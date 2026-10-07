@@ -603,6 +603,10 @@ export const mockAccount = {
   employees: 50,
   ownerId: TEST_UUIDS.user1,
   parentAccountId: null,
+  // PG-197: optional geography (nullable)
+  country: null,
+  region: null,
+  postalCode: null,
   // IFC-312: AI provenance scalars (nullable on legacy rows)
   score: null,
   scoreProvenance: null,

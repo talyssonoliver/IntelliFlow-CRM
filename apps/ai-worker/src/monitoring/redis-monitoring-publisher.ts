@@ -1,8 +1,8 @@
 /**
  * RedisMonitoringPublisher (IFC-214)
  *
- * Publishes tenant-scoped AI monitoring snapshots to Redis on a short cadence
- * so the API can serve dashboard reads from a low-latency cache instead of
+ * Publishes tenant-scoped AI monitoring snapshots to Redis every 60 s so the
+ * API can serve dashboard reads from a low-latency cache instead of
  * scanning the full `AIMonitoringEvent` table on every request.
  *
  * Layered ON TOP OF the IFC-297 DB tier (`AIMonitoringService` +
@@ -14,6 +14,10 @@
  *   1. Tenant-scoped key namespacing (no cross-tenant leakage).
  *   2. Schema version prefix `v1` in every key (no cross-version reads).
  *   3. TTL ≥ 6× publish cadence (stale-empty windows fall through to DB).
+ *
+ * Cadence: the source table is only written by `MonitoringFlushService` every
+ * 60 s, so publishing faster re-sends identical snapshots. At the old 5 s
+ * default each tick cost 1 + N(tenants) queries, ~17k per 6 h for no new data.
  *
  * @module monitoring/redis-monitoring-publisher
  * @task IFC-214
@@ -60,6 +64,11 @@ const SNAPSHOT_KINDS: readonly SnapshotKind[] = [
   'hallucination',
   'roi',
 ];
+
+/** Matches the MonitoringFlushService cadence that feeds the source table. */
+export const DEFAULT_PUBLISH_INTERVAL_MS = 60_000;
+/** R-016 control 3: TTL ≥ 6× the publish cadence. */
+const TTL_TO_INTERVAL_RATIO = 6;
 
 const SCHEMA_VERSION = 'v1';
 const KEY_PREFIX = 'ai-mon';
@@ -109,9 +118,20 @@ export class RedisMonitoringPublisher {
     opts: RedisMonitoringPublisherOptions = {}
   ) {
     this.intervalMs =
-      opts.intervalMs ?? (Number(process.env.AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS) || 5000);
+      opts.intervalMs ??
+      (Number(process.env.AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS) || DEFAULT_PUBLISH_INTERVAL_MS);
+    // The TTL follows the cadence unless set explicitly: a fixed 30 s TTL under a
+    // 60 s cadence would leave every key expired for half of each cycle.
     this.ttlSeconds =
-      opts.ttlSeconds ?? (Number(process.env.AI_MONITORING_REDIS_TTL_SECONDS) || 30);
+      opts.ttlSeconds ??
+      (Number(process.env.AI_MONITORING_REDIS_TTL_SECONDS) ||
+        Math.ceil((this.intervalMs * TTL_TO_INTERVAL_RATIO) / 1000));
+    if (this.ttlSeconds * 1000 <= this.intervalMs) {
+      logger.warn(
+        { intervalMs: this.intervalMs, ttlSeconds: this.ttlSeconds },
+        'TTL is not longer than the publish interval — snapshots will expire between ticks and reads will fall through to the DB'
+      );
+    }
     this.disabled =
       opts.disabled ?? (process.env.AI_MONITORING_REDIS_DISABLED === '1' || redis === null);
     this.lookbackMs = opts.lookbackMs ?? 24 * 60 * 60 * 1000;

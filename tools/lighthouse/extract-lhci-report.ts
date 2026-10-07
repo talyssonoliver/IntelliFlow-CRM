@@ -32,29 +32,29 @@ export interface LhciSummary {
   generatedAt: string;
 }
 
-export function extractLhciReport(lhciDir: string, outFile: string): LhciSummary | null {
-  const manifest = JSON.parse(fs.readFileSync(path.join(lhciDir, 'manifest.json'), 'utf8'));
+interface ManifestEntry {
+  url: string;
+  jsonPath: string;
+}
 
-  // Pick the run with the highest performance score for the "/" URL
-  const entries = manifest.filter((r: { url: string }) => r.url.endsWith('/'));
-  if (entries.length === 0) {
-    return null;
-  }
-
-  let bestEntry = entries[0];
+/** The run with the highest performance score among the entries. */
+function bestEntry(entries: ManifestEntry[]): ManifestEntry {
+  let best = entries[0];
   let bestScore = -1;
   for (const entry of entries) {
     const report = JSON.parse(fs.readFileSync(entry.jsonPath, 'utf8'));
     const perfScore = report.categories?.performance?.score ?? 0;
     if (perfScore > bestScore) {
       bestScore = perfScore;
-      bestEntry = entry;
+      best = entry;
     }
   }
+  return best;
+}
 
-  const lhr = JSON.parse(fs.readFileSync(bestEntry.jsonPath, 'utf8'));
-
-  const summary: LhciSummary = {
+function summarize(entry: ManifestEntry): LhciSummary {
+  const lhr = JSON.parse(fs.readFileSync(entry.jsonPath, 'utf8'));
+  return {
     url: lhr.finalUrl,
     fetchTime: lhr.fetchTime,
     scores: {
@@ -78,14 +78,65 @@ export function extractLhciReport(lhciDir: string, outFile: string): LhciSummary
     },
     generatedAt: new Date().toISOString(),
   };
+}
 
+function readManifest(lhciDir: string): ManifestEntry[] {
+  return JSON.parse(fs.readFileSync(path.join(lhciDir, 'manifest.json'), 'utf8'));
+}
+
+export function extractLhciReport(lhciDir: string, outFile: string): LhciSummary | null {
+  // Pick the run with the highest performance score for the "/" URL
+  const entries = readManifest(lhciDir).filter((r) => r.url.endsWith('/'));
+  if (entries.length === 0) {
+    return null;
+  }
+
+  const summary = summarize(bestEntry(entries));
   fs.writeFileSync(outFile, JSON.stringify(summary, null, 2));
   return summary;
 }
 
+/** File-name slug for a URL path: `/accounts/new` → `accounts-new`, `/` → `root`. */
+export function urlSlug(url: string): string {
+  const slug = new URL(url).pathname.replaceAll(/[^a-zA-Z0-9]+/g, '-').replaceAll(/^-|-$/g, '');
+  return slug || 'root';
+}
+
+/**
+ * PG-197: one summary per audited URL (best run each), written to
+ * `<outDir>/summary-<slug>.json`. Used when LHCI_URLS lists several routes.
+ */
+export function extractLhciReports(lhciDir: string, outDir: string): LhciSummary[] {
+  const byUrl = new Map<string, ManifestEntry[]>();
+  for (const entry of readManifest(lhciDir)) {
+    byUrl.set(entry.url, [...(byUrl.get(entry.url) ?? []), entry]);
+  }
+  fs.mkdirSync(outDir, { recursive: true });
+  return [...byUrl.entries()].map(([url, entries]) => {
+    const summary = summarize(bestEntry(entries));
+    fs.writeFileSync(
+      path.join(outDir, `summary-${urlSlug(url)}.json`),
+      JSON.stringify(summary, null, 2)
+    );
+    return summary;
+  });
+}
+
 // Auto-execute when run directly
 const isDirectRun = process.argv[1]?.includes('extract-lhci-report');
-if (isDirectRun) {
+if (isDirectRun && process.env.LHCI_OUTPUT_DIR) {
+  // PG-197: several URLs → one summary per URL next to the LHCI output.
+  const LHCI_DIR = path.resolve(process.env.LHCI_OUTPUT_DIR);
+  for (const summary of extractLhciReports(LHCI_DIR, LHCI_DIR)) {
+    console.log(
+      summary.url,
+      'performance',
+      (summary.scores.performance * 100).toFixed(0),
+      'accessibility',
+      (summary.scores.accessibility * 100).toFixed(0)
+    );
+  }
+} else if (isDirectRun) {
   const LHCI_DIR = path.resolve('artifacts/benchmarks/home-page-lighthouse');
   const OUT_FILE = path.resolve('artifacts/benchmarks/home-page-lighthouse.json');
 

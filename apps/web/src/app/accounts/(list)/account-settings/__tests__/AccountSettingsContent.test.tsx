@@ -7,6 +7,16 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
 }));
 
+// PG-196: hierarchy tier options come from the tenant's tiers (defaults here).
+vi.mock('@/hooks/useAccountTiers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useAccountTiers')>();
+  return {
+    ...actual,
+    useAccountTiers: () =>
+      actual.buildAccountTiersResult(undefined, { isLoading: false, isError: false }),
+  };
+});
+
 vi.mock('@intelliflow/ui', async (orig) => {
   const actual = (await orig()) as Record<string, unknown>;
   return { ...actual, toast: vi.fn() };

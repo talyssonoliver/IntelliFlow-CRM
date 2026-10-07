@@ -754,6 +754,10 @@ publishing:
     enabled: true
     table_name: domain_event_outbox
     polling_interval_ms: 100
+    # Idle backoff: each empty poll doubles the delay up to this ceiling, and the
+    # first non-empty batch resets it to polling_interval_ms. Worst-case pickup
+    # latency for an event written while the outbox is idle.
+    max_polling_interval_ms: 5000
     batch_size: 100
     max_retries: 3
     retry_backoff_ms: [1000, 5000, 30000]

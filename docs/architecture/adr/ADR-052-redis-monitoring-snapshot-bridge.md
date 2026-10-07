@@ -175,11 +175,24 @@ introduce `v2` keys read in parallel during a deploy window.
 
 ### TTL
 
-`AI_MONITORING_REDIS_TTL_SECONDS` defaults to 30.
-`AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS` defaults to 5 000. The 6× ratio
-guarantees that even one missed publish (worker restart) does not produce a
-stale-empty window — the API will see "miss" and fall through to DB rather than
-read an expired snapshot.
+> **Amended 2026-10-06 (idle query load).** The publish interval now defaults to
+> 60 000 ms and the TTL to 6× the interval (360 s), unless
+> `AI_MONITORING_REDIS_TTL_SECONDS` is set. The publisher reads
+> `AIMonitoringEvent`, which `MonitoringFlushService` writes only every 60 s, so
+> a 5 s tick re-published identical data 12 times per flush at 1 + N(tenants)
+> queries a tick (~17k queries per 6 h in production). Worst-case dashboard
+> staleness becomes flush (60 s) + publish (60 s) ≈ 120 s, against about 65 s
+> before. The ≤ 10 s figure below was never reachable while the flush ran every
+> 60 s. The web dashboard refetches every 30–300 s
+> (`apps/web/src/lib/ai-monitoring/hooks.ts`), and the API store has no age
+> check (`apps/api/src/modules/ai-monitoring/ai-monitoring.redis-store.ts`). Set
+> `AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS` to restore a faster cadence.
+
+`AI_MONITORING_REDIS_TTL_SECONDS` originally defaulted to 30.
+`AI_MONITORING_REDIS_PUBLISH_INTERVAL_MS` originally defaulted to 5 000. The 6×
+ratio guarantees that even one missed publish (worker restart) does not produce
+a stale-empty window — the API will see "miss" and fall through to DB rather
+than read an expired snapshot.
 
 ### Outage fallback
 

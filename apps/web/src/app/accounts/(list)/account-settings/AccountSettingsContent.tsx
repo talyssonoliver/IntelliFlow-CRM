@@ -5,6 +5,8 @@ import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared/page-header';
+import { SectionHeader } from '@/components/shared/section-header';
+import { useAccountTiers } from '@/hooks/useAccountTiers';
 import type {
   AccountHierarchyConfigInput,
   AccountRequiredFieldKey,
@@ -50,39 +52,6 @@ const DEFAULT_AUTOMATION: AccountAutomationSettings = {
   aiAccountScoring: false,
 };
 
-interface SectionHeaderProps {
-  icon: string;
-  iconBg: string;
-  iconFg: string;
-  title: string;
-  description: string;
-  action?: React.ReactNode;
-}
-
-function SectionHeader({
-  icon,
-  iconBg,
-  iconFg,
-  title,
-  description,
-  action,
-}: Readonly<SectionHeaderProps>) {
-  return (
-    <div className="flex items-start gap-3 mb-5">
-      <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
-        <span className={`material-symbols-outlined text-[20px] ${iconFg}`} aria-hidden="true">
-          {icon}
-        </span>
-      </div>
-      <div className="min-w-0 flex-1">
-        <h3 className="text-base font-semibold text-foreground">{title}</h3>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-      {action && <div className="shrink-0">{action}</div>}
-    </div>
-  );
-}
-
 function asCustomFieldRow(raw: {
   id: string;
   fieldName: string;
@@ -107,6 +76,12 @@ function asCustomFieldRow(raw: {
 
 export default function AccountSettingsContent() {
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
+  // PG-196: hierarchy tier options come from the tenant's Account Tiers configuration.
+  const { config: tierConfig } = useAccountTiers();
+  const tierOptions = useMemo(
+    () => tierConfig.tiers.map((t) => ({ key: t.key, label: t.label })),
+    [tierConfig]
+  );
   const utils = trpc.useUtils();
 
   // ── Queries ──────────────────────────────────────────────
@@ -650,7 +625,11 @@ export default function AccountSettingsContent() {
             title="Hierarchy"
             description="Rules for parent/child account relationships."
           />
-          <HierarchyTab config={localHierarchy} onConfigChange={handleHierarchyChange} />
+          <HierarchyTab
+            config={localHierarchy}
+            onConfigChange={handleHierarchyChange}
+            tierOptions={tierOptions}
+          />
         </Card>
 
         {/* Duplicate Detection */}

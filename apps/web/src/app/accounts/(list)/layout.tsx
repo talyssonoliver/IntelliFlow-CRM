@@ -15,6 +15,7 @@ import {
 } from '@/components/sidebar/configs/accounts';
 import { AccountSettingsPanel } from '@/components/accounts/AccountSettingsPanel';
 import { AccountSettingsSidebarNav } from '@/components/accounts/AccountSettingsSidebarNav';
+import { useAccountTiers } from '@/hooks/useAccountTiers';
 
 export default function AccountsListLayout({
   children,
@@ -23,15 +24,20 @@ export default function AccountsListLayout({
   const [settingsOpen, setSettingsOpen] = useState(false);
 
   const onSettingsPage = isAccountSettingsPage(pathname);
+  // PG-196: the sidebar tier links come from the tenant's tier configuration.
+  const { tiers } = useAccountTiers();
 
   const sidebarConfig = useMemo(() => {
     if (onSettingsPage) {
-      return createAccountsSettingsSidebarConfig(({ isExpanded }: { isExpanded: boolean }) => (
-        <AccountSettingsSidebarNav isExpanded={isExpanded} />
-      ));
+      return createAccountsSettingsSidebarConfig(
+        ({ isExpanded }: { isExpanded: boolean }) => (
+          <AccountSettingsSidebarNav isExpanded={isExpanded} />
+        ),
+        tiers
+      );
     }
-    return createAccountsSidebarConfig(() => setSettingsOpen((prev) => !prev));
-  }, [onSettingsPage]);
+    return createAccountsSidebarConfig(() => setSettingsOpen((prev) => !prev), tiers);
+  }, [onSettingsPage, tiers]);
 
   return (
     <SidebarProvider>

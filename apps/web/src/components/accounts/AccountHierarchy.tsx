@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Skeleton, Badge, Card } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/pricing/calculator';
-import { getAccountTier, TIER_CONFIG } from './AccountCard';
+import { useAccountTiers } from '@/hooks/useAccountTiers';
 
 const HIERARCHY_SKELETON_KEYS = ['hier-0', 'hier-1', 'hier-2', 'hier-3'] as const;
 
@@ -60,8 +60,7 @@ function TreeNode({
   const isCurrent = node.id === currentId;
   const isFocused = node.id === focusedNodeId;
   const hasChildren = node.children.length > 0;
-  const tier = getAccountTier(node.revenue);
-  const tierConfig = TIER_CONFIG[tier];
+  const tierView = useAccountTiers().resolveTier(node.revenue);
 
   return (
     <li
@@ -104,7 +103,7 @@ function TreeNode({
           <span className="w-6" />
         )}
 
-        <span className={`w-2 h-2 rounded-full shrink-0 ${tierConfig.dot}`} />
+        <span className={`w-2 h-2 rounded-full shrink-0 ${tierView.colors.dot}`} />
 
         <button
           type="button"

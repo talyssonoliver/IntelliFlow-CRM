@@ -9,15 +9,17 @@
  * floor is computed over product files only, from the per-file entries of
  * coverage-summary.json — the same set of files the floor measured before
  * tooling was instrumented. Tooling coverage is reported, not gated, here;
- * Sonar's new_coverage gates it.
+ * Sonar's new_coverage gates it. The project tracker's lib/ (the sprint
+ * dashboard's logic) is tooling too: vitest.config.ts measures it so Sonar can
+ * score new lines there, and it never counted toward the floor.
  */
 import path from 'node:path';
 
 export const DEFAULT_FLOOR = { statements: 78, branches: 70, functions: 75, lines: 80 };
 export const METRICS = Object.keys(DEFAULT_FLOOR);
 
-/** Top-level directories instrumented as repo tooling, not product. */
-export const TOOLING_ROOTS = ['scripts', 'tools'];
+/** Repo-relative directories instrumented as repo tooling, not product. */
+export const TOOLING_ROOTS = ['scripts', 'tools', 'apps/project-tracker/lib'];
 
 /**
  * Istanbul's own rounding (istanbul-lib-coverage/lib/percent.js), so a product

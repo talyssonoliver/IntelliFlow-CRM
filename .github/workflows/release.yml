@@ -208,8 +208,15 @@ jobs:
       - name: Build internal packages
         run: pnpm turbo run build --filter=!@intelliflow/web --filter=!@intelliflow/api --filter=!@intelliflow/project-tracker --filter=!@intelliflow/workers
 
+      # Unit projects only, as the ci.yml unit shards run them. The integration
+      # project needs a real Postgres; ci.yml's Integration Tests job provides
+      # one and has already passed on this main commit, so the release job
+      # does not repeat it (routing-rule-type.test.ts hit ECONNREFUSED here).
+      # Calls run-tests.js directly (the same OOM-tolerant runner `pnpm run test`
+      # uses): `pnpm run test -- <args>` forwards a literal `--`, after which
+      # vitest ignores the --project filter and runs every project.
       - name: Run tests
-        run: pnpm run test
+        run: node scripts/run-tests.js '--project=!integration'
 
       - name: Build
         run: pnpm run build

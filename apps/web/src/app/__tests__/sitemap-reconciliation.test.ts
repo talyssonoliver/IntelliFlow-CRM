@@ -60,8 +60,9 @@ describe('Sitemap Reconciliation', () => {
     // PG-181: +2 for the Help Article Editor routes
     //   settings/help-center/articles/new/page.tsx and .../[id]/edit/page.tsx → 211.
     // Aurora rebrand: +1 for the unlinked, noindex design preview preview/aurora/page.tsx → 212.
+    // PG-197: +2 for accounts/(list)/new/page.tsx and accounts/[id]/edit/page.tsx → 214.
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(212);
+    expect(pageFiles.length).toBe(214);
   });
 
   // TC-26

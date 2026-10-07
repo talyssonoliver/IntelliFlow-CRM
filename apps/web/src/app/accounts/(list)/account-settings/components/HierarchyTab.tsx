@@ -1,23 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import Link from 'next/link';
 import { Input, Button, Switch, Badge } from '@intelliflow/ui';
 import type { AccountHierarchyConfigInput } from '@intelliflow/validators';
 
-const DEFAULT_TIER_OPTIONS = ['enterprise', 'mid-market', 'smb', 'startup'];
+/** An account tier from the tenant's configuration (PG-196). */
+export interface HierarchyTierOption {
+  readonly key: string;
+  readonly label: string;
+}
 
 export interface HierarchyTabProps {
   readonly config: AccountHierarchyConfigInput;
   readonly onConfigChange: (next: AccountHierarchyConfigInput) => void;
-  readonly tierOptions?: readonly string[];
+  /** Tiers defined on the Account Tiers page. */
+  readonly tierOptions: readonly HierarchyTierOption[];
 }
 
-export function HierarchyTab({
-  config,
-  onConfigChange,
-  tierOptions = DEFAULT_TIER_OPTIONS,
-}: HierarchyTabProps) {
-  const [customTier, setCustomTier] = useState('');
+export function HierarchyTab({ config, onConfigChange, tierOptions }: HierarchyTabProps) {
+  const tierKeys = new Set(tierOptions.map((t) => t.key));
 
   const handleMaxDepth = (raw: string) => {
     const parsed = Number.parseInt(raw, 10);
@@ -32,17 +33,6 @@ export function HierarchyTab({
       ? config.requireParentForTiers.filter((t) => t !== tier)
       : [...config.requireParentForTiers, tier];
     onConfigChange({ ...config, requireParentForTiers: next });
-  };
-
-  const addCustomTier = () => {
-    const t = customTier.trim();
-    if (!t) return;
-    if (config.requireParentForTiers.includes(t)) return;
-    onConfigChange({
-      ...config,
-      requireParentForTiers: [...config.requireParentForTiers, t],
-    });
-    setCustomTier('');
   };
 
   return (
@@ -73,60 +63,58 @@ export function HierarchyTab({
         <div>
           <h4 className="text-sm font-medium text-foreground">Tiers that require a parent</h4>
           <p className="text-xs text-muted-foreground mb-2">
-            Accounts on these tiers must be created with a parent account.
+            Accounts on these tiers need a parent account. Tiers follow annual revenue;{' '}
+            <Link
+              href="/accounts/account-tiers"
+              className="text-primary hover:underline"
+              aria-label="Manage account tiers"
+            >
+              manage tiers
+            </Link>
+            .
           </p>
           <div className="flex flex-wrap gap-2">
             {tierOptions.map((tier) => {
-              const active = config.requireParentForTiers.includes(tier);
+              const active = config.requireParentForTiers.includes(tier.key);
               return (
                 <Button
-                  key={tier}
+                  key={tier.key}
                   type="button"
                   size="sm"
                   variant={active ? 'default' : 'outline'}
-                  onClick={() => toggleTier(tier)}
+                  aria-pressed={active}
+                  onClick={() => toggleTier(tier.key)}
                 >
-                  {tier}
+                  {tier.label}
                 </Button>
               );
             })}
           </div>
         </div>
-        {config.requireParentForTiers.some((t) => !tierOptions.includes(t)) && (
-          <div className="flex flex-wrap gap-2">
-            {config.requireParentForTiers
-              .filter((t) => !tierOptions.includes(t))
-              .map((t) => (
-                <Badge key={t} variant="secondary" className="flex items-center gap-1">
-                  {t}
-                  <button
-                    type="button"
-                    aria-label={`Remove tier ${t}`}
-                    onClick={() => toggleTier(t)}
-                    className="text-xs text-muted-foreground hover:text-foreground"
-                  >
-                    ×
-                  </button>
-                </Badge>
-              ))}
+        {config.requireParentForTiers.some((t) => !tierKeys.has(t)) && (
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">
+              Legacy values (no matching tier, no effect):
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {config.requireParentForTiers
+                .filter((t) => !tierKeys.has(t))
+                .map((t) => (
+                  <Badge key={t} variant="secondary" className="flex items-center gap-1">
+                    {t}
+                    <button
+                      type="button"
+                      aria-label={`Remove legacy tier ${t}`}
+                      onClick={() => toggleTier(t)}
+                      className="text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      ×
+                    </button>
+                  </Badge>
+                ))}
+            </div>
           </div>
         )}
-        <div className="flex gap-2 items-end">
-          <div className="flex-1">
-            <label htmlFor="custom-tier" className="text-xs text-muted-foreground">
-              Add a custom tier key
-            </label>
-            <Input
-              id="custom-tier"
-              value={customTier}
-              onChange={(e) => setCustomTier(e.target.value)}
-              placeholder="e.g. strategic"
-            />
-          </div>
-          <Button type="button" onClick={addCustomTier}>
-            Add
-          </Button>
-        </div>
       </div>
 
       <div className="flex items-center justify-between pt-2 border-t border-border">

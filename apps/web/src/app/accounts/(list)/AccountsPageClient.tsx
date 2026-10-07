@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { DataTable, EmptyState, Pagination, Skeleton } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar } from '@/components/shared';
 import {
@@ -13,6 +13,8 @@ import { api } from '@/lib/api';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@intelliflow/api-client';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { tierSlugToKey } from '@intelliflow/validators';
+import { useAccountTiers } from '@/hooks/useAccountTiers';
 
 /** Inferred output of the `account.stats` tRPC procedure (server-prefetched + client-fetched). */
 export type AccountStats = inferRouterOutputs<AppRouter>['account']['stats'];
@@ -198,6 +200,52 @@ function AccountsContent({
 }
 
 // =============================================================================
+// Tier filter chip (PG-196)
+// =============================================================================
+
+function TierFilterChip({ label, onClear }: Readonly<{ label: string; onClear: () => void }>) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/50 py-1 pl-3 pr-1 text-sm text-foreground">
+        {label}
+        <button
+          type="button"
+          onClick={onClear}
+          aria-label="Clear tier filter"
+          className="inline-flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground"
+        >
+          <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+            close
+          </span>
+        </button>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * `/accounts?tier=<slug>` (the sidebar tier links) → the tenant tier to filter by.
+ * `ready` is false while a tier is in the URL but the tenant's tiers are still
+ * loading, so the list is never shown unfiltered first.
+ */
+function useTierFilter() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { tiers } = useAccountTiers();
+  const slug = searchParams.get('tier');
+  const key = slug ? tierSlugToKey(slug) : null;
+  const active = key ? tiers?.find((t) => t.key === key) : undefined;
+  const clear = useCallback(() => router.replace('/accounts'), [router]);
+  return {
+    slug,
+    active,
+    showChip: Boolean(slug) && tiers !== null,
+    ready: !slug || tiers !== null,
+    clear,
+  };
+}
+
+// =============================================================================
 // Page Component
 // =============================================================================
 
@@ -213,6 +261,7 @@ export default function AccountsPageClient({
   initialStats: serverStats,
 }: AccountsPageClientProps = {}) {
   const router = useRouter();
+  const tierFilter = useTierFilter();
   const [searchQuery, setSearchQuery] = useState('');
   const [industryFilter, setIndustryFilter] = useState('');
   const [ownerFilter, setOwnerFilter] = useState('');
@@ -254,7 +303,7 @@ export default function AccountsPageClient({
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, industryFilter, ownerFilter, sortOrder]);
+  }, [debouncedSearch, industryFilter, ownerFilter, sortOrder, tierFilter.slug]);
 
   const sortParams = getSortParams(sortOrder);
 
@@ -265,10 +314,12 @@ export default function AccountsPageClient({
       search: debouncedSearch || undefined,
       industry: industryFilter || undefined,
       ownerId: ownerFilter || undefined,
+      tier: tierFilter.active?.key,
       sortBy: sortParams.sortBy,
       sortOrder: sortParams.sortOrder,
     },
-    { enabled: isAuthenticated && !authLoading }
+    // With a tier in the URL, wait for the tenant's tiers so the list is never shown unfiltered.
+    { enabled: isAuthenticated && !authLoading && tierFilter.ready }
   );
 
   const accounts = (data?.accounts ?? []) as AccountRow[];
@@ -277,7 +328,7 @@ export default function AccountsPageClient({
   const handlers: AccountRowHandlers = useMemo(
     () => ({
       onView: (id) => router.push(`/accounts/${id}`),
-      onEdit: (id) => router.push(`/accounts/${id}?edit=true`),
+      onEdit: (id) => router.push(`/accounts/${id}/edit`),
       onCreateDeal: (id) => router.push(`/deals/new?accountId=${id}`),
       onDelete: (id) => deleteMutation.mutate({ id }),
     }),
@@ -378,6 +429,13 @@ export default function AccountsPageClient({
         }}
       />
 
+      {tierFilter.showChip && (
+        <TierFilterChip
+          label={tierFilter.active ? `Tier: ${tierFilter.active.label}` : 'Unknown tier'}
+          onClear={tierFilter.clear}
+        />
+      )}
+
       {error && !isLoading && (
         <div className="flex flex-col items-center justify-center p-8 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
           <span
@@ -414,7 +472,7 @@ export default function AccountsPageClient({
           currentPage={currentPage}
           totalItems={totalItems}
           onPageChange={setCurrentPage}
-          hasFilters={!!(searchQuery || industryFilter || ownerFilter)}
+          hasFilters={!!(searchQuery || industryFilter || ownerFilter || tierFilter.active)}
         />
       )}
     </div>
