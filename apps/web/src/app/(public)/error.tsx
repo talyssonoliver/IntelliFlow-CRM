@@ -42,7 +42,7 @@ export default function PublicHomeError({ error, reset }: Readonly<PublicErrorPr
           <button
             type="button"
             onClick={reset}
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#101922]"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#101922]"
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               refresh
@@ -51,7 +51,7 @@ export default function PublicHomeError({ error, reset }: Readonly<PublicErrorPr
           </button>
           <Link
             href="/contact"
-            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-border-light dark:border-border-dark text-slate-800 dark:text-slate-200 font-semibold hover:bg-slate-100 dark:hover:bg-[#2d3a4a] transition-colors focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#101922]"
+            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-border-light dark:border-border-dark text-slate-800 dark:text-slate-200 font-semibold hover:bg-slate-100 dark:hover:bg-[#2d3a4a] transition-colors focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-[#101922]"
           >
             <span className="material-symbols-outlined text-lg" aria-hidden="true">
               support_agent

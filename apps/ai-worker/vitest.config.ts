@@ -10,6 +10,10 @@ export default defineConfig({
         __dirname,
         '../../packages/platform/src/feature-flags/index.ts'
       ),
+      '@intelliflow/platform/queues/connection': path.resolve(
+        __dirname,
+        '../../packages/platform/src/queues/connection.ts'
+      ),
       '@intelliflow/platform': path.resolve(__dirname, '../../packages/platform/src/index.ts'),
       // Resolve @opentelemetry/api through the workspace symlink so ALL modules
       // (including @opentelemetry/sdk-trace-base) share the same singleton.

@@ -1,0 +1,365 @@
+/*
+ * InboxCalendarSection — /email two-pane inbox + a calendar agenda, inside the CRM.
+ * White fading to Mist per the design contract's background sequence.
+ * Every rule scoped under .aurora-page.
+ */
+
+.aurora-page .inbox-cal-section {
+  background: linear-gradient(180deg, #fff 0%, #fff 55%, var(--mist) 100%);
+}
+
+.aurora-page .ic-grid {
+  margin-top: 56px;
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 22px;
+  align-items: start;
+}
+
+/* ---- Email scene (reuses .scene/.app/.rail/.titlebar from aurora-landing.css) ---- */
+.aurora-page .ic-email-scene {
+  padding: 0;
+}
+.aurora-page .ic-app {
+  width: 100%;
+  max-width: 100%;
+}
+.aurora-page .ic-email-body {
+  display: grid;
+  grid-template-columns: 128px 1fr 1.05fr;
+  min-height: 360px;
+}
+.aurora-page .ic-folders {
+  padding: 16px 10px;
+  border-right: 1px solid var(--line);
+  display: grid;
+  align-content: start;
+  gap: 3px;
+}
+.aurora-page .ic-folder {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 8px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+.aurora-page .ic-folder .material-symbols-outlined {
+  font-size: 17px;
+  color: var(--ink-3);
+}
+.aurora-page .ic-folder.on {
+  background: #fff;
+  color: var(--navy);
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 2px 6px -2px rgba(17, 23, 91, 0.15);
+}
+.aurora-page .ic-folder.on .material-symbols-outlined {
+  color: var(--blue);
+}
+.aurora-page .ic-folder b {
+  margin-left: auto;
+  font-size: 11px;
+  font-weight: 800;
+  color: #fff;
+  background: var(--blue);
+  border-radius: 999px;
+  padding: 1px 6px;
+}
+.aurora-page .ic-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.aurora-page .ic-label i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  background: var(--lc);
+  font-style: normal;
+}
+.aurora-page .ic-messages {
+  border-right: 1px solid var(--line);
+  display: grid;
+  align-content: start;
+}
+.aurora-page .ic-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+.aurora-page .ic-search .material-symbols-outlined {
+  font-size: 16px;
+}
+.aurora-page .ic-msg {
+  display: grid;
+  grid-template-columns: 26px 1fr auto;
+  gap: 10px;
+  align-items: start;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line);
+}
+.aurora-page .ic-msg > div {
+  min-width: 0;
+}
+.aurora-page .ic-msg-who {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--a);
+  color: #fff;
+  font:
+    800 11px/26px var(--font-manrope),
+    system-ui,
+    sans-serif;
+  text-align: center;
+}
+.aurora-page .ic-msg b {
+  display: block;
+  font-size: 12.5px;
+  color: var(--navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.aurora-page .ic-msg small {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--ink-3);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.aurora-page .ic-msg em {
+  font-style: normal;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+}
+.aurora-page .ic-msg.unread b {
+  font-weight: 800;
+}
+.aurora-page .ic-msg.unread::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--blue);
+  position: relative;
+  top: 4px;
+}
+.aurora-page .ic-msg.unread {
+  grid-template-columns: 8px 26px 1fr auto;
+}
+.aurora-page .ic-thread {
+  padding: 16px 18px;
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+.aurora-page .ic-thread header b {
+  display: block;
+  font-size: 13.5px;
+  color: var(--navy);
+}
+.aurora-page .ic-thread header small {
+  font-size: 11.5px;
+  color: var(--ink-3);
+}
+.aurora-page .ic-thread p {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+.aurora-page .ic-compose-row {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.aurora-page .ic-compose-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 8px;
+  font-size: 11.5px;
+  font-weight: 700;
+  box-shadow: 0 0 0 1px var(--line-2) inset;
+  color: var(--ink-2);
+}
+.aurora-page .ic-compose-btn .material-symbols-outlined {
+  font-size: 15px;
+}
+.aurora-page .ic-compose-btn.ai {
+  background: rgba(118, 85, 246, 0.1);
+  color: var(--violet);
+  box-shadow: none;
+}
+.aurora-page .ic-link-note {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-3);
+}
+
+/* ---- Calendar agenda card ---- */
+.aurora-page .ic-cal-card {
+  background: #fff;
+  border-radius: 24px;
+  padding: 22px;
+  box-shadow:
+    0 0 0 1px var(--line),
+    0 18px 40px -26px rgba(17, 23, 91, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.aurora-page .ic-cal-card .btag-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.aurora-page .ic-cal-card h3 {
+  font-size: 19px;
+  line-height: 1.3;
+  margin-top: 6px;
+}
+.aurora-page .ic-agenda {
+  display: grid;
+  gap: 4px;
+}
+.aurora-page .ic-event {
+  display: grid;
+  grid-template-columns: 58px 8px 1fr 26px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 6px;
+  border-radius: 10px;
+}
+.aurora-page .ic-event-when {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink-3);
+  line-height: 1.25;
+}
+.aurora-page .ic-event-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ec);
+}
+.aurora-page .ic-event-copy b {
+  display: block;
+  font-size: 12.5px;
+  color: var(--navy);
+}
+.aurora-page .ic-event-copy span {
+  display: block;
+  margin-top: 1px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ec);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.aurora-page .ic-event-who {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--a);
+  color: #fff;
+  font:
+    800 11px/26px var(--font-manrope),
+    system-ui,
+    sans-serif;
+  text-align: center;
+}
+.aurora-page .ic-cal-note {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink-3);
+}
+.aurora-page .ic-cal-note .material-symbols-outlined {
+  font-size: 16px;
+  color: var(--cyan);
+}
+
+@media (max-width: 960px) {
+  .aurora-page .ic-grid {
+    grid-template-columns: 1fr;
+    margin-top: 40px;
+    gap: 18px;
+  }
+  .aurora-page .ic-email-body {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+  .aurora-page .ic-folders {
+    grid-auto-flow: column;
+    grid-auto-columns: max-content;
+    align-content: center;
+    overflow-x: auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    padding: 10px 10px;
+  }
+  .aurora-page .ic-label {
+    display: none;
+  }
+  .aurora-page .ic-messages {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .aurora-page .ic-msg:nth-child(n + 4) {
+    display: none;
+  }
+  .aurora-page .ic-thread p {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .aurora-page .ic-cal-card {
+    padding: 18px;
+  }
+  .aurora-page .ic-event {
+    grid-template-columns: 50px 8px 1fr 24px;
+  }
+  /* On mobile .ic-email-body stacks to one column, so .ic-thread (with its
+     compose row) becomes the last thing in the app, landing directly under
+     the card's own .sample "Sample workspace" badge (position: absolute,
+     bottom:12/right:14 on .scene) and clipping "Draft with AI". Clear it. */
+  .aurora-page .ic-thread {
+    padding-bottom: 56px;
+  }
+  /* Design contract floor: UI-in-panel text never below 12px on a phone
+     (avatar-circle initials excepted, matching the .who/.who2 pattern used
+     elsewhere on the page). */
+  .aurora-page .ic-event-when,
+  .aurora-page .ic-event-copy span,
+  .aurora-page .ic-msg em,
+  .aurora-page .ic-thread header small {
+    font-size: 12px;
+  }
+}

@@ -3,7 +3,7 @@
 ## £2000 Investment Decision - IntelliFlow CRM AI Features
 
 **Document ID:** IFC-027-GATE2-ANALYSIS **Date:** 2026-01-06 **Prepared By:**
-Platform Team **Review Board:** CFO + CEO (STOA-Leadership)
+The owner (sole operator) **Reviewer:** The owner
 
 ---
 
@@ -192,12 +192,12 @@ Key justifications:
 
 ### 7.2 Gate 3 Preparation (£3000 Threshold)
 
-| Milestone               | Target Date  | Owner      |
-| ----------------------- | ------------ | ---------- |
-| Production deployment   | Sprint 19    | DevOps     |
-| User acceptance testing | Sprint 20-21 | QA         |
-| ROI validation          | Sprint 22    | Finance    |
-| Gate 3 review           | Sprint 19    | Leadership |
+| Milestone               | Target Date  | Owner |
+| ----------------------- | ------------ | ----- |
+| Production deployment   | Sprint 19    | Owner |
+| User acceptance testing | Sprint 20-21 | Owner |
+| ROI validation          | Sprint 22    | Owner |
+| Gate 3 review           | Sprint 19    | Owner |
 
 ---
 

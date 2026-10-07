@@ -349,8 +349,8 @@ datasource db {
 **Environment Variables:**
 
 ```bash
-DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres?pgbouncer=true"
-DIRECT_URL="postgresql://postgres:postgres@127.0.0.1:54322/postgres"
+DATABASE_URL="postgresql://<user>:<password>@127.0.0.1:54322/postgres?pgbouncer=true"
+DIRECT_URL="postgresql://<user>:<password>@127.0.0.1:54322/postgres"
 ```
 
 ### Frontend (Next.js)

@@ -76,6 +76,48 @@ describe('Routing Router', () => {
     });
   });
 
+  describe('ticket rule separation', () => {
+    it('scopes every lead rule read and write to ruleType LEAD', async () => {
+      (prismaMock.routingRule.findMany as any).mockResolvedValue([]);
+      (prismaMock.routingRule.findFirst as any).mockResolvedValue(mockRule);
+      (prismaMock.routingRule.update as any).mockResolvedValue(mockRule);
+      (prismaMock.routingRule.delete as any).mockResolvedValue(mockRule);
+      (prismaMock.routingRule.count as any).mockResolvedValue(1);
+      (prismaMock.routingRule.create as any).mockResolvedValue(mockRule);
+      (prismaMock as any).$transaction.mockResolvedValue([]);
+      const lead = { tenantId: TEST_UUIDS.tenant, ruleType: 'LEAD' };
+
+      await caller.list({ limit: 5 });
+      expect(prismaMock.routingRule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: expect.objectContaining(lead) })
+      );
+
+      await caller.get({ id: 'rule-1' });
+      await caller.update({ id: 'rule-1', name: 'Renamed' });
+      await caller.toggle({ id: 'rule-1', isActive: false });
+      await caller.delete({ id: 'rule-1' });
+      const findFirstCalls = (prismaMock.routingRule.findFirst as any).mock.calls;
+      expect(findFirstCalls).toHaveLength(4);
+      for (const call of findFirstCalls) {
+        expect(call[0].where).toMatchObject({ id: 'rule-1', ...lead });
+      }
+
+      await caller.reorder({ rules: [{ id: 'rule-1', priority: 1 }] });
+      expect(prismaMock.routingRule.count).toHaveBeenCalledWith({
+        where: { id: { in: ['rule-1'] }, ...lead },
+      });
+
+      await caller.create({
+        name: 'New',
+        conditions: [{ field: 'leadScore', operator: 'greater_than', value: 80 }],
+        actions: [{ type: 'assign_to_user', target: 'u1' }],
+      });
+      expect(prismaMock.routingRule.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ ruleType: 'LEAD' }),
+      });
+    });
+  });
+
   describe('get', () => {
     it('should return a single rule by ID', async () => {
       (prismaMock.routingRule.findFirst as any).mockResolvedValue(mockRule);

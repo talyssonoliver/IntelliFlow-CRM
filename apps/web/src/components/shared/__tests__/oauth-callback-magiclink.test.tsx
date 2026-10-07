@@ -209,8 +209,9 @@ describe('OAuthCallback magic link with an existing session (login CSRF guard)',
 
     expect(await screen.findByText('Switch account?')).toBeInTheDocument();
     expect(screen.getByText(/signed in as victim@example\.com/i)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /stay signed in/i })).toBeInTheDocument();
+    // The dialog opens in an effect after it mounts; its buttons are only accessible once open.
+    expect(await screen.findByRole('button', { name: 'Continue' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /stay signed in/i })).toBeInTheDocument();
     expect(h.signOut).not.toHaveBeenCalled();
     expect(h.clearSessionTokens).not.toHaveBeenCalled();
     expect(h.clearTokenCookie).not.toHaveBeenCalled();

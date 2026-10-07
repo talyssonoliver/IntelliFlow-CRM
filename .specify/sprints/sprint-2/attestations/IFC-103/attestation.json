@@ -6,16 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "packages/domain/src/aggregates/account/Account.ts",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "packages/domain/src/aggregates/account/account.test.ts",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "Account aggregate implemented",
       "95%+ test coverage"

@@ -1607,6 +1607,10 @@ IFC-112:
     Canonical API health endpoints: /health, /health/ready, /health/live
     Legacy aliases remain available at /api/health, /api/health/ready, /api/health/live
     Depends on ENV-005-AI completing first.
+    NOTE 2026-10-05: .github/workflows/blue-green-deploy.yml was deleted. Its switch and
+    rollback steps were commented-out TODOs and it never completed a run. The real
+    rollback path is .github/workflows/vercel-rollback.yml (Vercel Instant Rollback,
+    dry-run by default); see docs/operations/release-rollback.md.
 
 ENV-006-AI:
   tier: A

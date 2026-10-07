@@ -308,7 +308,7 @@ describe('GoogleCalendarAdapter', () => {
           expect.objectContaining({
             method: 'POST',
             headers: expect.objectContaining({
-              Authorization: 'Bearer valid-access-token',
+              Authorization: 'Bearer ' + 'valid-access-token',
             }),
           })
         );

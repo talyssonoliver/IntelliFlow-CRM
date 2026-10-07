@@ -41,8 +41,8 @@ function block(reason) {
   process.stderr.write(
     `prisma.config.ts uses DIRECT_URL ?? DATABASE_URL from .env — an inline DATABASE_URL\n` +
       `does NOT override a .env DIRECT_URL. To target the LOCAL test DB, set BOTH:\n\n` +
-      `  DIRECT_URL="postgresql://postgres:postgres@localhost:5433/intelliflow_test?schema=public" \\\n` +
-      `  DATABASE_URL="postgresql://postgres:postgres@localhost:5433/intelliflow_test?schema=public" \\\n` +
+      `  DIRECT_URL="postgresql://<user>:<password>@localhost:5433/intelliflow_test?schema=public" \\\n` +
+      `  DATABASE_URL="postgresql://<user>:<password>@localhost:5433/intelliflow_test?schema=public" \\\n` +
       `  pnpm --filter @intelliflow/db <script>\n\n` +
       `For a DELIBERATE production operation: ALLOW_PROD_DB_OPS=1 (prefer migrate deploy over db push).\n\n`
   );

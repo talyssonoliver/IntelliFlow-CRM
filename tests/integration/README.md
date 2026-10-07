@@ -64,7 +64,7 @@ Integration tests require specific environment variables:
 
 ```env
 NODE_ENV=test
-TEST_DATABASE_URL=postgresql://user:password@localhost:5432/intelliflow_test
+TEST_DATABASE_URL=postgresql://<user>:<password>@localhost:5432/intelliflow_test
 TEST_API_URL=http://localhost:3001
 TEST_API_AVAILABLE=true
 WAIT_FOR_SERVICES=true

@@ -19,7 +19,7 @@ import {
   enqueueSummarizationIfNeeded,
   SUMMARIZE_QUEUE,
 } from '../jobs/summarize-conversation.job.js';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
 
 const logger = pino({
   name: 'conversation-record-handler',
@@ -117,10 +117,7 @@ export class ConversationRecordCallbackHandler extends BaseCallbackHandler {
       // rejection must still never go unobserved) and the queue is always closed.
       const { Queue } = await import('bullmq');
       const summarizeQueue = new Queue(SUMMARIZE_QUEUE, {
-        connection: {
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        },
+        connection: getBullMQConnectionOptions(),
       });
       enqueueSummarizationIfNeeded(conversationId, this.sessionId, this.tenantId, summarizeQueue)
         .catch((error: unknown) => {

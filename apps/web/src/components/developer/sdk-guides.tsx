@@ -227,7 +227,7 @@ function LeadsList() {
 
 const client = createTRPCClient({
   url: '${process.env.NEXT_PUBLIC_API_URL || 'https://your-deployment.example.com'}',
-  headers: { Authorization: 'Bearer ifc_live_your_key' },
+  headers: { Authorization: 'Bearer <api-key>' },
 });
 
 const leads = await client.lead.list.query({ limit: 10 });

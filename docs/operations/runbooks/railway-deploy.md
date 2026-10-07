@@ -24,7 +24,8 @@ covered by their own runbooks.
 | Layer       | Source of truth                                    | What it does                                                            |
 | ----------- | -------------------------------------------------- | ----------------------------------------------------------------------- |
 | Provision   | `infra/terraform/modules/railway/`                 | Creates project, services (`api`, `ai-worker`), env vars, custom domain |
-| Image build | `.github/workflows/build-images.yml`               | Publishes `ghcr.io/<owner>/intelliflow-crm-{api,ai-worker}:latest`      |
+| Image build | `.github/workflows/build-images.yml`               | Publishes `ghcr.io/<owner>/intelliflow-crm-<svc>:sha-<full sha>` only   |
+| Promote     | `.github/workflows/promote-production.yml`         | Gated, manual: moves `:latest` to a built digest, redeploys, ledger     |
 | Deploy A    | Terraform re-apply OR Railway auto-pull on new tag | Production-grade, reproducible                                          |
 | Deploy B    | `.github/workflows/railway-deploy.yml`             | Direct `railway up` for hot-fixes / matrixed dev+staging                |
 
@@ -116,6 +117,14 @@ terraform output railway_worker_url
 
 ### Path A — Image refresh (production-grade, digest-pinned)
 
+> **Correction, 2026-10-05.** The digest pin below is in Terraform, but the live
+> production `api` service tracks `:latest` with Railway image auto-updates.
+> Railway's "Image Auto Upgraded" emails show it redeploying after merges. Until
+> the pin is applied, production promotion is
+> [`../production-promotion.md`](../production-promotion.md): `build-images.yml`
+> no longer writes `:latest`, and only the gated `promote-production.yml` moves
+> it.
+
 **Production `api` is pinned to an immutable digest** (ENG-OPS-003.Gap8), NOT
 the mutable `:latest` tag.
 `infra/terraform/environments/production/terraform.tfvars` sets
@@ -132,12 +141,12 @@ the mutable `:latest` tag.
 
 **Promotion procedure (production api):**
 
-1. Push to `main` (or tag `vX.Y.Z`) — triggers `build-images.yml`, which lands
-   `:latest` and `:sha-<short>` on GHCR.
+1. Push to `main` — triggers `build-images.yml`, which lands `:sha-<full sha>`
+   on GHCR (never `:latest`).
 2. Read the new image's immutable digest:
    ```bash
    docker buildx imagetools inspect \
-     ghcr.io/<owner>/intelliflow-crm-api:sha-<short> | grep '^Digest:'
+     ghcr.io/<owner>/intelliflow-crm-api:sha-<full sha> | grep '^Digest:'
    ```
 3. Update the pin — either edit `api_image_digest` in
    `environments/production/terraform.tfvars`, or pass it at apply time:
@@ -301,6 +310,7 @@ non-issue. Headroom notes:
 | `infra/terraform/.env`                                                | no       | Shell-sourced `TF_VAR_*` exports              |
 | `apps/api/railway.json`                                               | yes      | Railway CLI build/deploy config for API       |
 | `apps/ai-worker/railway.json`                                         | yes      | Railway CLI build/deploy config for worker    |
-| `.github/workflows/build-images.yml`                                  | yes      | Pushes images to GHCR                         |
+| `.github/workflows/build-images.yml`                                  | yes      | Pushes `sha-<sha>` images to GHCR             |
+| `.github/workflows/promote-production.yml`                            | yes      | Gated production promotion + ledger           |
 | `.github/workflows/terraform.yml`                                     | yes      | Plan/apply across envs                        |
 | `.github/workflows/railway-deploy.yml`                                | yes      | Direct `railway up` deploys                   |

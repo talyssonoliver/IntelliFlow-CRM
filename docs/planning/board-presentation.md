@@ -3,7 +3,7 @@
 ## Gate 2 Investment Review: £2000 AI Feature Expansion
 
 **Document ID:** IFC-027-BOARD-PRESENTATION **Date:** 2026-01-06 **Presented
-By:** Platform Team **Audience:** CFO, CEO (STOA-Leadership)
+By:** The owner (sole operator) **Audience:** The owner (sole decision maker)
 
 ---
 
@@ -39,7 +39,7 @@ Overall                  ███████████░░░░░░░�
 
 | Milestone                | Status   | Notes                           |
 | ------------------------ | -------- | ------------------------------- |
-| IFC-010 Phase 1 Go/No-Go | PASSED   | Unanimous GO decision           |
+| IFC-010 Phase 1 Go/No-Go | PASSED   | Owner decision                  |
 | AI Foundation Setup      | COMPLETE | All 8 AI features delivered     |
 | Core CRM Architecture    | COMPLETE | Hexagonal architecture enforced |
 | Test Coverage Target     | EXCEEDED | 90%+ achieved (target: 80%)     |
@@ -124,23 +124,12 @@ Year 3:  £361,700 ████████████████████�
 
 ## Slide 6: Customer Validation
 
-### Early Access Feedback (25 Beta Users)
+### Early Access Feedback
 
-| Metric               | Score   |
-| -------------------- | ------- |
-| Overall Satisfaction | 4.2/5.0 |
-| AI Lead Scoring      | 4.5/5.0 |
-| Human Override       | 4.6/5.0 |
-| Speed/Performance    | 4.3/5.0 |
-| Net Promoter Score   | +45     |
-
-### Customer Testimonials
-
-> "IntelliFlow's AI lead scoring has increased our sales team productivity by
-> 40%." — Sarah M., Sales Manager, TechStart Ltd
-
-> "Finally, a CRM that understands modern sales. The AI features are genuinely
-> useful." — James K., VP Sales, GrowthCo
+No early access or beta programme has run yet, so there is no customer feedback
+to report. The satisfaction scores, NPS and testimonials that previously
+appeared on this slide did not come from real users and have been removed.
+Feedback collection is planned for user acceptance testing (Sprint 20-21).
 
 ### Competitive Positioning
 
@@ -190,7 +179,6 @@ Year 3:  £361,700 ████████████████████�
 
 - **Cost Controls**: Real-time API usage monitoring
 - **Quality Gates**: Architecture tests prevent boundary violations
-- **User Trust**: 85% AI action acceptance rate
 - **Audit Trail**: Full event logging for compliance
 
 ---
@@ -218,7 +206,7 @@ Year 3:  £361,700 ████████████████████�
 
 1. **Release remaining £1,450** for continued development
 2. **Deploy production monitoring** for AI features
-3. **Begin user onboarding** for beta expansion
+3. **Begin user onboarding** for a first beta
 4. **Collect Gate 3 metrics** for £3000 review
 
 ### Gate 3 Timeline (Sprint 19)
@@ -243,7 +231,7 @@ Total to MVP  → £10,000
 
 ## Slide 11: Recommendation
 
-### Board Decision Requested
+### Decision Requested
 
 **APPROVE Gate 2 Investment: £2,000**
 
@@ -295,25 +283,20 @@ Total to MVP  → £10,000
 
 ### Satisfaction Distribution
 
-| Rating        | Lead Scoring | Agents | Human Override |
-| ------------- | ------------ | ------ | -------------- |
-| 5 - Excellent | 52%          | 40%    | 64%            |
-| 4 - Good      | 35%          | 45%    | 27%            |
-| 3 - Average   | 9%           | 10%    | 9%             |
-| 2 - Poor      | 4%           | 5%     | 0%             |
-| 1 - Very Poor | 0%           | 0%     | 0%             |
+No beta programme has run, so there is no satisfaction data. The distribution
+table that previously appeared here has been removed.
 
-### Feature Requests (Top 5)
+### Planned Features
 
-| Rank | Feature            | Votes | Status              |
-| ---- | ------------------ | ----- | ------------------- |
-| 1    | Mobile App         | 18    | Planned (Sprint 20) |
-| 2    | Slack Integration  | 14    | Planned (Sprint 18) |
-| 3    | Custom Dashboards  | 12    | Planned (Sprint 17) |
-| 4    | Advanced Reporting | 11    | In Progress         |
-| 5    | Email Templates    | 9     | Planned             |
+| Feature            | Status              |
+| ------------------ | ------------------- |
+| Mobile App         | Planned (Sprint 20) |
+| Slack Integration  | Planned (Sprint 18) |
+| Custom Dashboards  | Planned (Sprint 17) |
+| Advanced Reporting | In Progress         |
+| Email Templates    | Planned             |
 
 ---
 
 **Document Revision:** 1.0 **Last Updated:** 2026-01-06 **Status:** FINAL FOR
-BOARD REVIEW
+OWNER REVIEW

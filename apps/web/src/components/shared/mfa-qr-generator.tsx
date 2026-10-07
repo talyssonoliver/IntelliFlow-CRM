@@ -153,7 +153,7 @@ export function MfaQrGenerator({
                 <CopyButton text={secret} aria-label="Copy secret key" />
               </div>
               <p
-                className="font-mono text-[#7cc4ff] text-sm break-all bg-slate-900/50 p-2 rounded"
+                className="font-mono text-[#bca8ff] text-sm break-all bg-slate-900/50 p-2 rounded"
                 aria-label="Secret key for manual entry"
               >
                 {formattedSecret}
@@ -178,7 +178,7 @@ export function MfaQrGenerator({
       {/* Setup Instructions */}
       <div className="bg-slate-800/30 rounded-lg p-4 space-y-2">
         <h4 className="text-sm font-medium text-slate-300 flex items-center gap-2">
-          <span className="material-symbols-outlined text-lg text-[#137fec]" aria-hidden="true">
+          <span className="material-symbols-outlined text-lg text-[#2a78f6]" aria-hidden="true">
             info
           </span>{' '}
           Setup Instructions
@@ -197,9 +197,9 @@ export function MfaQrGenerator({
         onClick={onConfirm}
         className={cn(
           'w-full py-3 px-4 rounded-lg font-medium',
-          'bg-[var(--color-primary,#137fec)] text-white',
-          'hover:bg-[var(--color-primary-hover,#0d6ecc)]',
-          'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+          'bg-[var(--color-primary,#2a78f6)] text-white',
+          'hover:bg-[var(--color-primary-hover,#1f63d4)]',
+          'focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900',
           'transition-colors flex items-center justify-center gap-2'
         )}
         aria-label="Confirm you have scanned the QR code"

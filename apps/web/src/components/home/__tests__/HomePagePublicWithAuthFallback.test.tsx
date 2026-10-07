@@ -1,7 +1,8 @@
 /**
  * @vitest-environment jsdom
  *
- * Tests for the client wrapper that swaps the public homepage for the
+ * Tests for the client wrapper that swaps the public homepage (passed in as
+ * children) for the
  * authenticated one when a login-race leaves the server returning `null` while
  * the client is actually authenticated. AuthenticatedHomePage is loaded via
  * next/dynamic(ssr:false) (keeps its heavy subtree out of the public compile
@@ -14,10 +15,6 @@ import { render, screen } from '@testing-library/react';
 const mockAuth = { isAuthenticated: false, isLoading: false };
 vi.mock('@/lib/auth/AuthContext', () => ({
   useAuth: () => mockAuth,
-}));
-
-vi.mock('../PublicHomePage', () => ({
-  PublicHomePage: () => <div data-testid="public-home">Public</div>,
 }));
 
 vi.mock('next/dynamic', () => ({
@@ -38,7 +35,11 @@ describe('HomePagePublicWithAuthFallback', () => {
 
   it('renders the public home for unauthenticated visitors', () => {
     mockAuth.isAuthenticated = false;
-    render(<HomePagePublicWithAuthFallback />);
+    render(
+      <HomePagePublicWithAuthFallback>
+        <div data-testid="public-home">Public</div>
+      </HomePagePublicWithAuthFallback>
+    );
     expect(screen.getByTestId('public-home')).toBeInTheDocument();
     expect(screen.queryByTestId('authenticated-home')).not.toBeInTheDocument();
   });
@@ -46,7 +47,11 @@ describe('HomePagePublicWithAuthFallback', () => {
   it('swaps to the authenticated home once client auth resolves (login-race fallback)', () => {
     mockAuth.isAuthenticated = true;
     mockAuth.isLoading = false;
-    render(<HomePagePublicWithAuthFallback />);
+    render(
+      <HomePagePublicWithAuthFallback>
+        <div data-testid="public-home">Public</div>
+      </HomePagePublicWithAuthFallback>
+    );
     expect(screen.getByTestId('authenticated-home')).toBeInTheDocument();
     expect(screen.queryByTestId('public-home')).not.toBeInTheDocument();
   });
@@ -54,7 +59,11 @@ describe('HomePagePublicWithAuthFallback', () => {
   it('stays on the public home while auth is still loading', () => {
     mockAuth.isAuthenticated = true;
     mockAuth.isLoading = true;
-    render(<HomePagePublicWithAuthFallback />);
+    render(
+      <HomePagePublicWithAuthFallback>
+        <div data-testid="public-home">Public</div>
+      </HomePagePublicWithAuthFallback>
+    );
     expect(screen.getByTestId('public-home')).toBeInTheDocument();
   });
 });

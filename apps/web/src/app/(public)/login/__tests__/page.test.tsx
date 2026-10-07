@@ -594,14 +594,14 @@ describe('LoginPage', () => {
   describe('Login Metadata', () => {
     it('should have correct SEO metadata', () => {
       expect(metadata.title).toBe('Log In');
-      expect(metadata.description).toContain('IntelliFlow CRM');
+      expect(metadata.description).toContain('Aurora');
       expect(metadata.description).toContain('SSO');
     });
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
       expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/login');
-      expect(metadata.openGraph?.siteName).toBe('IntelliFlow CRM');
+      expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });
 

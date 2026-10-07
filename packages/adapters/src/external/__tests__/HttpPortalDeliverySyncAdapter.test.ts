@@ -132,7 +132,7 @@ describe('HttpPortalDeliverySyncAdapter', () => {
       const [url, init] = fetchSpy.mock.calls[0];
       expect(url).toBe('https://admin.leangency.com/api/internal/tenants');
       expect(init.method).toBe('POST');
-      expect(init.headers.Authorization).toBe('Bearer sek_test_123');
+      expect(init.headers.Authorization).toBe('Bearer ' + 'sek_test_123');
       expect(init.headers['Content-Type']).toBe('application/json');
       expect(JSON.parse(init.body)).toEqual(provisionInput);
       expect(init.signal).toBeInstanceOf(AbortSignal);

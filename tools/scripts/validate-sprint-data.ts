@@ -159,6 +159,25 @@ function mapCsvToJsonStatus(csvStatus: string): string {
   return map[csvStatus] || 'UNKNOWN';
 }
 
+/** Status for an attestation whose verdict says the task is not done yet. */
+const NOT_DONE = 'NOT_DONE';
+
+/**
+ * Attestation verdict -> task JSON status. INCOMPLETE/PARTIAL (e.g. a task that
+ * was attested and later reopened) only says "not done", so it is consistent
+ * with any CSV status other than Completed.
+ */
+function mapVerdictToJsonStatus(verdict: unknown): unknown {
+  if (verdict === 'COMPLETE') return 'DONE';
+  if (verdict === 'INCOMPLETE' || verdict === 'PARTIAL') return NOT_DONE;
+  return verdict;
+}
+
+function isStatusConsistent(jsonStatus: string, expectedStatus: string): boolean {
+  if (jsonStatus === NOT_DONE) return expectedStatus !== 'DONE';
+  return jsonStatus === expectedStatus;
+}
+
 function normalizeText(input: unknown): string {
   if (typeof input !== 'string') return '';
   return input.trim().replaceAll(/\s+/g, ' ');
@@ -172,7 +191,7 @@ type ParsedTaskJson = {
   repoRelativePath: string;
 };
 
-function indexTaskJsonFiles(taskJsonFiles: string[]): {
+export function indexTaskJsonFiles(taskJsonFiles: string[]): {
   byId: Map<string, ParsedTaskJson>;
   parseErrors: string[];
   missingTaskIdFiles: string[];
@@ -202,10 +221,8 @@ function indexTaskJsonFiles(taskJsonFiles: string[]): {
 
       byId.set(taskId, {
         taskId,
-        // Metrics JSONs use "status"; attestation JSONs use "verdict" (COMPLETE → DONE)
-        status: normalizeText(
-          data?.status || (data?.verdict === 'COMPLETE' ? 'DONE' : data?.verdict)
-        ).toUpperCase(),
+        // Metrics JSONs use "status"; attestation JSONs use "verdict"
+        status: normalizeText(data?.status || mapVerdictToJsonStatus(data?.verdict)).toUpperCase(),
         description: normalizeText(data?.description),
         filePath: jsonFile,
         repoRelativePath: repoRelativePath || jsonFile,
@@ -286,7 +303,7 @@ function validateCsvStructure(tasks: SprintTask[]): GateResult[] {
 // Gate: Sprint Task Counts
 // ============================================================================
 
-function validateSprintCounts(
+export function validateSprintCounts(
   tasks: SprintTask[],
   metricsDir: string,
   targetSprint: string
@@ -321,19 +338,13 @@ function validateSprintCounts(
       const summaryDone = summary.task_summary?.done || 0;
       const summaryInProgress = summary.task_summary?.in_progress || 0;
 
-      const mismatches: string[] = [];
-
-      if (summaryTotal !== sprintTasks.length) {
-        mismatches.push(`total: summary=${summaryTotal} vs csv=${sprintTasks.length}`);
-      }
-      if (summaryDone !== statusCounts.done) {
-        mismatches.push(`done: summary=${summaryDone} vs csv=${statusCounts.done}`);
-      }
-      if (summaryInProgress !== statusCounts.in_progress) {
-        mismatches.push(
-          `in_progress: summary=${summaryInProgress} vs csv=${statusCounts.in_progress}`
-        );
-      }
+      const mismatches = [
+        ['total', summaryTotal, sprintTasks.length],
+        ['done', summaryDone, statusCounts.done],
+        ['in_progress', summaryInProgress, statusCounts.in_progress],
+      ]
+        .filter(([, fromSummary, fromCsv]) => fromSummary !== fromCsv)
+        .map(([key, fromSummary, fromCsv]) => `${key}: summary=${fromSummary} vs csv=${fromCsv}`);
 
       if (mismatches.length > 0) {
         const result: GateResult = {
@@ -473,7 +484,7 @@ function checkJsonMissingFiles(
   };
 }
 
-function checkJsonStatusConsistency(
+export function checkJsonStatusConsistency(
   sprintTasks: SprintTask[],
   index: ReturnType<typeof indexTaskJsonFiles>
 ): GateResult {
@@ -482,7 +493,7 @@ function checkJsonStatusConsistency(
     const entry = index.byId.get(task['Task ID']);
     if (!entry) continue;
     const expectedStatus = mapCsvToJsonStatus(task.Status);
-    if (entry.status !== expectedStatus) {
+    if (!isStatusConsistent(entry.status, expectedStatus)) {
       statusMismatches.push(
         `${task['Task ID']}: CSV="${task.Status}" -> expected "${expectedStatus}", got "${entry.status}"`
       );
@@ -688,4 +699,10 @@ function main(): void {
   process.exit(exitCode);
 }
 
-main();
+// Run only as a CLI, so the gates above can be imported by tests.
+if (
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('validate-sprint-data.ts')
+) {
+  main();
+}

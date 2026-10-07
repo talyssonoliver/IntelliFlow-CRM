@@ -52,10 +52,30 @@ describe('classifyChangedFiles', () => {
     'packages/db/prisma/schema.prisma',
     'tests/integration/setup.ts',
     'apps/api/src/test/setup.ts',
+    'apps/web/src/test/__mocks__/empty.ts',
+    'apps/web/src/lib/__mocks__/trpc.ts',
   ])('falls back to the full suite when %s changes', (file) => {
     const r = classifyChangedFiles(['packages/domain/src/lead.ts', file]);
     expect(r.scope).toBe('full');
     expect(r.reason).toContain(file);
+  });
+
+  // Each of these escalated a real push to the full suite (15-47 min) on
+  // 2026-10-05 although `vitest related` sees its effect, or it has none.
+  it.each([
+    // turbo config: the test steps call vitest directly
+    ['tools/plan-linter/turbo.json', []],
+    ['turbo.json', []],
+    // imported by tests (and by app code), so the import graph follows it
+    [
+      'apps/web/src/test/fixtures/developer-data.ts',
+      ['apps/web/src/test/fixtures/developer-data.ts'],
+    ],
+    ['apps/api/src/test/quota.ts', ['apps/api/src/test/quota.ts']],
+  ])('keeps a related run when %s changes', (file, related) => {
+    const r = classifyChangedFiles(['packages/domain/src/lead.ts', file]);
+    expect(r.scope).toBe('related');
+    expect(r.files).toEqual(['packages/domain/src/lead.ts', ...related].sort());
   });
 
   it('falls back to the full suite when the diff is too large to pass as argv', () => {

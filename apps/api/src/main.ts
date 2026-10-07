@@ -6,15 +6,12 @@
  * the API library without pulling runtime-only HTTP server code.
  */
 
-import { startTracing } from './tracing/otel';
+import './instrument';
 import { initializeSentry } from './tracing/sentry';
 import { disconnectPrisma } from '@intelliflow/db';
 import { shutdownAllQueues } from '@intelliflow/platform/queues';
 import { startApiServer } from './http-server';
 
-if (process.env.OTEL_ENABLED !== 'false') {
-  startTracing();
-}
 initializeSentry()
   .catch((err) => {
     console.error('[API] Sentry initialization failed:', err);

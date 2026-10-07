@@ -193,9 +193,9 @@ into `vercel_project_env` for web.
 **Why boot-critical:** `apps/ai-worker/src/lib/llm-factory.ts:134-140` —
 `_assertProdKey()` throws
 `LITELLM_MASTER_KEY must be set to a real value in production` when
-`NODE_ENV=production` AND the value equals the dev placeholder
-`sk-litellm-dev-change-me` or is missing. The service crash-loops at the first
-LLM call, which occurs at worker startup for the embedding warmup path.
+`NODE_ENV=production` AND the value equals the dev placeholder its documented
+default or is missing. The service crash-loops at the first LLM call, which
+occurs at worker startup for the embedding warmup path.
 
 **Consumed by:** ai-worker only.
 

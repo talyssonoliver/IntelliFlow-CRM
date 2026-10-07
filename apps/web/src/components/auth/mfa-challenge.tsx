@@ -297,23 +297,23 @@ export function MfaChallenge({
   return (
     <Card className="relative overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-2xl">
       {/* Card gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#2a78f6]/[0.03]" />
 
       <div className="relative p-8 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#137fec]/20 mb-4">
-            <span className="material-symbols-outlined text-3xl text-[#7cc4ff]" aria-hidden="true">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#2a78f6]/20 mb-4">
+            <span className="material-symbols-outlined text-3xl text-[#bca8ff]" aria-hidden="true">
               {currentConfig.icon}
             </span>
           </div>
           <h2 className="text-xl font-bold text-white">Two-Factor Authentication</h2>
           <p className="text-sm text-slate-300">{currentConfig.description}</p>
           {selectedMethod === 'sms' && maskedPhone && (
-            <p className="text-sm text-[#7cc4ff]">{maskedPhone}</p>
+            <p className="text-sm text-[#bca8ff]">{maskedPhone}</p>
           )}
           {selectedMethod === 'email' && maskedEmail && (
-            <p className="text-sm text-[#7cc4ff]">{maskedEmail}</p>
+            <p className="text-sm text-[#bca8ff]">{maskedEmail}</p>
           )}
         </div>
 
@@ -327,7 +327,7 @@ export function MfaChallenge({
                 onClick={() => setSelectedMethod(method)}
                 className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                   selectedMethod === method
-                    ? 'bg-[#137fec] text-white'
+                    ? 'bg-[#2a78f6] text-white'
                     : 'bg-white/10 text-slate-300 hover:bg-white/20'
                 }`}
               >
@@ -350,7 +350,7 @@ export function MfaChallenge({
               }}
               placeholder="Enter backup code"
               maxLength={BACKUP_CODE_LENGTH}
-              className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white text-center text-lg tracking-widest font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:border-transparent"
+              className="w-full px-4 py-3 rounded-lg border border-white/10 bg-white/5 text-white text-center text-lg tracking-widest font-mono placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:border-transparent"
               disabled={isButtonLoading}
               autoComplete="one-time-code"
             />
@@ -372,7 +372,7 @@ export function MfaChallenge({
                 onChange={(e) => handleCodeChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 onPaste={index === 0 ? handlePaste : undefined}
-                className={`w-12 h-14 text-center text-2xl font-bold rounded-lg border bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:border-transparent transition-all ${
+                className={`w-12 h-14 text-center text-2xl font-bold rounded-lg border bg-white/5 text-white focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:border-transparent transition-all ${
                   displayError ? 'border-red-500/50' : 'border-white/10 hover:border-white/20'
                 }`}
                 disabled={isButtonLoading}
@@ -402,7 +402,7 @@ export function MfaChallenge({
               <button
                 type="button"
                 onClick={handleResend}
-                className="text-sm text-[#7cc4ff] hover:text-[#5ab3ff] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] rounded px-2 py-1"
+                className="text-sm text-[#bca8ff] hover:text-[#bca8ff] transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] rounded px-2 py-1"
                 disabled={isButtonLoading}
               >
                 Didn&apos;t receive a code? Resend
@@ -416,7 +416,7 @@ export function MfaChallenge({
           type="button"
           onClick={() => handleSubmit()}
           disabled={isButtonLoading}
-          className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#137fec]/20 hover:shadow-[#137fec]/30"
+          className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#11175b] disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-[#2a78f6]/20 hover:shadow-[#2a78f6]/30"
           aria-busy={isButtonLoading}
         >
           {isButtonLoading ? (
@@ -441,7 +441,7 @@ export function MfaChallenge({
           <button
             type="button"
             onClick={onCancel}
-            className="w-full text-sm text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] rounded py-2"
+            className="w-full text-sm text-slate-400 hover:text-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] rounded py-2"
             disabled={isButtonLoading}
           >
             Use a different login method

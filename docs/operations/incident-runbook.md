@@ -8,8 +8,20 @@
 ## 1. Overview
 
 This runbook provides standardized procedures for responding to incidents
-affecting IntelliFlow CRM services. All on-call engineers must be familiar with
-these procedures.
+affecting IntelliFlow CRM services. IntelliFlow CRM is run by one person (the
+owner), who is the only responder. Every role in this document (incident
+commander, technical lead, communications, scribe) is played by the owner.
+
+Production layout, for reference:
+
+- API, ai-worker, three workers (events, ingestion, notifications) and Redis on
+  Railway
+- Web on Vercel
+- Postgres on Supabase (Supabase-managed backups)
+- Errors in Sentry
+- OpenTelemetry export to a hosted Grafana Cloud stack (being set up)
+- Alerts by email to the owner from Grafana Cloud alerting (being set up, not
+  yet proven)
 
 ### 1.1 Incident Definition
 
@@ -34,20 +46,20 @@ quality that impacts users or business operations.
 #### Automated Detection
 
 1. Monitoring system detects anomaly
-2. Alert fires to PagerDuty/Slack
-3. On-call engineer receives notification
+2. An alert email arrives from Grafana Cloud alerting (once set up), or an error
+   appears in Sentry
+3. The owner reads the alert
 
 #### Manual Detection
 
-1. User reports issue via support channels
-2. Support escalates to engineering
-3. On-call engineer is paged
+1. A user reports an issue
+2. The owner picks it up directly
 
 #### First Response Actions
 
 ```
 [ ] Acknowledge the alert within SLA (P1: 5min, P2: 15min)
-[ ] Open incident channel: /incident-open in Slack
+[ ] Start a timeline (a note or an issue) with the alert time
 [ ] Verify the alert is valid (not false positive)
 [ ] Assess initial severity level
 ```
@@ -90,16 +102,17 @@ quality that impacts users or business operations.
 
 #### Escalation Decision
 
+There is nobody to escalate to. The owner decides how much to drop based on
+severity:
+
 ```
 IF severity >= P2:
-    [ ] Escalate to team lead
-    [ ] Notify stakeholders
-    [ ] Consider incident commander
+    [ ] Stop other work and focus on the incident
+    [ ] Notify affected users if they are known
 
 IF severity = P1:
-    [ ] Immediate escalation to all hands
-    [ ] Notify leadership
-    [ ] Activate war room
+    [ ] Mitigate first (rollback, restart), investigate second
+    [ ] Notify affected users once mitigated
 ```
 
 ### 2.3 Phase 3: Mitigation (15-60 minutes)
@@ -107,11 +120,10 @@ IF severity = P1:
 #### Quick Wins (Try First)
 
 ```
-1. [ ] Restart affected service(s)
-2. [ ] Rollback recent deployment
-3. [ ] Scale up resources
+1. [ ] Restart affected service(s) (Railway dashboard: redeploy)
+2. [ ] Rollback recent deployment (Railway or Vercel previous deployment)
+3. [ ] Scale up resources (Railway service settings)
 4. [ ] Disable problematic feature flag
-5. [ ] Failover to backup region
 ```
 
 #### Common Scenarios
@@ -119,17 +131,14 @@ IF severity = P1:
 ##### API High Error Rate
 
 ```bash
-# Check error logs
-kubectl logs -l app=api --tail=1000 | grep ERROR
+# Check error logs (Railway CLI, linked to the production environment)
+railway logs --service api | grep ERROR
 
-# Check recent deployments
-kubectl rollout history deployment/api
+# Check recent deployments: Railway dashboard > api > Deployments
+# Rollback if needed: redeploy the previous successful deployment from the
+# same page
 
-# Rollback if needed
-kubectl rollout undo deployment/api
-
-# Scale up if load issue
-kubectl scale deployment/api --replicas=5
+# Scale up if load issue: raise resource limits in Railway service settings
 ```
 
 ##### Database Connection Issues
@@ -149,14 +158,12 @@ psql -c "SELECT * FROM pg_locks WHERE granted = false;"
 ##### High Memory/CPU
 
 ```bash
-# Identify resource hogs
-kubectl top pods --sort-by=memory
+# Identify resource hogs: Railway dashboard > service > Metrics
 
-# Force pod restart
-kubectl delete pod <pod-name>
+# Force a restart: redeploy the service from the Railway dashboard
 
 # Check for memory leaks
-kubectl logs <pod-name> | grep -i "heap\|memory"
+railway logs --service <service-name> | grep -i "heap\|memory"
 ```
 
 ##### AI Service Degradation
@@ -187,7 +194,7 @@ curl -I http://ai-worker:3003/queues
 #### Documentation During Incident
 
 ```
-[ ] Timeline of events in incident channel
+[ ] Timeline of events
 [ ] Actions taken and results
 [ ] Root cause hypothesis
 [ ] Temporary vs permanent fix distinction
@@ -198,10 +205,9 @@ curl -I http://ai-worker:3003/queues
 #### Immediate Actions
 
 ```
-[ ] Update status page to resolved
-[ ] Notify stakeholders of resolution
+[ ] Notify affected users of resolution
 [ ] Create post-incident ticket
-[ ] Schedule post-mortem (within 72 hours for P1/P2)
+[ ] Write the post-mortem (within 72 hours for P1/P2)
 ```
 
 #### Post-Mortem Template
@@ -219,12 +225,12 @@ curl -I http://ai-worker:3003/queues
 
 ## Timeline
 
-| Time (UTC) | Event                 |
-| ---------- | --------------------- |
-| HH:MM      | Alert triggered       |
-| HH:MM      | Engineer acknowledged |
-| HH:MM      | Mitigation applied    |
-| HH:MM      | Resolved              |
+| Time (UTC) | Event              |
+| ---------- | ------------------ |
+| HH:MM      | Alert triggered    |
+| HH:MM      | Owner acknowledged |
+| HH:MM      | Mitigation applied |
+| HH:MM      | Resolved           |
 
 ## Root Cause
 
@@ -254,9 +260,9 @@ curl -I http://ai-worker:3003/queues
 
 ## Action Items
 
-| ID  | Action | Owner | Due Date | Status |
-| --- | ------ | ----- | -------- | ------ |
-| 1   |        |       |          |        |
+| ID  | Action | Due Date | Status |
+| --- | ------ | -------- | ------ |
+| 1   |        |          |        |
 
 ## Lessons Learned
 
@@ -268,18 +274,18 @@ curl -I http://ai-worker:3003/queues
 
 ## 3. Communication Templates
 
+There is no status page and no incident channel. Communication goes by email to
+affected users, sent by the owner.
+
 ### 3.1 Initial Notification (P1/P2)
 
 ```
-:rotating_light: INCIDENT DECLARED
+INCIDENT DECLARED
 
 Severity: P[X]
 Service(s): [affected services]
 Impact: [user impact description]
 Status: Investigating
-
-Incident Commander: @[name]
-Incident Channel: #incident-[id]
 
 Next update in 15 minutes.
 ```
@@ -287,7 +293,7 @@ Next update in 15 minutes.
 ### 3.2 Status Update
 
 ```
-:yellow_circle: INCIDENT UPDATE
+INCIDENT UPDATE
 
 Severity: P[X]
 Service(s): [affected services]
@@ -305,7 +311,7 @@ Next update in [X] minutes.
 ### 3.3 Resolution Notification
 
 ```
-:large_green_circle: INCIDENT RESOLVED
+INCIDENT RESOLVED
 
 Severity: P[X]
 Service(s): [affected services]
@@ -315,8 +321,7 @@ Status: Resolved
 Root Cause: [brief description]
 Resolution: [what fixed it]
 
-Post-mortem scheduled for [date/time].
-Full timeline will be shared in #incidents.
+Post-mortem: [date/time or link]
 ```
 
 ### 3.4 Customer Communication (P1)
@@ -344,57 +349,36 @@ Prevention:
 We apologize for any inconvenience this caused.
 
 Best regards,
-IntelliFlow CRM Team
+IntelliFlow CRM
 ```
 
 ---
 
-## 4. Role Definitions
+## 4. Roles
 
-### 4.1 Incident Commander (IC)
+IntelliFlow CRM has a single operator. The owner does all of the following.
 
-**Responsibilities**:
+### 4.1 Incident Commander
 
-- Coordinate response efforts
-- Make severity and escalation decisions
-- Communicate with stakeholders
-- Assign tasks to responders
-- Ensure documentation
-
-**Who**: Senior engineer or designated IC rotation
+- Coordinate the response
+- Make severity decisions
+- Decide when to roll back
 
 ### 4.2 Technical Lead
 
-**Responsibilities**:
-
-- Lead technical investigation
-- Direct debugging efforts
+- Lead the technical investigation
 - Make technical decisions on mitigation
 - Validate fixes
 
-**Who**: Most experienced engineer for affected system
+### 4.3 Communications
 
-### 4.3 Communications Lead
-
-**Responsibilities**:
-
-- Update status page
-- Draft customer communications
-- Manage Slack updates
-- Coordinate with support team
-
-**Who**: Support lead or designated comms person
+- Draft and send customer communications by email
 
 ### 4.4 Scribe
 
-**Responsibilities**:
-
-- Document timeline in real-time
-- Record all actions taken
-- Capture decisions and rationale
-- Prepare post-mortem draft
-
-**Who**: Any available engineer not actively debugging
+- Keep the timeline as the incident runs
+- Record actions taken and the reasoning
+- Write the post-mortem
 
 ---
 
@@ -402,41 +386,33 @@ IntelliFlow CRM Team
 
 ### 5.1 Monitoring & Observability
 
-| Tool       | URL                                    | Purpose             |
-| ---------- | -------------------------------------- | ------------------- |
-| Grafana    | https://grafana.intelliflow.io         | Dashboards, metrics |
-| Prometheus | https://prometheus.intelliflow.io      | Metrics queries     |
-| Loki       | https://grafana.intelliflow.io/explore | Log search          |
-| Jaeger     | https://jaeger.intelliflow.io          | Distributed tracing |
-| Sentry     | https://sentry.io/intelliflow          | Error tracking      |
+| Tool          | Access                       | Purpose                                   |
+| ------------- | ---------------------------- | ----------------------------------------- |
+| Grafana Cloud | Hosted stack (being set up)  | Dashboards, metrics, logs, traces, alerts |
+| Sentry        | https://sentry.io            | Error tracking                            |
+| Railway       | Dashboard and `railway logs` | Service logs and metrics for API, workers |
+| Vercel        | Dashboard                    | Web deployment logs                       |
 
 ### 5.2 Infrastructure
 
-| Tool        | URL/Access                     | Purpose                 |
-| ----------- | ------------------------------ | ----------------------- |
-| Kubernetes  | `kubectl`                      | Container orchestration |
-| AWS Console | https://console.aws.amazon.com | Cloud resources         |
-| Supabase    | https://app.supabase.com       | Database                |
-| Vercel      | https://vercel.com/intelliflow | Deployments             |
+| Tool     | URL/Access               | Purpose                                                           |
+| -------- | ------------------------ | ----------------------------------------------------------------- |
+| Railway  | https://railway.app      | API, ai-worker, workers (events, ingestion, notifications), Redis |
+| Supabase | https://app.supabase.com | Postgres database and managed backups                             |
+| Vercel   | https://vercel.com       | Web deployments                                                   |
 
-### 5.3 Communication
+### 5.3 Alerting
 
-| Tool        | Channel               | Purpose              |
-| ----------- | --------------------- | -------------------- |
-| Slack       | #incidents            | Active incidents     |
-| Slack       | #oncall               | On-call coordination |
-| PagerDuty   | intelliflow           | Alerting, escalation |
-| Status Page | status.intelliflow.io | Public status        |
+| Tool                   | Channel            | Purpose                               |
+| ---------------------- | ------------------ | ------------------------------------- |
+| Grafana Cloud alerting | Email to the owner | Alerts (being set up, not yet proven) |
 
 ### 5.4 Useful Commands
 
 ```bash
-# Kubernetes
-kubectl get pods -A | grep -v Running
-kubectl describe pod <pod-name>
-kubectl logs -f <pod-name> --tail=100
-kubectl rollout status deployment/<name>
-kubectl rollout undo deployment/<name>
+# Railway
+railway status
+railway logs --service <name>
 
 # Database
 psql -c "SELECT * FROM pg_stat_activity WHERE state != 'idle';"
@@ -448,40 +424,41 @@ dig api.intelliflow.io
 traceroute api.intelliflow.io
 
 # Logs
-kubectl logs -l app=api --since=1h | jq '.level == "error"'
+railway logs --service api | jq 'select(.level == "error")'
 ```
 
 ---
 
-## 6. Escalation Contacts
+## 6. Escalation and External Dependencies
 
-### 6.1 Engineering
+### 6.1 Escalation
 
-| Role                | Name   | Contact                |
-| ------------------- | ------ | ---------------------- |
-| CTO                 | [Name] | @cto / +1-XXX-XXX-XXXX |
-| VP Engineering      | [Name] | @vpe / +1-XXX-XXX-XXXX |
-| Engineering Manager | [Name] | @em / +1-XXX-XXX-XXXX  |
+| Role  | Contact             |
+| ----- | ------------------- |
+| Owner | Via the alert email |
+
+There is no on-call rotation, no manager and no security team. The owner handles
+every incident, including security response and data restoration.
 
 ### 6.2 External Dependencies
 
-| Vendor    | Support Contact        | SLA        |
-| --------- | ---------------------- | ---------- |
-| AWS       | aws.amazon.com/support | Enterprise |
-| Supabase  | support@supabase.io    | Pro        |
-| Vercel    | support@vercel.com     | Pro        |
-| OpenAI    | help.openai.com        | Tier 4     |
-| PagerDuty | support@pagerduty.com  | Standard   |
+| Vendor        | Support Contact                 |
+| ------------- | ------------------------------- |
+| Railway       | Railway dashboard support       |
+| Supabase      | Supabase dashboard support      |
+| Vercel        | Vercel dashboard support        |
+| OpenAI        | help.openai.com                 |
+| Grafana Cloud | Grafana Cloud dashboard support |
+| Sentry        | Sentry dashboard support        |
 
 ### 6.3 Emergency Actions
 
-| Action               | Authority Required  | Contact   |
-| -------------------- | ------------------- | --------- |
-| Rollback             | On-call engineer    | Self      |
-| Scale infrastructure | On-call engineer    | Self      |
-| Region failover      | Engineering Manager | @em       |
-| Data restoration     | DBA + EM approval   | #database |
-| Security response    | Security team       | @security |
+| Action               | Authority Required | Notes                                      |
+| -------------------- | ------------------ | ------------------------------------------ |
+| Rollback             | Owner              | Railway or Vercel previous deployment      |
+| Scale infrastructure | Owner              | Railway service settings                   |
+| Data restoration     | Owner              | Supabase-managed backups                   |
+| Security response    | Owner              | Rotate credentials, review Sentry and logs |
 
 ---
 
@@ -510,7 +487,6 @@ kubectl logs -l app=api --since=1h | jq '.level == "error"'
 ### 7.3 Related Documents
 
 - [SLO Definitions](./slo-definitions.md)
-- [On-Call Schedule](../infra/monitoring/oncall-schedule.json)
 - [Alerts Configuration](../infra/monitoring/alerts-config.yaml)
 - [Monitoring Runbook](./runbooks/monitoring-runbook.md)
 - [Release & Rollback](./release-rollback.md)

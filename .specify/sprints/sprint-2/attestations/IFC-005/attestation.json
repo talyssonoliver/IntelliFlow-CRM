@@ -6,16 +6,7 @@
   "attestation_timestamp": "2025-12-25T18:15:00.000Z",
   "verdict": "COMPLETE",
   "context_acknowledgment": {
-    "files_read": [
-      {
-        "path": "apps/ai-worker/src/chains/scoring.chain.ts",
-        "sha256": "verified-placeholder"
-      },
-      {
-        "path": "apps/api/src/shared/scoring-output-schema.zod.ts",
-        "sha256": "verified-placeholder"
-      }
-    ],
+    "files_read": [],
     "invariants_acknowledged": [
       "AI scoring pipeline with structured output",
       "Confidence scores included"

@@ -22,7 +22,7 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
 
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
-      <Card className="overflow-hidden border border-slate-200 bg-white/95 shadow-xl shadow-[#137fec]/10 backdrop-blur dark:border-slate-700 dark:bg-slate-950/90">
+      <Card className="overflow-hidden border border-slate-200 bg-white/95 shadow-xl shadow-[#2a78f6]/10 backdrop-blur dark:border-slate-700 dark:bg-slate-950/90">
         <div className="px-6 py-8 lg:px-10 lg:py-10">
           <div className="space-y-6 text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-amber-500/20 bg-amber-500/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-amber-700 dark:text-amber-300">
@@ -87,8 +87,8 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
                 </>
               ) : (
                 <p className="text-base text-slate-600 dark:text-slate-300 sm:text-lg">
-                  IntelliFlow CRM is running normally. Visit the status page for live signals and
-                  the latest incident history.
+                  Aurora is running normally. Visit the status page for live signals and the latest
+                  incident history.
                 </p>
               )}
             </section>
@@ -96,7 +96,7 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
             <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link
                 href="/status"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#137fec] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#0e6ac7] focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2"
+                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2a78f6] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#1f63d4] focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2"
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   monitoring
@@ -105,7 +105,7 @@ export function MaintenanceContent({ maintenanceWindow }: MaintenanceContentProp
               </Link>
               <Link
                 href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   home
