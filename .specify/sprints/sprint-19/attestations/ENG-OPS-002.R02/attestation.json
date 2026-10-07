@@ -28,6 +28,24 @@
       "name": "Evaluator unit tests",
       "command": "pnpm --filter @intelliflow/api exec vitest run src/shared/__tests__/duplicate-rule-evaluator.test.ts",
       "result": "PASS — 29 passed"
+    },
+    {
+      "name": "TypeScript (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:34.331Z",
+      "duration_ms": 21420,
+      "stdout_hash": "53d0f849ced6d028c49ad71a07104c03a10b25681f52bf6a2ecfb45335e75d6b"
+    },
+    {
+      "name": "Lint (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:55.751Z",
+      "duration_ms": 8906,
+      "stdout_hash": "48678ba173ed62419ebd130af4679ea5a3c2632dce38f163f7c7386b5d317d8a"
     }
   ],
   "gate_results": [

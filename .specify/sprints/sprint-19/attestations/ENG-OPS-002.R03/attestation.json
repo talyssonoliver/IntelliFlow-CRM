@@ -5,7 +5,7 @@
   "run_id": "eng-ops-002-r03-2026-07-22",
   "attestor": "Claude Code (claude-opus-4-8) — ENG-OPS-002.R03 remediation (chore/eng-ops-002-r03)",
   "attestation_timestamp": "2026-07-22T13:05:00Z",
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "evidence_summary": {
     "finding": "STALE-001",
     "severity": "Critical",

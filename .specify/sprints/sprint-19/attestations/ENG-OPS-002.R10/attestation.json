@@ -35,6 +35,24 @@
       "name": "API ticket/task regression",
       "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/ticket src/modules/task src/services/TicketService",
       "result": "PASS — 218 passed"
+    },
+    {
+      "name": "TypeScript (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:20.808Z",
+      "duration_ms": 1893,
+      "stdout_hash": "1215039c475cf7b7f238dce9b0a5f89c430b5865a4f07a2738b04639f844c4d9"
+    },
+    {
+      "name": "Lint (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:22.703Z",
+      "duration_ms": 3953,
+      "stdout_hash": "c3b80519c8e412f6c55ab7698035f025b2e080c592928d04ebea7df0de922fce"
     }
   ],
   "gate_results": [
