@@ -2,7 +2,14 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/lib/icons';
-import { RefreshButton, MetricCard, StaleIndicator, TrendSparkline } from './shared';
+import {
+  RefreshButton,
+  MetricCard,
+  StaleIndicator,
+  TrendSparkline,
+  LoadingPanel,
+  ErrorPanel,
+} from './shared';
 
 // --- Shared types ---
 export type SloComplianceStatus = 'compliant' | 'violation' | 'pending';
@@ -387,28 +394,11 @@ export default function AIMetrics() {
   }, [fetchData, handleFetchError, loading]);
 
   if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Icon name="progress_activity" className="animate-spin text-blue-500" size="2xl" />
-      </div>
-    );
+    return <LoadingPanel />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-        <div className="flex items-center gap-2">
-          <Icon name="error" size="lg" />
-          <span>Error: {error}</span>
-        </div>
-        <button
-          onClick={() => fetchData().catch(handleFetchError)}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
-          Try again
-        </button>
-      </div>
-    );
+    return <ErrorPanel error={error} onRetry={() => fetchData().catch(handleFetchError)} />;
   }
 
   const costUtilization = data?.costs

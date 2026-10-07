@@ -57,6 +57,22 @@ export default function AIReviewDetailPage() {
   const [escalateReason, setEscalateReason] = useState('');
 
   // Mutations
+  const refreshReview = () =>
+    Promise.all([
+      utils.aiReview.get.invalidate({ reviewId }),
+      utils.aiReview.list.invalidate(),
+      utils.aiReview.stats.invalidate(),
+    ]);
+  const failToast = (title: string) => (err: { message: string }) => {
+    toast({ title, description: err.message, variant: 'destructive' });
+  };
+  // A decision ends this reviewer's lock on the review.
+  const releaseWith = (title: string) => () => {
+    setLockToken(null);
+    toast({ title });
+    return refreshReview();
+  };
+
   const claimMutation = api.aiReview.claim.useMutation({
     onSuccess: (data) => {
       setLockToken(data.lockToken);
@@ -64,76 +80,24 @@ export default function AIReviewDetailPage() {
         title: 'Review claimed',
         description: 'You have exclusive access to review this output.',
       });
-      return Promise.all([
-        utils.aiReview.get.invalidate({ reviewId }),
-        utils.aiReview.list.invalidate(),
-        utils.aiReview.stats.invalidate(),
-      ]);
+      return refreshReview();
     },
-    onError: (err: { message: string }) => {
-      toast({
-        title: 'Failed to claim',
-        description: err.message,
-        variant: 'destructive',
-      });
-    },
+    onError: failToast('Failed to claim'),
   });
 
   const approveMutation = api.aiReview.approve.useMutation({
-    onSuccess: () => {
-      setLockToken(null);
-      toast({ title: 'Review approved' });
-      return Promise.all([
-        utils.aiReview.get.invalidate({ reviewId }),
-        utils.aiReview.list.invalidate(),
-        utils.aiReview.stats.invalidate(),
-      ]);
-    },
-    onError: (err: { message: string }) => {
-      toast({
-        title: 'Failed to approve',
-        description: err.message,
-        variant: 'destructive',
-      });
-    },
+    onSuccess: releaseWith('Review approved'),
+    onError: failToast('Failed to approve'),
   });
 
   const rejectMutation = api.aiReview.reject.useMutation({
-    onSuccess: () => {
-      setLockToken(null);
-      toast({ title: 'Review rejected' });
-      return Promise.all([
-        utils.aiReview.get.invalidate({ reviewId }),
-        utils.aiReview.list.invalidate(),
-        utils.aiReview.stats.invalidate(),
-      ]);
-    },
-    onError: (err: { message: string }) => {
-      toast({
-        title: 'Failed to reject',
-        description: err.message,
-        variant: 'destructive',
-      });
-    },
+    onSuccess: releaseWith('Review rejected'),
+    onError: failToast('Failed to reject'),
   });
 
   const escalateMutation = api.aiReview.escalate.useMutation({
-    onSuccess: () => {
-      setLockToken(null);
-      toast({ title: 'Review escalated' });
-      return Promise.all([
-        utils.aiReview.get.invalidate({ reviewId }),
-        utils.aiReview.list.invalidate(),
-        utils.aiReview.stats.invalidate(),
-      ]);
-    },
-    onError: (err: { message: string }) => {
-      toast({
-        title: 'Failed to escalate',
-        description: err.message,
-        variant: 'destructive',
-      });
-    },
+    onSuccess: releaseWith('Review escalated'),
+    onError: failToast('Failed to escalate'),
   });
 
   const isMutating =

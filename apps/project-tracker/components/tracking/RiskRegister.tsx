@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/lib/icons';
-import { RefreshButton, StaleIndicator } from './shared';
+import { RefreshButton, StaleIndicator, LoadingPanel, ErrorPanel } from './shared';
 import {
   type Risk,
   type RiskStatus,
@@ -129,28 +129,11 @@ export default function RiskRegister() {
   const categories = [...new Set(risks.map((r) => r.category))];
 
   if (loading && risks.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Icon name="progress_activity" className="animate-spin text-blue-500" size="2xl" />
-      </div>
-    );
+    return <LoadingPanel />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-        <div className="flex items-center gap-2">
-          <Icon name="error" size="lg" />
-          <span>Error: {error}</span>
-        </div>
-        <button
-          onClick={() => fetchData().catch(handleFetchError)}
-          className="mt-2 text-sm underline hover:no-underline"
-        >
-          Try again
-        </button>
-      </div>
-    );
+    return <ErrorPanel error={error} onRetry={() => fetchData().catch(handleFetchError)} />;
   }
 
   return (

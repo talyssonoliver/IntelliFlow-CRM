@@ -70,6 +70,18 @@ export default function TaskDetailPage() {
     { enabled: isAuthenticated && !authLoading && !!params.id }
   );
 
+  // Detail, list, stats and the server cache: what a task change can affect.
+  const refreshTask = () =>
+    Promise.all([
+      utils.task.getById.invalidate({ id: params.id }),
+      utils.task.list.invalidate(),
+      utils.task.stats.invalidate(),
+      revalidateTasksCache(),
+    ]);
+  const failToast = (title: string) => (err: { message: string }) => {
+    toast({ title, description: err.message, variant: 'destructive' });
+  };
+
   const completeMutation = api.task.complete.useMutation({
     onSuccess: () => {
       // task.complete fires task_completed to activity:feed (Team M4 cross-entity)
@@ -80,9 +92,7 @@ export default function TaskDetailPage() {
         revalidateTasksCache(undefined, true),
       ]);
     },
-    onError: (err) => {
-      toast({ title: 'Complete Failed', description: err.message, variant: 'destructive' });
-    },
+    onError: failToast('Complete Failed'),
   });
 
   const updateMutation = api.task.update.useMutation({
@@ -95,9 +105,7 @@ export default function TaskDetailPage() {
         revalidateTasksCache(),
       ]);
     },
-    onError: (err) => {
-      toast({ title: 'Update Failed', description: err.message, variant: 'destructive' });
-    },
+    onError: failToast('Update Failed'),
   });
 
   const deleteMutation = api.task.delete.useMutation({
@@ -106,9 +114,7 @@ export default function TaskDetailPage() {
       router.push('/tasks');
       return Promise.all([utils.task.list.invalidate(), revalidateTasksCache()]);
     },
-    onError: (err) => {
-      toast({ title: 'Delete Failed', description: err.message, variant: 'destructive' });
-    },
+    onError: failToast('Delete Failed'),
   });
 
   const startMutation = api.task.start.useMutation({
@@ -120,55 +126,32 @@ export default function TaskDetailPage() {
         revalidateTasksCache(),
       ]);
     },
-    onError: (err) => {
-      toast({ title: 'Start Failed', description: err.message, variant: 'destructive' });
-    },
+    onError: failToast('Start Failed'),
   });
 
   const archiveMutation = api.task.archive.useMutation({
     onSuccess: () => {
       toast({ title: 'Task Archived', description: 'The task has been archived.' });
       router.push('/tasks');
-      return Promise.all([
-        utils.task.getById.invalidate({ id: params.id }),
-        utils.task.list.invalidate(),
-        utils.task.stats.invalidate(),
-        revalidateTasksCache(),
-      ]);
+      return refreshTask();
     },
-    onError: (err) => {
-      toast({ title: 'Archive Failed', description: err.message, variant: 'destructive' });
-    },
+    onError: failToast('Archive Failed'),
   });
 
   const assignMutation = api.task.assign.useMutation({
     onSuccess: () => {
       toast({ title: 'Task Assigned', description: 'The task has been assigned to the entity.' });
-      return Promise.all([
-        utils.task.getById.invalidate({ id: params.id }),
-        utils.task.list.invalidate(),
-        utils.task.stats.invalidate(),
-        revalidateTasksCache(),
-      ]);
+      return refreshTask();
     },
-    onError: (err) => {
-      toast({ title: 'Assign Failed', description: err.message, variant: 'destructive' });
-    },
+    onError: failToast('Assign Failed'),
   });
 
   const rescheduleMutation = api.task.reschedule.useMutation({
     onSuccess: () => {
       toast({ title: 'Task Rescheduled', description: 'The due date has been updated.' });
-      return Promise.all([
-        utils.task.getById.invalidate({ id: params.id }),
-        utils.task.list.invalidate(),
-        utils.task.stats.invalidate(),
-        revalidateTasksCache(),
-      ]);
+      return refreshTask();
     },
-    onError: (err) => {
-      toast({ title: 'Reschedule Failed', description: err.message, variant: 'destructive' });
-    },
+    onError: failToast('Reschedule Failed'),
   });
 
   const handleStart = useCallback(
