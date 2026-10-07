@@ -10,6 +10,7 @@
 
 import type { Context } from '../../context';
 import { tenantUserWhere } from '@intelliflow/db';
+import { ACCOUNT_OWNER_ADMIN_ROLES } from '@intelliflow/domain';
 import { getTenantContext } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
 import { notifyAccountReassignment, type AccountAutomationFlags } from './account-automation';
@@ -18,7 +19,8 @@ import {
   type CreateNotificationParams,
 } from '../notifications/notifications.router';
 
-export const REASSIGN_ADMIN_ROLES = new Set(['ADMIN', 'MANAGER', 'OWNER', 'SUPER_ADMIN']);
+// PG-197: derived from the single domain source (no drifting copy).
+export const REASSIGN_ADMIN_ROLES: ReadonlySet<string> = new Set(ACCOUNT_OWNER_ADMIN_ROLES);
 
 export type AccountReassignVerdict =
   | { kind: 'OK'; previousOwnerId: string; accountName: string; newOwnerId: string }
@@ -93,7 +95,8 @@ export async function performAccountReassign(
   });
 }
 
-function buildAccountBoundNotificationCreator(ctx: Context) {
+/** The notification creator bound to this request (reused by account create — PG-197). */
+export function buildAccountBoundNotificationCreator(ctx: Context) {
   return (params: CreateNotificationParams) =>
     createNotification(ctx.prisma, params, ctx.services?.notificationOrchestrator);
 }

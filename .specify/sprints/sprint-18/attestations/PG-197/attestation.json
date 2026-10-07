@@ -2,71 +2,241 @@
   "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-197",
-  "run_id": "eng-ops-002-r16-pg-197-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "run-20261007T090902Z",
+  "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-197 exec lane, branch feat/pg-197-territory-mapping",
+  "attestation_timestamp": "2026-10-07T10:33:01Z",
+  "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 15,
+    "validations_passed": 12,
     "validations_failed": 0,
-    "gates_passed": 0,
+    "gates_passed": 4,
     "gates_failed": 1,
     "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "kpis_missed": 1,
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/accounts/(list)/territory-mapping/page.tsx": "187b00bccb7adc739ae9efad5d999eec8be3e2b47657c9a5e317f41f60985a7c"
+    "apps/web/src/app/accounts/(list)/territory-mapping/page.tsx": "5cf4f2e9674372bef5e5ce5b9cccd1cdf998343ef5587bd9ef7347f4de2c9eee",
+    "apps/web/src/app/accounts/(list)/territory-mapping/TerritoryMappingContent.tsx": "f512814d61fa5ec85c6462c4e53364fd34c6f31049d1fbb8a9d4fb9169298958",
+    "apps/api/src/modules/account/account-territories.router.ts": "7595f8384c4cad1303f5149074b41c1ddc7dfc8c935322995f51d475ddb2ea33",
+    "packages/validators/src/account-territories.ts": "a74824bc4c96b539b114a50b79e3beba018ace6a2208ea751eaf206c230bf800",
+    "apps/api/src/modules/account/account-territory-assignment.ts": "a658004904f06b5c57434c59d602df8be2db9d400eaf0fdd2a9b1b58fcb70f19",
+    "packages/domain/src/crm/account/territory/territory-matching.ts": "ef9a5c9618bfea750a507ca91227a214342903d23acfde6e03b92991e5542a55",
+    "packages/domain/src/crm/account/territory/territory-constants.ts": "4e136185a05af656fddcfb887be7d7c83efb92ee5d07906d5916bc26990821c7",
+    "packages/db/prisma/migrations/20261007130000_account_territories/migration.sql": "4fb8f5d48beef1dc748bddf853ea1df6a8543830f7d96f5bebb2d152f08e5040",
+    "apps/web/src/app/accounts/(list)/new/NewAccountForm.tsx": "682866ab9b8006e0217b362b02b0784981aa10941b248d443d2983547f4e42c5",
+    "apps/web/src/app/accounts/[id]/edit/EditAccountForm.tsx": "88cd91496aef509827adb435d1cb254f5b1075f050873172b1f9f19d52d860ad",
+    "apps/web/src/components/accounts/AccountForm.tsx": "7f18c02d04c9d265e01e9629cba1fdafa4d5437ff4405c7562b945d7298e54e0",
+    "apps/web/src/components/shared/country-select.tsx": "0f2360ab44fe0a8936b4df671074e010aadaa0ddcddbe14c223f12fa3f9b5561",
+    "docs/architecture/adr/ADR-074-territory-based-account-owner-assignment.md": "8147eef6a4b4b90c9617b51a6cb2fbb2db7e555194178f2285c220baa78fb65c",
+    "tests/integration/account-territories.test.ts": "d0178362785a97f576c71d5d6fb03944831d8727d0ad5ccc2dd6ae0759d77b2e",
+    ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json": "402d919c890c754b36336ac5fab02c1b67c7c13578eb25bd35ec05c64cf4a362"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "integration (real local test DB)",
+      "command": "DATABASE_URL=<sourced .env.test TEST_DATABASE_URL, host 127.0.0.1:5433> pnpm exec vitest run --project integration tests/integration/account-territories.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "15/15 passed (migration CHECKs, unique/partial/expression indexes, RLS, composite tenant FKs, atomic round-robin cursor)"
+    },
+    {
+      "name": "domain tests",
+      "command": "pnpm --filter @intelliflow/domain exec vitest run src/crm/account",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "154/154 passed; coverage Account.ts + territory/** 98.85% stmts / 96.56% branches"
+    },
+    {
+      "name": "validators tests",
+      "command": "pnpm --filter @intelliflow/validators exec vitest run (account-territories, account.geography, account-settings, account.hierarchy, account)",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "142/142 passed"
+    },
+    {
+      "name": "application tests",
+      "command": "pnpm --filter @intelliflow/application exec vitest run src/services/__tests__/AccountService",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "133/133 passed"
+    },
+    {
+      "name": "adapters tests",
+      "command": "pnpm --filter @intelliflow/adapters exec vitest run PrismaAccountRepository",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "36/36 passed"
+    },
+    {
+      "name": "api tests",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/account src/__tests__/app-router.smoke.test.ts src/shared/__tests__/mappers.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "313/313 passed; coverage account-territor*.ts 99.35% stmts / 95.5% branches"
+    },
+    {
+      "name": "web tests",
+      "command": "pnpm --filter @intelliflow/web exec vitest run src/app/accounts src/components/accounts src/components/shared/__tests__/country-select.test.tsx src/components/sidebar src/app/__tests__/sitemap-reconciliation.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "401/401 passed; coverage of new web files 98.63% stmts / 94.45% branches / 99.73% lines"
+    },
+    {
+      "name": "lighthouse extractor tests",
+      "command": "pnpm exec vitest run tools/lighthouse/__tests__/extract-lhci-report.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "8/8 passed"
+    },
+    {
+      "name": "typecheck",
+      "command": "pnpm --filter @intelliflow/{db,domain,validators,application,adapters,api,web} typecheck (sequential)",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "all 7 PASS"
+    },
+    {
+      "name": "lint",
+      "command": "pnpm --filter @intelliflow/{domain,validators,application,adapters,api,web} lint (sequential) + web eslint.sonar-guard on touched files",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "all PASS"
+    },
+    {
+      "name": "build",
+      "command": "pnpm --filter @intelliflow/{db,domain,validators,application,adapters,api} build; then pnpm --filter @intelliflow/web build alone",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "all PASS; routes /accounts/new, /accounts/[id]/edit, /accounts/territory-mapping emitted; only warning is the pre-existing web-worker dynamic require"
+    },
+    {
+      "name": "material symbols subset",
+      "command": "node tools/scripts/subset-material-symbols.mjs --verify",
+      "exit_code": 0,
+      "passed": true,
+      "output_summary": "audit OK - 370 icons"
+    }
+  ],
   "gate_results": [
     {
       "gate_id": "module-settings-dod-artifacts-present",
+      "passed": true,
+      "log_path": "All 4 CSV ARTIFACT paths + context_ack.json exist; hashes in artifact_hashes"
+    },
+    {
+      "gate_id": "nav-wiring + page-doc-cochange",
+      "passed": true,
+      "log_path": "check-nav-wiring.mjs / check-page-doc-cochange.mjs exit 0. NOTE: both pass vacuously (their plan parser does not read brace-style page paths); the doc rows were added anyway (navigation-reachability-audit, sitemap, PAGE_MAP_AND_FLOWS, page-registry) and sitemap-reconciliation asserts 214 pages"
+    },
+    {
+      "gate_id": "plan-reviewer-marker",
+      "passed": true,
+      "log_path": "check-plan-reviewer-subagent.mjs PG-197 exit 0"
+    },
+    {
+      "gate_id": "secret-scan",
+      "passed": true,
+      "log_path": "git diff origin/main...HEAD scanned for token, key, connection-string and JWT shapes; the only hit is the path 'task-tracking.json' (false positive)"
+    },
+    {
+      "gate_id": "lighthouse-gte-90",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-197 requires page.tsx (exists), TerritoryMappingContent.tsx (MISSING), apps/api/src/modules/account/account-territories.router.ts (MISSING), packages/validators/src/account-territories.ts (MISSING), context_ack.json (MISSING). Broad grep for 'territory'/'territories' router or validator logic across apps/api and packages/validators returned zero hits."
+      "log_path": "OPEN GATE - not run. LHCI_TEST_EMAIL / LHCI_TEST_PASSWORD are not set in .env.local, .env.test or apps/web/.env.local (verified by grep), and tools/lighthouse/lhci-auth.js authenticates against the production Supabase project. No waiver is claimed. Harness parametrised; run: LHCI_URLS=\"http://localhost:3000/accounts/territory-mapping,http://localhost:3000/accounts/new,http://localhost:3000/accounts/<seeded-id>/edit\" LHCI_OUTPUT_DIR=./artifacts/lighthouse/PG-197 pnpm --filter @intelliflow/web lighthouse:auth"
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Lighthouse (performance/accessibility) on the 3 PG-197 routes",
+      "target": ">= 90",
+      "actual": "not measured (open gate)",
+      "met": false
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-183"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /accounts/(list)/territory-mapping renders",
+      "criterion": "Territory mapping at /accounts/(list)/territory-mapping (rules by region/country/postcode, round-robin/load-balance/manual, priority overlap, default territory)",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "TerritoryMappingContent.tsx + components/*; accountTerritories router; domain resolveTerritory / planTerritoryAssignment / pickTerritoryAssignee"
     },
     {
-      "criterion": "Geographic territory rules by region/country/postcode, assignment strategies, overlap resolution, default territory implemented",
-      "met": false,
-      "evidence": "page.tsx (18 lines) is a static placeholder ('Territory mapping configuration coming soon.'). No form, no data fetch, no territory logic."
+      "criterion": "PageHeader + bento grid",
+      "met": true,
+      "evidence": "TerritoryMappingContent test (AC-001) asserts the grid classes"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate (region,country); colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "Canonical EmptyState (entity + phase=passive)",
+      "met": true,
+      "evidence": "TerritoryList renders EmptyState entity=rules phase=passive size=sm; test asserts no action button"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "System-compliant CTAs; forwardRef create handle",
+      "met": true,
+      "evidence": "'New Territory' Button size=sm opens TerritoryList through the forwardRef openCreate handle; focus returns to the trigger (test)"
+    },
+    {
+      "criterion": "$transaction on all destructive writes; no skipDuplicates",
+      "met": true,
+      "evidence": "create/update/reorder/setDefault/resetToDefaults use callback-form $transaction; delete is one tenant-scoped deleteMany; no skipDuplicates"
+    },
+    {
+      "criterion": "Zod superRefine for duplicate (region, country) pairs",
+      "met": true,
+      "evidence": "packages/validators/src/account-territories.ts refineTerritory reports 'rows N and M' at the second row"
+    },
+    {
+      "criterion": "colorToken CHECK constraint",
+      "met": true,
+      "evidence": "account_territories_colorToken_check in the migration; asserted by the integration test"
+    },
+    {
+      "criterion": "AI defaults FALSE",
+      "met": true,
+      "evidence": "No AI toggles added (vacuously met)"
+    },
+    {
+      "criterion": "Wire every Boolean toggle or declare category-2",
+      "met": true,
+      "evidence": "autoAssignOwner, notifyOnOwnerChange, isActive, isDefault are all category 1 (PRD PG-197 section 8 table)"
+    },
+    {
+      "criterion": "Cross-tenant negative test",
+      "met": true,
+      "evidence": "router tests: foreign id -> NOT_FOUND with zero writes; integration: composite tenant FKs + RLS"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "Open gate - see gate_results lighthouse-gte-90"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "Scoped package suites green (validation_results). Full monorepo suite not run locally by runner rule (one scoped test process at a time); CI runs it"
     }
   ],
-  "dependencies_verified": [],
+  "nav_wiring_confirmed": true,
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-197-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-197-plan.md",
+  "plan_reviewer_verdict": "APPROVE",
+  "plan_reviewer_agent": "aafe26e0614f0489a",
+  "plan_reviewer_marker": "<!-- plan-reviewer: subagent -->",
   "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "node": "v22.14.0",
+    "os": "Windows 11",
+    "test_db": "intelliflow-postgres-test (127.0.0.1:5433)"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 18-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 2e7bb135ada2108554f853ae04f99e16da4b98bd ('feat(web): add account, lead, contact, and deal subpages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: TerritoryMappingContent.tsx, account-territories.router.ts, account-territories validators, and context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern across this batch of Module-Settings tasks. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json — absent"
-    ]
-  }
+  "notes": [
+    "Commits: dd0f8e37b (db), 5a5e47d62 (domain), e5e11db77 (validators), 0d7d54584 (application/adapters), e6c2dd8af (api), 2e0b9bb7b (web account pages), db68d3b8e (web territory page), fe8fbe482 (docs), 41ffa3253 (lighthouse harness), f687fd912 (refactor), then governance commits 054b4497c and its hash refresh.",
+    "Plan deviation: MemberMultiSelect is a labelled checkbox group inside the Popover instead of an aria-multiselectable listbox - the web Sonar a11y guard (jsx-a11y/prefer-tag-over-role) rejects ARIA listbox/option roles; native checkboxes carry multi-selection semantics. The trigger name still carries the selected count.",
+    "Plan deviation: the Step 13 existing-test stubs were not needed - every existing account router test stayed green because autoAssignOwner defaults to false.",
+    "Local DB note: 'localhost' intermittently resolves to an unreachable IPv6 path on this host; the integration run used 127.0.0.1 (same local test container). .env.test URLs contain DB_USER/DB_PASSWORD placeholders and must be sourced, not cut.",
+    "Out-of-scope finding filed: https://github.com/talyssonoliver/IntelliFlow-CRM/issues/830 (Deals sidebar 'Territory Map' dead link).",
+    "Diff-coverage (Sonar new_coverage parity) is authoritative at the runner's pre-ship gate; not run locally."
+  ]
 }

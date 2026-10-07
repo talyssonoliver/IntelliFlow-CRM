@@ -274,15 +274,25 @@ describe('Content Audit Results Schema Validation', () => {
     expect(sitemapFinding).toBeDefined();
   });
 
-  // TC-11: findings contains lighthouserc.js SEO warn with high severity (AC-008)
-  it('TC-11: findings contains lighthouserc.js SEO warn level', () => {
+  // TC-11: the lighthouserc.js SEO finding tracks the real config (AC-008).
+  // The audit raises a high-severity finding only while `categories:seo` is at
+  // warn level; IFC-208 promoted it to error, so a freshly regenerated audit
+  // must NOT carry the finding. Assert consistency with the config rather than
+  // the finding's presence, which only held for a stale audit file.
+  it('TC-11: lighthouserc.js SEO finding matches the configured level', () => {
+    const lhSource = readFileSync(resolve(REPO_ROOT, 'lighthouserc.js'), 'utf-8');
+    const seoAtWarn = /['"]categories:seo['"]\s*:\s*\[\s*['"]warn['"]/.test(lhSource);
     const lhFinding = auditData.findings.high.find(
       (f) =>
         f.description.includes('lighthouserc') ||
         f.description.includes('Lighthouse') ||
         f.file === 'lighthouserc.js'
     );
-    expect(lhFinding).toBeDefined();
+    if (seoAtWarn) {
+      expect(lhFinding).toBeDefined();
+    } else {
+      expect(lhFinding).toBeUndefined();
+    }
   });
 
   // TC-12: Routes sorted lexicographically by route field (NF-002)

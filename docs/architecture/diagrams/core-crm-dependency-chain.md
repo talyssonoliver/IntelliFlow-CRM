@@ -307,3 +307,27 @@ Container wiring:
   `createContactEmbedWorker` factory.
 
 See ADR-050 for motivation and alternatives considered.
+
+---
+
+## PG-196: Tenant-Configurable Account Tiers (2026-10-07)
+
+One revenue-tier configuration per tenant feeds every tier consumer (ADR-073).
+
+```
+domain   AccountTierConfig.ts  resolveAccountTier / validateTierConfig / tierBand
+  ↓                           (Account.getAccountTier delegates with DEFAULT_TIER_CONFIG)
+validators account-tiers.ts    updateAccountTiersSchema (+superRefine), slug<->key
+  ↓
+db       AccountTierDefinition + AccountTierConfig (Class A migration, RLS)
+  ↓
+application AccountService.getAccountTier → domain resolver
+  ↓
+api      accountTiers.get / update / resetToDefaults (ADMIN writes)
+         account.list { tier }  ·  update/updateRevenue → account_tier_changed
+         create/update/updateRevenue/setParent → requireParentForTiers check
+  ↓
+web      useAccountTiers → sidebar tier links (?tier=), AccountsPageClient filter,
+         TierBadge (AccountCard), AccountDetail, AccountHierarchy, HierarchyTab,
+         /accounts/account-tiers (AccountTiersContent)
+```

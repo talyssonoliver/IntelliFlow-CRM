@@ -3,10 +3,21 @@
 // Dedicated LHCI config for auditing the authenticated view of /
 // Uses a Puppeteer script to inject Supabase auth cookies before collection.
 // The standard lighthouserc.js (27 URLs, unauthenticated) is left unchanged.
+//
+// PG-197: the URL list and output directory can be overridden for other
+// authenticated routes — LHCI_URLS (comma-separated) and LHCI_OUTPUT_DIR.
+// Defaults are unchanged (the authenticated home page).
+const urls = process.env.LHCI_URLS
+  ? process.env.LHCI_URLS.split(',')
+      .map((url) => url.trim())
+      .filter(Boolean)
+  : ['http://localhost:3000/'];
+const outputDir = process.env.LHCI_OUTPUT_DIR || './artifacts/benchmarks/home-page-lighthouse';
+
 module.exports = {
   ci: {
     collect: {
-      url: ['http://localhost:3000/'],
+      url: urls,
       numberOfRuns: 3,
       puppeteerScript: './tools/lighthouse/lhci-auth.js',
       startServerCommand: 'pnpm --filter @intelliflow/web start',
@@ -42,7 +53,7 @@ module.exports = {
     },
     upload: {
       target: 'filesystem',
-      outputDir: './artifacts/benchmarks/home-page-lighthouse',
+      outputDir,
     },
   },
 };

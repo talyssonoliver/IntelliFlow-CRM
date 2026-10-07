@@ -125,6 +125,39 @@ describe('mapAccountToResponse — website serialization (IFC-270 B-13)', () => 
   });
 });
 
+describe('mapAccountToResponse — geography (PG-197)', () => {
+  it('returns country, region and postalCode', () => {
+    const account = Account.create({
+      name: 'Geo Inc',
+      country: 'gb',
+      region: 'London',
+      postalCode: 'sw1a 1aa',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    }).value;
+
+    expect(mapAccountToResponse(account)).toMatchObject({
+      country: 'GB',
+      region: 'London',
+      postalCode: 'SW1A 1AA',
+    });
+  });
+
+  it('returns null geography when absent', () => {
+    const account = Account.create({
+      name: 'Plain Inc',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    }).value;
+
+    expect(mapAccountToResponse(account)).toMatchObject({
+      country: null,
+      region: null,
+      postalCode: null,
+    });
+  });
+});
+
 describe('mapOpportunityToResponse — closedAt (IFC-282 B-11)', () => {
   const makeOpp = () =>
     Opportunity.create({

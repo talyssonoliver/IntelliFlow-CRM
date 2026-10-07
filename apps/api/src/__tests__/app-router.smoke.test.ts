@@ -119,6 +119,26 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     expect(record.documentSettings).toBeDefined();
   });
 
+  it('registers the accountTerritories router with every procedure (PG-197)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const territories = record.accountTerritories as Record<string, unknown> | undefined;
+
+    expect(territories).toBeDefined();
+    for (const procedure of [
+      'list',
+      'create',
+      'update',
+      'delete',
+      'reorder',
+      'setDefault',
+      'preview',
+      'resetToDefaults',
+    ]) {
+      expect(territories?.[procedure]).toBeDefined();
+    }
+  });
+
   it('registers appointmentSettings and reportSettings routers', async () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, unknown>;
@@ -150,5 +170,16 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     expect(taskSettings?.get).toBeDefined();
     expect(taskSettings?.update).toBeDefined();
     expect(taskSettings?.resetToDefaults).toBeDefined();
+  });
+
+  it('registers the PG-196 accountTiers router with get/update/resetToDefaults', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const accountTiers = record.accountTiers as Record<string, unknown> | undefined;
+
+    expect(accountTiers).toBeDefined();
+    expect(accountTiers?.get).toBeDefined();
+    expect(accountTiers?.update).toBeDefined();
+    expect(accountTiers?.resetToDefaults).toBeDefined();
   });
 });

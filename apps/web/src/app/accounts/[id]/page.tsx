@@ -1,23 +1,41 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { Suspense, useEffect } from 'react';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { AccountDetail } from '@/components/accounts/AccountDetail';
 import { Card, Skeleton } from '@intelliflow/ui';
 
+/**
+ * PG-197: the page reads `?edit=true` (the legacy edit URL), so its body sits
+ * inside Suspense (Next 16 `useSearchParams` bailout rule).
+ */
 export default function AccountDetailPage() {
+  return (
+    <Suspense fallback={null}>
+      <AccountDetailPageBody />
+    </Suspense>
+  );
+}
+
+function AccountDetailPageBody() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { isLoading: authLoading, isAuthenticated } = useRequireAuth();
   const accountId = params.id as string;
+  const legacyEdit = searchParams?.get('edit') === 'true';
 
-  // Redirect to login if not authenticated once auth check completes
+  // Redirect to login if not authenticated once auth check completes; a legacy
+  // `?edit=true` URL moves to the edit page only after auth resolves (PG-197).
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (authLoading) return;
+    if (!isAuthenticated) {
       router.replace('/login');
+      return;
     }
-  }, [authLoading, isAuthenticated, router]);
+    if (legacyEdit) router.replace(`/accounts/${accountId}/edit`);
+  }, [authLoading, isAuthenticated, legacyEdit, accountId, router]);
 
   if (authLoading) {
     return (

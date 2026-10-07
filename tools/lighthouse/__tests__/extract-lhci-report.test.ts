@@ -15,7 +15,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import fs from 'fs';
 import path from 'path';
-import { extractLhciReport } from '../extract-lhci-report';
+import { extractLhciReport, extractLhciReports, urlSlug } from '../extract-lhci-report';
 
 // ---------------------------------------------------------------------------
 // Mock fs module
@@ -173,5 +173,68 @@ describe('extract-lhci-report', () => {
     expect(parsed).toHaveProperty('metrics');
     expect(parsed).toHaveProperty('passedThresholds');
     expect(parsed).toHaveProperty('generatedAt');
+  });
+});
+
+// PG-197: several authenticated routes audited in one LHCI run.
+describe('extractLhciReports (LHCI_URLS)', () => {
+  const written = new Map<string, string>();
+
+  beforeEach(() => {
+    written.clear();
+    const manifest = [
+      { url: 'http://localhost:3000/accounts/new', jsonPath: '/m/new-1.json' },
+      { url: 'http://localhost:3000/accounts/new', jsonPath: '/m/new-2.json' },
+      { url: 'http://localhost:3000/accounts/territory-mapping', jsonPath: '/m/tm-1.json' },
+    ];
+    const scores: Record<string, number> = {
+      '/m/new-1.json': 0.81,
+      '/m/new-2.json': 0.94,
+      '/m/tm-1.json': 0.97,
+    };
+    vi.mocked(fs.readFileSync).mockImplementation((filePath: fs.PathOrFileDescriptor) => {
+      const p = String(filePath);
+      if (p.includes('manifest.json')) return JSON.stringify(manifest);
+      if (p in scores) {
+        return JSON.stringify(
+          createMockLHR({
+            finalUrl: p.includes('tm')
+              ? 'http://localhost:3000/accounts/territory-mapping'
+              : 'http://localhost:3000/accounts/new',
+            categories: {
+              performance: { score: scores[p] },
+              accessibility: { score: 0.96 },
+              'best-practices': { score: 0.93 },
+            },
+          })
+        );
+      }
+      throw new Error(`Unexpected file read: ${p}`);
+    });
+    vi.mocked(fs.mkdirSync).mockImplementation(() => undefined);
+    vi.mocked(fs.writeFileSync).mockImplementation(
+      (filePath: fs.PathOrFileDescriptor, data: string | NodeJS.ArrayBufferView) => {
+        written.set(String(filePath), String(data));
+      }
+    );
+  });
+
+  it('writes one summary per URL with the best run of each', () => {
+    const summaries = extractLhciReports('/lhci', '/out');
+
+    expect(summaries).toHaveLength(2);
+    expect(summaries[0].scores.performance).toBe(0.94);
+    expect(summaries[1].scores.performance).toBe(0.97);
+    expect(summaries[1].scores.seo).toBeNull();
+    expect([...written.keys()]).toEqual([
+      path.join('/out', 'summary-accounts-new.json'),
+      path.join('/out', 'summary-accounts-territory-mapping.json'),
+    ]);
+    expect(fs.mkdirSync).toHaveBeenCalledWith('/out', { recursive: true });
+  });
+
+  it('slugs URL paths', () => {
+    expect(urlSlug('http://localhost:3000/')).toBe('root');
+    expect(urlSlug('http://localhost:3000/accounts/abc-123/edit')).toBe('accounts-abc-123-edit');
   });
 });

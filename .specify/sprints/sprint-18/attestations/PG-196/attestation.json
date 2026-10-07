@@ -1,72 +1,312 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-196",
-  "run_id": "eng-ops-002-r16-pg-196-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "20261007-065321-pg196",
+  "attestor": "Claude Code (exec, ralph loop) on branch feat/pg-196-account-tiers",
+  "attestation_timestamp": "2026-10-07T08:08:11Z",
+  "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 92,
+    "validations_passed": 10,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "gates_passed": 5,
+    "gates_failed": 3,
+    "kpis_met": 2,
+    "kpis_missed": 1,
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/accounts/(list)/account-tiers/page.tsx": "e1327b9ff48af2d0379f3114050324c4795958c9e30e52c60bec8ac981303201"
+    ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json": "d1e7b152fd4c093122fde10a1712465b527c5e580cf8cbf444617c181eeb6019",
+    ".specify/sprints/sprint-18/attestations/PG-196/task-tracking.json": "da9b102751ad7ac438d8b15aed89c8d763c8a4f5a06348880914c9ec59f73dc9",
+    ".specify/sprints/sprint-18/context/PG-196/PG-196-open-question.md": "f619762b73b6ccf665146e4a52806ee011c460cbfea14dea4952b726c857e1d3",
+    ".specify/sprints/sprint-18/planning/PG-196-plan.md": "227f974f6638f2e31d55809e0e38114e32e120290c39d0d3238476ced2cc6082",
+    ".specify/sprints/sprint-18/specifications/PG-196-spec.md": "7ef7f6091e581a2a33c5d72e3bbeb38fc84f05983ef585f62ae5cea5c12ec2e5",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "ceaceeb1b77c13021e1c1855b2da36fb8c00bacfdd4de11220fbc997b97d2e3f",
+    "apps/api/src/modules/account/__tests__/account-settings.router.test.ts": "15b0fac7d0e295989c63a6af76c7f1e0f5e651f1e364845b8e23b0b1faf2b48f",
+    "apps/api/src/modules/account/__tests__/account-tiers.helpers.test.ts": "0f2e2dea2827c7cd0bd0dbe9532ad79fe7ce8cc14081834d8577903416869c23",
+    "apps/api/src/modules/account/__tests__/account-tiers.router.test.ts": "8957058a930edcd4d6dac7e0270b966971c18c2fec9d964eb228af70da1d16d9",
+    "apps/api/src/modules/account/__tests__/account.router.ai.test.ts": "392e74edb0b37138cb3761eee24460f13f8795c5475820e4521c2e1b46a62b66",
+    "apps/api/src/modules/account/__tests__/account.router.test.ts": "b6980b4b334006e26f9084ca3dd10d8f1ba0a87c5a80b47e4eeb77b9455656bd",
+    "apps/api/src/modules/account/__tests__/account.router.tiers.test.ts": "75372e58f6a867a3401c3f86c05b9557c57ab2144094204effa71dcb08def885",
+    "apps/api/src/modules/account/account-automation.ts": "da7bfbaa31adbc669bc68c3a6437e4849f206fdf0ebd368234d5f8705feb8789",
+    "apps/api/src/modules/account/account-settings.router.ts": "e0cb44f2d6ec0da1b37de489185fe94291359e5f14e843064c06e849ca456a45",
+    "apps/api/src/modules/account/account-tiers.router.ts": "e6f051643a2094787181d49188b771ef5943dd32106781d18a2b2ecf51a24c4a",
+    "apps/api/src/modules/account/account-tiers.ts": "3c343ace6c7b588162baaa264c48c92e58b3b39a77c6631dcd7dc07067aa04ff",
+    "apps/api/src/modules/account/account.router.ts": "aae1f16fc2d65fa4a09b0f20cc373d6d1d4723bfb76f31a0aca46c19e53879f8",
+    "apps/api/src/router.ts": "87ae3ce0f38ee9a05782be82885d2b37d29be89fcff064c92ddbc63d795c6809",
+    "apps/web/src/app/accounts/(list)/AccountsPageClient.tsx": "f953036ba1e027798c13792632268e89f7d27a7458c1091930357a245f5ac538",
+    "apps/web/src/app/accounts/(list)/__tests__/AccountsPageClient.test.tsx": "092d24901b7ca26325156e6dae4756c7e442592d25948142fc72671053f04eae",
+    "apps/web/src/app/accounts/(list)/__tests__/layout.test.tsx": "b138b8ceaff50ea987d5b4c099a65bb4917176f8a94d2e961ba94a9b4f24365c",
+    "apps/web/src/app/accounts/(list)/account-settings/AccountSettingsContent.tsx": "158a7ed33cb14b8100ecc5b18f0b799eaad313887988f9ccf0e87e35616f7a53",
+    "apps/web/src/app/accounts/(list)/account-settings/__tests__/AccountSettingsContent.test.tsx": "d387c63119ab2630d2319ed46e6131b9494f137400cd262e663fedfe78a50aa3",
+    "apps/web/src/app/accounts/(list)/account-settings/components/HierarchyTab.tsx": "8baa296402c67d763051d5d605ab21f9e85dbe0bd8866c092408c52f5562c364",
+    "apps/web/src/app/accounts/(list)/account-settings/components/__tests__/HierarchyTab.test.tsx": "4f4c0b07d03b9db1a8624cded7a765955b8b1b6a48f42d0b9ffaeb08c353a967",
+    "apps/web/src/app/accounts/(list)/account-tiers/AccountTiersContent.tsx": "c980b86756477c885abcabecc9ae86a4800485a2e6d1259b4c7f6a40380a298a",
+    "apps/web/src/app/accounts/(list)/account-tiers/AccountTiersLoading.tsx": "d736b8b7993500edf4419685f1da293027dcbe3c9584fd5bb326bcd8ad8c85da",
+    "apps/web/src/app/accounts/(list)/account-tiers/__tests__/AccountTiersContent.test.tsx": "bf32997e6f61998b72b3132219245e905209ea1258d4efd35bc6695e23aabe57",
+    "apps/web/src/app/accounts/(list)/account-tiers/__tests__/AccountTiersLoading.test.tsx": "233422c99970d463d098c3729059120b7dd955c3c43e323cbc4250d55340eb65",
+    "apps/web/src/app/accounts/(list)/account-tiers/__tests__/page.test.tsx": "5b5f3b97dac77c51b79989facb50b45d507fc1063105cf78c8d70b932deccf4e",
+    "apps/web/src/app/accounts/(list)/account-tiers/__tests__/tier-draft.test.ts": "8f65e9795f4b9ccce6ae5369b9c782cd26b2eef81fa09539ae68bd1df333dc08",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/BenefitsMatrixCard.tsx": "50b12edd9a233e2a2be93a966f16986e115ee30ceaef4c7d3f36c6d164d0ba5a",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/DefaultTierCard.tsx": "075624055f36435388223c8810da886f322aedd68c9991a0e21d011b2f4bba60",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/TierColorPicker.tsx": "3458eeac9590c6457438f51c533038f95eac2b334d4eeec994b4af5e4467a126",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/TierDefinitionsCard.tsx": "41597387d56979b02fbb439ead49292a8430a6cb9b1b1cfd721e529f6fe965c0",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/TierRulesCard.tsx": "905668b7503d270dd961721687a2acb24e1a0226f31cb1debc890d580afbdc46",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/__tests__/BenefitsMatrixCard.test.tsx": "09119d2087421a1b1c403326b0db0a3767521697b1bfad1dec65d644aec64308",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/__tests__/DefaultTierCard.test.tsx": "dc69e3a7dc9248010b3ce256779cc42613d52d04d0b8e3fcbe07622f7166d74b",
+    "apps/web/src/app/accounts/(list)/account-tiers/components/__tests__/TierDefinitionsCard.test.tsx": "e0b7496bb98d22220893cd06f14e3889f134669fd53cde383386ad6ea03fa1c4",
+    "apps/web/src/app/accounts/(list)/account-tiers/page.tsx": "b402f443bd04b0e12b73ac34f03e706888145ac2fdb43b7e9de300073b37a556",
+    "apps/web/src/app/accounts/(list)/account-tiers/tier-draft.ts": "546300ff7f70b38b1d8fe3ab37130992fcbfe8cb57df888854da5cd8fcb286f7",
+    "apps/web/src/app/accounts/(list)/layout.tsx": "fe097786eca6edec61a2d59beedbe77ff6a1fbc9f32f0ced94b521b151ad9282",
+    "apps/web/src/app/accounts/(list)/page.tsx": "df8a6bce3bf079c4edb4c85cf2ea2ae8c51c622d82b39674d11282d7967ed2f0",
+    "apps/web/src/app/accounts/__tests__/page.test.tsx": "ccdfae8a0e63a44de7c8e1ea5234f90b971955561d2ed0011828b0c2fdf1f9bd",
+    "apps/web/src/components/accounts/AccountCard.tsx": "74ead6f2e32d96e3dcf2ea287b30fae8f981a059d109795684393e69508a47f5",
+    "apps/web/src/components/accounts/AccountDetail.tsx": "aa0c27763235014d456daaa60b51dcec73fc5926e1b78fa313e38e29d1835262",
+    "apps/web/src/components/accounts/AccountHierarchy.tsx": "9bdd05340abe6444d6bc900905c0bf56dda21e37a7d809fb8403a6b474b7d3be",
+    "apps/web/src/components/accounts/TierBadge.tsx": "ec713d5d837121f7b41c4fd3c9148dff68c83a648b66c5bed4c6b21dab65355f",
+    "apps/web/src/components/accounts/__tests__/AccountCard.test.tsx": "426782eb8730b1d40b3fa39f78531e616ac72e6474612d330c9db25d4aa79075",
+    "apps/web/src/components/accounts/__tests__/AccountDetail.test.tsx": "0e35f09f33490efdf2c42f4ed573b53ab97da88bdfb48c43aa5faa8cdfa6badc",
+    "apps/web/src/components/accounts/__tests__/AccountHierarchy.test.tsx": "53371e9a2d3d38ae50ee6bf8cb476dbc6089c47bb284746bd1d486eaf79319f3",
+    "apps/web/src/components/accounts/__tests__/TierBadge.test.tsx": "c9e3794bf94a2e1a08e04d2961aef8b00b820a92ed3bf6e74da953dcc7bbeba0",
+    "apps/web/src/components/shared/__tests__/section-header.test.tsx": "c9e81f27870b38c16d452ea8c06cb15a2158ac14234c78fb1fe637e924899853",
+    "apps/web/src/components/shared/section-header.tsx": "f58522916903123501386cd1c5341d33d7e5f861c13b0593151b4faf19d3cd3b",
+    "apps/web/src/components/sidebar/__tests__/accounts-config.test.ts": "0094380eb6b87402e63feff8a7504ca5055168465727a7e8e27a492f7f1fc437",
+    "apps/web/src/components/sidebar/configs/accounts.ts": "4433fdef523913d4c5c52eaae5bb950d1a8cd56d9f7672513f1caa983990c060",
+    "apps/web/src/hooks/__tests__/useAccountTiers.test.ts": "99639f136399d8ae57c40564054c031e33a47f8d11a54572181e03cdf7e514ec",
+    "apps/web/src/hooks/useAccountTiers.ts": "6fa037ebe6d1e94a6e5a063d61df1d64cec82ce6382e3391022e3cc8423d208d",
+    "apps/web/src/lib/accounts/__tests__/tier-colors.test.ts": "8f6e65e27e273d01074c54987c82c4a79de3ffdd921585ca84daad9d6b1837de",
+    "apps/web/src/lib/accounts/tier-colors.ts": "bab18e493e5bd8c30873d6b3614bc36f8bdc6c90482f0f828482ce47465266e3",
+    "artifacts/benchmarks/baseline.json": "f6af400d543294eb2d9e8f07a44e60b12660447581ffea908d5a1a98c264e460",
+    "artifacts/coverage/PG-196-before.json": "ffaafc0bc2a786d65798f7602d36432dd44d76a278b541ff707194a25e26b86e",
+    "artifacts/lighthouse/PG-196/README.md": "9b98da15c7768f5e41234ce1668127d6b8ad0ee31d0822b6edb4132b6de25851",
+    "artifacts/lighthouse/PG-196/account-tiers-r1.report.json": "c0da8fa45c713eb83ee3e82160d3f188dc13f7b10501a848692ceedb1eebc910",
+    "docs/architecture/adr/ADR-073-tenant-configurable-account-tiers.md": "6b543970d735a7e2bd4744ffb9267e372713406d1f1278d5268812e310f4b47c",
+    "docs/architecture/adr/README.md": "ec006ac96362671cc83530da4f0c758840b9773196e6e12725ef764ee5411f3f",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "bb5cc2fe83bb70aaa0a656c9c3da548eb262a400202acfdc362608d97a3ddcd8",
+    "docs/architecture/diagrams/core-crm-dependency-chain.md": "415ceccca61493ff2d4ba1a51d9aa3c0e2df0ec5d88931898961484499b661b8",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "7c21fcce32ee3b8ebff4f26742e586b47a55d4f98b50e79496415dda08e70ae0",
+    "docs/design/navigation-reachability-audit.md": "06476a9e3dad0ea7b76d5bcb961a070f386036ef7dea880908d878e37c611209",
+    "docs/design/sitemap.md": "51f5bd1724eacdaa51dac7c32fe1a3e627ca9881647e1b57263eebba5990f27e",
+    "docs/planning/prd-module-settings.md": "ff5e3d89b6598a2c4e5a14480ea641be7613484ffe1d85abaf42b2680d73f42c",
+    "packages/application/src/services/AccountService.ts": "076d47f263b8cfc490cbe037ab54daa65ebc22d617fc497bcc356068fd67b16f",
+    "packages/application/src/services/__tests__/AccountService.additional.test.ts": "163c5003c582e14210408c55021f8dad9eb05c72d571ede03e9c1ed4bc2c5563",
+    "packages/application/src/services/__tests__/AccountService.test.ts": "3e303450bb685b4079a2a3aa6f64ae66bfba40acfbdefb7aaee020b80350b2b4",
+    "packages/db/prisma/migrations/20261007120000_account_tiers/migration.sql": "b164db696ba1797c9a64dd274ae85409f07e9dc100c72d4c7bb519258ff0fa9e",
+    "packages/db/prisma/schema.prisma": "e01adc9727f626002b047d94530994f2aad78b79a418484f531cfa376ab20b27",
+    "packages/db/src/index.ts": "9b8829f28e9bdb7397ea441b5df94b6c56e1a3dc30068a28e00fcf3f59a9c545",
+    "packages/domain/src/crm/account/Account.ts": "c7a62ea423a76ba89c84f7b3f9ef71d4be24bba95b07f9f95b978583117f2312",
+    "packages/domain/src/crm/account/AccountTierConfig.ts": "1436e78ba0eb36d5443e5fae9b1bbc2b19da59b2fb883fce5afe3aac4ef80876",
+    "packages/domain/src/crm/account/__tests__/AccountTier.test.ts": "2b01b8471d1392364d9f1c768e4002782ee9e3f39def8a1deb708cc9ee513310",
+    "packages/domain/src/crm/account/__tests__/AccountTierConfig.test.ts": "7289a31a52db9d84079c02939cfccc960ac3d17e7628ef5bc26bc63fb6ab3252",
+    "packages/domain/src/index.ts": "5a5d2a90430986bd56f924ccc42adee712125a2ae1036cba209d9f4f606ce231",
+    "packages/validators/src/__tests__/account-settings.test.ts": "e3372bfb23574b2f34c2fa33b5f8af73cbc63e14490120d519f5e694bdb3c0c6",
+    "packages/validators/src/__tests__/account-tiers.test.ts": "0472a6e60a217a15970907478069e66452906f695764e2185957ec955703f2ed",
+    "packages/validators/src/__tests__/notifications.test.ts": "74c5b106b4a5456b410108aac25a9cef27d89e0fdad8001dffb20b483a244d07",
+    "packages/validators/src/account-settings.ts": "58695ed6beaf23e91f52ef2ea2370b4d0e34ad7568437c80dc1e56dc4bb37d88",
+    "packages/validators/src/account-tiers.ts": "8d283a5994dc95625badbe9a2b402ebc77c66c863b79dcd1180177c108d19766",
+    "packages/validators/src/account.ts": "d9bcbad8eee2814d98ac2771bcae6aece19f0ca8ea126a99eeb01917136e1f50",
+    "packages/validators/src/index.ts": "ac21f83b57543803f0d7d0869fc753038c33144dc5ee878004c196446579a8a2",
+    "packages/validators/src/notifications.ts": "e8fa49a2a3ddd6f956af2b28b6a904af76b24b6fee56362eb5bc27c56092606c",
+    "tests/integration/account-tiers.test.ts": "f846b56eb6b961731a2e7c7bd6d7c706de9aec721e7fd7202b3b841fb740c2b5"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/{domain,validators,db,application,api,web} typecheck (one package at a time)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/{domain,validators,application,api,web} lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/{domain,validators,db,application,api} build && pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Tests: domain",
+      "command": "pnpm --filter @intelliflow/domain exec vitest run src/crm/account (150 passed)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Tests: validators",
+      "command": "npx vitest run src/__tests__/account-tiers.test.ts src/__tests__/notifications.test.ts src/__tests__/account-settings.test.ts (177 passed); full package earlier 2494 passed",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Tests: application",
+      "command": "npx vitest run AccountService.test/additional/hierarchy (129 passed)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Tests: api",
+      "command": "npx vitest run src/modules/account src/__tests__/app-router.smoke.test.ts (316 passed)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Tests: architecture",
+      "command": "npx vitest run tests/architecture/tenant-procedure-enforcement.test.ts (5 passed)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Tests: integration (real DB, Node 22)",
+      "command": "npx vitest run --project integration tests/integration/account-tiers.test.ts (11 passed)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    },
+    {
+      "name": "Tests: web",
+      "command": "npx vitest run src/lib/accounts src/hooks/__tests__/useAccountTiers.test.ts src/components/accounts src/components/shared/__tests__/section-header.test.tsx src/components/sidebar src/app/accounts (390 passed)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:08:11Z"
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
+      "gate_id": "exec-readiness",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "plan-reviewer-subagent",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "page-doc-cochange",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "nav-wiring",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "migration-drift (prisma migrate diff, account_tier tables)",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "lighthouse-gte-90",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-196 requires 4 ARTIFACT paths: page.tsx (exists), AccountTiersContent.tsx (MISSING), apps/api/src/modules/account/account-tiers.router.ts (MISSING), packages/validators/src/account-tiers.ts (MISSING). Also EVIDENCE:.specify/sprints/sprint-18/attestations/PG-196/context_ack.json (MISSING). No tRPC router or Zod validator for 'account-tiers' exists anywhere in apps/api or packages/validators (broad grep across both trees returned zero hits)."
+      "exit_code": 1
+    },
+    {
+      "gate_id": "worktree-landed (Gate 4b: branch pushed)",
+      "passed": false,
+      "exit_code": 1
+    },
+    {
+      "gate_id": "pre-ship (diff-coverage, full CI parity)",
+      "passed": false,
+      "exit_code": 1
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Lighthouse >= 90 on /accounts/account-tiers",
+      "target": ">= 0.90 performance/accessibility/best-practices (authenticated view)",
+      "actual": "not measured: unauthenticated runs redirect to /login (0.87/0.93/0.74, login page) \u2014 see artifacts/lighthouse/PG-196/README.md",
+      "met": false
+    },
+    {
+      "kpi": "Domain resolver coverage",
+      "target": ">= 95%",
+      "actual": "100% lines/branches (AccountTierConfig.ts)",
+      "met": true
+    },
+    {
+      "kpi": "New API surface coverage",
+      "target": ">= 80% changed lines",
+      "actual": "account-tiers.ts 100%/98.7%, account-tiers.router.ts 98.5%/97.1% lines/branches",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-183"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /accounts/(list)/account-tiers renders",
+      "criterion": "Tenant-configurable revenue-band tiers at /accounts/account-tiers (names, thresholds, colour, benefits matrix, default tier, up/down rules)",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "AccountTiersContent + components; accountTiers router; AccountTiersContent.test (18), TierDefinitionsCard/BenefitsMatrixCard/DefaultTierCard tests"
     },
     {
-      "criterion": "Tier definitions bronze/silver/gold/platinum, point thresholds, benefits matrix, default tier, upgrade/downgrade rules implemented",
-      "met": false,
-      "evidence": "page.tsx (16 lines) is a static placeholder: '<h1>Account Tiers</h1>...<p>Account tiers configuration coming soon.</p>'. No form, no data fetch, no tier logic of any kind."
+      "criterion": "AccountCard, Account Settings hierarchy tab and sidebar tier links read one tenant configuration",
+      "met": true,
+      "evidence": "useAccountTiers consumers; TIER_CONFIG/TIER_GRADIENTS/DEFAULT_TIER_OPTIONS removed (grep); AccountCard/HierarchyTab/accounts-config/layout tests"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction on destructive writes; Zod superRefine; colorToken CHECK constraint; AI defaults FALSE; Boolean toggles wired to account-automation.ts",
-      "met": false,
-      "evidence": "None of these patterns appear in the file — it uses a bare div/h1/p, not the shadcn PageHeader or the project's canonical EmptyState component."
+      "criterion": "Dead /accounts?tier= sidebar filters wired",
+      "met": true,
+      "evidence": "account.list tier filter (account.router.tiers.test) + AccountsPageClient chip (AccountsPageClient.test)"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "Playbook: PageHeader + bento, EmptyState passive, system CTAs, $transaction on destructive writes, no skipDuplicates",
+      "met": true,
+      "evidence": "AccountTiersContent; router delete+createMany in $transaction (router test asserts order, no skipDuplicates)"
+    },
+    {
+      "criterion": "Zod superRefine for duplicate tier names; colorToken CHECK constraint",
+      "met": true,
+      "evidence": "updateAccountTiersSchema tests; migration CHECKs proven by integration test"
+    },
+    {
+      "criterion": "Every Boolean toggle wired or declared",
+      "met": true,
+      "evidence": "notifyOwnerOnUpgrade/Downgrade wired (account.update/updateRevenue, notification tests); no AI toggles added"
+    },
+    {
+      "criterion": "Cross-tenant negative test",
+      "met": true,
+      "evidence": "account-tiers.router.test 'scopes every read and write to the caller tenant'; RLS USING+WITH CHECK (integration)"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
       "met": false,
-      "evidence": "No test file exists for this page or feature anywhere in the repo (grep for account-tiers across tests/ and __tests__ directories returns nothing)."
+      "evidence": "Not measured on the authenticated page \u2014 needs authenticated harness or owner waiver"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "Package-scoped suites per owner instruction (no whole-monorepo run); full suite runs in pre-ship/CI on push"
     }
   ],
-  "dependencies_verified": [],
   "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "os": "Windows 11",
+    "node_version": "v22.14.0 (DB/integration/build); v25.2.1 host default",
+    "git_commit": "eeefa9091ba551c12723731ea15d22335d1e0c6f",
+    "branch": "feat/pg-196-account-tiers"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). This task is CSV-marked 'Completed' but on independent re-verification the deliverable does not substantiate that claim. Per the honesty protocol for this remediation task ('never fabricate evidence; honest partial progress beats fake completeness'), this attestation records verdict=INCOMPLETE rather than a passing attestation. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 2e7bb135ada2108554f853ae04f99e16da4b98bd ('feat(web): add account, lead, contact, and deal subpages') as part of a 15-file batch of route scaffolds — independently confirmed via `git log --diff-filter=A` at the exact current path (unambiguous, single add event, no PR wraps this commit — it appears to have been pushed directly to main). What is missing, per the CSV's own DoD/ARTIFACT list: AccountTiersContent.tsx, apps/api/src/modules/account/account-tiers.router.ts, packages/validators/src/account-tiers.ts, and the context_ack.json ceremony evidence — none exist anywhere in the repository under any name (broad grep performed). No git history shows any subsequent commit implementing this feature past the initial stub. FLAGGED FOR HUMAN DECISION: either (a) revert this task's CSV status from Completed to Backlog/In-Progress and schedule the real implementation, or (b) if the placeholder-only scope was an intentional, later-descoped MVP decision, that decision should be documented and the DoD text in Sprint_plan.csv corrected to match — but that CSV edit is explicitly out of scope for this attestation-only backfill task (R16 forbids editing Sprint_plan.csv). This same pattern (stub-only, DoD unmet) was found across 12 PG-19x/20x Module-Settings tasks (PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209) — tracked as issue #615. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. Issue #615 still names 13 tasks and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json — absent"
-    ]
-  }
+  "nav_wiring_confirmed": true,
+  "spec_session_consensus": "6/6 APPROVE WITH CHANGES, all conditions incorporated",
+  "plan_reviewer_verdict": "APPROVE (iteration 2)",
+  "plan_reviewer_agent": "plan-reviewer",
+  "plan_reviewer_marker": "<!-- plan-reviewer: subagent -->",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-196-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-196-plan.md",
+  "notes": "Implementation, tests, lint, typecheck and builds are done and committed on feat/pg-196-account-tiers. Not COMPLETE because three gates need the owner or the runner: (1) Lighthouse >= 90 on the authenticated /accounts/account-tiers view could not be measured here (no working local Supabase; unauthenticated runs measure /login) \u2014 needs an authenticated run or lighthouse_waiver_approved_by; (2) Gate 4b requires the branch pushed \u2014 this lane is forbidden to push; (3) pre-ship (diff-coverage, full suite) runs on push. Plan deviations: lighthouserc.authenticated.js left unchanged (playbook uses a per-task copy); account.router.hierarchy/reassign tests needed no new stubs; new pure module account-tiers/tier-draft.ts and DefaultTierCard test added; default Startup colour is yellow (matches pre-PG-196 UI). Coverage baseline artifacts/coverage/PG-196-before.json. ADR-073 stays Proposed until the gates close."
 }

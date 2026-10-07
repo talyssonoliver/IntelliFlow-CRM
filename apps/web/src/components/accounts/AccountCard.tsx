@@ -1,48 +1,7 @@
 'use client';
 
 import { ColumnDef } from '@tanstack/react-table';
-import { getAccountTier, type AccountTier } from '@intelliflow/domain';
-
-// Tier vocabulary lives in the domain layer (IFC-273, L-04). Re-export it so
-// existing consumers (AccountDetail, AccountHierarchy) keep importing from
-// './AccountCard' unchanged.
-export { getAccountTier, type AccountTier };
-
-export const TIER_CONFIG: Record<
-  AccountTier,
-  { label: string; color: string; dot: string; avatarBg: string }
-> = {
-  ENTERPRISE: {
-    label: 'Enterprise',
-    color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-    dot: 'bg-purple-500',
-    avatarBg: 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300',
-  },
-  MID_MARKET: {
-    label: 'Mid-Market',
-    color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-    dot: 'bg-blue-500',
-    avatarBg: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  },
-  SMB: {
-    label: 'SMB',
-    color: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    dot: 'bg-green-500',
-    avatarBg: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-  },
-  STARTUP: {
-    label: 'Startup',
-    color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-    dot: 'bg-yellow-500',
-    avatarBg: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-300',
-  },
-  UNKNOWN: {
-    label: 'Unknown',
-    color: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
-    dot: 'bg-slate-400',
-    avatarBg: 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400',
-  },
-};
+import { TierAvatar, TierDot } from './TierBadge';
 
 export interface AccountRow {
   id: string;
@@ -116,19 +75,12 @@ export function createAccountColumns(
       size: 260,
       cell: ({ row }) => {
         const account = row.original;
-        const rawRevenue = account.revenue == null ? null : Number(account.revenue);
-        const tier = getAccountTier(rawRevenue);
-        const config = TIER_CONFIG[tier];
         const initials = getInitials(account.name);
         const parentName = account.parentAccount?.name;
 
         return (
           <div className="flex items-center gap-3">
-            <div
-              className={`size-9 rounded-lg ${config.avatarBg} flex items-center justify-center text-xs font-semibold shrink-0`}
-            >
-              {initials}
-            </div>
+            <TierAvatar revenue={account.revenue} initials={initials} />
             <div className="flex flex-col min-w-0">
               <button
                 className="text-sm font-semibold text-foreground hover:text-primary text-left truncate"
@@ -162,11 +114,9 @@ export function createAccountColumns(
       cell: ({ row }) => {
         const rawRevenue = row.original.revenue;
         const revenue = rawRevenue == null ? null : Number(rawRevenue);
-        const tier = getAccountTier(revenue);
-        const config = TIER_CONFIG[tier];
         return (
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${config.dot}`} />
+            <TierDot revenue={rawRevenue} />
             <span className="text-sm text-foreground">
               {revenue == null ? '—' : formatCompactCurrency(revenue)}
             </span>

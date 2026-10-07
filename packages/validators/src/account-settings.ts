@@ -48,7 +48,8 @@ export const DEFAULT_ACCOUNT_INDUSTRIES: ReadonlyArray<{ label: string; key: str
 
 export const accountHierarchyConfigSchema = z.object({
   maxDepth: z.number().int().min(1).max(10),
-  requireParentForTiers: z.array(z.string().min(1).max(50)),
+  // PG-196: values are account tier keys (legacy lowercase values are normalised on read).
+  requireParentForTiers: z.array(z.string().min(1).max(50)).max(10),
   preventCycles: z.boolean(),
 });
 export type AccountHierarchyConfigInput = z.infer<typeof accountHierarchyConfigSchema>;
