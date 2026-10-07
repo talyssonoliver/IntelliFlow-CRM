@@ -14,6 +14,7 @@
  */
 
 import { Job, Worker, Queue, QueueEvents } from 'bullmq';
+import { createSerialJobWorker } from './serial-job-worker';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
 
@@ -102,13 +103,11 @@ export class CaseDeadlineMonitorWorker {
     this.queueEvents = new QueueEvents(CASE_DEADLINE_MONITOR_QUEUE_NAME, {
       connection: this.redisConnection,
     });
-    this.worker = new Worker<CaseDeadlineMonitorJobData, CaseDeadlineMonitorJobResult>(
+    this.worker = createSerialJobWorker<CaseDeadlineMonitorJobData, CaseDeadlineMonitorJobResult>(
       CASE_DEADLINE_MONITOR_QUEUE_NAME,
-      async (job) => this.process(job),
-      { connection: this.redisConnection, concurrency: 1 }
-    );
-    this.worker.on('failed', (job, error) =>
-      console.warn(`[case-deadline-monitor] job ${job?.id} failed:`, error?.message)
+      (job) => this.process(job),
+      this.redisConnection,
+      'case-deadline-monitor'
     );
   }
 
