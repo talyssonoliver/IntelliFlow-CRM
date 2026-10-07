@@ -22,9 +22,9 @@ import { AuroraSiteFooter, FOOTER_COLUMNS } from '../AuroraSiteFooter';
 /** The app directory, so every link can be checked against a real page. */
 const APP = path.resolve(__dirname, '../../../app');
 
-/** True when `route` (no hash) is served by a page.tsx somewhere under app/, route groups included. */
+/** True when `route` (no hash or query) is served by a page.tsx somewhere under app/, route groups included. */
 function routeExists(route: string): boolean {
-  const parts = route.split('#')[0]!.split('/').filter(Boolean);
+  const parts = route.split(/[#?]/)[0]!.split('/').filter(Boolean);
   const walk = (dir: string, rest: string[]): boolean => {
     if (rest.length === 0) {
       if (fs.existsSync(path.join(dir, 'page.tsx'))) return true;

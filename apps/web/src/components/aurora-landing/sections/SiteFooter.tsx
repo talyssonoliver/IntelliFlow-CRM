@@ -26,7 +26,7 @@ export function SiteFooter() {
                     {link.label}
                   </a>
                 ) : (
-                  <Link key={link.href} href={link.href}>
+                  <Link key={link.href} href={link.href} data-testid={link.testId}>
                     {link.label}
                   </Link>
                 )
