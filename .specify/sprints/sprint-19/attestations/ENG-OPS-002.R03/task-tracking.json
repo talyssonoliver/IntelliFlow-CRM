@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "ENG-OPS-002.R03",
+  "blockers": [
+    {
+      "description": "Reopen evidence: half delivered. CLAUDE.md was fixed (PR #601), but the DoD also requires that .specify/sprints/sprint-18/_summary.json \"reflects reality or is removed with consumers repointed\". It is still stale: generated_at 2026-04-11, task_summary total 43 / completed 3, against 67 sprint-18 tasks (54 Completed) in Sprint_plan.csv. The attestation reassigns that half (STALE-002) to ENG-OPS-002.R16, which is Backlog.",
+      "raised_at": "2026-10-07T08:37:18Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: sprint-18 _summary.json regenerated from the CSV (or removed with its consumers repointed), and pnpm validate:docs-integrity passes; or split STALE-002 into R16 and amend this DoD.",
+      "raised_at": "2026-10-07T08:37:18Z",
+      "resolved_at": null
+    }
+  ],
+  "status_history": [
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:37:18Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
+    }
+  ],
+  "updated_at": "2026-10-07T08:37:18Z"
+}
