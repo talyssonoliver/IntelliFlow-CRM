@@ -54,6 +54,7 @@ describe('isToolingFile', () => {
     ['scripts/lib/diff-coverage.mjs', true],
     ['tools/scripts/x.ts', true],
     ['apps/project-tracker/lib/validation-profile.ts', true],
+    ['apps/project-tracker/app/page.tsx', false],
     ['apps/project-tracker-v2/lib/a.ts', false],
     ['apps/api/src/agent/tools/search.ts', false],
     ['apps/ai-worker/scripts/check-queue.ts', false],
@@ -137,7 +138,7 @@ describe('runCoverageFloor', () => {
     expect(r.out).toMatch(/Product coverage \(1 files\)/);
     expect(r.out).toMatch(/✓ lines: 90% \(floor 80%\)/);
     expect(r.out).toMatch(
-      /Tooling coverage \(1 files, scripts\/, tools\/, apps\/project-tracker\/ .*lines 0%/
+      /Tooling coverage \(1 files, scripts\/, tools\/, apps\/project-tracker\/lib\/ .*lines 0%/
     );
     expect(r.out).toMatch(/✅ Product coverage meets the ratchet floor/);
   });
