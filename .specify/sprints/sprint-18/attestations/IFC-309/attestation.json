@@ -151,5 +151,115 @@
       "validate_sprint_data": "PASS",
       "codex_review": "PASS (5.4s)"
     }
-  }
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:20.808Z",
+      "duration_ms": 1893,
+      "stdout_hash": "1215039c475cf7b7f238dce9b0a5f89c430b5865a4f07a2738b04639f844c4d9"
+    },
+    {
+      "name": "Lint (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:22.703Z",
+      "duration_ms": 3953,
+      "stdout_hash": "c3b80519c8e412f6c55ab7698035f025b2e080c592928d04ebea7df0de922fce"
+    },
+    {
+      "name": "Tests (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain exec vitest run src/crm/ticket/__tests__ src/crm/task/__tests__",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:26.657Z",
+      "duration_ms": 1673,
+      "stdout_hash": "34b906449f1eaa6bf9f63ec4eda848c7c125b688b5285d374ebac8f3f768f9ef"
+    },
+    {
+      "name": "Build (domain; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/domain build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:28.331Z",
+      "duration_ms": 3268,
+      "stdout_hash": "6d8a6f8617401ba082d7afd80999207ab056da716e45a7185fd152a0c66631fd"
+    },
+    {
+      "name": "TypeScript (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:34.331Z",
+      "duration_ms": 21420,
+      "stdout_hash": "53d0f849ced6d028c49ad71a07104c03a10b25681f52bf6a2ecfb45335e75d6b"
+    },
+    {
+      "name": "Lint (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:55.751Z",
+      "duration_ms": 8906,
+      "stdout_hash": "48678ba173ed62419ebd130af4679ea5a3c2632dce38f163f7c7386b5d317d8a"
+    },
+    {
+      "name": "Tests (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api exec vitest run src/modules/email/__tests__/inbound.router.test.ts src/shared/__tests__/duplicate-rule-evaluator.test.ts src/modules/analytics/__tests__/report-templates.router.test.ts src/modules/legal/__tests__/terms-acceptance.router.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:04.659Z",
+      "duration_ms": 5969,
+      "stdout_hash": "cff51fb0405c8d2c2615299e8225a7e482126aaee8f400b1156a473a9d5ebfc9"
+    },
+    {
+      "name": "Build (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:10.629Z",
+      "duration_ms": 45872,
+      "stdout_hash": "7cf2918b84cec64b4377fa2bf477536879214c03263e9a8c82044fa16bde695c"
+    },
+    {
+      "name": "TypeScript (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:56.503Z",
+      "duration_ms": 59015,
+      "stdout_hash": "1a3449b1d8cbd8eb94800f98cc4ad86ea16c7016cd39cee7468d3d0582fb26bd"
+    },
+    {
+      "name": "Lint (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:30:55.518Z",
+      "duration_ms": 14311,
+      "stdout_hash": "82d87e406fabda8bbc988c12b2556367f5c30a4565b55f975ad8634e05c2bc0a"
+    },
+    {
+      "name": "Tests (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web exec vitest run \"src/app/analytics/(list)/report-templates/__tests__\" src/app/analytics/report-templates/__tests__ \"src/app/(public)/terms/__tests__\" src/components/legal/__tests__",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:31:09.830Z",
+      "duration_ms": 4889,
+      "stdout_hash": "9e4f1fa5a665fd0d647b52e6eeaefc91a4cd23e002bfc70fd46f1700c277b132"
+    },
+    {
+      "name": "Build (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:31:14.719Z",
+      "duration_ms": 151883,
+      "stdout_hash": "fd5357b7bf501ebf3389a8a7d3b28ea97c345f9a551c0d7d37b18f8c14f79b19"
+    }
+  ]
 }
