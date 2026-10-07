@@ -47,12 +47,12 @@ describe('ticket config managers - mutation onSuccess', () => {
     }
   );
 
-  it.each(['create', 'update', 'delete'])(
-    'AutomationRuleBuilder %s refreshes the routing list',
+  it.each(['createRule', 'updateRule', 'deleteRule', 'toggleRule'])(
+    'AutomationRuleBuilder %s refreshes the rule list',
     (name) => {
       render(<AutomationRuleBuilder />);
-      capture.mutations[`routing.${name}`].onSuccess?.();
-      expect(capture.invalidations).toContain('routing.list');
+      capture.mutations[`ticketRouting.${name}`].onSuccess?.();
+      expect(capture.invalidations).toContain('ticketRouting.listRules');
     }
   );
 });

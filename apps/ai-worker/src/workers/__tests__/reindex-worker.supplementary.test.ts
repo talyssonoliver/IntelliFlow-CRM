@@ -231,7 +231,7 @@ describe('ReindexWorker - processJob via captured processor', () => {
     expect(await capturedProcessor(j)).toBeDefined();
     await Promise.resolve();
     expect(errorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('progress update failed'),
+      expect.stringContaining('Failed to update job progress'),
       expect.any(Error)
     );
     errorSpy.mockRestore();
