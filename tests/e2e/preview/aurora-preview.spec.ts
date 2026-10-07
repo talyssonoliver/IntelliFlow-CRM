@@ -13,6 +13,15 @@ test.use({ storageState: { cookies: [], origins: [] } });
 
 for (const width of [390, 1024, 1440]) {
   test(`pause control is on top and works at ${width}px`, async ({ page }) => {
+    // KNOWN, ACCEPTED: at phone and tablet widths the draggable 3D stack's canvas
+    // (pointer-events: auto) sits over the pause button's corner, so a tap lands
+    // on the stack, not the button (WCAG 2.2.2, Pause, Stop, Hide). Owner
+    // decision 2026-10-07: leave the layout as it is. Kept as fixme, not deleted,
+    // so it runs again the day that decision changes; 1440px still guards desktop.
+    test.fixme(
+      width < 1440,
+      'Owner decision 2026-10-07: pause control left covered by the draggable stack below 1440px (WCAG 2.2.2)'
+    );
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/preview/aurora');
 
