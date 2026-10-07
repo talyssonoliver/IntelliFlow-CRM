@@ -40,10 +40,59 @@ export function isAlive(pid, kill = (p, sig) => process.kill(p, sig)) {
   }
 }
 
+let clockTicks;
+/** USER_HZ, the unit of /proc/<pid>/stat starttime (100 on every common Linux). */
+function linuxClockTicks(run) {
+  if (clockTicks === undefined) {
+    const r = run('getconf', ['CLK_TCK'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 5000,
+    });
+    const hz = Number.parseInt((r.stdout || '').trim(), 10);
+    clockTicks = hz > 0 ? hz : 100;
+  }
+  return clockTicks;
+}
+
+/**
+ * Linux start time from /proc, aligned to the wall clock NOW: Date.now() minus how
+ * long ago the process started (uptime - starttime). `ps -o lstart=` cannot be
+ * used here: it is whole seconds, and it is boot time + ticks, which drifts from
+ * the wall clock; measured on WSL it read 1.0-1.9 s before a Date.now() taken
+ * straight after the spawn, so a recorded start never matched within 2 s and the
+ * watchdog refused to stop a live orphaned step. Null when /proc is unreadable.
+ */
+function linuxProcStartMs(pid, { read, now, ticks }) {
+  try {
+    const stat = read(`/proc/${Number(pid)}/stat`);
+    // Field 2 (comm) may hold spaces and parentheses; fields resume after the last ')'.
+    // The rest starts at field 3 (state), so starttime (field 22) is rest[19].
+    const rest = stat.slice(stat.lastIndexOf(')') + 2).split(' ');
+    const startTicks = Number(rest[19]);
+    const uptimeSec = Number(read('/proc/uptime').split(' ')[0]);
+    if (!Number.isFinite(startTicks) || !Number.isFinite(uptimeSec)) return null;
+    return Math.round(now() - (uptimeSec - startTicks / ticks()) * 1000);
+  } catch {
+    return null;
+  }
+}
+
 /** When a process started, in ms since the epoch, or null if gone or unreadable. */
 export function startTimeOf(pid, deps = {}) {
-  const { platform = process.platform, run = spawnSync, alive = isAlive } = deps;
+  const {
+    platform = process.platform,
+    run = spawnSync,
+    alive = isAlive,
+    read = (p) => fs.readFileSync(p, 'utf8'),
+    now = Date.now,
+    ticks = () => linuxClockTicks(run),
+  } = deps;
   if (!alive(pid)) return null;
+  if (platform === 'linux') {
+    const ms = linuxProcStartMs(pid, { read, now, ticks });
+    if (ms !== null) return ms;
+  }
   if (platform === 'win32') {
     const r = run(
       'powershell',
@@ -59,6 +108,7 @@ export function startTimeOf(pid, deps = {}) {
     const ms = Number.parseInt((r.stdout || '').trim(), 10);
     return Number.isFinite(ms) ? ms : null;
   }
+  // Other POSIX (macOS), or Linux without a readable /proc.
   const r = run('ps', ['-o', 'lstart=', '-p', String(pid)], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
