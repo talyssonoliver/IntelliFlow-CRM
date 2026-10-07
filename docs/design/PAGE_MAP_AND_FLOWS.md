@@ -35,7 +35,7 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category                                        | Count |
 | ----------------------------------------------- | ----- |
-| Total Pages                                     | 212   |
+| Total Pages                                     | 214   |
 | Public Pages                                    | 32    |
 | Developer Pages                                 | 14    |
 | Protected Pages                                 | 166   |
@@ -173,15 +173,17 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 6. CRM Core — Accounts (5 pages)
+### 6. CRM Core — Accounts (7 pages)
 
 | Route                         | Page              | Description                                                           |
 | ----------------------------- | ----------------- | --------------------------------------------------------------------- |
 | `/accounts`                   | Accounts List     | Company/account list with filters and stats                           |
+| `/accounts/new`               | New Account       | Create an account; optional location and owner (PG-197)               |
 | `/accounts/[id]`              | Account Detail    | Account 360° view                                                     |
+| `/accounts/[id]/edit`         | Edit Account      | Edit account details and location (PG-197)                            |
 | `/accounts/account-settings`  | Account Settings  | Tenant-level account configuration and defaults                       |
 | `/accounts/account-tiers`     | Account Tiers     | Tenant revenue tiers: thresholds, colours, benefits, default (PG-196) |
-| `/accounts/territory-mapping` | Territory Mapping | Assign accounts to sales territories by region/rep                    |
+| `/accounts/territory-mapping` | Territory Mapping | Territories (country/region/postcode) that assign new owners          |
 
 ---
 
