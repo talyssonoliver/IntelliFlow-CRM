@@ -7,8 +7,10 @@
  */
 import { describe, it, expect } from 'vitest';
 import { ACCOUNT_TIERS, getAccountTier, type AccountTier } from '../Account';
+import { DEFAULT_TIER_CONFIG, resolveAccountTier } from '../AccountTierConfig';
 
 describe('ACCOUNT_TIERS (domain enum)', () => {
+  // Default vocabulary only: tenants configure their own tiers (PG-196).
   it('is the canonical tier vocabulary', () => {
     expect(ACCOUNT_TIERS).toEqual(['ENTERPRISE', 'MID_MARKET', 'SMB', 'STARTUP', 'UNKNOWN']);
   });
@@ -48,5 +50,22 @@ describe('getAccountTier (revenue band)', () => {
   it('returns STARTUP below 100K', () => {
     expect(getAccountTier(99_999)).toBe('STARTUP');
     expect(getAccountTier(0)).toBe('STARTUP');
+  });
+});
+
+describe('getAccountTier delegates to the default tier configuration (PG-196)', () => {
+  it.each([
+    null,
+    undefined,
+    -1,
+    0,
+    99_999.99,
+    100_000,
+    999_999.99,
+    1_000_000,
+    9_999_999.99,
+    10_000_000,
+  ])('matches resolveAccountTier(%s, DEFAULT_TIER_CONFIG)', (revenue) => {
+    expect(getAccountTier(revenue)).toBe(resolveAccountTier(revenue, DEFAULT_TIER_CONFIG));
   });
 });

@@ -36,6 +36,7 @@ export * from './crm/contact/CrossTenantOrNotFoundError';
 
 // CRM Domain - Accounts
 export * from './crm/account/Account';
+export * from './crm/account/AccountTierConfig';
 export * from './crm/account/AccountId';
 export * from './crm/account/AccountEvents';
 export * from './crm/account/AccountRepository';

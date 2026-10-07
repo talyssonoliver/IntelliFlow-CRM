@@ -11,8 +11,10 @@ import {
   AccountOwnerAssignedEvent,
   AccountDeletedEvent,
 } from './AccountEvents';
+import { DEFAULT_TIER_CONFIG, resolveAccountTier } from './AccountTierConfig';
 
-// Canonical account-tier vocabulary - single source of truth (IFC-273, L-04).
+// Default account-tier vocabulary (IFC-273, L-04). Tenants may rename, re-threshold,
+// add and remove tiers (PG-196, ADR-073); these are the keys every tenant starts with.
 // Mirrors the CONTACT_STATUSES / OPPORTUNITY_STAGES DRY-enum pattern.
 export const ACCOUNT_TIERS = ['ENTERPRISE', 'MID_MARKET', 'SMB', 'STARTUP', 'UNKNOWN'] as const;
 
@@ -20,15 +22,12 @@ export const ACCOUNT_TIERS = ['ENTERPRISE', 'MID_MARKET', 'SMB', 'STARTUP', 'UNK
 export type AccountTier = (typeof ACCOUNT_TIERS)[number];
 
 /**
- * Classify an account into a tier by annual revenue band.
+ * Classify an account into a tier by the default annual revenue bands.
  * Pure function — no infra dependency. UNKNOWN when revenue is absent.
+ * Tenant-specific tiers resolve through `resolveAccountTier(revenue, config)`.
  */
 export function getAccountTier(revenue: number | null | undefined): AccountTier {
-  if (revenue == null) return 'UNKNOWN';
-  if (revenue >= 10_000_000) return 'ENTERPRISE';
-  if (revenue >= 1_000_000) return 'MID_MARKET';
-  if (revenue >= 100_000) return 'SMB';
-  return 'STARTUP';
+  return resolveAccountTier(revenue, DEFAULT_TIER_CONFIG);
 }
 
 export class InvalidRevenueError extends DomainError {
