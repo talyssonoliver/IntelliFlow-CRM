@@ -111,6 +111,10 @@ describe('account.create — territory owner assignment', () => {
     createNotification.mockReset().mockResolvedValue({});
     (prismaMock as any).$extends = vi.fn().mockReturnValue(prismaMock);
     (prismaMock.accountRequiredField.findMany as any).mockResolvedValue([]);
+    // PG-196: create reads the tier policy. No rows ⇒ default tiers, no parent rule.
+    (prismaMock.accountTierDefinition.findMany as any).mockResolvedValue([]);
+    (prismaMock.accountTierConfig.findUnique as any).mockResolvedValue(null);
+    (prismaMock.accountHierarchyConfig.findUnique as any).mockResolvedValue(null);
     setFlags({});
     useCaller(createTestContext());
   });

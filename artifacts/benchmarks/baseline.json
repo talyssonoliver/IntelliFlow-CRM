@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-07T09:47:19.491Z",
+  "timestamp": "2026-10-07T13:50:49.164Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 66,
-    "total_endpoints": 543,
+    "total_routers": 67,
+    "total_endpoints": 544,
     "total_queries": 236,
-    "total_mutations": 307,
+    "total_mutations": 308,
     "routers": [
       {
         "name": "contact",
@@ -1381,6 +1381,12 @@
         "mutations": 1
       },
       {
+        "name": "accountTiers",
+        "endpoints": 1,
+        "queries": 0,
+        "mutations": 1
+      },
+      {
         "name": "customActionHandler",
         "endpoints": 1,
         "queries": 0,
@@ -1419,16 +1425,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 190,
-    "total_fields": 2748,
-    "total_indexes": 870,
-    "total_relations": 269,
+    "total_tables": 192,
+    "total_fields": 2769,
+    "total_indexes": 875,
+    "total_relations": 271,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 168,
+        "fields": 170,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -2113,6 +2119,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AccountTierDefinition",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "PipelineStageConfig",
         "fields": 11,
         "indexes": 4,
@@ -2509,6 +2522,13 @@
         "fields": 8,
         "indexes": 3,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountTierConfig",
+        "fields": 8,
+        "indexes": 2,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -3125,10 +3145,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 53,
-    "total_schemas": 604,
+    "total_validators": 54,
+    "total_schemas": 606,
     "by_complexity": {
-      "complex": 33,
+      "complex": 34,
       "moderate": 16,
       "simple": 4
     },
@@ -3404,6 +3424,12 @@
         "complexity": "moderate"
       },
       {
+        "name": "account-tiers",
+        "file": "account-tiers.ts",
+        "schemas": 2,
+        "complexity": "complex"
+      },
+      {
         "name": "appointment",
         "file": "appointment.ts",
         "schemas": 2,
@@ -3580,6 +3606,13 @@
         "name": "accountTerritories.resetToDefaults",
         "method": "POST",
         "description": "Reset to defaults"
+      }
+    ],
+    "accountTiers": [
+      {
+        "name": "accountTiers.get",
+        "method": "POST",
+        "description": "Get"
       }
     ],
     "account": [
