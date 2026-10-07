@@ -142,19 +142,74 @@ describe('startTimeOf', () => {
     expect(startTimeOf(321, { platform: 'win32', run: () => ({}), alive })).toBeNull();
   });
 
-  it('POSIX: parses ps lstart, null when it is unreadable', () => {
+  it('POSIX without /proc: parses ps lstart, null when it is unreadable', () => {
+    const noProc = () => {
+      throw new Error('ENOENT');
+    };
     const calls: unknown[][] = [];
     const run: Run = (...a) => {
       calls.push(a);
       return { stdout: 'Mon Oct  5 10:00:00 2026\n' };
     };
-    expect(startTimeOf(321, { platform: 'linux', run, alive })).toBe(
+    expect(startTimeOf(321, { platform: 'darwin', run, alive })).toBe(
       Date.parse('Mon Oct  5 10:00:00 2026')
     );
     expect(calls[0].slice(0, 2)).toEqual(['ps', ['-o', 'lstart=', '-p', '321']]);
-    expect(startTimeOf(321, { platform: 'linux', run: runReturning('garbage'), alive })).toBeNull();
-    expect(startTimeOf(321, { platform: 'linux', run: () => ({}), alive })).toBeNull();
+    expect(startTimeOf(321, { platform: 'linux', run, alive, read: noProc })).toBe(
+      Date.parse('Mon Oct  5 10:00:00 2026')
+    );
+    expect(
+      startTimeOf(321, { platform: 'darwin', run: runReturning('garbage'), alive })
+    ).toBeNull();
+    expect(startTimeOf(321, { platform: 'darwin', run: () => ({}), alive })).toBeNull();
   });
+
+  it('Linux: reads /proc starttime against uptime, aligned to the wall clock now', () => {
+    const files: Record<string, string> = {
+      // comm with a space and a ')' must not shift the fields; starttime (field 22) = 50000 ticks.
+      '/proc/321/stat':
+        '321 (node (x) y) S 1 321 321 0 -1 4194560 100 0 0 0 1 2 0 0 20 0 7 0 50000 1000 200\n',
+      '/proc/uptime': '600.25 1200.00\n',
+    };
+    const read = (p: string) => {
+      if (!(p in files)) throw new Error(`ENOENT ${p}`);
+      return files[p];
+    };
+    const run: Run = () => {
+      throw new Error('ps must not run when /proc answers');
+    };
+    const now = () => 1_700_000_000_000;
+    // Started 600.25 - 500 = 100.25 s ago.
+    expect(startTimeOf(321, { platform: 'linux', run, alive, read, now, ticks: () => 100 })).toBe(
+      1_700_000_000_000 - 100_250
+    );
+    expect(
+      startTimeOf(321, {
+        platform: 'linux',
+        run: runReturning('garbage'),
+        alive,
+        read: (p: string) => (p === '/proc/uptime' ? 'x' : files[p]),
+        now,
+        ticks: () => 100,
+      })
+    ).toBeNull();
+  });
+
+  // The CI failure on main a1e7d9a38 (Unit Shard 12/20): ps lstart read 1-2 s before
+  // the Date.now() the gate records at spawn, so sameProcess answered 'no' for the
+  // gate's own live step and reapGate stopped nothing.
+  it.skipIf(process.platform !== 'linux')(
+    'Linux: a child read on the real OS starts within 250 ms of the clock at spawn',
+    async () => {
+      const child = longRunning();
+      const recorded = Date.now();
+      await waitFor(() => isAlive(child.pid!));
+      const started = startTimeOf(child.pid!);
+      expect(started).not.toBeNull();
+      expect(Math.abs(started! - recorded)).toBeLessThan(250);
+      expect(sameProcess(child.pid!, recorded)).toBe('yes');
+    }
+  );
 
   it('answers for this very process with the real clock and platform', () => {
     const t = startTimeOf(process.pid);
