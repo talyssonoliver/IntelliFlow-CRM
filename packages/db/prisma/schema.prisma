@@ -178,6 +178,8 @@ model Tenant {
   documentAutomationSettings DocumentAutomationSetting[] @ignore
   documentRetentionPolicies DocumentRetentionPolicy[] @ignore
   caseSettings              CaseSettings[]            @ignore
+  accountTierDefinitions    AccountTierDefinition[]   @ignore // PG-196
+  accountTierConfigs        AccountTierConfig[]       @ignore // PG-196
   caseDuplicateRules        CaseDuplicateRule[]       @ignore
   caseRequiredFields        CaseRequiredField[]       @ignore
   caseTags                  CaseTag[]                 @ignore
@@ -1016,6 +1018,49 @@ model AccountAutomationSetting {
   updatedAt                          DateTime @updatedAt
 
   @@map("account_automation_settings")
+}
+
+// ─── PG-196: Account Tiers ──────────────────────────────────────────────────
+// Tenant-configurable revenue tiers (ADR-073). A tenant with no rows uses the
+// in-memory domain DEFAULT_TIER_CONFIG — there is no SQL seed. Cross-row rules
+// (exactly one tier at 0, default tier among the keys) are enforced by the
+// domain validateTierConfig and the accountTiers router; the migration adds
+// CHECK constraints for the single-row rules and RLS tenant isolation.
+
+/// One revenue tier of a tenant. Band = [minRevenue, next tier's minRevenue).
+model AccountTierDefinition {
+  id         String   @id @default(cuid())
+  tenantId   String
+  /// Immutable UPPER_SNAKE key ("UNKNOWN" is reserved).
+  key        String
+  label      String
+  /// Inclusive lower bound of annual revenue.
+  minRevenue Decimal  @db.Decimal(15, 2)
+  colorToken String   @default("slate")
+  benefits   String[] @default([])
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, key])
+  @@unique([tenantId, minRevenue])
+  @@map("account_tier_definitions")
+}
+
+/// One row per tenant: default tier and up/down rules. Absent row = defaults.
+model AccountTierConfig {
+  id                     String   @id @default(cuid())
+  tenantId               String   @unique
+  /// Tier shown for accounts with no revenue; null = UNKNOWN.
+  defaultTierKey         String?
+  notifyOwnerOnUpgrade   Boolean  @default(false)
+  notifyOwnerOnDowngrade Boolean  @default(false)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  tenant                 Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("account_tier_config")
 }
 
 model Opportunity {

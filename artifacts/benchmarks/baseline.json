@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-07T07:04:33.592Z",
+  "timestamp": "2026-10-07T07:12:13.201Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1413,16 +1413,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 187,
-    "total_fields": 2711,
-    "total_indexes": 861,
-    "total_relations": 265,
+    "total_tables": 189,
+    "total_fields": 2732,
+    "total_indexes": 866,
+    "total_relations": 267,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 167,
+        "fields": 169,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -2100,6 +2100,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AccountTierDefinition",
+        "fields": 11,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "PipelineStageConfig",
         "fields": 11,
         "indexes": 4,
@@ -2489,6 +2496,13 @@
         "fields": 8,
         "indexes": 3,
         "relations": 0,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountTierConfig",
+        "fields": 8,
+        "indexes": 2,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
