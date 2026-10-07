@@ -572,39 +572,45 @@ export class LeadRoutingService {
   ): Promise<RuleAssignment | null> {
     for (const action of actions) {
       if (!action.target) continue;
+      const resolved = await this.resolveAction(tx, tenantId, action.type, action.target);
+      if (resolved) return resolved;
+    }
+    return null;
+  }
 
-      if (action.type === 'assign_to_user') {
-        return { assigneeId: action.target, actionType: action.type, matchedSkill: null };
-      }
+  private async resolveAction(
+    tx: any,
+    tenantId: string,
+    type: string,
+    target: string
+  ): Promise<RuleAssignment | null> {
+    if (type === 'assign_to_user') {
+      // A rule is stored data: never trust its target to be a user of THIS tenant.
+      const user = await tx.user.findFirst({
+        where: { id: target, tenantId },
+        select: { id: true },
+      });
+      return user ? { assigneeId: target, actionType: type, matchedSkill: null } : null;
+    }
 
-      if (action.type === 'assign_to_team') {
-        const members: Array<{ userId: string }> = await tx.teamMember.findMany({
-          where: { teamId: action.target, tenantId, team: { isActive: true } },
-        });
-        const memberIds = new Set(members.map((m) => m.userId));
-        const candidates = (await this.getEligibleAgentsInTx(tx, tenantId)).filter((a) =>
-          memberIds.has(a.agentId)
-        );
-        const pick = [...candidates].sort((a, b) => a.currentLoad - b.currentLoad)[0];
-        if (pick) {
-          return { assigneeId: pick.agentId, actionType: action.type, matchedSkill: null };
-        }
-        continue;
-      }
+    if (type === 'assign_to_team') {
+      const members: Array<{ userId: string }> = await tx.teamMember.findMany({
+        where: { teamId: target, tenantId, team: { isActive: true } },
+      });
+      const memberIds = new Set(members.map((m) => m.userId));
+      const candidates = (await this.getEligibleAgentsInTx(tx, tenantId)).filter((a) =>
+        memberIds.has(a.agentId)
+      );
+      const pick = [...candidates].sort((a, b) => a.currentLoad - b.currentLoad)[0];
+      return pick ? { assigneeId: pick.agentId, actionType: type, matchedSkill: null } : null;
+    }
 
-      if (action.type === 'assign_by_skill') {
-        const candidates = await this.getEligibleAgentsInTx(tx, tenantId, action.target);
-        const pick = [...candidates].sort(
-          (a, b) => (b.proficiency ?? 0) - (a.proficiency ?? 0) || a.currentLoad - b.currentLoad
-        )[0];
-        if (pick) {
-          return {
-            assigneeId: pick.agentId,
-            actionType: action.type,
-            matchedSkill: action.target,
-          };
-        }
-      }
+    if (type === 'assign_by_skill') {
+      const candidates = await this.getEligibleAgentsInTx(tx, tenantId, target);
+      const pick = [...candidates].sort(
+        (a, b) => (b.proficiency ?? 0) - (a.proficiency ?? 0) || a.currentLoad - b.currentLoad
+      )[0];
+      return pick ? { assigneeId: pick.agentId, actionType: type, matchedSkill: target } : null;
     }
 
     return null;

@@ -75,6 +75,7 @@ function makeTx() {
     routingRule: { findMany: vi.fn() },
     routingAudit: { create: vi.fn() },
     teamMember: { findMany: vi.fn().mockResolvedValue([]) },
+    user: { findFirst: vi.fn().mockResolvedValue({ id: 'any-user' }) },
   };
 }
 
@@ -95,6 +96,7 @@ beforeEach(() => {
     agentAvailability: tx.agentAvailability,
     agentSkill: tx.agentSkill,
     teamMember: tx.teamMember,
+    user: tx.user,
   });
   service = new LeadRoutingService(prismaMock);
 });
@@ -163,6 +165,24 @@ describe('assign_to_user', () => {
       actionType: 'assign_to_user',
       matchedSkill: null,
     });
+  });
+
+  it('F4b: only assigns a user of the same tenant (checked with the tenant id)', async () => {
+    givenRules([
+      makeRule([{ type: 'assign_to_user', target: 'foreign-user' }], { id: 'rule-foreign' }),
+      makeRule([{ type: 'assign_to_user', target: AGENT_2 }], { id: 'rule-local' }),
+    ]);
+    tx.user.findFirst.mockImplementation(async (args: { where: { id: string } }) =>
+      args.where.id === AGENT_2 ? { id: AGENT_2 } : null
+    );
+
+    const result = await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT);
+
+    expect(tx.user.findFirst).toHaveBeenCalledWith({
+      where: { id: 'foreign-user', tenantId: TENANT_ID },
+      select: { id: true },
+    });
+    expect(result?.ruleId).toBe('rule-local');
   });
 
   it('F5: ignores an action with no target', async () => {

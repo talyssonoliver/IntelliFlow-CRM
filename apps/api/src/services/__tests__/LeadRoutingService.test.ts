@@ -37,6 +37,7 @@ function makeTxMock() {
     },
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue({ id: AGENT_ID_1 }),
     },
   };
 }
@@ -113,6 +114,9 @@ beforeEach(() => {
   };
   (prismaMock as any).routingRule = {
     findMany: vi.fn().mockResolvedValue([]),
+  };
+  (prismaMock as any).user = {
+    findFirst: vi.fn().mockResolvedValue({ id: AGENT_ID_1 }),
   };
 
   service = new LeadRoutingService(prismaMock);
