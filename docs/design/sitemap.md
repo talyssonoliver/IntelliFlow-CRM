@@ -143,7 +143,7 @@ intelliflow.com
 │   ├── /accounts                         Account list
 │   ├── /accounts/[id]                    Account detail (NO sidebar)
 │   ├── /accounts/account-settings        Tenant account configuration and defaults
-│   ├── /accounts/account-tiers           Tier definitions (SMB, Mid-Market, Enterprise)
+│   ├── /accounts/account-tiers           Tenant revenue tiers, benefits, default tier (PG-196)
 │   └── /accounts/territory-mapping       Assign accounts to sales territories
 │
 ├── CRM CORE: DEALS ──────────────────────── Layout: deals/(list), deals/[id]

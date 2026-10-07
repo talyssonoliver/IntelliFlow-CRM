@@ -560,6 +560,13 @@ configuration, and the `/accounts?tier=` filters work. Decision record:
   hierarchy tab and `requireParentForTiers` keyed on tier keys and enforced on
   transitions).
 
+### Status (2026-10-07)
+
+Implemented on `feat/pg-196-account-tiers` (domain → web, all package-scoped
+validations green). Open before completion: Lighthouse ≥ 90 on the authenticated
+page (or an owner waiver), push + pre-ship. Evidence:
+`artifacts/lighthouse/PG-196/README.md`.
+
 ### Dropped (category 3, playbook §8)
 
 Hysteresis, grace periods and manual tier overrides: tiers are derived from

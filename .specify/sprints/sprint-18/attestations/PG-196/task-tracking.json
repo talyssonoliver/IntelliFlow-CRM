@@ -18,7 +18,10 @@
       ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json"
     ]
   },
-  "blockers": [],
+  "blockers": [
+    "Lighthouse >= 90 on authenticated /accounts/account-tiers not measurable here (needs authenticated harness or owner waiver)",
+    "Branch not pushed (lane not allowed to push) \u2014 Gate 4b and pre-ship run on push"
+  ],
   "completed_at": null,
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.879Z"
@@ -29,7 +32,7 @@
   },
   "kpis": {},
   "notes": "Owner ruling A (2026-10-07): tenant-configurable revenue tiers seeded from ENTERPRISE/MID_MARKET/SMB/STARTUP (names, revenue thresholds, colour, benefits, default tier, up/down rules); card, hierarchy tab and sidebar tier links read one config; /accounts?tier= filters wired. MUST follow docs/planning/module-settings-playbook.md.",
-  "phase": "plan",
+  "phase": "exec",
   "started_at": "2026-10-06T22:12:30Z",
   "status_history": [
     {
@@ -51,6 +54,11 @@
       "at": "2026-10-07T00:00:00Z",
       "status": "Plan Complete",
       "note": "18-step TDD plan; plan-reviewer subagent APPROVE on iteration 2"
+    },
+    {
+      "at": "2026-10-07T08:30:00Z",
+      "status": "In Progress",
+      "note": "exec: all layers implemented and committed; validations pass; blocked on authenticated Lighthouse (or owner waiver), push (Gate 4b) and pre-ship"
     }
   ],
   "stream": null,

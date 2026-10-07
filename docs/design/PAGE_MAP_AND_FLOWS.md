@@ -175,13 +175,13 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 6. CRM Core — Accounts (5 pages)
 
-| Route                         | Page              | Description                                                    |
-| ----------------------------- | ----------------- | -------------------------------------------------------------- |
-| `/accounts`                   | Accounts List     | Company/account list with filters and stats                    |
-| `/accounts/[id]`              | Account Detail    | Account 360° view                                              |
-| `/accounts/account-settings`  | Account Settings  | Tenant-level account configuration and defaults                |
-| `/accounts/account-tiers`     | Account Tiers     | Manage tier definitions (SMB, Mid-Market, Enterprise, Startup) |
-| `/accounts/territory-mapping` | Territory Mapping | Assign accounts to sales territories by region/rep             |
+| Route                         | Page              | Description                                                           |
+| ----------------------------- | ----------------- | --------------------------------------------------------------------- |
+| `/accounts`                   | Accounts List     | Company/account list with filters and stats                           |
+| `/accounts/[id]`              | Account Detail    | Account 360° view                                                     |
+| `/accounts/account-settings`  | Account Settings  | Tenant-level account configuration and defaults                       |
+| `/accounts/account-tiers`     | Account Tiers     | Tenant revenue tiers: thresholds, colours, benefits, default (PG-196) |
+| `/accounts/territory-mapping` | Territory Mapping | Assign accounts to sales territories by region/rep                    |
 
 ---
 

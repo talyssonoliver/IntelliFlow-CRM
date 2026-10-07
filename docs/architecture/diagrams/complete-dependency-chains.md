@@ -260,6 +260,13 @@ Dependency Chain:
                                  │      ⬜ NEW      │
                                  └──────────────────┘
 
+PG-196 (2026-10-07) — tenant-configurable revenue tiers (ADR-073):
+domain AccountTierConfig (resolveAccountTier) → validators account-tiers.ts →
+db AccountTierDefinition + AccountTierConfig → accountTiers router (+ account.list
+tier filter, tier-change notifications, requireParentForTiers) → web
+useAccountTiers → /accounts/account-tiers, sidebar ?tier= links, list, detail,
+hierarchy, Account Settings → Hierarchy. Detail: core-crm-dependency-chain.md.
+
 Dependency Chain:
   IFC-103 (Domain) ──┬──► account.ts (Validators) ──► IFC-108 (Services) ──► IFC-107 (Adapters) ──► IFC-185 (API) ✅ ──► PG-134 (UI) ✅
                      │
