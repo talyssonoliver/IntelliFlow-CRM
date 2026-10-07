@@ -1,0 +1,24 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "PG-127",
+  "blockers": [
+    {
+      "description": "Reopen evidence: set Completed in bulk commit a6026d7c8 (#535) with no code or attestation. apps/web/src/app/(public)/partners/apply/ does not exist, nor packages/validators/src/partner-application.ts, nor apps/web/src/lib/partners/. The only partners page, (public)/partners/page.tsx, sends its CTA to /contact; the partner router has no application procedure.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: the partner application form, validator, handler and tests exist and are wired; attestation.json with 4 validations.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    }
+  ],
+  "status_history": [
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:40:36Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
+    }
+  ],
+  "updated_at": "2026-10-07T08:40:36Z"
+}
