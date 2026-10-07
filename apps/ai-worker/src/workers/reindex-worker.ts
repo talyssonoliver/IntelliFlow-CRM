@@ -10,6 +10,7 @@
  */
 
 import { Job, Worker, Queue, QueueEvents } from 'bullmq';
+import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
 import {
@@ -156,6 +157,7 @@ export class ReindexWorker {
       {
         connection: this.redisConnection,
         concurrency: 1, // Process one reindex job at a time
+        drainDelay: getDrainDelaySeconds(),
         limiter: {
           max: 1,
           duration: 60000, // Max 1 job per minute
