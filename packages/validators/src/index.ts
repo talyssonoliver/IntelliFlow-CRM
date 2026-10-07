@@ -105,6 +105,7 @@ export * from './contact-settings';
 
 // Account Settings Schemas (PG-183)
 export * from './account-settings';
+export * from './account-tiers';
 
 // Deal Settings Schemas (PG-184)
 export * from './deal-settings';

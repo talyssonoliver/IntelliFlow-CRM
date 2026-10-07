@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { idSchema, paginationSchema, urlSchema, nameSchema } from './common';
+import { accountTierFilterKeySchema } from './account-tiers';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
@@ -90,6 +91,8 @@ export const accountQuerySchema = paginationSchema.extend({
   maxRevenue: z.number().positive().optional(),
   minEmployees: z.number().int().positive().optional(),
   maxEmployees: z.number().int().positive().optional(),
+  /** PG-196: tier key (or UNKNOWN); the server turns it into a revenue band. */
+  tier: accountTierFilterKeySchema.optional(),
   sortBy: z.enum(ACCOUNT_SORT_FIELDS).default('createdAt'),
 });
 

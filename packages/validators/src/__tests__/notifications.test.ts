@@ -74,7 +74,7 @@ describe('Notifications Validators', () => {
   // =========================================================================
   describe('Enum arrays', () => {
     it('should have 54 notification types', () => {
-      expect(NOTIFICATION_TYPES).toHaveLength(54);
+      expect(NOTIFICATION_TYPES).toHaveLength(55);
     });
 
     it('NOTIFICATION_TYPES contains account_reassigned (IFC-311)', () => {

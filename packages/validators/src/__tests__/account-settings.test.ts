@@ -47,6 +47,15 @@ describe('account-settings validators', () => {
   });
 
   describe('accountHierarchyConfigSchema', () => {
+    it('caps requireParentForTiers at 10 tier keys (PG-196)', () => {
+      const result = accountHierarchyConfigSchema.safeParse({
+        maxDepth: 5,
+        requireParentForTiers: Array.from({ length: 11 }, (_, i) => `TIER_${i}`),
+        preventCycles: true,
+      });
+      expect(result.success).toBe(false);
+    });
+
     it('accepts a valid config', () => {
       const result = accountHierarchyConfigSchema.safeParse({
         maxDepth: 5,
