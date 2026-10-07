@@ -257,20 +257,31 @@ test.describe('Accessibility', () => {
     await expect(label).toBeVisible();
   });
 
-  test('keyboard navigation works', async ({ page }) => {
+  test('keyboard navigation works', async ({ page, browserName }) => {
     await page.goto('/signup');
     await page.waitForLoadState('networkidle');
 
     // The root layout renders an accessibility "Skip to main content" link as the
     // first focusable element (apps/web/src/app/layout.tsx), so the first Tab
-    // lands there — not on the OAuth buttons.
-    await page.keyboard.press('Tab');
-    await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
+    // lands there — not on the OAuth buttons. WebKit keeps Safari's default, where
+    // Tab skips links altogether (Option+Tab reaches them), so it starts at Google.
+    if (browserName !== 'webkit') {
+      await page.keyboard.press('Tab');
+      await expect(page.getByRole('link', { name: 'Skip to main content' })).toBeFocused();
+    }
 
-    // The next Tab reaches the first interactive control inside the card: the
-    // Google OAuth button (SocialLoginGrid is the card's first child).
-    await page.keyboard.press('Tab');
-    await expect(page.locator('button:has-text("Google")')).toBeFocused();
+    // Tabbing on reaches the first control inside the card, the Google OAuth button
+    // (SocialLoginGrid is the card's first child). On the way: the Aurora logo,
+    // which links home (#741), and in Firefox the scrollable <main> itself, which
+    // Firefox makes a tab stop. Allow those few stops, but it must get there.
+    const google = page.locator('button:has-text("Google")');
+    let reached = false;
+    for (let i = 0; i < 4 && !reached; i++) {
+      await page.keyboard.press('Tab');
+      reached = await google.evaluate((el) => el === document.activeElement);
+    }
+    expect(reached, 'Tab reaches the Google button within 4 presses').toBe(true);
+    await expect(google).toBeFocused();
 
     // Continue tabbing through the remaining interactive elements; this verifies
     // tab order keeps advancing without getting stuck.

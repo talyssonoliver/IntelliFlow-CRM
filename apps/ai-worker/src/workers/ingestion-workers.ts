@@ -21,6 +21,7 @@
  */
 
 import { Job, Worker, Queue } from 'bullmq';
+import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import pino from 'pino';
 import { z } from 'zod';
 import { fetchDocument, extractTextFromBuffer, createChunks } from '@intelliflow/worker-shared';
@@ -344,6 +345,7 @@ export async function bootIngestionWorkers(
     {
       connection: redisConnection,
       concurrency: 2,
+      drainDelay: getDrainDelaySeconds(),
     }
   );
   textWorker.on('failed', (job, error) => {
@@ -357,6 +359,7 @@ export async function bootIngestionWorkers(
     {
       connection: redisConnection,
       concurrency: 1, // OCR is CPU-heavy
+      drainDelay: getDrainDelaySeconds(),
     }
   );
   ocrWorkerInstance.on('failed', (job, error) => {

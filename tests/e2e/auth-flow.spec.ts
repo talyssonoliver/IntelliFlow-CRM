@@ -22,10 +22,10 @@ test.describe('Auth Flow', () => {
     // Should load the home page
     await expect(page).toHaveURL('/');
 
-    // Should show public header (not authenticated header)
-    // Look for sign up or login links that indicate public view
-    const pageContent = await page.content();
-    expect(pageContent).toContain('IntelliFlow');
+    // The public home is the Aurora landing since #741 ("Aurora, the AI CRM that
+    // asks before it acts"); the old check for "IntelliFlow" in the markup only
+    // passed where a stray script chunk still carried the old name.
+    await expect(page).toHaveTitle(/Aurora/);
   });
 
   test('should redirect unauthenticated user from dashboard to login', async ({ page }) => {
@@ -60,9 +60,10 @@ test.describe('Auth Flow', () => {
     // Wait for page to fully load
     await page.waitForLoadState('networkidle');
 
-    // Count header elements - should only have one
-    const headers = page.locator('header');
-    const headerCount = await headers.count();
+    // Count page headers (the banner landmark), not every <header> element: the
+    // Aurora landing draws product mock-ups whose window bars are <header>s inside
+    // their sections, and those are not page headers.
+    const headerCount = await page.getByRole('banner').count();
 
     // Should have exactly one header (either public or auth, not both)
     expect(headerCount).toBeLessThanOrEqual(1);
