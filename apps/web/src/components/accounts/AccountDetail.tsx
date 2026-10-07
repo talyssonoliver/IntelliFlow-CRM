@@ -19,7 +19,7 @@ import {
 } from '@intelliflow/ui';
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/pricing/calculator';
-import { getAccountTier, TIER_CONFIG, type AccountTier } from './AccountCard';
+import { useAccountTiers } from '@/hooks/useAccountTiers';
 import { AccountContactsList } from './AccountContactsList';
 import { AccountOpportunitiesList } from './AccountOpportunitiesList';
 import { RevenueChart } from './RevenueChart';
@@ -60,15 +60,6 @@ interface Tab {
 }
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-
-// Tier gradient colours for the profile card header
-const TIER_GRADIENTS: Record<AccountTier, string> = {
-  ENTERPRISE: 'from-purple-100 to-indigo-50 dark:from-purple-900/40 dark:to-slate-800',
-  MID_MARKET: 'from-blue-100 to-blue-50 dark:from-blue-900/40 dark:to-slate-800',
-  SMB: 'from-green-100 to-emerald-50 dark:from-green-900/40 dark:to-slate-800',
-  STARTUP: 'from-yellow-100 to-amber-50 dark:from-yellow-900/40 dark:to-slate-800',
-  UNKNOWN: 'from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-800',
-};
 
 function getInitials(name: string): string {
   return name
@@ -162,11 +153,8 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   });
 
   // Derived data
-  const tier = useMemo(
-    () => getAccountTier(account?.revenue ? Number(account.revenue) : null),
-    [account?.revenue]
-  );
-  const tierConfig = TIER_CONFIG[tier];
+  const { resolveTier } = useAccountTiers();
+  const tier = resolveTier(account?.revenue);
   const contactCount = account?._count?.contacts ?? 0;
   const opportunityCount = account?._count?.opportunities ?? 0;
   const website = useMemo(() => resolveWebsite(account?.website), [account?.website]);
@@ -381,11 +369,11 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
         <aside className="lg:col-span-3 flex flex-col gap-6">
           {/* Profile Card */}
           <Card className="overflow-hidden">
-            <div className={`h-24 bg-gradient-to-r ${TIER_GRADIENTS[tier]}`} />
+            <div className={`h-24 bg-gradient-to-r ${tier.colors.gradient}`} />
             <div className="px-5 pb-6 relative">
               <div className="relative -mt-10 mb-3">
                 <div
-                  className={`w-20 h-20 rounded-xl border-4 border-white dark:border-slate-900 ${tierConfig.avatarBg} flex items-center justify-center text-2xl font-bold shadow-sm`}
+                  className={`w-20 h-20 rounded-xl border-4 border-white dark:border-slate-900 ${tier.colors.avatarBg} flex items-center justify-center text-2xl font-bold shadow-sm`}
                 >
                   {initials}
                 </div>
@@ -399,7 +387,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 )}
               </div>
               <div className="flex flex-wrap gap-2 mb-6">
-                <Badge className={tierConfig.color}>{tierConfig.label}</Badge>
+                <Badge className={tier.colors.badge}>{tier.label}</Badge>
                 {account.industry && (
                   <span className="px-2 py-1 rounded bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 text-xs font-medium">
                     {account.industry}
@@ -618,7 +606,25 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 </div>
                 <div>
                   <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Tier</p>
-                  <Badge className={tierConfig.color}>{tierConfig.label}</Badge>
+                  <Badge className={tier.colors.badge}>{tier.label}</Badge>
+                  {tier.benefits.length > 0 && (
+                    <ul className="mt-2 space-y-1" aria-label={`${tier.label} tier benefits`}>
+                      {tier.benefits.map((benefit) => (
+                        <li
+                          key={benefit}
+                          className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300"
+                        >
+                          <span
+                            className="material-symbols-outlined !text-[14px] text-green-600"
+                            aria-hidden="true"
+                          >
+                            check
+                          </span>
+                          {benefit}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
                 {account.description && (
                   <div className="sm:col-span-2">
@@ -795,7 +801,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
                     Tier
                   </span>
-                  <Badge className={tierConfig.color}>{tierConfig.label}</Badge>
+                  <Badge className={tier.colors.badge}>{tier.label}</Badge>
                 </div>
               </div>
               <div>
@@ -880,7 +886,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
             </div>
             <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
               <div
-                className={`w-10 h-10 rounded-lg ${tierConfig.avatarBg} flex items-center justify-center text-sm font-bold shrink-0`}
+                className={`w-10 h-10 rounded-lg ${tier.colors.avatarBg} flex items-center justify-center text-sm font-bold shrink-0`}
               >
                 {initials}
               </div>
@@ -888,7 +894,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
                   {account.name}
                 </p>
-                <p className="text-xs text-slate-500">{tierConfig.label} Account</p>
+                <p className="text-xs text-slate-500">{tier.label} Account</p>
               </div>
             </div>
           </Card>

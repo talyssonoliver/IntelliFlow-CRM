@@ -297,10 +297,11 @@ export interface OwnerChangeNotification {
   actingUserId: string;
 }
 
-type NotificationCreator = (args: {
+/** Bound notification creator; `T` is the notification type the caller emits. */
+export type NotificationCreator<T extends string = 'account_reassigned'> = (args: {
   userId: string;
   tenantId: string;
-  type: 'account_reassigned';
+  type: T;
   title: string;
   body: string;
   priority?: 'high' | 'normal' | 'low';

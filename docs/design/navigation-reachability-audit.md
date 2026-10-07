@@ -156,7 +156,7 @@ Legend:
 | `/accounts`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) |
 | `/accounts/[id]`              | --  | --  | --  | IP  |     OK     | From list rows        |
 | `/accounts/account-settings`  | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
-| `/accounts/account-tiers`     | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
+| `/accounts/account-tiers`     | --  | --  | SB  | IP  |    YES     | Accounts sidebar      |
 | `/accounts/territory-mapping` | --  | --  | SB  | --  |    YES     | Accounts sidebar      |
 
 ### Agent Approvals (17 routes)

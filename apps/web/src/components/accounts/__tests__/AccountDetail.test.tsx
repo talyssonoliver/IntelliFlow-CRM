@@ -105,16 +105,23 @@ vi.mock('@/lib/pricing/calculator', () => ({
   formatCurrency: (v: number) => `$${v.toLocaleString('en-GB')}`,
 }));
 
-vi.mock('../AccountCard', () => ({
-  getAccountTier: () => 'MID_MARKET',
-  TIER_CONFIG: {
-    ENTERPRISE: { label: 'Enterprise', color: 'c1', dot: 'd1', avatarBg: 'a1' },
-    MID_MARKET: { label: 'Mid-Market', color: 'c2', dot: 'd2', avatarBg: 'a2' },
-    SMB: { label: 'SMB', color: 'c3', dot: 'd3', avatarBg: 'a3' },
-    STARTUP: { label: 'Startup', color: 'c4', dot: 'd4', avatarBg: 'a4' },
-    UNKNOWN: { label: 'Unknown', color: 'c5', dot: 'd5', avatarBg: 'a5' },
-  },
-}));
+// PG-196: tiers resolve through the tenant configuration (useAccountTiers).
+// Mid-Market (5,000,000 in mockAccount) carries benefits shown on the tier card.
+vi.mock('@/hooks/useAccountTiers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useAccountTiers')>();
+  const { DEFAULT_TIER_CONFIG } = await import('@intelliflow/domain');
+  const tiers = DEFAULT_TIER_CONFIG.tiers.map((t) =>
+    t.key === 'MID_MARKET' ? { ...t, benefits: ['Priority support', 'Quarterly review'] } : t
+  );
+  return {
+    ...actual,
+    useAccountTiers: () =>
+      actual.buildAccountTiersResult(
+        { tiers, defaultTierKey: null, canManage: false },
+        { isLoading: false, isError: false }
+      ),
+  };
+});
 
 vi.mock('../AccountContactsList', () => ({
   AccountContactsList: ({ onAddContact }: { onAddContact?: () => void }) => (
@@ -390,6 +397,13 @@ describe('AccountDetail', () => {
     render(<AccountDetail {...defaultProps} />);
     const backLink = screen.getByText('Back to Accounts').closest('a');
     expect(backLink).toHaveAttribute('href', '/accounts');
+  });
+
+  it('lists the tier benefits on the account page (PG-196)', () => {
+    render(<AccountDetail {...defaultProps} />);
+    const list = screen.getByRole('list', { name: 'Mid-Market tier benefits' });
+    expect(list).toHaveTextContent('Priority support');
+    expect(list).toHaveTextContent('Quarterly review');
   });
 
   it('shows dash for missing revenue', () => {

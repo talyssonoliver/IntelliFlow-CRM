@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                  |
-| ------------- | ---------------------- |
-| Feature Name  | Module Settings Pages  |
-| Status        | Active                 |
-| Related Tasks | PG-178, PG-182, PG-183 |
-| Created       | 2026-03-11             |
-| Last Updated  | 2026-04-13             |
-| Author        | Spec Session (PG-178)  |
+| Field         | Value                          |
+| ------------- | ------------------------------ |
+| Feature Name  | Module Settings Pages          |
+| Status        | Active                         |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196 |
+| Created       | 2026-03-11                     |
+| Last Updated  | 2026-10-07                     |
+| Author        | Spec Session (PG-178)          |
 
 ## Problem Statement
 
@@ -530,3 +530,44 @@ Reference implementation: `apps/web/src/app/tickets/(list)/sla-policies/**`,
 None blocking. Sibling stubs `/analytics/report-templates` and
 `/analytics/scheduled-reports` remain at the wrong route-group level (no
 sidebar). Their own tasks in later sprints should address the move.
+
+## PG-196 Addendum: Account Tiers (2026-10-07)
+
+Owner ruling A (2026-10-07): each tenant configures the existing revenue tiers
+(ENTERPRISE / MID_MARKET / SMB / STARTUP as the starting set); the account card,
+Account Settings hierarchy tab and sidebar tier links read that one
+configuration, and the `/accounts?tier=` filters work. Decision record:
+`docs/architecture/adr/ADR-073-tenant-configurable-account-tiers.md`.
+
+### Additional User Stories
+
+- **US-T1 (Tier definitions)**: As a workspace admin, I want to rename,
+  recolour, re-threshold, add and remove account tiers so that the tier labels
+  match how my business segments customers by annual revenue.
+- **US-T2 (Default tier)**: As a workspace admin, I want to choose which tier an
+  account shows when no annual revenue is recorded.
+- **US-T3 (Benefits)**: As a workspace admin, I want to record the benefits each
+  tier receives so that account owners see them on the account.
+- **US-T4 (Up/down rules)**: As an account owner, I want to be notified when one
+  of my accounts moves up or down a tier, when my admin turns that on.
+
+### Additional Acceptance Criteria
+
+- AC-T01..AC-T16 and NF-001..NF-005 as specified in
+  `.specify/sprints/sprint-18/specifications/PG-196-spec.md` (route
+  `/accounts/account-tiers`; defaults equal the IFC-273 bands; ADMIN-only
+  writes; tier-change notifications default off; working `?tier=` filters;
+  hierarchy tab and `requireParentForTiers` keyed on tier keys and enforced on
+  transitions).
+
+### Status (2026-10-07)
+
+Implemented on `feat/pg-196-account-tiers` (domain → web, all package-scoped
+validations green). Open before completion: Lighthouse ≥ 90 on the authenticated
+page (or an owner waiver), push + pre-ship. Evidence:
+`artifacts/lighthouse/PG-196/README.md`.
+
+### Dropped (category 3, playbook §8)
+
+Hysteresis, grace periods and manual tier overrides: tiers are derived from
+revenue, so these would need a persisted tier that nothing reads today.

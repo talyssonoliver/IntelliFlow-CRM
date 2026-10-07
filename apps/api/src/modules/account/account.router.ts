@@ -63,6 +63,21 @@ import {
   REASSIGN_ADMIN_ROLES,
 } from './account-reassign';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import {
+  createNotification,
+  type CreateNotificationParams,
+} from '../notifications/notifications.router';
+import {
+  assertCreateAllowed,
+  assertParentRemovalAllowed,
+  assertRevenueChangeAllowed,
+  loadAccountTierConfig,
+  loadAccountTierPolicy,
+  loadRevenueChange,
+  notifyRevenueChange,
+  tierRevenueWhere,
+  type RevenueChange,
+} from './account-tiers';
 
 /**
  * Helper to get account service from context
@@ -141,15 +156,41 @@ async function enqueueAccountAIEnrichment(entityId: string, tenantId: string): P
 
 // ─── Extracted procedure handlers ───────────────────────────────────────────
 
+/** Bound creator for account notifications (in-app + orchestrator when wired). */
+function accountNotificationCreator(ctx: Context) {
+  return (params: CreateNotificationParams) =>
+    createNotification(ctx.prisma, params, ctx.services?.notificationOrchestrator);
+}
+
+/**
+ * PG-196: when an edit sets revenue, read the account and the tenant's tier
+ * policy first so the parent rule can be checked and a tier move notified.
+ */
+async function prepareRevenueChange(
+  typedCtx: ReturnType<typeof getTenantContext>,
+  accountId: string,
+  data: Record<string, unknown>
+): Promise<RevenueChange | null> {
+  if (!Object.prototype.hasOwnProperty.call(data, 'revenue')) return null;
+  const change = await loadRevenueChange(
+    typedCtx.prismaWithTenant,
+    typedCtx.tenant.tenantId,
+    accountId
+  );
+  if (change) assertRevenueChangeAllowed(change, data.revenue);
+  return change;
+}
+
 async function handleAccountCreate(ctx: Context, input: CreateAccountInput) {
   const typedCtx = getTenantContext(ctx);
   const accountService = getAccountService(ctx);
 
   // PG-183: apply tenant automation + required-field policy before the
-  // domain service takes over.
-  const [flags, requiredFields] = await Promise.all([
+  // domain service takes over. PG-196: tier policy for the parent rule.
+  const [flags, requiredFields, tierPolicy] = await Promise.all([
     loadAccountAutomation(typedCtx),
     loadRequiredAccountFields(typedCtx),
+    loadAccountTierPolicy(typedCtx.prismaWithTenant, typedCtx.tenant.tenantId),
   ]);
 
   const websiteString = resolveWebsiteString(
@@ -167,6 +208,11 @@ async function handleAccountCreate(ctx: Context, input: CreateAccountInput) {
     },
     requiredFields,
     'create'
+  );
+  assertCreateAllowed(
+    tierPolicy,
+    (input as { revenue?: unknown }).revenue,
+    (input as { parentAccountId?: string | null }).parentAccountId
   );
 
   const hygieneInput = {
@@ -341,6 +387,7 @@ async function handleAccountUpdate(ctx: Context, input: UpdateAccountInput) {
     requiredFields,
     'update'
   );
+  const revenueChange = await prepareRevenueChange(typedCtx, id, data as Record<string, unknown>);
 
   const updateData = {
     ...data,
@@ -391,6 +438,16 @@ async function handleAccountUpdate(ctx: Context, input: UpdateAccountInput) {
       actorId: typedCtx.tenant.userId,
     })
     .catch((err) => console.error('[account.router] Audit log failed:', err));
+
+  // PG-196: up/down tier notification (post-commit, best-effort).
+  if (revenueChange) {
+    await notifyRevenueChange(
+      revenueChange,
+      (data as { revenue?: unknown }).revenue,
+      { tenantId: typedCtx.tenant.tenantId, actorId: typedCtx.tenant.userId },
+      accountNotificationCreator(ctx)
+    );
+  }
 
   // IFC-312: wire AI_ENRICHMENT producer on account update.
   if (flags.aiEnrichment || flags.aiIndustryInference) {
@@ -659,6 +716,15 @@ export const accountRouter = createTRPCRouter({
           (baseWhere.revenue as Record<string, number>).lte = maxRevenue;
       }
 
+      // PG-196: tier filter → revenue band from the tenant's tier configuration.
+      if (input.tier) {
+        const { config } = await loadAccountTierConfig(
+          typedCtx.prismaWithTenant,
+          typedCtx.tenant.tenantId
+        );
+        baseWhere.AND = [tierRevenueWhere(config, input.tier)];
+      }
+
       if (minEmployees !== undefined || maxEmployees !== undefined) {
         baseWhere.employees = {};
         if (minEmployees !== undefined)
@@ -728,6 +794,9 @@ export const accountRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
       const accountService = getAccountService(ctx);
+      const revenueChange = await prepareRevenueChange(typedCtx, input.id, {
+        revenue: input.revenue,
+      });
 
       const result = await accountService.updateRevenue(
         input.id,
@@ -739,6 +808,14 @@ export const accountRouter = createTRPCRouter({
       if (result.isFailure) throwAccountCommandError(result.error.code, result.error.message);
 
       await auditAndEnrichAccountUpdate(ctx, typedCtx, input.id, { revenue: input.revenue });
+      if (revenueChange) {
+        await notifyRevenueChange(
+          revenueChange,
+          input.revenue,
+          { tenantId: typedCtx.tenant.tenantId, actorId: typedCtx.tenant.userId },
+          accountNotificationCreator(ctx)
+        );
+      }
       return mapAccountToResponse(result.value);
     }),
 
@@ -1120,6 +1197,15 @@ export const accountRouter = createTRPCRouter({
   setParent: tenantProcedure.input(setParentSchema).mutation(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
     const accountService = getAccountService(ctx);
+
+    // PG-196: removing the parent must respect requireParentForTiers.
+    if (!input.parentAccountId) {
+      await assertParentRemovalAllowed(
+        typedCtx.prismaWithTenant,
+        typedCtx.tenant.tenantId,
+        input.accountId
+      );
+    }
 
     const result = await accountService.setParent(
       input.accountId,

@@ -353,9 +353,9 @@ describe('AccountService', () => {
       expect(tier).toBe('STARTUP');
     });
 
-    it('should return STARTUP for no revenue', () => {
+    it('should return UNKNOWN for no revenue (domain resolver, PG-196)', () => {
       const tier = service.getAccountTier(undefined);
-      expect(tier).toBe('STARTUP');
+      expect(tier).toBe('UNKNOWN');
     });
 
     it('should return STARTUP for zero revenue', () => {
@@ -419,7 +419,7 @@ describe('AccountService', () => {
 
       expect(result.isSuccess).toBe(true);
       expect(result.value.overallScore).toBe(0);
-      expect(result.value.tier).toBe('STARTUP');
+      expect(result.value.tier).toBe('UNKNOWN');
     });
   });
 
@@ -717,7 +717,9 @@ describe('AccountService', () => {
       expect(stats.total).toBe(3);
       expect(stats.byTier['ENTERPRISE']).toBe(1);
       expect(stats.byTier['SMB']).toBe(1);
-      expect(stats.byTier['STARTUP']).toBe(1);
+      // Stat 3 has no revenue: UNKNOWN, matching the domain resolver (PG-196)
+      expect(stats.byTier['STARTUP']).toBe(0);
+      expect(stats.byTier['UNKNOWN']).toBe(1);
       expect(stats.byIndustry['Technology']).toBe(2);
       expect(stats.byIndustry['Healthcare']).toBe(1);
       expect(stats.totalRevenue).toBe(15500000);

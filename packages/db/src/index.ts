@@ -59,6 +59,8 @@ export type {
   AccountRequiredField,
   AccountTag,
   AccountAutomationSetting,
+  AccountTierDefinition,
+  AccountTierConfig,
   DealWinLossReason,
   DealScoringRule,
   DealDuplicateRule,

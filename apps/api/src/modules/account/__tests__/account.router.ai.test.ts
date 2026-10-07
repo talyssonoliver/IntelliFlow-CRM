@@ -34,6 +34,11 @@ describe('Account Router AI Procedures (IFC-312)', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // PG-196: create/update/updateRevenue/setParent read the tier policy.
+    // No rows ⇒ default tiers, no parent rule.
+    (prismaMock.accountTierDefinition.findMany as any).mockResolvedValue([]);
+    (prismaMock.accountTierConfig.findUnique as any).mockResolvedValue(null);
+    (prismaMock.accountHierarchyConfig.findUnique as any).mockResolvedValue(null);
     caller = accountRouter.createCaller(createTestContext() as any);
   });
 

@@ -151,4 +151,15 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     expect(taskSettings?.update).toBeDefined();
     expect(taskSettings?.resetToDefaults).toBeDefined();
   });
+
+  it('registers the PG-196 accountTiers router with get/update/resetToDefaults', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const accountTiers = record.accountTiers as Record<string, unknown> | undefined;
+
+    expect(accountTiers).toBeDefined();
+    expect(accountTiers?.get).toBeDefined();
+    expect(accountTiers?.update).toBeDefined();
+    expect(accountTiers?.resetToDefaults).toBeDefined();
+  });
 });
