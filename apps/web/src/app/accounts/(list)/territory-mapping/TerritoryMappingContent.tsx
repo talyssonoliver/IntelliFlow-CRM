@@ -112,7 +112,10 @@ export default function TerritoryMappingContent() {
       toast({ title: id ? 'Territory updated' : 'Territory created', description: saved.name });
       return saved;
     } catch (error) {
-      showError('Could not save territory', error as { message: string });
+      showError(
+        'Could not save territory',
+        error instanceof Error ? error : { message: 'Please try again.' }
+      );
       return undefined;
     }
   };

@@ -73,9 +73,7 @@ export async function assertExplicitOwner(
 
 /** Narrow a stored strategy (SQL CHECK-constrained) to the domain union. */
 export function toTerritoryStrategy(value: string): TerritoryStrategy {
-  return (TERRITORY_STRATEGIES as readonly string[]).includes(value)
-    ? (value as TerritoryStrategy)
-    : 'MANUAL';
+  return TERRITORY_STRATEGIES.find((strategy) => strategy === value) ?? 'MANUAL';
 }
 
 interface LoadedTerritory extends TerritoryCandidate {

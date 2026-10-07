@@ -26,11 +26,9 @@ export const COLOR_SWATCH_CLASSES: Record<AccountTagColorToken, string> = {
   rose: 'bg-rose-500',
 };
 
-const COLOR_TOKENS: ReadonlySet<string> = new Set(ACCOUNT_TAG_COLOR_TOKENS);
-
 /** Narrow a stored token to the allowlist; unknown → slate. */
 export function toColorToken(token: string): AccountTagColorToken {
-  return COLOR_TOKENS.has(token) ? (token as AccountTagColorToken) : 'slate';
+  return ACCOUNT_TAG_COLOR_TOKENS.find((known) => known === token) ?? 'slate';
 }
 
 export function swatchClass(token: string): string {

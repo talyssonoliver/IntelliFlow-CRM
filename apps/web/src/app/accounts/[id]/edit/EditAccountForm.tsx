@@ -54,7 +54,9 @@ export function toFormValues(record: AccountRecord): AccountFormValues {
 }
 
 function isNotFound(error: unknown): boolean {
-  return (error as { data?: { code?: string } } | null)?.data?.code === 'NOT_FOUND';
+  if (typeof error !== 'object' || error === null || !('data' in error)) return false;
+  const { data } = error;
+  return typeof data === 'object' && data !== null && 'code' in data && data.code === 'NOT_FOUND';
 }
 
 export default function EditAccountForm({ accountId }: Readonly<{ accountId: string }>) {

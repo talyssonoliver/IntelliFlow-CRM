@@ -230,7 +230,7 @@ describe('TerritoryMappingContent', () => {
   });
 
   it('shows a toast and returns undefined when a save fails', async () => {
-    h.mutations.create.mutateAsync.mockRejectedValueOnce({ message: 'A territory named X exists' });
+    h.mutations.create.mutateAsync.mockRejectedValueOnce(new Error('A territory named X exists'));
     render(<TerritoryMappingContent />);
     let result: unknown = 'unset';
     await act(async () => {
@@ -239,6 +239,17 @@ describe('TerritoryMappingContent', () => {
     expect(result).toBeUndefined();
     expect(h.toast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Could not save territory', variant: 'destructive' })
+    );
+  });
+
+  it('falls back to a generic message for non-Error rejections', async () => {
+    h.mutations.update.mutateAsync.mockRejectedValueOnce('nope');
+    render(<TerritoryMappingContent />);
+    await act(async () => {
+      await h.listProps!.onSave({ name: 'X' }, 't1');
+    });
+    expect(h.toast).toHaveBeenCalledWith(
+      expect.objectContaining({ description: 'Please try again.' })
     );
   });
 
