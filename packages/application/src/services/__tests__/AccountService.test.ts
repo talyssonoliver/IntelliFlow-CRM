@@ -51,6 +51,28 @@ describe('AccountService', () => {
       expect(result.value.industry).toBe('Technology');
     });
 
+    it('passes geography through to the aggregate (PG-197)', async () => {
+      const result = await service.createAccount({
+        name: 'Geo Company',
+        country: 'us',
+        region: 'CA',
+        postalCode: '94105',
+        ownerId: 'owner-1',
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value).toMatchObject({ country: 'US', region: 'CA', postalCode: '94105' });
+    });
+
+    it('fails on an invalid country (PG-197)', async () => {
+      const result = await service.createAccount({
+        name: 'Bad Geo',
+        country: 'UK',
+        ownerId: 'owner-1',
+      });
+      expect(result.isFailure).toBe(true);
+    });
+
     it('should fail if name already exists', async () => {
       await service.createAccount({
         name: 'Duplicate Company',
@@ -189,6 +211,40 @@ describe('AccountService', () => {
       const reloaded = await accountRepository.findById(account.id, 'tenant-123');
       expect(reloaded?.name).toBe('Validate Update');
       expect(reloaded?.website).toBeUndefined();
+    });
+
+    it('sets and clears geography via updateAccountInfo (PG-197)', async () => {
+      const account = Account.create({ name: 'Geo Co', ownerId: 'owner-1' }).value;
+      await accountRepository.save(account);
+
+      const set = await service.updateAccountInfo(
+        account.id.value,
+        { country: 'gb', region: 'London', postalCode: 'sw1a 1aa' },
+        'updater'
+      );
+      expect(set.isSuccess).toBe(true);
+      expect(set.value).toMatchObject({ country: 'GB', region: 'London', postalCode: 'SW1A 1AA' });
+
+      const cleared = await service.updateAccountInfo(
+        account.id.value,
+        { country: null, region: null, postalCode: null },
+        'updater'
+      );
+      expect(cleared.isSuccess).toBe(true);
+      expect(cleared.value).toMatchObject({ country: null, region: null, postalCode: null });
+      expect(cleared.value.ownerId).toBe('owner-1');
+    });
+
+    it('rejects an invalid country on update (PG-197)', async () => {
+      const account = Account.create({ name: 'Bad Geo Co', ownerId: 'owner-1' }).value;
+      await accountRepository.save(account);
+
+      const result = await service.updateAccountInfo(
+        account.id.value,
+        { country: 'UK' },
+        'updater'
+      );
+      expect(result.isFailure).toBe(true);
     });
 
     it('should update revenue, employees and industry via updateAccountInfo (B-08)', async () => {
