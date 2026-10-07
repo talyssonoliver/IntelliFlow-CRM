@@ -3,10 +3,20 @@
  * safety one: anything we cannot prove is narrow runs the full suite, and a
  * package change always pulls in everything that depends on it.
  */
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { describe, it, expect } from 'vitest';
-import { classify, readWorkspacePackages, FULL_SHARDS } from '../ci/affected.mjs';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  classify,
+  outputLines,
+  parseArgs,
+  readWorkspacePackages,
+  resolveScope,
+  stepSummary,
+  FULL_SHARDS,
+} from '../ci/affected.mjs';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -107,6 +117,131 @@ describe('classify', () => {
   it('runs integration but no unit shard when only integration tests change', () => {
     const r = run(['tests/integration/db.test.ts']);
     expect(r).toMatchObject({ mode: 'affected', unit: false, integration: true, shardTotal: 0 });
+  });
+});
+
+describe('resolveScope', () => {
+  const quiet = () => {
+    const lines: string[] = [];
+    return {
+      lines,
+      log: { log: (m: string) => lines.push(m), error: (m: string) => lines.push(m) },
+    };
+  };
+
+  it.each([['push'], ['merge_group'], ['schedule'], [undefined]])(
+    'runs the full suite for event %s without diffing',
+    (event) => {
+      const diff = vi.fn();
+      const r = resolveScope({ event }, PACKAGES, TESTS, diff, quiet().log);
+      expect(r.mode).toBe('full');
+      expect(r.reason).toBe(`event ${event ?? '(none)'} always runs the full suite`);
+      expect(diff).not.toHaveBeenCalled();
+    }
+  );
+
+  it('classifies the pull request diff between base and head', () => {
+    const diff = vi.fn(() => ['packages/domain/src/lead.ts', '']);
+    const { lines, log } = quiet();
+    const r = resolveScope(
+      { event: 'pull_request', base: 'b', head: 'h' },
+      PACKAGES,
+      TESTS,
+      diff,
+      log
+    );
+    expect(diff).toHaveBeenCalledWith('b', 'h');
+    expect(r.mode).toBe('affected');
+    expect(lines).toContain('Changed files (1):\npackages/domain/src/lead.ts');
+  });
+
+  it('falls back to the full suite when the diff fails', () => {
+    const { lines, log } = quiet();
+    const r = resolveScope(
+      { event: 'pull_request', base: 'b', head: 'h' },
+      PACKAGES,
+      TESTS,
+      () => {
+        throw new Error('bad revision');
+      },
+      log
+    );
+    expect(r.mode).toBe('full');
+    expect(lines[0]).toMatch(/^::warning::git diff b h failed; .*bad revision$/);
+  });
+});
+
+describe('parseArgs', () => {
+  it('reads --key value pairs', () => {
+    expect(parseArgs(['--event', 'pull_request', '--base', 'abc', '--head', 'def'])).toEqual({
+      event: 'pull_request',
+      base: 'abc',
+      head: 'def',
+    });
+  });
+});
+
+describe('outputLines and stepSummary', () => {
+  it('writes every key the workflows read, for an affected run', () => {
+    const r = run(['packages/domain/src/lead.ts']);
+    const lines = outputLines(r);
+    expect(lines).toContain('mode=affected');
+    expect(lines).toContain('code=true');
+    expect(lines).toContain(
+      'turbo_filter=--filter=@intelliflow/web --filter=@x/application --filter=@x/domain'
+    );
+    expect(lines).toContain('test_paths=apps/web/ packages/application/ packages/domain/ tests/');
+    expect(lines.find((l) => l.startsWith('shards='))).toBe(
+      `shards=${JSON.stringify(Array.from({ length: r.shardTotal }, (_, i) => i + 1))}`
+    );
+    expect(stepSummary(r)).toContain(
+      'Affected packages: @intelliflow/web, @x/application, @x/domain'
+    );
+  });
+
+  it('reports code=false and no packages for a docs-only run', () => {
+    const r = run(['docs/x.md']);
+    expect(outputLines(r)).toEqual(
+      expect.arrayContaining(['code=false', 'shards=[]', 'turbo_filter='])
+    );
+    expect(stepSummary(r)).toBe(
+      '### CI scope: `none`\n\nno path a PR job tests changed (docs, e2e or property only)\n\nUnit shards: 0\n'
+    );
+  });
+});
+
+describe('readWorkspacePackages (fixture)', () => {
+  it('expands globs, keeps plain entries and skips dirs with no named package.json', () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'affected-'));
+    try {
+      const write = (rel: string, body: string) => {
+        fs.mkdirSync(path.dirname(path.join(root, rel)), { recursive: true });
+        fs.writeFileSync(path.join(root, rel), body);
+      };
+      write(
+        'pnpm-workspace.yaml',
+        "packages:\n  - 'apps/*' # apps\n  - \"tools/single\"\n  - 'missing/*'\n"
+      );
+      write(
+        'apps/a/package.json',
+        JSON.stringify({ name: 'a', dependencies: { b: '1', zod: '3' } })
+      );
+      write('apps/b/package.json', JSON.stringify({ name: 'b' }));
+      write('apps/unnamed/package.json', JSON.stringify({ private: true }));
+      fs.mkdirSync(path.join(root, 'apps/empty'), { recursive: true });
+      write('apps/file.txt', 'not a dir');
+      write(
+        'tools/single/package.json',
+        JSON.stringify({ name: 'single', devDependencies: { a: '1' } })
+      );
+
+      const pkgs = readWorkspacePackages(root);
+      expect(pkgs.map((p: { name: string }) => p.name).sort()).toEqual(['a', 'b', 'single']);
+      expect(pkgs.find((p: { name: string }) => p.name === 'a')?.deps).toEqual(['b']);
+      expect(pkgs.find((p: { name: string }) => p.name === 'single')?.deps).toEqual(['a']);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });
 
