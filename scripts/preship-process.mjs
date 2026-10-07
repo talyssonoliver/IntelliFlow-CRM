@@ -135,8 +135,35 @@ export function sameProcess(pid, recordedStartMs, deps = {}) {
   return sameStart(started, recordedStartMs) ? 'yes' : 'no';
 }
 
-/** PIDs above `pid` (parent, grandparent, ...), nearest first. */
-export function ancestorsOf(pid, depth = 6, deps = {}) {
+/**
+ * How far up ancestorsOf looks for the `git push`. The gate re-runs itself under
+ * with-slot, so on Windows the push is 8 levels up: gate <- cmd (with-slot's
+ * shell) <- with-slot <- pre-ship <- cmd <- pnpm <- cmd (pnpm.cmd) <- sh (the
+ * hook) <- git. The old fixed depth of 6 stopped at the pnpm shim, so a killed
+ * push left every watched PID alive and the gate held its slot for nobody.
+ */
+export const ANCESTOR_SEARCH_DEPTH = 12;
+/** What ancestorsOf returns when no git is above (a manual `pnpm run pre-ship`): as before. */
+export const ANCESTOR_FALLBACK_DEPTH = 6;
+
+const isGit = (name) => /^git(\.exe)?$/i.test(path.basename(String(name ?? '')));
+
+/**
+ * The PIDs to watch above the gate: up to and including the `git` running the
+ * push hook (and a git directly above it: Git for Windows' cmd\git.exe wrapper
+ * starts the real git.exe), or, when there is no git within `depth` levels, the
+ * nearest ANCESTOR_FALLBACK_DEPTH.
+ */
+function upToGit(chain) {
+  const first = chain.findIndex((a) => isGit(a.name));
+  if (first === -1) return chain.slice(0, ANCESTOR_FALLBACK_DEPTH).map((a) => a.pid);
+  let last = first;
+  while (last + 1 < chain.length && isGit(chain[last + 1].name)) last++;
+  return chain.slice(0, last + 1).map((a) => a.pid);
+}
+
+/** PIDs above `pid` (parent, grandparent, ...), nearest first, ending at the push's git. */
+export function ancestorsOf(pid, depth = ANCESTOR_SEARCH_DEPTH, deps = {}) {
   const { platform = process.platform, run = spawnSync } = deps;
   if (platform === 'win32') {
     const r = run(
@@ -151,30 +178,37 @@ export function ancestorsOf(pid, depth = 6, deps = {}) {
           `$q = $all[[int]$p.ParentProcessId]; ` +
           // A parent created after its child is a reused PID, not the parent.
           `if (-not $q -or $q.CreationDate -gt $p.CreationDate) { break }; ` +
-          `$out += $q.ProcessId; $p = $q }; $out -join ','`,
+          `$out += "$($q.ProcessId)|$($q.Name)"; $p = $q }; $out -join ','`,
       ],
       { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 30000, windowsHide: true }
     );
-    return (r.stdout || '')
+    const chain = (r.stdout || '')
       .trim()
       .split(',')
-      .map((v) => Number.parseInt(v, 10))
-      .filter((v) => Number.isInteger(v) && v > 4);
+      .map((entry) => {
+        const [id, name = ''] = entry.split('|');
+        return { pid: Number.parseInt(id, 10), name: name.trim() };
+      })
+      .filter((a) => Number.isInteger(a.pid) && a.pid > 4);
+    return upToGit(chain);
   }
-  const out = [];
+  const ps = (field, of) =>
+    (
+      run('ps', ['-o', field, '-p', String(of)], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore'],
+        timeout: 5000,
+      }).stdout || ''
+    ).trim();
+  const chain = [];
   let current = pid;
   for (let i = 0; i < depth; i++) {
-    const r = run('ps', ['-o', 'ppid=', '-p', String(current)], {
-      encoding: 'utf8',
-      stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 5000,
-    });
-    const parent = Number.parseInt((r.stdout || '').trim(), 10);
+    const parent = Number.parseInt(ps('ppid=', current), 10);
     if (!Number.isInteger(parent) || parent <= 1) break;
-    out.push(parent);
+    chain.push({ pid: parent, name: ps('comm=', parent) });
     current = parent;
   }
-  return out;
+  return upToGit(chain);
 }
 
 /** Stop a process and everything it started (Windows: taskkill /T /F by PID). */
