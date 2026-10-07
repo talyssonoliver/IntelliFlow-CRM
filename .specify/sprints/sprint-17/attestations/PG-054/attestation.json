@@ -3,7 +3,12 @@
   "sprint": 17,
   "verdict": "COMPLETE",
   "attested_at": "2026-04-19T11:10:00Z",
-  "dependencies_verified": ["PG-050", "PG-051", "PG-052", "PG-053"],
+  "dependencies_verified": [
+    "PG-050",
+    "PG-051",
+    "PG-052",
+    "PG-053"
+  ],
   "artifact_hashes": {
     "apps/web/src/app/(public)/aup/page.tsx": "1e7f4367bed46e4871fa00598edcfa60c074002e222d5f22bb73b757a9593183",
     "apps/web/src/lib/legal/violation-tracker.ts": "3091a99d1b92031084ba8f1097676590efd8bdf0ca03b18afa23f33a411bb0a3",
@@ -51,6 +56,15 @@
       "timestamp": "2026-04-19T11:05:00Z",
       "duration_ms": 180000,
       "stdout_hash": "Compiled successfully; /aup present in route manifest as dynamic (ƒ /aup); BUILD_ID fg1Sxz2ZI9cWQe53GhG9U. Build required upstream fixes (see local-run-note.md Tangential fixes section): validators barrel export + analytics router wiring + Prisma regen + PRISMA_FIELD_ENCRYPTION_KEY env — all PG-187/189/190 scope not PG-054."
+    },
+    {
+      "name": "Lint (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:30:55.518Z",
+      "duration_ms": 14311,
+      "stdout_hash": "82d87e406fabda8bbc988c12b2556367f5c30a4565b55f975ad8634e05c2bc0a"
     }
   ],
   "gate_results": [

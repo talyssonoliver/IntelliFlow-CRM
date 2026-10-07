@@ -2,7 +2,7 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "task_id": "IFC-234",
   "sprint": 18,
-  "verdict": "COMPLETE",
+  "verdict": "PARTIAL",
   "completed_at": "2026-06-29T14:20:00Z",
   "git_sha": "ac3f481d9",
   "branch": "feat/ifc-234",

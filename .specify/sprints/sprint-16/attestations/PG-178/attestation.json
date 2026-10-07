@@ -10,7 +10,10 @@
     "apps/web/src/components/settings/ModuleSettingsLayout.tsx": "086eabdd7977006b0663a6dea26c5cea273f0d220be2f4801f9ae85a2c257b0e",
     "apps/web/src/app/settings/leads/LeadSettingsContent.tsx": "4eb5dc4ce76fe14d329fad430fd4779298bfbf272ab86b65bc791b9eb01640ba"
   },
-  "dependencies_verified": ["PG-104", "IFC-076"],
+  "dependencies_verified": [
+    "PG-104",
+    "IFC-076"
+  ],
   "validation_results": [
     {
       "name": "TypeScript",
@@ -44,6 +47,33 @@
       "passed": true,
       "timestamp": "2026-03-11T22:52:33Z",
       "duration_ms": 17000
+    },
+    {
+      "name": "TypeScript (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:56.503Z",
+      "duration_ms": 59015,
+      "stdout_hash": "1a3449b1d8cbd8eb94800f98cc4ad86ea16c7016cd39cee7468d3d0582fb26bd"
+    },
+    {
+      "name": "TypeScript (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:34.331Z",
+      "duration_ms": 21420,
+      "stdout_hash": "53d0f849ced6d028c49ad71a07104c03a10b25681f52bf6a2ecfb45335e75d6b"
+    },
+    {
+      "name": "TypeScript (validators; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/validators typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:31.600Z",
+      "duration_ms": 2731,
+      "stdout_hash": "6e509db3fcc0f25bb0ba86bc1bdcb6fb0ffb64fde52fa3a4bd387a2f26d00e3c"
     }
   ],
   "evidence_summary": {

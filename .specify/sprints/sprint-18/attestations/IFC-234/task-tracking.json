@@ -17,8 +17,19 @@
     ],
     "missing": []
   },
-  "blockers": [],
-  "completed_at": "2026-06-29T14:20:00Z",
+  "blockers": [
+    {
+      "description": "Reopen evidence: the DoD requires working Invite/Remove/Role, real integration status with connect/disconnect, and notification toggles that persist via mutation. apps/web/src/app/settings/team/page.tsx shows Invite as \"coming soon\" and Remove/Role disabled; settings/integrations/page.tsx:60 says \"No connect/disconnect mutations exist yet\"; settings/notifications/page.tsx is a 5-line redirect to /notifications/settings. Only the read paths (user.list, getAllConnectorsHealth) and the account save are wired.",
+      "raised_at": "2026-10-07T08:35:35Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: Invite/Remove/Role and Connect/Disconnect work through real mutations with tests; notification toggles persist; attestation validation_results with the 4 validations.",
+      "raised_at": "2026-10-07T08:35:35Z",
+      "resolved_at": null
+    }
+  ],
+  "completed_at": null,
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.859Z"
   },
@@ -70,6 +81,11 @@
     {
       "at": "2026-06-29T14:20:00Z",
       "status": "Completed"
+    },
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:35:35Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
     }
   ],
   "stream": null,
@@ -111,5 +127,6 @@
       "result": "PASS",
       "stdout_hash": "team-coverage-100pct-2026-06-29"
     }
-  ]
+  ],
+  "updated_at": "2026-10-07T08:35:35Z"
 }

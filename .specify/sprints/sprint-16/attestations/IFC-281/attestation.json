@@ -37,6 +37,42 @@
       "timestamp": "2026-03-19T00:39:00Z",
       "duration_ms": 14000,
       "stdout_hash": "pre-existing-GuardrailsAIService-prompt-sanitizer-missing"
+    },
+    {
+      "name": "TypeScript (adapters; re-run by the 2026-10-07 integrity audit at b5b42db08 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/adapters typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:52:41.749Z",
+      "duration_ms": 5990,
+      "stdout_hash": "267b034ace317dcfc53ba724f05750922a51d5a311e64784713df8c00cfefaaf"
+    },
+    {
+      "name": "TypeScript (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:28:34.331Z",
+      "duration_ms": 21420,
+      "stdout_hash": "53d0f849ced6d028c49ad71a07104c03a10b25681f52bf6a2ecfb45335e75d6b"
+    },
+    {
+      "name": "Build (adapters; re-run by the 2026-10-07 integrity audit at b5b42db08 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/adapters build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:52:47.741Z",
+      "duration_ms": 12578,
+      "stdout_hash": "07f311c7b746f9792c0d796375b7b1d93c96a55b2d4576429e2c0a6b8e9d5f23"
+    },
+    {
+      "name": "Build (api; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/api build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:10.629Z",
+      "duration_ms": 45872,
+      "stdout_hash": "7cf2918b84cec64b4377fa2bf477536879214c03263e9a8c82044fa16bde695c"
     }
   ]
 }

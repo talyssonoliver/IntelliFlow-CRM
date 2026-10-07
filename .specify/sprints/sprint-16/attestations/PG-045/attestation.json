@@ -44,6 +44,24 @@
       "passed": false,
       "timestamp": "2026-03-08T12:07:00Z",
       "duration_ms": 45000
+    },
+    {
+      "name": "TypeScript (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:29:56.503Z",
+      "duration_ms": 59015,
+      "stdout_hash": "1a3449b1d8cbd8eb94800f98cc4ad86ea16c7016cd39cee7468d3d0582fb26bd"
+    },
+    {
+      "name": "Build (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:31:14.719Z",
+      "duration_ms": 151883,
+      "stdout_hash": "fd5357b7bf501ebf3389a8a7d3b28ea97c345f9a551c0d7d37b18f8c14f79b19"
     }
   ],
   "gate_results": [
@@ -120,6 +138,8 @@
     "kpis_missed": 0,
     "placeholders_found": 0
   },
-  "dependencies_verified": ["PG-043"],
+  "dependencies_verified": [
+    "PG-043"
+  ],
   "notes": "PG-045 Help Article page fully implemented with TDD. TypeScript and Build validations show pre-existing failures in unrelated files (DealsCharts.tsx, SentimentDistributionChart.tsx JSX comment syntax; login-security.ts node:crypto client-side import). All PG-045 source files pass lint cleanly. 54 new tests, 0 regressions across 106 existing tests. Coverage exceeds all thresholds."
 }
