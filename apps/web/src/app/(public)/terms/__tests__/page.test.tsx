@@ -27,7 +27,7 @@ describe('TermsPage', () => {
 
     expect(screen.getByRole('heading', { name: /terms of service/i })).toBeInTheDocument();
     // version badge appears at least once
-    expect(screen.getAllByText(/v2026\.08/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText(/v2026\.10/).length).toBeGreaterThanOrEqual(1);
     // At least one summary bullet from frontmatter
     expect(screen.getByText(/18 or older/i)).toBeInTheDocument();
   });
@@ -35,14 +35,14 @@ describe('TermsPage', () => {
   it('renders current terms metadata sourced from the helper', () => {
     render(<TermsPage />);
 
-    expect(screen.getAllByText(/v2026\.08/).length).toBeGreaterThanOrEqual(1);
-    expect(screen.getByText(/11 august 2026/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/v2026\.10/).length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/7 october 2026/i)).toBeInTheDocument();
 
     const emailLinks = screen.getAllByRole('link', {
-      name: /legal@intelliflow-crm\.com/i,
+      name: /legal@leangency.com/i,
     });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
-    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:legal@intelliflow-crm.com');
+    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:legal@leangency.com');
   });
 
   it('renders inside the Aurora shell (no main of its own) with section navigation links', () => {

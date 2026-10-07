@@ -8,9 +8,9 @@ describe('cookie-policy-tracker', () => {
     const policy = getCookiePolicy();
 
     expect(policy.metadata.title).toBe('Cookie Policy');
-    expect(policy.metadata.version).toBe('v2026.04');
-    expect(policy.metadata.effectiveDate).toBe('2026-04-12');
-    expect(policy.metadata.contactEmail).toBe('privacy@intelliflow-crm.com');
+    expect(policy.metadata.version).toBe('v2026.10');
+    expect(policy.metadata.effectiveDate).toBe('2026-10-07');
+    expect(policy.metadata.contactEmail).toBe('privacy@leangency.com');
     expect(policy.metadata.summary.length).toBeGreaterThanOrEqual(4);
     expect(policy.sections.length).toBeGreaterThanOrEqual(6);
     expect(policy.sections[0].id).toBe('what-are-cookies');

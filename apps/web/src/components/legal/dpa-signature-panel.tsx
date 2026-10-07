@@ -47,8 +47,8 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
     <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
       This acknowledgment is stored locally in your browser. For a countersigned DPA for enterprise
       records, contact{' '}
-      <a href="mailto:legal@intelliflow-crm.com" className="underline">
-        legal@intelliflow-crm.com
+      <a href="mailto:legal@leangency.com" className="underline">
+        legal@leangency.com
       </a>{' '}
       .
     </p>
@@ -146,8 +146,8 @@ export function DpaSignaturePanel({ currentVersion, downloadPath }: DpaSignature
               Data Processing Addendum ({currentVersion})
             </p>
             <p className="mt-0.5 text-sm text-slate-600 dark:text-slate-300">
-              As a data controller using IntelliFlow CRM, please execute this DPA to formalise our
-              GDPR Article 28 data processor relationship.
+              As a data controller using Aurora, please execute this DPA to formalise our GDPR
+              Article 28 data processor relationship.
             </p>
           </div>
           <div className="flex flex-col gap-3">

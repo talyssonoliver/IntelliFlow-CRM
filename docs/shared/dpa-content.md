@@ -1,16 +1,16 @@
 ---
 title: Data Processing Addendum
-version: v2026.08
-effectiveDate: 2026-08-13
-contactEmail: legal@intelliflow-crm.com
+version: v2026.10
+effectiveDate: 2026-10-07
+contactEmail: legal@leangency.com
 summary:
-  - IntelliFlow acts as a data processor under GDPR Article 28 on behalf of the
+  - Leangency acts as a data processor under GDPR Article 28 on behalf of the
     customer as controller.
   - Processing occurs only on documented instructions from the controller and
     for the duration of the service agreement.
   - Sub-processors are listed and subject to equivalent contractual obligations
     to those in this DPA.
-  - Data subjects may exercise rights through the controller, with IntelliFlow
+  - Data subjects may exercise rights through the controller, with Leangency
     providing reasonable technical assistance.
   - Data is returned or deleted upon agreement termination, except where
     retention is required by law.
@@ -21,9 +21,9 @@ summary:
 ## Introduction and Parties
 
 [PLACEHOLDER — Legal review required] This Data Processing Addendum ("DPA")
-forms part of the IntelliFlow CRM Service Agreement and governs the processing
-of personal data by IntelliFlow CRM Ltd ("Processor") on behalf of the customer
-("Controller").
+forms part of the Aurora Service Agreement and governs the processing of
+personal data by Talysson da Silva Oliveira, a sole trader trading as Leangency
+("Processor") on behalf of the customer ("Controller").
 
 [PLACEHOLDER — Legal review required] This DPA is entered into pursuant to
 Article 28 of Regulation (EU) 2016/679 of the European Parliament and of the
@@ -32,9 +32,9 @@ Council (the "General Data Protection Regulation" or "GDPR").
 ## Subject Matter and Duration of Processing
 
 [PLACEHOLDER — Legal review required] The subject matter of the data processing
-is the provision of the IntelliFlow CRM platform services as described in the
-Service Agreement. The duration of processing is coterminous with the Service
-Agreement, unless otherwise required by applicable law.
+is the provision of the Aurora platform services as described in the Service
+Agreement. The duration of processing is coterminous with the Service Agreement,
+unless otherwise required by applicable law.
 
 [PLACEHOLDER — Legal review required] Upon expiry or termination of the Service
 Agreement, all personal data shall be returned to the Controller or securely
@@ -75,8 +75,8 @@ contacts stored within the CRM system.
 [PLACEHOLDER — Legal review required] The Controller shall ensure that personal
 data submitted to the platform has a lawful basis for processing under
 applicable data protection law. The Controller is responsible for responding to
-data subject rights requests and for notifying IntelliFlow CRM of any
-instructions that may affect the processing activities.
+data subject rights requests and for notifying Leangency of any instructions
+that may affect the processing activities.
 
 [PLACEHOLDER — Legal review required] The Controller retains all rights to the
 personal data processed on their behalf and may instruct the Processor to
@@ -86,9 +86,8 @@ correct, delete, or export data at any time.
 
 [PLACEHOLDER — Legal review required] The Controller grants general
 authorization to engage sub-processors. The current list of sub-processors is
-available at intelliflow-crm.com/legal/sub-processors. The Processor shall
-notify the Controller of any intended changes to sub-processors at least 30 days
-prior.
+available on request from legal@leangency.com. The Processor shall notify the
+Controller of any intended changes to sub-processors at least 30 days prior.
 
 [PLACEHOLDER — Legal review required] All sub-processors are bound by data
 processing agreements that impose equivalent data protection obligations to
@@ -109,9 +108,9 @@ including: encryption of personal data at rest and in transit, access controls
 and authentication mechanisms, regular security assessments and penetration
 testing, and incident response procedures.
 
-[PLACEHOLDER — Legal review required] IntelliFlow CRM maintains SOC 2 Type II
-compliance and aligns security practices with ISO/IEC 27001. Detailed technical
-measures are available upon request.
+[PLACEHOLDER — Legal review required] Aurora does not currently hold an
+independent security certification such as SOC 2 or ISO/IEC 27001. Detailed
+technical measures are available upon request.
 
 ## Data Return and Deletion
 

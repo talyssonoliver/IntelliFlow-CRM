@@ -17,12 +17,12 @@ describe('CookiePage', () => {
   it('renders current policy metadata sourced from the helper', () => {
     render(<CookiePage />);
 
-    expect(screen.getByText('v2026.04')).toBeInTheDocument();
-    expect(screen.getByText(/12 april 2026/i)).toBeInTheDocument();
+    expect(screen.getByText('v2026.10')).toBeInTheDocument();
+    expect(screen.getByText(/7 october 2026/i)).toBeInTheDocument();
 
-    const emailLinks = screen.getAllByRole('link', { name: /privacy@intelliflow-crm\.com/i });
+    const emailLinks = screen.getAllByRole('link', { name: /privacy@leangency.com/i });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
-    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:privacy@intelliflow-crm.com');
+    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:privacy@leangency.com');
   });
 
   it('renders inside the Aurora shell (no main of its own), with section nav and slugified headings', () => {

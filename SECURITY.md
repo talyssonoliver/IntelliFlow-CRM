@@ -38,7 +38,7 @@ methods:
    - Fill out the advisory form with details
 
 2. **Email**
-   - Send an email to: security@intelliflow-crm.com (or your designated security
+   - Send an email to: security@leangency.com (or your designated security
      email)
    - Use PGP encryption if possible (key available on request)
    - Include "SECURITY" in the subject line
@@ -249,7 +249,7 @@ All team members undergo:
 
 ## Security Contacts
 
-- **Security Team Email**: security@intelliflow-crm.com
+- **Security Team Email**: security@leangency.com
 - **Security Advisories**: GitHub Security Advisories
 - **Bug Bounty**: (Coming soon after v1.0 launch)
 
@@ -324,7 +324,7 @@ researchers who report vulnerabilities responsibly:
 
 If you have questions about this security policy, please contact:
 
-- **Email**: security@intelliflow-crm.com
+- **Email**: security@leangency.com
 - **GitHub Discussions**: Security category
 - **Documentation**: https://docs.intelliflow-crm.com/security
 

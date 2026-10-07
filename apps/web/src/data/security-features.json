@@ -191,7 +191,7 @@
     ]
   },
   "securityContact": {
-    "email": "security@intelliflow-crm.com",
+    "email": "security@leangency.com",
     "bugBounty": "https://hackerone.com/intelliflow",
     "pgpKey": "https://intelliflow-crm.com/.well-known/security.txt"
   }
