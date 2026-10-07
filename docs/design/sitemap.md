@@ -1,6 +1,6 @@
 # IntelliFlow CRM - Sitemap
 
-**Total Pages**: 212 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
+**Total Pages**: 214 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
 
 _Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-07-21 · _Procs_: 232
 
@@ -141,10 +141,12 @@ intelliflow.com
 ├── CRM CORE: ACCOUNTS ──────────────────── Layout: accounts/(list)
 │   │
 │   ├── /accounts                         Account list
+│   ├── /accounts/new                     New account form (PG-197)
 │   ├── /accounts/[id]                    Account detail (NO sidebar)
+│   ├── /accounts/[id]/edit               Edit account incl. location (PG-197, NO sidebar)
 │   ├── /accounts/account-settings        Tenant account configuration and defaults
-│   ├── /accounts/account-tiers           Tier definitions (SMB, Mid-Market, Enterprise)
-│   └── /accounts/territory-mapping       Assign accounts to sales territories
+│   ├── /accounts/account-tiers           Tenant revenue tiers, benefits, default tier (PG-196)
+│   └── /accounts/territory-mapping       Territories that assign new accounts' owners (PG-197)
 │
 ├── CRM CORE: DEALS ──────────────────────── Layout: deals/(list), deals/[id]
 │   │
@@ -347,7 +349,7 @@ intelliflow.com
 | Dashboard                     | 3       | Main, new, customize                                                                                                          |
 | CRM Core: Leads               | 7       | List, new, detail, edit, pipeline, routing, lead-settings                                                                     |
 | CRM Core: Contacts            | 7       | List, new, detail, edit, types, settings, import-export                                                                       |
-| CRM Core: Accounts            | 5       | List, detail, settings, tiers, territory-mapping                                                                              |
+| CRM Core: Accounts            | 7       | List, new, detail, edit, settings, tiers, territory-mapping                                                                   |
 | CRM Core: Deals               | 10      | List, trash, detail, forecast (2), stages, settings, automation, new, all/forecast                                            |
 | CRM Core: Tickets             | 6       | List, new, detail, sla-policies, types, automations                                                                           |
 | CRM Core: Documents           | 6       | List, new, detail, types, storage-policies, settings                                                                          |
@@ -435,7 +437,7 @@ in the sitemap.
 | Dashboard     | `/dashboard`, `/dashboard/new`, `/dashboard/customize`                                                                                                                                                                                                           | Implemented | FLOW-025           |
 | Leads         | `/leads`, `/leads/new`, `/leads/[id]`, `/leads/[id]/edit`, `/leads/pipeline`, `/leads/routing`, `/leads/lead-settings`                                                                                                                                           | Implemented | FLOW-005, FLOW-006 |
 | Contacts      | `/contacts`, `/contacts/new`, `/contacts/[id]`, `/contacts/[id]/edit`, `/contacts/contact-types`, `/contacts/contact-settings`, `/contacts/import-export`                                                                                                        | Implemented | FLOW-016           |
-| Accounts      | `/accounts`, `/accounts/[id]`, `/accounts/account-settings`, `/accounts/account-tiers`, `/accounts/territory-mapping`                                                                                                                                            | Implemented | -                  |
+| Accounts      | `/accounts`, `/accounts/new`, `/accounts/[id]`, `/accounts/[id]/edit`, `/accounts/account-settings`, `/accounts/account-tiers`, `/accounts/territory-mapping`                                                                                                    | Implemented | -                  |
 | Deals         | `/deals`, `/deals/trash`, `/deals/new`, `/deals/[id]`, `/deals/[id]/forecast`, `/deals/forecast`, `/deals/all/forecast`, `/deals/deal-stages`, `/deals/deal-settings`, `/deals/deal-automation`                                                                  | Implemented | FLOW-007, FLOW-008 |
 | Tickets       | `/tickets`, `/tickets/new`, `/tickets/[id]`, `/tickets/sla-policies`, `/tickets/types`, `/tickets/automations`                                                                                                                                                   | Implemented | FLOW-011, FLOW-012 |
 | Documents     | `/documents`, `/documents/new`, `/documents/[id]`, `/documents/document-types`, `/documents/storage-policies`, `/documents/document-settings`                                                                                                                    | Implemented | -                  |
@@ -662,10 +664,13 @@ apps/web/src/app/
 │       ├── page.tsx              # /contacts/[id] (NO sidebar)
 │       └── edit/page.tsx         # /contacts/[id]/edit
 │
-├── accounts/                     # ACCOUNTS (2 pages)
+├── accounts/                     # ACCOUNTS (4 pages)
 │   ├── (list)/
-│   │   └── page.tsx              # /accounts
-│   └── [id]/page.tsx             # /accounts/[id]
+│   │   ├── page.tsx              # /accounts
+│   │   └── new/page.tsx          # /accounts/new (PG-197)
+│   └── [id]/
+│       ├── page.tsx              # /accounts/[id] (NO sidebar)
+│       └── edit/page.tsx         # /accounts/[id]/edit (PG-197)
 │
 ├── deals/                        # DEALS (4 pages)
 │   ├── (list)/

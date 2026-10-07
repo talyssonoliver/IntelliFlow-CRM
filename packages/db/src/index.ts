@@ -59,6 +59,11 @@ export type {
   AccountRequiredField,
   AccountTag,
   AccountAutomationSetting,
+  AccountTierDefinition,
+  AccountTierConfig,
+  AccountTerritory, // PG-197
+  AccountTerritoryRule,
+  AccountTerritoryMember,
   DealWinLossReason,
   DealScoringRule,
   DealDuplicateRule,

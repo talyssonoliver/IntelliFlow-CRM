@@ -1,8 +1,26 @@
 import { z } from 'zod';
+import { TERRITORY_LIMITS, isIsoCountryCode } from '@intelliflow/domain';
 import { idSchema, paginationSchema, urlSchema, nameSchema } from './common';
+import { accountTierFilterKeySchema } from './account-tiers';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
+
+// PG-197 BR-1: optional geography. The domain normalises on write; here the
+// value is trimmed, the country is checked against the ISO list (UK rejected)
+// and the length limits applied. On create an empty string means "not given".
+const countryInputSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .refine((value) => value === '' || isIsoCountryCode(value), {
+    message: 'Use an ISO 3166-1 alpha-2 country code',
+  });
+const regionInputSchema = z.string().trim().max(TERRITORY_LIMITS.maxRegionLength);
+const postalCodeInputSchema = z.string().trim().max(TERRITORY_LIMITS.maxPostalCodeLength);
+const emptyToUndefined = (value: string | undefined) => (value === '' ? undefined : value);
+// On update: undefined = unchanged, null (or an empty string) = clear.
+const emptyToNull = (value: string | null | undefined) => (value === '' ? null : value);
 
 // Base account fields schema (DRY - used by create and update)
 const baseAccountFieldsSchema = z.object({
@@ -24,11 +42,17 @@ const baseAccountFieldsSchema = z.object({
     .max(1000)
     .transform((val) => val.trim())
     .optional(),
+  country: countryInputSchema.optional().transform(emptyToUndefined),
+  region: regionInputSchema.optional().transform(emptyToUndefined),
+  postalCode: postalCodeInputSchema.optional().transform(emptyToUndefined),
 });
 
 // Create Account Schema
+// PG-197 BR-13: ownerId is optional — omitted means "assign automatically"
+// (territory assignment when autoAssignOwner is on, else the creator).
 export const createAccountSchema = baseAccountFieldsSchema.extend({
   parentAccountId: idSchema.optional(),
+  ownerId: idSchema.optional(),
 });
 
 export type CreateAccountInput = z.infer<typeof createAccountSchema>;
@@ -40,6 +64,9 @@ export type CreateAccountInput = z.infer<typeof createAccountSchema>;
 // would silently no-op (it cannot be applied safely via updateAccountInfo).
 export const updateAccountSchema = baseAccountFieldsSchema.partial().extend({
   id: idSchema,
+  country: countryInputSchema.nullish().transform(emptyToNull),
+  region: regionInputSchema.nullish().transform(emptyToNull),
+  postalCode: postalCodeInputSchema.nullish().transform(emptyToNull),
 });
 
 export type UpdateAccountInput = z.infer<typeof updateAccountSchema>;
@@ -90,6 +117,8 @@ export const accountQuerySchema = paginationSchema.extend({
   maxRevenue: z.number().positive().optional(),
   minEmployees: z.number().int().positive().optional(),
   maxEmployees: z.number().int().positive().optional(),
+  /** PG-196: tier key (or UNKNOWN); the server turns it into a revenue band. */
+  tier: accountTierFilterKeySchema.optional(),
   sortBy: z.enum(ACCOUNT_SORT_FIELDS).default('createdAt'),
 });
 
@@ -108,6 +137,9 @@ export const accountResponseSchema = z.object({
   employees: z.number().nullable(),
   revenue: z.string().nullable(), // Decimal as string (future: moneySchema)
   description: z.string().nullable(),
+  country: z.string().nullable(),
+  region: z.string().nullable(),
+  postalCode: z.string().nullable(),
   ownerId: idSchema,
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),

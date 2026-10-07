@@ -18,7 +18,10 @@
       ".specify/sprints/sprint-18/attestations/PG-196/context_ack.json"
     ]
   },
-  "blockers": [],
+  "blockers": [
+    "Lighthouse >= 90 on authenticated /accounts/account-tiers not measurable here (needs authenticated harness or owner waiver)",
+    "Branch not pushed (lane not allowed to push) \u2014 Gate 4b and pre-ship run on push"
+  ],
   "completed_at": null,
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.879Z"
@@ -28,17 +31,46 @@
     "retry_count": 0
   },
   "kpis": {},
-  "notes": "Account tiers at /accounts/(list)/account-tiers: tier definitions (bronze/silver/gold/platinum), point thresholds, benefits matrix, default tier, upgrade/downgrade rules. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in account-automation.ts OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "",
-  "started_at": null,
+  "notes": "Owner ruling A (2026-10-07): tenant-configurable revenue tiers seeded from ENTERPRISE/MID_MARKET/SMB/STARTUP (names, revenue thresholds, colour, benefits, default tier, up/down rules); card, hierarchy tab and sidebar tier links read one config; /accounts?tier= filters wired. MUST follow docs/planning/module-settings-playbook.md.",
+  "phase": "exec",
+  "started_at": "2026-10-06T22:12:30Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
-      "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
+      "note": "Task created \u2014 playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-10-06T22:12:30Z",
+      "status": "Specifying",
+      "note": "spec-session started; paused on tier-model conflict (open-question note)"
+    },
+    {
+      "at": "2026-10-07T00:00:00Z",
+      "status": "Spec Complete",
+      "note": "owner ruling A; 6-agent consensus; spec sha256 d4b411ca71f063711833d5844daa693a713559e86b3f5b2ffd49cace4110bf2d"
+    },
+    {
+      "at": "2026-10-07T00:00:00Z",
+      "status": "Plan Complete",
+      "note": "18-step TDD plan; plan-reviewer subagent APPROVE on iteration 2"
+    },
+    {
+      "at": "2026-10-07T08:30:00Z",
+      "status": "In Progress",
+      "note": "exec: all layers implemented and committed; validations pass; blocked on authenticated Lighthouse (or owner waiver), push (Gate 4b) and pre-ship"
     }
   ],
   "stream": null,
   "task_id": "PG-196",
-  "validations": []
+  "validations": [],
+  "executor": "Claude Code (spec-session, ralph loop)",
+  "agents": [
+    "domain-expert",
+    "backend-architect",
+    "data-engineer",
+    "frontend-lead",
+    "test-engineer",
+    "security-lead"
+  ]
 }
