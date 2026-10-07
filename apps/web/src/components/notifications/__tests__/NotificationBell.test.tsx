@@ -22,6 +22,15 @@ const {
 
 let markAsReadMutationOnSuccess: (() => Promise<unknown>) | undefined;
 
+/** The onSuccess NotificationBell passed to markAsRead.useMutation; fails the test if none was. */
+function capturedMarkAsReadOnSuccess(): Promise<unknown> {
+  const onSuccess = markAsReadMutationOnSuccess;
+  if (typeof onSuccess !== 'function') {
+    throw new Error('markAsRead.useMutation was never invoked with an onSuccess callback');
+  }
+  return onSuccess();
+}
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     notifications: {
@@ -394,7 +403,7 @@ describe('NotificationBell', () => {
     let finish: () => void = () => undefined;
     mockInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
     let settled = false;
-    const pending = markAsReadMutationOnSuccess!().then(() => {
+    const pending = capturedMarkAsReadOnSuccess().then(() => {
       settled = true;
     });
     await Promise.resolve();
@@ -413,7 +422,7 @@ describe('NotificationBell', () => {
     vi.mocked(revalidateNotifications).mockRejectedValueOnce(boom);
     render(<NotificationBell />);
     await act(async () => {
-      await expect(markAsReadMutationOnSuccess!()).resolves.toBeDefined();
+      await expect(capturedMarkAsReadOnSuccess()).resolves.toBeDefined();
     });
     expect(errorSpy).toHaveBeenCalledWith(
       '[NotificationBell] Failed to refresh notifications:',
@@ -430,7 +439,7 @@ describe('NotificationBell', () => {
     } as never);
     render(<NotificationBell />);
     await act(async () => {
-      await markAsReadMutationOnSuccess!();
+      await capturedMarkAsReadOnSuccess();
     });
     expect(revalidateNotifications).not.toHaveBeenCalled();
   });
