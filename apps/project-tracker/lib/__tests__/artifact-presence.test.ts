@@ -2,7 +2,7 @@ import { copyFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'nod
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { findMissingArtifacts } from '../artifact-presence';
+import { findMissingArtifacts, trackedEvidence } from '../artifact-presence';
 
 const REPO_ROOT = resolve(__dirname, '../../../..');
 let root: string;
@@ -46,5 +46,21 @@ describe('findMissingArtifacts (Plan-vs-Code Mismatches)', () => {
       root
     );
     expect(missing).toEqual([]);
+  });
+});
+
+describe('trackedEvidence', () => {
+  it('never counts a gitignored path as evidence, even when a local copy exists', async () => {
+    const p = '.specify/sprints/sprint-6/planning/PG-1-plan.md';
+    mkdirSync(join(root, '.specify/sprints/sprint-6/planning'), { recursive: true });
+    writeFileSync(join(root, p), '# plan');
+    expect(await trackedEvidence([p], root)).toEqual([]);
+    expect(await findMissingArtifacts([p], 'PLAN:', root)).toEqual([]);
+  });
+
+  it('returns the tracked artifacts that exist', async () => {
+    expect(await trackedEvidence(['apps/api/src/router.ts', 'apps/api/src/gone.ts'], root)).toEqual(
+      ['apps/api/src/router.ts']
+    );
   });
 });

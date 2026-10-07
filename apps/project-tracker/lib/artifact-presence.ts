@@ -36,9 +36,22 @@ export async function findMissingArtifacts(
 ): Promise<string[]> {
   const missing: string[] = [];
   for (const p of paths) {
-    if (await artifactExists(p, root)) continue;
     if (isUntrackedByDesign(p, root)) continue;
+    if (await artifactExists(p, root)) continue;
     missing.push(prefix ? `${prefix}${p}` : p);
   }
   return missing;
+}
+
+/**
+ * The tracked artifacts that exist: the only things that can prove a task was
+ * done. A gitignored path never counts, even when a local copy exists, so a
+ * task whose every artifact is untracked by design has no evidence at all.
+ */
+export async function trackedEvidence(paths: string[], root: string): Promise<string[]> {
+  const found: string[] = [];
+  for (const p of paths) {
+    if (!isUntrackedByDesign(p, root) && (await artifactExists(p, root))) found.push(p);
+  }
+  return found;
 }

@@ -140,10 +140,11 @@ export function verifyArtifacts(
   const untrackedByDesign: string[] = [];
 
   for (const artifact of artifacts) {
-    if (checkArtifactExists(artifact, root)) {
-      exists.push(artifact);
-    } else if (isUntrackedByDesign(artifact, root)) {
+    // A gitignored path is never proof, even when a local copy happens to exist.
+    if (isUntrackedByDesign(artifact, root)) {
       untrackedByDesign.push(artifact);
+    } else if (checkArtifactExists(artifact, root)) {
+      exists.push(artifact);
     } else {
       missing.push(artifact);
     }
@@ -319,18 +320,23 @@ export function classifyCompletion(
   const dodWarnings = verifyDod(task['Definition of Done'] || '');
   const base = { untrackedByDesign: artifactCheck.untrackedByDesign, dodWarnings };
 
+  const phantom = (issues: string[]): CompletionClassification => ({
+    ...base,
+    verified: null,
+    phantom: {
+      taskId,
+      description: shortDesc,
+      status: 'Completed',
+      issues,
+      missingArtifacts: artifactCheck.missing,
+    },
+  });
   if (artifactCheck.missing.length > 0) {
-    return {
-      ...base,
-      verified: null,
-      phantom: {
-        taskId,
-        description: shortDesc,
-        status: 'Completed',
-        issues: [`Missing ${artifactCheck.missing.length} artifact(s)`],
-        missingArtifacts: artifactCheck.missing,
-      },
-    };
+    return phantom([`Missing ${artifactCheck.missing.length} artifact(s)`]);
+  }
+  // Skipping untracked paths must never turn "no evidence" into a pass.
+  if (artifactCheck.exists.length === 0) {
+    return phantom(['No tracked evidence: every artifact is untracked by design or absent']);
   }
   return {
     ...base,

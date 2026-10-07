@@ -6,8 +6,12 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { normalizeStatus, STATUS_GROUPS } from '@/lib/csv-parser';
 import { PATHS, MONOREPO_ROOT } from '@/lib/paths';
 import { NO_CACHE_HEADERS } from '@/lib/api-types';
-import { findMissingArtifacts, isUntrackedByDesign } from '@/lib/artifact-presence';
-import { requiredValidations } from '@/lib/validation-profile';
+import {
+  findMissingArtifacts,
+  isUntrackedByDesign,
+  trackedEvidence,
+} from '@/lib/artifact-presence';
+import { evaluateValidations, type ValidationRecord } from '@/lib/validation-profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -507,7 +511,12 @@ function checkAttestationIntegrity(
   taskId: string,
   sprintNumber: number | null,
   allSprintDirs: string[]
-): { exists: boolean; verdict: string | null; validationCount: number } {
+): {
+  exists: boolean;
+  verdict: string | null;
+  validationCount: number;
+  validations: ValidationRecord[];
+} {
   const dirs = getAttestationDirs(taskId, sprintNumber, allSprintDirs);
   const attestNames = ['attestation.json', `${taskId}-attestation.json`];
 
@@ -517,11 +526,11 @@ function checkAttestationIntegrity(
       if (existsSync(attestPath)) {
         try {
           const raw = JSON.parse(readFileSync(attestPath, 'utf-8'));
-          const validationCount = Array.isArray(raw.validation_results)
-            ? raw.validation_results.length
-            : 0;
+          const validations: ValidationRecord[] = Array.isArray(raw.validation_results)
+            ? raw.validation_results
+            : [];
           const verdict = raw.verdict ?? raw.status ?? null;
-          return { exists: true, verdict, validationCount };
+          return { exists: true, verdict, validationCount: validations.length, validations };
         } catch {
           /* invalid JSON */
         }
@@ -529,7 +538,7 @@ function checkAttestationIntegrity(
     }
   }
 
-  return { exists: false, verdict: null, validationCount: 0 };
+  return { exists: false, verdict: null, validationCount: 0, validations: [] };
 }
 
 type HashEntry = { path: string; sha256: string };
@@ -786,12 +795,8 @@ function collectAttestationIssues(
       attestResult.verdict !== 'COMPLETE' &&
       attestResult.verdict !== 'PASS';
     if (badVerdict) issues.push(`Attestation verdict: ${attestResult.verdict} (expected COMPLETE)`);
-    const required = requiredValidations(artifactsStr);
-    if (attestResult.validationCount < required.count) {
-      issues.push(
-        `Only ${attestResult.validationCount}/${required.count} validations recorded (${required.label})`
-      );
-    }
+    const checks = evaluateValidations(attestResult.validations, artifactsStr);
+    if (checks.issue) issues.push(checks.issue);
   } else {
     issues.push('Missing attestation.json');
   }
@@ -1046,7 +1051,22 @@ async function collectMismatchAndRevertDetails(tasks: CsvTask[]): Promise<{
     if (!isCompleted || !hasPathsToCheck) continue;
 
     const { missingArtifacts, missingEvidence } = await collectMissingPaths(parsed);
-    if (missingArtifacts.length === 0 && missingEvidence.length === 0) continue;
+    if (missingArtifacts.length === 0 && missingEvidence.length === 0) {
+      // Untracked-by-design paths are skipped above; that must not let a task
+      // with no tracked evidence at all pass.
+      const allPaths = [
+        ...parsed.artifacts,
+        ...parsed.evidence,
+        ...parsed.specs,
+        ...parsed.plans,
+        ...parsed.contexts,
+        ...parsed.prds,
+        ...parsed.attestations,
+      ];
+      const evidence = await trackedEvidence(allPaths, join(process.cwd(), '..', '..'));
+      if (evidence.length > 0) continue;
+      missingEvidence.push('(no tracked evidence: every artifact is untracked by design)');
+    }
 
     mismatchDetails.push({
       task_id: task['Task ID'],

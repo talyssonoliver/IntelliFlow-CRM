@@ -68,6 +68,28 @@ describe('classifyCompletion', () => {
     expect(r.untrackedByDesign).toHaveLength(3);
   });
 
+  it('fails a task whose only evidence is a gitignored path (review repro)', () => {
+    const r = classifyCompletion(
+      task('DELIVERY:.specify/sprints/sprint-6/execution/X/never-produced.md'),
+      root
+    );
+    expect(r.verified).toBeNull();
+    expect(r.phantom?.issues[0]).toContain('No tracked evidence');
+  });
+
+  it('does not accept a local copy of a gitignored file as proof', () => {
+    const p = '.specify/sprints/sprint-6/planning/PG-1-plan.md';
+    mkdirSync(join(root, '.specify/sprints/sprint-6/planning'), { recursive: true });
+    writeFileSync(join(root, p), '# plan');
+    const r = classifyCompletion(task(`PLAN:${p}`), root);
+    expect(r.phantom?.issues[0]).toContain('No tracked evidence');
+  });
+
+  it('still flags a missing .tsx (review: keep)', () => {
+    const r = classifyCompletion(task('ARTIFACT:apps/web/src/missing.tsx'), root);
+    expect(r.phantom?.missingArtifacts).toEqual(['apps/web/src/missing.tsx']);
+  });
+
   it('reports DoD wording separately and never makes a task phantom over it', () => {
     const r = classifyCompletion(
       task(
