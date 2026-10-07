@@ -1,6 +1,7 @@
 # ADR-074: Territory-Based Account Owner Assignment
 
-**Status:** Proposed
+**Status:** Accepted (2026-10-07 — implemented on
+`feat/pg-197-territory-mapping`; GREEN validations passed)
 
 **Date:** 2026-10-07
 

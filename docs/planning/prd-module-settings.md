@@ -621,3 +621,32 @@ Spec: `.specify/sprints/sprint-18/specifications/PG-197-spec.md`. ADR-074.
 - AC-T10: Non-admins can only choose themselves as an explicit owner.
 - AC-T11: The CREATE audit entry records how the owner was chosen.
 - AC-T12: Lighthouse ≥ 90 on the territory, new-account and edit-account pages.
+
+### Delivery Status (2026-10-07, branch `feat/pg-197-territory-mapping`)
+
+| AC     | Status    | Evidence                                                                                                                                                                                                                                                                                       |
+| ------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-T1  | Delivered | `TerritoryMappingContent.tsx` (PageHeader, 12-column grid, EmptyState `rules`/`passive`); `TerritoryDialog` Save rule                                                                                                                                                                          |
+| AC-T2  | Delivered | `TerritoryList.tsx` — dnd-kit with `KeyboardSensor` + up/down buttons, live-region announcement                                                                                                                                                                                                |
+| AC-T3  | Delivered | `account-territories.ts` validators (superRefine "rows N and M"); `lower(name)` and rule de-dupe indexes                                                                                                                                                                                       |
+| AC-T4  | Delivered | `setDefault` clear-then-set transaction; inactive/deleted default → `PRECONDITION_FAILED`                                                                                                                                                                                                      |
+| AC-T5  | Delivered | `accountTerritories` mutations gated on `ACCOUNT_OWNER_ADMIN_ROLES`; explicit `tenantId` on every query; RLS + composite FKs                                                                                                                                                                   |
+| AC-T6  | Delivered | `resetToDefaults` deletes territories only (router test asserts no account/automation writes)                                                                                                                                                                                                  |
+| AC-T7  | Delivered | `accountTerritories.preview` (read-only, never moves the cursor) + "Test an address" form                                                                                                                                                                                                      |
+| AC-T8  | Delivered | `Account` geography (domain/validators/service/repository/API); `/accounts/new`, `/accounts/[id]/edit`                                                                                                                                                                                         |
+| AC-T9  | Delivered | `resolveAccountOwner` in `handleAccountCreate`; BR-15 fallback to the creator                                                                                                                                                                                                                  |
+| AC-T10 | Delivered | `assertExplicitOwner` — non-admin naming another user → `FORBIDDEN` before any lookup                                                                                                                                                                                                          |
+| AC-T11 | Delivered | CREATE audit `afterState` = `{ ownerId, ownerSource, territoryId?, strategy?, reason? }`                                                                                                                                                                                                       |
+| AC-T12 | **Open**  | Lighthouse not run: `LHCI_TEST_EMAIL`/`LHCI_TEST_PASSWORD` are not configured on the build host and the harness authenticates against the production Supabase project. Harness parametrised (`LHCI_URLS`, `LHCI_OUTPUT_DIR`) so the three routes can be audited once credentials are provided. |
+
+#### Playbook §8 — Boolean toggle categories (PG-197)
+
+| Toggle                                         | Category                                         | Consumer                                        |
+| ---------------------------------------------- | ------------------------------------------------ | ----------------------------------------------- |
+| `AccountAutomationSetting.autoAssignOwner`     | 1 — wired                                        | `handleAccountCreate` → `resolveAccountOwner`   |
+| `AccountAutomationSetting.notifyOnOwnerChange` | 1 — wired (IFC-311 reassign), extended to create | `notifyAccountAssignedOnCreate`                 |
+| `AccountTerritory.isActive`                    | 1 — wired                                        | `resolveTerritory` ignores inactive territories |
+| `AccountTerritory.isDefault`                   | 1 — wired                                        | `resolveTerritory` fallback                     |
+
+No AI toggles were added. Out-of-scope finding filed: #830 (Deals sidebar
+"Territory Map" is a dead link).
