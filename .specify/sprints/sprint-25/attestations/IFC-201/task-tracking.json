@@ -6,7 +6,18 @@
     "missing": []
   },
   "attempt": 0,
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "Reopen evidence: set Completed in bulk commit a6026d7c8 (#535) with no code or attestation. SettingsPolicy, PrismaSettingsRepository and apps/api/src/modules/settings/ do not exist and nothing references them; docs/planning/prd-settings-control-plane.md does not exist. The per-module *-settings.router.ts files predate this task and are not the IAM/audit/integrations/security control plane.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: the settings domain policy, Prisma repository and settings.router exist with tests and are wired in the API; the PRD is committed; attestation.json with 4 validations.",
+      "raised_at": "2026-10-07T08:40:36Z",
+      "resolved_at": null
+    }
+  ],
   "completed_at": null,
   "current_phase": "ARCHITECT_SPEC",
   "dependencies_meta": {
@@ -26,10 +37,15 @@
       "at": "2026-02-13T23:42:10+00:00",
       "note": "Task execution started",
       "status": "In Progress"
+    },
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:40:36Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
     }
   ],
   "stream": null,
   "task_id": "IFC-201",
-  "updated_at": "2026-02-13T23:42:12+00:00",
+  "updated_at": "2026-10-07T08:40:36Z",
   "validations": []
 }
