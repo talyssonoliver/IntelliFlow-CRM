@@ -4,7 +4,7 @@
   "task_id": "PG-197",
   "run_id": "run-20261007T090902Z",
   "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-197 exec lane, branch feat/pg-197-territory-mapping",
-  "attestation_timestamp": "2026-10-07T10:31:50Z",
+  "attestation_timestamp": "2026-10-07T10:33:01Z",
   "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
     "artifacts_verified": 15,
@@ -29,7 +29,7 @@
     "apps/web/src/app/accounts/[id]/edit/EditAccountForm.tsx": "88cd91496aef509827adb435d1cb254f5b1075f050873172b1f9f19d52d860ad",
     "apps/web/src/components/accounts/AccountForm.tsx": "7f18c02d04c9d265e01e9629cba1fdafa4d5437ff4405c7562b945d7298e54e0",
     "apps/web/src/components/shared/country-select.tsx": "0f2360ab44fe0a8936b4df671074e010aadaa0ddcddbe14c223f12fa3f9b5561",
-    "docs/architecture/adr/ADR-074-territory-based-account-owner-assignment.md": "99f85e377bb95e51b721b61a6d00b0b3482b591d2c744c9a2472cbd9aa3ff290",
+    "docs/architecture/adr/ADR-074-territory-based-account-owner-assignment.md": "8147eef6a4b4b90c9617b51a6cb2fbb2db7e555194178f2285c220baa78fb65c",
     "tests/integration/account-territories.test.ts": "d0178362785a97f576c71d5d6fb03944831d8727d0ad5ccc2dd6ae0759d77b2e",
     ".specify/sprints/sprint-18/attestations/PG-197/context_ack.json": "402d919c890c754b36336ac5fab02c1b67c7c13578eb25bd35ec05c64cf4a362"
   },
@@ -232,7 +232,7 @@
     "test_db": "intelliflow-postgres-test (127.0.0.1:5433)"
   },
   "notes": [
-    "Commits: dd0f8e37b (db), 5a5e47d62 (domain), e5e11db77 (validators), 0d7d54584 (application/adapters), e6c2dd8af (api), 2e0b9bb7b (web account pages), db68d3b8e (web territory page), fe8fbe482 (docs), 41ffa3253 (lighthouse harness), f687fd912 (refactor), then this governance commit.",
+    "Commits: dd0f8e37b (db), 5a5e47d62 (domain), e5e11db77 (validators), 0d7d54584 (application/adapters), e6c2dd8af (api), 2e0b9bb7b (web account pages), db68d3b8e (web territory page), fe8fbe482 (docs), 41ffa3253 (lighthouse harness), f687fd912 (refactor), then governance commits 054b4497c and its hash refresh.",
     "Plan deviation: MemberMultiSelect is a labelled checkbox group inside the Popover instead of an aria-multiselectable listbox - the web Sonar a11y guard (jsx-a11y/prefer-tag-over-role) rejects ARIA listbox/option roles; native checkboxes carry multi-selection semantics. The trigger name still carries the selected count.",
     "Plan deviation: the Step 13 existing-test stubs were not needed - every existing account router test stayed green because autoAssignOwner defaults to false.",
     "Local DB note: 'localhost' intermittently resolves to an unreachable IPv6 path on this host; the integration run used 127.0.0.1 (same local test container). .env.test URLs contain DB_USER/DB_PASSWORD placeholders and must be sourced, not cut.",
