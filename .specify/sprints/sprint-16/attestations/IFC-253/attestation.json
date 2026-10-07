@@ -43,6 +43,15 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-03-13T19:08:00Z"
+    },
+    {
+      "name": "Lint (web; re-run by the 2026-10-07 integrity audit at d42a21329 = origin/main a1e7d9a38 + tracker-only changes)",
+      "command": "pnpm --filter @intelliflow/web lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-07T08:30:55.518Z",
+      "duration_ms": 14311,
+      "stdout_hash": "82d87e406fabda8bbc988c12b2556367f5c30a4565b55f975ad8634e05c2bc0a"
     }
   ],
   "evidence_summary": {
