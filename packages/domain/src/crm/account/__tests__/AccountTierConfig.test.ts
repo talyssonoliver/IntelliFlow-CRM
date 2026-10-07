@@ -40,7 +40,7 @@ describe('DEFAULT_TIER_CONFIG', () => {
       ['ENTERPRISE', 'Enterprise', 10_000_000, 'purple'],
       ['MID_MARKET', 'Mid-Market', 1_000_000, 'blue'],
       ['SMB', 'SMB', 100_000, 'green'],
-      ['STARTUP', 'Startup', 0, 'amber'],
+      ['STARTUP', 'Startup', 0, 'yellow'],
     ]);
     expect(DEFAULT_TIER_CONFIG.tiers.every((t) => t.benefits.length === 0)).toBe(true);
   });

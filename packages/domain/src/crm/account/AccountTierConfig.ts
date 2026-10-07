@@ -55,7 +55,7 @@ export const DEFAULT_TIER_CONFIG: TierConfig<DefaultTierKey> = {
       benefits: [],
     },
     { key: 'SMB', label: 'SMB', minRevenue: 100_000, colorToken: 'green', benefits: [] },
-    { key: 'STARTUP', label: 'Startup', minRevenue: 0, colorToken: 'amber', benefits: [] },
+    { key: 'STARTUP', label: 'Startup', minRevenue: 0, colorToken: 'yellow', benefits: [] },
   ],
   defaultTierKey: null,
 };
