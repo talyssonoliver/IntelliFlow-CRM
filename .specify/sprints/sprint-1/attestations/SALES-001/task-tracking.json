@@ -12,8 +12,19 @@
     ],
     "missing": []
   },
-  "blockers": [],
-  "completed_at": "2025-12-27T11:33:39.124Z",
+  "blockers": [
+    {
+      "description": "Reopen evidence: the DoD requires \"a single canonical link to design source (Figma/Canva)\". artifacts/misc/sales/pitch-deck-source-link.txt only ever held \"Placeholder - Design source TBD\" and was deleted in 182bdd67b; docs/sales/pitch-deck-outline.md still says \"Figma/Canva link TBD\". The outline (13 slides) and docs/sales/one-pager.md are delivered.",
+      "raised_at": "2026-10-07T08:33:27Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: commit the real Figma/Canva design-source link (the owner has it) in artifacts/misc/sales/pitch-deck-source-link.txt and the outline; then Completed.",
+      "raised_at": "2026-10-07T08:33:27Z",
+      "resolved_at": null
+    }
+  ],
+  "completed_at": null,
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.707Z"
   },
@@ -46,6 +57,11 @@
     {
       "at": "2025-12-21T14:00:00Z",
       "status": "DONE"
+    },
+    {
+      "status": "BACKLOG",
+      "at": "2026-10-07T08:33:27Z",
+      "note": "Reopened from Completed by the 2026-10-07 completion-integrity audit: no evidence the deliverable exists. See blockers."
     }
   ],
   "task_id": "SALES-001",
@@ -58,5 +74,6 @@
       "passed": true,
       "timestamp": "2025-12-27T11:33:39.124Z"
     }
-  ]
+  ],
+  "updated_at": "2026-10-07T08:33:27Z"
 }
