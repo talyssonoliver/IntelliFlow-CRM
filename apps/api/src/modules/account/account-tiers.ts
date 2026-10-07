@@ -149,7 +149,9 @@ export function tierRevenueWhere(config: TierConfig, key: string): AccountTierWh
 
 /** Normalised tier keys from `AccountHierarchyConfig.requireParentForTiers`. */
 export function normalizeRequiredTiers(values: readonly string[] | null | undefined): Set<string> {
-  return new Set((values ?? []).map(normalizeLegacyTierValue).filter((v) => v.length > 0));
+  return new Set(
+    (values ?? []).map((value) => normalizeLegacyTierValue(value)).filter((v) => v.length > 0)
+  );
 }
 
 export interface ParentRequirementCheck {

@@ -52,7 +52,9 @@ const HIERARCHY_DEFAULTS = {
 
 /** De-duplicated tier keys in their canonical UPPER_SNAKE form (PG-196). */
 function normalizeTierValues(values: readonly string[]): string[] {
-  return [...new Set(values.map(normalizeLegacyTierValue).filter((v) => v.length > 0))];
+  return [
+    ...new Set(values.map((value) => normalizeLegacyTierValue(value)).filter((v) => v.length > 0)),
+  ];
 }
 
 /**
