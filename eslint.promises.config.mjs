@@ -13,7 +13,7 @@
 // attach a rejection handler.
 import tseslint from 'typescript-eslint';
 
-const SOURCE_ROOTS = [
+export const SOURCE_ROOTS = [
   'apps/api/src',
   'apps/ai-worker/src',
   'apps/web/src',
