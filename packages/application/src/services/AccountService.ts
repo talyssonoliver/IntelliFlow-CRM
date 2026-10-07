@@ -8,17 +8,22 @@ import {
   OpportunityRepository,
   CreateAccountProps,
   type AccountHierarchyRecord,
+  type AccountTier as DomainAccountTier,
+  DEFAULT_TIER_CONFIG,
+  resolveAccountTier,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
 import { PersistenceError, ValidationError, NotFoundError } from '../errors';
 
 /**
- * Account tier based on revenue
+ * Account tier based on revenue — the domain vocabulary (UNKNOWN when revenue is absent).
  */
-export type AccountTier = 'ENTERPRISE' | 'MID_MARKET' | 'SMB' | 'STARTUP';
+export type AccountTier = DomainAccountTier;
 
 /**
- * Account tier thresholds (annual revenue in currency units)
+ * Default account tier thresholds (annual revenue in currency units).
+ * Mirrors DEFAULT_TIER_CONFIG in the domain; tenants may configure their own
+ * tiers (PG-196), which this service does not read.
  */
 export const ACCOUNT_TIER_THRESHOLDS = {
   ENTERPRISE: 10_000_000,
@@ -300,15 +305,11 @@ export class AccountService {
   }
 
   /**
-   * Get account tier based on revenue
+   * Get account tier from the default revenue bands (UNKNOWN when revenue is absent).
+   * Default bands only — tenant-configured tiers resolve in the API layer (PG-196).
    */
   getAccountTier(revenue: number | undefined): AccountTier {
-    if (!revenue) return 'STARTUP';
-
-    if (revenue >= ACCOUNT_TIER_THRESHOLDS.ENTERPRISE) return 'ENTERPRISE';
-    if (revenue >= ACCOUNT_TIER_THRESHOLDS.MID_MARKET) return 'MID_MARKET';
-    if (revenue >= ACCOUNT_TIER_THRESHOLDS.SMB) return 'SMB';
-    return 'STARTUP';
+    return resolveAccountTier(revenue, DEFAULT_TIER_CONFIG);
   }
 
   /**
@@ -456,6 +457,7 @@ export class AccountService {
       MID_MARKET: 0,
       SMB: 0,
       STARTUP: 0,
+      UNKNOWN: 0,
     };
 
     const byIndustry: Record<string, number> = {};
