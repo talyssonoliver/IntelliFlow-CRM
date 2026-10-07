@@ -4,22 +4,26 @@
  *
  * A large commit (the s9383 merge: 657 staged files, 380 of them
  * .ts/.tsx/.js/.jsx/.mjs/.cjs) used to pipe every staged path to one
- * `pnpm exec eslint --fix ...` call, which overflowed Windows' command-line
- * limit ("The command line is too long"). The fix bounds each `xargs`
- * invocation to `-s 7000` (max total command-line chars, command + args
- * together) with `-x` (fail loudly, rather than silently doing something
- * else, if a single item still can't fit).
+ * `pnpm exec eslint --fix ...` call, which overflowed a Windows
+ * command-line limit ("The command line is too long") and blocked the
+ * commit outright.
  *
- * This does not run real eslint. It swaps the trailing command for a tiny
- * recorder script and feeds it a large, generated list of staged-looking
- * paths (same shape as the real merge's staged set), then asserts:
- *   1. batching actually happened (more than one invocation),
- *   2. no single invocation's reconstructed command line exceeds the
- *      configured ceiling, and
- *   3. every path was covered, exactly once, across all batches.
- * It also pins the hook file to still carry the `-s 7000 -x` flags on that
- * line, so a future edit that silently drops the batching fails here
- * instead of on the next large merge.
+ * That failure is specific to this exact invocation chain: `pnpm exec
+ * eslint` resolves `pnpm` to its POSIX shim under Git Bash (not
+ * pnpm.cmd), which re-execs node; then pnpm itself resolves `eslint`
+ * through node_modules/.bin's own shim, which re-execs node again. Each
+ * hop rebuilds the Win32 command line from the full argv, and the
+ * combined limit measured in practice (`pnpm exec eslint --version`
+ * against this repo's real staged-file list) is far below either the
+ * commonly-cited ~8191-char cmd.exe line limit or the ~32767-char
+ * Windows CreateProcess limit — a plain single-hop exec (e.g. `pnpm
+ * exec node <script>`) tolerates thousands more characters than `pnpm
+ * exec eslint` does. A synthetic stand-in for eslint would not
+ * reproduce this, so this test runs the real `pnpm exec eslint
+ * --version` (harmless: eslint exits on `--version` before touching
+ * any file argument, real or not) through the hook's own `-s` value,
+ * across a large generated staged-file list shaped like the real
+ * merge's.
  */
 import { describe, it, expect } from 'vitest';
 import { spawnSync, execSync } from 'node:child_process';
@@ -29,6 +33,22 @@ import * as path from 'node:path';
 
 const ROOT = path.resolve(__dirname, '..', '..', '..');
 const HOOK = path.join(ROOT, '.husky', 'pre-commit');
+
+/** Pulls the `-s <N>` batch size straight off the hook's xargs line, so this
+ * test tracks whatever value is actually shipped instead of a copy that can
+ * silently drift from it. */
+function readConfiguredBatchChars(hookSrc: string): number {
+  const m = hookSrc.match(
+    /xargs -s (\d+) -x pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored/
+  );
+  if (!m) {
+    throw new Error(
+      'Could not find the batched `xargs -s <N> -x pnpm exec eslint ...` line in .husky/pre-commit — ' +
+        'did its shape change? Update this test to match.'
+    );
+  }
+  return Number(m[1]);
+}
 
 /**
  * Git for Windows' `sh.exe` isn't necessarily on the inherited PATH (only
@@ -68,78 +88,60 @@ function resolveSh(): string {
 const toShPath = (p: string) => p.replace(/\\/g, '/');
 
 describe('.husky/pre-commit — batched staged-file lint', () => {
-  it('still bounds the eslint xargs call to -s 7000 -x', () => {
+  it('still bounds the eslint xargs call to -s <N> -x pnpm exec eslint --fix ...', () => {
     const hook = fs.readFileSync(HOOK, 'utf8');
-    expect(hook).toMatch(
-      /xargs -s 7000 -x pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored/
-    );
+    expect(() => readConfiguredBatchChars(hook)).not.toThrow();
   });
 
-  it('batches a large staged-file list so no invocation exceeds the limit, covering every file exactly once', () => {
-    const sh = resolveSh();
-    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'precommit-lint-batch-'));
-    const recorder = path.join(tmp, 'recorder.cjs');
-    const log = path.join(tmp, 'calls.log');
-    fs.writeFileSync(log, '');
-    fs.writeFileSync(
-      recorder,
-      [
-        "const fs = require('fs');",
-        `fs.appendFileSync(${JSON.stringify(log)}, process.argv.slice(2).join('\\n') + '\\n---\\n');`,
-      ].join('\n')
-    );
+  it(
+    'runs the real `pnpm exec eslint` across a large staged-file list, batched at the ' +
+      "hook's own -s value, without hitting the Windows command-line limit",
+    () => {
+      const sh = resolveSh();
+      const batchChars = readConfiguredBatchChars(fs.readFileSync(HOOK, 'utf8'));
 
-    // Simulate the real merge: hundreds of plausible staged TS paths, same
-    // rough shape (nesting depth, filename length) as the s9383 merge's
-    // staged set.
-    const files: string[] = [];
-    for (let i = 0; i < 650; i++) {
-      files.push(`apps/web/src/modules/feature-${i}/components/SomeComponent-${i}.tsx`);
+      const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'precommit-lint-batch-'));
+      // Same rough shape (nesting depth, filename length) as the s9383
+      // merge's real staged set (380 files, ~52 chars average path).
+      const files: string[] = [];
+      for (let i = 0; i < 650; i++) {
+        files.push(`apps/web/src/modules/feature-${i}/components/SomeComponent-${i}.tsx`);
+      }
+      // Written to a file and `cat`, not passed through `env:` — the real
+      // hook's STAGED_TS is a plain (non-exported) shell variable, piped
+      // into `xargs` as stdin text, never inherited as an environment
+      // variable by the spawned children. Putting 650 paths into an actual
+      // env var instead would inflate every child's environment block and
+      // fail for a reason that has nothing to do with the command-line
+      // length bug being tested here ("environment is too large for exec"
+      // vs. "command line is too long").
+      const stagedFile = path.join(tmp, 'staged.txt');
+      fs.writeFileSync(stagedFile, files.join('\n') + '\n');
+
+      // `eslint --version` exits before touching any file argument (real
+      // or, as here, synthetic and nonexistent), so this is harmless and
+      // still goes through the exact chain that broke: pnpm's POSIX shim
+      // re-execs node, which re-execs node_modules/.bin/eslint's own shim.
+      const cmd =
+        `cat ${JSON.stringify(toShPath(stagedFile))}` +
+        ` | xargs -s ${batchChars} -x pnpm exec eslint --version`;
+      const result = spawnSync(sh, ['-c', cmd], {
+        cwd: ROOT,
+        env: process.env,
+        encoding: 'utf8',
+      });
+
+      expect(result.error).toBeUndefined();
+      expect(result.stdout + result.stderr).not.toMatch(/command line is too long/i);
+      expect(result.status).toBe(0);
+
+      // Batching actually happened — eslint's version banner printed more
+      // than once, meaning more than one invocation ran rather than one
+      // giant call for all 650 paths.
+      const versionLines = (result.stdout.match(/^v\d+\.\d+\.\d+$/gm) ?? []).length;
+      expect(versionLines).toBeGreaterThan(1);
+
+      fs.rmSync(tmp, { recursive: true, force: true });
     }
-    // Written to a file and `cat`, not passed through `env:` — the real hook's
-    // STAGED_TS is a plain (non-exported) shell variable, piped into `xargs`
-    // as stdin text, never inherited as an environment variable by the
-    // spawned children. Putting 650 paths into an actual env var instead
-    // would inflate every child's environment block and fail for a reason
-    // that has nothing to do with the command-line-length bug being fixed
-    // here ("environment is too large for exec" vs. "command line is too
-    // long") — this mirrors the real mechanism exactly.
-    const stagedFile = path.join(tmp, 'staged.txt');
-    fs.writeFileSync(stagedFile, files.join('\n') + '\n');
-
-    const cmd = `cat ${JSON.stringify(toShPath(stagedFile))} | xargs -s 7000 -x node ${JSON.stringify(toShPath(recorder))}`;
-    const result = spawnSync(sh, ['-c', cmd], {
-      env: process.env,
-      encoding: 'utf8',
-    });
-
-    expect(result.error).toBeUndefined();
-    expect(result.status).toBe(0);
-
-    const raw = fs.readFileSync(log, 'utf8');
-    const batches = raw
-      .split('---\n')
-      .map((b) => b.trim())
-      .filter(Boolean);
-
-    // Batching actually happened — not one giant call for all 650 paths.
-    expect(batches.length).toBeGreaterThan(1);
-
-    // No single invocation's reconstructed command line exceeds the
-    // configured ceiling (generous slack for quoting differences between
-    // xargs' own accounting and this naive reconstruction).
-    const prefixLen = `node ${recorder} `.length;
-    for (const batch of batches) {
-      const args = batch.split('\n').filter(Boolean);
-      const cmdLen = prefixLen + args.reduce((n, a) => n + a.length + 1, 0);
-      expect(cmdLen).toBeLessThanOrEqual(7100);
-    }
-
-    // Every file was covered, exactly once, across all batches.
-    const seen = batches.flatMap((b) => b.split('\n').filter(Boolean));
-    expect(seen.length).toBe(files.length);
-    expect(new Set(seen)).toEqual(new Set(files));
-
-    fs.rmSync(tmp, { recursive: true, force: true });
-  });
+  );
 });

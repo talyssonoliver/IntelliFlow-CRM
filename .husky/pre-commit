@@ -108,18 +108,21 @@ if [ -n "$STAGED_TS" ] && [ "${ESCAPE_LINT_FIX:-0}" != "1" ]; then
   # Batched via `xargs -s` (max total command-line chars per invocation,
   # command + args together) because a large commit (e.g. a 650+ file
   # merge) passing every staged path to one `pnpm exec eslint` call
-  # overflows Windows' command-line limit: "The command line is too
-  # long". 7000 leaves headroom under both the ~8191-char cmd.exe line
-  # limit (eslint resolves through node_modules/.bin/eslint.CMD on
-  # Windows, the same shim layer the prettier step above already
-  # batches for) and the ~32767-char absolute Windows CreateProcess
-  # limit, whichever is actually binding. `-s` packs as many paths as
-  # fit per batch rather than a fixed count, so it adapts to path
-  # length instead of guessing a safe file count. `-x` makes xargs
-  # fail loudly if a single path were somehow too long to fit at all,
-  # instead of silently doing something else. Same eslint flags, same
-  # --max-warnings=0 failure behavior — just run over N batches.
-  echo "$STAGED_TS" | xargs -s 7000 -x pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored || {
+  # overflows a Windows command-line limit: "The command line is too
+  # long". `pnpm` resolves to its POSIX shim (not pnpm.cmd) under
+  # Git Bash, which re-execs node with the full arg list — that extra
+  # exec hop hits its own, tighter limit than a plain single-hop exec.
+  # Measured directly against this exact chain (380 real staged paths,
+  # `pnpm exec eslint --version`): -s 6500 passed, -s 6800 failed, so
+  # 4000 leaves real margin below the observed ~6800-char failure
+  # point rather than a guessed constant — re-measure
+  # (`cat <files> | xargs -s N -x pnpm exec eslint --version`) if this
+  # ever needs raising. `-s` packs as many paths as fit per batch
+  # rather than a fixed count, so it adapts to path length. `-x` makes
+  # xargs fail loudly if a single path were somehow too long to fit at
+  # all, instead of silently doing something else. Same eslint flags,
+  # same --max-warnings=0 failure behavior — just run over N batches.
+  echo "$STAGED_TS" | xargs -s 4000 -x pnpm exec eslint --fix --max-warnings=0 --no-warn-ignored || {
     echo "❌ Lint failed on staged files after autofix. Fix the remaining errors before committing."
     echo "   (Override only if necessary: ESCAPE_LINT_FIX=1 git commit ... — record reason in commit body.)"
     exit 1
