@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-07T07:29:37.374Z",
+  "timestamp": "2026-10-07T09:14:47.716Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 66,
-    "total_endpoints": 536,
+    "total_routers": 65,
+    "total_endpoints": 535,
     "total_queries": 234,
-    "total_mutations": 302,
+    "total_mutations": 301,
     "routers": [
       {
         "name": "contact",
@@ -1375,12 +1375,6 @@
         "mutations": 1
       },
       {
-        "name": "accountTiers",
-        "endpoints": 1,
-        "queries": 0,
-        "mutations": 1
-      },
-      {
         "name": "customActionHandler",
         "endpoints": 1,
         "queries": 0,
@@ -1419,16 +1413,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 189,
-    "total_fields": 2732,
-    "total_indexes": 866,
-    "total_relations": 267,
+    "total_tables": 190,
+    "total_fields": 2748,
+    "total_indexes": 870,
+    "total_relations": 269,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 169,
+        "fields": 168,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1442,7 +1436,7 @@
       },
       {
         "name": "User",
-        "fields": 44,
+        "fields": 45,
         "indexes": 7,
         "relations": 7,
         "hasEmbedding": false
@@ -1476,6 +1470,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Account",
+        "fields": 32,
+        "indexes": 7,
+        "relations": 5,
+        "hasEmbedding": false
+      },
+      {
         "name": "AuditLogEntry",
         "fields": 32,
         "indexes": 8,
@@ -1494,13 +1495,6 @@
         "fields": 30,
         "indexes": 4,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Account",
-        "fields": 29,
-        "indexes": 7,
-        "relations": 5,
         "hasEmbedding": false
       },
       {
@@ -1759,6 +1753,13 @@
         "name": "UserMfaSettings",
         "fields": 15,
         "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AccountTerritory",
+        "fields": 15,
+        "indexes": 3,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2106,13 +2107,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "AccountTierDefinition",
-        "fields": 11,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
         "name": "PipelineStageConfig",
         "fields": 11,
         "indexes": 4,
@@ -2407,6 +2401,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AccountTerritoryRule",
+        "fields": 9,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "RBACRole",
         "fields": 9,
         "indexes": 3,
@@ -2505,10 +2506,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "AccountTierConfig",
+        "name": "AccountTerritoryMember",
         "fields": 8,
-        "indexes": 2,
-        "relations": 1,
+        "indexes": 4,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -3118,10 +3119,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 53,
-    "total_schemas": 597,
+    "total_validators": 52,
+    "total_schemas": 595,
     "by_complexity": {
-      "complex": 33,
+      "complex": 32,
       "moderate": 16,
       "simple": 4
     },
@@ -3391,12 +3392,6 @@
         "complexity": "moderate"
       },
       {
-        "name": "account-tiers",
-        "file": "account-tiers.ts",
-        "schemas": 2,
-        "complexity": "complex"
-      },
-      {
         "name": "appointment",
         "file": "appointment.ts",
         "schemas": 2,
@@ -3531,13 +3526,6 @@
         "name": "accountSettings.updateAll",
         "method": "POST",
         "description": "Update all"
-      }
-    ],
-    "accountTiers": [
-      {
-        "name": "accountTiers.get",
-        "method": "POST",
-        "description": "Get"
       }
     ],
     "account": [
