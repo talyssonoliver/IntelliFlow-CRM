@@ -320,7 +320,7 @@ export default function AccountsPageClient({
   const handlers: AccountRowHandlers = useMemo(
     () => ({
       onView: (id) => router.push(`/accounts/${id}`),
-      onEdit: (id) => router.push(`/accounts/${id}?edit=true`),
+      onEdit: (id) => router.push(`/accounts/${id}/edit`),
       onCreateDeal: (id) => router.push(`/deals/new?accountId=${id}`),
       onDelete: (id) => deleteMutation.mutate({ id }),
     }),

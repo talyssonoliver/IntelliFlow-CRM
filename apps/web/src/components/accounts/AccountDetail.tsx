@@ -20,6 +20,7 @@ import {
 import { api } from '@/lib/api';
 import { formatCurrency } from '@/lib/pricing/calculator';
 import { useAccountTiers } from '@/hooks/useAccountTiers';
+import { countryLabel } from '@/components/shared/country-select';
 import { AccountContactsList } from './AccountContactsList';
 import { AccountOpportunitiesList } from './AccountOpportunitiesList';
 import { RevenueChart } from './RevenueChart';
@@ -68,6 +69,21 @@ function getInitials(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 2);
+}
+
+/** PG-197: join the optional geography fields; null when none is set. */
+export function formatAccountLocation(
+  account:
+    | { country?: string | null; region?: string | null; postalCode?: string | null }
+    | null
+    | undefined
+): string | null {
+  if (!account) return null;
+  const country = account.country ? countryLabel(account.country) : null;
+  const parts = [account.region, account.postalCode, country].filter(
+    (part): part is string => !!part
+  );
+  return parts.length > 0 ? parts.join(', ') : null;
 }
 
 function resolveWebsite(website: unknown): { href: string; display: string } | null {
@@ -158,6 +174,8 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   const contactCount = account?._count?.contacts ?? 0;
   const opportunityCount = account?._count?.opportunities ?? 0;
   const website = useMemo(() => resolveWebsite(account?.website), [account?.website]);
+  // PG-197: optional geography — "Region, POSTCODE, Country" when present.
+  const location = formatAccountLocation(account);
 
   const tabs: Tab[] = useMemo(
     () => [
@@ -251,7 +269,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
         <div className="flex gap-3">
           <button
             className="flex items-center gap-2 px-4 h-10 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-sm font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            onClick={() => router.push(`/accounts/${accountId}?edit=true`)}
+            onClick={() => router.push(`/accounts/${accountId}/edit`)}
           >
             <span className="material-symbols-outlined !text-[18px]">edit</span> Edit
           </button>
@@ -626,6 +644,12 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                     </ul>
                   )}
                 </div>
+                {location && (
+                  <div data-testid="account-location">
+                    <p className="text-xs text-slate-400 uppercase font-semibold mb-1">Location</p>
+                    <p className="text-sm text-slate-900 dark:text-white">{location}</p>
+                  </div>
+                )}
                 {account.description && (
                   <div className="sm:col-span-2">
                     <p className="text-xs text-slate-400 uppercase font-semibold mb-1">
