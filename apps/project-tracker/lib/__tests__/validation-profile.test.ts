@@ -133,3 +133,71 @@ describe('evaluateValidations: what counts as a passing record', () => {
     expect(evaluateValidations([], CODE).issue).toContain('TypeScript, Tests, Lint, Build');
   });
 });
+
+describe('the checks a non-code task needs follow its deliverables', () => {
+  const TF_ONLY = 'ARTIFACT:infra/terraform/main.tf';
+
+  it('does not pass a Terraform deliverable on lint + tests (review repro)', () => {
+    const r = evaluateValidations([ok('Lint'), ok('Tests')], TF_ONLY);
+    expect(r.ok).toBe(false);
+    expect(r.issue).toContain('terraform');
+  });
+
+  it('passes a Terraform deliverable on two distinct terraform checks', () => {
+    expect(evaluateValidations([ok('terraform validate'), ok('terraform plan')], TF_ONLY).ok).toBe(
+      true
+    );
+  });
+
+  it('does not let a format check stand in for terraform fmt', () => {
+    expect(evaluateValidations([ok('terraform validate'), ok('Prettier')], TF_ONLY).ok).toBe(false);
+  });
+
+  it('holds a mixed Terraform + runbook task to the terraform checks', () => {
+    const mixed = `${TF_ONLY};ARTIFACT:docs/operations/runbooks/x.md`;
+    expect(evaluateValidations([ok('Lint'), ok('Tests'), ok('Prettier')], mixed).ok).toBe(false);
+    expect(
+      evaluateValidations([ok('terraform validate'), ok('terraform fmt -check')], mixed).ok
+    ).toBe(true);
+  });
+
+  it('still passes a data deliverable on format + its own integrity test', () => {
+    expect(
+      evaluateValidations(
+        [ok('Prettier (x.json)'), ok('Tests (x integrity)')],
+        'ARTIFACT:docs/x.json'
+      ).ok
+    ).toBe(true);
+  });
+});
+
+describe('evidence paths are recognised however they are written', () => {
+  it('never reads ./.specify evidence as a non-code deliverable (review repro)', () => {
+    const a =
+      'ARTIFACT:apps/api/src/router.ts;EVIDENCE:./.specify/sprints/sprint-19/attestations/X/attestation.json';
+    expect(
+      isNonCodeTask('EVIDENCE:./.specify/sprints/sprint-19/attestations/X/attestation.json')
+    ).toBe(false);
+    expect(isNonCodeTask(a)).toBe(false);
+  });
+
+  it('never reads a backslashed .specify path as a deliverable', () => {
+    expect(
+      isNonCodeTask(String.raw`EVIDENCE:.specify\sprints\sprint-19\attestations\X\attestation.json`)
+    ).toBe(false);
+  });
+
+  it('asks the four code checks of a code task that cites ./.specify evidence', () => {
+    const r = evaluateValidations(
+      [ok('Tests'), ok('Lint')],
+      'ARTIFACT:infra/notes.md;EVIDENCE:./.specify/sprints/sprint-19/attestations/X/attestation.json'
+    );
+    expect(r.ok).toBe(true);
+    const code = evaluateValidations(
+      [ok('Tests'), ok('Lint')],
+      'EVIDENCE:./.specify/sprints/sprint-19/attestations/X/attestation.json'
+    );
+    expect(code.ok).toBe(false);
+    expect(code.issue).toContain('TypeScript');
+  });
+});
