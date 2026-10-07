@@ -6,7 +6,7 @@ import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { normalizeStatus, STATUS_GROUPS } from '@/lib/csv-parser';
 import { PATHS, MONOREPO_ROOT } from '@/lib/paths';
 import { NO_CACHE_HEADERS } from '@/lib/api-types';
-import { findMissingArtifacts } from '@/lib/artifact-presence';
+import { findMissingArtifacts, isUntrackedByDesign } from '@/lib/artifact-presence';
 import { requiredValidations } from '@/lib/validation-profile';
 
 export const dynamic = 'force-dynamic';
@@ -485,7 +485,10 @@ function checkPlanDeliverables(
     checked: checkboxChecked,
     pct: checkboxPct,
   } = countPlanCheckboxes(planContent);
-  const filePaths = extractPlanFilePaths(planContent);
+  // A plan may list a gitignored context_ack.json or spec; no checkout has those.
+  const filePaths = extractPlanFilePaths(planContent).filter(
+    (fp) => !isUntrackedByDesign(fp, MONOREPO_ROOT)
+  );
   const { verified, missingFiles } = verifyPlanFilePaths(filePaths);
 
   return {

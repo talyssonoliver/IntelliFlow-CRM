@@ -2,6 +2,8 @@ import { access } from 'node:fs/promises';
 import { join } from 'node:path';
 import { isUntrackedByDesign } from '../../../tools/scripts/lib/untracked-by-design';
 
+export { isUntrackedByDesign };
+
 /**
  * Does a tracked artifact exist under `root`? A glob counts as present when its
  * parent directory exists.
