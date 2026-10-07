@@ -7,6 +7,7 @@ import { normalizeStatus, STATUS_GROUPS } from '@/lib/csv-parser';
 import { PATHS, MONOREPO_ROOT } from '@/lib/paths';
 import { NO_CACHE_HEADERS } from '@/lib/api-types';
 import { findMissingArtifacts } from '@/lib/artifact-presence';
+import { requiredValidations } from '@/lib/validation-profile';
 
 export const dynamic = 'force-dynamic';
 
@@ -756,7 +757,8 @@ function collectAttestationIssues(
   taskId: string,
   sprintNum: number | null,
   targetSprint: string,
-  allSprintDirs: string[]
+  allSprintDirs: string[],
+  artifactsStr = ''
 ): {
   issues: string[];
   attestExists: boolean | null;
@@ -781,9 +783,10 @@ function collectAttestationIssues(
       attestResult.verdict !== 'COMPLETE' &&
       attestResult.verdict !== 'PASS';
     if (badVerdict) issues.push(`Attestation verdict: ${attestResult.verdict} (expected COMPLETE)`);
-    if (attestResult.validationCount < 4) {
+    const required = requiredValidations(artifactsStr);
+    if (attestResult.validationCount < required.count) {
       issues.push(
-        `Only ${attestResult.validationCount}/4 validations recorded (need TypeScript, Tests, Lint, Build)`
+        `Only ${attestResult.validationCount}/${required.count} validations recorded (${required.label})`
       );
     }
   } else {
@@ -837,7 +840,8 @@ function buildTaskIntegrityIssues(
     taskId,
     sprintNum,
     task['Target Sprint'],
-    allSprintDirs
+    allSprintDirs,
+    task['Artifacts To Track']
   );
   issues.push(...attestInfo.issues);
 
