@@ -15,6 +15,7 @@
 
 import * as React from 'react';
 import { useState, useEffect, useCallback } from 'react';
+import cookieInventoryJson from './cookie-inventory.json';
 
 // ============================================
 // Types & Interfaces
@@ -90,78 +91,38 @@ const DEFAULT_CONSENT: CookieConsent = {
 /**
  * Cookie inventory for transparency
  */
-export const COOKIE_INVENTORY: CookieInfo[] = [
-  {
-    name: 'session_token',
-    category: 'necessary',
-    duration: '24 hours',
-    description: 'Maintains user session for authentication',
-    provider: 'Leangency',
-  },
-  {
-    name: 'csrf_token',
-    category: 'necessary',
-    duration: 'Session',
-    description: 'Protects against cross-site request forgery',
-    provider: 'Leangency',
-  },
-  {
-    name: 'intelliflow_consent',
-    category: 'necessary',
-    duration: '1 year',
-    description: 'Stores cookie consent preferences',
-    provider: 'Leangency',
-  },
-  {
-    name: '_ga',
-    category: 'analytics',
-    duration: '2 years',
-    description: 'Distinguishes users for Google Analytics',
-    provider: 'Google',
-  },
-  {
-    name: '_gid',
-    category: 'analytics',
-    duration: '24 hours',
-    description: 'Distinguishes users for Google Analytics',
-    provider: 'Google',
-  },
-  {
-    name: 'mixpanel_id',
-    category: 'analytics',
-    duration: '1 year',
-    description: 'Tracks user behavior for product analytics',
-    provider: 'Mixpanel',
-  },
-  {
-    name: '_fbp',
-    category: 'marketing',
-    duration: '90 days',
-    description: 'Facebook advertising pixel',
-    provider: 'Meta',
-  },
-  {
-    name: '_gcl_au',
-    category: 'marketing',
-    duration: '90 days',
-    description: 'Google Ads conversion tracking',
-    provider: 'Google',
-  },
-  {
-    name: 'theme',
-    category: 'preferences',
-    duration: '1 year',
-    description: 'Stores UI theme preference (light/dark)',
-    provider: 'Leangency',
-  },
-  {
-    name: 'language',
-    category: 'preferences',
-    duration: '1 year',
-    description: 'Stores language preference',
-    provider: 'Leangency',
-  },
+const COOKIE_CATEGORIES: readonly CookieCategory[] = [
+  'necessary',
+  'analytics',
+  'marketing',
+  'preferences',
 ];
+
+function isCookieInfo(value: unknown): value is CookieInfo {
+  if (typeof value !== 'object' || value === null) return false;
+  const v = value as Record<string, unknown>;
+  return (
+    typeof v.name === 'string' &&
+    typeof v.duration === 'string' &&
+    typeof v.description === 'string' &&
+    typeof v.provider === 'string' &&
+    typeof v.category === 'string' &&
+    (COOKIE_CATEGORIES as readonly string[]).includes(v.category)
+  );
+}
+
+/**
+ * The inventory is content, kept in cookie-inventory.json. A JSON import is typed
+ * from its contents, so each entry is checked here, once, at load.
+ */
+export function parseCookieInventory(data: unknown): CookieInfo[] {
+  if (!Array.isArray(data)) throw new Error('cookie-inventory.json: expected an array');
+  const bad = data.findIndex((entry) => !isCookieInfo(entry));
+  if (bad !== -1) throw new Error(`cookie-inventory.json: entry ${bad} is not a CookieInfo`);
+  return data as CookieInfo[];
+}
+
+export const COOKIE_INVENTORY: CookieInfo[] = parseCookieInventory(cookieInventoryJson);
 
 // ============================================
 // Utility Functions

@@ -14,7 +14,7 @@ export function isValidEmail(email: string): boolean {
   // Same rule as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, without a backtracking regex:
   // exactly one @, something before it, and a dot inside the domain.
   const at = email.indexOf('@');
-  if (at < 1 || email.indexOf('@', at + 1) !== -1) return false;
+  if (at < 1 || email.includes('@', at + 1)) return false;
   const domain = email.slice(at + 1);
   const dot = domain.indexOf('.', 1);
   return dot > 0 && dot < domain.length - 1;
