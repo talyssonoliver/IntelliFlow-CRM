@@ -252,7 +252,7 @@ export function TicketDetail({
             <nav className="flex items-center gap-2 text-sm text-slate-500">
               <Link
                 href={listHref}
-                className="hover:text-[#137fec] transition-colors flex items-center gap-1"
+                className="hover:text-[#2a78f6] transition-colors flex items-center gap-1"
               >
                 <span className="material-symbols-outlined text-[16px]">arrow_back</span> Tickets
               </Link>
@@ -415,7 +415,7 @@ export function TicketDetail({
               value={escalationReason}
               onChange={(e) => setEscalationReason(e.target.value)}
               placeholder="Explain why this ticket needs urgent manager attention..."
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none text-sm"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] resize-none text-sm"
               rows={3}
             />
             {!escalationReason.trim() && (
@@ -593,7 +593,7 @@ export function TicketDetail({
                   </p>
                   <Link
                     href={`/accounts/${ticket.account.id}`}
-                    className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline"
+                    className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1 hover:underline"
                   >
                     <span className="material-symbols-outlined text-[16px]">business</span>{' '}
                     {ticket.customer.company}
@@ -610,7 +610,7 @@ export function TicketDetail({
                     >
                       <Link
                         href={`/email/compose?to=${encodeURIComponent(ticket.customer.email)}`}
-                        className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                        className="text-slate-700 dark:text-slate-300 hover:text-[#2a78f6]"
                       >
                         {ticket.customer.email}
                       </Link>
@@ -622,17 +622,17 @@ export function TicketDetail({
                     </span>
                     <a
                       href={`tel:${ticket.customer.phone}`}
-                      className="text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                      className="text-slate-700 dark:text-slate-300 hover:text-[#2a78f6]"
                     >
                       {ticket.customer.phone}
                     </a>
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
+                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#2a78f6]/10 text-[#2a78f6] text-xs font-semibold hover:bg-[#2a78f6]/20 transition-colors">
                     <span className="material-symbols-outlined text-[16px]">mail</span> Email
                   </button>
-                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#137fec]/10 text-[#137fec] text-xs font-semibold hover:bg-[#137fec]/20 transition-colors">
+                  <button className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg bg-[#2a78f6]/10 text-[#2a78f6] text-xs font-semibold hover:bg-[#2a78f6]/20 transition-colors">
                     <span className="material-symbols-outlined text-[16px]">call</span> Call
                   </button>
                   <Link
@@ -708,7 +708,7 @@ export function TicketDetail({
                       onClick={() => setActiveTab(tab.id)}
                       className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                         activeTab === tab.id
-                          ? 'text-[#137fec] border-[#137fec]'
+                          ? 'text-[#2a78f6] border-[#2a78f6]'
                           : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
                       }`}
                     >
@@ -793,7 +793,7 @@ export function TicketDetail({
                     </h4>
                     <button
                       onClick={() => setActiveTab('activity')}
-                      className="text-xs text-[#137fec] font-medium hover:underline"
+                      className="text-xs text-[#2a78f6] font-medium hover:underline"
                     >
                       View All
                     </button>
@@ -939,7 +939,7 @@ export function TicketDetail({
                             <button
                               onClick={handleSendReply}
                               disabled={isLoading || !replyContent.trim()}
-                              className="px-4 py-1.5 bg-[#137fec] text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
+                              className="px-4 py-1.5 bg-[#2a78f6] text-white text-xs font-bold rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 disabled:opacity-50"
                             >
                               Send Reply{' '}
                               <span className="material-symbols-outlined text-[16px]">send</span>
@@ -1028,7 +1028,7 @@ export function TicketDetail({
                         type="checkbox"
                         checked={notifyCustomer}
                         onChange={(e) => setNotifyCustomer(e.target.checked)}
-                        className="rounded border-slate-300 text-[#137fec]"
+                        className="rounded border-slate-300 text-[#2a78f6]"
                       />
                       <span className="text-sm text-slate-600 dark:text-slate-300">
                         Notify customer of resolution
@@ -1057,7 +1057,7 @@ export function TicketDetail({
             {activeTab === 'attachments' && (
               <Card className="p-6">
                 <div className="space-y-6">
-                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-[#137fec] hover:bg-[#137fec]/5 transition-colors cursor-pointer">
+                  <div className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center hover:border-[#2a78f6] hover:bg-[#2a78f6]/5 transition-colors cursor-pointer">
                     <span className="material-symbols-outlined text-4xl text-slate-400 mb-2">
                       cloud_upload
                     </span>
@@ -1118,7 +1118,7 @@ export function TicketDetail({
                             {file.size} • {file.uploader}
                           </p>
                         </div>
-                        <button className="p-1.5 text-slate-400 hover:text-[#137fec] transition-colors">
+                        <button className="p-1.5 text-slate-400 hover:text-[#2a78f6] transition-colors">
                           <span className="material-symbols-outlined">download</span>
                         </button>
                       </div>
@@ -1178,7 +1178,7 @@ export function TicketDetail({
 
                   <div>
                     <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-                      <span className="material-symbols-outlined text-[#137fec] text-[20px]">
+                      <span className="material-symbols-outlined text-[#2a78f6] text-[20px]">
                         lightbulb
                       </span>{' '}
                       Suggested Solutions
@@ -1189,7 +1189,7 @@ export function TicketDetail({
                           key={solution}
                           className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
                         >
-                          <span className="text-[#137fec] font-bold text-sm">{i + 1}.</span>
+                          <span className="text-[#2a78f6] font-bold text-sm">{i + 1}.</span>
                           <p className="text-sm text-slate-700 dark:text-slate-300">{solution}</p>
                         </div>
                       ))}
@@ -1213,7 +1213,7 @@ export function TicketDetail({
                             className="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                           >
                             <div>
-                              <span className="text-sm font-medium text-[#137fec]">
+                              <span className="text-sm font-medium text-[#2a78f6]">
                                 #{related.id}
                               </span>
                               <p className="text-sm text-slate-600 dark:text-slate-400">
@@ -1245,7 +1245,7 @@ export function TicketDetail({
                       <p className="text-xs text-slate-500">Based on customer messages</p>
                     </div>
                     <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-lg text-center">
-                      <p className="text-3xl font-bold text-[#137fec] mb-2">
+                      <p className="text-3xl font-bold text-[#2a78f6] mb-2">
                         {ticket.aiInsights.similarResolvedTickets}
                       </p>
                       <p className="text-sm font-medium text-slate-900 dark:text-white">
@@ -1355,15 +1355,15 @@ export function TicketDetail({
                 <button
                   onClick={() => setAssignSidebarOpen(true)}
                   disabled={isLoading || !canOpenAssignSidebar}
-                  className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-[#137fec] hover:bg-[#137fec]/5 transition-all group disabled:opacity-50"
+                  className="flex flex-col items-center justify-center p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-[#2a78f6] hover:bg-[#2a78f6]/5 transition-all group disabled:opacity-50"
                 >
                   <span
-                    className="material-symbols-outlined text-slate-400 group-hover:text-[#137fec] mb-1"
+                    className="material-symbols-outlined text-slate-400 group-hover:text-[#2a78f6] mb-1"
                     style={{ fontSize: '24px' }}
                   >
                     forward
                   </span>
-                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-[#137fec]">
+                  <span className="text-xs font-bold text-slate-600 dark:text-slate-400 group-hover:text-[#2a78f6]">
                     Assign
                   </span>
                 </button>
@@ -1375,7 +1375,7 @@ export function TicketDetail({
                 <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
                   Next Steps
                 </h3>
-                <button className="w-6 h-6 flex items-center justify-center rounded bg-[#137fec]/10 hover:bg-[#137fec]/20 text-[#137fec] transition-colors">
+                <button className="w-6 h-6 flex items-center justify-center rounded bg-[#2a78f6]/10 hover:bg-[#2a78f6]/20 text-[#2a78f6] transition-colors">
                   <span className="material-symbols-outlined text-[16px]">add</span>
                 </button>
               </div>
@@ -1389,10 +1389,10 @@ export function TicketDetail({
                     <input
                       type="checkbox"
                       defaultChecked={step.completed}
-                      className="mt-1 rounded border-slate-300 text-[#137fec] focus:ring-[#137fec]/50"
+                      className="mt-1 rounded border-slate-300 text-[#2a78f6] focus:ring-[#2a78f6]/50"
                     />
                     <div className="text-sm">
-                      <p className="font-medium text-slate-700 dark:text-slate-300 group-hover:text-[#137fec] transition-colors">
+                      <p className="font-medium text-slate-700 dark:text-slate-300 group-hover:text-[#2a78f6] transition-colors">
                         {step.title}
                       </p>
                       <p
@@ -1425,7 +1425,7 @@ export function TicketDetail({
                       className="block p-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-[#137fec]">#{related.id}</span>
+                        <span className="text-sm font-medium text-[#2a78f6]">#{related.id}</span>
                         <span
                           className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${relatedStatus?.bg} ${relatedStatus?.text}`}
                         >

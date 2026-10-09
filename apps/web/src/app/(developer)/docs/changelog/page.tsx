@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { ChangelogDisplay } from '@/components/developer/changelog-display';
 
 export const metadata: Metadata = {
-  title: 'Changelog | IntelliFlow CRM',
+  title: 'Changelog | Aurora',
   description:
-    'Release notes, version history, and breaking change notifications for IntelliFlow CRM platform updates',
+    'Release notes, version history, and breaking change notifications for Aurora platform updates',
   alternates: {
     types: {
       'application/rss+xml': '/api/developer/changelog-rss',
@@ -19,7 +19,7 @@ export default function ChangelogPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Changelog</h1>
           <p className="text-muted-foreground mt-1">
-            Track platform releases, breaking changes, and migration deadlines for IntelliFlow CRM
+            Track platform releases, breaking changes, and migration deadlines for Aurora
           </p>
         </div>
         <ChangelogDisplay />

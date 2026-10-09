@@ -74,7 +74,7 @@ export function getTicketStatusColor(status: string): string {
   if (normalized === 'RESOLVED' || normalized === 'CLOSED') {
     return 'bg-green-100 dark:bg-green-900/30 text-green-600';
   }
-  return 'bg-[#137fec]/10 text-[#137fec]';
+  return 'bg-[#2a78f6]/10 text-[#2a78f6]';
 }
 
 /** Normalise raw contact tickets (from the API) into render-ready view models. */

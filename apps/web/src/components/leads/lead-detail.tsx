@@ -208,7 +208,7 @@ export function LeadProfileCard({
             {lead.firstName} {lead.lastName}
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">{lead.title}</p>
-          <div className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1">
+          <div className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1">
             <span aria-hidden="true" className="material-symbols-outlined !text-sm">
               domain
             </span>
@@ -249,7 +249,7 @@ export function LeadProfileCard({
               >
                 <Link
                   href={`/email/compose?to=${encodeURIComponent(lead.email)}`}
-                  className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
+                  className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#2a78f6] break-all"
                 >
                   {lead.email}
                 </Link>
@@ -267,7 +267,7 @@ export function LeadProfileCard({
               <span className="text-xs text-slate-400 uppercase font-semibold">Phone</span>
               <a
                 href={`tel:${lead.phone.replaceAll(/\D/g, '')}`}
-                className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#2a78f6]"
               >
                 {lead.phone}
               </a>
@@ -299,7 +299,7 @@ export function LeadProfileCard({
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={`${lead.website} (opens in new tab)`}
-                className="text-sm text-[#137fec] hover:underline"
+                className="text-sm text-[#2a78f6] hover:underline"
               >
                 {lead.website}
               </a>
@@ -341,7 +341,7 @@ export function LeadProfileCard({
           <div className="text-center">
             <span
               aria-hidden="true"
-              className="material-symbols-outlined text-[#137fec] !text-3xl mb-1"
+              className="material-symbols-outlined text-[#2a78f6] !text-3xl mb-1"
             >
               location_on
             </span>

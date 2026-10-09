@@ -25,8 +25,8 @@ describe('ChangelogPage', () => {
     expect(screen.getByTestId('changelog-display')).toBeInTheDocument();
   });
 
-  it('exports metadata.title as "Changelog | IntelliFlow CRM"', () => {
-    expect(metadata.title).toBe('Changelog | IntelliFlow CRM');
+  it('exports metadata.title as "Changelog | Aurora"', () => {
+    expect(metadata.title).toBe('Changelog | Aurora');
   });
 
   it('exports metadata.description matching /changelog|release/i', () => {

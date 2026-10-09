@@ -1,8 +1,8 @@
 ---
 title: Cookie Policy
-version: v2026.04
-effectiveDate: 2026-04-12
-contactEmail: privacy@intelliflow-crm.com
+version: v2026.10
+effectiveDate: 2026-10-07
+contactEmail: privacy@leangency.com
 summary:
   - Necessary cookies keep the site working, authenticate sessions, and remember
     your cookie choices; they cannot be turned off.
@@ -18,20 +18,18 @@ summary:
 
 Cookies are small text files that a website stores in your browser. They allow
 the site to remember information about your visit, such as your sign-in state,
-preferred theme, or the cookie categories you have agreed to. IntelliFlow CRM
-uses cookies, along with similar technologies such as local storage, to operate
-the public site and the authenticated product.
+preferred theme, or the cookie categories you have agreed to. Aurora, provided
+by Leangency, uses cookies, along with similar technologies such as local
+storage, to operate the public site and the authenticated product.
 
-Some cookies are set by IntelliFlow directly, while others are set by trusted
+Some cookies are set by Leangency directly, while others are set by trusted
 third-party providers that help us measure site performance or deliver the
-service. All cookies used on IntelliFlow CRM are listed in the categories
-section below.
+service. All cookies used on Aurora are listed in the categories section below.
 
 ## Categories We Use
 
-IntelliFlow CRM groups cookies into four categories that mirror the options
-available in the consent banner: necessary, analytics, marketing, and
-preferences.
+Aurora groups cookies into four categories that mirror the options available in
+the consent banner: necessary, analytics, marketing, and preferences.
 
 Necessary cookies support authentication, cross-site request forgery protection,
 and the storage of your consent choice itself. They are always on because the

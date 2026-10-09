@@ -127,7 +127,7 @@ export function CustomerPortalView({
                         className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
                           isCustomer
                             ? 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'
-                            : 'bg-[#137fec] text-white'
+                            : 'bg-[#2a78f6] text-white'
                         }`}
                       >
                         {activity.author.name.charAt(0)}
@@ -136,7 +136,7 @@ export function CustomerPortalView({
                         {activity.author.name}
                       </span>
                       {!isCustomer && (
-                        <span className="text-[10px] font-medium text-[#137fec] bg-[#137fec]/10 px-1.5 py-0.5 rounded">
+                        <span className="text-[10px] font-medium text-[#2a78f6] bg-[#2a78f6]/10 px-1.5 py-0.5 rounded">
                           Support
                         </span>
                       )}
@@ -176,7 +176,7 @@ export function CustomerPortalView({
               type="button"
               onClick={handleSendReply}
               disabled={!replyContent.trim() || isSending}
-              className="px-4 py-1.5 bg-[#137fec] text-white text-sm font-bold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-1.5 bg-[#2a78f6] text-white text-sm font-bold rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSending ? (
                 <span className="material-symbols-outlined text-[16px] animate-spin">

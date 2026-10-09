@@ -242,7 +242,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
           </p>
           <Link
             href="/accounts"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Accounts
           </Link>
@@ -259,7 +259,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/accounts" className="hover:text-[#137fec] transition-colors">
+            <Link href="/accounts" className="hover:text-[#2a78f6] transition-colors">
               Accounts
             </Link>
             <span className="material-symbols-outlined !text-sm">chevron_right</span>
@@ -283,7 +283,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
           </button>
           <button
             type="button"
-            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
+            className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
             onClick={() => setAddContactOpen(true)}
           >
             <span className="material-symbols-outlined !text-[18px]">person_add</span> Add Contact
@@ -427,7 +427,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                         href={website.href}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-sm text-[#137fec] hover:underline break-all"
+                        className="text-sm text-[#2a78f6] hover:underline break-all"
                       >
                         {website.display}
                       </a>
@@ -558,7 +558,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'text-[#137fec] border-[#137fec]'
+                      ? 'text-[#2a78f6] border-[#2a78f6]'
                       : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
                   }`}
                 >
@@ -591,7 +591,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                       href={website.href}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-sm text-[#137fec] hover:underline"
+                      className="text-sm text-[#2a78f6] hover:underline"
                     >
                       {website.display}
                     </a>
@@ -784,7 +784,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
           {/* Quick Stats */}
           <Card className="p-5">
             <div className="flex items-center gap-2 mb-4">
-              <span className="material-symbols-outlined text-[#137fec]">insights</span>
+              <span className="material-symbols-outlined text-[#2a78f6]">insights</span>
               <h3 className="text-base font-bold text-slate-900 dark:text-white">Account Health</h3>
             </div>
             <div className="space-y-4">
@@ -799,7 +799,7 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
                 </div>
                 <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
                   <div
-                    className="bg-[#137fec] h-2 rounded-full transition-all"
+                    className="bg-[#2a78f6] h-2 rounded-full transition-all"
                     style={{ width: `${Math.min(contactCount * 10, 100)}%` }}
                   />
                 </div>
@@ -850,13 +850,13 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
             <div className="space-y-2">
               <button
                 onClick={() => setActiveTab('contacts')}
-                className="w-full text-left p-2 rounded border bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#137fec]/50 transition-colors group"
+                className="w-full text-left p-2 rounded border bg-blue-50 dark:bg-slate-800/50 border-blue-100 dark:border-slate-700 hover:border-[#2a78f6]/50 transition-colors group"
               >
                 <div className="flex items-center gap-2">
-                  <span className="material-symbols-outlined !text-[18px] text-[#137fec]">
+                  <span className="material-symbols-outlined !text-[18px] text-[#2a78f6]">
                     person_add
                   </span>
-                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#137fec]">
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-200 group-hover:text-[#2a78f6]">
                     View Contacts
                   </span>
                 </div>

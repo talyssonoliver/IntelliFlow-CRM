@@ -102,12 +102,12 @@ export function PauseSubscriptionModal({
                 onClick={() => setSelectedDuration(option.months)}
                 className={`relative flex flex-col items-start p-4 rounded-xl border-2 transition-all text-left ${
                   selectedDuration === option.months
-                    ? 'border-[#137fec] bg-[#137fec]/5 dark:border-[#137fec] dark:bg-[#137fec]/10 shadow-sm'
+                    ? 'border-[#2a78f6] bg-[#2a78f6]/5 dark:border-[#2a78f6] dark:bg-[#2a78f6]/10 shadow-sm'
                     : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600'
                 }`}
               >
                 {option.recommended && (
-                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full bg-[#137fec] text-white text-[10px] font-bold px-2 py-0.5 leading-none">
+                  <span className="absolute -top-2.5 left-1/2 -translate-x-1/2 inline-flex items-center rounded-full bg-[#2a78f6] text-white text-[10px] font-bold px-2 py-0.5 leading-none">
                     Recommended
                   </span>
                 )}
@@ -124,13 +124,13 @@ export function PauseSubscriptionModal({
           {/* Data safety assurances */}
           <div className="flex flex-col gap-2 mt-2">
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <span className="material-symbols-outlined text-lg text-[#137fec]" aria-hidden="true">
+              <span className="material-symbols-outlined text-lg text-[#2a78f6]" aria-hidden="true">
                 shield
               </span>{' '}
               CRM Data securely stored and accessible upon return.
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
-              <span className="material-symbols-outlined text-lg text-[#137fec]" aria-hidden="true">
+              <span className="material-symbols-outlined text-lg text-[#2a78f6]" aria-hidden="true">
                 model_training
               </span>{' '}
               AI model progress and configurations saved.

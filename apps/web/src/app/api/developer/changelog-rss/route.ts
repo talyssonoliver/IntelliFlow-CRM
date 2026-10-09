@@ -6,9 +6,8 @@ export async function GET() {
 
   const xml = buildRssFeed({
     baseUrl,
-    title: 'IntelliFlow CRM Changelog',
-    description:
-      'Release notes, version history, and breaking change notifications for IntelliFlow CRM',
+    title: 'Aurora Changelog',
+    description: 'Release notes, version history, and breaking change notifications for Aurora',
     entries: CHANGELOG_ENTRIES,
   });
 

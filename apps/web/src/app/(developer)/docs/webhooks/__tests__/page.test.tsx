@@ -25,8 +25,8 @@ describe('WebhooksPage', () => {
     expect(screen.getByTestId('webhook-docs')).toBeInTheDocument();
   });
 
-  it('exports metadata.title as "Webhooks | IntelliFlow CRM"', () => {
-    expect(metadata.title).toBe('Webhooks | IntelliFlow CRM');
+  it('exports metadata.title as "Webhooks | Aurora"', () => {
+    expect(metadata.title).toBe('Webhooks | Aurora');
   });
 
   it('exports metadata.description containing "webhook"', () => {

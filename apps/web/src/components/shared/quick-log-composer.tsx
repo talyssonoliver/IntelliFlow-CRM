@@ -27,7 +27,7 @@ export interface QuickLogComposerProps {
 const TOOLBAR_BTN =
   'p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded transition-colors';
 const TOOLBAR_BTN_ACTIVE =
-  'p-1.5 text-[#137fec] bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded transition-colors';
+  'p-1.5 text-[#2a78f6] bg-blue-50 dark:bg-blue-900/30 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded transition-colors';
 
 function insertMarkdown(
   textarea: HTMLTextAreaElement,
@@ -151,7 +151,7 @@ export function QuickLogComposer({
             value={note}
             onChange={(e) => setNote(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] min-h-[80px] p-3 placeholder:text-slate-400"
+            className="w-full rounded-lg border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] min-h-[80px] p-3 placeholder:text-slate-400"
             placeholder={placeholder}
           />
 
@@ -236,7 +236,7 @@ export function QuickLogComposer({
                 type="button"
                 onClick={handleSubmit}
                 disabled={!hasContent || isSubmitting}
-                className="bg-[#137fec] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+                className="bg-[#2a78f6] text-white text-sm font-semibold px-4 py-1.5 rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
               >
                 {isSubmitting ? submittingLabel : submitLabel}
               </button>

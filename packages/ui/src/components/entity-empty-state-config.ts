@@ -417,7 +417,7 @@ export const ENTITY_EMPTY_STATE_CONFIG: Record<EmptyStateEntity, EntityEmptyStat
   subscriptions: {
     icon: 'credit_card_off',
     title: 'No active subscription',
-    description: 'Choose a plan to get started with IntelliFlow CRM and unlock powerful features.',
+    description: 'Choose a plan to get started with Aurora and unlock powerful features.',
     ctaLabel: 'View plans',
     suggestions: [],
     composerPlaceholder: '',

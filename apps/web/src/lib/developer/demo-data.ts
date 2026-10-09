@@ -24,7 +24,7 @@ export interface DeveloperApp {
 export const DEMO_APPS: DeveloperApp[] = [
   {
     id: 'app-001',
-    name: 'IntelliFlow Dashboard',
+    name: 'Aurora Dashboard',
     description: 'Main production dashboard application for CRM analytics and reporting',
     clientId: 'cli_prod_a1b2c3d4e5f6',
     status: 'active',

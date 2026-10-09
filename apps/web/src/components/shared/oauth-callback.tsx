@@ -1056,7 +1056,7 @@ export function OAuthCallback({
                     type="button"
                     data-testid="switch-account-continue"
                     onClick={handleConfirmSwitch}
-                    className="w-full px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
+                    className="w-full px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff]"
                   >
                     Continue
                   </button>
@@ -1064,7 +1064,7 @@ export function OAuthCallback({
                     type="button"
                     data-testid="switch-account-stay"
                     onClick={handleStaySignedIn}
-                    className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]"
+                    className="w-full px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff]"
                   >
                     Stay signed in
                   </button>

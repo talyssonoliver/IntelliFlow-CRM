@@ -103,8 +103,8 @@ function getFeatureLossDescription(feature: PlanFeature): string {
 // ============================================
 
 function getStepCircleClass(status: 'completed' | 'current' | 'upcoming'): string {
-  if (status === 'current') return 'bg-[#137fec] text-white';
-  if (status === 'completed') return 'bg-[#137fec] text-white hover:bg-[#0e6ac7]';
+  if (status === 'current') return 'bg-[#2a78f6] text-white';
+  if (status === 'completed') return 'bg-[#2a78f6] text-white hover:bg-[#1f63d4]';
   return 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-2 border-slate-200 dark:border-slate-700';
 }
 
@@ -279,8 +279,8 @@ function ReasonStep({
             key={value}
             className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
               reason === value
-                ? 'border-[#137fec] bg-[#137fec]/5 dark:border-[#137fec] dark:bg-[#137fec]/10'
-                : 'border-slate-200 dark:border-slate-700 hover:border-[#137fec] dark:hover:border-[#137fec]'
+                ? 'border-[#2a78f6] bg-[#2a78f6]/5 dark:border-[#2a78f6] dark:bg-[#2a78f6]/10'
+                : 'border-slate-200 dark:border-slate-700 hover:border-[#2a78f6] dark:hover:border-[#2a78f6]'
             }`}
           >
             <input
@@ -289,7 +289,7 @@ function ReasonStep({
               value={value}
               checked={reason === value}
               onChange={(e) => onReasonChange(e.target.value)}
-              className="size-4 text-[#137fec] border-slate-300 focus:ring-[#137fec] dark:border-slate-600 dark:bg-slate-800"
+              className="size-4 text-[#2a78f6] border-slate-300 focus:ring-[#2a78f6] dark:border-slate-600 dark:bg-slate-800"
             />
             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
               {CANCELLATION_REASON_LABELS[value]}
@@ -311,7 +311,7 @@ function ReasonStep({
           onChange={(e) => onFeedbackChange(e.target.value)}
           placeholder="Any additional feedback..."
           rows={3}
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] placeholder-slate-400 transition-shadow resize-none"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow resize-none"
         />
       </div>
     </div>
@@ -442,7 +442,7 @@ function CancelActionBar({
           </button>
           <Link
             href="/billing"
-            className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95"
+            className="flex items-center gap-2 bg-[#2a78f6] hover:bg-[#1f63d4] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#2a78f6]/30 transition-all active:scale-95"
             aria-label="Keep My Plan"
           >
             Keep My Plan
@@ -454,7 +454,7 @@ function CancelActionBar({
           type="button"
           onClick={handleNextStep}
           disabled={currentStep === 'reason' && !reason}
-          className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 bg-[#2a78f6] hover:bg-[#1f63d4] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#2a78f6]/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <span>{currentStep === 'plan' ? 'Continue Cancellation' : 'Next Step'}</span>
           <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">

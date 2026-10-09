@@ -104,7 +104,7 @@ export default function ActivityPage() {
                   placeholder="Search activity..."
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  className="w-48 sm:w-56 pl-8 pr-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec]/30 focus:border-[#137fec]"
+                  className="w-48 sm:w-56 pl-8 pr-3 py-1.5 text-sm rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/30 focus:border-[#2a78f6]"
                   aria-label="Search activity feed"
                 />
               </div>

@@ -110,10 +110,10 @@ export function AssignSheet({
                 type="button"
                 onClick={() => handleAssign(currentUserId)}
                 disabled={isDisabled}
-                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg bg-[#137fec]/5 border border-[#137fec]/20 text-left hover:bg-[#137fec]/10 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-between gap-3 p-3 rounded-lg bg-[#2a78f6]/5 border border-[#2a78f6]/20 text-left hover:bg-[#2a78f6]/10 transition-colors disabled:opacity-50"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <span className="material-symbols-outlined text-[#137fec] text-[20px]">
+                  <span className="material-symbols-outlined text-[#2a78f6] text-[20px]">
                     person
                   </span>
                   <div className="min-w-0">
@@ -186,7 +186,7 @@ export function AssignSheet({
                           </div>
                         </div>
                         {isSelf && (
-                          <span className="text-[10px] font-semibold text-[#137fec] bg-[#137fec]/10 px-2 py-0.5 rounded-full">
+                          <span className="text-[10px] font-semibold text-[#2a78f6] bg-[#2a78f6]/10 px-2 py-0.5 rounded-full">
                             You
                           </span>
                         )}

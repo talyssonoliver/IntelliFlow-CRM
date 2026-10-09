@@ -707,7 +707,7 @@ export default function AccountSettingsContent() {
             iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
             iconFg="text-fuchsia-600 dark:text-fuchsia-400"
             title="AI & Intelligence"
-            description="Control how IntelliFlow's AI augments account records."
+            description="Control how Aurora's AI augments account records."
           />
           <AISettingsTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
         </Card>

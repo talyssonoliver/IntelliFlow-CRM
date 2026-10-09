@@ -60,7 +60,7 @@ export function ErrorPageContent({
               {isBoundary && onReset ? (
                 <button
                   onClick={onReset}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#137fec] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#0e6ac7] focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2a78f6] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#1f63d4] focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     refresh
@@ -70,7 +70,7 @@ export function ErrorPageContent({
               ) : (
                 <Link
                   href="/dashboard"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#137fec] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#0e6ac7] focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#2a78f6] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#1f63d4] focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     dashboard
@@ -80,7 +80,7 @@ export function ErrorPageContent({
               )}
               <Link
                 href="/"
-                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
+                className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 px-5 py-3 font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 dark:border-slate-600 dark:text-slate-100 dark:hover:bg-slate-800"
               >
                 <span className="material-symbols-outlined text-lg" aria-hidden="true">
                   home
@@ -94,7 +94,7 @@ export function ErrorPageContent({
               Need help?{' '}
               <Link
                 href="/support"
-                className="font-medium text-[#137fec] hover:underline focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:ring-offset-2 rounded"
+                className="font-medium text-[#2a78f6] hover:underline focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:ring-offset-2 rounded"
               >
                 Contact Support
               </Link>

@@ -154,7 +154,7 @@ function Toggle({
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#137fec]" />
+      <div className="w-11 h-6 bg-slate-200 dark:bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#2a78f6]" />
     </label>
   );
 }
@@ -257,7 +257,7 @@ export function EditQuickActionsSheet({
         <div className="p-6 border-t border-[#e2e8f0] dark:border-[#334155] bg-slate-50/50 dark:bg-slate-800/20 flex gap-3 flex-shrink-0">
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2.5 bg-[#137fec] text-white rounded-lg font-semibold hover:bg-[#0e6ac7] transition-colors shadow-sm"
+            className="flex-1 px-4 py-2.5 bg-[#2a78f6] text-white rounded-lg font-semibold hover:bg-[#1f63d4] transition-colors shadow-sm"
           >
             Save Changes
           </button>
@@ -554,8 +554,8 @@ export function EditPinnedNavigationSheet({
                     onClick={() => handleToggle(group.id)}
                     className={`p-2 rounded-lg transition-colors ${
                       isStarred
-                        ? 'text-[#137fec] hover:bg-blue-50 dark:hover:bg-blue-900/20'
-                        : 'text-slate-300 dark:text-slate-600 hover:text-[#137fec]'
+                        ? 'text-[#2a78f6] hover:bg-blue-50 dark:hover:bg-blue-900/20'
+                        : 'text-slate-300 dark:text-slate-600 hover:text-[#2a78f6]'
                     }`}
                   >
                     <span
@@ -618,7 +618,7 @@ export function EditPinnedNavigationSheet({
         <div className="p-6 border-t border-[#e2e8f0] dark:border-[#334155] bg-slate-50/50 dark:bg-slate-800/20 flex gap-3 flex-shrink-0">
           <button
             onClick={handleSave}
-            className="flex-1 px-4 py-2.5 bg-[#137fec] text-white rounded-lg font-semibold hover:bg-[#0e6ac7] transition-colors shadow-sm"
+            className="flex-1 px-4 py-2.5 bg-[#2a78f6] text-white rounded-lg font-semibold hover:bg-[#1f63d4] transition-colors shadow-sm"
           >
             Save Changes
           </button>

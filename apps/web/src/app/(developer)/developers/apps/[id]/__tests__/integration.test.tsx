@@ -9,13 +9,13 @@ describe('DeveloperAppDetail Integration', () => {
   // I-001: Full render for app-001 shows app name
   it('full render for app-001 shows app name with real components', () => {
     render(<AppDashboard appId="app-001" />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('IntelliFlow Dashboard');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Aurora Dashboard');
   });
 
   // I-002: All 3 demo apps accessible via different ids
   it('all 3 demo apps render correctly', () => {
     const { unmount } = render(<AppDashboard appId="app-001" />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('IntelliFlow Dashboard');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Aurora Dashboard');
     unmount();
 
     const { unmount: u2 } = render(<AppDashboard appId="app-002" />);

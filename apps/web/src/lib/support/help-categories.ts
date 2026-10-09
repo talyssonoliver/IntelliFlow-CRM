@@ -22,7 +22,7 @@ export const DEFAULT_HELP_CATEGORIES: readonly HelpCategory[] = [
   {
     id: 'getting-started',
     title: 'Getting Started',
-    description: 'Quick start guides, onboarding steps, and first-time setup for IntelliFlow CRM',
+    description: 'Quick start guides, onboarding steps, and first-time setup for Aurora',
     icon: 'rocket_launch',
     color: 'bg-blue-500',
     href: '/help-center/getting-started',

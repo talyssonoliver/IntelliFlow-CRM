@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { CliDocs } from '@/components/developer/cli-docs';
 
 export const metadata: Metadata = {
-  title: 'CLI Reference | IntelliFlow CRM',
+  title: 'CLI Reference | Aurora',
   description:
-    'CLI documentation for IntelliFlow CRM — monorepo development commands for setup, testing, database management, and AI development',
+    'CLI documentation for Aurora — monorepo development commands for setup, testing, database management, and AI development',
 };
 
 export default function CliDocsPage() {
@@ -14,8 +14,7 @@ export default function CliDocsPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">CLI Reference</h1>
           <p className="text-muted-foreground mt-1">
-            Monorepo development commands for building, testing, and managing the IntelliFlow CRM
-            codebase
+            Monorepo development commands for building, testing, and managing the Aurora codebase
           </p>
         </div>
         <CliDocs />

@@ -4,7 +4,7 @@ import { BillingSettings } from '@/components/billing/billing-settings';
 import BillingSettingsLoading from './loading';
 
 export const metadata: Metadata = {
-  title: 'Billing Settings — IntelliFlow',
+  title: 'Billing Settings — Aurora',
   description: 'Manage your billing information, tax ID, and invoice contact.',
 };
 

@@ -441,7 +441,7 @@ export default function UploadDocumentPage() {
     <div className="flex flex-col gap-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-        <Link href="/documents" className="hover:text-[#137fec]">
+        <Link href="/documents" className="hover:text-[#2a78f6]">
           Documents
         </Link>
         <span className="material-symbols-outlined text-[16px]">chevron_right</span>
@@ -467,8 +467,8 @@ export default function UploadDocumentPage() {
             {formData.file ? (
               <div className="border border-slate-200 dark:border-slate-700 rounded-lg p-4">
                 <div className="flex items-start gap-4">
-                  <div className="p-3 bg-[#137fec]/10 rounded-lg">
-                    <span className="material-symbols-outlined text-[32px] text-[#137fec]">
+                  <div className="p-3 bg-[#2a78f6]/10 rounded-lg">
+                    <span className="material-symbols-outlined text-[32px] text-[#2a78f6]">
                       {getFileIcon(formData.file.type)}
                     </span>
                   </div>
@@ -487,7 +487,7 @@ export default function UploadDocumentPage() {
                         </div>
                         <div className="h-2 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                           <div
-                            className="h-full bg-[#137fec] transition-all duration-300"
+                            className="h-full bg-[#2a78f6] transition-all duration-300"
                             style={{ width: `${uploadProgress}%` }}
                           />
                         </div>
@@ -521,8 +521,8 @@ export default function UploadDocumentPage() {
                 aria-label="Drop file here or press Enter to browse"
                 className={`w-full border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
                   isDragging
-                    ? 'border-[#137fec] bg-[#137fec]/5'
-                    : 'border-slate-300 dark:border-slate-700 hover:border-[#137fec] hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                    ? 'border-[#2a78f6] bg-[#2a78f6]/5'
+                    : 'border-slate-300 dark:border-slate-700 hover:border-[#2a78f6] hover:bg-slate-50 dark:hover:bg-slate-800/50'
                 }`}
               >
                 <span className="material-symbols-outlined text-[64px] text-slate-400 mb-4 block">
@@ -544,7 +544,7 @@ export default function UploadDocumentPage() {
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.png,.jpg,.jpeg"
                   aria-label="Choose file to upload"
                 />
-                <span className="inline-block px-6 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors pointer-events-none">
+                <span className="inline-block px-6 py-2 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 transition-colors pointer-events-none">
                   Select File
                 </span>
               </button>
@@ -577,7 +577,7 @@ export default function UploadDocumentPage() {
                   type="text"
                   value={formData.title}
                   onChange={(e) => updateField('title', e.target.value)}
-                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors ${
+                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors ${
                     errors.title ? 'border-red-500' : 'border-slate-300 dark:border-slate-700'
                   }`}
                   placeholder="Enter document title"
@@ -600,7 +600,7 @@ export default function UploadDocumentPage() {
                   value={formData.description}
                   onChange={(e) => updateField('description', e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors resize-none"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors resize-none"
                   placeholder="Enter document description (optional)"
                 />
               </div>
@@ -619,7 +619,7 @@ export default function UploadDocumentPage() {
                     id="doc-document-type"
                     value={formData.documentType}
                     onChange={(e) => handleDocumentTypeChange(e.target.value as DocumentTypeField)}
-                    className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors ${
+                    className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors ${
                       errors.documentType
                         ? 'border-red-500'
                         : 'border-slate-300 dark:border-slate-700'
@@ -650,7 +650,7 @@ export default function UploadDocumentPage() {
                     Need a reusable custom label?{' '}
                     <Link
                       href="/documents/document-types"
-                      className="font-medium text-[#137fec] hover:underline"
+                      className="font-medium text-[#2a78f6] hover:underline"
                     >
                       Manage document types
                     </Link>
@@ -675,7 +675,7 @@ export default function UploadDocumentPage() {
                     id="doc-classification"
                     value={formData.classification}
                     onChange={(e) => updateField('classification', e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors"
+                    className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors"
                   >
                     {classificationOptions.map((option) => (
                       <option key={option.value} value={option.value}>
@@ -701,7 +701,7 @@ export default function UploadDocumentPage() {
                         type="text"
                         value={formData.documentTypeLabel}
                         onChange={(e) => updateField('documentTypeLabel', e.target.value)}
-                        className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors ${
+                        className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors ${
                           errors.documentTypeLabel
                             ? 'border-red-500'
                             : 'border-slate-300 dark:border-slate-700'
@@ -745,13 +745,13 @@ export default function UploadDocumentPage() {
                       {formData.tags.map((tag) => (
                         <span
                           key={tag}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#137fec]/10 text-[#137fec]"
+                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#2a78f6]/10 text-[#2a78f6]"
                         >
                           {tag}
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
-                            className="hover:text-[#137fec]/70"
+                            className="hover:text-[#2a78f6]/70"
                           >
                             <span className="material-symbols-outlined text-[14px]">close</span>
                           </button>
@@ -768,14 +768,14 @@ export default function UploadDocumentPage() {
                       value={tagInput}
                       onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={handleTagInputKeyPress}
-                      className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors"
+                      className="flex-1 px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors"
                       placeholder="Type a tag and press Enter"
                     />
                     <button
                       type="button"
                       onClick={() => handleAddTag(tagInput.trim())}
                       disabled={!tagInput.trim()}
-                      className="px-4 py-2 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="px-4 py-2 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
                       Add
                     </button>
@@ -827,7 +827,7 @@ export default function UploadDocumentPage() {
                   type="text"
                   value={formData.relatedCaseId}
                   onChange={(e) => updateField('relatedCaseId', e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors"
                   placeholder="Search for a case..."
                 />
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -848,7 +848,7 @@ export default function UploadDocumentPage() {
                   type="text"
                   value={formData.relatedContactId}
                   onChange={(e) => updateField('relatedContactId', e.target.value)}
-                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#137fec] transition-colors"
+                  className="w-full px-4 py-2 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e2936] text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#2a78f6] transition-colors"
                   placeholder="Search for a contact..."
                 />
                 <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
@@ -870,7 +870,7 @@ export default function UploadDocumentPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="flex items-center gap-2 px-6 py-2.5 bg-[#137fec] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
+            className="flex items-center gap-2 px-6 py-2.5 bg-[#2a78f6] text-white text-sm font-semibold rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
           >
             {isSubmitting ? (
               <>

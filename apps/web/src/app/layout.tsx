@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import dynamic from 'next/dynamic';
-import { Inter } from 'next/font/google';
 import { GoogleTagManager } from '@next/third-parties/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -14,6 +13,7 @@ import { OnboardingWelcome } from '@/components/onboarding/OnboardingWelcomeClie
 import { Toaster } from '@intelliflow/ui';
 import { getPrivacyPolicy } from '@/lib/legal/consent-tracker';
 import { FONTS_READY_SCRIPT, MATERIAL_SYMBOLS_FONT_URL } from '@/lib/fonts-ready';
+import { manrope } from '@/components/aurora-site/fonts';
 
 // Lazy-load CookieConsentBanner — it ships with every page via the root
 // layout but is only interacted with once per visitor. Defer to keep it out
@@ -34,8 +34,6 @@ export const viewport: Viewport = {
   userScalable: true,
   themeColor: '#11175B',
 };
-
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 // Material Symbols is self-hosted through a hand-written @font-face in
 // globals.css (family 'Material Symbols Outlined', font-display: block), preloaded
@@ -103,11 +101,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const cookiePolicyVersion = getPrivacyPolicy().metadata.version;
 
   return (
-    // Inter's variable goes on <html>, not <body>: globals.css's `@theme inline`
-    // puts var(--font-inter) straight into Tailwind's base `html { font-family }`,
+    // Manrope's variable goes on <html>, not <body>: globals.css's `@theme inline`
+    // puts var(--font-manrope) straight into Tailwind's base `html { font-family }`,
     // which is resolved on <html>. Defined only on <body>, it was unset there, so
     // the whole app fell back to the system font (DejaVu Sans on Linux).
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" className={manrope.variable} suppressHydrationWarning>
       <head>
         <link
           rel="preload"

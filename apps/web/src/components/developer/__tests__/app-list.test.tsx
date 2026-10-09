@@ -30,7 +30,7 @@ Object.defineProperty(navigator, 'clipboard', {
 describe('AppList', () => {
   it('renders all 3 app names from static data', () => {
     render(<AppList />);
-    expect(screen.getByText('IntelliFlow Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Aurora Dashboard')).toBeInTheDocument();
     expect(screen.getByText('CRM Sandbox App')).toBeInTheDocument();
     expect(screen.getByText('Legacy Connector')).toBeInTheDocument();
   });
@@ -109,7 +109,7 @@ describe('AppList', () => {
     render(<AppList />);
     const headings = screen.getAllByRole('heading', { level: 2 });
     expect(headings.length).toBe(3);
-    expect(headings[0]).toHaveTextContent('IntelliFlow Dashboard');
+    expect(headings[0]).toHaveTextContent('Aurora Dashboard');
     expect(headings[1]).toHaveTextContent('CRM Sandbox App');
     expect(headings[2]).toHaveTextContent('Legacy Connector');
   });

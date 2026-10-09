@@ -396,7 +396,7 @@ export default function NotificationSettingsPage() {
       <PageHeader
         breadcrumbs={[{ label: 'Notifications', href: '/notifications' }, { label: 'Settings' }]}
         title="Notification Settings"
-        description="Manage how and when you receive updates from IntelliFlow."
+        description="Manage how and when you receive updates from Aurora."
       />
 
       {/* Summary Cards */}

@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { GuidesList } from '@/components/developer/guides-list';
 
 export const metadata: Metadata = {
-  title: 'Developer Guides | IntelliFlow CRM',
+  title: 'Developer Guides | Aurora',
   description:
-    'Developer guides for IntelliFlow CRM — getting started, development workflows, testing strategies, AI development, deployment, and best practices',
+    'Developer guides for Aurora — getting started, development workflows, testing strategies, AI development, deployment, and best practices',
 };
 
 export default function GuidesPage() {
@@ -14,7 +14,7 @@ export default function GuidesPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Developer Guides</h1>
           <p className="text-muted-foreground mt-1">
-            Browse developer guides for building, testing, and deploying with IntelliFlow CRM
+            Browse developer guides for building, testing, and deploying with Aurora
           </p>
         </div>
         <GuidesList />

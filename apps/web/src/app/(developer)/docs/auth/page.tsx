@@ -2,9 +2,9 @@ import type { Metadata } from 'next';
 import { AuthGuides } from '@/components/developer/auth-guides';
 
 export const metadata: Metadata = {
-  title: 'Authentication | IntelliFlow CRM',
+  title: 'Authentication | Aurora',
   description:
-    'Authentication guides for IntelliFlow CRM — OAuth 2.0, JWT tokens, MFA setup, session management, and API key reference.',
+    'Authentication guides for Aurora — OAuth 2.0, JWT tokens, MFA setup, session management, and API key reference.',
 };
 
 export default function AuthGuidesPage() {

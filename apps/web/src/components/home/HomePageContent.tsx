@@ -13,7 +13,7 @@ function AuthenticatedSkeleton() {
     <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922]">
       <div className="px-4 sm:px-6 lg:px-8 xl:px-12 py-6 max-w-[1800px] mx-auto">
         {/* Welcome banner skeleton */}
-        <div className="bg-gradient-to-r from-[#137fec]/20 to-indigo-600/20 rounded-xl p-8 mb-6 animate-pulse">
+        <div className="bg-gradient-to-r from-[#2a78f6]/20 to-indigo-600/20 rounded-xl p-8 mb-6 animate-pulse">
           <div className="h-8 w-48 bg-white/20 rounded mb-4" />
           <div className="h-6 w-64 bg-white/20 rounded" />
         </div>
@@ -54,7 +54,7 @@ export function HomePageContent() {
     return (
       <div className="min-h-screen bg-[#f6f7f8] dark:bg-[#101922] flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-[#137fec] border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[#2a78f6] border-t-transparent rounded-full animate-spin" />
           <p className="text-slate-600 dark:text-slate-400 text-sm">Loading...</p>
         </div>
       </div>

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AppList } from '@/components/developer/app-list';
 
 export const metadata: Metadata = {
-  title: 'Developer Apps | IntelliFlow CRM',
+  title: 'Developer Apps | Aurora',
   description: 'Manage your developer applications, API keys, and webhook configurations',
 };
 

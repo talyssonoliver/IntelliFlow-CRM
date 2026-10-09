@@ -58,7 +58,7 @@ export function TermsAcceptanceConfirm({ termsVersion }: TermsAcceptanceConfirmP
   return (
     <section
       aria-labelledby="terms-accept-heading"
-      className="mt-8 rounded-lg border border-[#137fec]/30 bg-[#137fec]/5 p-6"
+      className="mt-8 rounded-lg border border-[#2a78f6]/30 bg-[#2a78f6]/5 p-6"
     >
       <h2
         id="terms-accept-heading"
@@ -78,7 +78,7 @@ export function TermsAcceptanceConfirm({ termsVersion }: TermsAcceptanceConfirmP
           checked={agreed}
           onChange={(e) => setAgreed(e.target.checked)}
           aria-required="true"
-          className="mt-1 h-4 w-4 cursor-pointer accent-[#137fec]"
+          className="mt-1 h-4 w-4 cursor-pointer accent-[#2a78f6]"
         />
         <label
           htmlFor="terms-accept-checkbox"
@@ -93,10 +93,10 @@ export function TermsAcceptanceConfirm({ termsVersion }: TermsAcceptanceConfirmP
         onClick={handleSubmit}
         disabled={!agreed || mutation.isPending}
         aria-disabled={!agreed || mutation.isPending}
-        className="mt-4 rounded-md bg-[#137fec] px-4 py-2 text-sm font-medium text-white
+        className="mt-4 rounded-md bg-[#2a78f6] px-4 py-2 text-sm font-medium text-white
                    disabled:cursor-not-allowed disabled:opacity-50 hover:bg-[#0f6fd0]
                    focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2
-                   focus-visible:outline-[#137fec] transition-colors"
+                   focus-visible:outline-[#2a78f6] transition-colors"
       >
         {mutation.isPending ? 'Saving...' : 'I Agree'}
       </button>

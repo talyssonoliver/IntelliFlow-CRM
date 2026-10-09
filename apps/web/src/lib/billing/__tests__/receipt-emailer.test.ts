@@ -83,7 +83,7 @@ describe('receipt-emailer', () => {
   describe('getReceiptEmailSubject', () => {
     it('formats subject with receipt number', () => {
       const subject = getReceiptEmailSubject('RCP-2026-0001');
-      expect(subject).toBe('Your Receipt RCP-2026-0001 from IntelliFlow');
+      expect(subject).toBe('Your Receipt RCP-2026-0001 from Aurora');
     });
   });
 });

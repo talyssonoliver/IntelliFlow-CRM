@@ -50,8 +50,8 @@ export default function TermsPage() {
             </h1>
 
             <p className="mt-6 text-lg text-slate-600 dark:text-slate-400">
-              These terms establish the rights and responsibilities between you and IntelliFlow Ltd
-              when using Aurora. Please read them carefully before using the service.
+              These terms establish the rights and responsibilities between you and Leangency when
+              using Aurora. Please read them carefully before using the service.
             </p>
           </div>
         </div>

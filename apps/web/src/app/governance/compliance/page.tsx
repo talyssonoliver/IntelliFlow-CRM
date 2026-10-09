@@ -170,7 +170,7 @@ function OverallScoreCard() {
                 strokeDasharray="74.6, 100"
                 strokeLinecap="round"
                 strokeWidth="3"
-                style={{ filter: 'drop-shadow(0 0 10px rgba(19, 127, 236, 0.5))' }}
+                style={{ filter: 'drop-shadow(0 0 10px rgba(42, 120, 246, 0.5))' }}
               />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center flex-col">

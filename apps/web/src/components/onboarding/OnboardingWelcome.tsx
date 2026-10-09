@@ -562,7 +562,7 @@ function OnboardingWelcomeInner() {
     <dialog
       ref={dialogRef}
       aria-modal="true"
-      aria-label="Welcome to IntelliFlow CRM"
+      aria-label="Welcome to Aurora"
       data-testid="onboarding-dialog"
       className={cn(
         'fixed inset-0 m-auto w-full max-w-xl rounded-xl border border-border bg-background shadow-2xl',
@@ -955,7 +955,7 @@ function OnboardingWelcomeInner() {
           <div>
             <h2 className="text-2xl font-bold">You&apos;re all set!</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Your {selectedTier?.name} subscription is now active. Welcome to IntelliFlow!
+              Your {selectedTier?.name} subscription is now active. Welcome to Aurora!
             </p>
           </div>
           <button

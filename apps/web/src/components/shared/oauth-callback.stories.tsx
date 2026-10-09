@@ -15,7 +15,7 @@ const AuthBackgroundWrapper = ({ children }: Readonly<{ children: React.ReactNod
     {/* Animated background gradients */}
     <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37]" />
     <div
-      className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-[#137fec]/20 blur-3xl opacity-50 animate-pulse"
+      className="absolute -left-40 top-20 h-96 w-96 rounded-full bg-[#2a78f6]/20 blur-3xl opacity-50 animate-pulse"
       style={{ animationDuration: '4s' }}
     />
     <div
@@ -52,16 +52,16 @@ const MockOAuthCallback = ({
       icon: 'progress_activity',
       title: 'Signing you in...',
       description: 'Please wait while we authenticate your account',
-      iconColor: 'text-[#7cc4ff]',
-      bgColor: 'bg-[#137fec]/20',
+      iconColor: 'text-[#bca8ff]',
+      bgColor: 'bg-[#2a78f6]/20',
       animate: true,
     },
     exchanging: {
       icon: 'sync',
       title: 'Authenticating...',
       description: 'Verifying your credentials with the provider',
-      iconColor: 'text-[#7cc4ff]',
-      bgColor: 'bg-[#137fec]/20',
+      iconColor: 'text-[#bca8ff]',
+      bgColor: 'bg-[#2a78f6]/20',
       animate: true,
     },
     success: {
@@ -91,7 +91,7 @@ const MockOAuthCallback = ({
     >
       <div className="relative z-10 w-full max-w-md animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div className="relative overflow-hidden border border-white/10 bg-white/5 backdrop-blur-xl shadow-2xl rounded-2xl">
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#137fec]/[0.03]" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.07] via-transparent to-[#2a78f6]/[0.03]" />
 
           <output className="relative p-8 text-center space-y-6 block" aria-live="polite">
             <div
@@ -112,13 +112,13 @@ const MockOAuthCallback = ({
 
             {status === 'error' && (
               <div className="pt-4 space-y-3">
-                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] shadow-lg shadow-[#137fec]/20">
+                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#0f172a] shadow-lg shadow-[#2a78f6]/20">
                   <span className="material-symbols-outlined text-xl" aria-hidden="true">
                     arrow_back
                   </span>{' '}
                   Back to Sign In
                 </button>
-                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#7cc4ff]">
+                <button className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/10 bg-white/5 text-slate-200 font-medium hover:bg-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-[#bca8ff]">
                   <span className="material-symbols-outlined text-xl" aria-hidden="true">
                     refresh
                   </span>{' '}
@@ -131,15 +131,15 @@ const MockOAuthCallback = ({
               <div className="pt-2">
                 <div className="flex justify-center gap-1">
                   <div
-                    className="w-2 h-2 rounded-full bg-[#7cc4ff] animate-bounce"
+                    className="w-2 h-2 rounded-full bg-[#bca8ff] animate-bounce"
                     style={{ animationDelay: '0ms' }}
                   />
                   <div
-                    className="w-2 h-2 rounded-full bg-[#7cc4ff] animate-bounce"
+                    className="w-2 h-2 rounded-full bg-[#bca8ff] animate-bounce"
                     style={{ animationDelay: '150ms' }}
                   />
                   <div
-                    className="w-2 h-2 rounded-full bg-[#7cc4ff] animate-bounce"
+                    className="w-2 h-2 rounded-full bg-[#bca8ff] animate-bounce"
                     style={{ animationDelay: '300ms' }}
                   />
                 </div>
@@ -156,7 +156,7 @@ const MockOAuthCallback = ({
           <div className="bg-white/[0.03] border-t border-white/10 px-8 py-4">
             <div className="flex items-center justify-center gap-2 text-xs text-slate-400">
               <span
-                className="material-symbols-outlined text-base text-[#7cc4ff]"
+                className="material-symbols-outlined text-base text-[#bca8ff]"
                 aria-hidden="true"
               >
                 verified_user
@@ -168,21 +168,21 @@ const MockOAuthCallback = ({
 
         <div className="mt-6 flex items-center justify-center gap-4 text-xs text-slate-400">
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-[#bca8ff]" aria-hidden="true">
               lock
             </span>{' '}
             Secure
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-[#bca8ff]" aria-hidden="true">
               shield_check
             </span>{' '}
             Encrypted
           </div>
           <div className="w-1 h-1 rounded-full bg-slate-600" aria-hidden="true" />
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-[#bca8ff]" aria-hidden="true">
               policy
             </span>{' '}
             Protected

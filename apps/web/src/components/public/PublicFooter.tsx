@@ -70,10 +70,10 @@ export function PublicFooter() {
           {/* Brand Column */}
           <div className="col-span-2 md:col-span-4 lg:col-span-1">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded bg-[#137fec] flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded bg-[#2a78f6] flex items-center justify-center flex-shrink-0">
                 <span className="material-symbols-outlined text-white text-xl">grid_view</span>
               </div>
-              <span className="text-lg font-bold text-foreground">IntelliFlow CRM</span>
+              <span className="text-lg font-bold text-foreground">Aurora</span>
             </div>
             <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
               AI-powered CRM with modern automation and governance-grade validation
@@ -86,7 +86,7 @@ export function PublicFooter() {
                   href={social.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-slate-600 dark:text-slate-400 hover:text-[#137fec] dark:hover:text-[#137fec] transition-colors"
+                  className="text-slate-600 dark:text-slate-400 hover:text-[#2a78f6] dark:hover:text-[#2a78f6] transition-colors"
                   aria-label={social.label}
                 >
                   <span className="text-sm font-medium">{social.icon}</span>
@@ -104,7 +104,7 @@ export function PublicFooter() {
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] dark:hover:text-[#137fec] transition-colors"
+                      className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#2a78f6] dark:hover:text-[#2a78f6] transition-colors"
                     >
                       {link.label}
                     </Link>
@@ -119,24 +119,24 @@ export function PublicFooter() {
         <div className="pt-8 border-t border-border">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              © {currentYear} IntelliFlow CRM. All rights reserved.
+              © {currentYear} Aurora. All rights reserved.
             </p>
             <div className="flex items-center gap-6">
               <Link
                 href="/privacy"
-                className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] dark:hover:text-[#137fec] transition-colors"
+                className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#2a78f6] dark:hover:text-[#2a78f6] transition-colors"
               >
                 Privacy
               </Link>
               <Link
                 href="/terms"
-                className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] dark:hover:text-[#137fec] transition-colors"
+                className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#2a78f6] dark:hover:text-[#2a78f6] transition-colors"
               >
                 Terms
               </Link>
               <Link
                 href="/cookies"
-                className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#137fec] dark:hover:text-[#137fec] transition-colors"
+                className="text-sm text-slate-600 dark:text-slate-400 hover:text-[#2a78f6] dark:hover:text-[#2a78f6] transition-colors"
               >
                 Cookies
               </Link>

@@ -89,13 +89,13 @@ export function PublicHomePage() {
     <main id="main-content" className="bg-[#0f172a] text-slate-50">
       <section aria-labelledby="hero-heading" className="relative overflow-hidden py-16 lg:py-24">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#0d1b2a] to-[#0b1f37]" />
-        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#137fec]/30 blur-3xl opacity-60" />
+        <div className="absolute -left-40 top-10 h-80 w-80 rounded-full bg-[#2a78f6]/30 blur-3xl opacity-60" />
         <div className="absolute right-0 bottom-0 h-96 w-96 rounded-full bg-indigo-500/30 blur-3xl opacity-50" />
 
         <div className="container relative z-10 px-4 lg:px-6 mx-auto max-w-6xl">
           <div className="flex flex-col gap-10 lg:flex-row lg:items-center">
             <div className="flex-1 space-y-6">
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#7cc4ff] font-medium backdrop-blur">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 rounded-full text-[#bca8ff] font-medium backdrop-blur">
                 <span className="material-symbols-outlined text-base" aria-hidden="true">
                   auto_awesome
                 </span>{' '}
@@ -116,7 +116,7 @@ export function PublicHomePage() {
               <div className="flex flex-col sm:flex-row items-center gap-3">
                 <Link
                   href="/signup"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#137fec] text-white font-semibold hover:bg-[#0e6ac7] transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-[#2a78f6] text-white font-semibold hover:bg-[#1f63d4] transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     rocket_launch
@@ -125,7 +125,7 @@ export function PublicHomePage() {
                 </Link>
                 <Link
                   href="/contact"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     forum
@@ -137,7 +137,7 @@ export function PublicHomePage() {
                   href="/features?tour=1"
                   data-testid="tour-trigger-link"
                   data-tour-id="features-v1"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-white/30 text-white font-semibold hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-[#0f172a]"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     play_circle
@@ -170,19 +170,19 @@ export function PublicHomePage() {
 
             <div className="flex-1">
               <Card className="relative overflow-hidden border border-white/10 bg-white/5 backdrop-blur p-6 rounded-2xl shadow-2xl">
-                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-[#137fec]/5 to-indigo-500/5" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-[#2a78f6]/5 to-indigo-500/5" />
                 <div className="relative space-y-4 text-slate-100">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span
-                        className="material-symbols-outlined text-lg text-[#7cc4ff]"
+                        className="material-symbols-outlined text-lg text-[#bca8ff]"
                         aria-hidden="true"
                       >
                         dashboard_customize
                       </span>
                       <p className="text-sm text-slate-300">Command Center</p>
                     </div>
-                    <span className="text-xs px-2 py-1 rounded-full bg-[#137fec]/20 text-[#7cc4ff]">
+                    <span className="text-xs px-2 py-1 rounded-full bg-[#2a78f6]/20 text-[#bca8ff]">
                       Live
                     </span>
                   </div>
@@ -204,7 +204,7 @@ export function PublicHomePage() {
                   <div className="p-4 rounded-xl bg-white/5 border border-white/10 space-y-2">
                     <div className="flex items-center gap-2 text-sm text-slate-200">
                       <span
-                        className="material-symbols-outlined text-base text-[#7cc4ff]"
+                        className="material-symbols-outlined text-base text-[#bca8ff]"
                         aria-hidden="true"
                       >
                         shield_person
@@ -213,15 +213,15 @@ export function PublicHomePage() {
                     </div>
                     <div className="flex items-center justify-between text-sm text-slate-300">
                       <span>WCAG AA checks</span>
-                      <span className="font-semibold text-[#7cc4ff]">Passing</span>
+                      <span className="font-semibold text-[#bca8ff]">Passing</span>
                     </div>
                     <div className="flex items-center justify-between text-sm text-slate-300">
                       <span>Audit gates</span>
-                      <span className="font-semibold text-[#7cc4ff]">Ready</span>
+                      <span className="font-semibold text-[#bca8ff]">Ready</span>
                     </div>
                     <div className="flex items-center justify-between text-sm text-slate-300">
                       <span>LCP budget</span>
-                      <span className="font-semibold text-[#7cc4ff]">&lt;1.8s target</span>
+                      <span className="font-semibold text-[#bca8ff]">&lt;1.8s target</span>
                     </div>
                   </div>
                 </div>
@@ -269,11 +269,11 @@ export function PublicHomePage() {
               <Card
                 key={pillar.title}
                 data-testid="value-pillar"
-                className="p-6 h-full border border-border-light bg-white hover:border-[#137fec] transition-colors shadow-sm"
+                className="p-6 h-full border border-border-light bg-white hover:border-[#2a78f6] transition-colors shadow-sm"
               >
-                <div className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-lg bg-[#2a78f6]/10 flex items-center justify-center mb-4">
                   <span
-                    className="material-symbols-outlined text-2xl text-[#137fec]"
+                    className="material-symbols-outlined text-2xl text-[#2a78f6]"
                     aria-hidden="true"
                   >
                     {pillar.icon}
@@ -304,11 +304,11 @@ export function PublicHomePage() {
               <Card
                 key={flow.title}
                 data-testid="flow-card"
-                className="p-6 h-full border border-border-light bg-slate-50 hover:border-[#137fec] transition-colors shadow-sm"
+                className="p-6 h-full border border-border-light bg-slate-50 hover:border-[#2a78f6] transition-colors shadow-sm"
               >
-                <div className="w-12 h-12 rounded-lg bg-[#137fec]/10 flex items-center justify-center mb-4">
+                <div className="w-12 h-12 rounded-lg bg-[#2a78f6]/10 flex items-center justify-center mb-4">
                   <span
-                    className="material-symbols-outlined text-2xl text-[#137fec]"
+                    className="material-symbols-outlined text-2xl text-[#2a78f6]"
                     aria-hidden="true"
                   >
                     {flow.icon}
@@ -338,10 +338,10 @@ export function PublicHomePage() {
                 className="p-6 h-full border border-white/10 bg-white/5 backdrop-blur shadow-lg"
               >
                 <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-full bg-[#137fec]/20 flex items-center justify-center text-white font-semibold">
+                  <div className="w-10 h-10 rounded-full bg-[#2a78f6]/20 flex items-center justify-center text-white font-semibold">
                     {index + 1}
                   </div>
-                  <span className="material-symbols-outlined text-[#7cc4ff]" aria-hidden="true">
+                  <span className="material-symbols-outlined text-[#bca8ff]" aria-hidden="true">
                     {step.icon}
                   </span>
                 </div>
@@ -363,7 +363,7 @@ export function PublicHomePage() {
               Security, accessibility, and reliability by default
             </h2>
             <p className="text-base text-slate-600">
-              Aligns with IntelliFlow&apos;s constitution and audit-matrix so every release is
+              Aligns with Aurora&apos;s constitution and audit-matrix so every release is
               observable, compliant, and ready for production.
             </p>
           </div>
@@ -372,7 +372,7 @@ export function PublicHomePage() {
             {securityChecklist.map((item) => (
               <Card key={item} className="p-6 border border-border-light bg-slate-50">
                 <div className="flex items-start gap-3">
-                  <span className="material-symbols-outlined text-[#137fec]" aria-hidden="true">
+                  <span className="material-symbols-outlined text-[#2a78f6]" aria-hidden="true">
                     shield_person
                   </span>
                   <p className="text-sm text-slate-700">{item}</p>
@@ -386,7 +386,7 @@ export function PublicHomePage() {
       <section
         data-testid="cta-section"
         aria-labelledby="cta-heading"
-        className="py-16 lg:py-24 bg-gradient-to-r from-[#137fec] to-[#0e6ac7]"
+        className="py-16 lg:py-24 bg-gradient-to-r from-[#2a78f6] to-[#1f63d4]"
       >
         <div className="container px-4 lg:px-6 mx-auto max-w-5xl text-center space-y-6 text-white">
           <h2 id="cta-heading" className="text-3xl lg:text-4xl font-bold">
@@ -399,7 +399,7 @@ export function PublicHomePage() {
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/signup"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-[#137fec] font-semibold rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#137fec]"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 bg-white text-[#2a78f6] font-semibold rounded-lg hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#2a78f6]"
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 trending_up
@@ -408,7 +408,7 @@ export function PublicHomePage() {
             </Link>
             <Link
               href="/contact"
-              className="inline-flex items-center justify-center gap-2 px-8 py-3 border border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#137fec]"
+              className="inline-flex items-center justify-center gap-2 px-8 py-3 border border-white text-white font-semibold rounded-lg hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-[#2a78f6]"
             >
               <span className="material-symbols-outlined" aria-hidden="true">
                 forum

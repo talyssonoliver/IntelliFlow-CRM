@@ -9,8 +9,7 @@ const docCategories: DocCategory[] = [
   {
     id: 'getting-started',
     title: 'Getting Started',
-    description:
-      'Quick start guides, installation instructions, and first steps with IntelliFlow CRM',
+    description: 'Quick start guides, installation instructions, and first steps with Aurora',
     href: 'https://intelliflow-crm.dev/docs/guides/getting-started',
     icon: 'rocket_launch',
     color: 'bg-blue-500',
@@ -75,7 +74,7 @@ export default function DocsPage() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold text-foreground">Developer Documentation</h1>
           <p className="text-muted-foreground mt-1">
-            Explore guides, API references, and architecture documentation for IntelliFlow CRM
+            Explore guides, API references, and architecture documentation for Aurora
           </p>
         </div>
 

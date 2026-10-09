@@ -14,8 +14,7 @@
         "Basic AI lead scoring",
         "1,000 AI predictions/month",
         "Email support",
-        "1 year data retention",
-        "Mobile apps (iOS & Android)"
+        "1 year data retention"
       ],
       "cta": "Start Free Trial",
       "ctaLink": "/signup?plan=starter",
@@ -62,7 +61,6 @@
         "Custom AI model training",
         "Multi-region deployment",
         "SSO & advanced security",
-        "99.9% SLA guarantee",
         "Dedicated account manager",
         "Unlimited data retention",
         "White-label options",
@@ -141,13 +139,6 @@
         },
         {
           "name": "Email Integration",
-          "starter": true,
-          "professional": true,
-          "enterprise": true,
-          "custom": true
-        },
-        {
-          "name": "Mobile Apps",
           "starter": true,
           "professional": true,
           "enterprise": true,
@@ -267,13 +258,6 @@
           "custom": "Custom"
         },
         {
-          "name": "SLA Guarantee",
-          "starter": false,
-          "professional": false,
-          "enterprise": "99.9%",
-          "custom": "Custom"
-        },
-        {
           "name": "Data Residency",
           "starter": false,
           "professional": false,
@@ -339,7 +323,7 @@
     },
     {
       "question": "Can I get a refund if I'm not satisfied?",
-      "answer": "Yes, we offer a 30-day money-back guarantee on all annual plans. If you're not satisfied within the first 30 days, we'll provide a full refund, no questions asked."
+      "answer": "Refunds are not automatic. Plans renew until you cancel, and cancelling stops future renewals, as our Terms of Service set out. If you think you have been charged in error, email legal@leangency.com and we will look into it."
     },
     {
       "question": "What happens to my data if I cancel?",
@@ -355,7 +339,6 @@
     "currencySymbol": "£",
     "annualDiscountPercent": 17,
     "freeTrialDays": 14,
-    "moneyBackGuaranteeDays": 30,
     "lastUpdated": "2025-12-30",
     "version": "1.0.0",
     "schema_version": "1.0",

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { AppCreator } from '@/components/developer/app-creator';
 
 export const metadata: Metadata = {
-  title: 'Create New App | Developer Apps | IntelliFlow CRM',
+  title: 'Create New App | Developer Apps | Aurora',
   description:
     'Register a new developer application with OAuth credentials, API scope selection, and optional webhook configuration.',
 };

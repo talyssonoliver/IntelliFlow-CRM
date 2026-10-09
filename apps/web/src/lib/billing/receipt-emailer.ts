@@ -6,14 +6,18 @@
  * @implements PG-031 (Receipts)
  */
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // NOSONAR S5852 — anchored ^$, bounded input
-
 /**
  * Validate email format
  */
 export function isValidEmail(email: string): boolean {
-  if (!email) return false;
-  return EMAIL_REGEX.test(email);
+  if (!email || /\s/.test(email)) return false;
+  // Same rule as /^[^\s@]+@[^\s@]+\.[^\s@]+$/, without a backtracking regex:
+  // exactly one @, something before it, and a dot inside the domain.
+  const at = email.indexOf('@');
+  if (at < 1 || email.includes('@', at + 1)) return false;
+  const domain = email.slice(at + 1);
+  const dot = domain.indexOf('.', 1);
+  return dot > 0 && dot < domain.length - 1;
 }
 
 /**
@@ -89,5 +93,5 @@ export async function sendReceiptEmail(
  * Format receipt email subject line
  */
 export function getReceiptEmailSubject(receiptNumber: string): string {
-  return `Your Receipt ${receiptNumber} from IntelliFlow`;
+  return `Your Receipt ${receiptNumber} from Aurora`;
 }

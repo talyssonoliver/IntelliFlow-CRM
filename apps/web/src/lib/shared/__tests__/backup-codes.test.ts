@@ -117,7 +117,7 @@ describe('Backup Codes Utility', () => {
 
       const content = generateBackupCodesDownload(codes, email, date);
 
-      expect(content).toContain('IntelliFlow CRM - Backup Codes');
+      expect(content).toContain('Aurora - Backup Codes');
       expect(content).toContain('Account: user@example.com');
       expect(content).toContain('Generated: 2025-01-01');
       expect(content).toContain('A1B2C-3D4E5');
@@ -230,7 +230,7 @@ describe('Backup Codes Utility', () => {
       expect(window.open).toHaveBeenCalled();
       expect(capturedBlob).toBeInstanceOf(Blob);
       const html = await capturedBlob!.text();
-      expect(html).toContain('IntelliFlow CRM');
+      expect(html).toContain('Aurora');
       expect(html).toContain('Backup Codes');
       expect(html).toContain('A1B2C-3D4E5');
     });

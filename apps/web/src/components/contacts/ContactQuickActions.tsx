@@ -102,7 +102,7 @@ export function ContactQuickActions({ contact }: Readonly<ContactQuickActionsPro
       <button
         type="button"
         onClick={() => setLogCallOpen(true)}
-        className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
+        className="flex items-center gap-2 px-4 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm shadow-blue-200 dark:shadow-none"
       >
         <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" fill="currentColor">
           <path d="M19.95 21q-3.125 0-6.175-1.362-3.05-1.363-5.55-3.863-2.5-2.5-3.862-5.55Q3 7.175 3 4.05q0-.45.3-.75t.75-.3H8.1q.35 0 .625.238.275.237.325.562l.65 3.5q.05.4-.025.675-.075.275-.275.475L6.65 11.2q.7 1.3 1.65 2.475.95 1.175 2.1 2.175l2.65-2.65q.225-.225.525-.325.3-.1.625-.025l3.3.7q.35.1.563.363.212.262.212.587v4.05q0 .45-.3.75t-.75.3Z" />
@@ -149,7 +149,7 @@ export function ContactQuickActions({ contact }: Readonly<ContactQuickActionsPro
                 onChange={(e) => setLogCallTitle(e.target.value)}
                 maxLength={200}
                 placeholder="e.g. Discovery call, Follow-up"
-                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent"
               />
             </div>
             <div className="flex flex-col gap-1.5">
@@ -166,7 +166,7 @@ export function ContactQuickActions({ contact }: Readonly<ContactQuickActionsPro
                 maxLength={2000}
                 placeholder="Call summary, outcomes, next steps..."
                 rows={3}
-                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] focus:border-transparent resize-none"
+                className="w-full px-3 py-2 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent resize-none"
               />
             </div>
           </div>
@@ -182,7 +182,7 @@ export function ContactQuickActions({ contact }: Readonly<ContactQuickActionsPro
               type="button"
               onClick={submitLogCall}
               disabled={!logCallTitle.trim() || logActivity.isPending}
-              className="px-4 py-2 rounded-md bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 rounded-md bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {logActivity.isPending ? 'Saving...' : 'Log Call'}
             </button>

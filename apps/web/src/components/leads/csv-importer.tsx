@@ -32,7 +32,7 @@ import {
 
 const PREVIEW_LIMIT = 10;
 const INPUT_CLASS =
-  'w-full px-3 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec] focus:border-transparent outline-none transition-all';
+  'w-full px-3 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6] focus:border-transparent outline-none transition-all';
 
 type ImporterStep = 'select' | 'map' | 'result';
 
@@ -68,7 +68,7 @@ function FileSelect({
       </p>
       <label
         htmlFor="lead-csv-file"
-        className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 p-8 cursor-pointer hover:border-[#137fec] transition-colors"
+        className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-slate-300 dark:border-slate-700 p-8 cursor-pointer hover:border-[#2a78f6] transition-colors"
       >
         <span aria-hidden="true" className="material-symbols-outlined !text-[32px] text-slate-400">
           upload_file
@@ -285,7 +285,7 @@ function MapStep({
           type="button"
           onClick={onImport}
           disabled={!canImport}
-          className="px-6 h-10 rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="px-6 h-10 rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {importing
             ? 'Importing…'
@@ -367,7 +367,7 @@ function ResultStep({ result, onReset }: Readonly<{ result: ImportResult; onRese
         </button>
         <Link
           href="/leads"
-          className="px-6 h-10 inline-flex items-center rounded-lg bg-[#137fec] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm"
+          className="px-6 h-10 inline-flex items-center rounded-lg bg-[#2a78f6] text-white text-sm font-semibold hover:bg-blue-600 transition-colors shadow-sm"
         >
           Back to Leads
         </Link>

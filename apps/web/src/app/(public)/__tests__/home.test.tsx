@@ -78,7 +78,7 @@ describe('PublicHomePage', () => {
     const { container } = render(<PublicHomePage />);
 
     expect(
-      container.querySelector('[class*="#137fec"]') || container.querySelector('[class*="primary"]')
+      container.querySelector('[class*="#2a78f6"]') || container.querySelector('[class*="primary"]')
     ).toBeTruthy();
     expect(container.querySelector('.material-symbols-outlined')).toBeTruthy();
   });

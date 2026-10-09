@@ -297,7 +297,7 @@ function PipelineByStageCard({ stages }: Readonly<{ stages: StageData[] }>) {
                 className="h-full rounded-full transition-all duration-500"
                 style={{
                   width: `${(stage.value / maxValue) * 100}%`,
-                  backgroundColor: `rgba(19, 127, 236, ${1 - index * 0.2})`,
+                  backgroundColor: `rgba(42, 120, 246, ${1 - index * 0.2})`,
                 }}
               />
             </div>
@@ -503,7 +503,7 @@ function buildForecastCSV(
   const lines: string[] = [];
 
   lines.push(
-    `IntelliFlow Forecast Report — ${quarterLabel}`,
+    `Aurora Forecast Report — ${quarterLabel}`,
     `Total Pipeline Value,${totalPipelineValue}`,
     `Weighted Forecast,${weightedForecast}`,
     '',

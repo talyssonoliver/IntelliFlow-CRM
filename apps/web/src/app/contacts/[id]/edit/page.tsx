@@ -182,7 +182,7 @@ export default function EditContactPage() {
           <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
             {error?.message ?? 'The contact you are looking for does not exist.'}
           </p>
-          <Link href="/contacts" className="text-[#137fec] hover:underline text-sm font-medium">
+          <Link href="/contacts" className="text-[#2a78f6] hover:underline text-sm font-medium">
             Back to contacts
           </Link>
         </Card>
@@ -204,7 +204,7 @@ export default function EditContactPage() {
             <li>
               <Link
                 href="/contacts"
-                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] font-medium transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
               >
                 Contacts
               </Link>
@@ -215,7 +215,7 @@ export default function EditContactPage() {
             <li>
               <Link
                 href={`/contacts/${contactId}`}
-                className="text-slate-500 dark:text-slate-400 hover:text-[#137fec] font-medium transition-colors"
+                className="text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"
               >
                 {contactName}
               </Link>

@@ -96,7 +96,7 @@ export function DraggablePinnedItem({
             </span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-[#137fec]">
+            <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate group-hover:text-[#2a78f6]">
               {item.title}
             </p>
             {item.subtitle && <p className="text-xs text-slate-400">{item.subtitle}</p>}

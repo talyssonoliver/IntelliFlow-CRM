@@ -103,7 +103,7 @@ interface StatusIconProps {
 
 function StatusIcon({ status }: Readonly<StatusIconProps>) {
   const iconMap: Record<VerificationStatus, { icon: string; color: string }> = {
-    loading: { icon: 'sync', color: 'text-[#137fec]' },
+    loading: { icon: 'sync', color: 'text-[#2a78f6]' },
     success: { icon: 'verified', color: 'text-green-500' },
     expired: { icon: 'schedule', color: 'text-amber-500' },
     invalid: { icon: 'error', color: 'text-red-500' },
@@ -117,7 +117,7 @@ function StatusIcon({ status }: Readonly<StatusIconProps>) {
     <div
       className={cn(
         'w-20 h-20 rounded-full flex items-center justify-center mb-6',
-        status === 'loading' ? 'bg-[#137fec]/10' : '',
+        status === 'loading' ? 'bg-[#2a78f6]/10' : '',
         status === 'success' || status === 'already_verified' ? 'bg-green-500/10' : '',
         status === 'expired' ? 'bg-amber-500/10' : '',
         status === 'invalid' || status === 'error' ? 'bg-red-500/10' : ''
@@ -229,9 +229,9 @@ export function EmailVerification({
             href={redirectUrl}
             className={cn(
               'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
-              'bg-[#137fec] text-white font-medium',
-              'hover:bg-[#137fec]/90 transition-colors',
-              'focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900'
+              'bg-[#2a78f6] text-white font-medium',
+              'hover:bg-[#2a78f6]/90 transition-colors',
+              'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900'
             )}
             aria-label="Continue to dashboard"
           >
@@ -248,9 +248,9 @@ export function EmailVerification({
             href="/login"
             className={cn(
               'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
-              'bg-[#137fec] text-white font-medium',
-              'hover:bg-[#137fec]/90 transition-colors',
-              'focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900'
+              'bg-[#2a78f6] text-white font-medium',
+              'hover:bg-[#2a78f6]/90 transition-colors',
+              'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900'
             )}
             aria-label="Go to login page"
           >
@@ -271,9 +271,9 @@ export function EmailVerification({
                 disabled={isResending}
                 className={cn(
                   'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
-                  'bg-[#137fec] text-white font-medium',
-                  'hover:bg-[#137fec]/90 transition-colors',
-                  'focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+                  'bg-[#2a78f6] text-white font-medium',
+                  'hover:bg-[#2a78f6]/90 transition-colors',
+                  'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900',
                   'disabled:opacity-50 disabled:cursor-not-allowed'
                 )}
                 aria-label="Resend verification email"
@@ -319,7 +319,7 @@ export function EmailVerification({
               'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
               'bg-slate-700 text-white font-medium',
               'hover:bg-slate-600 transition-colors',
-              'focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900'
+              'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900'
             )}
             aria-label="Go to sign up page"
           >
@@ -339,7 +339,7 @@ export function EmailVerification({
                 'inline-flex items-center gap-2 px-6 py-3 rounded-lg',
                 'bg-slate-700 text-white font-medium',
                 'hover:bg-slate-600 transition-colors',
-                'focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900'
+                'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900'
               )}
               aria-label="Try signing up again"
             >
@@ -405,7 +405,7 @@ export function EmailVerification({
       {status !== 'loading' && (
         <p className="mt-8 text-sm text-slate-500">
           Need help?{' '}
-          <Link href="/contact" className="text-[#137fec] hover:text-[#7cc4ff] transition-colors">
+          <Link href="/contact" className="text-[#2a78f6] hover:text-[#bca8ff] transition-colors">
             Contact Support
           </Link>
         </p>

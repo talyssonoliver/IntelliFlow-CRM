@@ -72,7 +72,7 @@ export function InsightCard({ insight, onClick }: Readonly<InsightCardProps>) {
         <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
           {insight.description}
           {insight.suggestedAction && (
-            <span className="font-medium text-[#137fec]">
+            <span className="font-medium text-[#2a78f6]">
               {' '}
               Suggested Action: {insight.suggestedAction}
             </span>

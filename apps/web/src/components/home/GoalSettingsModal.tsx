@@ -170,7 +170,7 @@ export function GoalSettingsModal({
           <button
             onClick={handleSave}
             disabled={!targetValue || targetValue <= 0}
-            className="flex-1 px-4 py-2.5 bg-[#137fec] text-white rounded-lg font-semibold hover:bg-[#0e6ac7] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex-1 px-4 py-2.5 bg-[#2a78f6] text-white rounded-lg font-semibold hover:bg-[#1f63d4] transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Save Changes
           </button>

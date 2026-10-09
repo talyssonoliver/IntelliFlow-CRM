@@ -150,9 +150,9 @@ export function FileUploader({
     dropZoneClass =
       'cursor-not-allowed border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800/30 opacity-60';
   } else if (isDragOver) {
-    dropZoneClass = 'border-[#137fec] bg-[#137fec]/5';
+    dropZoneClass = 'border-[#2a78f6] bg-[#2a78f6]/5';
   } else {
-    dropZoneClass = 'border-slate-300 dark:border-slate-600 hover:border-[#137fec]/50';
+    dropZoneClass = 'border-slate-300 dark:border-slate-600 hover:border-[#2a78f6]/50';
   }
 
   return (
@@ -192,7 +192,7 @@ export function FileUploader({
           type="button"
           onClick={handleBrowseClick}
           disabled={disabled}
-          className="text-[#137fec] text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-[#137fec]/20 rounded"
+          className="text-[#2a78f6] text-sm font-medium hover:underline focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/20 rounded"
         >
           Browse files
         </button>
@@ -243,7 +243,7 @@ export function FileUploader({
                 onClick={() => handleRemove(index)}
                 disabled={disabled}
                 aria-label={`Remove ${file.name}`}
-                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-[#137fec]/20 disabled:opacity-50"
+                className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded focus:outline-none focus:ring-2 focus:ring-[#2a78f6]/20 disabled:opacity-50"
               >
                 <span className="material-symbols-outlined text-lg">close</span>
               </button>
