@@ -20,10 +20,10 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import {
-  ancestorsOf,
   gateStatePath,
   installExitHandlers,
   killTree,
+  watchTargets,
   writeGateState,
 } from '../preship-process.mjs';
 
@@ -63,7 +63,7 @@ export function createGate(cfg) {
     watchdogScript = DEFAULT_WATCHDOG,
   } = cfg;
   const deps = {
-    ancestorsOf,
+    watchTargets,
     killTree,
     writeGateState,
     installExitHandlers,
@@ -108,8 +108,17 @@ export function createGate(cfg) {
     gate.persistState();
     try {
       // PIDs above the gate (the `git push`, the husky hook shell): if one of them
-      // dies, nothing is waiting for this gate's verdict any more.
-      const above = deps.ancestorsOf(gatePid).join(',');
+      // dies, nothing is waiting for this gate's verdict any more. What is watched,
+      // and how the push was found, goes in the state file so a watchdog that did
+      // not fire can be explained afterwards.
+      const targets = deps.watchTargets(gatePid, repoRoot);
+      gate.state.watch = {
+        pids: targets.pids,
+        how: targets.how,
+        chain: targets.chain.map((a) => `${a.pid}|${a.name}`),
+      };
+      gate.persistState();
+      const above = targets.pids.join(',');
       const w = deps.spawn(deps.execPath, [watchdogScript, String(gatePid), stateFile, above], {
         detached: true,
         stdio: 'ignore',
