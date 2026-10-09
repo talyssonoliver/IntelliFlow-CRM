@@ -1239,52 +1239,50 @@ export const leadRouter = createTRPCRouter({
 
       // Fire-and-forget: populate LeadAIInsight so Lead IQ sidebar shows real data
       (async () => {
-        try {
-          const lead = await typedCtx.prismaWithTenant.lead.findUnique({
-            where: { id: input.leadId },
-            select: {
-              source: true,
-              title: true,
-              company: true,
-              estimatedValue: true,
-              status: true,
-              lastContactedAt: true,
-              createdAt: true,
-            },
-          });
-          if (!lead) return;
+        const lead = await typedCtx.prismaWithTenant.lead.findUnique({
+          where: { id: input.leadId },
+          select: {
+            source: true,
+            title: true,
+            company: true,
+            estimatedValue: true,
+            status: true,
+            lastContactedAt: true,
+            createdAt: true,
+          },
+        });
+        if (!lead) return;
 
-          const insights = deriveLeadInsights({
-            score: result.value.newScore,
-            confidence: result.value.confidence,
-            source: lead.source,
-            title: lead.title,
-            company: lead.company,
-            estimatedValue: lead.estimatedValue,
-            status: lead.status,
-            lastContactedAt: lead.lastContactedAt,
-            createdAt: lead.createdAt,
-          });
+        const insights = deriveLeadInsights({
+          score: result.value.newScore,
+          confidence: result.value.confidence,
+          source: lead.source,
+          title: lead.title,
+          company: lead.company,
+          estimatedValue: lead.estimatedValue,
+          status: lead.status,
+          lastContactedAt: lead.lastContactedAt,
+          createdAt: lead.createdAt,
+        });
 
-          await typedCtx.prismaWithTenant.leadAIInsight.upsert({
-            where: {
-              leadId_tenantId: { leadId: input.leadId, tenantId: typedCtx.tenant.tenantId },
-            },
-            update: {
-              ...insights,
-              recommendations: insights.recommendations,
-            },
-            create: {
-              leadId: input.leadId,
-              tenantId: typedCtx.tenant.tenantId,
-              ...insights,
-              recommendations: insights.recommendations,
-            },
-          });
-        } catch (err) {
-          console.warn('Failed to populate LeadAIInsight after scoring:', err);
-        }
-      })();
+        await typedCtx.prismaWithTenant.leadAIInsight.upsert({
+          where: {
+            leadId_tenantId: { leadId: input.leadId, tenantId: typedCtx.tenant.tenantId },
+          },
+          update: {
+            ...insights,
+            recommendations: insights.recommendations,
+          },
+          create: {
+            leadId: input.leadId,
+            tenantId: typedCtx.tenant.tenantId,
+            ...insights,
+            recommendations: insights.recommendations,
+          },
+        });
+      })().catch((err: unknown) => {
+        console.warn('Failed to populate LeadAIInsight after scoring:', err);
+      });
 
       // IFC-240: fire-and-forget audit logging with a real before/after diff
       getAuditLogger(ctx.prisma)

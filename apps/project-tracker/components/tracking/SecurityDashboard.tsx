@@ -315,17 +315,13 @@ async function pollAndUpdateScanState(
   onComplete: () => void,
   interval: NodeJS.Timeout
 ): Promise<void> {
-  try {
-    const result = await pollScanStatus();
-    if (!result) return;
-    const newState = result.scan;
-    setScanState(newState);
-    if (newState.status === 'completed' || newState.status === 'failed') {
-      clearInterval(interval);
-      onComplete();
-    }
-  } catch {
-    // Silently handle polling errors
+  const result = await pollScanStatus();
+  if (!result) return;
+  const newState = result.scan;
+  setScanState(newState);
+  if (newState.status === 'completed' || newState.status === 'failed') {
+    clearInterval(interval);
+    onComplete();
   }
 }
 
@@ -630,11 +626,13 @@ export default function SecurityDashboard() {
       setData(result.metrics);
       setScanState(result.scanState);
       setErrors({});
-    } catch (err) {
-      setErrors({ general: err instanceof Error ? err.message : 'Unknown error' });
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleFetchError = useCallback((err: unknown) => {
+    setErrors({ general: err instanceof Error ? err.message : 'Unknown error' });
   }, []);
 
   const handleScan = async () => {
@@ -669,19 +667,28 @@ export default function SecurityDashboard() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   // Scan state polling (NF-001)
   useEffect(() => {
     if (scanState?.status !== 'running') return;
 
     const interval = setInterval(() => {
-      pollAndUpdateScanState(setScanState, fetchData, interval);
+      pollAndUpdateScanState(
+        setScanState,
+        () => {
+          fetchData().catch(handleFetchError);
+        },
+        interval
+      ).catch((err: unknown) => {
+        // Not fatal: the next tick polls again. Log it so a persistently failing poll is visible.
+        console.error('Failed to poll security scan status:', err);
+      });
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [scanState?.status, fetchData]);
+  }, [scanState?.status, fetchData, handleFetchError]);
 
   // Loading/error/empty states
   const loadState = getLoadingState(loading, data, errors);
@@ -701,7 +708,10 @@ export default function SecurityDashboard() {
           <Icon name="error" size="lg" />
           <span>Error: {loadState.errorMessage}</span>
         </div>
-        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
+        <button
+          onClick={() => fetchData().catch(handleFetchError)}
+          className="mt-2 text-sm underline hover:no-underline"
+        >
           Try again
         </button>
       </div>

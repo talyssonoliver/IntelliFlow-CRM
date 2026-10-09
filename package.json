@@ -43,6 +43,7 @@
     "test:load": "node tools/scripts/k6/run-ifc-033-load-test.mjs",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
+    "lint:promises": "node scripts/lint-promises.mjs",
     "lint:artifacts": "tsx tools/lint/artifact-paths.ts",
     "lint:artifacts:fix": "tsx tools/lint/artifact-paths.ts --fix",
     "lint:artifacts:audit": "tsx tools/lint/artifact-paths.ts --audit",

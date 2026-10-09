@@ -629,7 +629,8 @@ export default function PerformanceReportView() {
   const [isRunningTest, setIsRunningTest] = useState<'quick' | 'comprehensive' | null>(null);
   const [testOutput, setTestOutput] = useState<string | null>(null);
 
-  const loadData = useCallback(async () => {
+  // Starts the load; its failure is handled on the chain below (surfaces as `error`).
+  const loadData = useCallback((): void => {
     setIsLoading(true);
     setError(null);
     fetchPerformanceReport()
@@ -644,7 +645,7 @@ export default function PerformanceReportView() {
     runK6TestRequest(testType)
       .then((output) => {
         setTestOutput(output);
-        return loadData();
+        loadData();
       })
       .catch((err: unknown) => setTestOutput(err instanceof Error ? err.message : 'Test failed'))
       .finally(() => setIsRunningTest(null));

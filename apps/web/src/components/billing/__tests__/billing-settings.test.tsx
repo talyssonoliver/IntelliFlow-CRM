@@ -24,12 +24,14 @@ const mockGetBillingInfo = vi.fn<() => MockQueryReturn<typeof mockBillingInfo>>(
 const mockUpdateMutate = vi.fn();
 
 let mockOnError: ((err: { message?: string }) => void) | null = null;
+let mockOnSuccess: (() => unknown) | null = null;
+const mockInvalidate = vi.fn();
 
 vi.mock('@/lib/trpc', () => ({
   trpc: {
     useUtils: () => ({
       billing: {
-        getBillingInformation: { invalidate: vi.fn() },
+        getBillingInformation: { invalidate: () => mockInvalidate() },
       },
     }),
     billing: {
@@ -39,6 +41,7 @@ vi.mock('@/lib/trpc', () => ({
           if (opts && typeof (opts as Record<string, unknown>).onError === 'function') {
             mockOnError = (opts as { onError: (err: { message?: string }) => void }).onError;
           }
+          mockOnSuccess = (opts as { onSuccess?: () => unknown } | undefined)?.onSuccess ?? null;
           return {
             mutate: (...args: unknown[]) => {
               mockUpdateMutate(...args);
@@ -71,6 +74,7 @@ describe('BillingSettings', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockOnError = null;
+    mockOnSuccess = null;
     mockGetBillingInfo.mockReturnValue({ data: mockBillingInfo, isLoading: false, error: null });
     mockUseTenantMemberships.mockReturnValue({ pinned: false });
   });
@@ -252,5 +256,13 @@ describe('BillingSettings', () => {
     // Verify error toast was shown (toast mock captures the call)
     // The test simply asserts the handler doesn't throw and the component stays mounted
     expect(screen.getByLabelText(/organization/i)).toBeInTheDocument();
+  });
+
+  it('onSuccess returns the invalidation so the mutation waits for fresh data', async () => {
+    mockInvalidate.mockResolvedValue('refreshed');
+    render(<BillingSettings />);
+
+    await expect(mockOnSuccess?.()).resolves.toBe('refreshed');
+    expect(mockInvalidate).toHaveBeenCalledTimes(1);
   });
 });

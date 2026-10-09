@@ -187,8 +187,10 @@ function ToolCard({ tool, requiresApproval, isExpanded, onToggle }: Readonly<Too
         input: {},
       });
       if (result.requiresApproval) {
-        utils.agent.getPendingApprovals.invalidate();
-        utils.agent.getPendingCount.invalidate();
+        await Promise.all([
+          utils.agent.getPendingApprovals.invalidate(),
+          utils.agent.getPendingCount.invalidate(),
+        ]);
       }
     } catch {
       // Error is shown via executeMutation.error

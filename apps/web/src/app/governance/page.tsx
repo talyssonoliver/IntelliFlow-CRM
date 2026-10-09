@@ -74,13 +74,13 @@ export default function GovernancePage() {
         if (result.success) {
           setAdrStats(result.data);
         }
-      } catch (error) {
-        console.error('Failed to fetch ADR stats:', error);
       } finally {
         setLoading(false);
       }
     }
-    fetchStats();
+    fetchStats().catch((error) => {
+      console.error('Failed to fetch ADR stats:', error);
+    });
   }, []);
 
   return (

@@ -111,7 +111,9 @@ export function ConfirmationDialog({
           <AlertDialogAction
             onClick={(e) => {
               e.preventDefault();
-              handleConfirm();
+              handleConfirm().catch((error: unknown) => {
+                console.error('[ConfirmationDialog] onConfirm failed:', error);
+              });
             }}
             disabled={loading}
             className={cn(variant === 'destructive' && buttonVariants({ variant: 'destructive' }))}

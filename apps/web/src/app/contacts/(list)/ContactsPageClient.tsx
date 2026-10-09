@@ -159,26 +159,38 @@ export default function ContactsPageClient({
   // tRPC mutations with query invalidation
   const bulkEmailMutation = api.contact.bulkEmail.useMutation();
   const bulkExportMutation = api.contact.bulkExport.useMutation();
+  // Server-side cache revalidation. A failure here must not turn a successful
+  // delete into a failed mutation, so it is logged rather than rethrown.
+  const revalidateServerCaches = async () => {
+    try {
+      await invalidateContactsCache();
+      if (user?.id) await revalidateContactCaches(user.id);
+    } catch (error) {
+      console.error('[ContactsPage] Failed to revalidate contact caches:', error);
+    }
+  };
+
   const bulkDeleteMutation = api.contact.bulkDelete.useMutation({
-    onSuccess: () => {
-      utils.contact.list.invalidate();
-      utils.contact.stats.invalidate();
-      invalidateContactsCache();
-      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.contact.list.invalidate(),
+        utils.contact.stats.invalidate(),
+        revalidateServerCaches(),
+      ]),
   });
 
   // Single contact delete mutation
   const deleteMutation = api.contact.delete.useMutation({
     onSuccess: () => {
-      utils.contact.list.invalidate();
-      utils.contact.stats.invalidate();
-      invalidateContactsCache();
-      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
       toast({
         title: 'Contact Deleted',
         description: 'The contact has been successfully deleted.',
       });
+      return Promise.all([
+        utils.contact.list.invalidate(),
+        utils.contact.stats.invalidate(),
+        revalidateServerCaches(),
+      ]);
     },
     onError: (error) => {
       toast({

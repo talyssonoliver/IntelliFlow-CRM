@@ -198,15 +198,17 @@ describe('GoalSettingsModal', () => {
     expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
-  it('mutation onSuccess invalidates getDailyGoal and closes modal', () => {
+  it('mutation onSuccess closes the modal at once and returns the getDailyGoal invalidation', async () => {
+    mockInvalidate.mockResolvedValue('goal-refreshed');
     const onOpenChange = vi.fn();
     render(<GoalSettingsModal {...defaultProps} onOpenChange={onOpenChange} />);
     // Trigger the captured onSuccess callback
     const onSuccess = mockOnSuccess.get();
     expect(onSuccess).toBeDefined();
-    onSuccess!();
-    expect(mockInvalidate).toHaveBeenCalled();
+    const result = (onSuccess as () => Promise<unknown>)();
     expect(onOpenChange).toHaveBeenCalledWith(false);
+    await expect(result).resolves.toBe('goal-refreshed');
+    expect(mockInvalidate).toHaveBeenCalled();
   });
 
   it('save with custom type includes customUnit in mutation', () => {

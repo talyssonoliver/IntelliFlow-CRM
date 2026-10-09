@@ -47,7 +47,7 @@ export function useActivityReactions(
         [data.activityId]: data.reactions,
       }));
       // Invalidate to keep cache consistent
-      utils.activityFeed.getReactions.invalidate();
+      return utils.activityFeed.getReactions.invalidate();
     },
   });
 

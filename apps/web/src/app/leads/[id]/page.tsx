@@ -2213,6 +2213,10 @@ function isLeadAuthError(
   );
 }
 
+function reportCacheRevalidationError(error: unknown) {
+  console.error('Failed to revalidate lead caches:', error);
+}
+
 export default function Lead360Page() {
   // Get lead ID from URL params
   const params = useParams();
@@ -2229,9 +2233,13 @@ export default function Lead360Page() {
     if (leadId) {
       // Inline import keeps the hook isolated and avoids pulling the full
       // recently-viewed surface into this already-huge file.
-      void import('@/lib/leads/use-lead-recent-views').then(({ pushRecentLeadView }) => {
-        pushRecentLeadView(leadId);
-      });
+      import('@/lib/leads/use-lead-recent-views')
+        .then(({ pushRecentLeadView }) => {
+          pushRecentLeadView(leadId);
+        })
+        .catch((error: unknown) => {
+          console.error('Failed to record recently viewed lead:', error);
+        });
     }
   }, [leadId]);
 
@@ -2308,7 +2316,7 @@ export default function Lead360Page() {
   // Mutations
   const deleteMutation = api.lead.delete.useMutation({
     onSuccess: () => {
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
+      if (user?.id) revalidateLeadCaches(user.id).catch(reportCacheRevalidationError);
       toast({ title: 'Lead deleted', description: 'The lead has been permanently deleted.' });
       router.push('/leads');
     },
@@ -2319,9 +2327,11 @@ export default function Lead360Page() {
 
   const archiveMutation = api.lead.update.useMutation({
     onSuccess: () => {
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({ title: 'Lead archived', description: 'The lead has been moved to Lost status.' });
-      utils.lead.getById.invalidate({ id: leadId });
+      return Promise.all([
+        user?.id ? revalidateLeadCaches(user.id).catch(reportCacheRevalidationError) : undefined,
+        utils.lead.getById.invalidate({ id: leadId }),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Archive failed', description: err.message, variant: 'destructive' });
@@ -2330,7 +2340,7 @@ export default function Lead360Page() {
 
   const convertMutation = api.lead.convert.useMutation({
     onSuccess: (data) => {
-      if (user?.id) revalidateLeadConversionCaches(user.id).catch(() => {});
+      if (user?.id) revalidateLeadConversionCaches(user.id).catch(reportCacheRevalidationError);
       setConvertConfirmOpen(false);
       toast({ title: 'Lead converted', description: 'Lead has been converted to a contact.' });
       router.push(`/contacts/${data.contactId}`);
@@ -2346,9 +2356,11 @@ export default function Lead360Page() {
 
   const scoreWithAIMutation = api.lead.scoreWithAI.useMutation({
     onSuccess: () => {
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({ title: 'AI analysis complete', description: 'Lead has been scored by AI.' });
-      utils.lead.getById.invalidate({ id: leadId });
+      return Promise.all([
+        user?.id ? revalidateLeadCaches(user.id).catch(reportCacheRevalidationError) : undefined,
+        utils.lead.getById.invalidate({ id: leadId }),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'AI analysis failed', description: err.message, variant: 'destructive' });
@@ -2359,9 +2371,11 @@ export default function Lead360Page() {
     onSuccess: () => {
       toast({ title: 'Note added', description: 'Your note has been saved.' });
       setActivityNote('');
-      utils.lead.getById.invalidate({ id: leadId });
-      utils.activityFeed.getUnifiedFeed.invalidate();
-      utils.activityFeed.getEntityFeed.invalidate();
+      return Promise.all([
+        utils.lead.getById.invalidate({ id: leadId }),
+        utils.activityFeed.getUnifiedFeed.invalidate(),
+        utils.activityFeed.getEntityFeed.invalidate(),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Failed to add note', description: err.message, variant: 'destructive' });
@@ -2374,9 +2388,11 @@ export default function Lead360Page() {
     setLogCallOpen(false);
     setLogCallTitle('');
     setLogCallDescription('');
-    utils.lead.getById.invalidate({ id: leadId });
-    utils.activityFeed.getUnifiedFeed.invalidate();
-    utils.activityFeed.getEntityFeed.invalidate();
+    return Promise.all([
+      utils.lead.getById.invalidate({ id: leadId }),
+      utils.activityFeed.getUnifiedFeed.invalidate(),
+      utils.activityFeed.getEntityFeed.invalidate(),
+    ]);
   };
   const logActivityOnError = (err: { message: string }) => {
     toast({ title: 'Failed to log activity', description: err.message, variant: 'destructive' });

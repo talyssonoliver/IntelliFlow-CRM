@@ -84,6 +84,7 @@ const sampleNotifications = [
 describe('NotificationList', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockFetchNextPage.mockResolvedValue(undefined);
     intersectionCallback = null;
     mockHookReturn.items = [];
     mockHookReturn.isLoading = false;
@@ -196,6 +197,31 @@ describe('NotificationList', () => {
     });
 
     expect(mockFetchNextPage).toHaveBeenCalled();
+  });
+
+  it('logs instead of leaving an unhandled rejection when fetching the next page fails', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const boom = new Error('page failed');
+    mockFetchNextPage.mockRejectedValueOnce(boom);
+    mockHookReturn.items = sampleNotifications;
+    mockHookReturn.hasNextPage = true;
+    render(
+      <NotificationList
+        filters={{ searchQuery: '', typeFilter: '', priorityFilter: '', activeTab: 'all' }}
+        onMarkAsRead={vi.fn()}
+        onDismiss={vi.fn()}
+      />
+    );
+
+    await act(async () => {
+      intersectionCallback?.([{ isIntersecting: true } as IntersectionObserverEntry]);
+    });
+
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[NotificationList] Failed to load more notifications:',
+      boom
+    );
+    errorSpy.mockRestore();
   });
 
   it('does NOT call fetchNextPage when hasNextPage is false', () => {

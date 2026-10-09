@@ -450,7 +450,9 @@ export default function AuditView() {
   };
 
   useEffect(() => {
-    refresh();
+    refresh().catch((err) => {
+      console.error('Failed to refresh audit data:', err);
+    });
     return () => stopStream();
   }, []);
 
@@ -527,28 +529,24 @@ export default function AuditView() {
   };
 
   const loadSprintAuditReport = async (sprint: number) => {
-    try {
-      const res = await fetch(`/api/audit/sprint-completion?sprint=${sprint}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.report) {
-          setSprintAuditResult({
-            success: true,
-            runId: data.report.run_id,
-            verdict: data.report.verdict,
-            summary: {
-              total: data.report.summary?.totalTasks || 0,
-              audited: data.report.summary?.auditedTasks || 0,
-              passed: data.report.summary?.passedTasks || 0,
-              failed: data.report.summary?.failedTasks || 0,
-              needsHuman: data.report.summary?.needsHumanTasks || 0,
-            },
-            attestationSummary: data.report.attestation_summary,
-          });
-        }
-      }
-    } catch {
-      // ignore - just means no report exists yet
+    const res = await fetch(`/api/audit/sprint-completion?sprint=${sprint}`);
+    // A non-OK response just means no report exists yet for this sprint.
+    if (!res.ok) return;
+    const data = await res.json();
+    if (data.success && data.report) {
+      setSprintAuditResult({
+        success: true,
+        runId: data.report.run_id,
+        verdict: data.report.verdict,
+        summary: {
+          total: data.report.summary?.totalTasks || 0,
+          audited: data.report.summary?.auditedTasks || 0,
+          passed: data.report.summary?.passedTasks || 0,
+          failed: data.report.summary?.failedTasks || 0,
+          needsHuman: data.report.summary?.needsHumanTasks || 0,
+        },
+        attestationSummary: data.report.attestation_summary,
+      });
     }
   };
 
@@ -756,10 +754,19 @@ export default function AuditView() {
                   return (
                     <select
                       value={sprintToAudit ?? ''}
-                      onChange={(e) => {
+                      onChange={async (e) => {
                         const sprint = Number.parseInt(e.target.value, 10);
                         setSprintToAudit(sprint);
-                        loadSprintAuditReport(sprint);
+                        try {
+                          await loadSprintAuditReport(sprint);
+                        } catch (error) {
+                          console.error('[AuditView] Error loading sprint audit report:', error);
+                          setServerError(
+                            `Failed to load the audit report for sprint ${sprint}: ${
+                              error instanceof Error ? error.message : String(error)
+                            }`
+                          );
+                        }
                       }}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2"
                     >

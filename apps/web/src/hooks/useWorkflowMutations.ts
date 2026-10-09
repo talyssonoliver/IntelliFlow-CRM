@@ -17,8 +17,8 @@ export function useWorkflowMutations() {
 
   const createMutation = api.workflow.create.useMutation({
     onSuccess: () => {
-      void utils.workflow.list.invalidate();
       router.push('/cases/case-workflows');
+      return utils.workflow.list.invalidate();
     },
     onError: (error: { message?: string }) => {
       toast({
@@ -34,9 +34,11 @@ export function useWorkflowMutations() {
     // count / updatedAt) AND the single-workflow cache (so revisiting the
     // edit screen reflects the just-saved graph, not the stale one).
     onSuccess: (_data: unknown, variables: { id: string }) => {
-      void utils.workflow.list.invalidate();
-      void utils.workflow.getById.invalidate({ id: variables.id });
       toast({ title: 'Workflow saved' });
+      return Promise.all([
+        utils.workflow.list.invalidate(),
+        utils.workflow.getById.invalidate({ id: variables.id }),
+      ]);
     },
     onError: (error: { message?: string }) => {
       toast({
@@ -49,8 +51,8 @@ export function useWorkflowMutations() {
 
   const deleteMutation = api.workflow.delete.useMutation({
     onSuccess: () => {
-      void utils.workflow.list.invalidate();
       toast({ title: 'Workflow deleted' });
+      return utils.workflow.list.invalidate();
     },
     onError: (error: { message?: string }) => {
       toast({
@@ -62,9 +64,7 @@ export function useWorkflowMutations() {
   });
 
   const setActiveMutation = api.workflow.setActive.useMutation({
-    onSuccess: () => {
-      void utils.workflow.list.invalidate();
-    },
+    onSuccess: () => utils.workflow.list.invalidate(),
     onError: (error: { message?: string }) => {
       toast({
         title: 'Error',

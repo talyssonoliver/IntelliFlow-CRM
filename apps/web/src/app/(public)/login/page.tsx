@@ -364,7 +364,15 @@ export default function LoginPage() {
   const handleMfaCancel = () => {
     setStep('credentials');
     // Clear MFA state by logging out
-    auth.logout();
+    auth.logout().catch((error: unknown) => {
+      console.error('[LoginPage] MFA cancel logout error:', error);
+      setToast({
+        open: true,
+        variant: 'destructive',
+        title: 'Sign-out failed',
+        description: error instanceof Error ? error.message : 'Please try again',
+      });
+    });
   };
 
   // ==========================================

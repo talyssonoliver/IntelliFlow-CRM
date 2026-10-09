@@ -51,11 +51,13 @@ export function OpportunityCreateSheet({
   const utils = api.useUtils();
   const createMutation = api.opportunity.create.useMutation({
     onSuccess: () => {
-      utils.account.getOpportunities.invalidate({ accountId });
-      utils.account.getById.invalidate({ id: accountId });
       toast({ title: 'Deal created', description: `Deal "${form.name}" has been created.` });
       onOpenChange(false);
       onSuccess?.();
+      return Promise.all([
+        utils.account.getOpportunities.invalidate({ accountId }),
+        utils.account.getById.invalidate({ id: accountId }),
+      ]);
     },
     onError: (error) => {
       const desc =

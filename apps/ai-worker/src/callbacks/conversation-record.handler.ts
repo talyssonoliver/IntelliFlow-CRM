@@ -112,18 +112,22 @@ export class ConversationRecordCallbackHandler extends BaseCallbackHandler {
       });
 
       // After every message write, asynchronously check summarization thresholds.
-      // Fire-and-forget: errors are swallowed inside enqueueSummarizationIfNeeded
-      // so this never blocks or breaks the LLM callback path.
+      // Fire-and-forget so this never blocks the LLM callback path. A failure is logged
+      // at the call site (enqueueSummarizationIfNeeded handles its own errors, but a
+      // rejection must still never go unobserved) and the queue is always closed.
       const { Queue } = await import('bullmq');
       const summarizeQueue = new Queue(SUMMARIZE_QUEUE, {
         connection: getBullMQConnectionOptions(),
       });
-      enqueueSummarizationIfNeeded(
-        conversationId,
-        this.sessionId,
-        this.tenantId,
-        summarizeQueue
-      ).finally(() => summarizeQueue.close().catch(() => undefined));
+      enqueueSummarizationIfNeeded(conversationId, this.sessionId, this.tenantId, summarizeQueue)
+        .catch((error: unknown) => {
+          logger.debug({ error: String(error) }, 'Failed to enqueue conversation summarization');
+        })
+        .finally(() =>
+          summarizeQueue.close().catch((error: unknown) => {
+            logger.debug({ error: String(error) }, 'Failed to close summarization queue');
+          })
+        );
     } catch (error) {
       logger.debug({ error: String(error) }, 'Failed to write message record');
     }

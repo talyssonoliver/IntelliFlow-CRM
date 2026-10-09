@@ -40,6 +40,10 @@ function NotificationBellSkeleton() {
  * Subscription invalidates getUnreadCount on new notifications.
  * Fallback: refetchInterval 60s when WebSocket is unavailable.
  */
+function logRefreshError(error: unknown) {
+  console.error('[NotificationBell] Failed to refresh notifications:', error);
+}
+
 export function NotificationBell() {
   const { isAuthenticated, user } = useAuth();
   const router = useRouter();
@@ -59,35 +63,49 @@ export function NotificationBell() {
     { enabled: isAuthenticated && isOpen }
   );
 
+  // Refetch the unread count and list. Resolves once both refetches have finished.
+  const refreshNotifications = useCallback(
+    () =>
+      Promise.all([
+        utils.notifications.getUnreadCount.invalidate(),
+        utils.notifications.list.invalidate(),
+      ]),
+    [utils]
+  );
+
   // Invalidate notification list on every popover open so cached data shows
-  // instantly while a background refetch brings in fresh results.
+  // instantly while a background refresh brings in fresh results.
   useEffect(() => {
     if (isOpen && !prevIsOpenRef.current && isAuthenticated) {
-      utils.notifications.list.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
+      refreshNotifications().catch(logRefreshError);
     }
     prevIsOpenRef.current = isOpen;
-  }, [isOpen, isAuthenticated, utils]);
+  }, [isOpen, isAuthenticated, refreshNotifications]);
 
   // Real-time subscription invalidation
   const handleNewNotification = useCallback(() => {
-    utils.notifications.getUnreadCount.invalidate();
-    utils.notifications.list.invalidate();
-  }, [utils]);
+    refreshNotifications().catch(logRefreshError);
+  }, [refreshNotifications]);
 
   useNotificationSubscription({
     enabled: isAuthenticated,
     onData: handleNewNotification,
   });
 
+  // Server-side cache revalidation. A failure is logged, not rethrown, so it
+  // cannot turn a successful mark-as-read into a failed mutation.
+  const revalidateServerCaches = async () => {
+    if (!user?.id) return;
+    try {
+      await revalidateNotifications(user.id);
+    } catch (error) {
+      logRefreshError(error);
+    }
+  };
+
   const markAsReadMutation = trpc.notifications.markAsRead.useMutation({
-    onSuccess: () => {
-      utils.notifications.getUnreadCount.invalidate();
-      utils.notifications.list.invalidate();
-      if (user?.id) {
-        revalidateNotifications(user.id);
-      }
-    },
+    // Returned so the mutation stays pending until the refetches have finished.
+    onSuccess: () => Promise.all([refreshNotifications(), revalidateServerCaches()]),
   });
 
   // Track IDs optimistically marked as read in this dropdown session

@@ -497,15 +497,27 @@ export default function DealDetailPage() {
     { enabled: isAuthenticated && !authLoading && !!dealId }
   );
 
+  // Server-side cache revalidation. A failure must not turn a successful
+  // mutation into a failed one, so it is logged rather than rethrown.
+  const revalidateServerCaches = async () => {
+    try {
+      await revalidateDealCaches(user?.id ?? null);
+    } catch (error) {
+      logDealCacheFailure(error);
+    }
+  };
+
   const moveStage = api.opportunity.moveStage.useMutation({
     onSuccess: (_data, variables) => {
-      revalidateDealCaches(user?.id ?? null).catch(logDealCacheFailure);
-      void utils.opportunity.getById.invalidate({ id: dealId });
       setPendingAction(null);
       toast({
         title:
           variables.targetStage === 'CLOSED_WON' ? 'Deal marked as Won' : 'Deal marked as Lost',
       });
+      return Promise.all([
+        revalidateServerCaches(),
+        utils.opportunity.getById.invalidate({ id: dealId }),
+      ]);
     },
     onError: (err) => {
       setPendingAction(null);
@@ -518,13 +530,12 @@ export default function DealDetailPage() {
 
   const deleteMutation = api.opportunity.delete.useMutation({
     onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(logDealCacheFailure);
-      // The list this navigates to must not show the deal that was just
-      // trashed, even when the server-cache refresh above fails.
-      void utils.opportunity.list.invalidate();
       setDeleteConfirmOpen(false);
       toast({ title: 'Deal moved to trash' });
       router.push('/deals');
+      // The list this navigates to must not show the deal that was just trashed, even
+      // when the server-cache refresh fails.
+      return Promise.all([revalidateServerCaches(), utils.opportunity.list.invalidate()]);
     },
     onError: () => {
       toast({ title: 'Failed to delete deal. Please try again.', variant: 'destructive' });
@@ -533,10 +544,12 @@ export default function DealDetailPage() {
 
   const updateMutation = api.opportunity.update.useMutation({
     onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(logDealCacheFailure);
-      void utils.opportunity.getById.invalidate({ id: dealId });
       setEditDialogOpen(false);
       toast({ title: 'Deal updated' });
+      return Promise.all([
+        revalidateServerCaches(),
+        utils.opportunity.getById.invalidate({ id: dealId }),
+      ]);
     },
     onError: () => {
       toast({ title: 'Failed to update deal. Please try again.', variant: 'destructive' });

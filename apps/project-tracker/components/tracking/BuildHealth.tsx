@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/lib/icons';
-import { RefreshButton, MetricCard, StaleIndicator } from './shared';
+import { RefreshButton, MetricCard, StaleIndicator, LoadingPanel, ErrorPanel } from './shared';
 
 export interface BuildMetrics {
   turbo: {
@@ -173,11 +173,13 @@ export default function BuildHealth() {
       const result = await response.json();
       setData(result.metrics);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
   }, []);
 
   const handleValidation = async (type: 'all' | 'typecheck' | 'lint') => {
@@ -187,7 +189,7 @@ export default function BuildHealth() {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Validation failed');
-      await fetchData();
+      await fetchData().catch(handleFetchError);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Validation failed');
     } finally {
@@ -196,29 +198,15 @@ export default function BuildHealth() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   if (loading && !data) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Icon name="progress_activity" className="animate-spin text-blue-500" size="2xl" />
-      </div>
-    );
+    return <LoadingPanel />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-        <div className="flex items-center gap-2">
-          <Icon name="error" size="lg" />
-          <span>Error: {error}</span>
-        </div>
-        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
-          Try again
-        </button>
-      </div>
-    );
+    return <ErrorPanel error={error} onRetry={() => fetchData().catch(handleFetchError)} />;
   }
 
   const allPassing = computeAllPassing(data);

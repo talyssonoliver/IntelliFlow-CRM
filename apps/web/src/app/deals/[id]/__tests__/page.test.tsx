@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 const mockPush = vi.fn();
 const mockReplace = vi.fn();
@@ -17,7 +17,7 @@ const mockInvalidate = vi.fn();
 const mockListInvalidate = vi.fn();
 const mockToast = vi.fn();
 type CapturedMutationConfig = {
-  onSuccess?: (...args: unknown[]) => void;
+  onSuccess?: (...args: unknown[]) => unknown;
   onError?: (...args: unknown[]) => void;
 };
 let capturedMoveStageConfig: CapturedMutationConfig = {};
@@ -263,10 +263,13 @@ vi.mock('@/components/deals/DealForm', () => ({
   ),
 }));
 
-// Plain function (not vi.fn) so vi.clearAllMocks() can't strip the resolved
-// value — the page calls `revalidateDealCaches(...).catch(...)` in onSuccess.
+// The page awaits `revalidateDealCaches(...)` in onSuccess. The default behaviour is
+// supplied as the vi.fn implementation (not mockResolvedValue) so vi.clearAllMocks()
+// cannot strip it; tests swap `revalidateControl.impl`, or use mockRejectedValueOnce,
+// to simulate a rejecting server action.
+const revalidateControl = { impl: (): Promise<void> => Promise.resolve() };
 vi.mock('@/app/deals/actions', () => ({
-  revalidateDealCaches: vi.fn(() => Promise.resolve()),
+  revalidateDealCaches: vi.fn(() => revalidateControl.impl()),
 }));
 
 type StubAction = {
@@ -639,7 +642,9 @@ describe('DealDetailPage', () => {
 
     it('Won onSuccess invalidates getById and shows a Won toast', async () => {
       await renderDealPage();
-      capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'CLOSED_WON' });
+      await act(async () => {
+        await capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'CLOSED_WON' });
+      });
       expect(mockInvalidate).toHaveBeenCalledWith({ id: 'deal-123' });
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({ title: expect.stringMatching(/won/i) })
@@ -724,7 +729,9 @@ describe('DealDetailPage', () => {
 
     it('delete onSuccess toasts and navigates to /deals', async () => {
       await renderDealPage();
-      capturedDeleteConfig.onSuccess?.();
+      await act(async () => {
+        await capturedDeleteConfig.onSuccess?.();
+      });
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({ title: expect.stringMatching(/trash|deleted/i) })
       );
@@ -775,7 +782,9 @@ describe('DealDetailPage', () => {
 
     it('update onSuccess invalidates getById and toasts', async () => {
       await renderDealPage();
-      capturedUpdateConfig.onSuccess?.();
+      await act(async () => {
+        await capturedUpdateConfig.onSuccess?.();
+      });
       expect(mockInvalidate).toHaveBeenCalledWith({ id: 'deal-123' });
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({ title: expect.stringMatching(/updated/i) })
@@ -862,4 +871,59 @@ describe('DealDetailPage', () => {
       expect((screen.getByTestId('confirm-delete') as HTMLButtonElement).disabled).toBe(true);
     });
   });
+});
+
+describe('DealDetailPage - mutation onSuccess waits for fresh data and logs revalidation failures', () => {
+  async function renderDealPage() {
+    const { default: DealDetailPage } = await import('../page');
+    render(<DealDetailPage />);
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    revalidateControl.impl = () => Promise.resolve();
+  });
+
+  it('moveStage onSuccess stays pending until the getById invalidation finishes', async () => {
+    let finish: () => void = () => undefined;
+    mockInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+    await renderDealPage();
+    let settled = false;
+    const pending = Promise.resolve(
+      capturedMoveStageConfig.onSuccess?.({}, { targetStage: 'CLOSED_LOST' })
+    ).then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    expect(mockToast).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'Deal marked as Lost' })
+    );
+    finish();
+    await act(async () => {
+      await pending;
+    });
+    expect(settled).toBe(true);
+  });
+
+  it.each([
+    ['moveStage', () => capturedMoveStageConfig, [{}, { targetStage: 'CLOSED_WON' }]],
+    ['delete', () => capturedDeleteConfig, []],
+    ['update', () => capturedUpdateConfig, []],
+  ] as const)(
+    '%s onSuccess logs, and still resolves, when server cache revalidation rejects',
+    async (_name, getConfig, args) => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const boom = new Error('revalidate failed');
+      revalidateControl.impl = () => Promise.reject(boom);
+      await renderDealPage();
+      await act(async () => {
+        await expect(
+          Promise.resolve(getConfig().onSuccess?.(...(args as unknown as unknown[])))
+        ).resolves.not.toThrow();
+      });
+      expect(warnSpy).toHaveBeenCalledWith('[DealPage] Deal cache revalidation failed:', boom);
+      warnSpy.mockRestore();
+    }
+  );
 });

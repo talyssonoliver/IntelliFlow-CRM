@@ -75,32 +75,43 @@ export default function NotificationsPage() {
   const totalUnread = unreadData?.total ?? 0;
   const highPriorityCount = unreadData?.byPriority?.high ?? 0;
 
-  // Mutations with optimistic updates + cache invalidation
+  // Server-side cache revalidation. A failure must not turn a successful
+  // mutation into a failed one, so it is logged rather than rethrown.
+  const revalidateServerCaches = async () => {
+    if (!user?.id) return;
+    try {
+      await revalidateNotifications(user.id);
+    } catch (error) {
+      console.error('[NotificationsPage] Failed to revalidate notification caches:', error);
+    }
+  };
+
+  // Mutations with optimistic updates + cache invalidation. onSuccess returns the
+  // refetch promises so each mutation stays pending until the lists are fresh.
   const markAsReadMutation = trpc.notifications.markAsRead.useMutation({
-    onSuccess: () => {
-      utils.notifications.list.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
-      if (user?.id) {
-        revalidateNotifications(user.id);
-      }
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.notifications.list.invalidate(),
+        utils.notifications.getUnreadCount.invalidate(),
+        revalidateServerCaches(),
+      ]),
   });
 
   const markAllAsReadMutation = trpc.notifications.markAllAsRead.useMutation({
-    onSuccess: () => {
-      utils.notifications.list.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
-      if (user?.id) {
-        revalidateNotifications(user.id);
-      }
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.notifications.list.invalidate(),
+        utils.notifications.getUnreadCount.invalidate(),
+        revalidateServerCaches(),
+      ]),
   });
 
   const deleteMutation = trpc.notifications.delete.useMutation({
-    onSuccess: () => {
-      utils.notifications.list.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.notifications.list.invalidate(),
+        utils.notifications.getUnreadCount.invalidate(),
+      ]),
   });
 
   // Action handlers

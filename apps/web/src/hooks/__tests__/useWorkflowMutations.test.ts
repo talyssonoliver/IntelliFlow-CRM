@@ -131,6 +131,45 @@ describe('useWorkflowMutations', () => {
     expect(mockPush).toHaveBeenCalledWith('/cases/case-workflows');
   });
 
+  it.each(['create', 'delete', 'setActive'] as const)(
+    '%s onSuccess returns the list refresh so the mutation waits for fresh data',
+    (name) => {
+      const refresh = Promise.resolve();
+      mockInvalidate.mockReturnValueOnce(refresh);
+      renderHook(() => useWorkflowMutations());
+
+      const result = (mutationCallbacks[name]?.onSuccess as unknown as () => unknown)();
+
+      expect(result).toBe(refresh);
+    }
+  );
+
+  it('update onSuccess returns a promise that waits for both the list and the single workflow', async () => {
+    let releaseList!: () => void;
+    let releaseOne!: () => void;
+    mockInvalidate.mockReturnValueOnce(new Promise<void>((r) => (releaseList = r)));
+    mockGetByIdInvalidate.mockReturnValueOnce(new Promise<void>((r) => (releaseOne = r)));
+    renderHook(() => useWorkflowMutations());
+
+    let settled = false;
+    const done = Promise.resolve(
+      (
+        mutationCallbacks.update?.onSuccess as unknown as (d: unknown, v: { id: string }) => unknown
+      )(undefined, { id: 'wf-1' })
+    ).then(() => {
+      settled = true;
+    });
+
+    releaseList();
+    await Promise.resolve();
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    releaseOne();
+    await done;
+    expect(settled).toBe(true);
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Workflow saved' }));
+  });
+
   it('create onError shows destructive toast with error message', () => {
     renderHook(() => useWorkflowMutations());
 

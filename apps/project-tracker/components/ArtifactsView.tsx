@@ -562,7 +562,7 @@ interface FilesTabContentProps {
   generatedPrompt: { dir: string; content: string } | null;
   setGeneratedPrompt: (v: { dir: string; content: string } | null) => void;
   generatingPrompt: string | null;
-  generateFileAuditPrompt: (path: string) => Promise<void>;
+  generateFileAuditPrompt: (path: string) => void;
   downloadPrompt: () => void;
   onTaskClick?: (taskId: string) => void;
 }
@@ -578,6 +578,7 @@ function FilesTabContent({
   downloadPrompt,
   onTaskClick: _onTaskClick,
 }: Readonly<FilesTabContentProps>) {
+  const [copyError, setCopyError] = useState<string | null>(null);
   const { folders, directFiles } = getFolderContents(files, currentPath);
   const breadcrumbs = currentPath
     ? currentPath.split('/').map((part, index, arr) => ({
@@ -610,21 +611,37 @@ function FilesTabContent({
                   Download
                 </button>
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(generatedPrompt.content);
+                  onClick={async () => {
+                    setCopyError(null);
+                    try {
+                      await navigator.clipboard.writeText(generatedPrompt.content);
+                    } catch (err) {
+                      console.error('Failed to copy prompt to clipboard:', err);
+                      setCopyError(
+                        'Could not copy to the clipboard. Select the text and copy it manually.'
+                      );
+                    }
                   }}
                   className="px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                 >
                   Copy
                 </button>
                 <button
-                  onClick={() => setGeneratedPrompt(null)}
+                  onClick={() => {
+                    setCopyError(null);
+                    setGeneratedPrompt(null);
+                  }}
                   className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-sm"
                 >
                   Close
                 </button>
               </div>
             </div>
+            {copyError && (
+              <p role="alert" className="px-6 py-2 text-sm text-red-600 bg-red-50 border-b">
+                {copyError}
+              </p>
+            )}
             <div className="flex-1 overflow-auto p-6">
               <pre className="whitespace-pre-wrap text-sm font-mono text-gray-800 bg-gray-50 p-4 rounded">
                 {generatedPrompt.content}
@@ -1042,19 +1059,27 @@ function useFileHistory(staleDays: number, activeTab: ViewTab) {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyFilter, setHistoryFilter] = useState<'all' | 'stale' | 'with-task'>('all');
 
-  const fetchHistory = useCallback(
-    async (staleOnly = false) => {
+  const loadHistory = useCallback(
+    async (staleOnly: boolean) => {
       setHistoryLoading(true);
       try {
         const result = await fetchHistoryRequest(staleDays, staleOnly);
         setHistoryData(result);
-      } catch (err) {
-        console.error('Failed to fetch history:', err);
       } finally {
         setHistoryLoading(false);
       }
     },
     [staleDays]
+  );
+
+  // Fire-and-forget trigger: a failed load is logged here, at the call site.
+  const fetchHistory = useCallback(
+    (staleOnly = false): void => {
+      loadHistory(staleOnly).catch((err: unknown) => {
+        console.error('Failed to fetch history:', err);
+      });
+    },
+    [loadHistory]
   );
 
   useEffect(() => {
@@ -1070,17 +1095,25 @@ function useCodeAnalysis() {
   const [codeAnalysis, setCodeAnalysis] = useState<CodeAnalysisResult | null>(null);
   const [analysisLoading, setAnalysisLoading] = useState(false);
 
-  const fetchCodeAnalysis = useCallback(async (runFresh = false) => {
+  const loadCodeAnalysis = useCallback(async (runFresh: boolean) => {
     setAnalysisLoading(true);
     try {
       const result = await fetchCodeAnalysisRequest(runFresh);
       setCodeAnalysis(result);
-    } catch (err) {
-      console.error('Failed to fetch code analysis:', err);
     } finally {
       setAnalysisLoading(false);
     }
   }, []);
+
+  // Fire-and-forget trigger: a failed load is logged here, at the call site.
+  const fetchCodeAnalysis = useCallback(
+    (runFresh = false): void => {
+      loadCodeAnalysis(runFresh).catch((err: unknown) => {
+        console.error('Failed to fetch code analysis:', err);
+      });
+    },
+    [loadCodeAnalysis]
+  );
 
   useEffect(() => {
     fetchCodeAnalysis(false);
@@ -1121,8 +1154,8 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
   // Folder navigation state
   const [currentPath, setCurrentPath] = useState<string>(''); // Empty = root
 
-  const fetchData = useCallback(
-    async (refresh = false) => {
+  const loadData = useCallback(
+    async (refresh: boolean) => {
       setLoading(true);
       setError(null);
 
@@ -1136,8 +1169,6 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
 
         const result = await response.json();
         setData(result);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -1145,8 +1176,18 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
     [_page, directoryFilter, orphanFilter]
   );
 
+  // Fire-and-forget trigger: a failed load surfaces in the error panel, at the call site.
+  const fetchData = useCallback(
+    (refresh = false): void => {
+      loadData(refresh).catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'Unknown error');
+      });
+    },
+    [loadData]
+  );
+
   useEffect(() => {
-    fetchData(); // NOSONAR
+    fetchData();
   }, [fetchData]);
 
   const _toggleDir = (dir: string) => {
@@ -1188,7 +1229,7 @@ export default function ArtifactsView({ onTaskClick }: Readonly<ArtifactsViewPro
   };
 
   // Generate file audit prompt for a folder path
-  const generateFileAuditPrompt = async (folderPath: string) => {
+  const generateFileAuditPrompt = (folderPath: string): void => {
     setGeneratingPrompt(folderPath);
     try {
       const folderFiles = files.filter((f) => f.path.startsWith(folderPath + '/'));

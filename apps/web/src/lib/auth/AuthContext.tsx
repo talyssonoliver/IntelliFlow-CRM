@@ -164,11 +164,29 @@ const AuthContext = createContext<AuthContextType>({
 // Auth State Helpers
 // ============================================
 
+function logTokenSyncError(error: unknown): void {
+  console.error('[AuthContext] Failed to sync tokens to Supabase:', error);
+}
+
+function logCookieSyncError(error: unknown): void {
+  console.error('[AuthContext] Failed to sync token to cookie:', error);
+}
+
+function logAuthStatusRefreshError(error: unknown): void {
+  console.error('[AuthContext] Failed to refresh auth status:', error);
+}
+
+function logSessionRefreshError(error: unknown): void {
+  console.error('[AuthContext] Scheduled session refresh failed:', error);
+}
+
 function syncLocalStorageTokenToCookie(token: string): void {
   if (isTokenUsable(token)) {
-    import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
-      syncTokenToCookie(token);
-    });
+    import('@/lib/shared/session-cleanup')
+      .then(({ syncTokenToCookie }) => {
+        syncTokenToCookie(token);
+      })
+      .catch(logCookieSyncError);
   } else {
     document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT';
   }
@@ -284,7 +302,9 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
   useEffect(() => {
     if (typeof globalThis.window === 'undefined') return;
     const onTokenChanged = () => {
-      void queryClient.invalidateQueries({ queryKey: [['auth', 'getStatus']] });
+      queryClient
+        .invalidateQueries({ queryKey: [['auth', 'getStatus']] })
+        .catch(logAuthStatusRefreshError);
     };
     globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
     return () => globalThis.removeEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);
@@ -336,9 +356,11 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
                 localStorage.setItem('refreshToken', data.session.refresh_token);
               }
               // Sync to cookie
-              import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
-                syncTokenToCookie(data.session!.access_token);
-              });
+              import('@/lib/shared/session-cleanup')
+                .then(({ syncTokenToCookie }) => {
+                  syncTokenToCookie(data.session!.access_token);
+                })
+                .catch(logCookieSyncError);
             }
           }
         } catch (err) {
@@ -363,12 +385,16 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
         }
 
         // Sync to cookie
-        import('@/lib/shared/session-cleanup').then(({ syncTokenToCookie }) => {
-          syncTokenToCookie(session.access_token);
-        });
+        import('@/lib/shared/session-cleanup')
+          .then(({ syncTokenToCookie }) => {
+            syncTokenToCookie(session.access_token);
+          })
+          .catch(logCookieSyncError);
 
         // Invalidate auth status query to pick up new token
-        queryClient.invalidateQueries({ queryKey: [['auth', 'getStatus']] });
+        await queryClient
+          .invalidateQueries({ queryKey: [['auth', 'getStatus']] })
+          .catch(logAuthStatusRefreshError);
       } else if (event === 'SIGNED_OUT') {
         console.log('[AuthContext] Signed out via Supabase');
         localStorage.removeItem('accessToken');
@@ -378,7 +404,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     });
 
     // Initial sync
-    syncTokensToSupabase();
+    syncTokensToSupabase().catch(logTokenSyncError);
 
     // Also set up a backup timer-based refresh check
     const setupRefreshTimer = () => {
@@ -410,7 +436,12 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
       // Set timer to trigger Supabase refresh
       refreshTimerRef.current = setTimeout(() => {
         console.log('[AuthContext] Timer triggered, requesting token refresh...');
-        supabase.auth.refreshSession();
+        supabase.auth
+          .refreshSession()
+          .then(({ error }) => {
+            if (error) logSessionRefreshError(error);
+          })
+          .catch(logSessionRefreshError);
       }, timeUntilRefresh);
     };
 
@@ -423,7 +454,7 @@ export function AuthProvider({ children }: Readonly<{ children: ReactNode }>) {
     // idempotent (fires only on an actual token change), so this re-syncs the
     // session and reschedules the refresh timer exactly once per real token write.
     const onTokenChanged = () => {
-      void syncTokensToSupabase();
+      syncTokensToSupabase().catch(logTokenSyncError);
       setupRefreshTimer();
     };
     globalThis.addEventListener(AUTH_TOKEN_CHANGED_EVENT, onTokenChanged);

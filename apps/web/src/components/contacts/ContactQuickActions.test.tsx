@@ -18,7 +18,7 @@ const {
     isPending: false,
     opts: undefined as
       | undefined
-      | { onSuccess?: () => void; onError?: (e: { message: string }) => void },
+      | { onSuccess?: () => Promise<unknown>; onError?: (e: { message: string }) => void },
   },
 }));
 
@@ -39,7 +39,7 @@ vi.mock('@/lib/api', () => ({
     contact: {
       logActivity: {
         useMutation: (opts: {
-          onSuccess?: () => void;
+          onSuccess?: () => Promise<unknown>;
           onError?: (e: { message: string }) => void;
         }) => {
           state.opts = opts;
@@ -237,6 +237,21 @@ describe('ContactQuickActions (IFC-257) — mutation callbacks', () => {
     expect(mockGetByIdInvalidate).toHaveBeenCalledWith({ id: 'contact-1' });
     expect(mockUnifiedInvalidate).toHaveBeenCalled();
     expect(mockEntityInvalidate).toHaveBeenCalled();
+  });
+
+  it('on success: stays pending until every invalidation has finished', async () => {
+    let finish: () => void = () => undefined;
+    mockGetByIdInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+    renderActions();
+    let settled = false;
+    const pending = state.opts!.onSuccess!().then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    finish();
+    await pending;
+    expect(settled).toBe(true);
   });
 
   it('on error: shows a destructive toast with the error message', () => {

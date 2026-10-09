@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const mockInvalidate = vi.fn();
 const mockMutate = vi.fn();
+const mutationOptions: Record<string, any> = {};
 const mockQueryData = {
   items: [{ entityType: 'lead', entityId: 'l1', title: 'Lead 1', url: '/leads/l1' }],
 };
@@ -13,6 +14,7 @@ vi.mock('@/lib/trpc', () => ({
       getPinnedItems: { useQuery: vi.fn(() => ({ data: mockQueryData, isLoading: false })) },
       pinItem: {
         useMutation: vi.fn((opts: any) => ({
+          __opts: (mutationOptions.pin = opts),
           mutate: (...args: any[]) => {
             mockMutate(...args);
             opts?.onSuccess?.();
@@ -22,6 +24,7 @@ vi.mock('@/lib/trpc', () => ({
       },
       unpinItem: {
         useMutation: vi.fn((opts: any) => ({
+          __opts: (mutationOptions.unpin = opts),
           mutate: (...args: any[]) => {
             mockMutate(...args);
             opts?.onSuccess?.();
@@ -174,4 +177,20 @@ describe('useEntityPin', () => {
     result.togglePin();
     expect(mockMutate).toHaveBeenCalled();
   });
+
+  it.each(['pin', 'unpin'])(
+    '%s onSuccess returns the pinned-items refresh so the mutation stays pending',
+    (name) => {
+      const refresh = Promise.resolve();
+      mockInvalidate.mockReturnValueOnce(refresh);
+      useEntityPin({
+        entityType: 'lead' as any,
+        entityId: 'l1',
+        title: 'Lead 1',
+        url: '/leads/l1',
+      });
+
+      expect(mutationOptions[name].onSuccess()).toBe(refresh);
+    }
+  );
 });

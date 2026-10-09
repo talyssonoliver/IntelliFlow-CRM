@@ -38,7 +38,11 @@ export function NotificationList({
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
+          // The query's own error state is rendered below; log so the rejection
+          // is not left unhandled.
+          fetchNextPage().catch((err: unknown) => {
+            console.error('[NotificationList] Failed to load more notifications:', err);
+          });
         }
       },
       { rootMargin: '100px' }

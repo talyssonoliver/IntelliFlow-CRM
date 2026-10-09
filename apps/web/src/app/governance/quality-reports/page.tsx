@@ -452,12 +452,15 @@ export default function QualityReportsPage() {
       if (result.success) {
         setData(result.data);
       }
-    } catch (error) {
-      console.error('Failed to fetch quality reports:', error);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // Call-site wrapper: fetchReports propagates failures; log them here
+  const loadReports = useCallback(() => {
+    fetchReports().catch((error) => console.error('Failed to fetch quality reports:', error));
+  }, [fetchReports]);
 
   // Restore generation state on mount
   useEffect(() => {
@@ -466,8 +469,8 @@ export default function QualityReportsPage() {
       // Resume polling for running job
       setGenerationJob(storedJob);
     }
-    fetchReports();
-  }, [fetchReports]);
+    loadReports();
+  }, [loadReports]);
 
   // Poll for generation status
   useEffect(() => {
@@ -488,7 +491,7 @@ export default function QualityReportsPage() {
             for (const result of updatedJob.results.filter((r) => r.success)) {
               setCached(result.report);
             }
-            fetchReports();
+            loadReports();
           }
         }
       } catch (error) {
@@ -497,7 +500,7 @@ export default function QualityReportsPage() {
     }, 2000);
 
     return () => clearInterval(pollInterval);
-  }, [generationJob, fetchReports]);
+  }, [generationJob, loadReports]);
 
   const handleStartGeneration = async () => {
     if (selectedReports.length === 0) return;
@@ -558,7 +561,7 @@ export default function QualityReportsPage() {
         setCached(result.report);
       }
 
-      fetchReports();
+      loadReports();
     } catch (error) {
       if ((error as Error).name === 'AbortError') return;
 
@@ -801,7 +804,7 @@ export default function QualityReportsPage() {
       <TestRunnerModal
         isOpen={showTestModal}
         onClose={() => setShowTestModal(false)}
-        onComplete={fetchReports}
+        onComplete={loadReports}
       />
 
       {/* Summary Stats */}

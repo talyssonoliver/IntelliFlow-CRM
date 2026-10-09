@@ -94,12 +94,20 @@ export function DocumentUpload({
     [validateFile, computeHash]
   );
 
+  const reportFileSelectError = useCallback((err: unknown) => {
+    toast({
+      title: 'Could not read file',
+      description: err instanceof Error ? err.message : 'The selected file could not be processed.',
+      variant: 'destructive',
+    });
+  }, []);
+
   const handleFileInputChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
-      if (file) handleFileSelect(file);
+      if (file) handleFileSelect(file).catch(reportFileSelectError);
     },
-    [handleFileSelect]
+    [handleFileSelect, reportFileSelectError]
   );
 
   const removeFile = useCallback(() => {
@@ -125,9 +133,9 @@ export function DocumentUpload({
       e.preventDefault();
       setIsDragging(false);
       const file = e.dataTransfer.files[0];
-      if (file) handleFileSelect(file);
+      if (file) handleFileSelect(file).catch(reportFileSelectError);
     },
-    [handleFileSelect]
+    [handleFileSelect, reportFileSelectError]
   );
 
   // ─── Submit ───────────────────────────────────────────────────────────────

@@ -33,6 +33,10 @@ const activityMock = vi.fn();
 const oppsMock = vi.fn();
 const assigneesMock = vi.fn();
 const assignOwnerMutateMock = vi.fn();
+const utilsListInvalidateMock = vi.fn();
+const utilsStatsInvalidateMock = vi.fn();
+const assignOwnerOpts: { current?: { onSuccess?: () => unknown } } = {};
+const deleteOpts: { current?: { onSuccess?: () => unknown } } = {};
 
 vi.mock('@/lib/api', () => ({
   api: {
@@ -42,16 +46,22 @@ vi.mock('@/lib/api', () => ({
       getOpportunities: { useQuery: (...args: unknown[]) => oppsMock(...args) },
       assignees: { useQuery: (...args: unknown[]) => assigneesMock(...args) },
       assignOwner: {
-        useMutation: (_opts?: unknown) => ({
-          mutateAsync: assignOwnerMutateMock,
-          isPending: false,
-        }),
+        useMutation: (opts?: { onSuccess?: () => unknown }) => {
+          assignOwnerOpts.current = opts;
+          return {
+            mutateAsync: assignOwnerMutateMock,
+            isPending: false,
+          };
+        },
       },
       delete: {
-        useMutation: (_opts?: unknown) => ({
-          mutate: vi.fn(),
-          isPending: false,
-        }),
+        useMutation: (opts?: { onSuccess?: () => unknown }) => {
+          deleteOpts.current = opts;
+          return {
+            mutate: vi.fn(),
+            isPending: false,
+          };
+        },
       },
       list: { invalidate: vi.fn() },
       stats: { invalidate: vi.fn() },
@@ -59,8 +69,8 @@ vi.mock('@/lib/api', () => ({
     useUtils: () => ({
       account: {
         getById: { invalidate: vi.fn() },
-        list: { invalidate: vi.fn() },
-        stats: { invalidate: vi.fn() },
+        list: { invalidate: utilsListInvalidateMock },
+        stats: { invalidate: utilsStatsInvalidateMock },
       },
     }),
   },
@@ -575,4 +585,41 @@ describe('AccountDetail', () => {
       });
     });
   });
+
+  it('redirects to the accounts list after a successful delete', () => {
+    render(<AccountDetail {...defaultProps} />);
+    deleteOpts.current?.onSuccess?.();
+    expect(mockPush).toHaveBeenCalledWith('/accounts');
+  });
+
+  it('runs the assign-owner success handler without error', async () => {
+    render(<AccountDetail {...defaultProps} />);
+    await expect(Promise.resolve(assignOwnerOpts.current?.onSuccess?.())).resolves.not.toThrow();
+  });
+
+  it.each([
+    ['delete', deleteOpts],
+    ['assign-owner', assignOwnerOpts],
+  ])(
+    '%s success returns the invalidations so the mutation waits for fresh data',
+    async (_n, opts) => {
+      render(<AccountDetail {...defaultProps} />);
+      let release!: () => void;
+      utilsListInvalidateMock.mockReturnValueOnce(
+        new Promise<void>((resolve) => {
+          release = resolve;
+        })
+      );
+      const returned = opts.current?.onSuccess?.();
+      let settled = false;
+      Promise.resolve(returned).then(() => {
+        settled = true;
+      });
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      release();
+      await returned;
+      expect(settled).toBe(true);
+    }
+  );
 });
