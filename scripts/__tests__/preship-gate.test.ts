@@ -68,7 +68,15 @@ function makeGate(over: Record<string, unknown> = {}, deps: Record<string, unkno
     deps: {
       writeGateState: rec('writeGateState', () => {}),
       killTree: rec('killTree', () => {}),
-      ancestorsOf: rec('ancestorsOf', () => [11, 12]),
+      watchTargets: rec('watchTargets', () => ({
+        pids: [11, 12],
+        chain: [
+          { pid: 11, name: 'sh.exe' },
+          { pid: 12, name: 'git.exe' },
+        ],
+        push: null,
+        how: 'parent walk reached git',
+      })),
       installExitHandlers: rec('installExitHandlers', () => () => {}),
       spawn: rec('spawn', () => fakeChild()),
       unlink: rec('unlink', () => {}),
@@ -95,7 +103,7 @@ describe('gate.ensureWatchdog', () => {
     gate.ensureWatchdog();
     gate.ensureWatchdog();
     expect(calls.spawn).toHaveLength(1);
-    expect(calls.ancestorsOf).toEqual([[777]]);
+    expect(calls.watchTargets).toEqual([[777, '/work/intelliflow-wt']]);
     const [exe, args, opts] = calls.spawn[0] as [string, string[], any];
     expect(exe).toBe('/bin/node');
     expect(args).toEqual(['/scripts/preship-watchdog.mjs', '777', '/state/gate-777.json', '11,12']);
@@ -107,12 +115,27 @@ describe('gate.ensureWatchdog', () => {
     });
   });
 
+  it('records what it watches, and how the push was found, in the state file', () => {
+    const { gate, calls } = makeGate();
+    gate.ensureWatchdog();
+    const last = calls.writeGateState.at(-1)![0] as { watch: unknown };
+    expect(last.watch).toEqual({
+      pids: [11, 12],
+      how: 'parent walk reached git',
+      chain: ['11|sh.exe', '12|git.exe'],
+    });
+  });
+
   it('by default the watchdog runs in os.tmpdir(), never in the repo', () => {
     const spawnFn = vi.fn(() => fakeChild());
     const gate = createGate({
       repoRoot: process.cwd(),
       gatePid: 777,
-      deps: { spawn: spawnFn, ancestorsOf: () => [], writeGateState: () => {} },
+      deps: {
+        spawn: spawnFn,
+        watchTargets: () => ({ pids: [], chain: [], push: null, how: 'none' }),
+        writeGateState: () => {},
+      },
     });
     gate.ensureWatchdog();
     const opts = spawnFn.mock.calls[0][2] as { cwd: string };

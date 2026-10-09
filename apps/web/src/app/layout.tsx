@@ -103,7 +103,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   const cookiePolicyVersion = getPrivacyPolicy().metadata.version;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    // Inter's variable goes on <html>, not <body>: globals.css's `@theme inline`
+    // puts var(--font-inter) straight into Tailwind's base `html { font-family }`,
+    // which is resolved on <html>. Defined only on <body>, it was unset there, so
+    // the whole app fell back to the system font (DejaVu Sans on Linux).
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <link
           rel="preload"
@@ -119,7 +123,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <style>{'.material-symbols-outlined{visibility:inherit}'}</style>
         </noscript>
       </head>
-      <body className={inter.variable}>
+      <body>
         {process.env.NEXT_PUBLIC_GTM_ID && (
           <GoogleTagManager gtmId={process.env.NEXT_PUBLIC_GTM_ID} />
         )}

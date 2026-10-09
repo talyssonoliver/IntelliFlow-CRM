@@ -21,7 +21,8 @@ export interface CaseListItem {
   clientId: string;
   assignedTo: string;
   client: { id: string; name: string };
-  assignee: { id: string; name: string; email: string; avatarUrl: string | null };
+  /** `name` is null for a user without a display name (User.name is optional). */
+  assignee: { id: string; name: string | null; email: string; avatarUrl: string | null };
   tasks: CaseTaskItem[];
   taskProgress: number;
   pendingTaskCount: number;

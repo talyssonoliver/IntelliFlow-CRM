@@ -4,8 +4,11 @@
  * Code tasks need the four the repo makes non-negotiable: TypeScript, Tests,
  * Lint, Build, each recorded as a passing run. A task whose deliverables are
  * only Terraform, workflow YAML or docs has no TypeScript to check or build,
- * so it needs two passing checks of its own kind instead (for Terraform:
- * `terraform validate` and `terraform fmt -check`). Owner ruling 2026-10-07.
+ * so it needs two passing checks of its own kind instead. Owner ruling 2026-10-07.
+ * "Its own kind" follows the deliverables: a task that delivers Terraform needs
+ * two distinct terraform checks (validate, fmt, plan), because lint + tests
+ * prove nothing about a .tf file. Other non-code deliverables (workflow YAML,
+ * docs, data) take any two distinct non-code kinds.
  *
  * Checks are counted by kind, never by number of entries, and only when they
  * passed: two unrelated or failed records clear nothing.
@@ -16,6 +19,12 @@ const SOURCE_EXTENSION = /\.(ts|tsx|js|jsx|mjs|cjs|py|prisma|sql)$/i;
 const CODE_ROOTS = /^(apps|packages|src|tests|tools|scripts)\//;
 // References to the task's own evidence files say nothing about what kind of work it was.
 const EVIDENCE_ROOT = /^\.specify\//;
+const TERRAFORM_PATH = /\.(tf|tfvars|hcl)$|(^|\/)terraform\//i;
+
+/** Forward slashes and no leading ./, the form every path test here expects. */
+function normalise(p: string): string {
+  return p.replace(/\\/g, '/').replace(/^\.\//, '');
+}
 
 /** The paths in an "Artifacts To Track" cell, prefixes such as ARTIFACT: removed. */
 function trackedPaths(artifactsStr: string): string[] {
@@ -27,17 +36,23 @@ function trackedPaths(artifactsStr: string): string[] {
         .replace(/^[A-Z][A-Z_]*:/, '')
         .trim()
     )
-    .filter((p) => p.includes('/') || p.includes('.'));
+    .filter((p) => p.includes('/') || p.includes('.'))
+    .map(normalise);
+}
+
+/** The tracked paths that are the work itself, not the task's own evidence files. */
+function deliverablesOf(artifactsStr: string): string[] {
+  return trackedPaths(artifactsStr).filter((p) => !EVIDENCE_ROOT.test(p));
 }
 
 export function isCodePath(p: string): boolean {
-  const path = p.replace(/\\/g, '/').replace(/^\.\//, '');
+  const path = normalise(p);
   return CODE_ROOTS.test(path) || SOURCE_EXTENSION.test(path);
 }
 
 /** Non-code only when the task tracks real deliverables and none of them is code. */
 export function isNonCodeTask(artifactsStr: string): boolean {
-  const deliverables = trackedPaths(artifactsStr).filter((p) => !EVIDENCE_ROOT.test(p));
+  const deliverables = deliverablesOf(artifactsStr);
   return deliverables.length > 0 && !deliverables.some(isCodePath);
 }
 
@@ -62,10 +77,14 @@ const CODE_KINDS: Array<[string, RegExp]> = [
   ['Tests', /\btests?\b|vitest|jest|pytest/i],
 ];
 
-const NON_CODE_KINDS: Array<[string, RegExp]> = [
+const TERRAFORM_KINDS: Array<[string, RegExp]> = [
   ['terraform validate', /terraform[ _-]?validate/i],
   ['terraform fmt', /terraform[ _-]?fmt|fmt -check/i],
   ['terraform plan', /terraform[ _-]?plan/i],
+];
+
+const NON_CODE_KINDS: Array<[string, RegExp]> = [
+  ...TERRAFORM_KINDS,
   ['format', /prettier|format/i],
   ['lint', /lint/i],
   ['tests', /\btests?\b|vitest|jest|pytest/i],
@@ -87,15 +106,19 @@ export function evaluateValidations(
 ): { ok: boolean; issue: string | null } {
   const passing = records.filter(didPass);
   if (isNonCodeTask(artifactsStr)) {
+    const terraform = deliverablesOf(artifactsStr).some((p) => TERRAFORM_PATH.test(p));
     const kinds = new Set(
-      passing.map((v) => kindOf(v, NON_CODE_KINDS)).filter((k): k is string => k !== null)
+      passing
+        .map((v) => kindOf(v, terraform ? TERRAFORM_KINDS : NON_CODE_KINDS))
+        .filter((k): k is string => k !== null)
     );
-    return kinds.size >= 2
-      ? { ok: true, issue: null }
-      : {
-          ok: false,
-          issue: `Only ${kinds.size}/2 passing checks of its own kind (non-code task: e.g. terraform validate + fmt)`,
-        };
+    if (kinds.size >= 2) return { ok: true, issue: null };
+    return {
+      ok: false,
+      issue: terraform
+        ? `Only ${kinds.size}/2 passing terraform checks (Terraform deliverable: validate, fmt, plan)`
+        : `Only ${kinds.size}/2 passing checks of its own kind (non-code task: e.g. prettier + schema)`,
+    };
   }
   const kinds = new Set(passing.map((v) => kindOf(v, CODE_KINDS)));
   const missing = CODE_KINDS.map(([k]) => k).filter((k) => !kinds.has(k));
