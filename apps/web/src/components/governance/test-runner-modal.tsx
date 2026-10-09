@@ -268,24 +268,32 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
   }, [scope, withCoverage, isComplete, handleProgressEvent]);
 
   const handleCancel = useCallback(async () => {
-    if (runId) {
-      try {
+    try {
+      if (runId) {
         await fetch(`/api/quality-reports/test-run/${runId}`, { method: 'DELETE' });
-      } catch (e) {
-        console.error('Failed to cancel test run:', e);
       }
+    } finally {
+      // Always stop the local stream, even when the server-side cancel failed
+      eventSourceRef.current?.close();
+      setIsRunning(false);
+      setLogs((prev) => [...prev, { type: 'info', text: 'Test run cancelled' }]);
     }
-    eventSourceRef.current?.close();
-    setIsRunning(false);
-    setLogs((prev) => [...prev, { type: 'info', text: 'Test run cancelled' }]);
   }, [runId]);
+
+  // Call-site wrapper: a failed server-side cancel is logged and shown to the user
+  const cancelRun = useCallback(() => {
+    handleCancel().catch((e) => {
+      console.error('Failed to cancel test run:', e);
+      setError('Failed to cancel test run on the server');
+    });
+  }, [handleCancel]);
 
   const handleClose = useCallback(() => {
     if (isRunning) {
-      handleCancel();
+      cancelRun();
     }
     onClose();
-  }, [isRunning, handleCancel, onClose]);
+  }, [isRunning, cancelRun, onClose]);
 
   if (!isOpen) return null;
 
@@ -457,7 +465,7 @@ export function TestRunnerModal({ isOpen, onClose, onComplete }: Readonly<TestRu
             {/* Actions */}
             <div className="flex justify-end gap-3 mt-4">
               {isRunning ? (
-                <Button variant="destructive" onClick={handleCancel}>
+                <Button variant="destructive" onClick={cancelRun}>
                   Cancel Test Run
                 </Button>
               ) : (

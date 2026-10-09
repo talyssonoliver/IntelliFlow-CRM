@@ -34,7 +34,7 @@ export function useActivityComments(activityIds: string[], activitySource: strin
   const addCommentMutation = api.activityFeed.addComment.useMutation({
     onSuccess: () => {
       toast({ title: 'Reply added', description: 'Your reply has been posted.' });
-      utils.activityFeed.getComments.invalidate();
+      return utils.activityFeed.getComments.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Reply failed', description: err.message, variant: 'destructive' });

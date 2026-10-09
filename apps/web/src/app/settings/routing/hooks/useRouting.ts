@@ -55,8 +55,8 @@ export function useRouting(options: UseRoutingOptions = {}) {
 
   const createRule = api.routing.create.useMutation({
     onSuccess: () => {
-      utils.routing.list.invalidate();
       toast({ title: 'Rule created', description: 'Routing rule created successfully.' });
+      return utils.routing.list.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -65,8 +65,8 @@ export function useRouting(options: UseRoutingOptions = {}) {
 
   const updateRule = api.routing.update.useMutation({
     onSuccess: () => {
-      utils.routing.list.invalidate();
       toast({ title: 'Rule updated', description: 'Routing rule updated successfully.' });
+      return utils.routing.list.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -75,8 +75,8 @@ export function useRouting(options: UseRoutingOptions = {}) {
 
   const deleteRule = api.routing.delete.useMutation({
     onSuccess: () => {
-      utils.routing.list.invalidate();
       toast({ title: 'Rule deleted', description: 'Routing rule deleted.' });
+      return utils.routing.list.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -84,18 +84,14 @@ export function useRouting(options: UseRoutingOptions = {}) {
   });
 
   const reorderRules = api.routing.reorder.useMutation({
-    onSuccess: () => {
-      utils.routing.list.invalidate();
-    },
+    onSuccess: () => utils.routing.list.invalidate(),
     onError: (err) => {
       toast({ title: 'Reorder failed', description: err.message, variant: 'destructive' });
     },
   });
 
   const toggleRule = api.routing.toggle.useMutation({
-    onSuccess: () => {
-      utils.routing.list.invalidate();
-    },
+    onSuccess: () => utils.routing.list.invalidate(),
     onError: (err) => {
       toast({ title: 'Toggle failed', description: err.message, variant: 'destructive' });
     },
@@ -103,10 +99,12 @@ export function useRouting(options: UseRoutingOptions = {}) {
 
   const assignLead = api.routing.assignLead.useMutation({
     onSuccess: () => {
-      utils.routing.getAssignments.invalidate();
-      utils.routing.getLeadQueue.invalidate();
-      utils.routing.getAgentWorkload.invalidate();
       toast({ title: 'Lead assigned', description: 'Lead has been assigned successfully.' });
+      return Promise.all([
+        utils.routing.getAssignments.invalidate(),
+        utils.routing.getLeadQueue.invalidate(),
+        utils.routing.getAgentWorkload.invalidate(),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Assignment failed', description: err.message, variant: 'destructive' });

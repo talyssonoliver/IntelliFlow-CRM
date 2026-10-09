@@ -52,7 +52,7 @@ vi.mock('@intelliflow/ui', async () => {
 });
 
 let mutateFn: ReturnType<typeof vi.fn>;
-let mutationOpts: { onSuccess?: () => void; onError?: (err: { message: string }) => void };
+let mutationOpts: { onSuccess?: () => unknown; onError?: (err: { message: string }) => void };
 let isPendingValue = false;
 
 const mockInvalidateContacts = vi.fn();
@@ -63,7 +63,7 @@ vi.mock('@/lib/api', () => ({
     contact: {
       create: {
         useMutation: (opts: {
-          onSuccess?: () => void;
+          onSuccess?: () => unknown;
           onError?: (err: { message: string }) => void;
         }) => {
           mutationOpts = opts;
@@ -246,6 +246,26 @@ describe('ContactAddSheet', () => {
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Contact created' }));
     expect(defaultProps.onOpenChange).toHaveBeenCalledWith(false);
     expect(defaultProps.onSuccess).toHaveBeenCalled();
+  });
+
+  it('on success: returns the invalidation promise so the mutation waits for fresh data', async () => {
+    render(<ContactAddSheet {...defaultProps} />);
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    mockInvalidateContacts.mockReturnValueOnce(gate);
+
+    const returned = mutationOpts.onSuccess!();
+    let settled = false;
+    Promise.resolve(returned).then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    release();
+    await returned;
+    expect(settled).toBe(true);
   });
 
   it('on error: shows destructive toast, sheet stays open', () => {

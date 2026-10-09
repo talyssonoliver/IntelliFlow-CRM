@@ -82,13 +82,13 @@ export default function QualityReportDetailClient() {
         if (result.success) {
           setReport(result.data);
         }
-      } catch (error) {
-        console.error('Failed to fetch report:', error);
       } finally {
         setLoading(false);
       }
     }
-    fetchReport();
+    fetchReport().catch((error) => {
+      console.error('Failed to fetch report:', error);
+    });
   }, [reportId]);
 
   const config = reportConfigs[reportId] || reportConfigs.lighthouse;

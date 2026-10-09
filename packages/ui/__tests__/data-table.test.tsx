@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import * as React from 'react';
-import { render, screen, within, fireEvent } from '@testing-library/react';
+import { render, screen, within, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DataTable, TableRowActions } from '../src/components/data-table';
 import { ColumnDef } from '@tanstack/react-table';
@@ -769,6 +769,28 @@ describe('DataTable additional features', () => {
       await user.click(screen.getByTestId('select-row-0'));
       await user.click(screen.getByRole('button', { name: 'Archive' }));
       expect(onClick).toHaveBeenCalledWith([testData[0]]);
+    });
+
+    it('logs instead of leaving an unhandled rejection when an async bulk action rejects', async () => {
+      const failure = new Error('bulk failed');
+      const onClick = vi.fn().mockRejectedValue(failure);
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const user = userEvent.setup();
+      render(
+        <DataTable
+          columns={selectableColumns}
+          data={createTestData(3)}
+          enableRowSelection
+          bulkActions={[{ label: 'Archive', onClick }]}
+        />
+      );
+
+      await user.click(screen.getByTestId('select-row-0'));
+      await user.click(screen.getByRole('button', { name: 'Archive' }));
+      await waitFor(() =>
+        expect(errorSpy).toHaveBeenCalledWith('[DataTable] Bulk action failed:', failure)
+      );
+      errorSpy.mockRestore();
     });
 
     it('calls bulk action onExecute when clicked (legacy handler)', async () => {

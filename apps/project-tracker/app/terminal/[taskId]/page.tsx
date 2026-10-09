@@ -15,20 +15,22 @@ export default function TerminalPage({
 
   useEffect(() => {
     const fetchOutput = async () => {
-      try {
-        const response = await fetch(`/api/swarm/terminal/${taskId}`);
-        if (response.ok) {
-          const data = await response.json();
-          setOutput(data.recentOutput || data.fullLog || '');
-          setIsWaitingForInput(data.waitingForInput || false);
-        }
-      } catch (error) {
-        console.error('Failed to fetch terminal output:', error);
+      const response = await fetch(`/api/swarm/terminal/${taskId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setOutput(data.recentOutput || data.fullLog || '');
+        setIsWaitingForInput(data.waitingForInput || false);
       }
     };
 
-    fetchOutput();
-    const interval = setInterval(fetchOutput, 2000);
+    const pollOutput = () => {
+      fetchOutput().catch((error: unknown) => {
+        console.error('Failed to fetch terminal output:', error);
+      });
+    };
+
+    pollOutput();
+    const interval = setInterval(pollOutput, 2000);
 
     return () => clearInterval(interval);
   }, [taskId]);
@@ -57,6 +59,9 @@ export default function TerminalPage({
             .then((data) => {
               setOutput(data.recentOutput || data.fullLog || '');
               setIsWaitingForInput(data.waitingForInput || false);
+            })
+            .catch((error) => {
+              console.error('Failed to refresh terminal output:', error);
             });
         }, 1000);
       } else {
@@ -70,8 +75,9 @@ export default function TerminalPage({
     }
   };
 
-  const handleQuickAction = (action: string) => {
-    handleSendInput(action);
+  // handleSendInput reports its own failures (console + alert), so awaiting it is enough.
+  const handleQuickAction = async (action: string) => {
+    await handleSendInput(action);
   };
 
   return (
@@ -168,10 +174,10 @@ export default function TerminalPage({
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
+              onKeyDown={async (e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  handleSendInput(input);
+                  await handleSendInput(input);
                 }
               }}
               placeholder="Type your response or command..."

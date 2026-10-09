@@ -226,7 +226,9 @@ describe('CsvImporter', () => {
   });
 
   it('still shows the result when cache revalidation fails after import', async () => {
-    vi.mocked(revalidateLeadCaches).mockRejectedValueOnce(new Error('cache down'));
+    const consoleWarn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const failure = new Error('cache down');
+    vi.mocked(revalidateLeadCaches).mockRejectedValueOnce(failure);
     render(<CsvImporter />);
     await uploadFile(makeFile('email,first\na@x.com,Ann'));
     await waitFor(() => expect(screen.getByText('Map columns to lead fields')).toBeTruthy());
@@ -235,6 +237,11 @@ describe('CsvImporter', () => {
     // it still reaches the result step (the lead was created).
     await waitFor(() => expect(screen.getByText('Import complete')).toBeTruthy());
     expect(mockMutateAsync).toHaveBeenCalledTimes(1);
+    expect(consoleWarn).toHaveBeenCalledWith(
+      '[CsvImporter] Lead cache refresh failed after import:',
+      failure
+    );
+    consoleWarn.mockRestore();
   });
 
   it('still revalidates per-user caches when invalidateLeadsCache rejects, and logs it', async () => {

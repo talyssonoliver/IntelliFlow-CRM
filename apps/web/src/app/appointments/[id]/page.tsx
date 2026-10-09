@@ -15,7 +15,7 @@ import type { AppointmentDetailData } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
-import { revalidateCalendar } from '@/app/calendar/actions';
+import { revalidateCalendarCache } from '@/lib/calendar/revalidate-calendar-cache';
 import {
   getTypeConfig,
   formatTimeRange,
@@ -36,10 +36,12 @@ export default function AppointmentDetailPage() {
   });
 
   const invalidateAll = useCallback(() => {
-    utils.appointments.getById.invalidate({ id: appointmentId });
-    utils.appointments.list.invalidate();
-    utils.appointments.stats.invalidate();
-    if (user?.id) revalidateCalendar(user.id).catch(() => {});
+    return Promise.all([
+      utils.appointments.getById.invalidate({ id: appointmentId }),
+      utils.appointments.list.invalidate(),
+      utils.appointments.stats.invalidate(),
+      user?.id ? revalidateCalendarCache(user.id) : undefined,
+    ]);
   }, [utils, appointmentId, user]);
 
   const confirmMutation = api.appointments.confirm.useMutation({ onSuccess: invalidateAll });

@@ -325,7 +325,7 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
     return String(sprint);
   };
 
-  const fetchMetrics = async () => {
+  const loadMetrics = async () => {
     setLoading(true);
     setError(null);
     try {
@@ -336,11 +336,16 @@ export default function ExecutiveSummary({ sprint = 'all' }: ExecutiveSummaryPro
       }
       const data = await response.json();
       setMetrics(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fire-and-forget trigger (mount + poll): a failed load surfaces as the error state.
+  const fetchMetrics = (): void => {
+    loadMetrics().catch((err: unknown) => {
+      setError(err instanceof Error ? err.message : 'Unknown error');
+    });
   };
 
   useEffect(() => {

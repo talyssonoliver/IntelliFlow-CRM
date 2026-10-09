@@ -529,13 +529,17 @@ export function createApiServer(options: ApiServerOptions = {}): http.Server {
   return http.createServer((req, res) => {
     const requestContext = initializeRequestContext(req.headers);
 
-    void runWithContext(requestContext, async () => {
+    runWithContext(requestContext, async () => {
       try {
         await handleRequest(req, res, router, createContextFn);
       } catch (error) {
         console.error('[API] HTTP request failed:', error);
         sendInternalError(res, error, (req.method?.toUpperCase() ?? 'GET') === 'HEAD');
       }
+    }).catch((error: unknown) => {
+      // The 500 responder itself threw (e.g. headers already sent): nothing more can be
+      // written to the client, so surface it in the server log rather than crash the process.
+      console.error('[API] HTTP error responder failed:', error);
     });
   });
 }

@@ -172,7 +172,7 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
     setHistoryStats(null);
   }, [targetSprint]);
 
-  const fetchPhases = useCallback(async () => {
+  const loadPhases = useCallback(async () => {
     setLoading(true);
     try {
       const response = await fetch(`/api/sprint/phases?sprint=${targetSprint}`);
@@ -185,29 +185,37 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
       } else {
         setError('Failed to load phases');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch phases');
     } finally {
       setLoading(false);
     }
   }, [targetSprint]);
 
-  const fetchStatus = useCallback(async () => {
+  // Fire-and-forget trigger: a failed load surfaces as the view's error, at the call site.
+  const fetchPhases = useCallback((): void => {
+    loadPhases().catch((err: unknown) => {
+      setError(err instanceof Error ? err.message : 'Failed to fetch phases');
+    });
+  }, [loadPhases]);
+
+  const loadStatus = useCallback(async () => {
     if (!executionState?.runId) return;
 
-    try {
-      const response = await fetch(`/api/sprint/status?runId=${executionState.runId}`);
-      const data = await response.json();
+    const response = await fetch(`/api/sprint/status?runId=${executionState.runId}`);
+    const data = await response.json();
 
-      if (data.success && data.state) {
-        setExecutionState(data.state);
-      }
-    } catch (err) {
-      console.error('Failed to fetch status:', err);
+    if (data.success && data.state) {
+      setExecutionState(data.state);
     }
   }, [executionState?.runId]);
 
-  const fetchHistory = useCallback(async () => {
+  // Fire-and-forget trigger (SSE progress + polling fallback): failures are logged here.
+  const fetchStatus = useCallback((): void => {
+    loadStatus().catch((err: unknown) => {
+      console.error('Failed to fetch status:', err);
+    });
+  }, [loadStatus]);
+
+  const loadHistory = useCallback(async () => {
     setHistoryLoading(true);
     try {
       // Fetch runs and stats in parallel
@@ -226,12 +234,17 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
       if (statsData.success && statsData.stats) {
         setHistoryStats(statsData.stats);
       }
-    } catch (err) {
-      console.error('Failed to fetch history:', err);
     } finally {
       setHistoryLoading(false);
     }
   }, [targetSprint]);
+
+  // Fire-and-forget trigger: a failed load is logged here, at the call site.
+  const fetchHistory = useCallback((): void => {
+    loadHistory().catch((err: unknown) => {
+      console.error('Failed to fetch history:', err);
+    });
+  }, [loadHistory]);
 
   useEffect(() => {
     fetchPhases();
@@ -656,8 +669,8 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
                   </span>
 
                   <button
-                    onClick={() => {
-                      generateTaskPrompt(
+                    onClick={async () => {
+                      await generateTaskPrompt(
                         phase.tasks.map((t) => t.taskId),
                         `Phase ${phase.phaseNumber}`
                       );
@@ -745,9 +758,9 @@ export default function SprintExecutionView({ sprintNumber }: Readonly<SprintExe
                           </button>
 
                           <button
-                            onClick={(e) => {
+                            onClick={async (e) => {
                               e.stopPropagation();
-                              generateTaskPrompt([task.taskId], task.taskId);
+                              await generateTaskPrompt([task.taskId], task.taskId);
                             }}
                             className="px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 rounded"
                             disabled={promptLoading}

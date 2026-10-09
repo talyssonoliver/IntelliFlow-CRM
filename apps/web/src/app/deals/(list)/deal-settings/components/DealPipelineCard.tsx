@@ -28,8 +28,8 @@ export function DealPipelineCard() {
   });
   const resetMutation = trpc.dealSettings.pipeline.resetToDefaults.useMutation({
     onSuccess: () => {
-      utils.dealSettings.pipeline.getAll.invalidate();
       toast({ title: 'Pipeline reset', description: 'Stages restored to defaults.' });
+      return utils.dealSettings.pipeline.getAll.invalidate();
     },
   });
 

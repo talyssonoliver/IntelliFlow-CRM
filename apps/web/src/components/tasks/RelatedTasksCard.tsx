@@ -72,12 +72,14 @@ export function RelatedTasksCard({
   const utils = api.useUtils();
   const completeMutation = api.task.complete.useMutation({
     onSuccess: () => {
-      utils.task.getByEntity.invalidate({
-        entityType: queryEntityType as 'lead' | 'contact' | 'opportunity',
-        entityId,
-      });
-      utils.task.list.invalidate();
       toast({ title: 'Task completed' });
+      return Promise.all([
+        utils.task.getByEntity.invalidate({
+          entityType: queryEntityType as 'lead' | 'contact' | 'opportunity',
+          entityId,
+        }),
+        utils.task.list.invalidate(),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Failed to complete task', description: err.message, variant: 'destructive' });
@@ -205,12 +207,20 @@ export function RelatedTasksCard({
         onOpenChange={setCreateOpen}
         defaultEntityType={entityType}
         defaultEntityId={entityId}
-        onSuccess={() => {
-          utils.task.getByEntity.invalidate({
-            entityType: queryEntityType as 'lead' | 'contact' | 'opportunity',
-            entityId,
-          });
-        }}
+        onSuccess={() =>
+          utils.task.getByEntity
+            .invalidate({
+              entityType: queryEntityType as 'lead' | 'contact' | 'opportunity',
+              entityId,
+            })
+            .catch((err: unknown) => {
+              toast({
+                title: 'Failed to refresh tasks',
+                description: err instanceof Error ? err.message : 'Please reload the page.',
+                variant: 'destructive',
+              });
+            })
+        }
       />
     </>
   );

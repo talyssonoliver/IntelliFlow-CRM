@@ -173,16 +173,26 @@ jobs:
       - name: Redeploy on Railway and confirm the API restarted
         if: ${{ !inputs.dry_run && inputs.redeploy != '' }}
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          # The secret is an account/workspace token (Terraform's Railway
+          # provider needs that kind). The CLI reads such tokens only from
+          # RAILWAY_API_TOKEN; under RAILWAY_TOKEN it expects a project token
+          # and fails with "Invalid RAILWAY_TOKEN". An account token is not
+          # scoped to a project, so the project and environment are named.
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}
           API_URL: ${{ vars.PRODUCTION_API_URL }}
         run: |
           set -euo pipefail
+          [ -n "$RAILWAY_PROJECT_ID" ] || { echo "::error::repo variable RAILWAY_PROJECT_ID is not set"; exit 1; }
           uptime() { curl -fsS --max-time 15 "$API_URL/api/health/live" | jq -r '.uptime // empty'; }
           before="$(uptime || true)"
           started="$(date +%s)"
           for svc in $REDEPLOY; do
-            echo "railway redeploy --service $svc"
-            npx -y @railway/cli@4 redeploy --service "$svc" --yes
+            # --from-source pulls the image the tag points at now. Without it,
+            # redeploy restarts the previous deployment's pinned digest.
+            echo "railway redeploy --service $svc --from-source"
+            npx -y @railway/cli@4 redeploy --service "$svc" \
+              --project "$RAILWAY_PROJECT_ID" --environment production --from-source --yes
           done
           if [[ " $REDEPLOY " != *" api "* || -z "$API_URL" ]]; then
             echo "API not in the redeploy list (or no PRODUCTION_API_URL); restart not verified." | tee -a "$GITHUB_STEP_SUMMARY"

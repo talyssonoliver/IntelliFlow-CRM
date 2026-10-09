@@ -558,21 +558,30 @@ export default function AccountSettingsContent() {
   if (isLoading) return <AccountSettingsLoading />;
 
   if (error) {
+    const handleRetry = () => {
+      // Typed as thunks returning Promise<unknown> so the seven differently-typed tRPC
+      // query results are not unioned into one (excessively deep) type.
+      const refetchers: Array<() => Promise<unknown>> = [
+        () => hierarchyQuery.refetch(),
+        () => industryQuery.refetch(),
+        () => customFieldsQuery.refetch(),
+        () => duplicateRulesQuery.refetch(),
+        () => requiredFieldsQuery.refetch(),
+        () => tagsQuery.refetch(),
+        () => automationQuery.refetch(),
+      ];
+      Promise.all(refetchers.map((refetch) => refetch())).catch((err: unknown) => {
+        toast({
+          title: 'Could not reload settings',
+          description: err instanceof Error ? err.message : 'Unknown error',
+          variant: 'destructive',
+        });
+      });
+    };
     return (
       <div className="w-full text-center py-12">
         <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
-        <button
-          onClick={() => {
-            hierarchyQuery.refetch();
-            industryQuery.refetch();
-            customFieldsQuery.refetch();
-            duplicateRulesQuery.refetch();
-            requiredFieldsQuery.refetch();
-            tagsQuery.refetch();
-            automationQuery.refetch();
-          }}
-          className="text-sm text-primary hover:underline"
-        >
+        <button onClick={handleRetry} className="text-sm text-primary hover:underline">
           Retry
         </button>
       </div>

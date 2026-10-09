@@ -43,15 +43,13 @@ export default function ContinuousTaskHealth() {
         setData(json.metrics.cadenceFreshness);
       }
       setError(null);
-    } catch (e) {
-      setError(String(e));
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchData();
+    fetchData().catch((e: unknown) => setError(String(e)));
   }, [fetchData]);
 
   if (loading) {

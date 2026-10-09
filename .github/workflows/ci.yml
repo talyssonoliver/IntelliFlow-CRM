@@ -115,6 +115,12 @@ jobs:
             pnpm run lint
           fi
 
+      # Type-aware no-floating-promises (SonarCloud typescript:S9383 parity).
+      # Separate from `lint` because it builds the TypeScript program; pre-ship
+      # runs the same script as the `lint-promises` step.
+      - name: Lint (floating promises, type-aware)
+        run: pnpm run lint:promises
+
       - name: Format check
         run: |
           if [ "$SCOPE_MODE" = "affected" ] || [ "$SCOPE_MODE" = "none" ]; then

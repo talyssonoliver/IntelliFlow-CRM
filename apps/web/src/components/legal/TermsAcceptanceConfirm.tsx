@@ -35,8 +35,8 @@ export function TermsAcceptanceConfirm({ termsVersion }: TermsAcceptanceConfirmP
     onSuccess: () => {
       // Invalidate the cached getAcceptance result so re-navigation within the
       // React Query staleTime window does not re-show the confirmation (AC-009).
-      void utils.termsAcceptance.getAcceptance.invalidate({ termsVersion });
       setLocallyAccepted(true);
+      return utils.termsAcceptance.getAcceptance.invalidate({ termsVersion });
     },
   });
 

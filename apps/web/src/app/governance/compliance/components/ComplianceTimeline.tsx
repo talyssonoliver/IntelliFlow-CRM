@@ -187,15 +187,15 @@ export function ComplianceTimeline() {
       if (result.success) {
         setData(result.data);
       }
-    } catch (error) {
-      console.error('Failed to fetch timeline:', error);
     } finally {
       setLoading(false);
     }
   }, [currentDate]);
 
   useEffect(() => {
-    fetchEvents();
+    fetchEvents().catch((error) => {
+      console.error('Failed to fetch timeline:', error);
+    });
   }, [fetchEvents]);
 
   const navigateMonth = (direction: number) => {

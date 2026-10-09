@@ -39,15 +39,11 @@ export function useEntityPin(options: UseEntityPinOptions): UseEntityPinReturn {
   }, [pinnedData, entityType, entityId]);
 
   const pinMutation = trpc.home.pinItem.useMutation({
-    onSuccess: () => {
-      utils.home.getPinnedItems.invalidate();
-    },
+    onSuccess: () => utils.home.getPinnedItems.invalidate(),
   });
 
   const unpinMutation = trpc.home.unpinItem.useMutation({
-    onSuccess: () => {
-      utils.home.getPinnedItems.invalidate();
-    },
+    onSuccess: () => utils.home.getPinnedItems.invalidate(),
   });
 
   const isMutating = pinMutation.isPending || unpinMutation.isPending;

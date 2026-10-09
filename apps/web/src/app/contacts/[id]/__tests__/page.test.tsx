@@ -4,7 +4,7 @@
 
 import * as React from 'react';
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 
 const mockUseSearchParams = vi.fn(() => new URLSearchParams('tab=ai-insights'));
 const mockUseActivityFeed = vi.fn(() => ({
@@ -19,6 +19,14 @@ const mockLogActivityMutate = vi.fn();
 const mockAddNoteMutate = vi.fn();
 const mockScoreWithAIMutate = vi.fn();
 let mockScoreWithAIIsPending = false;
+const mockRevalidateContactCaches = vi.fn();
+const mockGetByIdInvalidate = vi.fn();
+const mockUnifiedFeedInvalidate = vi.fn();
+const mockEntityFeedInvalidate = vi.fn();
+type MutationOpts = { onSuccess?: () => Promise<unknown> };
+let capturedLogActivityOpts: MutationOpts | undefined;
+let capturedAddNoteOpts: MutationOpts | undefined;
+let capturedScoreWithAIOpts: MutationOpts | undefined;
 
 const mockContactQueryState = {
   data: {
@@ -83,6 +91,10 @@ vi.mock('next/navigation', () => ({
   useSearchParams: () => mockUseSearchParams(),
 }));
 
+vi.mock('../../actions', () => ({
+  revalidateContactCaches: (...args: unknown[]) => mockRevalidateContactCaches(...args),
+}));
+
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({
     isLoading: false,
@@ -94,7 +106,11 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 vi.mock('@/lib/api', () => ({
   api: {
     useUtils: () => ({
-      contact: { getById: { invalidate: vi.fn() } },
+      contact: { getById: { invalidate: mockGetByIdInvalidate } },
+      activityFeed: {
+        getUnifiedFeed: { invalidate: mockUnifiedFeedInvalidate },
+        getEntityFeed: { invalidate: mockEntityFeedInvalidate },
+      },
     }),
     contact: {
       getById: {
@@ -105,23 +121,32 @@ vi.mock('@/lib/api', () => ({
         }),
       },
       logActivity: {
-        useMutation: () => ({
-          mutate: mockLogActivityMutate,
-          mutateAsync: mockLogActivityMutate,
-          isPending: false,
-        }),
+        useMutation: (opts?: MutationOpts) => {
+          capturedLogActivityOpts = opts;
+          return {
+            mutate: mockLogActivityMutate,
+            mutateAsync: mockLogActivityMutate,
+            isPending: false,
+          };
+        },
       },
       addNote: {
-        useMutation: () => ({
-          mutate: mockAddNoteMutate,
-          isPending: false,
-        }),
+        useMutation: (opts?: MutationOpts) => {
+          capturedAddNoteOpts = opts;
+          return {
+            mutate: mockAddNoteMutate,
+            isPending: false,
+          };
+        },
       },
       scoreWithAI: {
-        useMutation: () => ({
-          mutate: mockScoreWithAIMutate,
-          isPending: mockScoreWithAIIsPending,
-        }),
+        useMutation: (opts?: MutationOpts) => {
+          capturedScoreWithAIOpts = opts;
+          return {
+            mutate: mockScoreWithAIMutate,
+            isPending: mockScoreWithAIIsPending,
+          };
+        },
       },
     },
     home: {
@@ -901,5 +926,82 @@ describe('Contact360Page - tab content, states & addNote (IFC-265)', () => {
       contactId: 'contact-1',
       content: 'Followed up by email',
     });
+  });
+});
+
+describe('Contact360Page - mutation onSuccess cache refresh', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockContactQueryState.error = null;
+    mockContactQueryState.isLoading = false;
+    mockUseSearchParams.mockReturnValue(new URLSearchParams());
+    mockUseActivityFeed.mockReturnValue({ items: [], isLoading: false });
+    mockRevalidateContactCaches.mockResolvedValue(undefined);
+    mockGetByIdInvalidate.mockResolvedValue(undefined);
+    mockUnifiedFeedInvalidate.mockResolvedValue(undefined);
+    mockEntityFeedInvalidate.mockResolvedValue(undefined);
+  });
+
+  it('logActivity onSuccess toasts, then refreshes the contact, feeds and server caches', async () => {
+    render(<Contact360Page />);
+    await act(async () => {
+      await capturedLogActivityOpts!.onSuccess!();
+    });
+    expect(mockRevalidateContactCaches).toHaveBeenCalledWith('user-1');
+    expect(mockGetByIdInvalidate).toHaveBeenCalledWith({ id: 'contact-1' });
+    expect(mockUnifiedFeedInvalidate).toHaveBeenCalled();
+    expect(mockEntityFeedInvalidate).toHaveBeenCalled();
+  });
+
+  it('logActivity onSuccess waits for the invalidations to finish', async () => {
+    let finish: () => void = () => undefined;
+    mockGetByIdInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+    render(<Contact360Page />);
+    let settled = false;
+    const pending = capturedLogActivityOpts!.onSuccess!().then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    finish();
+    await act(async () => {
+      await pending;
+    });
+    expect(settled).toBe(true);
+  });
+
+  it('logs, and does not fail the mutation, when server cache revalidation rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const boom = new Error('revalidate failed');
+    mockRevalidateContactCaches.mockRejectedValueOnce(boom);
+    render(<Contact360Page />);
+    await act(async () => {
+      await expect(capturedLogActivityOpts!.onSuccess!()).resolves.toBeDefined();
+    });
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[ContactDetail] Failed to revalidate contact caches:',
+      boom
+    );
+    errorSpy.mockRestore();
+  });
+
+  it('addNote onSuccess refreshes the contact and both activity feeds', async () => {
+    render(<Contact360Page />);
+    await act(async () => {
+      await capturedAddNoteOpts!.onSuccess!();
+    });
+    expect(mockGetByIdInvalidate).toHaveBeenCalledWith({ id: 'contact-1' });
+    expect(mockUnifiedFeedInvalidate).toHaveBeenCalled();
+    expect(mockEntityFeedInvalidate).toHaveBeenCalled();
+    expect(mockRevalidateContactCaches).not.toHaveBeenCalled();
+  });
+
+  it('scoreWithAI onSuccess refreshes the contact and server caches', async () => {
+    render(<Contact360Page />);
+    await act(async () => {
+      await capturedScoreWithAIOpts!.onSuccess!();
+    });
+    expect(mockRevalidateContactCaches).toHaveBeenCalledWith('user-1');
+    expect(mockGetByIdInvalidate).toHaveBeenCalledWith({ id: 'contact-1' });
   });
 });

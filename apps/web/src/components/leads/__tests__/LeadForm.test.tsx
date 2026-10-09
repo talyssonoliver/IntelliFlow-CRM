@@ -281,6 +281,35 @@ describe('LeadForm', () => {
     expect(screen.queryByText(/auto-filled/i)).toBeNull();
   });
 
+  it('keeps the notice line in place before the notice arrives, so a click is not shifted', () => {
+    // The notice arrives on the email blur, i.e. on the mousedown of the next
+    // click. Mounting a new line above the fields then moved "Next Step" mid-click.
+    const props = {
+      mode: 'create' as const,
+      visibleSections: ['basic' as const],
+      values: makeValues(),
+      errors: {},
+      onChange: vi.fn(),
+      onSubmit: vi.fn((e: React.FormEvent) => e.preventDefault()),
+      onCancel: vi.fn(),
+      isSubmitting: false,
+    };
+    const { rerender } = render(<LeadForm {...props} enrichmentNotice="" />);
+    const slot = screen.getByTestId('lead-enrichment-notice');
+    expect(slot.className).toContain('min-h-5');
+    expect(slot.textContent).toBe('');
+
+    rerender(<LeadForm {...props} enrichmentNotice="Auto-filled company from the email domain." />);
+    // The same element, now filled: nothing was inserted above the form's controls.
+    expect(screen.getByTestId('lead-enrichment-notice')).toBe(slot);
+    expect(slot.textContent).toMatch(/auto-filled company/i);
+  });
+
+  it('has no notice line in edit mode', () => {
+    renderCreateForm({ mode: 'edit', enrichmentNotice: 'x' });
+    expect(screen.queryByTestId('lead-enrichment-notice')).toBeNull();
+  });
+
   // -------------------------------------------------------------------------
   // Aria + error rendering
   // -------------------------------------------------------------------------

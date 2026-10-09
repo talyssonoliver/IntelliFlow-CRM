@@ -10,7 +10,7 @@
  * @implements PG-172 (Billing Ghost Pages — Cancel)
  */
 
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createMockSubscription } from '@/test/fixtures/billing-data';
 
@@ -104,6 +104,7 @@ import { CancelFlow } from '../cancel-flow';
 describe('CancelFlow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRefetch.mockResolvedValue(undefined);
     mockCancelIsSuccess.value = false;
     mockGetSubscription.mockReturnValue({
       data: mockSubscription,
@@ -386,5 +387,37 @@ describe('CancelFlow', () => {
     // Click "Pause Subscription" in modal
     fireEvent.click(screen.getByRole('button', { name: /pause subscription/i }));
     expect(mockPauseMutate).toHaveBeenCalledWith({ durationMonths: 2 });
+  });
+
+  function openPauseModalAndPause() {
+    render(<CancelFlow />);
+    fireEvent.click(screen.getByText('Continue Cancellation'));
+    fireEvent.click(screen.getByDisplayValue('too_expensive'));
+    fireEvent.click(screen.getByText('Next Step'));
+    fireEvent.click(screen.getByRole('button', { name: /confirm cancellation/i }));
+    fireEvent.click(screen.getByRole('button', { name: /pause subscription/i }));
+  }
+
+  it('refreshes the subscription and shows the paused state after a successful pause', async () => {
+    openPauseModalAndPause();
+
+    expect(mockRefetch).toHaveBeenCalledTimes(1);
+    expect(await screen.findByText('Subscription Paused')).toBeInTheDocument();
+  });
+
+  it('logs the failure when refreshing the subscription after a pause rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('refetch failed');
+    mockRefetch.mockRejectedValue(failure);
+
+    openPauseModalAndPause();
+
+    await waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[CancelFlow] Failed to refresh subscription after pause:',
+        failure
+      )
+    );
+    errorSpy.mockRestore();
   });
 });

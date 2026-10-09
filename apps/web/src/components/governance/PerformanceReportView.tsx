@@ -139,7 +139,10 @@ function EndpointHealthCard({
   const allPass = failing === 0;
 
   return (
-    <Card className="p-4" role="region" aria-label="Endpoint health">
+    <section
+      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"
+      aria-label="Endpoint health"
+    >
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-base text-muted-foreground">api</span>
@@ -156,7 +159,7 @@ function EndpointHealthCard({
         aria-label={`${passing} of ${tested} endpoints passing`}
       />
       <p className="text-xs text-muted-foreground">{pct}% passing</p>
-    </Card>
+    </section>
   );
 }
 
@@ -170,7 +173,10 @@ function LoadTestCard({
   duration: string | null;
 }) {
   return (
-    <Card className="p-4" role="region" aria-label="Load test results">
+    <section
+      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"
+      aria-label="Load test results"
+    >
       <div className="flex items-center gap-2 mb-3">
         <span className="material-symbols-outlined text-base text-muted-foreground">groups</span>
         <h3 className="font-medium text-foreground">Load Test</h3>
@@ -183,7 +189,7 @@ function LoadTestCard({
           ? `${vus} virtual users, ${duration}`
           : 'No load test data'}
       </p>
-    </Card>
+    </section>
   );
 }
 
@@ -231,7 +237,10 @@ function EndpointDetailTable({
   const hasMore = sorted.length > 5;
 
   return (
-    <Card className="p-4 mb-6" role="region" aria-label="Per-endpoint performance detail">
+    <section
+      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+      aria-label="Per-endpoint performance detail"
+    >
       <div className="flex items-center justify-between mb-4">
         <div>
           <h3 className="font-semibold text-foreground">Endpoint Performance Detail</h3>
@@ -311,7 +320,7 @@ function EndpointDetailTable({
           </button>
         </p>
       )}
-    </Card>
+    </section>
   );
 }
 
@@ -378,13 +387,13 @@ export default function PerformanceReportView() {
         } else {
           setError('Failed to load report data');
         }
-      } catch {
-        setError('Failed to load performance report');
       } finally {
         setLoading(false);
       }
     }
-    fetchReport();
+    fetchReport().catch(() => {
+      setError('Failed to load performance report');
+    });
   }, []);
 
   const metrics = report?.details;
@@ -444,7 +453,10 @@ export default function PerformanceReportView() {
         <>
           {/* ── Section 1: Overall Health Banner ── */}
           {}
-          <Card className="p-4 mb-6" role="region" aria-label="Overall performance status">
+          <section
+            className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+            aria-label="Overall performance status"
+          >
             <div className="flex items-center gap-4">
               <div
                 className={`w-12 h-12 rounded-lg flex items-center justify-center ${
@@ -482,7 +494,7 @@ export default function PerformanceReportView() {
                 </div>
               )}
             </div>
-          </Card>
+          </section>
 
           {/* ── Section 2: Executive KPI Grid ── */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -517,7 +529,10 @@ export default function PerformanceReportView() {
 
           {/* ── Section 4: Detailed Metrics ── */}
           {}
-          <Card className="p-4 mb-6" role="region" aria-label="Detailed performance metrics">
+          <section
+            className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+            aria-label="Detailed performance metrics"
+          >
             <h3 className="font-semibold text-foreground mb-4">Response Time Breakdown</h3>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -582,7 +597,7 @@ export default function PerformanceReportView() {
                 </tbody>
               </table>
             </div>
-          </Card>
+          </section>
 
           {/* ── Section 5: Per-Endpoint Detail ── */}
           {metrics.endpoints && metrics.endpoints.length > 0 && (
@@ -598,7 +613,10 @@ export default function PerformanceReportView() {
 
           {/* ── Section 7: Test Configuration & Metadata ── */}
           {}
-          <Card className="p-4" role="region" aria-label="Test configuration">
+          <section
+            className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"
+            aria-label="Test configuration"
+          >
             <h3 className="font-semibold text-foreground mb-3">Test Configuration</h3>
             <div className="grid gap-x-8 gap-y-2 sm:grid-cols-2 text-sm">
               <div className="flex justify-between py-1.5 border-b border-border/30">
@@ -643,7 +661,7 @@ export default function PerformanceReportView() {
                 )}
               </div>
             </div>
-          </Card>
+          </section>
         </>
       )}
     </>

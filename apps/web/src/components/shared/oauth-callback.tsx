@@ -154,15 +154,16 @@ function dropAbandonedSession(
 ): void {
   if (abandonedAccessToken === preexistingAccessToken) return;
   if (isolated) {
-    void revokeSession(supabase, abandonedAccessToken);
+    revokeSession(supabase, abandonedAccessToken).catch(logRevokeFailure);
     return;
   }
   try {
     // Fire and forget: revocation touches neither the SDK's storage nor its events, so its
     // timing cannot affect any session signed in afterwards.
-    supabase.auth.admin.signOut(abandonedAccessToken, 'local').catch(() => undefined);
-  } catch {
+    supabase.auth.admin.signOut(abandonedAccessToken, 'local').catch(logRevokeFailure);
+  } catch (error) {
     // The local cleanup below still applies.
+    logRevokeFailure(error);
   }
   clearSupabaseLocalStorage();
   const current = getStoredAccessToken();
@@ -173,17 +174,25 @@ function dropAbandonedSession(
 }
 
 /**
+ * Revocation is best effort and must never block or fail the sign-in, but a failure is
+ * logged rather than dropped so a session left valid on the server leaves a trace.
+ */
+function logRevokeFailure(error: unknown): void {
+  console.warn('[OAuthCallback] Session revoke failed:', error);
+}
+
+/**
  * Revoke a session server-side without touching the SDK's storage or emitting SIGNED_OUT, so it
  * cannot disturb the session the app holds now. Fire and forget, like dropAbandonedSession.
  */
 function revokeSession(supabase: BrowserSupabase, accessToken: string): Promise<void> {
   try {
-    return supabase.auth.admin.signOut(accessToken, 'local').then(
-      () => undefined,
-      () => undefined
-    );
-  } catch {
+    return supabase.auth.admin
+      .signOut(accessToken, 'local')
+      .then(() => undefined, logRevokeFailure);
+  } catch (error) {
     // Nothing else to clean: this session was never stored by this callback.
+    logRevokeFailure(error);
     return Promise.resolve();
   }
 }
@@ -218,9 +227,10 @@ function revokeEvenIfExpired(
       .then(({ data }) =>
         data?.session ? revokeSession(supabase, data.session.access_token) : undefined
       )
-      .catch(() => undefined);
-  } catch {
+      .catch(logRevokeFailure);
+  } catch (error) {
     // Revocation is best effort.
+    logRevokeFailure(error);
     return Promise.resolve();
   }
 }
@@ -440,7 +450,7 @@ export function OAuthCallback({
       // The session is committed above; a step that must finish before the page moves on (the
       // replaced session's revoke) runs now, so leaving mid-way never strands either session.
       if (beforeNavigate) {
-        void beforeNavigate().finally(navigate);
+        beforeNavigate().catch(logRevokeFailure).finally(navigate);
       } else {
         navigate();
       }
@@ -589,11 +599,11 @@ export function OAuthCallback({
     // anyone in behind the user's back, whichever account it is for. Discard it.
     if (departedRef.current) {
       if (isolated) {
-        void revokeEvenIfExpired(
+        revokeEvenIfExpired(
           supabase,
           data.session.access_token,
           data.session.refresh_token ?? null
-        );
+        ).catch(logRevokeFailure);
       } else {
         dropAbandonedSession(supabase, data.session.access_token, preexistingToken);
       }
@@ -765,8 +775,8 @@ export function OAuthCallback({
   useEffect(() => {
     if (hasCalledRef.current) return;
     hasCalledRef.current = true;
-    handleCallback();
-  }, [handleCallback]);
+    handleCallback().catch(reportError);
+  }, [handleCallback, reportError]);
 
   // Watchdog: whatever step is awaited, a spinner never outlives FLOW_TIMEOUT_MS. The visible
   // error offers "Back to Sign In" instead of leaving the user on "Signing you in...".
@@ -798,11 +808,11 @@ export function OAuthCallback({
       heldSessionRef.current = null;
       const supabase = getSupabaseBrowserClient();
       if (held && supabase)
-        void revokeEvenIfExpired(
+        revokeEvenIfExpired(
           supabase,
           held.session.access_token,
           held.session.refresh_token ?? null
-        );
+        ).catch(logRevokeFailure);
       return held !== null;
     };
     const onPageHide = (event: PageTransitionEvent) => {
@@ -902,11 +912,11 @@ export function OAuthCallback({
     // The held session was verified before the user chose; one that has since expired cannot
     // claim a grant or sign in, and the link is already spent.
     if (held.session.expires_at !== undefined && held.session.expires_at * 1000 <= Date.now()) {
-      void revokeEvenIfExpired(
+      revokeEvenIfExpired(
         supabase,
         held.session.access_token,
         held.session.refresh_token ?? null
-      );
+      ).catch(logRevokeFailure);
       reportError(
         new Error(
           'This sign-in link is invalid or has expired. Please go back to sign in and try again.'
@@ -932,11 +942,11 @@ export function OAuthCallback({
     // The verified session for the other account was never stored: it is only revoked, and the
     // current app session, including the SDK's copy that keeps it refreshed, is untouched.
     if (held && supabase)
-      void revokeEvenIfExpired(
+      revokeEvenIfExpired(
         supabase,
         held.session.access_token,
         held.session.refresh_token ?? null
-      );
+      ).catch(logRevokeFailure);
     router.push('/dashboard');
   };
 

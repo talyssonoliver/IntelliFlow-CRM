@@ -202,9 +202,7 @@ export function AccountHierarchy({ accountId }: Readonly<AccountHierarchyProps>)
   const isLoading = hierarchyQuery.isLoading;
   const error = hierarchyQuery.error;
   const setParentMutation = api.account.setParent.useMutation({
-    onSuccess: () => {
-      utils.account.getHierarchy.invalidate({ accountId });
-    },
+    onSuccess: () => utils.account.getHierarchy.invalidate({ accountId }),
   });
 
   const pickerQuery = api.account.list.useQuery(

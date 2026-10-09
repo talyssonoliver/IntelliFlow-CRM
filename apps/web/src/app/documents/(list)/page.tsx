@@ -313,37 +313,29 @@ export default function DocumentsPage() {
 
   const handleBulkDownload = useCallback(
     async (documents: DocumentRecord[]) => {
-      try {
-        const result = await bulkDownloadMutation.mutateAsync({
-          ids: documents.map((d) => d.id),
+      const result = await bulkDownloadMutation.mutateAsync({
+        ids: documents.map((d) => d.id),
+      });
+
+      if (result.storageKeys.length > 0) {
+        // In a real implementation, you would generate download URLs
+        // For now, show a success message with the count
+        toast({
+          title: 'Download Ready',
+          description: `${result.storageKeys.length} document(s) ready for download.`,
         });
 
-        if (result.storageKeys.length > 0) {
-          // In a real implementation, you would generate download URLs
-          // For now, show a success message with the count
-          toast({
-            title: 'Download Ready',
-            description: `${result.storageKeys.length} document(s) ready for download.`,
-          });
+        // Open download for each file (in production, you might create a zip)
+        result.storageKeys.forEach((doc) => {
+          // This would be replaced with actual storage URL generation
+          console.log(`Downloading: ${doc.title} (${doc.storageKey})`);
+        });
+      }
 
-          // Open download for each file (in production, you might create a zip)
-          result.storageKeys.forEach((doc) => {
-            // This would be replaced with actual storage URL generation
-            console.log(`Downloading: ${doc.title} (${doc.storageKey})`);
-          });
-        }
-
-        if (result.failed.length > 0) {
-          toast({
-            title: 'Some downloads failed',
-            description: `${result.failed.length} document(s) could not be downloaded.`,
-            variant: 'destructive',
-          });
-        }
-      } catch (error) {
+      if (result.failed.length > 0) {
         toast({
-          title: 'Download Failed',
-          description: error instanceof Error ? error.message : 'An unexpected error occurred',
+          title: 'Some downloads failed',
+          description: `${result.failed.length} document(s) could not be downloaded.`,
           variant: 'destructive',
         });
       }
@@ -351,7 +343,7 @@ export default function DocumentsPage() {
     [bulkDownloadMutation]
   );
 
-  const handleBulkShare = useCallback(async (documents: DocumentRecord[]) => {
+  const handleBulkShare = useCallback((documents: DocumentRecord[]) => {
     // Bulk recipient-selection dialog is tracked in IFC-152 (document sharing UI).
     // Per-document ACL management is fully implemented in the document detail page
     // (/documents/[id]) under the "Access Control" tab.
@@ -377,7 +369,7 @@ export default function DocumentsPage() {
           title: 'Documents Archived',
           description: `Successfully archived ${result.successful.length} document(s).`,
         });
-        refetch();
+        await refetch();
       }
 
       if (result.failed.length > 0) {
@@ -414,7 +406,7 @@ export default function DocumentsPage() {
           title: 'Documents Deleted',
           description: `Successfully deleted ${result.successful.length} document(s).`,
         });
-        refetch();
+        await refetch();
       }
 
       if (result.failed.length > 0) {
@@ -443,7 +435,13 @@ export default function DocumentsPage() {
         icon: 'download',
         label: 'Download',
         onClick: (selected) => {
-          handleBulkDownload(selected);
+          handleBulkDownload(selected).catch((error: unknown) => {
+            toast({
+              title: 'Download Failed',
+              description: error instanceof Error ? error.message : 'An unexpected error occurred',
+              variant: 'destructive',
+            });
+          });
         },
       },
       {

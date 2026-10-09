@@ -91,26 +91,24 @@ export class CloseDealLostUseCase {
       stageAtLoss
     );
 
-    Promise.resolve().then(async () => {
-      try {
-        await this.eventBus.publish(enrichedEvent);
-      } catch (err) {
+    Promise.resolve()
+      .then(() => this.eventBus.publish(enrichedEvent))
+      .catch((err: unknown) => {
         console.error('[CloseDealLost] Failed to publish enriched event:', err);
-      }
-    });
+      });
 
     // 5. Fire-and-forget: Dispatch deal-lost notification
-    Promise.resolve().then(async () => {
-      try {
-        await this.notificationService.sendEmail({
+    Promise.resolve()
+      .then(() =>
+        this.notificationService.sendEmail({
           to: [input.closedBy],
           subject: `Deal Lost: ${opportunity.name}`,
           textBody: `The deal "${opportunity.name}" has been closed as lost. Reason: ${input.reason}`,
-        });
-      } catch (err) {
+        })
+      )
+      .catch((err: unknown) => {
         console.error('[CloseDealLost] Failed to send notification:', err);
-      }
-    });
+      });
 
     // 6. Return success with the updated opportunity
     return Result.ok(opportunity);

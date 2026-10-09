@@ -39,8 +39,9 @@ export function useActiveAgentsDashboard() {
   const error = agentsQuery.error ?? statusQuery.error ?? null;
 
   const refetch = () => {
-    agentsQuery.refetch();
-    statusQuery.refetch();
+    Promise.all([agentsQuery.refetch(), statusQuery.refetch()]).catch((err: unknown) => {
+      console.error('[useActiveAgentsDashboard] Failed to refresh:', err);
+    });
   };
 
   return {

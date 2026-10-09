@@ -59,13 +59,13 @@ export default function CoverageReportView() {
         } else {
           setError('Failed to load report data');
         }
-      } catch {
-        setError('Failed to load coverage report');
       } finally {
         setLoading(false);
       }
     }
-    fetchReport();
+    fetchReport().catch(() => {
+      setError('Failed to load coverage report');
+    });
   }, []);
 
   const details = report?.details;
@@ -159,7 +159,10 @@ export default function CoverageReportView() {
 
           {/* Test Metadata */}
           {details.testsTotal !== undefined && (
-            <Card className="p-4 mb-6" role="region" aria-label="Test run metadata">
+            <section
+              className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+              aria-label="Test run metadata"
+            >
               <h3 className="font-semibold text-foreground mb-3">Test Run Summary</h3>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="text-center">
@@ -183,12 +186,15 @@ export default function CoverageReportView() {
                   <p className="text-sm text-muted-foreground">Failed</p>
                 </div>
               </div>
-            </Card>
+            </section>
           )}
 
           {/* Failing Tests List */}
           {details.failingTests && details.failingTests.length > 0 && (
-            <Card className="p-4 mb-6" role="region" aria-label="Failing tests">
+            <section
+              className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+              aria-label="Failing tests"
+            >
               <h3 className="font-semibold text-foreground mb-3">Failing Tests</h3>
               <div className="space-y-2">
                 {details.failingTests.map((ft, i) => (
@@ -203,7 +209,7 @@ export default function CoverageReportView() {
                   </div>
                 ))}
               </div>
-            </Card>
+            </section>
           )}
           {}
 

@@ -48,10 +48,10 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
   const statsQuery = api.aiReview.stats.useQuery({}, { refetchInterval: 60_000 });
 
   // Common invalidation helper
-  const invalidateAll = useCallback(() => {
-    utils.aiReview.list.invalidate();
-    utils.aiReview.stats.invalidate();
-  }, [utils]);
+  const invalidateAll = useCallback(
+    () => Promise.all([utils.aiReview.list.invalidate(), utils.aiReview.stats.invalidate()]),
+    [utils]
+  );
 
   // ---- Mutations (useChainVersions pattern) ----
 
@@ -63,11 +63,11 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
           expiresAt: new Date(data.expiresAt),
         });
       }
-      invalidateAll();
       toast({
         title: 'Review claimed',
         description: 'You have exclusive access to review this output.',
       });
+      return invalidateAll();
     },
     onError: (err: { message: string }) => {
       toast({
@@ -81,8 +81,8 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
   const approveMutation = api.aiReview.approve.useMutation({
     onSuccess: (_data, vars) => {
       lockTokens.current.delete(vars.reviewId);
-      invalidateAll();
       toast({ title: 'Review approved' });
+      return invalidateAll();
     },
     onError: (err: { message: string }) => {
       toast({
@@ -96,8 +96,8 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
   const rejectMutation = api.aiReview.reject.useMutation({
     onSuccess: (_data, vars) => {
       lockTokens.current.delete(vars.reviewId);
-      invalidateAll();
       toast({ title: 'Review rejected' });
+      return invalidateAll();
     },
     onError: (err: { message: string }) => {
       toast({
@@ -111,8 +111,8 @@ export function useReviewQueue(initialFilters?: Partial<ReviewListFilter>) {
   const escalateMutation = api.aiReview.escalate.useMutation({
     onSuccess: (_data, vars) => {
       lockTokens.current.delete(vars.reviewId);
-      invalidateAll();
       toast({ title: 'Review escalated' });
+      return invalidateAll();
     },
     onError: (err: { message: string }) => {
       toast({

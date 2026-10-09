@@ -19,6 +19,8 @@ import { spawn, spawnSync, type ChildProcess } from 'node:child_process';
 
 import {
   ancestorsOf,
+  findPushGit,
+  watchTargets,
   gateStatePath,
   installExitHandlers,
   isAlive,
@@ -358,6 +360,182 @@ if (n > 0) {
   it('answers for this process on the real platform', () => {
     expect(Array.isArray(ancestorsOf(process.pid, 2))).toBe(true);
   });
+});
+
+describe('findPushGit (Windows: the parent walk cannot reach the push)', () => {
+  const W = 'C:\\Program Files\\Git';
+  const REAL = `${W}\\mingw64\\bin\\git.exe`;
+  const WRAP = `${W}\\cmd\\git.exe`;
+  /**
+   * A machine with: our push (Git for Windows' cmd\git.exe wrapper 100 starting the
+   * real git.exe 101, run from a subdirectory of our worktree), another lane's push
+   * (200, another worktree) and a git that is not a push (300).
+   */
+  function machine(over: { cim?: string; msys?: Record<string, string>; ps?: string } = {}) {
+    const tops: Record<string, string> = {
+      'C:\\wt\\ours': 'C:/wt/ours',
+      'C:\\wt\\ours\\sub': 'C:/wt/ours',
+      'C:\\wt\\other': 'C:/wt/other',
+    };
+    const msysCwd = over.msys ?? { '9001': '/c/wt/ours/sub', '9002': '/c/wt/other' };
+    const winOf: Record<string, string> = {
+      '/c/wt/ours/sub': 'C:\\wt\\ours\\sub',
+      '/c/wt/other': 'C:\\wt\\other',
+    };
+    const cim =
+      over.cim ??
+      [
+        `100\t50\t${WRAP}\t"${WRAP}" push origin feat/x`,
+        `101\t100\t${REAL}\t"${REAL}" push origin feat/x`,
+        `200\t60\t${REAL}\t"${REAL}" push -u origin feat/y`,
+        `300\t61\t${REAL}\t"${REAL}" status --porcelain`,
+      ].join('\r\n');
+    const ps =
+      over.ps ??
+      [
+        '      PID    PPID    PGID     WINPID   TTY         UID    STIME COMMAND',
+        '     9001    8000    8000        101  ?         197609 21:49:48 /mingw64/bin/git',
+        '     9002    8100    8100        200  ?         197609 21:49:40 /mingw64/bin/git',
+      ].join('\n');
+    const run: Run = (cmd, args) => {
+      if (cmd === 'powershell') return { stdout: cim };
+      if (cmd === 'git') return { stdout: tops[args[1]] ?? '' };
+      if (cmd.endsWith('ps.exe')) return { stdout: ps };
+      if (cmd.endsWith('readlink.exe')) return { stdout: msysCwd[args[0].split('/')[2]] ?? '' };
+      if (cmd.endsWith('cygpath.exe')) return { stdout: winOf[args[1]] ?? '' };
+      return {};
+    };
+    return run;
+  }
+
+  it("picks this worktree's push, wrapper and real git.exe together, never another lane's", () => {
+    const found = findPushGit('C:\\wt\\ours', { platform: 'win32', run: machine() });
+    expect(found?.pids).toEqual([100, 101]);
+    expect(found?.how).toContain('git push in C:/wt/ours');
+  });
+
+  it('is null when the only push belongs to another worktree', () => {
+    const found = findPushGit('C:\\wt\\ours', {
+      platform: 'win32',
+      run: machine({ cim: `200\t60\t${REAL}\t"${REAL}" push origin feat/y` }),
+    });
+    expect(found).toBeNull();
+  });
+
+  it('takes a single push whose directory cannot be read, but not one of several', () => {
+    const one = machine({ cim: `101\t1\t${REAL}\t"${REAL}" push`, ps: '', msys: {} });
+    expect(findPushGit('C:\\wt\\ours', { platform: 'win32', run: one })?.pids).toEqual([101]);
+    const two = machine({ ps: '', msys: {} });
+    expect(findPushGit('C:\\wt\\ours', { platform: 'win32', run: two })).toBeNull();
+  });
+
+  it('is null off Windows and when no git is pushing', () => {
+    expect(findPushGit('/wt', { platform: 'linux', run: machine() })).toBeNull();
+    const none = machine({ cim: `300\t61\t${REAL}\t"${REAL}" fetch` });
+    expect(findPushGit('C:\\wt\\ours', { platform: 'win32', run: none })).toBeNull();
+  });
+});
+
+describe('watchTargets', () => {
+  const chainWith =
+    (...names: string[]) =>
+    () =>
+      names.map((name, i) => ({ pid: 10 + i, name }));
+
+  it('watches up to git when the parent walk reaches it, without searching', () => {
+    const findPush = vi.fn();
+    const t = watchTargets(1, '/wt', { chainOf: chainWith('node', 'sh', 'git'), findPush });
+    expect(t.pids).toEqual([10, 11, 12]);
+    expect(t.how).toBe('parent walk reached git');
+    expect(findPush).not.toHaveBeenCalled();
+  });
+
+  it('adds the push found directly when the walk stops short of git (MSYS exec)', () => {
+    const t = watchTargets(1, 'C:\\wt', {
+      chainOf: chainWith('cmd.exe', 'node.exe', 'sh.exe'),
+      findPush: () => ({ pids: [500, 501], how: 'git push in C:/wt' }),
+    });
+    expect(t.pids).toEqual([10, 11, 12, 500, 501]);
+    expect(t.how).toBe('git push in C:/wt');
+  });
+
+  it('keeps the nearest ancestors when no push is found, or the search throws', () => {
+    const chainOf = chainWith('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h');
+    expect(watchTargets(1, '/wt', { chainOf, findPush: () => null }).pids).toEqual([
+      10, 11, 12, 13, 14, 15,
+    ]);
+    const t = watchTargets(1, '/wt', {
+      chainOf,
+      findPush: () => {
+        throw new Error('powershell missing');
+      },
+    });
+    expect(t.pids).toHaveLength(6);
+    expect(t.how).toContain('no git push found');
+  });
+
+  it.skipIf(!isWin)(
+    'on a real push whose hook execs (as husky + pnpm do), still watches that push',
+    async () => {
+      // Git for Windows' bash, so the push is in MSYS's process table like one run
+      // from a Claude Code or Git Bash terminal.
+      const exec = spawnSync('git', ['--exec-path'], { encoding: 'utf8' }).stdout.trim();
+      const bash = path.resolve(exec, '..', '..', '..', 'usr', 'bin', 'bash.exe');
+      if (!exec || !fs.existsSync(bash)) return;
+      // GIT_* from an enclosing hook would point these git calls at the wrong repo.
+      const cleanEnv = (): NodeJS.ProcessEnv =>
+        Object.fromEntries(Object.entries(process.env).filter(([k]) => !k.startsWith('GIT_')));
+      const dir = tmpDir('preship-push-');
+      const remote = path.join(dir, 'remote.git');
+      const work = path.join(dir, 'work');
+      const out = path.join(dir, 'targets.json');
+      const git = (...a: string[]) => spawnSync('git', a, { cwd: work, env: cleanEnv() });
+      spawnSync('git', ['init', '-q', '--bare', remote], { env: cleanEnv() });
+      spawnSync('git', ['init', '-q', work], { env: cleanEnv() });
+      git('config', 'user.email', 'test@example.invalid');
+      git('config', 'user.name', 'test');
+      fs.writeFileSync(path.join(work, 'f'), 'x');
+      git('add', 'f');
+      git('commit', '-qm', 'init');
+      // The hook runs a script that `exec`s node, the shape of husky running pnpm's
+      // shell shim: MSYS emulates that exec by starting node and exiting, so node's
+      // parent link dangles and the walk alone cannot reach the push.
+      const probe = path.join(dir, 'probe.mjs');
+      fs.writeFileSync(
+        probe,
+        `import fs from 'node:fs';
+import { spawnSync } from 'node:child_process';
+const m = await import(${JSON.stringify(PROCESS_URL)});
+const t = m.watchTargets(process.pid, process.cwd());
+const walk = m.ancestorsOf(process.pid);
+const cim = spawnSync('powershell', ['-NoProfile', '-NonInteractive', '-Command',
+  "Get-CimInstance Win32_Process -Filter \\"Name='git.exe'\\" | ForEach-Object { \\"$($_.ProcessId)\`t$($_.CommandLine)\\" }"], { encoding: 'utf8' });
+const ours = cim.stdout.split(/\\r?\\n/).filter((l) => l.includes(${JSON.stringify(remote.replace(/\\/g, '/'))})).map((l) => Number(l.split('\\t')[0]));
+fs.writeFileSync(${JSON.stringify(out)}, JSON.stringify({ t, walk, ours }));
+`
+      );
+      const shim = path.join(dir, 'shim');
+      fs.writeFileSync(
+        shim,
+        `#!/bin/sh\nexec "${process.execPath.replace(/\\/g, '/')}" "${probe.replace(/\\/g, '/')}"\n`
+      );
+      const hooks = path.join(work, '.git', 'hooks');
+      fs.writeFileSync(path.join(hooks, 'pre-push'), `#!/bin/sh\n"${shim.replace(/\\/g, '/')}"\n`);
+      const push = spawnSync(
+        bash,
+        ['-lc', `git push -q "${remote.replace(/\\/g, '/')}" HEAD:refs/heads/main`],
+        { cwd: work, env: cleanEnv(), encoding: 'utf8' }
+      );
+      expect(push.status, push.stderr).toBe(0);
+      const { t, walk, ours } = JSON.parse(fs.readFileSync(out, 'utf8'));
+      expect(ours.length).toBeGreaterThan(0);
+      // The parent walk alone (#834) stops at the dangling link and never reaches it.
+      for (const pid of ours) expect(walk).not.toContain(pid);
+      for (const pid of ours) expect(t.pids).toContain(pid);
+      expect(t.how).toMatch(/git push in/);
+    },
+    120_000
+  );
 });
 
 describe('killTree with an injected platform', () => {

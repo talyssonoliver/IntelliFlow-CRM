@@ -289,13 +289,23 @@ function DealsPageContent() {
     dealName: string;
   } | null>(null);
 
+  // Server-side cache revalidation. A failure must not turn a successful stage
+  // change into a failed mutation (which would roll the board back), so it is
+  // logged rather than rethrown.
+  const revalidateServerCaches = async () => {
+    try {
+      await revalidateDealCaches(user?.id ?? null);
+    } catch (error) {
+      console.error('[DealsPage] Failed to revalidate deal caches:', error);
+    }
+  };
+
   // Mutation for stage change (IFC-064: uses moveStage endpoint)
   const moveStage = trpc.opportunity.moveStage.useMutation({
     onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
       setPendingDealId(null);
-      refetch();
       toast({ title: 'Deal stage updated successfully' });
+      return Promise.all([revalidateServerCaches(), refetch()]);
     },
     onError: (err, _variables, context) => {
       // Rollback to previous state (AC-004)

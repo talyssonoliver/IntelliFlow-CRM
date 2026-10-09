@@ -640,17 +640,11 @@ function AgentApprovalsPreviewContent() {
   // ==========================================================================
 
   const approveMutation = trpc.agent.approveAction.useMutation({
-    onSuccess: () => {
-      pendingQuery.refetch();
-      countQuery.refetch();
-    },
+    onSuccess: () => Promise.all([pendingQuery.refetch(), countQuery.refetch()]),
   });
 
   const rejectMutation = trpc.agent.rejectAction.useMutation({
-    onSuccess: () => {
-      pendingQuery.refetch();
-      countQuery.refetch();
-    },
+    onSuccess: () => Promise.all([pendingQuery.refetch(), countQuery.refetch()]),
   });
 
   // ==========================================================================

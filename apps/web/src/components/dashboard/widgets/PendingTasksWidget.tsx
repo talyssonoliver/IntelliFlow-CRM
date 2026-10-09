@@ -21,10 +21,8 @@ export function PendingTasksWidget(_props: Readonly<WidgetProps>) {
 
   const utils = api.useUtils();
   const completeMutation = api.task.complete.useMutation({
-    onSuccess: () => {
-      utils.task.list.invalidate();
-      utils.task.getReminders.invalidate();
-    },
+    onSuccess: () =>
+      Promise.all([utils.task.list.invalidate(), utils.task.getReminders.invalidate()]),
   });
 
   const tasks = data?.tasks ?? [];

@@ -40,9 +40,11 @@ export default function SupportTicketDetailPage() {
   // Generic update mutation — status, priority, assignment
   const updateMutation = api.ticket.update.useMutation({
     onSuccess: () => {
-      utils.ticket.getById.invalidate({ id: ticketId });
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
+      return Promise.all([
+        utils.ticket.getById.invalidate({ id: ticketId }),
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+      ]);
     },
     onError: (error) => {
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
@@ -51,8 +53,8 @@ export default function SupportTicketDetailPage() {
 
   const addResponseMutation = api.ticket.addResponse.useMutation({
     onSuccess: () => {
-      utils.ticket.getById.invalidate({ id: ticketId });
       toast({ title: 'Response Added', description: 'Your response has been posted.' });
+      return utils.ticket.getById.invalidate({ id: ticketId });
     },
     onError: (error) => {
       toast({

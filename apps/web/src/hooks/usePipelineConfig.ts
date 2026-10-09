@@ -53,11 +53,11 @@ export function usePipelineConfig() {
   // Update single stage mutation
   const updateStageMutation = api.pipelineConfig.updateStage.useMutation({
     onSuccess: () => {
-      utils.pipelineConfig.getAll.invalidate();
       toast({
         title: 'Stage updated',
         description: 'Pipeline stage has been updated successfully.',
       });
+      return utils.pipelineConfig.getAll.invalidate();
     },
     onError: (err) => {
       toast({
@@ -71,11 +71,11 @@ export function usePipelineConfig() {
   // Batch update all stages mutation
   const updateAllMutation = api.pipelineConfig.updateAll.useMutation({
     onSuccess: () => {
-      utils.pipelineConfig.getAll.invalidate();
       toast({
         title: 'Pipeline settings saved',
         description: 'All pipeline stages have been updated successfully.',
       });
+      return utils.pipelineConfig.getAll.invalidate();
     },
     onError: (err) => {
       toast({
@@ -89,11 +89,11 @@ export function usePipelineConfig() {
   // Reset to defaults mutation
   const resetMutation = api.pipelineConfig.resetToDefaults.useMutation({
     onSuccess: () => {
-      utils.pipelineConfig.getAll.invalidate();
       toast({
         title: 'Pipeline reset',
         description: 'Pipeline has been reset to default settings.',
       });
+      return utils.pipelineConfig.getAll.invalidate();
     },
     onError: (err) => {
       toast({
