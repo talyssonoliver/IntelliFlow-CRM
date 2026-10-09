@@ -211,6 +211,34 @@ describe('StoragePoliciesContent', () => {
       );
     });
 
+    it('update onSuccess: returns the invalidation so the mutation waits for fresh data', async () => {
+      setup({ data: [mockPolicy] });
+      const refetch = Promise.resolve();
+      mockInvalidate.mockReturnValue(refetch);
+      render(<StoragePoliciesContent />);
+
+      let returned: unknown;
+      await act(async () => {
+        returned = capturedUpdateOpts.onSuccess?.();
+      });
+
+      expect(returned).toBe(refetch);
+    });
+
+    it('reset onSuccess: returns the invalidation so the mutation waits for fresh data', async () => {
+      setup({ data: [mockPolicy] });
+      const refetch = Promise.resolve();
+      mockInvalidate.mockReturnValue(refetch);
+      render(<StoragePoliciesContent />);
+
+      let returned: unknown;
+      await act(async () => {
+        returned = capturedResetOpts.onSuccess?.();
+      });
+
+      expect(returned).toBe(refetch);
+    });
+
     it('update onError: toasts a destructive error', async () => {
       const { toast } = await import('@intelliflow/ui');
       setup({ data: [mockPolicy] });

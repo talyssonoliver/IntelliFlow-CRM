@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 
 // ─── Hoisted mock references ──────────────────────────────────────────────────
 const {
@@ -292,6 +292,17 @@ describe('CalendarSettingsContent', () => {
       updateCall.onSuccess(mockSettings);
       expect(mockInvalidate).toHaveBeenCalled();
     }
+  });
+
+  it('resetToDefaults onSuccess invalidates settings query', () => {
+    render(<CalendarSettingsContent />);
+    mockInvalidate.mockClear();
+    const resetCall = mockResetMutation.mock.calls[0]?.[0];
+    expect(resetCall?.onSuccess).toBeTypeOf('function');
+    act(() => {
+      resetCall.onSuccess(mockSettings);
+    });
+    expect(mockInvalidate).toHaveBeenCalledTimes(1);
   });
 
   // ── isDirty transitions (PG-189 AC-006) ──────────────────

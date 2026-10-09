@@ -73,7 +73,7 @@ const DEFAULT_VIEW: View = {
 const state = {
   query: { data: DEFAULT_VIEW as View | undefined, error: null as null | { message: string } },
 };
-const refetch = vi.fn();
+const refetch = vi.fn(() => Promise.resolve());
 const setData = vi.fn();
 const updateMutate = vi.fn();
 const resetMutate = vi.fn();

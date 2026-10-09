@@ -80,18 +80,18 @@ export default function CaseSettingsContent() {
   });
   const generalUpdate = trpc.caseSettings.general.update.useMutation({
     onSuccess: () => {
-      utils.caseSettings.general.get.invalidate();
       setGeneralDirty(false);
       toast({ title: 'General settings saved', variant: 'success' });
+      return utils.caseSettings.general.get.invalidate();
     },
     onError: (err) =>
       toast({ title: 'Save failed', description: err.message, variant: 'destructive' }),
   });
   const generalReset = trpc.caseSettings.general.resetToDefaults.useMutation({
     onSuccess: () => {
-      utils.caseSettings.general.get.invalidate();
       setGeneralDirty(false);
       toast({ title: 'General settings reset' });
+      return utils.caseSettings.general.get.invalidate();
     },
   });
 
@@ -101,8 +101,8 @@ export default function CaseSettingsContent() {
   });
   const duplicateRulesUpdate = trpc.caseSettings.duplicateRules.update.useMutation({
     onSuccess: () => {
-      utils.caseSettings.duplicateRules.list.invalidate();
       toast({ title: 'Duplicate rules saved', variant: 'success' });
+      return utils.caseSettings.duplicateRules.list.invalidate();
     },
   });
 
@@ -112,8 +112,8 @@ export default function CaseSettingsContent() {
   });
   const requiredFieldsUpdate = trpc.caseSettings.requiredFields.update.useMutation({
     onSuccess: () => {
-      utils.caseSettings.requiredFields.list.invalidate();
       toast({ title: 'Required fields saved', variant: 'success' });
+      return utils.caseSettings.requiredFields.list.invalidate();
     },
   });
 
@@ -121,18 +121,18 @@ export default function CaseSettingsContent() {
   const tagsQuery = trpc.caseSettings.tags.list.useQuery(undefined, { enabled: isAuthenticated });
   const tagCreate = trpc.caseSettings.tags.create.useMutation({
     onSuccess: () => {
-      utils.caseSettings.tags.list.invalidate();
       setNewTagName('');
       setNewTagColor('slate');
       toast({ title: 'Tag added', variant: 'success' });
+      return utils.caseSettings.tags.list.invalidate();
     },
     onError: (err) =>
       toast({ title: 'Add tag failed', description: err.message, variant: 'destructive' }),
   });
   const tagDelete = trpc.caseSettings.tags.delete.useMutation({
     onSuccess: () => {
-      utils.caseSettings.tags.list.invalidate();
       toast({ title: 'Tag removed' });
+      return utils.caseSettings.tags.list.invalidate();
     },
   });
 
@@ -142,8 +142,8 @@ export default function CaseSettingsContent() {
   });
   const automationUpdate = trpc.caseSettings.automation.update.useMutation({
     onSuccess: () => {
-      utils.caseSettings.automation.get.invalidate();
       toast({ title: 'Automation saved', variant: 'success' });
+      return utils.caseSettings.automation.get.invalidate();
     },
   });
 

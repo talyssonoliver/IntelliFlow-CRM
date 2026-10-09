@@ -111,7 +111,10 @@ function WebVitalsSection({ vitals }: { vitals: LighthouseVitals }) {
   if (rows.length === 0) return null;
 
   return (
-    <Card className="p-4 mb-6" role="region" aria-label="Core Web Vitals">
+    <section
+      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+      aria-label="Core Web Vitals"
+    >
       <h3 className="font-semibold text-foreground mb-4">Core Web Vitals</h3>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -143,7 +146,7 @@ function WebVitalsSection({ vitals }: { vitals: LighthouseVitals }) {
           </tbody>
         </table>
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -170,7 +173,10 @@ function ResourceBudgetsSection({ vitals }: { vitals: LighthouseVitals }) {
   if (rows.length === 0) return null;
 
   return (
-    <Card className="p-4 mb-6" role="region" aria-label="Resource budgets">
+    <section
+      className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+      aria-label="Resource budgets"
+    >
       <h3 className="font-semibold text-foreground mb-4">Resource Budgets</h3>
       <div className="space-y-3">
         {rows.map((r) => (
@@ -194,7 +200,7 @@ function ResourceBudgetsSection({ vitals }: { vitals: LighthouseVitals }) {
           </div>
         ))}
       </div>
-    </Card>
+    </section>
   );
 }
 
@@ -261,13 +267,13 @@ export default function LighthouseReportView() {
         } else {
           setError('Failed to load report data');
         }
-      } catch {
-        setError('Failed to load Lighthouse report');
       } finally {
         setLoading(false);
       }
     }
-    fetchReport();
+    fetchReport().catch(() => {
+      setError('Failed to load Lighthouse report');
+    });
   }, []);
 
   const details = report?.details;
@@ -324,7 +330,10 @@ export default function LighthouseReportView() {
         <>
           {/* ── Section 1: Overall Summary Banner ── */}
           {}
-          <Card className="p-4 mb-6" role="region" aria-label="Overall Lighthouse summary">
+          <section
+            className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+            aria-label="Overall Lighthouse summary"
+          >
             <div className="flex items-center gap-4">
               <div
                 className={`w-12 h-12 rounded-lg ${getScoreBgColor(report.score ?? 0)} flex items-center justify-center`}
@@ -352,7 +361,7 @@ export default function LighthouseReportView() {
                 </div>
               )}
             </div>
-          </Card>
+          </section>
 
           {/* ── Section 2: Category Score Cards ── */}
           {}
@@ -361,7 +370,11 @@ export default function LighthouseReportView() {
               const score = details[key];
               const passing = score >= SCORE_THRESHOLD;
               return (
-                <Card key={key} className="p-4" role="region" aria-label={`${label} score`}>
+                <section
+                  key={key}
+                  className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"
+                  aria-label={`${label} score`}
+                >
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="font-medium text-foreground">{label}</h3>
                     <PassFailPill passing={passing} />
@@ -380,7 +393,7 @@ export default function LighthouseReportView() {
                   <p className="text-xs text-muted-foreground mt-2">
                     Threshold: &ge;{SCORE_THRESHOLD}
                   </p>
-                </Card>
+                </section>
               );
             })}
           </div>

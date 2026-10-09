@@ -225,6 +225,10 @@ export interface LeadListProps {
   readonly initialData?: unknown;
 }
 
+function reportCacheRevalidationError(error: unknown) {
+  console.error('Failed to revalidate lead caches:', error);
+}
+
 export default function LeadList({ initialData: serverData }: LeadListProps = {}) {
   const { timezone } = useTimezoneContext();
   const router = useRouter();
@@ -324,46 +328,38 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
     }
   }, [error, isAuthError, isLoading, authLoading, router]);
 
+  // Refreshes client queries + server caches after a lead mutation. Returned from
+  // onSuccess so the mutation stays pending until the list has refetched. The
+  // server-cache revalidation is best-effort: a failure is logged and never
+  // turns a successful mutation into a failed one.
+  const refreshLeads = (
+    revalidate: (userId: string) => Promise<void>,
+    { stats = true }: { stats?: boolean } = {}
+  ) =>
+    Promise.all([
+      utils.lead.list.invalidate(),
+      stats ? utils.lead.stats.invalidate() : undefined,
+      invalidateLeadsCache().catch(reportCacheRevalidationError),
+      user?.id ? revalidate(user.id).catch(reportCacheRevalidationError) : undefined,
+    ]);
+
   const bulkConvertMutation = api.lead.bulkConvert.useMutation({
-    onSuccess: () => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadConversionCaches(user.id).catch(() => {});
-    },
+    onSuccess: () => refreshLeads(revalidateLeadConversionCaches),
   });
   const bulkUpdateStatusMutation = api.lead.bulkUpdateStatus.useMutation({
-    onSuccess: () => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
-    },
+    onSuccess: () => refreshLeads(revalidateLeadCaches),
   });
   const bulkArchiveMutation = api.lead.bulkArchive.useMutation({
-    onSuccess: () => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
-    },
+    onSuccess: () => refreshLeads(revalidateLeadCaches),
   });
   const bulkDeleteMutation = api.lead.bulkDelete.useMutation({
-    onSuccess: () => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
-    },
+    onSuccess: () => refreshLeads(revalidateLeadCaches),
   });
 
   const deleteMutation = api.lead.delete.useMutation({
     onSuccess: () => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({ title: 'Lead Deleted', description: 'The lead has been successfully deleted.' });
+      return refreshLeads(revalidateLeadCaches);
     },
     onError: (err) => {
       toast({ title: 'Delete Failed', description: err.message, variant: 'destructive' });
@@ -372,14 +368,11 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const qualifyMutation = api.lead.qualify.useMutation({
     onSuccess: () => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({
         title: 'Lead Qualified',
         description: 'The lead has been qualified successfully.',
       });
+      return refreshLeads(revalidateLeadCaches);
     },
     onError: (err) => {
       toast({ title: 'Qualification Failed', description: err.message, variant: 'destructive' });
@@ -388,14 +381,11 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const convertMutation = api.lead.convert.useMutation({
     onSuccess: () => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadConversionCaches(user.id).catch(() => {});
       toast({
         title: 'Lead Converted',
         description: 'The lead has been converted to a contact.',
       });
+      return refreshLeads(revalidateLeadConversionCaches);
     },
     onError: (err) => {
       toast({ title: 'Conversion Failed', description: err.message, variant: 'destructive' });
@@ -404,14 +394,11 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const scoreMutation = api.lead.scoreWithAI.useMutation({
     onSuccess: (result) => {
-      utils.lead.list.invalidate();
-      utils.lead.stats.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({
         title: 'Lead Scored',
         description: `New score: ${result.score} (confidence: ${Math.round(result.confidence * 100)}%)`,
       });
+      return refreshLeads(revalidateLeadCaches);
     },
     onError: (err) => {
       toast({ title: 'Scoring Failed', description: err.message, variant: 'destructive' });
@@ -420,15 +407,13 @@ export default function LeadList({ initialData: serverData }: LeadListProps = {}
 
   const setStarredMutation = api.lead.setStarred.useMutation({
     onSuccess: (result) => {
-      utils.lead.list.invalidate();
-      invalidateLeadsCache();
-      if (user?.id) revalidateLeadCaches(user.id).catch(() => {});
       toast({
         title: result.isStarred ? 'Lead Starred' : 'Star Removed',
         description: result.isStarred
           ? 'Find it later under Sidebar → Starred.'
           : 'The lead is no longer starred.',
       });
+      return refreshLeads(revalidateLeadCaches, { stats: false });
     },
     onError: (err) => {
       toast({ title: 'Update Failed', description: err.message, variant: 'destructive' });

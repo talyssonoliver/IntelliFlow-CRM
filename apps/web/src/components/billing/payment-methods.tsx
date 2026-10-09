@@ -544,8 +544,8 @@ export function PaymentMethods({ className }: Readonly<PaymentMethodsProps>) {
 
   const updatePaymentMethodMutation = trpc.billing.updatePaymentMethod.useMutation({
     onSuccess: () => {
-      utils.billing.getPaymentMethods.invalidate();
       showToast('success', 'Default payment method updated');
+      return utils.billing.getPaymentMethods.invalidate();
     },
     onError: (error) => {
       showToast('error', error.message || 'Failed to update payment method');
@@ -554,8 +554,8 @@ export function PaymentMethods({ className }: Readonly<PaymentMethodsProps>) {
 
   const removePaymentMethodMutation = trpc.billing.removePaymentMethod.useMutation({
     onSuccess: () => {
-      utils.billing.getPaymentMethods.invalidate();
       showToast('success', 'Payment method removed');
+      return utils.billing.getPaymentMethods.invalidate();
     },
     onError: (error) => {
       showToast('error', error.message || 'Failed to remove payment method');

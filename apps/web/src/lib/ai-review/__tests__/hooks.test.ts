@@ -170,6 +170,39 @@ describe('useReviewQueue', () => {
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Review claimed' }));
   });
 
+  it.each([
+    [
+      'claim',
+      () => claimOpts,
+      [{ lockToken: 'tok-1', review: { id: 'r1' }, expiresAt: '2030-01-01' }],
+    ],
+    ['approve', () => approveOpts, [{}, { reviewId: 'r1' }]],
+    ['reject', () => rejectOpts, [{}, { reviewId: 'r1' }]],
+    ['escalate', () => escalateOpts, [{}, { reviewId: 'r1' }]],
+  ])(
+    '%s onSuccess returns the list and stats refresh so the mutation waits',
+    async (_n, opts, args) => {
+      let releaseList!: () => void;
+      let releaseStats!: () => void;
+      mockInvalidateList.mockReturnValueOnce(new Promise<void>((r) => (releaseList = r)));
+      mockInvalidateStats.mockReturnValueOnce(new Promise<void>((r) => (releaseStats = r)));
+      useReviewQueue();
+
+      let settled = false;
+      const done = Promise.resolve(opts().onSuccess(...args)).then(() => {
+        settled = true;
+      });
+
+      releaseList();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      releaseStats();
+      await done;
+      expect(settled).toBe(true);
+    }
+  );
+
   it('claim onError shows destructive toast', () => {
     useReviewQueue();
     claimOpts.onError({ message: 'Already claimed' });

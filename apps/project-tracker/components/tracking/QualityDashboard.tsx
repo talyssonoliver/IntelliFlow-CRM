@@ -67,13 +67,15 @@ export default function QualityDashboard() {
       const result = await response.json();
       setData(result.metrics);
       setErrors({});
-    } catch (err) {
-      setErrors((prev) =>
-        buildErrorState(prev, 'global', err instanceof Error ? err.message : 'Unknown error')
-      );
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleFetchError = useCallback((err: unknown) => {
+    setErrors((prev) =>
+      buildErrorState(prev, 'global', err instanceof Error ? err.message : 'Unknown error')
+    );
   }, []);
 
   const handleRefresh = async (type: 'all' | 'debt' | 'sonar' | 'phantom') => {
@@ -83,7 +85,7 @@ export default function QualityDashboard() {
         method: 'POST',
       });
       if (!response.ok) throw new Error('Failed to refresh');
-      await fetchData();
+      await fetchData().catch(handleFetchError);
       setErrors((prev) => ({ ...prev, [type]: null }));
     } catch (err) {
       setErrors((prev) =>
@@ -95,8 +97,8 @@ export default function QualityDashboard() {
   };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   if (loading && !data) {
     return (
@@ -113,7 +115,10 @@ export default function QualityDashboard() {
           <Icon name="error" size="lg" />
           <span>Error: {errors.global}</span>
         </div>
-        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
+        <button
+          onClick={() => fetchData().catch(handleFetchError)}
+          className="mt-2 text-sm underline hover:no-underline"
+        >
           Try again
         </button>
       </div>

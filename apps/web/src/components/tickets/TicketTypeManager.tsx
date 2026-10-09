@@ -65,25 +65,25 @@ export function TicketTypeManager() {
 
   const createMutation = trpc.ticketConfig.category.create.useMutation({
     onSuccess: () => {
-      utils.ticketConfig.category.list.invalidate();
       setDialogOpen(false);
       toast({ title: 'Category created' });
+      return utils.ticketConfig.category.list.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const updateMutation = trpc.ticketConfig.category.update.useMutation({
     onSuccess: () => {
-      utils.ticketConfig.category.list.invalidate();
       setDialogOpen(false);
       setEditingId(null);
       toast({ title: 'Category updated' });
+      return utils.ticketConfig.category.list.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const deleteMutation = trpc.ticketConfig.category.delete.useMutation({
     onSuccess: () => {
-      utils.ticketConfig.category.list.invalidate();
       toast({ title: 'Category deactivated' });
+      return utils.ticketConfig.category.list.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });

@@ -100,31 +100,29 @@ export default function ScheduleView() {
       setLoading(true);
       setError(null);
 
-      try {
-        const [scheduleRes, criticalRes] = await Promise.all([
-          fetch(`/api/schedule/calculate?sprint=${sprintParam}`).then((res) => res.json()),
-          fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).then((res) => res.json()),
-        ]);
+      const [scheduleRes, criticalRes] = await Promise.all([
+        fetch(`/api/schedule/calculate?sprint=${sprintParam}`).then((res) => res.json()),
+        fetch(`/api/schedule/critical-path?sprint=${sprintParam}`).then((res) => res.json()),
+      ]);
 
-        if (scheduleRes.error) {
-          setError(scheduleRes.error);
-        } else {
-          setScheduleData(scheduleRes);
-        }
-
-        if (!criticalRes.error) {
-          setCriticalPathData(criticalRes);
-        }
-
-        setLoading(false);
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error(String(err));
-        setError(error.message || 'Failed to fetch schedule data');
-        setLoading(false);
+      if (scheduleRes.error) {
+        setError(scheduleRes.error);
+      } else {
+        setScheduleData(scheduleRes);
       }
+
+      if (!criticalRes.error) {
+        setCriticalPathData(criticalRes);
+      }
+
+      setLoading(false);
     };
 
-    fetchScheduleData(); // NOSONAR
+    fetchScheduleData().catch((err: unknown) => {
+      const error = err instanceof Error ? err : new Error(String(err));
+      setError(error.message || 'Failed to fetch schedule data');
+      setLoading(false);
+    });
   }, [sprintParam]);
 
   // Compute "Today's Critical Work" from ready tasks on critical path
@@ -132,99 +130,98 @@ export default function ScheduleView() {
     if (!criticalPathData || !scheduleData) return;
 
     const fetchCriticalWork = async () => {
-      try {
-        // Fetch ready tasks from dependency graph
-        const [graphRes, progressRes] = await Promise.all([
-          fetch(`/api/dependency-graph?sprint=${sprintParam}`),
-          fetch(`/api/sprint/progress?sprint=${sprintParam}`).catch(() => null),
-        ]);
-        const graphData = await graphRes.json();
-        const progressData = progressRes ? await progressRes.json().catch(() => null) : null;
+      // Fetch ready tasks from dependency graph
+      const [graphRes, progressRes] = await Promise.all([
+        fetch(`/api/dependency-graph?sprint=${sprintParam}`),
+        fetch(`/api/sprint/progress?sprint=${sprintParam}`).catch(() => null),
+      ]);
+      const graphData = await graphRes.json();
+      const progressData = progressRes ? await progressRes.json().catch(() => null) : null;
 
-        const readyDetails = graphData.ready_to_start_details || [];
-        if (readyDetails.length === 0) {
-          setTodaysCriticalWork([]);
-          return;
-        }
+      const readyDetails = graphData.ready_to_start_details || [];
+      if (readyDetails.length === 0) {
+        setTodaysCriticalWork([]);
+        return;
+      }
 
-        // Build scorer inputs
-        const depGraphNodes = new Map<string, DepGraphNode>();
-        if (graphData.nodes) {
-          for (const [id, node] of Object.entries(
-            graphData.nodes as Record<
-              string,
-              { task_id: string; dependencies: string[]; dependents: string[] }
-            >
-          )) {
-            depGraphNodes.set(id, {
-              task_id: node.task_id || id,
-              dependencies: node.dependencies || [],
-              dependents: node.dependents || [],
-            });
-          }
-        }
-
-        const criticalPathIds = new Set<string>(criticalPathData.criticalPath.taskIds || []);
-        const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
-        for (const t of criticalPathData.tasks) {
-          // Enrich with totalFloat from schedule/calculate data (already fetched)
-          const calcTask = scheduleData?.tasks?.[t.taskId];
-          scheduleTaskMap.set(t.taskId, {
-            taskId: t.taskId,
-            earlyFinish: t.earlyFinish,
-            totalFloat: calcTask?.totalFloat,
-            isCritical: criticalPathIds.has(t.taskId),
+      // Build scorer inputs
+      const depGraphNodes = new Map<string, DepGraphNode>();
+      if (graphData.nodes) {
+        for (const [id, node] of Object.entries(
+          graphData.nodes as Record<
+            string,
+            { task_id: string; dependencies: string[]; dependents: string[] }
+          >
+        )) {
+          depGraphNodes.set(id, {
+            task_id: node.task_id || id,
+            dependencies: node.dependencies || [],
+            dependents: node.dependents || [],
           });
         }
-        const phaseProgress: PhaseProgress[] = progressData?.phases || [];
-
-        // Build minimal Task objects
-        const readyTasks = readyDetails.map(
-          (rd: {
-            taskId: string;
-            section: string;
-            description: string;
-            owner: string;
-            dependencies: string[];
-            sprint: number;
-            status?: string;
-          }) => ({
-            id: rd.taskId,
-            section: rd.section,
-            description: rd.description,
-            owner: rd.owner,
-            dependencies: rd.dependencies,
-            cleanDependencies: [],
-            crossQuarterDeps: false,
-            prerequisites: '',
-            dod: '',
-            status: rd.status || 'Planned',
-            kpis: '',
-            sprint: rd.sprint,
-            artifacts: [],
-            validation: '',
-          })
-        );
-
-        const scored = computePriorityScores(
-          readyTasks,
-          depGraphNodes,
-          criticalPathIds,
-          new Map<string, SessionStatus>(),
-          scheduleTaskMap,
-          phaseProgress,
-          typeof currentSprint === 'number' ? currentSprint : undefined
-        );
-
-        // Filter to NOW bucket, take top 3
-        setTodaysCriticalWork(scored.filter((s) => s.bucket === 'now').slice(0, 3));
-      } catch {
-        // Silently fail — this is a supplementary widget
-        setTodaysCriticalWork([]);
       }
+
+      const criticalPathIds = new Set<string>(criticalPathData.criticalPath.taskIds || []);
+      const scheduleTaskMap = new Map<string, ScheduleTaskInfo>();
+      for (const t of criticalPathData.tasks) {
+        // Enrich with totalFloat from schedule/calculate data (already fetched)
+        const calcTask = scheduleData?.tasks?.[t.taskId];
+        scheduleTaskMap.set(t.taskId, {
+          taskId: t.taskId,
+          earlyFinish: t.earlyFinish,
+          totalFloat: calcTask?.totalFloat,
+          isCritical: criticalPathIds.has(t.taskId),
+        });
+      }
+      const phaseProgress: PhaseProgress[] = progressData?.phases || [];
+
+      // Build minimal Task objects
+      const readyTasks = readyDetails.map(
+        (rd: {
+          taskId: string;
+          section: string;
+          description: string;
+          owner: string;
+          dependencies: string[];
+          sprint: number;
+          status?: string;
+        }) => ({
+          id: rd.taskId,
+          section: rd.section,
+          description: rd.description,
+          owner: rd.owner,
+          dependencies: rd.dependencies,
+          cleanDependencies: [],
+          crossQuarterDeps: false,
+          prerequisites: '',
+          dod: '',
+          status: rd.status || 'Planned',
+          kpis: '',
+          sprint: rd.sprint,
+          artifacts: [],
+          validation: '',
+        })
+      );
+
+      const scored = computePriorityScores(
+        readyTasks,
+        depGraphNodes,
+        criticalPathIds,
+        new Map<string, SessionStatus>(),
+        scheduleTaskMap,
+        phaseProgress,
+        typeof currentSprint === 'number' ? currentSprint : undefined
+      );
+
+      // Filter to NOW bucket, take top 3
+      setTodaysCriticalWork(scored.filter((s) => s.bucket === 'now').slice(0, 3));
     };
 
-    fetchCriticalWork();
+    // Supplementary widget: on failure fall back to an empty list, but log why.
+    fetchCriticalWork().catch((err: unknown) => {
+      console.error('Failed to compute critical work:', err);
+      setTodaysCriticalWork([]);
+    });
   }, [criticalPathData, scheduleData, sprintParam, currentSprint]);
 
   // Convert schedule tasks to GanttTask array

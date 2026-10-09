@@ -15,7 +15,8 @@ export interface TaskCreateSheetProps {
   readonly defaultEntityId?: string;
   readonly defaultEntityName?: string;
   readonly defaultDueDate?: string;
-  readonly onSuccess?: () => void;
+  /** Runs after creation; a returned promise is awaited so the mutation settles after the refresh. */
+  readonly onSuccess?: () => void | Promise<unknown>;
 }
 
 interface FormState {
@@ -53,12 +54,14 @@ export function TaskCreateSheet({
   const utils = api.useUtils();
   const createMutation = api.task.create.useMutation({
     onSuccess: () => {
-      utils.task.list.invalidate();
-      utils.task.getByEntity.invalidate();
-      utils.task.getReminders.invalidate();
       toast({ title: 'Task created', description: form.title });
       onOpenChange(false);
-      onSuccess?.();
+      return Promise.all([
+        utils.task.list.invalidate(),
+        utils.task.getByEntity.invalidate(),
+        utils.task.getReminders.invalidate(),
+        onSuccess?.(),
+      ]);
     },
     onError: (error) => {
       toast({ title: 'Failed to create task', description: error.message, variant: 'destructive' });

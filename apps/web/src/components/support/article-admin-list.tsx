@@ -136,8 +136,8 @@ export function ArticleAdminList({ initialData, role }: Readonly<ArticleAdminLis
 
   const publishMutation = api.helpArticle.publish.useMutation({
     onSuccess: () => {
-      utils.helpArticle.list.invalidate();
       toast({ title: 'Article published' });
+      return utils.helpArticle.list.invalidate();
     },
     onError: (err) => {
       toast({
@@ -150,8 +150,8 @@ export function ArticleAdminList({ initialData, role }: Readonly<ArticleAdminLis
 
   const unpublishMutation = api.helpArticle.unpublish.useMutation({
     onSuccess: () => {
-      utils.helpArticle.list.invalidate();
       toast({ title: 'Article unpublished' });
+      return utils.helpArticle.list.invalidate();
     },
     onError: (err) => {
       toast({
@@ -164,8 +164,8 @@ export function ArticleAdminList({ initialData, role }: Readonly<ArticleAdminLis
 
   const deleteMutation = api.helpArticle.delete.useMutation({
     onSuccess: () => {
-      utils.helpArticle.list.invalidate();
       toast({ title: 'Article deleted' });
+      return utils.helpArticle.list.invalidate();
     },
     onError: (err) => {
       toast({

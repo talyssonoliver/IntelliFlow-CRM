@@ -61,11 +61,11 @@ export function ChannelManager({ className }: ChannelManagerProps) {
 
   const mutation = trpc.notifications.updatePreferences.useMutation({
     onSuccess: () => {
-      utils.notifications.getPreferences.invalidate();
       toast({
         title: 'Channels updated',
         description: 'Your notification channel preferences have been saved.',
       });
+      return utils.notifications.getPreferences.invalidate();
     },
     onError: (err: { message: string }) => {
       toast({ title: 'Failed to save', description: err.message, variant: 'destructive' });

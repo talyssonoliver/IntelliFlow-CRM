@@ -59,6 +59,10 @@ vi.mock('@/hooks/use-dynamic-filters', () => ({
 
 // Mock trpc with configurable state
 const mockRefetch = vi.fn();
+const mockRevalidateDealCaches = vi.fn();
+vi.mock('@/app/deals/actions', () => ({
+  revalidateDealCaches: (...args: unknown[]) => mockRevalidateDealCaches(...args),
+}));
 const mockMutate = vi.fn();
 const mockMoveStage = vi.fn();
 let capturedMoveStageConfig: Record<string, (...args: unknown[]) => unknown> = {};
@@ -641,12 +645,52 @@ describe('DealsPage', { timeout: 10000 }, () => {
 
       // Trigger onSuccess callback
       await act(async () => {
-        capturedMoveStageConfig.onSuccess();
+        await capturedMoveStageConfig.onSuccess();
       });
 
       expect(mockToast).toHaveBeenCalledWith(
         expect.objectContaining({ title: 'Deal stage updated successfully' })
       );
+    });
+
+    it('stage change onSuccess refetches and revalidates server caches before resolving', async () => {
+      mockRevalidateDealCaches.mockResolvedValue(undefined);
+      let finishRefetch: () => void = () => undefined;
+      mockRefetch.mockReturnValueOnce(new Promise<void>((resolve) => (finishRefetch = resolve)));
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      let settled = false;
+      const pending = Promise.resolve(capturedMoveStageConfig.onSuccess()).then(() => {
+        settled = true;
+      });
+      await Promise.resolve();
+      expect(settled).toBe(false);
+      expect(mockRefetch).toHaveBeenCalled();
+      expect(mockRevalidateDealCaches).toHaveBeenCalledWith(null);
+
+      finishRefetch();
+      await act(async () => {
+        await pending;
+      });
+      expect(settled).toBe(true);
+    });
+
+    it('logs, and does not fail the mutation, when server cache revalidation rejects', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const boom = new Error('revalidate failed');
+      mockRevalidateDealCaches.mockRejectedValueOnce(boom);
+      await act(async () => {
+        render(<DealsPage />);
+      });
+
+      await act(async () => {
+        await expect(capturedMoveStageConfig.onSuccess()).resolves.toBeDefined();
+      });
+
+      expect(errorSpy).toHaveBeenCalledWith('[DealsPage] Failed to revalidate deal caches:', boom);
+      errorSpy.mockRestore();
     });
 
     it('failed stage change shows error toast (AC-009)', async () => {

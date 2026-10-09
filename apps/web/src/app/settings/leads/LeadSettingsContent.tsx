@@ -287,10 +287,18 @@ export default function LeadSettingsContent() {
         <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
         <button
           onClick={() => {
-            stagesQuery.refetch();
-            scoringQuery.refetch();
-            fieldsQuery.refetch();
-            automationQuery.refetch();
+            Promise.all([
+              stagesQuery.refetch(),
+              scoringQuery.refetch(),
+              fieldsQuery.refetch(),
+              automationQuery.refetch(),
+            ]).catch((err: unknown) =>
+              toast({
+                title: 'Error reloading settings',
+                description: err instanceof Error ? err.message : 'An unexpected error occurred',
+                variant: 'destructive',
+              })
+            );
           }}
           className="text-sm text-primary hover:underline"
         >

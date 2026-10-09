@@ -41,7 +41,7 @@ function getEditingTaskDueDate(task: TaskListItem | null): string {
 }
 import { TaskForm, type TaskFormData } from '@/components/tasks/TaskForm';
 import { ReminderConfig } from '@/components/tasks/ReminderConfig';
-import { invalidateTasksCache } from '@/app/tasks/actions';
+import { revalidateTasksCache } from '@/lib/tasks/revalidate-tasks-cache';
 
 // Custom hook for debounced value
 function useDebounce<T>(value: T, delay: number): T {
@@ -142,11 +142,13 @@ export default function TasksPage() {
   // Mutations
   const createMutation = api.task.create.useMutation({
     onSuccess: () => {
-      utils.task.list.invalidate();
-      utils.task.stats.invalidate();
-      invalidateTasksCache(undefined, true).catch(() => {});
       toast({ title: 'Task Created', description: 'The task has been created successfully.' });
       setShowCreateForm(false);
+      return Promise.all([
+        utils.task.list.invalidate(),
+        utils.task.stats.invalidate(),
+        revalidateTasksCache(undefined, true),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Create Failed', description: err.message, variant: 'destructive' });
@@ -155,11 +157,13 @@ export default function TasksPage() {
 
   const updateMutation = api.task.update.useMutation({
     onSuccess: () => {
-      utils.task.list.invalidate();
-      utils.task.stats.invalidate();
-      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Updated', description: 'The task has been updated successfully.' });
       setEditingTask(null);
+      return Promise.all([
+        utils.task.list.invalidate(),
+        utils.task.stats.invalidate(),
+        revalidateTasksCache(),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Update Failed', description: err.message, variant: 'destructive' });
@@ -168,11 +172,13 @@ export default function TasksPage() {
 
   const completeMutation = api.task.complete.useMutation({
     onSuccess: () => {
-      utils.task.list.invalidate();
-      utils.task.stats.invalidate();
       // task.complete fires task_completed to activity:feed (Team M4 cross-entity)
-      invalidateTasksCache(undefined, true).catch(() => {});
       toast({ title: 'Task Completed', description: 'The task has been marked as complete.' });
+      return Promise.all([
+        utils.task.list.invalidate(),
+        utils.task.stats.invalidate(),
+        revalidateTasksCache(undefined, true),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Complete Failed', description: err.message, variant: 'destructive' });
@@ -181,10 +187,12 @@ export default function TasksPage() {
 
   const deleteMutation = api.task.delete.useMutation({
     onSuccess: () => {
-      utils.task.list.invalidate();
-      utils.task.stats.invalidate();
-      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Deleted', description: 'The task has been deleted.' });
+      return Promise.all([
+        utils.task.list.invalidate(),
+        utils.task.stats.invalidate(),
+        revalidateTasksCache(),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Delete Failed', description: err.message, variant: 'destructive' });
@@ -193,10 +201,12 @@ export default function TasksPage() {
 
   const archiveMutation = api.task.archive.useMutation({
     onSuccess: () => {
-      utils.task.list.invalidate();
-      utils.task.stats.invalidate();
-      invalidateTasksCache().catch(() => {});
       toast({ title: 'Task Archived', description: 'The task has been archived.' });
+      return Promise.all([
+        utils.task.list.invalidate(),
+        utils.task.stats.invalidate(),
+        revalidateTasksCache(),
+      ]);
     },
     onError: (err) => {
       toast({ title: 'Archive Failed', description: err.message, variant: 'destructive' });
@@ -251,34 +261,42 @@ export default function TasksPage() {
     [archiveMutation]
   );
 
-  const handleBulkComplete = useCallback(
-    (ids: string[]) => {
-      Promise.allSettled(ids.map((id) => completeMutation.mutateAsync({ taskId: id }))).then(() => {
-        utils.task.list.invalidate();
-        utils.task.stats.invalidate();
+  // Per-item failures are already reported by each mutation's onError toast;
+  // this only refreshes the lists once every item has settled.
+  const refreshTaskLists = useCallback(async () => {
+    try {
+      await Promise.all([utils.task.list.invalidate(), utils.task.stats.invalidate()]);
+    } catch (err) {
+      toast({
+        title: 'Refresh Failed',
+        description: err instanceof Error ? err.message : 'Could not refresh the task list.',
+        variant: 'destructive',
       });
+    }
+  }, [utils]);
+
+  const handleBulkComplete = useCallback(
+    async (ids: string[]) => {
+      await Promise.allSettled(ids.map((id) => completeMutation.mutateAsync({ taskId: id })));
+      await refreshTaskLists();
     },
-    [completeMutation, utils]
+    [completeMutation, refreshTaskLists]
   );
 
   const handleBulkDelete = useCallback(
-    (ids: string[]) => {
-      Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync({ id }))).then(() => {
-        utils.task.list.invalidate();
-        utils.task.stats.invalidate();
-      });
+    async (ids: string[]) => {
+      await Promise.allSettled(ids.map((id) => deleteMutation.mutateAsync({ id })));
+      await refreshTaskLists();
     },
-    [deleteMutation, utils]
+    [deleteMutation, refreshTaskLists]
   );
 
   const handleBulkArchive = useCallback(
-    (ids: string[]) => {
-      Promise.allSettled(ids.map((id) => archiveMutation.mutateAsync({ id }))).then(() => {
-        utils.task.list.invalidate();
-        utils.task.stats.invalidate();
-      });
+    async (ids: string[]) => {
+      await Promise.allSettled(ids.map((id) => archiveMutation.mutateAsync({ id })));
+      await refreshTaskLists();
     },
-    [archiveMutation, utils]
+    [archiveMutation, refreshTaskLists]
   );
 
   const handleCreateSubmit = useCallback(

@@ -37,7 +37,7 @@ export function LiveStatus() {
   }, []);
 
   React.useEffect(() => {
-    void run();
+    run().catch(() => setCheck({ state: 'down' }));
   }, [run]);
 
   const label = describe(check);

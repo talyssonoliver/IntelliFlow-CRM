@@ -80,7 +80,7 @@ const {
     // IFC-248: cache-revalidation mocks must return a Promise (the component
     // does `revalidateLeadCaches(...).catch(...)`); hoisted so resetAll can
     // re-establish the resolved value after vitest mockReset wipes impls.
-    invalidateLeadsCacheMock: vi.fn(),
+    invalidateLeadsCacheMock: vi.fn().mockResolvedValue(undefined),
     revalidateLeadCachesMock: vi.fn().mockResolvedValue(undefined),
     revalidateLeadConversionCachesMock: vi.fn().mockResolvedValue(undefined),
   };
@@ -534,7 +534,7 @@ function resetAll() {
     isAuthenticated: true,
     user: { id: 'u1', email: 'u@example.com' },
   });
-  invalidateLeadsCacheMock.mockReset();
+  invalidateLeadsCacheMock.mockReset().mockResolvedValue(undefined);
   revalidateLeadCachesMock.mockReset().mockResolvedValue(undefined);
   revalidateLeadConversionCachesMock.mockReset().mockResolvedValue(undefined);
   for (const k of Object.keys(mockMutationCallbacks)) delete mockMutationCallbacks[k];
@@ -1043,15 +1043,20 @@ describe('LeadList — bulk operations (IFC-248)', () => {
     expect(screen.getByTestId('bulk-Convert to Contacts')).toBeTruthy();
   });
 
-  it('bulk mutation onSuccess handlers run their cache-invalidation wiring', () => {
+  it('bulk mutation onSuccess handlers return the cache refresh so the mutation waits for it', async () => {
     render(<LeadList />);
-    act(() => {
-      mockMutationCallbacks.bulkConvert?.onSuccess?.();
-      mockMutationCallbacks.bulkUpdateStatus?.onSuccess?.();
-      mockMutationCallbacks.bulkArchive?.onSuccess?.();
-      mockMutationCallbacks.bulkDelete?.onSuccess?.();
-    });
-    expect(mockMutationCallbacks.bulkConvert).toBeDefined();
+    const results = await act(async () =>
+      Promise.all([
+        mockMutationCallbacks.bulkConvert?.onSuccess?.(),
+        mockMutationCallbacks.bulkUpdateStatus?.onSuccess?.(),
+        mockMutationCallbacks.bulkArchive?.onSuccess?.(),
+        mockMutationCallbacks.bulkDelete?.onSuccess?.(),
+      ])
+    );
+    expect(results).toHaveLength(4);
+    expect(invalidateLeadsCacheMock).toHaveBeenCalledTimes(4);
+    expect(revalidateLeadConversionCachesMock).toHaveBeenCalledTimes(1);
+    expect(revalidateLeadCachesMock).toHaveBeenCalledTimes(3);
   });
 });
 
@@ -1132,29 +1137,39 @@ describe('LeadList — row actions, status gating & cell rendering (IFC-248)', (
     expect(mockPush).toHaveBeenCalledWith('/leads/lead-1/edit');
   });
 
-  it('individual mutation onSuccess/onError handlers fire the right toasts (AC-22)', () => {
+  it('individual mutation onSuccess/onError handlers fire the right toasts (AC-22)', async () => {
     render(<LeadList />);
-    act(() => mockMutationCallbacks.delete?.onSuccess?.());
+    await act(async () => {
+      await mockMutationCallbacks.delete?.onSuccess?.();
+    });
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Lead Deleted' }));
     act(() => mockMutationCallbacks.delete?.onError?.({ message: 'nope' }));
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Delete Failed', variant: 'destructive' })
     );
-    act(() => mockMutationCallbacks.convert?.onSuccess?.());
+    await act(async () => {
+      await mockMutationCallbacks.convert?.onSuccess?.();
+    });
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Lead Converted' }));
     act(() => mockMutationCallbacks.convert?.onError?.({ message: 'x' }));
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Conversion Failed' }));
-    act(() => mockMutationCallbacks.qualify?.onSuccess?.());
+    await act(async () => {
+      await mockMutationCallbacks.qualify?.onSuccess?.();
+    });
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Lead Qualified' }));
     act(() => mockMutationCallbacks.qualify?.onError?.({ message: 'x' }));
     expect(mockToast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Qualification Failed' })
     );
-    act(() => mockMutationCallbacks.scoreWithAI?.onSuccess?.({ score: 90, confidence: 0.8 }));
+    await act(async () => {
+      await mockMutationCallbacks.scoreWithAI?.onSuccess?.({ score: 90, confidence: 0.8 });
+    });
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Lead Scored' }));
     act(() => mockMutationCallbacks.scoreWithAI?.onError?.({ message: 'x' }));
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Scoring Failed' }));
-    act(() => mockMutationCallbacks.setStarred?.onSuccess?.({ isStarred: true }));
+    await act(async () => {
+      await mockMutationCallbacks.setStarred?.onSuccess?.({ isStarred: true });
+    });
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Lead Starred' }));
     act(() => mockMutationCallbacks.setStarred?.onError?.({ message: 'x' }));
     expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Update Failed' }));
@@ -1353,25 +1368,40 @@ describe('LeadList — misc interaction handlers (IFC-248)', () => {
     openSpy.mockRestore();
   });
 
-  it('mutation onSuccess handlers swallow a failing cache revalidation (covers .catch handlers)', async () => {
-    revalidateLeadCachesMock.mockRejectedValue(new Error('revalidate failed'));
-    revalidateLeadConversionCachesMock.mockRejectedValue(new Error('revalidate failed'));
+  it('mutation onSuccess handlers log a failing cache revalidation without failing the mutation', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const failure = new Error('revalidate failed');
+    revalidateLeadCachesMock.mockRejectedValue(failure);
+    revalidateLeadConversionCachesMock.mockRejectedValue(failure);
+    invalidateLeadsCacheMock.mockRejectedValue(failure);
     render(<LeadList />);
     await act(async () => {
-      mockMutationCallbacks.delete?.onSuccess?.();
-      mockMutationCallbacks.convert?.onSuccess?.();
-      mockMutationCallbacks.qualify?.onSuccess?.();
-      mockMutationCallbacks.scoreWithAI?.onSuccess?.({ score: 90, confidence: 0.8 });
-      mockMutationCallbacks.setStarred?.onSuccess?.({ isStarred: true });
-      mockMutationCallbacks.bulkConvert?.onSuccess?.();
-      mockMutationCallbacks.bulkUpdateStatus?.onSuccess?.();
-      mockMutationCallbacks.bulkArchive?.onSuccess?.();
-      mockMutationCallbacks.bulkDelete?.onSuccess?.();
-      // let the rejected revalidation promises settle so the .catch() arms run
-      await Promise.resolve();
-      await Promise.resolve();
+      // Every returned promise must still resolve: cache revalidation is best-effort.
+      await Promise.all([
+        mockMutationCallbacks.delete?.onSuccess?.(),
+        mockMutationCallbacks.convert?.onSuccess?.(),
+        mockMutationCallbacks.qualify?.onSuccess?.(),
+        mockMutationCallbacks.scoreWithAI?.onSuccess?.({ score: 90, confidence: 0.8 }),
+        mockMutationCallbacks.setStarred?.onSuccess?.({ isStarred: true }),
+        mockMutationCallbacks.bulkConvert?.onSuccess?.(),
+        mockMutationCallbacks.bulkUpdateStatus?.onSuccess?.(),
+        mockMutationCallbacks.bulkArchive?.onSuccess?.(),
+        mockMutationCallbacks.bulkDelete?.onSuccess?.(),
+      ]);
     });
     expect(revalidateLeadCachesMock).toHaveBeenCalled();
+    expect(consoleError).toHaveBeenCalledWith('Failed to revalidate lead caches:', failure);
+    consoleError.mockRestore();
+  });
+
+  it('skips the per-user cache revalidation when no user is signed in', async () => {
+    useRequireAuthMock.mockReturnValue({ isLoading: false, isAuthenticated: true, user: null });
+    render(<LeadList />);
+    await act(async () => {
+      await mockMutationCallbacks.delete?.onSuccess?.();
+    });
+    expect(invalidateLeadsCacheMock).toHaveBeenCalledTimes(1);
+    expect(revalidateLeadCachesMock).not.toHaveBeenCalled();
   });
 
   it('quick Send Email action targets the compose route (covers Send Email handler)', () => {

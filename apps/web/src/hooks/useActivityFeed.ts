@@ -57,7 +57,9 @@ export function useActivityFeed(options: UseActivityFeedOptions = {}) {
     if (invalidateTimer.current) return; // already scheduled
     invalidateTimer.current = setTimeout(() => {
       invalidateTimer.current = null;
-      utils.activityFeed.getUnifiedFeed.invalidate();
+      utils.activityFeed.getUnifiedFeed.invalidate().catch((err: unknown) => {
+        console.error('[useActivityFeed] Failed to refresh the feed:', err);
+      });
     }, 500);
   }, [utils]);
 
@@ -146,7 +148,9 @@ export function useEntityFeed(options: UseEntityFeedOptions) {
     if (invalidateTimer.current) return;
     invalidateTimer.current = setTimeout(() => {
       invalidateTimer.current = null;
-      utils.activityFeed.getEntityFeed.invalidate();
+      utils.activityFeed.getEntityFeed.invalidate().catch((err: unknown) => {
+        console.error('[useEntityFeed] Failed to refresh the feed:', err);
+      });
     }, 500);
   }, [utils]);
 

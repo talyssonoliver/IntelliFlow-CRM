@@ -14,11 +14,16 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock auth
+const { authState } = vi.hoisted(() => ({
+  authState: {
+    user: { id: 'user-1', email: 'test@test.com' } as { id: string; email: string } | null,
+  },
+}));
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({
     isLoading: false,
     isAuthenticated: true,
-    user: { id: 'user-1', email: 'test@test.com' },
+    user: authState.user,
   }),
 }));
 
@@ -79,6 +84,14 @@ vi.mock('@/lib/api', () => ({
       },
     },
   },
+}));
+
+// Mock server actions (cache revalidation)
+vi.mock('../(list)/actions', () => ({
+  invalidateAccountsCache: vi.fn(async () => undefined),
+}));
+vi.mock('../actions', () => ({
+  revalidateAccountCaches: vi.fn(async () => undefined),
 }));
 
 // PG-196: the list reads tiers from the tenant configuration (defaults here).
@@ -154,5 +167,67 @@ describe('AccountsPage', () => {
 
     expect(screen.getByText('Total Accounts')).toBeDefined();
     expect(screen.getByText('Total Revenue')).toBeDefined();
+  });
+
+  it('refreshes server caches for the signed-in user after a delete succeeds', async () => {
+    const { render } = await import('@testing-library/react');
+    const { api } = await import('@/lib/api');
+    const actions = await import('../(list)/actions');
+    const parentActions = await import('../actions');
+    const mod = await import('../(list)/AccountsPageClient');
+
+    render(<mod.default />);
+
+    const useMutation = api.account.delete.useMutation as unknown as {
+      mock: { calls: [{ onSuccess: () => void }][] };
+    };
+    const opts = useMutation.mock.calls.at(-1)![0];
+    opts.onSuccess();
+
+    expect(actions.invalidateAccountsCache).toHaveBeenCalled();
+    expect(parentActions.revalidateAccountCaches).toHaveBeenCalledWith('user-1');
+  });
+
+  async function renderAndGetDeleteOnSuccess() {
+    const { render } = await import('@testing-library/react');
+    const { api } = await import('@/lib/api');
+    const mod = await import('../(list)/AccountsPageClient');
+    render(<mod.default />);
+    const useMutation = api.account.delete.useMutation as unknown as {
+      mock: { calls: [{ onSuccess: () => Promise<unknown> }][] };
+    };
+    return useMutation.mock.calls.at(-1)![0].onSuccess;
+  }
+
+  it('logs a failed server-cache revalidation after delete without failing the mutation', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const actions = await import('../(list)/actions');
+    const parentActions = await import('../actions');
+    const failure = new Error('revalidate down');
+    vi.mocked(actions.invalidateAccountsCache).mockRejectedValueOnce(failure);
+    vi.mocked(parentActions.revalidateAccountCaches).mockRejectedValueOnce(failure);
+
+    const onSuccess = await renderAndGetDeleteOnSuccess();
+    await expect(onSuccess()).resolves.toBeDefined();
+
+    expect(consoleError).toHaveBeenCalledTimes(2);
+    expect(consoleError).toHaveBeenCalledWith(
+      'Failed to revalidate account caches after delete:',
+      failure
+    );
+    consoleError.mockRestore();
+  });
+
+  it('skips the per-user revalidation when no user is signed in', async () => {
+    const parentActions = await import('../actions');
+    vi.mocked(parentActions.revalidateAccountCaches).mockClear();
+    authState.user = null;
+    try {
+      const onSuccess = await renderAndGetDeleteOnSuccess();
+      await onSuccess();
+    } finally {
+      authState.user = { id: 'user-1', email: 'test@test.com' };
+    }
+    expect(parentActions.revalidateAccountCaches).not.toHaveBeenCalled();
   });
 });

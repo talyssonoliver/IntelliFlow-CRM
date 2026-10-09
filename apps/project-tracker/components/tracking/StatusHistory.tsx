@@ -78,16 +78,18 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
       const data = await response.json();
       setEntries(data.entries || []);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
+  }, []);
+
   useEffect(() => {
-    fetchHistory();
-  }, [fetchHistory]);
+    fetchHistory().catch(handleFetchError);
+  }, [fetchHistory, handleFetchError]);
 
   const trend = useMemo(() => {
     if (entries.length < 2) return null;
@@ -156,7 +158,10 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
           <Icon name="error" size="lg" />
           <span>Error: {error}</span>
         </div>
-        <button onClick={fetchHistory} className="mt-2 text-sm underline hover:no-underline">
+        <button
+          onClick={() => fetchHistory().catch(handleFetchError)}
+          className="mt-2 text-sm underline hover:no-underline"
+        >
           Try again
         </button>
       </div>
@@ -186,7 +191,7 @@ export default function StatusHistory({ onBack }: Readonly<StatusHistoryProps>) 
           </div>
         </div>
         <RefreshButton
-          onRefresh={fetchHistory}
+          onRefresh={() => fetchHistory().catch(handleFetchError)}
           label="Refresh History"
           variant="outline"
           size="sm"

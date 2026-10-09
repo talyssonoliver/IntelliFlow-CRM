@@ -1,5 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { toast } from '@intelliflow/ui';
+import { trpc } from '@/lib/trpc';
 
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
@@ -172,5 +174,80 @@ describe('AccountSettingsContent', () => {
   it('renders Reset to Defaults action', () => {
     render(<AccountSettingsContent />);
     expect(screen.getByRole('button', { name: /reset to defaults/i })).toBeTruthy();
+  });
+
+  describe('load error retry', () => {
+    type Cached = { error: Error | null; refetch: ReturnType<typeof vi.fn> };
+    type Hook = { useQuery: () => Cached };
+    // The mocked router type is enormous; narrow it to just the seven query hooks.
+    const settings = trpc.accountSettings as unknown as {
+      hierarchy: { get: Hook };
+      industry: { list: Hook };
+      customFields: { list: Hook };
+      duplicateRules: { getAll: Hook };
+      requiredFields: { getAll: Hook };
+      tags: { list: Hook };
+      automation: { get: Hook };
+    };
+    const queries = () =>
+      [
+        settings.hierarchy.get,
+        settings.industry.list,
+        settings.customFields.list,
+        settings.duplicateRules.getAll,
+        settings.requiredFields.getAll,
+        settings.tags.list,
+        settings.automation.get,
+      ].map((q) => q.useQuery());
+
+    const withLoadError = async (run: () => Promise<void> | void) => {
+      const all = queries();
+      all[0].error = new Error('boom');
+      try {
+        await run();
+      } finally {
+        all[0].error = null;
+        for (const q of all) q.refetch.mockReset();
+        vi.mocked(toast).mockClear();
+      }
+    };
+
+    it('Retry refetches every settings query', () =>
+      withLoadError(async () => {
+        render(<AccountSettingsContent />);
+        expect(screen.getByText(/Failed to load settings: boom/)).toBeTruthy();
+        fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+        for (const q of queries()) expect(q.refetch).toHaveBeenCalledTimes(1);
+        expect(toast).not.toHaveBeenCalled();
+      }));
+
+    it('Retry shows a destructive toast when a refetch rejects', () =>
+      withLoadError(async () => {
+        queries()[3].refetch.mockRejectedValueOnce(new Error('network down'));
+        render(<AccountSettingsContent />);
+        fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+        await waitFor(() =>
+          expect(toast).toHaveBeenCalledWith({
+            title: 'Could not reload settings',
+            description: 'network down',
+            variant: 'destructive',
+          })
+        );
+      }));
+
+    it('Retry falls back to a generic message for a non-Error rejection', () =>
+      withLoadError(async () => {
+        queries()[0].refetch.mockRejectedValueOnce('nope');
+        render(<AccountSettingsContent />);
+        fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+        await waitFor(() =>
+          expect(toast).toHaveBeenCalledWith(
+            expect.objectContaining({
+              title: 'Could not reload settings',
+              description: 'Unknown error',
+            })
+          )
+        );
+      }));
   });
 });

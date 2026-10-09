@@ -232,13 +232,26 @@ export default function Contact360Page() {
   const linkedInsightRequiresApproval =
     (linkedInsight as { requiresApproval?: boolean } | undefined)?.requiresApproval === true;
   const ensureInsightReviewMutation = api.home.ensureInsightReview.useMutation();
+  // Server-side cache revalidation. A failure must not turn a successful
+  // mutation into a failed one, so it is logged rather than rethrown.
+  const revalidateServerCaches = async () => {
+    if (!user?.id) return;
+    try {
+      await revalidateContactCaches(user.id);
+    } catch (error) {
+      console.error('[ContactDetail] Failed to revalidate contact caches:', error);
+    }
+  };
+  const invalidateContactAndFeeds = () =>
+    Promise.all([
+      utils.contact.getById.invalidate({ id: contactId }),
+      utils.activityFeed.getUnifiedFeed.invalidate(),
+      utils.activityFeed.getEntityFeed.invalidate(),
+    ]);
   const logActivityMutation = api.contact.logActivity.useMutation({
     onSuccess: () => {
-      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
       toast({ title: 'Activity logged', description: 'Activity has been recorded.' });
-      utils.contact.getById.invalidate({ id: contactId });
-      utils.activityFeed.getUnifiedFeed.invalidate();
-      utils.activityFeed.getEntityFeed.invalidate();
+      return Promise.all([revalidateServerCaches(), invalidateContactAndFeeds()]);
     },
   });
   const addNoteMutation = api.contact.addNote.useMutation({
@@ -246,20 +259,20 @@ export default function Contact360Page() {
       toast({ title: 'Note added', description: 'Your note has been saved.' });
       setShowNoteInput(false);
       setNewNoteContent('');
-      utils.contact.getById.invalidate({ id: contactId });
-      utils.activityFeed.getUnifiedFeed.invalidate();
-      utils.activityFeed.getEntityFeed.invalidate();
+      return invalidateContactAndFeeds();
     },
     onError: (err) => {
       toast({ title: 'Failed to add note', description: err.message, variant: 'destructive' });
     },
   });
   const scoreWithAIMutation = api.contact.scoreWithAI.useMutation({
-    onSuccess: (() => {
-      if (user?.id) revalidateContactCaches(user.id).catch(() => {});
+    onSuccess: () => {
       toast({ title: 'AI analysis complete', description: 'Contact has been analyzed by AI.' });
-      utils.contact.getById.invalidate({ id: contactId });
-    }) as () => void,
+      return Promise.all([
+        revalidateServerCaches(),
+        utils.contact.getById.invalidate({ id: contactId }),
+      ]);
+    },
     onError: ((err: { message: string }) => {
       toast({ title: 'AI analysis failed', description: err.message, variant: 'destructive' });
     }) as (err: { message: string }) => void,
