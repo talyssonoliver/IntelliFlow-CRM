@@ -252,7 +252,7 @@ export function useSessionPolling({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStatus = useCallback(async () => {
+  const loadStatus = useCallback(async () => {
     if (!enabled || !sessionId) return;
 
     try {
@@ -266,19 +266,27 @@ export function useSessionPolling({
         setStatus(data.status);
         setOutput(data.output || '');
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch session status');
     } finally {
       setIsLoading(false);
     }
   }, [enabled, sessionId]);
 
+  const reportStatusError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Failed to fetch session status');
+  }, []);
+
+  // Public refetch: resolves once the attempt is done and reports a failure via `error`.
+  const fetchStatus = useCallback(
+    () => loadStatus().catch(reportStatusError),
+    [loadStatus, reportStatusError]
+  );
+
   // Initial fetch
   useEffect(() => {
     if (enabled) {
-      fetchStatus();
+      loadStatus().catch(reportStatusError);
     }
-  }, [enabled, fetchStatus]);
+  }, [enabled, loadStatus, reportStatusError]);
 
   // Polling
   useEffect(() => {
@@ -286,9 +294,11 @@ export function useSessionPolling({
       return;
     }
 
-    const interval = setInterval(fetchStatus, pollInterval);
+    const interval = setInterval(() => {
+      loadStatus().catch(reportStatusError);
+    }, pollInterval);
     return () => clearInterval(interval);
-  }, [enabled, status, pollInterval, fetchStatus]);
+  }, [enabled, status, pollInterval, loadStatus, reportStatusError]);
 
   return {
     output,

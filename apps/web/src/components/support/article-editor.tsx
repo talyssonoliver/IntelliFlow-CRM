@@ -464,9 +464,11 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
   }, [validate, buildBase, content, bodyDirty, mode, articleId, createArticle, updateArticle]);
 
   const invalidate = useCallback(
-    (id?: string) => {
-      void utils.helpArticle.list.invalidate();
-      if (id) void utils.helpArticle.getById.invalidate({ id });
+    async (id?: string) => {
+      await Promise.all([
+        utils.helpArticle.list.invalidate(),
+        id ? utils.helpArticle.getById.invalidate({ id }) : undefined,
+      ]);
     },
     [utils]
   );
@@ -474,11 +476,11 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
   const handleSaveDraft = useCallback(async () => {
     const id = await persist();
     if (!id) return;
-    invalidate(id);
     toast({ title: mode === 'create' ? 'Draft created' : 'Changes saved' });
     if (mode === 'create') {
       router.push(`/settings/help-center/articles/${id}/edit`);
     }
+    await invalidate(id);
   }, [persist, invalidate, mode, router]);
 
   const handlePublish = useCallback(async () => {
@@ -487,9 +489,9 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
     try {
       await publishMutation.mutateAsync({ id });
       setStatus('PUBLISHED');
-      invalidate(id);
       toast({ title: 'Article published' });
       router.push('/settings/help-center/articles');
+      await invalidate(id);
     } catch (err) {
       toast({
         title: 'Publish failed',
@@ -500,8 +502,8 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
       // edit route so a retry updates the existing draft instead of attempting a
       // duplicate-slug create.
       if (mode === 'create') {
-        invalidate(id);
         router.push(`/settings/help-center/articles/${id}/edit`);
+        await invalidate(id);
       }
     }
   }, [persist, publishMutation, invalidate, mode, router]);
@@ -511,8 +513,8 @@ export function ArticleEditor({ mode, articleId }: Readonly<ArticleEditorProps>)
     try {
       await unpublishMutation.mutateAsync({ id: articleId });
       setStatus('DRAFT');
-      invalidate(articleId);
       toast({ title: 'Article unpublished' });
+      await invalidate(articleId);
     } catch (err) {
       toast({
         title: 'Unpublish failed',

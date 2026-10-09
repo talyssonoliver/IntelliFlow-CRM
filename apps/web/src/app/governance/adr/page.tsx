@@ -96,24 +96,27 @@ export default function ADRRegistryPage() {
       } else {
         setError(result.error);
       }
-    } catch {
-      setError('Failed to fetch ADRs');
     } finally {
       setLoading(false);
     }
   }, [searchQuery]);
 
+  // Call-site wrappers: the fetchers propagate failures; these surface them
+  const loadADRs = useCallback(() => {
+    fetchADRs().catch(() => setError('Failed to fetch ADRs'));
+  }, [fetchADRs]);
+
   const fetchStats = useCallback(async () => {
-    try {
-      const response = await fetch('/api/adr?action=stats');
-      const result = await response.json();
-      if (result.success) {
-        setStats(result.data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch stats:', err);
+    const response = await fetch('/api/adr?action=stats');
+    const result = await response.json();
+    if (result.success) {
+      setStats(result.data);
     }
   }, []);
+
+  const loadStats = useCallback(() => {
+    fetchStats().catch((err) => console.error('Failed to fetch stats:', err));
+  }, [fetchStats]);
 
   const fetchIndex = useCallback(async () => {
     setIndexLoading(true);
@@ -123,24 +126,26 @@ export default function ADRRegistryPage() {
       if (result.success) {
         setIndexContent(result.data.content);
       }
-    } catch (err) {
-      console.error('Failed to fetch index:', err);
     } finally {
       setIndexLoading(false);
     }
   }, []);
 
+  const loadIndex = useCallback(() => {
+    fetchIndex().catch((err) => console.error('Failed to fetch index:', err));
+  }, [fetchIndex]);
+
   const fetchGraph = useCallback(async () => {
-    try {
-      const response = await fetch('/api/adr?action=graph');
-      const result = await response.json();
-      if (result.success) {
-        setGraphContent(result.data);
-      }
-    } catch (err) {
-      console.error('Failed to fetch graph:', err);
+    const response = await fetch('/api/adr?action=graph');
+    const result = await response.json();
+    if (result.success) {
+      setGraphContent(result.data);
     }
   }, []);
+
+  const loadGraph = useCallback(() => {
+    fetchGraph().catch((err) => console.error('Failed to fetch graph:', err));
+  }, [fetchGraph]);
 
   const fetchValidations = useCallback(async () => {
     try {
@@ -155,22 +160,22 @@ export default function ADRRegistryPage() {
   }, []);
 
   useEffect(() => {
-    fetchADRs();
-    fetchStats();
-  }, [fetchADRs, fetchStats]);
+    loadADRs();
+    loadStats();
+  }, [loadADRs, loadStats]);
 
   useEffect(() => {
     if (activeTab === 'index' && !indexContent) {
-      fetchIndex();
+      loadIndex();
     }
     if (activeTab === 'graph' && !graphContent) {
-      fetchGraph();
+      loadGraph();
     }
-  }, [activeTab, indexContent, graphContent, fetchIndex, fetchGraph]);
+  }, [activeTab, indexContent, graphContent, loadIndex, loadGraph]);
 
   const handleSearch = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    fetchADRs();
+    loadADRs();
   };
 
   const handleCreate = async (e: React.SyntheticEvent) => {
@@ -197,8 +202,8 @@ export default function ADRRegistryPage() {
         setNewAdrTitle('');
         setNewAdrStory('');
         setShowCreateModal(false);
-        fetchADRs();
-        fetchStats();
+        loadADRs();
+        loadStats();
         setIndexContent(''); // Reset index to refetch
       } else {
         setError(result.error);
@@ -220,7 +225,7 @@ export default function ADRRegistryPage() {
 
       if (result.success) {
         setSuccessMessage(`Index generated: ${result.data.path}`);
-        fetchIndex(); // Refresh the index content
+        loadIndex(); // Refresh the index content
       } else {
         setError(result.error);
       }
@@ -246,8 +251,8 @@ export default function ADRRegistryPage() {
 
       if (result.success) {
         setSuccessMessage(`Status updated to ${newStatus}`);
-        fetchADRs();
-        fetchStats();
+        loadADRs();
+        loadStats();
         setIndexContent(''); // Reset index to refetch
       } else {
         setError(result.error);
@@ -294,8 +299,10 @@ export default function ADRRegistryPage() {
   };
 
   const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setSuccessMessage('Copied to clipboard');
+    navigator.clipboard.writeText(text).then(
+      () => setSuccessMessage('Copied to clipboard'),
+      () => setError('Failed to copy to clipboard')
+    );
   };
 
   return (
@@ -435,7 +442,7 @@ export default function ADRRegistryPage() {
                   type="button"
                   onClick={() => {
                     setSearchQuery('');
-                    fetchADRs();
+                    loadADRs();
                   }}
                   className="px-4 py-2 text-muted-foreground hover:text-foreground text-sm"
                 >

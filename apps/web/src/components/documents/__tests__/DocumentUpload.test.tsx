@@ -190,6 +190,47 @@ describe('DocumentUpload', () => {
     expect(screen.queryByText('test.pdf')).not.toBeInTheDocument();
   });
 
+  function unreadableFile(failure: unknown) {
+    const file = new File(['x'], 'broken.pdf', { type: 'application/pdf' });
+    Object.defineProperty(file, 'size', {
+      get() {
+        throw failure;
+      },
+    });
+    return file;
+  }
+
+  it('reports an unreadable file chosen via the input with a destructive toast', async () => {
+    render(<DocumentUpload {...defaultProps} />);
+    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+
+    fireEvent.change(input, { target: { files: [unreadableFile(new Error('disk gone'))] } });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Could not read file',
+        description: 'disk gone',
+        variant: 'destructive',
+      });
+    });
+  });
+
+  it('reports an unreadable dropped file with a generic message for non-Error failures', async () => {
+    render(<DocumentUpload {...defaultProps} />);
+
+    fireEvent.drop(screen.getByTestId('dropzone'), {
+      dataTransfer: { files: [unreadableFile('weird')] },
+    });
+
+    await waitFor(() => {
+      expect(mockToast).toHaveBeenCalledWith({
+        title: 'Could not read file',
+        description: 'The selected file could not be processed.',
+        variant: 'destructive',
+      });
+    });
+  });
+
   // ─── Drag and Drop ────────────────────────────────────────────────────────
 
   it('shows drag-over visual state', () => {

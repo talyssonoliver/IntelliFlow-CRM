@@ -24,7 +24,7 @@ const {
 }));
 
 // Track onSuccess callbacks for cache invalidation tests
-let markAsReadOnSuccess: (() => void) | undefined;
+let markAsReadOnSuccess: (() => unknown) | undefined;
 let _markAllAsReadOnSuccess: (() => void) | undefined;
 
 vi.mock('@/lib/trpc', () => ({
@@ -252,11 +252,11 @@ describe('NotificationsSummaryWidget', () => {
   });
 
   // 1.12 — AC-009
-  it('after markAsRead.onSuccess, both getUnreadCount and list caches are invalidated', () => {
+  it('after markAsRead.onSuccess, both getUnreadCount and list caches are invalidated', async () => {
     render(<NotificationsSummaryWidget enabled={true} />);
     // The onSuccess callback was captured during render
     expect(markAsReadOnSuccess).toBeDefined();
-    markAsReadOnSuccess!();
+    await markAsReadOnSuccess!();
     expect(mockGetUnreadCountInvalidate).toHaveBeenCalled();
     expect(mockListInvalidate).toHaveBeenCalled();
   });

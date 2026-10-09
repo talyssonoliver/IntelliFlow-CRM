@@ -448,11 +448,15 @@ export class GuardrailsAIService implements AIServicePort {
     try {
       return await this.auditLogPort.logSecurityEvent(event, tenantContext);
     } catch (error) {
-      // Track failure metric but don't block AI operations
-      this.metrics.increment('guardrails.audit_log_failure');
-      console.error('[GUARDRAILS] Audit log failed:', error);
       // Don't rethrow - audit failure shouldn't block AI operations
+      this.reportAuditLogFailure(error);
     }
+  }
+
+  /** Track an audit-log failure without blocking AI operations. */
+  private reportAuditLogFailure(error: unknown): void {
+    this.metrics.increment('guardrails.audit_log_failure');
+    console.error('[GUARDRAILS] Audit log failed:', error);
   }
 
   /**
@@ -546,10 +550,12 @@ export class GuardrailsAIService implements AIServicePort {
 
     // Log if anything was redacted
     if (result !== text) {
+      // sanitizeText is synchronous, so the audit write is fire-and-forget; a rejection
+      // (e.g. while building the event, before the port call) is reported like any audit failure.
       this.logSecurityEvent('AI_PII_EXPOSURE_BLOCKED', {
         context,
         redactionCount: (text.match(/@/g) || []).length,
-      });
+      }).catch((error: unknown) => this.reportAuditLogFailure(error));
     }
 
     return result;

@@ -24,10 +24,11 @@ export function NotificationsSummaryWidget({ enabled }: Readonly<NotificationsSu
     { enabled }
   );
 
-  const invalidateAll = () => {
-    utils.notifications.getUnreadCount.invalidate();
-    utils.notifications.list.invalidate();
-  };
+  const invalidateAll = () =>
+    Promise.all([
+      utils.notifications.getUnreadCount.invalidate(),
+      utils.notifications.list.invalidate(),
+    ]);
 
   const markAsRead = trpc.notifications.markAsRead.useMutation({
     onSuccess: invalidateAll,

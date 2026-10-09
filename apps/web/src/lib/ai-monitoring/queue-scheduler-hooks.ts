@@ -28,7 +28,9 @@ export function useQueueScheduler() {
     isUnavailable: !query.isLoading && !!query.error,
     error: query.error as Error | null,
     refetch: () => {
-      query.refetch();
+      query.refetch().catch((err: unknown) => {
+        console.error('[useQueueScheduler] Failed to refresh queues:', err);
+      });
     },
   };
 }
@@ -40,9 +42,8 @@ export function useQueueScheduler() {
 export function useQueueMutations() {
   const utils = api.useUtils();
 
-  const invalidate = () => {
-    utils.queuesAdmin.list.invalidate();
-  };
+  // Returned so each mutation stays pending until the refreshed queue list has loaded.
+  const invalidate = () => utils.queuesAdmin.list.invalidate();
 
   const pauseMutation = api.queuesAdmin.pause.useMutation({ onSuccess: invalidate });
   const resumeMutation = api.queuesAdmin.resume.useMutation({ onSuccess: invalidate });

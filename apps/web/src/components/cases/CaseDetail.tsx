@@ -20,6 +20,7 @@ import {
   getPriorityConfig,
   formatDeadlineShort,
   getInitials,
+  assigneeDisplayName,
   timeAgo,
 } from '@/lib/cases/case-utils';
 import { ActivityFeed } from '@/components/shared/activity-feed';
@@ -337,11 +338,13 @@ export function CaseDetail({
                 ) : (
                   <div className="flex items-center gap-2">
                     <Avatar
-                      name={caseData.assignee.name}
+                      name={assigneeDisplayName(caseData.assignee)}
                       url={caseData.assignee.avatarUrl ?? undefined}
                       size="md"
                     />
-                    <span className="text-sm text-foreground">{caseData.assignee.name}</span>
+                    <span className="text-sm text-foreground">
+                      {assigneeDisplayName(caseData.assignee)}
+                    </span>
                   </div>
                 )}
               </div>

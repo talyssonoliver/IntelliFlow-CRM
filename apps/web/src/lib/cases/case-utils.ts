@@ -122,6 +122,14 @@ export function isOverdue(deadline: Date | string | null, status: string): boole
   return new Date(deadline) < new Date();
 }
 
+/**
+ * What to call a case's assignee. `User.name` is optional (String? in the schema):
+ * a user who signed up without a display name has none, so fall back to the email.
+ */
+export function assigneeDisplayName(assignee: { name: string | null; email: string }): string {
+  return assignee.name?.trim() || assignee.email;
+}
+
 export function getInitials(name: string): string {
   return name
     .split(' ')

@@ -288,6 +288,34 @@ describe('Lead Router — Audit Logging (IFC-240)', () => {
     );
   });
 
+  it('scoreWithAI still returns the score and warns when LeadAIInsight population fails', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const ctx = createTestContext();
+    ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue(
+      success({
+        leadId: TEST_UUIDS.lead1,
+        previousScore: 10,
+        newScore: 80,
+        confidence: 0.9,
+        tier: 'hot',
+        autoQualified: true,
+        autoDisqualified: false,
+      })
+    );
+    const insightError = new Error('insight store unavailable');
+    prismaMock.lead.findUnique.mockRejectedValue(insightError);
+
+    const result = await leadRouter.createCaller(ctx).scoreWithAI({ leadId: TEST_UUIDS.lead1 });
+    await flush();
+
+    expect(result.score).toBe(80);
+    expect(warn).toHaveBeenCalledWith(
+      'Failed to populate LeadAIInsight after scoring:',
+      insightError
+    );
+    warn.mockRestore();
+  });
+
   it('addNote logs an UPDATE action with add_note metadata', async () => {
     const ctx = createTestContext();
     prismaMock.lead.findUnique.mockResolvedValue({ id: TEST_UUIDS.lead1 } as any);

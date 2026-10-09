@@ -442,7 +442,14 @@ export function TicketDetail({
                 className="bg-red-600 hover:bg-red-700 text-white"
                 onClick={() => {
                   setDeleteConfirmOpen(false);
-                  onDelete?.();
+                  onDelete?.().catch((error: unknown) => {
+                    console.error('Failed to delete ticket:', error);
+                    toast({
+                      title: 'Delete failed',
+                      description: 'The ticket could not be deleted.',
+                      variant: 'destructive',
+                    });
+                  });
                 }}
               >
                 Delete
@@ -466,7 +473,14 @@ export function TicketDetail({
               <AlertDialogAction
                 onClick={() => {
                   setArchiveConfirmOpen(false);
-                  onArchive?.();
+                  onArchive?.().catch((error: unknown) => {
+                    console.error('Failed to archive ticket:', error);
+                    toast({
+                      title: 'Archive failed',
+                      description: 'The ticket could not be archived.',
+                      variant: 'destructive',
+                    });
+                  });
                 }}
               >
                 Archive

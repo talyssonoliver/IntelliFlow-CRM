@@ -215,6 +215,29 @@ describe('QuietHoursScheduler', () => {
     expect(toast).toHaveBeenCalled();
   });
 
+  it('save success returns the preferences invalidation so the mutation waits for fresh data', async () => {
+    let capturedOnSuccess: (() => Promise<unknown>) | undefined;
+    (
+      trpc.notifications.updatePreferences.useMutation as ReturnType<typeof vi.fn>
+    ).mockImplementation((opts?: { onSuccess?: () => Promise<unknown> }) => {
+      capturedOnSuccess = opts?.onSuccess;
+      return { mutate: mockMutate, isPending: false };
+    });
+    let finish: () => void = () => undefined;
+    mockInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+    renderComponent();
+    let settled = false;
+    const pending = capturedOnSuccess!().then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(mockInvalidate).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+    finish();
+    await pending;
+    expect(settled).toBe(true);
+  });
+
   it('save error shows error toast', () => {
     let capturedOnError: ((err: Error) => void) | undefined;
     (

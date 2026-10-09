@@ -103,8 +103,8 @@ export function BillingSettings() {
       const savedSnap = JSON.stringify(formValuesRef.current);
       setInitialSnapshot(savedSnap);
       initialSnapshotRef.current = savedSnap;
-      void utils.billing.getBillingInformation.invalidate();
       toast({ title: 'Saved', description: 'Billing information updated successfully.' });
+      return utils.billing.getBillingInformation.invalidate();
     },
     onError: (err) => {
       toast({

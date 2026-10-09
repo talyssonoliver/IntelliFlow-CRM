@@ -168,7 +168,9 @@ export function useWorkflowProgress(params: UseWorkflowProgressParams): UseWorkf
     isLoading: activeQuery.isLoading,
     error: (activeQuery.error as Error | null) ?? null,
     refetch: () => {
-      activeQuery.refetch();
+      activeQuery.refetch().catch((err: unknown) => {
+        console.error('[useWorkflowProgress] Failed to refresh:', err);
+      });
     },
   };
 }

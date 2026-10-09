@@ -34,8 +34,8 @@ const h = vi.hoisted(() => ({
   invalidateContactsCacheMock: vi.fn(),
   revalidateContactCachesMock: vi.fn(),
   // captured mutation lifecycle callbacks
-  bulkDeleteOnSuccess: undefined as undefined | (() => void),
-  deleteOnSuccess: undefined as undefined | (() => void),
+  bulkDeleteOnSuccess: undefined as undefined | (() => Promise<unknown>),
+  deleteOnSuccess: undefined as undefined | (() => Promise<unknown>),
   deleteOnError: undefined as undefined | ((e: { message: string }) => void),
   // captured list.useQuery inputs/options
   listQueryArgs: [] as Array<Record<string, unknown>>,
@@ -98,14 +98,14 @@ vi.mock('@/lib/api', () => ({
         useMutation: () => ({ mutateAsync: h.bulkExportMutateAsync, isPending: false }),
       },
       bulkDelete: {
-        useMutation: (opts?: { onSuccess?: () => void }) => {
+        useMutation: (opts?: { onSuccess?: () => Promise<unknown> }) => {
           h.bulkDeleteOnSuccess = opts?.onSuccess;
           return { mutateAsync: h.bulkDeleteMutateAsync, isPending: false };
         },
       },
       delete: {
         useMutation: (opts?: {
-          onSuccess?: () => void;
+          onSuccess?: () => Promise<unknown>;
           onError?: (e: { message: string }) => void;
         }) => {
           h.deleteOnSuccess = opts?.onSuccess;
@@ -547,14 +547,57 @@ describe('ContactsPageClient — bulk actions & delete (T-05)', () => {
     );
   });
 
-  it('bulk delete onSuccess invalidates the list + stats caches', () => {
+  it('bulk delete onSuccess invalidates the list + stats caches', async () => {
     render(<ContactsPageClient />);
     expect(h.bulkDeleteOnSuccess).toBeTypeOf('function');
-    act(() => h.bulkDeleteOnSuccess!());
+    await act(async () => {
+      await h.bulkDeleteOnSuccess!();
+    });
     expect(h.listInvalidate).toHaveBeenCalled();
     expect(h.statsInvalidate).toHaveBeenCalled();
     expect(h.invalidateContactsCacheMock).toHaveBeenCalled();
     expect(h.revalidateContactCachesMock).toHaveBeenCalledWith('user-1');
+  });
+
+  it('bulk delete onSuccess waits for the query invalidations before resolving', async () => {
+    let finishList: () => void = () => undefined;
+    h.listInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finishList = resolve)));
+    render(<ContactsPageClient />);
+    let settled = false;
+    const pending = h.bulkDeleteOnSuccess!().then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    finishList();
+    await act(async () => {
+      await pending;
+    });
+    expect(settled).toBe(true);
+  });
+
+  it('logs and still resolves when server cache revalidation fails after a bulk delete', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const boom = new Error('revalidate failed');
+    h.revalidateContactCachesMock.mockRejectedValueOnce(boom);
+    render(<ContactsPageClient />);
+    await act(async () => {
+      await expect(h.bulkDeleteOnSuccess!()).resolves.toBeDefined();
+    });
+    expect(errorSpy).toHaveBeenCalledWith(
+      '[ContactsPage] Failed to revalidate contact caches:',
+      boom
+    );
+  });
+
+  it('skips the per-user revalidation when no user is signed in', async () => {
+    h.mockAuthState = { isLoading: false, isAuthenticated: true, user: null };
+    render(<ContactsPageClient />);
+    await act(async () => {
+      await h.bulkDeleteOnSuccess!();
+    });
+    expect(h.invalidateContactsCacheMock).toHaveBeenCalled();
+    expect(h.revalidateContactCachesMock).not.toHaveBeenCalled();
   });
 
   it('single delete calls the delete mutation with the contact id', () => {
@@ -563,10 +606,12 @@ describe('ContactsPageClient — bulk actions & delete (T-05)', () => {
     expect(h.deleteMutate).toHaveBeenCalledWith({ id: 'id-1' });
   });
 
-  it('single delete onSuccess invalidates caches and toasts', () => {
+  it('single delete onSuccess invalidates caches and toasts', async () => {
     render(<ContactsPageClient />);
     expect(h.deleteOnSuccess).toBeTypeOf('function');
-    act(() => h.deleteOnSuccess!());
+    await act(async () => {
+      await h.deleteOnSuccess!();
+    });
     expect(h.listInvalidate).toHaveBeenCalled();
     expect(h.statsInvalidate).toHaveBeenCalled();
     expect(h.toastMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'Contact Deleted' }));

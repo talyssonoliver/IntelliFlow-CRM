@@ -141,13 +141,12 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
   const utils = api.useUtils();
   const deleteMutation = api.account.delete.useMutation({
     onSuccess: () => {
-      utils.account.list.invalidate();
-      utils.account.stats.invalidate();
       toast({
         title: 'Account Deleted',
         description: 'The account has been permanently deleted.',
       });
       router.push('/accounts');
+      return Promise.all([utils.account.list.invalidate(), utils.account.stats.invalidate()]);
     },
     onError: (error: { message: string }) => {
       toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
@@ -159,9 +158,11 @@ export function AccountDetail({ accountId, isAuthenticated }: Readonly<AccountDe
 
   const assignOwnerMutation = api.account.assignOwner.useMutation({
     onSuccess: () => {
-      utils.account.getById.invalidate({ id: accountId });
-      utils.account.list.invalidate();
       toast({ title: 'Owner Assigned', description: 'Account owner has been updated.' });
+      return Promise.all([
+        utils.account.getById.invalidate({ id: accountId }),
+        utils.account.list.invalidate(),
+      ]);
     },
     onError: (error: { message: string }) => {
       toast({ title: 'Assignment failed', description: error.message, variant: 'destructive' });

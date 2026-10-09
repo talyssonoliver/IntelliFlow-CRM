@@ -332,12 +332,37 @@ describe('CloseDealLostUseCase', () => {
 
   describe('Partial Failure Resilience', () => {
     it('should return success even if notification sendEmail throws (AC-010)', async () => {
-      mockNotificationService.sendEmail.mockRejectedValue(new Error('SMTP down'));
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const failure = new Error('SMTP down');
+      mockNotificationService.sendEmail.mockRejectedValue(failure);
 
       const result = await useCase.execute(defaultInput);
       await flushPromises();
 
       expect(result.isSuccess).toBe(true);
+      expect(consoleError).toHaveBeenCalledWith(
+        '[CloseDealLost] Failed to send notification:',
+        failure
+      );
+      consoleError.mockRestore();
+    });
+
+    it('logs a synchronous throw from sendEmail instead of failing the close', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const failure = new Error('SMTP down (sync)');
+      mockNotificationService.sendEmail.mockImplementation(() => {
+        throw failure;
+      });
+
+      const result = await useCase.execute(defaultInput);
+      await flushPromises();
+
+      expect(result.isSuccess).toBe(true);
+      expect(consoleError).toHaveBeenCalledWith(
+        '[CloseDealLost] Failed to send notification:',
+        failure
+      );
+      consoleError.mockRestore();
     });
 
     it('should return success even if notification returns Result.fail (AC-010)', async () => {
@@ -352,12 +377,37 @@ describe('CloseDealLostUseCase', () => {
     });
 
     it('should return success even if eventBus.publish throws (AC-010)', async () => {
-      mockEventBus.publish.mockRejectedValue(new Error('EventBus down'));
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const failure = new Error('EventBus down');
+      mockEventBus.publish.mockRejectedValue(failure);
 
       const result = await useCase.execute(defaultInput);
       await flushPromises();
 
       expect(result.isSuccess).toBe(true);
+      expect(consoleError).toHaveBeenCalledWith(
+        '[CloseDealLost] Failed to publish enriched event:',
+        failure
+      );
+      consoleError.mockRestore();
+    });
+
+    it('logs a synchronous throw from eventBus.publish instead of failing the close', async () => {
+      const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      const failure = new Error('EventBus down (sync)');
+      mockEventBus.publish.mockImplementation(() => {
+        throw failure;
+      });
+
+      const result = await useCase.execute(defaultInput);
+      await flushPromises();
+
+      expect(result.isSuccess).toBe(true);
+      expect(consoleError).toHaveBeenCalledWith(
+        '[CloseDealLost] Failed to publish enriched event:',
+        failure
+      );
+      consoleError.mockRestore();
     });
   });
 

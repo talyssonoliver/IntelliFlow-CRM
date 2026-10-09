@@ -528,8 +528,17 @@ export function LeadForm({
         </Card>
       )}
 
-      {mode === 'create' && enrichmentNotice && (
-        <p aria-live="polite" className="text-sm text-blue-600 dark:text-blue-400">
+      {/* Always present in create mode, its line reserved: the notice appears on the
+          email field's blur, and that blur is the mousedown of the next click. A <p>
+          mounted only then pushed the fields and the wizard's "Next Step" down by a
+          line plus the form gap mid-click, so mouseup landed off the button and the
+          click was lost (the nightly E2E's lead form stayed on step 1). */}
+      {mode === 'create' && (
+        <p
+          aria-live="polite"
+          data-testid="lead-enrichment-notice"
+          className="min-h-5 text-sm text-blue-600 dark:text-blue-400"
+        >
           {enrichmentNotice}
         </p>
       )}

@@ -37,8 +37,12 @@ export function useNotificationFeed(filters: NotificationFiltersState) {
     if (invalidateTimer.current) return;
     invalidateTimer.current = setTimeout(() => {
       invalidateTimer.current = null;
-      utils.notifications.list.invalidate();
-      utils.notifications.getUnreadCount.invalidate();
+      Promise.all([
+        utils.notifications.list.invalidate(),
+        utils.notifications.getUnreadCount.invalidate(),
+      ]).catch((error: unknown) => {
+        console.error('[useNotificationFeed] Failed to refresh the notification feed:', error);
+      });
     }, 500);
   }, [utils]);
 

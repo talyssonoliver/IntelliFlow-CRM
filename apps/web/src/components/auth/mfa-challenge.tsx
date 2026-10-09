@@ -168,6 +168,10 @@ export function MfaChallenge({
   // Handlers
   // ==========================================
 
+  const reportVerifyError = useCallback((err: unknown) => {
+    setLocalError(err instanceof Error ? err.message : 'Verification failed');
+  }, []);
+
   const handleSubmit = useCallback(
     async (submittedCode?: string) => {
       const codeToVerify =
@@ -197,12 +201,12 @@ export function MfaChallenge({
           }
         }
       } catch (err) {
-        setLocalError(err instanceof Error ? err.message : 'Verification failed');
+        reportVerifyError(err);
       } finally {
         setIsVerifying(false);
       }
     },
-    [selectedMethod, code, backupCode, onVerify]
+    [selectedMethod, code, backupCode, onVerify, reportVerifyError]
   );
 
   const handleCodeChange = useCallback(
@@ -222,10 +226,10 @@ export function MfaChallenge({
 
       // Auto-submit when complete
       if (value && index === CODE_LENGTH - 1 && newCode.every(Boolean)) {
-        handleSubmit(newCode.join(''));
+        handleSubmit(newCode.join('')).catch(reportVerifyError);
       }
     },
-    [code, handleSubmit]
+    [code, handleSubmit, reportVerifyError]
   );
 
   const handleKeyDown = useCallback(
@@ -263,10 +267,10 @@ export function MfaChallenge({
 
       // Auto-submit if complete
       if (pastedData.length >= CODE_LENGTH) {
-        handleSubmit(newCode.slice(0, CODE_LENGTH).join(''));
+        handleSubmit(newCode.slice(0, CODE_LENGTH).join('')).catch(reportVerifyError);
       }
     },
-    [code, handleSubmit]
+    [code, handleSubmit, reportVerifyError]
   );
 
   const handleResend = useCallback(async () => {

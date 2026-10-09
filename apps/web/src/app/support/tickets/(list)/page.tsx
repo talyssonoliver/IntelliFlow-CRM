@@ -97,22 +97,13 @@ export default function SupportTicketsPage() {
 
   // Bulk mutation hooks — only 3 for support context (AC-007)
   const bulkAssignMutation = api.ticket.bulkAssign.useMutation({
-    onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-    },
+    onSuccess: () => Promise.all([utils.ticket.list.invalidate(), utils.ticket.stats.invalidate()]),
   });
   const bulkUpdateStatusMutation = api.ticket.bulkUpdateStatus.useMutation({
-    onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-    },
+    onSuccess: () => Promise.all([utils.ticket.list.invalidate(), utils.ticket.stats.invalidate()]),
   });
   const bulkResolveMutation = api.ticket.bulkResolve.useMutation({
-    onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-    },
+    onSuccess: () => Promise.all([utils.ticket.list.invalidate(), utils.ticket.stats.invalidate()]),
   });
 
   const handleBulkAction = async (

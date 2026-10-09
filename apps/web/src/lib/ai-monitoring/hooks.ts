@@ -129,9 +129,11 @@ export function useDriftDashboard(
     isLoading,
     error: error as Error | null,
     refetch: () => {
-      statusQuery.refetch();
-      driftQuery.refetch();
-      roiQuery.refetch();
+      Promise.all([statusQuery.refetch(), driftQuery.refetch(), roiQuery.refetch()]).catch(
+        (err: unknown) => {
+          console.error('[useDriftDashboard] Failed to refresh:', err);
+        }
+      );
     },
   };
 }
@@ -196,7 +198,9 @@ export function useAgentLogs(params: AgentLogsParams): AgentLogsData {
     isLoading: query.isLoading,
     error: query.error as Error | null,
     refetch: () => {
-      query.refetch();
+      query.refetch().catch((err: unknown) => {
+        console.error('[useAgentLogs] Failed to refresh:', err);
+      });
     },
   };
 }
@@ -304,8 +308,9 @@ export function useLatencyDashboard(
     isLoading: metricsQuery.isLoading || trendQuery.isLoading,
     error: (metricsQuery.error as Error | null) ?? (trendQuery.error as Error | null),
     refetch: () => {
-      metricsQuery.refetch();
-      trendQuery.refetch();
+      Promise.all([metricsQuery.refetch(), trendQuery.refetch()]).catch((err: unknown) => {
+        console.error('[useLatencyDashboard] Failed to refresh:', err);
+      });
     },
   };
 }
@@ -341,7 +346,9 @@ export function useFailedJobs(params: FailedJobsParams): FailedJobsData {
     isLoading: query.isLoading,
     error: query.error as Error | null,
     refetch: () => {
-      query.refetch();
+      query.refetch().catch((err: unknown) => {
+        console.error('[useFailedJobs] Failed to refresh:', err);
+      });
     },
   };
 }

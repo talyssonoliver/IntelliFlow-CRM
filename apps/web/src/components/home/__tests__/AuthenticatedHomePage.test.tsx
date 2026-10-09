@@ -1037,6 +1037,21 @@ describe('AuthenticatedHomePage', () => {
       expect(mutationConfig!.onError).toBeInstanceOf(Function);
     });
 
+    it('unpinMutation onSuccess returns the pinned-items refetch so the mutation waits for it', async () => {
+      const refetch = vi.fn().mockResolvedValue('pinned-refreshed');
+      mockPinnedQuery.mockReturnValue({
+        data: { items: [], maxItems: 10 },
+        isLoading: false,
+        refetch,
+      });
+      render(<AuthenticatedHomePage />);
+
+      const calls = mockUnpinMutation.mock.calls as any[][];
+      const config = calls.at(-1)?.[0] as { onSuccess: () => Promise<unknown> };
+      await expect(config.onSuccess()).resolves.toBe('pinned-refreshed');
+      expect(refetch).toHaveBeenCalledTimes(1);
+    });
+
     // T-008: onError calls refetchPinned (rollback)
     it('invokes onSuccess and onError callbacks without throwing', () => {
       render(<AuthenticatedHomePage />);

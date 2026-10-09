@@ -365,3 +365,68 @@ describe('ArticleEditor — edit flow', () => {
     );
   });
 });
+
+describe('ArticleEditor — query refresh after a successful action', () => {
+  it('gives toast and navigation feedback before the refetch has finished, then awaits it', async () => {
+    let finishRefetch: () => void = () => {};
+    invalidateList.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (finishRefetch = resolve))
+    );
+    render(<ArticleEditor mode="create" />);
+    fillRequiredFields();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('save-draft'));
+    });
+    // refetch still pending: the user already has feedback
+    expect(toastMock).toHaveBeenCalledWith(expect.objectContaining({ title: 'Draft created' }));
+    expect(routerPush).toHaveBeenCalledWith('/settings/help-center/articles/new-1/edit');
+    expect(invalidateList).toHaveBeenCalledTimes(1);
+    expect(invalidateById).toHaveBeenCalledWith({ id: 'new-1' });
+    await act(async () => {
+      finishRefetch();
+    });
+  });
+
+  it('refreshes the list and the article after publishing', async () => {
+    render(<ArticleEditor mode="create" />);
+    fillRequiredFields();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('publish'));
+    });
+    await waitFor(() => expect(invalidateById).toHaveBeenCalledWith({ id: 'new-1' }));
+    expect(invalidateList).toHaveBeenCalled();
+  });
+
+  it('still refreshes the list and the draft when a create-mode publish fails', async () => {
+    publishMutateAsync.mockRejectedValue(new Error('already published'));
+    render(<ArticleEditor mode="create" />);
+    fillRequiredFields();
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('publish'));
+    });
+    await waitFor(() => expect(invalidateById).toHaveBeenCalledWith({ id: 'new-1' }));
+    expect(invalidateList).toHaveBeenCalled();
+  });
+
+  it('refreshes the list and the article after unpublishing', async () => {
+    articleData = {
+      id: 'art-42',
+      title: 'Existing Title',
+      slug: 'existing-slug',
+      categoryId: 'faq',
+      excerpt: 'Existing excerpt.',
+      readTimeMinutes: 4,
+      keywords: [],
+      relatedArticleIds: [],
+      order: 2,
+      status: 'PUBLISHED' as const,
+      sections: [{ heading: 'Intro', content: 'Body of intro.', blocks: null, order: 0 }],
+    };
+    render(<ArticleEditor mode="edit" articleId="art-42" />);
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('unpublish'));
+    });
+    await waitFor(() => expect(invalidateById).toHaveBeenCalledWith({ id: 'art-42' }));
+    expect(invalidateList).toHaveBeenCalled();
+  });
+});

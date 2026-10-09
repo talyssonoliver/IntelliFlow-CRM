@@ -495,14 +495,12 @@ export function CancelFlow() {
   const cancelMutation = trpc.billing.cancelSubscription.useMutation({
     onSuccess: () => {
       setCurrentStep('confirm');
-      refetch();
+      return refetch();
     },
   });
 
   const reactivateMutation = trpc.billing.updateSubscription.useMutation({
-    onSuccess: () => {
-      refetch();
-    },
+    onSuccess: () => refetch(),
   });
 
   const handleStepClick = (step: Step) => {
@@ -732,7 +730,9 @@ export function CancelFlow() {
         onPauseSuccess={() => {
           setShowPauseModal(false);
           setPaused(true);
-          refetch();
+          refetch().catch((err: unknown) => {
+            console.error('[CancelFlow] Failed to refresh subscription after pause:', err);
+          });
         }}
       />
     </Card>

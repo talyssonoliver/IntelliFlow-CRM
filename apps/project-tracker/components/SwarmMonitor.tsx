@@ -160,18 +160,22 @@ export default function SwarmMonitor() {
           watchdog_threshold: prev?.watchdog_threshold,
           timestamp: new Date().toISOString(),
         }));
-      } catch (error) {
-        console.error('Failed to fetch agent status:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
+    const pollSwarmStatus = () => {
+      fetchSwarmStatus().catch((error: unknown) => {
+        console.error('Failed to fetch agent status:', error);
+      });
+    };
+
     // Initial fetch
-    fetchSwarmStatus();
+    pollSwarmStatus();
 
     // Poll every 5 seconds to catch newly started sessions
-    const interval = setInterval(fetchSwarmStatus, 5000);
+    const interval = setInterval(pollSwarmStatus, 5000);
     return () => clearInterval(interval);
   }, []);
 

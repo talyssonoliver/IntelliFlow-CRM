@@ -24,7 +24,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
-import { invalidateTicketsCache } from '@/app/tickets/actions';
+import { revalidateTicketsCache } from '@/lib/tickets/revalidate-tickets-cache';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const CUID_RE = /^c[a-z0-9]{8,}$/;
@@ -63,12 +63,13 @@ export default function TicketDetailPage() {
 
   // Generic update mutation — used for status, priority, and assignment changes
   const updateMutation = api.ticket.update.useMutation({
-    onSuccess: () => {
-      utils.ticket.getById.invalidate({ id: ticketId });
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
-    },
+    onSuccess: () =>
+      Promise.all([
+        utils.ticket.getById.invalidate({ id: ticketId }),
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]),
     onError: (error) => {
       toast({ title: 'Update failed', description: error.message, variant: 'destructive' });
     },
@@ -76,8 +77,8 @@ export default function TicketDetailPage() {
 
   const addResponseMutation = api.ticket.addResponse.useMutation({
     onSuccess: () => {
-      utils.ticket.getById.invalidate({ id: ticketId });
       toast({ title: 'Response Added', description: 'Your response has been posted.' });
+      return utils.ticket.getById.invalidate({ id: ticketId });
     },
     onError: (error) => {
       toast({
@@ -90,11 +91,13 @@ export default function TicketDetailPage() {
 
   const deleteMutation = api.ticket.delete.useMutation({
     onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
       toast({ title: 'Ticket Deleted', description: 'The ticket has been permanently deleted.' });
       router.push('/tickets');
+      return Promise.all([
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]);
     },
     onError: (error) => {
       toast({ title: 'Delete failed', description: error.message, variant: 'destructive' });
@@ -103,12 +106,14 @@ export default function TicketDetailPage() {
 
   const archiveMutation = api.ticket.archive.useMutation({
     onSuccess: () => {
-      utils.ticket.getById.invalidate({ id: ticketId });
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
       toast({ title: 'Ticket Archived', description: 'The ticket has been archived.' });
       router.push('/tickets');
+      return Promise.all([
+        utils.ticket.getById.invalidate({ id: ticketId }),
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]);
     },
     onError: (error) => {
       toast({ title: 'Archive failed', description: error.message, variant: 'destructive' });

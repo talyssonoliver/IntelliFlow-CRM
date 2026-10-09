@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { cn, Popover, PopoverContent, PopoverTrigger } from '@intelliflow/ui';
+import { cn, Popover, PopoverContent, PopoverTrigger, toast } from '@intelliflow/ui';
 import { useCalendarVisibility, CALENDAR_COLOR_OPTIONS } from '@/hooks/useCalendarVisibility';
 
 interface CalendarTogglesSectionProps {
@@ -17,10 +17,30 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
   const handleAdd = () => {
     const trimmed = newName.trim();
     if (!trimmed) return;
-    addCalendar(trimmed, newColor);
-    setNewName('');
-    setNewColor(CALENDAR_COLOR_OPTIONS[0]);
-    setAddOpen(false);
+    addCalendar(trimmed, newColor)
+      .then(() => {
+        setNewName('');
+        setNewColor(CALENDAR_COLOR_OPTIONS[0]);
+        setAddOpen(false);
+      })
+      .catch((err: unknown) => {
+        // Keep the form open with the typed name so the user can retry.
+        toast({
+          title: 'Could not add calendar',
+          description: err instanceof Error ? err.message : 'Please try again.',
+          variant: 'destructive',
+        });
+      });
+  };
+
+  const handleRemove = (id: string, label: string) => {
+    removeCalendar(id).catch((err: unknown) => {
+      toast({
+        title: `Could not remove ${label}`,
+        description: err instanceof Error ? err.message : 'Please try again.',
+        variant: 'destructive',
+      });
+    });
   };
 
   return (
@@ -136,9 +156,7 @@ export function CalendarTogglesSection({ isExpanded }: Readonly<CalendarTogglesS
               {/* Remove button for custom calendars (only when expanded) */}
               {isExpanded && !cal.isDefault && (
                 <button
-                  onClick={() => {
-                    removeCalendar(cal.id);
-                  }}
+                  onClick={() => handleRemove(cal.id, cal.label)}
                   className="p-0.5 rounded-sm text-muted-foreground/0 group-hover:text-muted-foreground hover:!text-destructive transition-colors"
                   aria-label={`Remove ${cal.label}`}
                   title={`Remove ${cal.label}`}

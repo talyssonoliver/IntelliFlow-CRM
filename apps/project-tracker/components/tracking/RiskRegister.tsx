@@ -2,7 +2,7 @@
 
 import { Fragment, useState, useEffect, useCallback } from 'react';
 import { Icon } from '@/lib/icons';
-import { RefreshButton, StaleIndicator } from './shared';
+import { RefreshButton, StaleIndicator, LoadingPanel, ErrorPanel } from './shared';
 import {
   type Risk,
   type RiskStatus,
@@ -36,16 +36,18 @@ export default function RiskRegister() {
       setSummary(result.summary || null);
       setLastUpdated(result.lastUpdated);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
+  }, []);
+
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   const handleAddRisk = async (newRisk: Partial<Risk>) => {
     try {
@@ -55,7 +57,7 @@ export default function RiskRegister() {
         body: JSON.stringify({ action: 'add', risk: newRisk }),
       });
       if (!response.ok) throw new Error('Failed to add risk');
-      await fetchData();
+      await fetchData().catch(handleFetchError);
       setShowAddModal(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add risk');
@@ -73,7 +75,7 @@ export default function RiskRegister() {
         const data = await response.json();
         throw new Error(data.message || 'Failed to edit risk');
       }
-      await fetchData();
+      await fetchData().catch(handleFetchError);
       setEditRisk(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to edit risk');
@@ -127,25 +129,11 @@ export default function RiskRegister() {
   const categories = [...new Set(risks.map((r) => r.category))];
 
   if (loading && risks.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Icon name="progress_activity" className="animate-spin text-blue-500" size="2xl" />
-      </div>
-    );
+    return <LoadingPanel />;
   }
 
   if (error) {
-    return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-600">
-        <div className="flex items-center gap-2">
-          <Icon name="error" size="lg" />
-          <span>Error: {error}</span>
-        </div>
-        <button onClick={fetchData} className="mt-2 text-sm underline hover:no-underline">
-          Try again
-        </button>
-      </div>
-    );
+    return <ErrorPanel error={error} onRetry={() => fetchData().catch(handleFetchError)} />;
   }
 
   return (
@@ -194,7 +182,7 @@ export default function RiskRegister() {
               </div>
             )}
           </div>
-          <RefreshButton onRefresh={fetchData} label="Reload" />
+          <RefreshButton onRefresh={() => fetchData().catch(handleFetchError)} label="Reload" />
         </div>
       </div>
 

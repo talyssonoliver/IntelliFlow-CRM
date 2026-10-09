@@ -505,6 +505,28 @@ export default function DealSettingsContent() {
   const scoringIsBusy =
     scoringCreate.isPending || scoringUpdate.isPending || scoringDelete.isPending;
 
+  const handleRetry = async () => {
+    // Typed as thunks returning Promise<unknown> so the six differently-typed tRPC
+    // query results are not unioned into one (excessively deep) type.
+    const refetchers: Array<() => Promise<unknown>> = [
+      () => winLossQuery.refetch({ throwOnError: true }),
+      () => scoringQuery.refetch({ throwOnError: true }),
+      () => duplicateRulesQuery.refetch({ throwOnError: true }),
+      () => requiredFieldsQuery.refetch({ throwOnError: true }),
+      () => tagsQuery.refetch({ throwOnError: true }),
+      () => automationQuery.refetch({ throwOnError: true }),
+    ];
+    try {
+      await Promise.all(refetchers.map((refetch) => refetch()));
+    } catch (err) {
+      toast({
+        title: 'Error reloading settings',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (isLoading) return <DealSettingsLoading />;
 
   if (error) {
@@ -513,14 +535,7 @@ export default function DealSettingsContent() {
         <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
         <button
           type="button"
-          onClick={() => {
-            winLossQuery.refetch();
-            scoringQuery.refetch();
-            duplicateRulesQuery.refetch();
-            requiredFieldsQuery.refetch();
-            tagsQuery.refetch();
-            automationQuery.refetch();
-          }}
+          onClick={handleRetry}
           className="text-sm text-primary hover:underline"
         >
           Retry

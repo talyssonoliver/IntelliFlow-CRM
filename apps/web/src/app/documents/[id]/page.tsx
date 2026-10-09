@@ -691,16 +691,12 @@ export default function DocumentDetailPage() {
 
   // Sign mutation (AC-003) — server extracts IP/UA from headers
   const signMutation = trpc.documents.sign.useMutation({
-    onSuccess: () => {
-      utils.documents.getById.invalidate({ id: documentId });
-    },
+    onSuccess: () => utils.documents.getById.invalidate({ id: documentId }),
   });
 
   // Approve mutation
   const approveMutation = trpc.documents.approve.useMutation({
-    onSuccess: () => {
-      utils.documents.getById.invalidate({ id: documentId });
-    },
+    onSuccess: () => utils.documents.getById.invalidate({ id: documentId }),
   });
 
   // Map audit trail to UI-friendly format using module-level mapAuditEntry helper

@@ -21,7 +21,7 @@ import type { BulkActionType, TicketStats, TicketFilterOptions } from '@/compone
 import { useTicketFilters } from '@/hooks/useTicketFilters';
 import { api } from '@/lib/api';
 import { mapTicketListItems } from '@/lib/tickets/ticket-detail-mapper';
-import { invalidateTicketsCache } from '@/app/tickets/actions';
+import { revalidateTicketsCache } from '@/lib/tickets/revalidate-tickets-cache';
 
 const defaultStats: TicketStats = { open: 0, inProgress: 0, breached: 0, resolvedToday: 0 };
 const defaultFilterOptions: TicketFilterOptions = {
@@ -73,37 +73,47 @@ export default function TicketsPage() {
   // Bulk mutation hooks
   const bulkAssignMutation = api.ticket.bulkAssign.useMutation({
     onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
+      return Promise.all([
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]);
     },
   });
   const bulkUpdateStatusMutation = api.ticket.bulkUpdateStatus.useMutation({
     onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
+      return Promise.all([
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]);
     },
   });
   const bulkResolveMutation = api.ticket.bulkResolve.useMutation({
     onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
+      return Promise.all([
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]);
     },
   });
   const bulkEscalateMutation = api.ticket.bulkEscalate.useMutation({
     onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
+      return Promise.all([
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]);
     },
   });
   const bulkCloseMutation = api.ticket.bulkClose.useMutation({
     onSuccess: () => {
-      utils.ticket.list.invalidate();
-      utils.ticket.stats.invalidate();
-      invalidateTicketsCache().catch(() => {});
+      return Promise.all([
+        utils.ticket.list.invalidate(),
+        utils.ticket.stats.invalidate(),
+        revalidateTicketsCache(),
+      ]);
     },
   });
 

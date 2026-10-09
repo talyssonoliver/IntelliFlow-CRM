@@ -89,17 +89,13 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
   // Mutations
   const utils = trpc.useUtils();
   const markAsReadMutation = trpc.email.markAsRead.useMutation({
-    onSuccess: () => {
-      void utils.email.listEmails.invalidate();
-      void utils.email.getUnreadCounts.invalidate();
-    },
+    onSuccess: () =>
+      Promise.all([utils.email.listEmails.invalidate(), utils.email.getUnreadCounts.invalidate()]),
   });
 
   const processEmailMutation = trpc.email.processEmail.useMutation({
     onSuccess: (_data, variables) => {
       setSelectedEmailId(null);
-      void utils.email.listEmails.invalidate();
-      void utils.email.getUnreadCounts.invalidate();
       const actionLabels: Record<string, string> = {
         archive: 'Email archived',
         delete: 'Email moved to trash',
@@ -107,6 +103,10 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
         spam: 'Email marked as spam',
       };
       toast({ title: actionLabels[variables.action] ?? 'Email processed' });
+      return Promise.all([
+        utils.email.listEmails.invalidate(),
+        utils.email.getUnreadCounts.invalidate(),
+      ]);
     },
     onError: () => {
       toast({ title: 'Failed to process email', variant: 'destructive' });
@@ -115,8 +115,8 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
 
   const setLabelsMutation = trpc.email.setLabels.useMutation({
     onSuccess: () => {
-      void utils.email.listEmails.invalidate();
       toast({ title: 'Labels updated' });
+      return utils.email.listEmails.invalidate();
     },
     onError: () => {
       toast({ title: 'Failed to update labels', variant: 'destructive' });
@@ -126,9 +126,11 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
   const markAsUnreadMutation = trpc.email.markAsUnread.useMutation({
     onSuccess: () => {
       setSelectedEmailId(null);
-      void utils.email.listEmails.invalidate();
-      void utils.email.getUnreadCounts.invalidate();
       toast({ title: 'Email marked as unread' });
+      return Promise.all([
+        utils.email.listEmails.invalidate(),
+        utils.email.getUnreadCounts.invalidate(),
+      ]);
     },
     onError: () => {
       toast({ title: 'Failed to mark email as unread', variant: 'destructive' });
@@ -217,10 +219,16 @@ export function EmailPage({ initialEmailId, className }: Readonly<EmailPageProps
     [selectedEmailId, setLabelsMutation]
   );
 
-  const handleInlineSent = useCallback(() => {
-    void utils.email.listEmails.invalidate();
-    void threadQuery.refetch();
+  const handleInlineSent = useCallback(async () => {
     toast({ title: 'Reply sent' });
+    try {
+      await Promise.all([utils.email.listEmails.invalidate(), threadQuery.refetch()]);
+    } catch {
+      toast({
+        title: 'Reply sent, but the conversation could not be refreshed',
+        variant: 'destructive',
+      });
+    }
   }, [utils, threadQuery]);
 
   return (

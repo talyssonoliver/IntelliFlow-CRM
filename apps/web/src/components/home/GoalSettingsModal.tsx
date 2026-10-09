@@ -51,8 +51,8 @@ export function GoalSettingsModal({
   const utils = trpc.useUtils();
   const updateGoal = trpc.home.updateDailyGoal.useMutation({
     onSuccess: () => {
-      utils.home.getDailyGoal.invalidate();
       onOpenChange(false);
+      return utils.home.getDailyGoal.invalidate();
     },
   });
 
