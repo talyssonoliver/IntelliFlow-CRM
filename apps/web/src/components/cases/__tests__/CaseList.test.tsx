@@ -139,6 +139,18 @@ describe('CaseList', () => {
     expect(screen.getByText('JD')).toBeInTheDocument();
   });
 
+  it('renders an assignee without a display name by email instead of crashing', () => {
+    // User.name is optional: the nightly E2E's enterprise persona has none, and
+    // name.split() took the whole /cases list down to the error page.
+    const unnamed: CaseListItem = {
+      ...mockCase,
+      assignee: { id: 'user-2', name: null, email: 'qa@test.com', avatarUrl: null },
+    };
+    render(<CaseList {...defaultProps} cases={[unnamed]} />);
+    expect(screen.getByText('Test Case Alpha')).toBeInTheDocument();
+    expect(screen.getByText('qa@test.com')).toBeInTheDocument();
+  });
+
   it('shows overdue badge for overdue cases', () => {
     const overdueCase = { ...mockCase, isOverdue: true };
     render(<CaseList {...defaultProps} cases={[overdueCase]} />);
