@@ -238,6 +238,57 @@ describe('MfaChallenge', () => {
     });
   });
 
+  describe('Verification errors on auto-submit paths', () => {
+    it('shows the error message when auto-submit verification rejects', async () => {
+      const onVerify = vi.fn().mockRejectedValue(new Error('verifier down'));
+
+      render(<MfaChallenge {...defaultProps} onVerify={onVerify} />);
+
+      const inputs = screen.getAllByRole('textbox');
+      for (let i = 0; i < 5; i++) {
+        fireEvent.change(inputs[i], { target: { value: String(i + 1) } });
+      }
+      await act(async () => {
+        fireEvent.change(inputs[5], { target: { value: '6' } });
+      });
+
+      expect(await screen.findByText('verifier down')).toBeInTheDocument();
+    });
+
+    it('shows the error message when a pasted code fails verification', async () => {
+      const onVerify = vi.fn().mockRejectedValue(new Error('paste verifier down'));
+
+      render(<MfaChallenge {...defaultProps} onVerify={onVerify} />);
+
+      const inputs = screen.getAllByRole('textbox');
+      await act(async () => {
+        fireEvent.paste(inputs[0], {
+          preventDefault: vi.fn(),
+          clipboardData: { getData: () => '123456' },
+        });
+      });
+
+      expect(await screen.findByText('paste verifier down')).toBeInTheDocument();
+      expect(onVerify).toHaveBeenCalledWith('123456', 'totp');
+    });
+
+    it('falls back to a generic message when verification rejects with a non-Error', async () => {
+      const onVerify = vi.fn().mockRejectedValue('nope');
+
+      render(<MfaChallenge {...defaultProps} onVerify={onVerify} />);
+
+      const inputs = screen.getAllByRole('textbox');
+      await act(async () => {
+        fireEvent.paste(inputs[0], {
+          preventDefault: vi.fn(),
+          clipboardData: { getData: () => '123456' },
+        });
+      });
+
+      expect(await screen.findByText('Verification failed')).toBeInTheDocument();
+    });
+  });
+
   describe('Manual Submit', () => {
     it('shows error when submitting incomplete code', async () => {
       const user = userEvent.setup();

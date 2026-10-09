@@ -68,6 +68,11 @@ function coerceValue(
   return Number(fallback);
 }
 
+/** Call-site handler for fire-and-forget deal notifications: log, never break the mutation. */
+function logDealNotifyFailure(err: unknown): void {
+  console.error('[opportunity.router] deal notify failed:', err);
+}
+
 /**
  * Fire-and-forget deal notifications after an update. Extracted to reduce
  * cognitive complexity of the update procedure.
@@ -85,15 +90,15 @@ function triggerUpdateNotifications(
   const notifier = buildDealNotifier(ctx, tenantId);
   const { ownerId } = before;
   if (automation.notifyOnStageChange && before.stage !== newStage) {
-    void notifyDealStageChange(
+    notifyDealStageChange(
       notifier,
       { opportunityId: id, ownerId, fromStage: before.stage, toStage: newStage, actorId },
       automation
-    );
+    ).catch(logDealNotifyFailure);
   }
   if (automation.notifyOnHighValueStageMove && before.stage !== newStage) {
     if (finalValue >= automation.highValueThreshold) {
-      void notifyHighValueStageMove(
+      notifyHighValueStageMove(
         notifier,
         {
           opportunityId: id,
@@ -106,7 +111,7 @@ function triggerUpdateNotifications(
           toUserIds: [ownerId],
         },
         automation
-      );
+      ).catch(logDealNotifyFailure);
     }
   }
 }
@@ -697,7 +702,7 @@ export const opportunityRouter = createTRPCRouter({
         },
       });
       if (suspect) {
-        void notifyDealDuplicate(
+        notifyDealDuplicate(
           notifier,
           {
             opportunityId: result.value.id.value,
@@ -706,7 +711,7 @@ export const opportunityRouter = createTRPCRouter({
             actorId: typedCtx.tenant.userId,
           },
           automation
-        );
+        ).catch(logDealNotifyFailure);
       }
     }
 

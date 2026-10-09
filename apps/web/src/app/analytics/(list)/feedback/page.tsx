@@ -65,16 +65,20 @@ export default function FeedbackAnalyticsPage() {
   const handleExportCSV = useCallback(() => {
     if (!data) return;
     // Dynamic import to avoid bundling export utils unnecessarily
-    import('@/lib/export/csv').then(({ exportToCSV }) => {
-      const rows = data.trends.map((t) => ({
-        Period: t.period,
-        NPS: t.nps ?? '',
-        CSAT: t.csat ?? '',
-        CES: t.ces ?? '',
-        Responses: t.responseCount,
-      }));
-      exportToCSV(rows, { filename: `feedback-analytics-${period}.csv` });
-    });
+    import('@/lib/export/csv')
+      .then(({ exportToCSV }) => {
+        const rows = data.trends.map((t) => ({
+          Period: t.period,
+          NPS: t.nps ?? '',
+          CSAT: t.csat ?? '',
+          CES: t.ces ?? '',
+          Responses: t.responseCount,
+        }));
+        exportToCSV(rows, { filename: `feedback-analytics-${period}.csv` });
+      })
+      .catch((error) => {
+        console.error('Failed to export feedback analytics CSV:', error);
+      });
   }, [data, period]);
 
   if (isLoading) {

@@ -136,12 +136,14 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
   // Create version
   const createMutation = api.chainVersion.create.useMutation({
     onSuccess: () => {
-      utils.chainVersion.list.invalidate();
-      utils.chainVersion.getStats.invalidate();
       toast({
         title: 'Version created',
         description: 'New chain version has been created as a draft.',
       });
+      return Promise.all([
+        utils.chainVersion.list.invalidate(),
+        utils.chainVersion.getStats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -155,11 +157,11 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
   // Update version
   const updateMutation = api.chainVersion.update.useMutation({
     onSuccess: () => {
-      utils.chainVersion.list.invalidate();
       toast({
         title: 'Version updated',
         description: 'Chain version has been updated successfully.',
       });
+      return utils.chainVersion.list.invalidate();
     },
     onError: (err: { message: string }) => {
       toast({
@@ -173,13 +175,15 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
   // Activate version
   const activateMutation = api.chainVersion.activate.useMutation({
     onSuccess: () => {
-      utils.chainVersion.list.invalidate();
-      utils.chainVersion.getActive.invalidate();
-      utils.chainVersion.getStats.invalidate();
       toast({
         title: 'Version activated',
         description: 'Chain version is now active. Previous active version has been deprecated.',
       });
+      return Promise.all([
+        utils.chainVersion.list.invalidate(),
+        utils.chainVersion.getActive.invalidate(),
+        utils.chainVersion.getStats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -193,12 +197,14 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
   // Deprecate version
   const deprecateMutation = api.chainVersion.deprecate.useMutation({
     onSuccess: () => {
-      utils.chainVersion.list.invalidate();
-      utils.chainVersion.getStats.invalidate();
       toast({
         title: 'Version deprecated',
         description: 'Chain version has been deprecated.',
       });
+      return Promise.all([
+        utils.chainVersion.list.invalidate(),
+        utils.chainVersion.getStats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -212,12 +218,14 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
   // Archive version
   const archiveMutation = api.chainVersion.archive.useMutation({
     onSuccess: () => {
-      utils.chainVersion.list.invalidate();
-      utils.chainVersion.getStats.invalidate();
       toast({
         title: 'Version archived',
         description: 'Chain version has been archived.',
       });
+      return Promise.all([
+        utils.chainVersion.list.invalidate(),
+        utils.chainVersion.getStats.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -231,14 +239,16 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
   // Rollback version
   const rollbackMutation = api.chainVersion.rollback.useMutation({
     onSuccess: () => {
-      utils.chainVersion.list.invalidate();
-      utils.chainVersion.getActive.invalidate();
-      utils.chainVersion.getStats.invalidate();
-      utils.chainVersion.getAuditLog.invalidate();
       toast({
         title: 'Rollback successful',
         description: 'Chain version has been rolled back.',
       });
+      return Promise.all([
+        utils.chainVersion.list.invalidate(),
+        utils.chainVersion.getActive.invalidate(),
+        utils.chainVersion.getStats.invalidate(),
+        utils.chainVersion.getAuditLog.invalidate(),
+      ]);
     },
     onError: (err: { message: string }) => {
       toast({
@@ -311,12 +321,20 @@ export function useChainVersions(options: UseChainVersionsOptions = {}): UseChai
 
     // Utilities
     refetch: () => {
-      versionsQuery.refetch();
-      scoringActiveQuery.refetch();
-      qualificationActiveQuery.refetch();
-      emailWriterActiveQuery.refetch();
-      followupActiveQuery.refetch();
-      statsQuery.refetch();
+      Promise.all([
+        versionsQuery.refetch(),
+        scoringActiveQuery.refetch(),
+        qualificationActiveQuery.refetch(),
+        emailWriterActiveQuery.refetch(),
+        followupActiveQuery.refetch(),
+        statsQuery.refetch(),
+      ]).catch((err: unknown) => {
+        toast({
+          title: 'Failed to refresh versions',
+          description: err instanceof Error ? err.message : 'Unknown error',
+          variant: 'destructive',
+        });
+      });
     },
     compareVersions,
   };
@@ -350,7 +368,11 @@ export function useVersionAudit(options: UseVersionAuditOptions = {}): UseVersio
     auditLog: auditQuery.data as ChainVersionAudit[] | undefined,
     isLoading: auditQuery.isLoading,
     error: auditQuery.error ? new Error(auditQuery.error.message) : null,
-    refetch: () => auditQuery.refetch(),
+    refetch: () => {
+      auditQuery.refetch().catch((err: unknown) => {
+        console.error('[useVersionAudit] Failed to refresh the audit log:', err);
+      });
+    },
   };
 }
 
@@ -403,7 +425,9 @@ export function useZepBudget(): UseZepBudgetReturn {
     isLoading: budgetQuery.isLoading,
     error: budgetQuery.error ? new Error(budgetQuery.error.message) : null,
     refetch: () => {
-      budgetQuery.refetch();
+      budgetQuery.refetch().catch((err: unknown) => {
+        console.error('[useZepBudget] Failed to refresh the budget:', err);
+      });
     },
     percentUsed,
     budgetStatus,

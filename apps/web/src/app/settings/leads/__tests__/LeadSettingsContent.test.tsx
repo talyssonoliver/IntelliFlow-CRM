@@ -454,6 +454,32 @@ describe('LeadSettingsContent', () => {
     expect(refetchAutomation).toHaveBeenCalled();
   });
 
+  it.each([
+    [new Error('refetch exploded'), 'refetch exploded'],
+    ['plain failure', 'An unexpected error occurred'],
+  ])('shows an error toast when a retry refetch rejects (%s)', async (rejection, description) => {
+    const { toast: mockToast } = await import('@intelliflow/ui');
+    mockStagesGetAllQuery.mockReturnValue({
+      data: undefined,
+      isLoading: false,
+      error: { message: 'Network error' },
+      refetch: vi.fn().mockRejectedValue(rejection),
+    });
+
+    render(<LeadSettingsContent />);
+    fireEvent.click(screen.getByText('Retry'));
+
+    await waitFor(() =>
+      expect(mockToast).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: 'Error reloading settings',
+          description,
+          variant: 'destructive',
+        })
+      )
+    );
+  });
+
   it('Save Changes button is disabled initially (isDirty starts false)', () => {
     render(<LeadSettingsContent />);
     expect(screen.getByTestId('pg-action-save-changes')).toBeDisabled();

@@ -81,7 +81,9 @@ export default function AccountTiersContent() {
           description: 'Someone else saved account tiers. The latest tiers have been loaded.',
           variant: 'destructive',
         });
-        void query.refetch();
+        query
+          .refetch()
+          .catch((err: unknown) => console.error('Failed to reload account tiers:', err));
         return;
       }
       toast({ title: 'Could not save tiers', description: error.message, variant: 'destructive' });

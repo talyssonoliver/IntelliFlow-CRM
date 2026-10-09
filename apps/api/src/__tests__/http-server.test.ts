@@ -440,4 +440,31 @@ describe('HTTP API Server', () => {
       expect(res.headers['access-control-allow-origin']).toBeUndefined();
     });
   });
+
+  it('logs instead of crashing when the 500 responder itself throws', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const server = createApiServer({
+      router: createTRPCRouter({ hello: publicProcedure.query(() => 'world') }),
+      createContext: (opts) => createPublicContext({ req: opts?.req }),
+    });
+    // An unparseable URL makes handleRequest throw; a response whose header API throws
+    // (as when headers were already sent) makes the 500 responder throw as well.
+    const responderError = new Error('headers already sent');
+    const req = { url: 'http://', headers: {}, method: 'GET' };
+    const res = {
+      setHeader: () => {
+        throw responderError;
+      },
+    };
+
+    server.emit('request', req, res);
+
+    await vi.waitFor(() =>
+      expect(consoleError).toHaveBeenCalledWith(
+        '[API] HTTP error responder failed:',
+        responderError
+      )
+    );
+    consoleError.mockRestore();
+  });
 });

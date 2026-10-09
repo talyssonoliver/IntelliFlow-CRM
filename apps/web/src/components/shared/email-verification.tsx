@@ -192,6 +192,8 @@ export function EmailVerification({
       setVerifiedEmail,
       onVerified: () => onVerifiedRef.current?.(),
       onError: (err: string) => onErrorRef.current?.(err),
+    }).catch((error: unknown) => {
+      console.error('[EmailVerification] Verification callback failed:', error);
     });
   }, []);
 

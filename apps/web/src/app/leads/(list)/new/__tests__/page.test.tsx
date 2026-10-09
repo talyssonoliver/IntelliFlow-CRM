@@ -801,4 +801,39 @@ describe('CreateNewLeadPage', () => {
 
     expect(mockMutateAsync).toHaveBeenCalledOnce();
   });
+
+  it('logs a rejected create from the call-site handler and re-enables the submit button', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const failure = new Error('create failed');
+    mockMutateAsync.mockRejectedValueOnce(failure);
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> step 2
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> step 3
+    await act(async () => {
+      capturedProps?.onSubmit({ preventDefault: () => undefined });
+    });
+
+    expect(consoleError).toHaveBeenCalledWith('Mutation error:', failure);
+    expect(
+      (screen.getByRole('button', { name: /create lead/i }) as HTMLButtonElement).disabled
+    ).toBe(false);
+    consoleError.mockRestore();
+  });
+
+  it('submits via the final-step button and logs a rejected create', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const failure = new Error('create failed');
+    mockMutateAsync.mockRejectedValueOnce(failure);
+    render(<CreateNewLeadPage />);
+    fillBasicStep();
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> step 2
+    fireEvent.click(screen.getByRole('button', { name: /next step/i })); // -> step 3
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: /create lead/i }));
+    });
+
+    expect(consoleError).toHaveBeenCalledWith('Mutation error:', failure);
+    consoleError.mockRestore();
+  });
 });

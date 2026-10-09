@@ -334,21 +334,30 @@ export default function ContactSettingsContent() {
     [handleSave, isDirty, isSaving, hasDuplicateRulePair]
   );
 
+  const handleRetry = async () => {
+    try {
+      await Promise.all([
+        duplicateRulesQuery.refetch({ throwOnError: true }),
+        requiredFieldsQuery.refetch({ throwOnError: true }),
+        tagsQuery.refetch({ throwOnError: true }),
+        automationQuery.refetch({ throwOnError: true }),
+      ]);
+    } catch (err) {
+      toast({
+        title: 'Error reloading settings',
+        description: err instanceof Error ? err.message : 'An unexpected error occurred',
+        variant: 'destructive',
+      });
+    }
+  };
+
   if (isLoading) return <ContactSettingsLoading />;
 
   if (error) {
     return (
       <div className="w-full text-center py-12">
         <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
-        <button
-          onClick={() => {
-            duplicateRulesQuery.refetch();
-            requiredFieldsQuery.refetch();
-            tagsQuery.refetch();
-            automationQuery.refetch();
-          }}
-          className="text-sm text-primary hover:underline"
-        >
+        <button onClick={handleRetry} className="text-sm text-primary hover:underline">
           Retry
         </button>
       </div>

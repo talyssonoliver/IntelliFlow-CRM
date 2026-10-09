@@ -72,11 +72,11 @@ export default function ReportTemplatesContent() {
   });
   const createMutation = trpc.analytics.reportTemplates.create.useMutation({
     onSuccess: () => {
-      void utils.analytics.reportTemplates.list.invalidate();
       toast({ title: 'Template created', description: 'Your report template was saved.' });
       setDialogOpen(false);
       setForm(EMPTY_FORM);
       setEditingId(null);
+      return utils.analytics.reportTemplates.list.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -84,11 +84,11 @@ export default function ReportTemplatesContent() {
   });
   const updateMutation = trpc.analytics.reportTemplates.update.useMutation({
     onSuccess: () => {
-      void utils.analytics.reportTemplates.list.invalidate();
       toast({ title: 'Template updated', description: 'Your changes were saved.' });
       setDialogOpen(false);
       setForm(EMPTY_FORM);
       setEditingId(null);
+      return utils.analytics.reportTemplates.list.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -96,9 +96,9 @@ export default function ReportTemplatesContent() {
   });
   const deleteMutation = trpc.analytics.reportTemplates.delete.useMutation({
     onSuccess: () => {
-      void utils.analytics.reportTemplates.list.invalidate();
       toast({ title: 'Template deleted' });
       setDeleteTarget(null);
+      return utils.analytics.reportTemplates.list.invalidate();
     },
     onError: (err) => {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });

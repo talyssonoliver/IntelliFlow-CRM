@@ -23,9 +23,7 @@ export function useMfaStatus() {
 export function useDisableMfa() {
   const utils = trpc.useUtils();
   return trpc.auth.disableMfa.useMutation({
-    onSuccess: () => {
-      utils.auth.getMfaStatus.invalidate();
-    },
+    onSuccess: () => utils.auth.getMfaStatus.invalidate(),
   });
 }
 
@@ -36,8 +34,6 @@ export function useDisableMfa() {
 export function useRegenerateBackupCodes() {
   const utils = trpc.useUtils();
   return trpc.auth.regenerateBackupCodes.useMutation({
-    onSuccess: () => {
-      utils.auth.getMfaStatus.invalidate();
-    },
+    onSuccess: () => utils.auth.getMfaStatus.invalidate(),
   });
 }

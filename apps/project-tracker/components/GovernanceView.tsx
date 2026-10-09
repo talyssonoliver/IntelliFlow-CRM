@@ -1457,6 +1457,10 @@ export default function GovernanceView({ selectedSprint }: Readonly<GovernanceVi
     if (platformData?.status) setPlatformHealth(platformData);
   };
 
+  const reportGovernanceLoadError = (error: unknown) => {
+    console.error('Error loading governance data:', error);
+  };
+
   const loadGovernanceData = async () => {
     setIsLoading(true);
     const sprintParam = getSprintParam();
@@ -1471,8 +1475,6 @@ export default function GovernanceView({ selectedSprint }: Readonly<GovernanceVi
           fetchJson('/api/governance/platform-health'),
         ]);
       applyGovernanceData(summaryData, queueData, debtData, lintData, phantomData, platformData);
-    } catch (error) {
-      console.error('Error loading governance data:', error);
     } finally {
       setIsLoading(false);
     }
@@ -1499,7 +1501,7 @@ export default function GovernanceView({ selectedSprint }: Readonly<GovernanceVi
         }
 
         // Reload data after lint
-        await loadGovernanceData();
+        await loadGovernanceData().catch(reportGovernanceLoadError);
       }
     } catch (error) {
       console.error('Error running plan lint:', error);
@@ -1538,7 +1540,7 @@ export default function GovernanceView({ selectedSprint }: Readonly<GovernanceVi
   };
 
   useEffect(() => {
-    loadGovernanceData();
+    loadGovernanceData().catch(reportGovernanceLoadError);
   }, [selectedSprint]);
 
   const toggleExpand = (id: string) => {
@@ -1604,7 +1606,7 @@ export default function GovernanceView({ selectedSprint }: Readonly<GovernanceVi
             {isRunningLint ? 'Running...' : 'Run Lint'}
           </button>
           <button
-            onClick={loadGovernanceData}
+            onClick={() => loadGovernanceData().catch(reportGovernanceLoadError)}
             disabled={isLoading}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50"
           >

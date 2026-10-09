@@ -16,7 +16,7 @@ import { AppointmentForm } from '@/components/appointments';
 import type { AppointmentFormInput } from '@/components/appointments/types';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { api } from '@/lib/api';
-import { revalidateCalendar } from '@/app/calendar/actions';
+import { revalidateCalendarCache } from '@/lib/calendar/revalidate-calendar-cache';
 
 export default function NewAppointmentPage() {
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
@@ -41,10 +41,12 @@ export default function NewAppointmentPage() {
 
   const createMutation = api.appointments.create.useMutation({
     onSuccess: () => {
-      utils.appointments.list.invalidate();
-      utils.appointments.stats.invalidate();
-      if (user?.id) revalidateCalendar(user.id).catch(() => {});
       router.push('/appointments');
+      return Promise.all([
+        utils.appointments.list.invalidate(),
+        utils.appointments.stats.invalidate(),
+        user?.id ? revalidateCalendarCache(user.id) : undefined,
+      ]);
     },
   });
 

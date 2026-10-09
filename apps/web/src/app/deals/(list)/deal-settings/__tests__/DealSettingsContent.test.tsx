@@ -1,5 +1,9 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { toast } from '@intelliflow/ui';
+
+// Per-test query overrides keyed by the mock query key (see mkQuery below).
+const queryOverrides = vi.hoisted(() => new Map<string, unknown>());
 
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ isLoading: false, isAuthenticated: true }),
@@ -19,7 +23,7 @@ vi.mock('@/lib/trpc', () => {
     if (!queryCache.has(key)) {
       queryCache.set(key, { data, isLoading: false, error: null, refetch: vi.fn() });
     }
-    return () => queryCache.get(key);
+    return () => queryOverrides.get(key) ?? queryCache.get(key);
   };
   const mkMutation = (key: string) => {
     if (!mutationCache.has(key)) {
@@ -146,5 +150,55 @@ describe('DealSettingsContent (PG-184)', () => {
     expect(h3s).toContain('Scoring Rules');
     expect(h3s).toContain('Tags');
     expect(h3s).toContain('Automation');
+  });
+
+  describe('Retry after a load error', () => {
+    afterEach(() => {
+      queryOverrides.clear();
+      vi.mocked(toast).mockClear();
+    });
+
+    const failingWinLoss = (refetch: ReturnType<typeof vi.fn>) =>
+      queryOverrides.set('winLoss.list', {
+        data: undefined,
+        isLoading: false,
+        error: new Error('load failed'),
+        refetch,
+      });
+
+    it('refetches the failing query when Retry is clicked', async () => {
+      const refetch = vi.fn().mockResolvedValue({});
+      failingWinLoss(refetch);
+      render(<DealSettingsContent />);
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await waitFor(() => expect(refetch).toHaveBeenCalledWith({ throwOnError: true }));
+      expect(toast).not.toHaveBeenCalled();
+    });
+
+    it('shows a destructive toast when the retry itself fails', async () => {
+      failingWinLoss(vi.fn().mockRejectedValue(new Error('still offline')));
+      render(<DealSettingsContent />);
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await waitFor(() =>
+        expect(toast).toHaveBeenCalledWith(
+          expect.objectContaining({
+            title: 'Error reloading settings',
+            description: 'still offline',
+            variant: 'destructive',
+          })
+        )
+      );
+    });
+
+    it('falls back to a generic message for non-Error rejections', async () => {
+      failingWinLoss(vi.fn().mockRejectedValue('nope'));
+      render(<DealSettingsContent />);
+      fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+      await waitFor(() =>
+        expect(toast).toHaveBeenCalledWith(
+          expect.objectContaining({ description: 'An unexpected error occurred' })
+        )
+      );
+    });
   });
 });

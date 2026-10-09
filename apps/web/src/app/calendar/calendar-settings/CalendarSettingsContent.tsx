@@ -80,17 +80,17 @@ export default function CalendarSettingsContent() {
 
   const updateMutation = trpc.appointmentSettings.update.useMutation({
     onSuccess: (data) => {
-      utils.appointmentSettings.get.invalidate();
       setInitialSettings(mapSettings(data));
       setLocalSettings(mapSettings(data));
+      return utils.appointmentSettings.get.invalidate();
     },
   });
 
   const resetMutation = trpc.appointmentSettings.resetToDefaults.useMutation({
     onSuccess: (data) => {
-      utils.appointmentSettings.get.invalidate();
       setInitialSettings(mapSettings(data));
       setLocalSettings(mapSettings(data));
+      return utils.appointmentSettings.get.invalidate();
     },
   });
 

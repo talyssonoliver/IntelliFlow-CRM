@@ -59,7 +59,7 @@ export default function TerritoryMappingContent() {
     onSuccess: refresh,
     onError: (error) => {
       showError('Could not reorder territories', error);
-      void refresh();
+      refresh().catch((err: unknown) => console.error('Failed to reload territories:', err));
     },
   });
   const setDefaultMutation = trpc.accountTerritories.setDefault.useMutation({

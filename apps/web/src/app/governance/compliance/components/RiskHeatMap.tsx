@@ -177,15 +177,15 @@ export function RiskHeatMap() {
       if (result.success) {
         setData(result.data);
       }
-    } catch (error) {
-      console.error('Failed to fetch risks:', error);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchRisks();
+    fetchRisks().catch((error) => {
+      console.error('Failed to fetch risks:', error);
+    });
   }, [fetchRisks]);
 
   const getRisksForCell = (probability: RiskProbability, impact: RiskImpact): Risk[] => {

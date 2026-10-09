@@ -8,7 +8,7 @@ import { TEST_UUIDS } from '../../../test/setup';
  * Following hexagonal architecture - mocks services for business logic procedures.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 
@@ -867,6 +867,88 @@ describe('Opportunity Router', () => {
         return params.type;
       });
       expect(types).not.toContain('deal_high_value_moved');
+    });
+
+    describe('fire-and-forget notification failures are logged, never thrown', () => {
+      const NOTIFY_FAILED = '[opportunity.router] deal notify failed:';
+      let consoleError: ReturnType<typeof vi.spyOn>;
+      const boom = new Error('notifier exploded');
+
+      beforeEach(() => {
+        consoleError = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        // A synchronous throw escapes the per-recipient .catch inside the notifier, so
+        // send() rejects and only the call-site handler can observe it.
+        createNotificationSpy.mockImplementationOnce(() => {
+          throw boom;
+        });
+      });
+
+      afterEach(() => {
+        consoleError.mockRestore();
+      });
+
+      const stubExisting = (value: number) =>
+        (prismaMock.opportunity.findFirst as any).mockResolvedValue({
+          id: TEST_UUIDS.opportunity1,
+          ownerId: TEST_UUIDS.user1,
+          stage: 'PROPOSAL',
+          value: new Prisma.Decimal(value),
+          tenantId: TEST_UUIDS.tenant,
+        });
+
+      const stubUpdate = () => {
+        ctx.services!.opportunity!.updateOpportunity = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: createMockDomainOpportunity({ stage: 'NEGOTIATION' }),
+        });
+      };
+
+      it('create: duplicate-suspected notify failure is logged and the create succeeds', async () => {
+        const input = {
+          name: 'Acme Renewal',
+          value: { amount: 75000 },
+          stage: 'PROPOSAL' as const,
+          probability: 50,
+          expectedCloseDate: new Date('2025-06-30'),
+          accountId: TEST_UUIDS.account1,
+        };
+        stubAutomationRow({ autoMergeOnExactNameAccount: false, notifyOnDuplicate: true });
+        (prismaMock.opportunity.findFirst as any).mockResolvedValueOnce({
+          id: 'suspect-id',
+          ownerId: TEST_UUIDS.user1,
+        });
+        ctx.services!.opportunity!.createOpportunity = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: createMockDomainOpportunity({ name: input.name }),
+        });
+
+        await expect(caller.create(input)).resolves.toBeDefined();
+        await vi.waitFor(() => expect(consoleError).toHaveBeenCalledWith(NOTIFY_FAILED, boom));
+      });
+
+      it('update: stage-change notify failure is logged and the update succeeds', async () => {
+        stubAutomationRow({ notifyOnStageChange: true });
+        stubExisting(10000);
+        stubUpdate();
+
+        await expect(
+          caller.update({ id: TEST_UUIDS.opportunity1, stage: 'NEGOTIATION' })
+        ).resolves.toBeDefined();
+        await vi.waitFor(() => expect(consoleError).toHaveBeenCalledWith(NOTIFY_FAILED, boom));
+      });
+
+      it('update: high-value notify failure is logged and the update succeeds', async () => {
+        stubAutomationRow({ notifyOnHighValueStageMove: true, highValueThreshold: 50000 });
+        stubExisting(100000);
+        stubUpdate();
+
+        await expect(
+          caller.update({ id: TEST_UUIDS.opportunity1, stage: 'NEGOTIATION' })
+        ).resolves.toBeDefined();
+        await vi.waitFor(() => expect(consoleError).toHaveBeenCalledWith(NOTIFY_FAILED, boom));
+      });
     });
 
     it('delete: blocks with PRECONDITION_FAILED when preventDeleteWithOpenTasks and open tasks exist', async () => {

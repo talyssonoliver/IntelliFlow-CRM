@@ -253,6 +253,10 @@ interface AccountsPageClientProps {
   initialStats?: AccountStats;
 }
 
+function reportCacheRevalidationError(error: unknown) {
+  console.error('Failed to revalidate account caches after delete:', error);
+}
+
 export default function AccountsPageClient({
   initialStats: serverStats,
 }: AccountsPageClientProps = {}) {
@@ -269,12 +273,16 @@ export default function AccountsPageClient({
   const utils = api.useUtils();
 
   const deleteMutation = api.account.delete.useMutation({
-    onSuccess: () => {
-      utils.account.list.invalidate();
-      utils.account.stats.invalidate();
-      invalidateAccountsCache();
-      if (user?.id) revalidateAccountCaches(user.id).catch(() => {});
-    },
+    // Returned so the mutation stays pending until the lists have refetched.
+    // Server-cache revalidation is best-effort: a failure is logged, never
+    // turned into a failed delete.
+    onSuccess: () =>
+      Promise.all([
+        utils.account.list.invalidate(),
+        utils.account.stats.invalidate(),
+        invalidateAccountsCache().catch(reportCacheRevalidationError),
+        user?.id ? revalidateAccountCaches(user.id).catch(reportCacheRevalidationError) : undefined,
+      ]),
   });
 
   const debouncedSearch = useDebounce(searchQuery, 300);

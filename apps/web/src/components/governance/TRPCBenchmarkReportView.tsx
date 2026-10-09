@@ -98,6 +98,11 @@ function OpStatusPill({ op, thresholds }: { op: Operation; thresholds: Threshold
   );
 }
 
+function getBarColorClass(hasError: boolean, withinThreshold: boolean): string {
+  if (hasError) return 'bg-muted-foreground/40';
+  return withinThreshold ? 'bg-emerald-500' : 'bg-red-500';
+}
+
 function OperationsTable({
   operations,
   thresholds,
@@ -131,11 +136,7 @@ function OperationsTable({
             {operations.map((op) => {
               const p95 = op.p95 ?? 0;
               const pct = Math.min(100, Math.max(1, (p95 / maxP95) * 100));
-              const barColor = op.error
-                ? 'bg-muted-foreground/40'
-                : p95 < thresholds.p95
-                  ? 'bg-emerald-500'
-                  : 'bg-red-500';
+              const barColor = getBarColorClass(Boolean(op.error), p95 < thresholds.p95);
               return (
                 <tr key={op.operation} className="border-b border-border/50 last:border-0">
                   <td className="py-2 pr-3 font-mono text-foreground">{op.operation}</td>
@@ -264,13 +265,13 @@ export default function TRPCBenchmarkReportView() {
         } else {
           setError('Failed to load report data');
         }
-      } catch {
-        setError('Failed to load tRPC benchmark report');
       } finally {
         setLoading(false);
       }
     }
-    fetchReport();
+    fetchReport().catch(() => {
+      setError('Failed to load tRPC benchmark report');
+    });
   }, []);
 
   const details = report?.details;
@@ -333,37 +334,20 @@ node scripts/ci/generate-trpc-benchmark-report.js`}
       {!loading && !error && report && !isPlaceholder && details && (
         <>
           {/* Overall summary banner */}
-          <Card className="p-4 mb-6" role="region" aria-label="Benchmark summary">
+          <section
+            className="rounded-lg border bg-card text-card-foreground shadow-sm p-4 mb-6"
+            aria-label="Benchmark summary"
+          >
             <div className="flex items-center gap-4">
               <div
-                className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  report.status === 'passing'
-                    ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                    : report.status === 'failing'
-                      ? 'bg-red-100 dark:bg-red-900/30'
-                      : 'bg-muted'
-                }`}
+                className={`w-12 h-12 rounded-lg flex items-center justify-center ${getStatusBgClass(report.status)}`}
               >
-                <span
-                  className={`material-symbols-outlined ${
-                    report.status === 'passing'
-                      ? 'text-emerald-600 dark:text-emerald-400'
-                      : report.status === 'failing'
-                        ? 'text-red-600 dark:text-red-400'
-                        : 'text-muted-foreground'
-                  }`}
-                >
+                <span className={`material-symbols-outlined ${getStatusIconClass(report.status)}`}>
                   {report.status === 'passing' ? 'check_circle' : 'warning'}
                 </span>
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-foreground">
-                  {report.status === 'passing'
-                    ? 'All benchmarks pass IFC-003 KPI'
-                    : report.status === 'failing'
-                      ? 'Some benchmarks regressed'
-                      : 'No benchmarks completed'}
-                </h3>
+                <h3 className="font-semibold text-foreground">{getStatusHeading(report.status)}</h3>
                 <p className="text-sm text-muted-foreground">
                   {details.totals.passed}/{details.totals.completed} passing ·{' '}
                   {details.totals.failedKpi} KPI fail · {details.totals.errored} errored
@@ -371,22 +355,14 @@ node scripts/ci/generate-trpc-benchmark-report.js`}
               </div>
               {report.score != null && (
                 <div className="text-right">
-                  <p
-                    className={`text-2xl font-bold ${
-                      report.score >= 90
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : report.score >= 50
-                          ? 'text-amber-600 dark:text-amber-400'
-                          : 'text-red-600 dark:text-red-400'
-                    }`}
-                  >
+                  <p className={`text-2xl font-bold ${getScoreClass(report.score)}`}>
                     {report.score}%
                   </p>
                   <p className="text-xs text-muted-foreground">Pass Rate</p>
                 </div>
               )}
             </div>
-          </Card>
+          </section>
 
           {/* Threshold KPI cards */}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
@@ -407,7 +383,10 @@ node scripts/ci/generate-trpc-benchmark-report.js`}
               <p className="text-2xl font-bold text-foreground">&lt; {details.thresholds.p99}ms</p>
               <p className="text-xs text-muted-foreground mt-1">99th percentile</p>
             </Card>
-            <Card className="p-4" role="region" aria-label="Pass rate">
+            <section
+              className="rounded-lg border bg-card text-card-foreground shadow-sm p-4"
+              aria-label="Pass rate"
+            >
               <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                 Pass Rate
               </p>
@@ -421,7 +400,7 @@ node scripts/ci/generate-trpc-benchmark-report.js`}
                 {report.score ?? 0}%
               </p>
               <Progress value={report.score ?? 0} className="h-2 mt-2" />
-            </Card>
+            </section>
           </div>
 
           {/* Per-operation table */}

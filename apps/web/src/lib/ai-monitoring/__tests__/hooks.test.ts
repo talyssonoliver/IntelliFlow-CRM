@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
 // Mock the tRPC api module
 vi.mock('@/lib/api', () => ({
@@ -10,6 +10,7 @@ vi.mock('@/lib/api', () => ({
       getLatencyMetrics: { useQuery: vi.fn() },
       getLatencyTrend: { useQuery: vi.fn() },
       getAgentLogs: { useQuery: vi.fn() },
+      getFailedJobs: { useQuery: vi.fn() },
     },
   },
 }));
@@ -21,7 +22,7 @@ vi.mock('react', async () => {
 });
 
 import { api } from '@/lib/api';
-import { useDriftDashboard, useLatencyDashboard, useAgentLogs } from '../hooks';
+import { useDriftDashboard, useLatencyDashboard, useAgentLogs, useFailedJobs } from '../hooks';
 
 const mockStatusQuery = api.aiMonitoring.getStatus.useQuery as ReturnType<typeof vi.fn>;
 const mockDriftQuery = api.aiMonitoring.getDriftMetrics.useQuery as ReturnType<typeof vi.fn>;
@@ -97,6 +98,10 @@ function setupMocks(overrides: Record<string, any> = {}) {
     ...overrides.roi,
   });
 }
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
 describe('useDriftDashboard', () => {
   it('returns aggregated data from 3 queries', () => {
@@ -174,9 +179,9 @@ describe('useDriftDashboard', () => {
   });
 
   it('refetch triggers all 3 queries', () => {
-    const statusRefetch = vi.fn();
-    const driftRefetch = vi.fn();
-    const roiRefetch = vi.fn();
+    const statusRefetch = vi.fn().mockResolvedValue(undefined);
+    const driftRefetch = vi.fn().mockResolvedValue(undefined);
+    const roiRefetch = vi.fn().mockResolvedValue(undefined);
     setupMocks({
       status: { refetch: statusRefetch, data: undefined, isLoading: false, error: null },
       drift: {
@@ -201,6 +206,23 @@ describe('useDriftDashboard', () => {
     expect(statusRefetch).toHaveBeenCalled();
     expect(driftRefetch).toHaveBeenCalled();
     expect(roiRefetch).toHaveBeenCalled();
+  });
+
+  it('refetch logs when a query refresh rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('network down');
+    setupMocks({
+      status: {
+        refetch: vi.fn().mockRejectedValue(failure),
+        data: undefined,
+        isLoading: false,
+        error: null,
+      },
+    });
+    useDriftDashboard().refetch();
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith('[useDriftDashboard] Failed to refresh:', failure)
+    );
   });
 });
 
@@ -386,8 +408,8 @@ describe('useLatencyDashboard', () => {
   });
 
   it('refetch calls both query refetch methods', () => {
-    const metricsRefetch = vi.fn();
-    const trendRefetch = vi.fn();
+    const metricsRefetch = vi.fn().mockResolvedValue(undefined);
+    const trendRefetch = vi.fn().mockResolvedValue(undefined);
     setupLatencyMocks({
       metrics: { refetch: metricsRefetch, data: baseLatencyMetrics, isLoading: false, error: null },
       trend: { refetch: trendRefetch, data: baseTrend, isLoading: false, error: null },
@@ -396,6 +418,23 @@ describe('useLatencyDashboard', () => {
     result.refetch();
     expect(metricsRefetch).toHaveBeenCalled();
     expect(trendRefetch).toHaveBeenCalled();
+  });
+
+  it('refetch logs when a query refresh rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('network down');
+    setupLatencyMocks({
+      trend: {
+        refetch: vi.fn().mockRejectedValue(failure),
+        data: baseTrend,
+        isLoading: false,
+        error: null,
+      },
+    });
+    useLatencyDashboard().refetch();
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith('[useLatencyDashboard] Failed to refresh:', failure)
+    );
   });
 
   it('passes model filter to getLatencyMetrics input', () => {
@@ -545,10 +584,54 @@ describe('useAgentLogs', () => {
   });
 
   it('refetch calls query refetch', () => {
-    const refetchFn = vi.fn();
+    const refetchFn = vi.fn().mockResolvedValue(undefined);
     setupAgentLogsMocks({ refetch: refetchFn });
     const result = useAgentLogs({});
     result.refetch();
     expect(refetchFn).toHaveBeenCalled();
+  });
+
+  it('refetch logs when the refresh rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('network down');
+    setupAgentLogsMocks({ refetch: vi.fn().mockRejectedValue(failure) });
+    useAgentLogs({}).refetch();
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith('[useAgentLogs] Failed to refresh:', failure)
+    );
+  });
+});
+
+// ---------------------------------------------------------------------------
+// useFailedJobs
+// ---------------------------------------------------------------------------
+
+describe('useFailedJobs', () => {
+  const mockFailedJobsQuery = api.aiMonitoring.getFailedJobs.useQuery as ReturnType<typeof vi.fn>;
+
+  function setupFailedJobsMocks(refetch: ReturnType<typeof vi.fn>) {
+    mockFailedJobsQuery.mockReturnValue({
+      data: { jobs: [], total: 0, hasMore: false },
+      isLoading: false,
+      error: null,
+      refetch,
+    });
+  }
+
+  it('refetch delegates to the query', () => {
+    const refetch = vi.fn().mockResolvedValue(undefined);
+    setupFailedJobsMocks(refetch);
+    useFailedJobs({ queue: 'ai-scoring' } as never).refetch();
+    expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('refetch logs when the refresh rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('network down');
+    setupFailedJobsMocks(vi.fn().mockRejectedValue(failure));
+    useFailedJobs({ queue: 'ai-scoring' } as never).refetch();
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith('[useFailedJobs] Failed to refresh:', failure)
+    );
   });
 });

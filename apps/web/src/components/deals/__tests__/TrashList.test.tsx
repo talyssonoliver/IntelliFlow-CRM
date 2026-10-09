@@ -235,6 +235,13 @@ vi.mock('@/components/shared', () => ({
   ),
 }));
 
+// ─── Deal cache server action mock ───────────────────────────────────────────
+// Plain function so tests can swap `impl` to simulate a rejecting server action.
+const revalidateControl = { impl: (): Promise<void> => Promise.resolve() };
+vi.mock('@/app/deals/actions', () => ({
+  revalidateDealCaches: () => revalidateControl.impl(),
+}));
+
 // ─── TimezoneProvider mock ────────────────────────────────────────────────────
 vi.mock('@/providers/TimezoneProvider', () => ({
   useTimezoneContext: () => ({
@@ -1388,5 +1395,77 @@ describe('TrashList', { timeout: 10000 }, () => {
       expect(dialog).toBeInTheDocument();
       expect(dialog.querySelector('h2')).toHaveTextContent('Restore Deal');
     });
+  });
+});
+
+describe('TrashList - mutation onSuccess waits for fresh data', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    revalidateControl.impl = () => Promise.resolve();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('restore onSuccess stays pending until the trashed-list invalidation finishes', async () => {
+    let finish: () => void = () => undefined;
+    mockInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+    await act(async () => {
+      render(<TrashList />);
+    });
+
+    let settled = false;
+    const pending = Promise.resolve(capturedRestoreConfig.onSuccess?.()).then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(settled).toBe(false);
+    expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Deal Restored' }));
+
+    finish();
+    await act(async () => {
+      await pending;
+    });
+    expect(settled).toBe(true);
+  });
+
+  it('restore onSuccess logs, and still resolves, when server cache revalidation rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const boom = new Error('revalidate failed');
+    revalidateControl.impl = () => Promise.reject(boom);
+    await act(async () => {
+      render(<TrashList />);
+    });
+
+    await act(async () => {
+      await expect(Promise.resolve(capturedRestoreConfig.onSuccess?.())).resolves.toBeDefined();
+    });
+
+    expect(errorSpy).toHaveBeenCalledWith('[TrashList] Failed to revalidate deal caches:', boom);
+    expect(mockInvalidate).toHaveBeenCalled();
+    errorSpy.mockRestore();
+  });
+
+  it('permanent delete onSuccess invalidates the trashed list and returns the refetch', async () => {
+    let finish: () => void = () => undefined;
+    mockInvalidate.mockReturnValueOnce(new Promise<void>((resolve) => (finish = resolve)));
+    await act(async () => {
+      render(<TrashList />);
+    });
+
+    let settled = false;
+    const pending = Promise.resolve(capturedPermDeleteConfig.onSuccess?.()).then(() => {
+      settled = true;
+    });
+    await Promise.resolve();
+    expect(mockInvalidate).toHaveBeenCalledTimes(1);
+    expect(settled).toBe(false);
+
+    finish();
+    await act(async () => {
+      await pending;
+    });
+    expect(settled).toBe(true);
   });
 });

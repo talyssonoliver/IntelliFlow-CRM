@@ -245,16 +245,29 @@ export const TrashList = React.memo(function TrashList() {
     {}
   );
 
+  // Server-side cache revalidation. A failure must not turn a successful
+  // restore into a failed mutation, so it is logged rather than rethrown.
+  const revalidateServerCaches = async () => {
+    try {
+      await revalidateDealCaches(user?.id ?? null);
+    } catch (error) {
+      console.error('[TrashList] Failed to revalidate deal caches:', error);
+    }
+  };
+
   // Mutations
   const restoreMutation = trpc.opportunity.restore.useMutation({
     onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
-      utils.opportunity.listTrashed.invalidate();
-      utils.opportunity.list.invalidate();
-      utils.opportunity.stats.invalidate();
+      // The bulk flag is read synchronously, before the refetches are awaited.
       if (!isBulkOperationRef.current) {
         toast({ title: 'Deal Restored', description: 'The deal has been restored.' });
       }
+      return Promise.all([
+        revalidateServerCaches(),
+        utils.opportunity.listTrashed.invalidate(),
+        utils.opportunity.list.invalidate(),
+        utils.opportunity.stats.invalidate(),
+      ]);
     },
     onError: (err) => {
       if (!isBulkOperationRef.current) {
@@ -265,13 +278,13 @@ export const TrashList = React.memo(function TrashList() {
 
   const permanentDeleteMutation = trpc.opportunity.permanentDelete.useMutation({
     onSuccess: () => {
-      utils.opportunity.listTrashed.invalidate();
       if (!isBulkOperationRef.current) {
         toast({
           title: 'Deal Permanently Deleted',
           description: 'The deal has been permanently removed.',
         });
       }
+      return utils.opportunity.listTrashed.invalidate();
     },
     onError: (err) => {
       if (!isBulkOperationRef.current) {

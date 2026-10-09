@@ -399,13 +399,16 @@ describe('ComplianceTimeline', () => {
 
   describe('Error Handling', () => {
     it('should handle API error gracefully', async () => {
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockFetch.mockRejectedValue(new Error('Network error'));
 
       render(<ComplianceTimeline />);
 
       await waitFor(() => {
         expect(screen.getByText('Compliance Timeline')).toBeInTheDocument();
+        expect(errorSpy).toHaveBeenCalledWith('Failed to fetch timeline:', expect.any(Error));
       });
+      errorSpy.mockRestore();
     });
   });
 

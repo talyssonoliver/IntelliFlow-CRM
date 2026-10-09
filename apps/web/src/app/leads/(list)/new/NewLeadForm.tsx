@@ -258,11 +258,17 @@ export default function NewLeadForm() {
         annualRevenue: toRevenueBand(form.annualRevenue),
         ...(qualificationNote ? { qualificationNote } : {}),
       });
-    } catch (e) {
-      console.error('Mutation error:', e);
     } finally {
       setSubmitting(false);
     }
+  };
+
+  // The create mutation's onError already toasts the user; this is the call-site
+  // handler so a rejection is never left floating.
+  const handleSubmit = () => {
+    submit().catch((e: unknown) => {
+      console.error('Mutation error:', e);
+    });
   };
 
   const symbolClass = 'material-symbols-outlined !text-[18px]';
@@ -327,7 +333,7 @@ export default function NewLeadForm() {
                 if (stepIndex < STEPS.length - 1) {
                   nextStep();
                 } else {
-                  void submit();
+                  handleSubmit();
                 }
               }}
               onEmailBlur={onEmailBlur}
@@ -358,7 +364,7 @@ export default function NewLeadForm() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => void submit()}
+                  onClick={handleSubmit}
                   disabled={submitting}
                   className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2.5 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >

@@ -83,33 +83,33 @@ export function SLAPolicyManager() {
 
   const createMutation = trpc.ticketConfig.slaPolicy.create.useMutation({
     onSuccess: () => {
-      utils.ticketConfig.slaPolicy.list.invalidate();
       setDialogOpen(false);
       toast({ title: 'Policy created' });
+      return utils.ticketConfig.slaPolicy.list.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const updateMutation = trpc.ticketConfig.slaPolicy.update.useMutation({
     onSuccess: () => {
-      utils.ticketConfig.slaPolicy.list.invalidate();
       setDialogOpen(false);
       setEditingId(null);
       toast({ title: 'Policy updated' });
+      return utils.ticketConfig.slaPolicy.list.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const deleteMutation = trpc.ticketConfig.slaPolicy.delete.useMutation({
     onSuccess: () => {
-      utils.ticketConfig.slaPolicy.list.invalidate();
       setDeleteId(null);
       toast({ title: 'Policy deactivated' });
+      return utils.ticketConfig.slaPolicy.list.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });
   const setDefaultMutation = trpc.ticketConfig.slaPolicy.setDefault.useMutation({
     onSuccess: () => {
-      utils.ticketConfig.slaPolicy.list.invalidate();
       toast({ title: 'Default policy updated' });
+      return utils.ticketConfig.slaPolicy.list.invalidate();
     },
     onError: (err) => toast({ title: err.message, variant: 'destructive' }),
   });

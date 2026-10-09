@@ -246,16 +246,18 @@ export default function NextStepsView({
         const newMap = await computeScoredTaskMap(result, planStatusMap, sprintParam, sprint);
         setScoredMap(newMap);
       }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   }, [sprint]);
 
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
+  }, []);
+
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   const toggleSprint = (sprint: number) => {
     setExpandedSprints((prev) => {
@@ -308,7 +310,7 @@ export default function NextStepsView({
             : `${result.message} Spec: ${result.specPath || ''} Plan: ${result.planPath || ''}`,
         });
         // Refresh the dependency graph
-        await fetchData();
+        await fetchData().catch(handleFetchError);
       } else {
         setStartResult({
           success: false,
@@ -330,9 +332,10 @@ export default function NextStepsView({
     setStartResult(null);
   };
 
-  const handlePlanClick = (e: React.MouseEvent, task: ReadyTaskDetail) => {
+  const handlePlanClick = async (e: React.MouseEvent, task: ReadyTaskDetail) => {
     e.stopPropagation(); // Prevent task click
-    planTask(task.taskId);
+    // planTask reports its own failures through the result banner.
+    await planTask(task.taskId);
   };
 
   const planTask = async (taskId: string) => {
@@ -369,7 +372,7 @@ export default function NextStepsView({
         }));
 
         // Refresh to update any status changes
-        await fetchData();
+        await fetchData().catch(handleFetchError);
       } else {
         setStartResult({
           success: false,
@@ -422,7 +425,7 @@ export default function NextStepsView({
           <span>Error loading dependency graph: {error}</span>
         </div>
         <button
-          onClick={fetchData}
+          onClick={() => fetchData().catch(handleFetchError)}
           className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
         >
           Retry
@@ -892,7 +895,7 @@ export default function NextStepsView({
       <div className="flex items-center justify-between text-xs text-gray-500 px-1">
         <span>Last updated: {new Date(last_updated).toLocaleString()}</span>
         <button
-          onClick={fetchData}
+          onClick={() => fetchData().catch(handleFetchError)}
           className="flex items-center gap-1 hover:text-gray-700 transition-colors"
         >
           <Icon name="refresh" size="xs" />

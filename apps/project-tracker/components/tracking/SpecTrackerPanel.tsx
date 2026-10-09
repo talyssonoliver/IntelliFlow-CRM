@@ -77,21 +77,23 @@ export default function SpecTrackerPanel() {
       setData(result.data);
       setLastUpdated(result.lastUpdated);
       setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   }, []);
 
+  const handleFetchError = useCallback((err: unknown) => {
+    setError(err instanceof Error ? err.message : 'Unknown error');
+  }, []);
+
   const handleRefresh = async () => {
     setLoading(true);
-    await fetchData();
+    await fetchData().catch(handleFetchError);
   };
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData().catch(handleFetchError);
+  }, [fetchData, handleFetchError]);
 
   if (loading && !data) {
     return (

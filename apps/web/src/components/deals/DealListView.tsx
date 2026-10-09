@@ -352,21 +352,34 @@ export const DealListView = React.memo(function DealListView() {
     {}
   );
 
+  // Server-side cache revalidation. A failure must not turn a successful
+  // mutation into a failed one, so it is logged rather than rethrown.
+  const revalidateServerCaches = async () => {
+    try {
+      await revalidateDealCaches(user?.id ?? null);
+    } catch (error) {
+      console.error('[DealListView] Failed to revalidate deal caches:', error);
+    }
+  };
+
+  // Returned from onSuccess so each mutation stays pending until the list and
+  // stats have refetched.
+  const refreshDealData = () =>
+    Promise.all([
+      revalidateServerCaches(),
+      utils.opportunity.list.invalidate(),
+      utils.opportunity.stats.invalidate(),
+    ]);
+
   // Mutations
   const updateMutation = trpc.opportunity.update.useMutation({
-    onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
-      utils.opportunity.list.invalidate();
-      utils.opportunity.stats.invalidate();
-    },
+    onSuccess: refreshDealData,
   });
 
   const deleteMutation = trpc.opportunity.delete.useMutation({
     onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
-      utils.opportunity.list.invalidate();
-      utils.opportunity.stats.invalidate();
       toast({ title: 'Deal Deleted', description: 'The deal has been removed.' });
+      return refreshDealData();
     },
     onError: (err) => {
       toast({ title: 'Delete Failed', description: err.message, variant: 'destructive' });
@@ -375,20 +388,12 @@ export const DealListView = React.memo(function DealListView() {
 
   // NP-024: Bulk stage update — single round-trip replaces N per-deal mutations
   const bulkUpdateStageMutation = trpc.opportunity.bulkUpdateStage.useMutation({
-    onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
-      utils.opportunity.list.invalidate();
-      utils.opportunity.stats.invalidate();
-    },
+    onSuccess: refreshDealData,
   });
 
   // NP-025: Bulk delete — single round-trip replaces N per-deal mutations
   const bulkDeleteMutation = trpc.opportunity.bulkDelete.useMutation({
-    onSuccess: () => {
-      revalidateDealCaches(user?.id ?? null).catch(() => {});
-      utils.opportunity.list.invalidate();
-      utils.opportunity.stats.invalidate();
-    },
+    onSuccess: refreshDealData,
   });
 
   // Reset page on filter change

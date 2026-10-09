@@ -274,11 +274,11 @@ export default function NotificationSettingsPage() {
 
   const mutation = trpc.notifications.updatePreferences.useMutation({
     onSuccess: () => {
-      utils.notifications.getPreferences.invalidate();
       toast({
         title: 'Preferences updated',
         description: 'Your notification preferences have been saved.',
       });
+      return utils.notifications.getPreferences.invalidate();
     },
     onError: (err: { message: string }) => {
       toast({ title: 'Failed to save', description: err.message, variant: 'destructive' });

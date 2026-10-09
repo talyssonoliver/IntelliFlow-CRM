@@ -202,8 +202,6 @@ export function ComplianceDetailPanel({
       if (result.success) {
         setDetail(result.data);
       }
-    } catch (error) {
-      console.error('Failed to fetch compliance detail:', error);
     } finally {
       setLoading(false);
     }
@@ -211,7 +209,9 @@ export function ComplianceDetailPanel({
 
   useEffect(() => {
     if (standardId && open) {
-      fetchDetail();
+      fetchDetail().catch((error) => {
+        console.error('Failed to fetch compliance detail:', error);
+      });
     }
   }, [standardId, open, fetchDetail]);
 

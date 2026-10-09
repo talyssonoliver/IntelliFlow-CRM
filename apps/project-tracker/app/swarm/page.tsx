@@ -786,8 +786,9 @@ function SwarmPageContent() {
   const logContainerRef = useRef<HTMLDivElement>(null);
   const cliOutputRef = useRef<HTMLDivElement>(null);
 
-  // Fetch swarm status
-  const fetchStatus = useCallback(async () => {
+  // Fetch swarm status. Starts the request and returns; the promise chain below handles its own
+  // failure (logs and marks the swarm disconnected), so there is nothing for callers to await.
+  const fetchStatus = useCallback((): void => {
     fetchSwarmStatus()
       .then(({ health, tasks, connected }) => {
         setIsConnected(connected);
@@ -803,8 +804,8 @@ function SwarmPageContent() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  // Fetch pending questions
-  const fetchQuestions = useCallback(async () => {
+  // Fetch pending questions (same contract as fetchStatus: failures are logged on the chain).
+  const fetchQuestions = useCallback((): void => {
     fetchPendingQuestions()
       .then((tasks) => setPendingQuestions(tasks))
       .catch((error) => console.error('Failed to fetch questions:', error));

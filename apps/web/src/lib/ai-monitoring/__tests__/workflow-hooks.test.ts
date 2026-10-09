@@ -167,11 +167,23 @@ describe('useWorkflowProgress — data mapping', () => {
   });
 
   it('refetch calls the active query refetch', () => {
-    const refetch = vi.fn();
+    const refetch = vi.fn().mockResolvedValue(undefined);
     mockGetExecution.mockReturnValue(stubQuery({ data: sampleExecution, refetch }));
     const result = useWorkflowProgress({ executionId: 'exec-1' });
     result.refetch();
     expect(refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('refetch logs when the refresh rejects', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const failure = new Error('network down');
+    const refetch = vi.fn().mockRejectedValue(failure);
+    mockGetExecution.mockReturnValue(stubQuery({ data: sampleExecution, refetch }));
+    useWorkflowProgress({ executionId: 'exec-1' }).refetch();
+    await vi.waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith('[useWorkflowProgress] Failed to refresh:', failure)
+    );
+    errorSpy.mockRestore();
   });
 });
 
