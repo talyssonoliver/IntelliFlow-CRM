@@ -43,7 +43,7 @@ describe('ApiReferencePage', () => {
   });
 
   it('exports metadata with correct title', () => {
-    expect(metadata.title).toBe('API Reference | IntelliFlow CRM');
+    expect(metadata.title).toBe('API Reference | Aurora');
   });
 
   it('exports metadata with correct description containing "Interactive tRPC API"', () => {

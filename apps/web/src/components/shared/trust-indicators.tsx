@@ -72,7 +72,7 @@ export function TrustIndicators({
       <div className={cn('flex flex-col gap-2 text-xs text-slate-400', className)}>
         {items.map((item) => (
           <div key={item.label} className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-[#bca8ff]" aria-hidden="true">
               {item.icon}
             </span>
             <span>{item.label}</span>
@@ -87,7 +87,7 @@ export function TrustIndicators({
       {items.map((item, index) => (
         <React.Fragment key={item.label}>
           <div className="flex items-center gap-1">
-            <span className="material-symbols-outlined text-sm text-[#7cc4ff]" aria-hidden="true">
+            <span className="material-symbols-outlined text-sm text-[#bca8ff]" aria-hidden="true">
               {item.icon}
             </span>
             {item.label}

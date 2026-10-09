@@ -10,11 +10,11 @@
 
 @theme inline {
   /* Font family */
-  --font-sans: var(--font-inter), system-ui, -apple-system, sans-serif;
+  --font-sans: var(--font-manrope), system-ui, -apple-system, sans-serif;
 
   /* Design system colors */
-  --color-ds-primary: #137fec;
-  --color-ds-primary-hover: #0e6ac7;
+  --color-ds-primary: #2a78f6;
+  --color-ds-primary-hover: #1f63d4;
   --color-background-light: #f6f7f8;
   --color-background-dark: #101922;
   --color-surface-light: #ffffff;
@@ -155,7 +155,7 @@
     --card-foreground: 215 28% 17%;
     --popover: 0 0% 100%;
     --popover-foreground: 215 28% 17%;
-    --primary: 209 87% 50%; /* #137fec */
+    --primary: 217 92% 56%; /* #2a78f6, Aurora blue */
     --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 215 28% 17%;
@@ -167,11 +167,11 @@
     --destructive-foreground: 0 0% 100%;
     --border: 214 32% 91%; /* #e2e8f0 */
     --input: 214 32% 91%;
-    --ring: 209 87% 50%;
+    --ring: 217 92% 56%;
     --radius: 0.5rem;
 
     /* Pipeline stage colors (PG-135) */
-    --stage-qualification: 209 87% 50%; /* blue – matches primary */
+    --stage-qualification: 217 92% 56%; /* blue – matches primary */
     --stage-needs-analysis: 38 92% 50%; /* amber */
     --stage-proposal: 262 52% 56%; /* purple */
     --stage-negotiation: 28 80% 52%; /* orange */
@@ -187,7 +187,7 @@
     --card-foreground: 210 40% 98%;
     --popover: 213 32% 17%;
     --popover-foreground: 210 40% 98%;
-    --primary: 209 87% 50%; /* #137fec */
+    --primary: 217 92% 56%; /* #2a78f6, Aurora blue */
     --primary-foreground: 0 0% 100%;
     --secondary: 215 28% 17%;
     --secondary-foreground: 210 40% 98%;
@@ -199,10 +199,10 @@
     --destructive-foreground: 210 40% 98%;
     --border: 215 25% 27%; /* #334155 */
     --input: 215 25% 27%;
-    --ring: 209 87% 50%;
+    --ring: 217 92% 56%;
 
     /* Pipeline stage colors (PG-135) - dark mode */
-    --stage-qualification: 209 87% 60%;
+    --stage-qualification: 217 92% 64%;
     --stage-needs-analysis: 38 92% 55%;
     --stage-proposal: 262 52% 65%;
     --stage-negotiation: 28 80% 58%;
@@ -299,7 +299,7 @@
 
 /* Variable bridge — maps Schedule-X tokens to IntelliFlow design system */
 :root {
-  --sx-color-primary: #137fec;
+  --sx-color-primary: #2a78f6;
   --sx-color-on-primary: #fff;
   --sx-color-primary-container: #dbeafe;
   --sx-color-on-primary-container: #1e3a5f;
@@ -316,7 +316,7 @@
   --sx-color-outline-variant: #e2e8f0;
   --sx-color-neutral: #64748b;
   --sx-color-neutral-variant: #94a3b8;
-  --sx-color-surface-tint: #137fec;
+  --sx-color-surface-tint: #2a78f6;
   --sx-internal-color-gray-ripple-background: #e2e8f0;
   --sx-internal-color-light-gray: #f8fafc;
   --sx-internal-color-text: #0f172a;
@@ -326,7 +326,7 @@
 }
 
 .dark {
-  --sx-color-primary: #137fec;
+  --sx-color-primary: #2a78f6;
   --sx-color-on-primary: #fff;
   --sx-color-primary-container: #1e3a5f;
   --sx-color-on-primary-container: #bfdbfe;
@@ -403,7 +403,7 @@
 
 /* Today indicator */
 .sx__month-grid-day__header-date.sx__is-today {
-  background-color: #137fec !important;
+  background-color: #2a78f6 !important;
   color: #0f172a !important;
 }
 
@@ -440,11 +440,11 @@
 
 /* Today column highlight */
 .sx__week-grid__date--is-today .sx__week-grid__day-name {
-  color: #137fec !important;
+  color: #2a78f6 !important;
   font-weight: 700 !important;
 }
 .sx__week-grid__date--is-today .sx__week-grid__date-number {
-  background-color: #137fec !important;
+  background-color: #2a78f6 !important;
   color: #fff !important;
 }
 
@@ -517,10 +517,10 @@
 
 /* Current time indicator */
 .sx__current-time-indicator {
-  background-color: #137fec !important;
+  background-color: #2a78f6 !important;
 }
 .sx__current-time-indicator::before {
-  background-color: #137fec !important;
+  background-color: #2a78f6 !important;
 }
 
 /* ─── Unified calendar container — prevents layout shift on view toggle ─── */

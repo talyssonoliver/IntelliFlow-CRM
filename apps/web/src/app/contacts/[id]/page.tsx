@@ -575,7 +575,7 @@ export default function Contact360Page() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-1">
-            <Link href="/contacts" className="hover:text-[#137fec]">
+            <Link href="/contacts" className="hover:text-[#2a78f6]">
               Contacts
             </Link>
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
@@ -681,7 +681,7 @@ export default function Contact360Page() {
                 {contact.account && (
                   <Link
                     href={`/accounts/${contact.account.id}`}
-                    className="flex items-center gap-1 text-[#137fec] text-sm font-medium mt-1 hover:underline"
+                    className="flex items-center gap-1 text-[#2a78f6] text-sm font-medium mt-1 hover:underline"
                   >
                     <span className="material-symbols-outlined !text-sm">domain</span>
                     <span>{contact.company || contact.account.name}</span>
@@ -736,7 +736,7 @@ export default function Contact360Page() {
                     >
                       <Link
                         href={`/email/compose?to=${encodeURIComponent(contact.email)}`}
-                        className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec] break-all"
+                        className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#2a78f6] break-all"
                       >
                         {contact.email}
                       </Link>
@@ -755,7 +755,7 @@ export default function Contact360Page() {
                     <span className="text-xs text-slate-400 uppercase font-semibold">Phone</span>
                     <a
                       href={`tel:${contact.phone.replaceAll(/\D/g, '')}`}
-                      className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#137fec]"
+                      className="text-sm text-slate-700 dark:text-slate-300 hover:text-[#2a78f6]"
                     >
                       {contact.phone}
                     </a>
@@ -839,7 +839,7 @@ export default function Contact360Page() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`px-4 py-4 text-sm font-semibold border-b-2 transition-colors whitespace-nowrap ${
                     activeTab === tab.id
-                      ? 'text-[#137fec] border-[#137fec]'
+                      ? 'text-[#2a78f6] border-[#2a78f6]'
                       : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 border-transparent'
                   }`}
                 >
@@ -924,7 +924,7 @@ export default function Contact360Page() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search activities..."
-                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec] placeholder:text-slate-400"
+                        className="w-full pl-10 pr-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6] placeholder:text-slate-400"
                       />
                     </div>
 
@@ -936,7 +936,7 @@ export default function Contact360Page() {
                           onClick={() => setActivityTypeFilter(filter.value)}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
                             activityTypeFilter === filter.value
-                              ? 'bg-[#137fec] text-white'
+                              ? 'bg-[#2a78f6] text-white'
                               : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                           }`}
                         >
@@ -951,7 +951,7 @@ export default function Contact360Page() {
                       <select
                         value={personFilter}
                         onChange={(e) => setPersonFilter(e.target.value)}
-                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#137fec] focus:ring-1 focus:ring-[#137fec]"
+                        className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm focus:border-[#2a78f6] focus:ring-1 focus:ring-[#2a78f6]"
                       >
                         {personFilters.map((filter) => (
                           <option key={filter.value} value={filter.value}>
@@ -966,7 +966,7 @@ export default function Contact360Page() {
                             setPersonFilter('all');
                             setSearchQuery('');
                           }}
-                          className="text-xs text-[#137fec] hover:underline"
+                          className="text-xs text-[#2a78f6] hover:underline"
                         >
                           Clear filters
                         </button>
@@ -976,9 +976,9 @@ export default function Contact360Page() {
                     {/* AI Insights Banner (Sentiment Trend & Quiet Period Alert) */}
                     {aiInsights?.sentimentTrend && (
                       <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-                        <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full bg-[#2a78f6]/10 flex items-center justify-center">
                           <svg
-                            className="w-4 h-4 text-[#137fec]"
+                            className="w-4 h-4 text-[#2a78f6]"
                             viewBox="0 0 24 24"
                             fill="currentColor"
                           >
@@ -1136,7 +1136,7 @@ export default function Contact360Page() {
                   {hasMore && (
                     <button
                       onClick={() => setVisibleCount((prev) => prev + 5)}
-                      className="w-full mt-6 py-3 text-sm text-[#137fec] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
+                      className="w-full mt-6 py-3 text-sm text-[#2a78f6] font-medium hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg transition-colors border border-slate-200 dark:border-slate-700"
                     >
                       Load more activities ({filteredActivities.length - visibleCount} remaining)
                     </button>
@@ -1168,8 +1168,8 @@ export default function Contact360Page() {
                 {/* AI Sentiment Trend Banner */}
                 {aiInsights?.sentimentTrend && (
                   <div className="flex items-center gap-3 p-3 mx-5 mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-800 rounded-lg border border-blue-100 dark:border-slate-700">
-                    <div className="w-8 h-8 rounded-full bg-[#137fec]/10 flex items-center justify-center">
-                      <span className="material-symbols-outlined text-base text-[#137fec]">
+                    <div className="w-8 h-8 rounded-full bg-[#2a78f6]/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-base text-[#2a78f6]">
                         auto_awesome
                       </span>
                     </div>
@@ -1259,7 +1259,7 @@ export default function Contact360Page() {
                       {contact.account ? (
                         <Link
                           href={`/accounts/${contact.account.id}`}
-                          className="text-[#137fec] hover:underline"
+                          className="text-[#2a78f6] hover:underline"
                         >
                           {contact.account.name}
                         </Link>
@@ -1277,7 +1277,7 @@ export default function Contact360Page() {
                   </h3>
                   <button
                     onClick={() => setActiveTab('deals')}
-                    className="text-sm text-[#137fec] hover:underline"
+                    className="text-sm text-[#2a78f6] hover:underline"
                   >
                     View All
                   </button>
@@ -1369,7 +1369,7 @@ export default function Contact360Page() {
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-white">Notes</h3>
                 <button
                   onClick={() => setShowNoteInput((v) => !v)}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#137fec] hover:bg-[#137fec]/10 rounded-lg transition-colors"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-[#2a78f6] hover:bg-[#2a78f6]/10 rounded-lg transition-colors"
                 >
                   <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                     <path d="M11 13H5v-2h6V5h2v6h6v2h-6v6h-2Z" />
@@ -1383,7 +1383,7 @@ export default function Contact360Page() {
                     value={newNoteContent}
                     onChange={(e) => setNewNoteContent(e.target.value)}
                     placeholder="Write a note..."
-                    className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none"
+                    className="w-full px-3 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] resize-none"
                     rows={3}
                   />
                   <div className="flex items-center justify-end gap-2 mt-2">
@@ -1403,7 +1403,7 @@ export default function Contact360Page() {
                         }
                       }}
                       disabled={!newNoteContent.trim() || addNoteMutation.isPending}
-                      className="px-3 py-1.5 text-xs font-medium text-white bg-[#137fec] hover:bg-[#0f6dd0] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 text-xs font-medium text-white bg-[#2a78f6] hover:bg-[#0f6dd0] rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {addNoteMutation.isPending ? 'Saving...' : 'Save Note'}
                     </button>
@@ -1498,7 +1498,7 @@ export default function Contact360Page() {
             {notes.length > 2 && (
               <button
                 onClick={() => setActiveTab('notes')}
-                className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#137fec] hover:text-[#0f6dd0] transition-colors text-center"
+                className="w-full mt-3 pt-3 border-t border-slate-100 dark:border-slate-800 text-xs font-medium text-[#2a78f6] hover:text-[#0f6dd0] transition-colors text-center"
               >
                 View all notes ({notes.length})
               </button>

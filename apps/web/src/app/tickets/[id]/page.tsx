@@ -231,7 +231,7 @@ export default function TicketDetailPage() {
           </p>
           <Link
             href="/tickets"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <span className="material-symbols-outlined !text-lg">arrow_back</span> Back to Tickets
           </Link>

@@ -110,7 +110,7 @@ function HelpCenterContent() {
       <div className="max-w-5xl">
         <PageHeader
           title="Help Center"
-          description="Find answers, guides, and documentation for IntelliFlow CRM"
+          description="Find answers, guides, and documentation for Aurora"
           breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Help Center' }]}
         />
 

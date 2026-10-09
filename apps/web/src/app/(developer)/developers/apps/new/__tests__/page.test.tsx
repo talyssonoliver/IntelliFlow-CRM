@@ -36,8 +36,8 @@ describe('CreateNewAppPage', () => {
     expect(metadata.title).toContain('Developer Apps');
   });
 
-  it('metadata.title contains "IntelliFlow CRM" (NP-007)', () => {
-    expect(metadata.title).toContain('IntelliFlow CRM');
+  it('metadata.title contains "Aurora" (NP-007)', () => {
+    expect(metadata.title).toContain('Aurora');
   });
 
   it('exports metadata object', () => {

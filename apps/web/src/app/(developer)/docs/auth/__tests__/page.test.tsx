@@ -25,8 +25,8 @@ describe('AuthGuidesPage', () => {
     expect(screen.getByTestId('auth-guides')).toBeInTheDocument();
   });
 
-  it('exports metadata.title as "Authentication | IntelliFlow CRM"', () => {
-    expect(metadata.title).toBe('Authentication | IntelliFlow CRM');
+  it('exports metadata.title as "Authentication | Aurora"', () => {
+    expect(metadata.title).toBe('Authentication | Aurora');
   });
 
   it('exports metadata.description containing "authentication"', () => {

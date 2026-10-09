@@ -18,7 +18,7 @@ export const metadata: Metadata = {
 
 export default function NotFoundPage() {
   return (
-    <main className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_rgba(19,127,236,0.16),_transparent_42%),linear-gradient(180deg,_#f8fbff_0%,_#eef4fb_100%)] px-6 py-12 dark:bg-[radial-gradient(circle_at_top,_rgba(124,196,255,0.14),_transparent_36%),linear-gradient(180deg,_#11175b_0%,_#111827_100%)]">
+    <main className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_rgba(42,120,246,0.16),_transparent_42%),linear-gradient(180deg,_#f8fbff_0%,_#eef4fb_100%)] px-6 py-12 dark:bg-[radial-gradient(circle_at_top,_rgba(124,196,255,0.14),_transparent_36%),linear-gradient(180deg,_#11175b_0%,_#111827_100%)]">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-8">
         <Card className="overflow-hidden border border-slate-200 bg-white/95 shadow-xl shadow-[#2a78f6]/10 backdrop-blur dark:border-slate-700 dark:bg-slate-950/90">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.2fr_0.8fr] lg:px-10 lg:py-10">

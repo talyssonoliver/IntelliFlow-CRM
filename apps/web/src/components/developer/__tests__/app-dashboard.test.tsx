@@ -23,7 +23,7 @@ describe('AppDashboard', () => {
   // D-001: Renders app name as heading
   it('renders app name as h1 heading for app-001', () => {
     render(<AppDashboard appId="app-001" />);
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('IntelliFlow Dashboard');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Aurora Dashboard');
   });
 
   // D-002: Renders status badge for active app
@@ -67,7 +67,7 @@ describe('AppDashboard', () => {
   it('copy clientId button has aria-label', () => {
     render(<AppDashboard appId="app-001" />);
     expect(
-      screen.getByRole('button', { name: /Copy client ID for IntelliFlow Dashboard/i })
+      screen.getByRole('button', { name: /Copy client ID for Aurora Dashboard/i })
     ).toBeInTheDocument();
   });
 
@@ -174,7 +174,7 @@ describe('AppDashboard', () => {
     expect(breadcrumbNav).toBeInTheDocument();
     const link = within(breadcrumbNav).getByText('Developer Apps');
     expect(link.closest('a')).toHaveAttribute('href', '/developers/apps');
-    const currentCrumb = within(breadcrumbNav).getByText('IntelliFlow Dashboard');
+    const currentCrumb = within(breadcrumbNav).getByText('Aurora Dashboard');
     expect(currentCrumb).toHaveAttribute('aria-current', 'page');
   });
 
@@ -237,7 +237,7 @@ describe('AppDashboard', () => {
     const user = userEvent.setup();
     render(<AppDashboard appId="app-001" />);
     const copyBtn = screen.getByRole('button', {
-      name: /Copy client ID for IntelliFlow Dashboard/i,
+      name: /Copy client ID for Aurora Dashboard/i,
     });
     await user.click(copyBtn);
     // After clicking copy, the icon should change to check mark (feedback)

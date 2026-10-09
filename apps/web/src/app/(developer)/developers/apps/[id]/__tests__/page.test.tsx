@@ -82,7 +82,7 @@ describe('DeveloperAppDetailPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'app-001' }),
     });
-    expect(metadata.title).toContain('IntelliFlow Dashboard');
+    expect(metadata.title).toContain('Aurora Dashboard');
   });
 
   // P-009: generateMetadata returns "App Not Found" for unknown id

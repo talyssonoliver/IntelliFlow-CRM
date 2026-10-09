@@ -19,12 +19,12 @@ describe('PrivacyPage', () => {
   it('renders current policy metadata sourced from the helper', () => {
     render(<PrivacyPage />);
 
-    expect(screen.getByText('v2026.03')).toBeInTheDocument();
-    expect(screen.getByText(/8 march 2026/i)).toBeInTheDocument();
+    expect(screen.getByText('v2026.10')).toBeInTheDocument();
+    expect(screen.getByText(/7 october 2026/i)).toBeInTheDocument();
 
-    const emailLinks = screen.getAllByRole('link', { name: /privacy@intelliflow-crm\.com/i });
+    const emailLinks = screen.getAllByRole('link', { name: /privacy@leangency.com/i });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
-    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:privacy@intelliflow-crm.com');
+    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:privacy@leangency.com');
   });
 
   it('renders inside the Aurora shell (no main of its own) with section navigation links', () => {
@@ -51,7 +51,7 @@ describe('consent-tracker', () => {
     const { buildConsentRecord } = await import('@/lib/legal/consent-tracker');
     const record = buildConsentRecord('2026-03-08T10:00:00Z');
 
-    expect(record.policyVersion).toBe('v2026.03');
+    expect(record.policyVersion).toBe('v2026.10');
     expect(record.reviewedAt).toBe('2026-03-08T10:00:00Z');
     expect(record.route).toBe('/privacy');
   });
@@ -79,13 +79,13 @@ describe('consent-tracker', () => {
     const policy = getPrivacyPolicy();
 
     expect(policy.metadata.title).toBe('Privacy Policy');
-    expect(policy.metadata.version).toBe('v2026.03');
-    expect(policy.metadata.contactEmail).toBe('privacy@intelliflow-crm.com');
+    expect(policy.metadata.version).toBe('v2026.10');
+    expect(policy.metadata.contactEmail).toBe('privacy@leangency.com');
     expect(policy.metadata.summary.length).toBeGreaterThanOrEqual(4);
     for (const bullet of policy.metadata.summary) {
       expect(bullet).toMatch(/[.!?]$/);
     }
-    expect(policy.metadata.summary[0]).toMatch(/operate IntelliFlow CRM\.$/);
+    expect(policy.metadata.summary[0]).toMatch(/operate Aurora\.$/);
     expect(policy.sections.length).toBeGreaterThanOrEqual(6);
     expect(policy.sections[0].id).toBe('information-we-collect');
     expect(policy.sections[0].body.length).toBeGreaterThanOrEqual(1);

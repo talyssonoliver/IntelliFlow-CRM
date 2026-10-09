@@ -394,7 +394,7 @@ function EntityDescription({
           {richDescription ? ' ' : ''}
           <Link
             href={entityUrl}
-            className="font-semibold text-slate-800 dark:text-slate-200 hover:text-[#137fec]"
+            className="font-semibold text-slate-800 dark:text-slate-200 hover:text-[#2a78f6]"
           >
             {entity.name}
           </Link>
@@ -465,7 +465,7 @@ export function ActivityFeedItem({
             {primaryUrl ? (
               <Link
                 href={primaryUrl}
-                className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-[#137fec] hover:underline"
+                className="text-sm font-medium text-slate-900 dark:text-slate-100 hover:text-[#2a78f6] hover:underline"
               >
                 {title}
               </Link>
@@ -497,7 +497,7 @@ export function ActivityFeedItem({
               {attachment.url ? (
                 <a
                   href={attachment.url}
-                  className="text-sm text-slate-700 dark:text-slate-300 font-medium hover:text-[#137fec] truncate"
+                  className="text-sm text-slate-700 dark:text-slate-300 font-medium hover:text-[#2a78f6] truncate"
                 >
                   {attachment.filename}
                 </a>
@@ -529,7 +529,7 @@ export function ActivityFeedItem({
           {actionUrl && actionLabel && (
             <Link
               href={actionUrl}
-              className="mt-2 inline-block text-sm text-[#137fec] font-medium hover:underline"
+              className="mt-2 inline-block text-sm text-[#2a78f6] font-medium hover:underline"
             >
               {actionLabel}
             </Link>
@@ -539,7 +539,7 @@ export function ActivityFeedItem({
           {entity && entityUrl && !richDescription && !description && (
             <Link
               href={entityUrl}
-              className="mt-2 inline-block text-sm text-[#137fec] font-medium hover:underline"
+              className="mt-2 inline-block text-sm text-[#2a78f6] font-medium hover:underline"
             >
               View {entity.type.charAt(0) + entity.type.slice(1).toLowerCase()}
             </Link>

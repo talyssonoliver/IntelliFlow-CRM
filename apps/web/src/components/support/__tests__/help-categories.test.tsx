@@ -28,9 +28,7 @@ describe('HelpCategories', () => {
     // Check first category has all elements
     expect(screen.getByText('Getting Started')).toBeInTheDocument();
     expect(
-      screen.getByText(
-        'Quick start guides, onboarding steps, and first-time setup for IntelliFlow CRM'
-      )
+      screen.getByText('Quick start guides, onboarding steps, and first-time setup for Aurora')
     ).toBeInTheDocument();
     expect(screen.getByText('5 articles')).toBeInTheDocument();
 

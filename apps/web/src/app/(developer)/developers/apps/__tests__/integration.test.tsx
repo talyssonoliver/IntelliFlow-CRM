@@ -31,12 +31,12 @@ describe('DeveloperAppsPage Integration', () => {
   it('renders page with real AppList component', () => {
     render(<DeveloperAppsPage />);
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Developer Apps');
-    expect(screen.getByText('IntelliFlow Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Aurora Dashboard')).toBeInTheDocument();
   });
 
   it('all 3 demo app names visible', () => {
     render(<DeveloperAppsPage />);
-    expect(screen.getByText('IntelliFlow Dashboard')).toBeInTheDocument();
+    expect(screen.getByText('Aurora Dashboard')).toBeInTheDocument();
     expect(screen.getByText('CRM Sandbox App')).toBeInTheDocument();
     expect(screen.getByText('Legacy Connector')).toBeInTheDocument();
   });

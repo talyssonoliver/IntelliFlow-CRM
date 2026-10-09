@@ -269,12 +269,9 @@ export function ExportReportButton({ className }: Readonly<ExportReportButtonPro
         doc.setPage(i);
         doc.setFontSize(8);
         doc.setTextColor(150, 150, 150);
-        doc.text(
-          `IntelliFlow CRM - Compliance Report - Page ${i} of ${pageCount}`,
-          pageWidth / 2,
-          290,
-          { align: 'center' }
-        );
+        doc.text(`Aurora - Compliance Report - Page ${i} of ${pageCount}`, pageWidth / 2, 290, {
+          align: 'center',
+        });
       }
 
       doc.save(`compliance-report-${new Date().toISOString().split('T')[0]}.pdf`);

@@ -272,7 +272,7 @@ export function ActivityFeed(props: Readonly<ActivityFeedProps>) {
         {!isFetchingNextPage && hasNextPage && (
           <button
             onClick={() => fetchNextPage()}
-            className="text-sm font-medium text-slate-500 hover:text-[#137fec] transition-colors"
+            className="text-sm font-medium text-slate-500 hover:text-[#2a78f6] transition-colors"
           >
             Load More Updates
           </button>

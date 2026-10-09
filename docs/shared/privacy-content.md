@@ -1,11 +1,11 @@
 ---
 title: Privacy Policy
-version: v2026.03
-effectiveDate: 2026-03-08
-contactEmail: privacy@intelliflow-crm.com
+version: v2026.10
+effectiveDate: 2026-10-07
+contactEmail: privacy@leangency.com
 summary:
   - We collect account, product usage, and support interaction data needed to
-    operate IntelliFlow CRM.
+    operate Aurora.
   - We use personal data to deliver the service, secure customer workspaces, and
     meet regulatory obligations.
   - We retain information according to contractual, security, and legal
@@ -16,10 +16,12 @@ summary:
 
 ## Information We Collect
 
-We collect account registration details, workspace configuration data, product
-usage telemetry, and support communications that are necessary to provide
-IntelliFlow CRM. We do not collect more information than is required to operate,
-secure, and improve the service.
+Aurora is provided by Talysson da Silva Oliveira, a sole trader trading as
+Leangency ("Leangency", "we", "us"), the controller of the personal data
+described in this policy. We collect account registration details, workspace
+configuration data, product usage telemetry, and support communications that are
+necessary to provide Aurora. We do not collect more information than is required
+to operate, secure, and improve the service.
 
 ## How We Use Information
 
@@ -31,9 +33,9 @@ policy information before taking action.
 ## Sharing and Subprocessors
 
 We share data only with service providers and subprocessors that help us host,
-secure, monitor, and support IntelliFlow CRM. Every processor relationship is
-reviewed for security, confidentiality, and data-governance obligations before
-production use.
+secure, monitor, and support Aurora. Every processor relationship is reviewed
+for security, confidentiality, and data-governance obligations before production
+use.
 
 ## Retention and Security
 
@@ -52,6 +54,6 @@ limits of legal retention obligations.
 ## Contact Us
 
 If you have privacy questions, data-subject requests, or concerns about this
-policy, contact the IntelliFlow privacy team at privacy@intelliflow-crm.com. We
-review policy changes before release and publish an updated version identifier
-whenever the policy changes materially.
+policy, contact Leangency at privacy@leangency.com. We review policy changes
+before release and publish an updated version identifier whenever the policy
+changes materially.

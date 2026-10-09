@@ -263,7 +263,7 @@ function GoalSection({ isLoading, goal }: Readonly<GoalSectionProps>) {
             strokeWidth="3"
           />
           <path
-            className="text-[#137fec]"
+            className="text-[#2a78f6]"
             d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
             fill="none"
             stroke="currentColor"
@@ -441,7 +441,7 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
 
         <div className="relative px-4 sm:px-6 lg:px-8 xl:px-12 py-6 max-w-[1800px] mx-auto">
           {/* Welcome Banner */}
-          <div className="bg-gradient-to-r from-[#137fec] to-indigo-600 rounded-xl p-8 text-white shadow-lg relative overflow-hidden mb-6">
+          <div className="bg-gradient-to-r from-[#2a78f6] to-indigo-600 rounded-xl p-8 text-white shadow-lg relative overflow-hidden mb-6">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <span className="material-symbols-outlined text-9xl" aria-hidden="true">
                 waving_hand
@@ -464,7 +464,7 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
                 <Link
                   href="/calendar"
                   onClick={() => trackWelcomeCtaClick('View Schedule', '/calendar')}
-                  className="bg-white text-[#137fec] hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2"
+                  className="bg-white text-[#2a78f6] hover:bg-blue-50 px-4 py-2 rounded-lg font-semibold text-sm transition-colors shadow-sm flex items-center gap-2"
                 >
                   <span className="material-symbols-outlined text-lg" aria-hidden="true">
                     calendar_today
@@ -525,7 +525,7 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
                     trackQuickActionsSettingsOpened();
                     setIsQuickActionsSheetOpen(true);
                   }}
-                  className="text-slate-400 hover:text-[#137fec] transition-colors"
+                  className="text-slate-400 hover:text-[#2a78f6] transition-colors"
                   aria-label="Edit quick actions"
                 >
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">
@@ -624,7 +624,7 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
                       trackGoalSettingsOpened();
                       setIsGoalSettingsOpen(true);
                     }}
-                    className="text-slate-400 hover:text-[#137fec] transition-colors"
+                    className="text-slate-400 hover:text-[#2a78f6] transition-colors"
                     aria-label="Goal settings"
                     data-testid="goal-settings-button"
                   >
@@ -646,7 +646,7 @@ export function AuthenticatedHomePage({ initialWelcomeData }: AuthenticatedHomeP
                     trackPinnedNavSettingsOpened();
                     setIsPinnedNavSheetOpen(true);
                   }}
-                  className="text-slate-400 hover:text-[#137fec] transition-colors"
+                  className="text-slate-400 hover:text-[#2a78f6] transition-colors"
                   aria-label="Edit pinned navigation"
                 >
                   <span className="material-symbols-outlined text-sm" aria-hidden="true">

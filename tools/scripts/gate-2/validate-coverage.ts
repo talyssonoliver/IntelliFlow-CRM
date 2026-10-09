@@ -59,12 +59,14 @@ interface ValidationResult {
   };
 }
 
-const THRESHOLDS: Record<'T2' | 'T3', TrancheThresholds> = {
+export const TRANCHES = ['T2', 'T3'] as const;
+
+export const THRESHOLDS: Record<'T2' | 'T3', TrancheThresholds> = {
   T2: { overall: 80, domain: 95, application: 90 },
   T3: { overall: 90, domain: 95, application: 90 },
 };
 
-function getCoverageForPath(summary: CoverageSummary, pathPattern: string): number | null {
+export function getCoverageForPath(summary: CoverageSummary, pathPattern: string): number | null {
   const matchingPaths = Object.keys(summary).filter(
     (key) => key !== 'total' && key.includes(pathPattern)
   );
@@ -84,8 +86,24 @@ function getCoverageForPath(summary: CoverageSummary, pathPattern: string): numb
   return totalLines > 0 ? (coveredLines / totalLines) * 100 : null;
 }
 
-function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
-  const coveragePath = join(process.cwd(), 'artifacts', 'coverage', 'coverage-summary.json');
+/** One Domain/Application row: a layer with no report entries prints "No data". */
+function printOptionalLayerRow(label: string, target: number, actual: number | null): void {
+  const cell = label.padEnd(14);
+  if (actual === null) {
+    console.log(`│ ${cell}│ ${target}%`.padEnd(21) + '│ -        │ No data               │');
+    return;
+  }
+  const status = actual >= target ? '✓ MET' : '✗ NOT MET';
+  console.log(
+    `│ ${cell}│ ${target}%`.padEnd(21) +
+      `│ ${actual.toFixed(2)}%`.padEnd(11) +
+      `│ ${status}`.padEnd(24) +
+      '│'
+  );
+}
+
+export function validateCoverage(tranche: 'T2' | 'T3', root = process.cwd()): ValidationResult {
+  const coveragePath = join(root, 'artifacts', 'coverage', 'coverage-summary.json');
   const thresholds = THRESHOLDS[tranche];
 
   console.log('╔══════════════════════════════════════════════════════════════╗');
@@ -134,36 +152,8 @@ function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
       '│'
   );
 
-  let domainStatus: string;
-  if (domain !== null) {
-    domainStatus = domain >= thresholds.domain ? '✓ MET' : '✗ NOT MET';
-    console.log(
-      `│ Domain        │ ${thresholds.domain}%`.padEnd(21) +
-        `│ ${domain.toFixed(2)}%`.padEnd(11) +
-        `│ ${domainStatus}`.padEnd(24) +
-        '│'
-    );
-  } else {
-    console.log(
-      `│ Domain        │ ${thresholds.domain}%`.padEnd(21) + '│ -        │ No data               │'
-    );
-  }
-
-  let appStatus: string;
-  if (application !== null) {
-    appStatus = application >= thresholds.application ? '✓ MET' : '✗ NOT MET';
-    console.log(
-      `│ Application   │ ${thresholds.application}%`.padEnd(21) +
-        `│ ${application.toFixed(2)}%`.padEnd(11) +
-        `│ ${appStatus}`.padEnd(24) +
-        '│'
-    );
-  } else {
-    console.log(
-      `│ Application   │ ${thresholds.application}%`.padEnd(21) +
-        '│ -        │ No data               │'
-    );
-  }
+  printOptionalLayerRow('Domain', thresholds.domain, domain);
+  printOptionalLayerRow('Application', thresholds.application, application);
 
   console.log('└───────────────┴──────────┴──────────┴───────────────────────┘');
 
@@ -208,28 +198,39 @@ function validateCoverage(tranche: 'T2' | 'T3'): ValidationResult {
   return result;
 }
 
-// Parse arguments
-const tranche = (process.argv[2] as 'T2' | 'T3') || 'T2';
-if (tranche !== 'T2' && tranche !== 'T3') {
-  console.error('Usage: npx tsx validate-coverage.ts [T2|T3]');
-  process.exit(1);
+/** CLI entry: returns the exit code instead of exiting, so it can be tested. */
+export function main(argv: string[] = process.argv.slice(2), root = process.cwd()): number {
+  const requested = argv[0] || 'T2';
+  // Take the value from the allow-list, never from argv, so only a known tranche reaches a path.
+  const tranche = TRANCHES.find((t) => t === requested);
+  if (!tranche) {
+    console.error('Usage: npx tsx validate-coverage.ts [T2|T3]');
+    return 1;
+  }
+
+  const result = validateCoverage(tranche, root);
+
+  // Save result to artifacts
+  const artifactsDir = join(root, 'artifacts', 'gate-2');
+  if (!existsSync(artifactsDir)) {
+    mkdirSync(artifactsDir, { recursive: true });
+  }
+
+  writeFileSync(
+    join(artifactsDir, `coverage-validation-${tranche}.json`),
+    JSON.stringify(result, null, 2)
+  );
+
+  console.log('');
+  console.log(`Result saved to: artifacts/gate-2/coverage-validation-${tranche}.json`);
+
+  return result.passed ? 0 : 1;
 }
 
-// Main execution
-const result = validateCoverage(tranche);
-
-// Save result to artifacts
-const artifactsDir = join(process.cwd(), 'artifacts', 'gate-2');
-if (!existsSync(artifactsDir)) {
-  mkdirSync(artifactsDir, { recursive: true });
+// Run only when executed directly, so tests can import the functions.
+if (
+  process.argv[1]?.endsWith('validate-coverage.ts') ||
+  process.argv[1]?.endsWith('validate-coverage.js')
+) {
+  process.exit(main());
 }
-
-writeFileSync(
-  join(artifactsDir, `coverage-validation-${tranche}.json`),
-  JSON.stringify(result, null, 2)
-);
-
-console.log('');
-console.log(`Result saved to: artifacts/gate-2/coverage-validation-${tranche}.json`);
-
-process.exit(result.passed ? 0 : 1);

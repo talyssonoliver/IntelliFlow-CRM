@@ -64,8 +64,8 @@ describe('ArchitecturePage', () => {
     expect(screen.getByTestId('adr-list')).toBeInTheDocument();
   });
 
-  it('exports metadata.title as "Architecture | IntelliFlow CRM" (AC-001)', () => {
-    expect(metadata.title).toBe('Architecture | IntelliFlow CRM');
+  it('exports metadata.title as "Architecture | Aurora" (AC-001)', () => {
+    expect(metadata.title).toBe('Architecture | Aurora');
   });
 
   it('exports metadata.description containing "Architecture Decision Records" (AC-001)', () => {

@@ -312,7 +312,7 @@ export function getStageColor(stage: string): string {
     case 'Proposal':
       return 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400';
     default:
-      return 'bg-[#137fec]/10 text-[#137fec]';
+      return 'bg-[#2a78f6]/10 text-[#2a78f6]';
   }
 }
 
@@ -652,14 +652,14 @@ export function ContactNotFoundError({ fromInsight }: { fromInsight: boolean }) 
           {fromInsight && (
             <Link
               href="/"
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               <span className="material-symbols-outlined text-sm">home</span> Back to Home
             </Link>
           )}
           <Link
             href="/contacts"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-[#137fec] text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-[#2a78f6] text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <span className="material-symbols-outlined text-sm">arrow_back</span> Back to Contacts
           </Link>

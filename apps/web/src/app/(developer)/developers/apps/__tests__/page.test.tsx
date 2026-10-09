@@ -71,6 +71,6 @@ describe('DeveloperAppsPage', () => {
   });
 
   it('metadata title matches expected format', () => {
-    expect(metadata.title).toBe('Developer Apps | IntelliFlow CRM');
+    expect(metadata.title).toBe('Developer Apps | Aurora');
   });
 });

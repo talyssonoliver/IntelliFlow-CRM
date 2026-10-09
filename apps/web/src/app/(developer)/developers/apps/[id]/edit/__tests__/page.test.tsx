@@ -31,19 +31,19 @@ describe('DeveloperAppEditPage', () => {
   });
 
   // EP-003: generateMetadata returns edit title for valid app
-  it('EP-003: generateMetadata returns "Edit {app.name} | Developer Apps | IntelliFlow CRM"', async () => {
+  it('EP-003: generateMetadata returns "Edit {app.name} | Developer Apps | Aurora"', async () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'app-001' }),
     });
-    expect(metadata.title).toBe('Edit IntelliFlow Dashboard | Developer Apps | IntelliFlow CRM');
+    expect(metadata.title).toBe('Edit Aurora Dashboard | Developer Apps | Aurora');
   });
 
   // EP-004: generateMetadata returns not-found title for unknown id
-  it('EP-004: generateMetadata returns "App Not Found | IntelliFlow CRM" for unknown id', async () => {
+  it('EP-004: generateMetadata returns "App Not Found | Aurora" for unknown id', async () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'unknown-id' }),
     });
-    expect(metadata.title).toBe('App Not Found | IntelliFlow CRM');
+    expect(metadata.title).toBe('App Not Found | Aurora');
   });
 
   // EP-005: generateMetadata returns not-found title for invalid id
@@ -51,7 +51,7 @@ describe('DeveloperAppEditPage', () => {
     const metadata = await generateMetadata({
       params: Promise.resolve({ id: 'invalid<script>' }),
     });
-    expect(metadata.title).toBe('App Not Found | IntelliFlow CRM');
+    expect(metadata.title).toBe('App Not Found | Aurora');
   });
 
   // EP-006: Invalid id passes empty appId to AppEditor

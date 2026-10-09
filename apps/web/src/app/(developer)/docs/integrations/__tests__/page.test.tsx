@@ -25,8 +25,8 @@ describe('IntegrationsPage', () => {
     expect(screen.getByTestId('integration-list')).toBeInTheDocument();
   });
 
-  it('exports metadata.title as "Integration Resources | IntelliFlow CRM"', () => {
-    expect(metadata.title).toBe('Integration Resources | IntelliFlow CRM');
+  it('exports metadata.title as "Integration Resources | Aurora"', () => {
+    expect(metadata.title).toBe('Integration Resources | Aurora');
   });
 
   it('exports metadata.description containing "Webhooks" or "SDK"', () => {

@@ -19,7 +19,7 @@ const defaultSize = { width: 180, height: 160 };
 // ============================================
 // Brand palette constants
 // ============================================
-const P = '#137fec'; // primary
+const P = '#2a78f6'; // primary
 const PL = '#93c5fd'; // primary-light (blue-300)
 const PLT = '#dbeafe'; // primary-lightest (blue-100)
 const S2 = '#e2e8f0'; // slate-200

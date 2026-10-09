@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { Card, Badge } from '@intelliflow/ui';
+import developerGuidesJson from '@/data/developer-guides.json';
+import { hasFields, isLinkCategory, isOneOf, parseJsonArray } from '@/lib/shared/json-data';
 
 interface GuideCategory {
   id: string;
@@ -21,231 +23,21 @@ interface GuideItem {
   external?: boolean;
 }
 
-const GUIDE_CATEGORIES: GuideCategory[] = [
-  {
-    id: 'getting-started',
-    title: 'Getting Started',
-    description: 'Quick start guide and initial setup instructions',
-    icon: 'rocket_launch',
-    color: 'bg-blue-500',
-    items: [
-      {
-        id: 'getting-started',
-        title: 'Getting Started',
-        description: 'Set up your development environment and build your first feature',
-        href: 'https://intelliflow-crm.dev/guides/getting-started',
-        status: 'available',
-        external: true,
-      },
-    ],
-  },
-  {
-    id: 'development',
-    title: 'Development',
-    description: 'Core development workflow and environment setup',
-    icon: 'developer_mode',
-    color: 'bg-emerald-500',
-    items: [
-      {
-        id: 'development-overview',
-        title: 'Development Overview',
-        description: 'Architecture overview and development workflow',
-        href: 'https://intelliflow-crm.dev/guides/development-overview',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'local-setup',
-        title: 'Local Setup',
-        description: 'Configure your local development environment',
-        href: 'https://intelliflow-crm.dev/guides/local-setup',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'environment-variables',
-        title: 'Environment Variables',
-        description: 'Manage environment configuration across environments',
-        href: 'https://intelliflow-crm.dev/guides/environment-variables',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'database-management',
-        title: 'Database Management',
-        description: 'Prisma migrations, seeding, and database operations',
-        href: 'https://intelliflow-crm.dev/guides/database-management',
-        status: 'coming-soon',
-        external: true,
-      },
-    ],
-  },
-  {
-    id: 'testing',
-    title: 'Testing',
-    description: 'Testing strategies and best practices',
-    icon: 'science',
-    color: 'bg-violet-500',
-    items: [
-      {
-        id: 'testing-overview',
-        title: 'Testing Overview',
-        description: 'Testing philosophy and strategy overview',
-        href: 'https://intelliflow-crm.dev/guides/testing-overview',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'unit-testing',
-        title: 'Unit Testing',
-        description: 'Write effective unit tests with Vitest',
-        href: 'https://intelliflow-crm.dev/guides/unit-testing',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'integration-testing',
-        title: 'Integration Testing',
-        description: 'Test component interactions and API integrations',
-        href: 'https://intelliflow-crm.dev/guides/integration-testing',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'e2e-testing',
-        title: 'E2E Testing',
-        description: 'End-to-end testing with Playwright',
-        href: 'https://intelliflow-crm.dev/guides/e2e-testing',
-        status: 'coming-soon',
-        external: true,
-      },
-    ],
-  },
-  {
-    id: 'ai-development',
-    title: 'AI Development',
-    description: 'AI integration and LLM development guides',
-    icon: 'psychology',
-    color: 'bg-amber-500',
-    items: [
-      {
-        id: 'ai-development-guide',
-        title: 'AI Development Guide',
-        description: 'Build AI-powered features with LangChain and CrewAI',
-        href: 'https://intelliflow-crm.dev/guides/ai-development',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'langchain-setup',
-        title: 'LangChain Setup',
-        description: 'Configure LangChain for AI agent development',
-        href: 'https://intelliflow-crm.dev/guides/langchain-setup',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'ollama-local',
-        title: 'Ollama Local',
-        description: 'Run LLMs locally with Ollama for development',
-        href: 'https://intelliflow-crm.dev/guides/ollama-local',
-        status: 'coming-soon',
-        external: true,
-      },
-    ],
-  },
-  {
-    id: 'deployment',
-    title: 'Deployment',
-    description: 'Deploy and manage IntelliFlow CRM in production',
-    icon: 'cloud_upload',
-    color: 'bg-sky-500',
-    items: [
-      {
-        id: 'deployment-overview',
-        title: 'Deployment Overview',
-        description: 'Deployment strategies and infrastructure overview',
-        href: 'https://intelliflow-crm.dev/guides/deployment-overview',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'docker',
-        title: 'Docker',
-        description: 'Containerize and deploy with Docker Compose',
-        href: 'https://intelliflow-crm.dev/guides/docker',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'vercel',
-        title: 'Vercel',
-        description: 'Deploy the frontend to Vercel',
-        href: 'https://intelliflow-crm.dev/guides/vercel',
-        status: 'coming-soon',
-        external: true,
-      },
-    ],
-  },
-  {
-    id: 'best-practices',
-    title: 'Best Practices',
-    description: 'Code quality, security, and performance guidelines',
-    icon: 'workspace_premium',
-    color: 'bg-indigo-500',
-    items: [
-      {
-        id: 'code-style',
-        title: 'Code Style',
-        description: 'TypeScript coding standards and conventions',
-        href: 'https://intelliflow-crm.dev/guides/code-style',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'git-workflow',
-        title: 'Git Workflow',
-        description: 'Branching strategy and commit conventions',
-        href: 'https://intelliflow-crm.dev/guides/git-workflow',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'security',
-        title: 'Security',
-        description: 'Security best practices and vulnerability prevention',
-        href: 'https://intelliflow-crm.dev/guides/security',
-        status: 'coming-soon',
-        external: true,
-      },
-      {
-        id: 'performance',
-        title: 'Performance',
-        description: 'Performance optimization techniques and monitoring',
-        href: 'https://intelliflow-crm.dev/guides/performance',
-        status: 'coming-soon',
-        external: true,
-      },
-    ],
-  },
-  {
-    id: 'contributing',
-    title: 'Contributing',
-    description: 'How to contribute to the IntelliFlow CRM project',
-    icon: 'group',
-    color: 'bg-rose-500',
-    items: [
-      {
-        id: 'contributing-guide',
-        title: 'Contributing Guide',
-        description: 'Guidelines for contributing code, docs, and feedback',
-        href: 'https://intelliflow-crm.dev/guides/contributing',
-        status: 'coming-soon',
-        external: true,
-      },
-    ],
-  },
-];
+const GUIDE_STATUSES: readonly GuideItem['status'][] = ['available', 'coming-soon'];
+
+const isGuideItem = (value: unknown): boolean =>
+  hasFields(
+    value,
+    { id: 'string', title: 'string', description: 'string', href: 'string' },
+    { external: 'boolean' }
+  ) && isOneOf(value.status, GUIDE_STATUSES);
+
+/** The guide catalogue is content, kept in data/developer-guides.json. */
+const GUIDE_CATEGORIES: GuideCategory[] = parseJsonArray<GuideCategory>(
+  developerGuidesJson,
+  'data/developer-guides.json',
+  (value) => isLinkCategory(value, isGuideItem)
+);
 
 function StatusBadge({ status }: Readonly<{ status: 'available' | 'coming-soon' }>) {
   if (status === 'coming-soon') {

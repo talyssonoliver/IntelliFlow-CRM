@@ -168,8 +168,8 @@ function UpgradePageContent() {
                   Upgrade Your Plan
                 </h1>
                 <p className="text-base text-slate-600 dark:text-slate-400">
-                  Get more from IntelliFlow CRM with advanced features, AI intelligence, and
-                  dedicated support.
+                  Get more from Aurora with advanced features, AI intelligence, and dedicated
+                  support.
                 </p>
               </>
             )}

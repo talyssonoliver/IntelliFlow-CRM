@@ -113,12 +113,12 @@ export function TicketForm({
   };
 
   const inputClass = (hasError: boolean) =>
-    `w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 transition-shadow focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] focus:outline-none ${
+    `w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 transition-shadow focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] focus:outline-none ${
       hasError ? 'border-red-500' : 'border-slate-200 dark:border-slate-700'
     }`;
 
   const selectClass =
-    'w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] focus:outline-none transition-shadow';
+    'w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] focus:outline-none transition-shadow';
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
@@ -159,7 +159,7 @@ export function TicketForm({
           id="description"
           value={formData.description}
           onChange={(e) => updateField('description', e.target.value)}
-          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 min-h-[72px] focus:ring-2 focus:ring-[#137fec]/20 focus:border-[#137fec] focus:outline-none transition-shadow resize-y"
+          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 min-h-[72px] focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] focus:outline-none transition-shadow resize-y"
           placeholder="Provide details about the issue..."
           rows={3}
         />
@@ -319,7 +319,7 @@ export function TicketForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="flex items-center gap-2 bg-[#137fec] hover:bg-[#0e6ac7] text-white font-bold py-2 px-6 rounded-lg shadow-sm shadow-[#137fec]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="flex items-center gap-2 bg-[#2a78f6] hover:bg-[#1f63d4] text-white font-bold py-2 px-6 rounded-lg shadow-sm shadow-[#2a78f6]/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isSubmitting && (
             <span className="material-symbols-outlined text-[16px] animate-spin">

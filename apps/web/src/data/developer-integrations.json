@@ -1,0 +1,157 @@
+[
+  {
+    "id": "webhooks",
+    "title": "Webhooks",
+    "description": "Real-time event notifications for your applications",
+    "icon": "webhook",
+    "color": "bg-blue-500",
+    "items": [
+      {
+        "id": "inbound-webhooks",
+        "title": "Inbound Webhooks",
+        "description": "Receive events from external services into Aurora",
+        "href": "/docs/webhooks",
+        "status": "available"
+      },
+      {
+        "id": "outbound-webhooks",
+        "title": "Outbound Webhooks",
+        "description": "Send real-time event notifications to your endpoints",
+        "href": "/docs/webhooks",
+        "status": "available"
+      }
+    ]
+  },
+  {
+    "id": "sdk-tools",
+    "title": "SDK & Developer Tools",
+    "description": "Libraries and tools for building with Aurora",
+    "icon": "code",
+    "color": "bg-emerald-500",
+    "items": [
+      {
+        "id": "typescript-sdk",
+        "title": "TypeScript SDK",
+        "description": "Official TypeScript/JavaScript SDK for Aurora API (v0.1.0)",
+        "href": "/docs/sdk",
+        "status": "beta"
+      },
+      {
+        "id": "react-hooks",
+        "title": "React Hooks",
+        "description": "Pre-built React hooks for common CRM operations and data fetching",
+        "href": "/docs/sdk",
+        "status": "available"
+      },
+      {
+        "id": "cli-tools",
+        "title": "CLI Tools",
+        "description": "Command-line interface for managing Aurora resources",
+        "href": "/docs/cli",
+        "status": "available"
+      }
+    ]
+  },
+  {
+    "id": "authentication",
+    "title": "Authentication",
+    "description": "Secure access and identity management",
+    "icon": "lock",
+    "color": "bg-orange-500",
+    "items": [
+      {
+        "id": "oauth",
+        "title": "OAuth (Google & Azure)",
+        "description": "Single sign-on with Google Workspace and Microsoft Azure AD",
+        "href": "/docs/auth",
+        "status": "available"
+      },
+      {
+        "id": "jwt-bearer",
+        "title": "JWT / Bearer Token",
+        "description": "Token-based authentication for API access and service-to-service calls",
+        "href": "/docs/api",
+        "status": "available"
+      },
+      {
+        "id": "api-keys",
+        "title": "API Keys",
+        "description": "Programmatic API key generation and management for integrations",
+        "href": "#",
+        "status": "coming-soon"
+      },
+      {
+        "id": "mfa",
+        "title": "Multi-Factor Authentication",
+        "description": "TOTP-based two-factor authentication for enhanced account security",
+        "href": "/docs/auth",
+        "status": "available"
+      }
+    ]
+  },
+  {
+    "id": "connectors",
+    "title": "Third-Party Connectors",
+    "description": "Pre-built integrations with popular business tools",
+    "icon": "hub",
+    "color": "bg-purple-500",
+    "items": [
+      {
+        "id": "sap-erp",
+        "title": "SAP ERP",
+        "description": "Enterprise resource planning synchronization with SAP systems",
+        "href": "https://intelliflow-crm.dev/docs/connectors/sap",
+        "status": "available",
+        "external": true
+      },
+      {
+        "id": "stripe",
+        "title": "Stripe",
+        "description": "Payment processing and subscription management integration",
+        "href": "https://intelliflow-crm.dev/docs/connectors/stripe",
+        "status": "available",
+        "external": true
+      },
+      {
+        "id": "paypal",
+        "title": "PayPal",
+        "description": "PayPal payment gateway integration for invoicing and transactions",
+        "href": "https://intelliflow-crm.dev/docs/connectors/paypal",
+        "status": "available",
+        "external": true
+      },
+      {
+        "id": "gmail",
+        "title": "Gmail",
+        "description": "Gmail integration for email tracking, logging, and campaign management",
+        "href": "https://intelliflow-crm.dev/docs/connectors/gmail",
+        "status": "available",
+        "external": true
+      },
+      {
+        "id": "outlook",
+        "title": "Outlook",
+        "description": "Microsoft Outlook integration for email and calendar synchronization",
+        "href": "https://intelliflow-crm.dev/docs/connectors/outlook",
+        "status": "available",
+        "external": true
+      },
+      {
+        "id": "slack",
+        "title": "Slack",
+        "description": "Slack workspace integration for CRM notifications and commands",
+        "href": "https://intelliflow-crm.dev/docs/connectors/slack",
+        "status": "available",
+        "external": true
+      },
+      {
+        "id": "teams",
+        "title": "Microsoft Teams",
+        "description": "Teams integration for collaboration, notifications, and meeting links",
+        "href": "https://intelliflow-crm.dev/docs/connectors/teams",
+        "status": "available",
+        "external": true
+      }
+    ]
+  }
+]

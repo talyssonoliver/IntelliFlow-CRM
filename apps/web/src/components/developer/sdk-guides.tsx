@@ -92,8 +92,8 @@ function OverviewTab() {
           About the SDK
         </h2>
         <p className="text-muted-foreground">
-          The IntelliFlow CRM SDK provides typed client libraries for integrating with the
-          IntelliFlow CRM API. The primary SDK is{' '}
+          The Aurora SDK provides typed client libraries for integrating with the Aurora API. The
+          primary SDK is{' '}
           <code className="text-sm bg-muted px-1 py-0.5 rounded">@intelliflow/api-client</code>{' '}
           (v0.1.0), offering both React hooks and a vanilla TypeScript client.
         </p>
@@ -131,7 +131,7 @@ function OverviewTab() {
           <li>Node.js 18 or later</li>
           <li>npm, pnpm, or yarn package manager</li>
           <li>
-            {'IntelliFlow CRM API key ('}
+            {'Aurora API key ('}
             <code className="text-sm bg-muted px-1 py-0.5 rounded">ifc_live_*</code>
             {' or '}
             <code className="text-sm bg-muted px-1 py-0.5 rounded">ifc_test_*</code>

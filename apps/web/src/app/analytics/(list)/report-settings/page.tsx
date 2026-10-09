@@ -6,7 +6,7 @@ import ReportSettingsContent from './ReportSettingsContent';
 import ReportSettingsLoading from './loading';
 
 export const metadata = {
-  title: 'Report Settings — IntelliFlow',
+  title: 'Report Settings — Aurora',
   description:
     'Configure default date range, display currency, and scheduled delivery for analytics reports.',
 };

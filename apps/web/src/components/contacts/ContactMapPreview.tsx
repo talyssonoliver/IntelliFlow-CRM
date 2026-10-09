@@ -31,7 +31,7 @@ export function ContactMapPreview({ location }: Readonly<ContactMapPreviewProps>
       <div className="w-full h-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-slate-700 dark:to-slate-800 flex items-center justify-center">
         <div className="text-center">
           <svg
-            className="w-8 h-8 text-[#137fec] mx-auto mb-1"
+            className="w-8 h-8 text-[#2a78f6] mx-auto mb-1"
             viewBox="0 0 24 24"
             fill="currentColor"
           >

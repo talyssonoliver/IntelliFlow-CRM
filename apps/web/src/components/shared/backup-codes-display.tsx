@@ -172,7 +172,7 @@ export function BackupCodesDisplay({
             {leftColumn.map(({ index, code }) => (
               <div key={index} className="flex items-center gap-3 font-mono text-sm">
                 <span className="text-slate-500 w-4 text-right">{index}.</span>
-                <span className="text-[#7cc4ff]">{code}</span>
+                <span className="text-[#bca8ff]">{code}</span>
               </div>
             ))}
           </div>
@@ -182,7 +182,7 @@ export function BackupCodesDisplay({
             {rightColumn.map(({ index, code }) => (
               <div key={index} className="flex items-center gap-3 font-mono text-sm">
                 <span className="text-slate-500 w-4 text-right">{index}.</span>
-                <span className="text-[#7cc4ff]">{code}</span>
+                <span className="text-[#bca8ff]">{code}</span>
               </div>
             ))}
           </div>
@@ -222,9 +222,9 @@ export function BackupCodesDisplay({
             onChange={(e) => setAcknowledged(e.target.checked)}
             className={cn(
               'mt-0.5 w-5 h-5 rounded border-2 border-slate-600',
-              'bg-slate-700 text-[#137fec]',
-              'focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900',
-              'checked:bg-[#137fec] checked:border-[#137fec]'
+              'bg-slate-700 text-[#2a78f6]',
+              'focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900',
+              'checked:bg-[#2a78f6] checked:border-[#2a78f6]'
             )}
             aria-describedby="acknowledge-description"
           />
@@ -244,9 +244,9 @@ export function BackupCodesDisplay({
           'w-full py-3 px-4 rounded-lg font-medium transition-colors',
           'flex items-center justify-center gap-2',
           acknowledged
-            ? 'bg-[var(--color-primary,#137fec)] text-white hover:bg-[var(--color-primary-hover,#0d6ecc)]'
+            ? 'bg-[var(--color-primary,#2a78f6)] text-white hover:bg-[var(--color-primary-hover,#1f63d4)]'
             : 'bg-slate-700 text-slate-500 cursor-not-allowed',
-          'focus:outline-none focus:ring-2 focus:ring-[#7cc4ff] focus:ring-offset-2 focus:ring-offset-slate-900'
+          'focus:outline-none focus:ring-2 focus:ring-[#bca8ff] focus:ring-offset-2 focus:ring-offset-slate-900'
         )}
         aria-label="Continue after saving backup codes"
       >

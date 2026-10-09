@@ -25,8 +25,8 @@ describe('CliDocsPage', () => {
     expect(screen.getByTestId('cli-docs')).toBeInTheDocument();
   });
 
-  it('metadata.title === "CLI Reference | IntelliFlow CRM"', () => {
-    expect(metadata.title).toBe('CLI Reference | IntelliFlow CRM');
+  it('metadata.title === "CLI Reference | Aurora"', () => {
+    expect(metadata.title).toBe('CLI Reference | Aurora');
   });
 
   it('metadata.description contains "CLI"', () => {

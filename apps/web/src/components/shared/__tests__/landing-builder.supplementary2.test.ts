@@ -71,7 +71,7 @@ function getStatsBgClass(background: 'light' | 'dark' | 'brand' | undefined): st
   const bgClass: Record<string, string> = {
     light: 'bg-white dark:bg-slate-800',
     dark: 'bg-slate-900 dark:bg-slate-950',
-    brand: 'bg-gradient-to-r from-[#137fec] to-[#0e6ac7]',
+    brand: 'bg-gradient-to-r from-[#2a78f6] to-[#1f63d4]',
   };
   return bgClass[background || 'light'];
 }

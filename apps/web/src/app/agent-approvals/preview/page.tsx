@@ -334,8 +334,8 @@ function ActionCard({
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             {/* Agent Icon */}
-            <div className="w-10 h-10 rounded-full bg-[#137fec]/10 flex items-center justify-center flex-shrink-0">
-              <Icon name="smart_toy" className="text-xl text-[#137fec]" />
+            <div className="w-10 h-10 rounded-full bg-[#2a78f6]/10 flex items-center justify-center flex-shrink-0">
+              <Icon name="smart_toy" className="text-xl text-[#2a78f6]" />
             </div>
 
             {/* Action Info */}
@@ -480,7 +480,7 @@ function ActionCard({
                   value={feedback}
                   onChange={(e) => setFeedback(e.target.value)}
                   placeholder="Please provide a reason for rejection..."
-                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#137fec] resize-none"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#2a78f6] resize-none"
                   rows={3}
                   onClick={(e) => e.stopPropagation()}
                 />
@@ -600,7 +600,7 @@ function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProp
 
       <Card className="p-4" data-testid="metric-highimpact">
         <div className="text-sm text-slate-500 dark:text-slate-400 mb-1">High Impact</div>
-        <div className="text-2xl font-bold text-[#137fec]" data-testid="metric-value">
+        <div className="text-2xl font-bold text-[#2a78f6]" data-testid="metric-value">
           {highImpact}
         </div>
       </Card>
@@ -762,11 +762,11 @@ function AgentApprovalsPreviewContent() {
     <div className="flex flex-col gap-6">
       {/* Breadcrumb */}
       <nav className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 mb-2">
-        <Link href="/dashboard" className="hover:text-[#137fec]">
+        <Link href="/dashboard" className="hover:text-[#2a78f6]">
           Dashboard
         </Link>
         <span>/</span>
-        <Link href="/agent-approvals" className="hover:text-[#137fec]">
+        <Link href="/agent-approvals" className="hover:text-[#2a78f6]">
           Agent Approvals
         </Link>
         <span>/</span>
@@ -817,7 +817,7 @@ function AgentApprovalsPreviewContent() {
                 onClick={() => setFilterStatus(status)}
                 className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                   filterStatus === status
-                    ? 'bg-[#137fec] text-white'
+                    ? 'bg-[#2a78f6] text-white'
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
@@ -853,7 +853,7 @@ function AgentApprovalsPreviewContent() {
               data-status={action.status}
               className={`transition-all duration-500 ${
                 highlightedActionId === action.id
-                  ? 'ring-2 ring-[#137fec] ring-offset-2 rounded-lg'
+                  ? 'ring-2 ring-[#2a78f6] ring-offset-2 rounded-lg'
                   : ''
               }`}
             >

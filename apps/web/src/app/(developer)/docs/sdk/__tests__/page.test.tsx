@@ -25,8 +25,8 @@ describe('SdkGuidesPage', () => {
     expect(screen.getByTestId('sdk-guides')).toBeInTheDocument();
   });
 
-  it('exports metadata.title as "SDK Guides | IntelliFlow CRM" (AC-002)', () => {
-    expect(metadata.title).toBe('SDK Guides | IntelliFlow CRM');
+  it('exports metadata.title as "SDK Guides | Aurora" (AC-002)', () => {
+    expect(metadata.title).toBe('SDK Guides | Aurora');
   });
 
   it('exports metadata.description containing "SDK" (AC-002)', () => {
