@@ -164,6 +164,17 @@ function upToGit(chain) {
 
 /** PIDs above `pid` (parent, grandparent, ...), nearest first, ending at the push's git. */
 export function ancestorsOf(pid, depth = ANCESTOR_SEARCH_DEPTH, deps = {}) {
+  return upToGit(ancestorChain(pid, depth, deps));
+}
+
+/**
+ * The processes above `pid`, nearest first, as `{ pid, name }`. On Windows this
+ * stops early wherever a parent no longer exists, and under Git for Windows that
+ * is usually before the push: MSYS emulates `exec` (git's `sh -c <hook>`, the
+ * pnpm shim's `exec node`) by starting the new process and exiting, so the hook's
+ * shell points at a parent that is gone. findPushGit covers that case.
+ */
+export function ancestorChain(pid, depth = ANCESTOR_SEARCH_DEPTH, deps = {}) {
   const { platform = process.platform, run = spawnSync } = deps;
   if (platform === 'win32') {
     const r = run(
@@ -190,7 +201,7 @@ export function ancestorsOf(pid, depth = ANCESTOR_SEARCH_DEPTH, deps = {}) {
         return { pid: Number.parseInt(id, 10), name: name.trim() };
       })
       .filter((a) => Number.isInteger(a.pid) && a.pid > 4);
-    return upToGit(chain);
+    return chain;
   }
   const ps = (field, of) =>
     (
@@ -208,7 +219,139 @@ export function ancestorsOf(pid, depth = ANCESTOR_SEARCH_DEPTH, deps = {}) {
     chain.push({ pid: parent, name: ps('comm=', parent) });
     current = parent;
   }
-  return upToGit(chain);
+  return chain;
+}
+
+// path.resolve drops trailing separators; Windows paths compare case-insensitively.
+const sameDir = (a, b) => path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
+
+/** Whether a git command line is a `push` (a bare `push` argument after the executable). */
+const isPushCommand = (commandLine) =>
+  String(commandLine ?? '')
+    .replace(/^\s*("[^"]*"|\S+)/, '')
+    .trim()
+    .split(/\s+/)
+    .includes('push');
+
+/**
+ * Windows only: the live `git push` for the worktree at `repoRoot`, found
+ * directly because the parent walk cannot reach it (see ancestorChain).
+ * Candidates are the git.exe processes whose command line is a push; a pair
+ * where one started the other (Git for Windows' cmd\git.exe wrapper and the real
+ * git.exe) is one push. Each one's working directory comes from Git for Windows'
+ * own process table (usr/bin/ps, /proc/<pid>/cwd), and the push whose repository
+ * top level is `repoRoot` wins. With no directory readable, a single push is
+ * taken; anything ambiguous returns null, so another lane's push is never watched.
+ * @returns {{pids: number[], how: string} | null}
+ */
+export function findPushGit(repoRoot, deps = {}) {
+  const { platform = process.platform, run = spawnSync } = deps;
+  if (platform !== 'win32') return null;
+  const opts = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], windowsHide: true };
+  const cim = run(
+    'powershell',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-Command',
+      `Get-CimInstance Win32_Process -Filter "Name='git.exe'" | ForEach-Object { ` +
+        `"$($_.ProcessId)\`t$($_.ParentProcessId)\`t$($_.ExecutablePath)\`t$($_.CommandLine)" }`,
+    ],
+    { ...opts, timeout: 30000 }
+  );
+  const pushes = (cim.stdout || '')
+    .split(/\r?\n/)
+    .map((line) => {
+      const [pid, ppid, exe = '', cmd = ''] = line.split('\t');
+      return { pid: Number.parseInt(pid, 10), ppid: Number.parseInt(ppid, 10), exe, cmd };
+    })
+    .filter((g) => Number.isInteger(g.pid) && g.pid > 4 && isPushCommand(g.cmd));
+  // One push per group: a push started by another push (the cmd\git.exe wrapper) joins it.
+  const groups = [];
+  for (const g of pushes.filter((p) => !pushes.some((q) => q.pid === p.ppid))) {
+    const members = [g];
+    for (let next = pushes.find((p) => p.ppid === g.pid); next; ) {
+      members.push(next);
+      const at = next;
+      next = pushes.find((p) => p.ppid === at.pid);
+    }
+    groups.push(members);
+  }
+  if (groups.length === 0) return null;
+
+  const top = (dir) => {
+    const r = run('git', ['-C', dir, 'rev-parse', '--show-toplevel'], { ...opts, timeout: 10000 });
+    return (r.stdout || '').trim() || null;
+  };
+  const ourTop = top(repoRoot) ?? repoRoot;
+  // Git for Windows' MSYS process table: WINPID -> MSYS pid, for /proc/<pid>/cwd.
+  const msys = new Map();
+  const usrBin = (exe) => path.join(path.dirname(exe), '..', '..', 'usr', 'bin');
+  const anyExe = pushes.find((p) => /[\\/]mingw64[\\/]bin[\\/]git\.exe$/i.test(p.exe))?.exe;
+  if (anyExe) {
+    const ps = run(path.join(usrBin(anyExe), 'ps.exe'), ['-l'], { ...opts, timeout: 10000 });
+    // Columns: [status] PID PPID PGID WINPID TTY UID STIME COMMAND.
+    for (const line of (ps.stdout || '').split(/\r?\n/)) {
+      const cols = line.trim().split(/\s+/);
+      if (cols.length > 0 && !/^\d+$/.test(cols[0])) cols.shift();
+      const [msysPid, , , winPid] = cols;
+      if (/^\d+$/.test(msysPid ?? '') && /^\d+$/.test(winPid ?? ''))
+        msys.set(Number(winPid), msysPid);
+    }
+  }
+  const cwdOf = (g) => {
+    const msysPid = msys.get(g.pid);
+    if (!msysPid || !anyExe) return null;
+    const bin = usrBin(anyExe);
+    const link = run(path.join(bin, 'readlink.exe'), [`/proc/${msysPid}/cwd`], {
+      ...opts,
+      timeout: 10000,
+    });
+    const posixCwd = (link.stdout || '').trim();
+    if (!posixCwd) return null;
+    const win = run(path.join(bin, 'cygpath.exe'), ['-w', posixCwd], { ...opts, timeout: 10000 });
+    return (win.stdout || '').trim() || null;
+  };
+  const located = groups.map((members) => {
+    const cwd = members.map(cwdOf).find(Boolean) ?? null;
+    const t = cwd ? top(cwd) : null;
+    return { pids: members.map((m) => m.pid), cwd, ours: Boolean(t && sameDir(t, ourTop)) };
+  });
+  const ours = located.filter((g) => g.ours);
+  if (ours.length === 1) return { pids: ours[0].pids, how: `git push in ${ourTop}` };
+  if (ours.length === 0 && located.length === 1 && !located[0].cwd) {
+    return { pids: located[0].pids, how: 'the only git push running (directory unreadable)' };
+  }
+  return null;
+}
+
+/**
+ * What the watchdog watches above a gate: the parent chain up to the push's git
+ * when it reaches it; otherwise the nearest ANCESTOR_FALLBACK_DEPTH plus the push
+ * found by findPushGit (Windows). `chain` and `how` go in the gate state file, so
+ * a watchdog that did not fire can be explained afterwards.
+ */
+export function watchTargets(gatePid, repoRoot, deps = {}) {
+  const { chainOf = ancestorChain, findPush = findPushGit } = deps;
+  const chain = chainOf(gatePid, ANCESTOR_SEARCH_DEPTH, deps);
+  if (chain.some((a) => isGit(a.name))) {
+    return { pids: upToGit(chain), chain, push: null, how: 'parent walk reached git' };
+  }
+  const near = upToGit(chain);
+  let push;
+  try {
+    push = findPush(repoRoot, deps);
+  } catch {
+    push = null;
+  }
+  if (!push)
+    return { pids: near, chain, push: null, how: 'no git push found; nearest ancestors only' };
+  return {
+    pids: [...near, ...push.pids.filter((p) => !near.includes(p))],
+    chain,
+    push,
+    how: push.how,
+  };
 }
 
 /** Stop a process and everything it started (Windows: taskkill /T /F by PID). */

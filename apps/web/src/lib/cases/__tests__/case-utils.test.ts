@@ -7,8 +7,17 @@ import {
   formatDeadlineShort,
   isOverdue,
   getInitials,
+  assigneeDisplayName,
   timeAgo,
 } from '../case-utils';
+
+describe('assigneeDisplayName', () => {
+  it('uses the name, or the email when the user has no display name', () => {
+    expect(assigneeDisplayName({ name: 'Jane Doe', email: 'jane@test.com' })).toBe('Jane Doe');
+    expect(assigneeDisplayName({ name: null, email: 'qa@test.com' })).toBe('qa@test.com');
+    expect(assigneeDisplayName({ name: '  ', email: 'qa@test.com' })).toBe('qa@test.com');
+  });
+});
 
 describe('case-utils', () => {
   // ── getStatusConfig ──────────────────────────────────────────────────────

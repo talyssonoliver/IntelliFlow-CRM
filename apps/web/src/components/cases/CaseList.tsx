@@ -17,6 +17,7 @@ import {
   getPriorityConfig,
   formatDeadline,
   getInitials,
+  assigneeDisplayName,
   timeAgo,
 } from '@/lib/cases/case-utils';
 import type { CaseListItem, CaseStats, CaseFilterOptions } from './types';
@@ -215,7 +216,8 @@ function CasePriorityCell({ row }: Readonly<{ row: CaseListItem }>) {
 
 function CaseAssigneeCell({ row }: Readonly<{ row: CaseListItem }>) {
   const { assignee } = row;
-  const shortName = assignee.name
+  const name = assigneeDisplayName(assignee);
+  const shortName = name
     .split(' ')
     .map((p: string, i: number) => (i === 0 ? p : `${p[0]}.`))
     .join(' ');
@@ -225,11 +227,11 @@ function CaseAssigneeCell({ row }: Readonly<{ row: CaseListItem }>) {
         <div
           className="size-7 rounded-full bg-muted bg-cover bg-center shrink-0"
           style={{ backgroundImage: `url(${assignee.avatarUrl})` }}
-          aria-label={assignee.name}
+          aria-label={name}
         />
       ) : (
         <div className="size-7 rounded-full bg-primary text-white flex items-center justify-center text-[10px] font-bold shrink-0">
-          {getInitials(assignee.name)}
+          {getInitials(name)}
         </div>
       )}
       <span className="text-sm text-foreground">{shortName}</span>
