@@ -4,6 +4,10 @@
 
 **Date:** 2026-06-03
 
+**Amended 2026-10-10:** the Node pin moves from 22 to 24 LTS (`.nvmrc`, every
+`NODE_VERSION`/`node-version` in CI, and all six `FROM node:` Dockerfiles), so
+local dev, CI, the Railway images and Vercel (already on 24.x) run one major.
+
 **Deciders:** DevOps + QA Lead (STOA-Quality), CI/CD Reliability
 
 **Technical Story:** CI Audit Report
@@ -56,9 +60,9 @@ deterministic and correct?
 - **Option E — Playwright browser cache** (`~/.cache/ms-playwright`, keyed by
   resolved `@playwright/test` version): add explicit cache step to the e2e and
   nightly jobs.
-- **Option F — `.nvmrc`-pinned Node version** (root `.nvmrc=22`, all
+- **Option F — `.nvmrc`-pinned Node version** (root `.nvmrc=24`, all
   `setup-monorepo` steps switch to `node-version-file`): pin CI to the same Node
-  22 as local dev.
+  24 as local dev (Node 22 until 2026-10-10).
 
 ## Decision Outcome
 
@@ -77,7 +81,7 @@ Specific resolutions:
 | Turbo build/lint/typecheck | **Add** (Option C)    | `turbo run build` in the build job replays unchanged packages from remote cache (signature-verified); saves repeated compilation across PRs that touch a leaf package. Turbo test caching stays off.                                                        |
 | Turbo test cache           | **Reject** (Option D) | CI correctness relies on shard parallelism in `test-regression.yml` (`unit-shards` matrix 1..20). Turbo test caching would replay stale blob reports, break the `--merge-reports` aggregation, and eliminate the wall-clock benefit of 20 parallel runners. |
 | Playwright browsers        | **Add** (Option E)    | `~/.cache/ms-playwright` keyed by resolved `@playwright/test` version; saves ~90 s browser download on every e2e and nightly run with no correctness risk.                                                                                                  |
-| Node version pin           | **Add** (Option F)    | Root `.nvmrc=22` + `node-version-file: .nvmrc` in every `actions/setup-node` call. `engines` in `package.json` can stay `>=20` for downstream consumers; CI and local dev both run 22.                                                                      |
+| Node version pin           | **Add** (Option F)    | Root `.nvmrc=24` + `node-version-file: .nvmrc` in every `actions/setup-node` call. `engines` in `package.json` is a floor (`>=24.0.0`); CI, Docker images and local dev all run 24.                                                                         |
 
 ### Positive Consequences
 
@@ -248,8 +252,8 @@ not a flake — it is a mis-configuration.
       below 90/80/90/90.
 - [ ] SonarCloud gate remains A and is **blocking** after `sonar.yml` is deleted
       and Sonar migrates to the `sonar` job in `test-regression.yml`.
-- [ ] `.nvmrc` present at repo root with content `22`; all CI jobs resolve Node
-      22 via `node-version-file: .nvmrc`.
+- [ ] `.nvmrc` present at repo root with content `24`; all CI jobs resolve Node
+      24 via `node-version-file: .nvmrc`.
 - [ ] `node_modules` cache step absent from all jobs (no `path: node_modules` in
       any `actions/cache` step).
 - [ ] End-to-end PR wall-clock time measures ~8-12 min across install + library

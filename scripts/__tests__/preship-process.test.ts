@@ -315,12 +315,16 @@ describe('ancestorsOf', () => {
   });
 
   it('on the real OS, finds a process named git 8 levels above, the push hook chain', async () => {
-    // A `git` that is really node: a hard link (Windows) or symlink (POSIX) named git.
+    // A process named git. Windows: a hard link to node named git.exe (the walk
+    // reads the image name). POSIX: a shell script named git that starts node.
+    // The walk reads `ps -o comm=`, and from Node 24 a node process's comm is its
+    // main thread's name, "MainThread", whatever the binary is called. So a
+    // symlink to node no longer shows up as git. A script keeps its own file name.
     const dir = tmpDir('preship-git-');
     const fakeGit = path.join(dir, isWin ? 'git.exe' : 'git');
     try {
       if (isWin) fs.linkSync(process.execPath, fakeGit);
-      else fs.symlinkSync(process.execPath, fakeGit);
+      else fs.writeFileSync(fakeGit, '#!/bin/sh\n"$NODE_BIN" "$@"\n', { mode: 0o755 });
     } catch {
       return; // the filesystem refuses links here; the modelled chains above still run
     }
@@ -337,8 +341,9 @@ if (n > 0) {
     process.stdout.write(JSON.stringify({ leaf: process.pid, above: m.ancestorsOf(process.pid) }) + '\\n');
   });
 }`;
-    // git (level 8) -> 7 node levels -> the leaf: git is the leaf's 8th ancestor.
-    const top = spawn(fakeGit, ['-e', LEVEL, '8'], {
+    // git -> 7 node levels -> the leaf: git is the leaf's 8th ancestor. On Windows
+    // git is itself node and runs level 8; on POSIX the script starts level 7.
+    const top = spawn(fakeGit, ['-e', LEVEL, isWin ? '8' : '7'], {
       // NODE_BIN: the levels below git must be plain node, not more processes named git.
       env: { ...process.env, LEVEL, PROCESS_URL, NODE_BIN: process.execPath },
       stdio: ['ignore', 'pipe', 'inherit'],
