@@ -45,9 +45,9 @@ description: 'pnpm + Node + install + optional library pre-build for IntelliFlow
 
 inputs:
   node-version:
-    description: 'Node.js version (default: 22, matches NODE_VERSION env across workflows)'
+    description: 'Node.js version (default: 24, matches NODE_VERSION env across workflows)'
     required: false
-    default: '22'
+    default: '24'
   pnpm-version:
     description: 'pnpm version (default: 10.33.0, matches PNPM_VERSION env across workflows)'
     required: false
@@ -79,7 +79,7 @@ runs:
     # but whose stability we'd rather not depend on).
     - name: Setup Node.js (with pnpm cache)
       if: inputs.install-deps == 'true'
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         # .nvmrc at the repo root is the single source of truth for the Node
         # version (F-08 / ADR-059) so local dev and CI never drift. The
@@ -90,7 +90,7 @@ runs:
 
     - name: Setup Node.js (no cache, install-deps=false)
       if: inputs.install-deps != 'true'
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         # See note above — .nvmrc is authoritative for the Node version.
         node-version-file: '.nvmrc'

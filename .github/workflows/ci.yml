@@ -29,7 +29,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: '22'
+  NODE_VERSION: '24'
   PNPM_VERSION: '10.33.0'
   # TURBO_TOKEN reuses VERCEL_TOKEN (both are Vercel-issued tokens and the
   # Turborepo remote cache API accepts a Vercel token). TURBO_TEAM must be
@@ -71,7 +71,7 @@ jobs:
           # pull_request checks out the merge commit: HEAD^1 is the base tip and
           # HEAD^2 the PR head, so depth 3 covers both diff modes below.
           fetch-depth: 3
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: '.nvmrc'
       - name: Classify changed paths

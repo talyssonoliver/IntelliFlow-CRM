@@ -49,7 +49,7 @@ jobs:
             tools/scripts/observability
       - uses: actions/setup-node@v7
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Apply
         env:
           GRAFANA_URL: https://graysushi1880.grafana.net

@@ -36,7 +36,7 @@ concurrency:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-  NODE_VERSION: '22'
+  NODE_VERSION: '24'
   PNPM_VERSION: '10.33.0'
   # Prevent Next.js webpack build OOM on GitHub-hosted runners (7 GB RAM).
   NODE_OPTIONS: --max-old-space-size=4096
