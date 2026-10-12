@@ -1,52 +1,55 @@
 # Session Context Snapshot
-_Generated: 2026-07-26T10:27:33.965Z • Branch: ifc-306-compliance-calendar_
+_Generated: 2026-10-12T23:27:54.859Z • Branch: feat/pg-198-approval-policies_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 100% complete (34/34 tasks). 2 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 52m ago; 618 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 17 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 3s ago; 619 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 457/618 tasks completed (73.95%) — 159 backlog, 0 blocked, 2 in progress.
-- **Focus band:** Sprints 18, 19, 20, 21 carry the earliest remaining backlog.
-- **Evidence issues:** 10 completed without attestation; 15 attested but CSV not updated.
+- **Progress:** 433/619 tasks completed (69.95%) — 169 backlog, 0 blocked, 17 in progress.
+- **Focus band:** Sprints 0, 1, 6, 8 carry the earliest remaining backlog.
+- **Evidence issues:** 30 attested but CSV not updated.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
 
-_None. The active sprint has no tasks currently in progress._
+- **[ENV-008-AI]** Automated Observability with Predictive Monitoring — started 7d ago, Backend Dev + AI Specialist (STOA-Intelligence)
+  - artifacts: 0 created / 0 missing
+- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 7d ago, DevOps + Claude Code (STOA-Automation)
+  - artifacts: 0 created / 0 missing
 
 ## Recently Completed (last 5)
 
-- **IFC-160** — 3mo ago (15m)
-- **ANALYTICS-001** — 3mo ago (15m)
-- **EXC-SEC-001** — 3mo ago (15m)
-- **ENG-OPS-001** — 3mo ago (15m)
-- **PM-OPS-001** — 3mo ago (15m)
+- **IFC-160** — 6mo ago (15m)
+- **ANALYTICS-001** — 6mo ago (15m)
+- **EXC-SEC-001** — 6mo ago (15m)
+- **ENG-OPS-001** — 6mo ago (15m)
+- **PM-OPS-001** — 6mo ago (15m)
 
 ## Next Up (unblocked)
 
-- **PG-196** (sprint 18) — Module Settings - Account Tiers (/accounts/(list)/account-tiers)
-- **PG-197** (sprint 18) — Module Settings - Territory Mapping (/accounts/(list)/territory-mapping)
-- **PG-198** (sprint 18) — Module Settings - Approval Policies (/agent-approvals/approval-policies)
+- **SALES-001** (sprint 1) — Commercial Narrative + Pitch Deck Outline + One-Pager
+- **IFC-056** (sprint 9) — Team Upskilling Program
+- **IFC-234** (sprint 18) — Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hard
 
 ## Git Activity
 
-- **Branch:** `ifc-306-compliance-calendar` (7 dirty file(s))
-- **Dirty preview:** `artifacts/coverage/coverage-final.json`, `artifacts/coverage/coverage-summary.json`, `artifacts/coverage/lcov.info`, `artifacts/reports/a11y-route-reconcile.json`, `artifacts/reports/current-state-report.json` …
+- **Branch:** `feat/pg-198-approval-policies` (5 dirty file(s))
+- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv`, `artifacts/reports/current-state-report.json`, `artifacts/reports/spec-tracker.json`, `docs/CURRENT_STATE_REPORT.md`
 - **Last 10 commits:**
-  - `68c68a4cd` fix(compliance): serve calendar seed + refresh stale statuses (IFC-306) — test, 50 minutes ago
-  - `888a5f115` fix(k6): stop persisting auth tokens in load-test summaries (SEC-643) (#660) — Talysson Oliveira, 6 minutes ago
-  - `a8de69b0b` feat(contacts): reconcile Contacts List, extract contact-search helpers (PG-064) — Talysson Oliveira, 10 hours ago
-  - `a20f21a62` ci(harness): enforce a local pre-ship record on the PR head SHA (ENG-OPS-003.Gap13) (#654) — Talysson Oliveira, 12 hours ago
-  - `398cf5551` ci(e2e): start @intelliflow/api in E2E env so tRPC specs resolve (ENG-OPS-003.Gap12) (#651) — Talysson Oliveira, 13 hours ago
-  - `c0f48f2eb` fix(docs): make docs:build/docs:dev hard-error instead of silent no-op (#652) — Talysson Oliveira, 14 hours ago
-  - `beab7cb61` chore(eng-ops-002.r16): backfill the 12 remaining sprint-18 attestations (#650) — Talysson Oliveira, 16 hours ago
-  - `a14dfb43b` fix(e2e): repair signup selector drift (ENG-OPS-003.Gap7) (#649) — Talysson Oliveira, 18 hours ago
-  - `1a31a3234` feat(infra): pin Railway api service to immutable image digest (ENG-OPS-003.Gap8) (#648) — Talysson Oliveira, 19 hours ago
-  - `0cba18d9e` fix(test): use Prisma 7 pg adapter in file-ingestion e2e (ENG-OPS-003.Gap9) (#646) — Talysson Oliveira, 21 hours ago
+  - `47f1b5d84` fix(web): make intelli-flow-crm-web.vercel.app the canonical production domain (#849) — Talysson Oliveira, 26 minutes ago
+  - `6a21e456c` fix(security): verify bull-board's vendored highlight.js is already fixed (#848) — Talysson Oliveira, 46 minutes ago
+  - `ac4cdf8a7` chore(ci)(deps): bump snyk/actions/node from b075801f26076be9bb50521154cafab73f44da0c to 11b673cfb4b0dc0d860a1323caa199d54950dcce (#847) — dependabot[bot], 63 minutes ago
+  - `cbcfa1842` chore(ci): move to node 24 lts in ci, docker and engines (#845) — Talysson Oliveira, 2 days ago
+  - `5e05b6c0b` chore(deps): bump next from 16.3.6 to 16.3.8 in /apps/project-tracker (#844) — dependabot[bot], 3 days ago
+  - `f761c818b` feat(web): finish the aurora rebrand: legal pages, pricing claims and app ui (#842) — Talysson Oliveira, 3 days ago
+  - `1f0bc4e37` chore(deps): bump next from 16.3.6 to 16.3.8 in /apps/web (#841) — dependabot[bot], 3 days ago
+  - `eb167a67b` fix(tooling): clear four sonar findings in repo scripts and cover them with tests (#838) — Talysson Oliveira, 4 days ago
+  - `a56ad6556` fix(web): stop the lead form's auto-fill notice from moving next step mid-click (#836) — Talysson Oliveira, 4 days ago
+  - `e90c2195e` fix: handle or explicitly ignore unhandled promises flagged by sonar s9383 (#766) — Talysson Oliveira, 4 days ago
 
 ## Key File References
 
