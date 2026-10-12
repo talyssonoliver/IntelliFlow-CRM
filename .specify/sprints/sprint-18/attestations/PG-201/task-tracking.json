@@ -29,13 +29,23 @@
   },
   "kpis": {},
   "notes": "Scheduled reports at /analytics/scheduled-reports: cron schedules, recipient lists, delivery format (PDF/CSV/email-body), template ref. IFC-308 BullMQ cron READS these schedules — schema must match what the job expects. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "",
-  "started_at": null,
+  "phase": "spec",
+  "started_at": "2026-10-13T00:30:00Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-10-13T00:30:00Z",
+      "note": "/spec-session started (owner ruling 2026-10-13 applied: evolve report_schedules in place, cron+tz, report-settings card -> link + one-time copy, tags)",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-10-13T01:30:00Z",
+      "note": "Spec complete after 4-agent challenge round (data-engineer, security-lead, frontend-lead+a11y, test-engineer); spec at .specify/sprints/sprint-18/specifications/PG-201-spec.md",
+      "status": "Spec Complete"
     }
   ],
   "stream": null,
