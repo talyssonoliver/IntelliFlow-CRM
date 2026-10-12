@@ -2,7 +2,7 @@
 title: Acceptable Use Policy
 version: v2026.10
 effectiveDate: 2026-10-07
-contactEmail: legal@leangency.com
+contactEmail: hello@leangency.com
 summary:
   - Aurora is a shared platform for sales, customer service, and revenue teams;
     this policy describes how it must be used.
@@ -12,7 +12,7 @@ summary:
     rights, sexually exploits minors, or incites real-world violence.
   - Automated, AI-assisted, and API-driven workflows must respect documented
     rate limits and the model-use guidelines in this policy.
-  - Suspected violations should be reported to legal@leangency.com with the
+  - Suspected violations should be reported to hello@leangency.com with the
     affected route and timestamp so we can investigate promptly.
   - Violations may lead to enforcement actions ranging from warnings to
     suspension or termination of access.
@@ -27,12 +27,13 @@ should be relied upon or published as a final policy.]
 
 This Acceptable Use Policy ("AUP") applies to every customer, end user,
 integration, and partner that accesses Aurora, which is provided by Talysson da
-Silva Oliveira, a sole trader trading as "Leangency" ("Leangency", "we", "us")
-[OWNER TO CONFIRM: registered business address and VAT/company registration
-status, if any, before this policy is finalised]. By using the service you agree
-to follow these rules in addition to the Terms of Service and Privacy Policy.
-Nothing in this AUP overrides a term agreed separately in a signed order form or
-enterprise agreement; where the two conflict, the signed agreement controls.
+Silva Oliveira, trading as "Leangency", a sole trader based in London
+("Leangency", "we", "us"). Talysson da Silva Oliveira is not VAT registered.
+Notices under this AUP should be sent to hello@leangency.com rather than to a
+street address. By using the service you agree to follow these rules in addition
+to the Terms of Service and Privacy Policy. Nothing in this AUP overrides a term
+agreed separately in a signed order form or enterprise agreement; where the two
+conflict, the signed agreement controls.
 
 ## Prohibited Activities
 
@@ -58,7 +59,7 @@ to the relevant authority in addition to taking action under this policy.
 
 Customers are expected to safeguard their own account credentials, enable
 multi-factor authentication on administrator accounts, and report suspected
-security incidents to security@leangency.com without delay. You must not probe,
+security incidents to hello@leangency.com without delay. You must not probe,
 scan, or test the service for vulnerabilities outside the published
 responsible-disclosure programme; the security measures we apply to personal
 data processed through Aurora are described in the Data Processing Addendum,
@@ -87,7 +88,7 @@ similarly significant effects on a data subject.
 ## Reporting Violations
 
 If you witness or suspect a violation of this policy, send an email to
-legal@leangency.com with the affected route, the timestamp (in UTC), and any
+hello@leangency.com with the affected route, the timestamp (in UTC), and any
 supporting detail you can share. Reports submitted in good faith are protected
 from retaliation, and we will acknowledge a report within a reasonable time.
 
@@ -102,7 +103,7 @@ enforcement where required or appropriate.
 ## Appeals
 
 If your account is suspended or terminated for an alleged violation, you may
-submit an appeal to legal@leangency.com within 30 days of the action, setting
+submit an appeal to hello@leangency.com within 30 days of the action, setting
 out why you believe the action was mistaken. As Leangency is a sole-trader
 operation, an appeal is reviewed by Talysson da Silva Oliveira or a person he
 designates who was not responsible for the original enforcement decision, rather
@@ -113,6 +114,5 @@ than by a separate legal department.
 This Acceptable Use Policy was drafted to replace placeholder text (tracked as
 S17-AUDIT-007 in issue #260) and has not undergone legal review. It is a
 starting point for Talysson da Silva Oliveira to review, amend, and approve —
-not a finished, legally-reviewed document. The entity details marked [OWNER TO
-CONFIRM] above must be confirmed or corrected before this policy is published as
-final.
+not a finished, legally-reviewed document. The entity details above are
+resolved; there is no outstanding [OWNER TO CONFIRM] in this policy.

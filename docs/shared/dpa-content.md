@@ -2,7 +2,7 @@
 title: Data Processing Addendum
 version: v2026.10
 effectiveDate: 2026-10-07
-contactEmail: legal@leangency.com
+contactEmail: hello@leangency.com
 summary:
   - Leangency acts as a data processor under UK GDPR Article 28 on behalf of the
     customer as controller.
@@ -28,10 +28,10 @@ should be relied upon, signed, or sent to a customer as a final DPA.]
 This Data Processing Addendum ("DPA") forms part of the Aurora Terms of Service
 and governs the processing of personal data by the operator of Aurora on behalf
 of the customer ("Controller"). Aurora is operated by Talysson da Silva
-Oliveira, a sole trader trading as "Leangency" ("Processor", "Leangency", "we",
-"us") [OWNER TO CONFIRM: registered business address, VAT status/number if
-applicable, and whether any other trading or company registration exists, before
-this DPA is finalised or sent to a customer for signature].
+Oliveira, trading as "Leangency", a sole trader based in London ("Processor",
+"Leangency", "we", "us"). Talysson da Silva Oliveira is not VAT registered.
+Notices to the Processor under this DPA should be sent to hello@leangency.com
+rather than to a street address.
 
 This DPA is entered into pursuant to Article 28 of the UK General Data
 Protection Regulation (the retained version of Regulation (EU) 2016/679 as it
@@ -107,7 +107,7 @@ prohibits such information on important grounds of public interest. As of this
 draft, those instructions are the ones described in "Nature and Purpose of
 Processing" above and in the Terms of Service; any further or different
 instruction from the Controller should be given in writing, including by email
-to legal@leangency.com, so that it is documented.
+to hello@leangency.com, so that it is documented.
 
 In line with the final paragraph of UK GDPR Article 28(3), the Processor shall
 immediately inform the Controller if, in the Processor's opinion, an instruction
@@ -145,7 +145,7 @@ change how personal data is processed.
 
 The Controller retains all rights to the personal data processed on its behalf
 and may instruct the Processor to correct, delete, or export that data at any
-time through the product or by emailing legal@leangency.com.
+time through the product or by emailing hello@leangency.com.
 
 ## Sub-processors
 
@@ -194,7 +194,9 @@ OpenAI model served through OpenRouter's own infrastructure, and the
 configuration supports routing to other providers depending on the tier
 configured; that routing decision, and any resulting relationship with the
 underlying model provider, is OpenRouter's own, not a direct relationship
-between Leangency and that provider).
+between Leangency and that provider). **The vendor contract register finds
+OpenRouter is not currently suitable for Controller personal data as configured
+— see "International Transfers" below.**
 
 Twilio SendGrid Inc., OpenAI, L.L.C., Anthropic, PBC, and Amazon Web Services,
 Inc. (S3 storage) are integrated in Aurora's codebase as configurable providers
@@ -244,7 +246,7 @@ Aurora does not currently hold an independent security certification such as SOC
 2 or ISO/IEC 27001; references to such standards elsewhere in Aurora's
 documentation describe internal controls modelled on those frameworks, not an
 externally certified status. Detailed technical and organisational measures are
-available to a Controller on request to legal@leangency.com, and the Processor
+available to a Controller on request to hello@leangency.com, and the Processor
 will assist the Controller with its own Article 32 obligations, breach
 notifications under Article 33/34, and any data protection impact assessment
 that depends on how the Processor handles the Controller's data.
@@ -274,7 +276,7 @@ request, the Processor shall delete or return all personal data processed on the
 Controller's behalf, and delete existing copies, within 30 days, unless
 retention of specific data is required by UK law (for example, billing records
 kept for tax purposes). The Controller may choose return, deletion, or export
-through the product's export tooling or by emailing legal@leangency.com.
+through the product's export tooling or by emailing hello@leangency.com.
 
 ## Audit and Compliance
 
@@ -303,7 +305,10 @@ https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2026/01/updated-gui
 
 For each sub-processor confirmed live in "Sub-processors" above, Leangency
 relies on that sub-processor's own published safeguard rather than one executed
-directly between Leangency and the sub-processor. Checked on 2026-10-12:
+directly between Leangency and the sub-processor. Checked on 2026-10-12, and
+kept current in the vendor contract register at
+`docs/compliance-and-governance/compliance/vendor-dpa-register.md`, which this
+section summarises:
 
 - **Vercel Inc.** — Data Processing Addendum, https://vercel.com/legal/dpa
   (updated 17 March 2026, effective 31 March 2026): Vercel's own text names this
@@ -332,9 +337,11 @@ directly between Leangency and the sub-processor. Checked on 2026-10-12:
   s.119A of the Data Protection Act 2018). Unlike every other provider below,
   Railway's own text says this DPA is **not** incorporated automatically — the
   customer must complete and submit a DocuSign form, and it only becomes binding
-  once Railway countersigns. [OWNER TO CONFIRM: whether that DocuSign step has
-  been completed for the IntelliFlow Railway account; if not, Railway's DPA and
-  UK Addendum are not yet in force for this processing.]
+  once Railway countersigns. The register found no self-serve dashboard toggle
+  for this; the real step is to contact Railway directly to execute it. **Owner
+  action: contact Railway to complete that DocuSign step, and confirm whether it
+  has already been done for this account** — until it has, Railway's DPA and UK
+  Addendum are not in force for this processing.
 - **Supabase, Inc.** — Data Processing Addendum, https://supabase.com/legal/dpa
   (Version 1, 1 August 2026): the Approved/UK Addendum (ICO template version
   B.1.0 under s.119A of the Data Protection Act 2018), incorporated
@@ -352,10 +359,12 @@ directly between Leangency and the sub-processor. Checked on 2026-10-12:
   falling back to the International Data Transfer Addendum (version B1.0 under
   s.119A of the Data Protection Act 2018) if the Data Privacy Framework is ever
   invalidated. Sentry's own text says this DPA is entered into only by the party
-  that electronically accepts or opts in to it — it is **not** automatic. [OWNER
-  TO CONFIRM: whether that opt-in has been completed for the IntelliFlow Sentry
-  account; if not, Sentry's DPA and its transfer safeguard are not yet in force
-  for this processing.]
+  that electronically accepts or opts in to it — it is **not** automatic, and
+  the register did not find a self-describing settings path for it beyond
+  Sentry's own support article. **Owner action: follow Sentry's DPA opt-in
+  instructions and confirm whether this has already been done for the
+  IntelliFlow Sentry account** — until it has, Sentry's DPA and its transfer
+  safeguard are not in force for this processing.
 - **Upstash, Inc.** — Data Processing Addendum,
   https://upstash.com/trust/dpa.pdf (last updated April 2025): the UK Transfer
   Addendum (ICO template version B.1.0), incorporated automatically into the
@@ -364,24 +373,54 @@ directly between Leangency and the sub-processor. Checked on 2026-10-12:
   Processor, https://business.safety.google/processorterms/ (Version 10, 7 May
   2026): Google LLC's UK Extension to the EU-U.S. Data Privacy Framework
   (certified since 14 September 2023). This DPA takes effect only from the date
-  the customer "clicked to accept or the parties otherwise agreed" to it — it is
-  **not** silently automatic. [OWNER TO CONFIRM: whether that acceptance step
-  has been completed for the Gemini API account the AI-worker uses; if not, this
-  DPA and its transfer safeguard are not yet in force for this processing.]
-- **OpenRouter, Inc.** — DPA available through OpenRouter's Trust Portal, but
-  per OpenRouter's own support guidance "the agreement only applies to
-  enterprise accounts" — a self-serve account can review it for information
-  only, without it being binding. OpenRouter's public privacy policy
-  (https://openrouter.ai/privacy, last updated 31 August 2026) names only
-  "standard contractual clauses approved... under Article 46 of the GDPR"
-  generically, without separately naming a UK-specific instrument. [OWNER TO
-  CONFIRM: whether this is an OpenRouter Enterprise account with a signed DPA;
-  if not, there is currently no DPA, and no UK-specific transfer safeguard, in
-  place with OpenRouter for this processing.] OpenRouter's own onward transfer
-  of a request to whichever underlying model provider it routes to is
-  OpenRouter's sub-processor relationship, not Leangency's; this DPA relies on
-  OpenRouter to flow down equivalent obligations under its own contracts,
-  consistent with "Sub-processors" above.
+  the customer "clicked to accept or the parties otherwise agreed" to it, so
+  unlike Supabase, Resend, Twilio, or Upstash it is not incorporated silently by
+  using the service — but a developer accepts these terms when creating a Gemini
+  API key in Google AI Studio itself (sign in, accept the terms, "Create API
+  key"), so that acceptance step is practically certain to already be satisfied
+  if the AI-worker's `GEMINI_API_KEY` is live and working. Unlike Railway's
+  DocuSign or Sentry's opt-in below, this is not a separate, skippable step —
+  the key could not exist without it.
+
+  The more material question is the "Paid"/"Unpaid Services" split: Google's
+  Unpaid Services terms say it "uses the content you submit... to provide,
+  improve, and develop" its products, with "human reviewers" reading API input
+  and output, and warn "do not submit ... personal information to the Unpaid
+  Services" — while Paid Services get "Google doesn't use your prompts... or
+  responses to improve our products." Which applies normally turns on whether
+  the Cloud Project behind the API key has active billing, which is not visible
+  from an environment-variable name. **But Google's own terms resolve this for a
+  UK account regardless of billing**: "If you're in the European Economic Area,
+  Switzerland, or the United Kingdom, the terms under 'How Google uses Your
+  Data' in 'Paid Services' apply to all Services... even though they are offered
+  free of charge." Because Leangency is a UK sole trader, Aurora's Gemini usage
+  gets the no-training, no-product-improvement-use terms whether or not billing
+  is active on the Cloud Project — provided the Google account itself is
+  UK-registered, which is consistent with Leangency being based in London but
+  was not separately verified (no tool here can check a Google account's
+  registered country without logging into it). Full detail, with exact quotes,
+  is in the vendor contract register.
+
+- **OpenRouter, Inc.** — OpenRouter's DPA is part of its "Enterprise Access
+  Agreement" only (https://openrouter.ai/terms-of-service-enterprise); this
+  account is not on that tier, so **there is no DPA, and no UK-specific transfer
+  safeguard, currently in place with OpenRouter** — only OpenRouter's standard
+  EU SCCs under GDPR Article 46, which do not on their own satisfy a UK
+  restricted transfer. OpenRouter's own onward transfer of a request to
+  whichever underlying model provider it routes to is OpenRouter's sub-processor
+  relationship, not Leangency's.
+
+  This is deliberately not an [OWNER TO CONFIRM], because the vendor contract
+  register (`docs/compliance-and-governance/compliance/vendor-dpa-register.md`)
+  reaches a plain verdict: as currently configured — no per-request data policy
+  set, and defaulting to a free-tier model — OpenRouter is **not suitable** for
+  Controller personal data. It becomes suitable only once every request carrying
+  personal data sets the `data_collection: "deny"` (or stricter `zdr: true`)
+  provider option and moves off the free-tier default, which is a code change,
+  not something fixed by this DPA. **Owner action: decide whether to pursue that
+  fix, pursue an OpenRouter Enterprise agreement, or stop routing Controller
+  personal data through OpenRouter until one of those happens** — no CRM feature
+  or setting was added to make this decision.
 
 Twilio SendGrid, OpenAI, Anthropic, and Amazon Web Services (S3) are not live
 (see "Sub-processors" above), so no transfer safeguard is currently needed for
@@ -393,10 +432,17 @@ before that happens.
 This Data Processing Addendum was drafted to replace placeholder text (tracked
 as S17-AUDIT-006 in issue #260) and has not undergone legal review. It is a
 starting point for Talysson da Silva Oliveira to review, amend, and approve —
-not a finished, legally-reviewed document. The entity details and the remaining
-per-account items marked [OWNER TO CONFIRM] in "International Transfers"
-(Railway, Sentry, Google, and OpenRouter) must be confirmed or corrected before
-this DPA is presented to, or signed with, any customer.
+not a finished, legally-reviewed document. The entity details are resolved (see
+"Introduction and Parties"), and so is Google's position (see "International
+Transfers" — API-key creation already requires accepting its terms, and its
+UK/EEA carve-out gives Aurora's Gemini usage the no-training protection
+regardless of billing status). Three owner actions remain, each named in
+"International Transfers" and detailed in the vendor contract register
+(`docs/compliance-and-governance/compliance/vendor-dpa-register.md`): executing
+Railway's DPA, completing Sentry's opt-in, and deciding how to resolve
+OpenRouter's unsuitability as configured. None of these were, or could be,
+completed from this check alone — they must be confirmed or actioned before this
+DPA is presented to, or signed with, any customer.
 
 **Separately, and not something the owner needs to decide: as verified in
 "International Transfers" above, Aurora's Vercel hosting is on the Hobby plan,
