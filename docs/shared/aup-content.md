@@ -20,69 +20,99 @@ summary:
 
 ## Introduction
 
-[PLACEHOLDER — Legal review required] This Acceptable Use Policy ("AUP") applies
-to every customer, end user, integration, and partner that accesses Aurora,
-which is provided by Talysson da Silva Oliveira, a sole trader trading as
-Leangency ("Leangency", "we", "us"). By using the service you agree to follow
-these rules in addition to the Terms of Service and Privacy Policy.
+[DRAFT — pending owner review and approval. This text has not been reviewed by a
+qualified lawyer and does not take legal effect until Talysson da Silva Oliveira
+approves it and the entity details below are confirmed. Nothing in this draft
+should be relied upon or published as a final policy.]
+
+This Acceptable Use Policy ("AUP") applies to every customer, end user,
+integration, and partner that accesses Aurora, which is provided by Talysson da
+Silva Oliveira, a sole trader trading as "Leangency" ("Leangency", "we", "us")
+[OWNER TO CONFIRM: registered business address and VAT/company registration
+status, if any, before this policy is finalised]. By using the service you agree
+to follow these rules in addition to the Terms of Service and Privacy Policy.
+Nothing in this AUP overrides a term agreed separately in a signed order form or
+enterprise agreement; where the two conflict, the signed agreement controls.
 
 ## Prohibited Activities
 
-[PLACEHOLDER — Legal review required] You must not abuse the platform or other
-users. Prohibited activities include fraud, harassment, unauthorised access,
-scraping at a scale that interferes with the service, and attempting to bypass
-platform protections such as authentication, rate limiting, or tenancy
-boundaries.
+You must not abuse the platform or other tenants. Prohibited activities include
+fraud, harassment, unauthorised access to another account or tenant, scraping at
+a scale that interferes with the service, and attempting to bypass platform
+protections such as authentication, rate limiting, or tenancy boundaries.
+Probing or testing the service for vulnerabilities outside the published
+responsible-disclosure channel may also constitute an offence under the UK
+Computer Misuse Act 1990 (unauthorised access to, or modification of, computer
+material) and will be treated as a serious violation of this policy.
 
 ## Prohibited Content
 
-[PLACEHOLDER — Legal review required] You must not upload, share, or process
-content that is unlawful in your jurisdiction, infringes intellectual-property
-rights, contains malware, sexually exploits minors, depicts non-consensual
-intimate imagery, or incites real-world violence against individuals or groups.
+You must not upload, share, or process content that is unlawful in your
+jurisdiction, infringes intellectual-property rights, contains malware, sexually
+exploits minors, depicts non-consensual intimate imagery, or incites real-world
+violence against individuals or groups. Where such content is also illegal
+content under the UK Online Safety Act 2023, we will remove it and may report it
+to the relevant authority in addition to taking action under this policy.
 
 ## Security Expectations
 
-[PLACEHOLDER — Legal review required] Customers are expected to safeguard their
-credentials, enable multi-factor authentication on administrator accounts, and
-report suspected security incidents to security@leangency.com without delay. You
-must not probe, scan, or test the service for vulnerabilities outside the
-published responsible-disclosure programme.
+Customers are expected to safeguard their own account credentials, enable
+multi-factor authentication on administrator accounts, and report suspected
+security incidents to security@leangency.com without delay. You must not probe,
+scan, or test the service for vulnerabilities outside the published
+responsible-disclosure programme; the security measures we apply to personal
+data processed through Aurora are described in the Data Processing Addendum,
+consistent with UK GDPR Article 32.
 
 ## API & Rate Limits
 
-[PLACEHOLDER — Legal review required] All public and authenticated APIs are
-subject to documented rate limits. You must respect 429 responses, implement
-exponential back-off, and avoid high-frequency polling patterns that degrade the
-service for other tenants. Caching public responses for the duration of their
-declared TTL is encouraged.
+All public and authenticated APIs are subject to documented rate limits. You
+must respect 429 responses, implement exponential back-off, and avoid
+high-frequency polling patterns that degrade the service for other tenants.
+Caching public responses for the duration of their declared TTL is encouraged.
+Rate limits exist to protect every tenant sharing the platform and may be
+adjusted without notice to respond to abuse.
 
 ## AI / ML Misuse
 
-[PLACEHOLDER — Legal review required] Generative-AI and ML features must not be
-used to produce disallowed content, to infer protected attributes about
-individuals from their CRM record, or to generate output that materially
-misrepresents Aurora. Prompts that attempt to extract system instructions,
-training data, or other tenants' data are prohibited.
+Generative-AI and ML features must not be used to produce disallowed content, to
+infer special-category data (such as health, racial or ethnic origin, or
+religious belief, within the meaning of UK GDPR Article 9) about an individual
+from their CRM record, or to generate output that materially misrepresents
+Aurora. Prompts that attempt to extract system instructions, training data, or
+another tenant's data are prohibited. AI-generated scores and predictions are
+decision support, not a sole or automated basis for a decision with legal or
+similarly significant effects on a data subject.
 
 ## Reporting Violations
 
-[PLACEHOLDER — Legal review required] If you witness or suspect a violation of
-this policy, send an email to legal@leangency.com with the affected route, the
-timestamp (in UTC), and any supporting detail you can share. Reports submitted
-in good faith are protected from retaliation.
+If you witness or suspect a violation of this policy, send an email to
+legal@leangency.com with the affected route, the timestamp (in UTC), and any
+supporting detail you can share. Reports submitted in good faith are protected
+from retaliation, and we will acknowledge a report within a reasonable time.
 
 ## Enforcement Actions
 
-[PLACEHOLDER — Legal review required] Leangency may respond to confirmed
-violations with a graduated set of actions: written warning, throttling, feature
-suspension, account suspension, or termination of access. Severe violations -
-including those that endanger users or breach the law - may trigger immediate
-suspension and law-enforcement notification.
+Leangency may respond to confirmed violations with a graduated set of actions: a
+written warning, feature throttling, feature suspension, account suspension, or
+termination of access. Severe violations, including those that endanger users or
+breach the law, may trigger immediate suspension and notification to law
+enforcement where required or appropriate.
 
 ## Appeals
 
-[PLACEHOLDER — Legal review required] If your account is suspended or terminated
-for an alleged violation, you may submit an appeal to legal@leangency.com within
-30 days of the action. Appeals are reviewed by a member of legal staff who was
-not involved in the original decision.
+If your account is suspended or terminated for an alleged violation, you may
+submit an appeal to legal@leangency.com within 30 days of the action, setting
+out why you believe the action was mistaken. As Leangency is a sole-trader
+operation, an appeal is reviewed by Talysson da Silva Oliveira or a person he
+designates who was not responsible for the original enforcement decision, rather
+than by a separate legal department.
+
+## Draft Status and Owner Approval
+
+This Acceptable Use Policy was drafted to replace placeholder text (tracked as
+S17-AUDIT-007 in issue #260) and has not undergone legal review. It is a
+starting point for Talysson da Silva Oliveira to review, amend, and approve —
+not a finished, legally-reviewed document. The entity details marked [OWNER TO
+CONFIRM] above must be confirmed or corrected before this policy is published as
+final.
