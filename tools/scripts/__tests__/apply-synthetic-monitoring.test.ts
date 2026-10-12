@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import yaml from 'js-yaml';
 import { describe, expect, it } from 'vitest';
 import {
   buildAlertRule,
@@ -185,6 +186,23 @@ describe('synthetic monitoring config', () => {
     });
     expect(rule.data[0].model.expr).toBe(CONFIG.alertRule.expr);
     expect(rule.data[2].model.conditions[0].evaluator).toEqual({ type: 'lt', params: [1] });
+  });
+
+  it('the workflow only applies on an explicit manual dispatch, never on push — issue #811: "prepare it, I\'ll switch it on"', () => {
+    // GRAFANA_SA_TOKEN (Admin-role, provisioning-capable) already exists as a
+    // Production environment secret, added for IFC-032 (#804) before this PR.
+    // The only thing standing between "prepare" and "switch on" is whether
+    // this workflow can run unattended. A `push: branches: [main]` trigger on
+    // these exact paths means the moment the owner later adds SM_ACCESS_TOKEN
+    // + SM_API_URL (the one step #811 leaves him), the very next merge that
+    // touches the config, the script, or this workflow file — not
+    // necessarily one where he means to flip the switch — auto-applies the
+    // check and alert rule with no further action. Only `workflow_dispatch`
+    // keeps "switch on" a deliberate act, independent of what secrets exist.
+    const workflow = yaml.load(
+      readFileSync(join(__dirname, '../../../.github/workflows/synthetic-monitoring.yml'), 'utf8')
+    ) as { on?: Record<string, unknown> };
+    expect(Object.keys(workflow.on ?? {})).toEqual(['workflow_dispatch']);
   });
 
   it("never shares a rule group name with alert-rules.json, so that script's folder/rule-group PUT can never wipe this rule", () => {
