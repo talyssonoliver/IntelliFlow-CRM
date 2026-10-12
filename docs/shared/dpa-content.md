@@ -169,25 +169,35 @@ Controller for the performance of that sub-processor's obligations, in
 accordance with UK GDPR Article 28(4). See the ICO's guidance cited in
 "Introduction and Parties" above for the equivalent requirement.
 
-As of this draft, the sub-processors actually integrated in Aurora's codebase
-and infrastructure configuration are: Vercel Inc. (hosts the Aurora web
-application); Railway Corporation (hosts the API, AI-worker, and background-job
-services); Supabase, Inc. (managed PostgreSQL database, authentication, and file
-storage); Upstash, Inc. (managed Redis, used for caching, rate limiting, and job
-queues); OpenAI, L.L.C. and Anthropic, PBC (large-language-model providers used
-for AI-assisted lead scoring, predictions, and workflow automation); Twilio Inc.
-(SMS delivery for notifications); Resend, Inc. and/or Twilio SendGrid Inc.
-(transactional email delivery — the active provider is an environment-level
-configuration choice); Functional Software, Inc., trading as Sentry (error
-tracking and performance monitoring); and, where a deployment configures
-file/document storage against Amazon S3, Amazon Web Services, Inc.
+As of 2026-10-12, this list has been checked against which environment variable
+NAMES exist for Aurora's Vercel production project and its Railway production
+services (`api`, `ai-worker`, `notifications-worker`, `events-worker`,
+`ingestion-worker`, `ws`) — values were never read, only which credentials are
+configured. The sub-processors confirmed live in production are: Vercel Inc.
+(hosts the Aurora web application); Railway Corporation (hosts the API,
+AI-worker, and background-job services, including a Railway-hosted Redis
+instance used for caching and job queues); Supabase, Inc. (managed PostgreSQL
+database, authentication, and file storage); Upstash, Inc. (managed Redis,
+confirmed live specifically for rate limiting on the web application via a REST
+URL/token credential pair — the API and worker services' own caching/job-queue
+Redis is the Railway-hosted instance above, not Upstash); Resend, Inc.
+(transactional email delivery); Twilio Inc. (SMS delivery for notifications);
+and Functional Software, Inc., trading as Sentry (error tracking and performance
+monitoring).
 
-[OWNER TO CONFIRM: which of the above are actually enabled in the live
-production environment (several are configured per-deployment via environment
-variables that are not committed to source control, for example the choice
-between Resend and SendGrid, and whether AWS S3 storage is active), and whether
-a signed data-processing agreement or standard contractual terms are on file
-with each one actually in use.]
+Twilio SendGrid Inc., OpenAI, L.L.C., Anthropic, PBC, and Amazon Web Services,
+Inc. (S3 storage) are integrated in Aurora's codebase as configurable providers
+but are not enabled in production as of this date: no SendGrid, OpenAI,
+Anthropic, or AWS/S3 credential is configured on either platform. This DPA must
+be updated before any of them is switched on.
+
+[OWNER TO CONFIRM: this same check also found live providers this DPA does not
+currently name at all — Google LLC (Gemini API, used by the AI-worker and
+background-worker services in place of OpenAI/Anthropic) and OpenRouter, Inc.
+(LLM request routing), plus, outside the AI path, Stripe, Inc. (billing/payment
+processing) and Cloudinary Ltd. (image/media hosting). Whether to add these as
+named sub-processors, and draft their entries, is a scope decision for the owner
+— it has not been actioned here.]
 
 ## Data Subject Rights Assistance
 
@@ -269,12 +279,57 @@ https://ico.org.uk/for-organisations/uk-gdpr-guidance-and-resources/internationa
 and
 https://ico.org.uk/about-the-ico/media-centre/news-and-blogs/2026/01/updated-guidance-on-international-transfers-published/.
 
-[OWNER TO CONFIRM: Leangency relies on each sub-processor's own standard
-safeguard (for example, the sub-processor's published UK Addendum or Standard
-Contractual Clauses) rather than a safeguard executed directly between Leangency
-and that sub-processor. This has not been independently verified against each
-sub-processor's current terms and should be confirmed, and recorded here, before
-this DPA is relied upon.]
+For each sub-processor confirmed live in "Sub-processors" above, Leangency
+relies on that sub-processor's own published safeguard rather than one executed
+directly between Leangency and the sub-processor. Checked on 2026-10-12:
+
+- **Vercel Inc.** — Data Processing Addendum, https://vercel.com/legal/dpa
+  (updated 17 March 2026, effective 31 March 2026): Vercel's own text names this
+  the "UK IDTA", deemed entered into and incorporated into the Addendum by
+  reference. Vercel states the Addendum applies only to customers on Pro or
+  Enterprise plans and otherwise becomes binding automatically on entering the
+  Agreement. [OWNER TO CONFIRM: which Vercel plan this project is on — this was
+  not checked, and on the free/Hobby tier Vercel's own text says no Article 28
+  contract, and so no UK transfer safeguard, currently covers this processing at
+  all.]
+- **Railway Corporation** — Data Processing Addendum,
+  https://railway.com/legal/dpa: the UK Addendum (UK SCCs, ICO template under
+  s.119A of the Data Protection Act 2018). Unlike every other provider below,
+  Railway's own text says this DPA is **not** incorporated automatically — the
+  customer must complete and submit a DocuSign form, and it only becomes binding
+  once Railway countersigns. [OWNER TO CONFIRM: whether that DocuSign step has
+  been completed for the IntelliFlow Railway account; if not, Railway's DPA and
+  UK Addendum are not yet in force for this processing.]
+- **Supabase, Inc.** — Data Processing Addendum, https://supabase.com/legal/dpa
+  (Version 1, 1 August 2026): the Approved/UK Addendum (ICO template version
+  B.1.0 under s.119A of the Data Protection Act 2018), incorporated
+  automatically by accepting the Supabase Terms of Service.
+- **Resend, Inc.** — Data Processing Addendum, https://resend.com/legal/dpa
+  (updated 31 December 2025): the UK SCCs (the EU SCCs as amended by the UK
+  Addendum), binding automatically on entering the agreement.
+- **Twilio Inc.** — Data Protection Addendum,
+  https://www.twilio.com/en-us/legal/data-protection-addendum (last updated 9
+  April 2026): the UK International Data Transfer Agreement (IDTA, version B1.0,
+  in force 21 March 2022), forming part of the agreement automatically.
+- **Functional Software, Inc., trading as Sentry** — Data Processing Addendum,
+  https://sentry.io/legal/dpa/ (version 5.1.0, 29 May 2024): primarily Sentry's
+  self-certification to the UK Extension to the EU-U.S. Data Privacy Framework,
+  falling back to the International Data Transfer Addendum (version B1.0 under
+  s.119A of the Data Protection Act 2018) if the Data Privacy Framework is ever
+  invalidated. Sentry's own text says this DPA is entered into only by the party
+  that electronically accepts or opts in to it — it is **not** automatic. [OWNER
+  TO CONFIRM: whether that opt-in has been completed for the IntelliFlow Sentry
+  account; if not, Sentry's DPA and its transfer safeguard are not yet in force
+  for this processing.]
+- **Upstash, Inc.** — Data Processing Addendum,
+  https://upstash.com/trust/dpa.pdf (last updated April 2025): the UK Transfer
+  Addendum (ICO template version B.1.0), incorporated automatically into the
+  Upstash Terms of Service and binding on use of the service.
+
+Twilio SendGrid, OpenAI, Anthropic, and Amazon Web Services (S3) are not live
+(see "Sub-processors" above), so no transfer safeguard is currently needed for
+them; if any is enabled later, its safeguard must be checked and recorded here
+before that happens.
 
 ## Draft Status and Owner Approval
 
