@@ -109,6 +109,11 @@ function scanRepo(): string[] {
       ':!apps/web/eslint-sonar-output.json',
       ':!artifacts/reports/content-audit-results.json',
       ':!artifacts/test-failures/web.json',
+      // This file's own doc-comment and test titles name the banned hosts
+      // in prose, to describe what the guard does — not a production claim.
+      // Excluded here (not via ALLOWLIST) because it is the scanner's own
+      // source, not another file that happens to be exempt.
+      ':!tools/scripts/__tests__/canonical-domain-guard.test.ts',
     ],
     { cwd: ROOT, encoding: 'utf8', maxBuffer: 16 * 1024 * 1024 }
   );
