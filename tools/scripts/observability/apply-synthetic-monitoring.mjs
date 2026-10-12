@@ -38,6 +38,11 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  buildAlertRulePayload,
+  createApiClient,
+  querySeriesCount,
+} from '../lib/grafana-provisioning.mjs';
 
 const CONFIG_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -114,84 +119,7 @@ export function buildCheckPayload(check, probeIds) {
 
 /** Grafana alert rule (provisioning API shape) for the probe_success rule. */
 export function buildAlertRule(entry, config) {
-  return {
-    uid: entry.uid,
-    title: entry.title,
-    folderUID: config.folder.uid,
-    ruleGroup: config.group.name,
-    condition: 'C',
-    noDataState: entry.noData,
-    execErrState: 'Error',
-    for: entry.for,
-    labels: { severity: entry.severity, team: 'owner', source: 'ifc-811' },
-    annotations: { summary: entry.summary },
-    isPaused: false,
-    data: [
-      {
-        refId: 'A',
-        relativeTimeRange: { from: 900, to: 0 },
-        datasourceUid: config.datasourceUid,
-        model: {
-          refId: 'A',
-          expr: entry.expr,
-          instant: true,
-          intervalMs: 60000,
-          maxDataPoints: 43200,
-        },
-      },
-      {
-        refId: 'B',
-        datasourceUid: '__expr__',
-        model: { refId: 'B', type: 'reduce', expression: 'A', reducer: 'last' },
-      },
-      {
-        refId: 'C',
-        datasourceUid: '__expr__',
-        model: {
-          refId: 'C',
-          type: 'threshold',
-          expression: 'B',
-          conditions: [{ evaluator: { type: entry.operator, params: [entry.threshold] } }],
-        },
-      },
-    ],
-  };
-}
-
-function client(baseUrl, token, fetchImpl) {
-  return async (method, path, body) => {
-    const res = await fetchImpl(`${baseUrl.replace(/\/$/, '')}${path}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        // Keep the rule editable in the UI (no provenance lock), matching
-        // apply-grafana-alert-rules.mjs.
-        'X-Disable-Provenance': 'true',
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    const text = await res.text();
-    let json;
-    try {
-      json = text ? JSON.parse(text) : undefined;
-    } catch {
-      json = undefined;
-    }
-    return { status: res.status, json, text };
-  };
-}
-
-/** Number of live series the alert's selector matches over the last hour. */
-async function seriesCount(api, datasourceUid, selector) {
-  const query = encodeURIComponent(`count(last_over_time(${selector}[1h]))`);
-  const res = await api(
-    'GET',
-    `/api/datasources/proxy/uid/${datasourceUid}/api/v1/query?query=${query}`
-  );
-  if (res.status !== 200) throw new Error(`series check for ${selector}: HTTP ${res.status}`);
-  const value = res.json?.data?.result?.[0]?.value?.[1];
-  return value === undefined ? 0 : Number(value);
+  return buildAlertRulePayload(entry, config, 'ifc-811');
 }
 
 export async function run({
@@ -212,8 +140,8 @@ export async function run({
     throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
   }
 
-  const sm = client(env.SM_API_URL, env.SM_ACCESS_TOKEN, fetchImpl);
-  const grafana = client(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl);
+  const sm = createApiClient(env.SM_API_URL, env.SM_ACCESS_TOKEN, fetchImpl);
+  const grafana = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl);
 
   // Resolve probe location names to ids. Fail loud rather than silently
   // creating a check that watches from nowhere.
@@ -288,7 +216,7 @@ export async function run({
   const empty = [];
   if (existingCheck) {
     seriesChecked = true;
-    const n = await seriesCount(grafana, config.datasourceUid, config.alertRule.selector);
+    const n = await querySeriesCount(grafana, config.datasourceUid, config.alertRule.selector);
     log(`series ${n}  ${config.alertRule.uid}  ${config.alertRule.selector}`);
     if (n === 0) empty.push(config.alertRule.uid);
   }
