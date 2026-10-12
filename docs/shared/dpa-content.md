@@ -183,7 +183,18 @@ URL/token credential pair — the API and worker services' own caching/job-queue
 Redis is the Railway-hosted instance above, not Upstash); Resend, Inc.
 (transactional email delivery); Twilio Inc. (SMS delivery for notifications);
 and Functional Software, Inc., trading as Sentry (error tracking and performance
-monitoring).
+monitoring); Google LLC (generates vector embeddings of CRM text content — the
+data used for AI-assisted scoring, qualification, and semantic search — via the
+Gemini Developer API's `gemini-embedding-001` model); and OpenRouter, Inc.
+(receives the prompt for AI-assisted lead scoring, qualification, email
+drafting, and reasoning, and forwards it to whichever underlying
+large-language-model provider corresponds to the model configured for that
+request — the codebase's own default, absent an override, is an open-weight
+OpenAI model served through OpenRouter's own infrastructure, and the
+configuration supports routing to other providers depending on the tier
+configured; that routing decision, and any resulting relationship with the
+underlying model provider, is OpenRouter's own, not a direct relationship
+between Leangency and that provider).
 
 Twilio SendGrid Inc., OpenAI, L.L.C., Anthropic, PBC, and Amazon Web Services,
 Inc. (S3 storage) are integrated in Aurora's codebase as configurable providers
@@ -191,13 +202,24 @@ but are not enabled in production as of this date: no SendGrid, OpenAI,
 Anthropic, or AWS/S3 credential is configured on either platform. This DPA must
 be updated before any of them is switched on.
 
-[OWNER TO CONFIRM: this same check also found live providers this DPA does not
-currently name at all — Google LLC (Gemini API, used by the AI-worker and
-background-worker services in place of OpenAI/Anthropic) and OpenRouter, Inc.
-(LLM request routing), plus, outside the AI path, Stripe, Inc. (billing/payment
-processing) and Cloudinary Ltd. (image/media hosting). Whether to add these as
-named sub-processors, and draft their entries, is a scope decision for the owner
-— it has not been actioned here.]
+Two further providers found live during this check are deliberately **not**
+included above, because checking the code that actually calls them shows neither
+receives personal data the Processor handles on the Controller's behalf:
+
+- **Stripe, Inc.** receives only Leangency's own billing relationship with the
+  Controller — the Controller's account billing contact's name, email, tax ID,
+  and invoice contact, sent so Leangency can bill the Controller for its Aurora
+  subscription. For that data, Leangency is itself the controller, not a
+  processor acting on the Controller's instructions, so Stripe falls outside
+  this DPA's sub-processor list; Leangency's own privacy notice, not this DPA,
+  should cover that billing relationship.
+- **Cloudinary Ltd.** has credentials provisioned (a Cloudinary API key and
+  related variables exist on the Vercel production project) but no code in
+  Aurora's codebase calls the Cloudinary API — the only in-repo matches for
+  "cloudinary" are Next.js's own built-in list of named image-loader options and
+  generic framework documentation, not an integration. No personal data, and no
+  CRM attachment or upload, currently reaches Cloudinary. This DPA must be
+  updated before that changes.
 
 ## Data Subject Rights Assistance
 
@@ -286,12 +308,25 @@ directly between Leangency and the sub-processor. Checked on 2026-10-12:
 - **Vercel Inc.** — Data Processing Addendum, https://vercel.com/legal/dpa
   (updated 17 March 2026, effective 31 March 2026): Vercel's own text names this
   the "UK IDTA", deemed entered into and incorporated into the Addendum by
-  reference. Vercel states the Addendum applies only to customers on Pro or
-  Enterprise plans and otherwise becomes binding automatically on entering the
-  Agreement. [OWNER TO CONFIRM: which Vercel plan this project is on — this was
-  not checked, and on the free/Hobby tier Vercel's own text says no Article 28
-  contract, and so no UK transfer safeguard, currently covers this processing at
-  all.]
+  reference — but only for customers on Pro or Enterprise plans.
+
+  **Verified 2026-10-12, not an owner choice: this project's Vercel team
+  (`talyssons-projects`) is on the Hobby plan**
+  (`vercel api /v2/teams/team_v4UlyPGDvXOtXK8yPx1w90Hf` returned
+  `billing.plan: "hobby"`, `billing.status: "active"`). Vercel's Terms of
+  Service state that "You shall only use the Services under a Hobby plan for
+  your personal or non-commercial use" (https://vercel.com/legal/terms, §4), and
+  its Fair Use Guidelines define commercial usage to include "any method of
+  requesting or processing payment from visitors of the site"
+  (https://vercel.com/docs/limits/fair-use-guidelines#commercial-usage) — which
+  Aurora, a CRM sold to paying customers, plainly is. Because Vercel's DPA
+  applies only to Pro/Enterprise customers, **there is currently no Article 28
+  contract, and so no UK transfer safeguard, in place with Vercel for this
+  processing, and Aurora's own hosting is itself outside what the Hobby plan
+  permits.** Plainly: this DPA must not be presented to, or signed with, any
+  customer until Aurora's Vercel hosting is moved to a plan whose terms and DPA
+  actually cover it.
+
 - **Railway Corporation** — Data Processing Addendum,
   https://railway.com/legal/dpa: the UK Addendum (UK SCCs, ICO template under
   s.119A of the Data Protection Act 2018). Unlike every other provider below,
@@ -325,6 +360,28 @@ directly between Leangency and the sub-processor. Checked on 2026-10-12:
   https://upstash.com/trust/dpa.pdf (last updated April 2025): the UK Transfer
   Addendum (ICO template version B.1.0), incorporated automatically into the
   Upstash Terms of Service and binding on use of the service.
+- **Google LLC** — Data Processing Addendum for Products Where Google is a Data
+  Processor, https://business.safety.google/processorterms/ (Version 10, 7 May
+  2026): Google LLC's UK Extension to the EU-U.S. Data Privacy Framework
+  (certified since 14 September 2023). This DPA takes effect only from the date
+  the customer "clicked to accept or the parties otherwise agreed" to it — it is
+  **not** silently automatic. [OWNER TO CONFIRM: whether that acceptance step
+  has been completed for the Gemini API account the AI-worker uses; if not, this
+  DPA and its transfer safeguard are not yet in force for this processing.]
+- **OpenRouter, Inc.** — DPA available through OpenRouter's Trust Portal, but
+  per OpenRouter's own support guidance "the agreement only applies to
+  enterprise accounts" — a self-serve account can review it for information
+  only, without it being binding. OpenRouter's public privacy policy
+  (https://openrouter.ai/privacy, last updated 31 August 2026) names only
+  "standard contractual clauses approved... under Article 46 of the GDPR"
+  generically, without separately naming a UK-specific instrument. [OWNER TO
+  CONFIRM: whether this is an OpenRouter Enterprise account with a signed DPA;
+  if not, there is currently no DPA, and no UK-specific transfer safeguard, in
+  place with OpenRouter for this processing.] OpenRouter's own onward transfer
+  of a request to whichever underlying model provider it routes to is
+  OpenRouter's sub-processor relationship, not Leangency's; this DPA relies on
+  OpenRouter to flow down equivalent obligations under its own contracts,
+  consistent with "Sub-processors" above.
 
 Twilio SendGrid, OpenAI, Anthropic, and Amazon Web Services (S3) are not live
 (see "Sub-processors" above), so no transfer safeguard is currently needed for
@@ -336,7 +393,15 @@ before that happens.
 This Data Processing Addendum was drafted to replace placeholder text (tracked
 as S17-AUDIT-006 in issue #260) and has not undergone legal review. It is a
 starting point for Talysson da Silva Oliveira to review, amend, and approve —
-not a finished, legally-reviewed document. The entity details, sub-processor
-list, and international-transfer safeguards above are marked [OWNER TO CONFIRM]
-and must be confirmed or corrected before this DPA is presented to, or signed
-with, any customer.
+not a finished, legally-reviewed document. The entity details and the remaining
+per-account items marked [OWNER TO CONFIRM] in "International Transfers"
+(Railway, Sentry, Google, and OpenRouter) must be confirmed or corrected before
+this DPA is presented to, or signed with, any customer.
+
+**Separately, and not something the owner needs to decide: as verified in
+"International Transfers" above, Aurora's Vercel hosting is on the Hobby plan,
+which Vercel's own Terms of Service restrict to personal or non-commercial use,
+and Vercel's Data Processing Addendum covers Pro/Enterprise customers only. This
+DPA cannot be offered to, or signed with, a customer until that is fixed —
+either by moving Aurora's Vercel hosting to a plan whose terms and DPA actually
+apply, or by hosting it elsewhere.**
