@@ -96,6 +96,43 @@ given user accounts on the platform, and third-party business contacts (for
 example, opposing parties, vendors, or partners) that the Controller's users
 record in the CRM.
 
+## Processing on the Controller's Instructions
+
+The Processor shall process personal data only on the Controller's documented
+instructions, including with regard to transfers of personal data to a third
+country or international organisation, unless required to do otherwise by UK law
+applicable to the Processor — in which case the Processor shall inform the
+Controller of that legal requirement before processing, unless that law
+prohibits such information on important grounds of public interest. As of this
+draft, those instructions are the ones described in "Nature and Purpose of
+Processing" above and in the Terms of Service; any further or different
+instruction from the Controller should be given in writing, including by email
+to legal@leangency.com, so that it is documented.
+
+In line with the final paragraph of UK GDPR Article 28(3), the Processor shall
+immediately inform the Controller if, in the Processor's opinion, an instruction
+given by the Controller infringes UK GDPR, the Data Protection Act 2018, or
+other applicable data protection law. The ICO's guidance on what a
+controller-processor contract must include, cited in "Introduction and Parties"
+above, confirms both limbs of this obligation.
+
+## Confidentiality of Personnel
+
+The Processor shall ensure that each of its employees, contractors, and other
+personnel who are authorised to process personal data under this DPA has
+committed themselves to confidentiality in respect of that personal data —
+whether under a written confidentiality or non-disclosure obligation in their
+contract of employment or engagement, or because they are already subject to an
+appropriate statutory obligation of confidentiality — before they are given that
+access. Access is limited to personnel who need it to provide the contracted
+functionality described in "Nature and Purpose of Processing" above, consistent
+with the role-based access control described in "Security Measures" below. This
+personnel-confidentiality duty is separate from, and in addition to, the
+confidentiality obligations owed by sub-processors described in "Sub-processors"
+below and in "Audit and Compliance" below. See the ICO's guidance cited in
+"Introduction and Parties" above for the equivalent requirement at UK GDPR
+Article 28(3)(b).
+
 ## Obligations and Rights of the Controller
 
 The Controller shall ensure that personal data submitted to Aurora has a lawful
@@ -168,6 +205,24 @@ available to a Controller on request to legal@leangency.com, and the Processor
 will assist the Controller with its own Article 32 obligations, breach
 notifications under Article 33/34, and any data protection impact assessment
 that depends on how the Processor handles the Controller's data.
+
+## Personal Data Breach Notification by the Processor
+
+Where the Processor becomes aware of a personal data breach affecting personal
+data processed under this DPA, it shall notify the Controller without undue
+delay, in accordance with UK GDPR Article 33(2). This duty is separate from, and
+precedes, the assistance described in "Security Measures" above with the
+Controller's own obligations under Articles 32 to 34, and it is owed regardless
+of whether the breach was caused by the Processor, a sub-processor, or a third
+party. The ICO's guidance on personal data breaches confirms that where a
+controller uses a processor, and that processor suffers a breach, the processor
+"must inform [the controller] without undue delay as soon as it becomes aware"
+of it ("What role do processors have?",
+https://ico.org.uk/for-organisations/report-a-breach/personal-data-breach/personal-data-breaches-a-guide/).
+The notification shall include the information available to the Processor at the
+time, so that the Controller can assess the breach and, where required, notify
+the ICO within the Controller's own 72-hour deadline under Article 33(1); the
+Processor shall provide further information as it becomes available.
 
 ## Data Return and Deletion
 
