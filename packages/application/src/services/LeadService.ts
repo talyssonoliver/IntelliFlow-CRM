@@ -561,16 +561,21 @@ export class LeadService {
   async updateLead(
     leadId: string,
     updates: {
-      firstName?: string;
-      lastName?: string;
-      company?: string;
+      // IFC-412 (owner ruling 2026-10-12): these "required-looking" fields must
+      // be explicitly clearable from the lead edit form. `undefined`/omitted
+      // leaves the field unchanged; `null` clears it (forwarded to
+      // `Lead.updateContactInfo`, which normalizes it to the domain's
+      // `undefined` "absent" representation).
+      firstName?: string | null;
+      lastName?: string | null;
+      company?: string | null;
       title?: string;
-      phone?: string;
-      location?: string;
-      website?: string;
+      phone?: string | null;
+      location?: string | null;
+      website?: string | null;
       avatarUrl?: string;
       lastContactedAt?: Date;
-      estimatedValue?: number;
+      estimatedValue?: number | null;
       tags?: string[];
       // BANT qualification fields (IFC-242)
       budget?: string;
@@ -621,11 +626,16 @@ export class LeadService {
     }
 
     if (updates.phone !== undefined) {
-      const phoneResult = PhoneNumber.create(updates.phone);
-      if (phoneResult.isFailure) {
-        return Result.fail(phoneResult.error);
+      if (updates.phone === null) {
+        // IFC-412: explicit clear — nothing to validate, forward the null.
+        updateProps.phone = null;
+      } else {
+        const phoneResult = PhoneNumber.create(updates.phone);
+        if (phoneResult.isFailure) {
+          return Result.fail(phoneResult.error);
+        }
+        updateProps.phone = phoneResult.value;
       }
-      updateProps.phone = phoneResult.value;
     }
 
     lead.updateContactInfo(updateProps);
