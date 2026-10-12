@@ -158,6 +158,17 @@ to the Controller's registered account contact, giving the Controller a
 reasonable opportunity to object on reasonable data-protection grounds before
 the change takes effect.
 
+Each sub-processor is engaged under a written contract that imposes on it the
+same data-protection obligations that this DPA imposes on Leangency, in
+particular the obligations described in "Confidentiality of Personnel",
+"Security Measures", "Personal Data Breach Notification by the Processor", "Data
+Subject Rights Assistance", and "Data Return and Deletion" above, to the extent
+relevant to that sub-processor's function. Where a sub-processor fails to fulfil
+its data-protection obligations, Leangency remains fully liable to the
+Controller for the performance of that sub-processor's obligations, in
+accordance with UK GDPR Article 28(4). See the ICO's guidance cited in
+"Introduction and Parties" above for the equivalent requirement.
+
 As of this draft, the sub-processors actually integrated in Aurora's codebase
 and infrastructure configuration are: Vercel Inc. (hosts the Aurora web
 application); Railway Corporation (hosts the API, AI-worker, and background-job
