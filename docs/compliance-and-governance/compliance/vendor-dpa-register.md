@@ -236,28 +236,50 @@ approval-gated Zero Data Retention option. OpenAI itself is currently listed as
 — this register does not change that; it only confirms the fallback path is real
 and already coded if the owner chooses it.
 
-## Owner actions (the only things left that genuinely need him)
+## Owner rulings (modal, 2026-10-12)
 
-Three open items; none is checkable from public vendor docs or an
-environment-variable name — each requires looking at an actual vendor account. A
-fourth (Vercel) is listed for completeness even though it is already closed — he
-answered it on 2026-10-12:
+All four open items from this register went to the owner and are now ruled, not
+open — none is a question any more:
 
-1. **Railway** — has the DPA's DocuSign form been submitted and countersigned by
-   Railway for this account? Check: Railway dashboard, or the email thread from
-   whoever last engaged Railway's legal/sales contact about a DPA.
-2. **Sentry** — has the electronic DPA opt-in been completed for this account?
-   Check: Sentry organization settings → Legal & Compliance (or wherever
-   Sentry's current self-serve DPA flow lives — see https://sentry.io/legal/dpa/
-   for the current instructions link).
-3. **OpenRouter** — is this account Enterprise-tier with a signed DPA, or
-   self-serve? If self-serve, there is no DPA until that changes — this is a
-   commercial decision (cost, terms) for the owner, not a technical one.
-4. **Vercel** — the owner already answered this one (2026-10-12): stay on Hobby.
-   That means Aurora's Vercel hosting still has no Article 28 contract covering
-   it; `docs/shared/dpa-content.md` says so plainly and this is not re-opened
-   here as a question.
+1. **Vercel** — stay on Hobby. Aurora's Vercel hosting still has no Article 28
+   contract covering this processing (see "Vercel Inc." above).
+2. **Railway** — "Not until a customer." Executing the DocuSign DPA is
+   **deferred**, not actioned now. No configuration change was made.
+3. **Sentry** — "Not until a customer." Completing the electronic DPA opt-in is
+   **deferred**, not actioned now. No configuration change was made.
+4. **OpenRouter** — "Leave it until a customer." The verdict above (not suitable
+   as configured) stands unchanged; no code or configuration change was made to
+   fix it, pursue Enterprise, or stop routing personal data through it.
 
-Google's Gemini API acceptance (see above) and every "automatic" vendor are not
-owner actions — they're already satisfied by the account already being live, or
-require no action at all.
+**Trigger for all three deferrals (Railway, Sentry, OpenRouter): the first
+paying customer, or before this DPA is offered to anyone — whichever comes
+first.** They do not need resolving today. They do need resolving before any of
+the four pre-conditions below are satisfied.
+
+## Pre-conditions before this DPA can be offered to any customer
+
+Next to the Vercel ruling: the full set of things that must happen first, drawn
+directly from the rulings above and the verdicts earlier in this register. None
+of these four is done today:
+
+1. **Vercel moves to Pro** (or hosting moves elsewhere) — Hobby carries no
+   Article 28 contract and Aurora is commercial use Hobby's own terms don't
+   permit.
+2. **OpenRouter is resolved**, with the options from its verdict above: an
+   Enterprise agreement with a signed DPA and the `data_collection`/`zdr`
+   settings and a non-free-tier model; or switching to the realistic
+   already-coded alternative (`AI_PROVIDER=openai`); or stopping Controller
+   personal data from being routed through OpenRouter until one of those
+   happens.
+3. **Railway's DPA is executed** — the DocuSign form submitted and countersigned
+   by Railway.
+4. **Sentry's DPA is accepted** — the electronic opt-in completed for this
+   account.
+
+Until all four are true, this register's own position is: no customer should see
+this DPA as a final document, consistent with "Draft Status and Owner Approval"
+in `docs/shared/dpa-content.md`.
+
+Google's Gemini API acceptance (see "Google LLC" above) and every "automatic"
+vendor needed no owner action either — they were already satisfied by the
+account already being live, or require no action at all.

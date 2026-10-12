@@ -339,9 +339,10 @@ section summarises:
   customer must complete and submit a DocuSign form, and it only becomes binding
   once Railway countersigns. The register found no self-serve dashboard toggle
   for this; the real step is to contact Railway directly to execute it. **Owner
-  action: contact Railway to complete that DocuSign step, and confirm whether it
-  has already been done for this account** — until it has, Railway's DPA and UK
-  Addendum are not in force for this processing.
+  ruling (modal, 2026-10-12): "Not until a customer" — executing that DocuSign
+  step is deferred, not actioned now.** Until it is done, Railway's DPA and UK
+  Addendum are not in force for this processing; see "Pre-conditions before this
+  DPA can be offered" in "Draft Status and Owner Approval" below.
 - **Supabase, Inc.** — Data Processing Addendum, https://supabase.com/legal/dpa
   (Version 1, 1 August 2026): the Approved/UK Addendum (ICO template version
   B.1.0 under s.119A of the Data Protection Act 2018), incorporated
@@ -361,10 +362,11 @@ section summarises:
   invalidated. Sentry's own text says this DPA is entered into only by the party
   that electronically accepts or opts in to it — it is **not** automatic, and
   the register did not find a self-describing settings path for it beyond
-  Sentry's own support article. **Owner action: follow Sentry's DPA opt-in
-  instructions and confirm whether this has already been done for the
-  IntelliFlow Sentry account** — until it has, Sentry's DPA and its transfer
-  safeguard are not in force for this processing.
+  Sentry's own support article. **Owner ruling (modal, 2026-10-12): "Not until a
+  customer" — completing that opt-in is deferred, not actioned now.** Until it
+  is done, Sentry's DPA and its transfer safeguard are not in force for this
+  processing; see "Pre-conditions before this DPA can be offered" in "Draft
+  Status and Owner Approval" below.
 - **Upstash, Inc.** — Data Processing Addendum,
   https://upstash.com/trust/dpa.pdf (last updated April 2025): the UK Transfer
   Addendum (ICO template version B.1.0), incorporated automatically into the
@@ -417,10 +419,11 @@ section summarises:
   Controller personal data. It becomes suitable only once every request carrying
   personal data sets the `data_collection: "deny"` (or stricter `zdr: true`)
   provider option and moves off the free-tier default, which is a code change,
-  not something fixed by this DPA. **Owner action: decide whether to pursue that
-  fix, pursue an OpenRouter Enterprise agreement, or stop routing Controller
-  personal data through OpenRouter until one of those happens** — no CRM feature
-  or setting was added to make this decision.
+  not something fixed by this DPA. **Owner ruling (modal, 2026-10-12): "Leave it
+  until a customer" — no code or configuration change was made now.**
+  OpenRouter's unsuitability stands as described above until that changes; see
+  "Pre-conditions before this DPA can be offered" in "Draft Status and Owner
+  Approval" below.
 
 Twilio SendGrid, OpenAI, Anthropic, and Amazon Web Services (S3) are not live
 (see "Sub-processors" above), so no transfer safeguard is currently needed for
@@ -436,18 +439,45 @@ not a finished, legally-reviewed document. The entity details are resolved (see
 "Introduction and Parties"), and so is Google's position (see "International
 Transfers" — API-key creation already requires accepting its terms, and its
 UK/EEA carve-out gives Aurora's Gemini usage the no-training protection
-regardless of billing status). Three owner actions remain, each named in
-"International Transfers" and detailed in the vendor contract register
-(`docs/compliance-and-governance/compliance/vendor-dpa-register.md`): executing
-Railway's DPA, completing Sentry's opt-in, and deciding how to resolve
-OpenRouter's unsuitability as configured. None of these were, or could be,
-completed from this check alone — they must be confirmed or actioned before this
-DPA is presented to, or signed with, any customer.
+regardless of billing status).
 
-**Separately, and not something the owner needs to decide: as verified in
-"International Transfers" above, Aurora's Vercel hosting is on the Hobby plan,
-which Vercel's own Terms of Service restrict to personal or non-commercial use,
-and Vercel's Data Processing Addendum covers Pro/Enterprise customers only. This
-DPA cannot be offered to, or signed with, a customer until that is fixed —
-either by moving Aurora's Vercel hosting to a plan whose terms and DPA actually
-apply, or by hosting it elsewhere.**
+**Owner rulings (modal, 2026-10-12) on the three remaining items — each is now
+ruled, not open:**
+
+- **Railway**: "Not until a customer." Executing the DocuSign DPA is
+  **deferred**.
+- **Sentry**: "Not until a customer." Completing the electronic DPA opt-in is
+  **deferred**.
+- **OpenRouter**: "Leave it until a customer." No code or configuration change
+  was made to resolve its unsuitability.
+
+**Trigger for all three: the first paying customer, or before this DPA is
+offered to anyone — whichever comes first.** None of the three was, or needs to
+be, actioned today; each is detailed in the vendor contract register
+(`docs/compliance-and-governance/compliance/vendor-dpa-register.md`), which
+records these same rulings.
+
+**Separately, and already decided, not reopened: as verified in "International
+Transfers" above, Aurora's Vercel hosting is on the Hobby plan, which Vercel's
+own Terms of Service restrict to personal or non-commercial use, and Vercel's
+Data Processing Addendum covers Pro/Enterprise customers only — the owner chose
+(2026-10-12) to stay on Hobby.**
+
+**Pre-conditions before this DPA can be offered to any customer** — next to the
+Vercel ruling, the full set of things that must happen first, none of which is
+true today:
+
+1. **Vercel moves to Pro** (or hosting moves elsewhere) — Hobby carries no
+   Article 28 contract for this processing.
+2. **OpenRouter is resolved**, with the options from its verdict in the vendor
+   contract register: an Enterprise agreement with a signed DPA and the
+   `data_collection`/`zdr` settings and a non-free-tier model; or switching to
+   the already-coded `AI_PROVIDER=openai` alternative; or stopping Controller
+   personal data from being routed through OpenRouter.
+3. **Railway's DPA is executed** — the DocuSign form submitted and countersigned
+   by Railway.
+4. **Sentry's DPA is accepted** — the electronic opt-in completed for this
+   account.
+
+Until all four are true, this DPA must not be presented to, or signed with, any
+customer.
