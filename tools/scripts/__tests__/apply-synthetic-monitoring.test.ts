@@ -173,18 +173,35 @@ describe('synthetic monitoring config', () => {
     });
   });
 
-  it('builds a query -> reduce -> threshold alert rule in the shared production folder/group', () => {
+  it('builds a query -> reduce -> threshold alert rule in the shared production folder, its own rule group', () => {
     const rule = buildAlertRule(CONFIG.alertRule, CONFIG);
     expect(rule).toMatchObject({
       uid: 'ifc811-probe-success-down',
       folderUID: 'intelliflow-prod',
-      ruleGroup: 'intelliflow-prod',
+      ruleGroup: 'intelliflow-prod-synthetic',
       condition: 'C',
       noDataState: 'Alerting',
       for: '1m',
     });
     expect(rule.data[0].model.expr).toBe(CONFIG.alertRule.expr);
     expect(rule.data[2].model.conditions[0].evaluator).toEqual({ type: 'lt', params: [1] });
+  });
+
+  it("never shares a rule group name with alert-rules.json, so that script's folder/rule-group PUT can never wipe this rule", () => {
+    // apply-grafana-alert-rules.mjs replaces its ENTIRE named group's rule
+    // list on every run (PUT /api/v1/provisioning/folder/{uid}/rule-groups/{name}),
+    // built only from its own config.rules. If this config named the same
+    // group, that run — triggered by any push to alert-rules.json, or by
+    // hand via workflow_dispatch — would silently delete ifc811-probe-success-down
+    // with no error and no scheduled job to recreate it. The folder may
+    // still be shared; the rule group name must not be.
+    const alertRulesConfig = JSON.parse(
+      readFileSync(
+        join(__dirname, '../../../infra/monitoring/grafana/cloud/alert-rules.json'),
+        'utf8'
+      )
+    );
+    expect(CONFIG.group.name).not.toBe(alertRulesConfig.group.name);
   });
 });
 

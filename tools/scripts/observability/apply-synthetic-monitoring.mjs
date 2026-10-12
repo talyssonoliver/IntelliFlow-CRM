@@ -14,12 +14,18 @@
 //   2. The same Grafana Alerting provisioning API
 //      apply-grafana-alert-rules.mjs uses (GRAFANA_URL/GRAFANA_SA_TOKEN) —
 //      creates or updates ONE alert rule over the probe_success metric the
-//      check publishes, in the same "intelliflow-prod" folder/group IFC-032's
-//      rules already live in. This deliberately uses only the per-uid
-//      provisioning endpoints and NEVER the folder/rule-group PUT that script
-//      uses to set the group's evaluation interval — that call REPLACES the
-//      group's entire rule list, which would silently delete the IFC-032
-//      rules if this script also called it.
+//      check publishes, in the same "intelliflow-prod" folder IFC-032's
+//      rules already live in, but its OWN "intelliflow-prod-synthetic" rule
+//      group — never the same group name as alert-rules.json's. This
+//      deliberately uses only the per-uid provisioning endpoints and NEVER
+//      the folder/rule-group PUT that apply-grafana-alert-rules.mjs uses to
+//      set its group's evaluation interval — that call REPLACES the named
+//      group's entire rule list from that script's own config.rules alone.
+//      A shared group name would mean THAT script's normal runs (triggered
+//      by any push touching alert-rules.json, or by hand via
+//      workflow_dispatch) silently delete this rule with no error; keeping
+//      the group names distinct makes that impossible even though this
+//      script never calls the endpoint itself.
 // A brand-new check has not published probe_success yet, so the live-series
 // check only runs when the check already existed before this run.
 //

@@ -28,5 +28,5 @@
   },
   "folder": { "uid": "intelliflow-prod", "title": "IntelliFlow production" },
   "datasourceUid": "grafanacloud-prom",
-  "group": { "name": "intelliflow-prod" }
+  "group": { "name": "intelliflow-prod-synthetic" }
 }

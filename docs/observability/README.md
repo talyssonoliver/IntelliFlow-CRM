@@ -178,13 +178,15 @@ It does two things against two different Grafana Cloud APIs:
 2. Creates/updates **one** Grafana alert rule, `ifc811-probe-success-down`, over
    the `probe_success` metric the check publishes to the stack's existing
    `grafanacloud-prom` datasource — via the **same** provisioning API
-   `apply-grafana-alert-rules.mjs` uses, in the same `intelliflow-prod`
-   folder/group, so it inherits the default notification policy (owner's email)
-   IFC-032 already set up. It only ever creates/updates that one rule by uid; it
-   never calls the folder/rule-group endpoint that
-   `apply-grafana-alert-rules.mjs` uses to set the group interval, because that
-   call replaces the group's entire rule list and would silently delete the
-   IFC-032 rules.
+   `apply-grafana-alert-rules.mjs` uses, in the same `intelliflow-prod` folder
+   but its **own** `intelliflow-prod-synthetic` rule group (never the same group
+   name `alert-rules.json` uses), so it still inherits the default notification
+   policy (owner's email) IFC-032 already set up. It only ever creates/updates
+   that one rule by uid; it never calls the folder/rule-group endpoint that
+   `apply-grafana-alert-rules.mjs` uses to set its group's interval, because
+   that call replaces the **named** group's entire rule list from that script's
+   own config alone — exactly why the two configs must never share a group name,
+   or that script's ordinary runs would silently delete this rule.
 
 ### Two owner steps, then one apply — not done yet
 
