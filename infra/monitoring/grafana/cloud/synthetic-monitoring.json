@@ -1,0 +1,32 @@
+{
+  "_comment": "Grafana Cloud Synthetic Monitoring probe for the production API's readiness endpoint (IFC-032 follow-up, #811: 'Availability (an external probe of /health/ready) is not a span-metric rule. It needs a Grafana Synthetic Monitoring check.'). Applied by tools/scripts/observability/apply-synthetic-monitoring.mjs in two steps against two different APIs: (1) the HTTP check itself, created/updated through the Synthetic Monitoring API (POST /api/v1/check/add or /api/v1/check/update at SM_API_URL, auth SM_ACCESS_TOKEN); (2) one Grafana alert rule over the probe_success metric the check publishes to the stack's existing Grafana Cloud Prometheus datasource (grafanacloud-prom), created/updated through the SAME provisioning API infra/monitoring/grafana/cloud/alert-rules.json already uses (GRAFANA_URL/GRAFANA_SA_TOKEN), so it inherits the stack's existing default notification policy (owner's email) rather than defining a new one. Target matches vars.PRODUCTION_API_URL / tools/local-verify/verify-cors-auth.mjs; update it here first if the production domain ever changes. NOT applied yet: Synthetic Monitoring must be initialized on the stack and a publish access token issued first (see docs/observability/README.md and PR #811's body for the two owner steps and the apply command).",
+  "check": {
+    "job": "ifc-prod-health-ready",
+    "target": "https://api-production-e9c1.up.railway.app/health/ready",
+    "frequencySeconds": 60,
+    "timeoutSeconds": 10,
+    "probeNames": ["London", "Amsterdam", "Frankfurt"],
+    "labels": [{ "name": "task", "value": "ifc-811" }],
+    "http": {
+      "method": "GET",
+      "ipVersion": "V4",
+      "noFollowRedirects": false,
+      "validStatusCodes": [200]
+    }
+  },
+  "alertRule": {
+    "uid": "ifc811-probe-success-down",
+    "title": "Production /health/ready probe failing",
+    "expr": "avg_over_time(probe_success{job=\"ifc-prod-health-ready\"}[5m])",
+    "selector": "probe_success{job=\"ifc-prod-health-ready\"}",
+    "operator": "lt",
+    "threshold": 1,
+    "for": "1m",
+    "noData": "Alerting",
+    "severity": "critical",
+    "summary": "The external synthetic probe of the production API's /health/ready endpoint failed at least once from a monitored location in the last 5 minutes."
+  },
+  "folder": { "uid": "intelliflow-prod", "title": "IntelliFlow production" },
+  "datasourceUid": "grafanacloud-prom",
+  "group": { "name": "intelliflow-prod" }
+}
