@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     title: 'Aurora features: agents that do the work, with you in charge',
     description:
       'Lead scoring, drafted follow-ups, one approval queue, pipeline, cases, email and calendar, and six connectors.',
-    url: 'https://intelliflow-crm.com/features',
+    url: 'https://intelli-flow-crm-web.vercel.app/features',
     siteName: 'Aurora',
     type: 'website',
   },

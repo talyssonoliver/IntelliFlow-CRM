@@ -11,7 +11,7 @@ describe('error-analytics', () => {
   it('builds a stable analytics payload', () => {
     const payload = buildNotFoundAnalyticsPayload({
       missingPath: '/reports/missing',
-      referrer: 'https://intelliflow-crm.com/dashboard',
+      referrer: 'https://intelli-flow-crm-web.vercel.app/dashboard',
       suggestionCount: 3,
       navigationType: 'navigate',
       timestamp: '2026-03-10T12:00:00.000Z',
@@ -34,7 +34,7 @@ describe('error-analytics', () => {
     trackNotFoundPageView({
       missingPath: '/missing',
       suggestionCount: 2,
-      referrer: 'https://intelliflow-crm.com/',
+      referrer: 'https://intelli-flow-crm-web.vercel.app/',
       navigationType: 'reload',
       timestamp: '2026-03-10T12:00:00.000Z',
     });

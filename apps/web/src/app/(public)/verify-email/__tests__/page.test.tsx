@@ -129,7 +129,7 @@ describe('LegacyEmailVerifyPage (IFC-120)', () => {
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
-      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/verify-email');
+      expect(metadata.openGraph?.url).toBe('https://intelli-flow-crm-web.vercel.app/verify-email');
       expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });

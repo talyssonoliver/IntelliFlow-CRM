@@ -189,6 +189,6 @@ describe('sitemap() fallback URL', () => {
     const entries = mod.default();
     const root = entries.find((e: { url: string }) => new URL(e.url).pathname === '/');
     expect(root).toBeDefined();
-    expect(root!.url).toBe('https://intelliflow-crm.com');
+    expect(root!.url).toBe('https://intelli-flow-crm-web.vercel.app');
   });
 });

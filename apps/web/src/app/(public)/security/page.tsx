@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: 'Aurora security: on from day one',
     description:
       "No AI action goes out without a person's approval. Each workspace's data is kept apart and every change is logged.",
-    url: 'https://intelliflow-crm.com/security',
+    url: 'https://intelli-flow-crm-web.vercel.app/security',
     siteName: 'Aurora',
     type: 'website',
   },

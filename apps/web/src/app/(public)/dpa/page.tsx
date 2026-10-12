@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: 'Data Processing Addendum',
     description:
       'Read the Aurora DPA covering processing subject matter, sub-processors, security measures, and controller obligations under GDPR Article 28.',
-    url: 'https://intelliflow-crm.com/dpa',
+    url: 'https://intelli-flow-crm-web.vercel.app/dpa',
     siteName: 'Aurora',
     type: 'website',
   },

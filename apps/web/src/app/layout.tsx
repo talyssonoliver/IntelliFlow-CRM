@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL('https://intelliflow-crm.com'),
+  metadataBase: new URL('https://intelli-flow-crm-web.vercel.app'),
   alternates: {
     canonical: '/',
   },
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     title: 'Aurora, the AI CRM that asks before it acts',
     description:
       'Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.',
-    url: 'https://intelliflow-crm.com',
+    url: 'https://intelli-flow-crm-web.vercel.app',
     siteName: 'Aurora',
     locale: 'en_GB',
     type: 'website',

@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     title: 'Acceptable Use Policy',
     description:
       'Read the Aurora AUP: boundaries that protect every customer, end user, integration, and partner on the platform.',
-    url: 'https://intelliflow-crm.com/aup',
+    url: 'https://intelli-flow-crm-web.vercel.app/aup',
     siteName: 'Aurora',
     type: 'website',
   },

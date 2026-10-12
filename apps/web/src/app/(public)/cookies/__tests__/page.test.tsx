@@ -63,6 +63,6 @@ describe('CookiePage', () => {
   it('exports metadata for the canonical cookies route', () => {
     expect(metadata.title).toBe('Cookie Policy');
     expect(metadata.alternates?.canonical).toBe('/cookies');
-    expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/cookies');
+    expect(metadata.openGraph?.url).toBe('https://intelli-flow-crm-web.vercel.app/cookies');
   });
 });

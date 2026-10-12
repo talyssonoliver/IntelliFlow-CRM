@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: 'Privacy Policy',
     description:
       'Read the Aurora Privacy Policy, including data handling principles, retention, subprocessors, and data-subject rights.',
-    url: 'https://intelliflow-crm.com/privacy',
+    url: 'https://intelli-flow-crm-web.vercel.app/privacy',
     siteName: 'Aurora',
     type: 'website',
   },
