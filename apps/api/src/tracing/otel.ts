@@ -16,6 +16,10 @@
  * - OTEL_ENABLED: Enable/disable tracing (default: true)
  * - OTEL_SERVICE_NAME: Service name (default: intelliflow-api)
  * - OTEL_EXPORTER_OTLP_ENDPOINT: OTLP collector endpoint (default: http://localhost:4318)
+ * - OTEL_LOGS_EXPORTER: Logs exporter — 'otlp' (default via NodeSDK, same as
+ *   traces/metrics), 'console' or 'none'. The dev fallback below forces 'none'
+ *   when no custom endpoint is set, so local dev never dials a collector that
+ *   isn't running.
  * - NODE_ENV: Environment (development/production)
  *
  * @see https://opentelemetry.io/docs/instrumentation/js/
@@ -121,6 +125,20 @@ export function initializeOpenTelemetry(): NodeSDK | null {
         },
         '@opentelemetry/instrumentation-http': {
           enabled: true,
+        },
+        // #809 (IFC-032 follow-up): forward pino log records to the OTel Logs
+        // SDK so they reach the same OTLP gateway as traces/metrics, with
+        // trace_id/span_id already attached for Grafana's "Logs for this
+        // trace". disableLogSending:false is this package's own default —
+        // spelled out here so the decision is visible and tested rather than
+        // depending on the auto-instrumentations-node bundle's default.
+        // Log correlation (trace_id/span_id/trace_flags) is left at its
+        // default too: packages/observability's own pino mixin already injects
+        // the same fields from the same active span, and this instrumentation
+        // composes with an existing mixin instead of overwriting it, so the
+        // two are redundant-safe, not conflicting.
+        '@opentelemetry/instrumentation-pino': {
+          disableLogSending: false,
         },
       }),
     ],
