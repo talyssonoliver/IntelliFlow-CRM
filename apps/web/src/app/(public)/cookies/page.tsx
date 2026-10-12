@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     title: 'Cookie Policy',
     description:
       'Read the Aurora Cookie Policy, including cookie categories, third-party providers, retention, and how to manage preferences.',
-    url: 'https://intelliflow-crm.com/cookies',
+    url: 'https://intelli-flow-crm-web.vercel.app/cookies',
     siteName: 'Aurora',
     type: 'website',
   },

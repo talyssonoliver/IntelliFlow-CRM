@@ -54,7 +54,7 @@ export async function generateMetadata({ params }: Readonly<LandingPageProps>): 
       images: OG_IMAGES,
       title: pageConfig.title,
       description: pageConfig.description,
-      url: `https://intelliflow-crm.com/lp/${slug}`,
+      url: `https://intelli-flow-crm-web.vercel.app/lp/${slug}`,
       siteName: 'Aurora',
       type: 'website',
     },

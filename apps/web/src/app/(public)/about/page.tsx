@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     title: 'About Aurora: AI-first, governance-grade',
     description:
       'Founded in 2024. Aurora builds AI-first CRM that pairs automation with governance-grade validation. Meet the team building the future of CRM.',
-    url: 'https://intelliflow-crm.com/about',
+    url: 'https://intelli-flow-crm-web.vercel.app/about',
     siteName: 'Aurora',
     type: 'website',
   },

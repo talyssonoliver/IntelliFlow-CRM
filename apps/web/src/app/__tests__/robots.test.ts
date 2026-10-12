@@ -160,6 +160,6 @@ describe('robots() fallback URL', () => {
     vi.resetModules();
     const mod = await import('../robots');
     const result = mod.default();
-    expect(result.sitemap).toBe('https://intelliflow-crm.com/sitemap.xml');
+    expect(result.sitemap).toBe('https://intelli-flow-crm-web.vercel.app/sitemap.xml');
   });
 });

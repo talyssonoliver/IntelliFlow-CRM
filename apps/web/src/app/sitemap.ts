@@ -4,7 +4,7 @@ import { jobListings } from '@/data/job-listings';
 import landingPagesData from '@/data/landing-pages.json';
 import pressData from '@/data/press-releases.json';
 
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelliflow-crm.com';
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelli-flow-crm-web.vercel.app';
 
 // Update this date whenever static page content changes materially
 const STATIC_LAST_MODIFIED = '2026-04-13';

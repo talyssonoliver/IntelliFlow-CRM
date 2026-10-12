@@ -33,7 +33,7 @@ describe('PartnersPage', () => {
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
       expect(metadata.openGraph?.title).toBe('Partner with Aurora');
-      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/partners');
+      expect(metadata.openGraph?.url).toBe('https://intelli-flow-crm-web.vercel.app/partners');
       expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });

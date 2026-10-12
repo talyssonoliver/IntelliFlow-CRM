@@ -27,7 +27,7 @@ function toPathname(referrer?: string | null): string | null {
   }
 
   try {
-    return new URL(referrer, 'https://intelliflow-crm.com').pathname;
+    return new URL(referrer, 'https://intelli-flow-crm-web.vercel.app').pathname;
   } catch {
     return null;
   }
