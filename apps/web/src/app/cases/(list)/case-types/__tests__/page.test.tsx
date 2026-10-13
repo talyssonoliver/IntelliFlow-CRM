@@ -21,8 +21,8 @@ describe('/cases/case-types page', () => {
 
   it('has a busy skeleton that mirrors the bento grid', () => {
     const { container } = render(<CaseTypesLoading />);
-    const skeleton = screen.getByLabelText('Loading case types');
-    expect(skeleton.getAttribute('aria-busy')).toBe('true');
+    expect(screen.getByRole('status').textContent).toBe('Loading case types');
+    expect((container.firstChild as HTMLElement).getAttribute('aria-busy')).toBe('true');
     expect(container.querySelector('.lg\\:grid-cols-12')).not.toBeNull();
     expect(container.querySelector('.lg\\:col-span-8')).not.toBeNull();
     expect(container.querySelector('.lg\\:col-span-4')).not.toBeNull();

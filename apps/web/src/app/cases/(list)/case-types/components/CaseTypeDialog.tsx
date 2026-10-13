@@ -114,7 +114,7 @@ function fingerprint(draft: CaseTypeDraft): string {
     category: draft.category.trim(),
     slaDays: draft.slaDays.trim(),
     requiredFields: [...draft.requiredFields].sort(),
-    checklist: draft.checklist.map((item) => item.title.trim()),
+    checklist: draft.checklist.map((item) => item.title.trim()).filter(Boolean),
   });
 }
 
@@ -132,16 +132,13 @@ export function parseSlaDays(value: string): number | null | 'invalid' {
   return days;
 }
 
-/** Index → message for blank or case-insensitively duplicated steps. */
+/** Index → message for case-insensitively duplicated steps (blank steps are dropped on save). */
 export function findChecklistErrors(items: ChecklistDraftItem[]): Record<number, string> {
   const errors: Record<number, string> = {};
   const seen = new Map<string, number>();
   items.forEach((item, index) => {
     const key = item.title.trim().toLowerCase();
-    if (!key) {
-      errors[index] = 'Enter a step or remove it.';
-      return;
-    }
+    if (!key) return;
     const first = seen.get(key);
     if (first === undefined) seen.set(key, index);
     else errors[index] = `Same as step ${first + 1}.`;
@@ -158,7 +155,9 @@ export function toSaveInput(draft: CaseTypeDraft): CaseTypeSaveInput {
     defaultPriority: draft.defaultPriority,
     defaultSlaDays: sla === 'invalid' ? null : sla,
     requiredFields: draft.requiredFields,
-    checklist: draft.checklist.map((item) => ({ title: item.title.trim() })),
+    checklist: draft.checklist
+      .map((item) => ({ title: item.title.trim() }))
+      .filter((item) => item.title.length > 0),
     isActive: draft.isActive,
   };
 }
@@ -324,16 +323,21 @@ export function CaseTypeDialog({
                 value={draft.slaDays}
                 onChange={(e) => set('slaDays', e.target.value)}
                 aria-invalid={sla === 'invalid' ? true : undefined}
-                aria-describedby="case-type-sla-help"
+                aria-describedby={
+                  sla === 'invalid'
+                    ? 'case-type-sla-error case-type-sla-help'
+                    : 'case-type-sla-help'
+                }
               />
-              <p
-                id="case-type-sla-help"
-                className={`text-xs ${sla === 'invalid' ? 'text-destructive' : 'text-muted-foreground'}`}
-              >
-                {sla === 'invalid'
-                  ? `Enter a whole number from ${CASE_TYPE_LIMITS.minSlaDays} to ${CASE_TYPE_LIMITS.maxSlaDays}.`
-                  : 'Sets the deadline to the end of that day. Empty means no default deadline.'}
+              <p id="case-type-sla-help" className="text-xs text-muted-foreground">
+                Sets the deadline to the end of that day. Empty means no default deadline.
               </p>
+              {sla === 'invalid' && (
+                <p id="case-type-sla-error" role="alert" className="text-xs text-destructive">
+                  Enter a whole number from {CASE_TYPE_LIMITS.minSlaDays} to{' '}
+                  {CASE_TYPE_LIMITS.maxSlaDays}.
+                </p>
+              )}
             </div>
           </div>
 

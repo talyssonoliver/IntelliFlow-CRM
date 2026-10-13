@@ -59,7 +59,11 @@ export function ResolutionChecklistEditor({
     onChange(items.map((item, i) => (i === index ? { ...item, title } : item)));
 
   const add = () => {
-    if (atLimit || disabled) return;
+    if (disabled) return;
+    if (atLimit) {
+      setAnnouncement(`Maximum of ${CASE_TYPE_LIMITS.maxChecklistItems} steps reached.`);
+      return;
+    }
     const next = [...items, newChecklistItem()];
     onChange(next);
     setAnnouncement(`Step added, position ${next.length}.`);

@@ -50,6 +50,7 @@ export default function CaseTypesContent() {
   const [pendingDelete, setPendingDelete] = useState<CaseTypeDto | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState('');
+  const deletedRef = useRef(false);
 
   const types = useMemo(() => listQuery.data?.types ?? [], [listQuery.data]);
   const canEdit = listQuery.data?.canEdit ?? false;
@@ -87,7 +88,7 @@ export default function CaseTypesContent() {
       setDeleteError(null);
       setAnnouncement(`${name} deleted.`);
       toast({ title: 'Case type deleted', description: name });
-      setTimeout(() => document.getElementById('new-case-type-button')?.focus(), 0);
+      deletedRef.current = true;
     } catch (error) {
       setDeleteError(errorMessage(error));
     }
@@ -237,6 +238,13 @@ export default function CaseTypesContent() {
         onCancel={() => {
           setPendingDelete(null);
           setDeleteError(null);
+        }}
+        onCloseAutoFocus={(event) => {
+          if (!deletedRef.current) return;
+          // The deleted row's Delete button is gone; move focus somewhere useful.
+          deletedRef.current = false;
+          event.preventDefault();
+          document.getElementById('new-case-type-button')?.focus();
         }}
       />
     </div>

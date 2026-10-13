@@ -136,7 +136,7 @@ describe('CaseTypesContent', () => {
   it('shows the skeleton while loading', () => {
     h.list = { data: undefined, isLoading: true, error: null };
     render(<CaseTypesContent />);
-    expect(screen.getByLabelText('Loading case types')).toBeDefined();
+    expect(screen.getByText('Loading case types')).toBeDefined();
   });
 
   it('shows an error with Retry', () => {
@@ -254,7 +254,6 @@ describe('CaseTypesContent', () => {
   });
 
   it('deletes after confirmation and keeps a refusal inside the dialog', async () => {
-    vi.useFakeTimers();
     render(<CaseTypesContent />);
     act(() => h.listProps!.onDelete(h.list.data.types[1]));
     expect(screen.getByRole('alertdialog').textContent).toBe('Advisory');
@@ -272,9 +271,17 @@ describe('CaseTypesContent', () => {
     expect(h.mutations.delete.mutateAsync).toHaveBeenLastCalledWith({ id: 't2' });
     expect(screen.queryByRole('alertdialog')).toBeNull();
     expect(screen.getByText('Advisory deleted.')).toBeDefined();
-    act(() => vi.runAllTimers());
+    const event = { preventDefault: vi.fn() };
+    act(() => h.deleteProps!.onCloseAutoFocus(event));
+    expect(event.preventDefault).toHaveBeenCalled();
     expect(document.activeElement?.id).toBe('new-case-type-button');
-    vi.useRealTimers();
+  });
+
+  it('leaves focus restore to the dialog when nothing was deleted', () => {
+    render(<CaseTypesContent />);
+    const event = { preventDefault: vi.fn() };
+    act(() => h.deleteProps!.onCloseAutoFocus(event));
+    expect(event.preventDefault).not.toHaveBeenCalled();
   });
 
   it('cancels a pending delete', () => {

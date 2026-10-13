@@ -232,7 +232,12 @@ export function CaseForm({
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      // After React commits the error state, focus the first invalid field (WCAG 3.3.1).
+      const form = e.currentTarget as HTMLFormElement;
+      setTimeout(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(), 0);
+      return;
+    }
 
     const submitData: Record<string, unknown> = {
       title: formData.subject.trim(),

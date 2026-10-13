@@ -76,10 +76,18 @@ describe('CaseTypeDialog helpers', () => {
     expect(parseSlaDays('abc')).toBe('invalid');
   });
 
-  it('finds blank and case-insensitive duplicate steps', () => {
+  it('flags case-insensitive duplicate steps and ignores blank ones', () => {
     expect(
       findChecklistErrors([newChecklistItem('A'), newChecklistItem(' '), newChecklistItem('a')])
-    ).toEqual({ 1: 'Enter a step or remove it.', 2: 'Same as step 1.' });
+    ).toEqual({ 2: 'Same as step 1.' });
+  });
+
+  it('drops blank steps from the save payload', () => {
+    const draft = draftFromCaseType(null);
+    expect(
+      toSaveInput({ ...draft, checklist: [newChecklistItem(' '), newChecklistItem(' Filing ')] })
+        .checklist
+    ).toEqual([{ title: 'Filing' }]);
   });
 
   it('round-trips a type into a save payload and normalises a legacy colour', () => {
@@ -166,7 +174,7 @@ describe('CaseTypeDialog', () => {
     renderDialog();
     fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'X' } });
     fireEvent.change(screen.getByLabelText('Default SLA (days)'), { target: { value: '0' } });
-    expect(screen.getByText('Enter a whole number from 1 to 3650.')).toBeDefined();
+    expect(screen.getByRole('alert').textContent).toBe('Enter a whole number from 1 to 3650.');
     expect(saveButton().disabled).toBe(true);
   });
 

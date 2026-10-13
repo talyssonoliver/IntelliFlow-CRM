@@ -164,6 +164,10 @@ describe('CaseForm — case types (PG-204)', () => {
     expect(screen.getByText('Jurisdiction is required for this case').getAttribute('role')).toBe(
       'alert'
     );
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    expect(document.activeElement).toBe(screen.getByLabelText(/Jurisdiction/));
 
     fireEvent.change(screen.getByLabelText('Case type'), { target: { value: 'ct-adv' } });
     await submit();

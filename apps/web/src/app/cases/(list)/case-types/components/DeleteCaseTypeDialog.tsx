@@ -23,6 +23,8 @@ export interface DeleteCaseTypeDialogProps {
   error: string | null;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Called instead of Radix's focus restore when the dialog closes (the trigger row may be gone). */
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
 export function DeleteCaseTypeDialog({
@@ -31,10 +33,11 @@ export function DeleteCaseTypeDialog({
   error,
   onConfirm,
   onCancel,
+  onCloseAutoFocus,
 }: Readonly<DeleteCaseTypeDialogProps>) {
   return (
     <AlertDialog open={name !== null} onOpenChange={(open) => (open ? null : onCancel())}>
-      <AlertDialogContent>
+      <AlertDialogContent onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete {name ?? 'case type'}?</AlertDialogTitle>
           <AlertDialogDescription>

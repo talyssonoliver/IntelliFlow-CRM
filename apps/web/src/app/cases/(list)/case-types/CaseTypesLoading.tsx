@@ -6,7 +6,8 @@ const DEFAULT_KEYS = ['ct-default-0', 'ct-default-1', 'ct-default-2'] as const;
 /** Skeleton mirroring the case types bento grid (no layout shift when data lands). */
 export function CaseTypesLoading() {
   return (
-    <div className="w-full" aria-busy="true" aria-label="Loading case types">
+    <div className="w-full" aria-busy="true">
+      <output className="sr-only">Loading case types</output>
       <div className="mb-6 space-y-2">
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-8 w-64" />

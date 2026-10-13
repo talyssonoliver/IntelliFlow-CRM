@@ -123,6 +123,7 @@ describe('ResolutionChecklistEditor', () => {
     expect(add.getAttribute('aria-disabled')).toBe('true');
     fireEvent.click(add);
     expect(titles()?.split('|')).toHaveLength(20);
+    expect(live()).toBe('Maximum of 20 steps reached.');
     expect(screen.getByText(/Maximum 20 steps/)).toBeDefined();
   });
 
