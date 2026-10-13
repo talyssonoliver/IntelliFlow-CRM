@@ -3,8 +3,8 @@
   "schema_version": "1.0.0",
   "task_id": "PG-201",
   "run_id": "PG-201-exec-20261013",
-  "attestor": "Claude Code (claude-opus-5-5) — /full-pipeline PG-201 exec, remediation session after the runner audit",
-  "attestation_timestamp": "2026-10-13T07:57:00.288Z",
+  "attestor": "Claude Code (claude-opus-5-5) — /full-pipeline PG-201 exec, final attestation after Codex rounds 2-3",
+  "attestation_timestamp": "2026-10-13T14:57:51.543Z",
   "verdict": "NEEDS_HUMAN",
   "context_acknowledgment": {
     "acknowledged_at": "2026-10-13T00:55:38.310Z",
@@ -43,25 +43,25 @@
     "validations_passed": 4,
     "validations_failed": 0,
     "gates_passed": 14,
-    "gates_failed": 3,
+    "gates_failed": 2,
     "kpis_met": 5,
     "kpis_missed": 1,
     "placeholders_found": 0
   },
   "artifact_hashes": {
     ".specify/sprints/sprint-18/attestations/PG-201/context_ack.json": "120542082d16b0c89db42c068eab5c2a4abdbd14a9617db36f18fb61456b21a5",
-    ".specify/sprints/sprint-18/attestations/PG-201/findings.md": "b06181c7f3d851181bfbfc4609816fd6b2dcaf85811380ae4f2a9f057aef6fe0",
-    ".specify/sprints/sprint-18/attestations/PG-201/task-tracking.json": "93f865c5cb9659f6f17ba65fa0ec0d975858498f6008b66f74a6d06e255877e2",
+    ".specify/sprints/sprint-18/attestations/PG-201/findings.md": "916b9390cac284d8216e576735fcc91daef85bf53371fc95c514afdb6963fd9e",
+    ".specify/sprints/sprint-18/attestations/PG-201/task-tracking.json": "4a5df80150fcb248507dfddbb7bc21da1e8b181e61581034391876be7bf65a09",
     "apps/api/package.json": "5640636d11fb819de70cf8ba43f85721fb379ce60057b3ac412b4bbd480507ee",
     "apps/api/src/__tests__/app-router.smoke.test.ts": "7adfd575f0e476e73a3d87a6c116fe2d3b2ae2382d1a02ce23567b6924659198",
     "apps/api/src/modules/analytics/__tests__/report-settings.router.test.ts": "5342a6fbc745cb505aa7b56a84c6ff58fff1000a7cd6b67f4dee3dd3fca08a97",
     "apps/api/src/modules/analytics/__tests__/report-templates.router.test.ts": "c1db15ce7c8c31897d3e307dbb5191cab7ae1091e6dfb734377a87dd1342beb9",
-    "apps/api/src/modules/analytics/__tests__/scheduled-reports.router.test.ts": "13c06d6073996cca89eecc8c6b8a67c7e2a92634d26bbc6c0f235afe4b0e4db9",
+    "apps/api/src/modules/analytics/__tests__/scheduled-reports.router.test.ts": "ddbe1b2c80921292488c2f624fd9d59c9e65a2561c6fb55f7323d54026a1a0c0",
     "apps/api/src/modules/analytics/__tests__/scheduled-reports.schedule.test.ts": "7c98b65a700e3c26cb3a8f04052b4c1d7054881d51afbc18bab3a74527f0dd01",
     "apps/api/src/modules/analytics/analytics.router.ts": "874aa504b657011362dbc25b35460717198383bb7fd60d4df0053974335d7542",
     "apps/api/src/modules/analytics/report-settings.router.ts": "ce41acc369bb36a938876e09fe43a112bf63ba7379b8d900f21dafb287f8d714",
-    "apps/api/src/modules/analytics/report-templates.router.ts": "b711a95350fce9aeb29d9a26c4cdcca952d1e747c9d2525b223f4c399c663f1a",
-    "apps/api/src/modules/analytics/scheduled-reports.router.ts": "9ef82e412a773ca259630d29fb5c2bc2d605993fd07b0ce1c2fde06956ad76b4",
+    "apps/api/src/modules/analytics/report-templates.router.ts": "0cfdfe0823ce818b40e413c864feeb2658de27d9b5cdbf617fe8fe03c5933d44",
+    "apps/api/src/modules/analytics/scheduled-reports.router.ts": "7916fd19ddf76a5b5e9537ed7e0bae5817f508745c444a3d511e40cfe9713340",
     "apps/api/src/modules/analytics/scheduled-reports.schedule.ts": "6c1192017442e458cbcd69968d6a07fcba393dd14c8a426b2830f514eea7506a",
     "apps/api/src/security/rbac.ts": "23b541aba93205d97c2c761117c5faaddfda7ecee9242513a1b500c17672dda8",
     "apps/api/src/security/types.ts": "24c606a23af318a50375583e578c3ec3510932888d00bfcffb4937bcfc8b2692",
@@ -94,12 +94,12 @@
     "artifacts/lighthouse/PG-201/scheduled-reports-r1.report.json": "a904a064abb4e0c5579e006c0199a7ca656852a377f299a7230dbdbe615dc339",
     "artifacts/lighthouse/PG-201/waiver-evidence.md": "1e6fbd23f68a05cf3f977ed9838303c1e185232d8f1ec6bbb1d0719ef69c596b",
     "artifacts/metrics/debt-ledger.yaml": "2ae05216467a4decda31205e8dbdfe98dbde8328b9f071ceab14bdde016450c8",
-    "artifacts/reports/a11y-route-reconcile.json": "385e4fd4d145ee2ba207b45fd3185df113c2819fbbfa94720707bfd93a30f635",
+    "artifacts/reports/a11y-route-reconcile.json": "267bd08bc61066b06ded091977c1f0caa2b957c343e484d7d0c48075980604ce",
     "artifacts/reports/content-audit-results.json": "04c6569e819a1b6550138d6627f8d6e12864fc13f6d5753bac719eb2354c102f",
-    "artifacts/reports/phantom-completion-audit.json": "5f74a033af50404150d7e6349245ac1e967e11d431fa28f23676f1364b228a28",
-    "artifacts/reports/plan-lint-report.json": "c505fb7acb4d7ff076ecaff6a1649c4a57d9f49f316cb12e7b6b63ff628f8afd",
-    "artifacts/reports/spec-tracker.json": "d7331c35a81935f9a3e3f73d04fa91131015723aaea32519a742dfb6151bc9ec",
-    "docs/architecture/adr/ADR-075-report-schedule-contract.md": "ec6e4ef51b5c62427dbe5703866700608b7125eb24efb87ff39162bdeb381027",
+    "artifacts/reports/phantom-completion-audit.json": "6f3d791210dfe4275ae7beecbf2f170c7c439609af0657e07a8f7d41dd01da17",
+    "artifacts/reports/plan-lint-report.json": "16b1deebf94a48611ca0ae66f7900291f75f6ad8aee30941fbd70443f9c39708",
+    "artifacts/reports/spec-tracker.json": "11d8135a7a792bbbf3be6ce5b8390002bcddb627aa68bdf3c055e48e24f75a91",
+    "docs/architecture/adr/ADR-075-report-schedule-contract.md": "4a320271b4b03c4ebe7ee30988626755f5ce867dec3bc17d0b9e85e2a203d877",
     "docs/architecture/adr/README.md": "f54a88c62ab8a3a919b707e620d4455727e8c9537978918203655169b75ca944",
     "docs/architecture/diagrams/complete-dependency-chains.md": "d81bacd18e40ca3163351f18d76523d52ffa65cd2a6ecd2b40674975743b08b4",
     "docs/compliance-and-governance/compliance/vpat-2.5.md": "c08aee5ec0ac07136dc4a2bdf1d192d7058db311d1db5185ff443bda0f14fcdf",
@@ -109,48 +109,48 @@
     "docs/design/page-registry.md": "bd134576ea471b340a5880145721a2246e00b360af2ac22884d3aa954304e732",
     "docs/design/ui-flow-mapping.md": "42c23b6511b89f67ec0293a42a33df44b6612aa77b0d413a8420e9aa356b07f4",
     "docs/planning/prd-module-settings.md": "2b89f6a010c394f7a576e0cd616f71fa8cabc9c0c70c132c979160372c890e43",
-    "packages/db/prisma/migrations/20261013120000_report_schedules_pg201/migration.sql": "b75a9d7c7c3930152e65b551a74193a23fccb64406f43b0a24da93c98c9676d3",
-    "packages/db/prisma/schema.prisma": "eb637753847c77546b2e627793bfb8468902775d73c97b8814f6da513e437ecc",
-    "packages/db/src/__tests__/report-schedules-migration.test.ts": "beed1cf66e56ade69bdb1d8a7f6a4a0c94947bbb80b2bcbc793e8198430e574a",
+    "packages/db/prisma/migrations/20261013120000_report_schedules_pg201/migration.sql": "9d7ce0e75b618b2dc1890b2d99a26beca593d9134051c87a1f55eab074774a47",
+    "packages/db/prisma/schema.prisma": "0de496dc65aba105ed886cd23f44156bf04102836de972c930a4c967d9f257cf",
+    "packages/db/src/__tests__/report-schedules-migration.test.ts": "0898853d609420f72c9cdc9505d1b329d53eda1eeea4e123764db1e9dd26b067",
     "packages/db/src/index.ts": "962a882a21bca3c469d4c7354ef3fee8f47ab95ea5c45a21a9cd76e1cbad86ea",
     "packages/validators/src/__tests__/scheduled-reports.test.ts": "2ef95ac32997b490714e72d1e7f5de7ebb8c8f0146090fab96d259235220577e",
     "packages/validators/src/index.ts": "7ede05ed374d87329555d53e82a38d31c354db3e1cccdfd2aa4f36dc34d7fe57",
     "packages/validators/src/scheduled-reports.ts": "ae9b5c967075f9d9178feae76264f1839b393281f3decf2e9cb74b5bf2a32b28",
     "pnpm-lock.yaml": "eb14f78b1858bc35922069f68dbf805f1ce145b2effa307aba2e62a2b2a34e0e",
-    "tests/integration/report-schedules-migration.test.ts": "2c9b5f2b31de63fe2756d34d9f7146f668037bd47852154933c647f3ff09d875"
+    "tests/integration/report-schedules-migration.test.ts": "9d23617134ea8b39886ce67b0d4ae0334339789e6aa5fecd28563bf78a735aaa"
   },
   "validation_results": [
     {
       "name": "TypeScript",
-      "command": "pnpm exec turbo run typecheck --force --filter=web --filter=api --filter=validators --filter=db (17 tasks, 0 cached)",
+      "command": "pnpm run pre-ship @34dc3ae34: typecheck step (repo-wide); dddcf13f0: pre-commit hook turbo typecheck",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T06:50:28Z",
-      "duration_ms": 275000
+      "timestamp": "2026-10-13T14:33:44Z",
+      "duration_ms": 79000
     },
     {
       "name": "Tests",
-      "command": "pnpm --filter @intelliflow/{validators,db,api,web} test, one at a time (2571; 222+14 skipped; 7330+18 skipped; 12637)",
+      "command": "pnpm run pre-ship @34dc3ae34: unit-tests 37090 passed (full scope) + integration-tests 357 passed/61 skipped; dddcf13f0: router+schedule 118/118, data-copy integration 17/17 x2",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T07:13:54Z",
-      "duration_ms": 660000
+      "timestamp": "2026-10-13T14:33:44Z",
+      "duration_ms": 972300
     },
     {
       "name": "Lint",
-      "command": "pnpm exec eslint --max-warnings=0 .",
+      "command": "pnpm run pre-ship @34dc3ae34: lint + lint-promises; dddcf13f0: pre-commit eslint + sonar guard",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T06:57:19Z",
-      "duration_ms": 74000
+      "timestamp": "2026-10-13T14:33:44Z",
+      "duration_ms": 236200
     },
     {
       "name": "Build",
-      "command": "pnpm --filter @intelliflow/{validators,db,api,web} build",
+      "command": "pnpm run pre-ship @34dc3ae34: library-build + build",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T06:56:00Z",
-      "duration_ms": 321000
+      "timestamp": "2026-10-13T14:33:44Z",
+      "duration_ms": 504000
     }
   ],
   "gate_results": [
@@ -161,10 +161,11 @@
       "log_path": ".specify/sprints/sprint-18/attestations/PG-201/context_ack.json"
     },
     {
-      "gate_id": "gate-1-plan-checkboxes",
-      "passed": false,
+      "gate_id": "gate-1-plan-checkboxes: 87/87 lines checked (92/92 box occurrences; 77/77 list items, the audit's count); nothing deleted",
+      "passed": true,
+      "exit_code": 0,
       "log_path": ".specify/sprints/sprint-18/planning/PG-201-plan.md",
-      "score": 97.8
+      "score": 100
     },
     {
       "gate_id": "gate-2-artifact-hashes",
@@ -185,19 +186,13 @@
       "log_path": ".specify/sprints/sprint-18/context/PG-201/PG-201-hydrated-context.json"
     },
     {
-      "gate_id": "gate-3-build-validation",
+      "gate_id": "gate-3-build-validation (pre-ship @34dc3ae34)",
       "passed": true,
       "exit_code": 0,
-      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/matop/gates"
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/preship.log"
     },
     {
-      "gate_id": "gate-3a-validation-matrix",
-      "passed": true,
-      "exit_code": 0,
-      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/matop/gates"
-    },
-    {
-      "gate_id": "gate-3b-scoped-coverage",
+      "gate_id": "gate-3b-scoped-coverage (Quality STOA @f637e9dc4: S 97.82 B 90.53 F 98.42 L 98.73)",
       "passed": true,
       "exit_code": 0,
       "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/matop/gates/coverage",
@@ -210,49 +205,49 @@
       "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/gate-3c-knip.log"
     },
     {
-      "gate_id": "gate-4-stoa",
+      "gate_id": "gate-4-stoa: Foundation, Quality, Domain PASS; Security, Intelligence, Automation NEEDS_HUMAN (pre-existing repo items outside the PG-201 diff, tracked in #886; accepted by the owner's delegate) — not a plain pass",
       "passed": true,
       "exit_code": 0,
       "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/matop/stoa-verdicts"
     },
     {
-      "gate_id": "gate-12-nav-wiring",
+      "gate_id": "gate-12-nav-wiring (verified by hand, #877)",
       "passed": true,
       "exit_code": 0,
       "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/gate-check-nav-wiring.log"
     },
     {
-      "gate_id": "diff-coverage",
+      "gate_id": "diff-coverage 95.4% (900/943) vs origin/main, pre-ship @34dc3ae34",
       "passed": true,
       "exit_code": 0,
-      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/matop/gates",
-      "score": 95.5
+      "log_path": "artifacts/preship/logs/diff-coverage.log",
+      "score": 95.4
     },
     {
-      "gate_id": "data-copy-idempotency",
+      "gate_id": "data-copy-integration: 16/16 x2 on fresh migrate-deployed DB (13:32:42Z, 13:32:47Z) and 17/17 x2 after the reportId fix (14:35:19Z, 14:35:22Z)",
       "passed": true,
       "exit_code": 0,
-      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/matop/gates"
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/tdd-p1c-integration-run2.log"
     },
     {
-      "gate_id": "semantic-review",
+      "gate_id": "semantic-review: codex 0 findings @dddcf13f0 (14:44:59Z); Codex round 3 + adversarial review by the owner's delegate: no blockers, 0 surviving P0/P1",
       "passed": true,
       "exit_code": 0,
-      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/codex-review-final2.log"
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/codex-review-dddcf13.log"
     },
     {
-      "gate_id": "spec-consensus",
+      "gate_id": "spec-consensus 4/4 APPROVED (3/4 then 4/4 after the security-lead REJECT was fixed in 0b73fdd1e)",
       "passed": true,
       "exit_code": 0,
       "log_path": ".specify/sprints/sprint-18/context/PG-201/PG-201-consensus-vote.md"
     },
     {
-      "gate_id": "gate-4b-worktree-landed",
+      "gate_id": "gate-4b-worktree-landed (push follows this commit; pre-ship runs on this head first)",
       "passed": false,
       "log_path": "tools/scripts/exec-preflight/check-worktree-landed.mjs"
     },
     {
-      "gate_id": "gate-13-14-lighthouse",
+      "gate_id": "gate-13-14-lighthouse (NEEDS_HUMAN, no approver)",
       "passed": false,
       "log_path": "artifacts/lighthouse/PG-201/waiver-evidence.md"
     }
@@ -261,31 +256,31 @@
     {
       "kpi": "Statements coverage (files created by PG-201)",
       "target": ">=90%",
-      "actual": "97.82% (627/641)",
+      "actual": "97.82% (627/641) at f637e9dc4 (Quality STOA)",
       "met": true
     },
     {
       "kpi": "Branches coverage (files created by PG-201)",
       "target": ">=80%",
-      "actual": "90.53% (497/549)",
+      "actual": "90.53% (497/549) at f637e9dc4 (Quality STOA)",
       "met": true
     },
     {
       "kpi": "Functions coverage (files created by PG-201)",
       "target": ">=90%",
-      "actual": "98.42% (187/190)",
+      "actual": "98.42% (187/190) at f637e9dc4 (Quality STOA)",
       "met": true
     },
     {
       "kpi": "Lines coverage (files created by PG-201)",
       "target": ">=90%",
-      "actual": "98.73% (545/552)",
+      "actual": "98.73% (545/552) at f637e9dc4 (Quality STOA)",
       "met": true
     },
     {
       "kpi": "Diff coverage on changed lines",
       "target": ">=80%",
-      "actual": "95.5% (889/931) vs 47f1b5d84",
+      "actual": "95.4% (900/943) vs origin/main, pre-ship at 34dc3ae34",
       "met": true
     },
     {
@@ -353,7 +348,7 @@
     {
       "criterion": "One-time scheduledDelivery copy idempotent and loss-free as specified (runner ruling 3)",
       "met": true,
-      "evidence": "integration test 15/15 twice (Quality STOA 07:14Z); Reset to Defaults now keeps scheduledDelivery (94ebf1d66)"
+      "evidence": "integration test 16/16 x2 (13:32Z, fresh migrate-deployed DB) and 17/17 x2 (14:35Z); Reset to Defaults keeps scheduledDelivery with this code (94ebf1d66)"
     },
     {
       "criterion": "Excel only for legacy rows (AC-005)",
@@ -373,21 +368,36 @@
     {
       "criterion": "verified by: pnpm test",
       "met": true,
-      "evidence": "validators 2571, db 222, api 7330, web 12637 (Quality STOA)"
+      "evidence": "pre-ship @34dc3ae34: unit 37090 passed, integration 357 passed; router+schedule 118/118 @dddcf13f0"
+    },
+    {
+      "criterion": "Report definition visibility before delivering a reportId-only schedule (Codex round 2)",
+      "met": true,
+      "evidence": "2fdc36fd1; router tests RED 4 failed -> 116/116"
+    },
+    {
+      "criterion": "Template FK does not block tenant deletion (Codex round 2)",
+      "met": true,
+      "evidence": "34dc3ae34 ON DELETE NO ACTION; integration asserts confdeltype a; tenant delete cascades; referenced template delete refused"
+    },
+    {
+      "criterion": "A schedule moved to a template survives deletion of its former report definition (pre-ship Codex)",
+      "met": true,
+      "evidence": "dddcf13f0 clears reportId; router test + real-DB test"
     }
   ],
   "environment": {
     "os": "win32",
     "node_version": "v22.14.0",
-    "git_commit": "f637e9dc406c9d790edff2fa4cd9b07389fff3f0",
+    "git_commit": "dddcf13f0691a416a8f44f2cc9c94ef5d0a94ccb",
     "branch": "agent/PG-201-scheduled-reports"
   },
   "nav_wiring_confirmed": true,
-  "spec_session_consensus": "Rounds 1-2 lead-drafted; round 3 a 4-agent CHALLENGE with no vote. Real /spec-consensus vote run 2026-10-13 06:31-06:38Z on the final spec after /spec-exploration: round 1 3/4 APPROVED (security-lead REJECTED: activation via update not audited), fixed in 0b73fdd1e; round 2 security-lead APPROVED. 4/4 APPROVED (context/PG-201/PG-201-consensus-vote.md).",
+  "spec_session_consensus": "Rounds 1-2 were lead-drafted; Round 3 was a 4-agent CHALLENGE (data-engineer, security-lead, frontend-lead+a11y, test-engineer) with no vote. /spec-exploration then ran with 4 Explore sub-agents (06:09-06:13Z), and the /spec-consensus vote went 3/4 APPROVED (security-lead REJECTED: activation via update not audited), then 4/4 APPROVED after the fix in 0b73fdd1e (06:31-06:38Z). Record: context/PG-201/PG-201-consensus-vote.md.",
   "plan_reviewer_verdict": "APPROVED",
   "plan_reviewer_agent": "plan-reviewer subagent a743437319653afc7 (3 rounds: REVISE, REVISE, APPROVE)",
   "plan_reviewer_marker": "plan-reviewer: subagent",
   "spec_path": ".specify/sprints/sprint-18/specifications/PG-201-spec.md",
   "plan_path": ".specify/sprints/sprint-18/planning/PG-201-plan.md",
-  "notes": "VERDICT NEEDS_HUMAN. Open items: (1) Lighthouse KPI met:false: only Path A ran, and it scored the error page because the build has no Supabase public env; an authenticated run needs a non-production Supabase. No waiver approver is recorded; the owner decides. (2) Gate 4b: the runner renames, runs pre-ship and pushes. (3) STOA sub-agents (real, 06:45-07:44Z): Foundation PASS, Quality PASS, Domain PASS, Security NEEDS_HUMAN, Intelligence NEEDS_HUMAN, Automation NEEDS_HUMAN. The three NEEDS_HUMAN are pre-existing repo items outside the PG-201 diff, each with evidence: Security (1092 historical gitleaks hits, none in the branch range, CI scoped by #639; sprintf-js moderate #876; 3 ignored GHSAs), Intelligence (test:chains broken on vitest 4 #879; no ollama on the host), Automation (validate:sprint0 script missing, sync:metrics has no check mode). Filed as GitHub #886. (4) Plan checkboxes 90/92 at attestation time: the open 2 are this attestation and the final commit/READY step, which come after it.\n!!! PRODUCTION DATA WRITE: migration packages/db/prisma/migrations/20261013120000_report_schedules_pg201/migration.sql alters report_schedules and report_executions (additive) and copies every enabled or recipient-bearing report_settings.scheduledDelivery into one INACTIVE report_schedules row per tenant (id rs-migrated-<tenantId>). Idempotent, tenant-scoped, guarded casts, never writes report_settings; Reset to Defaults now keeps that JSON too. It must run as the table owner or a BYPASSRLS role (RLS on report_settings), checked with the ADR-075 post-apply query. Manual apply by the owner before the code ships.\nNavigation: sidebar apps/web/src/components/sidebar/configs/analytics.ts line 22, AnalyticsSettingsPanel.tsx line 28, Report Settings link card. check-nav-wiring.mjs skips route-group pages (#877), so verified by hand.\nSkills run in this session: /hydrate-context (library, shell routed through Git Bash: 2 deps, 20 patterns) and agent selection (library), /spec-exploration (4 Explore sub-agents), /spec-consensus (above), /exec-metrics (session start 06:07:56Z, end recorded in task-tracking.json), MATOP with six real STOA sub-agents, compliance-check. Product P2s fixed TDD with observed RED (logs/tdd-p2.log): reset keeps scheduledDelivery (94ebf1d66), Excel legacy-only + next run on read + setActive audit + heading (a5f06b1c9), update-path audit (0b73fdd1e). Semantic review on the final diff: Claude fallback, 0 findings (Codex exit 2, no output); Codex itself passed at a1c969334.\nCorrections: earlier attestation and spec claimed agent approval that had not been voted, hand-written STOA verdicts and gate results, 100% plan checkboxes with 15 inline boxes open, and hand-typed timestamps; all replaced (f637e9dc4 timestamps, consensus file, matop/stoa-verdicts from sub-agents, handwritten verdicts kept in matop/handwritten-superseded).\nFollow-ups: recipient allowlist #869; shared-token contrast #871; Codex P1 copied recipient arrays ruled P2 (findings.md); TagsTab inline aria-invalid; non-admin readers see recipient addresses (Security STOA info, owner question); ReportSchedule.isActive takes effect with IFC-308."
+  "notes": "VERDICT NEEDS_HUMAN. Open: (1) Lighthouse KPI met:false (Path A scored the error page; an authenticated run needs a non-production Supabase); no waiver approver is recorded. (2) Gate 4b: the push follows this commit, after pre-ship on this head. (3) STOA (sub-agents at f637e9dc4): Foundation PASS, Quality PASS, Domain PASS, Security NEEDS_HUMAN, Intelligence NEEDS_HUMAN, Automation NEEDS_HUMAN. The three NEEDS_HUMAN are pre-existing repo items outside the PG-201 diff, tracked in #886 (with #876, #879, #639), accepted by the owner's delegate; not a plain pass.\n!!! PRODUCTION DATA WRITE — CLASS B: migration packages/db/prisma/migrations/20261013120000_report_schedules_pg201/migration.sql is additive DDL plus a one-time copy of every enabled or recipient-bearing report_settings.scheduledDelivery into one INACTIVE report_schedules row per tenant (id rs-migrated-<tenantId>): idempotent, tenant-scoped, never writes report_settings. Prod apply waits for the owner: run it as the table owner or a BYPASSRLS role, then the ADR-075 post-apply check.\nKnown P2s: malformed legacy recipient arrays are copied as-is into the (inactive) rows, activation re-validates them; the API running in production before promotion still clears scheduledDelivery on Reset, so apply the migration before any production use; /analytics/scheduled-reports errors until the API is promoted.\nChanges since the previous attestation: 2fdc36fd1 report-definition visibility (isPublic or createdBy) before activating or changing delivery of a reportId-only schedule; 34dc3ae34 template FK ON DELETE NO ACTION (was RESTRICT), Prisma onDelete NoAction; dddcf13f0 reportId cleared when a template is assigned (reportId is ON DELETE CASCADE). Each RED then GREEN (logs/tdd-p2.log).\nEvidence used here: pre-ship @34dc3ae34 (13:41:51Z-14:33:44Z, 31/34 PASS, the one FAIL fixed in dddcf13f0); integration 16/16 x2 at 13:32:42Z/13:32:47Z and 17/17 x2 at 14:35:19Z/14:35:22Z (earlier integration runs are superseded and not cited); codex 0 findings at dddcf13f0 (14:44:59Z); Codex round 3 and the adversarial review (owner's delegate) found no blockers. Plan: 87/87 lines, 92/92 boxes, 77/77 list items; the earlier 90/92 counted box occurrences, nothing was deleted.\nNavigation: sidebar apps/web/src/components/sidebar/configs/analytics.ts line 22, AnalyticsSettingsPanel.tsx line 28, Report Settings link card (verified by hand, #877).\nFollow-ups: #869 recipient allowlist; #871 shared-token contrast; TagsTab inline aria-invalid; non-admin readers see recipient addresses (owner question); ReportSchedule.isActive takes effect with IFC-308."
 }

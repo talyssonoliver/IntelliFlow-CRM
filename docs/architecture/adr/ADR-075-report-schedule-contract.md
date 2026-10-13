@@ -106,9 +106,12 @@ worker owns BullMQ).
 - Negative: until IFC-308 ships, `isActive` has no runtime effect. The page says
   so.
 - Negative: deleting a PG-200 template that a schedule uses is now refused.
-- Risk: the copy in the migration is a production data write; the owner applies
-  the migration manually. Report Settings' Reset to Defaults keeps the legacy
-  `scheduledDelivery`, so a reset before the apply loses nothing.
+- Risk: the copy in the migration is a production data write (Class B under
+  ADR-069: one owner escalation before the production apply); the owner applies
+  the migration manually. With this code, Report Settings' Reset to Defaults
+  keeps the legacy `scheduledDelivery`; the API running in production before it
+  is promoted still clears it on Reset, so apply the migration before the page
+  is used in production.
 - Risk: `report_settings` has RLS (not FORCEd). The copy reads it, so it only
   sees rows when `prisma migrate deploy` runs as the table owner or a BYPASSRLS
   role; under any other role it silently inserts nothing. Check after applying,

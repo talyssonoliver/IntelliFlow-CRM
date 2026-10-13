@@ -69,7 +69,7 @@
     },
     "diff_coverage": {
       "target": 80,
-      "actual": 95.5,
+      "actual": 95.4,
       "met": true,
       "unit": "percent"
     },
@@ -129,6 +129,11 @@
       "at": "2026-10-13T07:57:00.288Z",
       "note": "Remediation session end (exec-metrics): skills re-run (hydrate-context, spec-exploration, spec-consensus 4/4 APPROVED, real STOA sub-agents), P2s fixed, timestamps corrected. Attestation NEEDS_HUMAN.",
       "status": "Needs Human"
+    },
+    {
+      "at": "2026-10-13T14:57:51.543Z",
+      "note": "Codex round-2 fixes (2fdc36fd1 report-definition visibility, 34dc3ae34 FK NO ACTION) and pre-ship Codex fix (dddcf13f0 reportId cleared) attested; Codex round 3 + adversarial review passed (owner's delegate). Still NEEDS_HUMAN for Lighthouse.",
+      "status": "Needs Human"
     }
   ],
   "stream": null,
@@ -136,36 +141,36 @@
   "validations": [
     {
       "name": "TypeScript",
-      "command": "pnpm exec turbo run typecheck --force --filter=web --filter=api --filter=validators --filter=db (17 tasks, 0 cached)",
+      "command": "pnpm run pre-ship @34dc3ae34: typecheck step (repo-wide); dddcf13f0: pre-commit hook turbo typecheck",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2026-10-13T06:50:28Z",
-      "duration_ms": 275000
+      "executed_at": "2026-10-13T14:33:44Z",
+      "duration_ms": 79000
     },
     {
       "name": "Tests",
-      "command": "pnpm --filter @intelliflow/{validators,db,api,web} test, one at a time (2571; 222+14 skipped; 7330+18 skipped; 12637)",
+      "command": "pnpm run pre-ship @34dc3ae34: unit-tests 37090 passed (full scope) + integration-tests 357 passed/61 skipped; dddcf13f0: router+schedule 118/118, data-copy integration 17/17 x2",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2026-10-13T07:13:54Z",
-      "duration_ms": 660000
+      "executed_at": "2026-10-13T14:33:44Z",
+      "duration_ms": 972300
     },
     {
       "name": "Lint",
-      "command": "pnpm exec eslint --max-warnings=0 .",
+      "command": "pnpm run pre-ship @34dc3ae34: lint + lint-promises; dddcf13f0: pre-commit eslint + sonar guard",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2026-10-13T06:57:19Z",
-      "duration_ms": 74000
+      "executed_at": "2026-10-13T14:33:44Z",
+      "duration_ms": 236200
     },
     {
       "name": "Build",
-      "command": "pnpm --filter @intelliflow/{validators,db,api,web} build",
+      "command": "pnpm run pre-ship @34dc3ae34: library-build + build",
       "passed": true,
       "exit_code": 0,
-      "executed_at": "2026-10-13T06:56:00Z",
-      "duration_ms": 321000
+      "executed_at": "2026-10-13T14:33:44Z",
+      "duration_ms": 504000
     }
   ],
-  "updated_at": "2026-10-13T07:57:00.288Z"
+  "updated_at": "2026-10-13T14:57:51.543Z"
 }

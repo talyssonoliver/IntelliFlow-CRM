@@ -22,8 +22,10 @@
 -- (deterministic id + NOT EXISTS + ON CONFLICT DO NOTHING), tenant-scoped (each row
 -- takes the tenantId of its own report_settings row), never UPDATEs or DELETEs
 -- report_settings, and lands every copied row INACTIVE (the legacy setting had no
--- template, and an active schedule must reference one). The production apply is
--- manual and needs the owner.
+-- template, and an active schedule must reference one). Because of this copy the
+-- migration as a whole is CLASS B (a backfill): prepared autonomously, one owner
+-- escalation before the production apply. The apply is manual, as the table owner or a
+-- BYPASSRLS role (report_settings has RLS), followed by ADR-075's post-apply check.
 --
 -- Recovery plan: forward-only. Copied rows are inactive and can be deleted by the
 -- owner from the UI. A down-migration (DROP TABLE / DROP COLUMN) is Class C,
