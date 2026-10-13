@@ -10,6 +10,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 let lastConfig: unknown;
+let pinoLoaded = false;
+
+// Loading pino before its OTel instrumentation is registered leaves every
+// logger created from that copy unpatched, so this module must never pull it in.
+vi.mock('pino', () => {
+  pinoLoaded = true;
+  return { default: () => ({}) };
+});
 
 vi.mock('@opentelemetry/auto-instrumentations-node', () => ({
   getNodeAutoInstrumentations: (config: unknown) => {
@@ -21,6 +29,7 @@ vi.mock('@opentelemetry/auto-instrumentations-node', () => ({
 describe('getStandardNodeInstrumentations', () => {
   beforeEach(() => {
     lastConfig = undefined;
+    pinoLoaded = false;
   });
 
   it('returns whatever getNodeAutoInstrumentations produces', async () => {
@@ -51,5 +60,13 @@ describe('getStandardNodeInstrumentations', () => {
 
     const config = lastConfig as Record<string, { disableLogSending?: boolean } | undefined>;
     expect(config['@opentelemetry/instrumentation-pino']?.disableLogSending).toBe(false);
+  });
+
+  it('does not load pino when imported', async () => {
+    vi.resetModules();
+
+    await import('./node-instrumentations');
+
+    expect(pinoLoaded).toBe(false);
   });
 });

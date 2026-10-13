@@ -13,6 +13,11 @@
  * (trace_id/span_id/trace_flags) is left at its default too: it composes with
  * an existing pino `mixin` option (this package's own `logging.ts` mixin, or
  * a caller's) instead of overwriting it, so the two cannot conflict.
+ *
+ * Import this via the `@intelliflow/observability/node-instrumentations`
+ * subpath, NOT the package root: the root barrel loads logging.ts (and so
+ * `pino`) eagerly, which would load pino before the pino instrumentation is
+ * registered and leave the shared loggers unpatched.
  */
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 

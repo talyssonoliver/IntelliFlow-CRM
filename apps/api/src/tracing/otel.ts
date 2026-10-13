@@ -26,7 +26,7 @@
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getStandardNodeInstrumentations } from '@intelliflow/observability';
+import { getStandardNodeInstrumentations } from '@intelliflow/observability/node-instrumentations';
 import { installQueryBudgetOtelEmitter } from './query-budget-otel';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {

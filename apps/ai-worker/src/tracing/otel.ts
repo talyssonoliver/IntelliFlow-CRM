@@ -17,7 +17,7 @@
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getStandardNodeInstrumentations } from '@intelliflow/observability';
+import { getStandardNodeInstrumentations } from '@intelliflow/observability/node-instrumentations';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
