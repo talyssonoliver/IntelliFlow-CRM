@@ -171,7 +171,7 @@ Legend:
 | `/agent-approvals/ai-review/[id]`    | --  | --  |   --   | IP  |     OK      | From review list                            |
 | `/agent-approvals/ai-search`         | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |
 | `/agent-approvals/ai-settings`       | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
-| `/agent-approvals/approval-policies` | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
+| `/agent-approvals/approval-policies` | --  | --  |   SB   | IP  |     YES     | Sidebar + AI settings panel (PG-198)        |
 | `/agent-approvals/churn-risk`        | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
 | `/agent-approvals/drift`             | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
 | `/agent-approvals/experiments`       | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |

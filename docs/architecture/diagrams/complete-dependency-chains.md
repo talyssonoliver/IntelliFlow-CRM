@@ -1300,6 +1300,19 @@ Dependency Chain:
   IFC-021 (Agents) ✅ ──┬──► IFC-139 (Tools Auth) ✅ ──► IFC-149 (Approval) ✅ ──► agent.router ✅ ──► UI ⬜
                         ├──► IFC-148 (Memory) ✅ ────────────────────────────────────────────────────┘
                         └──► IFC-125 (Guardrails) ✅ ──► IFC-128 (Review) ⏳ ────────────────────────┘
+
+PG-198 (Approval Policies, ADR-077) — extends IFC-149 and IFC-029:
+  domain ai/approval-policy (constants, resolver, predicates)
+    ──► validators approval-policies.ts
+    ──► db migrations 20261013120000_approval_policies (2 tables, CHECKs, RLS; agent_actions
+          escalatedAt/escalatedTo, confidenceScore nullable)
+          + 20261013120100_agent_actions_pending_sweep_idx (CONCURRENTLY)
+    ──► api approval-policy-loader + approved-action-executor + approval-escalation-sweep/scheduler
+          ──► agent.router (expiry, min role, auto-approve, real execution)
+          ──► autoResponse.router (expiry, min role, auto-approve, session actor)
+    ──► api modules/agent/approval-policies.router.ts (approvalPolicies.*)
+    ──► web /agent-approvals/approval-policies (ApprovalPoliciesContent)
+          + /agent-approvals/preview (real confidence, Escalated badge)
 ```
 
 ---

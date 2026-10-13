@@ -1215,7 +1215,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 14: AI & Automation (14 routes)
+## Section 14: AI & Automation (15 routes)
 
 ### Agent Approvals Hub (`/agent-approvals`)
 
@@ -1291,6 +1291,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                    |
 | **RACI**       | R: AI Team / A: Product / C: Frontend / I: QA                  |
 | **Components** | "use client", AISearchPage, Skeleton, Suspense, useRequireAuth |
+
+### Approval Policies (`/agent-approvals/approval-policies`)
+
+| Field          | Value                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-198                                                                                              |
+| **File Path**  | `apps/web/src/app/agent-approvals/approval-policies/page.tsx`                                       |
+| **Layout**     | `apps/web/src/app/agent-approvals/layout.tsx`                                                       |
+| **API Router** | `apps/api/src/modules/agent/approval-policies.router.ts` (`approvalPolicies.*`), `ticket.assignees` |
+| **E2E Test**   | None                                                                                                |
+| **Unit Tests** | `apps/web/src/app/agent-approvals/approval-policies/__tests__/`, `.../components/__tests__/`        |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                     |
+| **Status**     | Implemented                                                                                         |
+| **RACI**       | R: Frontend / A: Product / C: AI Team, Backend / I: QA                                              |
+| **Components** | Route shell, ApprovalPoliciesContent, PolicyCard, PolicyDialog, AssignmentsEditor, EffectiveRules   |
 
 ### Churn Risk (`/agent-approvals/churn-risk`)
 

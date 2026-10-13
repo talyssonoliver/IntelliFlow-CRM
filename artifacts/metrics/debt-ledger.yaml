@@ -4502,6 +4502,123 @@ items:
       AUTOMATION-003 set to tier:B (mirrors sibling AUTOMATION-001/002) with
       debt_allowed:yes + waiver_expiry 2026-08-31. No gate/owner/evidence values
       fabricated. gh issue #574.
+  PG-198-RF1-APPROVED-ACTIONS-NEVER-EXECUTED:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: high
+    description: >-
+      Approved agent actions were never executed: approveAction returned a canned success with a fake entityId (gh #853).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fixed on the PG-198 branch: atomic claim then the real mutation through the target module tRPC procedure; failures stored as executionError.
+    status: resolved
+    notes: 'Resolved by PG-198 commits 5a900fadb, 3a4eb51f0 (and later hardening up to d9be943b7). Close #853 on merge.'
+  PG-198-RF2-CONFIDENCE-DERIVED-FROM-IMPACT:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: high
+    description: >-
+      Agent action confidence was derived from estimated impact, not reported by a model (gh #854).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fixed on the PG-198 branch: confidence is caller-supplied or NULL; legacy rows without the source marker read as none; the preview shows a dash.
+    status: resolved
+    notes: 'Resolved by PG-198 commits 5a900fadb, c058ffcdf, a1363f6d6 (0% shown as 0%). Close #854 on merge.'
+  PG-198-RF3-AUTORESPONSE-CLIENT-ACTOR:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: high
+    description: >-
+      autoResponse approve/reject/escalate trusted a client-supplied actor id (gh #855).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fixed on the PG-198 branch: sessionActor() takes the actor from the session and refuses a different one.
+    status: resolved
+    notes: 'Resolved by PG-198 commit 954042ccc. Close #855 on merge.'
+  PG-198-RF4-SIMULATED-ROLLBACK:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: medium
+    description: >-
+      Agent tool rollbacks are simulated (log only); no real compensating actions (gh #856).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Implement per-tool compensating actions, then re-enable rollback tokens. PG-198 stops issuing rollback tokens (rollbackAvailable false) until then.
+    status: open
+    notes: 'Tracked, not fixed in PG-198 (spec RF-4). gh #856.'
+  PG-198-A11-FIND-PENDING-IGNORES-APPROVER:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: medium
+    description: >-
+      PrismaAutoResponseDraftRepository.findPendingForApprover ignores approverId, so every approver sees every pending draft (gh #857).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Filter by approverId (or by policy reviewer role) in the repository query; add a repository test.
+    status: open
+    notes: 'Pre-existing (IFC-029); spec A11. gh #857.'
+  PG-198-STATS-CLIENT-TENANT:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: high
+    description: >-
+      autoResponse.getStatsByStatus preferred a client-supplied tenantId over the session tenant (cross-tenant counts) (gh #870).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fixed on the PG-198 branch: only the session tenant is used; a different client tenantId is FORBIDDEN.
+    status: resolved
+    notes: 'Resolved by PG-198 commit a1363f6d6. Close #870 on merge.'
+  PG-198-CASES-ASSIGNEE-CTX-USER-ID:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: medium
+    description: >-
+      cases.create defaults assignee from ctx.user.id, which does not exist on UserSession, so creating a case without an assignee always fails (gh #872).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Use ctx.user.userId; add a router test for the default assignee.
+    status: open
+    notes: 'Found during PG-198 executor work; out of scope. gh #872.'
+  PG-198-DRAFT-OPTIMISTIC-LOCK:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: high
+    description: >-
+      Auto-response draft optimistic lock never engages: no aggregate mutation increments version, so concurrent saves overwrite each other (gh #874).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Increment version on every aggregate mutation and match the stored version in save(); PG-198 added a guarded saveEscalation for the sweep only.
+    status: open
+    notes: 'Partially mitigated for the sweep by PG-198 commit 712bf1f7a; general save() still unguarded. gh #874.'
+  PG-198-C10-ACTION-STORE-ID-ONLY:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: medium
+    description: >-
+      PrismaAgentActionStore get/update/delete query by id without tenantId; guarded on the tRPC path by requireTenantOwnedAction only (gh #883).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add a tenantId parameter and use findFirst/updateMany/deleteMany with id+tenantId; thread context.tenantId from ApprovalWorkflowService.
+    status: open
+    notes: 'Pre-existing IFC-139 design; PG-198 spec As-built C10, accepted by consensus on condition of this issue. gh #883.'
 summary:
   total_items: 419
   by_severity:

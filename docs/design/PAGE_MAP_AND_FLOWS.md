@@ -306,7 +306,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/agent-approvals/ai-review/[id]`    | Review Detail       | IFC-181         |
 | `/agent-approvals/ai-search`         | AI Search (RAG)     | PG-144          |
 | `/agent-approvals/ai-settings`       | AI Settings         | —               |
-| `/agent-approvals/approval-policies` | Approval Policies   | —               |
+| `/agent-approvals/approval-policies` | Approval Policies   | PG-198          |
 | `/agent-approvals/churn-risk`        | Churn Risk          | PG-143          |
 | `/agent-approvals/drift`             | Drift Detection     | PG-146          |
 | `/agent-approvals/experiments`       | Experiments         | PG-149          |
