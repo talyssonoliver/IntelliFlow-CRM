@@ -147,6 +147,11 @@ describe('createApprovalPolicySchema', () => {
       { escalationTargetUserId: 'not-an-id' },
       'escalationTargetUserId',
     ],
+    [
+      'a stored delay at or above the timeout while escalation is off',
+      { escalationEnabled: false, escalateAfterMinutes: 60 },
+      'escalateAfterMinutes',
+    ],
   ])('rejects %s', (_label, patch, field) => {
     const found = issues({ ...agentPolicy, ...patch });
     expect(found.some((i) => i.path[0] === field)).toBe(true);

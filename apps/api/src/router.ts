@@ -37,6 +37,7 @@ import { appointmentSettingsRouter } from './modules/legal/appointment-settings.
 import { reportSettingsRouter } from './modules/analytics/report-settings.router';
 import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
+import { approvalPoliciesRouter } from './modules/agent/approval-policies.router'; // PG-198
 import { conversationRouter } from './modules/agent/conversation.router';
 import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
@@ -165,6 +166,7 @@ export const appRouter = createTRPCRouter({
 
   // AI & Automation
   agent: agentRouter,
+  approvalPolicies: approvalPoliciesRouter, // PG-198: Approval Policies
   conversation: conversationRouter, // IFC-148: Conversation records, messages, tool calls
   chainVersion: chainVersionRouter,
   zepBudget: zepBudgetRouter,

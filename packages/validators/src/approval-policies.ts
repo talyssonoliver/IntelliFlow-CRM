@@ -130,6 +130,14 @@ function refineRules(data: ApprovalPolicyFields, ctx: z.RefinementCtx): void {
       path: ['autoApproveMinConfidence'],
     });
   }
+  // Any stored delay must sit below the timeout (DB CHECK), even while escalation is off.
+  if (data.escalateAfterMinutes !== null && data.escalateAfterMinutes >= data.timeoutMinutes) {
+    ctx.addIssue({
+      code: 'custom',
+      message: 'Escalate before the approval times out',
+      path: ['escalateAfterMinutes'],
+    });
+  }
   if (!data.escalationEnabled) return;
   if (data.escalationTargetUserId === null) {
     ctx.addIssue({
@@ -142,12 +150,6 @@ function refineRules(data: ApprovalPolicyFields, ctx: z.RefinementCtx): void {
     ctx.addIssue({
       code: 'custom',
       message: 'Set how long to wait before escalating',
-      path: ['escalateAfterMinutes'],
-    });
-  } else if (data.escalateAfterMinutes >= data.timeoutMinutes) {
-    ctx.addIssue({
-      code: 'custom',
-      message: 'Escalate before the approval times out',
       path: ['escalateAfterMinutes'],
     });
   }
