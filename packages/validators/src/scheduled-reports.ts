@@ -12,6 +12,11 @@ export type ScheduleCadence = z.infer<typeof scheduleCadenceSchema>;
 export const scheduleDeliveryFormatSchema = z.enum(['pdf', 'csv', 'email_body', 'excel']);
 export type ScheduleDeliveryFormat = z.infer<typeof scheduleDeliveryFormatSchema>;
 
+// What a new schedule may choose (AC-005): Excel is legacy-only. An existing Excel row
+// keeps it on update; the router rejects switching any other row to Excel.
+export const newScheduleDeliveryFormatSchema = scheduleDeliveryFormatSchema.exclude(['excel']);
+export type NewScheduleDeliveryFormat = z.infer<typeof newScheduleDeliveryFormatSchema>;
+
 // Same 18-token palette as account tags/territories/tiers (DB CHECK mirrors it).
 export const REPORT_SCHEDULE_COLOR_TOKENS = ACCOUNT_TAG_COLOR_TOKENS;
 export const reportScheduleColorTokenSchema = z.enum(REPORT_SCHEDULE_COLOR_TOKENS);
@@ -151,7 +156,7 @@ export const createScheduledReportSchema = z
     cronExpression: cronExpressionSchema.optional(),
     timezone: ianaTimezoneSchema,
     recipients: recipientsSchema,
-    format: scheduleDeliveryFormatSchema,
+    format: newScheduleDeliveryFormatSchema,
     colorToken: reportScheduleColorTokenSchema.optional(),
     tags: tagNamesSchema.optional(),
     isActive: z.boolean().optional(),

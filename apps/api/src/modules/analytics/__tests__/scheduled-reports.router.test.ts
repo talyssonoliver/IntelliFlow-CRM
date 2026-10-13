@@ -9,6 +9,8 @@
  * - tags sub-router (rename/delete rewrite schedule tag arrays in one transaction)
  */
 
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { scheduledReportsRouter } from '../scheduled-reports.router';
@@ -720,9 +722,57 @@ describe('scheduledReportsRouter (PG-201)', () => {
       expect(prismaMock.reportTemplate.findFirst).not.toHaveBeenCalled();
     });
 
-    it('returns NOT_FOUND for a foreign-tenant id', async () => {
+    it('returns NOT_FOUND for a foreign-tenant id without writing', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(null);
       await expectCode(admin.setActive({ id: FOREIGN_ID, isActive: false }), 'NOT_FOUND');
+      expect(prismaMock.reportSchedule.findFirst).toHaveBeenCalledWith({
+        where: { id: FOREIGN_ID, tenantId },
+      });
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
+      expect(logAction).not.toHaveBeenCalled();
+    });
+
+    it('audits activation and pausing without recipient addresses', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ isActive: false, nextRunAt: null })
+      );
+      visibleTemplate();
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.setActive({ id: SCHEDULE_ID, isActive: true });
+      expect(logAction).toHaveBeenCalledWith(
+        'UPDATE',
+        'report_schedule',
+        SCHEDULE_ID,
+        tenantId,
+        expect.objectContaining({
+          actorId: adminId,
+          afterState: { recipientCount: 1, format: 'pdf', isActive: true },
+        })
+      );
+      expect(JSON.stringify(logAction.mock.calls)).not.toContain('lead@example.invalid');
+
+      logAction.mockClear();
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.setActive({ id: SCHEDULE_ID, isActive: false });
+      expect(logAction).toHaveBeenCalledWith(
+        'UPDATE',
+        'report_schedule',
+        SCHEDULE_ID,
+        tenantId,
+        expect.objectContaining({ afterState: expect.objectContaining({ isActive: false }) })
+      );
+    });
+
+    it('does not audit a call that leaves the state unchanged', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ isActive: false, nextRunAt: null })
+      );
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.setActive({ id: SCHEDULE_ID, isActive: false });
+      expect(logAction).not.toHaveBeenCalled();
     });
 
     it('is FORBIDDEN for a regular user', async () => {
@@ -914,6 +964,119 @@ describe('scheduledReportsRouter (PG-201)', () => {
       await expectCode(user.tags.create({ name: 'x' }), 'FORBIDDEN');
       await expectCode(user.tags.update({ id: 'tag-1', name: 'x' }), 'FORBIDDEN');
       await expectCode(user.tags.delete({ id: 'tag-1' }), 'FORBIDDEN');
+    });
+  });
+
+  // ─── review fixes (spec-exploration 2026-10-13) ──────────────────────────
+
+  describe('next run shown by list', () => {
+    it('is computed from cron + timezone, not a stale stored value', async () => {
+      vi.setSystemTime(new Date('2026-11-04T12:00:00Z'));
+      (prismaMock.reportSchedule.findMany as any).mockResolvedValueOnce([scheduleRow()]);
+      const [view] = await admin.list();
+      expect(view.nextRunAt).toEqual(new Date('2026-11-09T09:00:00Z'));
+    });
+  });
+
+  describe('Excel is for legacy rows only (AC-005)', () => {
+    it('rejects switching a non-Excel schedule to Excel', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      await expectCode(admin.update({ id: SCHEDULE_ID, format: 'excel' }), 'BAD_REQUEST');
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
+    });
+
+    it('lets a legacy Excel schedule keep its format while other fields change', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ format: 'excel' })
+      );
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) =>
+        scheduleRow({ format: 'excel', ...data })
+      );
+      const view = await admin.update({ id: SCHEDULE_ID, name: 'Renamed', format: 'excel' });
+      expect(view.format).toBe('excel');
+    });
+
+    it('rejects Excel on create at the input boundary', async () => {
+      await expectCode(admin.create({ ...createInput, format: 'excel' as never }), 'BAD_REQUEST');
+      expect(prismaMock.reportSchedule.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('update keeps its own name', () => {
+    it('saving the unchanged name is not a conflict', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      const view = await admin.update({ id: SCHEDULE_ID, name: 'Weekly pipeline' });
+      expect(view.name).toBe('Weekly pipeline');
+    });
+  });
+
+  describe('AC-009: every destructive write runs inside $transaction', () => {
+    let txDepth = 0;
+    const inTx: Record<string, boolean[]> = {};
+
+    function track(name: string, mockFn: any, result: (args: any) => unknown): void {
+      inTx[name] = [];
+      mockFn.mockImplementation(async (args: any) => {
+        inTx[name].push(txDepth > 0);
+        return result(args);
+      });
+    }
+
+    beforeEach(() => {
+      txDepth = 0;
+      (prismaMock.$transaction as any).mockImplementation(async (fn: any) => {
+        txDepth += 1;
+        try {
+          return await fn(prismaMock);
+        } finally {
+          txDepth -= 1;
+        }
+      });
+    });
+
+    it('create, update, setActive and delete write only inside the transaction', async () => {
+      visibleTemplate();
+      (prismaMock.reportSchedule.count as any).mockResolvedValue(0);
+      track('create', prismaMock.reportSchedule.create, ({ data }) => scheduleRow(data));
+      await admin.create(createInput);
+
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValue(scheduleRow());
+      track('update', prismaMock.reportSchedule.update, ({ data }) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, name: 'Renamed' });
+      await admin.setActive({ id: SCHEDULE_ID, isActive: false });
+
+      track('deleteMany', prismaMock.reportSchedule.deleteMany, () => ({ count: 1 }));
+      await admin.delete({ id: SCHEDULE_ID });
+
+      expect(inTx.create).toEqual([true]);
+      expect(inTx.update).toEqual([true, true]);
+      expect(inTx.deleteMany).toEqual([true]);
+    });
+
+    it('tag rename and tag delete rewrite schedules inside the transaction', async () => {
+      (prismaMock.reportScheduleTag.findFirst as any).mockResolvedValue(tagRow());
+      (prismaMock.reportSchedule.findMany as any).mockResolvedValue([
+        { id: SCHEDULE_ID, tags: ['Finance'] },
+      ]);
+      track('tagUpdate', prismaMock.reportScheduleTag.update, ({ data }) => tagRow(data));
+      track('scheduleUpdate', prismaMock.reportSchedule.update, () => scheduleRow());
+      track('tagDelete', prismaMock.reportScheduleTag.delete, () => tagRow());
+
+      await admin.tags.update({ id: 'tag-1', name: 'Revenue' });
+      await admin.tags.delete({ id: 'tag-1' });
+
+      expect(inTx.tagUpdate).toEqual([true]);
+      expect(inTx.scheduleUpdate).toEqual([true, true]);
+      expect(inTx.tagDelete).toEqual([true]);
+    });
+
+    it('never uses createMany skipDuplicates (playbook §5)', () => {
+      const source = readFileSync(join(__dirname, '..', 'scheduled-reports.router.ts'), 'utf8');
+      expect(source).not.toMatch(/skipDuplicates/);
+      expect(source).not.toMatch(/createMany/);
     });
   });
 });

@@ -193,7 +193,7 @@ describe('isTemplateVisible', () => {
 
 describe('normalizeScheduleRow', () => {
   it('maps a row to the view contract', () => {
-    const view = normalizeScheduleRow(row(), 'user-1');
+    const view = normalizeScheduleRow(row(), 'user-1', FROM);
     expect(view).toEqual({
       id: 'sched-1',
       name: 'Weekly pipeline',
@@ -256,5 +256,40 @@ describe('normalizeScheduleRow', () => {
       'user-1'
     );
     expect(view.recipients).toEqual(['a@example.invalid']);
+  });
+
+  describe('next run on read (nothing advances the stored value before IFC-308)', () => {
+    const LATER = new Date('2026-11-04T12:00:00Z'); // Wednesday, after the stored 2026-10-19 run
+
+    it('computes the next occurrence from cron + timezone instead of a stale stored value', () => {
+      const view = normalizeScheduleRow(row(), 'user-1', LATER);
+      // Monday 2026-11-09 09:00 Europe/London (GMT) = 09:00Z
+      expect(view.nextRunAt).toEqual(new Date('2026-11-09T09:00:00Z'));
+    });
+
+    it('never shows a past time for an active row', () => {
+      const view = normalizeScheduleRow(
+        row({ cronExpression: '30 7 1 * *', frequency: 'monthly', timezone: 'America/New_York' }),
+        'user-1',
+        LATER
+      );
+      expect(view.nextRunAt!.getTime()).toBeGreaterThan(LATER.getTime());
+      expect(view.nextRunAt).toEqual(new Date('2026-12-01T12:30:00Z'));
+    });
+
+    it('shows no next run for a paused row, whatever is stored', () => {
+      const view = normalizeScheduleRow(row({ isActive: false }), 'user-1', FROM);
+      expect(view.nextRunAt).toBeNull();
+    });
+
+    it('falls back to a future stored value when the cron cannot be read', () => {
+      const view = normalizeScheduleRow(row({ cronExpression: 'not a cron' }), 'user-1', FROM);
+      expect(view.nextRunAt).toEqual(new Date('2026-10-19T08:00:00Z'));
+    });
+
+    it('drops a past stored value when there is no usable cron', () => {
+      const view = normalizeScheduleRow(row({ cronExpression: null }), 'user-1', LATER);
+      expect(view.nextRunAt).toBeNull();
+    });
   });
 });

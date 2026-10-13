@@ -129,8 +129,10 @@ describe('ReportSettingsContent', () => {
     expect(screen.getByRole('button', { name: /select display currency/i })).toBeInTheDocument();
     // PG-201: the Scheduled Delivery card is replaced by a link to the new page.
     expect(screen.queryByRole('switch', { name: /enable scheduled delivery/i })).toBeNull();
+    // Same level as the sibling Default Range / Currency section headings (h3), so the
+    // outline stays h1 > h3, h3, h3 instead of an h2 after its h3 siblings.
     expect(
-      screen.getByRole('heading', { name: /scheduled delivery has moved/i })
+      screen.getByRole('heading', { level: 3, name: /scheduled delivery has moved/i })
     ).toBeInTheDocument();
     expect(screen.getByRole('link', { name: /open scheduled reports/i })).toHaveAttribute(
       'href',

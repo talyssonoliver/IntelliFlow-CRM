@@ -6,6 +6,7 @@ import { describe, it, expect } from 'vitest';
 import {
   scheduleCadenceSchema,
   scheduleDeliveryFormatSchema,
+  newScheduleDeliveryFormatSchema,
   REPORT_SCHEDULE_COLOR_TOKENS,
   reportScheduleColorTokenSchema,
   SCHEDULE_LIMITS,
@@ -57,6 +58,21 @@ describe('enums and constants', () => {
       expect(scheduleDeliveryFormatSchema.safeParse(v).success).toBe(true);
     }
     expect(scheduleDeliveryFormatSchema.safeParse('docx').success).toBe(false);
+  });
+
+  it('offers PDF, CSV and email body to new schedules; Excel is legacy-only (AC-005)', () => {
+    expect(newScheduleDeliveryFormatSchema.options).toEqual(['pdf', 'csv', 'email_body']);
+    expect(createScheduledReportSchema.safeParse(validCreate({ format: 'excel' })).success).toBe(
+      false
+    );
+    expect(createScheduledReportSchema.safeParse(validCreate({ format: 'csv' })).success).toBe(
+      true
+    );
+    // An existing legacy row may keep Excel; the router rejects switching *to* it.
+    expect(
+      updateScheduledReportSchema.safeParse({ id: 'clh3x2k8a0001qz8l1v2r3s4t', format: 'excel' })
+        .success
+    ).toBe(true);
   });
 
   it('has the 18-token colour allowlist', () => {

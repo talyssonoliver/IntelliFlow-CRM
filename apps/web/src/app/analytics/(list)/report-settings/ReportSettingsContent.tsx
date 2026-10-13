@@ -179,9 +179,9 @@ export default function ReportSettingsContent() {
                 </span>
               </div>
               <div>
-                <h2 className="text-base font-semibold text-foreground">
+                <h3 className="text-base font-semibold text-foreground">
                   Scheduled delivery has moved
-                </h2>
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   Set up recurring report emails per template, each with its own cadence, timezone
                   and recipients.

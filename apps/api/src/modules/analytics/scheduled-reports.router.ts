@@ -307,6 +307,14 @@ function planScheduleUpdate(
   const recipientsChanged =
     fields.recipients !== undefined && !sameRecipients(fields.recipients, existing.recipients);
   const formatChanged = fields.format !== undefined && fields.format !== existing.format;
+  if (formatChanged && fields.format === 'excel') {
+    // AC-005: Excel stays only on rows that already had it (copied legacy delivery).
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message:
+        'Excel is only kept for schedules that already used it. Choose PDF, CSV or email body.',
+    });
+  }
   const deliveryChanged = definitionChanged || recipientsChanged || formatChanged;
   const nextRun = definitionChanged || activating ? checkedNextRun(cron, timezone, now) : null;
 
@@ -582,6 +590,8 @@ export const scheduledReportsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<ScheduledReportView> => {
       assertScheduleManager(ctx);
       const tenantId = ctx.tenant.tenantId;
+      let changed = false;
+      let view: ScheduledReportView;
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
           await lockTenantSchedules(tx, tenantId);
@@ -589,6 +599,7 @@ export const scheduledReportsRouter = createTRPCRouter({
             where: { id: input.id, tenantId },
           });
           if (!existing) throw scheduleNotFound();
+          changed = existing.isActive !== input.isActive;
           let nextRunAt: Date | null = null;
           if (input.isActive) {
             assertReferenced(existing.templateId, existing.reportId);
@@ -605,10 +616,14 @@ export const scheduledReportsRouter = createTRPCRouter({
             include: SCHEDULE_INCLUDE,
           });
         });
-        return normalizeScheduleRow(row, ctx.tenant.userId);
+        view = normalizeScheduleRow(row, ctx.tenant.userId);
       } catch (err) {
         rethrowScheduleWriteError(err);
       }
+      // Activation is what starts delivery to the recipients, so it is audited like a
+      // recipient change (count only, no addresses).
+      if (changed) logScheduleAudit(ctx, 'UPDATE', input.id, auditState(view));
+      return view;
     }),
 
   delete: tenantProcedure

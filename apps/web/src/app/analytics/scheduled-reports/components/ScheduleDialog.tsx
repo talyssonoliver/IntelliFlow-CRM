@@ -33,6 +33,7 @@ import {
   describeSchedule,
   scheduleCadenceSchema,
   scheduleDeliveryFormatSchema,
+  newScheduleDeliveryFormatSchema,
   scheduleNameConflictSchema,
   updateScheduledReportSchema,
   type CreateScheduledReportInput,
@@ -413,6 +414,11 @@ export function ScheduleDialog({
 }: ScheduleDialogProps) {
   const [form, setForm] = useState<FormState>(() => initialState(schedule));
   const [errors, setErrors] = useState<FieldErrors>({});
+  // AC-005: Excel is offered only to a schedule that already uses it (copied legacy row).
+  const formatOptions: readonly ScheduleDeliveryFormat[] =
+    schedule?.format === 'excel'
+      ? scheduleDeliveryFormatSchema.options
+      : newScheduleDeliveryFormatSchema.options;
   const [focusRequest, setFocusRequest] = useState(0);
 
   useEffect(() => {
@@ -660,7 +666,7 @@ export function ScheduleDialog({
               }}
               className="flex flex-wrap gap-4"
             >
-              {scheduleDeliveryFormatSchema.options.map((f) => (
+              {formatOptions.map((f) => (
                 <div key={f} className="flex items-center gap-2">
                   <RadioGroupItem id={`schedule-format-${f}`} value={f} />
                   <Label htmlFor={`schedule-format-${f}`} className="font-normal">

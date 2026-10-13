@@ -5,8 +5,9 @@
  * BullMQ itself uses) stays server-side; the web page only uses the pure
  * presetToCron / describeSchedule helpers from @intelliflow/validators.
  *
- * PG-201 adds no scheduler: `nextRunAt` is stored for display and as IFC-308's
- * starting point; IFC-308 registers the BullMQ job schedulers (ADR-075).
+ * PG-201 adds no scheduler: `nextRunAt` is stored as IFC-308's starting point and
+ * the page shows the next occurrence computed on read (displayNextRun); IFC-308
+ * registers the BullMQ job schedulers (ADR-075).
  */
 
 import parser from 'cron-parser';
@@ -155,10 +156,29 @@ function toRecipients(value: Prisma.JsonValue): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
 }
 
+/**
+ * Next run to show for a row. Nothing advances the stored nextRunAt until IFC-308's
+ * runner exists, so an active row's next occurrence is computed from its cron and
+ * timezone at read time. Without a usable cron, a stored value is shown only while it
+ * is still in the future; paused rows have no next run.
+ */
+export function displayNextRun(row: ReportSchedule, now: Date): Date | null {
+  if (!row.isActive) return null;
+  if (row.cronExpression) {
+    try {
+      return computeNextRun(row.cronExpression, row.timezone, now);
+    } catch (err) {
+      if (!(err instanceof InvalidCronError)) throw err;
+    }
+  }
+  return row.nextRunAt && row.nextRunAt.getTime() > now.getTime() ? row.nextRunAt : null;
+}
+
 /** Row -> explicit view contract. Legacy values are normalised instead of crashing the page. */
 export function normalizeScheduleRow(
   row: ScheduleRowWithTemplate,
-  viewerId: string
+  viewerId: string,
+  now: Date = new Date()
 ): ScheduledReportView {
   const cadence = scheduleCadenceSchema.safeParse(row.frequency);
   const format = scheduleDeliveryFormatSchema.safeParse(row.format);
@@ -183,7 +203,7 @@ export function normalizeScheduleRow(
     tags: row.tags ?? [],
     isActive: row.isActive,
     lastRunAt: row.lastRunAt,
-    nextRunAt: row.nextRunAt,
+    nextRunAt: displayNextRun(row, now),
     createdBy: row.createdBy,
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,

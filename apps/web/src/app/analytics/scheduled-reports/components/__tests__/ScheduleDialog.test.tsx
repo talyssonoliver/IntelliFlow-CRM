@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 
 vi.mock('@intelliflow/ui', async (orig) => ({
   ...(await orig()),
@@ -341,6 +341,27 @@ describe('ScheduleDialog', () => {
     save();
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0][0].input).toMatchObject({ tags: [] });
+  });
+
+  it('does not offer Excel to a new schedule (AC-005)', () => {
+    renderDialog();
+    const group = screen.getByRole('radiogroup', { name: 'Delivery format' });
+    expect(within(group).getByRole('radio', { name: 'PDF' })).toBeInTheDocument();
+    expect(within(group).getByRole('radio', { name: 'CSV' })).toBeInTheDocument();
+    expect(within(group).getByRole('radio', { name: 'Email body' })).toBeInTheDocument();
+    expect(within(group).queryByRole('radio', { name: 'Excel' })).toBeNull();
+  });
+
+  it('does not offer Excel when editing a non-Excel schedule', () => {
+    renderDialog({ schedule: existingSchedule({ format: 'csv' }) });
+    const group = screen.getByRole('radiogroup', { name: 'Delivery format' });
+    expect(within(group).queryByRole('radio', { name: 'Excel' })).toBeNull();
+  });
+
+  it('keeps Excel for a legacy Excel schedule', () => {
+    renderDialog({ schedule: existingSchedule({ format: 'excel' }) });
+    const group = screen.getByRole('radiogroup', { name: 'Delivery format' });
+    expect(within(group).getByRole('radio', { name: 'Excel' })).toBeChecked();
   });
 
   it('Cancel closes the dialog and is disabled while saving', () => {
