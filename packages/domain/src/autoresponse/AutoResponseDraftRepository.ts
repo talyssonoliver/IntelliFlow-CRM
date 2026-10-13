@@ -56,6 +56,12 @@ export interface AutoResponseDraftRepository {
   findPendingByLeadId(leadId: string, tenantId: string): Promise<AutoResponseDraft[]>;
 
   /**
+   * PG-198: pending drafts of a tenant created before `before` that have never been
+   * escalated, oldest first, at most `limit` — candidates for the approval sweep.
+   */
+  findPendingOlderThan(tenantId: string, before: Date, limit: number): Promise<AutoResponseDraft[]>;
+
+  /**
    * Find expired drafts that need cleanup
    */
   findExpired(tenantId: string): Promise<AutoResponseDraft[]>;

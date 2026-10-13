@@ -124,6 +124,24 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
     return records.map((record) => this.toDomain(record));
   }
 
+  async findPendingOlderThan(
+    tenantId: string,
+    before: Date,
+    limit: number
+  ): Promise<AutoResponseDraft[]> {
+    const records = await this.prisma.autoResponseDraft.findMany({
+      where: {
+        tenantId,
+        status: 'PENDING_APPROVAL',
+        escalationCount: 0,
+        createdAt: { lt: before },
+      },
+      orderBy: { createdAt: 'asc' },
+      take: limit,
+    });
+    return records.map((record) => this.toDomain(record));
+  }
+
   async findPendingByLeadId(leadId: string, tenantId: string): Promise<AutoResponseDraft[]> {
     const records = await this.prisma.autoResponseDraft.findMany({
       where: {

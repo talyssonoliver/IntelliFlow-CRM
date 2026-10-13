@@ -13,6 +13,7 @@ import {
 } from '../AutoResponseDraft';
 import { AutoResponseDraftId } from '../AutoResponseDraftId';
 import { ResponseContent } from '../ResponseContent';
+import { SYSTEM_APPROVAL_ACTOR } from '../../ai/approval-policy';
 import {
   AutoResponseGeneratedEvent,
   AutoResponseSubmittedForApprovalEvent,
@@ -43,6 +44,34 @@ describe('AutoResponseDraft', () => {
     modelVersion: 'openai:gpt-4:v1',
     recipientEmail: 'customer@example.com',
   };
+
+  describe('system actor (PG-198 approval policies)', () => {
+    function pending() {
+      const draft = AutoResponseDraft.create(validCreateProps).value;
+      draft.submitForApproval('approver-1');
+      return draft;
+    }
+
+    it('approve accepts the policy actor and records it with the reason', () => {
+      const draft = pending();
+      const result = draft.approve(SYSTEM_APPROVAL_ACTOR, undefined, 'Auto-approved by policy');
+
+      expect(result.isSuccess).toBe(true);
+      expect(draft.approvalDecision?.decidedBy).toBe(SYSTEM_APPROVAL_ACTOR);
+      expect(draft.statusHistory.at(-1)?.changedBy).toBe(SYSTEM_APPROVAL_ACTOR);
+    });
+
+    it('escalate accepts the policy actor with a window shorter than the default', () => {
+      const draft = pending();
+      const result = draft.escalate(SYSTEM_APPROVAL_ACTOR, 'manager-1', 'Approval SLA', 0.5);
+
+      expect(result.isSuccess).toBe(true);
+      expect(draft.escalation?.escalatedBy).toBe(SYSTEM_APPROVAL_ACTOR);
+      const windowMs =
+        draft.escalation!.expiresAt.getTime() - draft.escalation!.escalatedAt.getTime();
+      expect(windowMs).toBe(30 * 60 * 1000);
+    });
+  });
 
   describe('create', () => {
     describe('with valid inputs', () => {

@@ -187,6 +187,30 @@ describe('PrismaAutoResponseDraftRepository', () => {
     });
   });
 
+  describe('findPendingOlderThan (PG-198)', () => {
+    it('returns un-escalated pending drafts of the tenant, oldest first, limited', async () => {
+      const before = new Date('2026-10-13T10:00:00Z');
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        createMockDraftData({ status: 'PENDING_APPROVAL' }),
+      ] as never);
+
+      const result = await repository.findPendingOlderThan('tenant-1', before, 25);
+
+      expect(mockPrisma.autoResponseDraft.findMany).toHaveBeenCalledWith({
+        where: {
+          tenantId: 'tenant-1',
+          status: 'PENDING_APPROVAL',
+          escalationCount: 0,
+          createdAt: { lt: before },
+        },
+        orderBy: { createdAt: 'asc' },
+        take: 25,
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].status).toBe('PENDING_APPROVAL');
+    });
+  });
+
   describe('findPendingForApprover', () => {
     it('should return drafts with PENDING_APPROVAL status', async () => {
       const mockData = [createMockDraftData({ status: 'PENDING_APPROVAL' })];
