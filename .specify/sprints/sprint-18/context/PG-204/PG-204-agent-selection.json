@@ -1,0 +1,20 @@
+{
+  "task_id": "PG-204",
+  "mode": "subagent",
+  "rounds": {
+    "1-2": [
+      "backend-architect",
+      "data-engineer",
+      "frontend-lead",
+      "domain-expert",
+      "test-engineer"
+    ],
+    "3-4": [
+      "security-lead",
+      "a11y-expert",
+      "stoa-domain"
+    ]
+  },
+  "rationale": "UI page + tRPC router + Prisma migration + case-creation business rules; always-included domain-expert and test-engineer",
+  "consensus": "8/8 approve with modifications incorporated"
+}

@@ -1,0 +1,120 @@
+{
+  "task_id": "PG-204",
+  "generated_at": "2026-10-13T00:05:00Z",
+  "source": "PG-204-hydrated-context.md (spec session Phase 0) + Phase 0.76/0.77 audits by frontend-lead",
+  "task": {
+    "title": "Module Settings - Case Types (/cases/case-types)",
+    "sprint": 18,
+    "dependencies": [
+      "PG-178",
+      "PG-190"
+    ],
+    "owner_ruling": ".specify/sprints/sprint-18/context/PG-204/PG-204-owner-ruling.md"
+  },
+  "prd_required": true,
+  "adr_required": true,
+  "relatedPrd": "docs/planning/prd-module-settings.md",
+  "relatedAdrs": [
+    "docs/architecture/adr/ADR-076-case-types-applied-at-case-creation.md"
+  ],
+  "shared_component_audit": {
+    "searched_directories": [
+      "apps/web/src/components/shared/",
+      "packages/ui/src/components/"
+    ],
+    "components_found": [
+      "PageHeader",
+      "SectionHeader",
+      "PrioritySelect",
+      "EmptyState",
+      "ConfirmationDialog",
+      "AlertDialog",
+      "Dialog",
+      "RadioGroup",
+      "Checkbox",
+      "Switch",
+      "Card",
+      "Button",
+      "Badge",
+      "Skeleton"
+    ],
+    "reuse_decisions": [
+      {
+        "need": "page header + breadcrumbs",
+        "existing": "PageHeader",
+        "action": "REUSE"
+      },
+      {
+        "need": "section header with action slot",
+        "existing": "shared SectionHeader",
+        "action": "REUSE"
+      },
+      {
+        "need": "default priority picker",
+        "existing": "PrioritySelect (clearable)",
+        "action": "REUSE"
+      },
+      {
+        "need": "zero state",
+        "existing": "EmptyState entity=cases variant=folder phase=passive",
+        "action": "REUSE"
+      },
+      {
+        "need": "delete confirmation keeping server error",
+        "existing": "AlertDialog (ConfirmationDialog swallows errors)",
+        "action": "COMPOSE"
+      },
+      {
+        "need": "form primitives",
+        "existing": "@intelliflow/ui Dialog/Input/RadioGroup/Checkbox/Switch",
+        "action": "COMPOSE"
+      }
+    ],
+    "new_components_justified": [
+      {
+        "name": "CaseTypeList",
+        "reason": "no shared list with a forwardRef openCreate handle (PG-197 TerritoryList pattern)"
+      },
+      {
+        "name": "CaseTypeDialog",
+        "reason": "entity-specific form (PG-197 TerritoryDialog pattern)"
+      },
+      {
+        "name": "ResolutionChecklistEditor",
+        "reason": "no shared ordered-row editor; a11y-improved TerritoryRulesEditor pattern"
+      },
+      {
+        "name": "DeleteCaseTypeDialog",
+        "reason": "shared ConfirmationDialog swallows onConfirm errors"
+      },
+      {
+        "name": "case-type-colors.ts / case-type-labels.ts",
+        "reason": "8-token case palette and labels shared by page, form and detail"
+      }
+    ]
+  },
+  "route_conflict_audit": {
+    "routes_searched": [
+      "/cases/**",
+      "/settings/cases",
+      "apps/web/src/components/cases/**"
+    ],
+    "conflicts_found": [
+      {
+        "path": "apps/web/src/app/cases/(list)/case-types/page.tsx",
+        "data_source": "stub (\"coming soon\" placeholder)",
+        "action": "REPLACED in place (no second route)"
+      },
+      {
+        "path": "apps/web/src/components/cases/CaseForm.tsx (CATEGORY_OPTIONS)",
+        "data_source": "fake (hardcoded ticket categories, never persisted)",
+        "action": "REPLACED by the real case type picker"
+      },
+      {
+        "path": "apps/web/src/app/settings/cases/page.tsx",
+        "data_source": "redirect to /cases/case-settings",
+        "action": "no change (not overlapping case types)"
+      }
+    ]
+  }
+}
