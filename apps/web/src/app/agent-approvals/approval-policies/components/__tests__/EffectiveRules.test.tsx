@@ -35,7 +35,7 @@ describe('EffectiveRules', () => {
         onRetry={vi.fn()}
       />
     );
-    expect(screen.getByLabelText('Loading Agent rules')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading Agent rules…');
   });
 
   it('shows the error with a Retry', () => {

@@ -69,8 +69,10 @@ describe('AssignmentsEditor', () => {
     expect(screen.getByLabelText('Row 1 agent')).toHaveValue('*');
     fireEvent.click(screen.getByRole('button', { name: 'Add Override' }));
     expect(screen.getByRole('button', { name: 'Add Override' })).toBeDisabled();
+    expect(screen.getByText('Maximum 2 overrides.')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove row 1' }));
+    expect(screen.getByRole('button', { name: 'Add Override' })).toHaveFocus();
     expect(onRows).toHaveBeenLastCalledWith([expect.objectContaining({ agentKey: '*' })]);
   });
 

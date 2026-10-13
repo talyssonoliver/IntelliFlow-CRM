@@ -107,7 +107,7 @@ describe('PolicyCard', () => {
     render(<PolicyCard policy={policy} canManage isBusy={false} {...h} />);
     fireEvent.click(screen.getByRole('button', { name: 'Edit Standard' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete Standard' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Make Default' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Make Default: Standard' }));
     expect(h.onEdit).toHaveBeenCalledWith(policy);
     expect(h.onDelete).toHaveBeenCalledWith(policy);
     expect(h.onSetDefault).toHaveBeenCalledWith(policy);
@@ -115,7 +115,7 @@ describe('PolicyCard', () => {
 
   it('offers no Make Default on the default policy and disables actions while busy', () => {
     render(<PolicyCard policy={policyRow()} canManage isBusy {...handlers()} />);
-    expect(screen.queryByRole('button', { name: 'Make Default' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Make Default/ })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Edit Standard' })).toBeDisabled();
   });
 });

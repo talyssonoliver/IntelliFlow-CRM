@@ -102,6 +102,7 @@ export function PolicyCard({
                 variant="ghost"
                 onClick={() => onSetDefault(policy)}
                 disabled={isBusy}
+                aria-label={`Make Default: ${policy.name}`}
               >
                 Make Default
               </Button>

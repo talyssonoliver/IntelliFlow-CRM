@@ -241,7 +241,7 @@ function AutoApproveFields({
           </div>
           <p
             id="policy-threshold-help"
-            className={`text-xs ${error ? 'text-destructive' : 'text-muted-foreground'}`}
+            className={`text-xs ${error ? 'text-red-700 dark:text-red-400' : 'text-muted-foreground'}`}
           >
             {error ??
               `Confidence must be strictly above this (${limits.autoApproveThreshold.min}–${limits.autoApproveThreshold.max}).`}
@@ -296,7 +296,7 @@ function EscalationFields({
               aria-describedby={errors.delay ? 'policy-delay-error' : undefined}
             />
             {errors.delay && (
-              <p id="policy-delay-error" className="text-xs text-destructive">
+              <p id="policy-delay-error" className="text-xs text-red-700 dark:text-red-400">
                 {errors.delay}
               </p>
             )}
@@ -327,9 +327,11 @@ function EscalationFields({
                 ))}
               </SelectContent>
             </Select>
-            {membersLoading && <p className="text-xs text-muted-foreground">Loading people…</p>}
+            {membersLoading && (
+              <output className="block text-xs text-muted-foreground">Loading people…</output>
+            )}
             {errors.target && (
-              <p id="policy-target-error" className="text-xs text-destructive">
+              <p id="policy-target-error" className="text-xs text-red-700 dark:text-red-400">
                 {errors.target}
               </p>
             )}
@@ -354,7 +356,8 @@ export interface PolicyDialogProps {
   members: MemberOption[];
   membersLoading?: boolean;
   isSaving: boolean;
-  onSave: (input: PolicySaveInput) => Promise<PolicyRow | undefined>;
+  /** Resolves with the saved row; rejects with the reason shown inside the dialog. */
+  onSave: (input: PolicySaveInput) => Promise<PolicyRow>;
   onClose: () => void;
 }
 
@@ -375,12 +378,16 @@ export function PolicyDialog({
   const [snapshot, setSnapshot] = useState(() => draftFromPolicy(policy, defaultTimeoutMinutes));
   const [draft, setDraft] = useState(snapshot);
   const [confirmAutoApprove, setConfirmAutoApprove] = useState(false);
+  const [nameTouched, setNameTouched] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
     const next = draftFromPolicy(policy, defaultTimeoutMinutes);
     setSnapshot(next);
     setDraft(next);
+    setNameTouched(false);
+    setSaveError(null);
   }, [open, policy, defaultTimeoutMinutes]);
 
   const set = <K extends keyof PolicyDraft>(key: K, value: PolicyDraft[K]) =>
@@ -403,9 +410,19 @@ export function PolicyDialog({
     return [...members, { id: target.id, name: target.name }];
   }, [members, policy]);
 
+  // A new policy's empty name is not an error until the field has been visited.
+  const nameError = nameTouched || draft.name.trim() ? errors.name : undefined;
+
   const save = async () => {
-    const saved = await onSave(toSaveInput(draft, scope, isDefault));
-    if (!saved) return;
+    setSaveError(null);
+    let saved: PolicyRow;
+    try {
+      saved = await onSave(toSaveInput(draft, scope, isDefault));
+    } catch (error) {
+      // Shown inside the dialog: the page's live region is aria-hidden while it is open.
+      setSaveError(error instanceof Error ? error.message : 'Please try again.');
+      return;
+    }
     const refreshed = draftFromPolicy(saved, defaultTimeoutMinutes);
     setSnapshot(refreshed);
     setDraft(refreshed);
@@ -431,18 +448,25 @@ export function PolicyDialog({
           <div className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="policy-name">Name</Label>
+                <Label htmlFor="policy-name">
+                  Name{' '}
+                  <span className="text-red-700 dark:text-red-400" aria-hidden="true">
+                    *
+                  </span>
+                </Label>
                 <Input
                   id="policy-name"
                   value={draft.name}
                   maxLength={limits.nameMaxLength}
                   onChange={(e) => set('name', e.target.value)}
-                  aria-invalid={errors.name ? true : undefined}
-                  aria-describedby={errors.name ? 'policy-name-error' : undefined}
+                  onBlur={() => setNameTouched(true)}
+                  aria-required="true"
+                  aria-invalid={nameError ? true : undefined}
+                  aria-describedby={nameError ? 'policy-name-error' : undefined}
                 />
-                {errors.name && (
-                  <p id="policy-name-error" className="text-xs text-destructive">
-                    {errors.name}
+                {nameError && (
+                  <p id="policy-name-error" className="text-xs text-red-700 dark:text-red-400">
+                    {nameError}
                   </p>
                 )}
               </div>
@@ -484,9 +508,15 @@ export function PolicyDialog({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <Label htmlFor="policy-timeout">Approval timeout (minutes)</Label>
+                <Label htmlFor="policy-timeout">
+                  Approval timeout (minutes){' '}
+                  <span className="text-red-700 dark:text-red-400" aria-hidden="true">
+                    *
+                  </span>
+                </Label>
                 <Input
                   id="policy-timeout"
+                  aria-required="true"
                   inputMode="numeric"
                   value={draft.timeoutMinutes}
                   onChange={(e) => set('timeoutMinutes', e.target.value)}
@@ -495,7 +525,7 @@ export function PolicyDialog({
                 />
                 <p
                   id="policy-timeout-help"
-                  className={`text-xs ${errors.timeout ? 'text-destructive' : 'text-muted-foreground'}`}
+                  className={`text-xs ${errors.timeout ? 'text-red-700 dark:text-red-400' : 'text-muted-foreground'}`}
                 >
                   {errors.timeout ??
                     `Undecided ${meta.itemNoun}s expire after ${timeout === null ? '…' : formatMinutes(timeout)}.`}
@@ -555,11 +585,26 @@ export function PolicyDialog({
             />
           </div>
 
+          {saveError && (
+            <p className="text-sm text-red-700 dark:text-red-400" role="alert">
+              Could not save the policy: {saveError}
+            </p>
+          )}
+          {isDirty && hasConflict && (
+            <p id="policy-save-hint" className="text-xs text-muted-foreground">
+              Fix the highlighted fields to save.
+            </p>
+          )}
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="button" onClick={save} disabled={!isDirty || isSaving || hasConflict}>
+            <Button
+              type="button"
+              onClick={save}
+              disabled={!isDirty || isSaving || hasConflict}
+              aria-describedby={isDirty && hasConflict ? 'policy-save-hint' : undefined}
+            >
               {isSaving ? 'Saving…' : 'Save'}
             </Button>
           </DialogFooter>

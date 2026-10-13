@@ -66,12 +66,12 @@ vi.mock('@/components/shared/page-header', () => ({
   PageHeader: (props: {
     title: string;
     breadcrumbs: { label: string }[];
-    actions: { label: string; onClick: () => void; disabled?: boolean }[];
+    actions?: { label: string; onClick: () => void; disabled?: boolean }[];
   }) => (
     <header>
       <nav aria-label="Breadcrumb">{props.breadcrumbs.map((b) => b.label).join(' / ')}</nav>
       <h1>{props.title}</h1>
-      {props.actions.map((a) => (
+      {(props.actions ?? []).map((a) => (
         <button key={a.label} onClick={a.onClick} disabled={a.disabled}>
           {a.label}
         </button>
@@ -179,13 +179,16 @@ describe('ApprovalPoliciesContent', () => {
   it('shows the skeleton while auth or the list loads', () => {
     h.list = { ...h.list, isLoading: true, data: undefined };
     render(<ApprovalPoliciesContent />);
-    expect(screen.getByLabelText('Loading approval policies')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading approval policies…');
   });
 
   it('shows an error with Retry when the list fails', () => {
     h.list = { data: undefined, isLoading: false, error: { message: 'down' }, refetch: vi.fn() };
     render(<ApprovalPoliciesContent />);
-    expect(screen.getByText('Failed to load approval policies: down')).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent('Failed to load approval policies: down');
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Approval Policies' })
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(h.list.refetch).toHaveBeenCalled();
   });
@@ -212,6 +215,9 @@ describe('ApprovalPoliciesContent', () => {
   it('explains the built-in rules with a passive empty state when a queue has no policy', () => {
     render(<ApprovalPoliciesContent />);
     const draftCard = screen.getByRole('region', { name: 'Email auto-responses' });
+    expect(
+      within(draftCard).getByRole('region', { name: 'No email auto-responses policies' })
+    ).toBeInTheDocument();
     expect(draftCard).toHaveTextContent(
       'No policy yet, so the built-in rules apply: drafts expire after 1 d'
     );
@@ -259,6 +265,9 @@ describe('ApprovalPoliciesContent', () => {
     });
     expect(h.mutations.update.mutateAsync).toHaveBeenCalledWith({ name: 'Renamed', id: 'p1' });
     expect(saved).toMatchObject({ name: 'Renamed' });
+    // Announced only once the dialog has closed (outside content is aria-hidden meanwhile).
+    expect(live()).toHaveTextContent('');
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
     expect(live()).toHaveTextContent('Saved policy “Renamed”.');
   });
 
@@ -270,6 +279,7 @@ describe('ApprovalPoliciesContent', () => {
       await h.dialogProps!.onSave({ name: 'New one' });
     });
     expect(h.mutations.create.mutateAsync).toHaveBeenCalledWith({ name: 'New one' });
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
     expect(live()).toHaveTextContent('Created policy “New one”.');
 
     await act(async () => {
@@ -279,23 +289,15 @@ describe('ApprovalPoliciesContent', () => {
     expect(h.invalidatePreview).toHaveBeenCalled();
   });
 
-  it('announces a failed save and keeps the dialog contract (returns undefined)', async () => {
+  it('rejects a failed save with the reason, for the dialog to show', async () => {
     h.mutations.create.mutateAsync.mockRejectedValue(new Error('Name taken'));
     render(<ApprovalPoliciesContent />);
     fireEvent.click(screen.getByRole('button', { name: 'New Policy for agent tool actions' }));
-    let saved: unknown = 'x';
-    await act(async () => {
-      saved = await h.dialogProps!.onSave({ name: 'Dup' });
-    });
-    expect(saved).toBeUndefined();
-    expect(live()).toHaveTextContent('Could not save the policy: Name taken');
+    await expect(h.dialogProps!.onSave({ name: 'Dup' })).rejects.toThrow('Name taken');
     expect(h.toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
 
     h.mutations.create.mutateAsync.mockRejectedValue('weird');
-    await act(async () => {
-      await h.dialogProps!.onSave({ name: 'Dup' });
-    });
-    expect(live()).toHaveTextContent('Could not save the policy: Please try again.');
+    await expect(h.dialogProps!.onSave({ name: 'Dup' })).rejects.toThrow('Please try again.');
   });
 
   it('deletes after confirmation, and reports a failure', async () => {
@@ -311,6 +313,8 @@ describe('ApprovalPoliciesContent', () => {
     expect(h.mutations.delete.mutateAsync).toHaveBeenCalledWith({ id: 'p2' });
     expect(live()).toHaveTextContent('Deleted policy “Fast lane”.');
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    // Focus lands on the queue's New Policy button, not on <body>.
+    expect(screen.getByRole('button', { name: 'New Policy for agent tool actions' })).toHaveFocus();
 
     h.mutations.delete.mutateAsync.mockRejectedValue(new Error('gone'));
     fireEvent.click(screen.getByRole('button', { name: 'Delete Standard' }));
@@ -332,14 +336,14 @@ describe('ApprovalPoliciesContent', () => {
     h.mutations.setDefault.mutateAsync.mockResolvedValue({ success: true });
     render(<ApprovalPoliciesContent />);
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Make Default' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Make Default: Fast lane' }));
     });
     expect(h.mutations.setDefault.mutateAsync).toHaveBeenCalledWith({ id: 'p2' });
     expect(live()).toHaveTextContent('“Fast lane” is now the default policy.');
 
     h.mutations.setDefault.mutateAsync.mockRejectedValue(new Error('nope'));
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: 'Make Default' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Make Default: Fast lane' }));
     });
     expect(live()).toHaveTextContent('Could not change the default policy: nope');
   });

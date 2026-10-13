@@ -9,7 +9,7 @@
  * them; only admins change them. The server is authoritative (FORBIDDEN for
  * others); the UI hides what a reader cannot do (AC-019).
  */
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button, Card, ConfirmationDialog, EmptyState, toast } from '@intelliflow/ui';
 import { APPROVAL_POLICY_SCOPES, type ApprovalPolicyScope } from '@intelliflow/domain';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
@@ -31,6 +31,16 @@ interface DialogState {
   scope: ApprovalPolicyScope;
   policy: PolicyRow | null;
 }
+
+const DESCRIPTION =
+  'How long AI work may wait for review, who may approve it, and when it escalates.';
+
+const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/' },
+  { label: 'AI & Agents', href: '/agent-approvals' },
+  { label: 'AI Settings', href: '/agent-approvals/ai-settings' },
+  { label: 'Approval Policies' },
+];
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Please try again.';
@@ -61,8 +71,24 @@ export default function ApprovalPoliciesContent() {
       utils.approvalPolicies.preview.invalidate(),
     ]);
   };
+  // While a dialog is open everything outside it is aria-hidden, so results are
+  // queued and announced once no dialog is open (WCAG 4.1.3).
+  const [queued, setQueued] = useState<string | null>(null);
+  const [focusAfterClose, setFocusAfterClose] = useState<string | null>(null);
+  const modalOpen = dialog !== null || pendingDelete !== null || resetOpen;
+  useEffect(() => {
+    if (modalOpen) return;
+    if (queued) {
+      setAnnouncement(queued);
+      setQueued(null);
+    }
+    if (focusAfterClose) {
+      document.getElementById(focusAfterClose)?.focus();
+      setFocusAfterClose(null);
+    }
+  }, [modalOpen, queued, focusAfterClose]);
   const announce = (message: string, destructive = false) => {
-    setAnnouncement(message);
+    setQueued(message);
     toast({ title: message, variant: destructive ? 'destructive' : undefined });
   };
 
@@ -79,7 +105,8 @@ export default function ApprovalPoliciesContent() {
     deleteMutation.isPending || setDefaultMutation.isPending || resetMutation.isPending;
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
-  const handleSave = async (input: PolicySaveInput): Promise<PolicyRow | undefined> => {
+  /** Rejects on failure so the dialog can show the reason inside itself. */
+  const handleSave = async (input: PolicySaveInput): Promise<PolicyRow> => {
     const id = dialog?.policy?.id;
     try {
       const saved: PolicyRow = id
@@ -88,8 +115,8 @@ export default function ApprovalPoliciesContent() {
       announce(`${id ? 'Saved' : 'Created'} policy “${saved.name}”.`);
       return saved;
     } catch (error) {
-      announce(`Could not save the policy: ${errorMessage(error)}`, true);
-      return undefined;
+      toast({ title: 'Could not save the policy', variant: 'destructive' });
+      throw new Error(errorMessage(error), { cause: error });
     }
   };
 
@@ -122,13 +149,22 @@ export default function ApprovalPoliciesContent() {
 
   if (listQuery.error || !listQuery.data) {
     return (
-      <div className="w-full text-center py-12">
-        <p className="text-destructive mb-4">
-          Failed to load approval policies{listQuery.error ? `: ${listQuery.error.message}` : '.'}
-        </p>
-        <Button type="button" variant="outline" onClick={() => listQuery.refetch()}>
-          Retry
-        </Button>
+      <div className="w-full">
+        <PageHeader
+          breadcrumbs={BREADCRUMBS}
+          title="Approval Policies"
+          description={DESCRIPTION}
+          className="mb-6"
+        />
+        <div className="text-center py-12">
+          <p className="text-red-700 dark:text-red-400 mb-4" role="alert">
+            Failed to load approval policies
+            {listQuery.error ? `: ${listQuery.error.message}` : '.'}
+          </p>
+          <Button type="button" variant="outline" onClick={() => listQuery.refetch()}>
+            Retry
+          </Button>
+        </div>
       </div>
     );
   }
@@ -141,14 +177,9 @@ export default function ApprovalPoliciesContent() {
   return (
     <div className="w-full">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'AI & Agents', href: '/agent-approvals' },
-          { label: 'AI Settings', href: '/agent-approvals/ai-settings' },
-          { label: 'Approval Policies' },
-        ]}
+        breadcrumbs={BREADCRUMBS}
         title="Approval Policies"
-        description="How long AI work may wait for review, who may approve it, and when it escalates."
+        description={DESCRIPTION}
         actions={actions}
         className="mb-6"
       />
@@ -184,6 +215,7 @@ export default function ApprovalPoliciesContent() {
                       <Button
                         type="button"
                         size="sm"
+                        id={`new-policy-${scope}`}
                         onClick={() => setDialog({ scope, policy: null })}
                         disabled={isBusy}
                         aria-label={`New Policy for ${meta.title.toLowerCase()}`}
@@ -199,6 +231,7 @@ export default function ApprovalPoliciesContent() {
                       entity="rules"
                       phase="passive"
                       size="sm"
+                      aria-label={`No ${meta.title.toLowerCase()} policies`}
                       className="py-4 px-3 gap-2"
                     />
                     <p className="text-sm text-muted-foreground">
@@ -293,6 +326,8 @@ export default function ApprovalPoliciesContent() {
           try {
             await deleteMutation.mutateAsync({ id: pendingDelete.id });
             announce(`Deleted policy “${pendingDelete.name}”.`);
+            // The Delete button is gone: put focus on the queue's New Policy button.
+            setFocusAfterClose(`new-policy-${pendingDelete.scope}`);
           } catch (error) {
             announce(`Could not delete the policy: ${errorMessage(error)}`, true);
           }

@@ -5,6 +5,7 @@
  * A duplicate pair is flagged on the second row as "rows N and M" (the same
  * rule the validator's superRefine enforces) and blocks Save via hasConflict.
  */
+import { useEffect, useRef, useState } from 'react';
 import {
   Button,
   Select,
@@ -101,11 +102,30 @@ export function AssignmentsEditor({
   const update = (index: number, patch: Partial<PolicyAssignment>) =>
     onChange(rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   const issueFor = (index: number) => issues.find((issue) => issue.index === index);
+  const addRef = useRef<HTMLButtonElement>(null);
+  // Focus follows the edit: the new row's agent after Add, the Add button after Remove.
+  const [focusKey, setFocusKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!focusKey) return;
+    if (focusKey === 'add') addRef.current?.focus();
+    else document.getElementById(`${focusKey}-agent`)?.focus();
+    setFocusKey(null);
+  }, [focusKey]);
+
+  const add = () => {
+    const row = newAssignmentDraft();
+    onChange([...rows, row]);
+    setFocusKey(row.key);
+  };
+  const remove = (index: number) => {
+    onChange(rows.filter((_, i) => i !== index));
+    setFocusKey('add');
+  };
 
   return (
-    <fieldset className="space-y-2">
+    <fieldset className="space-y-2" aria-describedby="assignments-help">
       <legend className="text-sm font-medium text-foreground">Applies to</legend>
-      <p className="text-xs text-muted-foreground">
+      <p id="assignments-help" className="text-xs text-muted-foreground">
         Route specific agents or actions to this policy. The most specific match wins: an exact
         agent and action, then the agent, then the action, then the default policy.
       </p>
@@ -122,6 +142,7 @@ export function AssignmentsEditor({
                   onValueChange={(agentKey) => update(index, { agentKey })}
                 >
                   <SelectTrigger
+                    id={`${row.key}-agent`}
                     className="w-48"
                     aria-label={`Row ${index + 1} agent`}
                     aria-invalid={issue ? true : undefined}
@@ -161,7 +182,7 @@ export function AssignmentsEditor({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  onClick={() => onChange(rows.filter((_, i) => i !== index))}
+                  onClick={() => remove(index)}
                   aria-label={`Remove row ${index + 1}`}
                 >
                   <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
@@ -170,7 +191,7 @@ export function AssignmentsEditor({
                 </Button>
               </div>
               {issue && (
-                <p id={errorId} className="text-xs text-destructive">
+                <p id={errorId} className="text-xs text-red-700 dark:text-red-400">
                   {issue.message}
                 </p>
               )}
@@ -178,15 +199,21 @@ export function AssignmentsEditor({
           );
         })}
       </ul>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={() => onChange([...rows, newAssignmentDraft()])}
-        disabled={rows.length >= maxRows}
-      >
-        Add Override
-      </Button>
+      <div className="flex flex-wrap items-center gap-3">
+        <Button
+          ref={addRef}
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={add}
+          disabled={rows.length >= maxRows}
+        >
+          Add Override
+        </Button>
+        {rows.length >= maxRows && (
+          <span className="text-xs text-muted-foreground">Maximum {maxRows} overrides.</span>
+        )}
+      </div>
     </fieldset>
   );
 }

@@ -20,7 +20,8 @@ describe('ApprovalPoliciesPage (PG-198)', () => {
 
   it('has a loading skeleton that mirrors the 12-column bento', () => {
     const { container } = render(<ApprovalPoliciesLoading />);
-    expect(screen.getByLabelText('Loading approval policies')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('status')).toHaveTextContent('Loading approval policies…');
+    expect(container.querySelector('[aria-busy="true"]')).not.toBeNull();
     expect(container.querySelector('.lg\\:grid-cols-12')).not.toBeNull();
     expect(container.querySelectorAll('.lg\\:col-span-6')).toHaveLength(2);
     expect(container.querySelectorAll('.lg\\:col-span-12')).toHaveLength(1);

@@ -64,7 +64,7 @@ describe('PolicyDialog', () => {
   it('starts a new policy from the built-in timeout with auto-approve and escalation off', () => {
     setup();
     expect(screen.getByRole('heading', { name: 'New Policy' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Approval timeout (minutes)')).toHaveValue('30');
+    expect(screen.getByLabelText(/^Approval timeout \(minutes\)/)).toHaveValue('30');
     expect(screen.getByLabelText('Auto-approve high-confidence items')).not.toBeChecked();
     expect(screen.getByLabelText('Escalate when nobody decides')).not.toBeChecked();
     expect(screen.queryByLabelText('Confidence threshold (%)')).not.toBeInTheDocument();
@@ -73,14 +73,14 @@ describe('PolicyDialog', () => {
 
   it('enables Save only for a dirty, conflict-free draft (playbook §3)', async () => {
     const props = setup();
-    type('Name', 'Existing');
+    type(/^Name/, 'Existing');
     expect(
       screen.getByText('A policy named “Existing” already exists for this queue.')
     ).toHaveAttribute('id', 'policy-name-error');
-    expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true');
+    expect(screen.getByLabelText(/^Name/)).toHaveAttribute('aria-invalid', 'true');
     expect(save()).toBeDisabled();
 
-    type('Name', 'Fast lane');
+    type(/^Name/, 'Fast lane');
     expect(save()).toBeEnabled();
     fireEvent.click(save());
     await waitFor(() => expect(props.onClose).toHaveBeenCalled());
@@ -89,12 +89,30 @@ describe('PolicyDialog', () => {
     );
   });
 
-  it('keeps the dialog open when the save fails', async () => {
-    const props = setup({ onSave: vi.fn().mockResolvedValue(undefined) });
-    type('Name', 'Fast lane');
+  it('keeps the dialog open and announces the failure inside it (WCAG 4.1.3)', async () => {
+    const props = setup({ onSave: vi.fn().mockRejectedValue(new Error('Name taken')) });
+    type(/^Name/, 'Fast lane');
     fireEvent.click(save());
-    await waitFor(() => expect(props.onSave).toHaveBeenCalled());
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Could not save the policy: Name taken'
+    );
     expect(props.onClose).not.toHaveBeenCalled();
+
+    (props.onSave as ReturnType<typeof vi.fn>).mockRejectedValueOnce('odd');
+    fireEvent.click(save());
+    await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent('Please try again.'));
+  });
+
+  it('shows "Enter a name." only after the field is visited, and explains a blocked Save', () => {
+    setup();
+    expect(screen.queryByText('Enter a name.')).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/^Name/)).toHaveAttribute('aria-required', 'true');
+    fireEvent.blur(screen.getByLabelText(/^Name/));
+    expect(screen.getByText('Enter a name.')).toBeInTheDocument();
+
+    type(/^Approval timeout/, '2');
+    expect(save()).toHaveAttribute('aria-describedby', 'policy-save-hint');
+    expect(screen.getByText('Fix the highlighted fields to save.')).toBeInTheDocument();
   });
 
   it('asks before turning auto-approval on, and cancelling leaves it off (AC-020)', () => {
@@ -129,7 +147,7 @@ describe('PolicyDialog', () => {
 
   it('validates the escalation delay against the timeout and requires a target', () => {
     setup();
-    type('Name', 'Escalating');
+    type(/^Name/, 'Escalating');
     fireEvent.click(screen.getByLabelText('Escalate when nobody decides'));
     expect(screen.getByText('Enter at least 5 minutes.')).toBeInTheDocument();
     expect(screen.getByText('Choose who receives escalations.')).toBeInTheDocument();
@@ -145,9 +163,9 @@ describe('PolicyDialog', () => {
 
   it('rejects an out-of-range timeout', () => {
     setup();
-    type('Approval timeout (minutes)', '2');
+    type(/^Approval timeout \(minutes\)/, '2');
     expect(screen.getByText('Enter whole minutes from 5 to 10080 (7 d).')).toBeInTheDocument();
-    type('Approval timeout (minutes)', '1440');
+    type(/^Approval timeout \(minutes\)/, '1440');
     expect(screen.getByText('Undecided actions expire after 1 d.')).toBeInTheDocument();
   });
 
@@ -193,7 +211,7 @@ describe('PolicyDialog', () => {
   it('changes the colour, role and description', () => {
     const props = setup({ makeDefault: true });
     expect(screen.getByText(/This is the default policy for the queue\./)).toBeInTheDocument();
-    type('Name', 'Coloured');
+    type(/^Name/, 'Coloured');
     fireEvent.change(screen.getByLabelText('Colour'), { target: { value: 'rose' } });
     fireEvent.change(screen.getByLabelText('Minimum reviewer'), { target: { value: 'MANAGER' } });
     type('Description (optional)', '  Senior review  ');

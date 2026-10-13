@@ -6,7 +6,8 @@ const SCOPE_KEYS = ['ap-scope-agent', 'ap-scope-email'] as const;
 /** Skeleton mirroring the approval policies bento grid (AC-001). */
 export function ApprovalPoliciesLoading() {
   return (
-    <div className="w-full" aria-busy="true" aria-label="Loading approval policies">
+    <div className="w-full" aria-busy="true">
+      <output className="sr-only">Loading approval policies…</output>
       <div className="mb-6 space-y-2">
         <Skeleton className="h-4 w-48" />
         <Skeleton className="h-8 w-64" />

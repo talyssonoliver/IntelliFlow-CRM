@@ -37,7 +37,8 @@ export function EffectiveRules({
 }: Readonly<EffectiveRulesProps>) {
   if (isLoading) {
     return (
-      <div className="space-y-2" aria-busy="true" aria-label={`Loading ${label}`}>
+      <div className="space-y-2" aria-busy="true">
+        <output className="sr-only">Loading {label}…</output>
         {SKELETON_KEYS.map((key) => (
           <Skeleton key={key} className="h-8 w-full" />
         ))}
@@ -47,7 +48,7 @@ export function EffectiveRules({
   if (error || !rows) {
     return (
       <div className="space-y-2">
-        <p className="text-sm text-destructive">
+        <p className="text-sm text-red-700 dark:text-red-400" role="alert">
           Could not load the effective rules{error ? `: ${error.message}` : '.'}
         </p>
         <Button type="button" size="sm" variant="outline" onClick={onRetry}>
@@ -78,9 +79,9 @@ export function EffectiveRules({
             key={`${row.agentKey}|${row.actionType}`}
             className="border-t border-slate-100 dark:border-slate-800"
           >
-            <td className="py-1.5 pr-2">
+            <th scope="row" className="py-1.5 pr-2 text-left font-normal">
               {agentLabel(row.agentKey)} · {actionLabel(row.actionType)}
-            </td>
+            </th>
             <td className="py-1.5 pr-2">
               {row.policyName ? (
                 <PolicyChip name={row.policyName} colorToken={row.colorToken ?? 'slate'} />
