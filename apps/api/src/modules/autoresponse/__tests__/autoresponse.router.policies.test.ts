@@ -267,6 +267,58 @@ describe('approve / reject / resolveEscalation — actor and reviewer role', () 
   });
 });
 
+describe('escalated drafts are decided from the queue (resolve + decide, one save)', () => {
+  function escalatedDraft() {
+    const d = pendingDraft();
+    const r = d.escalate('system:approval-policy', USER, 'Approval SLA', 1);
+    if (r.isFailure) throw r.error;
+    return d;
+  }
+
+  it('approving an escalated draft resolves the escalation and approves it', async () => {
+    const d = escalatedDraft();
+    repo.findById.mockResolvedValue(d);
+
+    const result = await autoResponseRouter
+      .createCaller(ctx('MANAGER'))
+      .approve({ draftId: d.id.toString(), decision: 'APPROVED', decidedBy: USER });
+
+    expect(result.status).toBe('APPROVED');
+    expect(repo.save).toHaveBeenCalledTimes(1);
+    expect(d.statusHistory.map((h) => h.status)).toEqual(
+      expect.arrayContaining(['ESCALATED', 'PENDING_APPROVAL', 'APPROVED'])
+    );
+  });
+
+  it('rejecting an escalated draft resolves the escalation and rejects it', async () => {
+    const d = escalatedDraft();
+    repo.findById.mockResolvedValue(d);
+
+    const result = await autoResponseRouter
+      .createCaller(ctx('MANAGER'))
+      .reject({ draftId: d.id.toString(), decidedBy: USER, reason: 'Off-tone' });
+
+    expect(result.status).toBe('REJECTED');
+    expect(repo.save).toHaveBeenCalledTimes(1);
+  });
+
+  it('a draft that cannot be resolved (expired escalation) is refused with no save', async () => {
+    const d = escalatedDraft();
+    const resolve = vi
+      .spyOn(d, 'resolveEscalation')
+      .mockReturnValue({ isFailure: true, error: new Error('Draft has expired') } as never);
+    repo.findById.mockResolvedValue(d);
+
+    await expect(
+      autoResponseRouter
+        .createCaller(ctx('MANAGER'))
+        .approve({ draftId: d.id.toString(), decision: 'APPROVED', decidedBy: USER })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST', message: 'Draft has expired' });
+    expect(repo.save).not.toHaveBeenCalled();
+    resolve.mockRestore();
+  });
+});
+
 describe('submitForApproval — auto-approval (AC-013)', () => {
   const enabled = { autoApproveEnabled: true, autoApproveMinConfidence: 90 };
 

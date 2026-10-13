@@ -135,6 +135,19 @@ async function assertDraftReviewer(
  * records the policy, threshold and confidence. Any policy-read error leaves the
  * draft pending (fail closed).
  */
+/**
+ * An escalated draft is decided by its reviewer from the queue: resolve the escalation
+ * on the same aggregate first, so approve/reject (which require PENDING_APPROVAL) apply
+ * and both land in one optimistic-locked save. Not escalated: no-op.
+ */
+function resolveIfEscalated(draft: AutoResponseDraft, decidedBy: string): void {
+  if (draft.status !== 'ESCALATED') return;
+  const resolved = draft.resolveEscalation(decidedBy);
+  if (resolved.isFailure) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: resolved.error.message });
+  }
+}
+
 async function tryAutoApproveDraft(
   ctx: Context,
   tenantId: string,
@@ -414,6 +427,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       const decidedBy = sessionActor(ctx, input.decidedBy, 'decidedBy');
       await assertDraftReviewer(ctx, typedCtx.tenant.tenantId, draft);
+      resolveIfEscalated(draft, decidedBy);
 
       const approveResult = draft.approve(decidedBy, input.modifications, input.reason);
 
@@ -466,6 +480,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       const decidedBy = sessionActor(ctx, input.decidedBy, 'decidedBy');
       await assertDraftReviewer(ctx, typedCtx.tenant.tenantId, draft);
+      resolveIfEscalated(draft, decidedBy);
 
       const rejectResult = draft.reject(decidedBy, input.reason);
       if (rejectResult.isFailure) {

@@ -352,6 +352,28 @@ export const casesRouter = createTRPCRouter({
       throw new TRPCError({ code: 'BAD_REQUEST', message: 'Assignee is required' });
     }
 
+    // #890: the foreign keys reference bare ids, so the client account and the assignee
+    // must be checked against this tenant (approved agent actions call this too).
+    const [client, assignee] = await Promise.all([
+      ctx.prismaWithTenant.account.findFirst({
+        where: { id: input.clientId, tenantId },
+        select: { id: true },
+      }),
+      ctx.prismaWithTenant.user.findFirst({
+        where: { id: assignedTo, ...tenantUserWhere(tenantId) },
+        select: { id: true },
+      }),
+    ]);
+    if (!client) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Client account not found' });
+    }
+    if (!assignee) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'The assignee must be a user of this workspace.',
+      });
+    }
+
     const caseData = await ctx.prismaWithTenant.case.create({
       data: {
         title: input.title,
