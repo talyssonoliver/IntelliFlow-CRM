@@ -6,7 +6,8 @@ import { Skeleton } from '@intelliflow/ui';
 
 export default function ScheduledReportsLoading() {
   return (
-    <div className="w-full" aria-busy="true" aria-label="Loading scheduled reports">
+    <output className="block w-full" aria-busy="true" aria-label="Loading scheduled reports">
+      <span className="sr-only">Loading scheduled reports</span>
       <div className="mb-6 space-y-2">
         <Skeleton className="h-7 w-64" />
         <Skeleton className="h-4 w-96 max-w-full" />
@@ -18,6 +19,6 @@ export default function ScheduledReportsLoading() {
           <Skeleton className="h-28" />
         </div>
       </div>
-    </div>
+    </output>
   );
 }

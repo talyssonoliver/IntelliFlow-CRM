@@ -111,6 +111,15 @@ describe('TimezoneSelector', () => {
     expect(trigger.getAttribute('aria-label')).toBeNull();
   });
 
+  it('forwards invalid state and a description to the trigger (PG-201)', () => {
+    render(
+      <TimezoneSelector id="tz" value="UTC" onChange={vi.fn()} invalid describedBy="tz-error" />
+    );
+    const trigger = screen.getByTestId('select-trigger');
+    expect(trigger.getAttribute('aria-invalid')).toBe('true');
+    expect(trigger.getAttribute('aria-describedby')).toBe('tz-error');
+  });
+
   it('keeps a stored zone the runtime does not list as an option (PG-201)', () => {
     render(<TimezoneSelector value="Etc/Legacy_Zone" onChange={vi.fn()} />);
 

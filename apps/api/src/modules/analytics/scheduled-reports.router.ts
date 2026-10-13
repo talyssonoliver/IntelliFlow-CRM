@@ -127,10 +127,21 @@ async function assertTagsExist(ctx: ScheduleCtx, tags: string[] | undefined): Pr
   }
 }
 
-async function assertActiveCapacity(ctx: ScheduleCtx, excludeId?: string): Promise<void> {
-  const active = await ctx.prismaWithTenant.reportSchedule.count({
+/**
+ * Activation slot for one more active schedule. Runs inside the write transaction
+ * after a per-tenant advisory lock, so two concurrent activations cannot both pass
+ * the cap (the lock is released when the transaction ends).
+ */
+async function reserveActiveSlot(
+  tx: ScheduleTx,
+  tenantId: string,
+  excludeId?: string
+): Promise<void> {
+  const lockKey = 'report_schedules:' + tenantId;
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+  const active = await tx.reportSchedule.count({
     where: {
-      tenantId: ctx.tenant.tenantId,
+      tenantId,
       isActive: true,
       ...(excludeId ? { NOT: { id: excludeId } } : {}),
     },
@@ -288,7 +299,9 @@ const tagsRouter = createTRPCRouter({
             data: {
               ...(fields.name !== undefined && { name: fields.name }),
               ...(fields.colorToken !== undefined && { colorToken: fields.colorToken }),
-              ...(fields.description !== undefined && { description: fields.description }),
+              ...(fields.description !== undefined && {
+                description: fields.description === '' ? null : fields.description,
+              }),
               ...(fields.isActive !== undefined && { isActive: fields.isActive }),
             },
           });
@@ -356,27 +369,29 @@ export const scheduledReportsRouter = createTRPCRouter({
       const columns = buildScheduleColumns(input);
       // Validated for every schedule; stored only while active.
       const nextRun = checkedNextRun(columns.cronExpression, input.timezone, new Date());
-      if (isActive) await assertActiveCapacity(ctx);
 
       let view: ScheduledReportView;
       try {
-        const row = await ctx.prismaWithTenant.reportSchedule.create({
-          data: {
-            tenantId,
-            createdBy: ctx.tenant.userId,
-            templateId: input.templateId,
-            name: input.name,
-            description: input.description ?? null,
-            ...columns,
-            timezone: input.timezone,
-            recipients: input.recipients,
-            format: input.format,
-            colorToken: input.colorToken ?? 'slate',
-            tags: input.tags ?? [],
-            isActive,
-            nextRunAt: isActive ? nextRun : null,
-          },
-          include: SCHEDULE_INCLUDE,
+        const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
+          if (isActive) await reserveActiveSlot(tx, tenantId);
+          return tx.reportSchedule.create({
+            data: {
+              tenantId,
+              createdBy: ctx.tenant.userId,
+              templateId: input.templateId,
+              name: input.name,
+              description: input.description ?? null,
+              ...columns,
+              timezone: input.timezone,
+              recipients: input.recipients,
+              format: input.format,
+              colorToken: input.colorToken ?? 'slate',
+              tags: input.tags ?? [],
+              isActive,
+              nextRunAt: isActive ? nextRun : null,
+            },
+            include: SCHEDULE_INCLUDE,
+          });
         });
         view = normalizeScheduleRow(row, ctx.tenant.userId);
       } catch (err) {
@@ -397,7 +412,9 @@ export const scheduledReportsRouter = createTRPCRouter({
         where: { id, tenantId },
       });
       if (!existing) throw scheduleNotFound();
-      if (fields.templateId !== undefined) await assertTemplateVisible(ctx, fields.templateId);
+      const templateChanged =
+        fields.templateId !== undefined && fields.templateId !== existing.templateId;
+      if (templateChanged && fields.templateId) await assertTemplateVisible(ctx, fields.templateId);
       await assertTagsExist(ctx, fields.tags);
 
       const columns: ScheduleColumns | null = cadence
@@ -409,14 +426,10 @@ export const scheduledReportsRouter = createTRPCRouter({
       const templateId = fields.templateId ?? existing.templateId;
       const now = new Date();
 
-      if (isActive) {
-        assertReferenced(templateId, existing.reportId);
-        if (!existing.isActive) {
-          if (fields.templateId === undefined && templateId) {
-            await assertTemplateVisible(ctx, templateId);
-          }
-          await assertActiveCapacity(ctx, id);
-        }
+      const activating = isActive && !existing.isActive;
+      if (isActive) assertReferenced(templateId, existing.reportId);
+      if (activating && !templateChanged && templateId) {
+        await assertTemplateVisible(ctx, templateId);
       }
       const scheduleChanged = columns !== null || fields.timezone !== undefined;
       const nextRun =
@@ -426,8 +439,9 @@ export const scheduledReportsRouter = createTRPCRouter({
 
       let view: ScheduledReportView;
       try {
-        const row = await ctx.prismaWithTenant.$transaction(async (tx) =>
-          tx.reportSchedule.update({
+        const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
+          if (activating) await reserveActiveSlot(tx, tenantId, id);
+          return tx.reportSchedule.update({
             where: { id, tenantId },
             data: {
               ...(fields.name !== undefined && { name: fields.name }),
@@ -443,8 +457,8 @@ export const scheduledReportsRouter = createTRPCRouter({
               ...(nextRun !== null && { nextRunAt: isActive ? nextRun : null }),
             },
             include: SCHEDULE_INCLUDE,
-          })
-        );
+          });
+        });
         view = normalizeScheduleRow(row, ctx.tenant.userId);
       } catch (err) {
         rethrowScheduleWriteError(err);
@@ -473,17 +487,18 @@ export const scheduledReportsRouter = createTRPCRouter({
         assertReferenced(existing.templateId, existing.reportId);
         if (existing.templateId) await assertTemplateVisible(ctx, existing.templateId);
         nextRunAt = checkedNextRun(existing.cronExpression, existing.timezone, new Date());
-        if (!existing.isActive) await assertActiveCapacity(ctx, input.id);
       }
+      const activating = input.isActive && !existing.isActive;
 
       try {
-        const row = await ctx.prismaWithTenant.$transaction(async (tx) =>
-          tx.reportSchedule.update({
+        const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
+          if (activating) await reserveActiveSlot(tx, tenantId, input.id);
+          return tx.reportSchedule.update({
             where: { id: input.id, tenantId },
             data: { isActive: input.isActive, nextRunAt },
             include: SCHEDULE_INCLUDE,
-          })
-        );
+          });
+        });
         return normalizeScheduleRow(row, ctx.tenant.userId);
       } catch (err) {
         rethrowScheduleWriteError(err);

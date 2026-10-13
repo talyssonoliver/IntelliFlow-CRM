@@ -90,7 +90,9 @@ const createInput = {
 
 function txMock() {
   return {
+    $executeRaw: vi.fn().mockResolvedValue(1),
     reportSchedule: {
+      count: vi.fn().mockResolvedValue(0),
       update: vi.fn(),
       deleteMany: vi.fn(),
       findMany: vi.fn().mockResolvedValue([]),
@@ -129,6 +131,9 @@ describe('scheduledReportsRouter (PG-201)', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(NOW);
     logAction.mockReset().mockResolvedValue('audit-1');
+    // create runs in a transaction: by default the transaction client is prismaMock
+    // itself; update/setActive/delete tests install their own tx with useTx().
+    (prismaMock.$transaction as any).mockImplementation(async (fn: any) => fn(prismaMock));
     admin = scheduledReportsRouter.createCaller(createAdminContext());
     user = scheduledReportsRouter.createCaller(createTestContext());
   });
@@ -281,6 +286,19 @@ describe('scheduledReportsRouter (PG-201)', () => {
       await expectCode(admin.create(createInput), 'BAD_REQUEST');
     });
 
+    it('takes the per-tenant activation lock before counting active schedules', async () => {
+      visibleTemplate();
+      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(0);
+      (prismaMock.reportSchedule.create as any).mockImplementationOnce(async ({ data }: any) =>
+        scheduleRow(data)
+      );
+      await admin.create(createInput);
+      expect(prismaMock.$executeRaw).toHaveBeenCalledTimes(1);
+      const [strings, lockKey] = (prismaMock.$executeRaw as any).mock.calls[0];
+      expect(strings.join('?')).toContain('pg_advisory_xact_lock');
+      expect(lockKey).toBe(`report_schedules:${tenantId}`);
+    });
+
     it('skips the cap and the next run for an inactive schedule', async () => {
       visibleTemplate();
       (prismaMock.reportSchedule.create as any).mockImplementationOnce(async ({ data }: any) =>
@@ -288,6 +306,7 @@ describe('scheduledReportsRouter (PG-201)', () => {
       );
       await admin.create({ ...createInput, isActive: false });
       expect(prismaMock.reportSchedule.count).not.toHaveBeenCalled();
+      expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
       expect((prismaMock.reportSchedule.create as any).mock.calls[0][0].data.nextRunAt).toBeNull();
     });
 
@@ -444,13 +463,46 @@ describe('scheduledReportsRouter (PG-201)', () => {
         scheduleRow({ id: 'rs-migrated-t1', templateId: null, template: null, isActive: false })
       );
       visibleTemplate();
-      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(3);
       const tx = useTx();
+      tx.reportSchedule.count.mockResolvedValueOnce(3);
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.update({ id: 'rs-migrated-t1', templateId: TEMPLATE_ID, isActive: true });
+      expect(tx.$executeRaw).toHaveBeenCalled();
+      expect(tx.reportSchedule.count).toHaveBeenCalledWith({
+        where: { tenantId, isActive: true, NOT: { id: 'rs-migrated-t1' } },
+      });
       const { data } = tx.reportSchedule.update.mock.calls[0][0];
       expect(data).toMatchObject({ templateId: TEMPLATE_ID, isActive: true });
       expect(data.nextRunAt).toBeInstanceOf(Date);
+    });
+
+    it('does not re-check an unchanged template (another user private template stays editable)', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({
+          template: {
+            id: TEMPLATE_ID,
+            name: 'Pipeline',
+            createdBy: 'someone-else',
+            sharingScope: 'private',
+          },
+        })
+      );
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, templateId: TEMPLATE_ID, name: 'Renamed' });
+      expect(prismaMock.reportTemplate.findFirst).not.toHaveBeenCalled();
+      expect(tx.$executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('enforces the active cap when an update activates a schedule', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ isActive: false })
+      );
+      visibleTemplate();
+      const tx = useTx();
+      tx.reportSchedule.count.mockResolvedValueOnce(100);
+      await expectCode(admin.update({ id: SCHEDULE_ID, isActive: true }), 'BAD_REQUEST');
+      expect(tx.reportSchedule.update).not.toHaveBeenCalled();
     });
 
     it('audits a recipient change by count only', async () => {
@@ -505,10 +557,11 @@ describe('scheduledReportsRouter (PG-201)', () => {
         scheduleRow({ isActive: false, nextRunAt: null })
       );
       visibleTemplate();
-      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(5);
       const tx = useTx();
+      tx.reportSchedule.count.mockResolvedValueOnce(5);
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.setActive({ id: SCHEDULE_ID, isActive: true });
+      expect(tx.$executeRaw).toHaveBeenCalled();
       const { data } = tx.reportSchedule.update.mock.calls[0][0];
       expect(data.isActive).toBe(true);
       expect(data.nextRunAt.toISOString()).toBe('2026-10-19T08:00:00.000Z');
@@ -542,18 +595,19 @@ describe('scheduledReportsRouter (PG-201)', () => {
         scheduleRow({ isActive: false })
       );
       visibleTemplate();
-      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(100);
+      const tx = useTx();
+      tx.reportSchedule.count.mockResolvedValueOnce(100);
       await expectCode(admin.setActive({ id: SCHEDULE_ID, isActive: true }), 'BAD_REQUEST');
-      expect(prismaMock.reportSchedule.count).toHaveBeenCalledWith({
+      expect(tx.reportSchedule.count).toHaveBeenCalledWith({
         where: { tenantId, isActive: true, NOT: { id: SCHEDULE_ID } },
       });
+      expect(tx.reportSchedule.update).not.toHaveBeenCalled();
     });
 
     it('activates a legacy report-definition schedule without a template check', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
         scheduleRow({ templateId: null, template: null, reportId: 'rep-1', isActive: false })
       );
-      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(0);
       const tx = useTx();
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.setActive({ id: SCHEDULE_ID, isActive: true });
@@ -683,6 +737,17 @@ describe('scheduledReportsRouter (PG-201)', () => {
         data: { tags: ['Money'] },
       });
       expect(view.name).toBe('Money');
+    });
+
+    it('clears a tag description when an empty string is sent', async () => {
+      const tx = useTx();
+      tx.reportScheduleTag.findFirst.mockResolvedValueOnce(tagRow({ description: 'Old' }));
+      tx.reportScheduleTag.update.mockResolvedValueOnce(tagRow({ description: null }));
+      await admin.tags.update({ id: 'tag-1', description: '' });
+      expect(tx.reportScheduleTag.update).toHaveBeenCalledWith({
+        where: { id: 'tag-1', tenantId },
+        data: { description: null },
+      });
     });
 
     it('updates colour without touching schedules', async () => {

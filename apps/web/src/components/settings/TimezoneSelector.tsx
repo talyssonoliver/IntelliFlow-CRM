@@ -26,6 +26,10 @@ interface TimezoneSelectorProps {
   disabled?: boolean;
   /** id for the trigger, so an external <Label htmlFor> names it. */
   id?: string;
+  /** Marks the trigger invalid (aria-invalid). */
+  invalid?: boolean;
+  /** id of an element describing the trigger, e.g. a field error. */
+  describedBy?: string;
 }
 
 /** Curated fallback list when Intl.supportedValuesOf is unavailable */
@@ -115,6 +119,8 @@ export function TimezoneSelector({
   onChange,
   disabled,
   id,
+  invalid,
+  describedBy,
 }: Readonly<TimezoneSelectorProps>) {
   const grouped = useMemo(() => {
     const tzList = getTimezones();
@@ -146,7 +152,13 @@ export function TimezoneSelector({
   return (
     <div className="space-y-2">
       <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger id={id} aria-label={id ? undefined : 'Timezone'} className="w-full">
+        <SelectTrigger
+          id={id}
+          aria-label={id ? undefined : 'Timezone'}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          className="w-full"
+        >
           <SelectValue placeholder="Select timezone" />
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">

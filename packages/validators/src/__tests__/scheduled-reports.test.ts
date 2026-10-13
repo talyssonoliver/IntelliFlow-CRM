@@ -81,6 +81,11 @@ describe('cronExpressionSchema', () => {
     expect(cronExpressionSchema.safeParse('*/30 8,12 1 1,4,7,10 *').success).toBe(true);
   });
 
+  it('normalises repeated spaces and tabs to single spaces (matches the DB CHECK)', () => {
+    const r = cronExpressionSchema.safeParse('  0  9\t* *   1-5 ');
+    expect(r.success && r.data).toBe('0 9 * * 1-5');
+  });
+
   it('rejects 6-field and 4-field expressions', () => {
     expect(cronExpressionSchema.safeParse('0 0 9 * * 1').success).toBe(false);
     expect(cronExpressionSchema.safeParse('0 9 * *').success).toBe(false);

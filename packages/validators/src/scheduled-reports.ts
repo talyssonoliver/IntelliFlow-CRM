@@ -37,9 +37,12 @@ const IANA_ZONE_REGEX = /^(UTC|[A-Za-z_]+(?:\/[A-Za-z0-9_+-]+)+)$/;
 export const cronExpressionSchema = z
   .string()
   .trim()
+  // Single spaces between fields: the stored value must match the DB CHECK
+  // (report_schedules_cronExpression_check) and BullMQ's pattern verbatim.
+  .overwrite((value) => value.split(/\s+/).join(' '))
   .max(SCHEDULE_LIMITS.maxCronLength)
   .refine((value) => {
-    const fields = value.split(/\s+/);
+    const fields = value.split(' ');
     return fields.length === 5 && fields.every((f) => CRON_FIELD_REGEX.test(f));
   }, 'Use a 5-field cron expression: minute hour day-of-month month day-of-week.');
 

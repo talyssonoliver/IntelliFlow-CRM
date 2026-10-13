@@ -100,7 +100,7 @@ export function ScheduleList({
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-sm font-medium text-foreground">{s.name}</p>
               <p
-                className={`text-xs ${missingTemplate ? 'text-destructive' : 'text-muted-foreground'}`}
+                className={`text-xs ${missingTemplate ? 'text-red-600 dark:text-red-400' : 'text-muted-foreground'}`}
               >
                 {templateLabel(s)}
               </p>
@@ -136,8 +136,11 @@ export function ScheduleList({
             <div className="flex shrink-0 items-center gap-2">
               <Switch
                 checked={s.isActive}
-                disabled={!canEdit || busy}
-                onCheckedChange={(checked) => onToggle(s, checked)}
+                disabled={!canEdit}
+                aria-busy={busy || undefined}
+                onCheckedChange={(checked) => {
+                  if (!busy) onToggle(s, checked);
+                }}
                 aria-label={`Active: ${s.name}`}
               />
               {canEdit && (

@@ -8,6 +8,7 @@ import {
   Button,
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -79,12 +80,17 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
   const submit = async () => {
     const name = dialog.name.trim();
     if (!name) return;
-    const description = dialog.description.trim() || undefined;
+    const description = dialog.description.trim();
     try {
       if (dialog.editing) {
+        // An empty string clears the stored description (undefined would leave it unchanged).
         await onUpdate({ id: dialog.editing.id, name, colorToken: dialog.colorToken, description });
       } else {
-        await onCreate({ name, colorToken: dialog.colorToken, description });
+        await onCreate({
+          name,
+          colorToken: dialog.colorToken,
+          description: description || undefined,
+        });
       }
       close();
     } catch {
@@ -162,16 +168,23 @@ export const TagsTab = forwardRef<TagsTabHandle, TagsTabProps>(function TagsTab(
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{dialog.editing ? 'Edit Tag' : 'New Tag'}</DialogTitle>
+            <DialogDescription>
+              Tags group scheduled reports. The name is required; Create stays disabled until you
+              enter one.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label htmlFor="schedule-tag-name">Name</Label>
+              <Label htmlFor="schedule-tag-name">
+                Name <span aria-hidden="true">*</span>
+              </Label>
               <Input
                 id="schedule-tag-name"
                 value={dialog.name}
                 maxLength={50}
                 onChange={(e) => setDialog((d) => ({ ...d, name: e.target.value }))}
                 placeholder="e.g. Finance"
+                aria-required="true"
               />
             </div>
             <div className="space-y-1.5">

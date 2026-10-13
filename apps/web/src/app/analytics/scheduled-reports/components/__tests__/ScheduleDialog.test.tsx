@@ -95,10 +95,10 @@ function renderDialog(props: Partial<Parameters<typeof ScheduleDialog>[0]> = {})
 }
 
 function fillValidCreate() {
-  fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Weekly pipeline' } });
-  fireEvent.change(screen.getByLabelText('Report template'), { target: { value: TEMPLATE_ID } });
+  fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'Weekly pipeline' } });
+  fireEvent.change(screen.getByLabelText(/^Report template/), { target: { value: TEMPLATE_ID } });
   fireEvent.change(screen.getByLabelText('Timezone'), { target: { value: 'Europe/London' } });
-  fireEvent.change(screen.getByLabelText('Recipients'), {
+  fireEvent.change(screen.getByLabelText(/^Recipients/), {
     target: { value: 'Lead@Example.invalid\nops@example.invalid' },
   });
 }
@@ -173,12 +173,12 @@ describe('ScheduleDialog', () => {
   it('shows inline errors, marks fields invalid and focuses the first one', async () => {
     const { onSubmit } = renderDialog();
     save();
-    const name = screen.getByLabelText('Name');
+    const name = screen.getByLabelText(/^Name/);
     await waitFor(() => expect(name).toHaveAttribute('aria-invalid', 'true'));
     expect(name).toHaveAttribute('aria-describedby', 'schedule-name-error');
     expect(screen.getByText('Choose a report template.')).toBeInTheDocument();
     expect(screen.getByText('Add at least one recipient.')).toBeInTheDocument();
-    expect(screen.getByLabelText('Recipients')).toHaveAttribute(
+    expect(screen.getByLabelText(/^Recipients/)).toHaveAttribute(
       'aria-describedby',
       'schedule-recipients-hint schedule-recipients-error'
     );
@@ -189,7 +189,7 @@ describe('ScheduleDialog', () => {
   it('rejects a duplicate name (case-insensitive) before calling the API', async () => {
     const { onSubmit } = renderDialog();
     fillValidCreate();
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'MONTHLY revenue' } });
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'MONTHLY revenue' } });
     save();
     expect(
       await screen.findByText('A scheduled report with this name already exists.')
@@ -200,7 +200,7 @@ describe('ScheduleDialog', () => {
   it('rejects a duplicate recipient', async () => {
     renderDialog();
     fillValidCreate();
-    fireEvent.change(screen.getByLabelText('Recipients'), {
+    fireEvent.change(screen.getByLabelText(/^Recipients/), {
       target: { value: 'a@example.invalid, A@example.invalid' },
     });
     save();
@@ -210,7 +210,7 @@ describe('ScheduleDialog', () => {
   it('edits an existing schedule and sends an update with its id', async () => {
     const { onSubmit } = renderDialog({ schedule: existingSchedule() });
     expect(screen.getByRole('heading', { name: 'Edit Scheduled Report' })).toBeInTheDocument();
-    expect(screen.getByLabelText('Name')).toHaveValue('Weekly pipeline');
+    expect(screen.getByLabelText(/^Name/)).toHaveValue('Weekly pipeline');
     expect(screen.getByLabelText('Day of the month')).toHaveValue('15');
     fireEvent.change(screen.getByLabelText('Description (optional)'), { target: { value: '' } });
     save();
@@ -229,6 +229,34 @@ describe('ScheduleDialog', () => {
         isActive: false,
       }),
     });
+    // The template is unchanged, so it is not re-sent (no visibility re-check).
+    expect(onSubmit.mock.calls[0][0].input).not.toHaveProperty('templateId');
+  });
+
+  it('sends a newly chosen template on update', async () => {
+    const other = 'clh3x2k8a0002qz8l1v2r3s4t';
+    const { onSubmit } = renderDialog({
+      schedule: existingSchedule(),
+      templates: [...templates, { id: other, name: 'Revenue' }],
+    });
+    fireEvent.change(screen.getByLabelText(/^Report template/), { target: { value: other } });
+    save();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0].input).toMatchObject({ templateId: other });
+  });
+
+  it('marks required fields and names the format radio group', () => {
+    renderDialog();
+    expect(screen.getByLabelText(/^Name/)).toHaveAttribute('aria-required', 'true');
+    expect(screen.getByLabelText(/^Recipients/)).toHaveAttribute('aria-required', 'true');
+    expect(screen.getByRole('radiogroup', { name: 'Delivery format' })).toBeInTheDocument();
+    expect(screen.getByTestId('schedule-preview')).toHaveAttribute('aria-atomic', 'true');
+  });
+
+  it('names the no-templates message by the template label', () => {
+    renderDialog({ templates: [] });
+    const message = screen.getByText(/No report templates yet/);
+    expect(message).toHaveAttribute('aria-labelledby', 'schedule-template-label');
   });
 
   it('keeps a template the user cannot see selectable for an existing schedule', () => {

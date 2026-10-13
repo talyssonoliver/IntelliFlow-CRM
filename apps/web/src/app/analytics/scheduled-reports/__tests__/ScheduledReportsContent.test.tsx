@@ -231,12 +231,23 @@ describe('ScheduledReportsContent', () => {
     expect(mutations.setActive.mutate).toHaveBeenCalledWith({ id: 's1', isActive: false });
   });
 
-  it('disables only the row whose toggle is pending', () => {
+  it('marks only the row whose toggle is pending as busy', () => {
     setup();
     mutations.setActive.isPending = true;
     mutations.setActive.variables = { id: 's1', isActive: false };
     render(<ScheduledReportsContent />);
-    expect(screen.getByRole('switch', { name: 'Active: Weekly pipeline' })).toBeDisabled();
+    expect(screen.getByRole('switch', { name: 'Active: Weekly pipeline' })).toHaveAttribute(
+      'aria-busy',
+      'true'
+    );
+  });
+
+  it('labels each card as a region', () => {
+    setup();
+    render(<ScheduledReportsContent />);
+    expect(screen.getByRole('region', { name: 'Schedules' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Tags' })).toBeInTheDocument();
+    expect(screen.getByRole('region', { name: 'Delivery status' })).toBeInTheDocument();
   });
 
   it('deletes a schedule after confirmation and reports success', async () => {
@@ -252,6 +263,8 @@ describe('ScheduledReportsContent', () => {
     expect(vars).toEqual({ id: 's1' });
     opts.onSuccess();
     expect(toast).toHaveBeenCalledWith({ title: 'Schedule deleted' });
+    // Focus stays in the card instead of falling to <body>.
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Schedules' }));
   });
 
   it('deletes a tag after confirmation', async () => {
@@ -276,6 +289,7 @@ describe('ScheduledReportsContent', () => {
     await waitFor(() => expect(mutations.tagDelete.mutate).toHaveBeenCalled());
     mutations.tagDelete.mutate.mock.calls[0][1].onSuccess();
     expect(toast).toHaveBeenCalledWith({ title: 'Tag deleted' });
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Tags' }));
   });
 
   it('opens the tag dialog from the SectionHeader through the TagsTab ref and creates a tag', async () => {
@@ -283,7 +297,7 @@ describe('ScheduledReportsContent', () => {
     render(<ScheduledReportsContent />);
     fireEvent.click(screen.getByRole('button', { name: 'New Tag' }));
     expect(await screen.findByRole('heading', { name: 'New Tag' })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Ops' } });
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'Ops' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() =>
       expect(mutations.tagCreate.mutateAsync).toHaveBeenCalledWith(
@@ -307,7 +321,7 @@ describe('ScheduledReportsContent', () => {
     });
     render(<ScheduledReportsContent />);
     fireEvent.click(screen.getByRole('button', { name: 'Edit tag Finance' }));
-    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Money' } });
+    fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: 'Money' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() =>
       expect(mutations.tagUpdate.mutateAsync).toHaveBeenCalledWith(
@@ -323,9 +337,9 @@ describe('ScheduledReportsContent', () => {
     expect(
       await screen.findByRole('heading', { name: 'New Scheduled Report' })
     ).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Weekly pipeline' } });
-    fireEvent.change(screen.getByLabelText('Report template'), { target: { value: TEMPLATE_ID } });
-    fireEvent.change(screen.getByLabelText('Recipients'), {
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'Weekly pipeline' } });
+    fireEvent.change(screen.getByLabelText(/^Report template/), { target: { value: TEMPLATE_ID } });
+    fireEvent.change(screen.getByLabelText(/^Recipients/), {
       target: { value: 'lead@example.invalid' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Save Schedule' }));

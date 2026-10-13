@@ -5,7 +5,7 @@
 // calling the API, shows inline errors (aria-invalid + aria-describedby) and moves
 // focus to the first invalid field. The cadence preview is announced politely.
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import {
   Button,
@@ -185,7 +185,8 @@ function cadenceFields(f: FormState) {
   return { timeOfDay: f.timeOfDay, ...weekly, ...monthly };
 }
 
-function commonFields(f: FormState) {
+function commonFields(f: FormState, original: ScheduleItem | null) {
+  const templateChanged = !original || f.templateId !== (original.templateId ?? '');
   return {
     name: f.name,
     cadence: f.cadence,
@@ -196,7 +197,9 @@ function commonFields(f: FormState) {
     colorToken: f.colorToken,
     tags: f.tags,
     isActive: f.isActive,
-    ...(f.templateId ? { templateId: f.templateId } : {}),
+    // Re-sending an unchanged template would re-run the visibility check, which fails
+    // for another user's private template; only a newly chosen template is sent.
+    ...(f.templateId && templateChanged ? { templateId: f.templateId } : {}),
   };
 }
 
@@ -234,7 +237,7 @@ function focusFirstInvalid(errors: FieldErrors): void {
 function FieldError({ id, message }: Readonly<{ id: string; message?: string }>) {
   if (!message) return null;
   return (
-    <p id={id} className="text-xs text-destructive">
+    <p id={id} className="text-xs text-red-600 dark:text-red-400">
       {message}
     </p>
   );
@@ -242,6 +245,123 @@ function FieldError({ id, message }: Readonly<{ id: string; message?: string }>)
 
 function Field({ children }: Readonly<{ children: ReactNode }>) {
   return <div className="space-y-1.5">{children}</div>;
+}
+
+type SetField = <K extends keyof FormState>(key: K, value: FormState[K]) => void;
+type ErrorProps = (key: FieldKey) => {
+  'aria-invalid': true | undefined;
+  'aria-describedby': string | undefined;
+};
+
+/** The cadence-specific inputs: day of week / day of month, then time of day or a custom cron. */
+function CadenceFields({
+  form,
+  set,
+  errors,
+  errorProps,
+}: Readonly<{ form: FormState; set: SetField; errors: FieldErrors; errorProps: ErrorProps }>) {
+  const isWeekly = form.cadence === 'weekly';
+  const needsDayOfMonth = form.cadence === 'monthly' || form.cadence === 'quarterly';
+  const isCustom = form.cadence === 'custom';
+  return (
+    <>
+      {isWeekly && (
+        <Field>
+          <Label htmlFor="schedule-day-of-week">Day of the week</Label>
+          <Select value={form.dayOfWeek} onValueChange={(v) => set('dayOfWeek', v)}>
+            <SelectTrigger id="schedule-day-of-week" {...errorProps('dayOfWeek')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DAYS_OF_WEEK.map((day, i) => (
+                <SelectItem key={day} value={String(i)}>
+                  {day}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError id="schedule-day-of-week-error" message={errors.dayOfWeek} />
+        </Field>
+      )}
+
+      {needsDayOfMonth && (
+        <Field>
+          <Label htmlFor="schedule-day-of-month">Day of the month</Label>
+          <Select value={form.dayOfMonth} onValueChange={(v) => set('dayOfMonth', v)}>
+            <SelectTrigger id="schedule-day-of-month" {...errorProps('dayOfMonth')}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {DAYS_OF_MONTH.map((d) => (
+                <SelectItem key={d} value={d}>
+                  {d}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <FieldError id="schedule-day-of-month-error" message={errors.dayOfMonth} />
+        </Field>
+      )}
+
+      {isCustom ? (
+        <div className="md:col-span-2">
+          <Field>
+            <Label htmlFor="schedule-cron">Cron expression</Label>
+            <Input
+              id="schedule-cron"
+              value={form.cronExpression}
+              maxLength={100}
+              onChange={(e) => set('cronExpression', e.target.value)}
+              placeholder="0 9 * * 1-5"
+              aria-invalid={errors.cronExpression ? true : undefined}
+              aria-describedby={
+                errors.cronExpression
+                  ? 'schedule-cron-hint schedule-cron-error'
+                  : 'schedule-cron-hint'
+              }
+            />
+            <p id="schedule-cron-hint" className="text-xs text-muted-foreground">
+              Five fields: minute, hour, day of month, month, day of week. At most once an hour.
+            </p>
+            <FieldError id="schedule-cron-error" message={errors.cronExpression} />
+          </Field>
+        </div>
+      ) : (
+        <Field>
+          <Label htmlFor="schedule-time">Time of day</Label>
+          <Input
+            id="schedule-time"
+            type="time"
+            value={form.timeOfDay}
+            onChange={(e) => set('timeOfDay', e.target.value)}
+            {...errorProps('timeOfDay')}
+          />
+          <FieldError id="schedule-time-error" message={errors.timeOfDay} />
+        </Field>
+      )}
+    </>
+  );
+}
+
+/** Plain-English preview of the cadence currently in the form. */
+function previewFor(form: FormState): string {
+  return describeSchedule({
+    cadence: form.cadence,
+    dayOfWeek: Number(form.dayOfWeek),
+    dayOfMonth: Number(form.dayOfMonth),
+    timeOfDay: form.timeOfDay,
+    cronExpression: form.cronExpression.trim() || null,
+    timezone: form.timezone,
+  });
+}
+
+/** A template the caller cannot see (or that no longer exists) still shows as selected. */
+function withCurrentTemplate(
+  templates: ReadonlyArray<{ id: string; name: string }>,
+  templateId: string
+): ReadonlyArray<{ id: string; name: string }> {
+  if (!templateId || templates.some((t) => t.id === templateId)) return templates;
+  return [...templates, { id: templateId, name: 'Current template (not visible to you)' }];
 }
 
 export function ScheduleDialog({
@@ -256,33 +376,25 @@ export function ScheduleDialog({
 }: ScheduleDialogProps) {
   const [form, setForm] = useState<FormState>(() => initialState(schedule));
   const [errors, setErrors] = useState<FieldErrors>({});
+  const [focusRequest, setFocusRequest] = useState(0);
 
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setForm((f) => ({ ...f, [key]: value }));
+  useEffect(() => {
+    if (focusRequest > 0) focusFirstInvalid(errors);
+  }, [focusRequest, errors]);
 
-  const errorProps = (key: FieldKey) => ({
+  const set: SetField = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const errorProps: ErrorProps = (key) => ({
     'aria-invalid': errors[key] ? true : undefined,
     'aria-describedby': errors[key] ? `${FIELD_ID[key]}-error` : undefined,
   });
 
-  const preview = describeSchedule({
-    cadence: form.cadence,
-    dayOfWeek: Number(form.dayOfWeek),
-    dayOfMonth: Number(form.dayOfMonth),
-    timeOfDay: form.timeOfDay,
-    cronExpression: form.cronExpression.trim() || null,
-    timezone: form.timezone,
-  });
-
-  // A template the caller cannot see (or no longer exists) still shows as selected.
-  const templateOptions =
-    form.templateId && !templates.some((t) => t.id === form.templateId)
-      ? [...templates, { id: form.templateId, name: 'Current template (not visible to you)' }]
-      : templates;
+  const preview = previewFor(form);
+  const templateOptions = withCurrentTemplate(templates, form.templateId);
 
   /** Validate the form; returns the API payload, or null after showing the errors. */
   function validate(): ScheduleSubmit | null {
-    const fields = commonFields(form);
+    const fields = commonFields(form, schedule);
     const description = form.description.trim();
     const nameCheck = scheduleNameConflictSchema(existingNames, schedule?.id).safeParse(form.name);
     let submit: ScheduleSubmit | null = null;
@@ -306,7 +418,7 @@ export function ScheduleDialog({
     if (!nameCheck.success && !next.name) next.name = nameCheck.error.issues[0].message;
     setErrors(next);
     if (submit && nameCheck.success) return submit;
-    focusFirstInvalid(next);
+    setFocusRequest((n) => n + 1);
     return null;
   }
 
@@ -320,18 +432,14 @@ export function ScheduleDialog({
     });
   }
 
-  const isWeekly = form.cadence === 'weekly';
-  const needsDayOfMonth = form.cadence === 'monthly' || form.cadence === 'quarterly';
-  const isCustom = form.cadence === 'custom';
-
   return (
     <Dialog open={open} onOpenChange={(next) => !isSaving && onOpenChange(next)}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{schedule ? 'Edit Scheduled Report' : 'New Scheduled Report'}</DialogTitle>
           <DialogDescription>
-            Choose what to send, when, and to whom. Delivery starts once the report runner is
-            enabled.
+            Choose what to send, when, and to whom. Fields marked * are required. Delivery starts
+            once the report runner is enabled.
           </DialogDescription>
         </DialogHeader>
 
@@ -342,13 +450,16 @@ export function ScheduleDialog({
         >
           <div className="md:col-span-2">
             <Field>
-              <Label htmlFor="schedule-name">Name</Label>
+              <Label htmlFor="schedule-name">
+                Name <span aria-hidden="true">*</span>
+              </Label>
               <Input
                 id="schedule-name"
                 value={form.name}
                 maxLength={100}
                 onChange={(e) => set('name', e.target.value)}
                 placeholder="e.g. Weekly pipeline summary"
+                aria-required="true"
                 {...errorProps('name')}
               />
               <FieldError id="schedule-name-error" message={errors.name} />
@@ -371,18 +482,33 @@ export function ScheduleDialog({
 
           <div className="md:col-span-2">
             <Field>
-              <Label htmlFor="schedule-template">Report template</Label>
+              <Label id="schedule-template-label" htmlFor="schedule-template">
+                Report template <span aria-hidden="true">*</span>
+              </Label>
               {templateOptions.length === 0 ? (
-                <p id="schedule-template" tabIndex={-1} className="text-sm text-muted-foreground">
+                <p
+                  id="schedule-template"
+                  tabIndex={-1}
+                  aria-labelledby="schedule-template-label"
+                  aria-describedby={errors.templateId ? 'schedule-template-error' : undefined}
+                  className="text-sm text-muted-foreground"
+                >
                   No report templates yet.{' '}
-                  <Link href="/analytics/report-templates" className="text-primary underline">
+                  <Link
+                    href="/analytics/report-templates"
+                    className="text-blue-700 underline dark:text-blue-300"
+                  >
                     Create a report template
                   </Link>{' '}
                   first.
                 </p>
               ) : (
                 <Select value={form.templateId} onValueChange={(v) => set('templateId', v)}>
-                  <SelectTrigger id="schedule-template" {...errorProps('templateId')}>
+                  <SelectTrigger
+                    id="schedule-template"
+                    aria-required="true"
+                    {...errorProps('templateId')}
+                  >
                     <SelectValue placeholder="Choose a template" />
                   </SelectTrigger>
                   <SelectContent>
@@ -420,80 +546,7 @@ export function ScheduleDialog({
             </Select>
           </Field>
 
-          {isWeekly && (
-            <Field>
-              <Label htmlFor="schedule-day-of-week">Day of the week</Label>
-              <Select value={form.dayOfWeek} onValueChange={(v) => set('dayOfWeek', v)}>
-                <SelectTrigger id="schedule-day-of-week" {...errorProps('dayOfWeek')}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DAYS_OF_WEEK.map((day, i) => (
-                    <SelectItem key={day} value={String(i)}>
-                      {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError id="schedule-day-of-week-error" message={errors.dayOfWeek} />
-            </Field>
-          )}
-
-          {needsDayOfMonth && (
-            <Field>
-              <Label htmlFor="schedule-day-of-month">Day of the month</Label>
-              <Select value={form.dayOfMonth} onValueChange={(v) => set('dayOfMonth', v)}>
-                <SelectTrigger id="schedule-day-of-month" {...errorProps('dayOfMonth')}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DAYS_OF_MONTH.map((d) => (
-                    <SelectItem key={d} value={d}>
-                      {d}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FieldError id="schedule-day-of-month-error" message={errors.dayOfMonth} />
-            </Field>
-          )}
-
-          {isCustom ? (
-            <div className="md:col-span-2">
-              <Field>
-                <Label htmlFor="schedule-cron">Cron expression</Label>
-                <Input
-                  id="schedule-cron"
-                  value={form.cronExpression}
-                  maxLength={100}
-                  onChange={(e) => set('cronExpression', e.target.value)}
-                  placeholder="0 9 * * 1-5"
-                  aria-invalid={errors.cronExpression ? true : undefined}
-                  aria-describedby={
-                    errors.cronExpression
-                      ? 'schedule-cron-hint schedule-cron-error'
-                      : 'schedule-cron-hint'
-                  }
-                />
-                <p id="schedule-cron-hint" className="text-xs text-muted-foreground">
-                  Five fields: minute, hour, day of month, month, day of week. At most once an hour.
-                </p>
-                <FieldError id="schedule-cron-error" message={errors.cronExpression} />
-              </Field>
-            </div>
-          ) : (
-            <Field>
-              <Label htmlFor="schedule-time">Time of day</Label>
-              <Input
-                id="schedule-time"
-                type="time"
-                value={form.timeOfDay}
-                onChange={(e) => set('timeOfDay', e.target.value)}
-                {...errorProps('timeOfDay')}
-              />
-              <FieldError id="schedule-time-error" message={errors.timeOfDay} />
-            </Field>
-          )}
+          <CadenceFields form={form} set={set} errors={errors} errorProps={errorProps} />
 
           <div className="md:col-span-2">
             <Field>
@@ -503,6 +556,8 @@ export function ScheduleDialog({
                 value={form.timezone}
                 onChange={(tz) => set('timezone', tz)}
                 disabled={isSaving}
+                invalid={Boolean(errors.timezone)}
+                describedBy={errors.timezone ? 'schedule-timezone-error' : undefined}
               />
               <FieldError id="schedule-timezone-error" message={errors.timezone} />
             </Field>
@@ -511,6 +566,7 @@ export function ScheduleDialog({
           <p
             className="md:col-span-2 rounded-md bg-muted px-3 py-2 text-sm text-foreground"
             aria-live="polite"
+            aria-atomic="true"
             data-testid="schedule-preview"
           >
             {preview}
@@ -518,13 +574,16 @@ export function ScheduleDialog({
 
           <div className="md:col-span-2">
             <Field>
-              <Label htmlFor="schedule-recipients">Recipients</Label>
+              <Label htmlFor="schedule-recipients">
+                Recipients <span aria-hidden="true">*</span>
+              </Label>
               <Textarea
                 id="schedule-recipients"
                 value={form.recipientsText}
                 rows={3}
                 onChange={(e) => set('recipientsText', e.target.value)}
                 placeholder="lead@example.com"
+                aria-required="true"
                 aria-invalid={errors.recipients ? true : undefined}
                 aria-describedby={
                   errors.recipients
@@ -540,8 +599,11 @@ export function ScheduleDialog({
           </div>
 
           <fieldset className="md:col-span-2 space-y-2">
-            <legend className="text-sm font-medium">Delivery format</legend>
+            <legend id="schedule-format-legend" className="text-sm font-medium">
+              Delivery format
+            </legend>
             <RadioGroup
+              aria-labelledby="schedule-format-legend"
               value={form.format}
               onValueChange={(v) => {
                 const parsed = scheduleDeliveryFormatSchema.safeParse(v);
@@ -632,7 +694,7 @@ export function ScheduleDialog({
             <p
               id="schedule-form-error"
               role="alert"
-              className="md:col-span-2 text-sm text-destructive"
+              className="md:col-span-2 text-sm text-red-600 dark:text-red-400"
             >
               {errors.form}
             </p>

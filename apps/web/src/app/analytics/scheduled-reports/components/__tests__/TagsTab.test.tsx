@@ -42,7 +42,7 @@ describe('TagsTab', () => {
     const { ref, onCreate } = renderTags();
     act(() => ref.current?.openCreate());
     expect(await screen.findByRole('heading', { name: 'New Tag' })).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: '  Ops  ' } });
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: '  Ops  ' } });
     fireEvent.change(screen.getByLabelText('Colour'), { target: { value: 'teal' } });
     fireEvent.change(screen.getByLabelText('Description (optional)'), {
       target: { value: 'Ops team' },
@@ -69,14 +69,14 @@ describe('TagsTab', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Edit tag Finance' }));
     expect(await screen.findByRole('heading', { name: 'Edit Tag' })).toBeInTheDocument();
     expect(screen.getByLabelText('Colour')).toHaveValue('slate');
-    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Money' } });
+    fireEvent.change(screen.getByLabelText(/^Name/), { target: { value: 'Money' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() =>
       expect(onUpdate).toHaveBeenCalledWith({
         id: 't1',
         name: 'Money',
         colorToken: 'slate',
-        description: undefined,
+        description: '',
       })
     );
   });
@@ -84,7 +84,7 @@ describe('TagsTab', () => {
   it('keeps the dialog open when saving fails', async () => {
     const { ref } = renderTags({ onCreate: vi.fn().mockRejectedValue(new Error('taken')) });
     act(() => ref.current?.openCreate());
-    fireEvent.change(await screen.findByLabelText('Name'), { target: { value: 'Finance' } });
+    fireEvent.change(await screen.findByLabelText(/^Name/), { target: { value: 'Finance' } });
     fireEvent.click(screen.getByRole('button', { name: 'Create' }));
     await waitFor(() =>
       expect(screen.getByRole('heading', { name: 'New Tag' })).toBeInTheDocument()

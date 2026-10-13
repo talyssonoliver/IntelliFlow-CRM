@@ -33,6 +33,21 @@ needs the owner; the additive migration must be applied before the code ships.
 | `report_executions.scheduleId` FK + index | IFC-308 scope | ADR-075 "Left to IFC-308" |
 | Three route-local `SectionHeader` copies (territory-mapping, task-settings, scheduled-reports inline) | DRY follow-up | this file; extraction is a separate refactor (L1) |
 
+## Review fixes (2026-10-13)
+
+- Codex semantic review (4 findings, all real, all fixed): cron whitespace normalised
+  to match the DB CHECK; an unchanged (possibly another user's private) template is no
+  longer re-checked on update; the active-schedule cap is enforced inside the write
+  transaction under a per-tenant advisory lock; clearing a tag description stores NULL.
+- a11y-expert WCAG 2.1 AA pass: error text and the template link moved to AA-contrast
+  colours; cards are `<section aria-labelledby>` regions; focus moves to the first
+  invalid field after errors render; required fields marked (`*` + `aria-required`);
+  radio group named by its legend; timezone error associated; loading skeleton is an
+  `<output>`; the row switch stays focusable while saving; focus returns to the card
+  heading after a delete; the tag dialog has a description.
+- Pre-existing shared-token contrast (input border, primary button text, destructive
+  text token) filed as GitHub #871 — shared tokens, not changed here (L1).
+
 ## Observations outside PG-201 (not changed, L1)
 
 - The shared local test DB (`localhost:5433/intelliflow_test`) has the PG-196

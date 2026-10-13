@@ -102,9 +102,13 @@ describe('ScheduleList', () => {
     expect(screen.queryByRole('button', { name: /delete/i })).toBeNull();
   });
 
-  it('disables the row controls while its toggle is pending', () => {
-    renderList({ pendingId: 's1' });
-    expect(screen.getByRole('switch', { name: 'Active: Weekly pipeline' })).toBeDisabled();
+  it('keeps the pending switch focusable but ignores repeat toggles', () => {
+    const { onToggle } = renderList({ pendingId: 's1' });
+    const toggle = screen.getByRole('switch', { name: 'Active: Weekly pipeline' });
+    expect(toggle).not.toBeDisabled();
+    expect(toggle).toHaveAttribute('aria-busy', 'true');
+    fireEvent.click(toggle);
+    expect(onToggle).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Edit Weekly pipeline' })).toBeDisabled();
   });
 });

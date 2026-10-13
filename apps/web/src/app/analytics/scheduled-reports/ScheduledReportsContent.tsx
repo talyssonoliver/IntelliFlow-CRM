@@ -48,7 +48,7 @@ function SectionHeading({
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <h2 id={titleId} className="text-base font-semibold text-foreground">
+        <h2 id={titleId} tabIndex={-1} className="text-base font-semibold text-foreground">
           {title}
         </h2>
         <p className="text-sm text-muted-foreground">{description}</p>
@@ -174,6 +174,10 @@ export default function ScheduledReportsContent() {
         onSuccess: () => {
           toast({ title: target.kind === 'schedule' ? 'Schedule deleted' : 'Tag deleted' });
           setDeleteTarget(null);
+          // The row (and its Delete button) is gone: keep keyboard focus in the card.
+          document
+            .getElementById(target.kind === 'schedule' ? 'schedules-heading' : 'tags-heading')
+            ?.focus();
         },
       }
     );
@@ -208,81 +212,87 @@ export default function ScheduledReportsContent() {
       />
 
       <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-12">
-        <Card className="p-4 sm:p-5 lg:col-span-8" aria-labelledby="schedules-heading">
-          <SectionHeading
-            icon="schedule_send"
-            iconClass="bg-primary/10 text-primary"
-            title="Schedules"
-            titleId="schedules-heading"
-            description={
-              canEdit
-                ? 'Each schedule sends one report template on its own cadence.'
-                : 'Only admins and managers can change scheduled reports.'
-            }
-          />
-          {listQuery.error ? (
-            <p role="alert" className="text-sm text-destructive">
-              Failed to load scheduled reports. {listQuery.error.message}
-            </p>
-          ) : (
-            <ScheduleList
-              schedules={schedules}
-              canEdit={canEdit}
-              pendingId={pendingId}
-              onToggle={(s, isActive) => setActiveMutation.mutate({ id: s.id, isActive })}
-              onEdit={(s) => openDialog(s)}
-              onDelete={(s) => setDeleteTarget({ kind: 'schedule', id: s.id, name: s.name })}
-            />
-          )}
-        </Card>
-
-        <div className="flex flex-col gap-4 sm:gap-5 lg:col-span-4">
-          <Card className="p-4 sm:p-5" aria-labelledby="tags-heading">
+        <section aria-labelledby="schedules-heading" className="lg:col-span-8">
+          <Card className="h-full p-4 sm:p-5">
             <SectionHeading
-              icon="sell"
-              iconClass="bg-violet-500/10 text-violet-600 dark:text-violet-400"
-              title="Tags"
-              titleId="tags-heading"
-              description="Group schedules by team or audience."
-              action={
-                canEdit ? (
-                  <Button size="sm" onClick={() => tagsTabRef.current?.openCreate()}>
-                    New Tag
-                  </Button>
-                ) : undefined
+              icon="schedule_send"
+              iconClass="bg-primary/10 text-primary"
+              title="Schedules"
+              titleId="schedules-heading"
+              description={
+                canEdit
+                  ? 'Each schedule sends one report template on its own cadence.'
+                  : 'Only admins and managers can change scheduled reports.'
               }
             />
-            {tagsQuery.isLoading ? (
-              <Skeleton className="h-16 w-full" />
+            {listQuery.error ? (
+              <p role="alert" className="text-sm text-red-600 dark:text-red-400">
+                Failed to load scheduled reports. {listQuery.error.message}
+              </p>
             ) : (
-              <TagsTab
-                ref={tagsTabRef}
-                tags={tags}
+              <ScheduleList
+                schedules={schedules}
                 canEdit={canEdit}
-                isBusy={tagBusy}
-                onCreate={handleCreateTag}
-                onUpdate={handleUpdateTag}
-                onDelete={(tag) => setDeleteTarget({ kind: 'tag', id: tag.id, name: tag.name })}
+                pendingId={pendingId}
+                onToggle={(s, isActive) => setActiveMutation.mutate({ id: s.id, isActive })}
+                onEdit={(s) => openDialog(s)}
+                onDelete={(s) => setDeleteTarget({ kind: 'schedule', id: s.id, name: s.name })}
               />
             )}
           </Card>
+        </section>
 
-          <Card className="p-4 sm:p-5" aria-labelledby="delivery-heading">
-            <SectionHeading
-              icon="info"
-              iconClass="bg-amber-500/10 text-amber-700 dark:text-amber-400"
-              title="Delivery status"
-              titleId="delivery-heading"
-              description="What happens to a schedule after you save it."
-            />
-            <p className="text-sm text-foreground" data-testid="delivery-status">
-              Schedules are saved now. Automated sending is done by the report runner, which is not
-              enabled yet, so no reports are emailed until it is switched on.
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              Active schedules show their next run time. Paused schedules are kept but not run.
-            </p>
-          </Card>
+        <div className="flex flex-col gap-4 sm:gap-5 lg:col-span-4">
+          <section aria-labelledby="tags-heading">
+            <Card className="p-4 sm:p-5">
+              <SectionHeading
+                icon="sell"
+                iconClass="bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                title="Tags"
+                titleId="tags-heading"
+                description="Group schedules by team or audience."
+                action={
+                  canEdit ? (
+                    <Button size="sm" onClick={() => tagsTabRef.current?.openCreate()}>
+                      New Tag
+                    </Button>
+                  ) : undefined
+                }
+              />
+              {tagsQuery.isLoading ? (
+                <Skeleton className="h-16 w-full" />
+              ) : (
+                <TagsTab
+                  ref={tagsTabRef}
+                  tags={tags}
+                  canEdit={canEdit}
+                  isBusy={tagBusy}
+                  onCreate={handleCreateTag}
+                  onUpdate={handleUpdateTag}
+                  onDelete={(tag) => setDeleteTarget({ kind: 'tag', id: tag.id, name: tag.name })}
+                />
+              )}
+            </Card>
+          </section>
+
+          <section aria-labelledby="delivery-heading">
+            <Card className="p-4 sm:p-5">
+              <SectionHeading
+                icon="info"
+                iconClass="bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                title="Delivery status"
+                titleId="delivery-heading"
+                description="What happens to a schedule after you save it."
+              />
+              <p className="text-sm text-foreground" data-testid="delivery-status">
+                Schedules are saved now. Automated sending is done by the report runner, which is
+                not enabled yet, so no reports are emailed until it is switched on.
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Active schedules show their next run time. Paused schedules are kept but not run.
+              </p>
+            </Card>
+          </section>
         </div>
       </div>
 
