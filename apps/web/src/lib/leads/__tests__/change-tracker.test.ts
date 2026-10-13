@@ -115,10 +115,10 @@ describe('change-tracker · buildLeadUpdatePayload', () => {
     ).toEqual({ id: 'lead-1', estimatedValue: 7500 });
   });
 
-  it('omits estimatedValue when cleared to empty', () => {
+  it('sends null when a changed estimatedValue is cleared to empty (IFC-412)', () => {
     expect(
       buildLeadUpdatePayload('lead-1', fields({ estimatedValue: '' }), ['estimatedValue'])
-    ).not.toHaveProperty('estimatedValue');
+    ).toEqual({ id: 'lead-1', estimatedValue: null });
   });
 
   it('omits a negative or non-numeric estimatedValue', () => {
@@ -145,15 +145,56 @@ describe('change-tracker · buildLeadUpdatePayload', () => {
     });
   });
 
-  it('omits a non-estimatedValue field cleared to empty (toOptional)', () => {
-    expect(
-      buildLeadUpdatePayload('lead-1', fields({ company: '' }), ['company'])
-    ).not.toHaveProperty('company');
+  it('omits a cleared field outside IFC-412 scope (toOptional)', () => {
+    // title is NOT one of #412's nullable-on-clear fields — a clear there
+    // stays the pre-existing no-op (omitted), unlike company/phone/etc. below.
+    expect(buildLeadUpdatePayload('lead-1', fields({ title: '' }), ['title'])).not.toHaveProperty(
+      'title'
+    );
   });
 
   it('trims a changed text field', () => {
     expect(buildLeadUpdatePayload('lead-1', fields({ title: '  VP  ' }), ['title']).title).toBe(
       'VP'
     );
+  });
+});
+
+describe('change-tracker · clearable fields (IFC-412)', () => {
+  // Owner ruling 2026-10-12: company, phone, name (first/last), estimatedValue,
+  // location and website must be clearable from the edit form, including the
+  // "required-looking" ones. A changed field in this set that is cleared to
+  // empty must send an explicit `null`, never be silently omitted.
+  it.each(['firstName', 'lastName', 'phone', 'company', 'location', 'website'] as const)(
+    'sends null when %s is changed and cleared to empty',
+    (field) => {
+      const payload = buildLeadUpdatePayload('lead-1', fields({ [field]: '' }), [field]);
+      expect(payload).toEqual({ id: 'lead-1', [field]: null });
+    }
+  );
+
+  it('sends null when estimatedValue is changed and cleared to empty', () => {
+    const payload = buildLeadUpdatePayload('lead-1', fields({ estimatedValue: '' }), [
+      'estimatedValue',
+    ]);
+    expect(payload).toEqual({ id: 'lead-1', estimatedValue: null });
+  });
+
+  it('leaves an untouched clearable field out of the payload entirely', () => {
+    // Only firstName changed; phone/company/location/website/estimatedValue
+    // are untouched and must not appear in the payload at all (not even as
+    // null) — "untouched" must never be confused with "cleared".
+    const current = fields({ firstName: 'Jane' });
+    const { changedFields } = computeLeadChangeset(fields(), current);
+    const payload = buildLeadUpdatePayload('lead-1', current, changedFields);
+    expect(payload).toEqual({ id: 'lead-1', firstName: 'Jane' });
+    for (const untouched of ['phone', 'company', 'location', 'website', 'estimatedValue']) {
+      expect(payload).not.toHaveProperty(untouched);
+    }
+  });
+
+  it('sends a real value (not null) for a changed clearable field that is not cleared', () => {
+    const payload = buildLeadUpdatePayload('lead-1', fields({ company: 'Globex' }), ['company']);
+    expect(payload).toEqual({ id: 'lead-1', company: 'Globex' });
   });
 });
