@@ -2405,6 +2405,9 @@ model CaseTask {
   completedAt DateTime?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  /// PG-204 — order of a step seeded from a case type's resolution checklist (0-based);
+  /// null for tasks added by hand (read order: position nulls last, then dueDate).
+  position    Int?
 
   tenantId    String
   tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)

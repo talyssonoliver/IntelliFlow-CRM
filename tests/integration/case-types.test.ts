@@ -16,6 +16,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { CASE_REQUIRED_FIELD_KEYS } from '../../packages/domain/src/legal/cases/case-type-defaults';
+import { CASE_TASK_ORDER } from '../../apps/api/src/lib/case-task-order';
 
 const MIGRATION_PATH = join(
   __dirname,
@@ -63,6 +64,11 @@ function splitStatements(sql: string): string[] {
  * when missing (a local DB that was not pushed with this schema).
  */
 async function ensureMigrationSql(client: any): Promise<void> {
+  // Columns on shared tables are added in place (never dropped); safe to repeat.
+  await client.$executeRawUnsafe('ALTER TABLE "cases" ADD COLUMN IF NOT EXISTS "caseTypeId" TEXT');
+  await client.$executeRawUnsafe(
+    'ALTER TABLE "case_tasks" ADD COLUMN IF NOT EXISTS "position" INTEGER'
+  );
   const present = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'case_types_colorToken_check'`
   );
@@ -71,12 +77,8 @@ async function ensureMigrationSql(client: any): Promise<void> {
     'DROP TABLE IF EXISTS "case_type_checklist_items", "case_types" CASCADE'
   );
   for (const stmt of splitStatements(migrationSql())) {
-    if (/^ALTER TABLE "cases" ADD COLUMN/.test(stmt)) {
-      await client.$executeRawUnsafe(
-        'ALTER TABLE "cases" ADD COLUMN IF NOT EXISTS "caseTypeId" TEXT'
-      );
-      continue;
-    }
+    // Shared-table columns were ensured above.
+    if (/^ALTER TABLE "(cases|case_tasks)" ADD COLUMN/.test(stmt)) continue;
     await client.$executeRawUnsafe(stmt);
   }
 }
@@ -292,6 +294,35 @@ describeDb('PG-204 case types (real DB)', () => {
       const t = await caseType(TENANT_A, `${RUN} in use`);
       await legalCase(TENANT_A, t.id);
       await expectRejected(prisma.caseType.delete({ where: { id: t.id } }), FOREIGN_KEY);
+    });
+  });
+
+  describe('case_tasks.position (checklist order)', () => {
+    it('returns seeded steps in checklist order before unpositioned tasks', async () => {
+      const c = await legalCase(TENANT_A, null);
+      const base = { tenantId: TENANT_A, caseId: c.id, status: 'PENDING', dueDate: null };
+      // Inserted out of order on purpose; every seeded dueDate is null.
+      await prisma.caseTask.create({ data: { ...base, title: 'Step 3', position: 2 } });
+      await prisma.caseTask.create({
+        data: { ...base, title: 'Manual, due', dueDate: new Date('2026-01-02T00:00:00Z') },
+      });
+      await prisma.caseTask.create({ data: { ...base, title: 'Step 1', position: 0 } });
+      await prisma.caseTask.create({
+        data: { ...base, title: 'Manual, earlier', dueDate: new Date('2026-01-01T00:00:00Z') },
+      });
+      await prisma.caseTask.create({ data: { ...base, title: 'Step 2', position: 1 } });
+
+      const tasks = await prisma.caseTask.findMany({
+        where: { caseId: c.id, tenantId: TENANT_A },
+        orderBy: CASE_TASK_ORDER,
+      });
+      expect(tasks.map((t: { title: string }) => t.title)).toEqual([
+        'Step 1',
+        'Step 2',
+        'Step 3',
+        'Manual, earlier',
+        'Manual, due',
+      ]);
     });
   });
 

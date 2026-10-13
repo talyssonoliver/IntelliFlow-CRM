@@ -34,6 +34,7 @@ import {
 import { assertTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
 import { computeSlaDeadline } from '../../lib/case-sla-deadline';
+import { CASE_TASK_ORDER } from '../../lib/case-task-order';
 
 // LEGAL is a Professional+ paid add-on (MODULE_PLAN_MAP). Gate every procedure on
 // the tenant's plan including the module — same pattern as documents.router.ts.
@@ -191,7 +192,7 @@ export const casesRouter = createTRPCRouter({
       ctx.prismaWithTenant.case.findMany({
         where,
         include: {
-          tasks: { orderBy: { dueDate: 'asc' } },
+          tasks: { orderBy: CASE_TASK_ORDER },
           client: { select: { id: true, name: true } },
           assignee: { select: { id: true, name: true, email: true, avatarUrl: true } },
         },
@@ -279,7 +280,7 @@ export const casesRouter = createTRPCRouter({
     const caseData = await ctx.prismaWithTenant.case.findFirst({
       where: { id: input.id, tenantId },
       include: {
-        tasks: { orderBy: { dueDate: 'asc' } },
+        tasks: { orderBy: CASE_TASK_ORDER },
         client: { select: { id: true, name: true } },
         assignee: { select: { id: true, name: true, email: true, avatarUrl: true, role: true } },
         appointments: {
@@ -480,20 +481,21 @@ export const casesRouter = createTRPCRouter({
       // The type's resolution checklist becomes the case's tasks, atomically with the case.
       if (resolved.seedTasks.length > 0) {
         await tx.caseTask.createMany({
-          data: resolved.seedTasks.map((task) => ({
+          data: resolved.seedTasks.map((task, position) => ({
             tenantId,
             caseId: createdCase.id,
             title: task.title,
             status: 'PENDING' as const,
             assignee: assignedTo,
             dueDate: null,
+            position,
           })),
         });
       }
       return tx.case.findFirstOrThrow({
         where: { id: createdCase.id, tenantId },
         include: {
-          tasks: true,
+          tasks: { orderBy: CASE_TASK_ORDER },
           client: { select: { id: true, name: true } },
           assignee: { select: { id: true, name: true, email: true, avatarUrl: true } },
         },

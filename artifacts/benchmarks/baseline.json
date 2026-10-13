@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-13T01:01:53.207Z",
+  "timestamp": "2026-10-13T02:39:32.232Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1432,7 +1432,7 @@
   },
   "database_inventory": {
     "total_tables": 194,
-    "total_fields": 2792,
+    "total_fields": 2793,
     "total_indexes": 880,
     "total_relations": 273,
     "tables_with_embeddings": 4,
@@ -1803,6 +1803,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CaseTask",
+        "fields": 15,
+        "indexes": 7,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "ContactReplyDraft",
         "fields": 15,
         "indexes": 3,
@@ -1891,13 +1898,6 @@
         "fields": 14,
         "indexes": 3,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "CaseTask",
-        "fields": 14,
-        "indexes": 7,
-        "relations": 3,
         "hasEmbedding": false
       },
       {

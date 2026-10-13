@@ -9,6 +9,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { casesRouter } from '../cases.router';
+import { CASE_TASK_ORDER } from '../../../lib/case-task-order';
 import { prismaMock, createTestContext, generateTestUUID, TEST_UUIDS } from '../../../test/setup';
 
 const tenantId = TEST_UUIDS.tenant;
@@ -194,6 +195,7 @@ describe('cases.create with case types (PG-204)', () => {
             status: 'PENDING',
             assignee: CALLER,
             dueDate: null,
+            position: 0,
           },
           {
             tenantId,
@@ -202,11 +204,15 @@ describe('cases.create with case types (PG-204)', () => {
             status: 'PENDING',
             assignee: CALLER,
             dueDate: null,
+            position: 1,
           },
         ],
       });
       expect(tx.case.findFirstOrThrow).toHaveBeenCalledWith(
-        expect.objectContaining({ where: { id: CASE_ID, tenantId } })
+        expect.objectContaining({
+          where: { id: CASE_ID, tenantId },
+          include: expect.objectContaining({ tasks: { orderBy: CASE_TASK_ORDER } }),
+        })
       );
     });
 
@@ -315,6 +321,16 @@ describe('cases.getById case type (PG-204)', () => {
     expect(result.caseType).toEqual({ id: TYPE, name: 'Litigation', colorToken: 'blue' });
   });
 
+  it('reads tasks in checklist order (position, nulls last, then due date)', async () => {
+    (prismaMock.case.findFirst as any).mockResolvedValueOnce({ ...caseRow, caseTypeId: null });
+    await casesRouter.createCaller(createTestContext()).getById({ id: CASE_ID });
+    expect(prismaMock.case.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({ tasks: { orderBy: CASE_TASK_ORDER } }),
+      })
+    );
+  });
+
   it('returns null without a case type', async () => {
     (prismaMock.case.findFirst as any).mockResolvedValueOnce({ ...caseRow, caseTypeId: null });
     const result = await casesRouter.createCaller(createTestContext()).getById({ id: CASE_ID });
@@ -332,5 +348,27 @@ describe('cases.update never changes the case type (PG-204)', () => {
       .update({ id: CASE_ID, title: 'Renamed', caseTypeId: TYPE } as { id: string; title: string });
     const data = (prismaMock.case.update as any).mock.calls[0][0].data;
     expect(data).toEqual({ title: 'Renamed' });
+  });
+});
+
+describe('cases.list task order (PG-204)', () => {
+  it("reads each case's tasks in checklist order", async () => {
+    (prismaMock.case.findMany as any).mockResolvedValueOnce([]);
+    (prismaMock.case.count as any).mockResolvedValueOnce(0);
+    await casesRouter.createCaller(createTestContext()).list({});
+    expect(prismaMock.case.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({ tasks: { orderBy: CASE_TASK_ORDER } }),
+      })
+    );
+  });
+});
+
+describe('CASE_TASK_ORDER', () => {
+  it('orders by position (nulls last), then due date', () => {
+    expect(CASE_TASK_ORDER).toEqual([
+      { position: { sort: 'asc', nulls: 'last' } },
+      { dueDate: 'asc' },
+    ]);
   });
 });

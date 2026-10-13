@@ -3,6 +3,7 @@
 -- Class A (ADR-069 / docs/operations/agent-autonomy-policy.md): additive only.
 --   * cases: one NULLABLE column with no default -> metadata-only on PG 11+, no
 --     table rewrite, no backfill, no existing row changes.
+--   * case_tasks: one NULLABLE "position" column with no default, same reasoning.
 --   * cases FK: added NOT VALID and then validated, so the validating scan runs
 --     without holding a long lock; every existing row has a NULL "caseTypeId"
 --     (MATCH SIMPLE skips NULLs), so validation cannot fail.
@@ -20,6 +21,11 @@
 
 -- ── cases: case type link ──────────────────────────────────────────────────
 ALTER TABLE "cases" ADD COLUMN     "caseTypeId" TEXT;
+
+-- ── case_tasks: checklist order ────────────────────────────────────────────
+-- Nullable, no default -> metadata-only; existing tasks keep NULL and their
+-- due-date order. Seeded checklist steps get 0..n-1.
+ALTER TABLE "case_tasks" ADD COLUMN     "position" INTEGER;
 
 -- ── case_types ─────────────────────────────────────────────────────────────
 CREATE TABLE "case_types" (
