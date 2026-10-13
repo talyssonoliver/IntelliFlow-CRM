@@ -447,6 +447,46 @@ describeDb('PG-201 report_schedules migration (real DB)', () => {
       );
     });
 
+    it('keeps a schedule moved to a template when its former report definition is deleted', async () => {
+      // report_schedules.reportId is ON DELETE CASCADE (baseline). The router clears reportId
+      // when a template is assigned; this proves why that matters on a real database.
+      const definition = (id: string) =>
+        prisma.$executeRawUnsafe(
+          `INSERT INTO "report_definitions" ("id", "tenantId", "name", "category", "type", "dataSource", "columns", "createdBy", "updatedAt")
+           VALUES ($1, $2, $1, 'sales', 'table', 'leads', '[]'::jsonb, 'u1', NOW())`,
+          id,
+          T.enabled
+        );
+      await template(T.enabled, `${RUN}_tpl_move`);
+      await definition(`${RUN}_def_moved`);
+      await definition(`${RUN}_def_kept`);
+      const moved = `${RUN}_sched_moved`;
+      const stale = `${RUN}_sched_stale`;
+      await insertSchedule({ id: moved, name: `${RUN} moved`, reportId: `${RUN}_def_moved` });
+      await insertSchedule({ id: stale, name: `${RUN} stale`, reportId: `${RUN}_def_kept` });
+      // What the router now writes when a template is assigned:
+      await prisma.$executeRawUnsafe(
+        `UPDATE "report_schedules" SET "templateId" = $1, "reportId" = NULL WHERE "id" = $2`,
+        `${RUN}_tpl_move`,
+        moved
+      );
+      // The old behaviour (template set, reportId kept):
+      await prisma.$executeRawUnsafe(
+        `UPDATE "report_schedules" SET "templateId" = $1 WHERE "id" = $2`,
+        `${RUN}_tpl_move`,
+        stale
+      );
+      await prisma.$executeRawUnsafe(
+        `DELETE FROM "report_definitions" WHERE "id" = ANY($1::text[])`,
+        [`${RUN}_def_moved`, `${RUN}_def_kept`]
+      );
+      const left: Array<{ id: string }> = await prisma.$queryRawUnsafe(
+        `SELECT "id" FROM "report_schedules" WHERE "id" = ANY($1::text[])`,
+        [moved, stale]
+      );
+      expect(left.map((r) => r.id)).toEqual([moved]);
+    });
+
     it('lets a tenant delete cascade through a template its schedule uses (consensus vote, data-engineer)', async () => {
       // The (tenantId, templateId) FK must not block tenant offboarding: both
       // report_templates and report_schedules cascade from tenants.

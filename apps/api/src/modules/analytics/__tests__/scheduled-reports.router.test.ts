@@ -542,6 +542,32 @@ describe('scheduledReportsRouter (PG-201)', () => {
       expect(tx.reportSchedule.update).toHaveBeenCalled();
     });
 
+    it('drops the legacy reportId when a template is assigned (pre-ship Codex review)', async () => {
+      // report_schedules.reportId cascades on delete; a schedule moved to a template must
+      // not disappear when its former report definition is deleted.
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ templateId: null, template: null, reportId: 'rep-1', isActive: false })
+      );
+      visibleTemplate();
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, templateId: TEMPLATE_ID });
+      expect(tx.reportSchedule.update.mock.calls[0][0].data).toMatchObject({
+        templateId: TEMPLATE_ID,
+        reportId: null,
+      });
+    });
+
+    it('keeps reportId when the template is not being changed', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ reportId: 'rep-1' })
+      );
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, name: 'Renamed' });
+      expect(tx.reportSchedule.update.mock.calls[0][0].data).not.toHaveProperty('reportId');
+    });
+
     it('refuses activation through update on a report definition the caller cannot see', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
         scheduleRow({ templateId: null, template: null, reportId: 'rep-1', isActive: false })

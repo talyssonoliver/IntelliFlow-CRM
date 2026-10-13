@@ -310,6 +310,40 @@ function changedFields(fields: ScheduleFieldChanges): Prisma.ReportScheduleUnche
   };
 }
 
+/** AC-005: Excel stays only on rows that already had it (copied legacy delivery). */
+function formatChange(next: UpdateScheduledReportInput['format'], current: string): boolean {
+  const changed = next !== undefined && next !== current;
+  if (changed && next === 'excel') {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message:
+        'Excel is only kept for schedules that already used it. Choose PDF, CSV or email body.',
+    });
+  }
+  return changed;
+}
+
+/**
+ * What the update must check and write about what the schedule delivers. A visibility
+ * check is needed when the template changes or the schedule is activated or its delivery
+ * changes: of the template, or of the legacy report definition when there is no template.
+ * A schedule moved to a template drops its reportId: report_schedules.reportId is ON DELETE
+ * CASCADE, so keeping it would delete the schedule together with that definition.
+ */
+function referencePlan(
+  existing: ReportSchedule,
+  templateId: string | null,
+  templateChanged: boolean,
+  needsCheck: boolean
+): { checkTemplateId: string | null; checkReportId: string | null; data: { reportId?: null } } {
+  const check = templateChanged || needsCheck;
+  return {
+    checkTemplateId: check ? templateId : null,
+    checkReportId: check && !templateId ? existing.reportId : null,
+    data: templateChanged && existing.reportId ? { reportId: null } : {},
+  };
+}
+
 /** Decide an update from the row as read under the tenant lock. Pure; throws TRPCError. */
 function planScheduleUpdate(
   existing: ReportSchedule,
@@ -337,30 +371,27 @@ function planScheduleUpdate(
   // the caller can see. Name, description, colour, tags and pausing do not.
   const recipientsChanged =
     fields.recipients !== undefined && !sameRecipients(fields.recipients, existing.recipients);
-  const formatChanged = fields.format !== undefined && fields.format !== existing.format;
-  if (formatChanged && fields.format === 'excel') {
-    // AC-005: Excel stays only on rows that already had it (copied legacy delivery).
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message:
-        'Excel is only kept for schedules that already used it. Choose PDF, CSV or email body.',
-    });
-  }
+  const formatChanged = formatChange(fields.format, existing.format);
   const deliveryChanged = definitionChanged || recipientsChanged || formatChanged;
   const nextRun = definitionChanged || activating ? checkedNextRun(cron, timezone, now) : null;
 
+  const reference = referencePlan(
+    existing,
+    templateId,
+    templateChanged,
+    activating || deliveryChanged
+  );
+
   return {
     activating,
-    checkTemplateId: templateChanged || activating || deliveryChanged ? templateId : null,
-    checkReportId:
-      !templateId && existing.reportId && (activating || deliveryChanged)
-        ? existing.reportId
-        : null,
+    checkTemplateId: reference.checkTemplateId,
+    checkReportId: reference.checkReportId,
     templateChosen: templateChanged,
     newTags: (fields.tags ?? []).filter((t) => !existing.tags.includes(t)),
     auditable: recipientsChanged || isActive !== existing.isActive || (isActive && deliveryChanged),
     data: {
       ...changedFields(fields),
+      ...reference.data,
       ...(columns ?? {}),
       ...nextRunField(isActive, existing.isActive, definitionChanged, nextRun),
     },
