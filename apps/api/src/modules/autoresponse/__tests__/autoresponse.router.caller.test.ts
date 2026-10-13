@@ -764,5 +764,18 @@ describe('autoResponseRouter (caller tests)', () => {
 
       expect(mockRepository.countByStatusAll).toHaveBeenCalledWith(TEST_TENANT_ID);
     });
+
+    it('refuses another tenant id and never reads its counts', async () => {
+      await expect(
+        caller.getStatsByStatus({ tenantId: 'cmforeigntenant0000000001' })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(mockRepository.countByStatusAll).not.toHaveBeenCalled();
+    });
+
+    it('uses the session tenant when no tenant id is sent', async () => {
+      mockRepository.countByStatusAll.mockResolvedValue({});
+      await caller.getStatsByStatus();
+      expect(mockRepository.countByStatusAll).toHaveBeenCalledWith(TEST_TENANT_ID);
+    });
   });
 });

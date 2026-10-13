@@ -61,6 +61,8 @@ interface PendingActionFromAPI {
 
 /** AgentAction plus the queue facts this page shows (PG-198). */
 type PreviewAction = AgentAction & {
+  /** False when the agent gave no confidence; a reported 0% is still shown as 0%. */
+  confidenceReported: boolean;
   impact: 'LOW' | 'MEDIUM' | 'HIGH' | null;
   escalated: boolean;
   interrupted: boolean;
@@ -103,8 +105,9 @@ function mapPendingToAction(pending: PendingActionFromAPI): PreviewAction {
     aiReasoning: pending.preview.warnings?.length
       ? pending.preview.warnings.join('. ')
       : `Automated action via ${agentName}`,
-    // RF-2 (#854): real confidence only; 0 means "none reported" and renders as a dash.
+    // RF-2 (#854): real confidence only; none reported renders as a dash.
     confidenceScore: pending.confidence ?? 0,
+    confidenceReported: pending.confidence !== null && pending.confidence !== undefined,
     impact: pending.estimatedImpact ?? pending.preview.estimatedImpact ?? null,
     escalated: Boolean(pending.escalatedAt),
     interrupted: pending.status === 'APPROVED' && pending.executionStatus === 'EXECUTING',
@@ -423,7 +426,7 @@ function ActionCard({
 
           {/* Confidence + Expand */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            {action.confidenceScore > 0 ? (
+            {action.confidenceReported ? (
               <div className="text-right">
                 <div className="text-lg font-bold text-slate-900 dark:text-white">
                   {action.confidenceScore}%

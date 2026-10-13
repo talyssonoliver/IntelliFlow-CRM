@@ -58,6 +58,23 @@ export interface SweepNotification {
   actionUrl: string;
 }
 
+/** BR-7: an escalation the sweep made, with the policy that caused it. */
+export interface SweepEscalationAudit {
+  tenantId: string;
+  policyId: string;
+  policyName: string;
+  entityType: 'agent_action' | 'auto_response_draft';
+  entityId: string;
+  escalatedTo: string;
+  escalateAfterMinutes: number;
+}
+
+/** What the sweep hands out only after its transaction commits. */
+interface SweepOutbox {
+  notifications: SweepNotification[];
+  audits: SweepEscalationAudit[];
+}
+
 interface AgentActionRow {
   id: string;
   tenantId: string;
@@ -97,6 +114,8 @@ export interface ApprovalSweepDeps {
   draftRepository: (client: SweepTx) => Promise<AutoResponseDraftRepository>;
   /** Delivered after the sweep transaction commits, one at a time; failures are logged. */
   notify: (notification: SweepNotification) => Promise<void>;
+  /** BR-7: records each escalation with its policy id, after the transaction commits. */
+  audit?: (entry: SweepEscalationAudit) => Promise<void>;
   log?: Pick<Console, 'warn'>;
 }
 
@@ -116,7 +135,7 @@ interface TenantContext {
   now: Date;
   report: ApprovalSweepReport;
   targets: Map<string, boolean>;
-  outbox: SweepNotification[];
+  outbox: SweepOutbox;
 }
 
 /** The policies of a queue that escalate, with the (agent, action) pairs each one governs. */
@@ -209,7 +228,29 @@ async function dueTarget(
  * notification write must never abort (and roll back) the sweep's transaction.
  */
 function queueNotification(ctx: TenantContext, notification: SweepNotification): void {
-  ctx.outbox.push(notification);
+  ctx.outbox.notifications.push(notification);
+}
+
+function queueAudit(
+  ctx: TenantContext,
+  group: EscalationGroup,
+  entityType: SweepEscalationAudit['entityType'],
+  entityId: string,
+  escalatedTo: string
+): void {
+  ctx.outbox.audits.push({
+    tenantId: ctx.tenantId,
+    policyId: group.id,
+    policyName: policyName(ctx, group),
+    entityType,
+    entityId,
+    escalatedTo,
+    escalateAfterMinutes: group.rule.escalateAfterMinutes as number,
+  });
+}
+
+function policyName(ctx: TenantContext, group: EscalationGroup): string {
+  return ctx.policies.find((p) => p.id === group.id)?.name ?? group.id;
 }
 
 async function escalateAgentActionGroup(ctx: TenantContext, group: EscalationGroup): Promise<void> {
@@ -236,6 +277,7 @@ async function escalateAgentActionGroup(ctx: TenantContext, group: EscalationGro
     });
     if (claimed.count !== 1) continue;
     ctx.report.agentActionsEscalated += 1;
+    queueAudit(ctx, group, 'agent_action', row.id, target);
     queueNotification(ctx, {
       tenantId: ctx.tenantId,
       userId: target,
@@ -258,9 +300,10 @@ function submittedAt(draft: AutoResponseDraft): Date {
 async function escalateDraft(
   ctx: TenantContext,
   repository: AutoResponseDraftRepository,
-  rule: ApprovalRule,
+  group: EscalationGroup,
   draft: AutoResponseDraft
 ): Promise<void> {
+  const { rule } = group;
   const target = await dueTarget(ctx, rule, submittedAt(draft));
   if (!target) return;
   // Never beyond the draft's own expiry, so escalation.expiresAt stays truthful: the
@@ -269,7 +312,9 @@ async function escalateDraft(
   const remainingMinutes = Math.floor((draft.expiresAt.getTime() - Date.now()) / 60_000);
   if (remainingMinutes <= 0) return;
   const windowHours = remainingMinutes / 60;
-  const reason = `Approval SLA: no decision after ${String(rule.escalateAfterMinutes)} minutes`;
+  const reason =
+    `Approval SLA: no decision after ${String(rule.escalateAfterMinutes)} minutes ` +
+    `(policy "${policyName(ctx, group)}", ${group.id})`;
   if (draft.escalate(SYSTEM_APPROVAL_ACTOR, target, reason, windowHours).isFailure) {
     ctx.report.skipped += 1;
     return;
@@ -283,6 +328,7 @@ async function escalateDraft(
     return;
   }
   ctx.report.draftsEscalated += 1;
+  queueAudit(ctx, group, 'auto_response_draft', draft.id.toString(), target);
   queueNotification(ctx, {
     tenantId: ctx.tenantId,
     userId: target,
@@ -318,7 +364,7 @@ async function escalateDraftGroup(
       { ...base, after },
       APPROVAL_SWEEP_BATCH
     );
-    for (const draft of drafts) await escalateDraft(ctx, repository, group.rule, draft);
+    for (const draft of drafts) await escalateDraft(ctx, repository, group, draft);
     if (drafts.length < APPROVAL_SWEEP_BATCH) {
       draftScanCursors.delete(cursorKey); // reached the end: start over next tick
       return;
@@ -343,7 +389,7 @@ async function sweepInTransaction(
   tx: SweepTx,
   deps: ApprovalSweepDeps,
   now: Date,
-  outbox: SweepNotification[]
+  outbox: SweepOutbox
 ): Promise<ApprovalSweepReport> {
   const report: ApprovalSweepReport = {
     locked: false,
@@ -396,13 +442,13 @@ export async function runApprovalSweep(
   deps: ApprovalSweepDeps,
   now: Date = new Date()
 ): Promise<ApprovalSweepReport> {
-  const outbox: SweepNotification[] = [];
+  const outbox: SweepOutbox = { notifications: [], audits: [] };
   const report = await deps.prisma.$transaction((tx) => sweepInTransaction(tx, deps, now, outbox), {
     timeout: 60_000,
     maxWait: 10_000,
   });
   // Escalations are committed; now tell the targets. Non-blocking, as for manual escalation.
-  for (const notification of outbox) {
+  for (const notification of outbox.notifications) {
     try {
       await deps.notify(notification);
     } catch (error) {
@@ -410,15 +456,24 @@ export async function runApprovalSweep(
       deps.log?.warn(`[approval-sweep] notification failed: ${message}`);
     }
   }
+  for (const entry of outbox.audits) {
+    try {
+      await deps.audit?.(entry);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      deps.log?.warn(`[approval-sweep] audit write failed: ${message}`);
+    }
+  }
   return report;
 }
 
 /** Production wiring: shared Prisma client, the Prisma draft repository, in-app notifications. */
 export async function createDefaultSweepDeps(): Promise<ApprovalSweepDeps> {
-  const [{ prisma }, adapters, { createNotification }] = await Promise.all([
+  const [{ prisma }, adapters, { createNotification }, { getAuditLogger }] = await Promise.all([
     import('@intelliflow/db'),
     import('@intelliflow/adapters'),
     import('../modules/notifications/notifications.router.js'),
+    import('../security/audit/index.js'),
   ]);
   const Repository = (
     adapters as unknown as {
@@ -435,6 +490,20 @@ export async function createDefaultSweepDeps(): Promise<ApprovalSweepDeps> {
         priority: 'high',
         actionLabel: 'Review',
       });
+    },
+    audit: async (entry) => {
+      await getAuditLogger(prisma as never).logAction(
+        'UPDATE',
+        'system',
+        entry.entityId,
+        entry.tenantId,
+        {
+          actorType: 'SYSTEM',
+          resourceName: `${entry.entityType} escalation`,
+          afterState: { ...entry, escalatedBy: SYSTEM_APPROVAL_ACTOR },
+          actionReason: `Escalated by approval policy "${entry.policyName}" (${entry.policyId})`,
+        }
+      );
     },
     log: console,
   };

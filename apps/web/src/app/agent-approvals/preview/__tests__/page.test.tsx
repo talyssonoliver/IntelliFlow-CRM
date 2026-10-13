@@ -119,6 +119,14 @@ describe('AgentApprovalsPreviewPage queue facts (PG-198)', () => {
     expect(screen.getByTestId('impact-chip')).toHaveTextContent('Low impact');
   });
 
+  it('shows a reported 0% confidence as 0%, not as "none reported" (AC-022)', () => {
+    stable.pending.data = [pending({ confidence: 0, estimatedImpact: 'LOW' })];
+    render(<AgentApprovalsPreviewPage />);
+
+    expect(screen.getByText('0%')).toBeInTheDocument();
+    expect(screen.queryByTestId('no-confidence')).not.toBeInTheDocument();
+  });
+
   it('marks escalated and interrupted actions', () => {
     stable.pending.data = [
       pending({ id: 'esc', escalatedAt: new Date().toISOString(), escalatedTo: 'm-1' }),

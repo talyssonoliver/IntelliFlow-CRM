@@ -894,7 +894,11 @@ export const autoResponseRouter = createTRPCRouter({
     .input(z.object({ tenantId: idSchema }).optional())
     .query(async ({ ctx, input }) => {
       const repository = await getRepository(ctx);
-      const tenantId = input?.tenantId ?? ctx.tenant.tenantId;
+      const tenantId = ctx.tenant.tenantId;
+      // The session decides the tenant; a client-supplied one may only repeat it.
+      if (input?.tenantId !== undefined && input.tenantId !== tenantId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot read another tenant' });
+      }
 
       if (!tenantId) {
         throw new TRPCError({

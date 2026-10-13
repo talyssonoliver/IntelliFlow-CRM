@@ -17,6 +17,9 @@ import { invalidateApprovalPolicyCache } from '../approval-policy-loader';
 
 const createNotification = vi.hoisted(() => vi.fn().mockResolvedValue({}));
 vi.mock('../../modules/notifications/notifications.router.js', () => ({ createNotification }));
+const logAction = vi.hoisted(() => vi.fn().mockResolvedValue('audit-1'));
+const getAuditLogger = vi.hoisted(() => vi.fn(() => ({ logAction })));
+vi.mock('../../security/audit/index.js', () => ({ getAuditLogger }));
 vi.mock('@intelliflow/adapters', () => ({
   PrismaAutoResponseDraftRepository: function Repo(this: any, client: unknown) {
     this.client = client;
@@ -167,6 +170,7 @@ function harness(opts: {
     notify: opts.notifyError
       ? vi.fn().mockRejectedValue(opts.notifyError)
       : vi.fn().mockResolvedValue(undefined),
+    audit: vi.fn().mockResolvedValue(undefined),
     log: { warn: vi.fn() },
   };
   return { tx: tx as unknown as SweepTx & typeof tx, repo, deps };
@@ -244,6 +248,52 @@ describe('runApprovalSweep', () => {
       actionUrl: '/agent-approvals/preview?actionId=act-1',
     });
     expect(report.agentActionsEscalated).toBe(1);
+  });
+
+  it('audit-logs each escalation with its policy id after the commit (BR-7)', async () => {
+    const { deps } = harness({ actions: [actionRow()] });
+    const order: string[] = [];
+    const inner = (deps.prisma.$transaction as any).getMockImplementation();
+    (deps.prisma.$transaction as any).mockImplementation(async (fn: any, o: unknown) => {
+      const result = await inner(fn, o);
+      order.push('commit');
+      return result;
+    });
+    (deps.audit as any).mockImplementation(async () => {
+      order.push('audit');
+    });
+
+    await runApprovalSweep(deps, NOW);
+
+    expect(deps.audit).toHaveBeenCalledWith({
+      tenantId: TENANT,
+      policyId: 'p1',
+      policyName: 'Escalating',
+      entityType: 'agent_action',
+      entityId: 'act-1',
+      escalatedTo: TARGET,
+      escalateAfterMinutes: 60,
+    });
+    expect(order).toEqual(['commit', 'audit']);
+  });
+
+  it('does not audit an escalation another tick already made', async () => {
+    const { deps } = harness({ actions: [actionRow()], claimCount: 0 });
+    await runApprovalSweep(deps, NOW);
+    expect(deps.audit).not.toHaveBeenCalled();
+  });
+
+  it('keeps the escalation when the audit write fails', async () => {
+    const { deps } = harness({ actions: [actionRow()] });
+    (deps.audit as any).mockRejectedValueOnce(new Error('audit down'));
+    const report = await runApprovalSweep(deps, NOW);
+    expect(report.agentActionsEscalated).toBe(1);
+    expect(deps.log!.warn).toHaveBeenCalledWith('[approval-sweep] audit write failed: audit down');
+
+    const second = harness({ actions: [actionRow()] }).deps;
+    (second.audit as any).mockRejectedValueOnce('gone');
+    await runApprovalSweep(second, NOW);
+    expect(second.log!.warn).toHaveBeenCalledWith('[approval-sweep] audit write failed: gone');
   });
 
   it('does not notify when another tick already escalated the action', async () => {
@@ -386,6 +436,16 @@ describe('runApprovalSweep', () => {
           entityType: 'auto_response_draft',
           actionUrl: '/agent-approvals?status=escalated',
           body: expect.stringContaining('no decision after 30 minutes'),
+        })
+      );
+      // BR-7: the draft's own escalation record and the audit name the policy.
+      expect(draft.escalation!.reason).toContain('(policy "Escalating", p1)');
+      expect(deps.audit).toHaveBeenCalledWith(
+        expect.objectContaining({
+          policyId: 'p1',
+          entityType: 'auto_response_draft',
+          entityId: draft.id.toString(),
+          escalatedTo: TARGET,
         })
       );
       expect(report.draftsEscalated).toBe(1);
@@ -543,5 +603,30 @@ describe('createDefaultSweepDeps', () => {
         actionLabel: 'Review',
       })
     );
+  });
+
+  it('writes escalation audits through the audit logger as the system (BR-7)', async () => {
+    const deps = await createDefaultSweepDeps();
+    await deps.audit!({
+      tenantId: TENANT,
+      policyId: 'p1',
+      policyName: 'Escalating',
+      entityType: 'agent_action',
+      entityId: 'act-1',
+      escalatedTo: TARGET,
+      escalateAfterMinutes: 60,
+    });
+
+    expect(getAuditLogger).toHaveBeenCalledWith(deps.prisma);
+    expect(logAction).toHaveBeenCalledWith('UPDATE', 'system', 'act-1', TENANT, {
+      actorType: 'SYSTEM',
+      resourceName: 'agent_action escalation',
+      afterState: expect.objectContaining({
+        policyId: 'p1',
+        escalatedTo: TARGET,
+        escalatedBy: SYSTEM_APPROVAL_ACTOR,
+      }),
+      actionReason: 'Escalated by approval policy "Escalating" (p1)',
+    });
   });
 });
