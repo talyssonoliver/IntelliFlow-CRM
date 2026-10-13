@@ -1,0 +1,377 @@
+/**
+ * Approval escalation sweep (PG-198, AC-014): advisory lock, once-only escalation,
+ * SLA clock, bounded draft window, missing target, escalate-before-expire.
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { AutoResponseDraft, ResponseContent, SYSTEM_APPROVAL_ACTOR } from '@intelliflow/domain';
+import {
+  APPROVAL_SWEEP_BATCH,
+  createDefaultSweepDeps,
+  runApprovalSweep,
+  type ApprovalSweepDeps,
+  type SweepTx,
+} from '../approval-escalation-sweep';
+import { invalidateApprovalPolicyCache } from '../approval-policy-loader';
+
+const createNotification = vi.hoisted(() => vi.fn().mockResolvedValue({}));
+vi.mock('../../modules/notifications/notifications.router.js', () => ({ createNotification }));
+vi.mock('@intelliflow/adapters', () => ({
+  PrismaAutoResponseDraftRepository: function Repo(this: any, client: unknown) {
+    this.client = client;
+  },
+}));
+
+const TENANT = 'tenant-1';
+const TARGET = 'manager-1';
+const NOW = new Date('2026-10-13T12:00:00Z');
+
+function policyRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'p1',
+    name: 'Escalating',
+    scope: 'AGENT_TOOL',
+    isDefault: true,
+    timeoutMinutes: 240,
+    minReviewerRole: 'USER',
+    autoApproveEnabled: false,
+    autoApproveMinConfidence: null,
+    escalationEnabled: true,
+    escalateAfterMinutes: 60,
+    escalationTargetUserId: TARGET,
+    assignments: [],
+    ...overrides,
+  };
+}
+
+function actionRow(overrides: Record<string, unknown> = {}) {
+  return {
+    id: 'act-1',
+    tenantId: TENANT,
+    actionType: 'create_case',
+    description: 'Create case "Renewal"',
+    entityName: 'Renewal',
+    createdAt: new Date('2026-10-13T10:30:00Z'),
+    ...overrides,
+  };
+}
+
+function pendingDraft(submittedAt: Date, expiresInHours = 24) {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date(submittedAt.getTime() - 60_000));
+  const draft = AutoResponseDraft.create({
+    tenantId: TENANT,
+    leadId: 'lead-1',
+    leadTenantId: TENANT,
+    leadStatus: 'NEW',
+    triggerType: 'EMAIL_RECEIVED',
+    content: ResponseContent.create({ subject: 'Thanks', body: 'Body' }),
+    aiConfidence: 0.5,
+    modelVersion: 'm',
+    recipientEmail: 'lead@example.invalid',
+    expiryHours: expiresInHours,
+  }).value;
+  vi.setSystemTime(submittedAt);
+  draft.submitForApproval('someone');
+  vi.useRealTimers();
+  return draft;
+}
+
+function harness(opts: {
+  locked?: boolean;
+  policies?: unknown[];
+  tenants?: string[];
+  actions?: unknown[];
+  claimCount?: number;
+  user?: { id: string } | null;
+  drafts?: AutoResponseDraft[];
+  saveError?: Error;
+  notifyError?: Error;
+}) {
+  const tx = {
+    $queryRaw: vi.fn().mockResolvedValue([{ locked: opts.locked ?? true }]),
+    approvalPolicy: {
+      findMany: vi.fn(async (args: any) =>
+        args.distinct
+          ? (opts.tenants ?? [TENANT]).map((tenantId) => ({ tenantId }))
+          : (opts.policies ?? [policyRow()])
+      ),
+    },
+    agentAction: {
+      findMany: vi.fn().mockResolvedValue(opts.actions ?? []),
+      updateMany: vi.fn(async (args: any) =>
+        args.data.status === 'EXPIRED' ? { count: 2 } : { count: opts.claimCount ?? 1 }
+      ),
+    },
+    user: {
+      findFirst: vi.fn().mockResolvedValue(opts.user === undefined ? { id: TARGET } : opts.user),
+    },
+  };
+  const repo = {
+    findPendingOlderThan: vi.fn().mockResolvedValue(opts.drafts ?? []),
+    save: opts.saveError
+      ? vi.fn().mockRejectedValue(opts.saveError)
+      : vi.fn().mockResolvedValue(undefined),
+  };
+  const deps: ApprovalSweepDeps = {
+    prisma: { $transaction: vi.fn(async (fn: any, _o: unknown) => fn(tx)) } as any,
+    draftRepository: vi.fn(async () => repo as any),
+    notify: opts.notifyError
+      ? vi.fn().mockRejectedValue(opts.notifyError)
+      : vi.fn().mockResolvedValue(undefined),
+    log: { warn: vi.fn() },
+  };
+  return { tx: tx as unknown as SweepTx & typeof tx, repo, deps };
+}
+
+beforeEach(() => {
+  invalidateApprovalPolicyCache();
+});
+
+describe('runApprovalSweep', () => {
+  it('runs in one transaction with a transaction-scoped advisory lock', async () => {
+    const { tx, deps } = harness({});
+    const report = await runApprovalSweep(deps, NOW);
+
+    expect(deps.prisma.$transaction).toHaveBeenCalledWith(expect.any(Function), {
+      timeout: 60_000,
+      maxWait: 10_000,
+    });
+    expect(tx.$queryRaw.mock.calls[0]![0].join('?')).toContain('pg_try_advisory_xact_lock');
+    expect(report.locked).toBe(true);
+  });
+
+  it('does nothing when another replica holds the lock', async () => {
+    const { tx, deps } = harness({ locked: false });
+    const report = await runApprovalSweep(deps, NOW);
+
+    expect(report).toEqual({
+      locked: false,
+      agentActionsEscalated: 0,
+      draftsEscalated: 0,
+      skipped: 0,
+      expired: 0,
+    });
+    expect(tx.approvalPolicy.findMany).not.toHaveBeenCalled();
+    expect(tx.agentAction.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('escalates a due agent action once, tenant-scoped, and notifies the target', async () => {
+    const { tx, deps } = harness({ actions: [actionRow()] });
+    const report = await runApprovalSweep(deps, NOW);
+
+    expect(tx.agentAction.findMany).toHaveBeenCalledWith({
+      where: {
+        tenantId: TENANT,
+        status: 'PENDING_APPROVAL',
+        escalatedAt: null,
+        expiresAt: { gt: NOW },
+        createdAt: { lte: new Date('2026-10-13T11:00:00Z') },
+      },
+      orderBy: { createdAt: 'asc' },
+      take: APPROVAL_SWEEP_BATCH,
+    });
+    expect(tx.agentAction.updateMany).toHaveBeenCalledWith({
+      where: { id: 'act-1', tenantId: TENANT, status: 'PENDING_APPROVAL', escalatedAt: null },
+      data: { escalatedAt: NOW, escalatedTo: TARGET },
+    });
+    expect(deps.notify).toHaveBeenCalledWith(tx, {
+      tenantId: TENANT,
+      userId: TARGET,
+      title: 'Agent Action Escalated for Your Review',
+      body: '"Create case "Renewal"" has waited 60 minutes for approval.',
+      entityType: 'agent_action',
+      entityId: 'act-1',
+      entityName: 'Renewal',
+      actionUrl: '/agent-approvals/preview?actionId=act-1',
+    });
+    expect(report.agentActionsEscalated).toBe(1);
+  });
+
+  it('does not notify when another tick already escalated the action', async () => {
+    const { deps } = harness({ actions: [actionRow()], claimCount: 0 });
+    const report = await runApprovalSweep(deps, NOW);
+    expect(deps.notify).not.toHaveBeenCalled();
+    expect(report.agentActionsEscalated).toBe(0);
+  });
+
+  it('skips actions whose own policy does not escalate yet', async () => {
+    const { tx, deps } = harness({
+      policies: [
+        policyRow(),
+        policyRow({
+          id: 'p2',
+          isDefault: false,
+          escalateAfterMinutes: 200,
+          assignments: [{ agentKey: 'update_case', actionType: 'UPDATE' }],
+        }),
+      ],
+      actions: [actionRow({ id: 'act-2', actionType: 'update_case' })],
+    });
+    await runApprovalSweep(deps, NOW);
+    expect(tx.agentAction.updateMany).toHaveBeenCalledTimes(1); // only the expiry flip
+  });
+
+  it('maps an unknown tool to a wildcard action type', async () => {
+    const { tx, deps } = harness({ actions: [actionRow({ actionType: 'legacy_tool' })] });
+    await runApprovalSweep(deps, NOW);
+    expect(tx.agentAction.updateMany).toHaveBeenCalledTimes(2);
+  });
+
+  it('skips and logs when the escalation target is no longer a user (BR-9)', async () => {
+    const { deps } = harness({ actions: [actionRow(), actionRow({ id: 'act-2' })], user: null });
+    const report = await runApprovalSweep(deps, NOW);
+
+    expect(report.skipped).toBe(2);
+    expect(deps.notify).not.toHaveBeenCalled();
+    // The target lookup is cached for the tenant.
+    expect(deps.log!.warn).toHaveBeenCalledTimes(1);
+  });
+
+  it('keeps the escalation when the notification fails', async () => {
+    const { deps } = harness({ actions: [actionRow()], notifyError: new Error('smtp') });
+    const report = await runApprovalSweep(deps, NOW);
+    expect(report.agentActionsEscalated).toBe(1);
+    expect(deps.log!.warn).toHaveBeenCalledWith('[approval-sweep] notification failed: smtp');
+  });
+
+  it('logs a non-Error notification failure too', async () => {
+    const { deps } = harness({ actions: [actionRow()] });
+    (deps.notify as any).mockRejectedValue('down');
+    await runApprovalSweep(deps, NOW);
+    expect(deps.log!.warn).toHaveBeenCalledWith('[approval-sweep] notification failed: down');
+  });
+
+  it('ignores queues without an escalating policy', async () => {
+    const { tx, deps } = harness({
+      policies: [policyRow({ escalationTargetUserId: null })],
+    });
+    await runApprovalSweep(deps, NOW);
+    expect(tx.agentAction.findMany).not.toHaveBeenCalled();
+    expect(deps.draftRepository).not.toHaveBeenCalled();
+  });
+
+  it('escalates before it expires, then flips overdue actions to EXPIRED', async () => {
+    const { tx, deps } = harness({ actions: [actionRow()] });
+    const report = await runApprovalSweep(deps, NOW);
+
+    const calls = tx.agentAction.updateMany.mock.calls.map((c: any) => c[0].data);
+    expect(calls).toEqual([{ escalatedAt: NOW, escalatedTo: TARGET }, { status: 'EXPIRED' }]);
+    expect(tx.agentAction.updateMany.mock.calls[1]![0].where).toEqual({
+      status: 'PENDING_APPROVAL',
+      expiresAt: { lt: NOW },
+    });
+    expect(report.expired).toBe(2);
+  });
+
+  describe('auto-response drafts', () => {
+    const draftPolicy = policyRow({ scope: 'AUTO_RESPONSE', escalateAfterMinutes: 30 });
+
+    it('escalates a due draft as the system actor, window bounded by its expiry', async () => {
+      const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'), 2);
+      const { repo, deps, tx } = harness({ policies: [draftPolicy], drafts: [draft] });
+      // The aggregate stamps the escalation with the clock; align it with the sweep's now.
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(NOW);
+      const report = await runApprovalSweep(deps, NOW);
+      vi.useRealTimers();
+
+      expect(repo.findPendingOlderThan).toHaveBeenCalledWith(
+        TENANT,
+        new Date('2026-10-13T11:30:00Z'),
+        APPROVAL_SWEEP_BATCH
+      );
+      expect(draft.status).toBe('ESCALATED');
+      expect(draft.escalation).toMatchObject({
+        escalatedBy: SYSTEM_APPROVAL_ACTOR,
+        escalatedTo: TARGET,
+      });
+      // Draft expires 2h after it was created (10:59), so the window ends there too.
+      expect(draft.escalation!.expiresAt.getTime()).toBe(draft.expiresAt.getTime());
+      expect(repo.save).toHaveBeenCalledWith(draft);
+      expect(deps.notify).toHaveBeenCalledWith(
+        tx,
+        expect.objectContaining({
+          entityType: 'auto_response_draft',
+          actionUrl: '/agent-approvals?status=escalated',
+          body: expect.stringContaining('no decision after 30 minutes'),
+        })
+      );
+      expect(report.draftsEscalated).toBe(1);
+    });
+
+    it('measures the SLA from submission, not from drafting', async () => {
+      const draft = pendingDraft(new Date('2026-10-13T11:45:00Z'));
+      const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
+      await runApprovalSweep(deps, NOW);
+      expect(draft.status).toBe('PENDING_APPROVAL');
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('does not escalate a draft that has already expired', async () => {
+      const draft = pendingDraft(new Date('2026-10-13T09:00:00Z'), 1);
+      const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
+      await runApprovalSweep(deps, NOW);
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('skips a draft the aggregate refuses to escalate', async () => {
+      const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'));
+      draft.escalate('someone', TARGET, 'manual', 1);
+      draft.resolveEscalation(TARGET);
+      // escalationCount is now 1 -> MAX is 3, so force a refusal by rejecting it.
+      draft.reject(TARGET, 'no');
+      const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
+      const report = await runApprovalSweep(deps, NOW);
+      expect(repo.save).not.toHaveBeenCalled();
+      expect(report.skipped).toBe(1);
+    });
+
+    it('skips a draft decided meanwhile (optimistic lock)', async () => {
+      const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'));
+      const { deps } = harness({
+        policies: [draftPolicy],
+        drafts: [draft],
+        saveError: new Error('version conflict'),
+      });
+      const report = await runApprovalSweep(deps, NOW);
+      expect(report).toMatchObject({ draftsEscalated: 0, skipped: 1 });
+      expect(deps.notify).not.toHaveBeenCalled();
+    });
+
+    it('logs a non-Error save failure', async () => {
+      const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'));
+      const { deps, repo } = harness({ policies: [draftPolicy], drafts: [draft] });
+      repo.save.mockRejectedValue('locked');
+      await runApprovalSweep(deps, NOW);
+      expect(deps.log!.warn).toHaveBeenCalledWith(expect.stringContaining('not escalated: locked'));
+    });
+  });
+});
+
+describe('createDefaultSweepDeps', () => {
+  it('wires the shared client, the Prisma draft repository and in-app notifications', async () => {
+    const deps = await createDefaultSweepDeps();
+
+    expect(deps.prisma).toBeDefined();
+    const repo: any = await deps.draftRepository({ marker: 1 } as any);
+    expect(repo.client).toEqual({ marker: 1 });
+    await deps.notify({ tx: 1 } as any, {
+      tenantId: TENANT,
+      userId: TARGET,
+      title: 't',
+      body: 'b',
+      entityType: 'agent_action',
+      entityId: 'a',
+      entityName: 'n',
+      actionUrl: '/x',
+    });
+    expect(createNotification).toHaveBeenCalledWith(
+      { tx: 1 },
+      expect.objectContaining({
+        type: 'ai_action_pending',
+        priority: 'high',
+        actionLabel: 'Review',
+      })
+    );
+  });
+});
