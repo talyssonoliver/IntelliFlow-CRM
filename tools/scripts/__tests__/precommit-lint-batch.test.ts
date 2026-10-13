@@ -85,6 +85,48 @@ function resolveSh(): string {
   return 'sh';
 }
 
+/**
+ * Minimal environment for the spawned hook chain: PATH plus only what pnpm,
+ * node and eslint need to start. Deliberately NOT `process.env`: under
+ * `pnpm run test:unit` (how pre-ship launches vitest) that is inflated with
+ * npm_config_* / npm_package_* vars, and `xargs` then fails with
+ * "environment is too large for exec" — a failure unrelated to the
+ * command-line-length behaviour this test pins down.
+ */
+function minimalEnv(): NodeJS.ProcessEnv {
+  const keep = [
+    'PATH',
+    'Path',
+    'PATHEXT',
+    'SystemRoot',
+    'SYSTEMROOT',
+    'ComSpec',
+    'windir',
+    'TEMP',
+    'TMP',
+    'TMPDIR',
+    'HOME',
+    'USERPROFILE',
+    'HOMEDRIVE',
+    'HOMEPATH',
+    'APPDATA',
+    'LOCALAPPDATA',
+    'ProgramFiles',
+    'ProgramFiles(x86)',
+    'ProgramW6432',
+    'ProgramData',
+    'COREPACK_HOME',
+    'PNPM_HOME',
+    'LANG',
+    'LC_ALL',
+  ];
+  const env: NodeJS.ProcessEnv = {};
+  for (const k of keep) {
+    if (process.env[k] !== undefined) env[k] = process.env[k];
+  }
+  return env;
+}
+
 const toShPath = (p: string) => p.replace(/\\/g, '/');
 
 describe('.husky/pre-commit — batched staged-file lint', () => {
@@ -127,7 +169,7 @@ describe('.husky/pre-commit — batched staged-file lint', () => {
         ` | xargs -s ${batchChars} -x pnpm exec eslint --version`;
       const result = spawnSync(sh, ['-c', cmd], {
         cwd: ROOT,
-        env: process.env,
+        env: minimalEnv(),
         encoding: 'utf8',
       });
 
