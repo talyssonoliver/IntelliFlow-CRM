@@ -32,4 +32,17 @@ describe('SectionHeader', () => {
     const { container } = render(<SectionHeader {...base} />);
     expect(container.querySelectorAll('.shrink-0')).toHaveLength(1);
   });
+
+  it('defaults to an h3 that is not focusable', () => {
+    render(<SectionHeader {...base} />);
+    const heading = screen.getByRole('heading', { name: 'Tier Definitions' });
+    expect(heading.tagName).toBe('H3');
+    expect(heading).not.toHaveAttribute('tabindex');
+  });
+
+  it('renders an h2 that can take programmatic focus when asked', () => {
+    render(<SectionHeader {...base} headingLevel={2} focusableTitle />);
+    const heading = screen.getByRole('heading', { level: 2, name: 'Tier Definitions' });
+    expect(heading).toHaveAttribute('tabindex', '-1');
+  });
 });

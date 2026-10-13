@@ -5,7 +5,7 @@
 // tags (TagsTab via forwardRef, §4) and an honest delivery-status card. Rows live
 // in report_schedules; IFC-308's BullMQ cron will read them (ADR-075).
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useRef, useState } from 'react';
 import { ACCOUNT_OWNER_ADMIN_ROLES } from '@intelliflow/domain';
 import { Card, ConfirmationDialog, Skeleton, toast, Button } from '@intelliflow/ui';
 import type {
@@ -16,47 +16,13 @@ import type {
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
 import { PageHeader, type PageAction } from '@/components/shared/page-header';
+import { SectionHeader } from '@/components/shared/section-header';
 import { ScheduleList, type ScheduleItem } from './components/ScheduleList';
 import { ScheduleDialog, type ScheduleSubmit } from './components/ScheduleDialog';
 import { TagsTab, type TagsTabHandle } from './components/TagsTab';
 import ScheduledReportsLoading from './loading';
 
 const MANAGER_ROLES: ReadonlySet<string> = new Set(ACCOUNT_OWNER_ADMIN_ROLES);
-
-interface SectionHeadingProps {
-  icon: string;
-  iconClass: string;
-  title: string;
-  titleId: string;
-  description: string;
-  action?: ReactNode;
-}
-
-function SectionHeading({
-  icon,
-  iconClass,
-  title,
-  titleId,
-  description,
-  action,
-}: Readonly<SectionHeadingProps>) {
-  return (
-    <div className="mb-4 flex items-start gap-3">
-      <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${iconClass}`}>
-        <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
-          {icon}
-        </span>
-      </div>
-      <div className="min-w-0 flex-1">
-        <h2 id={titleId} tabIndex={-1} className="text-base font-semibold text-foreground">
-          {title}
-        </h2>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </div>
-      {action && <div className="shrink-0">{action}</div>}
-    </div>
-  );
-}
 
 function errorToast(title: string) {
   return (err: { message: string }) =>
@@ -214,9 +180,12 @@ export default function ScheduledReportsContent() {
       <div className="grid grid-cols-1 gap-4 sm:gap-5 lg:grid-cols-12">
         <section aria-labelledby="schedules-heading" className="lg:col-span-8">
           <Card className="h-full p-4 sm:p-5">
-            <SectionHeading
+            <SectionHeader
               icon="schedule_send"
-              iconClass="bg-primary/10 text-primary"
+              iconBg="bg-primary/10"
+              iconFg="text-primary"
+              headingLevel={2}
+              focusableTitle
               title="Schedules"
               titleId="schedules-heading"
               description={
@@ -245,9 +214,12 @@ export default function ScheduledReportsContent() {
         <div className="flex flex-col gap-4 sm:gap-5 lg:col-span-4">
           <section aria-labelledby="tags-heading">
             <Card className="p-4 sm:p-5">
-              <SectionHeading
+              <SectionHeader
                 icon="sell"
-                iconClass="bg-violet-500/10 text-violet-600 dark:text-violet-400"
+                iconBg="bg-violet-500/10"
+                iconFg="text-violet-600 dark:text-violet-400"
+                headingLevel={2}
+                focusableTitle
                 title="Tags"
                 titleId="tags-heading"
                 description="Group schedules by team or audience."
@@ -277,9 +249,11 @@ export default function ScheduledReportsContent() {
 
           <section aria-labelledby="delivery-heading">
             <Card className="p-4 sm:p-5">
-              <SectionHeading
+              <SectionHeader
                 icon="info"
-                iconClass="bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                iconBg="bg-amber-500/10"
+                iconFg="text-amber-700 dark:text-amber-400"
+                headingLevel={2}
                 title="Delivery status"
                 titleId="delivery-heading"
                 description="What happens to a schedule after you save it."
