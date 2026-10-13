@@ -1,7 +1,13 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "artifacts": {
-    "created": [],
+    "created": [
+      "apps/web/src/app/cases/(list)/case-types/page.tsx",
+      "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx",
+      "apps/api/src/modules/legal/case-types.router.ts",
+      "packages/validators/src/case-types.ts",
+      ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json"
+    ],
     "expected": [
       "apps/web/src/app/cases/(list)/case-types/page.tsx",
       "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx",
@@ -9,15 +15,12 @@
       "packages/validators/src/case-types.ts",
       ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json"
     ],
-    "missing": [
-      "apps/web/src/app/cases/(list)/case-types/page.tsx",
-      "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx",
-      "apps/api/src/modules/legal/case-types.router.ts",
-      "packages/validators/src/case-types.ts",
-      ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json"
-    ]
+    "missing": []
   },
-  "blockers": [],
+  "blockers": [
+    "Lighthouse >= 90 not measurable: no LHCI credentials (NEEDS_HUMAN)",
+    "Push/PR/pre-ship owned by the runner (Gate 4b)"
+  ],
   "completed_at": null,
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.885Z"
@@ -28,7 +31,7 @@
   },
   "kpis": {},
   "notes": "Case types at /cases/case-types: taxonomy (category, default priority, default SLA, required fields, resolution workflow). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in case automation OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "plan",
+  "phase": "exec",
   "started_at": "2026-10-12T23:22:38Z",
   "status_history": [
     {
@@ -60,6 +63,16 @@
       "at": "2026-10-13T00:19:00Z",
       "note": "Plan approved by plan-reviewer subagent (iteration 2); 18 steps, 67 files; Planned Finish 2026-10-15",
       "status": "Plan Complete"
+    },
+    {
+      "at": "2026-10-13T00:22:00Z",
+      "note": "Exec started: preflights green, context_ack + coverage before-snapshot",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-10-13T02:28:00Z",
+      "note": "Implementation + full validation matrix green; attestation verdict NEEDS_HUMAN (Lighthouse credentials, runner push). Prisma migration 20261013120000_case_types needs a manual prod apply.",
+      "status": "In Progress"
     }
   ],
   "stream": null,

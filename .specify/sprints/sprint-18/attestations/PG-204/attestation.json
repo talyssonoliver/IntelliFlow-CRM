@@ -1,72 +1,390 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-204",
-  "run_id": "eng-ops-002-r16-pg-204-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "exec-PG-204-20261013",
+  "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-204 exec lane, branch feat/pg-204-case-types",
+  "attestation_timestamp": "2026-10-13T02:28:29.541Z",
+  "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 64,
+    "validations_passed": 16,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "gates_passed": 8,
+    "gates_failed": 0,
+    "kpis_met": 4,
+    "kpis_missed": 1,
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/cases/(list)/case-types/page.tsx": "f4d255a6c3d3910350f0444b17f7e7d6cca4cfb8c3e24ddb7adb41d094be4254"
+    "apps/web/src/app/cases/(list)/case-types/page.tsx": "3ef6c0968c435574fe14224cecca7cb306646833ca685c96c09e7d3aab36cb4c",
+    "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx": "5109fdc2d6428f37f272f76921e2fa9ba02f88ce083a340566f914f47f1e6683",
+    "apps/api/src/modules/legal/case-types.router.ts": "b5865324f8a16a2183fb9e86fcce6e18d56d66adbd08d953d8065628d5db83a4",
+    "packages/validators/src/case-types.ts": "3cf369d9fd3a9a2bee8dab3cfdfa549b743f965a2762134282ec166728411311",
+    "packages/domain/src/legal/cases/case-type-defaults.ts": "2238d54af413849d2f90ede8ff5ea5d0f0d61185ce7e0d18db4a177e30560cfb",
+    "packages/db/prisma/migrations/20261013120000_case_types/migration.sql": "332638370a2a4eaf25b173ef14e5c9c47b92b2b094cde35750945fc0dd5ecb11",
+    "apps/api/src/lib/case-sla-deadline.ts": "70ccdafa9e56a204b930aa271d4bea80588a8b638e58b83ba1f6b601b71c2153",
+    "apps/web/src/app/cases/(list)/case-types/CaseTypesLoading.tsx": "4c41c3657f1f7fed641ba15ef3cc2f9fb329c8be20f24d03a693a8916faeb8f1",
+    "apps/web/src/app/cases/(list)/case-types/components/CaseTypeList.tsx": "c17529fc27bd833dfb0287fa0d379dc8dd465034d283deaf6d20690fa0b2e24d",
+    "apps/web/src/app/cases/(list)/case-types/components/CaseTypeDialog.tsx": "cc8ce71d055c1486265cee1461cf996c04f3d4c87c39a90adbd3985057eab11d",
+    "apps/web/src/app/cases/(list)/case-types/components/ResolutionChecklistEditor.tsx": "2ff1b5e992aa9666e8f19d4504a7d39e3e61bc77620e2d400323ba0a79cbf6c1",
+    "apps/web/src/app/cases/(list)/case-types/components/DeleteCaseTypeDialog.tsx": "fc841581d660f7f0d991b541321ff931de0a6bb7cd6c7ac7e9d14a7981da0088",
+    "apps/web/src/components/cases/case-type-colors.ts": "93fcedcf6609899aba5e90b1873415dfce74b8703de7de6755938c7ab8ad90e4",
+    "apps/web/src/components/cases/case-type-labels.ts": "792680ec03880143037a0092e2c2729aa9d9a6f74f92b184692e2188222eec98",
+    "packages/domain/src/index.ts": "ec192653fabc2aefcf2b28d7549d27458ed58943ea7793e9500df9a145240590",
+    "packages/db/src/index.ts": "e04e50fb5bf19a305c90da67a7fa64220863b75eefe9d011abd61e1a02f0455a",
+    "packages/validators/src/case-settings.ts": "f8ce00be61f49a8a062545020b2848d1a6c7740751354635868fb864e127240b",
+    "packages/validators/src/case.ts": "786bc720a2fcc01e78be7e57525f6dc47f6fc5f09a3433b5aa73c2bce56b6dbc",
+    "packages/validators/src/index.ts": "870b4033c7f1b3f81282160a2ec18be3c46381d2fa9dbb71f41a64e2e1e1a9b1",
+    "apps/api/src/router.ts": "290b2ff70428ec8e28b1e5d1643315d4b103eda4c3516047fae0b672e03d25b1",
+    "apps/api/src/modules/legal/cases.router.ts": "f736ad65252ecf9aed9d6811d2498e2f96f25e3bf35082fba19420bdb562f910",
+    "apps/web/src/components/cases/CaseForm.tsx": "887e2fad1d46118bde9444ee4718ace43bfb6ba9d18259e6d13f6409d603e587",
+    "apps/web/src/app/cases/(list)/new/page.tsx": "6c3410e50d660183a7be219932369b223557f724187f53a271e712db2f91d294",
+    "apps/web/src/components/cases/CaseDetail.tsx": "a2bd60eaf1661534b83f3dcc09d771e1a63a53482959abe92140326ea0855ddc",
+    "apps/web/src/components/cases/types.ts": "453c8ef26dcd9f2b40e33599e6b6594eabfa96b0ce85769a3b6c1ebcf2e0f04b",
+    "packages/domain/src/legal/cases/__tests__/case-type-defaults.test.ts": "6b2aa572aa75b2c94e75ba57446bce8b6d6f4e80328f265b65248f56f1378804",
+    "packages/validators/src/__tests__/case-types.test.ts": "4f084f768a0b12bd1ce421bb9052e0b234c546c32e29cf0488ce61cf5ac34e2b",
+    "apps/api/src/modules/legal/__tests__/case-types.router.test.ts": "d02e850d90b61752e52603a9c5060b68b9420d0ab158633fe7660b417a92ae26",
+    "apps/api/src/modules/legal/__tests__/cases.router.case-types.test.ts": "2f87b1806f9cca146b0b34374494182c73ce5e2384e6473c800f3ac85117d525",
+    "apps/api/src/lib/__tests__/case-sla-deadline.test.ts": "3994f2563951706f169d559716514ce7e0fc8ea67fcac2e1ce4e48b5fd9f8b8a",
+    "tests/integration/case-types.test.ts": "a052806d7cd2b7a8476f8f37a154cab2cd1848b77f0893bb0a5fc1aff7dde03a",
+    "apps/web/src/app/cases/(list)/case-types/__tests__/page.test.tsx": "feb49e0b4e66811eed8145d235b80a7aef648edb451ac7da6f4483973b4b8839",
+    "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesContent.test.tsx": "471e05ac1df473876f772a76f89291b0afc749f81c70299aa6b33c129f442ba0",
+    "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesLoading.test.tsx": "fcbae4ecef27f4eef8319a3275eeca1a0d987237f4eaf28d78141aca9ca9175a",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeList.test.tsx": "657ee54de6b328485d89ba83f5c7f6697bfd0322e7226fe2343ffd272a56f447",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeDialog.test.tsx": "dd22c9597c65d83ad31a6b55ba2567e7ac5d4e364e3e5748e564c91f51fb6f4b",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/ResolutionChecklistEditor.test.tsx": "9d6fd399e085b5a399c7d2de14526c1dd17684a6d6bf67465496e3f77ea2d894",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/DeleteCaseTypeDialog.test.tsx": "12aab81903b84024e421745983af7394c5f8583cb9b1f02f6684857a922f6991",
+    "apps/web/src/components/cases/__tests__/case-type-helpers.test.ts": "4b52c7215e8117306b92f7a0964741a687bfbb25353c3bc1b72a4d8c2000bc28",
+    "apps/web/src/components/cases/__tests__/CaseForm.test.tsx": "8a3f87bbb8f8d06f148cc027375ffe01faafc9dbbca4fb4905146cd0dcfc38b2",
+    "apps/web/src/app/cases/(list)/new/__tests__/page.test.tsx": "d3cc0a74aa1547e07f6f688e42fffe9fa1d36ea3b7b26cb273826f0bcd4c3b2e",
+    "packages/validators/src/__tests__/case.test.ts": "7bd41ba6af182a6a35f4096fc35e6fde1d44b0df654213d5ccb2b2dc99f81997",
+    "packages/validators/src/__tests__/case-settings.test.ts": "d1759a38763d24845bc5d7a8f828216e1e731fe048face7da2a48af2d2e959de",
+    "packages/validators/__tests__/enum-consistency.spec.ts": "f166d47be40736f8a97bc58b4d36929bcbb68b1dced74534d8f5341f03dc3ea7",
+    "apps/api/src/modules/legal/__tests__/legal-module-entitlement.test.ts": "3e0770bb81203b26f3bbe5cc01c9f511c7289f01e6d4c8b714dc1b14269f11be",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "98d6edde111d03f69536f5eeab85788f7fabbb6949a5388a9c0542941a5a8fdc",
+    "packages/adapters/src/repositories/__tests__/PrismaCaseRepository.test.ts": "7c8357aa8b67184979654db629f5a92d0898c0adf960cd8e8f60c924b6d037b1",
+    "apps/web/src/components/cases/__tests__/CaseDetail.test.tsx": "0d0b476c400d64b05869ebe4a441a75181377ee3f28bd70f5edcb33ab5e34aea",
+    "apps/api/src/modules/legal/__tests__/cases.router.test.ts": "77ba3f35b6072b5141f2a9f051b055e703298fc9f0d556ac04900bbe4f2b63db",
+    "docs/architecture/adr/ADR-076-case-types-applied-at-case-creation.md": "99d7c38f51d0341e6cf6bed098865839c655d74418fdc41ec52931383de04e14",
+    "docs/architecture/adr/README.md": "7bf5da688bf64a72f22496aa29eddfb48118d11391b8cea10cef286be0f1e76b",
+    "docs/planning/prd-module-settings.md": "f07b46a5b3b28fe14da9bed47b6b8d222750f32732104a3886b9dd5a709a2717",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "17acfcd6d7c92243eebaadc88e4ab01a7705f158f7cd55a9907f15947ad8f34b",
+    "docs/design/page-registry.md": "156730f0d1eba735fc2565c42046aa7656d0755318f1c5b12aa3ed5f62a41d20",
+    "docs/design/sitemap.md": "594bf7c7860febc769ab4bc1353db8bd428b577409921d208ea218ccf92eced5",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "d31110cfde382a5ddd2db5d1070bf28fb965d94c77c2b3273dcb9f0eee2b60b9",
+    "docs/design/navigation-reachability-audit.md": "b5ec907f5640b9d3542a9af6ed4475f90d9411af40f67b2de77007e732d3da73",
+    "docs/design/ui-flow-mapping.md": "cb31333673347c6bb53b6a3385c7742d02f6a2cd37e1385423f59c5c89d24fd0",
+    "docs/design/information-architecture.md": "77e74a173245269d4bb144597e5e1c81f1100c0e65622279efc97269365ddeed",
+    "artifacts/metrics/debt-ledger.yaml": "470240768fdf9c110198119769c8d002ea7b73a70fe786211a905331ec6086ff",
+    ".specify/sprints/sprint-18/findings/PG-204-findings.md": "be50b17290fae664a02b714106e62b8314e2c749418b5d01689633de3464442a",
+    ".specify/sprints/sprint-18/attestations/PG-204/task-tracking.json": "1db17e0b2a718b63c3847d0869c782f3ad56a0447dd5535bde41f3f6e831e52f",
+    "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "1323e9c12c0c19b7a17de176a1f5fba44ce42532193d051780f8c769c6bd4c23",
+    ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json": "fc9f4e3f10b641622118b718c3ea4be17bed0aac854ae62bc0a8f2a643d0e03f"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "domain full suite",
+      "command": "pnpm --filter @intelliflow/domain test",
+      "exit_code": 0,
+      "passed": true,
+      "result": "103 files, 2957 tests passed",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "validators full suite",
+      "command": "pnpm --filter @intelliflow/validators test",
+      "exit_code": 0,
+      "passed": true,
+      "result": "53 files, 2557 tests passed",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "adapters full suite",
+      "command": "pnpm --filter @intelliflow/adapters test",
+      "exit_code": 0,
+      "passed": true,
+      "result": "109 files, 2967 tests passed",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "api full suite (after the last API change)",
+      "command": "pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "result": "292 files, 7281 passed, 18 skipped (pre-existing env-gated)",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "web full suite",
+      "command": "pnpm --filter @intelliflow/web exec vitest run",
+      "exit_code": 0,
+      "passed": true,
+      "result": "797 files, 12658 tests passed",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "case types integration (real local test DB)",
+      "command": "pnpm exec vitest run --project integration tests/integration/case-types.test.ts (slot --exclusive intelliflow-db)",
+      "exit_code": 0,
+      "passed": true,
+      "result": "16 passed",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "full integration suite (STOA domain gate 4)",
+      "command": "pnpm run test:integration (slot --exclusive intelliflow-db)",
+      "exit_code": 0,
+      "passed": true,
+      "result": "24 files passed, 1 skipped; 357 tests passed, 61 skipped (pre-existing env-gated)",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "typecheck domain/validators/adapters/db/api/web",
+      "command": "pnpm --filter @intelliflow/<pkg> typecheck (x6)",
+      "exit_code": 0,
+      "passed": true,
+      "result": "all exit 0",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "lint domain/validators/adapters/db/api/web",
+      "command": "pnpm --filter @intelliflow/<pkg> lint (x6)",
+      "exit_code": 0,
+      "passed": true,
+      "result": "all exit 0",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "sonar guard",
+      "command": "pnpm run lint:sonar:guard",
+      "exit_code": 0,
+      "passed": true,
+      "result": "exit 0",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "build domain/validators/db/api",
+      "command": "pnpm --filter @intelliflow/<pkg> build (x4)",
+      "exit_code": 0,
+      "passed": true,
+      "result": "all exit 0",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "build web",
+      "command": "pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "result": "exit 0; /cases/case-types and /cases/new in the route table; one pre-existing web-worker \"Critical dependency\" warning",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "code review quick (task-linked)",
+      "command": "pwsh scripts/code-review-analysis.ps1 -Sprint 18 -TaskId PG-204 -LinkToGates -Quick",
+      "exit_code": 0,
+      "passed": true,
+      "result": "27 packages, 0 type errors, 0 lint problems",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "semantic review",
+      "command": "node scripts/codex-review.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "result": "PASS, 0 unwaived findings (claude fallback: the installed codex CLI rejects --ephemeral); passes 1-3 found 4 real defects, all fixed",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "architecture boundaries",
+      "command": "pnpm exec depcruise --config .dependency-cruiser.cjs packages/domain packages/application --output-type err",
+      "exit_code": 0,
+      "passed": true,
+      "result": "0 errors, 2 pre-existing warnings (Contact events cycle)",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    },
+    {
+      "name": "migration status (local test DB)",
+      "command": "prisma migrate status (DIRECT_URL/DATABASE_URL = .env.test local DB)",
+      "exit_code": 0,
+      "passed": true,
+      "result": "WARN: 20261013120000_case_types not recorded (objects applied by the integration helper)",
+      "timestamp": "2026-10-13T02:28:29.541Z"
+    }
+  ],
   "gate_results": [
     {
+      "gate_id": "context-ack",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json (15 files with SHA-256, 9 invariants)"
+    },
+    {
+      "gate_id": "plan-reviewer-marker",
+      "passed": true,
+      "log_path": "check-plan-reviewer-subagent.mjs PG-204 exit 0 (Category Y PASS)"
+    },
+    {
+      "gate_id": "exec-readiness",
+      "passed": true,
+      "log_path": "check-exec-readiness.mjs PG-204: 5/5 PASS"
+    },
+    {
+      "gate_id": "nav-wiring + page-doc-cochange",
+      "passed": true,
+      "log_path": "check-nav-wiring.mjs / check-page-doc-cochange.mjs exit 0 (no new page.tsx; stub replaced in place; sidebar configs/cases.ts:14)"
+    },
+    {
       "gate_id": "module-settings-dod-artifacts-present",
+      "passed": true,
+      "log_path": "All 64 CSV ARTIFACT/EVIDENCE paths exist; hashes in artifact_hashes"
+    },
+    {
+      "gate_id": "stoa-domain",
+      "passed": true,
+      "log_path": "artifacts/reports/system-audit/exec-PG-204-20261013/stoa-verdicts/Domain.json (WARN: migration not recorded on the shared local test DB only)"
+    },
+    {
+      "gate_id": "a11y-expert WCAG 2.1 AA review",
+      "passed": true,
+      "log_path": "PASS WITH MINOR; minors 2,3,4,5,6,9 fixed in 3a10045ad; 1 (shared SectionHeader h3) and 7/8 left as documented minors"
+    },
+    {
+      "gate_id": "secret-scan",
+      "passed": true,
+      "log_path": "pre-commit secret scan passed on every commit; test fixtures use *.example.invalid hosts and no connection strings"
+    },
+    {
+      "gate_id": "lighthouse-gte-90",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-204 requires page.tsx (exists), CaseTypesContent.tsx (MISSING), apps/api/src/modules/case/case-types.router.ts (MISSING), packages/validators/src/case-types.ts (MISSING), context_ack.json (MISSING). Broad grep for case-types router/validator logic across apps/api and packages/validators returned zero hits."
+      "log_path": "NEEDS_HUMAN - not run. LHCI_TEST_EMAIL / LHCI_TEST_PASSWORD are not set in .env.local, .env.test or the main checkout .env.local (verified by grep of variable names), and tools/lighthouse/lhci-auth.js authenticates against the production Supabase project. Both routes are auth-gated. Run: LHCI_URLS=http://localhost:3000/cases/case-types,http://localhost:3000/cases/new LHCI_OUTPUT_DIR=artifacts/lighthouse/PG-204 pnpm --filter @intelliflow/web run lighthouse:auth with credentials for a non-production user."
+    },
+    {
+      "gate_id": "worktree-landed (Gate 4b)",
+      "passed": false,
+      "log_path": "NEEDS_HUMAN - by design: runner rules forbid this lane from pushing or opening a PR; the runner pushes and runs pre-ship once at the final SHA."
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Domain resolver coverage",
+      "target": ">= 95%",
+      "actual": "100% statements/branches/functions/lines (25 tests)",
+      "met": true
+    },
+    {
+      "kpi": "Diff coverage on changed lines (web)",
+      "target": ">= 80%",
+      "actual": "99.2% statements, 93.9% branches (route-group + components)",
+      "met": true
+    },
+    {
+      "kpi": "Diff coverage on changed cases.router.ts lines",
+      "target": ">= 80%",
+      "actual": "29/29 statements, 34/34 branches (router file is sonar-excluded; measured anyway)",
+      "met": true
+    },
+    {
+      "kpi": "Full suites of touched packages",
+      "target": "all green",
+      "actual": "domain, validators, adapters, api, web, integration all green",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse (performance/accessibility) on /cases/case-types and /cases/new",
+      "target": ">= 90",
+      "actual": "open gate: no LHCI credentials (see gate_results)",
+      "met": false
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-190"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /cases/case-types renders",
+      "criterion": "Case types at /cases/case-types (category, default priority, default SLA, required fields, resolution workflow) - owner ruling Q1=A/Q2=Yes",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "case-types.router.ts + CaseTypesContent.tsx; cases.create applies type then PG-190 defaults (resolveCaseCreateDefaults); checklist seeded as CaseTasks"
     },
     {
-      "criterion": "Taxonomy: category, default priority, default SLA, required fields, resolution workflow implemented",
-      "met": false,
-      "evidence": "page.tsx (20 lines) is a static placeholder ('Case types configuration coming soon.'). No form, no data fetch, no case-type model."
+      "criterion": "PageHeader + bento grid",
+      "met": true,
+      "evidence": "CaseTypesContent.tsx (grid-cols-12, col-span-8/4)"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "canonical EmptyState (entity + phase=passive)",
+      "met": true,
+      "evidence": "CaseTypeList.tsx EmptyState entity=\"cases\" variant=\"folder\" phase=\"passive\""
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "system-compliant CTAs",
+      "met": true,
+      "evidence": "New Case Type size=\"sm\" in SectionHeader action; Add Step size=\"sm\" right-aligned"
+    },
+    {
+      "criterion": "TagsTab-style list via forwardRef",
+      "met": true,
+      "evidence": "CaseTypeList forwardRef + useImperativeHandle({ openCreate }); CaseTypeList.test.tsx"
+    },
+    {
+      "criterion": "$transaction on all destructive writes",
+      "met": true,
+      "evidence": "create/update/delete/setDefault in $transaction (case-types.router.test.ts)"
+    },
+    {
+      "criterion": "no skipDuplicates",
+      "met": true,
+      "evidence": "test asserts createMany has no skipDuplicates"
+    },
+    {
+      "criterion": "Zod superRefine for duplicate type names",
+      "met": true,
+      "evidence": "caseTypeNameSchema superRefine + findDuplicateCaseTypeName (case-types.test.ts); DB lower(name) unique index"
+    },
+    {
+      "criterion": "colorToken CHECK constraint",
+      "met": true,
+      "evidence": "case_types_colorToken_check (integration test rejects neon)"
+    },
+    {
+      "criterion": "AI defaults FALSE",
+      "met": true,
+      "evidence": "N/A - no AI columns added"
+    },
+    {
+      "criterion": "every Boolean toggle wired or declared",
+      "met": true,
+      "evidence": "isActive (listActive + create rejects inactive), isDefault (New Case preselect) - category 1"
+    },
+    {
+      "criterion": "cross-tenant negative test",
+      "met": true,
+      "evidence": "router NOT_FOUND tests per mutation; cases.create foreign type/client/assignee; DB composite FK rejects a cross-tenant link (integration)"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "NEEDS_HUMAN - no LHCI credentials; harness targets production auth"
+    },
+    {
+      "criterion": "verified by pnpm test",
+      "met": true,
+      "evidence": "full suites of every touched package green (validation_results)"
     }
   ],
-  "dependencies_verified": [],
+  "nav_wiring_confirmed": true,
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-204-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-204-plan.md",
+  "spec_session_consensus": "8/8 agents approved (Rounds 1-4); owner ruling recorded",
+  "plan_reviewer_verdict": "APPROVED_WITH_CHANGES",
+  "plan_reviewer_agent": "a66765eb167925037",
+  "plan_reviewer_marker": "<!-- plan-reviewer: subagent -->",
   "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "node": "v22.14.0 (host default v25.2.1 hangs pg writes; repo pin 24 not installed)",
+    "os": "Windows 11",
+    "test_db": "intelliflow-postgres-test (localhost:5433)",
+    "git_commit": "ed3fc4fb087cc86cb16246fe0d5e08c61c2193d6",
+    "branch": "feat/pg-204-case-types"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 20-line 'coming soon' placeholder page.tsx. Its content was originally authored 2026-03-15 in commit 463445d54eea1901a0980ae03c637b9b9521e65b ('feat(web): add case, task, analytics, document, and agent-approval subpages') at path apps/web/src/app/cases/case-types/page.tsx, then moved unchanged (git-detected 100% rename, R100) into the current apps/web/src/app/cases/(list)/case-types/page.tsx path by an unrelated commit fa1dba47c104b0df15d29509b952ee6edd6f53a6 ('fix(security): upgrade next to 16.2.3...', 2026-04-20) during a broader Next.js route-group reorganization — confirmed by diffing that commit and finding an R100 (pure rename, zero content change) entry for this exact file. Neither commit added any feature logic. Missing per the CSV's own ARTIFACT/DoD list: CaseTypesContent.tsx, case-types.router.ts, case-types validators, context_ack.json — none exist anywhere under any name. environment.git_commit below cites the original content-authoring commit (2026-03-15), not the later path-move commit, since that is where the substantive (lack of) work actually happened. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json — absent"
-    ]
-  }
+  "notes": "PRISMA MIGRATION: packages/db/prisma/migrations/20261013120000_case_types (Class A, additive: two new tables, nullable cases.caseTypeId, composite FK added NOT VALID then validated, RLS). Production apply is MANUAL and must precede the code. Fixed beyond the row: cases.create default assignee read ctx.user.id (UserSession has userId) so \"Assign to me\" failed; the New Case client picker searched contacts while cases.clientId references accounts, so UI case creation always failed; the unpersisted category list was replaced by the case type picker. Semantic review found and this lane fixed: dropped jurisdiction/timezone on New Case, update/setDefault races, deactivation-vs-setDefault race. Tracked out of scope: #864-#867 (+ existing #853). Verdict NEEDS_HUMAN only for Lighthouse credentials and the runner-owned push/PR (Gate 4b)."
 }
