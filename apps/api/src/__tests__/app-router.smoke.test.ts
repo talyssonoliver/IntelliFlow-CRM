@@ -139,6 +139,17 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     }
   });
 
+  it('registers the caseTypes router with every procedure (PG-204)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const caseTypes = record.caseTypes as Record<string, unknown> | undefined;
+
+    expect(caseTypes).toBeDefined();
+    for (const procedure of ['list', 'listActive', 'create', 'update', 'delete', 'setDefault']) {
+      expect(caseTypes?.[procedure]).toBeDefined();
+    }
+  });
+
   it('registers appointmentSettings and reportSettings routers', async () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, unknown>;

@@ -25,14 +25,94 @@ import {
   removeCaseTaskSchema,
   idSchema,
 } from '@intelliflow/validators/case';
-import { assertTenantContext } from '../../security/tenant-context';
+import { DEFAULT_CASE_REQUIRED_FIELDS, type CaseTypeSummaryDto } from '@intelliflow/validators';
+import {
+  resolveCaseCreateDefaults,
+  type CaseDeadlineSource,
+  type CaseRequiredFieldKey,
+} from '@intelliflow/domain';
+import { assertTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
+import { computeSlaDeadline } from './case-sla-deadline';
 
 // LEGAL is a Professional+ paid add-on (MODULE_PLAN_MAP). Gate every procedure on
 // the tenant's plan including the module — same pattern as documents.router.ts.
 // Without this a lower-tier tenant could call these endpoints directly and bypass
 // the paywall (the frontend <ModuleGate> only hides the UI, not the API).
 const tenantProcedure = moduleTenantProcedure('LEGAL');
+
+// ─── PG-204: case type defaults at creation (ADR-076) ───────────────────────
+
+const REQUIRED_FIELD_LABELS: Record<CaseRequiredFieldKey, string> = {
+  title: 'Title',
+  description: 'Description',
+  deadline: 'Deadline',
+  jurisdiction: 'Jurisdiction',
+  clientId: 'Client',
+  assignedTo: 'Assignee',
+};
+
+type CreateCaseCtx = Pick<TenantAwareContext, 'prismaWithTenant'>;
+
+/**
+ * Tenant-scoped lookups made before any write. A foreign, missing or inactive
+ * case type, a foreign client and a foreign explicit assignee all fail with
+ * NOT_FOUND, so the errors reveal nothing about other tenants.
+ */
+async function loadCaseCreateContext(
+  ctx: CreateCaseCtx,
+  tenantId: string,
+  input: { caseTypeId?: string; clientId: string; assignedTo?: string }
+) {
+  const db = ctx.prismaWithTenant;
+  const [caseType, client, assignee, settings, requiredRows] = await Promise.all([
+    input.caseTypeId
+      ? db.caseType.findFirst({
+          where: { id: input.caseTypeId, tenantId, isActive: true },
+          select: {
+            id: true,
+            defaultPriority: true,
+            defaultSlaDays: true,
+            requiredFields: true,
+            checklist: { orderBy: { sortOrder: 'asc' }, select: { title: true } },
+          },
+        })
+      : null,
+    db.account.findFirst({ where: { id: input.clientId, tenantId }, select: { id: true } }),
+    input.assignedTo
+      ? db.user.findFirst({
+          where: { id: input.assignedTo, ...tenantUserWhere(tenantId) },
+          select: { id: true },
+        })
+      : { id: null },
+    db.caseSettings.findUnique({ where: { tenantId }, select: { defaultPriority: true } }),
+    db.caseRequiredField.findMany({
+      where: { tenantId },
+      select: { fieldKey: true, isRequired: true },
+    }),
+  ]);
+
+  if (input.caseTypeId && !caseType) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: 'Case type not found' });
+  }
+  if (!client) throw new TRPCError({ code: 'NOT_FOUND', message: 'Client not found' });
+  if (!assignee) throw new TRPCError({ code: 'NOT_FOUND', message: 'Assignee not found' });
+
+  return {
+    caseType,
+    moduleDefaultPriority: settings?.defaultPriority ?? null,
+    tenantRequiredFields: requiredRows.length > 0 ? requiredRows : DEFAULT_CASE_REQUIRED_FIELDS,
+  };
+}
+
+function resolveDeadlineDate(
+  source: CaseDeadlineSource,
+  input: { deadline?: Date; timezone?: string }
+): Date | undefined {
+  if (source.kind === 'input') return input.deadline;
+  if (source.kind === 'sla') return computeSlaDeadline(new Date(), source.days, input.timezone);
+  return undefined;
+}
 
 function getAssigneeTitle(role?: string | null): string {
   switch (role) {
@@ -216,6 +296,14 @@ export const casesRouter = createTRPCRouter({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Case not found' });
     }
 
+    // PG-204: the case type is shown read-only on the detail page.
+    const caseType: CaseTypeSummaryDto | null = caseData.caseTypeId
+      ? await ctx.prismaWithTenant.caseType.findFirst({
+          where: { id: caseData.caseTypeId, tenantId },
+          select: { id: true, name: true, colorToken: true },
+        })
+      : null;
+
     const now = new Date();
     const tasks = caseData.tasks as Array<{
       status: string;
@@ -269,6 +357,7 @@ export const casesRouter = createTRPCRouter({
         caseData.status !== 'CLOSED' &&
         caseData.status !== 'CANCELLED',
       resolution: caseData.resolution,
+      caseType,
       appointments: caseData.appointments.map(
         (a: Record<string, unknown>) => (a as { appointment: unknown }).appointment
       ),
@@ -345,30 +434,70 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
-    const userId = (ctx.user as { id?: string })?.id;
-    const assignedTo = input.assignedTo ?? userId;
+    // PG-204: the caller's id lives on ctx.tenant (UserSession has no `id` field).
+    const assignedTo = input.assignedTo ?? ctx.tenant.userId;
 
-    if (!assignedTo) {
-      throw new TRPCError({ code: 'BAD_REQUEST', message: 'Assignee is required' });
-    }
-
-    const caseData = await ctx.prismaWithTenant.case.create({
-      data: {
+    const loaded = await loadCaseCreateContext(ctx, tenantId, input);
+    const resolved = resolveCaseCreateDefaults({
+      input: {
+        priority: input.priority,
+        hasDeadline: input.deadline !== undefined,
         title: input.title,
         description: input.description,
-        priority: input.priority,
-        deadline: input.deadline,
-        timezone: input.timezone ?? null,
-        jurisdiction: input.jurisdiction ?? null,
+        jurisdiction: input.jurisdiction,
         clientId: input.clientId,
         assignedTo,
-        tenantId,
       },
-      include: {
-        tasks: true,
-        client: { select: { id: true, name: true } },
-        assignee: { select: { id: true, name: true, email: true, avatarUrl: true } },
-      },
+      caseType: loaded.caseType,
+      moduleDefaultPriority: loaded.moduleDefaultPriority,
+      tenantRequiredFields: loaded.tenantRequiredFields,
+    });
+
+    if (resolved.missingRequired.length > 0) {
+      const labels = resolved.missingRequired.map((key) => REQUIRED_FIELD_LABELS[key]);
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Required fields missing: ${labels.join(', ')}`,
+      });
+    }
+
+    const caseData = await ctx.prismaWithTenant.$transaction(async (tx) => {
+      const createdCase = await tx.case.create({
+        data: {
+          title: input.title,
+          description: input.description,
+          priority: resolved.priority,
+          deadline: resolveDeadlineDate(resolved.deadline, input),
+          timezone: input.timezone ?? null,
+          jurisdiction: input.jurisdiction ?? null,
+          clientId: input.clientId,
+          assignedTo,
+          tenantId,
+          caseTypeId: loaded.caseType?.id ?? null,
+        },
+        select: { id: true },
+      });
+      // The type's resolution checklist becomes the case's tasks, atomically with the case.
+      if (resolved.seedTasks.length > 0) {
+        await tx.caseTask.createMany({
+          data: resolved.seedTasks.map((task) => ({
+            tenantId,
+            caseId: createdCase.id,
+            title: task.title,
+            status: 'PENDING' as const,
+            assignee: assignedTo,
+            dueDate: null,
+          })),
+        });
+      }
+      return tx.case.findFirstOrThrow({
+        where: { id: createdCase.id, tenantId },
+        include: {
+          tasks: true,
+          client: { select: { id: true, name: true } },
+          assignee: { select: { id: true, name: true, email: true, avatarUrl: true } },
+        },
+      });
     });
 
     // Notify assignee
