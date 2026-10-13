@@ -549,6 +549,10 @@ describe('runApprovalSweep', () => {
 
     it('skips a draft the aggregate refuses to escalate', async () => {
       const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'));
+      // Pin the clock: the history these calls write must not depend on when the suite runs
+      // (with the real clock after NOW the draft looked "submitted in the future").
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(new Date('2026-10-13T11:05:00Z'));
       draft.escalate('someone', TARGET, 'manual', 1);
       draft.resolveEscalation(TARGET);
       // escalationCount is now 1 -> MAX is 3, so force a refusal by rejecting it.
@@ -556,7 +560,9 @@ describe('runApprovalSweep', () => {
       const { repo, deps } = harness({ policies: [draftPolicy] });
       // Returned by a racing read even though it was decided meanwhile.
       repo.findPendingOlderThan.mockResolvedValue([draft]);
+      vi.setSystemTime(NOW);
       const report = await runApprovalSweep(deps, NOW);
+      vi.useRealTimers();
       expect(repo.saveEscalation).not.toHaveBeenCalled();
       expect(report.skipped).toBe(1);
     });
