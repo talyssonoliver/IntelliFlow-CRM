@@ -161,17 +161,31 @@ export const helpArticleRouter = createTRPCRouter({
   /**
    * Get a single article by slug, including ordered sections.
    * DRAFT articles are only visible to ADMIN/MANAGER.
+   *
+   * Looks up the caller's own (tenant-authored) article first; a tenant's
+   * own article always wins over a built-in one with the same slug. Falls
+   * back to the shared built-in (system) article (#533) so every tenant —
+   * not just the one it is parented to — can read it. Tenant-authored
+   * articles are never matched by the fallback, so they stay isolated.
    */
   getBySlug: tenantProcedure.input(helpArticleSlugSchema).query(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+    const include = {
+      sections: { orderBy: { order: 'asc' as const } },
+      _count: { select: { feedback: true } },
+    };
 
-    const article = await ctx.prismaWithTenant.helpArticle.findUnique({
+    let article = await ctx.prismaWithTenant.helpArticle.findUnique({
       where: { tenantId_slug: { tenantId, slug: input.slug } },
-      include: {
-        sections: { orderBy: { order: 'asc' } },
-        _count: { select: { feedback: true } },
-      },
+      include,
     });
+
+    if (!article) {
+      article = await ctx.prismaWithTenant.helpArticle.findFirst({
+        where: { slug: input.slug, isSystem: true },
+        include,
+      });
+    }
 
     if (!article) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Article not found' });
@@ -227,13 +241,15 @@ export const helpArticleRouter = createTRPCRouter({
 
   /**
    * Get articles by category. Defaults to PUBLISHED only.
+   * Includes the caller's own tenant-authored articles AND every built-in
+   * (system) article (#533) — never another tenant's authored content.
    */
   getByCategory: tenantProcedure.input(helpArticleCategorySchema).query(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
 
     const isPrivileged = ctx.tenant.role === 'ADMIN' || ctx.tenant.role === 'MANAGER';
     const where: Record<string, unknown> = {
-      tenantId,
+      OR: [{ tenantId }, { isSystem: true }],
       categoryId: input.categoryId,
     };
     // Only privileged users can see unpublished articles
@@ -272,12 +288,16 @@ export const helpArticleRouter = createTRPCRouter({
 
   /**
    * Get related articles by resolving relatedArticleIds JSON array.
+   * The source article, and every related article resolved from it, may be
+   * either the caller's own tenant content or a built-in (system) one
+   * (#533) — never another tenant's authored content.
    */
   getRelated: tenantProcedure.input(helpArticleIdSchema).query(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
+    const visibleToCaller = { OR: [{ tenantId }, { isSystem: true }] };
 
     const source = await ctx.prismaWithTenant.helpArticle.findFirst({
-      where: { id: input.id, tenantId },
+      where: { id: input.id, ...visibleToCaller },
       select: { relatedArticleIds: true },
     });
 
@@ -291,7 +311,7 @@ export const helpArticleRouter = createTRPCRouter({
     }
 
     return ctx.prismaWithTenant.helpArticle.findMany({
-      where: { id: { in: relatedIds }, tenantId, status: 'PUBLISHED' },
+      where: { id: { in: relatedIds }, ...visibleToCaller, status: 'PUBLISHED' },
       select: {
         id: true,
         slug: true,
@@ -546,8 +566,12 @@ export const helpArticleRouter = createTRPCRouter({
   submitFeedback: tenantProcedure.input(submitFeedbackSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
 
+    // The article may be the caller's own or a built-in (system) one (#533) —
+    // never another tenant's authored content. The feedback row itself is
+    // always written under the caller's own tenantId below, so per-tenant
+    // feedback on shared built-in content stays segregated.
     const article = await ctx.prismaWithTenant.helpArticle.findFirst({
-      where: { id: input.articleId, tenantId },
+      where: { id: input.articleId, OR: [{ tenantId }, { isSystem: true }] },
       select: { id: true },
     });
     if (!article) {
@@ -598,8 +622,12 @@ export const helpArticleRouter = createTRPCRouter({
   recordView: tenantProcedure.input(recordViewSchema).mutation(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
 
+    // The article may be the caller's own or a built-in (system) one (#533) —
+    // never another tenant's authored content. The view is always recorded
+    // under the caller's own tenantId below, so analytics for shared
+    // built-in content stay segregated per viewing tenant.
     const article = await ctx.prismaWithTenant.helpArticle.findFirst({
-      where: { id: input.articleId, tenantId },
+      where: { id: input.articleId, OR: [{ tenantId }, { isSystem: true }] },
       select: { id: true },
     });
     if (!article) {

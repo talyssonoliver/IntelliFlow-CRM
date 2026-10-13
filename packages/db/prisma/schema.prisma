@@ -5684,6 +5684,15 @@ model HelpArticle {
   status            ArticleStatus   @default(DRAFT)
   publishedAt       DateTime?
 
+  /// Built-in article maintained centrally and readable by EVERY tenant
+  /// (#533). Only the seed script may set this — create/update never accept
+  /// it from client input — so a tenant can never make its own content
+  /// globally visible. Mutations (update/delete/publish/unpublish) stay
+  /// scoped to `tenantId` as before: a system row's owning tenantId is never
+  /// a real customer tenant, so other tenants' tenantId-scoped writes can
+  /// never reach it.
+  isSystem          Boolean         @default(false)
+
   // Multi-tenancy
   tenantId          String
   tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -5702,6 +5711,7 @@ model HelpArticle {
   @@index([categoryId])
   @@index([status])
   @@index([tenantId, categoryId])
+  @@index([isSystem])
   @@map("help_articles")
 }
 
