@@ -4,7 +4,7 @@
   "task_id": "PG-201",
   "run_id": "PG-201-exec-20261013",
   "attestor": "Claude Code (claude-opus-5-5) — /full-pipeline PG-201 exec",
-  "attestation_timestamp": "2026-10-13T05:18:33.186Z",
+  "attestation_timestamp": "2026-10-13T05:20:40.612Z",
   "verdict": "NEEDS_HUMAN",
   "context_acknowledgment": {
     "acknowledged_at": "2026-10-13T00:55:38.310Z",
@@ -51,7 +51,7 @@
   "artifact_hashes": {
     ".specify/sprints/sprint-18/attestations/PG-201/context_ack.json": "120542082d16b0c89db42c068eab5c2a4abdbd14a9617db36f18fb61456b21a5",
     ".specify/sprints/sprint-18/attestations/PG-201/findings.md": "182fdc1ee502c5cca2597cc0833dd48b0648ef1dada5b72334d5df6ccb01da56",
-    ".specify/sprints/sprint-18/attestations/PG-201/task-tracking.json": "756bb6a561a30f91a3aa256f9d1e01430d1c006c853e8a88b7c6982e85e7d650",
+    ".specify/sprints/sprint-18/attestations/PG-201/task-tracking.json": "4ffa629edb3a767b4df24676825a62e105dc6a69fc88a69c6f2b7b894222427e",
     "apps/api/package.json": "5640636d11fb819de70cf8ba43f85721fb379ce60057b3ac412b4bbd480507ee",
     "apps/api/src/__tests__/app-router.smoke.test.ts": "7adfd575f0e476e73a3d87a6c116fe2d3b2ae2382d1a02ce23567b6924659198",
     "apps/api/src/modules/analytics/__tests__/report-templates.router.test.ts": "c1db15ce7c8c31897d3e307dbb5191cab7ae1091e6dfb734377a87dd1342beb9",
@@ -367,7 +367,7 @@
   "environment": {
     "os": "win32",
     "node_version": "v22.14.0",
-    "git_commit": "c0a2d5ad73e2cb809ee6247b014f8058a2418fcc",
+    "git_commit": "590ee877f899393ec0000509d5f00738afa0bd08",
     "branch": "feat/pg-201-scheduled-reports"
   },
   "nav_wiring_confirmed": true,
