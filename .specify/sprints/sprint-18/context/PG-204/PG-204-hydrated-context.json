@@ -1,6 +1,12 @@
 {
   "task_id": "PG-204",
-  "generated_at": "2026-10-13T00:05:00Z",
+  "provenance": {
+    "produced_by": "hand-written (pg204-auditfix.py, spec-session lane), NOT the /hydrate-context skill",
+    "written_at": "2026-10-13T02:31:26Z (file mtime; first committed in 05d005aec at 2026-10-13T02:31:51Z)",
+    "back_dated_generated_at_removed": "2026-10-13T00:05:00Z",
+    "superseded_by": "hydrated-context.json / hydrated-context.md, written by tools/scripts/lib/stoa/context-hydration.ts (the /hydrate-context implementation) at 2026-10-13T06:22:17.459Z",
+    "relabelled_at": "2026-10-13T06:22:58Z"
+  },
   "source": "PG-204-hydrated-context.md (spec session Phase 0) + Phase 0.76/0.77 audits by frontend-lead",
   "task": {
     "title": "Module Settings - Case Types (/cases/case-types)",

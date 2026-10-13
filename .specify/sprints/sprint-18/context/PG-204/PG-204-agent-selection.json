@@ -1,20 +1,22 @@
 {
-  "task_id": "PG-204",
-  "mode": "subagent",
-  "rounds": {
-    "1-2": [
-      "backend-architect",
-      "data-engineer",
-      "frontend-lead",
-      "domain-expert",
-      "test-engineer"
-    ],
-    "3-4": [
-      "security-lead",
-      "a11y-expert",
-      "stoa-domain"
-    ]
+  "taskId": "PG-204",
+  "selectedAgents": [
+    "Backend-Architect",
+    "Frontend-Lead",
+    "AI-Specialist",
+    "Data-Engineer",
+    "A11y-Expert"
+  ],
+  "selectionRationale": {
+    "Backend-Architect": "Keyword match: \"api\"",
+    "Frontend-Lead": "Keyword match: \"page\"",
+    "AI-Specialist": "Keyword match: \"AI\"",
+    "Data-Engineer": "Keyword match: \"prisma\"",
+    "A11y-Expert": "Path match: apps\\/web",
+    "Compliance": "Keyword match: \"legal\"",
+    "Domain-Expert": "Always included for all tasks",
+    "Test-Engineer": "Always included for all tasks"
   },
-  "rationale": "UI page + tRPC router + Prisma migration + case-creation business rules; always-included domain-expert and test-engineer",
-  "consensus": "8/8 approve with modifications incorporated"
+  "taskDomain": "cross-cutting",
+  "selectedAt": "2026-10-13T06:22:22.432Z"
 }
