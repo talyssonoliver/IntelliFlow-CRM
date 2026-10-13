@@ -35,21 +35,24 @@
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-const isApply = process.argv.includes('--apply');
-const tenantArgIndex = process.argv.indexOf('--tenant');
-const tenantFilter =
-  tenantArgIndex !== -1 && process.argv[tenantArgIndex + 1]
-    ? process.argv[tenantArgIndex + 1]
-    : undefined;
 const BATCH_SIZE = 200;
 
-if (!process.env['DATABASE_URL']) {
-  console.error('[backfill-routing-audit-lead-id] ERROR: DATABASE_URL is not set.');
-  process.exit(1);
+export interface ParsedArgs {
+  isApply: boolean;
+  tenantFilter: string | undefined;
+}
+
+/** Parses `--apply` and `--tenant <id>` out of an argv array (e.g. `process.argv`). */
+export function parseArgs(argv: string[]): ParsedArgs {
+  const isApply = argv.includes('--apply');
+  const tenantArgIndex = argv.indexOf('--tenant');
+  const tenantFilter =
+    tenantArgIndex !== -1 && argv[tenantArgIndex + 1] ? argv[tenantArgIndex + 1] : undefined;
+  return { isApply, tenantFilter };
 }
 
 /** Mirrors routing.router.ts's readLeadId heuristic, for rows with no leadId yet. */
-function resolveLegacyLeadId(details: unknown, ticketId: string): string | null {
+export function resolveLegacyLeadId(details: unknown, ticketId: string): string | null {
   if (!details || typeof details !== 'object') return null;
   if ('leadId' in details && typeof (details as Record<string, unknown>).leadId === 'string') {
     return (details as Record<string, unknown>).leadId as string;
@@ -63,13 +66,18 @@ function resolveLegacyLeadId(details: unknown, ticketId: string): string | null 
 type Prisma = InstanceType<typeof PrismaClient>;
 type RoutingAuditRow = Awaited<ReturnType<Prisma['routingAudit']['findFirstOrThrow']>>;
 
-interface Totals {
+export interface Totals {
   updated: number;
   notLeadRows: number;
 }
 
-/** One row: resolve its legacy leadId, log it, and write it when --apply is set. */
-async function processRow(prisma: Prisma, audit: RoutingAuditRow, totals: Totals): Promise<void> {
+/** One row: resolve its legacy leadId, log it, and write it when `isApply` is set. */
+export async function processRow(
+  prisma: Prisma,
+  audit: RoutingAuditRow,
+  totals: Totals,
+  isApply: boolean
+): Promise<void> {
   const leadId = resolveLegacyLeadId(audit.details, audit.ticketId);
   if (!leadId) {
     totals.notLeadRows += 1;
@@ -90,7 +98,11 @@ async function processRow(prisma: Prisma, audit: RoutingAuditRow, totals: Totals
   });
 }
 
-async function fetchBatch(prisma: Prisma, cursor: string | undefined): Promise<RoutingAuditRow[]> {
+export async function fetchBatch(
+  prisma: Prisma,
+  cursor: string | undefined,
+  tenantFilter: string | undefined
+): Promise<RoutingAuditRow[]> {
   return prisma.routingAudit.findMany({
     where: {
       leadId: null,
@@ -102,7 +114,14 @@ async function fetchBatch(prisma: Prisma, cursor: string | undefined): Promise<R
   });
 }
 
-async function main() {
+export async function main(): Promise<void> {
+  if (!process.env['DATABASE_URL']) {
+    console.error('[backfill-routing-audit-lead-id] ERROR: DATABASE_URL is not set.');
+    process.exit(1);
+    return;
+  }
+  const { isApply, tenantFilter } = parseArgs(process.argv);
+
   const adapter = new PrismaPg({ connectionString: process.env['DATABASE_URL'] });
   const prisma = new PrismaClient({ adapter });
 
@@ -115,11 +134,11 @@ async function main() {
   let cursor: string | undefined;
 
   for (;;) {
-    const audits = await fetchBatch(prisma, cursor);
+    const audits = await fetchBatch(prisma, cursor, tenantFilter);
     if (audits.length === 0) break;
 
     for (const audit of audits) {
-      await processRow(prisma, audit, totals);
+      await processRow(prisma, audit, totals, isApply);
     }
 
     cursor = audits[audits.length - 1]!.id;
@@ -134,7 +153,14 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main().catch((err) => {
-  console.error('[backfill-routing-audit-lead-id] FAILED:', err);
-  process.exit(1);
-});
+// CLI entry point guard — importing this module (e.g. from a test) must not
+// run main(), connect to a database, or call process.exit().
+if (
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('backfill-routing-audit-lead-id.ts')
+) {
+  main().catch((err) => {
+    console.error('[backfill-routing-audit-lead-id] FAILED:', err);
+    process.exit(1);
+  });
+}

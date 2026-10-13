@@ -54,17 +54,20 @@
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 
-const isApply = process.argv.includes('--apply');
-const tenantArgIndex = process.argv.indexOf('--tenant');
-const tenantFilter =
-  tenantArgIndex !== -1 && process.argv[tenantArgIndex + 1]
-    ? process.argv[tenantArgIndex + 1]
-    : undefined;
 const BATCH_SIZE = 100;
 
-if (!process.env['DATABASE_URL']) {
-  console.error('[migrate-legacy-routing-rules] ERROR: DATABASE_URL is not set.');
-  process.exit(1);
+export interface ParsedArgs {
+  isApply: boolean;
+  tenantFilter: string | undefined;
+}
+
+/** Parses `--apply` and `--tenant <id>` out of an argv array (e.g. `process.argv`). */
+export function parseArgs(argv: string[]): ParsedArgs {
+  const isApply = argv.includes('--apply');
+  const tenantArgIndex = argv.indexOf('--tenant');
+  const tenantFilter =
+    tenantArgIndex !== -1 && argv[tenantArgIndex + 1] ? argv[tenantArgIndex + 1] : undefined;
+  return { isApply, tenantFilter };
 }
 
 interface LegacyCondition {
@@ -88,7 +91,7 @@ const FIELD_ALIASES: Record<string, string> = {
  * shape, or returns null if the operator is not one this script knows how to
  * map (reported as "unmapped" rather than guessed).
  */
-function convertEntry(
+export function convertEntry(
   rawField: string,
   entry: LegacyCondition
 ): { field: string; operator: string; value: unknown } | null {
@@ -109,9 +112,12 @@ function convertEntry(
   }
 }
 
-type Outcome = 'converted' | 'already-array' | 'unmapped' | 'malformed';
+export type Outcome = 'converted' | 'already-array' | 'unmapped' | 'malformed';
 
-function classifyAndConvert(conditions: unknown): { outcome: Outcome; converted?: unknown[] } {
+export function classifyAndConvert(conditions: unknown): {
+  outcome: Outcome;
+  converted?: unknown[];
+} {
   if (Array.isArray(conditions)) return { outcome: 'already-array' };
   if (!conditions || typeof conditions !== 'object') return { outcome: 'malformed' };
 
@@ -133,12 +139,12 @@ function classifyAndConvert(conditions: unknown): { outcome: Outcome; converted?
 type Prisma = InstanceType<typeof PrismaClient>;
 type RoutingRuleRow = Awaited<ReturnType<Prisma['routingRule']['findFirstOrThrow']>>;
 
-interface Totals {
+export interface Totals {
   counts: Record<Outcome, number>;
   nonArrayActions: number;
 }
 
-function logNonArrayActions(rule: RoutingRuleRow, totals: Totals): void {
+export function logNonArrayActions(rule: RoutingRuleRow, totals: Totals): void {
   if (Array.isArray(rule.actions)) return;
   totals.nonArrayActions += 1;
   console.log(
@@ -147,8 +153,13 @@ function logNonArrayActions(rule: RoutingRuleRow, totals: Totals): void {
   );
 }
 
-/** One row: classify its conditions, log the outcome, and write it when --apply is set. */
-async function processRow(prisma: Prisma, rule: RoutingRuleRow, totals: Totals): Promise<void> {
+/** One row: classify its conditions, log the outcome, and write it when `isApply` is set. */
+export async function processRow(
+  prisma: Prisma,
+  rule: RoutingRuleRow,
+  totals: Totals,
+  isApply: boolean
+): Promise<void> {
   const { outcome, converted } = classifyAndConvert(rule.conditions);
   totals.counts[outcome] += 1;
   logNonArrayActions(rule, totals);
@@ -176,7 +187,11 @@ async function processRow(prisma: Prisma, rule: RoutingRuleRow, totals: Totals):
   });
 }
 
-async function fetchBatch(prisma: Prisma, cursor: string | undefined): Promise<RoutingRuleRow[]> {
+export async function fetchBatch(
+  prisma: Prisma,
+  cursor: string | undefined,
+  tenantFilter: string | undefined
+): Promise<RoutingRuleRow[]> {
   return prisma.routingRule.findMany({
     where: tenantFilter ? { tenantId: tenantFilter } : undefined,
     take: BATCH_SIZE,
@@ -185,7 +200,14 @@ async function fetchBatch(prisma: Prisma, cursor: string | undefined): Promise<R
   });
 }
 
-async function main() {
+export async function main(): Promise<void> {
+  if (!process.env['DATABASE_URL']) {
+    console.error('[migrate-legacy-routing-rules] ERROR: DATABASE_URL is not set.');
+    process.exit(1);
+    return;
+  }
+  const { isApply, tenantFilter } = parseArgs(process.argv);
+
   const adapter = new PrismaPg({ connectionString: process.env['DATABASE_URL'] });
   const prisma = new PrismaClient({ adapter });
 
@@ -201,11 +223,11 @@ async function main() {
   let cursor: string | undefined;
 
   for (;;) {
-    const rules = await fetchBatch(prisma, cursor);
+    const rules = await fetchBatch(prisma, cursor, tenantFilter);
     if (rules.length === 0) break;
 
     for (const rule of rules) {
-      await processRow(prisma, rule, totals);
+      await processRow(prisma, rule, totals, isApply);
     }
 
     cursor = rules[rules.length - 1]!.id;
@@ -221,7 +243,14 @@ async function main() {
   await prisma.$disconnect();
 }
 
-main().catch((err) => {
-  console.error('[migrate-legacy-routing-rules] FAILED:', err);
-  process.exit(1);
-});
+// CLI entry point guard — importing this module (e.g. from a test) must not
+// run main(), connect to a database, or call process.exit().
+if (
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('migrate-legacy-routing-rules.ts')
+) {
+  main().catch((err) => {
+    console.error('[migrate-legacy-routing-rules] FAILED:', err);
+    process.exit(1);
+  });
+}

@@ -247,6 +247,26 @@ describe('RoutingRulesEditor', () => {
     expect(mockReorderRules.mutate).not.toHaveBeenCalled();
   });
 
+  it('placeholders the action target by action type, and requires every action to have one', async () => {
+    const user = userEvent.setup();
+    render(<RoutingRulesEditor />);
+
+    await user.click(screen.getByText('Add Rule'));
+
+    // Default action type is assign_to_user — its target field should
+    // prompt for a user id, not the old generic "Target" placeholder.
+    expect(screen.getByLabelText('Action target')).toHaveAttribute('placeholder', 'User ID');
+
+    // Name, one condition and one action are all present once a name is
+    // typed, but the action's target is still blank — submit must stay
+    // disabled until every action has one.
+    await user.type(screen.getByLabelText('Name'), 'My Rule');
+    expect(screen.getByRole('button', { name: 'Create Rule' })).toBeDisabled();
+
+    await user.type(screen.getByLabelText('Action target'), 'user-123');
+    expect(screen.getByRole('button', { name: 'Create Rule' })).not.toBeDisabled();
+  });
+
   it('shows empty state when no rules', async () => {
     rulesState.current = [];
     try {

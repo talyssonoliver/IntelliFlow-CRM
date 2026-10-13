@@ -376,6 +376,33 @@ describe('Routing Router', () => {
 
       expect(result.items.map((i) => i.leadId)).toEqual(['lead-auto', null, null]);
     });
+
+    it('prefers the leadId column over the legacy details/ticketId heuristic (#770)', async () => {
+      const createdAt = new Date('2026-10-04T10:00:00Z');
+      (prismaMock.routingAudit.findMany as any).mockResolvedValue([
+        {
+          id: 'audit-new',
+          // Neither legacy signal applies: details.leadId is absent and
+          // entityType isn't 'lead', so the old heuristic would read null.
+          // The row is written by a lead-routing writer post-migration, so
+          // leadId is set directly and must be returned without consulting
+          // details/ticketId at all.
+          ticketId: 'ticket-should-be-ignored',
+          leadId: TEST_UUIDS.lead1,
+          reason: 'rule_match',
+          ruleId: null,
+          ruleName: null,
+          toUserId: TEST_UUIDS.user1,
+          toUserName: 'Test User',
+          details: { entityType: 'ticket' },
+          createdAt,
+        },
+      ]);
+
+      const result = await caller.getAssignments({ limit: 20 });
+
+      expect(result.items[0]?.leadId).toBe(TEST_UUIDS.lead1);
+    });
   });
 
   describe('getAgentWorkload', () => {
