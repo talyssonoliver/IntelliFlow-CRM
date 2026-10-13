@@ -172,7 +172,10 @@ export const helpArticleRouter = createTRPCRouter({
     const tenantId = ctx.tenant.tenantId;
     const include = {
       sections: { orderBy: { order: 'asc' as const } },
-      _count: { select: { feedback: true } },
+      // Count only the caller's own feedback: a built-in article is shared, and
+      // feedback rows are written under each caller's tenantId, so an unscoped
+      // count would leak other tenants' activity.
+      _count: { select: { feedback: { where: { tenantId } } } },
     };
 
     let article = await ctx.prismaWithTenant.helpArticle.findUnique({
@@ -270,7 +273,8 @@ export const helpArticleRouter = createTRPCRouter({
         publishedAt: true,
         keywords: true,
         relatedArticleIds: true,
-        _count: { select: { feedback: true, sections: true } },
+        // Feedback count is per-tenant: built-in articles are shared across tenants.
+        _count: { select: { feedback: { where: { tenantId } }, sections: true } },
       },
       orderBy: { order: 'asc' },
     });

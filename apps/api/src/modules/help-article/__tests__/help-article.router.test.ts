@@ -282,6 +282,26 @@ describe('helpArticleRouter', () => {
       );
     });
 
+    it('counts only the caller tenant feedback so a shared built-in article leaks no cross-tenant aggregate', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findUnique.mockResolvedValue(null);
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({
+        ...mockPublishedWithSections,
+        tenantId: TEST_UUIDS.otherTenant,
+        isSystem: true,
+      });
+
+      await caller.getBySlug({ slug: 'advanced-features' });
+
+      const scopedCount = { select: { feedback: { where: { tenantId: TEST_UUIDS.tenant } } } };
+      expect((prismaMock.helpArticle as any).findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ include: expect.objectContaining({ _count: scopedCount }) })
+      );
+      expect((prismaMock.helpArticle as any).findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ include: expect.objectContaining({ _count: scopedCount }) })
+      );
+    });
+
     it("prefers the caller tenant's own article over a built-in one with the same slug", async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
       (prismaMock.helpArticle as any).findUnique.mockResolvedValue(mockPublishedWithSections);
@@ -384,7 +404,9 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           select: expect.objectContaining({
-            _count: { select: { feedback: true, sections: true } },
+            _count: {
+              select: { feedback: { where: { tenantId: TEST_UUIDS.tenant } }, sections: true },
+            },
           }),
         })
       );
