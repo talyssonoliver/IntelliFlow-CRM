@@ -1,5 +1,5 @@
 {
-  "timestamp": "2026-10-02T15:21:11.840Z",
+  "timestamp": "2026-10-13T05:15:41.319Z",
   "docRoutes": [
     "/",
     "/404",
@@ -8,6 +8,7 @@
     "/accounts",
     "/accounts/account-settings",
     "/accounts/account-tiers",
+    "/accounts/new",
     "/accounts/territory-mapping",
     "/activity",
     "/agent-approvals",
@@ -134,6 +135,7 @@
     "/notifications/settings",
     "/partners",
     "/press",
+    "/preview/aurora",
     "/pricing",
     "/privacy",
     "/profile",
@@ -191,6 +193,7 @@
     "/accounts",
     "/accounts/account-settings",
     "/accounts/account-tiers",
+    "/accounts/new",
     "/accounts/territory-mapping",
     "/activity",
     "/agent-approvals",
@@ -317,6 +320,7 @@
     "/notifications/settings",
     "/partners",
     "/press",
+    "/preview/aurora",
     "/pricing",
     "/privacy",
     "/profile",
@@ -374,6 +378,7 @@
     "/accounts",
     "/accounts/account-settings",
     "/accounts/account-tiers",
+    "/accounts/new",
     "/accounts/territory-mapping",
     "/activity",
     "/agent-approvals",
@@ -500,6 +505,7 @@
     "/notifications/settings",
     "/partners",
     "/press",
+    "/preview/aurora",
     "/pricing",
     "/privacy",
     "/profile",
@@ -555,12 +561,12 @@
     {
       "name": "PARSE_OK",
       "severity": "PASS",
-      "message": "Parsed 181 routes from conformance statement"
+      "message": "Parsed 183 routes from conformance statement"
     },
     {
       "name": "COUNT_MATCH",
       "severity": "PASS",
-      "message": "Doc routes: 181, FS routes: 181"
+      "message": "Doc routes: 183, FS routes: 183"
     },
     {
       "name": "STATEMENT_COVERS_DISK",
@@ -575,7 +581,7 @@
     {
       "name": "TOTAL_COUNT",
       "severity": "INFO",
-      "message": "Total: 181 matched, 0 doc-only, 0 fs-only"
+      "message": "Total: 183 matched, 0 doc-only, 0 fs-only"
     }
   ],
   "exitCode": 0
