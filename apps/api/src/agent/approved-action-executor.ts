@@ -149,23 +149,31 @@ async function updateCase(input: Input, ctx: Context): Promise<ExecutionResult> 
   return { entityType: 'CASE', entityId: id };
 }
 
-async function createAppointment(input: Input, ctx: Context): Promise<ExecutionResult> {
+async function createAppointment(
+  input: Input,
+  ctx: Context,
+  options: ExecutionOptions
+): Promise<ExecutionResult> {
   const { appointmentsRouter } = await import('../modules/legal/appointments.router.js');
-  const created = await appointmentsRouter
-    .createCaller(ctx as CallerCtx)
-    .create(
-      pick(input, [
-        'title',
-        'description',
-        'startTime',
-        'endTime',
-        'appointmentType',
-        'location',
-        'attendeeIds',
-        'linkedCaseIds',
-        'reminderMinutes',
-      ]) as never
-    );
+  // The approver becomes the organizer; the requester stays an attendee, as the
+  // approval preview showed them.
+  const proposed = Array.isArray(input.attendeeIds) ? (input.attendeeIds as string[]) : [];
+  const attendeeIds = options.requesterId
+    ? [...new Set([options.requesterId, ...proposed])]
+    : proposed;
+  const created = await appointmentsRouter.createCaller(ctx as CallerCtx).create({
+    ...pick(input, [
+      'title',
+      'description',
+      'startTime',
+      'endTime',
+      'appointmentType',
+      'location',
+      'linkedCaseIds',
+      'reminderMinutes',
+    ]),
+    attendeeIds,
+  } as never);
   return { entityType: 'APPOINTMENT', entityId: (created as { id: string }).id };
 }
 
@@ -258,6 +266,11 @@ async function addNote(input: Input, ctx: Context): Promise<ExecutionResult> {
 
 async function draftMessage(input: Input, ctx: Context): Promise<ExecutionResult> {
   if (input.type === 'EMAIL') return draftEmail(input, ctx);
+  const scheduledFor = input.scheduledFor instanceof Date ? input.scheduledFor : null;
+  if (input.type === 'NOTE' && scheduledFor && scheduledFor.getTime() > Date.now()) {
+    // Not applied early: scheduled notes are not supported, so nothing is written.
+    throw new Error('Scheduled notes are not supported; nothing was written.');
+  }
   if (input.type === 'NOTE') return addNote(input, ctx);
   throw new Error('No SMS channel is configured; nothing was sent.');
 }

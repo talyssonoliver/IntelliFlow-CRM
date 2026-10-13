@@ -39,6 +39,14 @@ export const APPROVAL_SWEEP_BATCH = 100;
 /** Draft candidates scanned per policy per tick at most (pages of APPROVAL_SWEEP_BATCH). */
 export const APPROVAL_SWEEP_MAX_PAGES = 10;
 
+/** Where each tenant/policy draft scan stopped on the last bounded tick (per process). */
+const draftScanCursors = new Map<string, { createdAt: Date; id: string } | undefined>();
+
+/** Test hook: forget every saved scan position. */
+export function resetDraftScanCursors(): void {
+  draftScanCursors.clear();
+}
+
 export interface SweepNotification {
   tenantId: string;
   userId: string;
@@ -113,6 +121,8 @@ interface TenantContext {
 
 /** The policies of a queue that escalate, with the (agent, action) pairs each one governs. */
 interface EscalationGroup {
+  /** The policy id (built-in rules never escalate, so this is always a real policy). */
+  id: string;
   rule: ApprovalRule;
   /** Tool names (agent queue) or trigger types (auto-response queue). */
   keys: string[];
@@ -152,7 +162,7 @@ function escalationGroups(
       continue;
     }
     const id = String(resolved.policyId);
-    const group = groups.get(id) ?? { rule, keys: [] };
+    const group = groups.get(id) ?? { id, rule, keys: [] };
     group.keys.push(pair.key);
     groups.set(id, group);
   }
@@ -298,7 +308,10 @@ async function escalateDraftGroup(
   // Candidates are ordered by creation, but the SLA runs from submission: page past
   // drafts submitted too recently, up to a bounded scan per tick. Keyset paging, so
   // drafts escalated on an earlier page cannot shift the next one.
-  let after: { createdAt: Date; id: string } | undefined;
+  // A bounded scan resumes where the previous tick stopped, so drafts submitted too
+  // recently can delay but never permanently block the ones behind them.
+  const cursorKey = `${ctx.tenantId}:${group.id}`;
+  let after = draftScanCursors.get(cursorKey);
   for (let page = 0; page < APPROVAL_SWEEP_MAX_PAGES; page++) {
     const drafts = await repository.findPendingOlderThan(
       ctx.tenantId,
@@ -306,10 +319,14 @@ async function escalateDraftGroup(
       APPROVAL_SWEEP_BATCH
     );
     for (const draft of drafts) await escalateDraft(ctx, repository, group.rule, draft);
-    if (drafts.length < APPROVAL_SWEEP_BATCH) return;
+    if (drafts.length < APPROVAL_SWEEP_BATCH) {
+      draftScanCursors.delete(cursorKey); // reached the end: start over next tick
+      return;
+    }
     const last = drafts[drafts.length - 1]!;
     after = { createdAt: last.createdAt, id: last.id.toString() };
   }
+  draftScanCursors.set(cursorKey, after);
 }
 
 async function escalateTenant(ctx: TenantContext): Promise<void> {

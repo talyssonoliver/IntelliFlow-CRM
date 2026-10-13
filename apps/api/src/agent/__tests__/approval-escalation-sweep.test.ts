@@ -6,7 +6,9 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { AutoResponseDraft, ResponseContent, SYSTEM_APPROVAL_ACTOR } from '@intelliflow/domain';
 import {
   APPROVAL_SWEEP_BATCH,
+  APPROVAL_SWEEP_MAX_PAGES,
   createDefaultSweepDeps,
+  resetDraftScanCursors,
   runApprovalSweep,
   type ApprovalSweepDeps,
   type SweepTx,
@@ -172,6 +174,7 @@ function harness(opts: {
 
 beforeEach(() => {
   invalidateApprovalPolicyCache();
+  resetDraftScanCursors();
 });
 
 describe('runApprovalSweep', () => {
@@ -458,6 +461,36 @@ describe('runApprovalSweep', () => {
       const report = await runApprovalSweep(deps, NOW);
 
       expect(report.draftsEscalated).toBe(150);
+    });
+
+    it('resumes a bounded scan on the next tick instead of restarting it', async () => {
+      // More recently-submitted old drafts than one tick can scan, then an overdue one.
+      const blocking = Array.from(
+        { length: APPROVAL_SWEEP_MAX_PAGES * APPROVAL_SWEEP_BATCH },
+        (_, i) =>
+          pendingDraftCreatedAt(
+            new Date(Date.UTC(2026, 9, 12, 0, 0, i)),
+            new Date('2026-10-13T11:59:00Z')
+          )
+      );
+      const overdue = pendingDraftCreatedAt(
+        new Date('2026-10-13T09:00:00Z'),
+        new Date('2026-10-13T09:01:00Z')
+      );
+      const { repo, deps } = harness({ policies: [draftPolicy], drafts: [...blocking, overdue] });
+
+      const first = await runApprovalSweep(deps, NOW);
+      expect(first.draftsEscalated).toBe(0);
+      expect(repo.findPendingOlderThan).toHaveBeenCalledTimes(APPROVAL_SWEEP_MAX_PAGES);
+
+      const second = await runApprovalSweep(deps, NOW);
+      expect(second.draftsEscalated).toBe(1);
+      expect(overdue.status).toBe('ESCALATED');
+
+      // The second tick reached the end, so the third starts from the beginning again.
+      repo.findPendingOlderThan.mockClear();
+      await runApprovalSweep(deps, NOW);
+      expect(repo.findPendingOlderThan.mock.calls[0]![1].after).toBeUndefined();
     });
 
     it('pages past drafts submitted too recently to reach an overdue one', async () => {

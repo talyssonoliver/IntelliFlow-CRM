@@ -189,23 +189,43 @@ describe('executeApprovedAction', () => {
     expect(calls.cases.changeStatus).toHaveBeenCalled();
   });
 
-  it('create_appointment runs appointments.create', async () => {
+  it('create_appointment runs appointments.create with the requester kept as an attendee', async () => {
     calls.appointments.create.mockResolvedValue({ id: 'appt-1' });
     const start = new Date('2026-10-14T10:00:00Z');
     const end = new Date('2026-10-14T11:00:00Z');
     const outcome = await executeApprovedAction(
       'create_appointment',
-      { title: 'Call', startTime: start, endTime: end, appointmentType: 'CALL', attendeeIds: [] },
-      ctx()
+      {
+        title: 'Call',
+        startTime: start,
+        endTime: end,
+        appointmentType: 'CALL',
+        attendeeIds: ['u-2'],
+      },
+      ctx(),
+      { requesterId: 'requester-1' }
     );
     expect(calls.appointments.create).toHaveBeenCalledWith({
       title: 'Call',
       startTime: start,
       endTime: end,
       appointmentType: 'CALL',
-      attendeeIds: [],
+      attendeeIds: ['requester-1', 'u-2'],
     });
     expect(outcome.result).toEqual({ entityType: 'APPOINTMENT', entityId: 'appt-1' });
+  });
+
+  it('create_appointment does not duplicate the requester or invent attendees', async () => {
+    calls.appointments.create.mockResolvedValue({ id: 'appt-2' });
+    await executeApprovedAction(
+      'create_appointment',
+      { title: 'A', attendeeIds: ['requester-1'] },
+      ctx(),
+      { requesterId: 'requester-1' }
+    );
+    expect(calls.appointments.create.mock.calls[0]![0].attendeeIds).toEqual(['requester-1']);
+    await executeApprovedAction('create_appointment', { title: 'B' }, ctx());
+    expect(calls.appointments.create.mock.calls[1]![0].attendeeIds).toEqual([]);
   });
 
   it('update_appointment updates fields and reschedules when both times change', async () => {
@@ -332,6 +352,40 @@ describe('executeApprovedAction', () => {
       approver
     );
     expect(outcome.error).toBe('No tenant on the approving session.');
+  });
+
+  it('draft_message NOTE scheduled for later fails instead of being written now', async () => {
+    const outcome = await executeApprovedAction(
+      'draft_message',
+      {
+        type: 'NOTE',
+        recipientType: 'LEAD',
+        recipientId: 'l-1',
+        body: 'later',
+        scheduledFor: new Date(Date.now() + 3_600_000),
+      },
+      ctx()
+    );
+    expect(outcome).toEqual({
+      status: 'FAILED',
+      error: 'Scheduled notes are not supported; nothing was written.',
+    });
+    expect(calls.lead.addNote).not.toHaveBeenCalled();
+  });
+
+  it('draft_message NOTE with a past scheduledFor is written', async () => {
+    await executeApprovedAction(
+      'draft_message',
+      {
+        type: 'NOTE',
+        recipientType: 'LEAD',
+        recipientId: 'l-1',
+        body: 'now',
+        scheduledFor: new Date(0),
+      },
+      ctx()
+    );
+    expect(calls.lead.addNote).toHaveBeenCalled();
   });
 
   it('draft_message NOTE adds a note to a lead or a contact', async () => {
