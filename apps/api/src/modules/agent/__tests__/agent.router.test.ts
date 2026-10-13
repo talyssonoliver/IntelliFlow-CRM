@@ -196,6 +196,13 @@ vi.mock('../../../agent/authorization', () => ({
   }),
 }));
 
+const mockAuditLogAction = vi.fn().mockResolvedValue('audit-1');
+vi.mock('../../../security/audit', () => ({
+  getAuditLogger: () => ({
+    logAction: (...args: unknown[]) => Promise.resolve(mockAuditLogAction(...args)),
+  }),
+}));
+
 // Mock the logger module
 vi.mock('../../../agent/logger', () => ({
   agentLogger: {
@@ -670,6 +677,43 @@ describe('agentRouter', () => {
       expect(result.id).toBe('action_123');
       expect(result.toolName).toBe('create_case');
       expect(result.input).toEqual({ subject: 'Test Case' });
+      // PG-198 read model: real confidence or null, never an impact-derived number.
+      expect(result).toMatchObject({
+        confidence: null,
+        estimatedImpact: null,
+        escalatedAt: null,
+        escalatedTo: null,
+        executionStatus: null,
+      });
+    });
+
+    it('returns a reported confidence as a percent and the escalation facts', async () => {
+      const escalatedAt = new Date();
+      mockApprovalGetPendingAction.mockResolvedValue({
+        id: 'action_124',
+        tenantId: TEST_UUIDS.tenant,
+        toolName: 'create_case',
+        actionType: 'CREATE',
+        entityType: 'Case',
+        input: {},
+        preview: { summary: 'Create', estimatedImpact: 'LOW' },
+        confidence: 0.93,
+        escalatedAt,
+        escalatedTo: 'manager-1',
+        createdAt: new Date(),
+        expiresAt: new Date(Date.now() + 60_000),
+        status: 'PENDING',
+      });
+      const caller = agentRouter.createCaller(createAgentTestContext());
+
+      const result = await caller.getPendingAction({ actionId: 'action_124' });
+
+      expect(result).toMatchObject({
+        confidence: 93,
+        estimatedImpact: 'LOW',
+        escalatedAt,
+        escalatedTo: 'manager-1',
+      });
     });
 
     it('should throw NOT_FOUND for non-existent action', async () => {
@@ -850,6 +894,18 @@ describe('agentRouter', () => {
       await expect(
         caller.rejectAction({ actionId: 'action_123', reason: 'Not needed' })
       ).rejects.toThrow(expect.objectContaining({ code: 'FORBIDDEN' }));
+    });
+
+    it('approveAction is FORBIDDEN without the approve grant, whatever the policy (regression)', async () => {
+      const ctx = createAgentTestContext(true, false);
+      (ctx.prisma as any).userPermission = { findFirst: vi.fn().mockResolvedValue(null) };
+      (ctx.prisma as any).userRoleAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+      const caller = agentRouter.createCaller(ctx);
+
+      await expect(caller.approveAction({ actionId: 'action_123' })).rejects.toThrow(
+        expect.objectContaining({ code: 'FORBIDDEN' })
+      );
+      expect(mockApprovalApproveAction).not.toHaveBeenCalled();
     });
   });
 
@@ -1124,7 +1180,7 @@ describe('agentRouter', () => {
         expect(decision).toMatchObject({
           decision: 'APPROVE',
           decidedBy: 'system:approval-policy',
-          reason: expect.stringMatching(/Auto-approved by policy "Strict"/),
+          reason: expect.stringMatching(/Auto-approved by policy "Strict" \(policy-1\)/),
         });
         expect(requestCtx).toMatchObject({ user: expect.objectContaining({ role: 'ADMIN' }) });
         const audit = mockLoggerLog.mock.calls
@@ -1135,8 +1191,50 @@ describe('agentRouter', () => {
           policyId: 'policy-1',
           threshold: 90,
           confidence: 0.95,
+          confidenceSource: 'caller',
           requester: TEST_UUIDS.user1,
         });
+        // Durable audit row (BR-7): system actor, policy id, after the execution.
+        expect(mockAuditLogAction).toHaveBeenCalledWith(
+          'UPDATE',
+          'system',
+          expect.any(String),
+          TEST_UUIDS.tenant,
+          expect.objectContaining({
+            actorType: 'SYSTEM',
+            resourceName: 'agent_action auto-approval',
+            actionReason: 'Auto-approved by approval policy "Strict" (policy-1)',
+            afterState: expect.objectContaining({
+              decision: 'APPROVED',
+              policyId: 'policy-1',
+              approvedBy: 'system:approval-policy',
+              executionStatus: 'SUCCEEDED',
+            }),
+          })
+        );
+      });
+
+      it('logs an audit-row write failure without failing the executed action', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        mockApprovalApproveAction.mockResolvedValue({ id: 'auto-2', executionStatus: 'SUCCEEDED' });
+        mockAuditLogAction.mockRejectedValueOnce(new Error('audit db down'));
+        const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        const result = (await caller.executeTool({
+          toolName: 'create_case',
+          input: {},
+          confidence: 0.95,
+        })) as any;
+        await new Promise((r) => setTimeout(r, 0));
+
+        expect(result.autoApproved).toBe(true);
+        expect(error).toHaveBeenCalledWith(
+          '[agent] auto-approval audit write failed:',
+          expect.any(Error)
+        );
+        error.mockRestore();
       });
 
       it.each([
@@ -1170,6 +1268,42 @@ describe('agentRouter', () => {
           .map((c) => c[0])
           .find((entry: any) => entry.metadata?.autoApproval);
         expect(audit.metadata.autoApproval.decision).toBe('LEFT_FOR_REVIEW');
+      });
+
+      it('never auto-approves for a requester without the approve permission (BR-6)', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        hasPermissionOverride.next = false;
+        try {
+          const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+          const result = (await caller.executeTool({
+            toolName: 'create_case',
+            input: {},
+            confidence: 0.99,
+          })) as any;
+
+          expect(result.requiresApproval).toBe(true);
+          expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+        } finally {
+          hasPermissionOverride.next = undefined;
+        }
+      });
+
+      it('never auto-approves an SMS draft', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(
+          approvalTool({ name: 'draft_message', actionType: 'DRAFT', entityTypes: ['MESSAGE'] })
+        );
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        const result = (await caller.executeTool({
+          toolName: 'draft_message',
+          input: { type: 'SMS' },
+          confidence: 0.99,
+        })) as any;
+
+        expect(result.requiresApproval).toBe(true);
+        expect(mockApprovalApproveAction).not.toHaveBeenCalled();
       });
 
       it('never auto-approves an email draft', async () => {
@@ -1244,6 +1378,25 @@ describe('agentRouter', () => {
         expect(mockApprovalApproveAction).not.toHaveBeenCalled();
       });
 
+      it('warns when the policy cannot be read, so a broken policy table is visible', async () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+        mockLoadApprovalPolicy.mockRejectedValueOnce(new Error('db down'));
+        mockLoadApprovalPolicy.mockRejectedValueOnce('gone');
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        await caller.executeTool({ toolName: 'create_case', input: {}, confidence: 0.99 });
+        await caller.executeTool({ toolName: 'create_case', input: {}, confidence: 0.99 });
+
+        expect(warn).toHaveBeenCalledWith(
+          '[agent] approval policy unavailable; action left for review: db down'
+        );
+        expect(warn).toHaveBeenCalledWith(
+          '[agent] approval policy unavailable; action left for review: gone'
+        );
+        warn.mockRestore();
+      });
+
       it('leaves the action pending when the approval is refused before the claim', async () => {
         mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
         mockGetAgentTool.mockReturnValue(approvalTool());
@@ -1259,6 +1412,12 @@ describe('agentRouter', () => {
         })) as any;
 
         expect(result.requiresApproval).toBe(true);
+        // The log never says "approved" for an action that was not claimed.
+        const decisions = mockLoggerLog.mock.calls
+          .map((c) => (c[0] as any).metadata?.autoApproval?.decision)
+          .filter(Boolean);
+        expect(decisions).toEqual(['CLAIM_REFUSED']);
+        expect(mockAuditLogAction).not.toHaveBeenCalled();
       });
 
       it('surfaces a failure after the claim instead of reporting the action as pending', async () => {

@@ -108,7 +108,7 @@ function harness(opts: {
   tenants?: string[];
   actions?: unknown[];
   claimCount?: number;
-  user?: { id: string } | null;
+  user?: { id: string; role?: string } | null;
   drafts?: AutoResponseDraft[];
   decidedMeanwhile?: boolean;
   notifyError?: Error;
@@ -283,17 +283,58 @@ describe('runApprovalSweep', () => {
     expect(deps.audit).not.toHaveBeenCalled();
   });
 
+  it('skips a target who can no longer review under the policy (demoted)', async () => {
+    const { tx, deps } = harness({
+      policies: [policyRow({ minReviewerRole: 'MANAGER' })],
+      actions: [actionRow(), actionRow({ id: 'act-2' })],
+      user: { id: TARGET, role: 'USER' },
+    });
+    const report = await runApprovalSweep(deps, NOW);
+
+    expect(report.agentActionsEscalated).toBe(0);
+    expect(report.skipped).toBe(2);
+    expect(tx.user.findFirst).toHaveBeenCalledTimes(1); // role cached per tick
+    expect(deps.log!.warn).toHaveBeenCalledWith(
+      `[approval-sweep] tenant=${TENANT}: escalation target ${TARGET} cannot review under this policy (needs MANAGER); skipping`
+    );
+    expect(deps.notify).not.toHaveBeenCalled();
+  });
+
+  it('escalates to a target whose role meets the policy minimum', async () => {
+    const { deps } = harness({
+      policies: [policyRow({ minReviewerRole: 'MANAGER' })],
+      actions: [actionRow()],
+      user: { id: TARGET, role: 'ADMIN' },
+    });
+    const report = await runApprovalSweep(deps, NOW);
+    expect(report.agentActionsEscalated).toBe(1);
+  });
+
   it('keeps the escalation when the audit write fails', async () => {
     const { deps } = harness({ actions: [actionRow()] });
     (deps.audit as any).mockRejectedValueOnce(new Error('audit down'));
     const report = await runApprovalSweep(deps, NOW);
     expect(report.agentActionsEscalated).toBe(1);
-    expect(deps.log!.warn).toHaveBeenCalledWith('[approval-sweep] audit write failed: audit down');
+    expect(deps.log!.warn).toHaveBeenCalledWith(
+      '[approval-sweep] audit write failed for agent_action act-1 (policy p1): audit down'
+    );
 
     const second = harness({ actions: [actionRow()] }).deps;
     (second.audit as any).mockRejectedValueOnce('gone');
     await runApprovalSweep(second, NOW);
-    expect(second.log!.warn).toHaveBeenCalledWith('[approval-sweep] audit write failed: gone');
+    expect(second.log!.warn).toHaveBeenCalledWith(
+      '[approval-sweep] audit write failed for agent_action act-1 (policy p1): gone'
+    );
+    // With an error-level logger the failure is reported as an error.
+    const third = harness({ actions: [actionRow()] }).deps;
+    const error = vi.fn();
+    third.log = { warn: vi.fn(), error };
+    (third.audit as any).mockRejectedValueOnce(new Error('x'));
+    await runApprovalSweep(third, NOW);
+    expect(error).toHaveBeenCalledWith(
+      '[approval-sweep] audit write failed for agent_action act-1 (policy p1): x'
+    );
+    expect(third.log.warn).not.toHaveBeenCalled();
   });
 
   it('does not notify when another tick already escalated the action', async () => {

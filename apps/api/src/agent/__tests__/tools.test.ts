@@ -441,6 +441,79 @@ describe('Agent Tools', () => {
     });
   });
 
+  describe('policy expiry and tenant stamp for every approval tool (PG-198 AC-008)', () => {
+    const inOneHour = () => new Date(Date.now() + 3600000);
+    const inTwoHours = () => new Date(Date.now() + 7200000);
+    it.each([
+      [
+        'create_appointment',
+        () => createAppointmentTool,
+        () => ({
+          title: 'Policy Appointment',
+          startTime: inOneHour(),
+          endTime: inTwoHours(),
+          appointmentType: 'MEETING' as const,
+          attendeeIds: [],
+          linkedCaseIds: [],
+        }),
+      ],
+      ['update_case', () => updateCaseTool, () => ({ id: 'case-123', title: 'Renamed' })],
+      [
+        'update_appointment',
+        () => updateAppointmentTool,
+        () => ({ id: 'apt-123', title: 'Moved' }),
+      ],
+      [
+        'draft_message',
+        () => draftMessageTool,
+        () => ({
+          type: 'NOTE' as const,
+          recipientType: 'CONTACT' as const,
+          recipientId: 'contact-123',
+          body: 'Internal note',
+        }),
+      ],
+    ])('%s takes its expiry from the tenant policy', async (_name, tool, input) => {
+      const { pendingActionsStore } = await import('../approval-workflow.js');
+      const { invalidateApprovalPolicyCache } = await import('../approval-policy-loader.js');
+      invalidateApprovalPolicyCache();
+      const findMany = vi.fn().mockResolvedValue([
+        {
+          id: 'p1',
+          name: 'Fast',
+          scope: 'AGENT_TOOL',
+          isDefault: true,
+          timeoutMinutes: 10,
+          minReviewerRole: 'USER',
+          autoApproveEnabled: false,
+          autoApproveMinConfidence: null,
+          escalationEnabled: false,
+          escalateAfterMinutes: null,
+          escalationTargetUserId: null,
+          assignments: [],
+        },
+      ]);
+      const context = {
+        ...createTestContext(),
+        tenantId: 'tenant-tools',
+        prisma: { approvalPolicy: { findMany } } as any,
+      };
+      (pendingActionsStore.add as any).mockClear?.();
+      const before = Date.now();
+
+      const result = await (tool() as any).execute(input(), context);
+
+      expect(result.requiresApproval).toBe(true);
+      const added = (pendingActionsStore.add as any).mock.calls.at(-1)[0];
+      const minutes = (added.expiresAt.getTime() - before) / 60_000;
+      expect(minutes).toBeGreaterThan(9.9);
+      expect(minutes).toBeLessThan(10.1);
+      // d9be943b7: the tenant whose policy set the expiry owns the row.
+      expect(added.tenantId).toBe('tenant-tools');
+      invalidateApprovalPolicyCache();
+    });
+  });
+
   describe('Draft Message Tool', () => {
     describe('draftMessageTool', () => {
       it('should require approval', () => {

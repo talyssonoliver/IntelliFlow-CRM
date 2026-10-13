@@ -228,8 +228,41 @@ describe('approvalPoliciesRouter', () => {
       expect(prismaMock.$transaction).not.toHaveBeenCalled();
     });
 
+    it('refuses a target who cannot review under the policy minimum role', async () => {
+      (prismaMock.user.findFirst as any).mockResolvedValueOnce({ id: TARGET, role: 'USER' });
+      await expect(
+        admin.create({
+          ...input,
+          minReviewerRole: 'MANAGER',
+          escalationEnabled: true,
+          escalateAfterMinutes: 30,
+          escalationTargetUserId: TARGET,
+        })
+      ).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+        message: 'Escalations must go to someone who can review them (MANAGER or above).',
+      });
+      expect(prismaMock.user.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ select: { id: true, role: true } })
+      );
+      expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('accepts a manager target on a MANAGER policy', async () => {
+      (prismaMock.user.findFirst as any).mockResolvedValueOnce({ id: TARGET, role: 'MANAGER' });
+      const tx = useTx();
+      await admin.create({
+        ...input,
+        minReviewerRole: 'MANAGER',
+        escalationEnabled: true,
+        escalateAfterMinutes: 30,
+        escalationTargetUserId: TARGET,
+      });
+      expect(tx.approvalPolicy.create).toHaveBeenCalled();
+    });
+
     it('accepts an escalation target of the tenant', async () => {
-      (prismaMock.user.findFirst as any).mockResolvedValueOnce({ id: TARGET });
+      (prismaMock.user.findFirst as any).mockResolvedValueOnce({ id: TARGET, role: 'ADMIN' });
       const tx = useTx();
       await admin.create({
         ...input,

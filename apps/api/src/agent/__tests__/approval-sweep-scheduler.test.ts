@@ -70,6 +70,22 @@ describe('startApprovalSweep / stopApprovalSweep', () => {
     expect(run).toHaveBeenCalledTimes(2);
   });
 
+  it('unrefs its timer so it never keeps the process alive', () => {
+    const unref = vi.fn();
+    const spy = vi
+      .spyOn(globalThis, 'setInterval')
+      .mockReturnValue({ unref } as unknown as ReturnType<typeof setInterval>);
+    const clear = vi.spyOn(globalThis, 'clearInterval').mockImplementation(() => undefined);
+    try {
+      expect(startApprovalSweep({ intervalMs: 1000, run: vi.fn(), log: quiet() })).toBe(true);
+      expect(unref).toHaveBeenCalledTimes(1);
+    } finally {
+      stopApprovalSweep();
+      spy.mockRestore();
+      clear.mockRestore();
+    }
+  });
+
   it('logs a failed tick and keeps going', async () => {
     vi.useFakeTimers();
     const run = vi

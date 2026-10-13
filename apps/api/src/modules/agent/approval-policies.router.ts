@@ -17,8 +17,10 @@ import {
   APPROVAL_POLICY_LIMITS,
   AUTO_RESPONSE_AGENT_KEY,
   TRIGGER_TYPES,
+  canReview,
   resolveApprovalPolicy,
   type ApprovalPolicyScope,
+  type ApproverRole,
 } from '@intelliflow/domain';
 import {
   createApprovalPolicySchema,
@@ -113,17 +115,30 @@ async function findOwnedPolicy(ctx: PolicyCtx, id: string) {
   return existing;
 }
 
-/** BR-9: an escalation target must be a user of this workspace. */
-async function assertTargetInTenant(ctx: PolicyCtx, userId: string | null): Promise<void> {
+/**
+ * BR-9: an escalation target must be a user of this workspace who can decide the
+ * items it receives, i.e. holds the policy's minimum reviewer role.
+ */
+async function assertTargetInTenant(
+  ctx: PolicyCtx,
+  userId: string | null,
+  minReviewerRole: ApproverRole
+): Promise<void> {
   if (userId === null) return;
   const user = await ctx.prismaWithTenant.user.findFirst({
     where: { id: userId, ...tenantUserWhere(ctx.tenant.tenantId) },
-    select: { id: true },
+    select: { id: true, role: true },
   });
   if (!user) {
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: 'Escalations must go to a user of this workspace.',
+    });
+  }
+  if (!canReview(user.role, { ...APPROVAL_POLICY_DEFAULTS.AGENT_TOOL, minReviewerRole })) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Escalations must go to someone who can review them (${minReviewerRole} or above).`,
     });
   }
 }
@@ -199,7 +214,7 @@ export const approvalPoliciesRouter = createTRPCRouter({
   create: tenantProcedure.input(createApprovalPolicySchema).mutation(async ({ ctx, input }) => {
     assertPolicyAdmin(ctx);
     const tenantId = ctx.tenant.tenantId;
-    await assertTargetInTenant(ctx, input.escalationTargetUserId);
+    await assertTargetInTenant(ctx, input.escalationTargetUserId, input.minReviewerRole);
 
     try {
       const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
@@ -230,7 +245,7 @@ export const approvalPoliciesRouter = createTRPCRouter({
     assertPolicyAdmin(ctx);
     const tenantId = ctx.tenant.tenantId;
     await findOwnedPolicy(ctx, input.id);
-    await assertTargetInTenant(ctx, input.escalationTargetUserId);
+    await assertTargetInTenant(ctx, input.escalationTargetUserId, input.minReviewerRole);
 
     try {
       const row = await ctx.prismaWithTenant.$transaction(async (tx) => {

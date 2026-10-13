@@ -20,6 +20,7 @@ import {
   AUTO_RESPONSE_AGENT_KEY,
   TRIGGER_TYPES,
   SYSTEM_APPROVAL_ACTOR,
+  canReview,
   isEscalationDue,
   resolveApprovalPolicy,
   type ApprovalPolicyRecord,
@@ -99,7 +100,7 @@ export interface SweepTx extends ApprovalPolicyReader {
     findMany(args: unknown): Promise<AgentActionRow[]>;
     updateMany(args: unknown): Promise<{ count: number }>;
   };
-  user: { findFirst(args: unknown): Promise<{ id: string } | null> };
+  user: { findFirst(args: unknown): Promise<{ id: string; role?: string | null } | null> };
 }
 
 export interface SweepPrisma {
@@ -116,7 +117,7 @@ export interface ApprovalSweepDeps {
   notify: (notification: SweepNotification) => Promise<void>;
   /** BR-7: records each escalation with its policy id, after the transaction commits. */
   audit?: (entry: SweepEscalationAudit) => Promise<void>;
-  log?: Pick<Console, 'warn'>;
+  log?: Pick<Console, 'warn'> & Partial<Pick<Console, 'error'>>;
 }
 
 export interface ApprovalSweepReport {
@@ -134,7 +135,8 @@ interface TenantContext {
   policies: ApprovalPolicyRecord[];
   now: Date;
   report: ApprovalSweepReport;
-  targets: Map<string, boolean>;
+  /** Target user id → their role while still a user of the tenant, else null. */
+  targets: Map<string, string | null>;
   outbox: SweepOutbox;
 }
 
@@ -192,25 +194,24 @@ function cutoff(now: Date, minutes: number): Date {
   return new Date(now.getTime() - minutes * 60_000);
 }
 
-/** BR-9: the escalation target must still be a user of the tenant. */
-async function targetIsValid(ctx: TenantContext, userId: string): Promise<boolean> {
-  const cached = ctx.targets.get(userId);
-  if (cached !== undefined) return cached;
+/** BR-9: the target's role while they are still a user of the tenant, else null. */
+async function targetRole(ctx: TenantContext, userId: string): Promise<string | null> {
+  if (ctx.targets.has(userId)) return ctx.targets.get(userId) ?? null;
   const user = await ctx.tx.user.findFirst({
     where: { id: userId, ...tenantUserWhere(ctx.tenantId) },
-    select: { id: true },
+    select: { id: true, role: true },
   });
-  const valid = user !== null;
-  if (!valid) {
+  const role = user ? (user.role ?? '') : null;
+  if (role === null) {
     ctx.deps.log?.warn(
       `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${userId} is no longer a user of the workspace; skipping`
     );
   }
-  ctx.targets.set(userId, valid);
-  return valid;
+  ctx.targets.set(userId, role);
+  return role;
 }
 
-/** The rule's target when it is due now and still valid; otherwise null. */
+/** The rule's target when it is due now, still valid and able to review; otherwise null. */
 async function dueTarget(
   ctx: TenantContext,
   rule: ApprovalRule,
@@ -218,7 +219,13 @@ async function dueTarget(
 ): Promise<string | null> {
   if (!isEscalationDue(startedAt, ctx.now, rule, false)) return null;
   const target = rule.escalationTargetUserId as string;
-  if (await targetIsValid(ctx, target)) return target;
+  const role = await targetRole(ctx, target);
+  if (role !== null && canReview(role, rule)) return target;
+  if (role !== null) {
+    ctx.deps.log?.warn(
+      `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${target} cannot review under this policy (needs ${rule.minReviewerRole}); skipping`
+    );
+  }
   ctx.report.skipped += 1;
   return null;
 }
@@ -461,7 +468,10 @@ export async function runApprovalSweep(
       await deps.audit?.(entry);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      deps.log?.warn(`[approval-sweep] audit write failed: ${message}`);
+      // The escalation is committed; name what lacks its audit row so it can be repaired.
+      (deps.log?.error ?? deps.log?.warn)?.(
+        `[approval-sweep] audit write failed for ${entry.entityType} ${entry.entityId} (policy ${entry.policyId}): ${message}`
+      );
     }
   }
   return report;

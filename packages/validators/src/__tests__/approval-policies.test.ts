@@ -76,6 +76,15 @@ describe('createApprovalPolicySchema', () => {
     expect(parsed.assignments).toHaveLength(3);
   });
 
+  it.each([90, 99])('accepts the auto-approve threshold boundary %i (A4)', (threshold) => {
+    const parsed = createApprovalPolicySchema.parse({
+      ...agentPolicy,
+      autoApproveEnabled: true,
+      autoApproveMinConfidence: threshold,
+    });
+    expect(parsed.autoApproveMinConfidence).toBe(threshold);
+  });
+
   it('accepts an auto-response policy keyed by trigger type', () => {
     const parsed = createApprovalPolicySchema.parse({
       ...autoResponsePolicy,

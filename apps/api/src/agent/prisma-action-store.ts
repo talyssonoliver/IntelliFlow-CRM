@@ -423,7 +423,9 @@ export class PrismaAgentActionStore {
   /** 0..1 → whole percent (floored, so 0.899 never reads as 90); invalid/absent → null. */
   private toConfidenceScore(confidence: unknown): number | null {
     const percent = confidenceToPercent(confidence);
-    return percent === null ? null : Math.floor(percent);
+    // Floor, never round up (0.899 -> 89), but absorb float error: 0.57 * 100 is
+    // 56.99999999999999 in binary floating point and must store 57.
+    return percent === null ? null : Math.floor(percent + 1e-9);
   }
 
   /** The impact stored with the preview; anything else is unknown. */

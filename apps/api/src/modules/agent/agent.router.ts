@@ -37,6 +37,7 @@ import {
   pendingActionsStore,
 } from '../../agent/approval-workflow';
 import { loadApprovalPolicy, resolveAgentToolExpiry } from '../../agent/approval-policy-loader';
+import { getAuditLogger } from '../../security/audit';
 import { canReview, evaluateAutoApproval, SYSTEM_APPROVAL_ACTOR } from '@intelliflow/domain';
 import { agentAuthorizationService, buildAuthContext } from '../../agent/authorization';
 import { agentLogger } from '../../agent/logger';
@@ -133,7 +134,10 @@ async function tryAutoApprove(
       action.actionType,
       { fresh: true }
     );
-  } catch {
+  } catch (error) {
+    // Fail closed, but visibly: the action stays pending for a person.
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[agent] approval policy unavailable; action left for review: ${message}`);
     return null;
   }
   if (!resolved.rule.autoApproveEnabled) return null;
@@ -151,31 +155,37 @@ async function tryAutoApprove(
     hasSessionRequester: Boolean(ctx.user?.userId),
   });
 
-  await agentLogger.log({
-    userId: agentContext.userId,
-    agentSessionId: agentContext.agentSessionId,
-    toolName: action.toolName,
-    actionType: action.actionType,
-    entityType: action.entityType,
-    input: action.input,
-    success: verdict.approve,
-    durationMs: 0,
-    approvalRequired: true,
-    approvalStatus: verdict.approve ? 'APPROVED' : 'PENDING',
-    approvedBy: verdict.approve ? SYSTEM_APPROVAL_ACTOR : undefined,
-    metadata: {
-      autoApproval: {
-        decision: verdict.approve ? 'APPROVED' : 'LEFT_FOR_REVIEW',
-        reason: verdict.reason,
-        policyId: resolved.policyId,
-        policyName: resolved.policyName,
-        threshold: resolved.rule.autoApproveMinConfidence,
-        confidence: action.confidence ?? null,
-        requester: agentContext.userId,
-      },
-    },
-  });
-  if (!verdict.approve) return null;
+  // BR-7: one decision record, written once the outcome is known.
+  const decision = {
+    reason: verdict.reason,
+    policyId: resolved.policyId,
+    policyName: resolved.policyName,
+    threshold: resolved.rule.autoApproveMinConfidence,
+    confidence: action.confidence ?? null,
+    // Caller-asserted (spec C13): bounded by BR-6, recorded so audits can see it.
+    confidenceSource: 'caller',
+    requester: agentContext.userId,
+  };
+  const logDecision = (outcome: 'APPROVED' | 'LEFT_FOR_REVIEW' | 'CLAIM_REFUSED') =>
+    agentLogger.log({
+      userId: agentContext.userId,
+      agentSessionId: agentContext.agentSessionId,
+      toolName: action.toolName,
+      actionType: action.actionType,
+      entityType: action.entityType,
+      input: action.input,
+      success: outcome === 'APPROVED',
+      durationMs: 0,
+      approvalRequired: true,
+      approvalStatus: outcome === 'APPROVED' ? 'APPROVED' : 'PENDING',
+      approvedBy: outcome === 'APPROVED' ? SYSTEM_APPROVAL_ACTOR : undefined,
+      metadata: { autoApproval: { decision: outcome, ...decision } },
+    });
+
+  if (!verdict.approve) {
+    await logDecision('LEFT_FOR_REVIEW');
+    return null;
+  }
 
   let executed;
   try {
@@ -185,7 +195,7 @@ async function tryAutoApprove(
         decision: 'APPROVE',
         decidedBy: SYSTEM_APPROVAL_ACTOR,
         decidedAt: new Date(),
-        reason: `Auto-approved by policy "${String(resolved.policyName)}": ${verdict.reason}`,
+        reason: `Auto-approved by policy "${String(resolved.policyName)}" (${String(resolved.policyId)}): ${verdict.reason}`,
       },
       agentContext,
       ctx
@@ -193,9 +203,27 @@ async function tryAutoApprove(
   } catch (error) {
     // Refused before the claim (e.g. invalid input): it stays pending for a person.
     // Anything later (the action was claimed) must surface, not pretend to be pending.
-    if (error instanceof ApprovalNotClaimedError) return null;
+    if (error instanceof ApprovalNotClaimedError) {
+      await logDecision('CLAIM_REFUSED');
+      return null;
+    }
     throw error;
   }
+  await logDecision('APPROVED');
+  // Durable audit row (the agent log is a buffered file log): system actor + policy id.
+  getAuditLogger(ctx.prisma)
+    .logAction('UPDATE', 'system', action.id, tenantId, {
+      actorType: 'SYSTEM',
+      resourceName: 'agent_action auto-approval',
+      afterState: {
+        ...decision,
+        decision: 'APPROVED',
+        approvedBy: SYSTEM_APPROVAL_ACTOR,
+        executionStatus: executed.executionStatus,
+      },
+      actionReason: `Auto-approved by approval policy "${String(resolved.policyName)}" (${String(resolved.policyId)})`,
+    })
+    .catch((err: unknown) => console.error('[agent] auto-approval audit write failed:', err));
   return {
     requiresApproval: false as const,
     autoApproved: true as const,

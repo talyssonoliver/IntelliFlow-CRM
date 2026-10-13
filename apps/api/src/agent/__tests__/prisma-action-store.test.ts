@@ -183,6 +183,20 @@ describe('add()', () => {
     expect(data.confidenceScore).toBeNull();
   });
 
+  it.each([
+    [0.57, 57],
+    [0.29, 29],
+    [0.58, 58],
+    [0.9, 90],
+  ])('A2b: stores %s as %s (no binary floating-point underflow)', async (confidence, stored) => {
+    (prismaMock.agentAction.create as any).mockResolvedValue({});
+
+    await store.add(makePendingAction({ confidence }));
+
+    const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
+    expect(data.confidenceScore).toBe(stored);
+  });
+
   it('A5: stores 100 for full confidence', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
