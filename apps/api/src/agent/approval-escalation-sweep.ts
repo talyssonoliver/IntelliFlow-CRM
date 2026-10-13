@@ -253,9 +253,12 @@ async function escalateDraft(
 ): Promise<void> {
   const target = await dueTarget(ctx, rule, submittedAt(draft));
   if (!target) return;
-  // Never beyond the draft's own expiry, so escalation.expiresAt stays truthful.
-  const windowHours = (draft.expiresAt.getTime() - ctx.now.getTime()) / 3_600_000;
-  if (windowHours <= 0) return;
+  // Never beyond the draft's own expiry, so escalation.expiresAt stays truthful: the
+  // aggregate adds the window to its own clock, so measure from the current time and
+  // round down to whole minutes.
+  const remainingMinutes = Math.floor((draft.expiresAt.getTime() - Date.now()) / 60_000);
+  if (remainingMinutes <= 0) return;
+  const windowHours = remainingMinutes / 60;
   const reason = `Approval SLA: no decision after ${String(rule.escalateAfterMinutes)} minutes`;
   if (draft.escalate(SYSTEM_APPROVAL_ACTOR, target, reason, windowHours).isFailure) {
     ctx.report.skipped += 1;

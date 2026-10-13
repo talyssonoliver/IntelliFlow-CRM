@@ -407,7 +407,10 @@ describe('runApprovalSweep', () => {
       const draft = pendingDraft(new Date('2026-10-13T09:00:00Z'), 1);
       const { repo, deps } = harness({ policies: [draftPolicy] });
       repo.findPendingOlderThan.mockResolvedValue([draft]);
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(NOW);
       await runApprovalSweep(deps, NOW);
+      vi.useRealTimers();
       expect(draft.status).toBe('PENDING_APPROVAL');
       expect(repo.saveEscalation).not.toHaveBeenCalled();
     });

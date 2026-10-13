@@ -77,7 +77,8 @@ function toActionView(action: PendingAction & { executionStatus?: ExecutionStatu
     createdAt: action.createdAt,
     expiresAt: action.expiresAt,
     status: action.status,
-    confidence: action.confidence === undefined ? null : Math.floor(action.confidence * 100),
+    // Stored as a whole percent (floored once at write time); round to undo the /100.
+    confidence: action.confidence === undefined ? null : Math.round(action.confidence * 100),
     estimatedImpact: action.preview.estimatedImpact ?? null,
     escalatedAt: action.escalatedAt ?? null,
     escalatedTo: action.escalatedTo ?? null,

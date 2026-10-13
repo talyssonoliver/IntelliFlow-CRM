@@ -575,7 +575,8 @@ describe('agentRouter', () => {
           createdAt: new Date(),
           expiresAt: new Date(Date.now() + 60_000),
           status: 'PENDING',
-          confidence: 0.957,
+          // As read back from a stored confidenceScore of 57 (57 / 100).
+          confidence: 0.57,
           escalatedAt,
           escalatedTo: 'manager-1',
         },
@@ -598,7 +599,7 @@ describe('agentRouter', () => {
       const result = await caller.getPendingApprovals();
 
       expect(result[0]).toMatchObject({
-        confidence: 95,
+        confidence: 57,
         estimatedImpact: 'LOW',
         escalatedAt,
         escalatedTo: 'manager-1',
