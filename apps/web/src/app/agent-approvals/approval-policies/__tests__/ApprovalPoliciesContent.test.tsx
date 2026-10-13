@@ -361,6 +361,7 @@ describe('ApprovalPoliciesContent', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     });
     expect(live()).toHaveTextContent('Approval policies reset to the built-in rules.');
+    expect(screen.getByRole('button', { name: 'New Policy for agent tool actions' })).toHaveFocus();
 
     h.mutations.resetToDefaults.mutateAsync.mockRejectedValue(new Error('locked'));
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Defaults' }));

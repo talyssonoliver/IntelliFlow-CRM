@@ -228,6 +228,7 @@ function AutoApproveFields({
           <div className="flex items-center gap-2">
             <Input
               id="policy-threshold"
+              aria-required="true"
               inputMode="numeric"
               className="w-24"
               value={draft.autoApproveMinConfidence}
@@ -289,6 +290,7 @@ function EscalationFields({
             <Label htmlFor="policy-delay">Escalate after (minutes)</Label>
             <Input
               id="policy-delay"
+              aria-required="true"
               inputMode="numeric"
               value={draft.escalateAfterMinutes}
               onChange={(e) => set('escalateAfterMinutes', e.target.value)}
@@ -311,6 +313,7 @@ function EscalationFields({
             >
               <SelectTrigger
                 id="policy-target"
+                aria-required="true"
                 aria-invalid={errors.target ? true : undefined}
                 aria-describedby={errors.target ? 'policy-target-error' : undefined}
               >
@@ -410,8 +413,9 @@ export function PolicyDialog({
     return [...members, { id: target.id, name: target.name }];
   }, [members, policy]);
 
-  // A new policy's empty name is not an error until the field has been visited.
-  const nameError = nameTouched || draft.name.trim() ? errors.name : undefined;
+  // A new policy's empty name is not an error until the field has been visited
+  // or anything else changed (then the Save hint must point at a highlighted field).
+  const nameError = nameTouched || draft.name.trim() || isDirty ? errors.name : undefined;
 
   const save = async () => {
     setSaveError(null);
@@ -446,6 +450,10 @@ export function PolicyDialog({
           </DialogHeader>
 
           <div className="space-y-5">
+            <p className="text-xs text-muted-foreground">
+              Fields marked <span aria-hidden="true">*</span>
+              <span className="sr-only">with an asterisk</span> are required.
+            </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="policy-name">

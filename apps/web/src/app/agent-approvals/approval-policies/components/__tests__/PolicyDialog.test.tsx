@@ -115,6 +115,13 @@ describe('PolicyDialog', () => {
     expect(screen.getByText('Fix the highlighted fields to save.')).toBeInTheDocument();
   });
 
+  it('reveals the empty-name error as soon as another field changes', () => {
+    setup();
+    type(/^Approval timeout/, '45');
+    expect(screen.getByText('Enter a name.')).toBeInTheDocument();
+    expect(screen.getByText('Fix the highlighted fields to save.')).toBeInTheDocument();
+  });
+
   it('asks before turning auto-approval on, and cancelling leaves it off (AC-020)', () => {
     setup();
     fireEvent.click(screen.getByLabelText('Auto-approve high-confidence items'));

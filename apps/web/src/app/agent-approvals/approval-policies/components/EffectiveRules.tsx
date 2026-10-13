@@ -37,12 +37,14 @@ export function EffectiveRules({
 }: Readonly<EffectiveRulesProps>) {
   if (isLoading) {
     return (
-      <div className="space-y-2" aria-busy="true">
+      <>
         <output className="sr-only">Loading {label}…</output>
-        {SKELETON_KEYS.map((key) => (
-          <Skeleton key={key} className="h-8 w-full" />
-        ))}
-      </div>
+        <div className="space-y-2" aria-busy="true">
+          {SKELETON_KEYS.map((key) => (
+            <Skeleton key={key} className="h-8 w-full" />
+          ))}
+        </div>
+      </>
     );
   }
   if (error || !rows) {

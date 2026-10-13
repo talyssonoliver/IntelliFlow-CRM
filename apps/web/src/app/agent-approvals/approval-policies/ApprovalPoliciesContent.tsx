@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Approval Policies — Module Settings (PG-198, ADR-076).
+ * Approval Policies — Module Settings (PG-198, ADR-077).
  *
  * Tenant rules for both approval queues (agent tool actions, AI email
  * auto-responses): timeout, minimum reviewer, opt-in auto-approval and
@@ -346,6 +346,8 @@ export default function ApprovalPoliciesContent() {
           try {
             await resetMutation.mutateAsync();
             announce('Approval policies reset to the built-in rules.');
+            // Reset is now disabled (nothing left to reset): move focus somewhere useful.
+            setFocusAfterClose('new-policy-AGENT_TOOL');
           } catch (error) {
             announce(`Could not reset approval policies: ${errorMessage(error)}`, true);
           }
