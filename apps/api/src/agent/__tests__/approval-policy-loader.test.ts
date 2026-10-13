@@ -8,6 +8,7 @@ import {
   loadApprovalPolicy,
   loadTenantApprovalPolicies,
   invalidateApprovalPolicyCache,
+  resolveAgentToolExpiry,
   toApprovalPolicyRecord,
 } from '../approval-policy-loader';
 
@@ -154,5 +155,33 @@ describe('approval-policy-loader', () => {
     await expect(
       loadApprovalPolicy(prisma, TENANT, 'AGENT_TOOL', 'create_case', 'CREATE', { fresh: true })
     ).rejects.toThrow('db down');
+  });
+
+  describe('resolveAgentToolExpiry (AC-008)', () => {
+    const now = new Date('2026-10-13T10:00:00Z');
+
+    it('is now + the effective policy timeout', async () => {
+      const { prisma } = fakePrisma([row({ timeoutMinutes: 15 })]);
+      const expiry = await resolveAgentToolExpiry(prisma, TENANT, 'create_case', 'CREATE', now);
+      expect(expiry).toEqual(new Date('2026-10-13T10:15:00Z'));
+    });
+
+    it('is the built-in 30 minutes without a client or a tenant', async () => {
+      expect(await resolveAgentToolExpiry(undefined, TENANT, 'create_case', 'CREATE', now)).toEqual(
+        new Date('2026-10-13T10:30:00Z')
+      );
+      const { prisma, findMany } = fakePrisma([row()]);
+      expect(await resolveAgentToolExpiry(prisma, undefined, 'create_case', 'CREATE', now)).toEqual(
+        new Date('2026-10-13T10:30:00Z')
+      );
+      expect(findMany).not.toHaveBeenCalled();
+    });
+
+    it('defaults to the current time', async () => {
+      const { prisma } = fakePrisma([]);
+      const before = Date.now();
+      const expiry = await resolveAgentToolExpiry(prisma, TENANT, 'draft_message', 'DRAFT');
+      expect(expiry.getTime() - before).toBeGreaterThanOrEqual(30 * 60_000);
+    });
   });
 });

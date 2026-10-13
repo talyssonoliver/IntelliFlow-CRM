@@ -287,6 +287,48 @@ describe('Agent Tools', () => {
         expect(result.actionId).toBeDefined();
       });
 
+      it('stamps the pending action expiry from the tenant approval policy (PG-198)', async () => {
+        const { pendingActionsStore } = await import('../approval-workflow.js');
+        const { invalidateApprovalPolicyCache } = await import('../approval-policy-loader.js');
+        invalidateApprovalPolicyCache();
+        const findMany = vi.fn().mockResolvedValue([
+          {
+            id: 'p1',
+            name: 'Fast',
+            scope: 'AGENT_TOOL',
+            isDefault: true,
+            timeoutMinutes: 10,
+            minReviewerRole: 'USER',
+            autoApproveEnabled: false,
+            autoApproveMinConfidence: null,
+            escalationEnabled: false,
+            escalateAfterMinutes: null,
+            escalationTargetUserId: null,
+            assignments: [],
+          },
+        ]);
+        const context = {
+          ...createTestContext(),
+          tenantId: 'tenant-tools',
+          prisma: { approvalPolicy: { findMany } } as any,
+        };
+        const before = Date.now();
+
+        await createCaseTool.execute(
+          { title: 'Policy Case', clientId: 'client-123', priority: 'MEDIUM' as const },
+          context
+        );
+
+        const added = (pendingActionsStore.add as any).mock.calls.at(-1)[0];
+        const minutes = (added.expiresAt.getTime() - before) / 60_000;
+        expect(minutes).toBeGreaterThan(9.9);
+        expect(minutes).toBeLessThan(10.1);
+        expect(findMany).toHaveBeenCalledWith(
+          expect.objectContaining({ where: { tenantId: 'tenant-tools' } })
+        );
+        invalidateApprovalPolicyCache();
+      });
+
       it('should generate preview with warnings for urgent priority', async () => {
         const context = createTestContext();
         const input = {

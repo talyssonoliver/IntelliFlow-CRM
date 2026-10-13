@@ -13,6 +13,7 @@
  */
 
 import {
+  APPROVAL_POLICY_DEFAULTS,
   APPROVAL_POLICY_SCOPES,
   APPROVER_ROLES,
   resolveApprovalPolicy,
@@ -143,4 +144,24 @@ export function invalidateApprovalPolicyCache(tenantId?: string): void {
     return;
   }
   cache.delete(tenantId);
+}
+
+/**
+ * Expiry for a new agent-tool approval (AC-008): now + the effective policy's
+ * timeout. Without a tenant or a client (background callers) the built-in
+ * 30 minutes apply, exactly as before policies existed.
+ */
+export async function resolveAgentToolExpiry(
+  prisma: ApprovalPolicyReader | undefined,
+  tenantId: string | undefined,
+  toolName: string,
+  actionType: string,
+  now: Date = new Date()
+): Promise<Date> {
+  const timeoutMinutes =
+    prisma && tenantId
+      ? (await loadApprovalPolicy(prisma, tenantId, 'AGENT_TOOL', toolName, actionType)).rule
+          .timeoutMinutes
+      : APPROVAL_POLICY_DEFAULTS.AGENT_TOOL.timeoutMinutes;
+  return new Date(now.getTime() + timeoutMinutes * 60_000);
 }

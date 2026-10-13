@@ -136,6 +136,45 @@ vi.mock('../../../agent/approval-workflow', () => ({
   },
 }));
 
+// PG-198: hasPermission stays real unless a test overrides it for one call.
+const hasPermissionOverride = vi.hoisted(() => ({ next: undefined as boolean | undefined }));
+vi.mock('../../../lib/rbac', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../../lib/rbac')>();
+  return {
+    ...actual,
+    hasPermission: async (...args: Parameters<typeof actual.hasPermission>) => {
+      if (hasPermissionOverride.next !== undefined) return hasPermissionOverride.next;
+      return actual.hasPermission(...args);
+    },
+  };
+});
+
+// PG-198: approval policies (the loader is covered by approval-policy-loader.test.ts)
+const builtInRule = {
+  timeoutMinutes: 30,
+  minReviewerRole: 'USER',
+  autoApproveEnabled: false,
+  autoApproveMinConfidence: null,
+  escalationEnabled: false,
+  escalateAfterMinutes: null,
+  escalationTargetUserId: null,
+};
+const mockLoadApprovalPolicy = vi.fn();
+const mockResolveAgentToolExpiry = vi.fn();
+vi.mock('../../../agent/approval-policy-loader', () => ({
+  loadApprovalPolicy: (...args: unknown[]) => mockLoadApprovalPolicy(...args),
+  resolveAgentToolExpiry: (...args: unknown[]) => mockResolveAgentToolExpiry(...args),
+}));
+
+function policy(rule: Record<string, unknown>) {
+  return {
+    rule: { ...builtInRule, ...rule },
+    policyId: 'policy-1',
+    policyName: 'Strict',
+    source: 'ASSIGNMENT_EXACT',
+  };
+}
+
 // Note: rbac hasPermission fast-paths for ADMIN role — approve action tests
 // use createAgentTestContext with admin=true to bypass DB permission checks
 
@@ -215,6 +254,10 @@ describe('agentRouter', () => {
     mockAuthorizeToolExecution.mockResolvedValue({ authorized: true, reason: null });
     mockApprovalGetPendingActions.mockResolvedValue([]);
     mockApprovalGetInterruptedActions.mockResolvedValue([]);
+    mockLoadApprovalPolicy.mockResolvedValue(policy({}));
+    mockResolveAgentToolExpiry.mockImplementation(
+      async () => new Date(Date.now() + 30 * 60 * 1000)
+    );
     // Default: a SAME-tenant pending action so the tenant-ownership guard on
     // getPendingAction / approveAction / rejectAction passes. Individual tests
     // override this for the not-found and cross-tenant cases.
@@ -950,6 +993,263 @@ describe('agentRouter', () => {
           approvalRequired: false,
         })
       );
+    });
+  });
+
+  // ============================================
+  // PG-198: approval policy enforcement
+  // ============================================
+
+  describe('approval policies (PG-198)', () => {
+    function approvalTool(overrides: Record<string, unknown> = {}) {
+      return {
+        name: 'create_case',
+        actionType: 'CREATE',
+        entityTypes: ['CASE'],
+        requiresApproval: true,
+        generatePreview: vi.fn().mockResolvedValue({
+          summary: 'Create case',
+          changes: [],
+          affectedEntities: [],
+          estimatedImpact: 'LOW',
+        }),
+        execute: vi.fn(),
+        ...overrides,
+      };
+    }
+
+    it('stamps the expiry from the tenant policy (AC-008)', async () => {
+      const expiry = new Date('2030-01-01T00:05:00Z');
+      mockResolveAgentToolExpiry.mockResolvedValue(expiry);
+      mockGetAgentTool.mockReturnValue(approvalTool());
+
+      const caller = agentRouter.createCaller(createAgentTestContext());
+      const result = (await caller.executeTool({ toolName: 'create_case', input: {} })) as any;
+
+      expect(mockResolveAgentToolExpiry).toHaveBeenCalledWith(
+        expect.anything(),
+        TEST_UUIDS.tenant,
+        'create_case',
+        'CREATE'
+      );
+      expect(result.expiresAt).toEqual(expiry);
+      expect(mockPendingActionsAdd.mock.calls[0]![0].expiresAt).toEqual(expiry);
+    });
+
+    it('blocks approve and reject below the policy minimum role (AC-010)', async () => {
+      mockLoadApprovalPolicy.mockResolvedValue(policy({ minReviewerRole: 'ADMIN' }));
+      // The reviewer holds the approve/reject permission but is only a MANAGER.
+      hasPermissionOverride.next = true;
+      try {
+        const ctx = createAgentTestContext(true, false);
+        ctx.user!.role = 'MANAGER';
+        const caller = agentRouter.createCaller(ctx);
+
+        await expect(caller.approveAction({ actionId: 'action_123' })).rejects.toMatchObject({
+          code: 'FORBIDDEN',
+          message: 'This action needs a reviewer with the ADMIN role or above.',
+        });
+        await expect(
+          caller.rejectAction({ actionId: 'action_123', reason: 'no' })
+        ).rejects.toMatchObject({
+          code: 'FORBIDDEN',
+          message: 'This action needs a reviewer with the ADMIN role or above.',
+        });
+        expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+        expect(mockApprovalRejectAction).not.toHaveBeenCalled();
+      } finally {
+        hasPermissionOverride.next = undefined;
+      }
+    });
+
+    it('reads the policy fresh for the reviewer check and lets a qualified reviewer through', async () => {
+      mockLoadApprovalPolicy.mockResolvedValue(policy({ minReviewerRole: 'ADMIN' }));
+      mockApprovalApproveAction.mockResolvedValue({
+        id: 'action_123',
+        executionStatus: 'SUCCEEDED',
+        rollbackAvailable: false,
+      });
+      const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+      await expect(caller.approveAction({ actionId: 'action_123' })).resolves.toMatchObject({
+        success: true,
+      });
+      const call = mockLoadApprovalPolicy.mock.calls[0]!;
+      expect(call[1]).toBe(TEST_UUIDS.tenant);
+      expect(call[2]).toBe('AGENT_TOOL');
+      expect(call[5]).toEqual({ fresh: true });
+    });
+
+    it('fails closed when the policy cannot be read for a review decision', async () => {
+      mockLoadApprovalPolicy.mockRejectedValue(new Error('db down'));
+      const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+      await expect(caller.approveAction({ actionId: 'action_123' })).rejects.toThrow();
+      expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+    });
+
+    describe('auto-approval (AC-013)', () => {
+      const enabled = { autoApproveEnabled: true, autoApproveMinConfidence: 90 };
+
+      it('auto-approves an eligible action as the system actor and audit-logs the decision', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        mockApprovalApproveAction.mockResolvedValue({
+          id: 'auto-1',
+          executionStatus: 'SUCCEEDED',
+          executionResult: { entityType: 'CASE', entityId: 'case-1' },
+        });
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        const result = (await caller.executeTool({
+          toolName: 'create_case',
+          input: {},
+          confidence: 0.95,
+        })) as any;
+
+        expect(result).toMatchObject({
+          requiresApproval: false,
+          autoApproved: true,
+          policyId: 'policy-1',
+          executionStatus: 'SUCCEEDED',
+        });
+        const [decision, , requestCtx] = mockApprovalApproveAction.mock.calls[0]!;
+        expect(decision).toMatchObject({
+          decision: 'APPROVE',
+          decidedBy: 'system:approval-policy',
+          reason: expect.stringMatching(/Auto-approved by policy "Strict"/),
+        });
+        expect(requestCtx).toMatchObject({ user: expect.objectContaining({ role: 'ADMIN' }) });
+        const audit = mockLoggerLog.mock.calls
+          .map((c) => c[0])
+          .find((entry: any) => entry.metadata?.autoApproval);
+        expect(audit.metadata.autoApproval).toMatchObject({
+          decision: 'APPROVED',
+          policyId: 'policy-1',
+          threshold: 90,
+          confidence: 0.95,
+          requester: TEST_UUIDS.user1,
+        });
+      });
+
+      it.each([
+        ['no confidence', {}, undefined],
+        ['confidence equal to the threshold', {}, 0.9],
+        ['HIGH impact', { estimatedImpact: 'HIGH' }, 0.99],
+      ])('leaves the action pending with %s', async (_label, previewPatch, confidence) => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(
+          approvalTool({
+            generatePreview: vi.fn().mockResolvedValue({
+              summary: 'Create case',
+              changes: [],
+              affectedEntities: [],
+              estimatedImpact: 'LOW',
+              ...previewPatch,
+            }),
+          })
+        );
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        const result = (await caller.executeTool({
+          toolName: 'create_case',
+          input: {},
+          confidence,
+        })) as any;
+
+        expect(result.requiresApproval).toBe(true);
+        expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+        const audit = mockLoggerLog.mock.calls
+          .map((c) => c[0])
+          .find((entry: any) => entry.metadata?.autoApproval);
+        expect(audit.metadata.autoApproval.decision).toBe('LEFT_FOR_REVIEW');
+      });
+
+      it('never auto-approves an email draft', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(
+          approvalTool({ name: 'draft_message', actionType: 'DRAFT', entityTypes: ['MESSAGE'] })
+        );
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        const result = (await caller.executeTool({
+          toolName: 'draft_message',
+          input: { type: 'EMAIL' },
+          confidence: 0.99,
+        })) as any;
+
+        expect(result.requiresApproval).toBe(true);
+        expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+      });
+
+      it('does not auto-approve for a requester below the policy minimum role (BR-6)', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(
+          policy({ ...enabled, minReviewerRole: 'MANAGER' })
+        );
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        hasPermissionOverride.next = true;
+        try {
+          const ctx = createAgentTestContext(true, false);
+          ctx.user!.role = 'SALES_REP';
+          const caller = agentRouter.createCaller(ctx);
+
+          const result = (await caller.executeTool({
+            toolName: 'create_case',
+            input: {},
+            confidence: 0.99,
+          })) as any;
+
+          expect(result.requiresApproval).toBe(true);
+          expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+          const audit = mockLoggerLog.mock.calls
+            .map((c) => c[0])
+            .find((entry: any) => entry.metadata?.autoApproval);
+          expect(audit.metadata.autoApproval.reason).toMatch(/below MANAGER/);
+        } finally {
+          hasPermissionOverride.next = undefined;
+        }
+      });
+
+      it('skips auto-approval entirely when the policy is off', async () => {
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        await caller.executeTool({ toolName: 'create_case', input: {}, confidence: 0.99 });
+
+        expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+        expect(mockLoggerLog.mock.calls.some((c) => (c[0] as any).metadata?.autoApproval)).toBe(
+          false
+        );
+      });
+
+      it('fails closed: a policy read error leaves the action pending', async () => {
+        mockLoadApprovalPolicy.mockRejectedValue(new Error('db down'));
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        const result = (await caller.executeTool({
+          toolName: 'create_case',
+          input: {},
+          confidence: 0.99,
+        })) as any;
+
+        expect(result.requiresApproval).toBe(true);
+        expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+      });
+
+      it('leaves the action pending when the approval is refused before the claim', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        mockApprovalApproveAction.mockRejectedValue(new Error('not valid for create_case'));
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        const result = (await caller.executeTool({
+          toolName: 'create_case',
+          input: {},
+          confidence: 0.99,
+        })) as any;
+
+        expect(result.requiresApproval).toBe(true);
+      });
     });
   });
 });
