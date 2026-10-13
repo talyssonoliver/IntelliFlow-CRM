@@ -855,7 +855,10 @@ export const autoResponseRouter = createTRPCRouter({
         leadStatus: 'CONTACTED',
         triggerType: original.triggerType,
         content,
-        aiConfidence: original.aiConfidence,
+        // Replaced text was never evaluated by the model: its confidence must not carry
+        // over (it could otherwise auto-approve content no model scored).
+        aiConfidence:
+          input.subject === undefined && input.body === undefined ? original.aiConfidence : 0,
         modelVersion: original.modelVersion,
         recipientEmail: original.recipientEmail,
         expiryHours: await draftExpiryHours(ctx, typedCtx.tenant.tenantId, original.triggerType),

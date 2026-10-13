@@ -7,7 +7,16 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
-import { APPROVAL_POLICY_DEFAULTS } from '@intelliflow/domain';
+import { APPROVAL_POLICY_DEFAULTS, APPROVAL_POLICY_LIMITS } from '@intelliflow/domain';
+// The permission check has its own test (escalation-target.test.ts); here it is a switch.
+const targetDecides = vi.hoisted(() => ({ next: true, calls: [] as unknown[][] }));
+vi.mock('../../../agent/escalation-target', () => ({
+  canDecideAgentActions: async (...args: unknown[]) => {
+    targetDecides.calls.push(args);
+    return targetDecides.next;
+  },
+}));
+
 import { approvalPoliciesRouter } from '../approval-policies.router';
 import * as loader from '../../../agent/approval-policy-loader';
 import {
@@ -129,6 +138,8 @@ describe('approvalPoliciesRouter', () => {
       );
       expect(result.canManage).toBe(false);
       expect(result.defaults).toEqual(APPROVAL_POLICY_DEFAULTS);
+      // Spec C2: the page reads its form limits from the same constants.
+      expect(result.limits).toEqual(APPROVAL_POLICY_LIMITS);
       expect(result.policies[0]).toMatchObject({
         id: P1,
         scope: 'AGENT_TOOL',
@@ -243,9 +254,60 @@ describe('approvalPoliciesRouter', () => {
         message: 'Escalations must go to someone who can review them (MANAGER or above).',
       });
       expect(prismaMock.user.findFirst).toHaveBeenCalledWith(
-        expect.objectContaining({ select: { id: true, role: true } })
+        expect.objectContaining({ select: { id: true, role: true, email: true } })
       );
       expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    });
+
+    it('refuses an agent-action target without approve/reject permission (per-user deny)', async () => {
+      (prismaMock.user.findFirst as any).mockResolvedValueOnce({
+        id: TARGET,
+        role: 'MANAGER',
+        email: 'm@example.invalid',
+      });
+      targetDecides.next = false;
+      try {
+        await expect(
+          admin.create({
+            ...input,
+            escalationEnabled: true,
+            escalateAfterMinutes: 30,
+            escalationTargetUserId: TARGET,
+          })
+        ).rejects.toMatchObject({
+          code: 'BAD_REQUEST',
+          message: 'Escalations must go to someone allowed to approve and reject agent actions.',
+        });
+        expect(targetDecides.calls.at(-1)).toEqual([
+          expect.anything(),
+          tenantId,
+          { id: TARGET, role: 'MANAGER', email: 'm@example.invalid' },
+        ]);
+        expect(prismaMock.$transaction).not.toHaveBeenCalled();
+      } finally {
+        targetDecides.next = true;
+      }
+    });
+
+    it('does not apply the agent-action permission check to email auto-response policies', async () => {
+      (prismaMock.user.findFirst as any).mockResolvedValueOnce({ id: TARGET, role: 'MANAGER' });
+      targetDecides.next = false;
+      const before = targetDecides.calls.length;
+      try {
+        const tx = useTx();
+        await admin.create({
+          ...input,
+          scope: 'AUTO_RESPONSE',
+          assignments: [],
+          escalationEnabled: true,
+          escalateAfterMinutes: 30,
+          escalationTargetUserId: TARGET,
+        });
+        expect(tx.approvalPolicy.create).toHaveBeenCalled();
+        expect(targetDecides.calls.length).toBe(before);
+      } finally {
+        targetDecides.next = true;
+      }
     });
 
     it('accepts a manager target on a MANAGER policy', async () => {
@@ -373,7 +435,7 @@ describe('approvalPoliciesRouter', () => {
     it('clears then sets the default of that queue in one transaction', async () => {
       ownPolicy({ scope: 'AUTO_RESPONSE' });
       const tx = useTx();
-      await admin.setDefault({ id: P1 });
+      await expect(admin.setDefault({ id: P1 })).resolves.toEqual({ success: true });
       expect(tx.approvalPolicy.updateMany).toHaveBeenNthCalledWith(1, {
         where: { tenantId, scope: 'AUTO_RESPONSE', isDefault: true },
         data: { isDefault: false },

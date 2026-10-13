@@ -132,6 +132,33 @@ describe('create / regenerate — expiry from the policy (AC-009)', () => {
     expect(hours).toBeGreaterThan(1.99);
     expect(hours).toBeLessThan(2.01);
   });
+
+  it('a regenerate with replaced text drops the model confidence (never evaluated)', async () => {
+    const original = draft(0.99);
+    original.submitForApproval(USER);
+    original.reject(USER, 'Wrong tone');
+    repo.findById.mockResolvedValue(original);
+    loadApprovalPolicy.mockResolvedValue(policy({}));
+
+    await autoResponseRouter
+      .createCaller(ctx())
+      .regenerate({ draftId: original.id.toString(), body: 'Entirely new text written by hand' });
+
+    const saved = repo.save.mock.calls.at(-1)![0];
+    expect(saved.aiConfidence).toBe(0);
+  });
+
+  it('a plain regenerate keeps the model confidence of the evaluated text', async () => {
+    const original = draft(0.99);
+    original.submitForApproval(USER);
+    original.reject(USER, 'Wrong tone');
+    repo.findById.mockResolvedValue(original);
+    loadApprovalPolicy.mockResolvedValue(policy({}));
+
+    await autoResponseRouter.createCaller(ctx()).regenerate({ draftId: original.id.toString() });
+
+    expect(repo.save.mock.calls.at(-1)![0].aiConfidence).toBe(0.99);
+  });
 });
 
 describe('approve / reject / resolveEscalation — actor and reviewer role', () => {

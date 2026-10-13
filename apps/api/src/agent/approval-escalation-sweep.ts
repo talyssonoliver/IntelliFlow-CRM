@@ -100,7 +100,11 @@ export interface SweepTx extends ApprovalPolicyReader {
     findMany(args: unknown): Promise<AgentActionRow[]>;
     updateMany(args: unknown): Promise<{ count: number }>;
   };
-  user: { findFirst(args: unknown): Promise<{ id: string; role?: string | null } | null> };
+  user: {
+    findFirst(
+      args: unknown
+    ): Promise<{ id: string; role?: string | null; email?: string | null } | null>;
+  };
 }
 
 export interface SweepPrisma {
@@ -117,6 +121,14 @@ export interface ApprovalSweepDeps {
   notify: (notification: SweepNotification) => Promise<void>;
   /** BR-7: records each escalation with its policy id, after the transaction commits. */
   audit?: (entry: SweepEscalationAudit) => Promise<void>;
+  /**
+   * Agent actions: may this user approve and reject them (permissions, per-user denies)?
+   * Absent → the role check alone decides.
+   */
+  targetCanApprove?: (
+    tenantId: string,
+    user: { id: string; email: string; role: string }
+  ) => Promise<boolean>;
   log?: Pick<Console, 'warn'> & Partial<Pick<Console, 'error'>>;
 }
 
@@ -137,6 +149,10 @@ interface TenantContext {
   report: ApprovalSweepReport;
   /** Target user id → their role while still a user of the tenant, else null. */
   targets: Map<string, string | null>;
+  /** Target user id → may decide agent actions (permission check, cached per tick). */
+  agentDeciders: Map<string, boolean>;
+  /** Target user id → email, for the permission check. */
+  targetEmails: Map<string, string>;
   outbox: SweepOutbox;
 }
 
@@ -199,9 +215,10 @@ async function targetRole(ctx: TenantContext, userId: string): Promise<string | 
   if (ctx.targets.has(userId)) return ctx.targets.get(userId) ?? null;
   const user = await ctx.tx.user.findFirst({
     where: { id: userId, ...tenantUserWhere(ctx.tenantId) },
-    select: { id: true, role: true },
+    select: { id: true, role: true, email: true },
   });
   const role = user ? (user.role ?? '') : null;
+  if (user) ctx.targetEmails.set(userId, user.email ?? '');
   if (role === null) {
     ctx.deps.log?.warn(
       `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${userId} is no longer a user of the workspace; skipping`
@@ -211,17 +228,44 @@ async function targetRole(ctx: TenantContext, userId: string): Promise<string | 
   return role;
 }
 
+/** Agent actions: the target must also hold the approve and reject permissions. */
+async function canDecideAgentActions(ctx: TenantContext, userId: string, role: string) {
+  const check = ctx.deps.targetCanApprove;
+  if (!check) return true;
+  const cached = ctx.agentDeciders.get(userId);
+  if (cached !== undefined) return cached;
+  const ok = await check(ctx.tenantId, {
+    id: userId,
+    email: ctx.targetEmails.get(userId) ?? '',
+    role,
+  });
+  if (!ok) {
+    ctx.deps.log?.warn(
+      `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${userId} lacks permission to decide agent actions; skipping`
+    );
+  }
+  ctx.agentDeciders.set(userId, ok);
+  return ok;
+}
+
 /** The rule's target when it is due now, still valid and able to review; otherwise null. */
 async function dueTarget(
   ctx: TenantContext,
   rule: ApprovalRule,
-  startedAt: Date
+  startedAt: Date,
+  scope: ApprovalPolicyScope
 ): Promise<string | null> {
   if (!isEscalationDue(startedAt, ctx.now, rule, false)) return null;
   const target = rule.escalationTargetUserId as string;
   const role = await targetRole(ctx, target);
-  if (role !== null && canReview(role, rule)) return target;
-  if (role !== null) {
+  if (
+    role !== null &&
+    canReview(role, rule) &&
+    (scope !== 'AGENT_TOOL' || (await canDecideAgentActions(ctx, target, role)))
+  ) {
+    return target;
+  }
+  if (role !== null && !canReview(role, rule)) {
     ctx.deps.log?.warn(
       `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${target} cannot review under this policy (needs ${rule.minReviewerRole}); skipping`
     );
@@ -276,7 +320,7 @@ async function escalateAgentActionGroup(ctx: TenantContext, group: EscalationGro
     take: APPROVAL_SWEEP_BATCH,
   });
   for (const row of rows) {
-    const target = await dueTarget(ctx, rule, row.createdAt);
+    const target = await dueTarget(ctx, rule, row.createdAt, 'AGENT_TOOL');
     if (!target) continue;
     const claimed = await ctx.tx.agentAction.updateMany({
       where: { id: row.id, tenantId: ctx.tenantId, status: 'PENDING_APPROVAL', escalatedAt: null },
@@ -311,7 +355,7 @@ async function escalateDraft(
   draft: AutoResponseDraft
 ): Promise<void> {
   const { rule } = group;
-  const target = await dueTarget(ctx, rule, submittedAt(draft));
+  const target = await dueTarget(ctx, rule, submittedAt(draft), 'AUTO_RESPONSE');
   if (!target) return;
   // Never beyond the draft's own expiry, so escalation.expiresAt stays truthful: the
   // aggregate adds the window to its own clock, so measure from the current time and
@@ -431,6 +475,8 @@ async function sweepInTransaction(
       now,
       report,
       targets: new Map(),
+      agentDeciders: new Map(),
+      targetEmails: new Map(),
       outbox,
     };
     await escalateTenant(ctx);
@@ -479,11 +525,18 @@ export async function runApprovalSweep(
 
 /** Production wiring: shared Prisma client, the Prisma draft repository, in-app notifications. */
 export async function createDefaultSweepDeps(): Promise<ApprovalSweepDeps> {
-  const [{ prisma }, adapters, { createNotification }, { getAuditLogger }] = await Promise.all([
+  const [
+    { prisma },
+    adapters,
+    { createNotification },
+    { getAuditLogger },
+    { canDecideAgentActions: canDecideAgentActionsFor },
+  ] = await Promise.all([
     import('@intelliflow/db'),
     import('@intelliflow/adapters'),
     import('../modules/notifications/notifications.router.js'),
     import('../security/audit/index.js'),
+    import('./escalation-target.js'),
   ]);
   const Repository = (
     adapters as unknown as {
@@ -501,6 +554,8 @@ export async function createDefaultSweepDeps(): Promise<ApprovalSweepDeps> {
         actionLabel: 'Review',
       });
     },
+    // The shared client is the encrypted extension of PrismaClient (same as createNotification below).
+    targetCanApprove: (tenantId, user) => canDecideAgentActionsFor(prisma as never, tenantId, user),
     audit: async (entry) => {
       await getAuditLogger(prisma as never).logAction(
         'UPDATE',

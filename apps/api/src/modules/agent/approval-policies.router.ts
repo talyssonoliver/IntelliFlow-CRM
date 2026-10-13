@@ -37,6 +37,7 @@ import {
   toApprovalPolicyRecord,
 } from '../../agent/approval-policy-loader';
 import { assertAgentSettingsAdmin, isAgentSettingsAdmin, rethrowConflict } from './settings-shared';
+import { canDecideAgentActions } from '../../agent/escalation-target';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -122,12 +123,13 @@ async function findOwnedPolicy(ctx: PolicyCtx, id: string) {
 async function assertTargetInTenant(
   ctx: PolicyCtx,
   userId: string | null,
-  minReviewerRole: ApproverRole
+  minReviewerRole: ApproverRole,
+  scope: ApprovalPolicyScope
 ): Promise<void> {
   if (userId === null) return;
   const user = await ctx.prismaWithTenant.user.findFirst({
     where: { id: userId, ...tenantUserWhere(ctx.tenant.tenantId) },
-    select: { id: true, role: true },
+    select: { id: true, role: true, email: true },
   });
   if (!user) {
     throw new TRPCError({
@@ -139,6 +141,16 @@ async function assertTargetInTenant(
     throw new TRPCError({
       code: 'BAD_REQUEST',
       message: `Escalations must go to someone who can review them (${minReviewerRole} or above).`,
+    });
+  }
+  // Agent actions also need the approve and reject permissions (a per-user deny wins).
+  if (
+    scope === 'AGENT_TOOL' &&
+    !(await canDecideAgentActions(ctx.prismaWithTenant, ctx.tenant.tenantId, user))
+  ) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Escalations must go to someone allowed to approve and reject agent actions.',
     });
   }
 }
@@ -214,7 +226,12 @@ export const approvalPoliciesRouter = createTRPCRouter({
   create: tenantProcedure.input(createApprovalPolicySchema).mutation(async ({ ctx, input }) => {
     assertPolicyAdmin(ctx);
     const tenantId = ctx.tenant.tenantId;
-    await assertTargetInTenant(ctx, input.escalationTargetUserId, input.minReviewerRole);
+    await assertTargetInTenant(
+      ctx,
+      input.escalationTargetUserId,
+      input.minReviewerRole,
+      input.scope
+    );
 
     try {
       const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
@@ -245,7 +262,12 @@ export const approvalPoliciesRouter = createTRPCRouter({
     assertPolicyAdmin(ctx);
     const tenantId = ctx.tenant.tenantId;
     await findOwnedPolicy(ctx, input.id);
-    await assertTargetInTenant(ctx, input.escalationTargetUserId, input.minReviewerRole);
+    await assertTargetInTenant(
+      ctx,
+      input.escalationTargetUserId,
+      input.minReviewerRole,
+      input.scope
+    );
 
     try {
       const row = await ctx.prismaWithTenant.$transaction(async (tx) => {

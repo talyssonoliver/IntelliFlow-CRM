@@ -108,7 +108,7 @@ function harness(opts: {
   tenants?: string[];
   actions?: unknown[];
   claimCount?: number;
-  user?: { id: string; role?: string } | null;
+  user?: { id: string; role?: string; email?: string } | null;
   drafts?: AutoResponseDraft[];
   decidedMeanwhile?: boolean;
   notifyError?: Error;
@@ -298,6 +298,34 @@ describe('runApprovalSweep', () => {
       `[approval-sweep] tenant=${TENANT}: escalation target ${TARGET} cannot review under this policy (needs MANAGER); skipping`
     );
     expect(deps.notify).not.toHaveBeenCalled();
+  });
+
+  it('skips an agent-action target without approve/reject permission, checked once per tick', async () => {
+    const { deps } = harness({
+      actions: [actionRow(), actionRow({ id: 'act-2' })],
+      user: { id: TARGET, role: 'MANAGER', email: 'm@example.invalid' },
+    });
+    const targetCanApprove = vi.fn().mockResolvedValue(false);
+    deps.targetCanApprove = targetCanApprove;
+    const report = await runApprovalSweep(deps, NOW);
+
+    expect(report.agentActionsEscalated).toBe(0);
+    expect(report.skipped).toBe(2);
+    expect(targetCanApprove).toHaveBeenCalledTimes(1);
+    expect(targetCanApprove).toHaveBeenCalledWith(TENANT, {
+      id: TARGET,
+      email: 'm@example.invalid',
+      role: 'MANAGER',
+    });
+    expect(deps.log!.warn).toHaveBeenCalledWith(
+      `[approval-sweep] tenant=${TENANT}: escalation target ${TARGET} lacks permission to decide agent actions; skipping`
+    );
+  });
+
+  it('escalates an agent action when the target may decide it', async () => {
+    const { deps } = harness({ actions: [actionRow()] });
+    deps.targetCanApprove = vi.fn().mockResolvedValue(true);
+    expect((await runApprovalSweep(deps, NOW)).agentActionsEscalated).toBe(1);
   });
 
   it('escalates to a target whose role meets the policy minimum', async () => {
@@ -644,6 +672,13 @@ describe('createDefaultSweepDeps', () => {
         actionLabel: 'Review',
       })
     );
+  });
+
+  it('wires the agent-action permission check to escalation-target', async () => {
+    const deps = await createDefaultSweepDeps();
+    await expect(
+      deps.targetCanApprove!(TENANT, { id: 'u1', email: 'u@example.invalid', role: 'ADMIN' })
+    ).resolves.toBe(true);
   });
 
   it('writes escalation audits through the audit logger as the system (BR-7)', async () => {
