@@ -35,9 +35,10 @@ three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
   under that row.
 - **content-audit-results.json**: regenerating changed only `og_url` on the PG-204 routes, which is drift from #849
   (canonical domain) that affects every entry, so the file was left unchanged.
-- **Test DB**: the local `intelliflow_test` is migration-managed only up to June 2026 (newer tables come from test
-  helpers), so `prisma migrate deploy` was **not** run against it. Applying months of pending migrations to a DB shared
-  by other lanes is unsafe. `tests/integration/case-types.test.ts` applies this migration's SQL idempotently (PG-197
-  pattern).
+- **Test DB**: `prisma migrate status` against the local `intelliflow_test` reports the last common migration
+  `20261007130000_account_territories`, with `20261013120000_case_types` pending, plus one migration from another lane
+  (`20260629000000_add_report_templates`) that is not on this branch. `migrate deploy` was not run on that shared DB.
+  `tests/integration/case-types.test.ts` applies this migration's SQL idempotently (PG-197 pattern), so the objects
+  exist there but are not recorded in `_prisma_migrations`.
 - **Node**: the host default is v25.2.1, which hangs pg writes, and the repo pin (24) is not installed. All tests ran on
   Node 22.14.0 via nvm.

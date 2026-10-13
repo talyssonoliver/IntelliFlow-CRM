@@ -1,7 +1,7 @@
 # ADR-076: Case Types Applied at Case Creation
 
-**Status:** Proposed (2026-10-13; accepted at the end of `/exec` once the GREEN
-validations pass)
+**Status:** Accepted (2026-10-13 — implemented on `feat/pg-204-case-types`;
+GREEN validations passed)
 
 **Date:** 2026-10-13
 

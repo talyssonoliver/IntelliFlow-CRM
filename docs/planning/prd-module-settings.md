@@ -705,3 +705,31 @@ AC-CT1 to AC-CT16 are defined in the spec. In summary:
 | `CaseType.isDefault` | 1 — wired | New Case picker preselection                      |
 
 No AI toggles were added.
+
+### Delivery Status (2026-10-13, branch `feat/pg-204-case-types`)
+
+| AC      | Status    | Evidence                                                                                                                                 |
+| ------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-CT1  | Delivered | `CaseTypesContent.tsx` (PageHeader, 12-column grid, EmptyState `cases`/`folder`/`passive`, `New Case Type` in the SectionHeader)         |
+| AC-CT2  | Delivered | `case-types.ts` validators (superRefine), `case_types` CHECKs + `lower(name)` index (`tests/integration/case-types.test.ts`)             |
+| AC-CT3  | Delivered | `CaseTypeList.tsx` `forwardRef` + `useImperativeHandle({ openCreate })`                                                                  |
+| AC-CT4  | Delivered | `case-types.router.ts` `$transaction` on create/update/delete/setDefault; no `skipDuplicates`; P2002 → CONFLICT                          |
+| AC-CT5  | Delivered | `setDefault` clear-then-set; partial unique index; default cannot be deleted or deactivated                                              |
+| AC-CT6  | Delivered | `delete` → CONFLICT with the case count; composite FK `cases(tenantId, caseTypeId)` (integration test)                                   |
+| AC-CT7  | Delivered | admin-only mutations, LEGAL gate (`legal-module-entitlement.test.ts`), cross-tenant NOT_FOUND tests                                      |
+| AC-CT8  | Delivered | `CaseForm` type picker, "Use default", status hint; the unpersisted category list is gone                                                |
+| AC-CT9  | Delivered | `resolveCaseCreateDefaults` + `computeSlaDeadline` (DST and +14h tests)                                                                  |
+| AC-CT10 | Delivered | required fields checked on effective values; `BAD_REQUEST` names them                                                                    |
+| AC-CT11 | Delivered | checklist seeded as PENDING `CaseTask`s in the case transaction                                                                          |
+| AC-CT12 | Delivered | tenant preflight for type, client and assignee                                                                                           |
+| AC-CT13 | Delivered | `getById.caseType` + `CaseDetail` badge; `updateCaseSchema` strips `caseTypeId`                                                          |
+| AC-CT14 | Delivered | PG-190 defaults applied with no type; "Assign to me" fixed (`ctx.tenant.userId`)                                                         |
+| AC-CT15 | **Open**  | Lighthouse not run: `LHCI_TEST_EMAIL`/`LHCI_TEST_PASSWORD` are not configured and the harness authenticates against production Supabase. |
+| AC-CT16 | Delivered | axe checks in component tests; a11y-expert review recorded in the attestation                                                            |
+
+Also fixed: the New Case client picker searched contacts while `cases.clientId`
+references accounts, so cases could not be created from the UI. Out-of-scope
+findings: #864–#867 (see
+`.specify/sprints/sprint-18/findings/PG-204-findings.md`). **Prisma migration**
+`20261013120000_case_types` (Class A) must be applied to production before this
+ships.
