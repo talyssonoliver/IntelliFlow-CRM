@@ -46,13 +46,21 @@ export interface RoutingAssignmentDto {
 }
 
 /**
- * The lead an audit row is about. RoutingAudit is ticket-shaped, and lead
- * assignments are written three ways: manual assignment records
- * `details.leadId`; LeadRoutingService records `details.entityType: 'lead'`
- * with the lead id in `ticketId`. Rows for tickets have neither, so a ticket id
- * is never reported as a lead.
+ * The lead an audit row is about. Both lead-routing writers (assignLead,
+ * LeadRoutingService.routeLead) set the `leadId` column directly (#770) — that
+ * is the first and authoritative source. Rows written before that column
+ * existed fall back to the old heuristic: manual assignment recorded
+ * `details.leadId`; LeadRoutingService recorded `details.entityType: 'lead'`
+ * with the lead id in `ticketId`. Rows for tickets have none of these, so a
+ * ticket id is never reported as a lead.
  */
-function readLeadId(details: unknown, ticketId: string): string | null {
+function readLeadId(audit: {
+  leadId: string | null;
+  details: unknown;
+  ticketId: string;
+}): string | null {
+  if (audit.leadId) return audit.leadId;
+  const { details, ticketId } = audit;
   if (!details || typeof details !== 'object') return null;
   if ('leadId' in details && typeof details.leadId === 'string') return details.leadId;
   if ('entityType' in details && details.entityType === 'lead') return ticketId;
@@ -292,7 +300,7 @@ export const routingRouter = createTRPCRouter({
         const items = audits.map(
           (audit): RoutingAssignmentDto => ({
             id: audit.id,
-            leadId: readLeadId(audit.details, audit.ticketId),
+            leadId: readLeadId(audit),
             reason: audit.reason,
             createdAt: audit.createdAt,
             rule: audit.ruleId ? { name: audit.ruleName ?? 'Unknown' } : null,
@@ -410,7 +418,8 @@ export const routingRouter = createTRPCRouter({
         const audit = await tx.routingAudit.create({
           data: {
             tenantId,
-            ticketId: input.leadId,
+            ticketId: input.leadId, // back-compat; leadId below is the column a reader should use (#770)
+            leadId: input.leadId,
             reason: input.reason,
             toUserId: input.userId,
             toUserName: '',

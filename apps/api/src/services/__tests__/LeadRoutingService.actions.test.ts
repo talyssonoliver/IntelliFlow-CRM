@@ -300,6 +300,36 @@ describe('unsupported and malformed actions', () => {
     ]);
     expect(await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT)).toBeNull();
   });
+
+  it('F15b (#770): skips a rule with legacy keyed-object conditions instead of crashing, and still tries the next rule', async () => {
+    givenRules([
+      makeRule([{ type: 'assign_to_user', target: 'legacy-target' }], {
+        id: 'rule-legacy',
+        priority: 9,
+        conditions: JSON.stringify({ score: { operator: 'gte', value: 90 } }),
+      }),
+      makeRule([{ type: 'assign_to_user', target: AGENT_3 }], { id: 'rule-next', priority: 8 }),
+    ]);
+
+    const result = await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT);
+
+    expect(result).toMatchObject({ ruleId: 'rule-next', assigneeId: AGENT_3 });
+  });
+
+  it('F15c (#770): skips a rule whose stored conditions are not valid JSON', async () => {
+    givenRules([
+      makeRule([{ type: 'assign_to_user', target: 'x' }], {
+        id: 'rule-bad-json',
+        priority: 9,
+        conditions: '{not valid json',
+      }),
+      makeRule([{ type: 'assign_to_user', target: AGENT_3 }], { id: 'rule-next', priority: 8 }),
+    ]);
+
+    const result = await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT);
+
+    expect(result).toMatchObject({ ruleId: 'rule-next', assigneeId: AGENT_3 });
+  });
 });
 
 describe('routeLead with rule actions', () => {

@@ -14,7 +14,7 @@
  *
  * CRITICAL: Writes ONLY schema-valid fields to RoutingAudit.
  * Does NOT replicate TicketRoutingService phantom-field bug.
- * Schema fields: ticketId, ruleId, ruleName, toUserId, toUserName, reason, details
+ * Schema fields: ticketId, leadId, ruleId, ruleName, toUserId, toUserName, reason, details
  */
 
 import type { PrismaClient } from '@intelliflow/db';
@@ -310,7 +310,8 @@ export class LeadRoutingService {
       const audit = await tx.routingAudit.create({
         data: {
           tenantId: params.tenantId,
-          ticketId: params.leadId, // RoutingAudit.ticketId stores leadId
+          ticketId: params.leadId, // RoutingAudit.ticketId stores leadId (back-compat)
+          leadId: params.leadId, // #770: the column a reader should actually use
           ruleId: ruleId,
           ruleName: ruleName,
           toUserId: assigneeId,
@@ -544,13 +545,34 @@ export class LeadRoutingService {
     });
 
     for (const rule of rules) {
-      const conditions: RoutingCondition[] =
-        typeof rule.conditions === 'string' ? JSON.parse(rule.conditions) : rule.conditions;
+      // #770: a rule seeded/stored before the array-shape fix holds a keyed
+      // object (`{ score: { operator, value } }`), which `for…of` cannot
+      // iterate. One such row must not crash routing for the whole tenant —
+      // skip it and keep evaluating the rest, same as the routing API's list
+      // procedure (routing-rule.mapper.ts) already does for display.
+      let conditions: unknown;
+      try {
+        conditions =
+          typeof rule.conditions === 'string' ? JSON.parse(rule.conditions) : rule.conditions;
+      } catch {
+        conditions = null;
+      }
+      if (!Array.isArray(conditions)) {
+        console.warn('[routing] skipping rule with non-array conditions (legacy shape?)', {
+          ruleId: rule.id,
+          tenantId,
+        });
+        continue;
+      }
 
-      if (!this.evaluateConditions(conditions, leadContext)) continue;
+      if (!this.evaluateConditions(conditions as RoutingCondition[], leadContext)) continue;
 
-      const rawActions: unknown =
-        typeof rule.actions === 'string' ? JSON.parse(rule.actions) : rule.actions;
+      let rawActions: unknown;
+      try {
+        rawActions = typeof rule.actions === 'string' ? JSON.parse(rule.actions) : rule.actions;
+      } catch {
+        rawActions = null;
+      }
       const resolved = await this.resolveRuleAssignee(tx, tenantId, parseRuleActions(rawActions));
       if (resolved) {
         return { ruleId: rule.id, ruleName: rule.name, ...resolved };
