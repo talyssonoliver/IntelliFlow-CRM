@@ -42,19 +42,25 @@ function offsetMinutesAt(instant: Date, timezone: string): number {
   return Math.round((wallClockAsUtc - wholeSeconds) / MINUTE_MS);
 }
 
+const DAY_MS = 24 * 60 * MINUTE_MS;
+
 /**
  * First instant of local calendar day `dayStart` (a UTC-midnight timestamp naming the
- * local date). Two offset guesses are tried: when a DST change sits at that midnight,
- * only one of them falls on the target day, and the earliest such instant is the start.
+ * local date). The zone's offsets a day before and a day after bracket any DST change
+ * at that midnight; each gives a candidate start, and the earliest candidate that is
+ * already on the target date wins. This handles a repeated midnight (first 00:00), a
+ * repeated last hour of the previous day, and a skipped midnight (the jump instant).
  */
 function startOfLocalDay(dayStart: number, timezone: string): number {
   const target = formatISODateInTimezone(new Date(dayStart), 'UTC');
-  const first = dayStart - offsetMinutesAt(new Date(dayStart), timezone) * MINUTE_MS;
-  const second = dayStart - offsetMinutesAt(new Date(first), timezone) * MINUTE_MS;
-  const onTarget = [first, second].filter(
-    (instant) => formatISODateInTimezone(new Date(instant), timezone) === target
-  );
-  return Math.min(...(onTarget.length > 0 ? onTarget : [second]));
+  const offsets = [
+    offsetMinutesAt(new Date(dayStart - DAY_MS), timezone),
+    offsetMinutesAt(new Date(dayStart + DAY_MS), timezone),
+  ];
+  const onTarget = offsets
+    .map((offset) => dayStart - offset * MINUTE_MS)
+    .filter((instant) => formatISODateInTimezone(new Date(instant), timezone) === target);
+  return Math.min(...onTarget);
 }
 
 export function computeSlaDeadline(

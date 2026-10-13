@@ -75,9 +75,51 @@ describe('computeSlaDeadline', () => {
     expect(local(deadline, 'Asia/Beirut')).toBe('2026-03-28 23:59:59.999');
   });
 
+  it('Asia/Amman: the day before a repeated midnight ends at its first midnight', () => {
+    // 2021-10-29 01:00 went back to 00:00, so that day starts at the first 00:00 (21:00Z, +03:00).
+    const deadline = computeSlaDeadline(new Date('2021-10-27T12:00:00Z'), 1, 'Asia/Amman');
+    expect(deadline.toISOString()).toBe('2021-10-28T20:59:59.999Z');
+    expect(local(deadline, 'Asia/Amman')).toBe('2021-10-28 23:59:59.999');
+  });
+
   it('late evening stays on the local date', () => {
     // 23:30 in New York on 2026-10-13 is 03:30Z on the 14th.
     const deadline = computeSlaDeadline(new Date('2026-10-14T03:30:00Z'), 1, 'America/New_York');
     expect(local(deadline, 'America/New_York')).toBe('2026-10-14 23:59:59.999');
+  });
+
+  it('every day of 2021 and 2026 ends exactly at the last local instant, in DST-unusual zones', () => {
+    const zones = [
+      'UTC',
+      'Europe/London',
+      'America/New_York',
+      'America/Santiago',
+      'America/Havana',
+      'Asia/Amman',
+      'Asia/Beirut',
+      'Australia/Lord_Howe',
+      'Pacific/Chatham',
+      'Pacific/Kiritimati',
+      'America/St_Johns',
+    ];
+    const dateOf = (instant: Date, zone: string) => local(instant, zone).slice(0, 10);
+    for (const zone of zones) {
+      for (const year of [2021, 2026]) {
+        for (let day = 0; day < 365; day++) {
+          const now = new Date(Date.UTC(year, 0, 1 + day, 12));
+          const deadline = computeSlaDeadline(now, 1, zone);
+          const today = dateOf(now, zone);
+          const expected = dateOf(
+            new Date(Date.parse(`${today}T12:00:00Z`) + 24 * 3600 * 1000),
+            'UTC'
+          );
+          // Last instant of local day D+1: it reads 23:59:59.999 on that day and 1 ms later is the next day.
+          expect(local(deadline, zone), `${zone} ${today}`).toBe(`${expected} 23:59:59.999`);
+          expect(dateOf(new Date(deadline.getTime() + 1), zone), `${zone} ${today}`).not.toBe(
+            expected
+          );
+        }
+      }
+    }
   });
 });
