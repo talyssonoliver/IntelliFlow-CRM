@@ -80,6 +80,9 @@ describe('constants', () => {
   it('recognises admin roles only', () => {
     expect(isCaseTypeAdminRole('ADMIN')).toBe(true);
     expect(isCaseTypeAdminRole('MANAGER')).toBe(true);
+    expect(isCaseTypeAdminRole('OWNER')).toBe(true);
+    expect(isCaseTypeAdminRole('SUPER_ADMIN')).toBe(true);
+    expect(isCaseTypeAdminRole('SALES_REP')).toBe(false);
     expect(isCaseTypeAdminRole('USER')).toBe(false);
     expect(isCaseTypeAdminRole(undefined)).toBe(false);
     expect(isCaseTypeAdminRole(null)).toBe(false);

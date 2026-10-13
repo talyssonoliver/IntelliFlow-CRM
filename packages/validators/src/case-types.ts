@@ -81,8 +81,9 @@ function refineCaseType(data: CaseTypeFields, ctx: z.RefinementCtx): void {
 export const createCaseTypeSchema = caseTypeFieldsSchema.superRefine(refineCaseType);
 export type CreateCaseTypeInput = z.infer<typeof createCaseTypeSchema>;
 
+// isActive has no default here: an update that omits it must not reactivate an inactive type.
 export const updateCaseTypeSchema = caseTypeFieldsSchema
-  .extend({ id: idSchema })
+  .extend({ id: idSchema, isActive: z.boolean() })
   .superRefine(refineCaseType);
 export type UpdateCaseTypeInput = z.infer<typeof updateCaseTypeSchema>;
 

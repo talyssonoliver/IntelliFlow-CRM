@@ -169,14 +169,36 @@ describe('cases.create with case types (PG-204)', () => {
 
     it('uses the PG-190 defaults when the tenant has no rows (title, client, assignee)', async () => {
       setup({ requiredRows: [] });
-      useTx();
-      await expect(caller.create(base)).resolves.toBeDefined();
+      const tx = useTx();
+      await caller.create(base);
+      expect(tx.case.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({
+            title: 'Smith v Jones',
+            clientId: CLIENT,
+            assignedTo: CALLER,
+          }),
+        })
+      );
+    });
+
+    it('rejects a missing PG-190 default field when the tenant has no rows', async () => {
+      setup({ requiredRows: [] });
+      await expect(caller.create({ ...base, title: '   ' })).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+        message: 'Required fields missing: Title',
+      });
     });
 
     it('lets an SLA-derived deadline satisfy a required deadline', async () => {
       setup({ caseType: { ...LITIGATION, requiredFields: ['deadline'] } });
-      useTx();
-      await expect(caller.create({ ...base, caseTypeId: TYPE })).resolves.toBeDefined();
+      const tx = useTx();
+      await caller.create({ ...base, caseTypeId: TYPE });
+      expect(tx.case.create).toHaveBeenCalledWith(
+        expect.objectContaining({
+          data: expect.objectContaining({ caseTypeId: TYPE, deadline: expect.any(Date) }),
+        })
+      );
     });
   });
 
@@ -348,6 +370,19 @@ describe('cases.update never changes the case type (PG-204)', () => {
       .update({ id: CASE_ID, title: 'Renamed', caseTypeId: TYPE } as { id: string; title: string });
     const data = (prismaMock.case.update as any).mock.calls[0][0].data;
     expect(data).toEqual({ title: 'Renamed' });
+  });
+});
+
+describe('cases.update task order (PG-204)', () => {
+  it("returns the updated case's tasks in checklist order", async () => {
+    (prismaMock.case.findFirst as any).mockResolvedValueOnce({ id: CASE_ID, tenantId });
+    (prismaMock.case.update as any).mockResolvedValueOnce({ id: CASE_ID });
+    await casesRouter.createCaller(createTestContext()).update({ id: CASE_ID, title: 'Renamed' });
+    expect(prismaMock.case.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        include: expect.objectContaining({ tasks: { orderBy: CASE_TASK_ORDER } }),
+      })
+    );
   });
 });
 

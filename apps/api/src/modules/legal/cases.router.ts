@@ -546,7 +546,7 @@ export const casesRouter = createTRPCRouter({
       where: { id },
       data: updateData,
       include: {
-        tasks: true,
+        tasks: { orderBy: CASE_TASK_ORDER },
         client: { select: { id: true, name: true } },
         assignee: { select: { id: true, name: true, email: true, avatarUrl: true } },
       },

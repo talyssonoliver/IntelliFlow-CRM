@@ -309,6 +309,27 @@ describe('caseTypesRouter', () => {
       useTx(tx);
       await expectCode(admin.update({ ...input, id: T1 }), 'CONFLICT');
     });
+
+    it('deactivates without touching the cases that already use the type', async () => {
+      (prismaMock.caseType.findFirst as any).mockResolvedValueOnce(row());
+      (prismaMock.case.count as any).mockResolvedValueOnce(3);
+      const tx = useTx();
+
+      const result = await admin.update({ ...input, id: T1, isActive: false });
+
+      expect(tx.caseType.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ data: expect.objectContaining({ isActive: false }) })
+      );
+      expect(prismaMock.case.updateMany).not.toHaveBeenCalled();
+      expect(prismaMock.case.update).not.toHaveBeenCalled();
+      expect(result.caseCount).toBe(3);
+    });
+
+    it('requires isActive, so an update cannot silently reactivate a type', async () => {
+      const { isActive: _omitted, ...withoutActive } = input;
+      await expectCode(admin.update({ ...withoutActive, id: T1 } as never), 'BAD_REQUEST');
+      expect(prismaMock.caseType.findFirst).not.toHaveBeenCalled();
+    });
   });
 
   describe('delete', () => {

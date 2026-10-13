@@ -124,6 +124,13 @@ describe('updateCaseTypeSchema', () => {
     );
     expect(result.success).toBe(false);
   });
+
+  it('requires isActive, so an update that omits it cannot reactivate a type', () => {
+    expect(updateCaseTypeSchema.safeParse(valid({ id: ID, isActive: undefined })).success).toBe(
+      false
+    );
+    expect(updateCaseTypeSchema.parse(valid({ id: ID, isActive: false })).isActive).toBe(false);
+  });
 });
 
 describe('deleteCaseTypeSchema / setDefaultCaseTypeSchema', () => {
