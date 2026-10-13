@@ -393,6 +393,29 @@ describe('cases.getById case type (PG-204)', () => {
     expect(result.caseType).toEqual({ id: TYPE, name: 'Litigation', colorToken: 'blue' });
   });
 
+  // codex checklist-order-lost-in-ui: the case page re-sorts tasks, so it needs `position`.
+  it('returns each task with its checklist position', async () => {
+    const task = {
+      id: 'task-1',
+      title: 'Step 1',
+      description: null,
+      dueDate: null,
+      status: 'PENDING',
+      assignee: null,
+      position: 0,
+      createdAt: NOW,
+      updatedAt: NOW,
+      completedAt: null,
+    };
+    (prismaMock.case.findFirst as any).mockResolvedValueOnce({
+      ...caseRow,
+      caseTypeId: null,
+      tasks: [task, { ...task, id: 'task-2', title: 'Manual', position: null }],
+    });
+    const result = await casesRouter.createCaller(createTestContext()).getById({ id: CASE_ID });
+    expect(result.tasks.map((t: { position: number | null }) => t.position)).toEqual([0, null]);
+  });
+
   it('reads tasks in checklist order (position, nulls last, then due date)', async () => {
     (prismaMock.case.findFirst as any).mockResolvedValueOnce({ ...caseRow, caseTypeId: null });
     await casesRouter.createCaller(createTestContext()).getById({ id: CASE_ID });
@@ -433,6 +456,36 @@ describe('cases.update task order (PG-204)', () => {
         include: expect.objectContaining({ tasks: { orderBy: CASE_TASK_ORDER } }),
       })
     );
+  });
+});
+
+describe('cases.list case timezone (PG-204)', () => {
+  // codex deadline-display-timezone-mismatch: the list shows the deadline as a date, so it
+  // needs the zone the deadline was computed in.
+  it('returns each case with its timezone', async () => {
+    (prismaMock.case.findMany as any).mockResolvedValueOnce([
+      {
+        id: CASE_ID,
+        title: 'Smith v Jones',
+        description: null,
+        status: 'OPEN',
+        priority: 'HIGH',
+        deadline: new Date('2026-12-02T04:59:59.999Z'),
+        timezone: 'America/New_York',
+        clientId: CLIENT,
+        assignedTo: CALLER,
+        client: { id: CLIENT, name: 'Acme' },
+        assignee: null,
+        tasks: [],
+        resolution: null,
+        createdAt: NOW,
+        updatedAt: NOW,
+        closedAt: null,
+      },
+    ]);
+    (prismaMock.case.count as any).mockResolvedValueOnce(1);
+    const result = await casesRouter.createCaller(createTestContext()).list({});
+    expect(result.cases[0].timezone).toBe('America/New_York');
   });
 });
 

@@ -157,6 +157,13 @@ describe('endOfCalendarDayInTimezone (typed deadline, codex deadline-timezone-mi
     expect(end.toISOString()).toBe('2011-12-30T09:59:59.999Z');
   });
 
+  // codex timezone-offset-rounding: Kolkata's 1900 offset (+05:53:20) has seconds; rounding
+  // it to minutes put the deadline 9 s into the next local day.
+  it('keeps the seconds of a historical offset (Asia/Kolkata 1900-01-01)', () => {
+    const end = endOfCalendarDayInTimezone('1900-01-01', 'Asia/Kolkata');
+    expect(local(end, 'Asia/Kolkata')).toBe('1900-01-01 23:59:59.999');
+  });
+
   it('far east (UTC+14): the date does not move a day', () => {
     const end = endOfCalendarDayInTimezone('2026-12-01', 'Pacific/Kiritimati');
     expect(local(end, 'Pacific/Kiritimati')).toBe('2026-12-01 23:59:59.999');

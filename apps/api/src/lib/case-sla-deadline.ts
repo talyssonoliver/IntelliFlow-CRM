@@ -16,8 +16,11 @@ import { formatISODateInTimezone, safeTimezone } from './timezone-utils';
 
 const MINUTE_MS = 60 * 1000;
 
-/** Offset of `timezone` from UTC at `instant`, in minutes (exact for any zone). */
-function offsetMinutesAt(instant: Date, timezone: string): number {
+/**
+ * Offset of `timezone` from UTC at `instant`, in ms. Kept to the second: historical
+ * local-mean-time offsets (Asia/Kolkata in 1900 is +05:53:20) are not whole minutes.
+ */
+function offsetMsAt(instant: Date, timezone: string): number {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: timezone,
     year: 'numeric',
@@ -39,7 +42,7 @@ function offsetMinutesAt(instant: Date, timezone: string): number {
     part('second')
   );
   const wholeSeconds = Math.floor(instant.getTime() / 1000) * 1000;
-  return Math.round((wallClockAsUtc - wholeSeconds) / MINUTE_MS);
+  return wallClockAsUtc - wholeSeconds;
 }
 
 const DAY_MS = 24 * 60 * MINUTE_MS;
@@ -56,10 +59,10 @@ const DAY_MS = 24 * 60 * MINUTE_MS;
 function startOfLocalDay(dayStart: number, timezone: string): number {
   const target = formatISODateInTimezone(new Date(dayStart), 'UTC');
   const offsets = [
-    offsetMinutesAt(new Date(dayStart - DAY_MS), timezone),
-    offsetMinutesAt(new Date(dayStart + DAY_MS), timezone),
+    offsetMsAt(new Date(dayStart - DAY_MS), timezone),
+    offsetMsAt(new Date(dayStart + DAY_MS), timezone),
   ];
-  const candidates = offsets.map((offset) => dayStart - offset * MINUTE_MS);
+  const candidates = offsets.map((offset) => dayStart - offset);
   const localDate = (instant: number) => formatISODateInTimezone(new Date(instant), timezone);
   const onTarget = candidates.filter((instant) => localDate(instant) === target);
   if (onTarget.length > 0) return Math.min(...onTarget);

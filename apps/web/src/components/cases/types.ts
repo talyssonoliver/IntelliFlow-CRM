@@ -18,6 +18,8 @@ export interface CaseListItem {
   status: CaseStatus;
   priority: CasePriority;
   deadline: DateOrStringOrNull;
+  /** PG-204: IANA zone the deadline was set in; null = UTC. */
+  timezone?: string | null;
   clientId: string;
   assignedTo: string;
   client: { id: string; name: string };
@@ -43,6 +45,8 @@ export interface CaseTaskItem {
   dueDate: Date | string | null;
   status: CaseTaskStatus;
   assignee: string | null;
+  /** PG-204: order of a step seeded from the case type checklist; null for hand-added tasks. */
+  position?: number | null;
   isOverdue: boolean;
   createdAt: Date | string;
   updatedAt: Date | string;

@@ -220,6 +220,7 @@ export const casesRouter = createTRPCRouter({
           description: string | null;
           assignee: string | null;
           caseId: string;
+          position: number | null;
           createdAt: Date;
           updatedAt: Date;
         }>;
@@ -237,6 +238,8 @@ export const casesRouter = createTRPCRouter({
           status: c.status,
           priority: c.priority,
           deadline: c.deadline,
+          // PG-204: the deadline is the end of a day in this zone; the list shows its date.
+          timezone: c.timezone,
           clientId: c.clientId,
           assignedTo: c.assignedTo,
           client: c.client,
@@ -248,6 +251,7 @@ export const casesRouter = createTRPCRouter({
             dueDate: t.dueDate,
             status: t.status,
             assignee: t.assignee,
+            position: t.position,
             isOverdue:
               t.dueDate !== null &&
               t.dueDate < now &&
@@ -319,6 +323,7 @@ export const casesRouter = createTRPCRouter({
       description: string | null;
       assignee: string | null;
       caseId: string;
+      position: number | null;
       createdAt: Date;
       updatedAt: Date;
     }>;
@@ -344,6 +349,7 @@ export const casesRouter = createTRPCRouter({
         dueDate: t.dueDate,
         status: t.status,
         assignee: t.assignee,
+        position: t.position,
         isOverdue:
           t.dueDate !== null &&
           t.dueDate < now &&
