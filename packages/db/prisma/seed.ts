@@ -1194,7 +1194,7 @@ async function seedLeads(tenantId: string) {
       avatarUrl:
         'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=160&h=160&fit=crop&crop=face',
       lastContactedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-      estimatedValue: 85000,
+      estimatedValue: 8500000, // #770: cents, $85,000 — was 85000 (dollars), inconsistent with Lead.estimatedValue ("In cents")
       tags: ['Enterprise', 'Multi-warehouse', 'Q1 Budget'],
       tenantId,
     },
@@ -1210,7 +1210,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.WEBSITE,
       status: LeadStatus.NEW,
       score: 82,
-      estimatedValue: 95000,
+      estimatedValue: 9500000, // #770: cents, $95,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -1225,7 +1225,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.REFERRAL,
       status: LeadStatus.NEW,
       score: 75,
-      estimatedValue: 45000,
+      estimatedValue: 4500000, // #770: cents, $45,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -1240,7 +1240,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.EVENT,
       status: LeadStatus.NEW,
       score: 88,
-      estimatedValue: 120000,
+      estimatedValue: 12000000, // #770: cents, $120,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -1255,7 +1255,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.WEBSITE,
       status: LeadStatus.NEW,
       score: 68,
-      estimatedValue: 38000,
+      estimatedValue: 3800000, // #770: cents, $38,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -1270,7 +1270,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.REFERRAL,
       status: LeadStatus.NEW,
       score: 71,
-      estimatedValue: 62000,
+      estimatedValue: 6200000, // #770: cents, $62,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -1285,7 +1285,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.WEBSITE,
       status: LeadStatus.NEW,
       score: 85,
-      estimatedValue: 88000,
+      estimatedValue: 8800000, // #770: cents, $88,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -1300,7 +1300,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.SOCIAL,
       status: LeadStatus.NEW,
       score: 62,
-      estimatedValue: 41000,
+      estimatedValue: 4100000, // #770: cents, $41,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -1315,7 +1315,7 @@ async function seedLeads(tenantId: string) {
       source: LeadSource.EMAIL,
       status: LeadStatus.NEW,
       score: 79,
-      estimatedValue: 55000,
+      estimatedValue: 5500000, // #770: cents, $55,000
       ownerId: SEED_IDS.users.admin,
       tenantId,
     },
@@ -7582,21 +7582,25 @@ async function seedRoutingRules(tenantId: string) {
 
   // Canonical shape — the one createRoutingRuleSchema (packages/validators/src/
   // routing.ts) accepts, the routing API returns and LeadRoutingService
-  // evaluates: arrays of { field, operator, value } and { type, target?,
-  // channels? }. These rules used to be keyed objects with `gte`/`lt` operators,
-  // which the engine cannot iterate and the UI showed as empty. Inclusive
-  // thresholds are written as `greater_than N-1` (all compared fields are ints).
+  // evaluates: arrays of { field, operator, value } and { type, target }.
+  // These rules used to be keyed objects with `gte`/`lt` operators, which the
+  // engine cannot iterate and the UI showed as empty. Inclusive thresholds are
+  // written as `greater_than N-1` (all compared fields are ints).
   //
   // Priority: a HIGHER number is evaluated FIRST (schema + LeadRoutingService),
   // so the list below runs top to bottom with priorities 7..0. Only actions the
   // engine executes are seeded (assign_to_user / assign_to_team / assign_by_skill).
+  //
+  // #770: estimatedValue is in cents (packages/validators/src/lead.ts), so the
+  // two currency thresholds below are the dollar amount the description names
+  // times 100, matching the seeded leads' estimatedValue.
   const rules = [
     {
       id: SEED_IDS.routingRules.enterpriseDeals,
       name: 'Enterprise Deals',
       description: 'Route high-value enterprise leads ($100k+) to senior sales team',
       priority: 7,
-      conditions: [{ field: 'estimatedValue', operator: 'greater_than', value: 99999 }],
+      conditions: [{ field: 'estimatedValue', operator: 'greater_than', value: 9999900 }], // #770: cents ($99,999)
       actions: [{ type: 'assign_to_team', target: SEED_IDS.teams.sales }],
       isActive: true,
       createdBy: SEED_IDS.users.admin,
@@ -7631,7 +7635,7 @@ async function seedRoutingRules(tenantId: string) {
       priority: 4,
       conditions: [
         { field: 'leadScore', operator: 'greater_than', value: 69 },
-        { field: 'estimatedValue', operator: 'greater_than', value: 49999 },
+        { field: 'estimatedValue', operator: 'greater_than', value: 4999900 }, // #770: cents ($49,999)
       ],
       actions: [{ type: 'assign_to_team', target: SEED_IDS.teams.sales }],
       isActive: true,
@@ -7709,28 +7713,31 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit1,
       ticketId: SEED_IDS.leads.kevinTaylor,
+      leadId: SEED_IDS.leads.kevinTaylor, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.highValueLeads,
       ruleName: 'High-Value Leads',
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { entityType: 'lead', score: 82, estimatedValue: 95000 },
+      details: { entityType: 'lead', score: 82, estimatedValue: 9500000 }, // #770: cents
       createdAt: new Date(now - 2 * HOUR),
     },
     {
       id: SEED_IDS.routingAudits.audit2,
       ticketId: SEED_IDS.leads.tomBrown,
+      leadId: SEED_IDS.leads.tomBrown, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.enterpriseDeals,
       ruleName: 'Enterprise Deals',
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { entityType: 'lead', score: 88, estimatedValue: 120000 },
+      details: { entityType: 'lead', score: 88, estimatedValue: 12000000 }, // #770: cents
       createdAt: new Date(now - 4 * HOUR),
     },
     {
       id: SEED_IDS.routingAudits.audit3,
       ticketId: SEED_IDS.leads.rachelGreen,
+      leadId: SEED_IDS.leads.rachelGreen, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.referralLeads,
       ruleName: 'Referral Leads',
       toUserId: SEED_IDS.users.emilyDavis,
@@ -7742,6 +7749,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit4,
       ticketId: SEED_IDS.leads.ninaPatel,
+      leadId: SEED_IDS.leads.ninaPatel, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.websiteInquiries,
       ruleName: 'Website Inquiries',
       toUserId: SEED_IDS.users.mikeDavis,
@@ -7753,6 +7761,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit5,
       ticketId: SEED_IDS.leads.carlosRivera,
+      leadId: SEED_IDS.leads.carlosRivera, // #770: the column a reader should use; ticketId kept for back-compat
       fromUserId: SEED_IDS.users.admin,
       fromUserName: 'Admin User',
       toUserId: SEED_IDS.users.emilyDavis,
@@ -7764,6 +7773,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit6,
       ticketId: SEED_IDS.leads.lisaPark,
+      leadId: SEED_IDS.leads.lisaPark, // #770: the column a reader should use; ticketId kept for back-compat
       toUserId: SEED_IDS.users.jamesWilson,
       toUserName: 'James Wilson',
       reason: 'skill_match',
@@ -7773,6 +7783,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit7,
       ticketId: SEED_IDS.leads.ryanMurphy,
+      leadId: SEED_IDS.leads.ryanMurphy, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.websiteInquiries,
       ruleName: 'Website Inquiries',
       toUserId: SEED_IDS.users.davidKim,
@@ -7784,17 +7795,19 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit8,
       ticketId: SEED_IDS.leads.dianaHall,
+      leadId: SEED_IDS.leads.dianaHall, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.highValueLeads,
       ruleName: 'High-Value Leads',
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { entityType: 'lead', score: 79, estimatedValue: 55000 },
+      details: { entityType: 'lead', score: 79, estimatedValue: 5500000 }, // #770: cents
       createdAt: new Date(now - 1.5 * DAY),
     },
     {
       id: SEED_IDS.routingAudits.audit9,
       ticketId: SEED_IDS.leads.sarahMiller,
+      leadId: SEED_IDS.leads.sarahMiller, // #770: the column a reader should use; ticketId kept for back-compat
       fromUserId: SEED_IDS.users.sarahJohnson,
       fromUserName: 'Sarah Johnson',
       toUserId: SEED_IDS.users.mikeDavis,
@@ -7806,6 +7819,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit10,
       ticketId: SEED_IDS.leads.davidChen,
+      leadId: SEED_IDS.leads.davidChen, // #770: the column a reader should use; ticketId kept for back-compat
       toUserId: SEED_IDS.users.emilyDavis,
       toUserName: 'Emily Davis',
       reason: 'skill_match',
@@ -7815,6 +7829,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit11,
       ticketId: SEED_IDS.leads.jamesWilson,
+      leadId: SEED_IDS.leads.jamesWilson, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.urgentEscalation,
       ruleName: 'Urgent Escalation',
       fromUserId: SEED_IDS.users.mikeDavis,
@@ -7828,6 +7843,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit12,
       ticketId: SEED_IDS.leads.elenaRodriguez,
+      leadId: SEED_IDS.leads.elenaRodriguez, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.websiteInquiries,
       ruleName: 'Website Inquiries',
       toUserId: SEED_IDS.users.jamesWilson,
@@ -7839,6 +7855,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit13,
       ticketId: SEED_IDS.leads.marcusReed,
+      leadId: SEED_IDS.leads.marcusReed, // #770: the column a reader should use; ticketId kept for back-compat
       fromUserId: SEED_IDS.users.alexMorgan,
       fromUserName: 'Alex Morgan',
       toUserId: SEED_IDS.users.davidKim,
@@ -7850,6 +7867,7 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit14,
       ticketId: SEED_IDS.leads.kevinTaylor,
+      leadId: SEED_IDS.leads.kevinTaylor, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.technicalSupport,
       ruleName: 'Technical Support',
       toUserId: SEED_IDS.users.mikeDavis,
@@ -7861,12 +7879,13 @@ async function seedRoutingAudits(tenantId: string) {
     {
       id: SEED_IDS.routingAudits.audit15,
       ticketId: SEED_IDS.leads.tomBrown,
+      leadId: SEED_IDS.leads.tomBrown, // #770: the column a reader should use; ticketId kept for back-compat
       ruleId: SEED_IDS.routingRules.highValueLeads,
       ruleName: 'High-Value Leads',
       toUserId: SEED_IDS.users.sarahJohnson,
       toUserName: 'Sarah Johnson',
       reason: 'rule_match',
-      details: { entityType: 'lead', score: 88, estimatedValue: 120000 },
+      details: { entityType: 'lead', score: 88, estimatedValue: 12000000 }, // #770: cents
       createdAt: new Date(now - 5 * DAY),
     },
   ];
