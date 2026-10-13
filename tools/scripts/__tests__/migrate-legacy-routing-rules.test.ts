@@ -34,6 +34,7 @@ import {
   logNonArrayActions,
   processRow,
   fetchBatch,
+  flipTenantPriorities,
   main,
   type Totals,
 } from '../migrate-legacy-routing-rules';
@@ -43,6 +44,7 @@ describe('parseArgs', () => {
     expect(parseArgs(['node', 'migrate-legacy-routing-rules.ts'])).toEqual({
       isApply: false,
       tenantFilter: undefined,
+      flipPriorities: false,
     });
   });
 
@@ -50,6 +52,7 @@ describe('parseArgs', () => {
     expect(parseArgs(['node', 'script.ts', '--tenant', 't1', '--apply'])).toEqual({
       isApply: true,
       tenantFilter: 't1',
+      flipPriorities: false,
     });
   });
 });
@@ -365,5 +368,62 @@ describe('main', () => {
       where: { id: 'r1', tenantId: 't1' },
       data: { conditions: [{ field: 'leadScore', operator: 'greater_than', value: 89 }] },
     });
+  });
+});
+
+describe('estimatedValue is not guessed at', () => {
+  it('leaves a legacy estimatedValue threshold unmapped instead of converting it unscaled', () => {
+    expect(convertEntry('estimatedValue', { operator: 'gte', value: 1000 })).toBeNull();
+    expect(classifyAndConvert({ estimatedValue: { operator: 'gte', value: 1000 } }).outcome).toBe(
+      'unmapped'
+    );
+  });
+});
+
+describe('flipTenantPriorities', () => {
+  beforeEach(() => {
+    prismaMock.routingRule.findMany.mockReset();
+    prismaMock.routingRule.update.mockReset();
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+  });
+  afterEach(() => vi.restoreAllMocks());
+
+  const rows = [
+    { id: 'a', priority: 0 },
+    { id: 'b', priority: 1 },
+    { id: 'c', priority: 2 },
+  ];
+
+  it('mirrors priorities within the tenant under --apply', async () => {
+    prismaMock.routingRule.findMany.mockResolvedValue(rows);
+    prismaMock.routingRule.update.mockResolvedValue({});
+    const changed = await flipTenantPriorities(prismaMock as never, 't1', true);
+    expect(changed).toBe(2);
+    expect(prismaMock.routingRule.update).toHaveBeenCalledWith({
+      where: { id: 'a', tenantId: 't1' },
+      data: { priority: 2 },
+    });
+    expect(prismaMock.routingRule.update).toHaveBeenCalledWith({
+      where: { id: 'c', tenantId: 't1' },
+      data: { priority: 0 },
+    });
+  });
+
+  it('writes nothing in dry-run', async () => {
+    prismaMock.routingRule.findMany.mockResolvedValue(rows);
+    expect(await flipTenantPriorities(prismaMock as never, 't1', false)).toBe(2);
+    expect(prismaMock.routingRule.update).not.toHaveBeenCalled();
+  });
+
+  it('main refuses --flip-priorities without --tenant', async () => {
+    const ORIG = process.argv;
+    process.env['DATABASE_URL'] = 'postgresql://test.example.invalid/db';
+    process.argv = ['node', 'migrate-legacy-routing-rules.ts', '--flip-priorities', '--apply'];
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => undefined as never);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    await main();
+    expect(exitSpy).toHaveBeenCalledWith(1);
+    expect(prismaMock.routingRule.findMany).not.toHaveBeenCalled();
+    process.argv = ORIG;
   });
 });

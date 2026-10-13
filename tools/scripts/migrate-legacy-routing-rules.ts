@@ -24,6 +24,18 @@
  * Field mapping:  score  -> leadScore
  *                 source -> leadSource
  *                 (anything already a canonical field name passes through)
+ * `estimatedValue` is deliberately NOT mapped: the engine compares it in cents,
+ * the legacy shape never documented it, and a legacy threshold may be in
+ * dollars. Converting it unscaled would silently shift the threshold 100x, so
+ * such rows are reported as "unmapped" for a human.
+ *
+ * Priority direction (separate, opt-in): the engine evaluates priority DESC
+ * (higher first). Rules saved through the OLD editor (0 = top) or the OLD seed
+ * (0 = first) now display reversed. `--flip-priorities --tenant <id>` mirrors
+ * a tenant's priorities (p -> max + min - p). It is NOT idempotent (applying
+ * twice restores the old order), so it requires an explicit tenant and must be
+ * run once per affected tenant only.
+ *
  * Operator mapping (inclusive thresholds, matching the seed's own fix):
  *                 gte N -> greater_than (N - 1)
  *                 lt  N -> less_than N
@@ -59,6 +71,7 @@ const BATCH_SIZE = 100;
 export interface ParsedArgs {
   isApply: boolean;
   tenantFilter: string | undefined;
+  flipPriorities: boolean;
 }
 
 /** Parses `--apply` and `--tenant <id>` out of an argv array (e.g. `process.argv`). */
@@ -67,7 +80,8 @@ export function parseArgs(argv: string[]): ParsedArgs {
   const tenantArgIndex = argv.indexOf('--tenant');
   const tenantFilter =
     tenantArgIndex !== -1 && argv[tenantArgIndex + 1] ? argv[tenantArgIndex + 1] : undefined;
-  return { isApply, tenantFilter };
+  const flipPriorities = argv.includes('--flip-priorities');
+  return { isApply, tenantFilter, flipPriorities };
 }
 
 interface LegacyCondition {
@@ -81,7 +95,6 @@ const FIELD_ALIASES: Record<string, string> = {
   leadScore: 'leadScore',
   leadSource: 'leadSource',
   leadStatus: 'leadStatus',
-  estimatedValue: 'estimatedValue',
   location: 'location',
   tags: 'tags',
 };
@@ -187,6 +200,43 @@ export async function processRow(
   });
 }
 
+/**
+ * Mirrors one tenant's rule priorities (p -> max + min - p) so rules saved
+ * under the old "0 = top" convention keep their intended order under the
+ * engine's priority DESC. Tenant-scoped on read and write. Returns the number
+ * of rows whose priority changes.
+ */
+export async function flipTenantPriorities(
+  prisma: Prisma,
+  tenantId: string,
+  isApply: boolean
+): Promise<number> {
+  const rules = await prisma.routingRule.findMany({
+    where: { tenantId },
+    select: { id: true, priority: true },
+  });
+  if (rules.length === 0) return 0;
+  const priorities = rules.map((r) => r.priority);
+  const sum = Math.max(...priorities) + Math.min(...priorities);
+  let changed = 0;
+  for (const rule of rules) {
+    const next = sum - rule.priority;
+    if (next === rule.priority) continue;
+    changed += 1;
+    console.log(
+      `[migrate-legacy-routing-rules] ${isApply ? 'flipping' : 'would flip'} priority ` +
+        `rule=${rule.id} tenant=${tenantId}: ${rule.priority} -> ${next}`
+    );
+    if (isApply) {
+      await prisma.routingRule.update({
+        where: { id: rule.id, tenantId },
+        data: { priority: next },
+      });
+    }
+  }
+  return changed;
+}
+
 export async function fetchBatch(
   prisma: Prisma,
   cursor: string | undefined,
@@ -200,16 +250,39 @@ export async function fetchBatch(
   });
 }
 
+async function runFlip(prisma: Prisma, tenantId: string, isApply: boolean): Promise<void> {
+  const changed = await flipTenantPriorities(prisma, tenantId, isApply);
+  console.log('[migrate-legacy-routing-rules] priorities flipped:', {
+    changed,
+    mode: isApply ? 'APPLY' : 'DRY-RUN',
+  });
+  await prisma.$disconnect();
+}
+
 export async function main(): Promise<void> {
   if (!process.env['DATABASE_URL']) {
     console.error('[migrate-legacy-routing-rules] ERROR: DATABASE_URL is not set.');
     process.exit(1);
     return;
   }
-  const { isApply, tenantFilter } = parseArgs(process.argv);
+  const { isApply, tenantFilter, flipPriorities } = parseArgs(process.argv);
+
+  if (flipPriorities && !tenantFilter) {
+    console.error(
+      '[migrate-legacy-routing-rules] ERROR: --flip-priorities requires --tenant <id> ' +
+        '(it is not idempotent; run once per affected tenant).'
+    );
+    process.exit(1);
+    return;
+  }
 
   const adapter = new PrismaPg({ connectionString: process.env['DATABASE_URL'] });
   const prisma = new PrismaClient({ adapter });
+
+  if (flipPriorities && tenantFilter) {
+    await runFlip(prisma, tenantFilter, isApply);
+    return;
+  }
 
   console.log(
     `[migrate-legacy-routing-rules] mode=${isApply ? 'APPLY' : 'DRY-RUN'}` +
