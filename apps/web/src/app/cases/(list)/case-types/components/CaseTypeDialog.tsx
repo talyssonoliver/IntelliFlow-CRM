@@ -23,6 +23,7 @@ import {
   Switch,
 } from '@intelliflow/ui';
 import {
+  CASE_REQUIRED_FIELD_KEYS,
   CASE_TYPE_LIMITS,
   type CasePriority,
   type CaseRequiredFieldKey,
@@ -46,12 +47,11 @@ import {
   type ChecklistDraftItem,
 } from './ResolutionChecklistEditor';
 
-/** Fields a new case can actually leave empty (subject, client and assignee always exist). */
-export const OPTIONAL_REQUIRED_KEYS: readonly CaseRequiredFieldKey[] = [
-  'description',
-  'deadline',
-  'jurisdiction',
-];
+/**
+ * Every key a type can store gets a checkbox, so what is saved is always what is shown:
+ * nothing changes unless someone ticks or unticks it.
+ */
+export const REQUIRED_KEY_CHOICES: readonly CaseRequiredFieldKey[] = CASE_REQUIRED_FIELD_KEYS;
 
 export interface CaseTypeDraft {
   name: string;
@@ -100,9 +100,7 @@ export function draftFromCaseType(type: CaseTypeDto | null): CaseTypeDraft {
     colorToken: toCaseTypeColorToken(type.colorToken),
     defaultPriority: type.defaultPriority,
     slaDays: type.defaultSlaDays == null ? '' : String(type.defaultSlaDays),
-    // Only the keys this dialog shows: subject, client and assignee are always present on a
-    // case, and a hidden stored key would keep "none ticked" from meaning "use Case Settings".
-    requiredFields: type.requiredFields.filter((key) => OPTIONAL_REQUIRED_KEYS.includes(key)),
+    requiredFields: [...type.requiredFields],
     checklist: type.checklist.map((item) => newChecklistItem(item.title)),
     isActive: type.isActive,
   };
@@ -349,10 +347,10 @@ export function CaseTypeDialog({
             </legend>
             <p id="case-type-required-help" className="text-xs text-muted-foreground">
               None ticked uses the Case Settings required fields; ticked fields replace them for
-              this type. Subject, client and assignee are always required.
+              this type. Subject, client and assignee are always filled in on a new case.
             </p>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
-              {OPTIONAL_REQUIRED_KEYS.map((key) => (
+              {REQUIRED_KEY_CHOICES.map((key) => (
                 <div key={key} className="flex min-h-11 items-center gap-2">
                   <Checkbox
                     id={`case-type-required-${key}`}

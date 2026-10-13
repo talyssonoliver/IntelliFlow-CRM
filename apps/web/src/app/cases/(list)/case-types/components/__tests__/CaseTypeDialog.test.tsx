@@ -82,10 +82,10 @@ describe('CaseTypeDialog helpers', () => {
     ).toEqual({ 2: 'Same as step 1.' });
   });
 
-  it('keeps only the required fields the dialog shows, so none ticked really means none', () => {
+  it('keeps every stored required field so unrelated edits never change them', () => {
     const draft = draftFromCaseType({ ...LITIGATION, requiredFields: ['title', 'description'] });
-    expect(draft.requiredFields).toEqual(['description']);
-    expect(toSaveInput({ ...draft, requiredFields: [] }).requiredFields).toEqual([]);
+    expect(draft.requiredFields).toEqual(['title', 'description']);
+    expect(toSaveInput(draft).requiredFields).toEqual(['title', 'description']);
   });
 
   it('drops blank steps from the save payload', () => {
@@ -210,10 +210,40 @@ describe('CaseTypeDialog', () => {
     expect(onClose).not.toHaveBeenCalled();
   });
 
-  it('unticking the last visible field saves an empty set (Case Settings fields apply)', async () => {
+  it('shows a checkbox for every supported field, ticked as stored', () => {
+    renderDialog({ caseType: { ...LITIGATION, requiredFields: ['assignedTo', 'jurisdiction'] } });
+    for (const name of [
+      'Subject',
+      'Description',
+      'Deadline',
+      'Jurisdiction',
+      'Client',
+      'Assignee',
+    ]) {
+      expect(screen.getByRole('checkbox', { name })).toBeDefined();
+    }
+    expect(screen.getByRole('checkbox', { name: 'Assignee' }).getAttribute('data-state')).toBe(
+      'checked'
+    );
+    expect(screen.getByRole('checkbox', { name: 'Subject' }).getAttribute('data-state')).toBe(
+      'unchecked'
+    );
+  });
+
+  it('an unrelated edit saves the stored required fields unchanged', async () => {
+    const { onSave } = renderDialog({ caseType: { ...LITIGATION, requiredFields: ['title'] } });
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Litigation 2' } });
+    await act(async () => {
+      fireEvent.click(saveButton());
+    });
+    expect(onSave.mock.calls[0][0].requiredFields).toEqual(['title']);
+  });
+
+  it('unticking every box saves an empty set (Case Settings fields apply)', async () => {
     const { onSave } = renderDialog({
       caseType: { ...LITIGATION, requiredFields: ['assignedTo', 'jurisdiction'] },
     });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Assignee' }));
     fireEvent.click(screen.getByRole('checkbox', { name: 'Jurisdiction' }));
     await act(async () => {
       fireEvent.click(saveButton());
