@@ -203,6 +203,43 @@ function commonFields(f: FormState, original: ScheduleItem | null) {
   };
 }
 
+function sameRecipients(a: string[], b: string[]): boolean {
+  const norm = (list: string[]) => list.map((r) => r.trim().toLowerCase()).join('\n');
+  return norm(a) === norm(b);
+}
+
+/**
+ * For an update, only what the user changed. Recipients, format, cadence and timezone
+ * are delivery changes that need a template the caller can see, so unchanged values
+ * are never re-sent (a schedule on someone else's private template stays renamable).
+ */
+function updateChanges(
+  original: ScheduleItem,
+  f: FormState,
+  fields: ReturnType<typeof commonFields>,
+  description: string
+): Record<string, unknown> {
+  const before = initialState(original);
+  const changes: Record<string, unknown> = {};
+  if (f.name !== before.name) changes.name = fields.name;
+  if (description !== before.description.trim()) changes.description = description;
+  if ('templateId' in fields) changes.templateId = fields.templateId;
+  const scheduleChanged =
+    f.cadence !== before.cadence ||
+    f.timezone !== before.timezone ||
+    JSON.stringify(cadenceFields(f)) !== JSON.stringify(cadenceFields(before));
+  if (scheduleChanged) {
+    Object.assign(changes, { cadence: f.cadence, ...cadenceFields(f), timezone: f.timezone });
+  }
+  if (!sameRecipients(fields.recipients, original.recipients))
+    changes.recipients = fields.recipients;
+  if (f.format !== before.format) changes.format = f.format;
+  if (f.colorToken !== before.colorToken) changes.colorToken = f.colorToken;
+  if (JSON.stringify(f.tags) !== JSON.stringify(before.tags)) changes.tags = f.tags;
+  if (f.isActive !== before.isActive) changes.isActive = f.isActive;
+  return changes;
+}
+
 function isFieldKey(value: string): value is FieldKey {
   return Object.hasOwn(FIELD_ID, value);
 }
@@ -402,8 +439,7 @@ export function ScheduleDialog({
     if (schedule) {
       const parsed = updateScheduledReportSchema.safeParse({
         id: schedule.id,
-        ...fields,
-        description,
+        ...updateChanges(schedule, form, fields, description),
       });
       if (parsed.success) submit = { kind: 'update', input: parsed.data };
       else next = collectErrors(parsed.error.issues);
@@ -441,6 +477,16 @@ export function ScheduleDialog({
             Choose what to send, when, and to whom. Fields marked * are required. Delivery starts
             once the report runner is enabled.
           </DialogDescription>
+          {schedule?.templateHidden && (
+            <p
+              className="rounded-md bg-muted px-3 py-2 text-sm text-foreground"
+              data-testid="hidden-template-note"
+            >
+              This schedule sends a report template you can&apos;t see. You can rename it, change
+              its colour or tags, or pause it; changing who receives it, when, or in which format
+              needs someone who can see the template.
+            </p>
+          )}
         </DialogHeader>
 
         <form

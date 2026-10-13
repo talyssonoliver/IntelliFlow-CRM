@@ -400,6 +400,7 @@ describe('scheduledReportsRouter (PG-201)', () => {
           dayOfWeek: null,
         })
       );
+      visibleTemplate();
       const tx = useTx();
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.update({ id: SCHEDULE_ID, cadence: 'daily', timeOfDay: '07:30' });
@@ -416,6 +417,7 @@ describe('scheduledReportsRouter (PG-201)', () => {
 
     it('recomputes the next run when only the timezone changes', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      visibleTemplate();
       const tx = useTx();
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.update({
@@ -460,7 +462,7 @@ describe('scheduledReportsRouter (PG-201)', () => {
       expect(data.nextRunAt).toBeInstanceOf(Date);
     });
 
-    it('does not re-check an unchanged template (another user private template stays editable)', async () => {
+    it('allows metadata edits on a schedule whose private template the caller cannot see', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
         scheduleRow({
           template: {
@@ -474,6 +476,39 @@ describe('scheduledReportsRouter (PG-201)', () => {
       const tx = useTx();
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.update({ id: SCHEDULE_ID, templateId: TEMPLATE_ID, name: 'Renamed' });
+      expect(prismaMock.reportTemplate.findFirst).not.toHaveBeenCalled();
+    });
+
+    it('forbids changing recipients when the caller cannot see the schedule template', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({
+          template: {
+            id: TEMPLATE_ID,
+            name: 'Pipeline',
+            createdBy: 'someone-else',
+            sharingScope: 'private',
+          },
+        })
+      );
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
+      await expectCode(
+        admin.update({ id: SCHEDULE_ID, recipients: ['outside@example.invalid'] }),
+        'FORBIDDEN'
+      );
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
+    });
+
+    it('forbids changing the format when the caller cannot see the schedule template', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
+      await expectCode(admin.update({ id: SCHEDULE_ID, format: 'csv' }), 'FORBIDDEN');
+    });
+
+    it('does not treat re-sent identical recipients and format as a delivery change', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, recipients: ['lead@example.invalid'], format: 'pdf' });
       expect(prismaMock.reportTemplate.findFirst).not.toHaveBeenCalled();
     });
 
@@ -526,6 +561,7 @@ describe('scheduledReportsRouter (PG-201)', () => {
 
     it('audits a recipient change by count only', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      visibleTemplate();
       const tx = useTx();
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.update({
@@ -619,7 +655,7 @@ describe('scheduledReportsRouter (PG-201)', () => {
         scheduleRow({ isActive: false })
       );
       (prismaMock.reportTemplate.findFirst as any).mockResolvedValueOnce(null);
-      await expectCode(admin.setActive({ id: SCHEDULE_ID, isActive: true }), 'NOT_FOUND');
+      await expectCode(admin.setActive({ id: SCHEDULE_ID, isActive: true }), 'FORBIDDEN');
     });
 
     it('enforces the active cap when activating', async () => {

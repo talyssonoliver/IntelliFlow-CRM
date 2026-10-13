@@ -109,11 +109,17 @@ async function lockTenantSchedules(tx: ScheduleTx, tenantId: string): Promise<vo
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
 }
 
-/** The template must exist in this tenant and be visible to the caller (PG-200 rule). */
+/**
+ * The template must exist in this tenant and be visible to the caller (PG-200 rule).
+ * `chosen`: a template the caller is picking now (missing => NOT_FOUND). Otherwise it is
+ * the schedule's current template, and a caller who cannot see it may not change how
+ * or to whom it is delivered (=> FORBIDDEN).
+ */
 async function assertTemplateVisible(
   tx: ScheduleTx,
   ctx: ScheduleCtx,
-  templateId: string
+  templateId: string,
+  chosen = true
 ): Promise<void> {
   const template = await tx.reportTemplate.findFirst({
     where: {
@@ -123,9 +129,15 @@ async function assertTemplateVisible(
     },
     select: { id: true },
   });
-  if (!template) {
+  if (template) return;
+  if (chosen) {
     throw new TRPCError({ code: 'NOT_FOUND', message: 'Report template not found.' });
   }
+  throw new TRPCError({
+    code: 'FORBIDDEN',
+    message:
+      "This schedule delivers a report template you can't see, so you can't change its delivery.",
+  });
 }
 
 /** Newly assigned tags must be active tags of this tenant's catalogue. */
@@ -202,6 +214,8 @@ interface UpdatePlan {
   activating: boolean;
   /** Template whose visibility must be checked (newly chosen, or re-activated). */
   checkTemplateId: string | null;
+  /** True when checkTemplateId is a newly chosen template (NOT_FOUND), else FORBIDDEN. */
+  templateChosen: boolean;
   /** Tags not already on the schedule (unchanged assignments may be inactive tags). */
   newTags: string[];
   recipientsChanged: boolean;
@@ -260,14 +274,20 @@ function planScheduleUpdate(
   // Validate the cron whenever the definition changes or the schedule starts running;
   // pausing never needs a valid cron (legacy rows may have none).
   const definitionChanged = columns !== null || fields.timezone !== undefined;
+  // Who receives the report, and when/how, is a delivery change: it needs a template
+  // the caller can see. Name, description, colour, tags and pausing do not.
+  const recipientsChanged =
+    fields.recipients !== undefined && !sameRecipients(fields.recipients, existing.recipients);
+  const formatChanged = fields.format !== undefined && fields.format !== existing.format;
+  const deliveryChanged = definitionChanged || recipientsChanged || formatChanged;
   const nextRun = definitionChanged || activating ? checkedNextRun(cron, timezone, now) : null;
 
   return {
     activating,
-    checkTemplateId: templateChanged || activating ? templateId : null,
+    checkTemplateId: templateChanged || activating || deliveryChanged ? templateId : null,
+    templateChosen: templateChanged,
     newTags: (fields.tags ?? []).filter((t) => !existing.tags.includes(t)),
-    recipientsChanged:
-      fields.recipients !== undefined && !sameRecipients(fields.recipients, existing.recipients),
+    recipientsChanged,
     data: {
       ...changedFields(fields),
       ...(columns ?? {}),
@@ -508,7 +528,9 @@ export const scheduledReportsRouter = createTRPCRouter({
           const existing = await tx.reportSchedule.findFirst({ where: { id, tenantId } });
           if (!existing) throw scheduleNotFound();
           const plan = planScheduleUpdate(existing, changes, new Date());
-          if (plan.checkTemplateId) await assertTemplateVisible(tx, ctx, plan.checkTemplateId);
+          if (plan.checkTemplateId) {
+            await assertTemplateVisible(tx, ctx, plan.checkTemplateId, plan.templateChosen);
+          }
           await assertTagsExist(tx, tenantId, plan.newTags);
           if (plan.activating) await assertActiveCapacity(tx, tenantId, id);
           recipientsChanged = plan.recipientsChanged;
@@ -541,7 +563,9 @@ export const scheduledReportsRouter = createTRPCRouter({
           let nextRunAt: Date | null = null;
           if (input.isActive) {
             assertReferenced(existing.templateId, existing.reportId);
-            if (existing.templateId) await assertTemplateVisible(tx, ctx, existing.templateId);
+            if (existing.templateId) {
+              await assertTemplateVisible(tx, ctx, existing.templateId, false);
+            }
             nextRunAt = checkedNextRun(existing.cronExpression, existing.timezone, new Date());
             if (!existing.isActive) await assertActiveCapacity(tx, tenantId, input.id);
           }

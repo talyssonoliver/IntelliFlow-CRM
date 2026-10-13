@@ -207,7 +207,7 @@ describe('ScheduleDialog', () => {
     expect(await screen.findByText(/Duplicate recipient/)).toBeInTheDocument();
   });
 
-  it('edits an existing schedule and sends an update with its id', async () => {
+  it('edits an existing schedule and sends only what changed', async () => {
     const { onSubmit } = renderDialog({ schedule: existingSchedule() });
     expect(screen.getByRole('heading', { name: 'Edit Scheduled Report' })).toBeInTheDocument();
     expect(screen.getByLabelText(/^Name/)).toHaveValue('Weekly pipeline');
@@ -217,20 +217,33 @@ describe('ScheduleDialog', () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     expect(onSubmit.mock.calls[0][0]).toEqual({
       kind: 'update',
-      input: expect.objectContaining({
-        id: 's1',
-        name: 'Weekly pipeline',
-        description: '',
-        cadence: 'monthly',
-        dayOfMonth: 15,
-        timeOfDay: '07:00',
-        format: 'csv',
-        colorToken: 'teal',
-        isActive: false,
-      }),
+      input: { id: 's1', description: '' },
     });
-    // The template is unchanged, so it is not re-sent (no visibility re-check).
-    expect(onSubmit.mock.calls[0][0].input).not.toHaveProperty('templateId');
+  });
+
+  it('sends the whole cadence group when the schedule changes', async () => {
+    const { onSubmit } = renderDialog({ schedule: existingSchedule() });
+    fireEvent.change(screen.getByLabelText('Day of the month'), { target: { value: '20' } });
+    fireEvent.change(screen.getByLabelText(/^Recipients/), {
+      target: { value: 'LEAD@example.invalid' },
+    });
+    save();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    // Recipients only differ by case, so they are not a change.
+    expect(onSubmit.mock.calls[0][0].input).toEqual({
+      id: 's1',
+      cadence: 'monthly',
+      dayOfMonth: 20,
+      timeOfDay: '07:00',
+      timezone: 'Europe/London',
+    });
+  });
+
+  it('explains what can be edited when the template is hidden from the user', () => {
+    renderDialog({
+      schedule: existingSchedule({ templateName: null, templateHidden: true }),
+    });
+    expect(screen.getByTestId('hidden-template-note')).toHaveTextContent(/can't see/);
   });
 
   it('sends a newly chosen template on update', async () => {
