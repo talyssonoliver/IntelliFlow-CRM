@@ -2,7 +2,56 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "artifacts": {
     "created": [
-      "apps/web/src/app/agent-approvals/approval-policies/page.tsx"
+      ".specify/sprints/sprint-18/context/PG-198/PG-198-consensus-rerun.md",
+      ".specify/sprints/sprint-18/context/PG-198/PG-198-exploration.md",
+      ".specify/sprints/sprint-18/context/PG-198/PG-198-open-question.md",
+      ".specify/sprints/sprint-18/context/PG-198/PG-198-owner-ruling.md",
+      "apps/api/src/__tests__/http-server.approval-sweep.test.ts",
+      "apps/api/src/agent/__tests__/approval-escalation-sweep.test.ts",
+      "apps/api/src/agent/__tests__/approval-policy-loader.test.ts",
+      "apps/api/src/agent/__tests__/approval-sweep-scheduler.test.ts",
+      "apps/api/src/agent/__tests__/approved-action-executor.test.ts",
+      "apps/api/src/agent/__tests__/escalation-target.test.ts",
+      "apps/api/src/agent/approval-escalation-sweep.ts",
+      "apps/api/src/agent/approval-policy-loader.ts",
+      "apps/api/src/agent/approval-sweep-scheduler.ts",
+      "apps/api/src/agent/approved-action-executor.ts",
+      "apps/api/src/agent/escalation-target.ts",
+      "apps/api/src/modules/agent/__tests__/approval-policies.router.test.ts",
+      "apps/api/src/modules/agent/__tests__/settings-shared.test.ts",
+      "apps/api/src/modules/agent/approval-policies.router.ts",
+      "apps/api/src/modules/agent/settings-shared.ts",
+      "apps/api/src/modules/autoresponse/__tests__/autoresponse.router.policies.test.ts",
+      "apps/api/src/modules/legal/__tests__/cases.create-tenant.test.ts",
+      "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesContent.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesLoading.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/__tests__/ApprovalPoliciesContent.test.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/__tests__/page.test.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/AssignmentsEditor.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/EffectiveRules.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/PolicyCard.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/PolicyDialog.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/AssignmentsEditor.test.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/EffectiveRules.test.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/PolicyCard.test.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/PolicyDialog.test.tsx",
+      "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/fixtures.ts",
+      "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/policy-model.test.ts",
+      "apps/web/src/app/agent-approvals/approval-policies/components/policy-model.ts",
+      "apps/web/src/lib/__tests__/color-tokens.test.ts",
+      "apps/web/src/lib/color-tokens.ts",
+      "artifacts/coverage/PG-198-before.json",
+      "docs/architecture/adr/ADR-077-tenant-approval-policies.md",
+      "packages/db/prisma/migrations/20261013120000_approval_policies/migration.sql",
+      "packages/db/prisma/migrations/20261013120100_agent_actions_pending_sweep_idx/migration.sql",
+      "packages/domain/src/ai/approval-policy/__tests__/approval-policy.test.ts",
+      "packages/domain/src/ai/approval-policy/constants.ts",
+      "packages/domain/src/ai/approval-policy/index.ts",
+      "packages/domain/src/ai/approval-policy/predicates.ts",
+      "packages/domain/src/ai/approval-policy/resolver.ts",
+      "packages/validators/src/__tests__/approval-policies.test.ts",
+      "packages/validators/src/approval-policies.ts",
+      "tests/integration/approval-policies.test.ts"
     ],
     "expected": [
       "apps/web/src/app/agent-approvals/approval-policies/page.tsx",
@@ -11,12 +60,7 @@
       "packages/validators/src/approval-policies.ts",
       ".specify/sprints/sprint-18/attestations/PG-198/context_ack.json"
     ],
-    "missing": [
-      "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesContent.tsx",
-      "apps/api/src/modules/agent/approval-policies.router.ts",
-      "packages/validators/src/approval-policies.ts",
-      ".specify/sprints/sprint-18/attestations/PG-198/context_ack.json"
-    ]
+    "missing": []
   },
   "blockers": [],
   "completed_at": null,
@@ -29,7 +73,15 @@
     "started_at": "2026-10-13T00:04:04Z",
     "executor": "Claude Code /exec (ralph loop /full-pipeline PG-198, session 52a6ff74)",
     "agents": [
-      "stoa-domain (required by the task row)"
+      "stoa-foundation (PASS, 13:42-13:54Z)",
+      "stoa-domain (PASS, 13:54:56-14:00:30Z; required by the task row)",
+      "stoa-security (PASS)",
+      "stoa-quality (PASS)",
+      "stoa-intelligence (PASS, 14:10:18-14:12:19Z)",
+      "plan-reviewer (iteration 7 APPROVE)",
+      "ai-specialist",
+      "a11y-expert",
+      "codex-review (round 5 PASS)"
     ]
   },
   "kpis": {},
@@ -66,6 +118,11 @@
       "at": "2026-10-13T07:10:57Z",
       "status": "In Progress",
       "note": "/exec-metrics invoked for the first time at this point (it was not run at exec Phase 0, 00:04Z). Start fields set from the real /exec invocation time (00:04:04Z, transcript). /hydrate-context 06:14:06Z, /spec-exploration 06:14:09Z and the /spec-consensus re-run (4/4 APPROVED, 06:24-06:26Z) also ran only after the resume."
+    },
+    {
+      "at": "2026-10-13T14:49:10Z",
+      "status": "In Progress",
+      "note": "/exec-metrics end at b1fa75033. Plan-reviewer iteration 7 APPROVE. All five STOAs PASS. Diff coverage 96.8%. /exec-gates: everything that can pass in this lane PASSES. Two gates stay open and need the runner or the owner: Gate 14 (Lighthouse a11y 0.87 measured the error boundary, NEEDS_HUMAN waiver or an authenticated run) and Gate 4b push (the runner pushes after pre-ship). Attestation verdict NEEDS_HUMAN. Status stays In Progress; the CSV is not flipped."
     }
   ],
   "stream": null,

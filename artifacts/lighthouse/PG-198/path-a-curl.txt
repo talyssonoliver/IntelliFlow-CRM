@@ -1,0 +1,6 @@
+# curl 2026-10-13T14:27:04Z
+GET /agent-approvals/approval-policies (no session)
+HTTP/1.1 200 OK
+status=200 redirect=
+GET /agent-approvals/approval-policies following redirects
+final_status=200 final_url=http://localhost:3400/agent-approvals/approval-policies redirects=0
