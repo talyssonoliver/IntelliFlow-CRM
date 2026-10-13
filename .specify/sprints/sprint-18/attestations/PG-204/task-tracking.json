@@ -3,16 +3,16 @@
   "artifacts": {
     "created": [],
     "expected": [
-      "apps/web/src/app/cases/case-types/page.tsx",
-      "apps/web/src/app/cases/case-types/CaseTypesContent.tsx",
-      "apps/api/src/modules/case/case-types.router.ts",
+      "apps/web/src/app/cases/(list)/case-types/page.tsx",
+      "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx",
+      "apps/api/src/modules/legal/case-types.router.ts",
       "packages/validators/src/case-types.ts",
       ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json"
     ],
     "missing": [
-      "apps/web/src/app/cases/case-types/page.tsx",
-      "apps/web/src/app/cases/case-types/CaseTypesContent.tsx",
-      "apps/api/src/modules/case/case-types.router.ts",
+      "apps/web/src/app/cases/(list)/case-types/page.tsx",
+      "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx",
+      "apps/api/src/modules/legal/case-types.router.ts",
       "packages/validators/src/case-types.ts",
       ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json"
     ]
@@ -28,13 +28,28 @@
   },
   "kpis": {},
   "notes": "Case types at /cases/case-types: taxonomy (category, default priority, default SLA, required fields, resolution workflow). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in case automation OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "",
-  "started_at": null,
+  "phase": "spec",
+  "started_at": "2026-10-12T23:22:38Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-10-12T23:40:00Z",
+      "note": "Spec session paused: owner question (case type semantics) - PG-204-open-question.md",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-10-12T23:55:00Z",
+      "note": "Owner ruling Q1=A, Q2=Yes recorded; spec session resumed",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-10-13T00:08:00Z",
+      "note": "Spec approved 8/8 (R1-R4); ADR-076 proposed; PRD addendum; CSV paths corrected",
+      "status": "Spec Complete"
     }
   ],
   "stream": null,

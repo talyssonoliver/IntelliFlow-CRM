@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                  |
-| ------------- | -------------------------------------- |
-| Feature Name  | Module Settings Pages                  |
-| Status        | Active                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197 |
-| Created       | 2026-03-11                             |
-| Last Updated  | 2026-10-07                             |
-| Author        | Spec Session (PG-178)                  |
+| Field         | Value                                          |
+| ------------- | ---------------------------------------------- |
+| Feature Name  | Module Settings Pages                          |
+| Status        | Active                                         |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-204 |
+| Created       | 2026-03-11                                     |
+| Last Updated  | 2026-10-13                                     |
+| Author        | Spec Session (PG-178)                          |
 
 ## Problem Statement
 
@@ -650,3 +650,58 @@ Spec: `.specify/sprints/sprint-18/specifications/PG-197-spec.md`. ADR-074.
 
 No AI toggles were added. Out-of-scope finding filed: #830 (Deals sidebar
 "Territory Map" is a dead link).
+
+## PG-204 Addendum: Case Types (2026-10-13)
+
+Owner ruling (2026-10-13): Q1 = A, case types are applied at case creation; Q2 =
+Yes, with no type the PG-190 module defaults apply (type first, then module
+defaults). Spec: `.specify/sprints/sprint-18/specifications/PG-204-spec.md`.
+ADR-076.
+
+### Additional User Stories
+
+- **US-CT1 (Taxonomy)**: As a CRM Admin, I want to define case types with a
+  name, category and colour, so that cases are classified consistently.
+- **US-CT2 (Defaults)**: As a CRM Admin, I want each case type to carry a
+  default priority, an SLA in days, required fields and a resolution checklist,
+  so that new cases start correctly without manual setup.
+- **US-CT3 (Picker)**: As a case handler, I want to pick a case type when I
+  create a case and see which defaults it will apply, so that I only fill in
+  what differs.
+- **US-CT4 (Module defaults)**: As a CRM Admin, I want the Case Settings default
+  priority and required fields to apply when no type is picked, so that those
+  settings actually take effect.
+
+### Additional Acceptance Criteria
+
+AC-CT1 to AC-CT16 are defined in the spec. In summary:
+
+- `/cases/case-types` follows the playbook (PageHeader, 12-column bento grid,
+  canonical EmptyState, playbook buttons, list `openCreate` via `forwardRef`).
+- Names are tenant-unique (case-insensitive); there are 8 colour tokens (DB
+  CHECK), an SLA of 1–3650 days, at most 20 checklist items and at most 50
+  types.
+- At most one default type, which must be active. A type used by cases cannot be
+  deleted (deactivate it instead).
+- Changes are limited to admins and managers; reads are open; everything is
+  LEGAL-gated and tenant-scoped (cross-tenant negative tests).
+- On create, priority is chosen as explicit > type > Case Settings default >
+  MEDIUM, and the deadline as explicit > end of the local day N days ahead >
+  none.
+- Required fields are the type's set if it has one, otherwise the tenant's.
+  Values are checked after defaults are applied.
+- The checklist is seeded as PENDING case tasks in the same transaction as the
+  case.
+- New Case gets a Case type picker that replaces the unpersisted Category
+  select, a "Use default" priority option and a hint. Case detail shows the
+  type.
+- Lighthouse ≥ 90 on `/cases/case-types` and `/cases/new`. WCAG 2.1 AA.
+
+### Boolean toggles (playbook §8)
+
+| Toggle               | Category  | Runtime consumer                                  |
+| -------------------- | --------- | ------------------------------------------------- |
+| `CaseType.isActive`  | 1 — wired | `caseTypes.listActive`; `cases.create` rejects it |
+| `CaseType.isDefault` | 1 — wired | New Case picker preselection                      |
+
+No AI toggles were added.
