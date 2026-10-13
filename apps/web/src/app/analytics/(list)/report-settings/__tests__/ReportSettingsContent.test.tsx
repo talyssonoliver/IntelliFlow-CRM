@@ -238,6 +238,34 @@ describe('ReportSettingsContent', () => {
     expect(mutateUpdate).toHaveBeenCalledWith({ defaultRange: '7d', currency: 'USD' });
   });
 
+  it('does not gate Save on legacy delivery recipients (PG-201: the card moved)', async () => {
+    // The removed Scheduled Delivery card blocked Save when delivery was enabled with no
+    // recipients. That legacy state must no longer stop range/currency changes.
+    const { mutateUpdate } = setup({
+      queryData: {
+        defaultRange: '30d',
+        currency: 'USD',
+        scheduledDelivery: {
+          enabled: true,
+          frequency: 'weekly',
+          dayOfWeek: 1,
+          time: '09:00',
+          recipients: [],
+          format: 'pdf',
+        },
+      },
+    });
+    render(<ReportSettingsContent />);
+    await waitFor(() => screen.getByRole('radio', { name: /7 days/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /7 days/i }));
+    const save = screen.getByRole('button', { name: /save changes/i });
+    await waitFor(() => expect(save).not.toBeDisabled());
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(mutateUpdate).toHaveBeenCalledWith({ defaultRange: '7d', currency: 'USD' })
+    );
+  });
+
   it('Reset opens ConfirmationDialog and confirming calls resetToDefaults', async () => {
     const { mutateReset } = setup({
       queryData: {
