@@ -19,12 +19,14 @@ export type CaseTaskStatus = z.infer<typeof caseTaskStatusSchema>;
 export const createCaseSchema = z.object({
   title: z.string().min(1).max(300),
   description: z.string().max(5000).optional(),
-  priority: casePrioritySchema.default('MEDIUM'),
+  // PG-204: no default — a blank priority lets the case type, then the module default, apply.
+  priority: casePrioritySchema.optional(),
   deadline: z.coerce.date().optional(),
   timezone: timezoneSchema.optional(),
   jurisdiction: z.string().max(100).optional(),
   clientId: idSchema,
   assignedTo: idSchema.optional(),
+  caseTypeId: idSchema.optional(),
 });
 
 export type CreateCaseInput = z.infer<typeof createCaseSchema>;

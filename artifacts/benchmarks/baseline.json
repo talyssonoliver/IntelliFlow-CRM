@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-13T00:32:16.794Z",
+  "timestamp": "2026-10-13T00:45:35.530Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -3159,11 +3159,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 54,
-    "total_schemas": 606,
+    "total_validators": 55,
+    "total_schemas": 611,
     "by_complexity": {
       "complex": 34,
-      "moderate": 16,
+      "moderate": 17,
       "simple": 4
     },
     "validators": [
@@ -3376,6 +3376,12 @@
         "file": "ticket-automation-rule.ts",
         "schemas": 6,
         "complexity": "complex"
+      },
+      {
+        "name": "case-types",
+        "file": "case-types.ts",
+        "schemas": 5,
+        "complexity": "moderate"
       },
       {
         "name": "report-settings",

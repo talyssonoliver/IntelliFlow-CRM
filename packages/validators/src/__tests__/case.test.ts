@@ -108,7 +108,9 @@ describe('Case Validators', () => {
       if (result.success) {
         expect(result.data.title).toBe('Test Case');
         expect(result.data.clientId).toBe(validUuid);
-        expect(result.data.priority).toBe('MEDIUM'); // default
+        // PG-204: no default — a blank priority lets the case type or module default apply
+        expect(result.data.priority).toBeUndefined();
+        expect(result.data.caseTypeId).toBeUndefined();
       }
     });
 
@@ -192,8 +194,42 @@ describe('Case Validators', () => {
     });
   });
 
+  describe('createCaseSchema caseTypeId (PG-204)', () => {
+    it('accepts an optional caseTypeId and an explicit priority', () => {
+      const caseTypeId = uuidv4();
+      const result = createCaseSchema.safeParse({
+        title: 'Typed',
+        clientId: uuidv4(),
+        caseTypeId,
+        priority: 'HIGH',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.caseTypeId).toBe(caseTypeId);
+        expect(result.data.priority).toBe('HIGH');
+      }
+    });
+
+    it('rejects a malformed caseTypeId', () => {
+      const result = createCaseSchema.safeParse({
+        title: 'Typed',
+        clientId: uuidv4(),
+        caseTypeId: 'not an id!',
+      });
+      expect(result.success).toBe(false);
+    });
+  });
+
   describe('updateCaseSchema', () => {
     const validUuid = uuidv4();
+
+    it('strips caseTypeId — a case type is set at creation only (PG-204)', () => {
+      const result = updateCaseSchema.safeParse({ id: validUuid, caseTypeId: uuidv4() });
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect('caseTypeId' in result.data).toBe(false);
+      }
+    });
 
     it('should accept valid update with only id', () => {
       const input = {

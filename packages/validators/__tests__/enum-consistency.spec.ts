@@ -17,6 +17,7 @@ import {
   CASE_STATUSES,
   CASE_PRIORITIES,
   CASE_TASK_STATUSES,
+  CASE_REQUIRED_FIELD_KEYS,
   APPOINTMENT_STATUSES,
   APPOINTMENT_TYPES,
   TICKET_STATUSES,
@@ -32,6 +33,8 @@ import { opportunityStageSchema } from '../src/opportunity';
 import { taskStatusSchema, taskPrioritySchema } from '../src/task';
 
 import { caseStatusSchema, casePrioritySchema, caseTaskStatusSchema } from '../src/case';
+
+import { caseRequiredFieldKeySchema } from '../src/case-settings';
 
 import { ticketStatusSchema, ticketPrioritySchema, slaStatusSchema } from '../src/ticket';
 
@@ -95,6 +98,13 @@ describe('Enum Consistency - DRY Architecture', () => {
     it('should derive caseTaskStatusSchema from domain CASE_TASK_STATUSES', () => {
       const domainValues = [...CASE_TASK_STATUSES];
       const schemaValues = caseTaskStatusSchema.options;
+
+      expect(schemaValues).toEqual(domainValues);
+    });
+
+    it('should derive caseRequiredFieldKeySchema from domain CASE_REQUIRED_FIELD_KEYS (PG-204)', () => {
+      const domainValues = [...CASE_REQUIRED_FIELD_KEYS];
+      const schemaValues = caseRequiredFieldKeySchema.options;
 
       expect(schemaValues).toEqual(domainValues);
     });
