@@ -4569,15 +4569,66 @@ items:
       Kiritimati/Chatham tests; then reuse it from case-sla-deadline.ts.
     status: open
     notes: 'gh issue #867. PG-204 sidestepped it with an exact local helper.'
+  PG-204-CASES-UPDATE-TENANT-SCOPE-001:
+    origin_task: PG-204
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Pre-existing in apps/api/src/modules/legal/cases.router.ts: cases.update
+      writes input.assignedTo with no tenant check and updates by { id } only
+      (:543-547), and removeTask deletes caseTask by { id: taskId } without
+      checking caseId or tenant (:752-754). Found by the PG-204 spec exploration.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Tenant-check assignedTo with tenantUserWhere; updateMany on { id, tenantId };
+      removeTask via deleteMany { id, caseId, tenantId } with NOT_FOUND on count 0;
+      caller-based negative tests.
+    status: open
+    notes: 'gh issue #880. Not PG-204 code; security-lead required it filed before merge.'
+  PG-204-HYDRATION-WINDOWS-PATTERNS-001:
+    origin_task: PG-204
+    owner: Tech Lead
+    severity: low
+    description: >-
+      tools/scripts/lib/stoa/context-hydration.ts scanCodebasePatterns runs
+      grep with 2>/dev/null through execSync, which uses cmd.exe on Windows, so
+      every hydration on a Windows host returns 0 codebase patterns (exit 0).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Replace the shell pipeline with Node fs + RegExp (or execFileSync without
+      redirection) and test for a non-zero pattern count.
+    status: open
+    notes: 'gh issue #881. Hit when /hydrate-context PG-204 was run on 2026-10-13.'
+  PG-204-A11Y-MINORS-001:
+    origin_task: PG-204
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      WCAG 2.1 AA minors in the case types screens (modal-hidden live region,
+      aria-busy loading output, non-live duplicate-step error, empty-name Save
+      with no message, aria-disabled styling, disabled-while-pending focus loss)
+      and pre-existing CaseForm items (client combobox without listbox role,
+      small clear button, unverified focus-ring contrast).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fix per gh issue #882; verify contrast on a rendered page in both themes.
+    status: open
+    notes: 'gh issue #882. The spec-required a11y items were fixed in PG-204.'
 summary:
-  total_items: 423
+  total_items: 426
   by_severity:
     critical: 241
     high: 12
-    medium: 155
-    low: 15
+    medium: 156
+    low: 17
   by_status:
-    open: 407
+    open: 410
     in_progress: 0
     resolved: 16
     wont_fix: 0
