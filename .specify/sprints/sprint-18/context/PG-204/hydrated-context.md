@@ -1,5 +1,7 @@
 # Hydrated Context: PG-204
 
+> **Provenance:** Generated at 2026-10-13T06:22:17Z by /hydrate-context (tools/scripts/lib/stoa/context-hydration.ts), AFTER the spec phase (spec committed 00:09:23Z, consensus re-run 06:20:57Z) and after most of the implementation. It did not inform the original spec, plan or code; it is kept as the record of the late run. The hand-made PG-204-hydrated-context.json from the original session is relabelled separately.
+
 **Generated:** 2026-10-13T06:22:17.459Z
 **Context Hash:** 5b957c203001...
 

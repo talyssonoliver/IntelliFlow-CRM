@@ -49,6 +49,11 @@ shows a failing run before the fix commit. Times are UTC, taken from the transcr
 | E19 focus after removing the last row | `e3f23e584` | **Yes.** 06:28:57Z |
 | E15 inline server error on New Case | `e3f23e584` | **Yes.** 06:29:28Z |
 | axe on CaseTypesLoading and DeleteCaseTypeDialog | `e3f23e584` | **No.** Green on first run. |
+| Codex a31603d21: typed deadline at UTC midnight (validator `deadlineDate`, end of day in the case zone, form/page) | `13cf1f0db` | **Yes.** 09:09:24Z validators (5 failing), 09:09:38Z api (8), 09:09:56Z web (3); logs in `matop/gates/codex-tz-fix/` (the validators RED was seen on the console and not saved). The real-DB round trip (New York, Tokyo) was first run after the fix, green. |
+| Codex fallback 13cf1f0db: skipped day gives Invalid Date (Pacific/Apia) | `07b2f9044` | **Yes.** 13:35:50Z, RangeError (`codex-tz-fix/red-apia.log`). The 13:34:50Z attempt had wrong expected values (kept as `red-apia-attempt1-wrong-expectations.log`). |
+| Codex 07b2f9044: checklist order lost on the case page | `653e23641` | **Yes.** 13:40:09Z, api 1 and web 1 failing (`matop/gates/codex-order-fix/`). |
+| Codex (staged tree): list deadline shown in London; offset rounded to minutes | `653e23641` | **Yes.** 13:46:28Z, api 2 and web 2 failing (`matop/gates/codex-tzdisplay-fix/`). |
+| Plan re-verify: requiredFields cardinality CHECK; tenant-delete cascade | `731a83a99` | **No.** Characterization tests of the existing schema, green on first run (row-07 re-run). |
 
 ## Validation (corrected 2026-10-13; every number below is from a log)
 
@@ -58,15 +63,15 @@ verdict file had been hand-written. The MATOP Phase 3 run below replaces it; its
 
 | Step | Result | Evidence |
 |---|---|---|
-| Validation matrix rows 01-07 (at `6bf14467f`) | domain resolver 25; domain 2957; validators 2558; adapters 2967; db build + typecheck; api 7295 (18 pre-existing skips); integration case-types 17 on the local test DB (Node 22) - all exit 0 | `matop/validation-matrix.json`, `matop/gates/validation-matrix-0*.log` |
-| Rows 08-13 (re-run at `d7d91e5e8`) | web 12677 tests in 797 files; typecheck; lint; build (224 pages, `/cases/case-types` and `/cases/new`); related-tests coverage; diff coverage 97.9% (559/571) - all exit 0 | same; run 1 at `6bf14467f` kept in `matop/gates/run1-at-6bf14467f/` |
+| Rows 01, 02, 04 (at `6bf14467f`, 06:39-06:41Z) | domain resolver 25; domain 2957; adapters 2967. packages/domain and packages/adapters are unchanged since (`git diff 6bf14467f..HEAD` is empty for both), so these still stand | `matop/gates/validation-matrix-0{1,2,4}-*.log` |
+| Rows 03, 05-13 (re-run after the reboot, 13:53-14:23Z, at `653e23641`/`731a83a99`; Docker healthy) | validators 2563; db build + typecheck; api 7308 passed, 18 pre-existing skips (attempt 1: every test passed but vitest exited 1 on a worker teardown error, "Closing rpc while onUserConsoleLog was pending"; the L5 retry was clean); integration case-types 21 on Node 22 with `--exclusive intelliflow-db`, re-run at `731a83a99` 14:23Z; web 12682 in 797 files; typecheck; lint; build (224 pages); related-tests coverage (Node 22); diff coverage 97.8% (583/596) | `matop/validation-matrix.json`, `matop/gates/validation-matrix-*.log`; the earlier runs are in `gates/run1-at-6bf14467f/` and `gates/run2-at-d7d91e5e8/` (run 2 rows 05-07 fell in the Docker hang, 03:47-07:30Z) |
 | Baselines | root `pnpm run typecheck` and `pnpm run lint` exit 0, but both were 100% turbo cache hits (corroboration only) | `matop/gates/turbo-*.log` |
-| Sonar guard over the branch diff | 49 TS/TSX files, exit 0 (CI mode; the local mode only sees uncommitted files) | `matop/gates/sonar-guard-branch-diff.log` |
+| Sonar guard over the branch diff | 53 TS/TSX files plus the web a11y guard on 26 files, exit 0 (CI mode, at `731a83a99`) | `matop/gates/sonar-guard-branch-diff.log` |
 | Gate 3c knip | 12 unused files, all pre-existing; none of the 29 created TS/TSX files | `matop/gates/gate-3c-knip.log` |
 | Class A migrate deploy | `prisma migrate deploy` of all 68 migrations into a fresh scratch DB (after the CI Supabase bootstrap): exit 0; case_types objects + RLS verified; scratch DB dropped | `matop/gates/class-a-migrate-deploy-proof.log` (attempt 1 without the bootstrap failed at the baseline and is kept) |
-| STOA sub-agents | Foundation PASS, Domain PASS, Quality PASS, Security WARN (pre-existing sprintf-js advisory, gh #876) -> aggregate **WARN** | `matop/stoa-verdicts/*.json`, `matop/stoa-aggregate.json` |
+| STOA sub-agents | Foundation PASS, Domain PASS, Quality PASS, Security WARN (pre-existing sprintf-js advisory, gh #876) -> aggregate **WARN**. Domain addendum_2 at `731a83a99` (post-audit commits, contract change): PASS | `matop/stoa-verdicts/*.json`, `matop/stoa-aggregate.json` |
 | a11y contrast at exec | FAIL (text-destructive 3.5:1 light / 1.8:1 dark; 3 swatch fills < 3:1) -> fixed in `d7d91e5e8` -> re-check PASS WITH MINOR | `matop/a11y-contrast-review.json`, `matop/a11y-contrast-review-recheck.json` |
-| Codex review | reviewer codex, PASS, 0 findings, 47 files (at `d7d91e5e8`) | `matop/gates/codex-review-d7d91e5e8.log` |
+| Codex review | after the runner audit: FAIL at `a31603d21` (typed deadline at UTC midnight), Claude-fallback FAIL at `13cf1f0db` (Apia skipped day), FAIL at `07b2f9044` (checklist order), FAIL on the staged tree (list deadline zone, offset seconds), then **PASS at `653e23641`** (reviewer codex, 0 findings). Every finding fixed test-first; no waivers | `matop/gates/codex-review-*.log` |
 | /code-review (full) and /sonarqube-fix | see the attestation gates `code-review skill` and `sonarqube-fix skill` | `matop/code-review-summary.json`, `matop/sonarcloud-main-issues-on-changed-files.json` |
 | Domain resolver coverage | 100% statements 38/38, branches 26/26, functions 12/12, lines 32/32 (25 tests) | `matop/gates/domain-resolver-coverage.log` |
 

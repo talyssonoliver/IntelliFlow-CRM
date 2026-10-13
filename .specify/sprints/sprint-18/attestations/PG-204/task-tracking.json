@@ -49,14 +49,14 @@
       "source": "first recorded in the 99bccbb4c attestation (commit time)"
     }
   ],
-  "completed_at": "2026-10-13T08:45:21Z",
+  "completed_at": "2026-10-13T14:24:09Z",
   "dependencies_meta": {
     "verified_at": "2026-04-29T21:54:51.885Z"
   },
   "execution": {
     "started_at": "2026-10-13T00:20:01Z",
-    "completed_at": "2026-10-13T08:45:21Z",
-    "duration_minutes": 505,
+    "completed_at": "2026-10-13T14:24:09Z",
+    "duration_minutes": 844,
     "executor": "Claude Code /exec",
     "agents": [
       "Foundation",
@@ -64,9 +64,14 @@
       "Quality",
       "Security"
     ],
-    "retry_count": 1,
-    "last_error": "ENOSPC twice on C: (2026-10-13): the first killed the run mid-write and the runner restored apps/web/src/app/cases/(list)/new/page.tsx from HEAD; the second was recovered by deleting this lane's own gitignored apps/web/.next (2.41 GB) and artifacts/coverage-parts (0.31 GB).",
-    "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/validation-matrix.json"
+    "retry_count": 2,
+    "last_error": "ENOSPC twice on C: (2026-10-13): the first killed the run mid-write and the runner restored apps/web/src/app/cases/(list)/new/page.tsx from HEAD; the second was recovered by deleting this lane's own gitignored apps/web/.next (2.41 GB) and artifacts/coverage-parts (0.31 GB). Machine reboot ~12:50Z interrupted a commit (staged files verified intact; a hung eslint in the commit hook was killed and the commit re-run).",
+    "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/validation-matrix.json",
+    "metrics_tree_json": {
+      "path": "apps/project-tracker/docs/metrics/sprint-18/PG-204.json",
+      "updated": false,
+      "reason": "ADR-067 Phase 2: the per-task metrics tree is a gitignored generated cache (.gitignore:204, apps/project-tracker/docs/metrics/sprint-*/**/*.json), rebuilt by generate:metrics as merge(CSV-derived fields + this task-tracking.json). Agents write session metrics here; the /exec-metrics skill text still names the old path. Not hand-edited so the cache is not forked."
+    }
   },
   "kpis": {
     "domain_resolver_coverage": {
@@ -148,7 +153,12 @@
     {
       "at": "2026-10-13T06:20:57Z",
       "status": "In Progress",
-      "note": "Runner audit fixes: /spec-exploration ran (8 Explore sub-agents, 06:12:43-06:17:16Z); spec amended; /spec-consensus re-run 8/8 APPROVED in 1 round; /hydrate-context ran at 06:22:17Z."
+      "note": "Runner audit fixes: /spec-exploration ran (8 Explore sub-agents, 06:12:43-06:17:16Z); spec amended; /spec-consensus re-run 8/8 APPROVED in 1 round (last verdict 06:20:57Z)."
+    },
+    {
+      "at": "2026-10-13T06:22:17Z",
+      "status": "In Progress",
+      "note": "/hydrate-context ran (hydrated-context.json generatedAt 06:22:17.459Z), after the spec phase."
     },
     {
       "at": "2026-10-13T06:36:56Z",
@@ -164,6 +174,11 @@
       "at": "2026-10-13T08:45:21Z",
       "status": "Needs Human",
       "note": "/exec-metrics session end. Exec gates green except Lighthouse (NEEDS_HUMAN) and Gate 4b (runner pushes); STOA aggregate WARN. Ready for the runner: rename done, pre-ship + push are runner-owned."
+    },
+    {
+      "at": "2026-10-13T14:24:09Z",
+      "status": "Needs Human",
+      "note": "Runner addendum after the reboot: codex FAIL at a31603d21 fixed test-first (13cf1f0db), then codex fixes 07b2f9044 and 653e23641 (codex PASS at 653e23641); plan re-verify (63 kept with citations, 1 unticked) + tests 731a83a99; matrix rows 03, 05-13 re-run 13:53-14:23Z with Docker healthy; STOA Domain addendum_2 PASS. Ready for pre-ship + push (runner asked this lane to push; no merge)."
     }
   ],
   "stream": null,
@@ -222,5 +237,5 @@
     }
   ],
   "timestamps_note": "status_history corrected 2026-10-13T08:28:14Z after the runner audit: times now come from the session transcript or commit metadata (each entry says which); nothing is rounded.",
-  "actual_duration_minutes": 563
+  "actual_duration_minutes": 902
 }

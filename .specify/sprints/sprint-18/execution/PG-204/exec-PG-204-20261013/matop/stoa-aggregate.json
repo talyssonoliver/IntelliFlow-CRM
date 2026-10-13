@@ -21,7 +21,10 @@
       "produced_at": "2026-10-13T07:17:49Z",
       "addendum_head": "d7d91e5e8",
       "addendum_checked_at": "2026-10-13T08:05:38Z",
-      "file": "stoa-verdicts/Domain.json"
+      "file": "stoa-verdicts/Domain.json",
+      "addendum_2_head": "731a83a99",
+      "addendum_2_verdict": "PASS",
+      "addendum_2_checked_at": "2026-10-13T14:11:07Z"
     },
     {
       "stoa": "Quality",
@@ -42,5 +45,6 @@
       "file": "stoa-verdicts/Security.json"
     }
   ],
-  "aggregate": "WARN"
+  "aggregate": "WARN",
+  "refreshed_at": "2026-10-13T14:24:16Z"
 }

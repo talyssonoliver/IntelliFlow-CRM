@@ -107,5 +107,55 @@
     "gate": "migration applied via prisma migrate deploy (Class A gate)",
     "result": "PASS",
     "notes": "Read matop/gates/class-a-migrate-deploy-proof.log (run at d7d91e5e8, Node 22.14.0): fresh scratch DB with CI Supabase bootstrap, prisma migrate deploy applied all 68 migrations (exit 0), migrate status exit 0 and up to date, _prisma_migrations row for 20261013120000_case_types finished and not rolled back, 0 unfinished. Queried and present: both new tables with RLS on, case_types_colorToken_check and cases_tenantId_caseTypeId_fkey both validated, case_types_one_default_key and case_types_tenant_lower_name_key indexes, both tenant_isolation policies; scratch DB dropped. Attempt 1 without the bootstrap failed at the baseline (schema extensions missing), a harness prerequisite unrelated to this migration. Commit d7d91e5e8 changed 8 web files (CSS classes and form/dialog markup, one web test) plus a rename of the superseded verdict file, none in domain, db, validators or api. This closes the NOT_RUN gate and the Class A deploy-path part of F1; the shared local test DB still lacks a _prisma_migrations record for these objects (local-only drift, not a production concern). Verdict unchanged."
+  },
+  "addendum_2": {
+    "head": "731a83a99",
+    "checked_at": "2026-10-13T14:11:07Z",
+    "produced_by": "stoa-domain sub-agent",
+    "commits_reviewed": [
+      "13cf1f0db",
+      "07b2f9044",
+      "653e23641",
+      "731a83a99"
+    ],
+    "verdict": "PASS",
+    "findings": [
+      {
+        "severity": "info",
+        "area": "backward-compat",
+        "detail": "deadline (z.coerce.date) is still accepted unchanged; deadlineDate is additive and optional (packages/validators/src/case.ts:36-41). Only in-repo callers of cases.create are the web form/new page, both migrated to deadlineDate; cases.list consumers (EntitySearchField.tsx:100) are unaffected by the added timezone/position fields, which are optional in web types (apps/web/src/components/cases/types.ts:21,48). Sending both is a clean BAD_REQUEST (cases.router.ts:448-453)."
+      },
+      {
+        "severity": "info",
+        "area": "tenant",
+        "detail": "No change to tenant scoping: assertTenantContext and tenantId usage untouched; resolveDeadlineDate (cases.router.ts:109-120) is pure and only reads input + case timezone."
+      },
+      {
+        "severity": "info",
+        "area": "dry/boundaries",
+        "detail": "deadlineDate validation lives in packages/validators only (calendarDateSchema); end-of-day helper stays in apps/api/src/lib; no package imports apps/api and the web uses only its own local types and the tRPC client. No new domain enum, so no DRY-enum impact. No container.ts/context.ts wiring changes."
+      },
+      {
+        "severity": "low",
+        "area": "evidence-gap",
+        "detail": "731a83a99 (tests/integration/case-types.test.ts, +28 lines: cardinality check and tenant delete cascade) is test-only but committed 15:10 local (14:10Z), after the integration run at 13:58Z (validation-matrix-07-integration-db.log, 21 tests, exit 0, run at 653e23641). Those added integration tests have no log of their own; re-run row 07 at HEAD to close it. Not a defect in product code."
+      },
+      {
+        "severity": "info",
+        "area": "coverage",
+        "detail": "New branches covered: both deadlineDate zone directions, deadline+deadlineDate rejection, deadlineDate satisfying a required deadline (cases.router.case-types.test.ts), task position and list timezone DTOs, validator accept/reject incl. 2026-02-31 (packages/validators/src/__tests__/case.test.ts), skipped-day/Apia/Kolkata/UTC+14 helper cases (apps/api/src/lib/__tests__/case-sla-deadline.test.ts). Limitation: not read-verified as executed at HEAD, only at 653e23641 (API 7308 passed, validators 2563, web 12682, typecheck and lint exit 0)."
+      }
+    ],
+    "evidence": [
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-03-validators-full.log (exit 0, 2563 passed)",
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-06-api-full.log (exit 0, 7308 passed, 18 skipped)",
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-07-integration-db.log (exit 0, 21 passed, pre-731a83a99)",
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-08-web-full.log (exit 0, 12682 passed)",
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-09-typecheck.log (exit 0)",
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-10-lint.log (exit 0)",
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/codex-review-653e23641.log (PASS, 0 unwaived)",
+      ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/codex-tz-fix/, codex-order-fix/, codex-tzdisplay-fix/ (red-*.log and green-*.log pairs)",
+      "git diff d7d91e5e8..HEAD -- apps packages tests (read-only; no test or build commands run)"
+    ]
   }
 }
