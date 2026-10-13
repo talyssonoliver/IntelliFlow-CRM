@@ -15,6 +15,10 @@ import { CaseForm } from '@/components/cases';
 import { requiredKeysFromRows } from '@/components/cases/case-type-labels';
 import { api } from '@/lib/api';
 
+function optionalString(value: unknown): string | undefined {
+  return typeof value === 'string' ? value : undefined;
+}
+
 export default function NewCasePage() {
   const router = useRouter();
 
@@ -43,7 +47,7 @@ export default function NewCasePage() {
   const handleSubmit = useCallback(
     async (data: Record<string, unknown>) => {
       // CaseForm populates title and clientId — validate before calling typed mutation
-      const { title, clientId, description, priority, deadline, assignedTo, caseTypeId } = data;
+      const { title, clientId, priority, deadline } = data;
       if (typeof title !== 'string' || typeof clientId !== 'string') {
         toast({
           title: 'Validation Error',
@@ -55,12 +59,15 @@ export default function NewCasePage() {
       await createMutation.mutateAsync({
         title,
         clientId,
-        description: typeof description === 'string' ? description : undefined,
+        description: optionalString(data.description),
         // PG-204: omitted when blank so the case type / Case Settings default applies.
         priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | undefined,
         deadline: deadline as Date | undefined,
-        assignedTo: typeof assignedTo === 'string' ? assignedTo : undefined,
-        caseTypeId: typeof caseTypeId === 'string' ? caseTypeId : undefined,
+        assignedTo: optionalString(data.assignedTo),
+        // PG-204: jurisdiction and timezone feed the required-field check and the SLA deadline.
+        timezone: optionalString(data.timezone),
+        jurisdiction: optionalString(data.jurisdiction),
+        caseTypeId: optionalString(data.caseTypeId),
       });
     },
     [createMutation]

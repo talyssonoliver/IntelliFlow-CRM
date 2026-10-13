@@ -93,6 +93,37 @@ describe('/cases/new', () => {
       priority: undefined,
       deadline: undefined,
       assignedTo: undefined,
+      timezone: undefined,
+      jurisdiction: undefined,
+      caseTypeId: 'ct-lit',
+    });
+  });
+
+  it('forwards jurisdiction and timezone (required-field check and SLA deadline need them)', async () => {
+    render(<NewCasePage />);
+    const deadline = new Date('2026-12-01T00:00:00Z');
+    await act(async () => {
+      await h.formProps!.onSubmit({
+        title: 'Smith v Jones',
+        clientId: 'acc-1',
+        caseTypeId: 'ct-lit',
+        priority: 'HIGH',
+        description: 'Contract dispute',
+        deadline,
+        assignedTo: 'user-2',
+        timezone: 'America/New_York',
+        jurisdiction: 'US-NY',
+      });
+    });
+    expect(h.mutateAsync).toHaveBeenCalledWith({
+      title: 'Smith v Jones',
+      clientId: 'acc-1',
+      description: 'Contract dispute',
+      priority: 'HIGH',
+      deadline,
+      assignedTo: 'user-2',
+      timezone: 'America/New_York',
+      jurisdiction: 'US-NY',
       caseTypeId: 'ct-lit',
     });
   });
