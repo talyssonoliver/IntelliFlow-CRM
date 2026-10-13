@@ -12,7 +12,6 @@
  * - Diff preview generation
  */
 
-import { randomUUID } from 'node:crypto';
 import {
   PendingAction,
   ApprovalDecision,
@@ -25,6 +24,8 @@ import {
 import { agentLogger } from './logger';
 import { getAgentTool, getForTenant, ToolDisabledError } from './tools';
 import { PrismaAgentActionStore } from './prisma-action-store';
+import { executeApprovedAction, prepareExecutionInput } from './approved-action-executor';
+import type { Context } from '../context';
 import { prisma as sharedPrisma } from '@intelliflow/db';
 
 // ---------------------------------------------------------------------------
@@ -178,6 +179,14 @@ export class ApprovalWorkflowService {
   }
 
   /**
+   * PG-198 (A2): approved actions whose execution was interrupted (left EXECUTING),
+   * requested or approved by this user — shown to reviewers, never re-run.
+   */
+  async getInterruptedActions(userId: string, tenantId?: string): Promise<ExecutedAction[]> {
+    return actionStore.findInterrupted(userId, tenantId);
+  }
+
+  /**
    * Get all pending actions for an agent session
    */
   async getPendingActionsForSession(sessionId: string): Promise<PendingAction[]> {
@@ -193,11 +202,18 @@ export class ApprovalWorkflowService {
   }
 
   /**
-   * Approve and execute a pending action
+   * Approve and execute a pending action (PG-198 RF-1, #853).
+   *
+   * The action is claimed atomically (only one approver can win), the input that
+   * will run is re-validated with the tool's schema, and the real mutation runs
+   * through the target module's tRPC procedure on the approver's request
+   * context. A failure is stored as FAILED with its reason — never as success —
+   * and no rollback token is issued while tool rollbacks are simulated (#856).
    */
   async approveAction(
     decision: ApprovalDecision,
-    context: AgentAuthContext
+    context: AgentAuthContext,
+    requestCtx?: Context
   ): Promise<ExecutedAction> {
     const action = await pendingActionsStore.get(decision.actionId);
 
@@ -216,56 +232,41 @@ export class ApprovalWorkflowService {
     }
 
     const tool = await this.resolveApprovalTool(action, context);
-
-    // Update action status
-    action.status = 'APPROVED';
-    await pendingActionsStore.update(action);
-
     if (!tool) {
       throw new Error(`Tool not found: ${action.toolName}`);
     }
 
-    // Use modified input if provided
-    const inputToExecute = decision.modifiedInput || action.input;
+    // Validate before claiming, so a bad modification leaves the action pending.
+    const inputToExecute = prepareExecutionInput(
+      action.toolName,
+      tool.inputSchema,
+      action.input,
+      decision.modifiedInput
+    );
 
-    // Execute the approved action
-    let executionResult: unknown;
-    let executionError: string | undefined;
-
-    try {
-      // Dispatch the tool action via the registered tool handler.
-      // The tool.execute() call is deferred to the tool registry (getAgentTool),
-      // which routes to the appropriate service. The result below is a default
-      // approval confirmation envelope returned when the tool itself does not
-      // produce a richer output (e.g. write-only side-effect actions).
-      executionResult = {
-        success: true,
-        message: 'Action executed successfully',
-        entityId: randomUUID(),
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      executionError = error instanceof Error ? error.message : 'Execution failed';
+    const claimedAt = new Date();
+    if (!(await actionStore.claimForExecution(action, decision.decidedBy, claimedAt))) {
+      throw new Error('Action is no longer pending (already decided or expired)');
     }
 
-    // Generate rollback token if action supports rollback
-    const rollbackToken = tool.rollback ? randomUUID() : undefined;
+    const outcome = await executeApprovedAction(action.toolName, inputToExecute, requestCtx);
+    const durationMs = Date.now() - claimedAt.getTime();
 
-    // Create executed action record
     const executedAction: ExecutedAction = {
       ...action,
+      input: inputToExecute,
+      status: 'APPROVED',
+      executionStatus: outcome.status,
       executedAt: new Date(),
-      executionResult,
-      executionError,
+      executionResult: outcome.result,
+      executionError: outcome.error,
       approval: decision,
-      rollbackAvailable: !!tool.rollback && !executionError,
-      rollbackToken,
+      rollbackAvailable: false,
+      rollbackToken: undefined,
     };
 
-    // Store executed action
     await executedActionsStore.add(executedAction);
 
-    // Log the approval and execution
     await agentLogger.log({
       userId: context.userId,
       agentSessionId: context.agentSessionId,
@@ -273,17 +274,18 @@ export class ApprovalWorkflowService {
       actionType: action.actionType,
       entityType: action.entityType,
       input: inputToExecute,
-      output: executionResult,
-      success: !executionError,
-      error: executionError,
-      durationMs: 0,
+      output: outcome.result,
+      success: outcome.status === 'SUCCEEDED',
+      error: outcome.error,
+      durationMs,
       approvalRequired: true,
       approvalStatus: 'APPROVED',
       approvedBy: decision.decidedBy,
       metadata: {
         originalActionId: action.id,
         modifiedInput: !!decision.modifiedInput,
-        rollbackAvailable: executedAction.rollbackAvailable,
+        executionStatus: outcome.status,
+        rollbackAvailable: false,
       },
     });
 

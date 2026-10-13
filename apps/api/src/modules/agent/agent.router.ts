@@ -37,7 +37,7 @@ import { agentLogger } from '../../agent/logger';
 import { hasPermission } from '../../lib/rbac';
 import type { Context } from '../../context';
 import { assertQuota } from '../../shared/quota-guard';
-import type { AgentAuthContext, PendingAction } from '../../agent/types';
+import type { AgentAuthContext, ExecutionStatus, PendingAction } from '../../agent/types';
 
 // ADR-070: server-side AI_INTELLIGENCE entitlement (plan gate, not role gate).
 const protectedProcedure = baseProtectedProcedure.use(requireModule('AI_INTELLIGENCE'));
@@ -58,6 +58,29 @@ async function requireTenantOwnedAction(ctx: Context, actionId: string): Promise
     throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
   }
   return action;
+}
+
+/**
+ * Read model for the approval queue (PG-198): real confidence as a percent or
+ * null (RF-2 — never derived from impact), impact separately, escalation, and
+ * the execution status of an approved-but-interrupted action.
+ */
+function toActionView(action: PendingAction & { executionStatus?: ExecutionStatus }) {
+  return {
+    id: action.id,
+    toolName: action.toolName,
+    actionType: action.actionType,
+    entityType: action.entityType,
+    preview: action.preview,
+    createdAt: action.createdAt,
+    expiresAt: action.expiresAt,
+    status: action.status,
+    confidence: action.confidence === undefined ? null : Math.floor(action.confidence * 100),
+    estimatedImpact: action.preview.estimatedImpact ?? null,
+    escalatedAt: action.escalatedAt ?? null,
+    escalatedTo: action.escalatedTo ?? null,
+    executionStatus: action.executionStatus ?? null,
+  };
 }
 
 /**
@@ -177,6 +200,8 @@ export const agentRouter = createTRPCRouter({
       z.object({
         toolName: z.string(),
         input: z.record(z.string(), z.unknown()),
+        /** PG-198 (RF-2): the calling agent's own confidence, 0..1, when it has one. */
+        confidence: z.number().min(0).max(1).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -245,6 +270,7 @@ export const agentRouter = createTRPCRouter({
           expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
           createdBy: agentContext.userId,
           agentSessionId: agentContext.agentSessionId,
+          confidence: input.confidence,
         };
 
         await pendingActionsStore.add(pendingAction);
@@ -301,21 +327,12 @@ export const agentRouter = createTRPCRouter({
    */
   getPendingApprovals: protectedProcedure.query(async ({ ctx }) => {
     const agentContext = buildAgentContext(ctx);
-    const pendingActions = await approvalWorkflowService.getPendingActions(
-      agentContext.userId,
-      ctx.user?.tenantId
-    );
+    const [pendingActions, interrupted] = await Promise.all([
+      approvalWorkflowService.getPendingActions(agentContext.userId, ctx.user?.tenantId),
+      approvalWorkflowService.getInterruptedActions(agentContext.userId, ctx.user?.tenantId),
+    ]);
 
-    return pendingActions.map((action) => ({
-      id: action.id,
-      toolName: action.toolName,
-      actionType: action.actionType,
-      entityType: action.entityType,
-      preview: action.preview,
-      createdAt: action.createdAt,
-      expiresAt: action.expiresAt,
-      status: action.status,
-    }));
+    return [...pendingActions, ...interrupted].map(toActionView);
   }),
 
   /**
@@ -327,18 +344,7 @@ export const agentRouter = createTRPCRouter({
       // Tenant ownership guard: only the owning tenant may read an action by id.
       const action = await requireTenantOwnedAction(ctx, input.actionId);
 
-      return {
-        id: action.id,
-        toolName: action.toolName,
-        actionType: action.actionType,
-        entityType: action.entityType,
-        input: action.input,
-        preview: action.preview,
-        createdAt: action.createdAt,
-        expiresAt: action.expiresAt,
-        status: action.status,
-        metadata: action.metadata,
-      };
+      return { ...toActionView(action), input: action.input, metadata: action.metadata };
     }),
 
   /**
@@ -380,10 +386,15 @@ export const agentRouter = createTRPCRouter({
         modifiedInput: input.modifiedInput,
       };
 
-      const executedAction = await approvalWorkflowService.approveAction(decision, agentContext);
+      const executedAction = await approvalWorkflowService.approveAction(
+        decision,
+        agentContext,
+        ctx
+      );
 
       return {
-        success: !executedAction.executionError,
+        success: executedAction.executionStatus === 'SUCCEEDED',
+        executionStatus: executedAction.executionStatus,
         actionId: executedAction.id,
         executedAt: executedAction.executedAt,
         result: executedAction.executionResult,

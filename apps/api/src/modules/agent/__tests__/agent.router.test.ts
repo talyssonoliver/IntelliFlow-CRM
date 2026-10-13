@@ -64,6 +64,7 @@ const mockToolsNotRequiringApproval = [
 const mockGetAgentTool = vi.fn();
 const mockApprovalGetPendingActions = vi.fn().mockResolvedValue([]);
 const mockApprovalGetPendingAction = vi.fn();
+const mockApprovalGetInterruptedActions = vi.fn().mockResolvedValue([]);
 const mockApprovalApproveAction = vi.fn();
 const mockApprovalRejectAction = vi.fn();
 const mockPendingActionsAdd = vi.fn().mockResolvedValue(undefined);
@@ -121,8 +122,10 @@ vi.mock('../../../agent/approval-workflow', () => ({
     getPendingActions: (userId: string, tenantId?: string) =>
       mockApprovalGetPendingActions(userId, tenantId),
     getPendingAction: (actionId: string) => mockApprovalGetPendingAction(actionId),
-    approveAction: (decision: unknown, context: unknown) =>
-      mockApprovalApproveAction(decision, context),
+    getInterruptedActions: (userId: string, tenantId?: string) =>
+      mockApprovalGetInterruptedActions(userId, tenantId),
+    approveAction: (decision: unknown, context: unknown, requestCtx?: unknown) =>
+      mockApprovalApproveAction(decision, context, requestCtx),
     rejectAction: (decision: unknown, context: unknown) =>
       mockApprovalRejectAction(decision, context),
   },
@@ -211,6 +214,7 @@ describe('agentRouter', () => {
     // Reset default mock behavior
     mockAuthorizeToolExecution.mockResolvedValue({ authorized: true, reason: null });
     mockApprovalGetPendingActions.mockResolvedValue([]);
+    mockApprovalGetInterruptedActions.mockResolvedValue([]);
     // Default: a SAME-tenant pending action so the tenant-ownership guard on
     // getPendingAction / approveAction / rejectAction passes. Individual tests
     // override this for the not-found and cross-tenant cases.
@@ -394,6 +398,27 @@ describe('agentRouter', () => {
       expect(mockTool.execute).not.toHaveBeenCalled();
     });
 
+    it('stores the calling agent confidence with the pending action (PG-198 RF-2)', async () => {
+      mockGetAgentTool.mockReturnValue({
+        name: 'create_case',
+        actionType: 'CREATE',
+        entityTypes: ['CASE'],
+        requiresApproval: true,
+        generatePreview: vi
+          .fn()
+          .mockResolvedValue({ summary: 'x', changes: [], affectedEntities: [] }),
+        execute: vi.fn(),
+      });
+      const caller = agentRouter.createCaller(createAgentTestContext());
+
+      await caller.executeTool({ toolName: 'create_case', input: {}, confidence: 0.93 });
+      expect(mockPendingActionsAdd.mock.calls[0]![0]).toMatchObject({ confidence: 0.93 });
+
+      await expect(
+        caller.executeTool({ toolName: 'create_case', input: {}, confidence: 1.2 })
+      ).rejects.toThrow();
+    });
+
     it('should throw NOT_FOUND for unknown tool', async () => {
       mockGetAgentTool.mockReturnValue(undefined);
 
@@ -485,6 +510,61 @@ describe('agentRouter', () => {
       expect(result[0].id).toBe('action_1');
       expect(result[0].toolName).toBe('create_case');
       expect(result[1].id).toBe('action_2');
+      // PG-198 (RF-2): no confidence supplied -> null, never an impact-derived number.
+      expect(result[0]).toMatchObject({
+        confidence: null,
+        estimatedImpact: null,
+        escalatedAt: null,
+        escalatedTo: null,
+        executionStatus: null,
+      });
+    });
+
+    it('exposes real confidence, impact and escalation, plus interrupted executions (PG-198)', async () => {
+      const escalatedAt = new Date('2026-10-13T09:00:00Z');
+      mockApprovalGetPendingActions.mockResolvedValue([
+        {
+          id: 'action_1',
+          toolName: 'create_case',
+          actionType: 'CREATE',
+          entityType: 'CASE',
+          preview: { summary: 'Create case', estimatedImpact: 'LOW' },
+          createdAt: new Date(),
+          expiresAt: new Date(Date.now() + 60_000),
+          status: 'PENDING',
+          confidence: 0.957,
+          escalatedAt,
+          escalatedTo: 'manager-1',
+        },
+      ]);
+      mockApprovalGetInterruptedActions.mockResolvedValue([
+        {
+          id: 'action_2',
+          toolName: 'update_case',
+          actionType: 'UPDATE',
+          entityType: 'CASE',
+          preview: { summary: 'Update case' },
+          createdAt: new Date(),
+          expiresAt: new Date(),
+          status: 'APPROVED',
+          executionStatus: 'EXECUTING',
+        },
+      ]);
+
+      const caller = agentRouter.createCaller(createAgentTestContext());
+      const result = await caller.getPendingApprovals();
+
+      expect(result[0]).toMatchObject({
+        confidence: 95,
+        estimatedImpact: 'LOW',
+        escalatedAt,
+        escalatedTo: 'manager-1',
+      });
+      expect(result[1]).toMatchObject({ id: 'action_2', executionStatus: 'EXECUTING' });
+      expect(mockApprovalGetInterruptedActions).toHaveBeenCalledWith(
+        TEST_UUIDS.user1,
+        TEST_UUIDS.tenant
+      );
     });
 
     it('should return empty array when no pending actions', async () => {
@@ -569,12 +649,13 @@ describe('agentRouter', () => {
     it('should approve and execute pending action', async () => {
       const mockExecutedAction = {
         id: 'action_123',
-        status: 'EXECUTED',
+        status: 'APPROVED',
+        executionStatus: 'SUCCEEDED',
         executedAt: new Date(),
-        executionResult: { caseId: 'case_456' },
-        executionError: null,
-        rollbackAvailable: true,
-        rollbackToken: 'rollback_xyz',
+        executionResult: { entityType: 'CASE', entityId: 'case_456' },
+        executionError: undefined,
+        rollbackAvailable: false,
+        rollbackToken: undefined,
       };
 
       mockApprovalApproveAction.mockResolvedValue(mockExecutedAction);
@@ -589,10 +670,34 @@ describe('agentRouter', () => {
       });
 
       expect(result.success).toBe(true);
+      expect(result.executionStatus).toBe('SUCCEEDED');
       expect(result.actionId).toBe('action_123');
-      expect(result.result).toEqual({ caseId: 'case_456' });
-      expect(result.rollbackAvailable).toBe(true);
-      expect(result.rollbackToken).toBe('rollback_xyz');
+      expect(result.result).toEqual({ entityType: 'CASE', entityId: 'case_456' });
+      expect(result.rollbackAvailable).toBe(false);
+      expect(result.rollbackToken).toBeUndefined();
+      // PG-198 (RF-1): the approver's request ctx is handed to the executor.
+      expect(mockApprovalApproveAction.mock.calls[0]![2]).toMatchObject({
+        user: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
+      });
+    });
+
+    it('reports a failed execution as unsuccessful with its error (PG-198)', async () => {
+      mockApprovalApproveAction.mockResolvedValue({
+        id: 'action_123',
+        status: 'APPROVED',
+        executionStatus: 'FAILED',
+        executionError: 'Client not found',
+        rollbackAvailable: false,
+      });
+      const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+      const result = await caller.approveAction({ actionId: 'action_123' });
+
+      expect(result).toMatchObject({
+        success: false,
+        executionStatus: 'FAILED',
+        error: 'Client not found',
+      });
     });
 
     it('should support modified input during approval', async () => {
@@ -623,6 +728,7 @@ describe('agentRouter', () => {
           decision: 'APPROVE',
           modifiedInput: { subject: 'Modified Subject' },
         }),
+        expect.any(Object),
         expect.any(Object)
       );
     });

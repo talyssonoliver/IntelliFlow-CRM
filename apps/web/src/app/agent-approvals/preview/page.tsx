@@ -50,7 +50,21 @@ interface PendingActionFromAPI {
   createdAt: Date | string;
   expiresAt: Date | string;
   status: string;
+  /** PG-198 (RF-2): the agent's real confidence as a percent, or null when it gave none. */
+  confidence?: number | null;
+  estimatedImpact?: 'LOW' | 'MEDIUM' | 'HIGH' | null;
+  escalatedAt?: Date | string | null;
+  escalatedTo?: string | null;
+  /** Set on an approved action whose execution never finished (interrupted). */
+  executionStatus?: 'EXECUTING' | 'SUCCEEDED' | 'FAILED' | null;
 }
+
+/** AgentAction plus the queue facts this page shows (PG-198). */
+type PreviewAction = AgentAction & {
+  impact: 'LOW' | 'MEDIUM' | 'HIGH' | null;
+  escalated: boolean;
+  interrupted: boolean;
+};
 
 function formatToolName(toolName: string): string {
   return toolName
@@ -59,7 +73,7 @@ function formatToolName(toolName: string): string {
     .join(' ');
 }
 
-function mapPendingToAction(pending: PendingActionFromAPI): AgentAction {
+function mapPendingToAction(pending: PendingActionFromAPI): PreviewAction {
   const previousState: Record<string, unknown> = {};
   const proposedState: Record<string, unknown> = {};
   for (const change of pending.preview.changes) {
@@ -72,12 +86,6 @@ function mapPendingToAction(pending: PendingActionFromAPI): AgentAction {
     APPROVED: 'approved',
     REJECTED: 'rejected',
     EXPIRED: 'expired',
-  };
-
-  const impactToConfidence: Record<string, number> = {
-    HIGH: 90,
-    MEDIUM: 70,
-    LOW: 50,
   };
 
   const agentName = formatToolName(pending.toolName);
@@ -95,7 +103,11 @@ function mapPendingToAction(pending: PendingActionFromAPI): AgentAction {
     aiReasoning: pending.preview.warnings?.length
       ? pending.preview.warnings.join('. ')
       : `Automated action via ${agentName}`,
-    confidenceScore: impactToConfidence[pending.preview.estimatedImpact || ''] || 0,
+    // RF-2 (#854): real confidence only; 0 means "none reported" and renders as a dash.
+    confidenceScore: pending.confidence ?? 0,
+    impact: pending.estimatedImpact ?? pending.preview.estimatedImpact ?? null,
+    escalated: Boolean(pending.escalatedAt),
+    interrupted: pending.status === 'APPROVED' && pending.executionStatus === 'EXECUTING',
     status: statusMap[pending.status] || 'pending',
     agentId: pending.toolName,
     agentName: agentName || 'AI Agent',
@@ -291,7 +303,7 @@ function DiffView({ previousState, proposedState }: DiffViewProps) {
 }
 
 interface ActionCardProps {
-  readonly action: AgentAction;
+  readonly action: PreviewAction;
   readonly onApprove: (id: string) => void;
   readonly onReject: (id: string, feedback: string) => void;
   readonly isExpanded: boolean;
@@ -350,6 +362,32 @@ function ActionCard({
                   {statusBadge.icon}
                   {statusBadge.label}
                 </span>
+                {action.impact && (
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    data-testid="impact-chip"
+                  >
+                    {action.impact.charAt(0) + action.impact.slice(1).toLowerCase()} impact
+                  </span>
+                )}
+                {action.escalated && (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300"
+                    data-testid="escalated-badge"
+                  >
+                    <Icon name="trending_up" className="text-sm" />
+                    Escalated
+                  </span>
+                )}
+                {action.interrupted && (
+                  <span
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                    data-testid="interrupted-badge"
+                  >
+                    <Icon name="error" className="text-sm" />
+                    Execution interrupted
+                  </span>
+                )}
               </div>
 
               <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400">
@@ -385,7 +423,7 @@ function ActionCard({
 
           {/* Confidence + Expand */}
           <div className="flex items-center gap-3 flex-shrink-0">
-            {action.confidenceScore > 0 && (
+            {action.confidenceScore > 0 ? (
               <div className="text-right">
                 <div className="text-lg font-bold text-slate-900 dark:text-white">
                   {action.confidenceScore}%
@@ -397,6 +435,13 @@ function ActionCard({
                     {confidenceBadge.label}
                   </span>
                 )}
+              </div>
+            ) : (
+              <div className="text-right" data-testid="no-confidence">
+                <span className="text-lg font-bold text-slate-400" aria-hidden="true">
+                  —
+                </span>
+                <span className="sr-only">No model confidence reported</span>
               </div>
             )}
             {isExpanded ? (
@@ -555,7 +600,7 @@ function MetricsLoadingSkeleton() {
 }
 
 interface MetricsSectionProps {
-  readonly actions: AgentAction[];
+  readonly actions: PreviewAction[];
   readonly pendingCount: number;
   readonly isLoading: boolean;
 }
@@ -569,7 +614,8 @@ function MetricsSection({ actions, pendingCount, isLoading }: MetricsSectionProp
     return hoursLeft < 2;
   }).length;
 
-  const highImpact = actions.filter((a) => a.confidenceScore >= 80).length;
+  // RF-2 (#854): count by the action's impact, not by confidence.
+  const highImpact = actions.filter((a) => a.impact === 'HIGH').length;
 
   return (
     <div className="grid gap-4 md:grid-cols-4" data-testid="metrics-dashboard">
@@ -620,6 +666,7 @@ function AgentApprovalsPreviewContent() {
   const [expandedActionId, setExpandedActionId] = useState<string | null>(actionIdFromUrl);
   const [filterStatus, setFilterStatus] = useState<ActionStatus | 'all'>('all');
   const [highlightedActionId, setHighlightedActionId] = useState<string | null>(null);
+  const [executionError, setExecutionError] = useState<string | null>(null);
 
   // ==========================================================================
   // tRPC Queries — WIRED TO BACKEND
@@ -691,8 +738,13 @@ function AgentApprovalsPreviewContent() {
 
   const handleApprove = useCallback(
     async (actionId: string) => {
+      setExecutionError(null);
       try {
-        await approveMutation.mutateAsync({ actionId });
+        const result = await approveMutation.mutateAsync({ actionId });
+        // PG-198 (RF-1): approval runs the action for real; surface a failed run.
+        if (result && !result.success) {
+          setExecutionError(result.error ?? 'The action could not be executed.');
+        }
       } catch (error) {
         console.error('Failed to approve:', error);
       }
@@ -774,6 +826,16 @@ function AgentApprovalsPreviewContent() {
           {actionIdFromUrl ? 'Review Action' : 'Tool Actions Preview'}
         </span>
       </nav>
+
+      {executionError && (
+        <div
+          role="alert"
+          className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 text-sm text-red-700 dark:text-red-300"
+          data-testid="execution-error"
+        >
+          Approved, but the action could not be executed: {executionError}
+        </div>
+      )}
 
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">

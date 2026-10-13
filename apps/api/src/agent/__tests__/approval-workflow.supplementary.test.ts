@@ -147,6 +147,18 @@ vi.mock('../tools', () => ({
 }));
 
 // Mock the logger module
+// PG-198: the real executor is covered in approved-action-executor.test.ts.
+vi.mock('../approved-action-executor', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../approved-action-executor')>()),
+  // A plain function: this suite resets vi.fn() implementations between tests.
+  executeApprovedAction: async () => ({
+    status: 'SUCCEEDED',
+    result: { entityType: 'CASE', entityId: 'case-1' },
+  }),
+}));
+
+const passthroughSchema = { safeParse: (value: unknown) => ({ success: true, data: value }) };
+
 vi.mock('../logger', () => ({
   agentLogger: {
     log: vi.fn().mockResolvedValue(undefined),
@@ -414,13 +426,14 @@ describe('Approval Workflow (supplementary)', () => {
       );
     });
 
-    it('should set rollbackAvailable based on tool rollback support', async () => {
+    it('never offers a rollback token while tool rollbacks are simulated (#856)', async () => {
       const action = createTestPendingAction({ id: 'rollback-check-action' });
       await pendingActionsStore.add(action);
 
-      // Mock tool with rollback support
+      // Tool declares a rollback, but tool rollbacks only log today (RF-4).
       (getAgentTool as any).mockReturnValue({
         name: 'create_case',
+        inputSchema: passthroughSchema,
         rollback: vi.fn(),
       });
 
@@ -432,8 +445,8 @@ describe('Approval Workflow (supplementary)', () => {
       };
 
       const result = await service.approveAction(decision, testContext);
-      expect(result.rollbackAvailable).toBe(true);
-      expect(result.rollbackToken).toBeDefined();
+      expect(result.rollbackAvailable).toBe(false);
+      expect(result.rollbackToken).toBeUndefined();
     });
 
     it('should set rollbackAvailable=false when tool has no rollback', async () => {
@@ -443,6 +456,7 @@ describe('Approval Workflow (supplementary)', () => {
       // Mock tool without rollback support
       (getAgentTool as any).mockReturnValue({
         name: 'create_case',
+        inputSchema: passthroughSchema,
         // no rollback property
       });
 
