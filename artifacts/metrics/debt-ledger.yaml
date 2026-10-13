@@ -4603,9 +4603,9 @@ items:
     expiry_date: 2027-01-13
     remediation_sprint: 19
     remediation_plan: >-
-      Increment version on every aggregate mutation and match the stored version in save(); PG-198 added a guarded saveEscalation for the sweep only.
-    status: open
-    notes: 'Partially mitigated for the sweep by PG-198 commit 712bf1f7a; general save() still unguarded. gh #874.'
+      Fixed on the PG-198 branch: save() matches the version the aggregate was loaded at, advances it, and throws OptimisticLockError on a lost race; saveEscalation() adds a still-pending guard for the sweep.
+    status: resolved
+    notes: 'Resolved by PG-198 commit 712bf1f7a (PrismaAutoResponseDraftRepository.ts save, verified 2026-10-13). Close #874 on merge.'
   PG-198-C10-ACTION-STORE-ID-ONLY:
     origin_task: PG-198
     owner: Backend Architect

@@ -126,8 +126,10 @@ Chosen option 3.
 - Follow-ups:
   - #856 real compensating rollbacks;
   - #857 approver filtering;
-  - #874 the draft optimistic lock;
+  - #872 the case assignee default;
   - #883 a tenant-scoped action store.
+
+  The draft optimistic lock (#874) was fixed on this branch.
 
 ## Links
 

@@ -758,5 +758,5 @@ AI toggle default: `autoApproveEnabled` is FALSE in Zod, Prisma and SQL
 
 Red flags tracked:
 
-- fixed on this branch: #853, #854, #855, #870;
-- open: #856, #857, #872, #874, #883.
+- fixed on this branch: #853, #854, #855, #870, #874;
+- open: #856, #857, #872, #883.
