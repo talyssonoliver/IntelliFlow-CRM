@@ -73,6 +73,11 @@
       "at": "2026-10-13T02:28:00Z",
       "note": "Implementation + full validation matrix green; attestation verdict NEEDS_HUMAN (Lighthouse credentials, runner push). Prisma migration 20261013120000_case_types needs a manual prod apply.",
       "status": "In Progress"
+    },
+    {
+      "at": "2026-10-13T03:37:00Z",
+      "note": "Real codex review: 6 findings fixed test-first (checklist position, picker invalidation, midnight-DST deadlines, required-field checkboxes); final codex PASS. Full matrix re-run green. Lighthouse Path A recorded (auth redirect); verdict NEEDS_HUMAN.",
+      "status": "In Progress"
     }
   ],
   "stream": null,

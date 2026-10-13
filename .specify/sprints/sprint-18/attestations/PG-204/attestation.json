@@ -4,10 +4,10 @@
   "task_id": "PG-204",
   "run_id": "exec-PG-204-20261013",
   "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-204 exec lane, branch feat/pg-204-case-types",
-  "attestation_timestamp": "2026-10-13T02:31:27.053Z",
+  "attestation_timestamp": "2026-10-13T03:37:39.184Z",
   "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 64,
+    "artifacts_verified": 68,
     "validations_passed": 4,
     "validations_failed": 0,
     "gates_passed": 8,
@@ -18,15 +18,16 @@
   },
   "artifact_hashes": {
     "apps/web/src/app/cases/(list)/case-types/page.tsx": "3ef6c0968c435574fe14224cecca7cb306646833ca685c96c09e7d3aab36cb4c",
-    "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx": "5109fdc2d6428f37f272f76921e2fa9ba02f88ce083a340566f914f47f1e6683",
+    "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx": "f90acf651a6e7988d09fc45ac118ddfa90cccbc24325cfe80e4ffd6c86fe1bac",
     "apps/api/src/modules/legal/case-types.router.ts": "b5865324f8a16a2183fb9e86fcce6e18d56d66adbd08d953d8065628d5db83a4",
     "packages/validators/src/case-types.ts": "3cf369d9fd3a9a2bee8dab3cfdfa549b743f965a2762134282ec166728411311",
     "packages/domain/src/legal/cases/case-type-defaults.ts": "2238d54af413849d2f90ede8ff5ea5d0f0d61185ce7e0d18db4a177e30560cfb",
-    "packages/db/prisma/migrations/20261013120000_case_types/migration.sql": "332638370a2a4eaf25b173ef14e5c9c47b92b2b094cde35750945fc0dd5ecb11",
-    "apps/api/src/lib/case-sla-deadline.ts": "70ccdafa9e56a204b930aa271d4bea80588a8b638e58b83ba1f6b601b71c2153",
+    "packages/db/prisma/migrations/20261013120000_case_types/migration.sql": "e00c4696b3b56904f8e5fd8f59eaa29b1ffb3d58d27fa361f39589df7902d87e",
+    "apps/api/src/lib/case-sla-deadline.ts": "671f9c78f77ee459980a4a3302fedf827b0b33ee17a5aead0203417a46f41d18",
+    "apps/api/src/lib/case-task-order.ts": "a6b77a25665795a6ca4302f920ec2d0fefa3ccd1358e11bf426444bbf294b045",
     "apps/web/src/app/cases/(list)/case-types/CaseTypesLoading.tsx": "4c41c3657f1f7fed641ba15ef3cc2f9fb329c8be20f24d03a693a8916faeb8f1",
     "apps/web/src/app/cases/(list)/case-types/components/CaseTypeList.tsx": "c17529fc27bd833dfb0287fa0d379dc8dd465034d283deaf6d20690fa0b2e24d",
-    "apps/web/src/app/cases/(list)/case-types/components/CaseTypeDialog.tsx": "cc8ce71d055c1486265cee1461cf996c04f3d4c87c39a90adbd3985057eab11d",
+    "apps/web/src/app/cases/(list)/case-types/components/CaseTypeDialog.tsx": "9a788a16e0a706b659657b9fe24dcc959b7102fcb90e7c8933a01a73381adcf0",
     "apps/web/src/app/cases/(list)/case-types/components/ResolutionChecklistEditor.tsx": "2ff1b5e992aa9666e8f19d4504a7d39e3e61bc77620e2d400323ba0a79cbf6c1",
     "apps/web/src/app/cases/(list)/case-types/components/DeleteCaseTypeDialog.tsx": "fc841581d660f7f0d991b541321ff931de0a6bb7cd6c7ac7e9d14a7981da0088",
     "apps/web/src/components/cases/case-type-colors.ts": "93fcedcf6609899aba5e90b1873415dfce74b8703de7de6755938c7ab8ad90e4",
@@ -37,7 +38,7 @@
     "packages/validators/src/case.ts": "786bc720a2fcc01e78be7e57525f6dc47f6fc5f09a3433b5aa73c2bce56b6dbc",
     "packages/validators/src/index.ts": "870b4033c7f1b3f81282160a2ec18be3c46381d2fa9dbb71f41a64e2e1e1a9b1",
     "apps/api/src/router.ts": "290b2ff70428ec8e28b1e5d1643315d4b103eda4c3516047fae0b672e03d25b1",
-    "apps/api/src/modules/legal/cases.router.ts": "f736ad65252ecf9aed9d6811d2498e2f96f25e3bf35082fba19420bdb562f910",
+    "apps/api/src/modules/legal/cases.router.ts": "a32d825f9034c451d9ab4dbafccf8c477ee854f1354f34a38f8e7444f636680a",
     "apps/web/src/components/cases/CaseForm.tsx": "887e2fad1d46118bde9444ee4718ace43bfb6ba9d18259e6d13f6409d603e587",
     "apps/web/src/app/cases/(list)/new/page.tsx": "6c3410e50d660183a7be219932369b223557f724187f53a271e712db2f91d294",
     "apps/web/src/components/cases/CaseDetail.tsx": "a2bd60eaf1661534b83f3dcc09d771e1a63a53482959abe92140326ea0855ddc",
@@ -45,14 +46,14 @@
     "packages/domain/src/legal/cases/__tests__/case-type-defaults.test.ts": "6b2aa572aa75b2c94e75ba57446bce8b6d6f4e80328f265b65248f56f1378804",
     "packages/validators/src/__tests__/case-types.test.ts": "4f084f768a0b12bd1ce421bb9052e0b234c546c32e29cf0488ce61cf5ac34e2b",
     "apps/api/src/modules/legal/__tests__/case-types.router.test.ts": "d02e850d90b61752e52603a9c5060b68b9420d0ab158633fe7660b417a92ae26",
-    "apps/api/src/modules/legal/__tests__/cases.router.case-types.test.ts": "2f87b1806f9cca146b0b34374494182c73ce5e2384e6473c800f3ac85117d525",
-    "apps/api/src/lib/__tests__/case-sla-deadline.test.ts": "3994f2563951706f169d559716514ce7e0fc8ea67fcac2e1ce4e48b5fd9f8b8a",
-    "tests/integration/case-types.test.ts": "a052806d7cd2b7a8476f8f37a154cab2cd1848b77f0893bb0a5fc1aff7dde03a",
+    "apps/api/src/modules/legal/__tests__/cases.router.case-types.test.ts": "7b270badd7e4efef56b6c5e37a8ebf77cb8b41a8b1a278dee771c81f2470d882",
+    "apps/api/src/lib/__tests__/case-sla-deadline.test.ts": "de8fd5c0439b98bd679b475daf08f413400910ec4b7dda4afb9212488e1364b2",
+    "tests/integration/case-types.test.ts": "f1580623847b0c49dceaba49cf3a35f12e4afef9da211f5d1cc3a18216f78e46",
     "apps/web/src/app/cases/(list)/case-types/__tests__/page.test.tsx": "feb49e0b4e66811eed8145d235b80a7aef648edb451ac7da6f4483973b4b8839",
-    "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesContent.test.tsx": "471e05ac1df473876f772a76f89291b0afc749f81c70299aa6b33c129f442ba0",
+    "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesContent.test.tsx": "80ae7d5013f3745c22c9ec4bbe28e2a707b266997fcf3a9d6300bbd801c8fdb2",
     "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesLoading.test.tsx": "fcbae4ecef27f4eef8319a3275eeca1a0d987237f4eaf28d78141aca9ca9175a",
     "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeList.test.tsx": "657ee54de6b328485d89ba83f5c7f6697bfd0322e7226fe2343ffd272a56f447",
-    "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeDialog.test.tsx": "dd22c9597c65d83ad31a6b55ba2567e7ac5d4e364e3e5748e564c91f51fb6f4b",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeDialog.test.tsx": "d365bcb50b978f6af89a49350030b39a14c4995393ea791834249b5f36102332",
     "apps/web/src/app/cases/(list)/case-types/components/__tests__/ResolutionChecklistEditor.test.tsx": "9d6fd399e085b5a399c7d2de14526c1dd17684a6d6bf67465496e3f77ea2d894",
     "apps/web/src/app/cases/(list)/case-types/components/__tests__/DeleteCaseTypeDialog.test.tsx": "12aab81903b84024e421745983af7394c5f8583cb9b1f02f6684857a922f6991",
     "apps/web/src/components/cases/__tests__/case-type-helpers.test.ts": "4b52c7215e8117306b92f7a0964741a687bfbb25353c3bc1b72a4d8c2000bc28",
@@ -77,9 +78,12 @@
     "docs/design/ui-flow-mapping.md": "cb31333673347c6bb53b6a3385c7742d02f6a2cd37e1385423f59c5c89d24fd0",
     "docs/design/information-architecture.md": "77e74a173245269d4bb144597e5e1c81f1100c0e65622279efc97269365ddeed",
     "artifacts/metrics/debt-ledger.yaml": "470240768fdf9c110198119769c8d002ea7b73a70fe786211a905331ec6086ff",
-    ".specify/sprints/sprint-18/findings/PG-204-findings.md": "be50b17290fae664a02b714106e62b8314e2c749418b5d01689633de3464442a",
+    ".specify/sprints/sprint-18/findings/PG-204-findings.md": "9597d8bddbe743cfebe2ad6630d10806a132d662510cb481b83847d604c66da7",
     ".specify/sprints/sprint-18/attestations/PG-204/task-tracking.json": "603179e9d3fbb365fc0bd242f882d05c9880dfce2d82b8b2c2cdfa0847596725",
     "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "1323e9c12c0c19b7a17de176a1f5fba44ce42532193d051780f8c769c6bd4c23",
+    "artifacts/lighthouse/PG-204/waiver-evidence.md": "2e8431f24605d08f4d4905da0ec33bf53795de3390c650cd9906acef883a171c",
+    "artifacts/lighthouse/PG-204/cases-case-types-r2.report.json": "609469b1cbfac7756c773154438932001850b44f4a49f0a524c44aaf54e50ee4",
+    "artifacts/lighthouse/PG-204/cases-new-r2.report.json": "3c498d709d5009d2bdb87dde889a0a19fa6d98fac9cd7443ca07a929fa3ab2c6",
     ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json": "fc9f4e3f10b641622118b718c3ea4be17bed0aac854ae62bc0a8f2a643d0e03f"
   },
   "validation_results": [
@@ -88,16 +92,16 @@
       "command": "pnpm --filter @intelliflow/{domain,validators,adapters,db,api,web} typecheck",
       "exit_code": 0,
       "passed": true,
-      "result": "all 6 exit 0; code-review quick: 27 packages, 0 type errors",
-      "timestamp": "2026-10-13T02:31:27.053Z"
+      "result": "all exit 0 (domain, validators, adapters, db, api, web; db/api/web/adapters re-run after the codex fixes); code-review quick: 27 packages, 0 type errors",
+      "timestamp": "2026-10-13T03:37:39.184Z"
     },
     {
       "name": "Tests",
       "command": "pnpm --filter @intelliflow/{domain,validators,adapters,api} test; pnpm --filter @intelliflow/web exec vitest run; pnpm run test:integration",
       "exit_code": 0,
       "passed": true,
-      "result": "domain 2957, validators 2557, adapters 2967, api 7281 (+18 pre-existing skips), web 12658, integration 357 (+61 pre-existing env-gated skips) incl. case-types 16 — all passed",
-      "timestamp": "2026-10-13T02:31:27.053Z"
+      "result": "after the codex fixes: case-creation regression suites (cases.router, cases.router.case-types, case-settings.router, legal-module-entitlement, case-sla-deadline) 91; api 7288 (+18 pre-existing skips); web 12662; adapters 2967; integration 358 (+61 pre-existing env-gated skips) incl. case-types 17; earlier in the run: domain 2957, validators 2557 — all passed",
+      "timestamp": "2026-10-13T03:37:39.184Z"
     },
     {
       "name": "Lint",
@@ -105,7 +109,7 @@
       "exit_code": 0,
       "passed": true,
       "result": "all exit 0; 0 lint problems in 27 packages",
-      "timestamp": "2026-10-13T02:31:27.053Z"
+      "timestamp": "2026-10-13T03:37:39.184Z"
     },
     {
       "name": "Build",
@@ -113,7 +117,7 @@
       "exit_code": 0,
       "passed": true,
       "result": "all exit 0; /cases/case-types and /cases/new in the web route table",
-      "timestamp": "2026-10-13T02:31:27.053Z"
+      "timestamp": "2026-10-13T03:37:39.184Z"
     }
   ],
   "gate_results": [
@@ -140,7 +144,7 @@
     {
       "gate_id": "module-settings-dod-artifacts-present",
       "passed": true,
-      "log_path": "All 64 CSV ARTIFACT/EVIDENCE paths exist; hashes in artifact_hashes"
+      "log_path": "All 68 CSV ARTIFACT/EVIDENCE paths exist; hashes in artifact_hashes"
     },
     {
       "gate_id": "stoa-domain",
@@ -160,7 +164,7 @@
     {
       "gate_id": "lighthouse-gte-90",
       "passed": false,
-      "log_path": "NEEDS_HUMAN - not run. LHCI_TEST_EMAIL / LHCI_TEST_PASSWORD are not set in .env.local, .env.test or the main checkout .env.local (verified by grep of variable names), and tools/lighthouse/lhci-auth.js authenticates against the production Supabase project. Both routes are auth-gated. Run: LHCI_URLS=http://localhost:3000/cases/case-types,http://localhost:3000/cases/new LHCI_OUTPUT_DIR=artifacts/lighthouse/PG-204 pnpm --filter @intelliflow/web run lighthouse:auth with credentials for a non-production user."
+      "log_path": "NEEDS_HUMAN - artifacts/lighthouse/PG-204/waiver-evidence.md. Path A run (runner ruling): attempt 1 rendered the global error page (placeholder env not in the build); attempt 2 (cases-*-r2.report.json) shows both auth-gated routes redirect to /login, so its scores (perf 0.87, a11y 0.93) measure the login page, not PG-204. Path C needs a test admin on production Supabase, which agents never create. No waiver approver named."
     },
     {
       "gate_id": "worktree-landed (Gate 4b)",
@@ -196,7 +200,7 @@
     {
       "kpi": "Lighthouse (performance/accessibility) on /cases/case-types and /cases/new",
       "target": ">= 90",
-      "actual": "open gate: no LHCI credentials (see gate_results)",
+      "actual": "open gate: Path A only reaches the /login redirect (see artifacts/lighthouse/PG-204/waiver-evidence.md)",
       "met": false
     }
   ],
@@ -268,7 +272,7 @@
     {
       "criterion": "Lighthouse >= 90",
       "met": false,
-      "evidence": "NEEDS_HUMAN - no LHCI credentials; harness targets production auth"
+      "evidence": "NEEDS_HUMAN - artifacts/lighthouse/PG-204/waiver-evidence.md (Path A reaches only the /login redirect; no authenticated run possible without production users)"
     },
     {
       "criterion": "verified by pnpm test",
@@ -287,8 +291,8 @@
     "node": "v22.14.0 (host default v25.2.1 hangs pg writes; repo pin 24 not installed)",
     "os": "Windows 11",
     "test_db": "intelliflow-postgres-test (localhost:5433)",
-    "git_commit": "f1b22ee8404e8eefeaea4c7620c39f2b058c7f97",
+    "git_commit": "f2304af2ec8fcd41118400692c51783a70dd74fe",
     "branch": "feat/pg-204-case-types"
   },
-  "notes": "PRISMA MIGRATION: packages/db/prisma/migrations/20261013120000_case_types (Class A, additive: two new tables, nullable cases.caseTypeId, composite FK added NOT VALID then validated, RLS). Production apply is MANUAL and must precede the code. Fixed beyond the row: cases.create default assignee read ctx.user.id (UserSession has userId) so \"Assign to me\" failed; the New Case client picker searched contacts while cases.clientId references accounts, so UI case creation always failed; the unpersisted category list was replaced by the case type picker. Semantic review found and this lane fixed: dropped jurisdiction/timezone on New Case, update/setDefault races, deactivation-vs-setDefault race. Reviews: semantic review PASS (0 unwaived, after 4 real defects fixed); code-review quick 0 errors; a11y-expert PASS WITH MINOR (fixed); STOA domain WARN (migration not recorded on the shared test DB); depcruise 0 errors. compliance-check: sections 2-12 PASS (plan deliverables, context ack, CSV artifacts, attestation phrases, architecture, PRD/ADR, WCAG doc control, nav wiring); section 13 Lighthouse evidence BLOCK (no credentials, no human waiver). Tracked out of scope: #864-#867 (+ existing #853). Verdict NEEDS_HUMAN only for Lighthouse credentials and the runner-owned push/PR (Gate 4b)."
+  "notes": "PRISMA MIGRATION: packages/db/prisma/migrations/20261013120000_case_types (Class A, additive: two new tables, nullable cases.caseTypeId and case_tasks.position, composite FK added NOT VALID then validated, RLS). Production apply is MANUAL and must precede the code. Fixed beyond the row: cases.create default assignee read ctx.user.id (UserSession has userId) so \"Assign to me\" failed; the New Case client picker searched contacts while cases.clientId references accounts, so UI case creation always failed; the unpersisted category list was replaced by the case type picker. Semantic review: the first passes used the Claude fallback only because this lane put an old nvm codex 0.79.0 first on PATH (the system codex 0.160.0 supports --ephemeral; the earlier \"codex cannot run\" claim was wrong). Claude-fallback findings fixed: dropped jurisdiction/timezone on New Case, update/setDefault races, deactivation-vs-setDefault race. Real codex findings fixed test-first, none waived: checklist order (case_tasks.position), stale New Case picker (router-wide invalidate), end-of-day across midnight DST (Santiago, Amman; exhaustive 2021/2026 test), required-field checkboxes for every stored key. Final real codex run: PASS, 0 findings. Reviews: codex PASS (0 findings); code-review quick 0 errors; a11y-expert PASS WITH MINOR (fixed); STOA domain WARN (migration not recorded on the shared test DB); depcruise 0 errors. compliance-check: sections 2-12 PASS (plan deliverables, context ack, CSV artifacts, attestation phrases, architecture, PRD/ADR, WCAG doc control, nav wiring); section 13 Lighthouse evidence BLOCK (no credentials, no human waiver). Tracked out of scope: #864-#867 (+ existing #853). Verdict NEEDS_HUMAN only for Lighthouse credentials and the runner-owned push/PR (Gate 4b)."
 }
