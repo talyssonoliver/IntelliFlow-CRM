@@ -185,6 +185,7 @@ model Tenant {
   caseRequiredFields        CaseRequiredField[]       @ignore
   caseTags                  CaseTag[]                 @ignore
   caseAutomationSettings    CaseAutomationSetting[]   @ignore
+  caseTypes                 CaseType[]                @ignore // PG-204
   appointmentSettings       AppointmentSettings[]     @ignore
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
@@ -2137,6 +2138,9 @@ model Case {
   closedAt     DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  /// PG-204 — case type applied at creation (ADR-076). Plain scalar: the tenant-consistent
+  /// FK ("tenantId","caseTypeId") -> case_types("tenantId","id") is SQL-only (see CaseType).
+  caseTypeId   String?
 
   // Multi-tenancy
   tenantId    String
@@ -2252,6 +2256,56 @@ model CaseAutomationSetting {
   tenant                      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("case_automation_settings")
+}
+
+// ─── PG-204: Case Types ─────────────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261013120000_case_types, asserted by
+// tests/integration/case-types.test.ts — do not drop in a diff):
+//   - case_types_tenant_lower_name_key   UNIQUE ("tenantId", lower("name"))
+//   - case_types_one_default_key         UNIQUE ("tenantId") WHERE "isDefault"
+//   - cases_tenantId_caseTypeId_fkey     FOREIGN KEY ("tenantId","caseTypeId")
+//                                        REFERENCES case_types("tenantId","id") ON DELETE NO ACTION
+//     (Prisma cannot model an optional relation over the required tenantId)
+//   - CHECKs on colorToken, defaultSlaDays, name, requiredFields, checklist title/sortOrder
+//   - RLS tenant policies on both tables
+
+/// A tenant-defined case type whose defaults are applied when a case is created (ADR-076).
+model CaseType {
+  id              String        @id @default(cuid())
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String        @db.VarChar(100)
+  category        String?       @db.VarChar(60)
+  colorToken      String        @default("slate")
+  defaultPriority CasePriority?
+  defaultSlaDays  Int?
+  requiredFields  String[]      @default([])
+  isActive        Boolean       @default(true)
+  isDefault       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  checklist CaseTypeChecklistItem[]
+
+  // DBA-012: composite target for tenant-consistent child FKs
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive])
+  @@map("case_types")
+}
+
+/// One resolution-checklist step of a case type; seeded as a CaseTask on case creation.
+model CaseTypeChecklistItem {
+  id         String   @id @default(cuid())
+  tenantId   String
+  caseTypeId String
+  caseType   CaseType @relation(fields: [tenantId, caseTypeId], references: [tenantId, id], onDelete: Cascade)
+  title      String   @db.VarChar(200)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId, caseTypeId])
+  @@map("case_type_checklist_items")
 }
 
 /// PG-189 — per-tenant appointment / calendar module settings. Landed alongside

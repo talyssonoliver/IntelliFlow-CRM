@@ -1,0 +1,51 @@
+{
+  "task_id": "PG-204",
+  "phase": "before",
+  "captured_at": "2026-10-13T00:20:41.753Z",
+  "source": "artifacts/coverage/coverage-summary.json (committed baseline @ 6f22baf8e, branch feat/pg-204-case-types)",
+  "total": {
+    "lines": {
+      "total": 19709,
+      "covered": 17291,
+      "skipped": 0,
+      "pct": 87.73
+    },
+    "statements": {
+      "total": 21259,
+      "covered": 18400,
+      "skipped": 0,
+      "pct": 86.55
+    },
+    "functions": {
+      "total": 5548,
+      "covered": 4740,
+      "skipped": 0,
+      "pct": 85.43
+    },
+    "branches": {
+      "total": 12829,
+      "covered": 9995,
+      "skipped": 0,
+      "pct": 77.9
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "files": {},
+  "files_without_baseline": [
+    "apps/api/src/modules/legal/cases.router.ts",
+    "apps/api/src/router.ts",
+    "packages/validators/src/case.ts",
+    "packages/validators/src/case-settings.ts",
+    "packages/domain/src/index.ts",
+    "apps/web/src/components/cases/CaseForm.tsx",
+    "apps/web/src/components/cases/CaseDetail.tsx",
+    "apps/web/src/app/cases/(list)/new/page.tsx",
+    "apps/web/src/app/cases/(list)/case-types/page.tsx"
+  ],
+  "note": "Files absent from the baseline had no coverage entry on main (untested or not instrumented)."
+}
