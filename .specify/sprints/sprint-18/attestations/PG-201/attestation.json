@@ -1,72 +1,381 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-201",
-  "run_id": "eng-ops-002-r16-pg-201-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "PG-201-exec-20261013",
+  "attestor": "Claude Code (claude-opus-5-5) — /full-pipeline PG-201 exec",
+  "attestation_timestamp": "2026-10-13T05:18:33.186Z",
+  "verdict": "NEEDS_HUMAN",
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-10-13T00:55:38.310Z",
+    "files_read": [
+      {
+        "path": "apps/web/src/components/sidebar/configs/analytics.ts",
+        "sha256": "e23e39f8f6efd94410114c33604e66768a8a97a2117b2b53bb4fc1694049fe8f"
+      },
+      {
+        "path": "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
+        "sha256": "488a0d66931d14cf21136a68cbfbd1f39dc19648828dca88691e1c41fd970660"
+      },
+      {
+        "path": "docs/planning/module-settings-playbook.md",
+        "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3"
+      },
+      {
+        "path": "docs/planning/prd-module-settings.md",
+        "sha256": "de6cea5c763e09dab9965658990e24507ca45c395e9893e66b0a8b4dc4cbb590"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Owner ruling 2026-10-13: evolve report_schedules in place; no new schedule table; no DROP TABLE/COLUMN; legacy columns stay.",
+      "A schedule that is active must reference a report template or a report definition (DB CHECK + router BAD_REQUEST).",
+      "tenantId comes only from ctx.tenant; every mutation is scoped by { id, tenantId } and a foreign-tenant id yields NOT_FOUND.",
+      "Every destructive write (update, setActive, delete, tag rename/delete) runs in $transaction; createMany never uses skipDuplicates.",
+      "PG-201 adds no scheduler, queue or worker: IFC-308 reads report_schedules (cron + IANA timezone) and owns the isActive runtime (category-2).",
+      "The report_settings.scheduledDelivery copy is a production data write: idempotent, tenant-scoped, inactive rows, legacy JSON untouched; flagged loudly.",
+      "Mutations require ADMIN/MANAGER/OWNER/SUPER_ADMIN; reads need the ANALYTICS module entitlement (moduleTenantProcedure).",
+      "Page follows the module-settings playbook: PageHeader + 12-col bento, canonical EmptyState without a CTA, TagsTab via forwardRef, colorToken CHECK.",
+      "Real data only: no seeded schedules and no fake delivery status; the page states delivery is pending IFC-308."
+    ]
+  },
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 66,
+    "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "gates_passed": 15,
+    "gates_failed": 2,
+    "kpis_met": 5,
+    "kpis_missed": 1,
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/analytics/scheduled-reports/page.tsx": "3117c42cd0cf2b13a96bf3e2f7e2a227d51cafaf437911f3988eef5f6516de0f"
+    ".specify/sprints/sprint-18/attestations/PG-201/context_ack.json": "120542082d16b0c89db42c068eab5c2a4abdbd14a9617db36f18fb61456b21a5",
+    ".specify/sprints/sprint-18/attestations/PG-201/findings.md": "182fdc1ee502c5cca2597cc0833dd48b0648ef1dada5b72334d5df6ccb01da56",
+    ".specify/sprints/sprint-18/attestations/PG-201/task-tracking.json": "756bb6a561a30f91a3aa256f9d1e01430d1c006c853e8a88b7c6982e85e7d650",
+    "apps/api/package.json": "5640636d11fb819de70cf8ba43f85721fb379ce60057b3ac412b4bbd480507ee",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "7adfd575f0e476e73a3d87a6c116fe2d3b2ae2382d1a02ce23567b6924659198",
+    "apps/api/src/modules/analytics/__tests__/report-templates.router.test.ts": "c1db15ce7c8c31897d3e307dbb5191cab7ae1091e6dfb734377a87dd1342beb9",
+    "apps/api/src/modules/analytics/__tests__/scheduled-reports.router.test.ts": "67ebba3c08a43a3282dca77d3b3758a7cee84a1533640acb234d88acb6184bc5",
+    "apps/api/src/modules/analytics/__tests__/scheduled-reports.schedule.test.ts": "2c7008c89621f42129a3acdcb480e9d6e95bb7cd8feeeda5d45d3b673d2e1508",
+    "apps/api/src/modules/analytics/analytics.router.ts": "874aa504b657011362dbc25b35460717198383bb7fd60d4df0053974335d7542",
+    "apps/api/src/modules/analytics/report-templates.router.ts": "b711a95350fce9aeb29d9a26c4cdcca952d1e747c9d2525b223f4c399c663f1a",
+    "apps/api/src/modules/analytics/scheduled-reports.router.ts": "870b5489edd5209fdc9c3f3a5cd78e3d5ed008c9fbc457ef3242c92b49347a34",
+    "apps/api/src/modules/analytics/scheduled-reports.schedule.ts": "f99552fe7b0c61678938c96d5d7abff350e4dede4dfaa4f4a9b9229aa57269d0",
+    "apps/api/src/security/rbac.ts": "23b541aba93205d97c2c761117c5faaddfda7ecee9242513a1b500c17672dda8",
+    "apps/api/src/security/types.ts": "24c606a23af318a50375583e578c3ec3510932888d00bfcffb4937bcfc8b2692",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "a53c5ea7c6a1cb1f75da9294eadd19e9c77d4c5ce63d81befda7de541045b59c",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv": "96a8c168eb7e8736d2c7f401d4d23a855ee1e89e1e701655aa0e05bb85bb648c",
+    "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx": "792db24679e3e7b9ffd9e741af3b52865000ad5f8a18488fc4db96d7d551a157",
+    "apps/web/src/app/analytics/(list)/report-settings/__tests__/ReportSettingsContent.test.tsx": "6a024519cd0facdf9e8b235fb0d9a587a5bd503ffa6aa6eba94818394fce6e82",
+    "apps/web/src/app/analytics/(list)/report-settings/__tests__/page.test.tsx": "d59c86170ea0cc50220a3569e425098d9aaf14aa8cf9f3d6fbd5521d38434a73",
+    "apps/web/src/app/analytics/(list)/report-settings/page.tsx": "12de9e79e81cead2148a715c4502a9d8d5f1668a0e3db7e6e008f0c16730cab0",
+    "apps/web/src/app/analytics/(list)/scheduled-reports/__tests__/page.test.tsx": "eb598f8bae81b306d0d769c6f1779473b573250cf103d214b71b920448c2a3a9",
+    "apps/web/src/app/analytics/(list)/scheduled-reports/page.tsx": "ccfc00be39c5b356e9855543d1c1fd0735266a95067540cb782a61fa81309b58",
+    "apps/web/src/app/analytics/scheduled-reports/ScheduledReportsContent.tsx": "a13edf52ca558d7fa25f672788d0cbac6c844d40466f75025b02c62b98b7eed9",
+    "apps/web/src/app/analytics/scheduled-reports/__tests__/ScheduledReportsContent.test.tsx": "7b23c9ce0b0f211e4e7da1f19026a9e188d79dc479dc4ef6182a161604e5c193",
+    "apps/web/src/app/analytics/scheduled-reports/components/ScheduleDialog.tsx": "5724f748df4b7c115b31a39a7695daa232fd342f2a96d60b6327ecca7d8084c8",
+    "apps/web/src/app/analytics/scheduled-reports/components/ScheduleList.tsx": "b8f7ac3d90edc25778df801994c6d45de125649200d921c3540c44c62fd373f7",
+    "apps/web/src/app/analytics/scheduled-reports/components/TagsTab.tsx": "81e2fad6d8e76558f940ff86f0c9f177e7db3ef799234565814fe40dcc8754d2",
+    "apps/web/src/app/analytics/scheduled-reports/components/__tests__/ScheduleDialog.test.tsx": "cc9f0cd4c08528d113c3de14d19890d863751a4cfe1f599dd6b95752ec3d38bf",
+    "apps/web/src/app/analytics/scheduled-reports/components/__tests__/ScheduleList.test.tsx": "e49fae6d095b612e334fa1844fd1e088e6d818c95df68ddce04ad4f455d0117f",
+    "apps/web/src/app/analytics/scheduled-reports/components/__tests__/TagsTab.test.tsx": "27e0656aaf91767910c912add0deb1d9c7a7638610670538697315808247e398",
+    "apps/web/src/app/analytics/scheduled-reports/components/schedule-colors.ts": "e1b682f3aa4d78c838d3659481f5ff08ea24dfb150fc0cde094cf34e2e70ce85",
+    "apps/web/src/app/analytics/scheduled-reports/loading.tsx": "8f11b4104c2fa53fca6adaea75979783fbe3346502f7e836073dc13e193f9fc5",
+    "apps/web/src/components/settings/TimezoneSelector.tsx": "748540fac8253976646dc39d91b41353edfac079cdc1ea4643a0a16b98103bc7",
+    "apps/web/src/components/settings/__tests__/TimezoneSelector.test.tsx": "f85936f1b398c76d04494d3b29707ee4a631fe276640aea04b7a0671fe9f25f5",
+    "apps/web/src/components/shared/__tests__/section-header.test.tsx": "06171367e3352a3f2e31bb1cd0ac9154e862ddd8918cf2011bb1876d3e4f12e9",
+    "apps/web/src/components/shared/section-header.tsx": "747e8ee92a83d8bbef582b73f8c17c1e05f9a2b0b4ca2bb4881c0b03ef61c9bf",
+    "artifacts/benchmarks/IFC-310-merge.json": "ae25afe1eb1a197648b4da5df1013f5f1612c8c709e056781f7a635370769629",
+    "artifacts/benchmarks/baseline.json": "d9959e62f72469e3bec63b3c94ccd697d37b74061ff0014c862cb28ca33ad6df",
+    "artifacts/coverage/PG-201-before.json": "3d491f7c6d3813ea73954d752625393cf0543fccd5c13fc8b0823587efdb83cb",
+    "artifacts/lighthouse/PG-201/README.md": "ca086d0a827439769165b5f3bdfd7db97092af42a3bc9b320d3179d6dae61c2a",
+    "artifacts/lighthouse/PG-201/scheduled-reports-r1.report.json": "a904a064abb4e0c5579e006c0199a7ca656852a377f299a7230dbdbe615dc339",
+    "artifacts/lighthouse/PG-201/waiver-evidence.md": "1e6fbd23f68a05cf3f977ed9838303c1e185232d8f1ec6bbb1d0719ef69c596b",
+    "artifacts/metrics/debt-ledger.yaml": "2ae05216467a4decda31205e8dbdfe98dbde8328b9f071ceab14bdde016450c8",
+    "artifacts/reports/a11y-route-reconcile.json": "991f152905a5ad8a6fc9a6250ef6f9a5d991b419e45bd1a23194faedeb72004f",
+    "artifacts/reports/content-audit-results.json": "04c6569e819a1b6550138d6627f8d6e12864fc13f6d5753bac719eb2354c102f",
+    "artifacts/reports/plan-lint-report.json": "4d6974f28ec871f368b0dcefd97e599fc5ab9d83aecf4bc6fbb163a8ef68253b",
+    "artifacts/reports/spec-tracker.json": "d7331c35a81935f9a3e3f73d04fa91131015723aaea32519a742dfb6151bc9ec",
+    "docs/architecture/adr/ADR-075-report-schedule-contract.md": "79c7144caaf1e45ff173fe81e1744021a11382444cb92d65a2930560a2cd449e",
+    "docs/architecture/adr/README.md": "f54a88c62ab8a3a919b707e620d4455727e8c9537978918203655169b75ca944",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "d81bacd18e40ca3163351f18d76523d52ffa65cd2a6ecd2b40674975743b08b4",
+    "docs/compliance-and-governance/compliance/vpat-2.5.md": "c08aee5ec0ac07136dc4a2bdf1d192d7058db311d1db5185ff443bda0f14fcdf",
+    "docs/compliance-and-governance/compliance/wcag-conformance-statement.md": "6762e6c2f5414be9d380aa6ba9fc690be8b4cf52dae5efe651550594a65e6c04",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "59ea1ef9afc7081f17a914a7ed7ff2dbb2fecd925f735edc4614a634be7a314a",
+    "docs/design/navigation-reachability-audit.md": "51a2f6ef1fc3be9dbc3ae4bc570f86e59ba1a11ea5c683e6f4e4e3b594142aaa",
+    "docs/design/page-registry.md": "bd134576ea471b340a5880145721a2246e00b360af2ac22884d3aa954304e732",
+    "docs/design/ui-flow-mapping.md": "42c23b6511b89f67ec0293a42a33df44b6612aa77b0d413a8420e9aa356b07f4",
+    "docs/planning/prd-module-settings.md": "a3780edf659ed0c07df575c0bef7cd36156f0a7d4133fdd6a4e6021e9f08f721",
+    "packages/db/prisma/migrations/20261013120000_report_schedules_pg201/migration.sql": "b75a9d7c7c3930152e65b551a74193a23fccb64406f43b0a24da93c98c9676d3",
+    "packages/db/prisma/schema.prisma": "eb637753847c77546b2e627793bfb8468902775d73c97b8814f6da513e437ecc",
+    "packages/db/src/__tests__/report-schedules-migration.test.ts": "beed1cf66e56ade69bdb1d8a7f6a4a0c94947bbb80b2bcbc793e8198430e574a",
+    "packages/db/src/index.ts": "962a882a21bca3c469d4c7354ef3fee8f47ab95ea5c45a21a9cd76e1cbad86ea",
+    "packages/validators/src/__tests__/scheduled-reports.test.ts": "de705c4af9dbd804e256c4db143a0b0baea9c9f6a99180e35b0458f9e6be1ed1",
+    "packages/validators/src/index.ts": "7ede05ed374d87329555d53e82a38d31c354db3e1cccdfd2aa4f36dc34d7fe57",
+    "packages/validators/src/scheduled-reports.ts": "cee4c3919fe097bfa068c1583a903c03f2a0c4f4327f5d3a035b3e1e27547b04",
+    "pnpm-lock.yaml": "eb14f78b1858bc35922069f68dbf805f1ce145b2effa307aba2e62a2b2a34e0e",
+    "tests/integration/report-schedules-migration.test.ts": "c42cbbfdbb3b67621e7eee01f3c61edb070d05e381eae6e2f73e415631eecc86"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm exec turbo run typecheck --force --filter=@intelliflow/web --filter=@intelliflow/api --filter=@intelliflow/validators --filter=@intelliflow/db (17/17, 0 cached; plus pnpm run typecheck 40/40)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T04:57:12Z",
+      "duration_ms": 150000
+    },
+    {
+      "name": "Tests",
+      "command": "with-slot pnpm --filter @intelliflow/{validators,db,api,web} test (2570; 222+14 skipped; 7310+18 skipped; 12631) + data-copy integration 14/14 x2 under --exclusive intelliflow-db",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T04:50:15Z",
+      "duration_ms": 774000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint (turbo 37/37)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T04:57:35Z",
+      "duration_ms": 18000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/api build && pnpm --filter @intelliflow/web build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T05:01:49Z",
+      "duration_ms": 156000
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
+      "gate_id": "gate-0-context-ack",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/attestations/PG-201/context_ack.json"
+    },
+    {
+      "gate_id": "gate-1-plan-checkboxes",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/planning/PG-201-plan.md",
+      "score": 100
+    },
+    {
+      "gate_id": "gate-2-artifact-hashes",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/gate-2-artifacts.log"
+    },
+    {
+      "gate_id": "gate-2b-import-reachability",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/gate-2-artifacts.log"
+    },
+    {
+      "gate_id": "gate-2c-runtime-wiring",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": "apps/web/src/app/analytics/scheduled-reports/ScheduledReportsContent.tsx"
+    },
+    {
+      "gate_id": "gate-2d-shared-component-reuse",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/context/PG-201/PG-201-hydrated-context.json"
+    },
+    {
+      "gate_id": "gate-3-build-validation",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/build-web.log"
+    },
+    {
+      "gate_id": "gate-3a-validation-matrix",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs"
+    },
+    {
+      "gate_id": "gate-3b-scoped-coverage",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/coverage-scoped-aggregate.log",
+      "score": 97.92
+    },
+    {
+      "gate_id": "gate-3c-dead-code",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/gate-3c-knip.log"
+    },
+    {
+      "gate_id": "gate-4-stoa",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/matop/stoa-verdicts"
+    },
+    {
+      "gate_id": "gate-12-nav-wiring",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/gate-check-nav-wiring.log"
+    },
+    {
+      "gate_id": "diff-coverage",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/diff-coverage.log",
+      "score": 95.4
+    },
+    {
+      "gate_id": "data-copy-idempotency",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/integration-data-copy-run2.log"
+    },
+    {
+      "gate_id": "semantic-review",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-201/PG-201-exec-20261013/logs/codex-review-final.log"
+    },
+    {
+      "gate_id": "gate-4b-worktree-landed",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-201 requires page.tsx (exists), ScheduledReportsContent.tsx (MISSING), apps/api/src/modules/analytics/scheduled-reports.router.ts (MISSING), packages/validators/src/scheduled-reports.ts (MISSING), context_ack.json (MISSING). Broad grep for scheduled-reports router/validator logic across apps/api and packages/validators returned zero hits."
+      "log_path": "tools/scripts/exec-preflight/check-worktree-landed.mjs"
+    },
+    {
+      "gate_id": "gate-13-14-lighthouse",
+      "passed": false,
+      "log_path": "artifacts/lighthouse/PG-201/waiver-evidence.md"
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Statements coverage (files created by PG-201)",
+      "target": ">=90%",
+      "actual": "97.92% (611/624)",
+      "met": true
+    },
+    {
+      "kpi": "Branches coverage (files created by PG-201)",
+      "target": ">=80%",
+      "actual": "90.30% (475/526)",
+      "met": true
+    },
+    {
+      "kpi": "Functions coverage (files created by PG-201)",
+      "target": ">=90%",
+      "actual": "98.41% (186/189)",
+      "met": true
+    },
+    {
+      "kpi": "Lines coverage (files created by PG-201)",
+      "target": ">=90%",
+      "actual": "98.70% (531/538)",
+      "met": true
+    },
+    {
+      "kpi": "Diff coverage on changed lines",
+      "target": ">=80%",
+      "actual": "95.4% (858/899) vs 47f1b5d84",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse >=90 on /analytics/scheduled-reports",
+      "target": ">=90 all categories (GATE:lighthouse-gte-90)",
+      "actual": "Path A only (runner ruling): the build had no Supabase public env, so the report scores (0.93/0.90/0.93/0.66) belong to the global error page, not this page. Authenticated Path C needs a non-production Supabase. Evidence: artifacts/lighthouse/PG-201/",
+      "met": false
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-187"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /analytics/scheduled-reports renders",
+      "criterion": "Scheduled reports at /analytics/scheduled-reports: cron schedules, recipient lists, delivery format PDF/CSV/email-body, template ref",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "apps/web/src/app/analytics/(list)/scheduled-reports/page.tsx, ScheduledReportsContent.tsx, ScheduleDialog.tsx; analytics.scheduledReports router; validators scheduled-reports.ts"
     },
     {
-      "criterion": "Cron schedules, recipient lists, delivery format, template ref implemented — schema must match the IFC-308 BullMQ cron job's expectations",
-      "met": false,
-      "evidence": "page.tsx (20 lines) is a static placeholder ('Scheduled reports configuration coming soon.'). No form, no data fetch, no schedule model — this also means the IFC-308 BullMQ cron dependency this task's own description calls out has no schema to read from."
+      "criterion": "IFC-308 BullMQ cron READS these schedules - schema must match job expectations",
+      "met": true,
+      "evidence": "ADR-075 report schedule contract (cronExpression + IANA timezone for upsertJobScheduler({pattern, tz}), isActive, nextRunAt); report_executions.templateId"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate schedule names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "PageHeader + bento grid; canonical EmptyState (entity + phase=passive)",
+      "met": true,
+      "evidence": "ScheduledReportsContent.tsx; ScheduleList EmptyState entity=reports phase=passive; Content tests"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "TagsTab via forwardRef",
+      "met": true,
+      "evidence": "components/TagsTab.tsx; opened from the SectionHeader via ref; TagsTab test"
+    },
+    {
+      "criterion": "$transaction on all destructive writes; no skipDuplicates",
+      "met": true,
+      "evidence": "scheduled-reports.router.ts writes run in $transaction under a per-tenant advisory lock; router tests"
+    },
+    {
+      "criterion": "Zod superRefine for duplicate schedule names",
+      "met": true,
+      "evidence": "scheduleNameConflictSchema in packages/validators/src/scheduled-reports.ts; lower(name) unique index (integration test)"
+    },
+    {
+      "criterion": "colorToken CHECK constraint",
+      "met": true,
+      "evidence": "migration 20261013120000_report_schedules_pg201 CHECKs on report_schedules and report_schedule_tags; integration test rejects an off-palette token"
+    },
+    {
+      "criterion": "AI defaults FALSE",
+      "met": true,
+      "evidence": "N/A: the entity has no AI toggle (owner ruling Q4)"
+    },
+    {
+      "criterion": "Wire every Boolean toggle or declare category-2",
+      "met": true,
+      "evidence": "ReportScheduleTag.isActive category 1 (dialog/router); ReportSchedule.isActive category 2 for IFC-308, recorded in debt-ledger, the IFC-308 CSV row and ADR-075"
+    },
+    {
+      "criterion": "Cross-tenant negative test",
+      "met": true,
+      "evidence": "scheduled-reports.router.test.ts cross-tenant negatives per mutation; integration test rejects another tenant template"
+    },
+    {
+      "criterion": "One-time scheduledDelivery copy is idempotent and loses nothing (runner ruling 3)",
+      "met": true,
+      "evidence": "tests/integration/report-schedules-migration.test.ts: 5 tenants, copy run twice, no duplicates, field mapping, legacy JSON unchanged; 14/14 twice"
+    },
+    {
+      "criterion": "Lighthouse >=90",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "NEEDS_HUMAN: authenticated run or owner waiver; see kpi_results and artifacts/lighthouse/PG-201/waiver-evidence.md"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "validators 2570, db 222, api 7310, web 12631; all exit 0"
     }
   ],
-  "dependencies_verified": [],
   "environment": {
     "os": "win32",
     "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "git_commit": "c0a2d5ad73e2cb809ee6247b014f8058a2418fcc",
+    "branch": "feat/pg-201-scheduled-reports"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 20-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 463445d54eea1901a0980ae03c637b9b9521e65b ('feat(web): add case, task, analytics, document, and agent-approval subpages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: ScheduledReportsContent.tsx, scheduled-reports.router.ts, scheduled-reports validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. WORTH ESCALATING: the task description explicitly notes IFC-308's BullMQ cron reads this schema — worth checking whether IFC-308 itself depends on a schema that was never built, which could indicate a broken/no-op scheduled-report cron in production; out of scope to investigate further in this attestation-only backfill. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-201/context_ack.json — absent"
-    ]
-  }
+  "nav_wiring_confirmed": true,
+  "spec_session_consensus": "CONSENSUS (round 4, 2026-10-13) — data-engineer, security-lead, frontend-lead (+a11y), test-engineer approved after round-3 changes; no open disagreement",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer subagent a743437319653afc7 (3 rounds: REVISE, REVISE, APPROVE)",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-201-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-201-plan.md",
+  "notes": "VERDICT NEEDS_HUMAN for two reasons, both by runner ruling 2026-10-13: (1) Lighthouse KPI met:false: only Path A was run, and it scored the error page because the build has no Supabase public env; an authenticated run needs a non-production Supabase. No waiver approver is recorded; the owner decides. (2) Gate 4b (worktree landed) is open because the runner renames the branch to agent/PG-201-scheduled-reports, runs pre-ship and pushes; this lane does not push.\n!!! PRODUCTION DATA WRITE: migration packages/db/prisma/migrations/20261013120000_report_schedules_pg201/migration.sql alters report_schedules and report_executions (additive: new columns, report_schedule_tags table + RLS, CHECKs/FKs NOT VALID then VALIDATE, reportId DROP NOT NULL) and copies every enabled or recipient-bearing report_settings.scheduledDelivery into one INACTIVE report_schedules row per tenant (id rs-migrated-<tenantId>). Idempotent (deterministic id + NOT EXISTS + ON CONFLICT DO NOTHING), tenant-scoped, guarded casts, never writes report_settings. The production apply is manual, needs the owner, and must happen before the code ships.\nNavigation: sidebar apps/web/src/components/sidebar/configs/analytics.ts line 22 (REPORT_SETTINGS_ITEMS id scheduled-reports), AnalyticsSettingsPanel.tsx line 28, and the Report Settings link card (ReportSettingsContent.tsx line 192). check-nav-wiring.mjs skips route-group pages (GitHub #877), so this was verified by hand.\nMATOP: Foundation, Security, Quality, Domain, Intelligence and Automation all PASS (matop/stoa-verdicts). Compliance-check PASS: plan deliverables, context ack, CSV artifacts, mock audit, architecture (depcruise 0 errors), PRD addendum + ADR-075 Accepted, VPAT/WCAG document control rows added. Semantic review: Codex PASS at a1c969334 (5 rounds, 12 findings fixed); the final full-diff review at eb719f289 ran on the Claude fallback (Codex returned no parseable output) with 0 findings. a11y-expert WCAG 2.1 AA: no AA blockers remain.\nTest runs: package suites at 5745a9266; typecheck, lint, builds, coverage and knip at eb719f289; later commits add tests, docs and regenerated reports only.\nPre-existing, not caused by PG-201: the ai-worker suite exits 1 on 4 teardown errors from ai-worker.supplementary2.test.ts, reproduced identically at base 47f1b5d84 (GitHub #878); ai-worker test:chains is broken on vitest 4 (#879); a moderate sprintf-js advisory (#876).\nFollow-ups: recipient restriction #869; shared-token contrast #871; ReportSchedule.isActive takes effect with IFC-308 (category 2)."
 }

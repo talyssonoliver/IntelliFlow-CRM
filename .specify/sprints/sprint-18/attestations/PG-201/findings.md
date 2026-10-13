@@ -31,7 +31,7 @@ needs the owner; the additive migration must be applied before the code ships.
 | Restrict recipients to tenant members or approved domains | security follow-up | GitHub #869; debt-ledger `PG-201-SCHEDULE-RECIPIENT-RESTRICTION` |
 | `ReportSchedule.isActive` has no runtime effect until IFC-308 | playbook §8 category 2 | debt-ledger `PG-201-SCHEDULE-ISACTIVE-CATEGORY-2`; IFC-308 CSV row note; ADR-075 |
 | `report_executions.scheduleId` FK + index | IFC-308 scope | ADR-075 "Left to IFC-308" |
-| Three route-local `SectionHeader` copies (territory-mapping, task-settings, scheduled-reports inline) | DRY follow-up | this file; extraction is a separate refactor (L1) |
+| Two route-local `SectionHeader` copies remain (territory-mapping, task-settings); a shared `components/shared/section-header.tsx` exists (PG-196). Scheduled Reports now uses the shared one (5745a9266). | DRY follow-up | this file; moving the other two is a separate refactor (L1) |
 
 ## Review fixes (2026-10-13)
 
