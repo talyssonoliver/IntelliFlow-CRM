@@ -1,0 +1,111 @@
+{
+  "stoa": "Domain",
+  "task_id": "PG-204",
+  "run_id": "exec-PG-204-20261013",
+  "verdict": "PASS",
+  "produced_by": "stoa-domain sub-agent",
+  "produced_at": "2026-10-13T07:17:49Z",
+  "head": "6bf14467f",
+  "gates": [
+    {
+      "gate": "typecheck (domain, validators, adapters, api, web)",
+      "result": "PASS",
+      "evidence": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-09-typecheck.log, .specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/turbo-typecheck.log",
+      "notes": "Exit 0 at HEAD 6bf14467f; read from logs, not re-run (host slot held)."
+    },
+    {
+      "gate": "domain unit tests",
+      "result": "PASS",
+      "evidence": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-02-domain-full.log",
+      "notes": "103 files, 2957 tests passed."
+    },
+    {
+      "gate": "domain coverage of new code (>95%)",
+      "result": "PASS",
+      "evidence": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/domain-resolver-coverage-summary.json",
+      "notes": "case-type-defaults.ts: 100% lines/statements/functions/branches (32/32, 38/38, 12/12, 26/26)."
+    },
+    {
+      "gate": "validators / adapters / api unit tests",
+      "result": "PASS",
+      "evidence": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-03..06 logs",
+      "notes": "All exit 0 (api 7295 tests)."
+    },
+    {
+      "gate": "integration tests on real DB",
+      "result": "PASS",
+      "evidence": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-07-integration-db.log",
+      "notes": "17/17 on the local test DB under Node 22.14.0; asserts CHECKs, partial and expression unique indexes, composite tenant FKs, RLS."
+    },
+    {
+      "gate": "prisma schema / db build + typecheck",
+      "result": "PASS",
+      "evidence": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-05-db.log",
+      "notes": "Schema diff is additive: CaseType, CaseTypeChecklistItem, nullable Case.caseTypeId, nullable CaseTask.position. Every new model carries tenantId. SQL-only objects are documented in a schema comment."
+    },
+    {
+      "gate": "Class A migration review (20261013120000_case_types)",
+      "result": "PASS",
+      "evidence": "packages/db/prisma/migrations/20261013120000_case_types/migration.sql",
+      "notes": "Additive only: two nullable no-default columns, two new tables, cases FK added NOT VALID then VALIDATE (all NULLs, brief lock documented), no non-concurrent index on cases, RLS enabled with idempotent policies, forward-only recovery stated, no DROP/UPDATE/DELETE. Timestamp sorts after the previous latest migration."
+    },
+    {
+      "gate": "migration applied via prisma migrate deploy",
+      "result": "NOT_RUN",
+      "evidence": "tests/integration/case-types.test.ts ensureMigrationSql",
+      "notes": "The integration test runs the migration SQL statement by statement (shared-table ALTERs swapped for IF NOT EXISTS), so the SQL is proven valid on real Postgres, but the migrate deploy path and the _prisma_migrations record are unexercised. See F1."
+    },
+    {
+      "gate": "hexagonal boundary",
+      "result": "PASS",
+      "evidence": "packages/domain/src/legal/cases/case-type-defaults.ts imports; no packages/application or packages/adapters source change in the diff",
+      "notes": "Resolver is pure (imports only CaseEvents and territory-constants inside domain), no I/O. dependency-cruiser not re-run (host constraint); verified by import inspection. Boundary violations: 0."
+    },
+    {
+      "gate": "DRY enum pattern",
+      "result": "PASS",
+      "evidence": "packages/validators/src/case-settings.ts:13,88; packages/validators/src/case-types.ts",
+      "notes": "CASE_REQUIRED_FIELD_KEYS lives in domain and feeds z.enum in validators; the SQL CHECK lists the same 6 keys; enum-consistency spec extended."
+    },
+    {
+      "gate": "tRPC contract / explicit DTOs",
+      "result": "PASS",
+      "evidence": "apps/api/src/modules/legal/case-types.router.ts",
+      "notes": "Explicit CaseTypeDto/ListDto/OptionDto from validators, moduleTenantProcedure, admin-role gate via isCaseTypeAdminRole, tenantId at 26 sites, registered in router.ts, entitlement test updated. Router uses ctx.prisma like sibling case-settings.router (existing pattern); no new container service so no container.ts/context.ts change needed."
+    },
+    {
+      "gate": "business rules",
+      "result": "PASS",
+      "evidence": "case-type-defaults.test.ts, cases.router.case-types.test.ts, case-types.router.test.ts",
+      "notes": "Precedence input, then type, then module, then fallback (ADR-076); required fields type-first then tenant rows; DB enforces name uniqueness, single default and tenant-consistent FK."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "medium",
+      "blocking": false,
+      "text": "The local shared test DB holds the case-type objects with no _prisma_migrations record (created by ensureMigrationSql). A later prisma migrate deploy against that DB will fail with \"already exists\" unless resolved via migrate resolve --applied or the objects are dropped. The ADR-069 Class A gate still needs a real migrate deploy on a clean or staging DB before production; this STOA could not observe one. Not a defect in the migration SQL."
+    },
+    {
+      "id": "F2",
+      "severity": "low",
+      "blocking": false,
+      "text": "Non-DB gates ran on Node v25.2.1 (repo pins 22); the DB gate ran on v22.14.0. Results are unaffected."
+    },
+    {
+      "id": "F3",
+      "severity": "info",
+      "blocking": false,
+      "text": "dependency-cruiser and a fresh typecheck were not re-run (single-process host constraint); the verdict relies on logs at HEAD 6bf14467f plus import inspection."
+    }
+  ],
+  "summary": "PASS. Types, domain (2957 tests, resolver 100% coverage), validators, adapters, api and 17 real-DB integration tests are green at HEAD 6bf14467f. The Class A migration is additive and correctly guarded, the domain stays pure, and DTOs and enum sourcing follow repo patterns. Open item: migrate deploy was not exercised and the local test DB is out of step with _prisma_migrations (F1); close it at the staging/production Class A gate.",
+  "addendum": {
+    "head": "d7d91e5e8",
+    "checked_at": "2026-10-13T08:05:38Z",
+    "gate": "migration applied via prisma migrate deploy (Class A gate)",
+    "result": "PASS",
+    "notes": "Read matop/gates/class-a-migrate-deploy-proof.log (run at d7d91e5e8, Node 22.14.0): fresh scratch DB with CI Supabase bootstrap, prisma migrate deploy applied all 68 migrations (exit 0), migrate status exit 0 and up to date, _prisma_migrations row for 20261013120000_case_types finished and not rolled back, 0 unfinished. Queried and present: both new tables with RLS on, case_types_colorToken_check and cases_tenantId_caseTypeId_fkey both validated, case_types_one_default_key and case_types_tenant_lower_name_key indexes, both tenant_isolation policies; scratch DB dropped. Attempt 1 without the bootstrap failed at the baseline (schema extensions missing), a harness prerequisite unrelated to this migration. Commit d7d91e5e8 changed 8 web files (CSS classes and form/dialog markup, one web test) plus a rename of the superseded verdict file, none in domain, db, validators or api. This closes the NOT_RUN gate and the Class A deploy-path part of F1; the shared local test DB still lacks a _prisma_migrations record for these objects (local-only drift, not a production concern). Verdict unchanged."
+  }
+}
