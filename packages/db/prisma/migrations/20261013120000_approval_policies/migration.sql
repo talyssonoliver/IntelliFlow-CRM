@@ -1,4 +1,4 @@
--- PG-198: tenant approval policies (ADR-076).
+-- PG-198: tenant approval policies (ADR-077).
 --
 -- Class A (ADR-069 / docs/operations/agent-autonomy-policy.md): additive only.
 --   * agent_actions: two NULLABLE columns with no default and DROP NOT NULL on

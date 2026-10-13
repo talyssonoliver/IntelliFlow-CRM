@@ -1660,7 +1660,7 @@ model AgentAction {
 //   - RLS tenant policies on both tables
 //   - agent_actions_pending_sweep_idx  ("tenantId", "createdAt") WHERE status = 'PENDING_APPROVAL'
 
-/// A tenant approval policy for one approval queue (ADR-076).
+/// A tenant approval policy for one approval queue (ADR-077).
 model ApprovalPolicy {
   id                       String   @id @default(cuid())
   tenantId                 String
