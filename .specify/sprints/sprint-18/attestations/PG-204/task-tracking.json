@@ -28,7 +28,7 @@
   },
   "kpis": {},
   "notes": "Case types at /cases/case-types: taxonomy (category, default priority, default SLA, required fields, resolution workflow). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in case automation OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "spec",
+  "phase": "plan",
   "started_at": "2026-10-12T23:22:38Z",
   "status_history": [
     {
@@ -50,6 +50,16 @@
       "at": "2026-10-13T00:08:00Z",
       "note": "Spec approved 8/8 (R1-R4); ADR-076 proposed; PRD addendum; CSV paths corrected",
       "status": "Spec Complete"
+    },
+    {
+      "at": "2026-10-13T00:10:00Z",
+      "note": "Plan session started",
+      "status": "Planning"
+    },
+    {
+      "at": "2026-10-13T00:19:00Z",
+      "note": "Plan approved by plan-reviewer subagent (iteration 2); 18 steps, 67 files; Planned Finish 2026-10-15",
+      "status": "Plan Complete"
     }
   ],
   "stream": null,
