@@ -154,6 +154,12 @@ describe('add()', () => {
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
     expect(data.confidenceScore).toBe(89);
+    // Provenance marker: this is a real agent confidence, not a legacy score.
+    expect(JSON.parse(data.aiReasoning)).toEqual({
+      source: 'crm-agent',
+      version: '1.0',
+      confidenceSource: 'agent',
+    });
   });
 
   it('A3: stores NULL when the caller supplied no confidence, whatever the impact', async () => {
@@ -165,6 +171,7 @@ describe('add()', () => {
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
     expect(data.confidenceScore).toBeNull();
+    expect(JSON.parse(data.aiReasoning)).not.toHaveProperty('confidenceSource');
   });
 
   it('A4: stores NULL for an out-of-range confidence', async () => {
@@ -1078,12 +1085,25 @@ describe('Status mapping', () => {
 describe('confidence and impact are independent (RF-2)', () => {
   it('M1: impact is read from the stored preview, not from the confidence', async () => {
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(
-      makeAgentActionRow({ confidenceScore: 95, expiresAt: new Date(Date.now() + 60_000) })
+      makeAgentActionRow({
+        confidenceScore: 95,
+        aiReasoning: JSON.stringify({ confidenceSource: 'agent' }),
+        expiresAt: new Date(Date.now() + 60_000),
+      })
     );
 
     const result = await store.get(ACTION_ID);
     expect(result!.preview.estimatedImpact).toBe('MEDIUM');
     expect(result!.confidence).toBe(0.95);
+  });
+
+  it('M1b: a legacy (pre-PG-198) impact-derived score is not exposed as confidence', async () => {
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+      makeAgentActionRow({ confidenceScore: 90, expiresAt: new Date(Date.now() + 60_000) })
+    );
+
+    const result = await store.get(ACTION_ID);
+    expect(result!.confidence).toBeUndefined();
   });
 
   it('M2: a NULL confidence reads back as undefined', async () => {

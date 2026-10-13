@@ -388,6 +388,31 @@ describe('executeApprovedAction', () => {
     expect(calls.lead.addNote).toHaveBeenCalled();
   });
 
+  it('draft_message NOTE refuses a recipient outside the approving tenant', async () => {
+    const approver = ctx();
+    approver.prisma.contact.findFirst.mockResolvedValue(null);
+    const outcome = await executeApprovedAction(
+      'draft_message',
+      { type: 'NOTE', recipientType: 'CONTACT', recipientId: 'foreign', body: 'x' },
+      approver
+    );
+    expect(outcome).toEqual({ status: 'FAILED', error: 'The contact was not found.' });
+    expect(approver.prisma.contact.findFirst).toHaveBeenCalledWith({
+      where: { id: 'foreign', tenantId: TENANT },
+      select: { id: true },
+    });
+    expect(calls.contact.addNote).not.toHaveBeenCalled();
+  });
+
+  it('draft_message NOTE needs a tenant on the approving session', async () => {
+    const outcome = await executeApprovedAction(
+      'draft_message',
+      { type: 'NOTE', recipientType: 'LEAD', recipientId: 'l', body: 'x' },
+      ctx({ user: { userId: 'u', role: 'ADMIN' } })
+    );
+    expect(outcome.error).toBe('No tenant on the approving session.');
+  });
+
   it('draft_message NOTE adds a note to a lead or a contact', async () => {
     await executeApprovedAction(
       'draft_message',

@@ -723,6 +723,11 @@ describe('agentRouter', () => {
       expect(mockApprovalApproveAction.mock.calls[0]![2]).toMatchObject({
         user: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
       });
+      // ...and the agent context carries tenant + client, so tool enablement is re-checked.
+      expect(mockApprovalApproveAction.mock.calls[0]![1]).toMatchObject({
+        tenantId: TEST_UUIDS.tenant,
+        prisma: expect.anything(),
+      });
     });
 
     it('reports a failed execution as unsuccessful with its error (PG-198)', async () => {

@@ -262,20 +262,38 @@ async function draftEmail(input: Input, ctx: Context): Promise<ExecutionResult> 
   };
 }
 
+/**
+ * The note procedures look recipients up by id only, so ownership is proven here:
+ * the lead/contact must belong to the approving session's tenant.
+ */
+async function assertRecipientInTenant(input: Input, ctx: Context): Promise<void> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) throw new Error('No tenant on the approving session.');
+  const where = { where: { id: String(input.recipientId), tenantId }, select: { id: true } };
+  const row =
+    input.recipientType === 'LEAD'
+      ? await ctx.prisma.lead.findFirst(where)
+      : await ctx.prisma.contact.findFirst(where);
+  if (!row) {
+    throw new Error(`The ${String(input.recipientType).toLowerCase()} was not found.`);
+  }
+}
+
 async function addNote(input: Input, ctx: Context): Promise<ExecutionResult> {
   const content = String(input.body);
   const id = String(input.recipientId);
+  if (input.recipientType !== 'LEAD' && input.recipientType !== 'CONTACT') {
+    throw new Error('Notes can be added to leads and contacts only.');
+  }
+  await assertRecipientInTenant(input, ctx);
   if (input.recipientType === 'LEAD') {
     const { leadRouter } = await import('../modules/lead/lead.router.js');
     await leadRouter.createCaller(ctx as CallerCtx).addNote({ leadId: id, content } as never);
     return { entityType: 'LEAD', entityId: id, detail: 'Note added.' };
   }
-  if (input.recipientType === 'CONTACT') {
-    const { contactRouter } = await import('../modules/contact/contact.router.js');
-    await contactRouter.createCaller(ctx as CallerCtx).addNote({ contactId: id, content } as never);
-    return { entityType: 'CONTACT', entityId: id, detail: 'Note added.' };
-  }
-  throw new Error('Notes can be added to leads and contacts only.');
+  const { contactRouter } = await import('../modules/contact/contact.router.js');
+  await contactRouter.createCaller(ctx as CallerCtx).addNote({ contactId: id, content } as never);
+  return { entityType: 'CONTACT', entityId: id, detail: 'Note added.' };
 }
 
 async function draftMessage(input: Input, ctx: Context): Promise<ExecutionResult> {

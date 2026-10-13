@@ -202,6 +202,19 @@ async function tryAutoApprove(
 }
 
 /**
+ * PG-198: the agent context for executing an approved action carries the tenant and
+ * the client, so ApprovalWorkflowService re-checks the tool's per-tenant enablement
+ * (a tool disabled after the action was queued is refused) instead of bypassing it.
+ */
+function withTenant(
+  agentContext: AgentAuthContext,
+  ctx: Context,
+  tenantId: string
+): AgentAuthContext {
+  return { ...agentContext, tenantId, prisma: ctx.prisma };
+}
+
+/**
  * Helper to build agent auth context from tRPC context
  */
 function buildAgentContext(ctx: Context): AgentAuthContext {
@@ -415,7 +428,7 @@ export const agentRouter = createTRPCRouter({
 
         const autoApproved = await tryAutoApprove(
           ctx,
-          agentContext,
+          withTenant(agentContext, ctx, ctx.user.tenantId),
           pendingAction,
           ctx.user.tenantId
         );
@@ -509,7 +522,8 @@ export const agentRouter = createTRPCRouter({
       // PG-198 (AC-010): the policy's minimum reviewer role, on top of the permission.
       await assertPolicyReviewer(ctx, action);
 
-      const agentContext = buildAgentContext(ctx);
+      // Tenant + client so the tool's per-tenant enablement is re-checked before it runs.
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
 
       const decision = {
         actionId: input.actionId,

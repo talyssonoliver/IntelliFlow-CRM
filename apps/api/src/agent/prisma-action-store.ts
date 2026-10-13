@@ -23,6 +23,10 @@ import type { PrismaClient } from '@intelliflow/db';
 import { confidenceToPercent } from '@intelliflow/domain';
 import type { PendingAction, ExecutedAction, ApprovalStatus, ExecutionStatus } from './types';
 
+/** Provenance marker (in aiReasoning) for a confidence supplied by the calling agent. */
+const CONFIDENCE_SOURCE_KEY = 'confidenceSource';
+const AGENT_CONFIDENCE = 'agent';
+
 /** An approved action still EXECUTING after this long was interrupted (crash/restart). */
 const INTERRUPTED_AFTER_MS = 5 * 60 * 1000;
 
@@ -56,14 +60,20 @@ export class PrismaAgentActionStore {
   // ---------------------------------------------------------------------------
 
   async add(action: PendingAction): Promise<void> {
+    const confidenceScore = this.toConfidenceScore(action.confidence);
     await this.prisma.agentAction.create({
       data: {
         id: action.id,
         actionType: action.toolName,
         description: action.preview.summary,
-        aiReasoning: JSON.stringify(action.metadata ?? {}),
+        // The marker tells real model confidence apart from legacy impact-derived scores.
+        aiReasoning: JSON.stringify(
+          confidenceScore === null
+            ? (action.metadata ?? {})
+            : { ...action.metadata, [CONFIDENCE_SOURCE_KEY]: AGENT_CONFIDENCE }
+        ),
         // RF-2 (#854): the caller's real confidence (0-100) or NULL — never derived from impact.
-        confidenceScore: this.toConfidenceScore(action.confidence),
+        confidenceScore,
         status: STATUS_TO_DB[action.status] as any,
         entityId: (action.input.entityId as string) ?? action.id,
         entityType: action.entityType.toLowerCase(),
@@ -353,6 +363,7 @@ export class PrismaAgentActionStore {
   private toPendingAction(row: AgentAction): PendingAction {
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     const input = (row.previousState as Record<string, unknown>) ?? {};
+    const metadata = row.aiReasoning ? this.safeParseJson(row.aiReasoning) : undefined;
 
     return {
       id: row.id,
@@ -368,7 +379,11 @@ export class PrismaAgentActionStore {
         warnings: (proposed.warnings as string[]) ?? [],
         estimatedImpact: this.toImpact(proposed.estimatedImpact),
       },
-      confidence: row.confidenceScore === null ? undefined : row.confidenceScore / 100,
+      // Legacy rows (before PG-198) hold an impact-derived score: not a confidence.
+      confidence:
+        row.confidenceScore !== null && metadata?.[CONFIDENCE_SOURCE_KEY] === AGENT_CONFIDENCE
+          ? row.confidenceScore / 100
+          : undefined,
       escalatedAt: row.escalatedAt ?? undefined,
       escalatedTo: row.escalatedTo ?? undefined,
       status: STATUS_FROM_DB[row.status] ?? 'PENDING',
@@ -376,7 +391,7 @@ export class PrismaAgentActionStore {
       expiresAt: row.expiresAt,
       createdBy: row.agentId,
       agentSessionId: row.agentName,
-      metadata: row.aiReasoning ? this.safeParseJson(row.aiReasoning) : undefined,
+      metadata,
     };
   }
 
