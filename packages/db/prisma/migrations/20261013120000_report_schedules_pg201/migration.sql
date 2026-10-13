@@ -84,9 +84,11 @@ CREATE UNIQUE INDEX "report_schedules_tenant_lower_name_key"
 ALTER TABLE "report_schedule_tags" ADD CONSTRAINT "report_schedule_tags_tenantId_fkey" FOREIGN KEY ("tenantId") REFERENCES "tenants"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- Composite FK: a schedule can only reference a template of its own tenant (DBA-012).
--- RESTRICT: deleting a template that a schedule still delivers is refused (the
--- report-templates router maps it to CONFLICT).
-ALTER TABLE "report_schedules" ADD CONSTRAINT "report_schedules_tenantId_templateId_fkey" FOREIGN KEY ("tenantId", "templateId") REFERENCES "report_templates"("tenantId", "id") ON DELETE RESTRICT ON UPDATE CASCADE NOT VALID;
+-- NO ACTION: deleting a template that a schedule still delivers is refused (the
+-- report-templates router maps it to CONFLICT). Not RESTRICT: NO ACTION is checked at
+-- the end of the statement, so a tenant delete cascading through report_templates and
+-- report_schedules never depends on the order of the cascades.
+ALTER TABLE "report_schedules" ADD CONSTRAINT "report_schedules_tenantId_templateId_fkey" FOREIGN KEY ("tenantId", "templateId") REFERENCES "report_templates"("tenantId", "id") ON DELETE NO ACTION ON UPDATE CASCADE NOT VALID;
 ALTER TABLE "report_schedules" VALIDATE CONSTRAINT "report_schedules_tenantId_templateId_fkey";
 
 -- ── CHECK constraints on report_schedules (SQL-only) ───────────────────────

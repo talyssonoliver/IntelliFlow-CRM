@@ -44,7 +44,10 @@ that IFC-308 can register it directly, without a second scheduler?
    crons set `frequency = 'custom'`.
 3. **What to deliver.** `templateId` references PG-200 `report_templates`
    through a tenant-consistent composite FK `(tenantId, templateId)`,
-   `ON DELETE RESTRICT`. The legacy `reportId` stays.
+   `ON DELETE NO ACTION` (checked at the end of the statement, so a tenant
+   delete cascading through templates and schedules always succeeds, while
+   deleting a template a schedule still uses is refused). The legacy `reportId`
+   stays.
    `CHECK (NOT isActive OR templateId IS NOT NULL OR reportId IS NOT NULL)`: an
    active schedule always has something to render.
 4. **Limits.** At most one run per hour (checked across the coming year's DST

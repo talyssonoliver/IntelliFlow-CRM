@@ -2332,7 +2332,7 @@ model ReportTemplate {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  // PG-201: schedules that deliver this layout (FK ON DELETE RESTRICT).
+  // PG-201: schedules that deliver this layout (FK ON DELETE NO ACTION).
   schedules ReportSchedule[]
 
   // PG-201: target of the tenant-consistent (tenantId, templateId) FK on report_schedules.
@@ -4640,7 +4640,7 @@ model ReportSchedule {
   report      ReportDefinition? @relation(fields: [reportId], references: [id], onDelete: Cascade)
   // PG-201: PG-200 layout to deliver; tenant-consistent composite FK.
   templateId  String?
-  template    ReportTemplate? @relation(fields: [tenantId, templateId], references: [tenantId, id], onDelete: Restrict)
+  template    ReportTemplate? @relation(fields: [tenantId, templateId], references: [tenantId, id], onDelete: NoAction)
   name        String?  @db.VarChar(100)
   description String?
   frequency   String   // 'daily', 'weekly', 'monthly', 'quarterly', 'custom' (kept consistent with cronExpression)

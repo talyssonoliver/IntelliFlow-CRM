@@ -433,7 +433,7 @@ describeDb('PG-201 report_schedules migration (real DB)', () => {
       );
     });
 
-    it('accepts an active schedule on its own template and restricts that template delete', async () => {
+    it('accepts an active schedule on its own template and refuses deleting that template on its own (NO ACTION)', async () => {
       await template(T.enabled, `${RUN}_tpl_a`);
       await insertSchedule({
         name: `${RUN} active`,
@@ -448,7 +448,7 @@ describeDb('PG-201 report_schedules migration (real DB)', () => {
     });
 
     it('lets a tenant delete cascade through a template its schedule uses (consensus vote, data-engineer)', async () => {
-      // RESTRICT on (tenantId, templateId) must not block tenant offboarding: both
+      // The (tenantId, templateId) FK must not block tenant offboarding: both
       // report_templates and report_schedules cascade from tenants.
       const doomed = `${RUN}_offboard`;
       await prisma.$executeRawUnsafe(
@@ -470,6 +470,15 @@ describeDb('PG-201 report_schedules migration (real DB)', () => {
         doomed
       );
       expect(Number(left[0].n)).toBe(0);
+    });
+
+    it('uses NO ACTION (not RESTRICT) for the template foreign key (Codex round 2)', async () => {
+      const rows: Array<{ confdeltype: string }> = await prisma.$queryRawUnsafe(
+        `SELECT confdeltype::text AS confdeltype FROM pg_constraint
+          WHERE conname = 'report_schedules_tenantId_templateId_fkey'`
+      );
+      // 'a' = NO ACTION, 'r' = RESTRICT (pg_constraint.confdeltype)
+      expect(rows.map((r) => r.confdeltype)).toEqual(['a']);
     });
 
     it('enforces the tag palette and case-insensitive tag names', async () => {

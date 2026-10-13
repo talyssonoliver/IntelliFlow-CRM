@@ -108,10 +108,14 @@ describe('report_schedules migration (PG-201)', () => {
     );
   });
 
-  it('keeps template references tenant-consistent and RESTRICTs template deletes', () => {
+  it('keeps template references tenant-consistent and blocks template deletes with NO ACTION', () => {
+    // NO ACTION (not RESTRICT): checked at the end of the statement, so a tenant delete
+    // that cascades through both report_templates and report_schedules always succeeds,
+    // while deleting a referenced template on its own is still refused (Codex round 2).
     expect(sql).toMatch(
-      /FOREIGN KEY \("tenantId", "templateId"\) REFERENCES "report_templates"\("tenantId", "id"\) ON DELETE RESTRICT/
+      /FOREIGN KEY \("tenantId", "templateId"\) REFERENCES "report_templates"\("tenantId", "id"\) ON DELETE NO ACTION/
     );
+    expect(sql).not.toMatch(/REFERENCES "report_templates"[^;]*ON DELETE RESTRICT/);
     expect(sql).toContain('CREATE UNIQUE INDEX "report_templates_tenantId_id_key"');
   });
 

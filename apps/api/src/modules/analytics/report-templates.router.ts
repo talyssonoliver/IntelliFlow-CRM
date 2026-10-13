@@ -251,7 +251,7 @@ export const reportTemplatesRouter = createTRPCRouter({
         });
       });
     } catch (err: unknown) {
-      // PG-201: report_schedules.templateId is ON DELETE RESTRICT.
+      // PG-201: report_schedules.templateId is ON DELETE NO ACTION (a used template cannot be deleted).
       if ((err as { code?: string }).code === 'P2003') {
         throw new TRPCError({
           code: 'CONFLICT',
