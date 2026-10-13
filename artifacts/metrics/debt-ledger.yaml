@@ -4631,7 +4631,7 @@ items:
     remediation_plan: >-
       Resolve clientId and assignedTo tenant-scoped before the write (NOT_FOUND/BAD_REQUEST), add cross-tenant negatives; verify appointments.create attendeeIds/linkedCaseIds the same way.
     status: open
-    notes: 'Pre-existing in cases.router.ts:347-364; found by the PG-198 AI-governance review (G5). gh #890.'
+    notes: 'Pre-existing in cases.router.ts:347-364; found by the PG-198 AI-governance review (G5) and Codex. Cases part fixed on the PG-198 branch (a57a1a7bb); appointments part still to verify. gh #890.'
 summary:
   total_items: 419
   by_severity:
