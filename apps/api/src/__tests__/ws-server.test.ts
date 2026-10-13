@@ -1,7 +1,7 @@
 /**
  * WebSocket Server Tests
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 const { mockOn, mockClose, mockBroadcast } = vi.hoisted(() => ({
   mockOn: vi.fn(),
@@ -41,6 +41,43 @@ import { createWSContext } from '../context';
 describe('WS_PORT', () => {
   it('should export WS_PORT as number', () => {
     expect(typeof WS_PORT).toBe('number');
+  });
+});
+
+describe('WS_PORT resolution (issue #851 — Railway injects PORT)', () => {
+  const originalWsPort = process.env.WS_PORT;
+  const originalPort = process.env.PORT;
+
+  beforeEach(() => {
+    vi.resetModules();
+  });
+
+  afterEach(() => {
+    if (originalWsPort === undefined) delete process.env.WS_PORT;
+    else process.env.WS_PORT = originalWsPort;
+    if (originalPort === undefined) delete process.env.PORT;
+    else process.env.PORT = originalPort;
+  });
+
+  it('falls back to the local-dev default of 3001 when neither WS_PORT nor PORT is set', async () => {
+    delete process.env.WS_PORT;
+    delete process.env.PORT;
+    const mod = (await import('../ws-server.js')) as any;
+    expect(mod.WS_PORT).toBe(3001);
+  });
+
+  it('listens on the Railway-injected PORT when WS_PORT is not explicitly set', async () => {
+    delete process.env.WS_PORT;
+    process.env.PORT = '8080';
+    const mod = (await import('../ws-server.js')) as any;
+    expect(mod.WS_PORT).toBe(8080);
+  });
+
+  it('prefers an explicit WS_PORT over PORT, so an already-configured Railway service keeps its port', async () => {
+    process.env.WS_PORT = '4000';
+    process.env.PORT = '8080';
+    const mod = (await import('../ws-server.js')) as any;
+    expect(mod.WS_PORT).toBe(4000);
   });
 });
 
