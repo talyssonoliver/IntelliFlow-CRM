@@ -16,7 +16,7 @@
  * @vitest-environment node
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { parseADR, validateADR, getAllADRFiles } from '../adr-service';
@@ -31,6 +31,22 @@ function repoRoot(): string {
 
 describe('ADR-075 production secrets management (real file)', () => {
   const absolutePath = path.resolve(repoRoot(), ADR_RELATIVE_PATH);
+
+  // getAllADRFiles() resolves its search paths from process.cwd(), not from
+  // this file's location. Run from the repo root (root vitest project) that
+  // is a no-op, but the web workspace's own test script runs vitest with
+  // cwd=apps/web, where docs/architecture/adr does not exist — codex-review
+  // flagged this as cwd-dependent-adr-discovery. Pin cwd for this suite only
+  // and restore it afterwards so other suites are unaffected.
+  const originalCwd = process.cwd();
+
+  beforeAll(() => {
+    process.chdir(repoRoot());
+  });
+
+  afterAll(() => {
+    process.chdir(originalCwd);
+  });
 
   it('exists on disk at the real next-available ADR number', () => {
     expect(fs.existsSync(absolutePath)).toBe(true);
