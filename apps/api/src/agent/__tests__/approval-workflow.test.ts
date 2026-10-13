@@ -453,6 +453,37 @@ describe('Approval Workflow', () => {
         const rejected = await approvalWorkflowService.rejectAction(decision, testContext);
 
         expect(rejected.status).toBe('REJECTED');
+        const row = agentActionRows.find((r) => r.id === 'reject-test-1');
+        expect(row).toMatchObject({
+          status: 'REJECTED',
+          reviewedBy: 'manager-1',
+          feedback: 'Not appropriate at this time',
+        });
+      });
+
+      it('an approval and a rejection racing on the same action cannot both win', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'race-2' }));
+        const stale = await pendingActionsStore.get('race-2');
+        const getSpy = vi.spyOn(pendingActionsStore, 'get').mockResolvedValue(stale);
+
+        await approvalWorkflowService.approveAction(
+          { actionId: 'race-2', decision: 'APPROVE', decidedBy: 'a', decidedAt: new Date() },
+          testContext
+        );
+        await expect(
+          approvalWorkflowService.rejectAction(
+            {
+              actionId: 'race-2',
+              decision: 'REJECT',
+              decidedBy: 'b',
+              decidedAt: new Date(),
+              reason: 'x',
+            },
+            testContext
+          )
+        ).rejects.toThrow(/no longer pending/);
+        expect(agentActionRows.find((r) => r.id === 'race-2').status).toBe('APPROVED');
+        getSpy.mockRestore();
       });
 
       it('should throw for non-existent action', async () => {

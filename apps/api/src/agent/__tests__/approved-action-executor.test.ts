@@ -490,6 +490,20 @@ describe('prepareExecutionInput', () => {
     });
   });
 
+  it('refuses a note longer than the note procedures accept (before any claim)', () => {
+    const passthrough = { safeParse: (v: unknown) => ({ success: true, data: v }) };
+    const note = { type: 'NOTE', recipientType: 'LEAD', recipientId: 'l', body: 'x'.repeat(5001) };
+    expect(() => prepareExecutionInput('draft_message', passthrough, note)).toThrow(
+      'A note can be at most 5000 characters.'
+    );
+    expect(
+      prepareExecutionInput('draft_message', passthrough, { ...note, body: 'x'.repeat(5000) })
+    ).toMatchObject({ type: 'NOTE' });
+    expect(
+      prepareExecutionInput('draft_message', passthrough, { ...note, type: 'EMAIL' })
+    ).toMatchObject({ type: 'EMAIL' });
+  });
+
   it('falls back to a generic message when the schema reports no error', () => {
     const silent = { safeParse: () => ({ success: false }) };
     expect(() => prepareExecutionInput('create_case', silent, {})).toThrow(/invalid input/);

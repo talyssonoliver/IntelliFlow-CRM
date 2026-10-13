@@ -31,6 +31,9 @@ export interface ExecutionResult {
   detail?: string;
 }
 
+/** lead.addNote / contact.addNote content limit. */
+const NOTE_MAX_LENGTH = 5000;
+
 /** Fields an approver may not change: they identify what the action targets. */
 export const IMMUTABLE_INPUT_FIELDS: Readonly<Record<string, readonly string[]>> = {
   create_case: ['clientId'],
@@ -73,7 +76,18 @@ export function prepareExecutionInput(
       `The approved input is not valid for ${toolName}: ${parsed.error?.message ?? 'invalid input'}`
     );
   }
-  return parsed.data as Record<string, unknown>;
+  const data = parsed.data as Record<string, unknown>;
+  // The note procedures accept less than the tool does; refuse before claiming, so the
+  // action stays pending and can be shortened.
+  if (
+    toolName === 'draft_message' &&
+    data.type === 'NOTE' &&
+    typeof data.body === 'string' &&
+    data.body.length > NOTE_MAX_LENGTH
+  ) {
+    throw new ApprovalInputError(`A note can be at most ${NOTE_MAX_LENGTH} characters.`);
+  }
+  return data;
 }
 
 type Input = Record<string, unknown>;

@@ -214,6 +214,32 @@ export class PrismaAgentActionStore {
   }
 
   /**
+   * PG-198: reject a still-pending action with the same status guard the approval
+   * claim uses, so an approval and a rejection can never both win.
+   */
+  async rejectIfPending(
+    action: PendingAction,
+    reviewedBy: string,
+    reason: string | undefined,
+    now: Date
+  ): Promise<boolean> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id: action.id,
+        tenantId: action.tenantId ?? this.tenantId,
+        status: 'PENDING_APPROVAL' as any,
+      },
+      data: {
+        status: 'REJECTED' as any,
+        reviewedAt: now,
+        reviewedBy,
+        feedback: reason ?? null,
+      },
+    });
+    return result.count === 1;
+  }
+
+  /**
    * Approved actions whose execution never finished (left EXECUTING by a crash),
    * requested or approved by this user. They are shown, never re-run.
    */

@@ -313,9 +313,13 @@ export class ApprovalWorkflowService {
       throw new Error(`Action is not pending: ${action.status}`);
     }
 
-    // Update action status
+    // Status-guarded (PG-198): loses cleanly to a concurrent approval or expiry.
+    if (
+      !(await actionStore.rejectIfPending(action, decision.decidedBy, decision.reason, new Date()))
+    ) {
+      throw new Error('Action is no longer pending (already decided or expired)');
+    }
     action.status = 'REJECTED';
-    await pendingActionsStore.update(action);
 
     // Log the rejection
     await agentLogger.log({
