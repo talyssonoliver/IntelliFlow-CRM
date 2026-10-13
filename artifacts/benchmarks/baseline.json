@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-13T00:25:09.116Z",
+  "timestamp": "2026-10-13T00:46:34.674Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1425,16 +1425,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 192,
-    "total_fields": 2769,
-    "total_indexes": 875,
-    "total_relations": 271,
+    "total_tables": 194,
+    "total_fields": 2800,
+    "total_indexes": 882,
+    "total_relations": 275,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 170,
+        "fields": 171,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1448,9 +1448,9 @@
       },
       {
         "name": "User",
-        "fields": 45,
+        "fields": 46,
         "indexes": 7,
-        "relations": 7,
+        "relations": 8,
         "hasEmbedding": false
       },
       {
@@ -1545,6 +1545,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AgentAction",
+        "fields": 25,
+        "indexes": 8,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "Document",
         "fields": 25,
         "indexes": 7,
@@ -1555,13 +1562,6 @@
         "name": "CallRecord",
         "fields": 24,
         "indexes": 6,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AgentAction",
-        "fields": 23,
-        "indexes": 8,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1618,6 +1618,13 @@
         "name": "ActivityEvent",
         "fields": 19,
         "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ApprovalPolicy",
+        "fields": 19,
+        "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -2536,6 +2543,13 @@
         "fields": 8,
         "indexes": 4,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ApprovalPolicyAssignment",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {

@@ -125,6 +125,7 @@ model Tenant {
   agentAvailabilities  AgentAvailability[]        @ignore
   routingRules         RoutingRule[]              @ignore
   accountTerritories   AccountTerritory[]         @ignore
+  approvalPolicies     ApprovalPolicy[]           @ignore
   routingAudits        RoutingAudit[]             @ignore
   notifications        Notification[]             @ignore
   notifPreferences     NotificationPreference[]   @ignore
@@ -525,6 +526,7 @@ model User {
   memberships         TenantMembership[]
   loginGrants         PartnerLoginGrant[]
   accountTerritoryMemberships AccountTerritoryMember[] // PG-197
+  approvalPolicyEscalations   ApprovalPolicy[] @relation("ApprovalPolicyEscalationTarget") // PG-198
 
   @@index([email])
   @@index([role])
@@ -1600,7 +1602,8 @@ model AgentAction {
   actionType      String            // 'lead_update', 'email_draft', 'deal_stage_change', 'task_create'
   description     String
   aiReasoning     String            @db.Text
-  confidenceScore Int               // 0-100
+  // PG-198 (RF-2): the calling agent's real confidence 0-100, or NULL when none was supplied.
+  confidenceScore Int?              // 0-100
   status          AgentActionStatus @default(PENDING_APPROVAL)
 
   // Entity being affected
@@ -1628,6 +1631,10 @@ model AgentAction {
   rolledBackBy    String?
   rollbackReason  String?
 
+  // PG-198: approval-policy escalation (set once by the approval sweep)
+  escalatedAt     DateTime?
+  escalatedTo     String?
+
   // DBA-002: Multi-tenancy (DB has tenantId NOT NULL)
   tenantId        String
   tenant          Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1641,6 +1648,67 @@ model AgentAction {
   @@index([tenantId, createdAt])
   @@index([tenantId, status])
   @@map("agent_actions")
+}
+
+// ─── PG-198: Approval Policies ──────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261013120000_approval_policies and
+// migrations/20261013120100_agent_actions_pending_sweep_idx — do not drop in a diff):
+//   - approval_policies_tenant_scope_lower_name_key  UNIQUE ("tenantId", "scope", lower("name"))
+//   - approval_policies_one_default_key              UNIQUE ("tenantId", "scope") WHERE "isDefault"
+//   - CHECKs on scope, colorToken, minReviewerRole, timeout/threshold/escalation ranges
+//   - RLS tenant policies on both tables
+//   - agent_actions_pending_sweep_idx  ("tenantId", "createdAt") WHERE status = 'PENDING_APPROVAL'
+
+/// A tenant approval policy for one approval queue (ADR-076).
+model ApprovalPolicy {
+  id                       String   @id @default(cuid())
+  tenantId                 String
+  tenant                   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name                     String   @db.VarChar(100)
+  description              String?
+  colorToken               String   @default("slate")
+  /// AGENT_TOOL | AUTO_RESPONSE (SQL CHECK; domain APPROVAL_POLICY_SCOPES).
+  scope                    String
+  isDefault                Boolean  @default(false)
+  timeoutMinutes           Int
+  /// USER | SALES_REP | MANAGER | ADMIN (SQL CHECK; domain APPROVER_ROLES).
+  minReviewerRole          String   @default("USER")
+  /// AI auto-approval is opt-in (playbook §7).
+  autoApproveEnabled       Boolean  @default(false)
+  /// Percent 90-99; the model confidence must be strictly above it.
+  autoApproveMinConfidence Int?
+  escalationEnabled        Boolean  @default(false)
+  escalateAfterMinutes     Int?
+  escalationTargetUserId   String?
+  escalationTarget         User?    @relation("ApprovalPolicyEscalationTarget", fields: [escalationTargetUserId], references: [id], onDelete: SetNull)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  assignments ApprovalPolicyAssignment[]
+
+  // DBA-012: composite targets so assignments carry the policy's tenant and scope
+  @@unique([tenantId, id])
+  @@unique([tenantId, id, scope])
+  @@index([tenantId, scope])
+  @@map("approval_policies")
+}
+
+/// Routes one (agent, action) pair of a queue to a policy; "*" is a wildcard.
+model ApprovalPolicyAssignment {
+  id         String         @id @default(cuid())
+  tenantId   String
+  policyId   String
+  /// Copy of the policy's scope, kept equal by the composite FK.
+  scope      String
+  policy     ApprovalPolicy @relation(fields: [tenantId, policyId, scope], references: [tenantId, id, scope], onDelete: Cascade, onUpdate: Cascade)
+  agentKey   String         @db.VarChar(64)
+  actionType String         @db.VarChar(64)
+  createdAt  DateTime       @default(now())
+
+  @@unique([tenantId, scope, agentKey, actionType])
+  @@index([tenantId, policyId])
+  @@map("approval_policy_assignments")
 }
 
 // ============================================

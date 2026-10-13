@@ -279,7 +279,8 @@ export class PrismaAgentActionStore {
         changes: (proposed.changes as any[]) ?? [],
         affectedEntities: (proposed.affectedEntities as any[]) ?? [],
         warnings: (proposed.warnings as string[]) ?? [],
-        estimatedImpact: this.confidenceToImpact(row.confidenceScore),
+        estimatedImpact:
+          row.confidenceScore === null ? undefined : this.confidenceToImpact(row.confidenceScore),
       },
       status: STATUS_FROM_DB[row.status] ?? 'PENDING',
       createdAt: row.createdAt,
