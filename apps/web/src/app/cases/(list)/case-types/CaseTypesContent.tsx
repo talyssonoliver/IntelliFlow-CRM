@@ -41,7 +41,8 @@ export default function CaseTypesContent() {
   const listRef = useRef<CaseTypeListHandle>(null);
 
   const listQuery = trpc.caseTypes.list.useQuery(undefined, { enabled });
-  const refresh = () => utils.caseTypes.list.invalidate();
+  // Router-wide: also refreshes caseTypes.listActive, which the New Case picker caches for 5 min.
+  const refresh = () => utils.caseTypes.invalidate();
   const createMutation = trpc.caseTypes.create.useMutation({ onSuccess: refresh });
   const updateMutation = trpc.caseTypes.update.useMutation({ onSuccess: refresh });
   const deleteMutation = trpc.caseTypes.delete.useMutation({ onSuccess: refresh });

@@ -17,6 +17,8 @@ const h = vi.hoisted(() => {
   return {
     toast: vi.fn(),
     invalidate: vi.fn(),
+    invalidateList: vi.fn(),
+    invalidateListActive: vi.fn(),
     refetch: vi.fn(),
     openCreate: vi.fn(),
     auth: { isLoading: false, isAuthenticated: true },
@@ -71,7 +73,13 @@ vi.mock('@/lib/trpc', () => {
   };
   return {
     trpc: {
-      useUtils: () => ({ caseTypes: { list: { invalidate: h.invalidate } } }),
+      useUtils: () => ({
+        caseTypes: {
+          invalidate: h.invalidate,
+          list: { invalidate: h.invalidateList },
+          listActive: { invalidate: h.invalidateListActive },
+        },
+      }),
       caseTypes: {
         list: { useQuery: () => ({ ...h.list, refetch: h.refetch }) },
         create: { useMutation: useMutation('create') },
@@ -299,10 +307,16 @@ describe('CaseTypesContent', () => {
     expect(h.mutations.delete.mutateAsync).not.toHaveBeenCalled();
   });
 
-  it('invalidates the list after each mutation succeeds', () => {
+  it('invalidates the whole caseTypes router (list and the New Case listActive) after every mutation', () => {
     render(<CaseTypesContent />);
-    h.mutations.create.opts?.onSuccess?.();
-    expect(h.invalidate).toHaveBeenCalled();
+    for (const key of ['create', 'update', 'delete', 'setDefault'] as const) {
+      h.invalidate.mockClear();
+      h.mutations[key].opts?.onSuccess?.();
+      // Router-level invalidation covers caseTypes.list and caseTypes.listActive (staleTime 5 min).
+      expect(h.invalidate).toHaveBeenCalledTimes(1);
+    }
+    expect(h.invalidateList).not.toHaveBeenCalled();
+    expect(h.invalidateListActive).not.toHaveBeenCalled();
   });
 });
 
