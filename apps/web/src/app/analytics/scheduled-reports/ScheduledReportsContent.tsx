@@ -175,9 +175,9 @@ export default function ScheduledReportsContent() {
           toast({ title: target.kind === 'schedule' ? 'Schedule deleted' : 'Tag deleted' });
           setDeleteTarget(null);
           // The row (and its Delete button) is gone: keep keyboard focus in the card.
-          document
-            .getElementById(target.kind === 'schedule' ? 'schedules-heading' : 'tags-heading')
-            ?.focus();
+          // Deferred so the confirmation dialog's own focus restore cannot override it.
+          const headingId = target.kind === 'schedule' ? 'schedules-heading' : 'tags-heading';
+          setTimeout(() => document.getElementById(headingId)?.focus(), 0);
         },
       }
     );

@@ -528,11 +528,14 @@ export function ScheduleDialog({
 
           <div className="md:col-span-2">
             <Field>
-              <Label id="schedule-template-label" htmlFor="schedule-template">
+              <Label
+                id="schedule-template-label"
+                htmlFor={templateOptions.length === 0 ? undefined : 'schedule-template'}
+              >
                 Report template <span aria-hidden="true">*</span>
               </Label>
               {templateOptions.length === 0 ? (
-                <p
+                <fieldset
                   id="schedule-template"
                   tabIndex={-1}
                   aria-labelledby="schedule-template-label"
@@ -547,7 +550,7 @@ export function ScheduleDialog({
                     Create a report template
                   </Link>{' '}
                   first.
-                </p>
+                </fieldset>
               ) : (
                 <Select value={form.templateId} onValueChange={(v) => set('templateId', v)}>
                   <SelectTrigger

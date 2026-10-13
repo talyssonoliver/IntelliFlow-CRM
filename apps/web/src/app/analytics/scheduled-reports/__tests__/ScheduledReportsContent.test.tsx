@@ -264,7 +264,9 @@ describe('ScheduledReportsContent', () => {
     opts.onSuccess();
     expect(toast).toHaveBeenCalledWith({ title: 'Schedule deleted' });
     // Focus stays in the card instead of falling to <body>.
-    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Schedules' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Schedules' }))
+    );
   });
 
   it('deletes a tag after confirmation', async () => {
@@ -289,7 +291,9 @@ describe('ScheduledReportsContent', () => {
     await waitFor(() => expect(mutations.tagDelete.mutate).toHaveBeenCalled());
     mutations.tagDelete.mutate.mock.calls[0][1].onSuccess();
     expect(toast).toHaveBeenCalledWith({ title: 'Tag deleted' });
-    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Tags' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Tags' }))
+    );
   });
 
   it('opens the tag dialog from the SectionHeader through the TagsTab ref and creates a tag', async () => {

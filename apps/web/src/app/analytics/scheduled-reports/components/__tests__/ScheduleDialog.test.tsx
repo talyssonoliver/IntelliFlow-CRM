@@ -268,8 +268,9 @@ describe('ScheduleDialog', () => {
 
   it('names the no-templates message by the template label', () => {
     renderDialog({ templates: [] });
-    const message = screen.getByText(/No report templates yet/);
-    expect(message).toHaveAttribute('aria-labelledby', 'schedule-template-label');
+    const group = screen.getByRole('group', { name: /^Report template/ });
+    expect(group).toHaveTextContent(/No report templates yet/);
+    expect(group).toHaveAttribute('aria-labelledby', 'schedule-template-label');
   });
 
   it('keeps a template the user cannot see selectable for an existing schedule', () => {
