@@ -4,8 +4,9 @@
  * straight from the k6 summary or explicitly `null` when the metric is
  * absent (e.g. a dry-run / malformed summary), rather than a guessed value.
  */
+import { resolve } from 'node:path';
 import { describe, it, expect } from 'vitest';
-import { buildIfc007Slo } from '../summarize-nightly-ifc007.mjs';
+import { buildIfc007Slo, resolveWithinAllowedRoot } from '../summarize-nightly-ifc007.mjs';
 
 describe('buildIfc007Slo', () => {
   it('extracts real p95/p99/error-rate/rps from a k6 summary-export shape', () => {
@@ -70,5 +71,52 @@ describe('buildIfc007Slo', () => {
     const result = buildIfc007Slo({ metrics: {} });
     expect(result.source).toMatch(/load-test\.js/);
     expect(result.source).toMatch(/#318/);
+  });
+});
+
+/**
+ * jssecurity:S8707 — the k6-summary path is CLI-supplied (the nightly
+ * workflow passes `artifacts/benchmarks/nightly-1000vu-${run_id}.json`), so
+ * it must be confined to `artifacts/benchmarks` before it reaches
+ * `readFileSync`/`writeFileSync`. Covers both the traversal rejection and
+ * the normal path still resolving, so a revert of the guard shows up as a
+ * failing test, not a silent pass.
+ */
+describe('resolveWithinAllowedRoot', () => {
+  it('resolves a normal path under artifacts/benchmarks', () => {
+    const resolved = resolveWithinAllowedRoot(
+      'artifacts/benchmarks/nightly-1000vu-123.json',
+      'input summary'
+    );
+    expect(resolved).toBe(resolve('artifacts/benchmarks/nightly-1000vu-123.json'));
+  });
+
+  it('resolves a nested path that still stays under artifacts/benchmarks', () => {
+    const resolved = resolveWithinAllowedRoot(
+      'artifacts/benchmarks/sub/dir/summary.json',
+      'input summary'
+    );
+    expect(resolved).toBe(resolve('artifacts/benchmarks/sub/dir/summary.json'));
+  });
+
+  it('rejects a relative traversal out of artifacts/benchmarks', () => {
+    expect(() =>
+      resolveWithinAllowedRoot('artifacts/benchmarks/../../../etc/passwd', 'input summary')
+    ).toThrow(/refusing input summary path outside artifacts\/benchmarks/);
+  });
+
+  it('rejects an absolute path outside artifacts/benchmarks', () => {
+    const outside = process.platform === 'win32' ? 'C:\\Windows\\win.ini' : '/etc/passwd';
+    expect(() => resolveWithinAllowedRoot(outside, 'input summary')).toThrow(
+      /refusing input summary path outside artifacts\/benchmarks/
+    );
+  });
+
+  it('rejects a sibling directory that merely shares the allowed-root prefix', () => {
+    // A naive `startsWith('artifacts/benchmarks')` string check would let
+    // this through; `path.relative` must not.
+    expect(() =>
+      resolveWithinAllowedRoot('artifacts/benchmarks-evil/payload.json', 'output')
+    ).toThrow(/refusing output path outside artifacts\/benchmarks/);
   });
 });

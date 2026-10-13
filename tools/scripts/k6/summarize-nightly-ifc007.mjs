@@ -17,8 +17,42 @@
  * Writes: artifacts/benchmarks/ifc-007-nightly-slo.json
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
+
+/**
+ * The only directory this script may read from or write to. Set by its one
+ * real caller, `.github/workflows/performance-gate.yml`'s `k6-nightly-1000vu`
+ * job: `node tools/scripts/k6/summarize-nightly-ifc007.mjs
+ * artifacts/benchmarks/nightly-1000vu-${{ github.run_id }}.json`. Both the
+ * CLI-supplied summary path and this script's own output path must resolve
+ * inside it, otherwise a crafted argument (e.g. `../../../etc/passwd`) could
+ * read or overwrite a file outside the repo (jssecurity:S8707).
+ */
+const ALLOWED_ROOT = resolve('artifacts/benchmarks');
+
+/**
+ * Resolve `candidatePath` and refuse it unless it stays inside
+ * `ALLOWED_ROOT`. Checks via `path.relative` (must not be absolute and must
+ * not start with `..`) rather than a string prefix, so a sibling directory
+ * that merely starts with the same name (e.g. `artifacts/benchmarks-evil`)
+ * is still rejected.
+ *
+ * @param {string} candidatePath
+ * @param {string} label - only used in the error message
+ * @returns {string} absolute path, guaranteed inside ALLOWED_ROOT
+ */
+export function resolveWithinAllowedRoot(candidatePath, label) {
+  const resolvedPath = resolve(candidatePath);
+  const rel = relative(ALLOWED_ROOT, resolvedPath);
+  const isInsideAllowedRoot = rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+  if (!isInsideAllowedRoot) {
+    throw new Error(
+      `[ifc-007] refusing ${label} path outside artifacts/benchmarks: ${candidatePath}`
+    );
+  }
+  return resolvedPath;
+}
 
 /**
  * @param {unknown} k6Summary - parsed k6 --summary-export JSON
@@ -70,11 +104,23 @@ function main() {
     return;
   }
 
-  const k6Summary = JSON.parse(readFileSync(resolve(summaryPath), 'utf-8'));
+  let resolvedSummaryPath;
+  try {
+    resolvedSummaryPath = resolveWithinAllowedRoot(summaryPath, 'input summary');
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+    return;
+  }
+
+  const k6Summary = JSON.parse(readFileSync(resolvedSummaryPath, 'utf-8'));
   const runId = process.env.GITHUB_RUN_ID ?? 'local';
   const result = buildIfc007Slo(k6Summary, { runId });
 
-  const outPath = resolve('artifacts/benchmarks/ifc-007-nightly-slo.json');
+  const outPath = resolveWithinAllowedRoot(
+    'artifacts/benchmarks/ifc-007-nightly-slo.json',
+    'output'
+  );
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, `${JSON.stringify(result, null, 2)}\n`);
 
