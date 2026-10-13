@@ -28,6 +28,13 @@ describe('SectionHeader', () => {
     expect(screen.getByRole('button', { name: 'New Tier' })).toBeInTheDocument();
   });
 
+  it('renders an h3 by default and an h2 when asked (PG-198 A12)', () => {
+    const { rerender } = render(<SectionHeader {...base} />);
+    expect(screen.getByRole('heading', { level: 3, name: 'Tier Definitions' })).toBeInTheDocument();
+    rerender(<SectionHeader {...base} headingLevel={2} />);
+    expect(screen.getByRole('heading', { level: 2, name: 'Tier Definitions' })).toBeInTheDocument();
+  });
+
   it('renders no action wrapper without an action', () => {
     const { container } = render(<SectionHeader {...base} />);
     expect(container.querySelectorAll('.shrink-0')).toHaveLength(1);
