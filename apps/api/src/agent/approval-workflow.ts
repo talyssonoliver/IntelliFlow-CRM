@@ -245,7 +245,9 @@ export class ApprovalWorkflowService {
     );
 
     const claimedAt = new Date();
-    if (!(await actionStore.claimForExecution(action, decision.decidedBy, claimedAt))) {
+    if (
+      !(await actionStore.claimForExecution(action, decision.decidedBy, claimedAt, inputToExecute))
+    ) {
       throw new Error('Action is no longer pending (already decided or expired)');
     }
 

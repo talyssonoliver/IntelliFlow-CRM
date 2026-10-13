@@ -154,9 +154,9 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
   async findPendingOlderThan(
     tenantId: string,
     filter: PendingOlderThanFilter,
-    limit: number,
-    offset = 0
+    limit: number
   ): Promise<AutoResponseDraft[]> {
+    const { after } = filter;
     const records = await this.prisma.autoResponseDraft.findMany({
       where: {
         tenantId,
@@ -165,10 +165,16 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
         triggerType: { in: filter.triggerTypes },
         expiresAt: { gt: filter.notExpiredAt },
         createdAt: { lt: filter.before },
+        // Keyset paging: stable even when earlier rows leave the set meanwhile.
+        ...(after && {
+          OR: [
+            { createdAt: { gt: after.createdAt } },
+            { createdAt: after.createdAt, id: { gt: after.id } },
+          ],
+        }),
       },
       orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       take: limit,
-      skip: offset,
     });
     return records.map((record) => this.toDomain(record));
   }

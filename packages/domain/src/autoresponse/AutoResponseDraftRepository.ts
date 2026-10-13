@@ -21,6 +21,8 @@ export interface PendingOlderThanFilter {
   /** Only drafts still unexpired at this time. */
   notExpiredAt: Date;
   triggerTypes: TriggerType[];
+  /** Keyset cursor: only drafts after this (createdAt, id) in the (createdAt, id) order. */
+  after?: { createdAt: Date; id: string };
 }
 
 /**
@@ -70,8 +72,7 @@ export interface AutoResponseDraftRepository {
   findPendingOlderThan(
     tenantId: string,
     filter: PendingOlderThanFilter,
-    limit: number,
-    offset?: number
+    limit: number
   ): Promise<AutoResponseDraft[]>;
 
   /**

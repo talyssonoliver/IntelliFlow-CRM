@@ -188,7 +188,12 @@ export class PrismaAgentActionStore {
    * PG-198 (RF-1, #853): atomically take a pending, unexpired action for execution.
    * Only one caller can win (status-guarded update), so an action never runs twice.
    */
-  async claimForExecution(action: PendingAction, reviewedBy: string, now: Date): Promise<boolean> {
+  async claimForExecution(
+    action: PendingAction,
+    reviewedBy: string,
+    now: Date,
+    executedInput: Record<string, unknown> = action.input
+  ): Promise<boolean> {
     const result = await this.prisma.agentAction.updateMany({
       where: {
         id: action.id,
@@ -200,7 +205,9 @@ export class PrismaAgentActionStore {
         status: 'APPROVED' as any,
         reviewedAt: now,
         reviewedBy,
-        proposedState: { ...action.preview, executionStatus: 'EXECUTING' } as any,
+        // The input that is about to run is recorded atomically with EXECUTING, so an
+        // interrupted execution still shows what actually ran.
+        proposedState: { ...action.preview, executionStatus: 'EXECUTING', executedInput } as any,
       },
     });
     return result.count === 1;

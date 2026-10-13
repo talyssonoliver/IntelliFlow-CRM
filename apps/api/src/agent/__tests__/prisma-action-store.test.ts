@@ -1139,9 +1139,20 @@ describe('claimForExecution() (RF-1)', () => {
         status: 'APPROVED',
         reviewedAt: now,
         reviewedBy: 'approver-1',
-        proposedState: { ...action.preview, executionStatus: 'EXECUTING' },
+        proposedState: {
+          ...action.preview,
+          executionStatus: 'EXECUTING',
+          executedInput: action.input,
+        },
       },
     });
+  });
+
+  it('M5b: records the input that is about to run with the claim', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
+    await store.claimForExecution(makePendingAction(), 'a', new Date(), { title: 'Modified' });
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
+    expect(data.proposedState.executedInput).toEqual({ title: 'Modified' });
   });
 
   it('M6: loses the race when another approver already claimed it', async () => {

@@ -212,23 +212,31 @@ describe('PrismaAutoResponseDraftRepository', () => {
         },
         orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         take: 25,
-        skip: 0,
       });
       expect(result).toHaveLength(1);
       expect(result[0].status).toBe('PENDING_APPROVAL');
     });
 
-    it('pages with an offset', async () => {
+    it('pages with a (createdAt, id) keyset cursor', async () => {
       vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([]);
+      const cursorAt = new Date('2026-10-13T09:00:00Z');
       await repository.findPendingOlderThan(
         'tenant-1',
-        { before: new Date(), notExpiredAt: new Date(), triggerTypes: ['MANUAL'] },
-        100,
-        200
+        {
+          before: new Date(),
+          notExpiredAt: new Date(),
+          triggerTypes: ['MANUAL'],
+          after: { createdAt: cursorAt, id: 'draft-9' },
+        },
+        100
       );
-      expect(mockPrisma.autoResponseDraft.findMany).toHaveBeenCalledWith(
-        expect.objectContaining({ take: 100, skip: 200 })
-      );
+      const call = vi.mocked(mockPrisma.autoResponseDraft.findMany).mock.calls[0]![0] as any;
+      expect(call.where.OR).toEqual([
+        { createdAt: { gt: cursorAt } },
+        { createdAt: cursorAt, id: { gt: 'draft-9' } },
+      ]);
+      expect(call.take).toBe(100);
+      expect(call).not.toHaveProperty('skip');
     });
   });
 

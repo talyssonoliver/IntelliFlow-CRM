@@ -135,16 +135,27 @@ function harness(opts: {
     },
   };
   const repo = {
-    findPendingOlderThan: vi.fn(
-      async (_tenant: string, filter: any, limit: number, offset: number) =>
-        (opts.drafts ?? [])
-          .filter(
-            (d) =>
-              filter.triggerTypes.includes(d.triggerType) &&
-              d.createdAt < filter.before &&
-              d.expiresAt > filter.notExpiredAt
-          )
-          .slice(offset, offset + limit)
+    // Behaves like the real keyset query over the drafts still pending and unescalated.
+    findPendingOlderThan: vi.fn(async (_tenant: string, filter: any, limit: number) =>
+      (opts.drafts ?? [])
+        .filter(
+          (d) =>
+            d.status === 'PENDING_APPROVAL' &&
+            d.escalationCount === 0 &&
+            filter.triggerTypes.includes(d.triggerType) &&
+            d.createdAt < filter.before &&
+            d.expiresAt > filter.notExpiredAt &&
+            (!filter.after ||
+              d.createdAt > filter.after.createdAt ||
+              (d.createdAt.getTime() === filter.after.createdAt.getTime() &&
+                d.id.toString() > filter.after.id))
+        )
+        .sort(
+          (a, b) =>
+            a.createdAt.getTime() - b.createdAt.getTime() ||
+            a.id.toString().localeCompare(b.id.toString())
+        )
+        .slice(0, limit)
     ),
     saveEscalation: vi.fn().mockResolvedValue(!opts.decidedMeanwhile),
   };
@@ -335,12 +346,12 @@ describe('runApprovalSweep', () => {
       expect(repo.findPendingOlderThan).toHaveBeenCalledWith(
         TENANT,
         {
+          after: undefined,
           before: new Date('2026-10-13T11:30:00Z'),
           notExpiredAt: NOW,
           triggerTypes: ['EMAIL_RECEIVED', 'FORM_SUBMIT', 'CHAT_MESSAGE', 'MANUAL'],
         },
-        APPROVAL_SWEEP_BATCH,
-        0
+        APPROVAL_SWEEP_BATCH
       );
       expect(draft.status).toBe('ESCALATED');
       expect(draft.escalation).toMatchObject({
@@ -391,7 +402,9 @@ describe('runApprovalSweep', () => {
       draft.resolveEscalation(TARGET);
       // escalationCount is now 1 -> MAX is 3, so force a refusal by rejecting it.
       draft.reject(TARGET, 'no');
-      const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
+      const { repo, deps } = harness({ policies: [draftPolicy] });
+      // Returned by a racing read even though it was decided meanwhile.
+      repo.findPendingOlderThan.mockResolvedValue([draft]);
       const report = await runApprovalSweep(deps, NOW);
       expect(repo.saveEscalation).not.toHaveBeenCalled();
       expect(report.skipped).toBe(1);
@@ -412,6 +425,22 @@ describe('runApprovalSweep', () => {
       );
     });
 
+    it('does not skip drafts when earlier ones are escalated during paging (keyset)', async () => {
+      // 150 overdue drafts: the first page escalates 100 of them, the second must still
+      // reach the remaining 50 (an offset of 100 would skip them).
+      const overdue = Array.from({ length: 150 }, (_, i) =>
+        pendingDraftCreatedAt(
+          new Date(Date.UTC(2026, 9, 13, 8, 0, i)),
+          new Date('2026-10-13T09:00:00Z')
+        )
+      );
+      const { deps } = harness({ policies: [draftPolicy], drafts: overdue });
+
+      const report = await runApprovalSweep(deps, NOW);
+
+      expect(report.draftsEscalated).toBe(150);
+    });
+
     it('pages past drafts submitted too recently to reach an overdue one', async () => {
       // 100 old drafts submitted just now, then one created later but submitted long ago.
       const recent = Array.from({ length: 100 }, (_, i) =>
@@ -429,7 +458,8 @@ describe('runApprovalSweep', () => {
       const report = await runApprovalSweep(deps, NOW);
 
       expect(repo.findPendingOlderThan).toHaveBeenCalledTimes(2);
-      expect(repo.findPendingOlderThan.mock.calls[1]![3]).toBe(100);
+      const cursor = repo.findPendingOlderThan.mock.calls[1]![1].after;
+      expect(cursor.createdAt).toEqual(recent[99]!.createdAt);
       expect(report.draftsEscalated).toBe(1);
       expect(overdue.status).toBe('ESCALATED');
     });

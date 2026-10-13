@@ -287,22 +287,25 @@ async function escalateDraftGroup(
   repository: AutoResponseDraftRepository,
   group: EscalationGroup
 ): Promise<void> {
-  const filter = {
+  const base = {
     before: cutoff(ctx.now, group.rule.escalateAfterMinutes as number),
     notExpiredAt: ctx.now,
     triggerTypes: group.keys as TriggerType[],
   };
   // Candidates are ordered by creation, but the SLA runs from submission: page past
-  // drafts submitted too recently, up to a bounded scan per tick.
+  // drafts submitted too recently, up to a bounded scan per tick. Keyset paging, so
+  // drafts escalated on an earlier page cannot shift the next one.
+  let after: { createdAt: Date; id: string } | undefined;
   for (let page = 0; page < APPROVAL_SWEEP_MAX_PAGES; page++) {
     const drafts = await repository.findPendingOlderThan(
       ctx.tenantId,
-      filter,
-      APPROVAL_SWEEP_BATCH,
-      page * APPROVAL_SWEEP_BATCH
+      { ...base, after },
+      APPROVAL_SWEEP_BATCH
     );
     for (const draft of drafts) await escalateDraft(ctx, repository, group.rule, draft);
     if (drafts.length < APPROVAL_SWEEP_BATCH) return;
+    const last = drafts[drafts.length - 1]!;
+    after = { createdAt: last.createdAt, id: last.id.toString() };
   }
 }
 
