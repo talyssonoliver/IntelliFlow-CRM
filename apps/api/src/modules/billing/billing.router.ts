@@ -21,7 +21,6 @@ import {
   createTRPCRouter,
   tenantProcedure,
   verifiedTenantProcedure,
-  publicProcedure,
   platformAdminProcedure,
 } from '../../trpc';
 import {

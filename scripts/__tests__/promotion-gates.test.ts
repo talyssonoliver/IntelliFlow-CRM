@@ -11,6 +11,7 @@ import {
   ATTESTATION_CHECK,
   REQUIRED_MAIN_CHECKS,
   evaluateChecks,
+  forSummary,
   imageBuildFor,
   latestByName,
   main,
@@ -96,6 +97,23 @@ describe('imageBuildFor', () => {
     expect(imageBuildFor([{ ...ok, conclusion: 'failure' }], SHA)).toBeNull();
     expect(imageBuildFor([{ ...ok, status: 'in_progress' }], SHA)).toBeNull();
     expect(imageBuildFor([{ ...ok, head_sha: PR_HEAD }], SHA)).toBeNull();
+  });
+});
+
+describe('forSummary', () => {
+  it('passes ordinary lines through unchanged', () => {
+    expect(forSummary('PASS  required checks on the main commit')).toBe(
+      'PASS  required checks on the main commit'
+    );
+  });
+  it('flattens embedded newlines, so one gate line cannot forge another', () => {
+    expect(forSummary('Build (failure\nMISSING  Type Check)')).toBe(
+      'Build (failure MISSING  Type Check)'
+    );
+  });
+  it("breaks up a run of backticks so it cannot close the summary's own code fence", () => {
+    expect(forSummary('status ```')).toBe("status '''");
+    expect(forSummary('status ``````')).toBe("status '''"); // one run, one replacement
   });
 });
 
@@ -187,6 +205,22 @@ describe('main (CLI)', () => {
     expect(await main([`--sha=${SHA}`], { ...env, GITHUB_STEP_SUMMARY: summary }, out)).toBe(0);
     expect(logs[0]).toBe(`Promotion gates for ${SHA}`);
     expect(fs.readFileSync(summary, 'utf8')).toMatch(/PASS {2}required checks/);
+  });
+
+  it("neutralises a CR/LF and a code-fence break-out coming from a check run's own status text", async () => {
+    // The GitHub API's conclusion/status text, not just this script's own
+    // constants, ends up in the step summary. A newline could forge a
+    // believable extra PASS/FAIL line; a ``` run could close the fence the
+    // lines are wrapped in and let the rest render as raw, unfenced markdown.
+    const checks = allGreen().filter((c) => c.name !== 'Build');
+    checks.push(run('Build', 'failure\n```\nFORGED LINE'));
+    stubGitHub({ checks });
+    const summary = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'promo-')), 'summary.md');
+    const { out } = quiet();
+    expect(await main([`--sha=${SHA}`], { ...env, GITHUB_STEP_SUMMARY: summary }, out)).toBe(1);
+    const text = fs.readFileSync(summary, 'utf8');
+    expect(text).not.toContain('\nFORGED LINE');
+    expect(text.match(/```/g) ?? []).toHaveLength(2); // only the two real wrapping fences
   });
 
   it('exits 1 when the main commit failed a required check', async () => {

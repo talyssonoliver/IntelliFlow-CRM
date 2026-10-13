@@ -8,7 +8,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
 import { helpArticleRouter } from '../help-article.router';
 import { prismaMock, createTestContext, TEST_UUIDS, generateTestUUID } from '../../../test/setup';
 

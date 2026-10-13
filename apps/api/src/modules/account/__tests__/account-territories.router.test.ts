@@ -22,7 +22,6 @@ const T1 = generateTestUUID('territory-1');
 const T2 = generateTestUUID('territory-2');
 const FOREIGN = generateTestUUID('territory-foreign');
 const U1 = generateTestUUID('member-1');
-const U2 = generateTestUUID('member-2');
 
 const created = new Date('2026-01-01T00:00:00Z');
 

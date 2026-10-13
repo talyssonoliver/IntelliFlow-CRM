@@ -58,9 +58,6 @@ function run(opts: CaseOpts): number {
   fs.mkdirSync(planDir, { recursive: true });
   fs.mkdirSync(specDir, { recursive: true });
 
-  const relPlan = `.specify/sprints/sprint-${sprint}/planning/${taskId}-plan.md`;
-  const relSpec = `.specify/sprints/sprint-${sprint}/specifications/${taskId}-spec.md`;
-
   const planMode = opts.planFile ?? (opts.provenance ? 'with-marker' : 'absent');
   if (planMode !== 'absent') {
     fs.writeFileSync(

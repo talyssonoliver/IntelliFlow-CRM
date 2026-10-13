@@ -9,7 +9,7 @@
  */
 
 import { createHash } from 'node:crypto';
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { closeSync, fstatSync, openSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 const SHA256_RE = /^[a-f0-9]{64}$/;
@@ -20,8 +20,22 @@ export type FileHasher = (repoPath: string) => string | null;
 export function createFileHasher(repoRoot: string): FileHasher {
   return (repoPath) => {
     const abs = join(repoRoot, repoPath);
-    if (!existsSync(abs) || !statSync(abs).isFile()) return null;
-    return createHash('sha256').update(readFileSync(abs)).digest('hex');
+    // Open first, then check/read the SAME file descriptor (not the path again):
+    // a path-based existsSync()+statSync()+readFileSync() sequence can be
+    // raced (the file can be replaced/removed between the check and the use).
+    // An fd, once open, always refers to the inode that was actually opened.
+    let fd: number;
+    try {
+      fd = openSync(abs, 'r');
+    } catch {
+      return null;
+    }
+    try {
+      if (!fstatSync(fd).isFile()) return null;
+      return createHash('sha256').update(readFileSync(fd)).digest('hex');
+    } finally {
+      closeSync(fd);
+    }
   };
 }
 
