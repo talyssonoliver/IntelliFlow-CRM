@@ -261,10 +261,12 @@ export const caseTypesRouter = createTRPCRouter({
 
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
-          await tx.caseType.updateMany({
+          const updated = await tx.caseType.updateMany({
             where: { id: input.id, tenantId },
             data: fieldsData(input),
           });
+          // Deleted by someone else since the ownership check.
+          if (updated.count === 0) throw new TRPCError({ code: 'NOT_FOUND', message: NOT_FOUND });
           await writeChecklist(tx, tenantId, input.id, input.checklist);
           return tx.caseType.findFirstOrThrow({
             where: { id: input.id, tenantId },
@@ -343,10 +345,18 @@ export const caseTypesRouter = createTRPCRouter({
           data: { isDefault: false },
         });
         if (input.id !== null) {
-          await tx.caseType.updateMany({
-            where: { id: input.id, tenantId },
+          // isActive in the filter: a type deactivated or deleted since the check is not made
+          // default, and the transaction rolls back so the previous default stays.
+          const updated = await tx.caseType.updateMany({
+            where: { id: input.id, tenantId, isActive: true },
             data: { isDefault: true },
           });
+          if (updated.count === 0) {
+            throw new TRPCError({
+              code: 'PRECONDITION_FAILED',
+              message: 'This case type changed while you were saving. Reload and try again.',
+            });
+          }
         }
       });
     } catch (err) {

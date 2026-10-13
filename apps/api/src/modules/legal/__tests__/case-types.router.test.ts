@@ -277,6 +277,15 @@ describe('caseTypesRouter', () => {
       expect(result.caseCount).toBe(4);
     });
 
+    it('returns NOT_FOUND when the type is deleted concurrently', async () => {
+      (prismaMock.caseType.findFirst as any).mockResolvedValueOnce(row());
+      const tx = txMock();
+      tx.caseType.updateMany.mockResolvedValueOnce({ count: 0 });
+      useTx(tx);
+      await expectCode(admin.update({ ...input, id: T1 }), 'NOT_FOUND');
+      expect(tx.caseTypeChecklistItem.deleteMany).not.toHaveBeenCalled();
+    });
+
     it('maps a rename collision (P2002) to CONFLICT', async () => {
       (prismaMock.caseType.findFirst as any).mockResolvedValueOnce(row());
       const tx = txMock();
@@ -392,9 +401,19 @@ describe('caseTypesRouter', () => {
         data: { isDefault: false },
       });
       expect(tx.caseType.updateMany).toHaveBeenNthCalledWith(2, {
-        where: { id: T1, tenantId },
+        where: { id: T1, tenantId, isActive: true },
         data: { isDefault: true },
       });
+    });
+
+    it('refuses a type deactivated or deleted concurrently (rolls back the clear)', async () => {
+      (prismaMock.caseType.findFirst as any).mockResolvedValueOnce(row());
+      const tx = txMock();
+      tx.caseType.updateMany
+        .mockResolvedValueOnce({ count: 1 })
+        .mockResolvedValueOnce({ count: 0 });
+      useTx(tx);
+      await expectCode(admin.setDefault({ id: T1 }), 'PRECONDITION_FAILED');
     });
 
     it('maps a concurrent default change (P2002) to CONFLICT and rethrows others', async () => {
