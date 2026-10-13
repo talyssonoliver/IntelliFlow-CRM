@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -4502,15 +4502,82 @@ items:
       AUTOMATION-003 set to tier:B (mirrors sibling AUTOMATION-001/002) with
       debt_allowed:yes + waiver_expiry 2026-08-31. No gate/owner/evidence values
       fabricated. gh issue #574.
+  PG-204-CASES-NOTIFY-USER-ID-001:
+    origin_task: PG-204
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/legal/cases.router.ts:597 (changeStatus) and :647
+      (close) read (ctx.user as { id?: string }).id, but UserSession has userId,
+      not id, so notifications for unassigned cases are attributed to 'system'.
+      PG-204 fixed the same bug in cases.create ("Assign to me" failed).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Use ctx.tenant.userId at both sites, drop the casts, add caller-based tests.
+    status: open
+    notes: 'gh issue #864. Out of PG-204 scope (create path only).'
+  PG-204-CASES-ROUTER-TEST-FALSE-COVERAGE-001:
+    origin_task: PG-204
+    owner: Test Engineer
+    severity: medium
+    description: >-
+      apps/api/src/modules/legal/__tests__/cases.router.test.ts asserts against
+      mockPrisma directly and never calls the router (its createCaller helper is
+      unused), so cases.create looked covered while its default-assignee path was
+      broken in production.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Rewrite on prismaMock + createTestContext + casesRouter.createCaller, like
+      cases.router.case-types.test.ts (PG-204).
+    status: open
+    notes: 'gh issue #865. PG-204 added a real caller-based suite for create/getById/update.'
+  PG-204-CASE-UPDATE-REQUIRED-FIELDS-001:
+    origin_task: PG-204
+    owner: Product Owner
+    severity: medium
+    description: >-
+      The case required-field policy (case type set, else Case Settings rows) is
+      enforced on cases.create (PG-204, ADR-076) but not on cases.update, so a
+      required description or jurisdiction can be blanked after creation.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      After product confirmation (existing cases may already violate the policy),
+      apply the same required check to the merged values on update.
+    status: open
+    notes: 'gh issue #866. Out of scope by the owner ruling ("applied at case creation").'
+  PG-204-TIMEZONE-OFFSET-BEYOND-12H-001:
+    origin_task: PG-204
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/lib/timezone-utils.ts getTimezoneOffsetMinutes compares only
+      hour/minute and folds into +-12h, so UTC+13/+14 zones (Pacific/Kiritimati,
+      Tongatapu, Chatham) get offsets a day off; startOfDay/endOfDay/startOfMonth
+      helpers are wrong for those tenants.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Compare the full wall-clock date with Date.UTC (as
+      apps/api/src/lib/case-sla-deadline.ts offsetMinutesAt does) and add
+      Kiritimati/Chatham tests; then reuse it from case-sla-deadline.ts.
+    status: open
+    notes: 'gh issue #867. PG-204 sidestepped it with an exact local helper.'
 summary:
-  total_items: 419
+  total_items: 423
   by_severity:
     critical: 241
     high: 12
-    medium: 152
-    low: 14
+    medium: 155
+    low: 15
   by_status:
-    open: 403
+    open: 407
     in_progress: 0
     resolved: 16
     wont_fix: 0
