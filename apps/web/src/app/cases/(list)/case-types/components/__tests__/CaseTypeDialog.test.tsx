@@ -82,6 +82,12 @@ describe('CaseTypeDialog helpers', () => {
     ).toEqual({ 2: 'Same as step 1.' });
   });
 
+  it('keeps only the required fields the dialog shows, so none ticked really means none', () => {
+    const draft = draftFromCaseType({ ...LITIGATION, requiredFields: ['title', 'description'] });
+    expect(draft.requiredFields).toEqual(['description']);
+    expect(toSaveInput({ ...draft, requiredFields: [] }).requiredFields).toEqual([]);
+  });
+
   it('drops blank steps from the save payload', () => {
     const draft = draftFromCaseType(null);
     expect(
@@ -202,6 +208,17 @@ describe('CaseTypeDialog', () => {
     });
     expect(screen.queryByRole('alert')).toBeNull();
     expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('unticking the last visible field saves an empty set (Case Settings fields apply)', async () => {
+    const { onSave } = renderDialog({
+      caseType: { ...LITIGATION, requiredFields: ['assignedTo', 'jurisdiction'] },
+    });
+    fireEvent.click(screen.getByRole('checkbox', { name: 'Jurisdiction' }));
+    await act(async () => {
+      fireEvent.click(saveButton());
+    });
+    expect(onSave.mock.calls[0][0].requiredFields).toEqual([]);
   });
 
   it('keeps the default type active', () => {

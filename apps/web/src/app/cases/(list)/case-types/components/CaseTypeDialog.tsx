@@ -100,7 +100,9 @@ export function draftFromCaseType(type: CaseTypeDto | null): CaseTypeDraft {
     colorToken: toCaseTypeColorToken(type.colorToken),
     defaultPriority: type.defaultPriority,
     slaDays: type.defaultSlaDays == null ? '' : String(type.defaultSlaDays),
-    requiredFields: [...type.requiredFields],
+    // Only the keys this dialog shows: subject, client and assignee are always present on a
+    // case, and a hidden stored key would keep "none ticked" from meaning "use Case Settings".
+    requiredFields: type.requiredFields.filter((key) => OPTIONAL_REQUIRED_KEYS.includes(key)),
     checklist: type.checklist.map((item) => newChecklistItem(item.title)),
     isActive: type.isActive,
   };
