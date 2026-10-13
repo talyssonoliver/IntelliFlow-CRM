@@ -682,8 +682,9 @@ its saved setting is copied once into `report_schedules`; schedules get tags
 - AC-SR-003: presets and a custom 5-field cron, each with an IANA timezone; the
   server derives the cron for presets and keeps the legacy columns consistent.
 - AC-SR-004: 1–50 recipients, case-insensitive duplicates rejected.
-- AC-SR-005: delivery format PDF / CSV / email body (Excel kept for copied
-  rows).
+- AC-SR-005: new schedules choose PDF / CSV / email body; Excel stays only on
+  copied rows that already use it (create rejects it, update refuses a switch to
+  it, the dialog offers it only to such a row).
 - AC-SR-006: an active schedule always references a template or a report
   definition (DB CHECK + API); private templates of other users stay hidden; a
   template still used by a schedule cannot be deleted (CONFLICT).
@@ -693,12 +694,14 @@ its saved setting is copied once into `report_schedules`; schedules get tags
   tags in one transaction; colorToken CHECK on schedules and tags.
 - AC-SR-009: every destructive write in `$transaction`; no `skipDuplicates`.
 - AC-SR-010: cross-tenant ids return NOT_FOUND and never touch another tenant.
-- AC-SR-011: `nextRunAt` shown for active schedules, cleared when paused.
+- AC-SR-011: active schedules show their next occurrence, computed from the cron
+  and timezone when read (never a past time); paused schedules show "Paused".
 - AC-SR-012: writes limited to ADMIN / MANAGER / OWNER / SUPER_ADMIN; at most
   one run per hour (also across DST changes); at most 100 active and 500 total
-  schedules per tenant; activation re-validates the stored recipients.
+  schedules per tenant; activation re-validates the stored recipients;
+  activation and recipient changes are audited (count only, no addresses).
 - AC-SR-013: Report Settings links to the new page and no longer writes
-  `scheduledDelivery`.
+  `scheduledDelivery`; its Reset to Defaults keeps the legacy value.
 - AC-SR-014: additive migration; the one-time copy is idempotent, tenant-scoped
   and leaves the legacy JSON untouched (production data write — owner applies).
 - AC-SR-015: the page states that automated delivery waits for IFC-308.

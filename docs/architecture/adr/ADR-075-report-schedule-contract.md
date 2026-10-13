@@ -1,7 +1,7 @@
 # ADR-075: Report Schedule Contract (report_schedules for the IFC-308 cron)
 
 **Status:** Accepted (2026-10-13 — implemented on
-`feat/pg-201-scheduled-reports`; GREEN validations passed)
+`agent/PG-201-scheduled-reports`; GREEN validations passed)
 
 **Date:** 2026-10-13
 
@@ -51,9 +51,10 @@ that IFC-308 can register it directly, without a second scheduler?
    changes), at most 100 active and 500 total schedules per tenant, and valid
    recipients on activation, all enforced by the API under a per-tenant advisory
    lock, so IFC-308 cannot be turned into a mail cannon.
-5. **No scheduler in PG-201.** PG-201 stores `nextRunAt` for display and as a
-   starting point. Registering and removing BullMQ job schedulers is IFC-308's
-   job.
+5. **No scheduler in PG-201.** PG-201 stores `nextRunAt` as IFC-308's starting
+   point. Because nothing advances it before IFC-308, the API shows the next
+   occurrence computed from `cronExpression` + `timezone` at read time.
+   Registering and removing BullMQ job schedulers is IFC-308's job.
 6. **Run history.** `report_executions` gains a nullable `templateId` and its
    `reportId` becomes nullable, so a template-only schedule can record its runs.
 
@@ -81,8 +82,9 @@ await queue.upsertJobScheduler(
 
 On deactivate or delete: `queue.removeJobScheduler(`report-schedule:${id}`)`.
 The job renders `templateId` (a PG-200 layout) or `reportId` (a definition) in
-`format` (`pdf | csv | email_body | excel`), emails `recipients` (a JSON array
-of addresses), writes a `report_executions` row (`scheduleId`, `templateId` or
+`format` (`pdf | csv | email_body`, plus `excel` on copied legacy rows only —
+new schedules cannot choose it), emails `recipients` (a JSON array of
+addresses), writes a `report_executions` row (`scheduleId`, `templateId` or
 `reportId`, status), and updates `lastRunAt` and `nextRunAt`. A schedule's
 status is derived from its executions; there is no status column on the
 schedule.
@@ -102,7 +104,28 @@ worker owns BullMQ).
   so.
 - Negative: deleting a PG-200 template that a schedule uses is now refused.
 - Risk: the copy in the migration is a production data write; the owner applies
-  the migration manually.
+  the migration manually. Report Settings' Reset to Defaults keeps the legacy
+  `scheduledDelivery`, so a reset before the apply loses nothing.
+- Risk: `report_settings` has RLS (not FORCEd). The copy reads it, so it only
+  sees rows when `prisma migrate deploy` runs as the table owner or a BYPASSRLS
+  role; under any other role it silently inserts nothing. Check after applying:
+
+  ```sql
+  -- Both counts must match (the second can only be lower if a tenant already had
+  -- a schedule with the migrated name, which cannot happen on first apply).
+  SELECT count(*) FROM report_settings
+   WHERE jsonb_typeof("scheduledDelivery") = 'object'
+     AND ("scheduledDelivery"->>'enabled' = 'true'
+          OR CASE WHEN jsonb_typeof("scheduledDelivery"->'recipients') = 'array'
+                  THEN jsonb_array_length("scheduledDelivery"->'recipients') > 0
+                  ELSE false END);
+  SELECT count(*) FROM report_schedules WHERE id LIKE 'rs-migrated-%';
+  ```
+
+- Accepted loss in the copy: enabled becomes inactive (noted in the
+  description), invalid values fall back to defaults, monthly gets day 1, the
+  timezone is Europe/London, and recipient arrays are copied as stored (no
+  element validation or 50 cap; activation re-validates them).
 
 ## Alternatives considered
 
