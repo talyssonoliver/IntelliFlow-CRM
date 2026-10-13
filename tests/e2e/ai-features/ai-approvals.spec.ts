@@ -431,7 +431,8 @@ test.describe('Agent Approval Workflow - Extended', () => {
       const allButton = filterButtons.locator('button:has-text("All")');
       await allButton.click();
 
-      await expect(allButton).toHaveClass(/bg-\[#137fec\]/);
+      // #842 (Aurora rebrand) recolored the active-filter chip #137fec -> #2a78f6.
+      await expect(allButton).toHaveClass(/bg-\[#2a78f6\]/);
     });
 
     test('should filter by Pending status', async ({ page }) => {
