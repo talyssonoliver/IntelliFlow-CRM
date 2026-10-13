@@ -69,7 +69,7 @@ const NO_CASE_TYPES: readonly CaseTypeOptionDto[] = [];
 function RequiredMark() {
   return (
     <>
-      <span className="text-destructive" aria-hidden="true">
+      <span className="text-red-700 dark:text-red-300" aria-hidden="true">
         {' *'}
       </span>
       <span className="sr-only"> (required)</span>
@@ -300,7 +300,11 @@ export function CaseForm({
               aria-describedby={errors.subject ? 'subject-error' : undefined}
             />
             {errors.subject && (
-              <p id="subject-error" role="alert" className="text-xs text-destructive mt-1">
+              <p
+                id="subject-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
                 {errors.subject}
               </p>
             )}
@@ -384,7 +388,11 @@ export function CaseForm({
               rows={4}
             />
             {errors.description && (
-              <p id="description-error" role="alert" className="text-xs text-destructive mt-1">
+              <p
+                id="description-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
                 {errors.description}
               </p>
             )}
@@ -514,7 +522,11 @@ export function CaseForm({
             {}
 
             {errors.clientSearch ? (
-              <p id="client-error" role="alert" className="text-xs text-destructive mt-1">
+              <p
+                id="client-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
                 {errors.clientSearch}
               </p>
             ) : (
@@ -587,7 +599,11 @@ export function CaseForm({
               aria-describedby={errors.deadline ? 'deadline-error' : 'case-type-hint'}
             />
             {errors.deadline && (
-              <p id="deadline-error" role="alert" className="text-xs text-destructive mt-1">
+              <p
+                id="deadline-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
                 {errors.deadline}
               </p>
             )}
@@ -622,7 +638,11 @@ export function CaseForm({
               aria-describedby={errors.jurisdiction ? 'jurisdiction-error' : undefined}
             />
             {errors.jurisdiction && (
-              <p id="jurisdiction-error" role="alert" className="text-xs text-destructive mt-1">
+              <p
+                id="jurisdiction-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
                 {errors.jurisdiction}
               </p>
             )}

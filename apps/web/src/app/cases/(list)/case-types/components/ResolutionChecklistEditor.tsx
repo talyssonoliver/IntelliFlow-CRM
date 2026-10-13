@@ -172,7 +172,7 @@ export function ResolutionChecklistEditor({
                   </Button>
                 </div>
                 {errors[index] && (
-                  <p id={errorId} className="ml-8 text-xs text-destructive">
+                  <p id={errorId} className="ml-8 text-xs text-red-700 dark:text-red-300">
                     {errors[index]}
                   </p>
                 )}

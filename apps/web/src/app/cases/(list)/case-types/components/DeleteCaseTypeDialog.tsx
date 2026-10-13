@@ -46,7 +46,7 @@ export function DeleteCaseTypeDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         {error && (
-          <p role="alert" className="text-sm text-destructive">
+          <p role="alert" className="text-sm text-red-700 dark:text-red-300">
             {error}
           </p>
         )}

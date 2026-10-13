@@ -74,8 +74,10 @@ describe('case type labels', () => {
 
 describe('case type colours', () => {
   it('maps tokens to static classes and falls back to slate', () => {
-    expect(swatchClass('blue')).toBe('bg-blue-500');
-    expect(swatchClass('neon')).toBe('bg-slate-500');
+    // Every swatch carries a slate-500 outline: amber/green/teal fills alone are under 3:1 on the
+    // light background (SC 1.4.11, PG-204 exec contrast review).
+    expect(swatchClass('blue')).toBe('bg-blue-500 ring-1 ring-inset ring-slate-500');
+    expect(swatchClass('neon')).toBe('bg-slate-500 ring-1 ring-inset ring-slate-500');
     expect(toCaseTypeColorToken('teal')).toBe('teal');
     expect(toCaseTypeColorToken('fuchsia')).toBe('slate');
   });

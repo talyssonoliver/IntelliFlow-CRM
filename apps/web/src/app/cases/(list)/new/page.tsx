@@ -99,7 +99,7 @@ export default function NewCasePage() {
   if (configFailed) {
     content = (
       <div className="w-full text-center py-12">
-        <p className="text-destructive mb-4" role="alert">
+        <p className="text-red-700 dark:text-red-300 mb-4" role="alert">
           Could not load case types and required fields.
         </p>
         <Button type="button" variant="outline" onClick={handleRetry}>
@@ -113,7 +113,7 @@ export default function NewCasePage() {
         {serverError && (
           <p
             role="alert"
-            className="mb-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+            className="mb-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-red-700 dark:text-red-300"
           >
             {serverError}
           </p>

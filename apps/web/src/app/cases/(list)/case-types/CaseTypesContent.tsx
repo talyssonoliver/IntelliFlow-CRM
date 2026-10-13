@@ -123,7 +123,7 @@ export default function CaseTypesContent() {
   if (listQuery.error || !listQuery.data) {
     return (
       <div className="w-full text-center py-12">
-        <p className="text-destructive mb-4" role="alert">
+        <p className="text-red-700 dark:text-red-300 mb-4" role="alert">
           Failed to load case types{listQuery.error ? `: ${listQuery.error.message}` : '.'}
         </p>
         <Button type="button" variant="outline" onClick={() => listQuery.refetch()}>

@@ -5,15 +5,19 @@
  */
 import { CASE_TAG_COLOR_TOKENS, type CaseTagColorToken } from '@intelliflow/validators';
 
+// The slate-500 outline keeps every swatch at >= 3:1 against the surface (SC 1.4.11):
+// amber, green and teal fills alone fall below that on the light background.
+const SWATCH_OUTLINE = 'ring-1 ring-inset ring-slate-500';
+
 export const CASE_TYPE_SWATCH_CLASSES: Record<CaseTagColorToken, string> = {
-  slate: 'bg-slate-500',
-  blue: 'bg-blue-500',
-  red: 'bg-red-500',
-  amber: 'bg-amber-500',
-  green: 'bg-green-500',
-  violet: 'bg-violet-500',
-  rose: 'bg-rose-500',
-  teal: 'bg-teal-500',
+  slate: `bg-slate-500 ${SWATCH_OUTLINE}`,
+  blue: `bg-blue-500 ${SWATCH_OUTLINE}`,
+  red: `bg-red-500 ${SWATCH_OUTLINE}`,
+  amber: `bg-amber-500 ${SWATCH_OUTLINE}`,
+  green: `bg-green-500 ${SWATCH_OUTLINE}`,
+  violet: `bg-violet-500 ${SWATCH_OUTLINE}`,
+  rose: `bg-rose-500 ${SWATCH_OUTLINE}`,
+  teal: `bg-teal-500 ${SWATCH_OUTLINE}`,
 };
 
 /** Human names shown next to every swatch — colour is never the only signal. */

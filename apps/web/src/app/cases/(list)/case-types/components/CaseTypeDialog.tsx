@@ -257,7 +257,11 @@ export function CaseTypeDialog({
                 aria-describedby={nameError ? 'case-type-name-error' : undefined}
               />
               {nameError && (
-                <p id="case-type-name-error" role="alert" className="text-xs text-destructive">
+                <p
+                  id="case-type-name-error"
+                  role="alert"
+                  className="text-xs text-red-700 dark:text-red-300"
+                >
                   {nameError}
                 </p>
               )}
@@ -333,7 +337,11 @@ export function CaseTypeDialog({
                 Sets the deadline to the end of that day. Empty means no default deadline.
               </p>
               {sla === 'invalid' && (
-                <p id="case-type-sla-error" role="alert" className="text-xs text-destructive">
+                <p
+                  id="case-type-sla-error"
+                  role="alert"
+                  className="text-xs text-red-700 dark:text-red-300"
+                >
                   Enter a whole number from {CASE_TYPE_LIMITS.minSlaDays} to{' '}
                   {CASE_TYPE_LIMITS.maxSlaDays}.
                 </p>
