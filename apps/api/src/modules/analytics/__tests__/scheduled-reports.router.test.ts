@@ -615,6 +615,64 @@ describe('scheduledReportsRouter (PG-201)', () => {
       expect(logAction).not.toHaveBeenCalled();
     });
 
+    it('audits activation from the edit dialog (consensus vote, security-lead)', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ isActive: false, nextRunAt: null })
+      );
+      visibleTemplate();
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, isActive: true });
+      expect(logAction).toHaveBeenCalledTimes(1);
+      expect(logAction).toHaveBeenCalledWith(
+        'UPDATE',
+        'report_schedule',
+        SCHEDULE_ID,
+        tenantId,
+        expect.objectContaining({
+          afterState: { recipientCount: 1, format: 'pdf', isActive: true },
+        })
+      );
+      expect(JSON.stringify(logAction.mock.calls)).not.toContain('lead@example.invalid');
+    });
+
+    it('audits pausing from the edit dialog', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, isActive: false });
+      expect(logAction).toHaveBeenCalledWith(
+        'UPDATE',
+        'report_schedule',
+        SCHEDULE_ID,
+        tenantId,
+        expect.objectContaining({ afterState: expect.objectContaining({ isActive: false }) })
+      );
+    });
+
+    it('audits a delivery change (format) on an active schedule', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      visibleTemplate();
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, format: 'csv' });
+      expect(logAction).toHaveBeenCalledWith(
+        'UPDATE',
+        'report_schedule',
+        SCHEDULE_ID,
+        tenantId,
+        expect.objectContaining({ afterState: expect.objectContaining({ format: 'csv' }) })
+      );
+    });
+
+    it('does not audit a rename', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, name: 'Renamed' });
+      expect(logAction).not.toHaveBeenCalled();
+    });
+
     it('is FORBIDDEN for a regular user', async () => {
       await expectCode(user.update({ id: SCHEDULE_ID, name: 'x' }), 'FORBIDDEN');
     });
@@ -1003,8 +1061,12 @@ describe('scheduledReportsRouter (PG-201)', () => {
     });
   });
 
-  describe('update keeps its own name', () => {
-    it('saving the unchanged name is not a conflict', async () => {
+  // The router has no application-level name check: uniqueness is the DB index
+  // (P2002 -> CONFLICT, tested above) and the dialog's scheduleNameConflictSchema,
+  // which excludes the schedule itself (validators test). This only proves the
+  // router passes an unchanged name through without inventing a conflict.
+  describe('update with its unchanged name', () => {
+    it('passes the name through and returns the row', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
       const tx = useTx();
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));

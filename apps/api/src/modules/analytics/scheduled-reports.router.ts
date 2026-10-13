@@ -245,7 +245,11 @@ interface UpdatePlan {
   templateChosen: boolean;
   /** Tags not already on the schedule (unchanged assignments may be inactive tags). */
   newTags: string[];
-  recipientsChanged: boolean;
+  /**
+   * Who receives the report, whether it runs, or when/how it is delivered changed:
+   * audited (recipient count only). Activation is what starts delivery.
+   */
+  auditable: boolean;
 }
 
 /** nextRunAt for the update: null when paused, recomputed when (re)activated or rescheduled. */
@@ -323,7 +327,7 @@ function planScheduleUpdate(
     checkTemplateId: templateChanged || activating || deliveryChanged ? templateId : null,
     templateChosen: templateChanged,
     newTags: (fields.tags ?? []).filter((t) => !existing.tags.includes(t)),
-    recipientsChanged,
+    auditable: recipientsChanged || isActive !== existing.isActive || (isActive && deliveryChanged),
     data: {
       ...changedFields(fields),
       ...(columns ?? {}),
@@ -558,7 +562,7 @@ export const scheduledReportsRouter = createTRPCRouter({
       const { id, ...changes } = input;
 
       let view: ScheduledReportView;
-      let recipientsChanged = false;
+      let auditable = false;
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
           await lockTenantSchedules(tx, tenantId);
@@ -570,7 +574,7 @@ export const scheduledReportsRouter = createTRPCRouter({
           }
           await assertTagsExist(tx, tenantId, plan.newTags);
           if (plan.activating) await assertActiveCapacity(tx, tenantId, id);
-          recipientsChanged = plan.recipientsChanged;
+          auditable = plan.auditable;
           return tx.reportSchedule.update({
             where: { id, tenantId },
             data: plan.data,
@@ -581,7 +585,7 @@ export const scheduledReportsRouter = createTRPCRouter({
       } catch (err) {
         rethrowScheduleWriteError(err);
       }
-      if (recipientsChanged) logScheduleAudit(ctx, 'UPDATE', id, auditState(view));
+      if (auditable) logScheduleAudit(ctx, 'UPDATE', id, auditState(view));
       return view;
     }),
 

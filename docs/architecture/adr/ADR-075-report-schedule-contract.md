@@ -108,9 +108,13 @@ worker owns BullMQ).
   `scheduledDelivery`, so a reset before the apply loses nothing.
 - Risk: `report_settings` has RLS (not FORCEd). The copy reads it, so it only
   sees rows when `prisma migrate deploy` runs as the table owner or a BYPASSRLS
-  role; under any other role it silently inserts nothing. Check after applying:
+  role; under any other role it silently inserts nothing. Check after applying,
+  connected as the same role that ran `migrate deploy` (both tables have RLS, so
+  a non-privileged role would see 0 and 0 and pass the check falsely):
 
   ```sql
+  -- Must show the table owner or rolbypassrls = true before the counts mean anything.
+  SELECT current_user, rolbypassrls FROM pg_roles WHERE rolname = current_user;
   -- Both counts must match (the second can only be lower if a tenant already had
   -- a schedule with the migrated name, which cannot happen on first apply).
   SELECT count(*) FROM report_settings

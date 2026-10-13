@@ -447,6 +447,31 @@ describeDb('PG-201 report_schedules migration (real DB)', () => {
       );
     });
 
+    it('lets a tenant delete cascade through a template its schedule uses (consensus vote, data-engineer)', async () => {
+      // RESTRICT on (tenantId, templateId) must not block tenant offboarding: both
+      // report_templates and report_schedules cascade from tenants.
+      const doomed = `${RUN}_offboard`;
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO "tenants" ("id", "name", "slug", "updatedAt") VALUES ($1, $1, $1, NOW())`,
+        doomed
+      );
+      await template(doomed, `${RUN}_tpl_off`);
+      await insertSchedule({
+        tenantId: doomed,
+        name: `${RUN} offboard`,
+        templateId: `${RUN}_tpl_off`,
+        isActive: true,
+        cronExpression: '0 9 * * 1',
+      });
+      await prisma.$executeRawUnsafe(`DELETE FROM "tenants" WHERE "id" = $1`, doomed);
+      const left: Array<{ n: bigint }> = await prisma.$queryRawUnsafe(
+        `SELECT (SELECT count(*) FROM "report_schedules" WHERE "tenantId" = $1)
+              + (SELECT count(*) FROM "report_templates" WHERE "tenantId" = $1) AS n`,
+        doomed
+      );
+      expect(Number(left[0].n)).toBe(0);
+    });
+
     it('enforces the tag palette and case-insensitive tag names', async () => {
       const tag = (id: string, name: string, colorToken = 'blue') =>
         prisma.$executeRawUnsafe(
