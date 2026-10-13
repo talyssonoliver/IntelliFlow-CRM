@@ -369,16 +369,9 @@ export class Lead extends AggregateRoot<LeadId> {
     props: Partial<
       Pick<
         LeadProps,
-        | 'firstName'
-        | 'lastName'
-        | 'company'
         | 'title'
-        | 'phone'
-        | 'location'
-        | 'website'
         | 'avatarUrl'
         | 'lastContactedAt'
-        | 'estimatedValue'
         | 'tags'
         | 'budget'
         | 'authority'
@@ -386,14 +379,31 @@ export class Lead extends AggregateRoot<LeadId> {
         | 'timeline'
         | 'annualRevenue'
       >
-    >
+    > & {
+      // IFC-412 (owner ruling 2026-10-12): these "required-looking" fields must
+      // be explicitly clearable from the lead edit form. The domain's internal
+      // "no value" representation is `undefined` (never `null` — see every
+      // other getter/prop in this class), so an explicit `null` here is a
+      // caller-facing signal, not a value we store as-is: `undefined`/omitted
+      // leaves the field unchanged, `null` clears it (normalized to
+      // `undefined` below), and any other value sets it.
+      firstName?: string | null;
+      lastName?: string | null;
+      company?: string | null;
+      phone?: LeadProps['phone'] | null;
+      location?: string | null;
+      website?: string | null;
+      estimatedValue?: number | null;
+    }
   ): void {
-    // Only apply fields that are explicitly provided (not undefined)
-    // to prevent partial updates from clearing existing data
-    Object.assign(
-      this.props,
-      Object.fromEntries(Object.entries(props).filter(([, v]) => v !== undefined))
-    );
+    // Only apply fields the caller actually provided (not undefined) — this is
+    // what lets an untouched field survive a partial update. A provided `null`
+    // is kept (not filtered out) and normalized to the domain's `undefined`
+    // "absent" representation, which is what actually clears the field.
+    const toApply = Object.entries(props)
+      .filter(([, v]) => v !== undefined)
+      .map(([k, v]) => [k, v === null ? undefined : v]);
+    Object.assign(this.props, Object.fromEntries(toApply));
     this.props.updatedAt = new Date();
   }
 

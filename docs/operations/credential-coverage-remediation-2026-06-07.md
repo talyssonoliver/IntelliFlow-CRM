@@ -10,8 +10,9 @@
 >
 > **Hard gate:** a full apply today would crash-boot the new workers and could
 > null the live `SENTRY_DSN`. See the Pre-apply checklist at the bottom.
-> Related: issue #312 (serverless `connection_limit`), ADR-065 (Vault-as-SSOT,
-> TBD).
+> Related: issue #312 (serverless `connection_limit`), issue #317 / ADR-075
+> (Vault-as-SSOT vs HCP vs native env stores — **decided 2026-10-12**: HCP +
+> Railway native, no separate Vault; see below).
 
 ---
 
@@ -644,18 +645,18 @@ already partially adopted (Supabase, Vercel, and Railway tokens are in HCP).
    `supabase_db_password`) in a Terraform `local` block rather than storing the
    composed URL as a static secret.
 
-**Long-term:**
+**Long-term — decided 2026-10-12,
+[ADR-075](../architecture/adr/ADR-075-production-secrets-management.md):**
 
-Write an ADR (suggest ADR-065: Vault-as-SSOT) to decide whether to:
+The owner decided (issue #317): keep production secrets in Terraform/HCP
+sensitive vars plus Railway's native env store; **no separate Vault cluster**.
+Promoting HashiCorp Vault Transit to primary DEK provider (`VAULT_ENABLED=true`)
+and Vault Agent/VSO injection are deferred indefinitely, not scheduled work.
 
-- Promote HashiCorp Vault Transit to primary DEK provider (`VAULT_ENABLED=true`)
-  for field encryption, and
-- Whether to use Vault Agent / VSO to inject env vars into Railway containers.
-
-Until that ADR is approved and the Vault cluster is provisioned in production,
-`VAULT_ENABLED` should remain unset (or `false`), and `VAULT_LOCAL_DEK_SECRET` +
-`VAULT_TOKEN` should be set in HCP and injected by Terraform as standard env
-vars.
+`VAULT_ENABLED` stays unset (or `false`) — the environment-variable DEK path
+(`EnvironmentKeyProvider`) is the production path, not an interim one.
+`VAULT_LOCAL_DEK_SECRET` + `VAULT_TOKEN` are set in HCP and injected by
+Terraform as standard env vars, same as every other Tier-0 secret below.
 
 ---
 
