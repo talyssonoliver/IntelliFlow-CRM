@@ -25,7 +25,12 @@
   },
   "execution": {
     "last_error": null,
-    "retry_count": 0
+    "retry_count": 0,
+    "started_at": "2026-10-13T00:04:04Z",
+    "executor": "Claude Code /exec (ralph loop /full-pipeline PG-198, session 52a6ff74)",
+    "agents": [
+      "stoa-domain (required by the task row)"
+    ]
   },
   "kpis": {},
   "notes": "Approval policies at /agent-approvals/approval-policies: auto-approve thresholds, required reviewers, escalation paths, approval timeout SLAs. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312.",
@@ -56,6 +61,11 @@
       "at": "2026-10-13T04:52:00Z",
       "status": "In Progress",
       "note": "Run died: drive C: hit 0 bytes (ENOSPC) after commit c058ffcdf; resumed by the runner at 06:07:28Z."
+    },
+    {
+      "at": "2026-10-13T07:10:57Z",
+      "status": "In Progress",
+      "note": "/exec-metrics invoked for the first time at this point (it was not run at exec Phase 0, 00:04Z). Start fields set from the real /exec invocation time (00:04:04Z, transcript). /hydrate-context 06:14:06Z, /spec-exploration 06:14:09Z and the /spec-consensus re-run (4/4 APPROVED, 06:24-06:26Z) also ran only after the resume."
     }
   ],
   "stream": null,
