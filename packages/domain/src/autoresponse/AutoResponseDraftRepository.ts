@@ -15,6 +15,14 @@ export interface AutoResponseDraftQuery {
   offset?: number;
 }
 
+/** PG-198: filter for the approval sweep's candidate query. */
+export interface PendingOlderThanFilter {
+  before: Date;
+  /** Only drafts still unexpired at this time. */
+  notExpiredAt: Date;
+  triggerTypes: TriggerType[];
+}
+
 /**
  * Repository interface for AutoResponseDraft persistence
  * Implemented by infrastructure layer
@@ -56,10 +64,14 @@ export interface AutoResponseDraftRepository {
   findPendingByLeadId(leadId: string, tenantId: string): Promise<AutoResponseDraft[]>;
 
   /**
-   * PG-198: pending drafts of a tenant created before `before` that have never been
-   * escalated, oldest first, at most `limit` — candidates for the approval sweep.
+   * PG-198: candidates for the approval sweep — a tenant's pending, never-escalated,
+   * unexpired drafts of the given triggers created before `before`, oldest first.
    */
-  findPendingOlderThan(tenantId: string, before: Date, limit: number): Promise<AutoResponseDraft[]>;
+  findPendingOlderThan(
+    tenantId: string,
+    filter: PendingOlderThanFilter,
+    limit: number
+  ): Promise<AutoResponseDraft[]>;
 
   /**
    * Find expired drafts that need cleanup

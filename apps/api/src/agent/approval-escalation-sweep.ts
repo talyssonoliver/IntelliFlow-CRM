@@ -15,8 +15,10 @@
  */
 
 import {
+  APPROVAL_AGENT_TOOL_KEYS,
   APPROVAL_AGENT_TOOLS,
   AUTO_RESPONSE_AGENT_KEY,
+  TRIGGER_TYPES,
   SYSTEM_APPROVAL_ACTOR,
   isEscalationDue,
   resolveApprovalPolicy,
@@ -25,6 +27,7 @@ import {
   type ApprovalRule,
   type AutoResponseDraft,
   type AutoResponseDraftRepository,
+  type TriggerType,
 } from '@intelliflow/domain';
 import { tenantUserWhere } from '@intelliflow/db';
 import { loadTenantApprovalPolicies, type ApprovalPolicyReader } from './approval-policy-loader';
@@ -104,16 +107,52 @@ interface TenantContext {
   targets: Map<string, boolean>;
 }
 
-/** Shortest escalation delay among a queue's escalating policies, or null if none escalate. */
-function shortestDelay(
+/** The policies of a queue that escalate, with the (agent, action) pairs each one governs. */
+interface EscalationGroup {
+  rule: ApprovalRule;
+  /** Tool names (agent queue) or trigger types (auto-response queue). */
+  keys: string[];
+}
+
+function queuePairs(
+  scope: ApprovalPolicyScope
+): { agentKey: string; actionType: string; key: string }[] {
+  if (scope === 'AUTO_RESPONSE') {
+    return TRIGGER_TYPES.map((t) => ({ agentKey: AUTO_RESPONSE_AGENT_KEY, actionType: t, key: t }));
+  }
+  return APPROVAL_AGENT_TOOL_KEYS.map((tool) => ({
+    agentKey: tool,
+    actionType: APPROVAL_AGENT_TOOLS[tool],
+    key: tool,
+  }));
+}
+
+/**
+ * Group a queue's pairs by the escalating policy they resolve to, so each group is
+ * queried with its own delay and only for its own tools/triggers: a batch can never
+ * be filled by items that are not due or whose policy does not escalate.
+ */
+function escalationGroups(
   policies: ApprovalPolicyRecord[],
   scope: ApprovalPolicyScope
-): number | null {
-  const delays = policies
-    .filter((p) => p.scope === scope && p.escalationEnabled && p.escalationTargetUserId)
-    .map((p) => p.escalateAfterMinutes)
-    .filter((m): m is number => m !== null);
-  return delays.length > 0 ? Math.min(...delays) : null;
+): EscalationGroup[] {
+  const groups = new Map<string, EscalationGroup>();
+  for (const pair of queuePairs(scope)) {
+    const resolved = resolveApprovalPolicy(policies, scope, pair.agentKey, pair.actionType);
+    const { rule } = resolved;
+    if (
+      !rule.escalationEnabled ||
+      rule.escalateAfterMinutes === null ||
+      !rule.escalationTargetUserId
+    ) {
+      continue;
+    }
+    const id = String(resolved.policyId);
+    const group = groups.get(id) ?? { rule, keys: [] };
+    group.keys.push(pair.key);
+    groups.set(id, group);
+  }
+  return [...groups.values()];
 }
 
 function cutoff(now: Date, minutes: number): Date {
@@ -161,24 +200,22 @@ async function notifySafely(ctx: TenantContext, notification: SweepNotification)
   }
 }
 
-async function escalateAgentActions(ctx: TenantContext): Promise<void> {
-  const delay = shortestDelay(ctx.policies, 'AGENT_TOOL');
-  if (delay === null) return;
+async function escalateAgentActionGroup(ctx: TenantContext, group: EscalationGroup): Promise<void> {
+  const { rule } = group;
   const rows = await ctx.tx.agentAction.findMany({
     where: {
       tenantId: ctx.tenantId,
+      // The actionType column holds the tool name.
+      actionType: { in: group.keys },
       status: 'PENDING_APPROVAL',
       escalatedAt: null,
       expiresAt: { gt: ctx.now },
-      createdAt: { lte: cutoff(ctx.now, delay) },
+      createdAt: { lte: cutoff(ctx.now, rule.escalateAfterMinutes as number) },
     },
     orderBy: { createdAt: 'asc' },
     take: APPROVAL_SWEEP_BATCH,
   });
   for (const row of rows) {
-    const actionType =
-      APPROVAL_AGENT_TOOLS[row.actionType as keyof typeof APPROVAL_AGENT_TOOLS] ?? '*';
-    const { rule } = resolveApprovalPolicy(ctx.policies, 'AGENT_TOOL', row.actionType, actionType);
     const target = await dueTarget(ctx, rule, row.createdAt);
     if (!target) continue;
     const claimed = await ctx.tx.agentAction.updateMany({
@@ -209,14 +246,9 @@ function submittedAt(draft: AutoResponseDraft): Date {
 async function escalateDraft(
   ctx: TenantContext,
   repository: AutoResponseDraftRepository,
+  rule: ApprovalRule,
   draft: AutoResponseDraft
 ): Promise<void> {
-  const { rule } = resolveApprovalPolicy(
-    ctx.policies,
-    'AUTO_RESPONSE',
-    AUTO_RESPONSE_AGENT_KEY,
-    draft.triggerType
-  );
   const target = await dueTarget(ctx, rule, submittedAt(draft));
   if (!target) return;
   // Never beyond the draft's own expiry, so escalation.expiresAt stays truthful.
@@ -249,16 +281,31 @@ async function escalateDraft(
   });
 }
 
-async function escalateDrafts(ctx: TenantContext): Promise<void> {
-  const delay = shortestDelay(ctx.policies, 'AUTO_RESPONSE');
-  if (delay === null) return;
-  const repository = await ctx.deps.draftRepository(ctx.tx);
+async function escalateDraftGroup(
+  ctx: TenantContext,
+  repository: AutoResponseDraftRepository,
+  group: EscalationGroup
+): Promise<void> {
   const drafts = await repository.findPendingOlderThan(
     ctx.tenantId,
-    cutoff(ctx.now, delay),
+    {
+      before: cutoff(ctx.now, group.rule.escalateAfterMinutes as number),
+      notExpiredAt: ctx.now,
+      triggerTypes: group.keys as TriggerType[],
+    },
     APPROVAL_SWEEP_BATCH
   );
-  for (const draft of drafts) await escalateDraft(ctx, repository, draft);
+  for (const draft of drafts) await escalateDraft(ctx, repository, group.rule, draft);
+}
+
+async function escalateTenant(ctx: TenantContext): Promise<void> {
+  for (const group of escalationGroups(ctx.policies, 'AGENT_TOOL')) {
+    await escalateAgentActionGroup(ctx, group);
+  }
+  const draftGroups = escalationGroups(ctx.policies, 'AUTO_RESPONSE');
+  if (draftGroups.length === 0) return;
+  const repository = await ctx.deps.draftRepository(ctx.tx);
+  for (const group of draftGroups) await escalateDraftGroup(ctx, repository, group);
 }
 
 async function sweepInTransaction(
@@ -292,8 +339,7 @@ async function sweepInTransaction(
   for (const { tenantId } of tenants) {
     const policies = await loadTenantApprovalPolicies(tx, tenantId, { fresh: true });
     const ctx: TenantContext = { tx, deps, tenantId, policies, now, report, targets: new Map() };
-    await escalateAgentActions(ctx);
-    await escalateDrafts(ctx);
+    await escalateTenant(ctx);
   }
 
   const expired = await tx.agentAction.updateMany({

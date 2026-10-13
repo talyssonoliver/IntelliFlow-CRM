@@ -97,7 +97,14 @@ function harness(opts: {
       ),
     },
     agentAction: {
-      findMany: vi.fn().mockResolvedValue(opts.actions ?? []),
+      // Behaves like the real query: tools of the group, created before the cutoff.
+      findMany: vi.fn(async (args: any) =>
+        ((opts.actions ?? []) as any[]).filter(
+          (a) =>
+            args.where.actionType.in.includes(a.actionType) &&
+            a.createdAt.getTime() <= args.where.createdAt.lte.getTime()
+        )
+      ),
       updateMany: vi.fn(async (args: any) =>
         args.data.status === 'EXPIRED' ? { count: 2 } : { count: opts.claimCount ?? 1 }
       ),
@@ -107,7 +114,14 @@ function harness(opts: {
     },
   };
   const repo = {
-    findPendingOlderThan: vi.fn().mockResolvedValue(opts.drafts ?? []),
+    findPendingOlderThan: vi.fn(async (_tenant: string, filter: any) =>
+      (opts.drafts ?? []).filter(
+        (d) =>
+          filter.triggerTypes.includes(d.triggerType) &&
+          d.createdAt < filter.before &&
+          d.expiresAt > filter.notExpiredAt
+      )
+    ),
     save: opts.saveError
       ? vi.fn().mockRejectedValue(opts.saveError)
       : vi.fn().mockResolvedValue(undefined),
@@ -162,6 +176,15 @@ describe('runApprovalSweep', () => {
     expect(tx.agentAction.findMany).toHaveBeenCalledWith({
       where: {
         tenantId: TENANT,
+        actionType: {
+          in: [
+            'create_case',
+            'create_appointment',
+            'update_case',
+            'update_appointment',
+            'draft_message',
+          ],
+        },
         status: 'PENDING_APPROVAL',
         escalatedAt: null,
         expiresAt: { gt: NOW },
@@ -194,7 +217,7 @@ describe('runApprovalSweep', () => {
     expect(report.agentActionsEscalated).toBe(0);
   });
 
-  it('skips actions whose own policy does not escalate yet', async () => {
+  it('queries each escalating policy with its own delay and tools', async () => {
     const { tx, deps } = harness({
       policies: [
         policyRow(),
@@ -204,17 +227,29 @@ describe('runApprovalSweep', () => {
           escalateAfterMinutes: 200,
           assignments: [{ agentKey: 'update_case', actionType: 'UPDATE' }],
         }),
+        policyRow({
+          id: 'p3',
+          isDefault: false,
+          escalationEnabled: false,
+          assignments: [{ agentKey: 'draft_message', actionType: '*' }],
+        }),
       ],
       actions: [actionRow({ id: 'act-2', actionType: 'update_case' })],
     });
     await runApprovalSweep(deps, NOW);
-    expect(tx.agentAction.updateMany).toHaveBeenCalledTimes(1); // only the expiry flip
-  });
 
-  it('maps an unknown tool to a wildcard action type', async () => {
-    const { tx, deps } = harness({ actions: [actionRow({ actionType: 'legacy_tool' })] });
-    await runApprovalSweep(deps, NOW);
-    expect(tx.agentAction.updateMany).toHaveBeenCalledTimes(2);
+    const wheres = tx.agentAction.findMany.mock.calls.map((c: any) => c[0].where);
+    expect(wheres).toHaveLength(2);
+    expect(wheres[0].actionType.in).toEqual([
+      'create_case',
+      'create_appointment',
+      'update_appointment',
+    ]);
+    expect(wheres[0].createdAt.lte).toEqual(new Date('2026-10-13T11:00:00Z'));
+    expect(wheres[1].actionType.in).toEqual(['update_case']);
+    expect(wheres[1].createdAt.lte).toEqual(new Date('2026-10-13T08:40:00Z'));
+    // act-2 (10:30) is not yet due under its 200-minute policy: only the expiry flip ran.
+    expect(tx.agentAction.updateMany).toHaveBeenCalledTimes(1);
   });
 
   it('skips and logs when the escalation target is no longer a user (BR-9)', async () => {
@@ -277,7 +312,11 @@ describe('runApprovalSweep', () => {
 
       expect(repo.findPendingOlderThan).toHaveBeenCalledWith(
         TENANT,
-        new Date('2026-10-13T11:30:00Z'),
+        {
+          before: new Date('2026-10-13T11:30:00Z'),
+          notExpiredAt: NOW,
+          triggerTypes: ['EMAIL_RECEIVED', 'FORM_SUBMIT', 'CHAT_MESSAGE', 'MANUAL'],
+        },
         APPROVAL_SWEEP_BATCH
       );
       expect(draft.status).toBe('ESCALATED');
@@ -311,6 +350,15 @@ describe('runApprovalSweep', () => {
       const draft = pendingDraft(new Date('2026-10-13T09:00:00Z'), 1);
       const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
       await runApprovalSweep(deps, NOW);
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('never opens an escalation window on a draft that expired after the query', async () => {
+      const draft = pendingDraft(new Date('2026-10-13T09:00:00Z'), 1);
+      const { repo, deps } = harness({ policies: [draftPolicy] });
+      repo.findPendingOlderThan.mockResolvedValue([draft]);
+      await runApprovalSweep(deps, NOW);
+      expect(draft.status).toBe('PENDING_APPROVAL');
       expect(repo.save).not.toHaveBeenCalled();
     });
 

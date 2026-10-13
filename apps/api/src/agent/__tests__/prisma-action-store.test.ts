@@ -675,6 +675,17 @@ describe('addExecuted()', () => {
       .proposedState as Record<string, unknown>;
     expect(proposedState.executionStatus).toBe('FAILED');
     expect(proposedState.executionError).toBe('Lead not found');
+    expect(proposedState.executedInput).toEqual(makePendingAction().input);
+  });
+
+  it('G4c: an executed record reads back the input that actually ran', async () => {
+    const row = makeAgentActionRow({ status: 'APPROVED', reviewedBy: 'approver-1' });
+    (row.proposedState as Record<string, unknown>).executedInput = { title: 'Modified' };
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+
+    const executed = await store.getExecuted(ACTION_ID);
+
+    expect(executed!.input).toEqual({ title: 'Modified' });
   });
 
   it('G5: uses new Date() as reviewedAt when executedAt is missing', async () => {

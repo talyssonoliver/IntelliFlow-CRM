@@ -188,19 +188,26 @@ describe('PrismaAutoResponseDraftRepository', () => {
   });
 
   describe('findPendingOlderThan (PG-198)', () => {
-    it('returns un-escalated pending drafts of the tenant, oldest first, limited', async () => {
+    it('returns un-escalated, unexpired pending drafts of the given triggers, oldest first', async () => {
       const before = new Date('2026-10-13T10:00:00Z');
+      const now = new Date('2026-10-13T12:00:00Z');
       vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
         createMockDraftData({ status: 'PENDING_APPROVAL' }),
       ] as never);
 
-      const result = await repository.findPendingOlderThan('tenant-1', before, 25);
+      const result = await repository.findPendingOlderThan(
+        'tenant-1',
+        { before, notExpiredAt: now, triggerTypes: ['EMAIL_RECEIVED', 'MANUAL'] },
+        25
+      );
 
       expect(mockPrisma.autoResponseDraft.findMany).toHaveBeenCalledWith({
         where: {
           tenantId: 'tenant-1',
           status: 'PENDING_APPROVAL',
           escalationCount: 0,
+          triggerType: { in: ['EMAIL_RECEIVED', 'MANUAL'] },
+          expiresAt: { gt: now },
           createdAt: { lt: before },
         },
         orderBy: { createdAt: 'asc' },

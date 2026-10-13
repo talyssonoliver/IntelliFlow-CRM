@@ -11,6 +11,7 @@ import {
   AutoResponseDraftRepository,
   AutoResponseDraftQuery,
   ResponseContent,
+  type PendingOlderThanFilter,
   type AutoResponseStatus,
   type TriggerType,
 } from '@intelliflow/domain';
@@ -126,7 +127,7 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
 
   async findPendingOlderThan(
     tenantId: string,
-    before: Date,
+    filter: PendingOlderThanFilter,
     limit: number
   ): Promise<AutoResponseDraft[]> {
     const records = await this.prisma.autoResponseDraft.findMany({
@@ -134,7 +135,9 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
         tenantId,
         status: 'PENDING_APPROVAL',
         escalationCount: 0,
-        createdAt: { lt: before },
+        triggerType: { in: filter.triggerTypes },
+        expiresAt: { gt: filter.notExpiredAt },
+        createdAt: { lt: filter.before },
       },
       orderBy: { createdAt: 'asc' },
       take: limit,

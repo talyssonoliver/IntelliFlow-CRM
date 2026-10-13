@@ -94,18 +94,12 @@ function pick(input: Input, keys: readonly string[]): Input {
 
 async function createCase(input: Input, ctx: Context): Promise<ExecutionResult> {
   const { casesRouter } = await import('../modules/legal/cases.router.js');
-  const created = await casesRouter
-    .createCaller(ctx as CallerCtx)
-    .create(
-      pick(input, [
-        'title',
-        'description',
-        'priority',
-        'deadline',
-        'clientId',
-        'assignedTo',
-      ]) as never
-    );
+  // Explicit assignee: cases.create cannot default one itself (#872).
+  const assignedTo = input.assignedTo ?? ctx.user?.userId;
+  const created = await casesRouter.createCaller(ctx as CallerCtx).create({
+    ...pick(input, ['title', 'description', 'priority', 'deadline', 'clientId']),
+    assignedTo,
+  } as never);
   return { entityType: 'CASE', entityId: (created as { id: string }).id };
 }
 

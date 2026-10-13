@@ -242,6 +242,9 @@ export class PrismaAgentActionStore {
         proposedState: {
           ...(action.preview as any),
           executionStatus: action.executionStatus,
+          // The input that actually ran (approver modifications included); the
+          // original proposal stays in previousState.
+          executedInput: action.input,
           executionResult: action.executionResult,
           executionError: action.executionError,
           rollbackAvailable: action.rollbackAvailable,
@@ -349,6 +352,7 @@ export class PrismaAgentActionStore {
 
     return {
       ...pending,
+      input: (proposed.executedInput as Record<string, unknown> | undefined) ?? pending.input,
       executionStatus: proposed.executionStatus as ExecutionStatus | undefined,
       executedAt: row.reviewedAt ?? undefined,
       executionResult: proposed.executionResult,
