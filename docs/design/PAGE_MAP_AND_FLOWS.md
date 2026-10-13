@@ -334,16 +334,16 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 15. Analytics & Reports (8 pages)
 
-| Route                          | Page                | Description                                                |
-| ------------------------------ | ------------------- | ---------------------------------------------------------- |
-| `/analytics`                   | Analytics Dashboard | Charts, metrics, and KPIs                                  |
-| `/analytics/feedback`          | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts                         |
-| `/analytics/saved/weekly`      | Weekly Summary      | Last 7 days: revenue, leads, pipeline trends               |
-| `/analytics/saved/monthly`     | Monthly Revenue     | Last 30 days: revenue breakdown, lead sources              |
-| `/analytics/saved/quarterly`   | Q4 Performance      | Quarterly performance summary with YoY comparison          |
-| `/analytics/report-templates`  | Report Templates    | Manage reusable report templates                           |
-| `/analytics/scheduled-reports` | Scheduled Reports   | Configure automated report delivery schedules              |
-| `/analytics/report-settings`   | Report Settings     | Tenant-level report defaults: locale, currency, date range |
+| Route                          | Page                | Description                                                  |
+| ------------------------------ | ------------------- | ------------------------------------------------------------ |
+| `/analytics`                   | Analytics Dashboard | Charts, metrics, and KPIs                                    |
+| `/analytics/feedback`          | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts                           |
+| `/analytics/saved/weekly`      | Weekly Summary      | Last 7 days: revenue, leads, pipeline trends                 |
+| `/analytics/saved/monthly`     | Monthly Revenue     | Last 30 days: revenue breakdown, lead sources                |
+| `/analytics/saved/quarterly`   | Q4 Performance      | Quarterly performance summary with YoY comparison            |
+| `/analytics/report-templates`  | Report Templates    | Manage reusable report templates                             |
+| `/analytics/scheduled-reports` | Scheduled Reports   | Cron schedules per report template (PG-201; sent by IFC-308) |
+| `/analytics/report-settings`   | Report Settings     | Tenant-level report defaults: locale, currency, date range   |
 
 ---
 

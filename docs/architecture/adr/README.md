@@ -260,6 +260,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-070](./ADR-070-independent-product-partner-api.md)                      | IntelliFlow is an independent product; the Leangency Portal integrates through a partner API | ✅ Accepted | 2026-09-30 | Cross-repo audit 2026-09-30 |
 | [ADR-073](./ADR-073-tenant-configurable-account-tiers.md)                    | Tenant-configurable account revenue tiers (derived via one domain resolver)                  | 📝 Proposed | 2026-10-07 | PG-196                      |
 | [ADR-074](./ADR-074-territory-based-account-owner-assignment.md)             | Territory-based account owner assignment                                                     | Accepted    | 2026-10-07 | PG-197                      |
+| [ADR-075](./ADR-075-report-schedule-contract.md)                             | Report schedule contract (report_schedules read by the IFC-308 cron)                         | Accepted    | 2026-10-13 | PG-201                      |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**

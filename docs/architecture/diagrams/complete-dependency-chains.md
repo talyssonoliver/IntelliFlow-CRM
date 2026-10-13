@@ -1089,6 +1089,16 @@ Runtime Wiring (IFC-222):
 
 Backend (done):  ANALYTICS-001 ✅ + IFC-003 ✅ + IFC-096 ✅ ──► IFC-200 ✅ ──► IFC-190 ✅
 Frontend (next): IFC-037 ⬜ ──► IFC-038 ⬜ (wires IFC-190 to UI)
+
+PG-201 (Scheduled Reports, ADR-075) ✅:
+  PG-178 ✅ + PG-187 ✅ (report settings) + PG-200 ✅ (report_templates)
+    ──► validators scheduled-reports.ts (cadence presets, cron, IANA timezone, recipients, tags)
+    ──► db migration 20261013120000_report_schedules_pg201
+          (report_schedules evolved in place, report_schedule_tags, report_executions.templateId,
+           one-time report_settings.scheduledDelivery copy)
+    ──► api scheduled-reports.router.ts (analytics.scheduledReports.*, cron-parser nextRunAt)
+    ──► web /analytics/scheduled-reports (ScheduledReportsContent) + Report Settings link card
+    ──► IFC-308 ⬜ BullMQ cron reads active report_schedules (pattern + tz) — category-2 consumer
 ```
 
 ---

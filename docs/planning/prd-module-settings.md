@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                  |
-| ------------- | -------------------------------------- |
-| Feature Name  | Module Settings Pages                  |
-| Status        | Active                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197 |
-| Created       | 2026-03-11                             |
-| Last Updated  | 2026-10-07                             |
-| Author        | Spec Session (PG-178)                  |
+| Field         | Value                                          |
+| ------------- | ---------------------------------------------- |
+| Feature Name  | Module Settings Pages                          |
+| Status        | Active                                         |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201 |
+| Created       | 2026-03-11                                     |
+| Last Updated  | 2026-10-13                                     |
+| Author        | Spec Session (PG-178)                          |
 
 ## Problem Statement
 
@@ -650,3 +650,68 @@ Spec: `.specify/sprints/sprint-18/specifications/PG-197-spec.md`. ADR-074.
 
 No AI toggles were added. Out-of-scope finding filed: #830 (Deals sidebar
 "Territory Map" is a dead link).
+
+## PG-201 Addendum: Scheduled Reports (2026-10-13)
+
+Owner ruling (2026-10-13): no new table — the existing `report_schedules` table
+is evolved in place and nothing is dropped; schedules are a cron expression plus
+an IANA timezone (presets keep the legacy frequency/day/time columns
+consistent); the Report Settings "Scheduled Delivery" card becomes a link and
+its saved setting is copied once into `report_schedules`; schedules get tags
+(TagsTab via `forwardRef`). Contract for the future IFC-308 cron:
+`docs/architecture/adr/ADR-075-report-schedule-contract.md`.
+
+### Additional User Stories
+
+- As an admin or manager, I schedule a report template to be emailed to a list
+  of recipients on a daily, weekly, monthly or quarterly cadence, or on a custom
+  cron, in my team's timezone.
+- As an admin or manager, I pause, edit, tag and delete schedules.
+- As any analytics user, I can see the tenant's schedules and when each runs
+  next.
+- As a tenant that used the old Report Settings delivery, I find my saved
+  setting as a paused schedule I only need to attach a template to.
+
+### Additional Acceptance Criteria
+
+- AC-SR-001: `/analytics/scheduled-reports` shows real `report_schedules` rows
+  or the canonical EmptyState (`entity="reports"`, `phase="passive"`, no
+  button).
+- AC-SR-002: PageHeader + 12-column bento grid; New Schedule is the only primary
+  CTA.
+- AC-SR-003: presets and a custom 5-field cron, each with an IANA timezone; the
+  server derives the cron for presets and keeps the legacy columns consistent.
+- AC-SR-004: 1–50 recipients, case-insensitive duplicates rejected.
+- AC-SR-005: delivery format PDF / CSV / email body (Excel kept for copied
+  rows).
+- AC-SR-006: an active schedule always references a template or a report
+  definition (DB CHECK + API); private templates of other users stay hidden; a
+  template still used by a schedule cannot be deleted (CONFLICT).
+- AC-SR-007: duplicate names rejected by a Zod superRefine in the dialog and by
+  the `(tenantId, lower(name))` unique index.
+- AC-SR-008: tags via TagsTab (`forwardRef`); rename/delete rewrite schedule
+  tags in one transaction; colorToken CHECK on schedules and tags.
+- AC-SR-009: every destructive write in `$transaction`; no `skipDuplicates`.
+- AC-SR-010: cross-tenant ids return NOT_FOUND and never touch another tenant.
+- AC-SR-011: `nextRunAt` shown for active schedules, cleared when paused.
+- AC-SR-012: writes limited to ADMIN / MANAGER / OWNER / SUPER_ADMIN; at most
+  one run per hour; at most 100 active schedules per tenant.
+- AC-SR-013: Report Settings links to the new page and no longer writes
+  `scheduledDelivery`.
+- AC-SR-014: additive migration; the one-time copy is idempotent, tenant-scoped
+  and leaves the legacy JSON untouched (production data write — owner applies).
+- AC-SR-015: the page states that automated delivery waits for IFC-308.
+- AC-SR-016: WCAG 2.1 AA; Lighthouse >= 90 (authenticated run needs the owner).
+
+### Boolean toggles (playbook §8)
+
+- `ReportSchedule.isActive` — category 2: consumed by IFC-308 (Backlog).
+- `ReportScheduleTag.isActive` — category 1: the dialog only offers active tags.
+- AI toggles — none on this entity ("AI defaults FALSE" is N/A).
+
+### Follow-ups
+
+- Restrict recipients to tenant members or approved domains (owner's delegate,
+  2026-10-13: follow-up, not blocking).
+- IFC-308 registers/removes BullMQ job schedulers and adds the
+  `report_executions.scheduleId` FK + index.
