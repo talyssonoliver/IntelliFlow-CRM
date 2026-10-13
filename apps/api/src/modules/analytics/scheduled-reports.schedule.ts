@@ -43,14 +43,48 @@ export function computeNextRun(cron: string, timezone: string, from: Date): Date
   return upcomingRuns(cron, timezone, from, 1)[0];
 }
 
-/**
- * Abuse guard for IFC-308: a schedule may not fire more often than
- * SCHEDULE_LIMITS.minIntervalMinutes. Checks the gaps between the next six runs.
- */
-export function isIntervalAllowed(cron: string, timezone: string, from: Date): boolean {
-  const runs = upcomingRuns(cron, timezone, from, 6);
+const DAY_MS = 86_400_000;
+
+function gapsAllowed(runs: Date[]): boolean {
   const minGapMs = SCHEDULE_LIMITS.minIntervalMinutes * 60_000;
   return runs.every((run, i) => i === 0 || run.getTime() - runs[i - 1].getTime() >= minGapMs);
+}
+
+/**
+ * Start of each day, in the coming year, on which `timezone` changes its UTC offset
+ * (DST). One offset lookup per day with a single formatter.
+ */
+export function offsetTransitionDays(timezone: string, from: Date): Date[] {
+  let format: Intl.DateTimeFormat;
+  try {
+    format = new Intl.DateTimeFormat('en-US', { timeZone: timezone, timeZoneName: 'longOffset' });
+  } catch (err) {
+    throw new InvalidCronError(timezone, err);
+  }
+  const offsetAt = (at: Date) =>
+    format.formatToParts(at).find((part) => part.type === 'timeZoneName')?.value ?? '';
+  const days: Date[] = [];
+  let previous = offsetAt(from);
+  for (let day = 1; day <= 366; day++) {
+    const at = new Date(from.getTime() + day * DAY_MS);
+    const offset = offsetAt(at);
+    if (offset !== previous) days.push(new Date(at.getTime() - DAY_MS));
+    previous = offset;
+  }
+  return days;
+}
+
+/**
+ * Abuse guard for IFC-308: a schedule may not fire more often than
+ * SCHEDULE_LIMITS.minIntervalMinutes. Checks the next runs, and the runs around every
+ * UTC-offset change in the coming year — a half-hour DST shift (e.g. Lord Howe) can
+ * put an hourly schedule's runs 30 minutes apart.
+ */
+export function isIntervalAllowed(cron: string, timezone: string, from: Date): boolean {
+  if (!gapsAllowed(upcomingRuns(cron, timezone, from, 6))) return false;
+  return offsetTransitionDays(timezone, from).every((day) =>
+    gapsAllowed(upcomingRuns(cron, timezone, day, 30))
+  );
 }
 
 export interface ScheduleDefinitionInput {

@@ -28,6 +28,7 @@ import {
   updateReportScheduleTagSchema,
   deleteReportScheduleTagSchema,
   SCHEDULE_LIMITS,
+  recipientsSchema,
   type ScheduledReportView,
   type ReportScheduleTagView,
   type UpdateScheduledReportInput,
@@ -199,6 +200,18 @@ function checkedNextRun(cron: string | null, timezone: string, now: Date): Date 
   }
 }
 
+/**
+ * An active schedule must have deliverable recipients. Copied legacy rows may hold an
+ * empty or malformed list, so the stored value is re-validated on activation.
+ */
+function assertDeliverableRecipients(recipients: unknown): void {
+  if (recipientsSchema.safeParse(recipients).success) return;
+  throw new TRPCError({
+    code: 'BAD_REQUEST',
+    message: 'Add at least one valid recipient before activating this schedule.',
+  });
+}
+
 function assertReferenced(templateId: string | null, reportId: string | null): void {
   if (templateId || reportId) return;
   throw new TRPCError({
@@ -270,6 +283,7 @@ function planScheduleUpdate(
   const templateId = fields.templateId ?? existing.templateId;
   const activating = isActive && !existing.isActive;
   if (isActive) assertReferenced(templateId, existing.reportId);
+  if (activating) assertDeliverableRecipients(fields.recipients ?? existing.recipients);
 
   // Validate the cron whenever the definition changes or the schedule starts running;
   // pausing never needs a valid cron (legacy rows may have none).
@@ -563,6 +577,7 @@ export const scheduledReportsRouter = createTRPCRouter({
           let nextRunAt: Date | null = null;
           if (input.isActive) {
             assertReferenced(existing.templateId, existing.reportId);
+            if (!existing.isActive) assertDeliverableRecipients(existing.recipients);
             if (existing.templateId) {
               await assertTemplateVisible(tx, ctx, existing.templateId, false);
             }

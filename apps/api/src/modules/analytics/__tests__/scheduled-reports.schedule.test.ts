@@ -10,6 +10,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computeNextRun,
   isIntervalAllowed,
+  offsetTransitionDays,
   buildScheduleColumns,
   normalizeScheduleRow,
   isTemplateVisible,
@@ -101,10 +102,31 @@ describe('isIntervalAllowed', () => {
     expect(isIntervalAllowed('0,30 9 * * *', 'UTC', FROM)).toBe(false);
   });
 
+  it('rejects an hourly schedule that a half-hour DST shift would run 30 minutes apart', () => {
+    // Australia/Lord_Howe moves its clock by 30 minutes (next change 2027-04-03).
+    expect(isIntervalAllowed('30 * * * *', 'Australia/Lord_Howe', FROM)).toBe(false);
+  });
+
   it('accepts hourly and slower schedules', () => {
     expect(isIntervalAllowed('0 * * * *', 'UTC', FROM)).toBe(true);
     expect(isIntervalAllowed('0 9 * * *', 'UTC', FROM)).toBe(true);
     expect(isIntervalAllowed('0 6 15 1,4,7,10 *', 'UTC', FROM)).toBe(true);
+  });
+});
+
+describe('offsetTransitionDays', () => {
+  it('finds the two Europe/London DST changes in the coming year', () => {
+    expect(
+      offsetTransitionDays('Europe/London', FROM).map((d) => d.toISOString().slice(0, 10))
+    ).toEqual(['2026-10-24', '2027-03-27']);
+  });
+
+  it('finds none for UTC', () => {
+    expect(offsetTransitionDays('UTC', FROM)).toEqual([]);
+  });
+
+  it('throws InvalidCronError for an unknown timezone', () => {
+    expect(() => offsetTransitionDays('Not/AZone', FROM)).toThrow(InvalidCronError);
   });
 });
 

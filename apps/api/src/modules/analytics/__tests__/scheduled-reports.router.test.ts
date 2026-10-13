@@ -512,6 +512,24 @@ describe('scheduledReportsRouter (PG-201)', () => {
       expect(prismaMock.reportTemplate.findFirst).not.toHaveBeenCalled();
     });
 
+    it('refuses to activate through update while the stored recipients are invalid', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ id: 'rs-migrated-t1', isActive: false, recipients: [] })
+      );
+      await expectCode(admin.update({ id: 'rs-migrated-t1', isActive: true }), 'BAD_REQUEST');
+    });
+
+    it('activates through update when valid recipients are supplied in the same request', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ isActive: false, recipients: [] })
+      );
+      visibleTemplate();
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, isActive: true, recipients: ['ok@example.invalid'] });
+      expect(tx.reportSchedule.update).toHaveBeenCalled();
+    });
+
     it('pauses a legacy schedule that has no cron without validating it', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
         scheduleRow({ templateId: null, template: null, reportId: 'rep-1', cronExpression: null })
@@ -633,6 +651,16 @@ describe('scheduledReportsRouter (PG-201)', () => {
       const { data } = tx.reportSchedule.update.mock.calls[0][0];
       expect(data.isActive).toBe(true);
       expect(data.nextRunAt.toISOString()).toBe('2026-10-19T08:00:00.000Z');
+    });
+
+    it('refuses to activate a copied schedule whose stored recipients are empty or invalid', async () => {
+      for (const recipients of [[], ['not-an-email'], 'oops']) {
+        (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+          scheduleRow({ isActive: false, recipients })
+        );
+        await expectCode(admin.setActive({ id: SCHEDULE_ID, isActive: true }), 'BAD_REQUEST');
+      }
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
     });
 
     it('refuses to activate an unreferenced schedule', async () => {
