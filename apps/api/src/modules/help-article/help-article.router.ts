@@ -245,14 +245,26 @@ export const helpArticleRouter = createTRPCRouter({
   /**
    * Get articles by category. Defaults to PUBLISHED only.
    * Includes the caller's own tenant-authored articles AND every built-in
-   * (system) article (#533) — never another tenant's authored content.
+   * (system) article (#533) — never another tenant's authored content. A
+   * built-in article shadowed by one of the caller's own (same slug) is omitted.
    */
   getByCategory: tenantProcedure.input(helpArticleCategorySchema).query(async ({ ctx, input }) => {
     const tenantId = ctx.tenant.tenantId;
 
     const isPrivileged = ctx.tenant.role === 'ADMIN' || ctx.tenant.role === 'MANAGER';
+    // A tenant's own article wins over a built-in one with the same slug (see
+    // getBySlug), so a built-in card whose slug the caller has already claimed
+    // would open the tenant article instead. Hide those shadowed built-ins —
+    // whatever the shadowing article's category or status (a draft still
+    // shadows, since getBySlug resolves the caller's row first).
+    const ownArticles = await ctx.prismaWithTenant.helpArticle.findMany({
+      where: { tenantId },
+      select: { slug: true },
+    });
+    const ownSlugs = ownArticles.map((a) => a.slug);
+
     const where: Record<string, unknown> = {
-      OR: [{ tenantId }, { isSystem: true }],
+      OR: [{ tenantId }, { isSystem: true, slug: { notIn: ownSlugs } }],
       categoryId: input.categoryId,
     };
     // Only privileged users can see unpublished articles

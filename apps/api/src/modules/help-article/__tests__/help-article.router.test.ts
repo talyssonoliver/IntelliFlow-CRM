@@ -455,7 +455,35 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true }],
+            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true, slug: { notIn: [] } }],
+          }),
+        })
+      );
+    });
+
+    it('omits built-in articles shadowed by a caller-owned article with the same slug', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      const findMany = (prismaMock.helpArticle as any).findMany;
+      // First call: the caller's own slugs (any category/status); second: the listing.
+      findMany.mockReset();
+      findMany
+        .mockResolvedValueOnce([{ slug: 'getting-started' }, { slug: 'draft-elsewhere' }])
+        .mockResolvedValueOnce([]);
+
+      await caller.getByCategory({ categoryId: 'cat-onboarding' });
+
+      expect(findMany).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ where: { tenantId: TEST_UUIDS.tenant } })
+      );
+      expect(findMany).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { tenantId: TEST_UUIDS.tenant },
+              { isSystem: true, slug: { notIn: ['getting-started', 'draft-elsewhere'] } },
+            ],
           }),
         })
       );
