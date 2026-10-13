@@ -92,6 +92,60 @@ describe('executeApprovedAction', () => {
     expect(outcome.result).toEqual({ entityType: 'CASE', entityId: 'case-1' });
   });
 
+  it('update_case changes status before fields, so a refused transition writes nothing', async () => {
+    calls.cases.changeStatus.mockRejectedValue(new Error('Cannot transition from CLOSED to OPEN'));
+    const outcome = await executeApprovedAction(
+      'update_case',
+      { id: 'case-1', title: 'New', status: 'OPEN' },
+      ctx()
+    );
+    expect(outcome).toEqual({ status: 'FAILED', error: 'Cannot transition from CLOSED to OPEN' });
+    expect(calls.cases.update).not.toHaveBeenCalled();
+  });
+
+  it('update_case reports exactly what applied when the field update fails afterwards', async () => {
+    calls.cases.update.mockRejectedValue(new Error('Case not found'));
+    const outcome = await executeApprovedAction(
+      'update_case',
+      { id: 'case-1', title: 'New', status: 'CLOSED' },
+      ctx()
+    );
+    expect(outcome.error).toBe(
+      'Status changed to CLOSED, but the other changes were not applied: Case not found'
+    );
+  });
+
+  it('update_case with only fields surfaces a field-update error unchanged', async () => {
+    calls.cases.update.mockRejectedValue(new Error('Case not found'));
+    const outcome = await executeApprovedAction('update_case', { id: 'case-1', title: 'N' }, ctx());
+    expect(outcome.error).toBe('Case not found');
+  });
+
+  it('update_appointment reschedules first, so a conflict writes nothing', async () => {
+    calls.appointments.reschedule.mockRejectedValue(new Error('Scheduling conflict'));
+    const start = new Date('2026-10-15T10:00:00Z');
+    const outcome = await executeApprovedAction(
+      'update_appointment',
+      { id: 'appt-1', title: 'T', startTime: start, endTime: start },
+      ctx()
+    );
+    expect(outcome.error).toBe('Scheduling conflict');
+    expect(calls.appointments.update).not.toHaveBeenCalled();
+  });
+
+  it('update_appointment reports a partial write honestly', async () => {
+    calls.appointments.update.mockRejectedValue('nope');
+    const start = new Date('2026-10-15T10:00:00Z');
+    const outcome = await executeApprovedAction(
+      'update_appointment',
+      { id: 'appt-1', title: 'T', startTime: start, endTime: start },
+      ctx()
+    );
+    expect(outcome.error).toBe(
+      'Rescheduled, but the other changes were not applied: unknown error'
+    );
+  });
+
   it('update_case with only a status skips the field update', async () => {
     await executeApprovedAction('update_case', { id: 'case-1', status: 'ON_HOLD' }, ctx());
     expect(calls.cases.update).not.toHaveBeenCalled();

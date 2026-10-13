@@ -109,14 +109,36 @@ async function createCase(input: Input, ctx: Context): Promise<ExecutionResult> 
   return { entityType: 'CASE', entityId: (created as { id: string }).id };
 }
 
+/**
+ * Run a second write after a first one succeeded. The two procedures cannot share a
+ * transaction, so a failure here is reported as exactly what was and was not applied.
+ */
+async function thenApply(applied: string | null, step: () => Promise<unknown>): Promise<void> {
+  try {
+    await step();
+  } catch (error) {
+    if (!applied) throw error;
+    const reason = error instanceof Error ? error.message : 'unknown error';
+    throw new Error(`${applied}, but the other changes were not applied: ${reason}`, {
+      cause: error,
+    });
+  }
+}
+
 async function updateCase(input: Input, ctx: Context): Promise<ExecutionResult> {
   const { casesRouter } = await import('../modules/legal/cases.router.js');
   const caller = casesRouter.createCaller(ctx as CallerCtx);
   const id = String(input.id);
   const fields = pick(input, ['title', 'description', 'priority', 'deadline', 'assignedTo']);
-  if (Object.keys(fields).length > 0) await caller.update({ id, ...fields } as never);
-  if (input.status !== undefined)
+  // The status change is the step that can be refused (invalid transition), so it runs first.
+  let applied: string | null = null;
+  if (input.status !== undefined) {
     await caller.changeStatus({ caseId: id, status: input.status } as never);
+    applied = `Status changed to ${String(input.status)}`;
+  }
+  if (Object.keys(fields).length > 0) {
+    await thenApply(applied, () => caller.update({ id, ...fields } as never));
+  }
   return { entityType: 'CASE', entityId: id };
 }
 
@@ -150,13 +172,18 @@ async function updateAppointment(input: Input, ctx: Context): Promise<ExecutionR
     throw new Error('Rescheduling needs both a start and an end time.');
   }
   const fields = pick(input, ['title', 'description', 'location', 'appointmentType', 'notes']);
-  if (Object.keys(fields).length > 0) await caller.update({ id, ...fields } as never);
+  // Rescheduling is the step that can be refused (conflicts), so it runs first.
+  let applied: string | null = null;
   if (hasStart) {
     await caller.reschedule({
       id,
       newStartTime: input.startTime,
       newEndTime: input.endTime,
     } as never);
+    applied = 'Rescheduled';
+  }
+  if (Object.keys(fields).length > 0) {
+    await thenApply(applied, () => caller.update({ id, ...fields } as never));
   }
   return { entityType: 'APPOINTMENT', entityId: id };
 }
