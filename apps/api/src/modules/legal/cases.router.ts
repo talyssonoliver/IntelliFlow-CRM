@@ -33,7 +33,7 @@ import {
 } from '@intelliflow/domain';
 import { assertTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
-import { computeSlaDeadline } from './case-sla-deadline';
+import { computeSlaDeadline } from '../../lib/case-sla-deadline';
 
 // LEGAL is a Professional+ paid add-on (MODULE_PLAN_MAP). Gate every procedure on
 // the tenant's plan including the module — same pattern as documents.router.ts.

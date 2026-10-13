@@ -12,7 +12,7 @@
  * move these deadlines by days.
  */
 
-import { formatISODateInTimezone, safeTimezone } from '../../lib/timezone-utils';
+import { formatISODateInTimezone, safeTimezone } from './timezone-utils';
 
 const MINUTE_MS = 60 * 1000;
 
