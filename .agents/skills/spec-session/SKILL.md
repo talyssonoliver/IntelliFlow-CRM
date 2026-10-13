@@ -59,6 +59,36 @@ tool. **MANDATORY.**
 **See references/spawning-agents.md** for Task tool prompts and TeamCreate
 patterns.
 
+## Light Tier Mode (`--tier=light`, issue #579)
+
+`/full-pipeline` passes `--tier=light` only when
+`tools/scripts/ceremony-tier-audit.ts` classified the task as
+template-following, dependency-light, pattern-citing, and small — see
+`.agents/skills/full-pipeline/references/ceremony-tier.md` for the exact rule.
+When invoked this way:
+
+- Phases 0, 0.75, 0.9, 0.92, 0.95, 0.97 (context hydration, codebase
+  exploration, dependency/UI-reachability verification, PRD/ADR resolution) run
+  **unchanged** — these are correctness/reuse checks, not ceremony.
+- **Phase 0.5 selects exactly ONE agent**, not 3–5: `Frontend-Lead` if the
+  task's Lane (from the tier-detection result) is UI-leaning (`Foundation`),
+  otherwise `Backend-Architect`. Do NOT also add `Domain-Expert` or
+  `Test-Engineer` — the "always included" rule in Phase 0.5 above applies only
+  to full tier.
+- **Rounds 1–4 collapse into a single pass.** There is one persona and no debate
+  partner, so ANALYSIS → PROPOSAL → CHALLENGE → CONSENSUS becomes: the one agent
+  explores (0.75), analyzes, and writes the spec directly. Do not spawn a second
+  agent to "challenge" a light-tier spec — that would silently re-introduce the
+  ceremony the tier was meant to skip.
+- Output format, `## Related Documents`, and the Status Updates table above are
+  unchanged.
+- If anything about the task looks wrong for `light` once you're actually
+  reading the code (e.g. the "existing pattern" it cites doesn't actually
+  match), STOP and re-run with `--tier=full` rather than forcing the
+  single-persona path — the heuristic is deterministic but not infallible, and a
+  human/agent who notices a bad classification should correct it via
+  `.specify/memory/task-tiers.yaml`, not route around it silently.
+
 ## Anti-Patterns (REJECT these)
 
 - No tool calls in exploration phase

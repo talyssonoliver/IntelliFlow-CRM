@@ -1,0 +1,5461 @@
+{
+  "generated_at": "2026-10-13T09:03:26.387Z",
+  "issue": "#579",
+  "total": 188,
+  "light": 21,
+  "full": 167,
+  "tasks": [
+    {
+      "taskId": "ENV-008-AI",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "EP-001-AI",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: ENV-008-AI"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-027",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-033",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-034",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-033"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-035",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-034"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-036",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-035"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-037",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-038",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 1 not previously-completed: IFC-037"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-040",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "14 dependency(ies) (max 2), 4 not previously-completed: IFC-046, IFC-115, IFC-043, IFC-033"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-041",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 1 not previously-completed: IFC-033"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-043",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "5 dependency(ies) (max 2), 2 not previously-completed: ENV-008-AI, IFC-115"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-046",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-047",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-048",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-049",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-048"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-050",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-048"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-051",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-049"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-052",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 2 not previously-completed: IFC-040, IFC-050"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-053",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-052"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-056",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-059",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-040"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-060",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-052"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-071",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-040"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-074",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-083",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-084",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-050"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-087",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-097",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-014",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-049",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-036"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-066",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-067",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-068",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-070",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-071",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-070"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-072",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-073",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-074",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-073"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-075",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-074"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-076",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-077",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-076"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-078",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-077"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-079",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-080",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-081",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-080"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-082",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-081"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "SALES-001",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-083",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-080"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-084",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-085",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: PG-084"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-086",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: PG-085"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-087",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-088",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-080"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-089",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-090",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-089"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-091",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-092",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-091"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-093",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-091"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-094",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-093"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-095",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-093"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-096",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-095"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-097",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-095"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-098",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-097"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-099",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-095"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-100",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-099"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-101",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-102",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-103",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: PG-102"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-105",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-106",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-107",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-108",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-109",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-110",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 2 not previously-completed: PG-109, IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-111",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 2 not previously-completed: PG-108, IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-112",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 1 not previously-completed: IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-113",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-114",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-115",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-116",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-117",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-118",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-119",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-120",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-201"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-121",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-122",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-123",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-115",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-071"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-116",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-074"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-117",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-123",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: IFC-087"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-127",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-142",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENV-008-AI"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-151",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "2 dependency(ies) (max 2), 1 not previously-completed: ENV-008-AI"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-164",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-165",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-166",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-175",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-145",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-147",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-199",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-201",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "5 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-204",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-168",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 1.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-208",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 1.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "A11Y-REVIEW-001",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.7h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-216",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-217",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-218",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-219",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-221",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-228",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 1.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-229",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 1.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-231",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-233",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-234",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-235",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-241",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-243",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-244",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-245",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-069:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-246",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-249",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-250",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-251",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-258",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-259",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-260",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-261",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-262",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-263",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-264",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-272",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-271:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-274",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-275",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-270:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-276",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-267:FS;IFC-268:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-277",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-283",
+      "tier": "light",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-284",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-285",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-286",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-278:FS;IFC-280:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-288",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-037:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-289",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-139:FS;IFC-148:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-290",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-291",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-068:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-292",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-140:FS;IFC-152:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-293",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-157:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-294",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: IFC-025:FS;IFC-095:FS"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-295",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-304",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-305",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-194",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 2.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-307",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-308",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 10.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-196",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-197",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-198",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-199",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "3 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-201",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-202",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-203",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-204",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-205",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-206",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-207",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-208",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-209",
+      "tier": "light",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": true,
+          "detail": "Description/Definition of Done references an existing pattern or playbook"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "PG-210",
+      "tier": "full",
+      "lane": "Foundation",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Foundation (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "IFC-313",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "INFRA-TF-004",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "1 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 10.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "4 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 16.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R03",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 1.3h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R04",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R05",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R06",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 10.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R07",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 4.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R08",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002.R05"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 9.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R09",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 3.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R11",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002.R04"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 6.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R12",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 14.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R13",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "2 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 1.5h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R14",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R15",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 10.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R16",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 12.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R17",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 1.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "ENG-OPS-002.R18",
+      "tier": "full",
+      "lane": "Domain",
+      "source": "heuristic",
+      "status": "Backlog",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": true,
+          "detail": "Lane=Domain (template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": false,
+          "detail": "1 dependency(ies) (max 2), 1 not previously-completed: ENG-OPS-002"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": false,
+          "detail": "Most-likely estimate 8.0h (max 6h)"
+        }
+      ]
+    },
+    {
+      "taskId": "AUTOMATION-004",
+      "tier": "full",
+      "lane": "Automation",
+      "source": "heuristic",
+      "status": "In Progress",
+      "checks": [
+        {
+          "id": "lane",
+          "passed": false,
+          "detail": "Lane=Automation (not template-following)"
+        },
+        {
+          "id": "dependencies",
+          "passed": true,
+          "detail": "0 dependency(ies) (max 2), 0 not previously-completed"
+        },
+        {
+          "id": "pattern",
+          "passed": false,
+          "detail": "No pattern/playbook reference found in Description or Definition of Done"
+        },
+        {
+          "id": "size",
+          "passed": true,
+          "detail": "Most-likely estimate 0.1h (max 6h)"
+        }
+      ]
+    }
+  ]
+}
