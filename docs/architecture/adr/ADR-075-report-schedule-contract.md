@@ -47,8 +47,10 @@ that IFC-308 can register it directly, without a second scheduler?
    `ON DELETE RESTRICT`. The legacy `reportId` stays.
    `CHECK (NOT isActive OR templateId IS NOT NULL OR reportId IS NOT NULL)`: an
    active schedule always has something to render.
-4. **Limits.** At most one run per hour and at most 100 active schedules per
-   tenant, enforced by the API, so IFC-308 cannot be turned into a mail cannon.
+4. **Limits.** At most one run per hour (checked across the coming year's DST
+   changes), at most 100 active and 500 total schedules per tenant, and valid
+   recipients on activation, all enforced by the API under a per-tenant advisory
+   lock, so IFC-308 cannot be turned into a mail cannon.
 5. **No scheduler in PG-201.** PG-201 stores `nextRunAt` for display and as a
    starting point. Registering and removing BullMQ job schedulers is IFC-308's
    job.

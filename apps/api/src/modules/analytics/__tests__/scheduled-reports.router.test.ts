@@ -265,9 +265,17 @@ describe('scheduledReportsRouter (PG-201)', () => {
       );
     });
 
+    it('enforces the per-tenant total schedule cap so every schedule stays listable', async () => {
+      visibleTemplate();
+      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(500);
+      await expectCode(admin.create({ ...createInput, isActive: false }), 'BAD_REQUEST');
+      expect(prismaMock.reportSchedule.count).toHaveBeenCalledWith({ where: { tenantId } });
+      expect(prismaMock.reportSchedule.create).not.toHaveBeenCalled();
+    });
+
     it('enforces the per-tenant active schedule cap', async () => {
       visibleTemplate();
-      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(100);
+      (prismaMock.reportSchedule.count as any).mockResolvedValueOnce(10).mockResolvedValueOnce(100);
       await expectCode(admin.create(createInput), 'BAD_REQUEST');
     });
 
@@ -290,7 +298,9 @@ describe('scheduledReportsRouter (PG-201)', () => {
         scheduleRow(data)
       );
       await admin.create({ ...createInput, isActive: false });
-      expect(prismaMock.reportSchedule.count).not.toHaveBeenCalled();
+      // Only the total cap applies to an inactive schedule.
+      expect(prismaMock.reportSchedule.count).toHaveBeenCalledTimes(1);
+      expect(prismaMock.reportSchedule.count).toHaveBeenCalledWith({ where: { tenantId } });
       expect((prismaMock.reportSchedule.create as any).mock.calls[0][0].data.nextRunAt).toBeNull();
     });
 

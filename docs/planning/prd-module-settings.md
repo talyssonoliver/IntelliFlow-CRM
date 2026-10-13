@@ -695,7 +695,8 @@ its saved setting is copied once into `report_schedules`; schedules get tags
 - AC-SR-010: cross-tenant ids return NOT_FOUND and never touch another tenant.
 - AC-SR-011: `nextRunAt` shown for active schedules, cleared when paused.
 - AC-SR-012: writes limited to ADMIN / MANAGER / OWNER / SUPER_ADMIN; at most
-  one run per hour; at most 100 active schedules per tenant.
+  one run per hour (also across DST changes); at most 100 active and 500 total
+  schedules per tenant; activation re-validates the stored recipients.
 - AC-SR-013: Report Settings links to the new page and no longer writes
   `scheduledDelivery`.
 - AC-SR-014: additive migration; the one-time copy is idempotent, tenant-scoped

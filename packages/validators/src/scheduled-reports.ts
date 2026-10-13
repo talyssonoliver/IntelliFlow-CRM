@@ -21,6 +21,8 @@ export const SCHEDULE_LIMITS = {
   maxRecipients: 50,
   maxTags: 10,
   maxActivePerTenant: 100,
+  // Every schedule must stay reachable from the (single-page) list.
+  maxPerTenant: 500,
   minIntervalMinutes: 60,
   maxNameLength: 100,
   maxTagNameLength: 50,

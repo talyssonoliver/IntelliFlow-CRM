@@ -155,6 +155,20 @@ async function assertTagsExist(tx: ScheduleTx, tenantId: string, tags: string[])
   }
 }
 
+/**
+ * Room for one more schedule at all (call under lockTenantSchedules). The list returns
+ * at most maxPerTenant rows, so the cap keeps every schedule reachable in the UI.
+ */
+async function assertTotalCapacity(tx: ScheduleTx, tenantId: string): Promise<void> {
+  const total = await tx.reportSchedule.count({ where: { tenantId } });
+  if (total >= SCHEDULE_LIMITS.maxPerTenant) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `A workspace can have at most ${SCHEDULE_LIMITS.maxPerTenant} scheduled reports. Delete one first.`,
+    });
+  }
+}
+
 /** Room for one more active schedule (call under lockTenantSchedules). */
 async function assertActiveCapacity(
   tx: ScheduleTx,
@@ -467,7 +481,7 @@ export const scheduledReportsRouter = createTRPCRouter({
       where: { tenantId: ctx.tenant.tenantId },
       include: SCHEDULE_INCLUDE,
       orderBy: [{ name: 'asc' }],
-      take: 500,
+      take: SCHEDULE_LIMITS.maxPerTenant,
     });
     return rows.map((row) => normalizeScheduleRow(row, ctx.tenant.userId));
   }),
@@ -499,6 +513,7 @@ export const scheduledReportsRouter = createTRPCRouter({
           await lockTenantSchedules(tx, tenantId);
           await assertTemplateVisible(tx, ctx, input.templateId);
           await assertTagsExist(tx, tenantId, input.tags ?? []);
+          await assertTotalCapacity(tx, tenantId);
           if (isActive) await assertActiveCapacity(tx, tenantId);
           return tx.reportSchedule.create({
             data: {

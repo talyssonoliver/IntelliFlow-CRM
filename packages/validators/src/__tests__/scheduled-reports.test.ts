@@ -70,6 +70,7 @@ describe('enums and constants', () => {
       maxRecipients: 50,
       maxTags: 10,
       maxActivePerTenant: 100,
+      maxPerTenant: 500,
       minIntervalMinutes: 60,
     });
   });
