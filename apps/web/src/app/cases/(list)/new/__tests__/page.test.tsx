@@ -108,7 +108,7 @@ describe('/cases/new', () => {
       clientId: 'acc-1',
       description: undefined,
       priority: undefined,
-      deadline: undefined,
+      deadlineDate: undefined,
       assignedTo: undefined,
       timezone: undefined,
       jurisdiction: undefined,
@@ -118,7 +118,6 @@ describe('/cases/new', () => {
 
   it('forwards jurisdiction and timezone (required-field check and SLA deadline need them)', async () => {
     render(<NewCasePage />);
-    const deadline = new Date('2026-12-01T00:00:00Z');
     await act(async () => {
       await h.formProps!.onSubmit({
         title: 'Smith v Jones',
@@ -126,7 +125,7 @@ describe('/cases/new', () => {
         caseTypeId: 'ct-lit',
         priority: 'HIGH',
         description: 'Contract dispute',
-        deadline,
+        deadlineDate: '2026-12-01',
         assignedTo: 'user-2',
         timezone: 'America/New_York',
         jurisdiction: 'US-NY',
@@ -137,7 +136,8 @@ describe('/cases/new', () => {
       clientId: 'acc-1',
       description: 'Contract dispute',
       priority: 'HIGH',
-      deadline,
+      // codex deadline-timezone-mismatch: the calendar date goes to the API unconverted.
+      deadlineDate: '2026-12-01',
       assignedTo: 'user-2',
       timezone: 'America/New_York',
       jurisdiction: 'US-NY',

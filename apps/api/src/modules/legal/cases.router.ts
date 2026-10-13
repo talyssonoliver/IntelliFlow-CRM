@@ -33,7 +33,7 @@ import {
 } from '@intelliflow/domain';
 import { assertTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
-import { computeSlaDeadline } from '../../lib/case-sla-deadline';
+import { computeSlaDeadline, endOfCalendarDayInTimezone } from '../../lib/case-sla-deadline';
 import { CASE_TASK_ORDER } from '../../lib/case-task-order';
 
 // LEGAL is a Professional+ paid add-on (MODULE_PLAN_MAP). Gate every procedure on
@@ -108,9 +108,13 @@ async function loadCaseCreateContext(
 
 function resolveDeadlineDate(
   source: CaseDeadlineSource,
-  input: { deadline?: Date; timezone?: string }
+  input: { deadline?: Date; deadlineDate?: string; timezone?: string }
 ): Date | undefined {
-  if (source.kind === 'input') return input.deadline;
+  if (source.kind === 'input') {
+    return input.deadlineDate === undefined
+      ? input.deadline
+      : endOfCalendarDayInTimezone(input.deadlineDate, input.timezone);
+  }
   if (source.kind === 'sla') return computeSlaDeadline(new Date(), source.days, input.timezone);
   return undefined;
 }
@@ -435,6 +439,13 @@ export const casesRouter = createTRPCRouter({
     assertTenantContext(ctx);
     const tenantId = ctx.tenant.tenantId;
 
+    if (input.deadline !== undefined && input.deadlineDate !== undefined) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Send either deadline or deadlineDate, not both',
+      });
+    }
+
     // PG-204: the caller's id lives on ctx.tenant (UserSession has no `id` field).
     const assignedTo = input.assignedTo ?? ctx.tenant.userId;
 
@@ -442,7 +453,7 @@ export const casesRouter = createTRPCRouter({
     const resolved = resolveCaseCreateDefaults({
       input: {
         priority: input.priority,
-        hasDeadline: input.deadline !== undefined,
+        hasDeadline: input.deadline !== undefined || input.deadlineDate !== undefined,
         title: input.title,
         description: input.description,
         jurisdiction: input.jurisdiction,

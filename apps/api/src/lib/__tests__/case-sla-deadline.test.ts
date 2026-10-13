@@ -2,7 +2,7 @@
  * computeSlaDeadline — PG-204 (spec D7): 23:59:59.999 local on calendar day today+N.
  */
 import { describe, it, expect } from 'vitest';
-import { computeSlaDeadline } from '../case-sla-deadline';
+import { computeSlaDeadline, endOfCalendarDayInTimezone } from '../case-sla-deadline';
 
 /** Local wall-clock of a UTC instant in a zone, as `YYYY-MM-DD HH:mm:ss.SSS`. */
 function local(date: Date, timeZone: string): string {
@@ -121,5 +121,30 @@ describe('computeSlaDeadline', () => {
         }
       }
     }
+  });
+});
+
+describe('endOfCalendarDayInTimezone (typed deadline, codex deadline-timezone-mismatch)', () => {
+  it('west of UTC: 2026-12-01 in New York ends at 2026-12-02 04:59:59.999Z', () => {
+    const end = endOfCalendarDayInTimezone('2026-12-01', 'America/New_York');
+    expect(end.toISOString()).toBe('2026-12-02T04:59:59.999Z');
+    expect(local(end, 'America/New_York')).toBe('2026-12-01 23:59:59.999');
+  });
+
+  it('east of UTC: 2026-12-01 in Tokyo ends at 2026-12-01 14:59:59.999Z', () => {
+    const end = endOfCalendarDayInTimezone('2026-12-01', 'Asia/Tokyo');
+    expect(end.toISOString()).toBe('2026-12-01T14:59:59.999Z');
+    expect(local(end, 'Asia/Tokyo')).toBe('2026-12-01 23:59:59.999');
+  });
+
+  it('UTC when no timezone is given', () => {
+    expect(endOfCalendarDayInTimezone('2026-12-01', undefined).toISOString()).toBe(
+      '2026-12-01T23:59:59.999Z'
+    );
+  });
+
+  it('far east (UTC+14): the date does not move a day', () => {
+    const end = endOfCalendarDayInTimezone('2026-12-01', 'Pacific/Kiritimati');
+    expect(local(end, 'Pacific/Kiritimati')).toBe('2026-12-01 23:59:59.999');
   });
 });

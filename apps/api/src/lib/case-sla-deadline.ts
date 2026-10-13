@@ -63,6 +63,16 @@ function startOfLocalDay(dayStart: number, timezone: string): number {
   return Math.min(...onTarget);
 }
 
+/**
+ * Last instant of local day `year-month-day` (+`addDays`): 1 ms before the next local day
+ * starts. This stays right when the day's last hour repeats (clocks go back at midnight)
+ * or when the next midnight is skipped (clocks go forward at midnight).
+ */
+function endOfLocalDay(year: number, month: number, day: number, tz: string): Date {
+  const nextDay = Date.UTC(year, month - 1, day + 1);
+  return new Date(startOfLocalDay(nextDay, tz) - 1);
+}
+
 export function computeSlaDeadline(
   now: Date,
   days: number,
@@ -70,9 +80,17 @@ export function computeSlaDeadline(
 ): Date {
   const tz = safeTimezone(timezone);
   const [year, month, day] = formatISODateInTimezone(now, tz).split('-').map(Number);
-  // The deadline is the last instant of local day D+N: 1 ms before local day D+N+1 starts.
-  // This stays right when the day's last hour repeats (clocks go back at midnight) or
-  // when the next midnight is skipped (clocks go forward at midnight).
-  const nextDay = Date.UTC(year, month - 1, day + days + 1);
-  return new Date(startOfLocalDay(nextDay, tz) - 1);
+  return endOfLocalDay(year, month, day + days, tz);
+}
+
+/**
+ * A deadline typed as a calendar date (`YYYY-MM-DD`) ends at 23:59:59.999 of that day in
+ * the case timezone (UTC when none), the same rule as an SLA deadline.
+ */
+export function endOfCalendarDayInTimezone(
+  isoDate: string,
+  timezone: string | null | undefined
+): Date {
+  const [year, month, day] = isoDate.split('-').map(Number);
+  return endOfLocalDay(year, month, day, safeTimezone(timezone));
 }

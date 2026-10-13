@@ -137,6 +137,30 @@ describe('Case Validators', () => {
       }
     });
 
+    // PG-204 (codex, deadline-timezone-mismatch): a typed date stays a calendar date so the
+    // API can place it in the case timezone; new Date('YYYY-MM-DD') would be UTC midnight.
+    it('accepts a calendar deadlineDate and keeps it as a string', () => {
+      const result = createCaseSchema.safeParse({
+        title: 'Dated',
+        clientId: validUuid,
+        deadlineDate: '2026-12-01',
+      });
+      expect(result.success).toBe(true);
+      if (result.success) expect(result.data.deadlineDate).toBe('2026-12-01');
+    });
+
+    it.each(['2026-02-31', '12/01/2026', '2026-12-01T00:00:00Z', ''])(
+      'rejects deadlineDate %j that is not a real YYYY-MM-DD date',
+      (deadlineDate) => {
+        const result = createCaseSchema.safeParse({
+          title: 'Dated',
+          clientId: validUuid,
+          deadlineDate,
+        });
+        expect(result.success).toBe(false);
+      }
+    );
+
     it('should reject empty title', () => {
       const input = {
         title: '',

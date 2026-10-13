@@ -256,7 +256,8 @@ export function CaseForm({
       submitData.assignedTo = formData.assigneeId;
     }
     // When 'me' is selected, omit assignedTo — backend defaults to current user
-    if (formData.deadline) submitData.deadline = new Date(formData.deadline);
+    // The calendar date is sent as typed: the API ends it in the case timezone.
+    if (formData.deadline) submitData.deadlineDate = formData.deadline;
     if (formData.timezone) submitData.timezone = formData.timezone;
     if (formData.jurisdiction) submitData.jurisdiction = formData.jurisdiction;
 

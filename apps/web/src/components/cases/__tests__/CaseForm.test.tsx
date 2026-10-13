@@ -209,6 +209,29 @@ describe('CaseForm — case types (PG-204)', () => {
     expect(data).not.toHaveProperty('caseTypeId');
   });
 
+  // codex deadline-timezone-mismatch: new Date('2026-12-01') is UTC midnight, the evening
+  // before in New York. The form keeps the calendar date; the API places it in the zone.
+  it.each(['America/New_York', 'Asia/Tokyo'])(
+    'submits a typed deadline as the calendar date with its timezone (%s)',
+    async (timezone) => {
+      const { onSubmit } = renderForm({
+        moduleRequiredFields: [],
+        initialData: { timezone },
+      });
+      fireEvent.change(screen.getByLabelText(/Subject/), { target: { value: 'Smith v Jones' } });
+      await pickClient();
+      fireEvent.change(screen.getByLabelText('Case type'), { target: { value: '' } });
+      fireEvent.change(screen.getByLabelText(/Deadline \/ Due Date/), {
+        target: { value: '2026-12-01' },
+      });
+      await submit();
+      const data = onSubmit.mock.calls[0][0];
+      expect(data.deadlineDate).toBe('2026-12-01');
+      expect(data.timezone).toBe(timezone);
+      expect(data).not.toHaveProperty('deadline');
+    }
+  );
+
   it('searches accounts (a case client is an Account) and links to the new account form', async () => {
     renderForm();
     await pickClient();

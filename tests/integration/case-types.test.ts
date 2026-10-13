@@ -17,6 +17,7 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { CASE_REQUIRED_FIELD_KEYS } from '../../packages/domain/src/legal/cases/case-type-defaults';
 import { CASE_TASK_ORDER } from '../../apps/api/src/lib/case-task-order';
+import { endOfCalendarDayInTimezone } from '../../apps/api/src/lib/case-sla-deadline';
 
 const MIGRATION_PATH = join(
   __dirname,
@@ -294,6 +295,33 @@ describeDb('PG-204 case types (real DB)', () => {
       const t = await caseType(TENANT_A, `${RUN} in use`);
       await legalCase(TENANT_A, t.id);
       await expectRejected(prisma.caseType.delete({ where: { id: t.id } }), FOREIGN_KEY);
+    });
+  });
+
+  // codex deadline-timezone-mismatch: the deadline cases.create writes for a typed
+  // 2026-12-01 reads back as 23:59:59.999 on 2026-12-01 in the case timezone.
+  describe('typed deadline in the case timezone', () => {
+    it.each([
+      ['America/New_York', '2026-12-02T04:59:59.999Z'],
+      ['Asia/Tokyo', '2026-12-01T14:59:59.999Z'],
+    ])('stores 2026-12-01 in %s as %s', async (timezone, iso) => {
+      const deadline = endOfCalendarDayInTimezone('2026-12-01', timezone);
+      const created = await prisma.case.create({
+        data: {
+          tenantId: TENANT_A,
+          title: `${RUN} dated ${timezone}`,
+          clientId: ACCOUNT_A,
+          assignedTo: USER_A,
+          deadline,
+          timezone,
+        },
+      });
+      const stored = await prisma.case.findUniqueOrThrow({ where: { id: created.id } });
+      expect(stored.deadline?.toISOString()).toBe(iso);
+      const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(
+        stored.deadline!
+      );
+      expect(localDate).toBe('2026-12-01');
     });
   });
 

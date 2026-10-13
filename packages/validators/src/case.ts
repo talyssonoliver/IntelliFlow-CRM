@@ -15,6 +15,20 @@ export type CaseStatus = z.infer<typeof caseStatusSchema>;
 export type CasePriority = z.infer<typeof casePrioritySchema>;
 export type CaseTaskStatus = z.infer<typeof caseTaskStatusSchema>;
 
+/** A real calendar date, `YYYY-MM-DD` (rejects 2026-02-31). */
+const calendarDateSchema = z
+  .string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected a YYYY-MM-DD date')
+  .refine((value) => {
+    const [year, month, day] = value.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return (
+      date.getUTCFullYear() === year &&
+      date.getUTCMonth() === month - 1 &&
+      date.getUTCDate() === day
+    );
+  }, 'Not a real calendar date');
+
 // Create Case Schema
 export const createCaseSchema = z.object({
   title: z.string().min(1).max(300),
@@ -22,6 +36,9 @@ export const createCaseSchema = z.object({
   // PG-204: no default — a blank priority lets the case type, then the module default, apply.
   priority: casePrioritySchema.optional(),
   deadline: z.coerce.date().optional(),
+  // PG-204: a date picked in the form. The API stores the end of that day in the case
+  // timezone; converting it in the browser (new Date('YYYY-MM-DD')) gives UTC midnight.
+  deadlineDate: calendarDateSchema.optional(),
   timezone: timezoneSchema.optional(),
   jurisdiction: z.string().max(100).optional(),
   clientId: idSchema,

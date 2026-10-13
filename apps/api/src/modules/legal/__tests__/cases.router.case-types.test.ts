@@ -141,6 +141,47 @@ describe('cases.create with case types (PG-204)', () => {
       expect(tx.case.create.mock.calls[0][0].data.deadline).toEqual(deadline);
     });
 
+    // codex deadline-timezone-mismatch: a typed calendar date is the end of that day in the
+    // case timezone, not UTC midnight (which is the previous evening west of UTC).
+    it('stores a typed date as the end of that day in a timezone west of UTC', async () => {
+      setup({ caseType: LITIGATION });
+      const tx = useTx();
+      await caller.create({
+        ...base,
+        caseTypeId: TYPE,
+        deadlineDate: '2026-12-01',
+        timezone: 'America/New_York',
+      });
+      const data = tx.case.create.mock.calls[0][0].data;
+      expect(data.deadline.toISOString()).toBe('2026-12-02T04:59:59.999Z');
+      expect(data.timezone).toBe('America/New_York');
+    });
+
+    it('stores a typed date as the end of that day in a timezone east of UTC', async () => {
+      setup({ caseType: LITIGATION });
+      const tx = useTx();
+      await caller.create({
+        ...base,
+        caseTypeId: TYPE,
+        deadlineDate: '2026-12-01',
+        timezone: 'Asia/Tokyo',
+      });
+      expect(tx.case.create.mock.calls[0][0].data.deadline.toISOString()).toBe(
+        '2026-12-01T14:59:59.999Z'
+      );
+    });
+
+    it('rejects a deadline and a deadlineDate together', async () => {
+      setup({ caseType: LITIGATION });
+      await expect(
+        caller.create({
+          ...base,
+          deadline: new Date('2026-12-01T12:00:00Z'),
+          deadlineDate: '2026-12-01',
+        })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    });
+
     it('leaves the deadline empty when the type has no SLA', async () => {
       setup({ caseType: { ...LITIGATION, defaultSlaDays: null } });
       const tx = useTx();
@@ -188,6 +229,15 @@ describe('cases.create with case types (PG-204)', () => {
         code: 'BAD_REQUEST',
         message: 'Required fields missing: Title',
       });
+    });
+
+    it('lets a typed deadlineDate satisfy a required deadline', async () => {
+      setup({ caseType: { ...LITIGATION, defaultSlaDays: null, requiredFields: ['deadline'] } });
+      const tx = useTx();
+      await caller.create({ ...base, caseTypeId: TYPE, deadlineDate: '2026-12-01' });
+      expect(tx.case.create.mock.calls[0][0].data.deadline.toISOString()).toBe(
+        '2026-12-01T23:59:59.999Z'
+      );
     });
 
     it('lets an SLA-derived deadline satisfy a required deadline', async () => {

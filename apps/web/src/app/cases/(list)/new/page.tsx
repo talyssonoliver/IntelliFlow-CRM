@@ -49,7 +49,7 @@ export default function NewCasePage() {
   const handleSubmit = useCallback(
     async (data: Record<string, unknown>) => {
       // CaseForm populates title and clientId — validate before calling typed mutation
-      const { title, clientId, priority, deadline } = data;
+      const { title, clientId, priority } = data;
       if (typeof title !== 'string' || typeof clientId !== 'string') {
         toast({
           title: 'Validation Error',
@@ -66,7 +66,8 @@ export default function NewCasePage() {
           description: optionalString(data.description),
           // PG-204: omitted when blank so the case type / Case Settings default applies.
           priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | undefined,
-          deadline: deadline as Date | undefined,
+          // A calendar date: the API stores the end of that day in the case timezone.
+          deadlineDate: optionalString(data.deadlineDate),
           assignedTo: optionalString(data.assignedTo),
           // PG-204: jurisdiction and timezone feed the required-field check and the SLA deadline.
           timezone: optionalString(data.timezone),
