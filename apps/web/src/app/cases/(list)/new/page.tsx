@@ -91,9 +91,12 @@ export default function NewCasePage() {
   const configReady = caseTypesQuery.isSuccess && requiredFieldsQuery.isSuccess;
   const configFailed = caseTypesQuery.isError || requiredFieldsQuery.isError;
 
-  const handleRetry = useCallback(() => {
-    if (caseTypesQuery.isError) void caseTypesQuery.refetch();
-    if (requiredFieldsQuery.isError) void requiredFieldsQuery.refetch();
+  // A failed refetch resolves with the error in the query state, which re-renders the alert.
+  const handleRetry = useCallback(async () => {
+    const retries: Promise<unknown>[] = [];
+    if (caseTypesQuery.isError) retries.push(caseTypesQuery.refetch());
+    if (requiredFieldsQuery.isError) retries.push(requiredFieldsQuery.refetch());
+    await Promise.all(retries);
   }, [caseTypesQuery, requiredFieldsQuery]);
 
   let content: ReactNode;
