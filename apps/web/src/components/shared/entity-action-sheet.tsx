@@ -18,6 +18,7 @@ export interface ExtraAction {
   icon: string;
   onClick: () => void;
   destructive?: boolean;
+  disabled?: boolean;
 }
 
 interface EntityActionSheetProps {
@@ -93,11 +94,12 @@ export function EntityActionSheet({
                 <button
                   key={action.label}
                   type="button"
+                  disabled={action.disabled}
                   onClick={() => {
                     action.onClick();
                     onOpenChange(false);
                   }}
-                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors ${
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-lg text-left text-sm font-medium transition-colors disabled:opacity-50 disabled:pointer-events-none ${
                     action.destructive
                       ? 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
                       : 'text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'

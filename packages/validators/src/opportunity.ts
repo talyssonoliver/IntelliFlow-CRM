@@ -282,3 +282,83 @@ export const bulkDeleteDealsSchema = z.object({
   ids: z.array(idSchema).min(1).max(100),
 });
 export type BulkDeleteDealsInput = z.infer<typeof bulkDeleteDealsSchema>;
+
+// ============================================
+// #421: Deal detail action backends (IFC-280 deferred)
+// Clone / Archive / Add-Product / File-upload
+// ============================================
+
+export const cloneOpportunitySchema = z.object({ id: idSchema });
+export type CloneOpportunityInput = z.infer<typeof cloneOpportunitySchema>;
+
+export const archiveOpportunitySchema = z.object({ id: idSchema });
+export type ArchiveOpportunityInput = z.infer<typeof archiveOpportunitySchema>;
+
+export const unarchiveOpportunitySchema = z.object({ id: idSchema });
+export type UnarchiveOpportunityInput = z.infer<typeof unarchiveOpportunitySchema>;
+
+// Deal products (DealProduct line items). unitPrice/quantity are plain numbers
+// (not moneySchema) — DealProduct carries no currency column of its own; the
+// deal's value/currency (GBP-only today, see opportunity.ts formatCurrency)
+// is the single-currency context these line items live in.
+export const addDealProductSchema = z.object({
+  opportunityId: idSchema,
+  name: z
+    .string()
+    .min(1)
+    .max(200)
+    .transform((val) => val.trim()),
+  description: z
+    .string()
+    .max(1000)
+    .transform((val) => val.trim())
+    .optional(),
+  quantity: z.number().int().positive().max(100_000).default(1),
+  unitPrice: z.number().positive().max(1_000_000_000),
+});
+export type AddDealProductInput = z.infer<typeof addDealProductSchema>;
+
+export const updateDealProductSchema = z.object({
+  id: idSchema,
+  name: z
+    .string()
+    .min(1)
+    .max(200)
+    .transform((val) => val.trim())
+    .optional(),
+  description: z
+    .string()
+    .max(1000)
+    .transform((val) => val.trim())
+    .optional()
+    .nullable(),
+  quantity: z.number().int().positive().max(100_000).optional(),
+  unitPrice: z.number().positive().max(1_000_000_000).optional(),
+});
+export type UpdateDealProductInput = z.infer<typeof updateDealProductSchema>;
+
+export const removeDealProductSchema = z.object({ id: idSchema });
+export type RemoveDealProductInput = z.infer<typeof removeDealProductSchema>;
+
+// Deal files (DealFile attachments). content is base64 — mirrors
+// ticket.addAttachmentSchema's transport shape. sizeBytes cap mirrors
+// IngestionOrchestrator.MAX_FILE_SIZE (50MB); the router re-validates the
+// decoded buffer length so a lying sizeBytes can't bypass the real limit.
+export const attachDealFileSchema = z.object({
+  opportunityId: idSchema,
+  name: z.string().min(1).max(255),
+  mimeType: z.string().min(1).max(255),
+  sizeBytes: z
+    .number()
+    .int()
+    .positive()
+    .max(50 * 1024 * 1024),
+  content: z.string().min(1),
+});
+export type AttachDealFileInput = z.infer<typeof attachDealFileSchema>;
+
+export const listDealFilesSchema = z.object({ opportunityId: idSchema });
+export type ListDealFilesInput = z.infer<typeof listDealFilesSchema>;
+
+export const removeDealFileSchema = z.object({ id: idSchema });
+export type RemoveDealFileInput = z.infer<typeof removeDealFileSchema>;

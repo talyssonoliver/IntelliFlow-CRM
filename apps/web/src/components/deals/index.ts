@@ -13,6 +13,7 @@ export { ValueSummary } from './ValueSummary';
 export { DealQuickView } from './DealQuickView';
 export { DealListView } from './DealListView';
 export { LossReasonModal } from './LossReasonModal';
+export { AddProductDialog, type AddProductFormData } from './AddProductDialog';
 export { TrashList } from './TrashList';
 export type { Deal, TrashedDeal, PipelineStats, DealFiltersValue } from './types';
 export {

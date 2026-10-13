@@ -28,6 +28,7 @@ import { PinButton } from '@/components/home/PinButton';
 import { RelatedTasksCard } from '@/components/tasks/RelatedTasksCard';
 import { LossReasonModal } from '@/components/deals/LossReasonModal';
 import { DealForm, type DealFormData } from '@/components/deals/DealForm';
+import { AddProductDialog, type AddProductFormData } from '@/components/deals/AddProductDialog';
 import { revalidateDealCaches } from '@/app/deals/actions';
 
 // Material Symbols icon helper component
@@ -58,6 +59,7 @@ interface DealDetail {
   isClosed: boolean;
   isWon: boolean;
   isLost: boolean;
+  archivedAt: Date | string | null;
   createdAt: Date | string;
   updatedAt: Date | string;
   owner: { id: string; name: string | null; email: string } | null;
@@ -407,7 +409,144 @@ function ProductsCard({
   );
 }
 
-function FilesCard({ onUpload }: Readonly<{ onUpload: () => void }>) {
+// #421: Material Symbols icon per DealFile.fileType, mirroring
+// FilesCard's existing Icon helper usage elsewhere on this page.
+const FILE_TYPE_ICONS: Record<string, string> = {
+  PDF: 'picture_as_pdf',
+  DOC: 'description',
+  DOCX: 'description',
+  XLS: 'table_view',
+  XLSX: 'table_view',
+  IMAGE: 'image',
+  OTHER: 'draft',
+};
+
+/** Strip the `data:<mime>;base64,` prefix FileReader.readAsDataURL adds. */
+function stripDataUrlPrefix(dataUrl: string): string {
+  const commaIndex = dataUrl.indexOf(',');
+  return commaIndex === -1 ? dataUrl : dataUrl.slice(commaIndex + 1);
+}
+
+function FilesCard({ dealId }: Readonly<{ dealId: string }>) {
+  const utils = api.useUtils();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const { data, isLoading } = api.opportunity.listFiles.useQuery({ opportunityId: dealId });
+
+  const attachMutation = api.opportunity.attachFile.useMutation({
+    onSuccess: () => {
+      toast({ title: 'File uploaded' });
+      return utils.opportunity.listFiles.invalidate({ opportunityId: dealId });
+    },
+    onError: (err) => {
+      toast({
+        title: err.message || 'Failed to upload file. Please try again.',
+        variant: 'destructive',
+      });
+    },
+  });
+
+  const removeMutation = api.opportunity.removeFile.useMutation({
+    onSuccess: () => {
+      setRemovingId(null);
+      toast({ title: 'File removed' });
+      return utils.opportunity.listFiles.invalidate({ opportunityId: dealId });
+    },
+    onError: () => {
+      setRemovingId(null);
+      toast({ title: 'Failed to remove file. Please try again.', variant: 'destructive' });
+    },
+  });
+
+  const handleUploadClick = () => fileInputRef.current?.click();
+
+  const handleFileSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-selecting the same file
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result;
+      if (typeof dataUrl !== 'string') return;
+      attachMutation.mutate({
+        opportunityId: dealId,
+        name: file.name,
+        mimeType: file.type || 'application/octet-stream',
+        sizeBytes: file.size,
+        content: stripDataUrlPrefix(dataUrl),
+      });
+    };
+    reader.onerror = () => {
+      toast({ title: 'Could not read the selected file', variant: 'destructive' });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemove = (id: string) => {
+    setRemovingId(id);
+    removeMutation.mutate({ id });
+  };
+
+  const files = data?.files ?? [];
+
+  // Computed up front (not a nested ternary in the JSX) — one of three
+  // mutually-exclusive render states for the files list.
+  let filesBody: React.ReactNode;
+  if (isLoading) {
+    filesBody = (
+      <div className="space-y-3">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+    );
+  } else if (files.length === 0) {
+    filesBody = <EmptyState entity="files" phase="passive" className="py-2" />;
+  } else {
+    filesBody = (
+      <div className="space-y-3">
+        {files.map((file, index) => (
+          <div
+            key={file.id}
+            className={`flex items-center gap-2 text-sm ${
+              index > 0 ? 'border-t border-slate-50 pt-3' : ''
+            }`}
+          >
+            <Icon
+              name={FILE_TYPE_ICONS[file.fileType] ?? 'draft'}
+              className="text-lg text-slate-400 shrink-0"
+            />
+            <div className="flex-1 min-w-0">
+              {file.downloadUrl ? (
+                <a
+                  href={file.downloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-medium text-slate-900 dark:text-white hover:text-primary truncate block"
+                >
+                  {file.name}
+                </a>
+              ) : (
+                <p className="font-medium text-slate-900 dark:text-white truncate">{file.name}</p>
+              )}
+              <p className="text-xs text-slate-500">{file.size}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleRemove(file.id)}
+              disabled={removingId === file.id}
+              aria-label={`Remove ${file.name}`}
+              className="text-slate-400 hover:text-red-500 transition-colors p-1 rounded disabled:opacity-50 shrink-0"
+            >
+              <Icon name="close" className="text-base" />
+            </button>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between mb-4">
@@ -416,14 +555,23 @@ function FilesCard({ onUpload }: Readonly<{ onUpload: () => void }>) {
         </h3>
         <button
           type="button"
-          onClick={onUpload}
+          onClick={handleUploadClick}
+          disabled={attachMutation.isPending}
           aria-label="Upload file"
-          className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors"
+          className="w-6 h-6 flex items-center justify-center rounded bg-primary/10 hover:bg-primary/20 text-primary transition-colors disabled:opacity-50"
         >
           <Icon name="upload" className="text-base" />
         </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          className="sr-only"
+          tabIndex={-1}
+          aria-hidden="true"
+          onChange={handleFileSelected}
+        />
       </div>
-      <EmptyState entity="files" phase="passive" className="py-2" />
+      {filesBody}
     </Card>
   );
 }
@@ -485,6 +633,7 @@ export default function DealDetailPage() {
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [addProductDialogOpen, setAddProductDialogOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<'WON' | 'LOST' | null>(null);
   const { isLoading: authLoading, isAuthenticated, user } = useRequireAuth();
 
@@ -556,6 +705,55 @@ export default function DealDetailPage() {
     },
   });
 
+  // #421: Clone / Archive / Add-Product backends (IFC-280 deferred).
+  const cloneMutation = api.opportunity.clone.useMutation({
+    onSuccess: (cloned) => {
+      toast({ title: 'Deal cloned', description: `Created "${cloned.name}"` });
+      router.push(`/deals/${cloned.id}`);
+      return Promise.all([revalidateServerCaches(), utils.opportunity.list.invalidate()]);
+    },
+    onError: () => {
+      toast({ title: 'Failed to clone deal. Please try again.', variant: 'destructive' });
+    },
+  });
+
+  const archiveMutation = api.opportunity.archive.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Deal archived' });
+      return Promise.all([
+        revalidateServerCaches(),
+        utils.opportunity.getById.invalidate({ id: dealId }),
+      ]);
+    },
+    onError: () => {
+      toast({ title: 'Failed to archive deal. Please try again.', variant: 'destructive' });
+    },
+  });
+
+  const unarchiveMutation = api.opportunity.unarchive.useMutation({
+    onSuccess: () => {
+      toast({ title: 'Deal unarchived' });
+      return Promise.all([
+        revalidateServerCaches(),
+        utils.opportunity.getById.invalidate({ id: dealId }),
+      ]);
+    },
+    onError: () => {
+      toast({ title: 'Failed to unarchive deal. Please try again.', variant: 'destructive' });
+    },
+  });
+
+  const addProductMutation = api.opportunity.addProduct.useMutation({
+    onSuccess: () => {
+      setAddProductDialogOpen(false);
+      toast({ title: 'Product added' });
+      return utils.opportunity.getProducts.invalidate({ opportunityId: dealId });
+    },
+    onError: () => {
+      toast({ title: 'Failed to add product. Please try again.', variant: 'destructive' });
+    },
+  });
+
   if (authLoading || isLoading) return <DealDetailSkeleton />;
   if (error || !deal) return <DealNotFoundError />;
 
@@ -563,9 +761,19 @@ export default function DealDetailPage() {
   // This is a single validated boundary cast rather than scattered field-level casts
   const d = deal as DealDetail;
   const stage = d.stage as OpportunityStage;
+  const isArchived = !!d.archivedAt;
 
-  const comingSoon = (feature: string) =>
-    toast({ title: 'Coming soon', description: `${feature} is under development` });
+  const handleClone = () => cloneMutation.mutate({ id: dealId });
+  const handleArchiveToggle = () =>
+    isArchived ? unarchiveMutation.mutate({ id: dealId }) : archiveMutation.mutate({ id: dealId });
+  const handleAddProductSubmit = (data: AddProductFormData) =>
+    addProductMutation.mutate({
+      opportunityId: dealId,
+      name: data.name,
+      description: data.description || undefined,
+      quantity: data.quantity,
+      unitPrice: data.unitPrice,
+    });
 
   const handleWon = () => {
     setPendingAction('WON');
@@ -695,8 +903,18 @@ export default function DealDetailPage() {
             url: `/deals/${dealId}`,
           }}
           extraActions={[
-            { label: 'Clone Deal', icon: 'content_copy', onClick: () => comingSoon('Clone deal') },
-            { label: 'Archive', icon: 'archive', onClick: () => comingSoon('Archive deal') },
+            {
+              label: 'Clone Deal',
+              icon: 'content_copy',
+              onClick: handleClone,
+              disabled: cloneMutation.isPending,
+            },
+            {
+              label: isArchived ? 'Unarchive' : 'Archive',
+              icon: isArchived ? 'unarchive' : 'archive',
+              onClick: handleArchiveToggle,
+              disabled: archiveMutation.isPending || unarchiveMutation.isPending,
+            },
             {
               label: 'Delete',
               icon: 'delete',
@@ -780,12 +998,20 @@ export default function DealDetailPage() {
 
           {/* Right Sidebar */}
           <div className="lg:col-span-3 flex flex-col gap-6">
-            <ProductsCard dealId={dealId} onAddProduct={() => comingSoon('Adding products')} />
+            <ProductsCard dealId={dealId} onAddProduct={() => setAddProductDialogOpen(true)} />
             <RelatedTasksCard entityType="opportunity" entityId={dealId} title="Next Steps" />
-            <FilesCard onUpload={() => comingSoon('File upload')} />
+            <FilesCard dealId={dealId} />
           </div>
         </div>
       </div>
+
+      {/* Add Product dialog (ProductsCard "+" button → opportunity.addProduct) */}
+      <AddProductDialog
+        open={addProductDialogOpen}
+        isSubmitting={addProductMutation.isPending}
+        onSubmit={handleAddProductSubmit}
+        onCancel={() => setAddProductDialogOpen(false)}
+      />
     </div>
   );
 }

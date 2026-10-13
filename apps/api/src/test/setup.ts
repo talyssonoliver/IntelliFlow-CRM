@@ -631,6 +631,8 @@ export const mockOpportunity = {
   expectedCloseDate: new Date('2024-12-31'),
   closedAt: null,
   deletedAt: null,
+  // #421: archivedAt column (nullable, additive) — see packages/db schema.
+  archivedAt: null,
   description: 'Large enterprise opportunity',
   accountId: TEST_UUIDS.account1,
   contactId: TEST_UUIDS.contact1,

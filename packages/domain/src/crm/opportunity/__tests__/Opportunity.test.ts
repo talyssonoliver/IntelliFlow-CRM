@@ -14,6 +14,8 @@ import {
   InvalidOpportunityValueError,
   InvalidOpportunityNameError,
   InvalidProbabilityError,
+  OpportunityAlreadyArchivedError,
+  OpportunityNotArchivedError,
 } from '../Opportunity';
 import { OpportunityId } from '../OpportunityId';
 import {
@@ -26,6 +28,8 @@ import {
   OpportunityDescriptionUpdatedEvent,
   OpportunityProbabilityUpdatedEvent,
   OpportunityCloseDateChangedEvent,
+  OpportunityArchivedEvent,
+  OpportunityUnarchivedEvent,
 } from '../OpportunityEvents';
 import { Money } from '../../../shared/Money';
 import { Percentage } from '../../../shared/Percentage';
@@ -645,6 +649,123 @@ describe('Opportunity Aggregate', () => {
     it('should set weighted value to zero when lost', () => {
       opportunity.markAsLost('No budget', 'user-123');
       expect(opportunity.weightedValue.amount).toBe(0); // 0% probability
+    });
+  });
+
+  describe('archive() / unarchive() (#421)', () => {
+    let opportunity: Opportunity;
+
+    beforeEach(() => {
+      const result = Opportunity.create({
+        name: 'Archive Test',
+        value: 100000,
+        accountId: 'account-123',
+        ownerId: 'owner-456',
+        tenantId: 'tenant-123',
+      });
+      opportunity = result.value;
+      opportunity.clearDomainEvents();
+    });
+
+    it('should archive an active opportunity successfully', () => {
+      expect(opportunity.isArchived).toBe(false);
+
+      const result = opportunity.archive('user-123');
+
+      expect(result.isSuccess).toBe(true);
+      expect(opportunity.isArchived).toBe(true);
+      expect(opportunity.archivedAt).toBeInstanceOf(Date);
+    });
+
+    it('should emit OpportunityArchivedEvent', () => {
+      opportunity.archive('user-789');
+
+      const events = opportunity.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(OpportunityArchivedEvent);
+
+      const archivedEvent = events[0] as OpportunityArchivedEvent;
+      expect(archivedEvent.opportunityId).toBe(opportunity.id);
+      expect(archivedEvent.archivedBy).toBe('user-789');
+    });
+
+    it('should fail to archive an already-archived opportunity', () => {
+      opportunity.archive('user-123');
+      opportunity.clearDomainEvents();
+
+      const result = opportunity.archive('user-456');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(OpportunityAlreadyArchivedError);
+      expect(opportunity.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('should allow archiving a WON (closed) deal — the documented alternative to delete', () => {
+      const wonResult = opportunity.markAsWon('user-123');
+      expect(wonResult.isSuccess).toBe(true);
+      opportunity.clearDomainEvents();
+
+      const result = opportunity.archive('user-456');
+
+      expect(result.isSuccess).toBe(true);
+      expect(opportunity.isArchived).toBe(true);
+      expect(opportunity.isWon).toBe(true); // archiving doesn't disturb the stage
+    });
+
+    it('should allow archiving a LOST (closed) deal', () => {
+      opportunity.markAsLost('No budget', 'user-123');
+      opportunity.clearDomainEvents();
+
+      const result = opportunity.archive('user-456');
+
+      expect(result.isSuccess).toBe(true);
+      expect(opportunity.isArchived).toBe(true);
+    });
+
+    it('should unarchive an archived opportunity successfully', () => {
+      opportunity.archive('user-123');
+      opportunity.clearDomainEvents();
+
+      const result = opportunity.unarchive('user-456');
+
+      expect(result.isSuccess).toBe(true);
+      expect(opportunity.isArchived).toBe(false);
+      expect(opportunity.archivedAt).toBeNull();
+    });
+
+    it('should emit OpportunityUnarchivedEvent', () => {
+      opportunity.archive('user-123');
+      opportunity.clearDomainEvents();
+
+      opportunity.unarchive('user-789');
+
+      const events = opportunity.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect(events[0]).toBeInstanceOf(OpportunityUnarchivedEvent);
+
+      const unarchivedEvent = events[0] as OpportunityUnarchivedEvent;
+      expect(unarchivedEvent.opportunityId).toBe(opportunity.id);
+      expect(unarchivedEvent.unarchivedBy).toBe('user-789');
+    });
+
+    it('should fail to unarchive an opportunity that is not archived', () => {
+      const result = opportunity.unarchive('user-456');
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(OpportunityNotArchivedError);
+      expect(opportunity.getDomainEvents()).toHaveLength(0);
+    });
+
+    it('should include archivedAt in toJSON output', () => {
+      opportunity.archive('user-123');
+      const json = opportunity.toJSON();
+      expect(json).toHaveProperty('archivedAt');
+      expect(json.archivedAt).toBeDefined();
+    });
+
+    it('should serialize archivedAt as null when not archived', () => {
+      const json = opportunity.toJSON();
+      expect(json.archivedAt).toBeNull();
     });
   });
 

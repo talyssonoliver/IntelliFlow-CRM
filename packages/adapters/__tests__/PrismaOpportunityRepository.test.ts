@@ -186,6 +186,30 @@ describe('PrismaOpportunityRepository', () => {
 
       await expect(repository.save(testOpportunity)).rejects.toThrow('Database error');
     });
+
+    it('should persist archivedAt as null when not archived (#421)', async () => {
+      const upsertMock = mockPrisma.opportunity.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(testOpportunity);
+
+      expect(upsertMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          create: expect.objectContaining({ archivedAt: null }),
+        })
+      );
+    });
+
+    it('should persist archivedAt when the opportunity is archived (#421)', async () => {
+      testOpportunity.archive('user-123');
+      const upsertMock = mockPrisma.opportunity.upsert;
+      upsertMock.mockResolvedValue({});
+
+      await repository.save(testOpportunity);
+
+      const callArgs = upsertMock.mock.calls[0][0];
+      expect(callArgs.create.archivedAt).toBeInstanceOf(Date);
+    });
   });
 
   describe('findById()', () => {
@@ -259,6 +283,62 @@ describe('PrismaOpportunityRepository', () => {
       expect(result?.description).toBeUndefined();
       expect(result?.contactId).toBeUndefined();
       expect(result?.closedAt).toBeUndefined();
+    });
+
+    it('should reconstitute archivedAt from the record (#421)', async () => {
+      const archivedAt = new Date('2026-10-01T00:00:00Z');
+      const mockRecord = {
+        id: testOpportunityId.value,
+        name: 'Archived Deal',
+        value: mockDecimal(50000),
+        stage: 'PROSPECTING',
+        probability: 10,
+        expectedCloseDate: null,
+        description: null,
+        accountId: 'account-123',
+        contactId: null,
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        closedAt: null,
+        archivedAt,
+      };
+
+      const findFirstMock = mockPrisma.opportunity.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
+
+      const result = await repository.findById(testOpportunityId);
+
+      expect(result?.isArchived).toBe(true);
+      expect(result?.archivedAt).toBe(archivedAt);
+    });
+
+    it('should reconstitute isArchived as false when archivedAt is null (#421)', async () => {
+      const mockRecord = {
+        id: testOpportunityId.value,
+        name: 'Active Deal',
+        value: mockDecimal(50000),
+        stage: 'PROSPECTING',
+        probability: 10,
+        expectedCloseDate: null,
+        description: null,
+        accountId: 'account-123',
+        contactId: null,
+        ownerId: 'owner-123',
+        tenantId: 'tenant-123',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        closedAt: null,
+        archivedAt: null,
+      };
+
+      const findFirstMock = mockPrisma.opportunity.findFirst;
+      findFirstMock.mockResolvedValue(mockRecord);
+
+      const result = await repository.findById(testOpportunityId);
+
+      expect(result?.isArchived).toBe(false);
     });
   });
 

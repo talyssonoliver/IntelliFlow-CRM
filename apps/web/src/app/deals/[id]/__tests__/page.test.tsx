@@ -16,6 +16,15 @@ const mockDeleteAsync = vi.fn().mockResolvedValue({ success: true, id: 'deal-123
 const mockInvalidate = vi.fn();
 const mockListInvalidate = vi.fn();
 const mockToast = vi.fn();
+// #421 — Clone / Archive / Add-Product / File-upload mutation spies.
+const mockClone = vi.fn();
+const mockArchive = vi.fn();
+const mockUnarchive = vi.fn();
+const mockAddProduct = vi.fn();
+const mockAttachFile = vi.fn();
+const mockRemoveFile = vi.fn();
+const mockGetProductsInvalidate = vi.fn();
+const mockListFilesInvalidate = vi.fn();
 type CapturedMutationConfig = {
   onSuccess?: (...args: unknown[]) => unknown;
   onError?: (...args: unknown[]) => void;
@@ -23,7 +32,27 @@ type CapturedMutationConfig = {
 let capturedMoveStageConfig: CapturedMutationConfig = {};
 let capturedUpdateConfig: CapturedMutationConfig = {};
 let capturedDeleteConfig: CapturedMutationConfig = {};
-const mutationPending = { moveStage: false, update: false, delete: false };
+let capturedCloneConfig: CapturedMutationConfig = {};
+let capturedArchiveConfig: CapturedMutationConfig = {};
+let capturedUnarchiveConfig: CapturedMutationConfig = {};
+let capturedAddProductConfig: CapturedMutationConfig = {};
+let capturedAttachFileConfig: CapturedMutationConfig = {};
+let capturedRemoveFileConfig: CapturedMutationConfig = {};
+const mutationPending = {
+  moveStage: false,
+  update: false,
+  delete: false,
+  clone: false,
+  archive: false,
+  unarchive: false,
+  addProduct: false,
+  attachFile: false,
+};
+
+const mockFilesQueryState = {
+  data: { files: [] } as { files: Array<Record<string, unknown>> } | null,
+  isLoading: false,
+};
 
 const mockOpportunityQueryState = {
   data: {
@@ -43,6 +72,7 @@ const mockOpportunityQueryState = {
     isClosed: false,
     isWon: false,
     isLost: false,
+    archivedAt: null as string | null,
     createdAt: '2026-03-01T00:00:00.000Z',
     updatedAt: '2026-03-10T00:00:00.000Z',
     owner: { id: 'owner-1', name: 'Alice Manager', email: 'alice@test.com' } as {
@@ -158,11 +188,56 @@ vi.mock('@/lib/api', () => ({
           return { mutateAsync: mockDeleteAsync, isPending: mutationPending.delete };
         },
       },
+      // #421 — Clone / Archive / Add-Product / File-upload backends.
+      listFiles: {
+        useQuery: () => ({
+          data: mockFilesQueryState.data,
+          isLoading: mockFilesQueryState.isLoading,
+        }),
+      },
+      clone: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedCloneConfig = config;
+          return { mutate: mockClone, isPending: mutationPending.clone };
+        },
+      },
+      archive: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedArchiveConfig = config;
+          return { mutate: mockArchive, isPending: mutationPending.archive };
+        },
+      },
+      unarchive: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedUnarchiveConfig = config;
+          return { mutate: mockUnarchive, isPending: mutationPending.unarchive };
+        },
+      },
+      addProduct: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedAddProductConfig = config;
+          return { mutate: mockAddProduct, isPending: mutationPending.addProduct };
+        },
+      },
+      attachFile: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedAttachFileConfig = config;
+          return { mutate: mockAttachFile, isPending: mutationPending.attachFile };
+        },
+      },
+      removeFile: {
+        useMutation: (config: CapturedMutationConfig) => {
+          capturedRemoveFileConfig = config;
+          return { mutate: mockRemoveFile, isPending: false };
+        },
+      },
     },
     useUtils: () => ({
       opportunity: {
         getById: { invalidate: mockInvalidate },
         list: { invalidate: mockListInvalidate },
+        getProducts: { invalidate: mockGetProductsInvalidate },
+        listFiles: { invalidate: mockListFilesInvalidate },
       },
     }),
   },
@@ -235,6 +310,30 @@ vi.mock('@/components/deals/LossReasonModal', () => ({
           Confirm Loss
         </button>
         <button data-testid="cancel-loss" onClick={() => (onCancel as () => void)()}>
+          Cancel
+        </button>
+      </div>
+    ) : null,
+}));
+
+vi.mock('@/components/deals/AddProductDialog', () => ({
+  AddProductDialog: ({ open, onSubmit, onCancel }: Record<string, unknown>) =>
+    (open as boolean) ? (
+      <div data-testid="add-product-dialog">
+        <button
+          data-testid="add-product-submit"
+          onClick={() =>
+            (onSubmit as (d: unknown) => void)({
+              name: 'Test Widget',
+              description: 'A test widget',
+              quantity: 2,
+              unitPrice: 25,
+            })
+          }
+        >
+          Add Product
+        </button>
+        <button data-testid="add-product-cancel" onClick={() => (onCancel as () => void)()}>
           Cancel
         </button>
       </div>
@@ -361,6 +460,7 @@ function resetMockData() {
     isClosed: false,
     isWon: false,
     isLost: false,
+    archivedAt: null,
     createdAt: '2026-03-01T00:00:00.000Z',
     updatedAt: '2026-03-10T00:00:00.000Z',
     owner: { id: 'owner-1', name: 'Alice Manager', email: 'alice@test.com' },
@@ -389,12 +489,25 @@ function resetMockData() {
     totalValue: 80000,
   };
   mockProductsQueryState.isLoading = false;
+  mockFilesQueryState.data = { files: [] };
+  mockFilesQueryState.isLoading = false;
   mutationPending.moveStage = false;
   mutationPending.update = false;
   mutationPending.delete = false;
+  mutationPending.clone = false;
+  mutationPending.archive = false;
+  mutationPending.unarchive = false;
+  mutationPending.addProduct = false;
+  mutationPending.attachFile = false;
   capturedMoveStageConfig = {};
   capturedUpdateConfig = {};
   capturedDeleteConfig = {};
+  capturedCloneConfig = {};
+  capturedArchiveConfig = {};
+  capturedUnarchiveConfig = {};
+  capturedAddProductConfig = {};
+  capturedAttachFileConfig = {};
+  capturedRemoveFileConfig = {};
 }
 
 describe('DealDetailPage', () => {
@@ -806,29 +919,146 @@ describe('DealDetailPage', () => {
     });
   });
 
-  describe('IFC-280 — Coming-soon toasts (AC-009)', () => {
-    it('Clone Deal shows a coming-soon toast', async () => {
+  describe('#421 — Clone Deal', () => {
+    it('clicking Clone Deal calls the clone mutation with the deal id', async () => {
       await renderDealPage();
       fireEvent.click(screen.getByTestId('extra-Clone Deal'));
-      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+      expect(mockClone).toHaveBeenCalledWith({ id: 'deal-123' });
     });
 
-    it('Archive shows a coming-soon toast', async () => {
+    it('clone onSuccess navigates to the cloned deal and toasts', async () => {
       await renderDealPage();
-      fireEvent.click(screen.getByTestId('extra-Archive'));
-      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+      await act(async () => {
+        await capturedCloneConfig.onSuccess?.({ id: 'deal-456', name: 'Test Deal Wire (Copy)' });
+      });
+      expect(mockPush).toHaveBeenCalledWith('/deals/deal-456');
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Deal cloned' }));
     });
 
-    it('Add Product shows a coming-soon toast', async () => {
+    it('clone onError toasts a destructive error', async () => {
+      await renderDealPage();
+      capturedCloneConfig.onError?.();
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' }));
+    });
+  });
+
+  describe('#421 — Archive / Unarchive', () => {
+    it('shows "Archive" and calls the archive mutation when the deal is not archived', async () => {
+      await renderDealPage();
+      expect(screen.getByTestId('extra-Archive')).toBeTruthy();
+      fireEvent.click(screen.getByTestId('extra-Archive'));
+      expect(mockArchive).toHaveBeenCalledWith({ id: 'deal-123' });
+      expect(mockUnarchive).not.toHaveBeenCalled();
+    });
+
+    it('shows "Unarchive" and calls the unarchive mutation when the deal is archived', async () => {
+      patchDeal({ archivedAt: '2026-05-01T00:00:00.000Z' });
+      await renderDealPage();
+      expect(screen.queryByTestId('extra-Archive')).toBeNull();
+      fireEvent.click(screen.getByTestId('extra-Unarchive'));
+      expect(mockUnarchive).toHaveBeenCalledWith({ id: 'deal-123' });
+      expect(mockArchive).not.toHaveBeenCalled();
+    });
+
+    it('archive onSuccess toasts "Deal archived"', async () => {
+      await renderDealPage();
+      await act(async () => {
+        await capturedArchiveConfig.onSuccess?.();
+      });
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Deal archived' }));
+    });
+
+    it('unarchive onSuccess toasts "Deal unarchived"', async () => {
+      await renderDealPage();
+      await act(async () => {
+        await capturedUnarchiveConfig.onSuccess?.();
+      });
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Deal unarchived' }));
+    });
+  });
+
+  describe('#421 — Add Product', () => {
+    it('clicking "+" opens the Add Product dialog', async () => {
+      await renderDealPage();
+      expect(screen.queryByTestId('add-product-dialog')).toBeNull();
+      fireEvent.click(screen.getByLabelText('Add product'));
+      expect(screen.getByTestId('add-product-dialog')).toBeTruthy();
+    });
+
+    it('submitting the dialog calls addProduct with the deal id and form data', async () => {
       await renderDealPage();
       fireEvent.click(screen.getByLabelText('Add product'));
-      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+      fireEvent.click(screen.getByTestId('add-product-submit'));
+      expect(mockAddProduct).toHaveBeenCalledWith({
+        opportunityId: 'deal-123',
+        name: 'Test Widget',
+        description: 'A test widget',
+        quantity: 2,
+        unitPrice: 25,
+      });
     });
 
-    it('File upload shows a coming-soon toast', async () => {
+    it('addProduct onSuccess closes the dialog and invalidates getProducts', async () => {
       await renderDealPage();
-      fireEvent.click(screen.getByLabelText('Upload file'));
-      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Coming soon' }));
+      fireEvent.click(screen.getByLabelText('Add product'));
+      await act(async () => {
+        await capturedAddProductConfig.onSuccess?.();
+      });
+      expect(screen.queryByTestId('add-product-dialog')).toBeNull();
+      expect(mockGetProductsInvalidate).toHaveBeenCalledWith({ opportunityId: 'deal-123' });
+    });
+  });
+
+  describe('#421 — Files', () => {
+    it('renders real files from listFiles instead of the permanent empty state', async () => {
+      mockFilesQueryState.data = {
+        files: [
+          {
+            id: 'file-1',
+            name: 'contract.pdf',
+            size: '1.2 MB',
+            fileType: 'PDF',
+            downloadUrl: null,
+          },
+        ],
+      };
+      await renderDealPage();
+      expect(screen.getByText('contract.pdf')).toBeTruthy();
+    });
+
+    it('clicking remove on a file calls removeFile with its id', async () => {
+      mockFilesQueryState.data = {
+        files: [
+          {
+            id: 'file-1',
+            name: 'contract.pdf',
+            size: '1.2 MB',
+            fileType: 'PDF',
+            downloadUrl: null,
+          },
+        ],
+      };
+      await renderDealPage();
+      fireEvent.click(screen.getByLabelText('Remove contract.pdf'));
+      expect(mockRemoveFile).toHaveBeenCalledWith({ id: 'file-1' });
+    });
+
+    it('attachFile onSuccess toasts "File uploaded" and invalidates listFiles', async () => {
+      await renderDealPage();
+      await act(async () => {
+        await capturedAttachFileConfig.onSuccess?.();
+      });
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'File uploaded' }));
+      expect(mockListFilesInvalidate).toHaveBeenCalledWith({ opportunityId: 'deal-123' });
+    });
+
+    it('removeFile onSuccess toasts "File removed" and invalidates listFiles', async () => {
+      await renderDealPage();
+      await act(async () => {
+        await capturedRemoveFileConfig.onSuccess?.();
+      });
+      expect(mockToast).toHaveBeenCalledWith(expect.objectContaining({ title: 'File removed' }));
+      expect(mockListFilesInvalidate).toHaveBeenCalledWith({ opportunityId: 'deal-123' });
     });
   });
 

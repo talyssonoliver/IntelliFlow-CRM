@@ -754,6 +754,127 @@ export class OpportunityService {
   }
 
   /**
+   * #421: Clone a deal. Reads the source opportunity, then creates a new one
+   * with the copied scalar/stakeholder fields, reset to the pipeline start
+   * (stage → PROSPECTING, which resolveInitialProbability defaults to 10%).
+   * sourceLeadId is NOT copied — the clone did not come from that lead
+   * conversion, the original deal did. Line items (DealProduct) and files
+   * (DealFile) belong to the specific deal instance and are not duplicated.
+   */
+  async cloneOpportunity(
+    opportunityId: string,
+    clonedBy: string,
+    tenantId: string
+  ): Promise<Result<Opportunity, DomainError>> {
+    const oppIdResult = OpportunityId.create(opportunityId);
+    if (oppIdResult.isFailure) {
+      return Result.fail(oppIdResult.error);
+    }
+
+    const source = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
+    if (!source) {
+      return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
+    }
+
+    const cloneResult = Opportunity.create({
+      name: `${source.name} (Copy)`,
+      value: source.value,
+      stage: 'PROSPECTING',
+      accountId: source.accountId,
+      contactId: source.contactId,
+      expectedCloseDate: source.expectedCloseDate,
+      description: source.description,
+      ownerId: clonedBy,
+      tenantId,
+    });
+    if (cloneResult.isFailure) {
+      return Result.fail(cloneResult.error);
+    }
+
+    const clone = cloneResult.value;
+
+    try {
+      await this.opportunityRepository.save(clone);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to save cloned opportunity'));
+    }
+
+    await this.publishEvents(clone);
+
+    return Result.ok(clone);
+  }
+
+  /**
+   * #421: Archive a deal. Deliberately allowed on closed deals — see
+   * Opportunity.archive's doc comment and deleteOpportunity's existing
+   * "Cannot delete won opportunities. Archive them instead." rule below.
+   */
+  async archiveOpportunity(
+    opportunityId: string,
+    archivedBy: string,
+    tenantId: string
+  ): Promise<Result<Opportunity, DomainError>> {
+    const oppIdResult = OpportunityId.create(opportunityId);
+    if (oppIdResult.isFailure) {
+      return Result.fail(oppIdResult.error);
+    }
+
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
+    if (!opportunity) {
+      return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
+    }
+
+    const archiveResult = opportunity.archive(archivedBy);
+    if (archiveResult.isFailure) {
+      return Result.fail(archiveResult.error);
+    }
+
+    try {
+      await this.opportunityRepository.save(opportunity);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to save opportunity'));
+    }
+
+    await this.publishEvents(opportunity);
+
+    return Result.ok(opportunity);
+  }
+
+  /**
+   * #421: Unarchive a deal, restoring it to the active surfaces.
+   */
+  async unarchiveOpportunity(
+    opportunityId: string,
+    unarchivedBy: string,
+    tenantId: string
+  ): Promise<Result<Opportunity, DomainError>> {
+    const oppIdResult = OpportunityId.create(opportunityId);
+    if (oppIdResult.isFailure) {
+      return Result.fail(oppIdResult.error);
+    }
+
+    const opportunity = await this.opportunityRepository.findById(oppIdResult.value, tenantId);
+    if (!opportunity) {
+      return Result.fail(new NotFoundError(`Opportunity not found: ${opportunityId}`));
+    }
+
+    const unarchiveResult = opportunity.unarchive(unarchivedBy);
+    if (unarchiveResult.isFailure) {
+      return Result.fail(unarchiveResult.error);
+    }
+
+    try {
+      await this.opportunityRepository.save(opportunity);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to save opportunity'));
+    }
+
+    await this.publishEvents(opportunity);
+
+    return Result.ok(opportunity);
+  }
+
+  /**
    * Reopen a lost opportunity
    */
   async reopenOpportunity(

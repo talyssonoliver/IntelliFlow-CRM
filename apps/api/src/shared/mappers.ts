@@ -149,6 +149,8 @@ export function mapOpportunityToResponse(opportunity: Opportunity) {
     updatedAt: opportunity.updatedAt,
     // IFC-282 B-11: surface closedAt (previously dropped → always undefined).
     closedAt: opportunity.closedAt ?? null,
+    // #421: surface archivedAt so clone/archive/unarchive responses carry it too.
+    archivedAt: opportunity.archivedAt ?? null,
   };
 }
 

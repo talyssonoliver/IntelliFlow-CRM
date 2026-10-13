@@ -535,6 +535,164 @@ describe('OpportunityService', () => {
     });
   });
 
+  describe('cloneOpportunity() (#421)', () => {
+    it('should clone a deal reset to PROSPECTING with copied fields', async () => {
+      const source = Opportunity.create({
+        name: 'Source Deal',
+        value: 75000,
+        stage: 'NEGOTIATION',
+        probability: 80,
+        accountId: testAccount.id.value,
+        description: 'Original description',
+        ownerId: 'owner-1',
+        tenantId: TEST_TENANT_ID,
+      }).value;
+      await opportunityRepository.save(source);
+
+      const result = await service.cloneOpportunity(source.id.value, 'cloner-1', TEST_TENANT_ID);
+
+      expect(result.isSuccess).toBe(true);
+      const clone = result.value;
+      expect(clone.id.value).not.toBe(source.id.value);
+      expect(clone.name).toBe('Source Deal (Copy)');
+      expect(clone.value.amount).toBe(75000);
+      expect(clone.stage).toBe('PROSPECTING');
+      expect(clone.probability.value).toBe(10); // PROSPECTING default, not copied from source
+      expect(clone.accountId).toBe(testAccount.id.value);
+      expect(clone.description).toBe('Original description');
+      expect(clone.ownerId).toBe('cloner-1');
+      expect(clone.tenantId).toBe(TEST_TENANT_ID);
+
+      // Clone persisted as a distinct record — original untouched.
+      const original = await opportunityRepository.findById(source.id, TEST_TENANT_ID);
+      expect(original?.name).toBe('Source Deal');
+      expect(original?.stage).toBe('NEGOTIATION');
+    });
+
+    it('should fail to clone a non-existent opportunity', async () => {
+      const fakeId = '00000000-0000-4000-8000-000000000000';
+
+      const result = await service.cloneOpportunity(fakeId, 'cloner-1', TEST_TENANT_ID);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Opportunity not found');
+    });
+  });
+
+  describe('archiveOpportunity() / unarchiveOpportunity() (#421)', () => {
+    it('should archive an active opportunity', async () => {
+      const opp = Opportunity.create({
+        name: 'Archive Me',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+        tenantId: TEST_TENANT_ID,
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.archiveOpportunity(opp.id.value, 'user-1', TEST_TENANT_ID);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.isArchived).toBe(true);
+
+      const persisted = await opportunityRepository.findById(opp.id, TEST_TENANT_ID);
+      expect(persisted?.isArchived).toBe(true);
+    });
+
+    it('should allow archiving a WON deal — the documented alternative to delete', async () => {
+      const opp = Opportunity.create({
+        name: 'Won Archive',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+        tenantId: TEST_TENANT_ID,
+      }).value;
+      opp.changeStage('QUALIFICATION', 'user');
+      opp.changeStage('NEEDS_ANALYSIS', 'user');
+      opp.changeStage('PROPOSAL', 'user');
+      opp.changeStage('NEGOTIATION', 'user');
+      opp.markAsWon('user');
+      await opportunityRepository.save(opp);
+
+      const result = await service.archiveOpportunity(opp.id.value, 'user-1', TEST_TENANT_ID);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.isArchived).toBe(true);
+      expect(result.value.isWon).toBe(true);
+    });
+
+    it('should fail to archive an already-archived opportunity', async () => {
+      const opp = Opportunity.create({
+        name: 'Double Archive',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+        tenantId: TEST_TENANT_ID,
+      }).value;
+      opp.archive('user-1');
+      await opportunityRepository.save(opp);
+
+      const result = await service.archiveOpportunity(opp.id.value, 'user-2', TEST_TENANT_ID);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('already been archived');
+    });
+
+    it('should fail to archive a non-existent opportunity', async () => {
+      const fakeId = '00000000-0000-4000-8000-000000000000';
+
+      const result = await service.archiveOpportunity(fakeId, 'user-1', TEST_TENANT_ID);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Opportunity not found');
+    });
+
+    it('should unarchive an archived opportunity', async () => {
+      const opp = Opportunity.create({
+        name: 'Unarchive Me',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+        tenantId: TEST_TENANT_ID,
+      }).value;
+      opp.archive('user-1');
+      await opportunityRepository.save(opp);
+
+      const result = await service.unarchiveOpportunity(opp.id.value, 'user-2', TEST_TENANT_ID);
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.isArchived).toBe(false);
+
+      const persisted = await opportunityRepository.findById(opp.id, TEST_TENANT_ID);
+      expect(persisted?.isArchived).toBe(false);
+    });
+
+    it('should fail to unarchive an opportunity that is not archived', async () => {
+      const opp = Opportunity.create({
+        name: 'Not Archived',
+        value: 50000,
+        accountId: testAccount.id.value,
+        ownerId: 'owner-1',
+        tenantId: TEST_TENANT_ID,
+      }).value;
+      await opportunityRepository.save(opp);
+
+      const result = await service.unarchiveOpportunity(opp.id.value, 'user-2', TEST_TENANT_ID);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Only archived opportunities can be unarchived');
+    });
+
+    it('should fail to unarchive a non-existent opportunity', async () => {
+      const fakeId = '00000000-0000-4000-8000-000000000000';
+
+      const result = await service.unarchiveOpportunity(fakeId, 'user-1', TEST_TENANT_ID);
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Opportunity not found');
+    });
+  });
+
   describe('getPipelineForecast()', () => {
     it('should return pipeline forecast', async () => {
       const opp1 = Opportunity.create({

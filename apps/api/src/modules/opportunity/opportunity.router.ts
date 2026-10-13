@@ -29,12 +29,22 @@ import {
   bulkReassignDealsSchema,
   bulkUpdateStageSchema,
   bulkDeleteDealsSchema,
+  cloneOpportunitySchema,
+  archiveOpportunitySchema,
+  unarchiveOpportunitySchema,
+  addDealProductSchema,
+  updateDealProductSchema,
+  removeDealProductSchema,
+  attachDealFileSchema,
+  listDealFilesSchema,
+  removeDealFileSchema,
 } from '@intelliflow/validators/opportunity';
 import {
   performDealReassign,
   emitDealReassignSideEffects,
   logDealReassignPermissionDenied,
 } from './deal-reassign';
+import { attachDealFile, listDealFiles, removeDealFile } from './deal-files';
 import { OPPORTUNITY_STAGES } from '@intelliflow/domain';
 import { mapOpportunityToResponse } from '../../shared/mappers';
 import { calculateForecastAccuracy } from '../../shared/forecast-algorithm';
@@ -206,6 +216,22 @@ function throwOpportunityDeleteError(error: { code: string; message: string }): 
 function throwMoveStageError(error: { code: string; message: string }): never {
   if (error.code === 'NOT_FOUND_ERROR') {
     throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+  }
+  throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
+}
+
+/**
+ * #421: Clone/Archive/Unarchive error mapping. NOT_FOUND_ERROR is a 404; the
+ * archive-state guards (OPPORTUNITY_ALREADY_ARCHIVED / OPPORTUNITY_NOT_ARCHIVED)
+ * are a 409 (the resource exists but is in the wrong state for this action),
+ * mirroring account.router's CONFLICT usage for analogous already-X guards.
+ */
+function throwOpportunityActionError(error: { code: string; message: string }): never {
+  if (error.code === 'NOT_FOUND_ERROR') {
+    throw new TRPCError({ code: 'NOT_FOUND', message: error.message });
+  }
+  if (error.code === 'OPPORTUNITY_ALREADY_ARCHIVED' || error.code === 'OPPORTUNITY_NOT_ARCHIVED') {
+    throw new TRPCError({ code: 'CONFLICT', message: error.message });
   }
   throw new TRPCError({ code: 'BAD_REQUEST', message: error.message });
 }
@@ -792,6 +818,8 @@ export const opportunityRouter = createTRPCRouter({
       // IFC-282 B-11: surface closedAt on the detail (Deal-360) response too, not
       // just the mapped list/create responses.
       closedAt: record.closedAt ?? null,
+      // #421: surface archivedAt so the detail page can show Archive vs Unarchive.
+      archivedAt: record.archivedAt ?? null,
       createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       description: record.description,
@@ -1686,5 +1714,251 @@ export const opportunityRouter = createTRPCRouter({
       succeeded: results.filter((r) => r.ok).length,
       results,
     };
+  }),
+
+  // ==========================================================================
+  // #421: Deal detail action backends (IFC-280 deferred)
+  // Clone / Archive / Add-Product / File-upload
+  // ==========================================================================
+
+  /**
+   * Clone a deal: reads it, then creates a copy reset to PROSPECTING.
+   */
+  clone: tenantProcedure.input(cloneOpportunitySchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const opportunityService = getOpportunityService(ctx);
+
+    const result = await opportunityService.cloneOpportunity(
+      input.id,
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
+    );
+    if (result.isFailure) {
+      throwOpportunityActionError(result.error);
+    }
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('CREATE', 'opportunity', result.value.id.value, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { clonedFrom: input.id },
+        afterState: { name: result.value.name, stage: result.value.stage },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return mapOpportunityToResponse(result.value);
+  }),
+
+  /**
+   * Archive a deal. Allowed on closed (won/lost) deals — see
+   * OpportunityService.deleteOpportunity's "Archive them instead" rule.
+   */
+  archive: tenantProcedure.input(archiveOpportunitySchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const opportunityService = getOpportunityService(ctx);
+
+    const result = await opportunityService.archiveOpportunity(
+      input.id,
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
+    );
+    if (result.isFailure) {
+      throwOpportunityActionError(result.error);
+    }
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('UPDATE', 'opportunity', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { archived: true },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return mapOpportunityToResponse(result.value);
+  }),
+
+  /**
+   * Unarchive a deal, restoring it to the active surfaces.
+   */
+  unarchive: tenantProcedure.input(unarchiveOpportunitySchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const opportunityService = getOpportunityService(ctx);
+
+    const result = await opportunityService.unarchiveOpportunity(
+      input.id,
+      typedCtx.tenant.userId,
+      typedCtx.tenant.tenantId
+    );
+    if (result.isFailure) {
+      throwOpportunityActionError(result.error);
+    }
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('UPDATE', 'opportunity', input.id, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { archived: false },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return mapOpportunityToResponse(result.value);
+  }),
+
+  /**
+   * Add a product (line item) to a deal. totalPrice is always
+   * server-computed (quantity * unitPrice) — never trust a client-supplied
+   * total.
+   */
+  addProduct: tenantProcedure.input(addDealProductSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const tenantId = typedCtx.tenant.tenantId;
+
+    const deal = await typedCtx.prismaWithTenant.opportunity.findFirst({
+      where: { id: input.opportunityId, deletedAt: null } as any,
+      select: { id: true },
+    });
+    if (!deal) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: `Deal not found: ${input.opportunityId}` });
+    }
+
+    const totalPrice = Math.round(input.quantity * input.unitPrice * 100) / 100;
+
+    const product = await typedCtx.prismaWithTenant.dealProduct.create({
+      data: {
+        name: input.name,
+        description: input.description ?? null,
+        quantity: input.quantity,
+        unitPrice: input.unitPrice,
+        totalPrice,
+        opportunityId: input.opportunityId,
+        tenantId,
+      },
+    });
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('CREATE', 'opportunity', input.opportunityId, tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { productAdded: product.id, name: product.name },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return product;
+  }),
+
+  /**
+   * Update a deal product's fields. totalPrice is recomputed from the
+   * EFFECTIVE quantity/unitPrice (new value if provided, else the existing
+   * one) so a partial update (e.g. quantity only) still keeps totalPrice
+   * consistent.
+   */
+  updateProduct: tenantProcedure.input(updateDealProductSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const tenantId = typedCtx.tenant.tenantId;
+
+    const existing = await typedCtx.prismaWithTenant.dealProduct.findFirst({
+      where: { id: input.id, tenantId },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: `Deal product not found: ${input.id}` });
+    }
+
+    const quantity = input.quantity ?? existing.quantity;
+    const unitPrice = input.unitPrice ?? Number(existing.unitPrice);
+    const totalPrice = Math.round(quantity * unitPrice * 100) / 100;
+
+    const product = await typedCtx.prismaWithTenant.dealProduct.update({
+      where: { id: input.id },
+      data: {
+        ...(input.name !== undefined ? { name: input.name } : {}),
+        ...(input.description !== undefined ? { description: input.description } : {}),
+        quantity,
+        unitPrice,
+        totalPrice,
+      },
+    });
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('UPDATE', 'opportunity', existing.opportunityId, tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { productUpdated: product.id },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return product;
+  }),
+
+  /**
+   * Remove a product (line item) from a deal.
+   */
+  removeProduct: tenantProcedure.input(removeDealProductSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const tenantId = typedCtx.tenant.tenantId;
+
+    const existing = await typedCtx.prismaWithTenant.dealProduct.findFirst({
+      where: { id: input.id, tenantId },
+      select: { id: true, opportunityId: true },
+    });
+    if (!existing) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: `Deal product not found: ${input.id}` });
+    }
+
+    await typedCtx.prismaWithTenant.dealProduct.delete({ where: { id: input.id } });
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('DELETE', 'opportunity', existing.opportunityId, tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { productRemoved: input.id },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return { success: true, id: input.id };
+  }),
+
+  /**
+   * Attach a file to a deal via the existing StorageServicePort
+   * quarantine-then-promote pipeline (see deal-files.ts).
+   */
+  attachFile: tenantProcedure.input(attachDealFileSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const file = await attachDealFile(ctx, input);
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('CREATE', 'opportunity', input.opportunityId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { fileAttached: file.id, name: file.name },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return file;
+  }),
+
+  /**
+   * List a deal's files with a freshly-signed download URL per file.
+   */
+  listFiles: tenantProcedure.input(listDealFilesSchema).query(async ({ ctx, input }) => {
+    const files = await listDealFiles(ctx, input.opportunityId);
+    return { files };
+  }),
+
+  /**
+   * Remove a file from a deal.
+   */
+  removeFile: tenantProcedure.input(removeDealFileSchema).mutation(async ({ ctx, input }) => {
+    const typedCtx = getTenantContext(ctx);
+    const { opportunityId } = await removeDealFile(ctx, input.id);
+
+    const auditLogger = getAuditLogger(ctx.prisma);
+    auditLogger
+      .logAction('DELETE', 'opportunity', opportunityId, typedCtx.tenant.tenantId, {
+        actorId: typedCtx.tenant.userId,
+        metadata: { fileRemoved: input.id },
+      })
+      .catch((err) => console.error('[opportunity.router] Audit log failed:', err));
+
+    return { success: true, id: input.id };
   }),
 });

@@ -246,6 +246,51 @@ export class OpportunityReopenedEvent extends DomainEvent {
 }
 
 /**
+ * Event: Opportunity was archived
+ * #421: Clone/Archive/Add-Product/File-upload backends — archive is the
+ * alternative to deletion the existing deleteOpportunity rule already points
+ * to for won deals ("Cannot delete won opportunities. Archive them instead.").
+ */
+export class OpportunityArchivedEvent extends DomainEvent {
+  readonly eventType = 'opportunity.archived';
+
+  constructor(
+    public readonly opportunityId: OpportunityId,
+    public readonly archivedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      opportunityId: this.opportunityId.value,
+      archivedBy: this.archivedBy,
+    };
+  }
+}
+
+/**
+ * Event: Opportunity was unarchived
+ */
+export class OpportunityUnarchivedEvent extends DomainEvent {
+  readonly eventType = 'opportunity.unarchived';
+
+  constructor(
+    public readonly opportunityId: OpportunityId,
+    public readonly unarchivedBy: string
+  ) {
+    super();
+  }
+
+  toPayload(): Record<string, unknown> {
+    return {
+      opportunityId: this.opportunityId.value,
+      unarchivedBy: this.unarchivedBy,
+    };
+  }
+}
+
+/**
  * Event: Deal won with enriched context for downstream consumers
  * Published by CloseDealWonUseCase after the domain's OpportunityWonEvent.
  * Carries full context so consumers don't need additional DB lookups.

@@ -1158,6 +1158,9 @@ model Opportunity {
   updatedAt     DateTime            @updatedAt
   closedAt      DateTime?
   deletedAt     DateTime?
+  // #421: archived deals stay in the pipeline lists (unlike deletedAt) but are
+  // flagged out of the active-deal surfaces. Nullable, no default — additive.
+  archivedAt    DateTime?
 
   // Multi-tenancy
   tenantId      String

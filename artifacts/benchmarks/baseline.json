@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-07T13:50:49.164Z",
+  "timestamp": "2026-10-13T02:40:00.490Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,10 +1016,16 @@
   },
   "api_inventory": {
     "total_routers": 67,
-    "total_endpoints": 544,
-    "total_queries": 236,
-    "total_mutations": 308,
+    "total_endpoints": 553,
+    "total_queries": 237,
+    "total_mutations": 316,
     "routers": [
+      {
+        "name": "opportunity",
+        "endpoints": 29,
+        "queries": 11,
+        "mutations": 18
+      },
       {
         "name": "contact",
         "endpoints": 28,
@@ -1037,12 +1043,6 @@
         "endpoints": 21,
         "queries": 6,
         "mutations": 15
-      },
-      {
-        "name": "opportunity",
-        "endpoints": 20,
-        "queries": 10,
-        "mutations": 10
       },
       {
         "name": "appointments",
@@ -1426,7 +1426,7 @@
   },
   "database_inventory": {
     "total_tables": 192,
-    "total_fields": 2769,
+    "total_fields": 2770,
     "total_indexes": 875,
     "total_relations": 271,
     "tables_with_embeddings": 4,
@@ -1496,6 +1496,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "Opportunity",
+        "fields": 30,
+        "indexes": 14,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
         "name": "Appointment",
         "fields": 30,
         "indexes": 10,
@@ -1507,13 +1514,6 @@
         "fields": 30,
         "indexes": 4,
         "relations": 3,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Opportunity",
-        "fields": 29,
-        "indexes": 14,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -3146,7 +3146,7 @@
   },
   "validators_inventory": {
     "total_validators": 54,
-    "total_schemas": 606,
+    "total_schemas": 615,
     "by_complexity": {
       "complex": 34,
       "moderate": 16,
@@ -3193,6 +3193,12 @@
         "name": "home",
         "file": "home.ts",
         "schemas": 25,
+        "complexity": "complex"
+      },
+      {
+        "name": "opportunity",
+        "file": "opportunity.ts",
+        "schemas": 22,
         "complexity": "complex"
       },
       {
@@ -3270,12 +3276,6 @@
       {
         "name": "lead",
         "file": "lead.ts",
-        "schemas": 13,
-        "complexity": "complex"
-      },
-      {
-        "name": "opportunity",
-        "file": "opportunity.ts",
         "schemas": 13,
         "complexity": "complex"
       },
@@ -5845,6 +5845,51 @@
         "name": "opportunity.bulkReassign",
         "method": "POST",
         "description": "Bulk reassign"
+      },
+      {
+        "name": "opportunity.clone",
+        "method": "POST",
+        "description": "Clone"
+      },
+      {
+        "name": "opportunity.archive",
+        "method": "POST",
+        "description": "Archive"
+      },
+      {
+        "name": "opportunity.unarchive",
+        "method": "POST",
+        "description": "Unarchive"
+      },
+      {
+        "name": "opportunity.addProduct",
+        "method": "POST",
+        "description": "Add product"
+      },
+      {
+        "name": "opportunity.updateProduct",
+        "method": "POST",
+        "description": "Update product"
+      },
+      {
+        "name": "opportunity.removeProduct",
+        "method": "POST",
+        "description": "Remove product"
+      },
+      {
+        "name": "opportunity.attachFile",
+        "method": "POST",
+        "description": "Attach file"
+      },
+      {
+        "name": "opportunity.listFiles",
+        "method": "GET",
+        "description": "List files"
+      },
+      {
+        "name": "opportunity.removeFile",
+        "method": "POST",
+        "description": "Remove file"
       }
     ],
     "pipelineConfig": [

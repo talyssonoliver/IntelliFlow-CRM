@@ -14,6 +14,8 @@ import {
   OpportunityProbabilityUpdatedEvent,
   OpportunityCloseDateChangedEvent,
   OpportunityReopenedEvent,
+  OpportunityArchivedEvent,
+  OpportunityUnarchivedEvent,
 } from './OpportunityEvents';
 
 const DEFAULT_STAGE_PROBABILITIES: Record<OpportunityStage, number> = {
@@ -61,6 +63,20 @@ export class InvalidOpportunityNameError extends DomainError {
   }
 }
 
+export class OpportunityAlreadyArchivedError extends DomainError {
+  readonly code = 'OPPORTUNITY_ALREADY_ARCHIVED';
+  constructor() {
+    super('Opportunity has already been archived');
+  }
+}
+
+export class OpportunityNotArchivedError extends DomainError {
+  readonly code = 'OPPORTUNITY_NOT_ARCHIVED';
+  constructor() {
+    super('Only archived opportunities can be unarchived');
+  }
+}
+
 interface OpportunityProps {
   name: string;
   value: Money;
@@ -77,6 +93,7 @@ interface OpportunityProps {
   updatedAt: Date;
   closedAt?: Date;
   deletedAt?: Date | null;
+  archivedAt?: Date | null;
 }
 
 export interface CreateOpportunityProps {
@@ -169,6 +186,14 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
 
   get isDeleted(): boolean {
     return !!this.props.deletedAt;
+  }
+
+  get archivedAt(): Date | null | undefined {
+    return this.props.archivedAt;
+  }
+
+  get isArchived(): boolean {
+    return !!this.props.archivedAt;
   }
 
   get isClosed(): boolean {
@@ -464,6 +489,43 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
   }
 
   /**
+   * #421: archive the deal. Deliberately NOT closed-guarded — archiving a won
+   * deal is the documented alternative to deleting it (OpportunityService.
+   * deleteOpportunity refuses to delete a won opportunity and tells the caller
+   * to archive it instead), so archiving must stay available on closed deals.
+   * Idempotent-guarded (fails on an already-archived deal) rather than silently
+   * no-op, matching markAsWon/markAsLost's already-closed guard shape.
+   */
+  archive(archivedBy: string): Result<void, DomainError> {
+    if (this.isArchived) {
+      return Result.fail(new OpportunityAlreadyArchivedError());
+    }
+
+    this.props.archivedAt = new Date();
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(new OpportunityArchivedEvent(this.id, archivedBy));
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * #421: restore an archived deal to the active surfaces.
+   */
+  unarchive(unarchivedBy: string): Result<void, DomainError> {
+    if (!this.isArchived) {
+      return Result.fail(new OpportunityNotArchivedError());
+    }
+
+    this.props.archivedAt = null;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(new OpportunityUnarchivedEvent(this.id, unarchivedBy));
+
+    return Result.ok(undefined);
+  }
+
+  /**
    * IFC-283 W-02: now emits OpportunityDescriptionUpdatedEvent so downstream
    * consumers (audit trail, search re-index) have a signal. `updatedBy` is
    * required for the event's actor field, unlike the no-op prior signature.
@@ -567,6 +629,7 @@ export class Opportunity extends AggregateRoot<OpportunityId> {
       updatedAt: this.updatedAt.toISOString(),
       closedAt: this.closedAt?.toISOString(),
       deletedAt: this.deletedAt?.toISOString() ?? null,
+      archivedAt: this.archivedAt?.toISOString() ?? null,
     };
   }
 }
