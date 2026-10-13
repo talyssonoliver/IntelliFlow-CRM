@@ -4,9 +4,10 @@
 --   * cases: one NULLABLE column with no default -> metadata-only on PG 11+, no
 --     table rewrite, no backfill, no existing row changes.
 --   * case_tasks: one NULLABLE "position" column with no default, same reasoning.
---   * cases FK: added NOT VALID and then validated, so the validating scan runs
---     without holding a long lock; every existing row has a NULL "caseTypeId"
---     (MATCH SIMPLE skips NULLs), so validation cannot fail.
+--   * cases FK: added NOT VALID and then validated. Both run in the one migration
+--     transaction, so the write-blocking lock on "cases" is held until commit;
+--     the hold is brief because the validating scan is short and cannot fail:
+--     every existing row has a NULL "caseTypeId" (MATCH SIMPLE skips NULLs).
 --   * No new index on "cases": a non-concurrent index inside the migration
 --     transaction would take a SHARE lock (blocks writes). The "a type is in use"
 --     check is tenant-scoped and served by the existing cases_tenantId_idx.
