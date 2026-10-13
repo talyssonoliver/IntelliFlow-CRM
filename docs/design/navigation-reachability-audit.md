@@ -196,7 +196,7 @@ Legend:
 | `/analytics/saved/monthly`     | --  | --  | SB  | --  |    YES     | Sidebar: Saved Reports     |
 | `/analytics/saved/quarterly`   | --  | --  | SB  | --  |    YES     | Sidebar: Saved Reports     |
 | `/analytics/report-templates`  | --  | --  | SB  | --  |    YES     | Sidebar: Report Management |
-| `/analytics/scheduled-reports` | --  | --  | SB  | --  |    YES     | Sidebar: Report Management |
+| `/analytics/scheduled-reports` | --  | --  | SB  | IP  |    YES     | Sidebar + Report Settings  |
 | `/analytics/report-settings`   | --  | --  | SB  | --  |    YES     | Sidebar: settingsHref      |
 
 ### Appointments (3 routes)

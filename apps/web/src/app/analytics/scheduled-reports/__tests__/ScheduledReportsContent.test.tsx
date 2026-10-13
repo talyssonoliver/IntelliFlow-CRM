@@ -411,6 +411,44 @@ describe('ScheduledReportsContent', () => {
     expect(screen.queryByRole('checkbox', { name: /^Old/ })).toBeNull();
   });
 
+  it('offers only active tags to a new schedule', async () => {
+    setup({
+      list: [],
+      tags: [
+        {
+          id: 't1',
+          name: 'Finance',
+          colorToken: 'blue',
+          description: null,
+          sortOrder: 0,
+          isActive: true,
+        },
+        {
+          id: 't2',
+          name: 'Retired',
+          colorToken: 'slate',
+          description: null,
+          sortOrder: 1,
+          isActive: false,
+        },
+      ],
+    });
+    render(<ScheduledReportsContent />);
+    fireEvent.click(screen.getByRole('button', { name: 'New Schedule' }));
+    expect(await screen.findByRole('checkbox', { name: 'Finance' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /^Retired/ })).toBeNull();
+  });
+
+  it('shows a placeholder in the tags card while tags load', () => {
+    setup();
+    queries.tags.mockReturnValue({ data: undefined, isLoading: true });
+    render(<ScheduledReportsContent />);
+    const tagsCard = screen.getByRole('region', { name: 'Tags' });
+    expect(within(tagsCard).queryByRole('button', { name: 'New Tag' })).toBeInTheDocument();
+    expect(within(tagsCard).queryByText(/no tags/i)).toBeNull();
+    expect(tagsCard.querySelector('[data-slot="skeleton"], .animate-pulse')).not.toBeNull();
+  });
+
   it('refreshes lists on success and toasts API errors', () => {
     setup();
     render(<ScheduledReportsContent />);
