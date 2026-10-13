@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-13T00:59:02.326Z",
+  "timestamp": "2026-10-13T01:18:32.091Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1425,16 +1425,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 192,
-    "total_fields": 2769,
-    "total_indexes": 875,
-    "total_relations": 271,
+    "total_tables": 193,
+    "total_fields": 2789,
+    "total_indexes": 878,
+    "total_relations": 273,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 170,
+        "fields": 171,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1549,6 +1549,13 @@
         "fields": 25,
         "indexes": 7,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportSchedule",
+        "fields": 25,
+        "indexes": 5,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1706,13 +1713,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "ReportSchedule",
-        "fields": 17,
-        "indexes": 5,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "NotificationDLQ",
         "fields": 17,
         "indexes": 4,
@@ -1752,6 +1752,13 @@
         "fields": 16,
         "indexes": 6,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportExecution",
+        "fields": 16,
+        "indexes": 5,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1836,13 +1843,6 @@
         "fields": 15,
         "indexes": 6,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "ReportExecution",
-        "fields": 15,
-        "indexes": 5,
-        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2302,6 +2302,13 @@
       },
       {
         "name": "CaseTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportScheduleTag",
         "fields": 10,
         "indexes": 3,
         "relations": 1,

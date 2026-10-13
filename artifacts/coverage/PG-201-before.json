@@ -1,0 +1,196 @@
+{
+  "task_id": "PG-201",
+  "captured_at": "2026-10-13T02:40:00Z",
+  "base_commit": "5426aeed8",
+  "description": "Pre-implementation coverage baseline for PG-201 (scheduled reports). Scoped istanbul runs, one package at a time, over every existing production file the plan modifies or deletes (validators/db index barrels are coverage-excluded type barrels).",
+  "command": "apps/api: npx vitest run src/modules/analytics/__tests__ --coverage.include=analytics.router.ts,report-templates.router.ts; apps/web: npx vitest run 'src/app/analytics/(list)/report-settings' src/components/settings/__tests__/TimezoneSelector.test.tsx --coverage.include=report-settings/**,TimezoneSelector.tsx,scheduled-reports/page.tsx (json-summary, thresholds 0)",
+  "baseline_files": {
+    "apps/api/src/modules/analytics/analytics.router.ts": {
+      "lines": {
+        "total": 65,
+        "covered": 58,
+        "pct": 89.23
+      },
+      "branches": {
+        "total": 22,
+        "covered": 14,
+        "pct": 63.63
+      },
+      "functions": {
+        "total": 19,
+        "covered": 14,
+        "pct": 73.68
+      }
+    },
+    "apps/api/src/modules/analytics/report-templates.router.ts": {
+      "lines": {
+        "total": 56,
+        "covered": 49,
+        "pct": 87.5
+      },
+      "branches": {
+        "total": 54,
+        "covered": 40,
+        "pct": 74.07
+      },
+      "functions": {
+        "total": 8,
+        "covered": 8,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/analytics/(list)/report-settings/ReportSettingsContent.tsx": {
+      "lines": {
+        "total": 52,
+        "covered": 44,
+        "pct": 84.61
+      },
+      "branches": {
+        "total": 27,
+        "covered": 20,
+        "pct": 74.07
+      },
+      "functions": {
+        "total": 12,
+        "covered": 8,
+        "pct": 66.66
+      }
+    },
+    "apps/web/src/app/analytics/(list)/report-settings/loading.tsx": {
+      "lines": {
+        "total": 1,
+        "covered": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/app/analytics/(list)/report-settings/page.tsx": {
+      "lines": {
+        "total": 2,
+        "covered": 2,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 1,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/analytics/(list)/report-settings/components/CurrencySection.tsx": {
+      "lines": {
+        "total": 14,
+        "covered": 14,
+        "pct": 100
+      },
+      "branches": {
+        "total": 12,
+        "covered": 10,
+        "pct": 83.33
+      },
+      "functions": {
+        "total": 9,
+        "covered": 9,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/analytics/(list)/report-settings/components/DefaultRangeSection.tsx": {
+      "lines": {
+        "total": 8,
+        "covered": 8,
+        "pct": 100
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 4,
+        "covered": 4,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/analytics/(list)/report-settings/components/ScheduledDeliverySection.tsx": {
+      "lines": {
+        "total": 47,
+        "covered": 39,
+        "pct": 82.97
+      },
+      "branches": {
+        "total": 28,
+        "covered": 22,
+        "pct": 78.57
+      },
+      "functions": {
+        "total": 19,
+        "covered": 15,
+        "pct": 78.94
+      }
+    },
+    "apps/web/src/app/analytics/(list)/report-settings/components/currencies.ts": {
+      "lines": {
+        "total": 4,
+        "covered": 4,
+        "pct": 100
+      },
+      "branches": {
+        "total": 4,
+        "covered": 4,
+        "pct": 100
+      },
+      "functions": {
+        "total": 2,
+        "covered": 2,
+        "pct": 100
+      }
+    },
+    "apps/web/src/app/analytics/scheduled-reports/page.tsx": {
+      "lines": {
+        "total": 1,
+        "covered": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 0,
+        "covered": 0,
+        "pct": 100
+      },
+      "functions": {
+        "total": 1,
+        "covered": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/components/settings/TimezoneSelector.tsx": {
+      "lines": {
+        "total": 39,
+        "covered": 38,
+        "pct": 97.43
+      },
+      "branches": {
+        "total": 18,
+        "covered": 17,
+        "pct": 94.44
+      },
+      "functions": {
+        "total": 10,
+        "covered": 10,
+        "pct": 100
+      }
+    }
+  }
+}
