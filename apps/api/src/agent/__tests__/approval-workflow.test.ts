@@ -156,6 +156,7 @@ import {
   pendingActionsStore,
 } from '../approval-workflow';
 import { PendingAction, ApprovalDecision, AgentAuthContext } from '../types';
+import { getAgentTool } from '../tools';
 
 describe('Approval Workflow', () => {
   const testContext: AgentAuthContext = {
@@ -315,6 +316,43 @@ describe('Approval Workflow', () => {
         expect(row.status).toBe('APPROVED');
         expect(row.reviewedBy).toBe('manager-1');
         expect(row.proposedState.executionStatus).toBe('SUCCEEDED');
+      });
+
+      it('judges expiry at the claim itself: an action that expires mid-approval never runs', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        const start = new Date('2026-10-13T10:00:00Z');
+        vi.setSystemTime(start);
+        await pendingActionsStore.add(
+          createTestPendingAction({
+            id: 'expires-mid',
+            expiresAt: new Date(start.getTime() + 1_000),
+          })
+        );
+        // The tool lookup is slow: by the time it returns the action has expired.
+        const original = (getAgentTool as any).getMockImplementation();
+        (getAgentTool as any).mockImplementationOnce((name: string) => {
+          vi.setSystemTime(new Date(start.getTime() + 5_000));
+          return original(name);
+        });
+        try {
+          await expect(
+            approvalWorkflowService.approveAction(
+              {
+                actionId: 'expires-mid',
+                decision: 'APPROVE',
+                decidedBy: 'manager-1',
+                decidedAt: start,
+              },
+              testContext
+            )
+          ).rejects.toBeInstanceOf(ApprovalNotClaimedError);
+          expect(executeSpy).not.toHaveBeenCalled();
+          expect(agentActionRows.find((r) => r.id === 'expires-mid').status).toBe(
+            'PENDING_APPROVAL'
+          );
+        } finally {
+          vi.useRealTimers();
+        }
       });
 
       it('stores a failed execution as FAILED with its reason, never as success', async () => {

@@ -219,8 +219,7 @@ export class ApprovalWorkflowService {
    */
   private async claimApproval(
     decision: ApprovalDecision,
-    context: AgentAuthContext,
-    claimedAt: Date
+    context: AgentAuthContext
   ): Promise<{ action: PendingAction; inputToExecute: Record<string, unknown> }> {
     const action = await pendingActionsStore.get(decision.actionId);
 
@@ -251,8 +250,10 @@ export class ApprovalWorkflowService {
       decision.modifiedInput
     );
 
+    // Expiry is judged at the claim itself, not when approval started: the reads above
+    // take time, and an action that expired meanwhile must not run.
     if (
-      !(await actionStore.claimForExecution(action, decision.decidedBy, claimedAt, inputToExecute))
+      !(await actionStore.claimForExecution(action, decision.decidedBy, new Date(), inputToExecute))
     ) {
       throw new ApprovalNotClaimedError('Action is no longer pending (already decided or expired)');
     }
@@ -278,7 +279,7 @@ export class ApprovalWorkflowService {
     let inputToExecute: Record<string, unknown>;
     const claimedAt = new Date();
     try {
-      ({ action, inputToExecute } = await this.claimApproval(decision, context, claimedAt));
+      ({ action, inputToExecute } = await this.claimApproval(decision, context));
     } catch (error) {
       // Nothing was claimed or run: callers (auto-approval) may leave it pending.
       throw error instanceof ApprovalNotClaimedError

@@ -48,6 +48,10 @@ function ctx(overrides: Record<string, unknown> = {}) {
     prisma: {
       lead: { findFirst: vi.fn().mockResolvedValue({ email: 'lead@example.invalid' }) },
       contact: { findFirst: vi.fn().mockResolvedValue({ email: 'contact@example.invalid' }) },
+      // Default: every proposed user / case is in the tenant (count echoes the ids asked for).
+      user: { count: vi.fn(async (args: any) => args.where.id.in.length) },
+      case: { count: vi.fn(async (args: any) => args.where.id.in.length) },
+      appointment: { findFirst: vi.fn().mockResolvedValue({ id: 'appt-1' }) },
     },
     ...overrides,
   } as any;
@@ -470,6 +474,84 @@ describe('executeApprovedAction', () => {
   it('refuses a tool without an executor', async () => {
     const outcome = await executeApprovedAction('search_leads', {}, ctx());
     expect(outcome).toEqual({ status: 'FAILED', error: 'No executor exists for "search_leads".' });
+  });
+});
+
+describe('agent-proposed ids must belong to the approving tenant (#880, #890)', () => {
+  it('update_case refuses an assignee outside the workspace, writing nothing', async () => {
+    const approver = ctx();
+    approver.prisma.user.count.mockResolvedValue(0);
+    const outcome = await executeApprovedAction(
+      'update_case',
+      { id: 'case-1', assignedTo: 'foreign-user', status: 'CLOSED' },
+      approver
+    );
+    expect(outcome).toMatchObject({
+      status: 'FAILED',
+      error: 'The assignee must be users of this workspace.',
+    });
+    expect(approver.prisma.user.count).toHaveBeenCalledWith({
+      where: expect.objectContaining({ id: { in: ['foreign-user'] } }),
+    });
+    expect(calls.cases.changeStatus).not.toHaveBeenCalled();
+    expect(calls.cases.update).not.toHaveBeenCalled();
+  });
+
+  it('create_appointment refuses a foreign attendee or linked case before creating', async () => {
+    const foreignUser = ctx();
+    foreignUser.prisma.user.count.mockResolvedValue(1); // requester found, u-2 not
+    const a = await executeApprovedAction(
+      'create_appointment',
+      { title: 'Call', attendeeIds: ['u-2'] },
+      foreignUser,
+      { requesterId: 'requester-1' }
+    );
+    expect(a).toMatchObject({
+      status: 'FAILED',
+      error: 'The attendees must be users of this workspace.',
+    });
+
+    const foreignCase = ctx();
+    foreignCase.prisma.case.count.mockResolvedValue(0);
+    const b = await executeApprovedAction(
+      'create_appointment',
+      { title: 'Call', linkedCaseIds: ['case-x', 7] },
+      foreignCase
+    );
+    expect(b).toMatchObject({ status: 'FAILED', error: 'A linked case was not found.' });
+    expect(foreignCase.prisma.case.count).toHaveBeenCalledWith({
+      where: { id: { in: ['case-x'] }, tenantId: TENANT },
+    });
+    expect(calls.appointments.create).not.toHaveBeenCalled();
+  });
+
+  it('update_appointment refuses an appointment of another tenant, writing nothing', async () => {
+    const approver = ctx();
+    approver.prisma.appointment.findFirst.mockResolvedValue(null);
+    const outcome = await executeApprovedAction(
+      'update_appointment',
+      { id: 'appt-foreign', title: 'Renamed' },
+      approver
+    );
+    expect(outcome).toMatchObject({ status: 'FAILED', error: 'The appointment was not found.' });
+    expect(approver.prisma.appointment.findFirst).toHaveBeenCalledWith({
+      where: { id: 'appt-foreign', tenantId: TENANT },
+      select: { id: true },
+    });
+    expect(calls.appointments.update).not.toHaveBeenCalled();
+    expect(calls.appointments.reschedule).not.toHaveBeenCalled();
+  });
+
+  it('the checks need a tenant on the approving session', async () => {
+    const outcome = await executeApprovedAction(
+      'update_appointment',
+      { id: 'appt-1', title: 'x' },
+      ctx({ user: { userId: 'approver-1', role: 'MANAGER', email: 'm@example.invalid' } })
+    );
+    expect(outcome).toMatchObject({
+      status: 'FAILED',
+      error: 'No tenant on the approving session.',
+    });
   });
 });
 

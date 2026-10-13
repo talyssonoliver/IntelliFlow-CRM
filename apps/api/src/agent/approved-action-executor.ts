@@ -14,6 +14,7 @@
  * because no SMS channel exists.
  */
 
+import { tenantUserWhere } from '@intelliflow/db';
 import type { Context } from '../context';
 import type { ExecutionStatus } from './types';
 
@@ -111,6 +112,47 @@ function pick(input: Input, keys: readonly string[]): Input {
   return out;
 }
 
+/**
+ * Ids an agent proposed must belong to the approving tenant. Several target procedures
+ * look related records up by id only (#880, #890), so an approved action is checked here
+ * before it runs, whoever (or whichever policy) approved it.
+ */
+function approvingTenant(ctx: Context): string {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) throw new Error('No tenant on the approving session.');
+  return tenantId;
+}
+
+async function assertUsersInTenant(ctx: Context, ids: readonly string[], label: string) {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return;
+  const found = await ctx.prisma.user.count({
+    where: { id: { in: unique }, ...tenantUserWhere(approvingTenant(ctx)) },
+  });
+  if (found !== unique.length) throw new Error(`The ${label} must be users of this workspace.`);
+}
+
+async function assertCasesInTenant(ctx: Context, ids: readonly string[]) {
+  const unique = [...new Set(ids)];
+  if (unique.length === 0) return;
+  const found = await ctx.prisma.case.count({
+    where: { id: { in: unique }, tenantId: approvingTenant(ctx) },
+  });
+  if (found !== unique.length) throw new Error('A linked case was not found.');
+}
+
+async function assertAppointmentInTenant(ctx: Context, id: string) {
+  const row = await ctx.prisma.appointment.findFirst({
+    where: { id, tenantId: approvingTenant(ctx) },
+    select: { id: true },
+  });
+  if (!row) throw new Error('The appointment was not found.');
+}
+
+function strings(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
+}
+
 async function createCase(
   input: Input,
   ctx: Context,
@@ -151,6 +193,10 @@ async function updateCase(input: Input, ctx: Context): Promise<ExecutionResult> 
   if (input.status === undefined && Object.keys(fields).length === 0) {
     throw new Error('The approved update has no changes to apply.');
   }
+  // cases.update writes assignedTo without a workspace check (#880).
+  if (typeof fields.assignedTo === 'string') {
+    await assertUsersInTenant(ctx, [fields.assignedTo], 'assignee');
+  }
   // The status change is the step that can be refused (invalid transition), so it runs first.
   let applied: string | null = null;
   if (input.status !== undefined) {
@@ -175,6 +221,8 @@ async function createAppointment(
   const attendeeIds = options.requesterId
     ? [...new Set([options.requesterId, ...proposed])]
     : proposed;
+  await assertUsersInTenant(ctx, attendeeIds, 'attendees');
+  await assertCasesInTenant(ctx, strings(input.linkedCaseIds));
   const created = await appointmentsRouter.createCaller(ctx as CallerCtx).create({
     ...pick(input, [
       'title',
@@ -204,6 +252,8 @@ async function updateAppointment(input: Input, ctx: Context): Promise<ExecutionR
   if (!hasStart && Object.keys(fields).length === 0) {
     throw new Error('The approved update has no changes to apply.');
   }
+  // appointments.update reads and writes by id only: prove the appointment is this tenant's.
+  await assertAppointmentInTenant(ctx, id);
   // Rescheduling is the step that can be refused (conflicts), so it runs first.
   let applied: string | null = null;
   if (hasStart) {
