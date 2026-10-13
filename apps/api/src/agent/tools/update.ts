@@ -276,6 +276,8 @@ export const updateCaseTool: AgentToolDefinition<UpdateCaseInput, UpdatedCaseRes
         ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
       };
 
       // Store pending action for approval
@@ -462,6 +464,8 @@ export const updateAppointmentTool: AgentToolDefinition<
         ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
       };
 
       // Store pending action for approval

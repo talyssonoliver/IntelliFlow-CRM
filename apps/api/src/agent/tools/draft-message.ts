@@ -216,6 +216,8 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
         ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
         metadata: {
           recipientType: input.recipientType,
           recipientId: input.recipientId,

@@ -118,6 +118,7 @@ vi.mock('../../../agent/tools', () => ({
 
 // Mock the approval workflow module
 vi.mock('../../../agent/approval-workflow', () => ({
+  ApprovalNotClaimedError: class ApprovalNotClaimedError extends Error {},
   approvalWorkflowService: {
     getPendingActions: (userId: string, tenantId?: string) =>
       mockApprovalGetPendingActions(userId, tenantId),
@@ -204,6 +205,7 @@ vi.mock('../../../agent/logger', () => ({
 
 // Import after mocks are defined
 import { agentRouter } from '../agent.router';
+import { ApprovalNotClaimedError } from '../../../agent/approval-workflow';
 import type { BaseContext } from '../../../context';
 
 // Test UUID constants
@@ -1245,7 +1247,9 @@ describe('agentRouter', () => {
       it('leaves the action pending when the approval is refused before the claim', async () => {
         mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
         mockGetAgentTool.mockReturnValue(approvalTool());
-        mockApprovalApproveAction.mockRejectedValue(new Error('not valid for create_case'));
+        mockApprovalApproveAction.mockRejectedValue(
+          new ApprovalNotClaimedError('not valid for create_case')
+        );
         const caller = agentRouter.createCaller(createAgentTestContext(true, true));
 
         const result = (await caller.executeTool({
@@ -1255,6 +1259,17 @@ describe('agentRouter', () => {
         })) as any;
 
         expect(result.requiresApproval).toBe(true);
+      });
+
+      it('surfaces a failure after the claim instead of reporting the action as pending', async () => {
+        mockLoadApprovalPolicy.mockResolvedValue(policy(enabled));
+        mockGetAgentTool.mockReturnValue(approvalTool());
+        mockApprovalApproveAction.mockRejectedValue(new Error('audit write failed'));
+        const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+        await expect(
+          caller.executeTool({ toolName: 'create_case', input: {}, confidence: 0.99 })
+        ).rejects.toThrow('audit write failed');
       });
     });
   });

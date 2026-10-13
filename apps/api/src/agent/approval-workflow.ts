@@ -28,6 +28,17 @@ import { executeApprovedAction, prepareExecutionInput } from './approved-action-
 import type { Context } from '../context';
 import { prisma as sharedPrisma } from '@intelliflow/db';
 
+/**
+ * PG-198: an approval was refused before the action was claimed — nothing ran and the
+ * action is still pending (or already decided by someone else).
+ */
+export class ApprovalNotClaimedError extends Error {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause === undefined ? undefined : { cause });
+    this.name = 'ApprovalNotClaimedError';
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Persistent Prisma-backed store (replaces in-memory Maps)
 // ---------------------------------------------------------------------------
@@ -202,19 +213,15 @@ export class ApprovalWorkflowService {
   }
 
   /**
-   * Approve and execute a pending action (PG-198 RF-1, #853).
-   *
-   * The action is claimed atomically (only one approver can win), the input that
-   * will run is re-validated with the tool's schema, and the real mutation runs
-   * through the target module's tRPC procedure on the approver's request
-   * context. A failure is stored as FAILED with its reason — never as success —
-   * and no rollback token is issued while tool rollbacks are simulated (#856).
+   * Everything that must succeed before an approved action may run: it exists, is
+   * pending and unexpired, its tool is still enabled, the input is valid, and this
+   * caller wins the atomic claim. Any failure here means nothing was claimed.
    */
-  async approveAction(
+  private async claimApproval(
     decision: ApprovalDecision,
     context: AgentAuthContext,
-    requestCtx?: Context
-  ): Promise<ExecutedAction> {
+    claimedAt: Date
+  ): Promise<{ action: PendingAction; inputToExecute: Record<string, unknown> }> {
     const action = await pendingActionsStore.get(decision.actionId);
 
     if (!action) {
@@ -244,11 +251,42 @@ export class ApprovalWorkflowService {
       decision.modifiedInput
     );
 
-    const claimedAt = new Date();
     if (
       !(await actionStore.claimForExecution(action, decision.decidedBy, claimedAt, inputToExecute))
     ) {
-      throw new Error('Action is no longer pending (already decided or expired)');
+      throw new ApprovalNotClaimedError('Action is no longer pending (already decided or expired)');
+    }
+
+    return { action, inputToExecute };
+  }
+
+  /**
+   * Approve and execute a pending action (PG-198 RF-1, #853).
+   *
+   * The action is claimed atomically (only one approver can win), the input that
+   * will run is re-validated with the tool's schema, and the real mutation runs
+   * through the target module's tRPC procedure on the approver's request
+   * context. A failure is stored as FAILED with its reason — never as success —
+   * and no rollback token is issued while tool rollbacks are simulated (#856).
+   */
+  async approveAction(
+    decision: ApprovalDecision,
+    context: AgentAuthContext,
+    requestCtx?: Context
+  ): Promise<ExecutedAction> {
+    let action: PendingAction;
+    let inputToExecute: Record<string, unknown>;
+    const claimedAt = new Date();
+    try {
+      ({ action, inputToExecute } = await this.claimApproval(decision, context, claimedAt));
+    } catch (error) {
+      // Nothing was claimed or run: callers (auto-approval) may leave it pending.
+      throw error instanceof ApprovalNotClaimedError
+        ? error
+        : new ApprovalNotClaimedError(
+            error instanceof Error ? error.message : String(error),
+            error
+          );
     }
 
     const outcome = await executeApprovedAction(action.toolName, inputToExecute, requestCtx, {

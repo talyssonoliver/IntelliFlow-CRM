@@ -31,7 +31,11 @@ import {
   toolMetadata,
   ToolDisabledError,
 } from '../../agent/tools';
-import { approvalWorkflowService, pendingActionsStore } from '../../agent/approval-workflow';
+import {
+  ApprovalNotClaimedError,
+  approvalWorkflowService,
+  pendingActionsStore,
+} from '../../agent/approval-workflow';
 import { loadApprovalPolicy, resolveAgentToolExpiry } from '../../agent/approval-policy-loader';
 import { canReview, evaluateAutoApproval, SYSTEM_APPROVAL_ACTOR } from '@intelliflow/domain';
 import { agentAuthorizationService, buildAuthContext } from '../../agent/authorization';
@@ -186,9 +190,11 @@ async function tryAutoApprove(
       agentContext,
       ctx
     );
-  } catch {
+  } catch (error) {
     // Refused before the claim (e.g. invalid input): it stays pending for a person.
-    return null;
+    // Anything later (the action was claimed) must surface, not pretend to be pending.
+    if (error instanceof ApprovalNotClaimedError) return null;
+    throw error;
   }
   return {
     requiresApproval: false as const,

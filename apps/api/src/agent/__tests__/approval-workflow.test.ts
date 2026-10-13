@@ -150,7 +150,11 @@ vi.mock('../approved-action-executor', async (importOriginal) => ({
   executeApprovedAction: executeSpy,
 }));
 
-import { approvalWorkflowService, pendingActionsStore } from '../approval-workflow';
+import {
+  ApprovalNotClaimedError,
+  approvalWorkflowService,
+  pendingActionsStore,
+} from '../approval-workflow';
 import { PendingAction, ApprovalDecision, AgentAuthContext } from '../types';
 
 describe('Approval Workflow', () => {
@@ -382,6 +386,28 @@ describe('Approval Workflow', () => {
           )
         ).rejects.toThrow('Tool not found: missing_tool');
         expect(agentActionRows.find((r) => r.id === 'gone-tool').status).toBe('PENDING_APPROVAL');
+      });
+
+      it('reports every refusal before the claim as ApprovalNotClaimedError (nothing ran)', async () => {
+        await pendingActionsStore.add(
+          createTestPendingAction({ id: 'expired-2', expiresAt: new Date(Date.now() - 1000) })
+        );
+        const expired = approvalWorkflowService.approveAction(
+          { actionId: 'expired-2', decision: 'APPROVE', decidedBy: 'm', decidedAt: new Date() },
+          testContext
+        );
+        await expect(expired).rejects.toBeInstanceOf(ApprovalNotClaimedError);
+        await expect(expired).rejects.toThrow(/expired|not pending/);
+
+        const getSpy = vi.spyOn(pendingActionsStore, 'get').mockRejectedValue('store down');
+        const failed = approvalWorkflowService.approveAction(
+          { actionId: 'x', decision: 'APPROVE', decidedBy: 'm', decidedAt: new Date() },
+          testContext
+        );
+        await expect(failed).rejects.toBeInstanceOf(ApprovalNotClaimedError);
+        await expect(failed).rejects.toThrow('store down');
+        expect(executeSpy).not.toHaveBeenCalled();
+        getSpy.mockRestore();
       });
 
       it('lists interrupted executions for the user', async () => {
