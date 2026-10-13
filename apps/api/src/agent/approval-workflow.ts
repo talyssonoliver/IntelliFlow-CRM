@@ -249,7 +249,9 @@ export class ApprovalWorkflowService {
       throw new Error('Action is no longer pending (already decided or expired)');
     }
 
-    const outcome = await executeApprovedAction(action.toolName, inputToExecute, requestCtx);
+    const outcome = await executeApprovedAction(action.toolName, inputToExecute, requestCtx, {
+      requesterId: action.createdBy,
+    });
     const durationMs = Date.now() - claimedAt.getTime();
 
     const executedAction: ExecutedAction = {

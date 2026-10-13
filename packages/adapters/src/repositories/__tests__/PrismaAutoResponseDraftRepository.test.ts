@@ -210,11 +210,71 @@ describe('PrismaAutoResponseDraftRepository', () => {
           expiresAt: { gt: now },
           createdAt: { lt: before },
         },
-        orderBy: { createdAt: 'asc' },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
         take: 25,
+        skip: 0,
       });
       expect(result).toHaveLength(1);
       expect(result[0].status).toBe('PENDING_APPROVAL');
+    });
+
+    it('pages with an offset', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([]);
+      await repository.findPendingOlderThan(
+        'tenant-1',
+        { before: new Date(), notExpiredAt: new Date(), triggerTypes: ['MANUAL'] },
+        100,
+        200
+      );
+      expect(mockPrisma.autoResponseDraft.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ take: 100, skip: 200 })
+      );
+    });
+  });
+
+  describe('saveEscalation (PG-198)', () => {
+    function escalatedDraft() {
+      const draft = AutoResponseDraft.create({
+        tenantId: 'tenant-1',
+        leadId: 'lead-123',
+        leadTenantId: 'tenant-1',
+        leadStatus: 'NEW',
+        triggerType: 'EMAIL_RECEIVED',
+        content: ResponseContent.create({ subject: 'Hi', body: 'Body' }),
+        aiConfidence: 0.5,
+        modelVersion: 'm',
+        recipientEmail: 'test@example.com',
+      }).value;
+      draft.submitForApproval('approver-1');
+      draft.escalate('system:approval-policy', 'manager-1', 'SLA', 1);
+      return draft;
+    }
+
+    it('writes only while the stored draft is still pending and never escalated', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 1 } as never);
+      const draft = escalatedDraft();
+
+      await expect(repository.saveEscalation(draft)).resolves.toBe(true);
+
+      const call = vi.mocked(mockPrisma.autoResponseDraft.updateMany).mock.calls[0]![0] as any;
+      expect(call.where).toEqual({
+        id: draft.id.toString(),
+        tenantId: 'tenant-1',
+        status: 'PENDING_APPROVAL',
+        escalationCount: 0,
+        version: 0,
+      });
+      expect(call.data).toMatchObject({ status: 'ESCALATED', escalationCount: 1, version: 1 });
+      expect(Object.keys(call.data).sort()).toEqual(
+        ['escalation', 'escalationCount', 'status', 'statusHistory', 'updatedAt', 'version'].sort()
+      );
+      // A reviewer still holding the version-0 copy is now rejected by save().
+      expect(draft.version).toBe(1);
+    });
+
+    it('reports false (nothing written) when a decision landed meanwhile', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 0 } as never);
+      await expect(repository.saveEscalation(escalatedDraft())).resolves.toBe(false);
     });
   });
 
@@ -273,9 +333,9 @@ describe('PrismaAutoResponseDraftRepository', () => {
       expect(mockPrisma.autoResponseDraft.updateMany).toHaveBeenCalled();
     });
 
-    it('should increment version on update', async () => {
+    it('should increment version on update (#874)', async () => {
+      // Loaded at version 0 (as rehydrated by toDomain); nothing pre-increments.
       const draft = createMockDraft();
-      draft.incrementVersion();
 
       vi.mocked(mockPrisma.autoResponseDraft.findUnique).mockResolvedValue(
         createMockDraftData({ version: 0 }) as never
@@ -287,13 +347,27 @@ describe('PrismaAutoResponseDraftRepository', () => {
       expect(mockPrisma.autoResponseDraft.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            version: 0, // Previous version in WHERE clause
+            version: 0, // The version this copy was loaded at
           }),
           data: expect.objectContaining({
-            version: 1, // New version in data
+            version: 1, // Advanced
           }),
         })
       );
+      // The in-memory aggregate follows, so a second save in the same request works.
+      expect(draft.version).toBe(1);
+    });
+
+    it('rejects a stale copy after another writer advanced the version (#874)', async () => {
+      const mine = createMockDraft();
+      vi.mocked(mockPrisma.autoResponseDraft.findUnique).mockResolvedValue(
+        createMockDraftData({ version: 1 }) as never
+      );
+      // Stored is now at version 1; this copy was loaded at 0 -> no row matches.
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 0 } as never);
+
+      await expect(repository.save(mine)).rejects.toThrow(OptimisticLockError);
+      expect(mine.version).toBe(0);
     });
 
     it('should throw OptimisticLockError on version conflict', async () => {
@@ -340,8 +414,9 @@ describe('PrismaAutoResponseDraftRepository', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             id: draft.id.toString(),
-            version: 2,
+            version: 3,
           }),
+          data: expect.objectContaining({ version: 4 }),
         })
       );
     });

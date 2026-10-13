@@ -129,7 +129,8 @@ export class PrismaAgentActionStore {
   async findByUser(userId: string, tenantId: string = this.tenantId): Promise<PendingAction[]> {
     const rows = await this.prisma.agentAction.findMany({
       where: {
-        agentId: userId,
+        // PG-198: the requester's own actions plus those escalated to this user.
+        OR: [{ agentId: userId }, { escalatedTo: userId }],
         status: 'PENDING_APPROVAL' as any,
         expiresAt: { gt: new Date() },
         tenantId,

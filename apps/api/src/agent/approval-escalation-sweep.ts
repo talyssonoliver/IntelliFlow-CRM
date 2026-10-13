@@ -34,8 +34,10 @@ import { loadTenantApprovalPolicies, type ApprovalPolicyReader } from './approva
 
 /** Advisory-lock key for the sweep (any constant unique to this job). */
 export const APPROVAL_SWEEP_LOCK_KEY = 1_980_001;
-/** NF-002: at most this many items per tenant and queue per tick. */
+/** NF-002: items per query page. */
 export const APPROVAL_SWEEP_BATCH = 100;
+/** Draft candidates scanned per policy per tick at most (pages of APPROVAL_SWEEP_BATCH). */
+export const APPROVAL_SWEEP_MAX_PAGES = 10;
 
 export interface SweepNotification {
   tenantId: string;
@@ -259,12 +261,11 @@ async function escalateDraft(
     ctx.report.skipped += 1;
     return;
   }
-  try {
-    await repository.save(draft);
-  } catch (error) {
-    // Optimistic-lock conflict: someone decided it meanwhile. Leave it alone.
-    const message = error instanceof Error ? error.message : String(error);
-    ctx.deps.log?.warn(`[approval-sweep] draft ${draft.id.toString()} not escalated: ${message}`);
+  // Guarded write: decided or escalated meanwhile -> nothing is overwritten.
+  if (!(await repository.saveEscalation(draft))) {
+    ctx.deps.log?.warn(
+      `[approval-sweep] draft ${draft.id.toString()} not escalated: decided or escalated meanwhile`
+    );
     ctx.report.skipped += 1;
     return;
   }
@@ -286,16 +287,23 @@ async function escalateDraftGroup(
   repository: AutoResponseDraftRepository,
   group: EscalationGroup
 ): Promise<void> {
-  const drafts = await repository.findPendingOlderThan(
-    ctx.tenantId,
-    {
-      before: cutoff(ctx.now, group.rule.escalateAfterMinutes as number),
-      notExpiredAt: ctx.now,
-      triggerTypes: group.keys as TriggerType[],
-    },
-    APPROVAL_SWEEP_BATCH
-  );
-  for (const draft of drafts) await escalateDraft(ctx, repository, group.rule, draft);
+  const filter = {
+    before: cutoff(ctx.now, group.rule.escalateAfterMinutes as number),
+    notExpiredAt: ctx.now,
+    triggerTypes: group.keys as TriggerType[],
+  };
+  // Candidates are ordered by creation, but the SLA runs from submission: page past
+  // drafts submitted too recently, up to a bounded scan per tick.
+  for (let page = 0; page < APPROVAL_SWEEP_MAX_PAGES; page++) {
+    const drafts = await repository.findPendingOlderThan(
+      ctx.tenantId,
+      filter,
+      APPROVAL_SWEEP_BATCH,
+      page * APPROVAL_SWEEP_BATCH
+    );
+    for (const draft of drafts) await escalateDraft(ctx, repository, group.rule, draft);
+    if (drafts.length < APPROVAL_SWEEP_BATCH) return;
+  }
 }
 
 async function escalateTenant(ctx: TenantContext): Promise<void> {

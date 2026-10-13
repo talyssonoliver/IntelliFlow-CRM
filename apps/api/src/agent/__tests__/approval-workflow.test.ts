@@ -36,10 +36,13 @@ function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
   });
 }
 
-function matchesWhere(row: any, where: Record<string, any> | undefined) {
+function matchesWhere(row: any, where: Record<string, any> | undefined): boolean {
   if (!where) return true;
 
   return Object.entries(where).every(([key, value]) => {
+    if (key === 'OR' && Array.isArray(value)) {
+      return value.some((clause): boolean => matchesWhere(row, clause));
+    }
     if (value && typeof value === 'object' && !Array.isArray(value)) {
       if ('gt' in value) return row[key] > value.gt;
       if ('lt' in value) return row[key] < value.lt;
@@ -296,7 +299,9 @@ describe('Approval Workflow', () => {
         expect(executed.approval?.decision).toBe('APPROVE');
         expect(executed.executedAt).toBeDefined();
         // RF-1 (#853): the real executor ran, on the approver's request context.
-        expect(executeSpy).toHaveBeenCalledWith('create_case', action.input, requestCtx);
+        expect(executeSpy).toHaveBeenCalledWith('create_case', action.input, requestCtx, {
+          requesterId: 'user-1',
+        });
         expect(executed.executionStatus).toBe('SUCCEEDED');
         expect(executed.executionResult).toEqual({ entityType: 'CASE', entityId: 'case-42' });
         expect(executed.rollbackAvailable).toBe(false);
@@ -425,7 +430,8 @@ describe('Approval Workflow', () => {
         expect(executeSpy).toHaveBeenCalledWith(
           'create_case',
           { title: 'Modified Case Title', clientId: 'client-1', priority: 'HIGH' },
-          undefined
+          undefined,
+          { requesterId: 'user-1' }
         );
         expect(executed.input.title).toBe('Modified Case Title');
       });

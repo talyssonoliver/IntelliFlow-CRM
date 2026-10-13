@@ -73,7 +73,7 @@ describe('executeApprovedAction', () => {
       status: 'SUCCEEDED',
       result: { entityType: 'CASE', entityId: 'case-9' },
     });
-    // No assignee proposed: the approver is assigned explicitly (#872).
+    // No assignee proposed and no requester known: the approver is assigned (#872).
     expect(calls.cases.create).toHaveBeenCalledWith({
       title: 'T',
       priority: 'HIGH',
@@ -81,6 +81,16 @@ describe('executeApprovedAction', () => {
       assignedTo: 'approver-1',
     });
     expect(calls.ctxSeen).toEqual([approver]);
+  });
+
+  it('create_case defaults the assignee to the requester, as the preview showed it', async () => {
+    calls.cases.create.mockResolvedValue({ id: 'case-11' });
+    await executeApprovedAction('create_case', { title: 'T', clientId: 'client-1' }, ctx(), {
+      requesterId: 'requester-3',
+    });
+    expect(calls.cases.create).toHaveBeenCalledWith(
+      expect.objectContaining({ assignedTo: 'requester-3' })
+    );
   });
 
   it('create_case keeps the proposed assignee', async () => {

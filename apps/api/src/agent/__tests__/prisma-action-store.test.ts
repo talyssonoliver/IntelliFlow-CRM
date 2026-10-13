@@ -443,7 +443,7 @@ describe('delete()', () => {
 // ════════════════════════════════════════════════════════════
 
 describe('findByUser()', () => {
-  it('E1: queries by agentId with PENDING_APPROVAL status and tenantId', async () => {
+  it('E1: queries the requester or escalation target with PENDING_APPROVAL status and tenantId', async () => {
     (prismaMock.agentAction.findMany as any).mockResolvedValue([makeAgentActionRow()]);
 
     const results = await store.findByUser(USER_ID);
@@ -451,7 +451,8 @@ describe('findByUser()', () => {
     expect(results).toHaveLength(1);
     expect(results[0].createdBy).toBe(USER_ID);
     const args = (prismaMock.agentAction.findMany as any).mock.calls[0][0];
-    expect(args.where.agentId).toBe(USER_ID);
+    // PG-198: an escalated action is listed for its escalation target too.
+    expect(args.where.OR).toEqual([{ agentId: USER_ID }, { escalatedTo: USER_ID }]);
     expect(args.where.status).toBe('PENDING_APPROVAL');
     expect(args.where.tenantId).toBe(TENANT_ID);
     expect(args.where.expiresAt).toEqual({ gt: expect.any(Date) });

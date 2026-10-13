@@ -70,8 +70,17 @@ export interface AutoResponseDraftRepository {
   findPendingOlderThan(
     tenantId: string,
     filter: PendingOlderThanFilter,
-    limit: number
+    limit: number,
+    offset?: number
   ): Promise<AutoResponseDraft[]>;
+
+  /**
+   * PG-198: persist an escalation made by the approval sweep, but only while the
+   * stored draft is still PENDING_APPROVAL and has never been escalated — so a
+   * decision or manual escalation made meanwhile is never overwritten.
+   * Returns false when the guard did not match (nothing written).
+   */
+  saveEscalation(draft: AutoResponseDraft): Promise<boolean>;
 
   /**
    * Find expired drafts that need cleanup

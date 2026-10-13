@@ -61,15 +61,17 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
       return;
     }
 
-    const previousVersion = Math.max(data.version - 1, 0);
+    // Optimistic lock (#874): match the version this aggregate was loaded at and
+    // advance it, so a writer holding a stale copy is rejected instead of winning.
     const result = await this.prisma.autoResponseDraft.updateMany({
-      where: { id, version: previousVersion },
-      data,
+      where: { id, version: data.version },
+      data: { ...data, version: data.version + 1 },
     });
 
     if (result.count === 0) {
       throw new OptimisticLockError('AutoResponseDraft', data.id);
     }
+    draft.incrementVersion();
   }
 
   async findById(id: AutoResponseDraftId, tenantId: string): Promise<AutoResponseDraft | null> {
@@ -125,10 +127,35 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
     return records.map((record) => this.toDomain(record));
   }
 
+  async saveEscalation(draft: AutoResponseDraft): Promise<boolean> {
+    const data = this.toPersistence(draft);
+    const result = await this.prisma.autoResponseDraft.updateMany({
+      where: {
+        id: data.id,
+        tenantId: data.tenantId,
+        status: 'PENDING_APPROVAL',
+        escalationCount: 0,
+        version: data.version,
+      },
+      data: {
+        status: data.status,
+        escalation: data.escalation,
+        escalationCount: data.escalationCount,
+        statusHistory: data.statusHistory,
+        updatedAt: data.updatedAt,
+        version: data.version + 1,
+      },
+    });
+    if (result.count !== 1) return false;
+    draft.incrementVersion();
+    return true;
+  }
+
   async findPendingOlderThan(
     tenantId: string,
     filter: PendingOlderThanFilter,
-    limit: number
+    limit: number,
+    offset = 0
   ): Promise<AutoResponseDraft[]> {
     const records = await this.prisma.autoResponseDraft.findMany({
       where: {
@@ -139,8 +166,9 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
         expiresAt: { gt: filter.notExpiredAt },
         createdAt: { lt: filter.before },
       },
-      orderBy: { createdAt: 'asc' },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
       take: limit,
+      skip: offset,
     });
     return records.map((record) => this.toDomain(record));
   }

@@ -79,6 +79,11 @@ export function prepareExecutionInput(
 type Input = Record<string, unknown>;
 type CallerCtx = never;
 
+export interface ExecutionOptions {
+  /** Who asked for the action; the preview showed them as the default assignee. */
+  requesterId?: string;
+}
+
 function str(value: unknown): string | undefined {
   return typeof value === 'string' ? value : undefined;
 }
@@ -92,10 +97,15 @@ function pick(input: Input, keys: readonly string[]): Input {
   return out;
 }
 
-async function createCase(input: Input, ctx: Context): Promise<ExecutionResult> {
+async function createCase(
+  input: Input,
+  ctx: Context,
+  options: ExecutionOptions
+): Promise<ExecutionResult> {
   const { casesRouter } = await import('../modules/legal/cases.router.js');
-  // Explicit assignee: cases.create cannot default one itself (#872).
-  const assignedTo = input.assignedTo ?? ctx.user?.userId;
+  // Explicit assignee — the requester, as the approval preview showed it — because
+  // cases.create cannot default one itself (#872).
+  const assignedTo = input.assignedTo ?? options.requesterId ?? ctx.user?.userId;
   const created = await casesRouter.createCaller(ctx as CallerCtx).create({
     ...pick(input, ['title', 'description', 'priority', 'deadline', 'clientId']),
     assignedTo,
@@ -246,20 +256,22 @@ async function draftMessage(input: Input, ctx: Context): Promise<ExecutionResult
   throw new Error('No SMS channel is configured; nothing was sent.');
 }
 
-const HANDLERS: Readonly<Record<string, (input: Input, ctx: Context) => Promise<ExecutionResult>>> =
-  {
-    create_case: createCase,
-    update_case: updateCase,
-    create_appointment: createAppointment,
-    update_appointment: updateAppointment,
-    draft_message: draftMessage,
-  };
+type Handler = (input: Input, ctx: Context, options: ExecutionOptions) => Promise<ExecutionResult>;
+
+const HANDLERS: Readonly<Record<string, Handler>> = {
+  create_case: createCase,
+  update_case: updateCase,
+  create_appointment: createAppointment,
+  update_appointment: updateAppointment,
+  draft_message: draftMessage,
+};
 
 /** Run an approved action. Never throws: failures come back as FAILED with the reason. */
 export async function executeApprovedAction(
   toolName: string,
   input: Input,
-  ctx: Context | undefined
+  ctx: Context | undefined,
+  options: ExecutionOptions = {}
 ): Promise<ExecutionOutcome> {
   const handler = HANDLERS[toolName];
   if (!handler) {
@@ -272,7 +284,7 @@ export async function executeApprovedAction(
     };
   }
   try {
-    return { status: 'SUCCEEDED', result: await handler(input, ctx) };
+    return { status: 'SUCCEEDED', result: await handler(input, ctx, options) };
   } catch (error) {
     return {
       status: 'FAILED',

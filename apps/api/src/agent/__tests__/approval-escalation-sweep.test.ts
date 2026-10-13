@@ -76,6 +76,27 @@ function pendingDraft(submittedAt: Date, expiresInHours = 24) {
   return draft;
 }
 
+function pendingDraftCreatedAt(createdAt: Date, submittedAt: Date) {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(createdAt);
+  const draft = AutoResponseDraft.create({
+    tenantId: TENANT,
+    leadId: 'lead-1',
+    leadTenantId: TENANT,
+    leadStatus: 'NEW',
+    triggerType: 'EMAIL_RECEIVED',
+    content: ResponseContent.create({ subject: 'Thanks', body: 'Body' }),
+    aiConfidence: 0.5,
+    modelVersion: 'm',
+    recipientEmail: 'lead@example.invalid',
+    expiryHours: 48,
+  }).value;
+  vi.setSystemTime(submittedAt);
+  draft.submitForApproval('someone');
+  vi.useRealTimers();
+  return draft;
+}
+
 function harness(opts: {
   locked?: boolean;
   policies?: unknown[];
@@ -84,7 +105,7 @@ function harness(opts: {
   claimCount?: number;
   user?: { id: string } | null;
   drafts?: AutoResponseDraft[];
-  saveError?: Error;
+  decidedMeanwhile?: boolean;
   notifyError?: Error;
 }) {
   const tx = {
@@ -114,17 +135,18 @@ function harness(opts: {
     },
   };
   const repo = {
-    findPendingOlderThan: vi.fn(async (_tenant: string, filter: any) =>
-      (opts.drafts ?? []).filter(
-        (d) =>
-          filter.triggerTypes.includes(d.triggerType) &&
-          d.createdAt < filter.before &&
-          d.expiresAt > filter.notExpiredAt
-      )
+    findPendingOlderThan: vi.fn(
+      async (_tenant: string, filter: any, limit: number, offset: number) =>
+        (opts.drafts ?? [])
+          .filter(
+            (d) =>
+              filter.triggerTypes.includes(d.triggerType) &&
+              d.createdAt < filter.before &&
+              d.expiresAt > filter.notExpiredAt
+          )
+          .slice(offset, offset + limit)
     ),
-    save: opts.saveError
-      ? vi.fn().mockRejectedValue(opts.saveError)
-      : vi.fn().mockResolvedValue(undefined),
+    saveEscalation: vi.fn().mockResolvedValue(!opts.decidedMeanwhile),
   };
   const deps: ApprovalSweepDeps = {
     prisma: { $transaction: vi.fn(async (fn: any, _o: unknown) => fn(tx)) } as any,
@@ -317,7 +339,8 @@ describe('runApprovalSweep', () => {
           notExpiredAt: NOW,
           triggerTypes: ['EMAIL_RECEIVED', 'FORM_SUBMIT', 'CHAT_MESSAGE', 'MANUAL'],
         },
-        APPROVAL_SWEEP_BATCH
+        APPROVAL_SWEEP_BATCH,
+        0
       );
       expect(draft.status).toBe('ESCALATED');
       expect(draft.escalation).toMatchObject({
@@ -326,7 +349,7 @@ describe('runApprovalSweep', () => {
       });
       // Draft expires 2h after it was created (10:59), so the window ends there too.
       expect(draft.escalation!.expiresAt.getTime()).toBe(draft.expiresAt.getTime());
-      expect(repo.save).toHaveBeenCalledWith(draft);
+      expect(repo.saveEscalation).toHaveBeenCalledWith(draft);
       expect(deps.notify).toHaveBeenCalledWith(
         tx,
         expect.objectContaining({
@@ -343,14 +366,14 @@ describe('runApprovalSweep', () => {
       const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
       await runApprovalSweep(deps, NOW);
       expect(draft.status).toBe('PENDING_APPROVAL');
-      expect(repo.save).not.toHaveBeenCalled();
+      expect(repo.saveEscalation).not.toHaveBeenCalled();
     });
 
     it('does not escalate a draft that has already expired', async () => {
       const draft = pendingDraft(new Date('2026-10-13T09:00:00Z'), 1);
       const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
       await runApprovalSweep(deps, NOW);
-      expect(repo.save).not.toHaveBeenCalled();
+      expect(repo.saveEscalation).not.toHaveBeenCalled();
     });
 
     it('never opens an escalation window on a draft that expired after the query', async () => {
@@ -359,7 +382,7 @@ describe('runApprovalSweep', () => {
       repo.findPendingOlderThan.mockResolvedValue([draft]);
       await runApprovalSweep(deps, NOW);
       expect(draft.status).toBe('PENDING_APPROVAL');
-      expect(repo.save).not.toHaveBeenCalled();
+      expect(repo.saveEscalation).not.toHaveBeenCalled();
     });
 
     it('skips a draft the aggregate refuses to escalate', async () => {
@@ -370,28 +393,45 @@ describe('runApprovalSweep', () => {
       draft.reject(TARGET, 'no');
       const { repo, deps } = harness({ policies: [draftPolicy], drafts: [draft] });
       const report = await runApprovalSweep(deps, NOW);
-      expect(repo.save).not.toHaveBeenCalled();
+      expect(repo.saveEscalation).not.toHaveBeenCalled();
       expect(report.skipped).toBe(1);
     });
 
-    it('skips a draft decided meanwhile (optimistic lock)', async () => {
+    it('never overwrites a draft decided or escalated meanwhile (guarded write)', async () => {
       const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'));
       const { deps } = harness({
         policies: [draftPolicy],
         drafts: [draft],
-        saveError: new Error('version conflict'),
+        decidedMeanwhile: true,
       });
       const report = await runApprovalSweep(deps, NOW);
       expect(report).toMatchObject({ draftsEscalated: 0, skipped: 1 });
       expect(deps.notify).not.toHaveBeenCalled();
+      expect(deps.log!.warn).toHaveBeenCalledWith(
+        expect.stringContaining('decided or escalated meanwhile')
+      );
     });
 
-    it('logs a non-Error save failure', async () => {
-      const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'));
-      const { deps, repo } = harness({ policies: [draftPolicy], drafts: [draft] });
-      repo.save.mockRejectedValue('locked');
-      await runApprovalSweep(deps, NOW);
-      expect(deps.log!.warn).toHaveBeenCalledWith(expect.stringContaining('not escalated: locked'));
+    it('pages past drafts submitted too recently to reach an overdue one', async () => {
+      // 100 old drafts submitted just now, then one created later but submitted long ago.
+      const recent = Array.from({ length: 100 }, (_, i) =>
+        pendingDraftCreatedAt(
+          new Date(Date.UTC(2026, 9, 13, 8, 0, i)),
+          new Date('2026-10-13T11:59:00Z')
+        )
+      );
+      const overdue = pendingDraftCreatedAt(
+        new Date('2026-10-13T09:00:00Z'),
+        new Date('2026-10-13T09:01:00Z')
+      );
+      const { repo, deps } = harness({ policies: [draftPolicy], drafts: [...recent, overdue] });
+
+      const report = await runApprovalSweep(deps, NOW);
+
+      expect(repo.findPendingOlderThan).toHaveBeenCalledTimes(2);
+      expect(repo.findPendingOlderThan.mock.calls[1]![3]).toBe(100);
+      expect(report.draftsEscalated).toBe(1);
+      expect(overdue.status).toBe('ESCALATED');
     });
   });
 });
