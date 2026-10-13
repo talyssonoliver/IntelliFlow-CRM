@@ -26,7 +26,7 @@
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { getStandardNodeInstrumentations } from '@intelliflow/observability';
 import { installQueryBudgetOtelEmitter } from './query-budget-otel';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
@@ -117,31 +117,9 @@ export function initializeOpenTelemetry(): NodeSDK | null {
   // For Sprint 1, we use a simplified setup to avoid version conflicts
   const sdk = new NodeSDK({
     resource,
-    instrumentations: [
-      getNodeAutoInstrumentations({
-        // Customize instrumentation
-        '@opentelemetry/instrumentation-fs': {
-          enabled: false, // Disable filesystem instrumentation (too noisy)
-        },
-        '@opentelemetry/instrumentation-http': {
-          enabled: true,
-        },
-        // #809 (IFC-032 follow-up): forward pino log records to the OTel Logs
-        // SDK so they reach the same OTLP gateway as traces/metrics, with
-        // trace_id/span_id already attached for Grafana's "Logs for this
-        // trace". disableLogSending:false is this package's own default —
-        // spelled out here so the decision is visible and tested rather than
-        // depending on the auto-instrumentations-node bundle's default.
-        // Log correlation (trace_id/span_id/trace_flags) is left at its
-        // default too: packages/observability's own pino mixin already injects
-        // the same fields from the same active span, and this instrumentation
-        // composes with an existing mixin instead of overwriting it, so the
-        // two are redundant-safe, not conflicting.
-        '@opentelemetry/instrumentation-pino': {
-          disableLogSending: false,
-        },
-      }),
-    ],
+    // Shared with apps/ai-worker — see packages/observability/src/node-instrumentations.ts
+    // (IFC-032 / #809) for the fs/http/pino instrumentation config and rationale.
+    instrumentations: [getStandardNodeInstrumentations()],
   });
 
   console.log(`[OpenTelemetry] Initialized tracing for ${config.serviceName}`);

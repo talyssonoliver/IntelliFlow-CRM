@@ -75,6 +75,10 @@ export {
 // Export request-scoped log context (AsyncLocalStorage-backed)
 export { runWithLogContext, getCurrentLogContext, type LogRequestContext } from './log-context';
 
+// Shared NodeSDK auto-instrumentation set (IFC-032 / #809) — used by
+// apps/api and apps/ai-worker's otel.ts so the config exists in one place.
+export { getStandardNodeInstrumentations } from './node-instrumentations';
+
 // Re-export OTel SDK trace primitives needed for in-process span capture (IFC-032).
 // Used by:
 //   - Section F LeadRoutingService tests (workflow.lead.route span assertions)

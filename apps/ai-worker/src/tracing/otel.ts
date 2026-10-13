@@ -17,7 +17,7 @@
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { getStandardNodeInstrumentations } from '@intelliflow/observability';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
@@ -84,26 +84,9 @@ export function initializeOpenTelemetry(): NodeSDK | null {
 
   const sdk = new NodeSDK({
     resource,
-    instrumentations: [
-      getNodeAutoInstrumentations({
-        // Disable filesystem instrumentation — too noisy
-        '@opentelemetry/instrumentation-fs': { enabled: false },
-        '@opentelemetry/instrumentation-http': { enabled: true },
-        // #809 (IFC-032 follow-up): forward pino log records (every chain
-        // file's own `import pino from 'pino'` logger included) to the OTel
-        // Logs SDK so they reach the same OTLP gateway as traces/metrics, with
-        // trace_id/span_id already attached for Grafana's "Logs for this
-        // trace". disableLogSending:false is this package's own default —
-        // spelled out here so the decision is visible and tested rather than
-        // depending on the auto-instrumentations-node bundle's default.
-        // Log correlation is left at its default too: it composes with an
-        // existing pino `mixin` option (e.g. packages/observability's own)
-        // instead of overwriting it, so the two cannot conflict.
-        '@opentelemetry/instrumentation-pino': {
-          disableLogSending: false,
-        },
-      }),
-    ],
+    // Shared with apps/api — see packages/observability/src/node-instrumentations.ts
+    // (IFC-032 / #809) for the fs/http/pino instrumentation config and rationale.
+    instrumentations: [getStandardNodeInstrumentations()],
   });
 
   console.log(`[OpenTelemetry] Initialized tracing for ${config.serviceName}`);
