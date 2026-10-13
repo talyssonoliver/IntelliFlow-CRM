@@ -17,15 +17,11 @@
  *
  * After this, run split-sprint-plan.ts + generate-context.ts as usual.
  */
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import Papa from 'papaparse';
 
 const CSV = join(process.cwd(), 'apps', 'project-tracker', 'docs', 'metrics', '_global', 'Sprint_plan.csv');
-if (!existsSync(CSV)) {
-  process.stderr.write(`Sprint_plan.csv not found at ${CSV} (run from the repo/worktree root)\n`);
-  process.exit(1);
-}
 
 const args = process.argv.slice(2).map((a) => {
   const i = a.indexOf('=');
@@ -36,7 +32,18 @@ if (!args.length || args.some((a) => !a.id || !a.status)) {
   process.exit(1);
 }
 
-let raw = readFileSync(CSV, 'utf8');
+// Read (not check-then-read): a path that existed a moment ago can be gone or
+// replaced by the time it is opened, so the attempt itself — not a prior
+// existsSync() — is what tells us whether the file is there.
+let raw;
+try {
+  raw = readFileSync(CSV, 'utf8');
+} catch (err) {
+  process.stderr.write(
+    `Sprint_plan.csv not found at ${CSV} (run from the repo/worktree root): ${err.message}\n`
+  );
+  process.exit(1);
+}
 const { data } = Papa.parse(raw, { header: true, skipEmptyLines: true });
 
 for (const { id, status } of args) {

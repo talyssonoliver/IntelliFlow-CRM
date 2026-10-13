@@ -13,7 +13,6 @@ import http from 'k6/http';
 import { check, sleep, group } from 'k6';
 import { Rate, Trend, Counter } from 'k6/metrics';
 import { randomString, randomIntBetween } from 'https://jslib.k6.io/k6-utils/1.4.0/index.js';
-import { SharedArray } from 'k6/data';
 import { sanitizeSummaryData } from './lib/redact.js';
 
 // Custom metrics
@@ -34,11 +33,6 @@ const TRPC_PATH = '/api/trpc';
 
 // Test user credentials (from seed data)
 const TEST_PASSWORD = __ENV.K6_TEST_PASSWORD || '';
-const TEST_USERS = [
-  { email: 'admin@intelliflow.dev', password: TEST_PASSWORD },
-  { email: 'alex@intelliflow.dev', password: TEST_PASSWORD },
-  { email: 'john.sales@intelliflow.dev', password: TEST_PASSWORD },
-];
 
 // Quick test options - 30 second test for faster feedback
 export const options = {

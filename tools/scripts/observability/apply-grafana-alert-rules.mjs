@@ -76,10 +76,27 @@ export function buildRule(entry, config) {
   };
 }
 
+// Every uid/name below is interpolated straight into a URL path segment in
+// client() below (e.g. `/api/v1/provisioning/alert-rules/${entry.uid}`), so
+// validateConfig restricts them to this charset before any of them reaches
+// an API call: no `/`, `?`, `#`, `..` or whitespace can turn one path segment
+// into two, redirect the request to a different endpoint, or smuggle a query
+// string. The committed alert-rules.json is reviewed source, not runtime
+// input, but the check costs nothing and holds even if that ever changes.
+const SAFE_PATH_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
+
+function checkPathSegment(problems, label, value) {
+  if (value !== undefined && value !== '' && !SAFE_PATH_SEGMENT.test(value))
+    problems.push(`${label}: must match ${SAFE_PATH_SEGMENT} (got ${JSON.stringify(value)})`);
+}
+
 /** Validate the rules file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
   const seen = new Set();
+  checkPathSegment(problems, 'folder.uid', config.folder?.uid);
+  checkPathSegment(problems, 'group.name', config.group?.name);
+  if (config.deliveryTest) checkPathSegment(problems, 'deliveryTest.uid', config.deliveryTest.uid);
   for (const entry of config.rules) {
     for (const key of [
       'uid',
@@ -95,6 +112,7 @@ export function validateConfig(config) {
       if (entry[key] === undefined || entry[key] === '')
         problems.push(`${entry.uid ?? '?'}: missing ${key}`);
     }
+    checkPathSegment(problems, `${entry.uid ?? '?'}: uid`, entry.uid);
     if (!['gt', 'lt'].includes(entry.operator))
       problems.push(`${entry.uid}: operator must be gt or lt`);
     if (typeof entry.threshold !== 'number')
@@ -107,6 +125,9 @@ export function validateConfig(config) {
   return problems;
 }
 
+/** Thin fetch wrapper for the provisioning API. `path` must already be built from
+ * values validateConfig has checked (see SAFE_PATH_SEGMENT) — this layer only
+ * adds the base URL, auth and JSON plumbing, it does not re-sanitize `path`. */
 function client(baseUrl, token, fetchImpl = fetch) {
   return async (method, path, body) => {
     const res = await fetchImpl(`${baseUrl.replace(/\/$/, '')}${path}`, {
