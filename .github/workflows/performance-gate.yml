@@ -7,9 +7,15 @@ name: Performance Gate
 # Pre-MVP: PR trigger disabled. The gate spins up Postgres + Redis, runs
 # Prisma migrations + seed, then k6-loads the API — only meaningful once
 # we have a stable seed dataset and tuned thresholds. Until then it's noise
-# on every PR. Triggered manually via `gh workflow run performance-gate.yml`
-# (or pushed nightly via cron — add a `schedule:` block when the seed flow
-# is stable). To re-enable PR mode, restore the `pull_request:` block below.
+# on every PR. Triggered manually via `gh workflow run performance-gate.yml`.
+# To re-enable PR mode, restore the `pull_request:` block below.
+#
+# Issue #318 (owner decision 2026-10-12): the 1,000-VU `k6-nightly-1000vu` job
+# below runs on the `schedule:` cron, on a SELF-HOSTED runner — not
+# GitHub-hosted minutes, and not per-PR. It validates the IFC-007 "1,000
+# concurrent users" headline, which until now was stub evidence only
+# (issue #312). The other two jobs in this file stay workflow_dispatch-only
+# and GitHub-hosted, unaffected by this schedule.
 on:
   workflow_dispatch:
     inputs:
@@ -18,6 +24,18 @@ on:
         required: false
         default: 'false'
         type: boolean
+      run_nightly_now:
+        description: 'Manually trigger the self-hosted nightly 1000-VU job (#318) instead of waiting for its cron'
+        required: false
+        default: 'false'
+        type: boolean
+  schedule:
+    # Nightly, once a day — never sub-daily (2026-10-05 Actions-minutes
+    # ruling). Runs on a self-hosted runner anyway, so it doesn't draw from
+    # the GitHub-hosted free-minutes budget at all; the once-daily cadence
+    # matches issue #318's "nightly" ask and keeps the self-hosted machine
+    # from fighting itself (pre-ship, other lanes) more than once a night.
+    - cron: '0 4 * * *'
   # pull_request:
   #   branches: [main, develop]
   #   paths:
@@ -34,6 +52,11 @@ env:
 jobs:
   performance-test:
     name: k6 Performance Test
+    # Manual-dispatch only — the new `schedule:` trigger (#318) is for
+    # `k6-nightly-1000vu` alone. Without this guard this job would otherwise
+    # also fire every night on GitHub-hosted minutes, since `inputs.*` is
+    # empty (not `!= 'true'` false) on a schedule event.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -306,6 +329,8 @@ jobs:
   # (p95<200ms, error<0.1%) gate the job. `VALIDATE:pnpm test:load`.
   ifc-033-critical-path:
     name: IFC-033 k6 Critical-Path Load Test
+    # Manual-dispatch only — see the comment on `performance-test` above.
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -400,3 +425,142 @@ jobs:
             artifacts/reports/load-test-report.html
             artifacts/benchmarks/ifc-033-load-summary.json
           retention-days: 30
+
+  # Issue #318 — nightly 1,000-VU k6 load test. Owner decision 2026-10-12:
+  # run on a SELF-HOSTED runner, not GitHub-hosted minutes, and on a
+  # schedule, not per-PR. Validates the IFC-007 "1,000 concurrent users"
+  # headline, which until now was stub evidence only (issue #312 — see
+  # .specify/sprints/sprint-3/attestations/IFC-007/attestation.json
+  # kpi_results[0]: "1000 VU in k6 load-test.js stages", never an actual
+  # measured run).
+  #
+  # Target environment: the issue did not name a specific non-production
+  # environment, so this follows the SAME ephemeral-Postgres pattern already
+  # proven above in `ifc-033-critical-path` (ubuntu-latest's ephemeral
+  # `pgvector/pgvector:pg15`), rather than a real Supabase project. The
+  # `?pgbouncer=true` suffix on DATABASE_URL mirrors the production
+  # connection-string SHAPE (issue #312 / PR #300's :6543?pgbouncer=true) —
+  # it disables Prisma's prepared-statement cache the way Supavisor's
+  # transaction-pooler mode requires — but plain Postgres has no actual
+  # Supavisor behind it, so this does not exercise pooler-specific failure
+  # modes (connection-ceiling exhaustion etc.). That needs a real non-prod
+  # Supabase project with its own 6543 pooler; out of scope here.
+  #
+  # Local `supabase start` is NOT used for this job: it is a known, currently
+  # broken path on this owner's machine (pgvector extension defect, recorded
+  # 2026-06-26 — see docs/operations/sprint-18-pg-181-session-issues-log.md
+  # and artifacts/lighthouse/PG-196/README.md), which is also where any
+  # self-hosted runner for this repo would run.
+  #
+  # ⚠ No self-hosted runner is registered on this repo yet — verified
+  # 2026-10-12 via `gh api repos/talyssonoliver/IntelliFlow-CRM/actions/runners`
+  # (0 runners). This job will show "queued" forever, not "slow", until one
+  # is registered with at least the `self-hosted` label (plus `Linux` and
+  # Docker, for the `services:` block below) — e.g. following the same
+  # pattern as COA's WSL runner (`talysson-wsl-cal`, self-hosted/Linux/X64).
+  # Registering a new CI runner is infrastructure on the owner's machine, so
+  # it is left for the owner rather than done here.
+  k6-nightly-1000vu:
+    name: 'IFC-007 Nightly k6 1000-VU Load Test (#318)'
+    # The `schedule:` trigger fires the WHOLE workflow; only this job should
+    # act on it. A human can also force an out-of-band run via
+    # workflow_dispatch with run_nightly_now=true, independent of the other
+    # two (GitHub-hosted, manual-only) jobs above.
+    if: |
+      github.event_name == 'schedule' ||
+      (github.event_name == 'workflow_dispatch' && inputs.run_nightly_now == 'true')
+    runs-on: [self-hosted, Linux, X64]
+    timeout-minutes: 30
+    env:
+      # Host port 55432 is deliberately NOT 5432 or 5433: this self-hosted
+      # runner is the owner's own machine, which also runs the pre-ship
+      # gate's `intelliflow-postgres-test` container on 5433
+      # (scripts/lib/preship-integration-infra.mjs) and may have a plain dev
+      # Postgres on 5432. Colliding with either fails this job for a reason
+      # that looks like a real failure and isn't one (see the
+      # ci-service-ports-collide-with-local-verification lesson from COA).
+      DATABASE_URL: postgresql://postgres:${{ secrets.PERF_GATE_PG_PASSWORD }}@localhost:55432/intelliflow_test?pgbouncer=true
+      DIRECT_URL: postgresql://postgres:${{ secrets.PERF_GATE_PG_PASSWORD }}@localhost:55432/intelliflow_test
+      PGPASSWORD: ${{ secrets.PERF_GATE_PG_PASSWORD }}
+    services:
+      postgres:
+        image: pgvector/pgvector:pg15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ${{ secrets.PERF_GATE_PG_PASSWORD }}
+          POSTGRES_DB: intelliflow_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install k6 (if missing on this self-hosted runner)
+        run: |
+          if ! command -v k6 >/dev/null 2>&1; then
+            sudo gpg -k
+            sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+            echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+            sudo apt-get update
+            sudo apt-get install -y k6
+          fi
+          k6 version
+      - name: Generate Prisma client
+        run: pnpm run db:generate
+      - name: Bootstrap Supabase schemas + roles
+        run: |
+          PGPASSWORD=${{ secrets.PERF_GATE_PG_PASSWORD }} psql -h localhost -p 55432 -U postgres -d intelliflow_test -v ON_ERROR_STOP=1 <<'SQL'
+            CREATE SCHEMA IF NOT EXISTS extensions;
+            DO $$
+            BEGIN
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+              IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'service_role') THEN CREATE ROLE service_role NOLOGIN BYPASSRLS; END IF;
+            END
+            $$;
+            GRANT USAGE ON SCHEMA extensions TO postgres, anon, authenticated, service_role;
+          SQL
+      - name: 'Run migrations + seed (seeded dataset per #318)'
+        run: pnpm run db:migrate && pnpm run db:seed
+      - name: Build API server
+        run: pnpm --filter api build
+      - name: Start API server
+        run: |
+          pnpm --filter api start &
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3000/api/trpc/health.ping >/dev/null 2>&1; then echo "API ready"; break; fi
+            echo "waiting for API... ($i/30)"; sleep 2
+          done
+        env:
+          DATABASE_URL: ${{ env.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+      - name: Run nightly 1000-VU k6 load test (tools/scripts/k6/load-test.js)
+        id: nightly-k6
+        run: |
+          mkdir -p artifacts/benchmarks
+          k6 run --summary-export=artifacts/benchmarks/nightly-1000vu-${{ github.run_id }}.json \
+            --env BASE_URL=http://localhost:3000 \
+            tools/scripts/k6/load-test.js
+      - name: Build IFC-007 SLO summary from the real run (never fabricated)
+        if: always()
+        run: node tools/scripts/k6/summarize-nightly-ifc007.mjs artifacts/benchmarks/nightly-1000vu-${{ github.run_id }}.json
+      - name: Upload nightly k6 summary + SLO artifact
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: ifc-007-nightly-k6-${{ github.run_id }}
+          path: |
+            artifacts/benchmarks/nightly-1000vu-${{ github.run_id }}.json
+            artifacts/benchmarks/ifc-007-nightly-slo.json
+          retention-days: 90
