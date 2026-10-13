@@ -1814,7 +1814,7 @@ export const opportunityRouter = createTRPCRouter({
     const tenantId = typedCtx.tenant.tenantId;
 
     const deal = await typedCtx.prismaWithTenant.opportunity.findFirst({
-      where: { id: input.opportunityId, deletedAt: null } as any,
+      where: { id: input.opportunityId, tenantId, deletedAt: null } as any,
       select: { id: true },
     });
     if (!deal) {

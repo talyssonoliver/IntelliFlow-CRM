@@ -80,7 +80,7 @@ function requireStorageAdapters(ctx: Context): {
 async function findDealOrThrow(ctx: Context, opportunityId: string): Promise<{ id: string }> {
   const typedCtx = getTenantContext(ctx);
   const deal = await typedCtx.prismaWithTenant.opportunity.findFirst({
-    where: { id: opportunityId, deletedAt: null } as any,
+    where: { id: opportunityId, tenantId: typedCtx.tenant.tenantId, deletedAt: null } as any,
     select: { id: true },
   });
   if (!deal) {
@@ -172,7 +172,7 @@ export async function listDealFiles(ctx: Context, opportunityId: string) {
   await findDealOrThrow(ctx, opportunityId);
 
   const files = await typedCtx.prismaWithTenant.dealFile.findMany({
-    where: { opportunityId },
+    where: { opportunityId, tenantId: typedCtx.tenant.tenantId },
     orderBy: { uploadedAt: 'desc' },
   });
 

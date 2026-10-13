@@ -218,6 +218,38 @@ describe('Opportunity Router - Deal Actions (#421)', () => {
         })
       );
     });
+
+    // Tenant-isolation defense-in-depth (#421 security fix): the deal-existence
+    // check must scope by tenantId, not just opportunityId — matching
+    // updateProduct/removeProduct/removeFile immediately adjacent in this
+    // module. Without it, the documented pooled-connection SET race lets a
+    // caller in tenant A plant a product on a tenant-B deal.
+    it('scopes the deal-existence check by tenantId, not just opportunityId', async () => {
+      const ctx = createTestContext();
+      (prismaMock.opportunity.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+        id: TEST_UUIDS.opportunity1,
+      });
+      (prismaMock.dealProduct.create as ReturnType<typeof vi.fn>).mockImplementation(
+        async ({ data }: any) => ({ id: 'cproduct01', ...data })
+      );
+
+      const caller = opportunityRouter.createCaller(ctx);
+      await caller.addProduct({
+        opportunityId: TEST_UUIDS.opportunity1,
+        name: 'Widget',
+        quantity: 1,
+        unitPrice: 10,
+      });
+
+      expect(prismaMock.opportunity.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            id: TEST_UUIDS.opportunity1,
+            tenantId: TEST_UUIDS.tenant,
+          }),
+        })
+      );
+    });
   });
 
   describe('updateProduct', () => {

@@ -106,6 +106,28 @@ describe('deal-files (#421)', () => {
       ).rejects.toMatchObject({ code: 'NOT_FOUND' });
     });
 
+    // Tenant-isolation defense-in-depth (#421 security fix): the deal-existence
+    // check must scope by tenantId, not just id. Under the documented pooled-
+    // connection SET race (tenant-context.ts), RLS alone can't be trusted — this
+    // explicit filter is what stops a cross-tenant opportunityId from resolving.
+    it('scopes the deal-existence check by tenantId, not just opportunityId', async () => {
+      const ctx = buildCtx();
+
+      await attachDealFile(ctx, {
+        opportunityId: OPPORTUNITY_ID,
+        name: 'doc.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 11,
+        content: SAMPLE_CONTENT,
+      });
+
+      expect((ctx.prismaWithTenant as any).opportunity.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ id: OPPORTUNITY_ID, tenantId: TENANT_ID }),
+        })
+      );
+    });
+
     it('rejects a disallowed MIME type before touching storage', async () => {
       const ctx = buildCtx();
 
@@ -224,6 +246,23 @@ describe('deal-files (#421)', () => {
       expect((ctx.adapters as any).storageService.getSignedUrl).toHaveBeenCalledWith(
         'primary/key-1',
         3600
+      );
+    });
+
+    // Tenant-isolation defense-in-depth (#421 security fix): without this,
+    // a caller in tenant A who knows/guesses a tenant-B opportunityId (and
+    // slips through the pooled-connection SET race) gets tenant B's file
+    // list back, including a live signed download URL per file.
+    it('scopes the file list by tenantId, not just opportunityId', async () => {
+      const ctx = buildCtx();
+      (ctx.prismaWithTenant as any).dealFile.findMany.mockResolvedValue([]);
+
+      await listDealFiles(ctx, OPPORTUNITY_ID);
+
+      expect((ctx.prismaWithTenant as any).dealFile.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ opportunityId: OPPORTUNITY_ID, tenantId: TENANT_ID }),
+        })
       );
     });
 
