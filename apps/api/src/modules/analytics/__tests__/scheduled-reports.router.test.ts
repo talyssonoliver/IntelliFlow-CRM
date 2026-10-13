@@ -88,27 +88,12 @@ const createInput = {
   format: 'pdf' as const,
 };
 
-function txMock() {
-  return {
-    $executeRaw: vi.fn().mockResolvedValue(1),
-    reportSchedule: {
-      count: vi.fn().mockResolvedValue(0),
-      update: vi.fn(),
-      deleteMany: vi.fn(),
-      findMany: vi.fn().mockResolvedValue([]),
-    },
-    reportScheduleTag: {
-      findFirst: vi.fn(),
-      update: vi.fn(),
-      delete: vi.fn(),
-    },
-  };
-}
-
-function useTx() {
-  const tx = txMock();
-  (prismaMock.$transaction as any).mockImplementationOnce(async (fn: any) => fn(tx));
-  return tx;
+/**
+ * Every write runs inside $transaction; the transaction client is prismaMock itself
+ * (installed in beforeEach), so tx.* and prismaMock.* are the same mocks.
+ */
+function useTx(): any {
+  return prismaMock;
 }
 
 function prismaError(code: string) {
@@ -306,7 +291,6 @@ describe('scheduledReportsRouter (PG-201)', () => {
       );
       await admin.create({ ...createInput, isActive: false });
       expect(prismaMock.reportSchedule.count).not.toHaveBeenCalled();
-      expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
       expect((prismaMock.reportSchedule.create as any).mock.calls[0][0].data.nextRunAt).toBeNull();
     });
 
@@ -390,7 +374,7 @@ describe('scheduledReportsRouter (PG-201)', () => {
     it('returns NOT_FOUND for a foreign-tenant id without writing', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(null);
       await expectCode(admin.update({ id: FOREIGN_ID, name: 'x' }), 'NOT_FOUND');
-      expect(prismaMock.$transaction).not.toHaveBeenCalled();
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
     });
 
     it('maps P2025 thrown inside the transaction to NOT_FOUND', async () => {
@@ -491,7 +475,42 @@ describe('scheduledReportsRouter (PG-201)', () => {
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.update({ id: SCHEDULE_ID, templateId: TEMPLATE_ID, name: 'Renamed' });
       expect(prismaMock.reportTemplate.findFirst).not.toHaveBeenCalled();
-      expect(tx.$executeRaw).not.toHaveBeenCalled();
+    });
+
+    it('pauses a legacy schedule that has no cron without validating it', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ templateId: null, template: null, reportId: 'rep-1', cronExpression: null })
+      );
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, isActive: false });
+      expect(tx.reportSchedule.update.mock.calls[0][0].data).toEqual({
+        isActive: false,
+        nextRunAt: null,
+      });
+    });
+
+    it('keeps an inactive tag already on the schedule and only checks newly added tags', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ tags: ['Retired'] })
+      );
+      (prismaMock.reportScheduleTag.findMany as any).mockResolvedValueOnce([{ name: 'Finance' }]);
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, tags: ['Retired', 'Finance'] });
+      expect(prismaMock.reportScheduleTag.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { tenantId, isActive: true, name: { in: ['Finance'] } } })
+      );
+    });
+
+    it('reads the schedule only after taking the tenant lock', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(scheduleRow());
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.update({ id: SCHEDULE_ID, name: 'Renamed' });
+      const lockOrder = (prismaMock.$executeRaw as any).mock.invocationCallOrder[0];
+      const readOrder = (prismaMock.reportSchedule.findFirst as any).mock.invocationCallOrder[0];
+      expect(lockOrder).toBeLessThan(readOrder);
     });
 
     it('enforces the active cap when an update activates a schedule', async () => {
@@ -550,6 +569,19 @@ describe('scheduledReportsRouter (PG-201)', () => {
         })
       );
       expect(view.isActive).toBe(false);
+    });
+
+    it('re-reads the row under the lock, so a stale pre-read cannot skip the cap', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ isActive: false })
+      );
+      visibleTemplate();
+      const tx = useTx();
+      tx.reportSchedule.count.mockResolvedValueOnce(100);
+      await expectCode(admin.setActive({ id: SCHEDULE_ID, isActive: true }), 'BAD_REQUEST');
+      const lockOrder = (prismaMock.$executeRaw as any).mock.invocationCallOrder[0];
+      const readOrder = (prismaMock.reportSchedule.findFirst as any).mock.invocationCallOrder[0];
+      expect(lockOrder).toBeLessThan(readOrder);
     });
 
     it('activating recomputes the next run after the visibility and cap checks', async () => {
@@ -748,6 +780,17 @@ describe('scheduledReportsRouter (PG-201)', () => {
         where: { id: 'tag-1', tenantId },
         data: { description: null },
       });
+    });
+
+    it('takes the tenant lock before rewriting schedule tags', async () => {
+      const tx = useTx();
+      tx.reportScheduleTag.findFirst.mockResolvedValueOnce(tagRow());
+      tx.reportScheduleTag.update.mockResolvedValueOnce(tagRow({ name: 'Money' }));
+      tx.reportSchedule.findMany.mockResolvedValueOnce([]);
+      await admin.tags.update({ id: 'tag-1', name: 'Money' });
+      const lockOrder = (prismaMock.$executeRaw as any).mock.invocationCallOrder[0];
+      const readOrder = (prismaMock.reportScheduleTag.findFirst as any).mock.invocationCallOrder[0];
+      expect(lockOrder).toBeLessThan(readOrder);
     });
 
     it('updates colour without touching schedules', async () => {

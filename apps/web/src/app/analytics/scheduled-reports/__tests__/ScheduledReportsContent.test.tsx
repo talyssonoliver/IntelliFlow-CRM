@@ -370,6 +370,43 @@ describe('ScheduledReportsContent', () => {
     );
   });
 
+  it('offers inactive tags only when the edited schedule already carries them', async () => {
+    setup({
+      list: [schedule({ tags: ['Retired'] })],
+      tags: [
+        {
+          id: 't1',
+          name: 'Finance',
+          colorToken: 'blue',
+          description: null,
+          sortOrder: 0,
+          isActive: true,
+        },
+        {
+          id: 't2',
+          name: 'Retired',
+          colorToken: 'slate',
+          description: null,
+          sortOrder: 1,
+          isActive: false,
+        },
+        {
+          id: 't3',
+          name: 'Old',
+          colorToken: 'slate',
+          description: null,
+          sortOrder: 2,
+          isActive: false,
+        },
+      ],
+    });
+    render(<ScheduledReportsContent />);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit Weekly pipeline' }));
+    expect(await screen.findByRole('checkbox', { name: 'Retired (inactive)' })).toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name: 'Finance' })).toBeInTheDocument();
+    expect(screen.queryByRole('checkbox', { name: /^Old/ })).toBeNull();
+  });
+
   it('refreshes lists on success and toasts API errors', () => {
     setup();
     render(<ScheduledReportsContent />);

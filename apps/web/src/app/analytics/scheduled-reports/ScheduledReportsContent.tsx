@@ -303,7 +303,8 @@ export default function ScheduledReportsContent() {
           onOpenChange={(open) => (open ? undefined : closeDialog())}
           schedule={dialog.schedule}
           templates={templates}
-          tags={tags.filter((t) => t.isActive)}
+          // Active tags, plus inactive ones already on this schedule so they can be removed.
+          tags={tags.filter((t) => t.isActive || (dialog.schedule?.tags.includes(t.name) ?? false))}
           existingNames={schedules.map((s) => ({ id: s.id, name: s.name }))}
           isSaving={isSaving}
           onSubmit={handleSubmit}

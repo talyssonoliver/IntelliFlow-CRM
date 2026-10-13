@@ -307,6 +307,28 @@ describe('ScheduleDialog', () => {
     });
   });
 
+  it('lets an inactive tag already on the schedule be removed', async () => {
+    const { onSubmit } = renderDialog({
+      schedule: existingSchedule({ tags: ['Retired'] }),
+      tags: [
+        {
+          id: 't9',
+          name: 'Retired',
+          colorToken: 'slate',
+          description: null,
+          sortOrder: 1,
+          isActive: false,
+        },
+      ],
+    });
+    const box = screen.getByRole('checkbox', { name: 'Retired (inactive)' });
+    expect(box).toBeChecked();
+    fireEvent.click(box);
+    save();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    expect(onSubmit.mock.calls[0][0].input).toMatchObject({ tags: [] });
+  });
+
   it('Cancel closes the dialog and is disabled while saving', () => {
     const { onOpenChange } = renderDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));

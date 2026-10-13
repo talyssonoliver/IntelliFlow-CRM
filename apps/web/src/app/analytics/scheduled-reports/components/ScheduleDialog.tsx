@@ -680,7 +680,7 @@ export function ScheduleDialog({
                         }
                       />
                       <Label htmlFor={id} className="font-normal">
-                        {tag.name}
+                        {tag.isActive ? tag.name : `${tag.name} (inactive)`}
                       </Label>
                     </div>
                   );

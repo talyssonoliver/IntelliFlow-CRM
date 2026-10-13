@@ -17,7 +17,7 @@
  */
 
 import { TRPCError } from '@trpc/server';
-import type { Prisma } from '@intelliflow/db';
+import type { Prisma, ReportSchedule } from '@intelliflow/db';
 import { ACCOUNT_OWNER_ADMIN_ROLES } from '@intelliflow/domain';
 import {
   createScheduledReportSchema,
@@ -30,6 +30,7 @@ import {
   SCHEDULE_LIMITS,
   type ScheduledReportView,
   type ReportScheduleTagView,
+  type UpdateScheduledReportInput,
 } from '@intelliflow/validators';
 import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import type { TenantAwareContext } from '../../security/tenant-context';
@@ -98,9 +99,23 @@ function scheduleNotFound(): TRPCError {
   return new TRPCError({ code: 'NOT_FOUND', message: 'Scheduled report not found.' });
 }
 
+/**
+ * Serialise every schedule and tag write of one tenant: the active-schedule cap and
+ * the tag-array rewrites are read-then-write, so concurrent requests must not
+ * interleave. Transaction-scoped advisory lock, released at commit/rollback.
+ */
+async function lockTenantSchedules(tx: ScheduleTx, tenantId: string): Promise<void> {
+  const lockKey = 'report_schedules:' + tenantId;
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+}
+
 /** The template must exist in this tenant and be visible to the caller (PG-200 rule). */
-async function assertTemplateVisible(ctx: ScheduleCtx, templateId: string): Promise<void> {
-  const template = await ctx.prismaWithTenant.reportTemplate.findFirst({
+async function assertTemplateVisible(
+  tx: ScheduleTx,
+  ctx: ScheduleCtx,
+  templateId: string
+): Promise<void> {
+  const template = await tx.reportTemplate.findFirst({
     where: {
       id: templateId,
       tenantId: ctx.tenant.tenantId,
@@ -113,11 +128,11 @@ async function assertTemplateVisible(ctx: ScheduleCtx, templateId: string): Prom
   }
 }
 
-/** Every tag must be an active tag of this tenant's catalogue. */
-async function assertTagsExist(ctx: ScheduleCtx, tags: string[] | undefined): Promise<void> {
-  if (!tags || tags.length === 0) return;
-  const found = await ctx.prismaWithTenant.reportScheduleTag.findMany({
-    where: { tenantId: ctx.tenant.tenantId, isActive: true, name: { in: tags } },
+/** Newly assigned tags must be active tags of this tenant's catalogue. */
+async function assertTagsExist(tx: ScheduleTx, tenantId: string, tags: string[]): Promise<void> {
+  if (tags.length === 0) return;
+  const found = await tx.reportScheduleTag.findMany({
+    where: { tenantId, isActive: true, name: { in: tags } },
     select: { name: true },
   });
   const known = new Set(found.map((t) => t.name));
@@ -127,18 +142,12 @@ async function assertTagsExist(ctx: ScheduleCtx, tags: string[] | undefined): Pr
   }
 }
 
-/**
- * Activation slot for one more active schedule. Runs inside the write transaction
- * after a per-tenant advisory lock, so two concurrent activations cannot both pass
- * the cap (the lock is released when the transaction ends).
- */
-async function reserveActiveSlot(
+/** Room for one more active schedule (call under lockTenantSchedules). */
+async function assertActiveCapacity(
   tx: ScheduleTx,
   tenantId: string,
   excludeId?: string
 ): Promise<void> {
-  const lockKey = 'report_schedules:' + tenantId;
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
   const active = await tx.reportSchedule.count({
     where: {
       tenantId,
@@ -184,6 +193,87 @@ function assertReferenced(templateId: string | null, reportId: string | null): v
     code: 'BAD_REQUEST',
     message: 'Choose a report template before activating this schedule.',
   });
+}
+
+type ScheduleChanges = Omit<UpdateScheduledReportInput, 'id'>;
+
+interface UpdatePlan {
+  data: Prisma.ReportScheduleUncheckedUpdateInput;
+  activating: boolean;
+  /** Template whose visibility must be checked (newly chosen, or re-activated). */
+  checkTemplateId: string | null;
+  /** Tags not already on the schedule (unchanged assignments may be inactive tags). */
+  newTags: string[];
+  recipientsChanged: boolean;
+}
+
+/** nextRunAt for the update: null when paused, recomputed when (re)activated or rescheduled. */
+function nextRunField(
+  isActive: boolean,
+  wasActive: boolean,
+  definitionChanged: boolean,
+  nextRun: Date | null
+): { nextRunAt?: Date | null } {
+  if (!isActive) return wasActive || definitionChanged ? { nextRunAt: null } : {};
+  return nextRun ? { nextRunAt: nextRun } : {};
+}
+
+type ScheduleFieldChanges = Omit<
+  ScheduleChanges,
+  'cadence' | 'dayOfWeek' | 'dayOfMonth' | 'timeOfDay' | 'cronExpression'
+>;
+
+/** Only the fields the client sent (undefined means "leave unchanged"). */
+function changedFields(fields: ScheduleFieldChanges): Prisma.ReportScheduleUncheckedUpdateInput {
+  return {
+    ...(fields.name !== undefined && { name: fields.name }),
+    ...(fields.description !== undefined && { description: fields.description }),
+    ...(fields.templateId !== undefined && { templateId: fields.templateId }),
+    ...(fields.timezone !== undefined && { timezone: fields.timezone }),
+    ...(fields.recipients !== undefined && { recipients: fields.recipients }),
+    ...(fields.format !== undefined && { format: fields.format }),
+    ...(fields.colorToken !== undefined && { colorToken: fields.colorToken }),
+    ...(fields.tags !== undefined && { tags: fields.tags }),
+    ...(fields.isActive !== undefined && { isActive: fields.isActive }),
+  };
+}
+
+/** Decide an update from the row as read under the tenant lock. Pure; throws TRPCError. */
+function planScheduleUpdate(
+  existing: ReportSchedule,
+  changes: ScheduleChanges,
+  now: Date
+): UpdatePlan {
+  const { cadence, dayOfWeek, dayOfMonth, timeOfDay, cronExpression, ...fields } = changes;
+  const columns: ScheduleColumns | null = cadence
+    ? buildScheduleColumns({ cadence, dayOfWeek, dayOfMonth, timeOfDay, cronExpression })
+    : null;
+  const timezone = fields.timezone ?? existing.timezone;
+  const cron = columns ? columns.cronExpression : existing.cronExpression;
+  const isActive = fields.isActive ?? existing.isActive;
+  const templateChanged =
+    fields.templateId !== undefined && fields.templateId !== existing.templateId;
+  const templateId = fields.templateId ?? existing.templateId;
+  const activating = isActive && !existing.isActive;
+  if (isActive) assertReferenced(templateId, existing.reportId);
+
+  // Validate the cron whenever the definition changes or the schedule starts running;
+  // pausing never needs a valid cron (legacy rows may have none).
+  const definitionChanged = columns !== null || fields.timezone !== undefined;
+  const nextRun = definitionChanged || activating ? checkedNextRun(cron, timezone, now) : null;
+
+  return {
+    activating,
+    checkTemplateId: templateChanged || activating ? templateId : null,
+    newTags: (fields.tags ?? []).filter((t) => !existing.tags.includes(t)),
+    recipientsChanged:
+      fields.recipients !== undefined && !sameRecipients(fields.recipients, existing.recipients),
+    data: {
+      ...changedFields(fields),
+      ...(columns ?? {}),
+      ...nextRunField(isActive, existing.isActive, definitionChanged, nextRun),
+    },
+  };
 }
 
 function logScheduleAudit(
@@ -292,6 +382,7 @@ const tagsRouter = createTRPCRouter({
       const { id, ...fields } = input;
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
+          await lockTenantSchedules(tx, tenantId);
           const existing = await tx.reportScheduleTag.findFirst({ where: { id, tenantId } });
           if (!existing) throw new TRPCError({ code: 'NOT_FOUND', message: 'Tag not found.' });
           const updated = await tx.reportScheduleTag.update({
@@ -322,6 +413,7 @@ const tagsRouter = createTRPCRouter({
       assertScheduleManager(ctx);
       const tenantId = ctx.tenant.tenantId;
       await ctx.prismaWithTenant.$transaction(async (tx) => {
+        await lockTenantSchedules(tx, tenantId);
         const existing = await tx.reportScheduleTag.findFirst({
           where: { id: input.id, tenantId },
         });
@@ -362,9 +454,6 @@ export const scheduledReportsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<ScheduledReportView> => {
       assertScheduleManager(ctx);
       const tenantId = ctx.tenant.tenantId;
-      await assertTemplateVisible(ctx, input.templateId);
-      await assertTagsExist(ctx, input.tags);
-
       const isActive = input.isActive ?? true;
       const columns = buildScheduleColumns(input);
       // Validated for every schedule; stored only while active.
@@ -373,7 +462,10 @@ export const scheduledReportsRouter = createTRPCRouter({
       let view: ScheduledReportView;
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
-          if (isActive) await reserveActiveSlot(tx, tenantId);
+          await lockTenantSchedules(tx, tenantId);
+          await assertTemplateVisible(tx, ctx, input.templateId);
+          await assertTagsExist(tx, tenantId, input.tags ?? []);
+          if (isActive) await assertActiveCapacity(tx, tenantId);
           return tx.reportSchedule.create({
             data: {
               tenantId,
@@ -406,56 +498,23 @@ export const scheduledReportsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<ScheduledReportView> => {
       assertScheduleManager(ctx);
       const tenantId = ctx.tenant.tenantId;
-      const { id, cadence, dayOfWeek, dayOfMonth, timeOfDay, cronExpression, ...fields } = input;
-
-      const existing = await ctx.prismaWithTenant.reportSchedule.findFirst({
-        where: { id, tenantId },
-      });
-      if (!existing) throw scheduleNotFound();
-      const templateChanged =
-        fields.templateId !== undefined && fields.templateId !== existing.templateId;
-      if (templateChanged && fields.templateId) await assertTemplateVisible(ctx, fields.templateId);
-      await assertTagsExist(ctx, fields.tags);
-
-      const columns: ScheduleColumns | null = cadence
-        ? buildScheduleColumns({ cadence, dayOfWeek, dayOfMonth, timeOfDay, cronExpression })
-        : null;
-      const timezone = fields.timezone ?? existing.timezone;
-      const cron = columns ? columns.cronExpression : existing.cronExpression;
-      const isActive = fields.isActive ?? existing.isActive;
-      const templateId = fields.templateId ?? existing.templateId;
-      const now = new Date();
-
-      const activating = isActive && !existing.isActive;
-      if (isActive) assertReferenced(templateId, existing.reportId);
-      if (activating && !templateChanged && templateId) {
-        await assertTemplateVisible(ctx, templateId);
-      }
-      const scheduleChanged = columns !== null || fields.timezone !== undefined;
-      const nextRun =
-        scheduleChanged || isActive !== existing.isActive
-          ? checkedNextRun(cron, timezone, now)
-          : null;
+      const { id, ...changes } = input;
 
       let view: ScheduledReportView;
+      let recipientsChanged = false;
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
-          if (activating) await reserveActiveSlot(tx, tenantId, id);
+          await lockTenantSchedules(tx, tenantId);
+          const existing = await tx.reportSchedule.findFirst({ where: { id, tenantId } });
+          if (!existing) throw scheduleNotFound();
+          const plan = planScheduleUpdate(existing, changes, new Date());
+          if (plan.checkTemplateId) await assertTemplateVisible(tx, ctx, plan.checkTemplateId);
+          await assertTagsExist(tx, tenantId, plan.newTags);
+          if (plan.activating) await assertActiveCapacity(tx, tenantId, id);
+          recipientsChanged = plan.recipientsChanged;
           return tx.reportSchedule.update({
             where: { id, tenantId },
-            data: {
-              ...(fields.name !== undefined && { name: fields.name }),
-              ...(fields.description !== undefined && { description: fields.description }),
-              ...(fields.templateId !== undefined && { templateId: fields.templateId }),
-              ...(columns ?? {}),
-              ...(fields.timezone !== undefined && { timezone: fields.timezone }),
-              ...(fields.recipients !== undefined && { recipients: fields.recipients }),
-              ...(fields.format !== undefined && { format: fields.format }),
-              ...(fields.colorToken !== undefined && { colorToken: fields.colorToken }),
-              ...(fields.tags !== undefined && { tags: fields.tags }),
-              ...(fields.isActive !== undefined && { isActive: fields.isActive }),
-              ...(nextRun !== null && { nextRunAt: isActive ? nextRun : null }),
-            },
+            data: plan.data,
             include: SCHEDULE_INCLUDE,
           });
         });
@@ -463,12 +522,7 @@ export const scheduledReportsRouter = createTRPCRouter({
       } catch (err) {
         rethrowScheduleWriteError(err);
       }
-      if (
-        fields.recipients !== undefined &&
-        !sameRecipients(fields.recipients, existing.recipients)
-      ) {
-        logScheduleAudit(ctx, 'UPDATE', id, auditState(view));
-      }
+      if (recipientsChanged) logScheduleAudit(ctx, 'UPDATE', id, auditState(view));
       return view;
     }),
 
@@ -477,22 +531,20 @@ export const scheduledReportsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<ScheduledReportView> => {
       assertScheduleManager(ctx);
       const tenantId = ctx.tenant.tenantId;
-      const existing = await ctx.prismaWithTenant.reportSchedule.findFirst({
-        where: { id: input.id, tenantId },
-      });
-      if (!existing) throw scheduleNotFound();
-
-      let nextRunAt: Date | null = null;
-      if (input.isActive) {
-        assertReferenced(existing.templateId, existing.reportId);
-        if (existing.templateId) await assertTemplateVisible(ctx, existing.templateId);
-        nextRunAt = checkedNextRun(existing.cronExpression, existing.timezone, new Date());
-      }
-      const activating = input.isActive && !existing.isActive;
-
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
-          if (activating) await reserveActiveSlot(tx, tenantId, input.id);
+          await lockTenantSchedules(tx, tenantId);
+          const existing = await tx.reportSchedule.findFirst({
+            where: { id: input.id, tenantId },
+          });
+          if (!existing) throw scheduleNotFound();
+          let nextRunAt: Date | null = null;
+          if (input.isActive) {
+            assertReferenced(existing.templateId, existing.reportId);
+            if (existing.templateId) await assertTemplateVisible(tx, ctx, existing.templateId);
+            nextRunAt = checkedNextRun(existing.cronExpression, existing.timezone, new Date());
+            if (!existing.isActive) await assertActiveCapacity(tx, tenantId, input.id);
+          }
           return tx.reportSchedule.update({
             where: { id: input.id, tenantId },
             data: { isActive: input.isActive, nextRunAt },
