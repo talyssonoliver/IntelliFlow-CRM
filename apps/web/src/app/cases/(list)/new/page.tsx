@@ -8,8 +8,8 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo } from 'react';
-import { toast } from '@intelliflow/ui';
+import { useCallback, useMemo, type ReactNode } from 'react';
+import { Button, toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { CaseForm } from '@/components/cases';
 import { requiredKeysFromRows } from '@/components/cases/case-type-labels';
@@ -77,6 +77,47 @@ export default function NewCasePage() {
     router.push('/cases');
   }, [router]);
 
+  // PG-204: the form waits for both lists. Rendering it early would let a submit go out
+  // without the default case type or the Case Settings required fields.
+  const configReady = caseTypesQuery.isSuccess && requiredFieldsQuery.isSuccess;
+  const configFailed = caseTypesQuery.isError || requiredFieldsQuery.isError;
+
+  const handleRetry = useCallback(() => {
+    if (caseTypesQuery.isError) void caseTypesQuery.refetch();
+    if (requiredFieldsQuery.isError) void requiredFieldsQuery.refetch();
+  }, [caseTypesQuery, requiredFieldsQuery]);
+
+  let content: ReactNode;
+  if (configFailed) {
+    content = (
+      <div className="w-full text-center py-12">
+        <p className="text-destructive mb-4" role="alert">
+          Could not load case types and required fields.
+        </p>
+        <Button type="button" variant="outline" onClick={handleRetry}>
+          Retry
+        </Button>
+      </div>
+    );
+  } else if (configReady) {
+    content = (
+      <CaseForm
+        mode="create"
+        onSubmit={handleSubmit}
+        onCancel={handleCancel}
+        isSubmitting={createMutation.isPending}
+        caseTypes={caseTypesQuery.data}
+        moduleRequiredFields={moduleRequiredFields}
+      />
+    );
+  } else {
+    content = (
+      <output className="block py-12 text-center text-muted-foreground">
+        Loading case types and required fields…
+      </output>
+    );
+  }
+
   return (
     <>
       <PageHeader
@@ -88,14 +129,7 @@ export default function NewCasePage() {
         title="Create New Case"
         description="Create a new legal case for management and tracking."
       />
-      <CaseForm
-        mode="create"
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        isSubmitting={createMutation.isPending}
-        caseTypes={caseTypesQuery.data}
-        moduleRequiredFields={moduleRequiredFields}
-      />
+      {content}
     </>
   );
 }

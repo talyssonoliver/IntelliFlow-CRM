@@ -6,7 +6,7 @@
  */
 import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act, fireEvent } from '@testing-library/react';
 
 const h = vi.hoisted(() => ({
   push: vi.fn(),
@@ -17,6 +17,10 @@ const h = vi.hoisted(() => ({
     onError: (error: { message: string }) => void;
   },
   formProps: null as null | Record<string, any>,
+  typesState: { isSuccess: true, isError: false } as { isSuccess: boolean; isError: boolean },
+  fieldsState: { isSuccess: true, isError: false } as { isSuccess: boolean; isError: boolean },
+  refetchTypes: vi.fn(),
+  refetchFields: vi.fn(),
 }));
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: h.push }) }));
@@ -37,17 +41,27 @@ vi.mock('@/lib/api', () => ({
   api: {
     caseTypes: {
       listActive: {
-        useQuery: () => ({ data: [{ id: 'ct-lit', name: 'Litigation', isDefault: true }] }),
+        useQuery: () => ({
+          ...h.typesState,
+          refetch: h.refetchTypes,
+          data: h.typesState.isSuccess
+            ? [{ id: 'ct-lit', name: 'Litigation', isDefault: true }]
+            : undefined,
+        }),
       },
     },
     caseSettings: {
       requiredFields: {
         list: {
           useQuery: () => ({
-            data: [
-              { fieldKey: 'description', isRequired: true },
-              { fieldKey: 'jurisdiction', isRequired: false },
-            ],
+            ...h.fieldsState,
+            refetch: h.refetchFields,
+            data: h.fieldsState.isSuccess
+              ? [
+                  { fieldKey: 'description', isRequired: true },
+                  { fieldKey: 'jurisdiction', isRequired: false },
+                ]
+              : undefined,
           }),
         },
       },
@@ -67,6 +81,9 @@ import NewCasePage from '../page';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  h.formProps = null;
+  h.typesState = { isSuccess: true, isError: false };
+  h.fieldsState = { isSuccess: true, isError: false };
 });
 
 describe('/cases/new', () => {
@@ -151,5 +168,45 @@ describe('/cases/new', () => {
     render(<NewCasePage />);
     act(() => h.formProps!.onCancel());
     expect(h.push).toHaveBeenCalledWith('/cases');
+  });
+
+  it('does not show the form until the case types have loaded (no silent bypass of the default type)', () => {
+    h.typesState = { isSuccess: false, isError: false };
+    render(<NewCasePage />);
+    expect(h.formProps).toBeNull();
+    expect(screen.getByText('Loading case types and required fields…')).toBeDefined();
+  });
+
+  it('waits for the Case Settings required fields too', () => {
+    h.fieldsState = { isSuccess: false, isError: false };
+    render(<NewCasePage />);
+    expect(h.formProps).toBeNull();
+  });
+
+  it('offers a retry instead of the form when loading fails', () => {
+    h.typesState = { isSuccess: false, isError: true };
+    h.fieldsState = { isSuccess: false, isError: true };
+    render(<NewCasePage />);
+    expect(h.formProps).toBeNull();
+    expect(screen.getByRole('alert').textContent).toContain('Could not load case types');
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(h.refetchTypes).toHaveBeenCalled();
+    expect(h.refetchFields).toHaveBeenCalled();
+  });
+
+  it('retries only the list that failed', () => {
+    h.typesState = { isSuccess: false, isError: true };
+    render(<NewCasePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(h.refetchTypes).toHaveBeenCalled();
+    expect(h.refetchFields).not.toHaveBeenCalled();
+  });
+
+  it('retries only the required fields when only they failed', () => {
+    h.fieldsState = { isSuccess: false, isError: true };
+    render(<NewCasePage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    expect(h.refetchFields).toHaveBeenCalled();
+    expect(h.refetchTypes).not.toHaveBeenCalled();
   });
 });
