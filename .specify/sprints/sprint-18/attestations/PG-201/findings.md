@@ -32,6 +32,12 @@ needs the owner; the additive migration must be applied before the code ships.
 | `ReportSchedule.isActive` has no runtime effect until IFC-308 | playbook §8 category 2 | debt-ledger `PG-201-SCHEDULE-ISACTIVE-CATEGORY-2`; IFC-308 CSV row note; ADR-075 |
 | `report_executions.scheduleId` FK + index | IFC-308 scope | ADR-075 "Left to IFC-308" |
 | Two route-local `SectionHeader` copies remain (territory-mapping, task-settings); a shared `components/shared/section-header.tsx` exists (PG-196). Scheduled Reports now uses the shared one (5745a9266). | DRY follow-up | this file; moving the other two is a separate refactor (L1) |
+| The one-time copy carries legacy `recipients` arrays as stored: no element validation, no 50 cap. Codex rated this P1; the owner's delegate (Aurora, 2026-10-13) ruled it **P2**: the legacy JSON is untouched, the copied rows are inactive, and activation re-validates recipients (`assertDeliverableRecipients`). Follow-up: sanitise (or cap) copied recipient arrays, or show copied rows with invalid recipients as needing attention. | data follow-up (P2) | this file; spec §1 "What the copy does not carry over"; ADR-075 Consequences |
+| The copy reads `report_settings` under RLS (not FORCEd): it inserts nothing unless `migrate deploy` runs as the table owner or a BYPASSRLS role. | prod-apply check | ADR-075 post-apply check (role + counts); final report |
+| TagsTab name field: no inline `aria-invalid`/error (the button is disabled instead, and the dialog description says so); Enter does not submit (no `<form>`). Not a WCAG 2.1 AA failure (frontend-lead+a11y vote). | a11y best practice | this file |
+| ScheduleDialog: an API error sets `errors.form` (announced by `role="alert"`) but does not move focus. | a11y best practice | this file (frontend-lead vote) |
+| `tags.create` computes `sortOrder` outside a transaction; concurrent creates may tie (ordering only). | accepted | spec §4 |
+| Cron/timezone/format changes on a **paused** schedule are not audited (activation is). Audit writes are fire-and-forget (PG-197 precedent) and record `afterState` only. | security note | security-lead vote, round 2 |
 
 ## Review fixes (2026-10-13)
 

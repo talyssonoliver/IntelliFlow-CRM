@@ -27,10 +27,60 @@
     "verified_at": "2026-04-29T21:54:51.883Z"
   },
   "execution": {
-    "last_error": null,
-    "retry_count": 0
+    "last_error": "Not complete: Lighthouse KPI needs an authenticated run or the owner waiver; Gate 4b is the runner push; Security/Intelligence/Automation STOAs returned NEEDS_HUMAN on pre-existing repo items (GitHub #886).",
+    "retry_count": 1,
+    "started_at": "2026-10-13T00:55:38.310Z",
+    "completed_at": "2026-10-13T07:57:00.288Z",
+    "duration_minutes": 421,
+    "executor": "Claude Code /exec",
+    "agents": [
+      "Foundation",
+      "Security",
+      "Quality",
+      "Domain",
+      "Intelligence",
+      "Automation"
+    ]
   },
-  "kpis": {},
+  "kpis": {
+    "coverage_statements_created_files": {
+      "target": 90,
+      "actual": 97.82,
+      "met": true,
+      "unit": "percent"
+    },
+    "coverage_branches_created_files": {
+      "target": 80,
+      "actual": 90.53,
+      "met": true,
+      "unit": "percent"
+    },
+    "coverage_functions_created_files": {
+      "target": 90,
+      "actual": 98.42,
+      "met": true,
+      "unit": "percent"
+    },
+    "coverage_lines_created_files": {
+      "target": 90,
+      "actual": 98.73,
+      "met": true,
+      "unit": "percent"
+    },
+    "diff_coverage": {
+      "target": 80,
+      "actual": 95.5,
+      "met": true,
+      "unit": "percent"
+    },
+    "lighthouse": {
+      "target": 90,
+      "actual": null,
+      "met": false,
+      "unit": "score",
+      "note": "NEEDS_HUMAN, no approver"
+    }
+  },
   "notes": "Scheduled reports at /analytics/scheduled-reports: cron schedules, recipient lists, delivery format (PDF/CSV/email-body), template ref. IFC-308 BullMQ cron READS these schedules — schema must match what the job expects. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312.",
   "phase": "exec",
   "started_at": "2026-10-12T23:26:50Z",
@@ -69,6 +119,16 @@
       "at": "2026-10-13T05:18:33.186Z",
       "note": "Exec gates green except the Lighthouse KPI (runner ruling: NEEDS_HUMAN, no approver) and Gate 4b (runner pushes). Attestation verdict NEEDS_HUMAN. Production migration needs the owner.",
       "status": "Needs Human"
+    },
+    {
+      "at": "2026-10-13T06:07:56Z",
+      "note": "/exec remediation session started after the runner audit (exec-metrics session start); re-running skipped skills, P2 fixes, real STOA sub-agents",
+      "status": "In Progress"
+    },
+    {
+      "at": "2026-10-13T07:57:00.288Z",
+      "note": "Remediation session end (exec-metrics): skills re-run (hydrate-context, spec-exploration, spec-consensus 4/4 APPROVED, real STOA sub-agents), P2s fixed, timestamps corrected. Attestation NEEDS_HUMAN.",
+      "status": "Needs Human"
     }
   ],
   "stream": null,
@@ -76,31 +136,36 @@
   "validations": [
     {
       "name": "TypeScript",
-      "command": "pnpm exec turbo run typecheck --force --filter=@intelliflow/web --filter=@intelliflow/api --filter=@intelliflow/validators --filter=@intelliflow/db (17/17, 0 cached; plus pnpm run typecheck 40/40)",
+      "command": "pnpm exec turbo run typecheck --force --filter=web --filter=api --filter=validators --filter=db (17 tasks, 0 cached)",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T04:57:12Z"
+      "executed_at": "2026-10-13T06:50:28Z",
+      "duration_ms": 275000
     },
     {
       "name": "Tests",
-      "command": "with-slot pnpm --filter @intelliflow/{validators,db,api,web} test (2570; 222+14 skipped; 7310+18 skipped; 12631) + data-copy integration 14/14 x2 under --exclusive intelliflow-db",
+      "command": "pnpm --filter @intelliflow/{validators,db,api,web} test, one at a time (2571; 222+14 skipped; 7330+18 skipped; 12637)",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T04:50:15Z"
+      "executed_at": "2026-10-13T07:13:54Z",
+      "duration_ms": 660000
     },
     {
       "name": "Lint",
-      "command": "pnpm run lint (turbo 37/37)",
+      "command": "pnpm exec eslint --max-warnings=0 .",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T04:57:35Z"
+      "executed_at": "2026-10-13T06:57:19Z",
+      "duration_ms": 74000
     },
     {
       "name": "Build",
-      "command": "pnpm --filter @intelliflow/api build && pnpm --filter @intelliflow/web build",
+      "command": "pnpm --filter @intelliflow/{validators,db,api,web} build",
       "passed": true,
       "exit_code": 0,
-      "timestamp": "2026-10-13T05:01:49Z"
+      "executed_at": "2026-10-13T06:56:00Z",
+      "duration_ms": 321000
     }
-  ]
+  ],
+  "updated_at": "2026-10-13T07:57:00.288Z"
 }
