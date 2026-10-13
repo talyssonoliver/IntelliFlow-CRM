@@ -78,6 +78,11 @@
       "at": "2026-10-13T03:37:00Z",
       "note": "Real codex review: 6 findings fixed test-first (checklist position, picker invalidation, midnight-DST deadlines, required-field checkboxes); final codex PASS. Full matrix re-run green. Lighthouse Path A recorded (auth redirect); verdict NEEDS_HUMAN.",
       "status": "In Progress"
+    },
+    {
+      "at": "2026-10-13T05:56:00Z",
+      "note": "New-case form now waits for case types and required fields (loading, alert + Retry), c492d96f8. Case-creation regression suites, web 12667 and build green; real codex PASS 0 findings. Verdict NEEDS_HUMAN (Lighthouse, runner push).",
+      "status": "In Progress"
     }
   ],
   "stream": null,

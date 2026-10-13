@@ -40,7 +40,14 @@ three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
   | C4 | repeated-midnight-offset (Asia/Amman 2021-10-29) | start of day from offsets bracketing midnight + exhaustive 2021/2026 × 11-zone test (`461edde35`) |
   | C5 | hidden required-field keys blocked "none ticked" inheritance | then C6 (codex flagged the first fix) |
   | C6 | silent-required-fields-change | a checkbox for each of the six supported keys; stored = shown (`b6673da54`) |
-- Final real codex run: **Verdict PASS, 0 findings** (2026-10-13T03:07Z, reviewer: codex).
+- Real codex run: **Verdict PASS, 0 findings** (2026-10-13T03:07Z, reviewer: codex).
+- **Self-review gap after that run (S1):** `/cases/new` rendered `CaseForm` before `caseTypes.listActive` and
+  `caseSettings.requiredFields.list` resolved, so a quick submit went out without the default case type and the Case
+  Settings required fields. The page now waits for both lists, shows a loading state, and on failure shows an alert
+  with a Retry that refetches only the list that failed (RED tests first, `c492d96f8`).
+- **Final real codex run after S1: Verdict PASS, 0 findings** (2026-10-13T05:54:30Z, reviewer: codex, 45 files in
+  scope). The 05:32Z attempt hit the OpenAI usage cap and fell back to Claude (PASS, 0 findings). That run is not
+  counted as the codex pass; the review was re-run on codex after the cap reset.
 
 ## Notes
 

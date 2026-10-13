@@ -4,13 +4,13 @@
   "task_id": "PG-204",
   "run_id": "exec-PG-204-20261013",
   "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-204 exec lane, branch feat/pg-204-case-types",
-  "attestation_timestamp": "2026-10-13T03:37:39.184Z",
+  "attestation_timestamp": "2026-10-13T05:55:23.586Z",
   "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
     "artifacts_verified": 68,
     "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 8,
+    "gates_passed": 9,
     "gates_failed": 0,
     "kpis_met": 4,
     "kpis_missed": 1,
@@ -40,7 +40,7 @@
     "apps/api/src/router.ts": "290b2ff70428ec8e28b1e5d1643315d4b103eda4c3516047fae0b672e03d25b1",
     "apps/api/src/modules/legal/cases.router.ts": "a32d825f9034c451d9ab4dbafccf8c477ee854f1354f34a38f8e7444f636680a",
     "apps/web/src/components/cases/CaseForm.tsx": "887e2fad1d46118bde9444ee4718ace43bfb6ba9d18259e6d13f6409d603e587",
-    "apps/web/src/app/cases/(list)/new/page.tsx": "6c3410e50d660183a7be219932369b223557f724187f53a271e712db2f91d294",
+    "apps/web/src/app/cases/(list)/new/page.tsx": "5818f10ae614d45fb9cfa5b3067c5e9eea5e55c4ba660925657be916c63193cf",
     "apps/web/src/components/cases/CaseDetail.tsx": "a2bd60eaf1661534b83f3dcc09d771e1a63a53482959abe92140326ea0855ddc",
     "apps/web/src/components/cases/types.ts": "453c8ef26dcd9f2b40e33599e6b6594eabfa96b0ce85769a3b6c1ebcf2e0f04b",
     "packages/domain/src/legal/cases/__tests__/case-type-defaults.test.ts": "6b2aa572aa75b2c94e75ba57446bce8b6d6f4e80328f265b65248f56f1378804",
@@ -58,7 +58,7 @@
     "apps/web/src/app/cases/(list)/case-types/components/__tests__/DeleteCaseTypeDialog.test.tsx": "12aab81903b84024e421745983af7394c5f8583cb9b1f02f6684857a922f6991",
     "apps/web/src/components/cases/__tests__/case-type-helpers.test.ts": "4b52c7215e8117306b92f7a0964741a687bfbb25353c3bc1b72a4d8c2000bc28",
     "apps/web/src/components/cases/__tests__/CaseForm.test.tsx": "8a3f87bbb8f8d06f148cc027375ffe01faafc9dbbca4fb4905146cd0dcfc38b2",
-    "apps/web/src/app/cases/(list)/new/__tests__/page.test.tsx": "d3cc0a74aa1547e07f6f688e42fffe9fa1d36ea3b7b26cb273826f0bcd4c3b2e",
+    "apps/web/src/app/cases/(list)/new/__tests__/page.test.tsx": "065c38d1c1a8805961ecf10d83a6ec71168a659092a657d4b24026a46db991de",
     "packages/validators/src/__tests__/case.test.ts": "7bd41ba6af182a6a35f4096fc35e6fde1d44b0df654213d5ccb2b2dc99f81997",
     "packages/validators/src/__tests__/case-settings.test.ts": "d1759a38763d24845bc5d7a8f828216e1e731fe048face7da2a48af2d2e959de",
     "packages/validators/__tests__/enum-consistency.spec.ts": "f166d47be40736f8a97bc58b4d36929bcbb68b1dced74534d8f5341f03dc3ea7",
@@ -78,8 +78,8 @@
     "docs/design/ui-flow-mapping.md": "cb31333673347c6bb53b6a3385c7742d02f6a2cd37e1385423f59c5c89d24fd0",
     "docs/design/information-architecture.md": "77e74a173245269d4bb144597e5e1c81f1100c0e65622279efc97269365ddeed",
     "artifacts/metrics/debt-ledger.yaml": "470240768fdf9c110198119769c8d002ea7b73a70fe786211a905331ec6086ff",
-    ".specify/sprints/sprint-18/findings/PG-204-findings.md": "9597d8bddbe743cfebe2ad6630d10806a132d662510cb481b83847d604c66da7",
-    ".specify/sprints/sprint-18/attestations/PG-204/task-tracking.json": "603179e9d3fbb365fc0bd242f882d05c9880dfce2d82b8b2c2cdfa0847596725",
+    ".specify/sprints/sprint-18/findings/PG-204-findings.md": "ed3d749ad48f61d90d48da690f285b4339b2312c382241e14ddf18cd85f44f33",
+    ".specify/sprints/sprint-18/attestations/PG-204/task-tracking.json": "b30716c2ecc86fd6ab3a0fad792603711323134c81a3d2105c24166cb62b33a0",
     "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "1323e9c12c0c19b7a17de176a1f5fba44ce42532193d051780f8c769c6bd4c23",
     "artifacts/lighthouse/PG-204/waiver-evidence.md": "2e8431f24605d08f4d4905da0ec33bf53795de3390c650cd9906acef883a171c",
     "artifacts/lighthouse/PG-204/cases-case-types-r2.report.json": "609469b1cbfac7756c773154438932001850b44f4a49f0a524c44aaf54e50ee4",
@@ -92,32 +92,32 @@
       "command": "pnpm --filter @intelliflow/{domain,validators,adapters,db,api,web} typecheck",
       "exit_code": 0,
       "passed": true,
-      "result": "all exit 0 (domain, validators, adapters, db, api, web; db/api/web/adapters re-run after the codex fixes); code-review quick: 27 packages, 0 type errors",
-      "timestamp": "2026-10-13T03:37:39.184Z"
+      "result": "all exit 0 (domain, validators, adapters, db, api, web; db/api/web/adapters re-run after the codex fixes); code-review quick: 27 packages, 0 type errors; after c492d96f8 (new-case form waits for its lists): web tsc --noEmit exit 0",
+      "timestamp": "2026-10-13T05:55:23.586Z"
     },
     {
       "name": "Tests",
       "command": "pnpm --filter @intelliflow/{domain,validators,adapters,api} test; pnpm --filter @intelliflow/web exec vitest run; pnpm run test:integration",
       "exit_code": 0,
       "passed": true,
-      "result": "after the codex fixes: case-creation regression suites (cases.router, cases.router.case-types, case-settings.router, legal-module-entitlement, case-sla-deadline) 91; api 7288 (+18 pre-existing skips); web 12662; adapters 2967; integration 358 (+61 pre-existing env-gated skips) incl. case-types 17; earlier in the run: domain 2957, validators 2557 — all passed",
-      "timestamp": "2026-10-13T03:37:39.184Z"
+      "result": "after c492d96f8: /cases/new page 11 (5 new); web cases suites 17 files / 254; case-creation regression suites (cases.router, cases.router.case-types, case-settings.router, legal-module-entitlement, case-sla-deadline) 91; full web 12667 (797 files); earlier in the run: api 7288 (+18 pre-existing skips), adapters 2967, integration 358 (+61 pre-existing env-gated skips) incl. case-types 17, domain 2957, validators 2557 - all passed",
+      "timestamp": "2026-10-13T05:55:23.586Z"
     },
     {
       "name": "Lint",
       "command": "pnpm --filter @intelliflow/{domain,validators,adapters,db,api,web} lint; pnpm run lint:sonar:guard",
       "exit_code": 0,
       "passed": true,
-      "result": "all exit 0; 0 lint problems in 27 packages",
-      "timestamp": "2026-10-13T03:37:39.184Z"
+      "result": "all exit 0; 0 lint problems in 27 packages; after c492d96f8: eslint + sonar-guard eslint + prettier on /cases/new exit 0",
+      "timestamp": "2026-10-13T05:55:23.586Z"
     },
     {
       "name": "Build",
       "command": "pnpm --filter @intelliflow/{domain,validators,db,api,web} build",
       "exit_code": 0,
       "passed": true,
-      "result": "all exit 0; /cases/case-types and /cases/new in the web route table",
-      "timestamp": "2026-10-13T03:37:39.184Z"
+      "result": "all exit 0; web build re-run after c492d96f8 exit 0, /cases/case-types and /cases/new in the route table",
+      "timestamp": "2026-10-13T05:55:23.586Z"
     }
   ],
   "gate_results": [
@@ -170,6 +170,11 @@
       "gate_id": "worktree-landed (Gate 4b)",
       "passed": false,
       "log_path": "NEEDS_HUMAN - by design: runner rules forbid this lane from pushing or opening a PR; the runner pushes and runs pre-ship once at the final SHA."
+    },
+    {
+      "gate_id": "codex-review",
+      "passed": true,
+      "log_path": "node scripts/codex-review.mjs, reviewer codex, 2026-10-13T05:54:30Z: Verdict PASS, 0 findings (45 files). Findings C1-C6 and S1 fixed test-first; none waived."
     }
   ],
   "kpi_results": [
@@ -182,7 +187,7 @@
     {
       "kpi": "Diff coverage on changed lines (web)",
       "target": ">= 80%",
-      "actual": "99.2% statements, 93.9% branches (route-group + components)",
+      "actual": "99.2% statements, 93.9% branches (route-group + components); /cases/new/page.tsx 100% statements/branches/functions/lines (11 tests)",
       "met": true
     },
     {
