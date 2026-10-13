@@ -87,7 +87,8 @@ export interface SweepPrisma {
 export interface ApprovalSweepDeps {
   prisma: SweepPrisma;
   draftRepository: (client: SweepTx) => Promise<AutoResponseDraftRepository>;
-  notify: (client: SweepTx, notification: SweepNotification) => Promise<void>;
+  /** Delivered after the sweep transaction commits, one at a time; failures are logged. */
+  notify: (notification: SweepNotification) => Promise<void>;
   log?: Pick<Console, 'warn'>;
 }
 
@@ -107,6 +108,7 @@ interface TenantContext {
   now: Date;
   report: ApprovalSweepReport;
   targets: Map<string, boolean>;
+  outbox: SweepNotification[];
 }
 
 /** The policies of a queue that escalate, with the (agent, action) pairs each one governs. */
@@ -192,14 +194,12 @@ async function dueTarget(
   return null;
 }
 
-async function notifySafely(ctx: TenantContext, notification: SweepNotification): Promise<void> {
-  try {
-    await ctx.deps.notify(ctx.tx, notification);
-  } catch (error) {
-    // Non-blocking, as for manual escalation: the escalation itself is recorded.
-    const message = error instanceof Error ? error.message : String(error);
-    ctx.deps.log?.warn(`[approval-sweep] notification failed: ${message}`);
-  }
+/**
+ * Queue a notification for delivery after the transaction commits: a failed
+ * notification write must never abort (and roll back) the sweep's transaction.
+ */
+function queueNotification(ctx: TenantContext, notification: SweepNotification): void {
+  ctx.outbox.push(notification);
 }
 
 async function escalateAgentActionGroup(ctx: TenantContext, group: EscalationGroup): Promise<void> {
@@ -226,7 +226,7 @@ async function escalateAgentActionGroup(ctx: TenantContext, group: EscalationGro
     });
     if (claimed.count !== 1) continue;
     ctx.report.agentActionsEscalated += 1;
-    await notifySafely(ctx, {
+    queueNotification(ctx, {
       tenantId: ctx.tenantId,
       userId: target,
       title: 'Agent Action Escalated for Your Review',
@@ -270,7 +270,7 @@ async function escalateDraft(
     return;
   }
   ctx.report.draftsEscalated += 1;
-  await notifySafely(ctx, {
+  queueNotification(ctx, {
     tenantId: ctx.tenantId,
     userId: target,
     title: 'AI Draft Escalated for Your Review',
@@ -322,7 +322,8 @@ async function escalateTenant(ctx: TenantContext): Promise<void> {
 async function sweepInTransaction(
   tx: SweepTx,
   deps: ApprovalSweepDeps,
-  now: Date
+  now: Date,
+  outbox: SweepNotification[]
 ): Promise<ApprovalSweepReport> {
   const report: ApprovalSweepReport = {
     locked: false,
@@ -349,7 +350,16 @@ async function sweepInTransaction(
 
   for (const { tenantId } of tenants) {
     const policies = await loadTenantApprovalPolicies(tx, tenantId, { fresh: true });
-    const ctx: TenantContext = { tx, deps, tenantId, policies, now, report, targets: new Map() };
+    const ctx: TenantContext = {
+      tx,
+      deps,
+      tenantId,
+      policies,
+      now,
+      report,
+      targets: new Map(),
+      outbox,
+    };
     await escalateTenant(ctx);
   }
 
@@ -366,10 +376,21 @@ export async function runApprovalSweep(
   deps: ApprovalSweepDeps,
   now: Date = new Date()
 ): Promise<ApprovalSweepReport> {
-  return deps.prisma.$transaction((tx) => sweepInTransaction(tx, deps, now), {
+  const outbox: SweepNotification[] = [];
+  const report = await deps.prisma.$transaction((tx) => sweepInTransaction(tx, deps, now, outbox), {
     timeout: 60_000,
     maxWait: 10_000,
   });
+  // Escalations are committed; now tell the targets. Non-blocking, as for manual escalation.
+  for (const notification of outbox) {
+    try {
+      await deps.notify(notification);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      deps.log?.warn(`[approval-sweep] notification failed: ${message}`);
+    }
+  }
+  return report;
 }
 
 /** Production wiring: shared Prisma client, the Prisma draft repository, in-app notifications. */
@@ -387,8 +408,8 @@ export async function createDefaultSweepDeps(): Promise<ApprovalSweepDeps> {
   return {
     prisma: prisma as unknown as SweepPrisma,
     draftRepository: async (client) => new Repository(client),
-    notify: async (client, n) => {
-      await createNotification(client as never, {
+    notify: async (n) => {
+      await createNotification(prisma as never, {
         ...n,
         type: 'ai_action_pending',
         priority: 'high',

@@ -170,6 +170,19 @@ describe('executeApprovedAction', () => {
     );
   });
 
+  it.each([
+    ['update_case', { id: 'case-1' }],
+    ['update_appointment', { id: 'appt-1' }],
+  ])('%s with nothing to change fails instead of reporting success', async (tool, input) => {
+    const outcome = await executeApprovedAction(tool, input, ctx());
+    expect(outcome).toEqual({
+      status: 'FAILED',
+      error: 'The approved update has no changes to apply.',
+    });
+    expect(calls.cases.update).not.toHaveBeenCalled();
+    expect(calls.appointments.update).not.toHaveBeenCalled();
+  });
+
   it('update_case with only a status skips the field update', async () => {
     await executeApprovedAction('update_case', { id: 'case-1', status: 'ON_HOLD' }, ctx());
     expect(calls.cases.update).not.toHaveBeenCalled();

@@ -134,6 +134,9 @@ async function updateCase(input: Input, ctx: Context): Promise<ExecutionResult> 
   const caller = casesRouter.createCaller(ctx as CallerCtx);
   const id = String(input.id);
   const fields = pick(input, ['title', 'description', 'priority', 'deadline', 'assignedTo']);
+  if (input.status === undefined && Object.keys(fields).length === 0) {
+    throw new Error('The approved update has no changes to apply.');
+  }
   // The status change is the step that can be refused (invalid transition), so it runs first.
   let applied: string | null = null;
   if (input.status !== undefined) {
@@ -176,6 +179,9 @@ async function updateAppointment(input: Input, ctx: Context): Promise<ExecutionR
     throw new Error('Rescheduling needs both a start and an end time.');
   }
   const fields = pick(input, ['title', 'description', 'location', 'appointmentType', 'notes']);
+  if (!hasStart && Object.keys(fields).length === 0) {
+    throw new Error('The approved update has no changes to apply.');
+  }
   // Rescheduling is the step that can be refused (conflicts), so it runs first.
   let applied: string | null = null;
   if (hasStart) {

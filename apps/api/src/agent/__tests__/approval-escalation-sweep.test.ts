@@ -230,7 +230,7 @@ describe('runApprovalSweep', () => {
       where: { id: 'act-1', tenantId: TENANT, status: 'PENDING_APPROVAL', escalatedAt: null },
       data: { escalatedAt: NOW, escalatedTo: TARGET },
     });
-    expect(deps.notify).toHaveBeenCalledWith(tx, {
+    expect(deps.notify).toHaveBeenCalledWith({
       tenantId: TENANT,
       userId: TARGET,
       title: 'Agent Action Escalated for Your Review',
@@ -302,6 +302,23 @@ describe('runApprovalSweep', () => {
     expect(deps.log!.warn).toHaveBeenCalledWith('[approval-sweep] notification failed: smtp');
   });
 
+  it('delivers notifications only after the transaction commits', async () => {
+    const { deps } = harness({ actions: [actionRow()] });
+    const order: string[] = [];
+    (deps.prisma.$transaction as any).mockImplementation(async (fn: any) => {
+      const result = await fn(harness({ actions: [actionRow()] }).tx);
+      order.push('commit');
+      return result;
+    });
+    (deps.notify as any).mockImplementation(async () => {
+      order.push('notify');
+    });
+
+    await runApprovalSweep(deps, NOW);
+
+    expect(order).toEqual(['commit', 'notify']);
+  });
+
   it('logs a non-Error notification failure too', async () => {
     const { deps } = harness({ actions: [actionRow()] });
     (deps.notify as any).mockRejectedValue('down');
@@ -362,7 +379,6 @@ describe('runApprovalSweep', () => {
       expect(draft.escalation!.expiresAt.getTime()).toBe(draft.expiresAt.getTime());
       expect(repo.saveEscalation).toHaveBeenCalledWith(draft);
       expect(deps.notify).toHaveBeenCalledWith(
-        tx,
         expect.objectContaining({
           entityType: 'auto_response_draft',
           actionUrl: '/agent-approvals?status=escalated',
@@ -473,7 +489,7 @@ describe('createDefaultSweepDeps', () => {
     expect(deps.prisma).toBeDefined();
     const repo: any = await deps.draftRepository({ marker: 1 } as any);
     expect(repo.client).toEqual({ marker: 1 });
-    await deps.notify({ tx: 1 } as any, {
+    await deps.notify({
       tenantId: TENANT,
       userId: TARGET,
       title: 't',
@@ -484,7 +500,7 @@ describe('createDefaultSweepDeps', () => {
       actionUrl: '/x',
     });
     expect(createNotification).toHaveBeenCalledWith(
-      { tx: 1 },
+      deps.prisma,
       expect.objectContaining({
         type: 'ai_action_pending',
         priority: 'high',
