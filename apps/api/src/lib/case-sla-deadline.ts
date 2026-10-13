@@ -50,6 +50,8 @@ const DAY_MS = 24 * 60 * MINUTE_MS;
  * at that midnight; each gives a candidate start, and the earliest candidate that is
  * already on the target date wins. This handles a repeated midnight (first 00:00), a
  * repeated last hour of the previous day, and a skipped midnight (the jump instant).
+ * When the zone skipped the whole day (Pacific/Apia, 2011-12-30), no candidate is on it;
+ * the earliest candidate after it is the jump, where that day would have started.
  */
 function startOfLocalDay(dayStart: number, timezone: string): number {
   const target = formatISODateInTimezone(new Date(dayStart), 'UTC');
@@ -57,10 +59,12 @@ function startOfLocalDay(dayStart: number, timezone: string): number {
     offsetMinutesAt(new Date(dayStart - DAY_MS), timezone),
     offsetMinutesAt(new Date(dayStart + DAY_MS), timezone),
   ];
-  const onTarget = offsets
-    .map((offset) => dayStart - offset * MINUTE_MS)
-    .filter((instant) => formatISODateInTimezone(new Date(instant), timezone) === target);
-  return Math.min(...onTarget);
+  const candidates = offsets.map((offset) => dayStart - offset * MINUTE_MS);
+  const localDate = (instant: number) => formatISODateInTimezone(new Date(instant), timezone);
+  const onTarget = candidates.filter((instant) => localDate(instant) === target);
+  if (onTarget.length > 0) return Math.min(...onTarget);
+  // ISO dates compare correctly as strings.
+  return Math.min(...candidates.filter((instant) => localDate(instant) > target));
 }
 
 /**

@@ -143,6 +143,20 @@ describe('endOfCalendarDayInTimezone (typed deadline, codex deadline-timezone-mi
     );
   });
 
+  // Apia skipped 2011-12-30 (UTC-10 -> UTC+14). The day after the target never starts, so
+  // the end of 2011-12-29 is the instant of the jump, not an Invalid Date.
+  it('a skipped next day (Pacific/Apia 2011-12-29) ends at the jump', () => {
+    const end = endOfCalendarDayInTimezone('2011-12-29', 'Pacific/Apia');
+    expect(end.toISOString()).toBe('2011-12-30T09:59:59.999Z');
+    expect(local(end, 'Pacific/Apia')).toBe('2011-12-29 23:59:59.999');
+  });
+
+  it('a typed day that the zone skipped (Pacific/Apia 2011-12-30) still gives a valid deadline', () => {
+    const end = endOfCalendarDayInTimezone('2011-12-30', 'Pacific/Apia');
+    expect(Number.isNaN(end.getTime())).toBe(false);
+    expect(end.toISOString()).toBe('2011-12-30T09:59:59.999Z');
+  });
+
   it('far east (UTC+14): the date does not move a day', () => {
     const end = endOfCalendarDayInTimezone('2026-12-01', 'Pacific/Kiritimati');
     expect(local(end, 'Pacific/Kiritimati')).toBe('2026-12-01 23:59:59.999');
