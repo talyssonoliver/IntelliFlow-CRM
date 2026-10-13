@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-13T01:18:32.091Z",
+  "timestamp": "2026-10-13T01:33:32.541Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 67,
-    "total_endpoints": 544,
-    "total_queries": 236,
-    "total_mutations": 308,
+    "total_routers": 68,
+    "total_endpoints": 550,
+    "total_queries": 238,
+    "total_mutations": 312,
     "routers": [
       {
         "name": "contact",
@@ -1238,6 +1238,12 @@
       },
       {
         "name": "queues",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "scheduledReports",
         "endpoints": 6,
         "queries": 2,
         "mutations": 4
@@ -4046,6 +4052,38 @@
         "name": "reportTemplates.delete",
         "method": "POST",
         "description": "Delete reportTemplates"
+      }
+    ],
+    "scheduledReports": [
+      {
+        "name": "scheduledReports.list",
+        "method": "GET",
+        "description": "List scheduledReportss with pagination"
+      },
+      {
+        "name": "scheduledReports.create",
+        "method": "POST",
+        "description": "Create new scheduledReports"
+      },
+      {
+        "name": "scheduledReports.update",
+        "method": "POST",
+        "description": "Update scheduledReports"
+      },
+      {
+        "name": "scheduledReports.delete",
+        "method": "POST",
+        "description": "Delete scheduledReports"
+      },
+      {
+        "name": "scheduledReports.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "scheduledReports.setActive",
+        "method": "POST",
+        "description": "Set active"
       }
     ],
     "auth": [
