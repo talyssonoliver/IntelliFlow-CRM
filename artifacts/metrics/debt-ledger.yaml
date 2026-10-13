@@ -4619,6 +4619,19 @@ items:
       Add a tenantId parameter and use findFirst/updateMany/deleteMany with id+tenantId; thread context.tenantId from ApprovalWorkflowService.
     status: open
     notes: 'Pre-existing IFC-139 design; PG-198 spec As-built C10, accepted by consensus on condition of this issue. gh #883.'
+  PG-198-G5-CASES-CREATE-FOREIGN-IDS:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: high
+    description: >-
+      cases.create accepts a foreign-tenant clientId/assignedTo (no tenant ownership check); reachable through approved agent actions, including policy auto-approvals (gh #890; cases.update twin is #880).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Resolve clientId and assignedTo tenant-scoped before the write (NOT_FOUND/BAD_REQUEST), add cross-tenant negatives; verify appointments.create attendeeIds/linkedCaseIds the same way.
+    status: open
+    notes: 'Pre-existing in cases.router.ts:347-364; found by the PG-198 AI-governance review (G5). gh #890.'
 summary:
   total_items: 419
   by_severity:
