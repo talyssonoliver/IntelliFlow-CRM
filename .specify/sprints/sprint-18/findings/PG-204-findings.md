@@ -24,6 +24,24 @@ three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
 | T4 | `timezone-utils` `getTimezoneOffsetMinutes` is wrong beyond +12h (Kiritimati/Tonga/Chatham) | #867 | `PG-204-TIMEZONE-OFFSET-BEYOND-12H-001` |
 | T5 | Approved agent actions (incl. `create_case`) are never executed; `approval-workflow.ts:240` returns a canned success with a random `entityId` | #853 (already open, P1, filed by another lane) | (owned by #853) |
 
+## Semantic review (codex), corrected record
+
+- **My earlier claim that codex could not run here was wrong.** In this lane I put the Node 22 nvm directory first on
+  `PATH`, so `codex` resolved to that directory's old global `codex-cli 0.79.0`, which rejects `--ephemeral`. The
+  system `codex-cli 0.160.0` (`C:/Users/talys/AppData/Roaming/npm/codex`) supports it. The first passes therefore fell
+  back to Claude, whose findings (dropped jurisdiction/timezone; update/setDefault races; deactivation vs setDefault)
+  were real and fixed.
+- **Real codex passes** (run without the Node 22 prefix), all findings verified and fixed test-first, none waived:
+  | # | Finding | Fix |
+  |---|---|---|
+  | C1 | lost-checklist-order: seeded tasks had no position, tasks read by `dueDate` only | `case_tasks.position` (nullable, in the unapplied `20261013120000_case_types` migration); seeds 0..n-1; `CASE_TASK_ORDER` = position nulls last, then dueDate; real-DB retrieval test (`e85c9a65b`) |
+  | C2 | stale-case-type-picker: only `caseTypes.list` invalidated | router-wide `utils.caseTypes.invalidate()` on every mutation (`9b3371890`) |
+  | C3 | ambiguous-end-of-day (America/Santiago repeated last hour) | deadline = 1 ms before the next local day (`7ec2075b6`) |
+  | C4 | repeated-midnight-offset (Asia/Amman 2021-10-29) | start of day from offsets bracketing midnight + exhaustive 2021/2026 × 11-zone test (`461edde35`) |
+  | C5 | hidden required-field keys blocked "none ticked" inheritance | then C6 (codex flagged the first fix) |
+  | C6 | silent-required-fields-change | a checkbox for each of the six supported keys; stored = shown (`b6673da54`) |
+- Final real codex run: **Verdict PASS, 0 findings** (2026-10-13T03:07Z, reviewer: codex).
+
 ## Notes
 
 - **Legal coverage dead zone** (`LEGAL-MERGED-LCOV-DEADZONE-001`): only `apps/api/src/modules/legal/*.router.ts` is
