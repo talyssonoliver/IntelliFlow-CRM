@@ -8,14 +8,27 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { CaseForm } from '@/components/cases';
+import { requiredKeysFromRows } from '@/components/cases/case-type-labels';
 import { api } from '@/lib/api';
 
 export default function NewCasePage() {
   const router = useRouter();
+
+  // PG-204: active case types for the picker and the Case Settings required fields.
+  const caseTypesQuery = api.caseTypes.listActive.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
+  const requiredFieldsQuery = api.caseSettings.requiredFields.list.useQuery(undefined, {
+    staleTime: 5 * 60 * 1000,
+  });
+  const moduleRequiredFields = useMemo(
+    () => requiredKeysFromRows(requiredFieldsQuery.data),
+    [requiredFieldsQuery.data]
+  );
 
   const createMutation = api.cases.create.useMutation({
     onSuccess: (data: { id: string }) => {
@@ -30,7 +43,7 @@ export default function NewCasePage() {
   const handleSubmit = useCallback(
     async (data: Record<string, unknown>) => {
       // CaseForm populates title and clientId — validate before calling typed mutation
-      const { title, clientId, description, priority, deadline, assignedTo } = data;
+      const { title, clientId, description, priority, deadline, assignedTo, caseTypeId } = data;
       if (typeof title !== 'string' || typeof clientId !== 'string') {
         toast({
           title: 'Validation Error',
@@ -43,9 +56,11 @@ export default function NewCasePage() {
         title,
         clientId,
         description: typeof description === 'string' ? description : undefined,
+        // PG-204: omitted when blank so the case type / Case Settings default applies.
         priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | undefined,
         deadline: deadline as Date | undefined,
         assignedTo: typeof assignedTo === 'string' ? assignedTo : undefined,
+        caseTypeId: typeof caseTypeId === 'string' ? caseTypeId : undefined,
       });
     },
     [createMutation]
@@ -71,6 +86,8 @@ export default function NewCasePage() {
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={createMutation.isPending}
+        caseTypes={caseTypesQuery.data}
+        moduleRequiredFields={moduleRequiredFields}
       />
     </>
   );

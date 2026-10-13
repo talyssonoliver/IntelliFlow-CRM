@@ -111,6 +111,8 @@ export interface TimelineEntry {
 
 export interface CaseDetailData extends CaseListItem {
   parties: PartyData[] | null;
+  /** PG-204: the case type applied at creation (read-only). */
+  caseType?: { id: string; name: string; colorToken: string } | null;
   tags?: string[];
   appointments: Array<{
     id: string;

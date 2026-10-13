@@ -150,8 +150,6 @@ export interface CaseTypeDto {
   isDefault: boolean;
   checklist: CaseTypeChecklistItemDto[];
   caseCount: number;
-  createdAt: Date;
-  updatedAt: Date;
 }
 
 export interface CaseTypeListDto {

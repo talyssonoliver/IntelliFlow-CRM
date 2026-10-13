@@ -55,8 +55,6 @@ interface CaseTypeRow {
   requiredFields: string[];
   isActive: boolean;
   isDefault: boolean;
-  createdAt: Date;
-  updatedAt: Date;
   checklist: { id: string; title: string; sortOrder: number }[];
 }
 
@@ -84,8 +82,6 @@ function toCaseTypeDto(row: CaseTypeRow, caseCount: number): CaseTypeDto {
       sortOrder: item.sortOrder,
     })),
     caseCount,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
   };
 }
 
