@@ -76,11 +76,8 @@ export function ResolutionChecklistEditor({
     onChange(next);
     const remaining = next.length === 1 ? '1 step remains' : `${next.length} steps remain`;
     setAnnouncement(`Step ${index + 1} removed, ${remaining}.`);
-    setFocusTarget(
-      next.length === 0
-        ? { kind: 'add' }
-        : { kind: 'input', index: Math.min(index, next.length - 1) }
-    );
+    // The next row takes the removed row's index; with no next row, focus Add Step.
+    setFocusTarget(index < next.length ? { kind: 'input', index } : { kind: 'add' });
   };
 
   const move = (index: number, delta: -1 | 1) => {

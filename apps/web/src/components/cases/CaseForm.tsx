@@ -285,11 +285,13 @@ export function CaseForm({
           {/* Subject */}
           <div>
             <label htmlFor="subject" className="block text-sm font-semibold text-foreground mb-1.5">
-              Subject <span className="text-destructive">*</span>
+              Subject
+              <RequiredMark />
             </label>
             <input
               id="subject"
               type="text"
+              aria-required="true"
               value={formData.subject}
               onChange={(e) => updateField('subject', e.target.value)}
               className={inputClasses('subject')}
@@ -404,7 +406,8 @@ export function CaseForm({
               htmlFor="clientSearch"
               className="block text-sm font-semibold text-foreground mb-1.5"
             >
-              Link to Client/Account <span className="text-destructive">*</span>
+              Link to Client/Account
+              <RequiredMark />
             </label>
 
             {formData.clientId ? (
@@ -436,6 +439,7 @@ export function CaseForm({
                 <input
                   id="clientSearch"
                   type="text"
+                  aria-required="true"
                   value={formData.clientSearch}
                   onChange={(e) => {
                     updateField('clientSearch', e.target.value);
@@ -510,7 +514,7 @@ export function CaseForm({
             {}
 
             {errors.clientSearch ? (
-              <p id="client-error" className="text-xs text-destructive mt-1">
+              <p id="client-error" role="alert" className="text-xs text-destructive mt-1">
                 {errors.clientSearch}
               </p>
             ) : (

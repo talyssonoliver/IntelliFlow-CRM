@@ -3,6 +3,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import axe from 'axe-core';
 import { CaseTypesLoading } from '../CaseTypesLoading';
 
 describe('CaseTypesLoading', () => {
@@ -14,5 +15,11 @@ describe('CaseTypesLoading', () => {
     expect(container.querySelectorAll('[class*="animate-pulse"]').length).toBeGreaterThanOrEqual(
       12
     );
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = render(<CaseTypesLoading />);
+    const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
+    expect(results.violations).toEqual([]);
   });
 });

@@ -4,6 +4,7 @@
 import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
+import axe from 'axe-core';
 
 type MutationOpts = { onSuccess?: (...args: unknown[]) => unknown };
 
@@ -216,6 +217,28 @@ describe('CaseTypesContent', () => {
     expect(h.toast).toHaveBeenCalledWith(
       expect.objectContaining({ title: 'Could not change the default case type' })
     );
+  });
+
+  it('keeps the default choices focusable while saving, shows and announces Saving, and ignores further changes', () => {
+    h.list.data.types[1].isActive = true;
+    h.mutations.setDefault.isPending = true;
+    render(<CaseTypesContent />);
+    const group = screen.getByRole('radiogroup', { name: 'Default case type' });
+    expect(group.getAttribute('aria-busy')).toBe('true');
+    const advisory = screen.getByRole('radio', { name: 'Advisory' }) as HTMLButtonElement;
+    expect(advisory.disabled).toBe(false);
+    const saving = screen.getAllByText('Saving the default case type…');
+    // One visible line under the group, one polite announcement in the live region.
+    expect(saving.map((el) => el.tagName)).toEqual(['OUTPUT', 'P']);
+    expect(saving[0].getAttribute('aria-live')).toBe('polite');
+    fireEvent.click(advisory);
+    expect(h.mutations.setDefault.mutate).not.toHaveBeenCalled();
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = render(<CaseTypesContent />);
+    const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
+    expect(results.violations).toEqual([]);
   });
 
   it('creates and updates through the list onSave', async () => {

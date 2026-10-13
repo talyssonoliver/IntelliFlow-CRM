@@ -164,6 +164,29 @@ describe('/cases/new', () => {
     );
   });
 
+  it('shows a server rejection inline above the form, without an unhandled rejection', async () => {
+    render(<NewCasePage />);
+    h.mutateAsync.mockRejectedValueOnce(new Error('Required fields missing: Jurisdiction'));
+    await act(async () => {
+      await expect(
+        h.formProps!.onSubmit({ title: 'Smith v Jones', clientId: 'acc-1' })
+      ).resolves.toBeUndefined();
+    });
+    expect(screen.getByRole('alert').textContent).toBe('Required fields missing: Jurisdiction');
+
+    h.mutateAsync.mockRejectedValueOnce('network down');
+    await act(async () => {
+      await h.formProps!.onSubmit({ title: 'Smith v Jones', clientId: 'acc-1' });
+    });
+    expect(screen.getByRole('alert').textContent).toBe('Failed to create case.');
+
+    h.mutateAsync.mockResolvedValueOnce({ id: 'case-1' });
+    await act(async () => {
+      await h.formProps!.onSubmit({ title: 'Smith v Jones', clientId: 'acc-1' });
+    });
+    expect(screen.queryByRole('alert')).toBeNull();
+  });
+
   it('cancels back to the case list', () => {
     render(<NewCasePage />);
     act(() => h.formProps!.onCancel());

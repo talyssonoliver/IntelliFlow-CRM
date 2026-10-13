@@ -107,6 +107,16 @@ describe('ResolutionChecklistEditor', () => {
     expect(document.activeElement).toBe(screen.getByLabelText('Checklist step 1'));
   });
 
+  it('focuses Add Step after removing the last row of several', () => {
+    render(<Harness initial={['A', 'B']} />);
+    act(() => {
+      fireEvent.click(screen.getByRole('button', { name: 'Remove step 2' }));
+    });
+    expect(titles()).toBe('A');
+    expect(live()).toBe('Step 2 removed, 1 step remains.');
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Add Step' }));
+  });
+
   it('focuses Add Step after removing the last step', () => {
     render(<Harness initial={['A']} />);
     act(() => {

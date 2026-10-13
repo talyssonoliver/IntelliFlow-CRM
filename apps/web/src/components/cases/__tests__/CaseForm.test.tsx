@@ -8,6 +8,7 @@ import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, act } from '@testing-library/react';
 import type { CaseTypeOptionDto } from '@intelliflow/validators';
+import axe from 'axe-core';
 
 const h = vi.hoisted(() => ({
   accountQueryInput: null as null | Record<string, unknown>,
@@ -217,6 +218,45 @@ describe('CaseForm — case types (PG-204)', () => {
     expect(screen.getByRole('link', { name: 'create a new one' }).getAttribute('href')).toBe(
       '/accounts/new'
     );
+  });
+
+  it('marks Subject and Client as required without a read-aloud asterisk', () => {
+    renderForm();
+    for (const id of ['subject', 'clientSearch']) {
+      const input = document.getElementById(id) as HTMLInputElement;
+      expect(input.getAttribute('aria-required')).toBe('true');
+      const label = document.querySelector(`label[for="${id}"]`) as HTMLLabelElement;
+      expect(label.querySelector('.sr-only')?.textContent).toBe(' (required)');
+      for (const star of Array.from(label.querySelectorAll('span')).filter((el) =>
+        el.textContent?.includes('*')
+      )) {
+        expect(star.getAttribute('aria-hidden')).toBe('true');
+      }
+    }
+  });
+
+  it('announces a missing client as an alert', async () => {
+    renderForm();
+    fireEvent.change(screen.getByLabelText(/Subject/), { target: { value: 'Smith v Jones' } });
+    await submit();
+    expect(screen.getByText('Please search and select a client').getAttribute('role')).toBe(
+      'alert'
+    );
+  });
+
+  it('has no axe violations', async () => {
+    const { container } = render(
+      <CaseForm
+        mode="create"
+        onSubmit={vi.fn()}
+        onCancel={vi.fn()}
+        isSubmitting={false}
+        caseTypes={[LITIGATION, ADVISORY]}
+        moduleRequiredFields={['description']}
+      />
+    );
+    const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
+    expect(results.violations).toEqual([]);
   });
 
   it('works without any case types', () => {

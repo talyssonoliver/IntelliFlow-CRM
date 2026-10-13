@@ -8,7 +8,7 @@
  */
 
 import { useRouter } from 'next/navigation';
-import { useCallback, useMemo, type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Button, toast } from '@intelliflow/ui';
 import { PageHeader } from '@/components/shared';
 import { CaseForm } from '@/components/cases';
@@ -21,6 +21,8 @@ function optionalString(value: unknown): string | undefined {
 
 export default function NewCasePage() {
   const router = useRouter();
+  // PG-204: a server rejection (e.g. required fields of the case type) is shown inline as well as toasted.
+  const [serverError, setServerError] = useState<string | null>(null);
 
   // PG-204: active case types for the picker and the Case Settings required fields.
   const caseTypesQuery = api.caseTypes.listActive.useQuery(undefined, {
@@ -56,19 +58,25 @@ export default function NewCasePage() {
         });
         return;
       }
-      await createMutation.mutateAsync({
-        title,
-        clientId,
-        description: optionalString(data.description),
-        // PG-204: omitted when blank so the case type / Case Settings default applies.
-        priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | undefined,
-        deadline: deadline as Date | undefined,
-        assignedTo: optionalString(data.assignedTo),
-        // PG-204: jurisdiction and timezone feed the required-field check and the SLA deadline.
-        timezone: optionalString(data.timezone),
-        jurisdiction: optionalString(data.jurisdiction),
-        caseTypeId: optionalString(data.caseTypeId),
-      });
+      setServerError(null);
+      try {
+        await createMutation.mutateAsync({
+          title,
+          clientId,
+          description: optionalString(data.description),
+          // PG-204: omitted when blank so the case type / Case Settings default applies.
+          priority: priority as 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT' | undefined,
+          deadline: deadline as Date | undefined,
+          assignedTo: optionalString(data.assignedTo),
+          // PG-204: jurisdiction and timezone feed the required-field check and the SLA deadline.
+          timezone: optionalString(data.timezone),
+          jurisdiction: optionalString(data.jurisdiction),
+          caseTypeId: optionalString(data.caseTypeId),
+        });
+      } catch (error) {
+        // onError already toasts; keep the message next to the form and settle the submit.
+        setServerError(error instanceof Error ? error.message : 'Failed to create case.');
+      }
     },
     [createMutation]
   );
@@ -101,14 +109,24 @@ export default function NewCasePage() {
     );
   } else if (configReady) {
     content = (
-      <CaseForm
-        mode="create"
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        isSubmitting={createMutation.isPending}
-        caseTypes={caseTypesQuery.data}
-        moduleRequiredFields={moduleRequiredFields}
-      />
+      <>
+        {serverError && (
+          <p
+            role="alert"
+            className="mb-4 rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
+          >
+            {serverError}
+          </p>
+        )}
+        <CaseForm
+          mode="create"
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          isSubmitting={createMutation.isPending}
+          caseTypes={caseTypesQuery.data}
+          moduleRequiredFields={moduleRequiredFields}
+        />
+      </>
     );
   } else {
     content = (

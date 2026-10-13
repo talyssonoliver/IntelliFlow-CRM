@@ -3,6 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import axe from 'axe-core';
 import { DeleteCaseTypeDialog } from '../DeleteCaseTypeDialog';
 
 function renderDialog(props: Partial<React.ComponentProps<typeof DeleteCaseTypeDialog>> = {}) {
@@ -42,10 +43,18 @@ describe('DeleteCaseTypeDialog', () => {
     );
   });
 
-  it('cancels, and locks both buttons while deleting', () => {
+  it('cancels', () => {
     const { onCancel } = renderDialog();
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
     expect(onCancel).toHaveBeenCalled();
+  });
+
+  it('has no axe violations, with or without a server error', async () => {
+    renderDialog({ error: '3 cases use this type. Deactivate it instead.' });
+    const results = await axe.run(document.body, {
+      rules: { 'color-contrast': { enabled: false } },
+    });
+    expect(results.violations).toEqual([]);
   });
 
   it('disables actions while deleting', () => {

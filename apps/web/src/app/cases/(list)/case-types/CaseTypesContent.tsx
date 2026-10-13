@@ -96,6 +96,8 @@ export default function CaseTypesContent() {
   };
 
   const changeDefault = (value: string) => {
+    // The group stays focusable while saving (disabling it drops focus to <body>), so ignore changes here.
+    if (isBusy) return;
     const id = value === NO_DEFAULT ? null : value;
     setDefaultMutation.mutate(
       { id },
@@ -148,7 +150,7 @@ export default function CaseTypesContent() {
       />
 
       <output aria-live="polite" className="sr-only">
-        {announcement}
+        {setDefaultMutation.isPending ? 'Saving the default case type…' : announcement}
       </output>
 
       {!canEdit && (
@@ -164,6 +166,7 @@ export default function CaseTypesContent() {
             iconBg="bg-blue-100 dark:bg-blue-900/30"
             iconFg="text-blue-600 dark:text-blue-400"
             title="Case types"
+            headingLevel={2}
             description="Shown in the New Case form. Inactive types are hidden there but kept on existing cases."
             action={
               <Button
@@ -200,6 +203,7 @@ export default function CaseTypesContent() {
             iconFg="text-violet-600 dark:text-violet-400"
             title="Default case type"
             titleId="default-case-type-heading"
+            headingLevel={2}
             description="Preselected in the New Case form. It must be active; people can still pick another type or none."
           />
           <RadioGroup
@@ -208,7 +212,8 @@ export default function CaseTypesContent() {
             aria-labelledby="default-case-type-heading"
             aria-describedby={describedBy}
             className="flex flex-col gap-3"
-            disabled={!canEdit || isBusy}
+            disabled={!canEdit}
+            aria-busy={setDefaultMutation.isPending}
           >
             <div className="flex min-h-6 items-center gap-2">
               <RadioGroupItem id="default-case-type-none" value={NO_DEFAULT} />
@@ -228,6 +233,11 @@ export default function CaseTypesContent() {
               </div>
             ))}
           </RadioGroup>
+          {setDefaultMutation.isPending && (
+            <p className="mt-3 text-sm text-muted-foreground" aria-hidden="true">
+              Saving the default case type…
+            </p>
+          )}
         </Card>
       </div>
 
