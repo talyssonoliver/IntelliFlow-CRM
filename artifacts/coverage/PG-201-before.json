@@ -1,6 +1,6 @@
 {
   "task_id": "PG-201",
-  "captured_at": "2026-10-13T02:40:00Z",
+  "captured_at": "2026-10-13T00:53:54Z",
   "base_commit": "5426aeed8",
   "description": "Pre-implementation coverage baseline for PG-201 (scheduled reports). Scoped istanbul runs, one package at a time, over every existing production file the plan modifies or deletes (validators/db index barrels are coverage-excluded type barrels).",
   "command": "apps/api: npx vitest run src/modules/analytics/__tests__ --coverage.include=analytics.router.ts,report-templates.router.ts; apps/web: npx vitest run 'src/app/analytics/(list)/report-settings' src/components/settings/__tests__/TimezoneSelector.test.tsx --coverage.include=report-settings/**,TimezoneSelector.tsx,scheduled-reports/page.tsx (json-summary, thresholds 0)",
@@ -192,5 +192,6 @@
         "pct": 100
       }
     }
-  }
+  },
+  "captured_at_source": "mtime of the scoped coverage-summary.json files (api 00:53:34Z, web 00:53:54Z); the earlier value 02:40:00Z was hand-typed"
 }

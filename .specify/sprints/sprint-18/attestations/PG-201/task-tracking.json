@@ -33,7 +33,7 @@
   "kpis": {},
   "notes": "Scheduled reports at /analytics/scheduled-reports: cron schedules, recipient lists, delivery format (PDF/CSV/email-body), template ref. IFC-308 BullMQ cron READS these schedules — schema must match what the job expects. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in analytics automation OR declare as category-2 follow-up under IFC-310/311/312.",
   "phase": "exec",
-  "started_at": "2026-10-13T00:30:00Z",
+  "started_at": "2026-10-12T23:26:50Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
@@ -41,23 +41,23 @@
       "status": "Backlog"
     },
     {
-      "at": "2026-10-13T00:30:00Z",
-      "note": "/spec-session started (owner ruling 2026-10-13 applied: evolve report_schedules in place, cron+tz, report-settings card -> link + one-time copy, tags)",
+      "at": "2026-10-12T23:26:50Z",
+      "note": "/spec-session: first artifact (PG-201-exploration-notes.md) written at this time (file mtime); the exact start was not recorded. Owner ruling applied: evolve report_schedules in place, cron+tz, report-settings card -> link + one-time copy, tags",
       "status": "Specifying"
     },
     {
-      "at": "2026-10-13T01:30:00Z",
-      "note": "Spec complete after 4-agent challenge round (data-engineer, security-lead, frontend-lead+a11y, test-engineer); spec at .specify/sprints/sprint-18/specifications/PG-201-spec.md",
+      "at": "2026-10-12T23:59:53Z",
+      "note": "Spec written after a 4-agent CHALLENGE round (data-engineer, security-lead, frontend-lead+a11y, test-engineer); no consensus vote was taken then (vote run 2026-10-13 06:31-06:38Z, 4/4 APPROVED). Time = commit 748322a84",
       "status": "Spec Complete"
     },
     {
-      "at": "2026-10-13T01:45:00Z",
-      "note": "/plan-session started",
+      "at": "2026-10-12T23:59:53Z",
+      "note": "/plan-session started after commit 748322a84; exact start not recorded",
       "status": "Planning"
     },
     {
-      "at": "2026-10-13T02:30:00Z",
-      "note": "Plan complete; plan-reviewer subagent APPROVE after 2 revision rounds; plan at .specify/sprints/sprint-18/planning/PG-201-plan.md",
+      "at": "2026-10-13T00:31:30Z",
+      "note": "Plan complete; plan-reviewer subagent APPROVE after 2 revision rounds. Time = commit 5426aeed8",
       "status": "Plan Complete"
     },
     {
