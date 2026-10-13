@@ -7,13 +7,13 @@
     "expected": [
       "apps/web/src/app/agent-approvals/approval-policies/page.tsx",
       "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesContent.tsx",
-      "apps/api/src/modules/agent-approval/approval-policies.router.ts",
+      "apps/api/src/modules/agent/approval-policies.router.ts",
       "packages/validators/src/approval-policies.ts",
       ".specify/sprints/sprint-18/attestations/PG-198/context_ack.json"
     ],
     "missing": [
       "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesContent.tsx",
-      "apps/api/src/modules/agent-approval/approval-policies.router.ts",
+      "apps/api/src/modules/agent/approval-policies.router.ts",
       "packages/validators/src/approval-policies.ts",
       ".specify/sprints/sprint-18/attestations/PG-198/context_ack.json"
     ]
@@ -29,13 +29,33 @@
   },
   "kpis": {},
   "notes": "Approval policies at /agent-approvals/approval-policies: auto-approve thresholds, required reviewers, escalation paths, approval timeout SLAs. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "",
-  "started_at": null,
+  "phase": "exec",
+  "started_at": "2026-10-13T00:04:48Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-10-12T23:50:56Z",
+      "status": "Spec Complete",
+      "note": "Commit 9de584c36. Original round: 4/4 APPROVE-WITH-CHANGES at 23:48-23:49Z after owner rulings R1-R3 (Q1=B,Q2=B,Q3=A,Q4=B, relayed 23:40Z); amendments applied without a re-vote. Re-vote on the final spec: see the 2026-10-13 06:2xZ entry."
+    },
+    {
+      "at": "2026-10-13T00:02:47Z",
+      "status": "Plan Complete",
+      "note": "Commit f271ddcca. plan-reviewer subagent: REVISE (9 errors) at 23:59:31Z, re-review REVISE (2 small errors, \"would APPROVE after fixes 1 and 2 without a further full re-review\") at 00:01:40Z; the 2 fixes were applied but no APPROVE verdict was issued. Re-review on the final plan: see later entry."
+    },
+    {
+      "at": "2026-10-13T00:04:48Z",
+      "status": "In Progress",
+      "note": "Exec session started (run exec-PG-198-2026-10-13)"
+    },
+    {
+      "at": "2026-10-13T04:52:00Z",
+      "status": "In Progress",
+      "note": "Run died: drive C: hit 0 bytes (ENOSPC) after commit c058ffcdf; resumed by the runner at 06:07:28Z."
     }
   ],
   "stream": null,

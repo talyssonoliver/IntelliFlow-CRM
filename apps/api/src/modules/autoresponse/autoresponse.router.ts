@@ -143,7 +143,10 @@ async function tryAutoApproveDraft(
   let resolved;
   try {
     resolved = await draftPolicy(ctx, tenantId, draft.triggerType, { fresh: true });
-  } catch {
+  } catch (error) {
+    // Fail closed, but visibly: a broken policy table must not hide behind "pending".
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[AutoResponse] approval policy unavailable; draft left for review: ${message}`);
     return false;
   }
   const verdict = evaluateAutoApproval({

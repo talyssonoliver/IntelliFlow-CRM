@@ -303,4 +303,22 @@ describe('submitForApproval — auto-approval (AC-013)', () => {
 
     expect(result.autoApproved).toBe(false);
   });
+
+  it('logs the policy read failure so a broken policy table is visible (C15)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    loadApprovalPolicy.mockRejectedValueOnce(new Error('db down')).mockRejectedValueOnce('gone');
+    const caller = autoResponseRouter.createCaller(ctx('ADMIN'));
+    for (const d of [draft(0.99), draft(0.99)]) {
+      repo.findById.mockResolvedValue(d);
+      await caller.submitForApproval({ draftId: d.id.toString(), approverId: USER });
+    }
+
+    expect(warn).toHaveBeenCalledWith(
+      '[AutoResponse] approval policy unavailable; draft left for review: db down'
+    );
+    expect(warn).toHaveBeenCalledWith(
+      '[AutoResponse] approval policy unavailable; draft left for review: gone'
+    );
+    warn.mockRestore();
+  });
 });
