@@ -779,7 +779,11 @@ export const leadRouter = createTRPCRouter({
 
     const result = await leadService.updateLead(id, {
       ...rest,
-      phone: phone?.value,
+      // IFC-412: `phone === null` is an explicit clear and must stay `null`
+      // through to the service — `phone?.value` alone would collapse it to
+      // `undefined` (optional chaining on `null` short-circuits), silently
+      // turning a clear into a no-op.
+      phone: phone === null ? null : phone?.value,
     });
 
     if (result.isFailure) {

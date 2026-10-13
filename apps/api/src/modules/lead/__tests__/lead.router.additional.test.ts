@@ -622,6 +622,109 @@ describe('Lead Router - Additional Coverage', () => {
     });
   });
 
+  describe('update - clearable fields forward explicit null (IFC-412)', () => {
+    // Owner ruling 2026-10-12: clearing a "required-looking" field in the lead
+    // edit form must reach LeadService.updateLead as an explicit `null`, not
+    // silently collapse to `undefined` (which would be a no-op server-side).
+    function makeMockDomainLead() {
+      return {
+        id: { value: TEST_UUIDS.lead1 },
+        email: { value: 'lead@example.com' },
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'ACME Corp',
+        title: null,
+        phone: null,
+        source: 'WEBSITE' as const,
+        status: 'NEW' as const,
+        score: { value: 50, confidence: 0.5, tier: 'warm' as const },
+        ownerId: TEST_UUIDS.user1,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+    }
+
+    it('forwards phone: null (not undefined) when the phone is cleared', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: makeMockDomainLead(),
+      });
+
+      await caller.update({ id: TEST_UUIDS.lead1, phone: null });
+
+      // The pre-fix code did `phone?.value`, which collapses `null` to
+      // `undefined` via optional chaining — the exact bug this guards against.
+      expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        expect.objectContaining({ phone: null })
+      );
+    });
+
+    it.each(['company', 'location', 'website', 'firstName', 'lastName'] as const)(
+      'forwards %s: null unchanged when that field is cleared',
+      async (field) => {
+        const ctx = createTestContext();
+        const caller = leadRouter.createCaller(ctx);
+        ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+          isSuccess: true,
+          isFailure: false,
+          value: makeMockDomainLead(),
+        });
+
+        await caller.update({ id: TEST_UUIDS.lead1, [field]: null });
+
+        expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
+          TEST_UUIDS.lead1,
+          expect.objectContaining({ [field]: null })
+        );
+      }
+    );
+
+    it('forwards estimatedValue: null unchanged when the estimate is cleared', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: makeMockDomainLead(),
+      });
+
+      await caller.update({ id: TEST_UUIDS.lead1, estimatedValue: null });
+
+      expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        expect.objectContaining({ estimatedValue: null })
+      );
+    });
+
+    it('does not forward an untouched clearable field at all when only one field changes', async () => {
+      const ctx = createTestContext();
+      const caller = leadRouter.createCaller(ctx);
+      ctx.services!.lead!.updateLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: makeMockDomainLead(),
+      });
+
+      await caller.update({ id: TEST_UUIDS.lead1, company: null });
+
+      const callArgs = (ctx.services!.lead!.updateLead as ReturnType<typeof vi.fn>).mock
+        .calls[0][1];
+      // phone is always present as a key on this call (the router spreads
+      // `phone: phone === null ? null : phone?.value` unconditionally — a
+      // pre-existing structural quirk, not part of this fix), so assert on
+      // its VALUE rather than key presence: unchanged -> undefined, not null.
+      expect(callArgs.phone).toBeUndefined();
+      expect(callArgs).not.toHaveProperty('firstName');
+      expect(callArgs).not.toHaveProperty('location');
+      expect(callArgs).not.toHaveProperty('website');
+      expect(callArgs).not.toHaveProperty('estimatedValue');
+    });
+  });
+
   describe('qualify - reason handling', () => {
     it('should pass provided reason to service', async () => {
       const mockDomainLead = {
