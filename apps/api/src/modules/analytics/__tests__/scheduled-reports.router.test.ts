@@ -542,6 +542,27 @@ describe('scheduledReportsRouter (PG-201)', () => {
       expect(tx.reportSchedule.update).toHaveBeenCalled();
     });
 
+    it('refuses activation through update on a report definition the caller cannot see', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ templateId: null, template: null, reportId: 'rep-1', isActive: false })
+      );
+      (prismaMock.reportDefinition.findFirst as any).mockResolvedValueOnce(null);
+      await expectCode(admin.update({ id: SCHEDULE_ID, isActive: true }), 'FORBIDDEN');
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
+    });
+
+    it('refuses a delivery change on an active schedule whose report definition is hidden', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ templateId: null, template: null, reportId: 'rep-1' })
+      );
+      (prismaMock.reportDefinition.findFirst as any).mockResolvedValueOnce(null);
+      await expectCode(
+        admin.update({ id: SCHEDULE_ID, recipients: ['x@example.invalid'] }),
+        'FORBIDDEN'
+      );
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
+    });
+
     it('pauses a legacy schedule that has no cron without validating it', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
         scheduleRow({ templateId: null, template: null, reportId: 'rep-1', cronExpression: null })
@@ -770,14 +791,43 @@ describe('scheduledReportsRouter (PG-201)', () => {
       expect(tx.reportSchedule.update).not.toHaveBeenCalled();
     });
 
-    it('activates a legacy report-definition schedule without a template check', async () => {
+    it('activates a report-definition schedule only after a definition visibility check', async () => {
       (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
         scheduleRow({ templateId: null, template: null, reportId: 'rep-1', isActive: false })
       );
+      (prismaMock.reportDefinition.findFirst as any).mockResolvedValueOnce({ id: 'rep-1' });
       const tx = useTx();
       tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
       await admin.setActive({ id: SCHEDULE_ID, isActive: true });
       expect(prismaMock.reportTemplate.findFirst).not.toHaveBeenCalled();
+      expect(prismaMock.reportDefinition.findFirst).toHaveBeenCalledWith({
+        where: {
+          id: 'rep-1',
+          tenantId,
+          OR: [{ isPublic: true }, { createdBy: adminId }],
+        },
+        select: { id: true },
+      });
+    });
+
+    it('refuses to activate a schedule whose report definition the caller cannot see (Codex round 2)', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ templateId: null, template: null, reportId: 'rep-1', isActive: false })
+      );
+      (prismaMock.reportDefinition.findFirst as any).mockResolvedValueOnce(null);
+      await expectCode(admin.setActive({ id: SCHEDULE_ID, isActive: true }), 'FORBIDDEN');
+      expect(prismaMock.reportSchedule.update).not.toHaveBeenCalled();
+      expect(logAction).not.toHaveBeenCalled();
+    });
+
+    it('still lets a schedule on a hidden report definition be paused', async () => {
+      (prismaMock.reportSchedule.findFirst as any).mockResolvedValueOnce(
+        scheduleRow({ templateId: null, template: null, reportId: 'rep-1' })
+      );
+      const tx = useTx();
+      tx.reportSchedule.update.mockImplementationOnce(async ({ data }: any) => scheduleRow(data));
+      await admin.setActive({ id: SCHEDULE_ID, isActive: false });
+      expect(prismaMock.reportDefinition.findFirst).not.toHaveBeenCalled();
     });
 
     it('returns NOT_FOUND for a foreign-tenant id without writing', async () => {

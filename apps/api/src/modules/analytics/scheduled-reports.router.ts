@@ -141,6 +141,31 @@ async function assertTemplateVisible(
   });
 }
 
+/**
+ * A schedule with no template delivers its legacy report definition. Activating it, or
+ * changing how or to whom it is delivered, needs a definition the caller can see
+ * (same tenant, public or created by the caller); otherwise FORBIDDEN.
+ */
+async function assertReportDefinitionVisible(
+  tx: ScheduleTx,
+  ctx: ScheduleCtx,
+  reportId: string
+): Promise<void> {
+  const definition = await tx.reportDefinition.findFirst({
+    where: {
+      id: reportId,
+      tenantId: ctx.tenant.tenantId,
+      OR: [{ isPublic: true }, { createdBy: ctx.tenant.userId }],
+    },
+    select: { id: true },
+  });
+  if (definition) return;
+  throw new TRPCError({
+    code: 'FORBIDDEN',
+    message: "This schedule delivers a report you can't see, so you can't change its delivery.",
+  });
+}
+
 /** Newly assigned tags must be active tags of this tenant's catalogue. */
 async function assertTagsExist(tx: ScheduleTx, tenantId: string, tags: string[]): Promise<void> {
   if (tags.length === 0) return;
@@ -243,6 +268,8 @@ interface UpdatePlan {
   checkTemplateId: string | null;
   /** True when checkTemplateId is a newly chosen template (NOT_FOUND), else FORBIDDEN. */
   templateChosen: boolean;
+  /** Report definition to check when there is no template (activation or delivery change). */
+  checkReportId: string | null;
   /** Tags not already on the schedule (unchanged assignments may be inactive tags). */
   newTags: string[];
   /**
@@ -325,6 +352,10 @@ function planScheduleUpdate(
   return {
     activating,
     checkTemplateId: templateChanged || activating || deliveryChanged ? templateId : null,
+    checkReportId:
+      !templateId && existing.reportId && (activating || deliveryChanged)
+        ? existing.reportId
+        : null,
     templateChosen: templateChanged,
     newTags: (fields.tags ?? []).filter((t) => !existing.tags.includes(t)),
     auditable: recipientsChanged || isActive !== existing.isActive || (isActive && deliveryChanged),
@@ -572,6 +603,7 @@ export const scheduledReportsRouter = createTRPCRouter({
           if (plan.checkTemplateId) {
             await assertTemplateVisible(tx, ctx, plan.checkTemplateId, plan.templateChosen);
           }
+          if (plan.checkReportId) await assertReportDefinitionVisible(tx, ctx, plan.checkReportId);
           await assertTagsExist(tx, tenantId, plan.newTags);
           if (plan.activating) await assertActiveCapacity(tx, tenantId, id);
           auditable = plan.auditable;
@@ -610,6 +642,8 @@ export const scheduledReportsRouter = createTRPCRouter({
             if (!existing.isActive) assertDeliverableRecipients(existing.recipients);
             if (existing.templateId) {
               await assertTemplateVisible(tx, ctx, existing.templateId, false);
+            } else if (existing.reportId) {
+              await assertReportDefinitionVisible(tx, ctx, existing.reportId);
             }
             nextRunAt = checkedNextRun(existing.cronExpression, existing.timezone, new Date());
             if (!existing.isActive) await assertActiveCapacity(tx, tenantId, input.id);
