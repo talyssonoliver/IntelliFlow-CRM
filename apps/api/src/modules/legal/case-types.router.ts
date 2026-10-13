@@ -37,6 +37,8 @@ type CaseTypeCtx = Pick<TenantAwareContext, 'tenant' | 'prismaWithTenant' | 'use
 type CaseTypeTx = Parameters<Parameters<CaseTypeCtx['prismaWithTenant']['$transaction']>[0]>[0];
 
 const NOT_FOUND = 'Case type not found';
+const DEFAULT_MUST_STAY_ACTIVE =
+  'The default case type must stay active. Choose another default first.';
 const DEFAULT_ORDER = [{ isDefault: 'desc' as const }, { name: 'asc' as const }];
 const CHECKLIST_INCLUDE = {
   checklist: {
@@ -253,20 +255,25 @@ export const caseTypesRouter = createTRPCRouter({
       const tenantId = ctx.tenant.tenantId;
       const existing = await findOwnedCaseType(ctx, input.id);
       if (existing.isDefault && !input.isActive) {
-        throw new TRPCError({
-          code: 'PRECONDITION_FAILED',
-          message: 'The default case type must stay active. Choose another default first.',
-        });
+        throw new TRPCError({ code: 'PRECONDITION_FAILED', message: DEFAULT_MUST_STAY_ACTIVE });
       }
 
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
+          // Deactivating: the guard is in the write, so a concurrent setDefault cannot
+          // leave an inactive type as the default (the row lock re-checks the WHERE).
           const updated = await tx.caseType.updateMany({
-            where: { id: input.id, tenantId },
+            where: { id: input.id, tenantId, ...(input.isActive ? {} : { isDefault: false }) },
             data: fieldsData(input),
           });
-          // Deleted by someone else since the ownership check.
-          if (updated.count === 0) throw new TRPCError({ code: 'NOT_FOUND', message: NOT_FOUND });
+          if (updated.count === 0) {
+            const stillThere = await tx.caseType.findFirst({
+              where: { id: input.id, tenantId },
+              select: { id: true },
+            });
+            if (!stillThere) throw new TRPCError({ code: 'NOT_FOUND', message: NOT_FOUND });
+            throw new TRPCError({ code: 'PRECONDITION_FAILED', message: DEFAULT_MUST_STAY_ACTIVE });
+          }
           await writeChecklist(tx, tenantId, input.id, input.checklist);
           return tx.caseType.findFirstOrThrow({
             where: { id: input.id, tenantId },

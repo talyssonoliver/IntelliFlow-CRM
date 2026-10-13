@@ -58,6 +58,7 @@ function txMock() {
   return {
     caseType: {
       create: vi.fn().mockResolvedValue({ id: T1 }),
+      findFirst: vi.fn().mockResolvedValue(null),
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
       findFirstOrThrow: vi.fn().mockResolvedValue(row()),
@@ -284,6 +285,21 @@ describe('caseTypesRouter', () => {
       useTx(tx);
       await expectCode(admin.update({ ...input, id: T1 }), 'NOT_FOUND');
       expect(tx.caseTypeChecklistItem.deleteMany).not.toHaveBeenCalled();
+    });
+
+    it('guards deactivation in the write so a concurrent setDefault cannot win', async () => {
+      (prismaMock.caseType.findFirst as any).mockResolvedValueOnce(row());
+      const tx = txMock();
+      tx.caseType.updateMany.mockResolvedValueOnce({ count: 0 });
+      tx.caseType.findFirst.mockResolvedValueOnce({ id: T1 });
+      useTx(tx);
+      await expect(admin.update({ ...input, id: T1, isActive: false })).rejects.toMatchObject({
+        code: 'PRECONDITION_FAILED',
+        message: 'The default case type must stay active. Choose another default first.',
+      });
+      expect(tx.caseType.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: T1, tenantId, isDefault: false } })
+      );
     });
 
     it('maps a rename collision (P2002) to CONFLICT', async () => {
