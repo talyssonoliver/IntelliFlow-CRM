@@ -61,6 +61,20 @@ describe('computeSlaDeadline', () => {
     expect(local(deadline, 'Pacific/Kiritimati')).toBe('2026-10-16 23:59:59.999');
   });
 
+  it('America/Santiago: a day whose last hour repeats ends at the later instant', () => {
+    // Clocks go back from 24:00 to 23:00 at the end of 2026-04-04, so 23:59:59.999 happens twice.
+    const deadline = computeSlaDeadline(new Date('2026-04-03T15:00:00Z'), 1, 'America/Santiago');
+    expect(deadline.toISOString()).toBe('2026-04-05T03:59:59.999Z');
+    expect(local(deadline, 'America/Santiago')).toBe('2026-04-04 23:59:59.999');
+  });
+
+  it('Asia/Beirut: the day before a midnight spring-forward ends right before the jump', () => {
+    // Lebanon skips 00:00-01:00 on 2026-03-29, so 2026-03-28 ends at 21:59:59.999Z (+02:00).
+    const deadline = computeSlaDeadline(new Date('2026-03-27T10:00:00Z'), 1, 'Asia/Beirut');
+    expect(deadline.toISOString()).toBe('2026-03-28T21:59:59.999Z');
+    expect(local(deadline, 'Asia/Beirut')).toBe('2026-03-28 23:59:59.999');
+  });
+
   it('late evening stays on the local date', () => {
     // 23:30 in New York on 2026-10-13 is 03:30Z on the 14th.
     const deadline = computeSlaDeadline(new Date('2026-10-14T03:30:00Z'), 1, 'America/New_York');

@@ -4,8 +4,8 @@
  * A case type's SLA is a number of calendar days. The deadline is the last
  * instant (23:59:59.999) of local calendar day today+N in the case timezone
  * (UTC when none). Calendar arithmetic is done on the local date, then the
- * local end-of-day is converted to UTC with the zone's offset at that instant,
- * so DST changes between today and the target day do not shift the result.
+ * deadline is 1 ms before the next local day starts, so DST changes between today
+ * and the target day, or at that midnight itself, do not shift the result.
  *
  * Self-contained on purpose: the shared `getTimezoneOffsetMinutes` in
  * lib/timezone-utils.ts wraps offsets above +12h (UTC+13/+14 zones), which would
@@ -42,6 +42,21 @@ function offsetMinutesAt(instant: Date, timezone: string): number {
   return Math.round((wallClockAsUtc - wholeSeconds) / MINUTE_MS);
 }
 
+/**
+ * First instant of local calendar day `dayStart` (a UTC-midnight timestamp naming the
+ * local date). Two offset guesses are tried: when a DST change sits at that midnight,
+ * only one of them falls on the target day, and the earliest such instant is the start.
+ */
+function startOfLocalDay(dayStart: number, timezone: string): number {
+  const target = formatISODateInTimezone(new Date(dayStart), 'UTC');
+  const first = dayStart - offsetMinutesAt(new Date(dayStart), timezone) * MINUTE_MS;
+  const second = dayStart - offsetMinutesAt(new Date(first), timezone) * MINUTE_MS;
+  const onTarget = [first, second].filter(
+    (instant) => formatISODateInTimezone(new Date(instant), timezone) === target
+  );
+  return Math.min(...(onTarget.length > 0 ? onTarget : [second]));
+}
+
 export function computeSlaDeadline(
   now: Date,
   days: number,
@@ -49,9 +64,9 @@ export function computeSlaDeadline(
 ): Date {
   const tz = safeTimezone(timezone);
   const [year, month, day] = formatISODateInTimezone(now, tz).split('-').map(Number);
-  // Target local date, then its 23:59:59.999 read as if it were UTC.
-  const wallClock = Date.UTC(year, month - 1, day + days, 23, 59, 59, 999);
-  const firstGuess = wallClock - offsetMinutesAt(new Date(wallClock), tz) * MINUTE_MS;
-  // Re-check the offset at the real instant (it differs when a DST change lies in between).
-  return new Date(wallClock - offsetMinutesAt(new Date(firstGuess), tz) * MINUTE_MS);
+  // The deadline is the last instant of local day D+N: 1 ms before local day D+N+1 starts.
+  // This stays right when the day's last hour repeats (clocks go back at midnight) or
+  // when the next midnight is skipped (clocks go forward at midnight).
+  const nextDay = Date.UTC(year, month - 1, day + days + 1);
+  return new Date(startOfLocalDay(nextDay, tz) - 1);
 }
