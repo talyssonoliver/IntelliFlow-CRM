@@ -222,6 +222,21 @@ describeDb('PG-204 case types (real DB)', () => {
       await expectRejected(caseType(TENANT_A, `${RUN} badreq`, { requiredFields: ['ssn'] }), CHECK);
     });
 
+    // Plan box (re-verify 2026-10-13): the cardinality half of the CHECK had no test. Seven
+    // entries, all valid keys (one repeated), pass the subset test and must fail cardinality <= 6.
+    it('rejects more than six required-field entries', async () => {
+      const requiredFields = [
+        'title',
+        'title',
+        'description',
+        'deadline',
+        'jurisdiction',
+        'clientId',
+        'assignedTo',
+      ];
+      await expectRejected(caseType(TENANT_A, `${RUN} toomany`, { requiredFields }), CHECK);
+    });
+
     it('rejects a case-insensitive duplicate name within a tenant only', async () => {
       await caseType(TENANT_A, `${RUN} NDA`);
       await expectRejected(caseType(TENANT_A, `${RUN} nda`), UNIQUE);
@@ -261,6 +276,19 @@ describeDb('PG-204 case types (real DB)', () => {
       );
       await prisma.caseType.delete({ where: { id: t.id } });
       expect(await prisma.caseTypeChecklistItem.count({ where: { caseTypeId: t.id } })).toBe(0);
+    });
+
+    // Plan box (re-verify 2026-10-13): deleting a tenant removes its types and checklist items.
+    it('are removed with their type when the tenant is deleted', async () => {
+      const tenantId = `${RUN}-tenant-c`;
+      await prisma.tenant.create({ data: { id: tenantId, name: tenantId, slug: tenantId } });
+      const t = await caseType(tenantId, `${RUN} cascade`);
+      await prisma.caseTypeChecklistItem.create({
+        data: { tenantId, caseTypeId: t.id, title: 'Engagement letter', sortOrder: 0 },
+      });
+      await prisma.tenant.delete({ where: { id: tenantId } });
+      expect(await prisma.caseType.count({ where: { tenantId } })).toBe(0);
+      expect(await prisma.caseTypeChecklistItem.count({ where: { tenantId } })).toBe(0);
     });
 
     it('cannot carry a tenant different from their type', async () => {
