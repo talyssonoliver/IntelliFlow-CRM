@@ -9,10 +9,7 @@
  * - OTEL_ENABLED: Enable/disable tracing (default: true)
  * - OTEL_SERVICE_NAME: Service name (default: intelliflow-ai-worker)
  * - OTEL_EXPORTER_OTLP_ENDPOINT: OTLP collector endpoint (default: http://localhost:4317)
- * - OTEL_LOGS_EXPORTER: Logs exporter — 'otlp' (default via NodeSDK, same as
- *   traces/metrics), 'console' or 'none'. The dev fallback below forces 'none'
- *   when no custom endpoint is set, so local dev never dials a collector that
- *   isn't running.
+ * - OTEL_LOGS_EXPORTER: Logs exporter; semantics as documented in apps/api/src/tracing/otel.ts
  * - NODE_ENV: Environment (development/production)
  */
 
