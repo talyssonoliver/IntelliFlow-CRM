@@ -272,6 +272,21 @@ describe('assign_by_skill', () => {
   });
 });
 
+describe('assign_by_skill without a skill table', () => {
+  it('fails closed instead of matching every agent', async () => {
+    givenRules([makeRule([{ type: 'assign_by_skill', target: 'enterprise' }])]);
+    givenAgents([makeAgent({ userId: AGENT_1 }), makeAgent({ userId: AGENT_2 })]);
+    const txWithoutSkills: Record<string, unknown> = { ...tx };
+    delete txWithoutSkills.agentSkill;
+    (prismaMock.$transaction as any).mockImplementation(async (fn: (t: any) => Promise<any>) =>
+      fn(txWithoutSkills)
+    );
+    (prismaMock as any).agentSkill = undefined;
+
+    expect(await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT)).toBeNull();
+  });
+});
+
 describe('unsupported and malformed actions', () => {
   it('F12: legacy notify / escalate assign nobody but never block a later action', async () => {
     givenRules([

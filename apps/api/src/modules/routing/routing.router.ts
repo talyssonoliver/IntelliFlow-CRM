@@ -284,7 +284,17 @@ export const routingRouter = createTRPCRouter({
     .query(
       async ({ ctx, input }): Promise<{ items: RoutingAssignmentDto[]; nextCursor?: string }> => {
         const audits = await ctx.prismaWithTenant.routingAudit.findMany({
-          where: { tenantId: ctx.tenant.tenantId },
+          where: {
+            tenantId: ctx.tenant.tenantId,
+            // Lead assignments only: RoutingAudit also holds ticket routing.
+            // Post-migration rows carry leadId; older rows are recognised by
+            // the signals readLeadId falls back to.
+            OR: [
+              { leadId: { not: null } },
+              { details: { path: ['entityType'], equals: 'lead' } },
+              { details: { path: ['leadId'], string_contains: '' } },
+            ],
+          },
           take: input.limit + 1,
           ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
           orderBy: { createdAt: 'desc' },

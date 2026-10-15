@@ -485,6 +485,12 @@ export class LeadRoutingService {
 
     const underCapacity = availabilities.filter((a: any) => a.currentCapacity < a.maxCapacity);
 
+    if (requiredSkill && !tx.agentSkill) {
+      // Fail closed: without the skill table nobody can be shown to have the
+      // skill, so returning every agent would make assign_by_skill match anyone.
+      return [];
+    }
+
     if (requiredSkill && tx.agentSkill) {
       const skillRecords = await tx.agentSkill.findMany({
         where: {

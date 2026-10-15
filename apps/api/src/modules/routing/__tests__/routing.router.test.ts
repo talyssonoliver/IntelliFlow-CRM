@@ -403,6 +403,19 @@ describe('Routing Router', () => {
 
       expect(result.items[0]?.leadId).toBe(TEST_UUIDS.lead1);
     });
+
+    it('queries only lead audits, not ticket routing rows', async () => {
+      (prismaMock.routingAudit.findMany as any).mockResolvedValue([]);
+
+      await caller.getAssignments({ limit: 20 });
+
+      const args = (prismaMock.routingAudit.findMany as any).mock.calls.at(-1)[0];
+      expect(args.where.OR).toEqual([
+        { leadId: { not: null } },
+        { details: { path: ['entityType'], equals: 'lead' } },
+        { details: { path: ['leadId'], string_contains: '' } },
+      ]);
+    });
   });
 
   describe('getAgentWorkload', () => {
