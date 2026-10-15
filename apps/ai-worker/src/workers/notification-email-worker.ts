@@ -50,14 +50,14 @@ export const EMAIL_NOTIFICATIONS_QUEUE = 'intelliflow-notifications-email';
 // ============================================================================
 // Job data schema — mirrors the literal object ticket.router.ts's
 // notifyAssignee() enqueues via `queue.add('notification:email', {...})`.
-// Permissive on purpose: `recipientEmail` is accepted too so a future
-// producer can skip the user-id lookup, but no current caller sends it.
+// There is deliberately no `recipientEmail` field: an address taken straight
+// from the job would bypass the tenant-scoped membership check in
+// UserEmailLookup. The recipient is always resolved from `recipientUserId`.
 // ============================================================================
 
 export const NotificationEmailJobDataSchema = z.object({
   type: z.string(),
   recipientUserId: z.string().optional(),
-  recipientEmail: z.string().email().optional(),
   tenantId: z.string(),
   subject: z.string(),
   body: z.string(),
@@ -118,8 +118,8 @@ export async function processNotificationEmailJob(
     tenantId: input.tenantId,
   });
 
-  let toEmail = input.recipientEmail;
-  if (!toEmail && input.recipientUserId) {
+  let toEmail: string | undefined;
+  if (input.recipientUserId) {
     toEmail = (await deps.users.findUserEmail(input.recipientUserId, input.tenantId)) ?? undefined;
   }
 

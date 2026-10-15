@@ -173,26 +173,45 @@ describe('processNotificationEmailJob', () => {
     expect(result).toEqual({ delivered: true, messageId: 'msg-1' });
   });
 
-  it('uses recipientEmail directly when present, without calling the user lookup', async () => {
-    const findUserEmail = vi.fn();
-    const sendEmail = vi
-      .fn()
-      .mockResolvedValue(Result.ok({ id: 'n2', channel: 'email', status: 'sent' }));
+  it('ignores a recipientEmail on the job and resolves only through the tenant-scoped lookup', async () => {
+    const findUserEmail = vi.fn().mockResolvedValue(null);
+    const sendEmail = vi.fn();
 
-    await processNotificationEmailJob(
+    const result = await processNotificationEmailJob(
       job({
         type: 'custom',
-        recipientEmail: 'direct@example.com',
+        recipientUserId: 'user-1',
+        recipientEmail: 'attacker@example.com',
         tenantId: 'tenant-1',
         subject: 'Hi',
         body: 'Body',
-      }),
+      } as never),
+      { users: { findUserEmail }, notificationService: { sendEmail }, logger: silentLogger }
+    );
+
+    expect(findUserEmail).toHaveBeenCalledWith('user-1', 'tenant-1');
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({ delivered: false, reason: 'no-recipient-email' });
+  });
+
+  it('never sends to a job-supplied recipientEmail when there is no recipientUserId', async () => {
+    const findUserEmail = vi.fn();
+    const sendEmail = vi.fn();
+
+    const result = await processNotificationEmailJob(
+      job({
+        type: 'custom',
+        recipientEmail: 'attacker@example.com',
+        tenantId: 'tenant-1',
+        subject: 'Hi',
+        body: 'Body',
+      } as never),
       { users: { findUserEmail }, notificationService: { sendEmail }, logger: silentLogger }
     );
 
     expect(findUserEmail).not.toHaveBeenCalled();
-    expect(sendEmail).toHaveBeenCalledTimes(1);
-    expect((sendEmail.mock.calls[0][0] as { to: string[] }).to).toEqual(['direct@example.com']);
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(result).toEqual({ delivered: false, reason: 'no-recipient-email' });
   });
 
   it('skips delivery and does not call sendEmail when no email can be resolved', async () => {
@@ -214,7 +233,7 @@ describe('processNotificationEmailJob', () => {
     expect(result).toEqual({ delivered: false, reason: 'no-recipient-email' });
   });
 
-  it('skips delivery when the job carries neither recipientUserId nor recipientEmail', async () => {
+  it('skips delivery when the job carries no recipientUserId', async () => {
     const findUserEmail = vi.fn();
     const sendEmail = vi.fn();
 

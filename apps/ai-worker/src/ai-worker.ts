@@ -454,10 +454,13 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    *
    * `intelliflow-notifications-email` has been produced by
    * apps/api/.../ticket.router.ts since that router shipped, but its only
-   * intended consumer — apps/workers/notifications-worker — could not
-   * consume it (its job schema never matched the real payload, #230), so jobs
-   * have backlogged in Redis. Stop the notifications-worker service at release. This wires a real
-   * BullMQ consumer inside the already-deployed ai-worker process instead.
+   * intended consumer — apps/workers/notifications-worker, which WAS built,
+   * deployed and promoted — could not consume it (its job schema never
+   * matched the real payload, #230), so jobs have backlogged in Redis. Its
+   * Railway service is kept but must be scaled to 0 BEFORE this ai-worker is
+   * promoted (see docs/operations/runbooks/workers-runbook.md), otherwise the
+   * old worker would claim jobs and fail them. This wires a real BullMQ
+   * consumer inside the already-deployed ai-worker process instead.
    *
    * Email delivery reuses the same adapter apps/api wires in container.ts for
    * production email (createEmailServiceAdapter → Resend/SendGrid, degrading
