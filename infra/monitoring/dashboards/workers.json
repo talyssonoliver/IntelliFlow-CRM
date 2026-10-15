@@ -547,10 +547,10 @@
         "id": 24,
         "gridPos": { "h": 6, "w": 8, "x": 16, "y": 40 },
         "type": "gauge",
-        "title": "Notifications Worker Health",
+        "title": "AI Worker Health (notification email consumer)",
         "targets": [
           {
-            "expr": "up{job=\"notifications-worker\"}",
+            "expr": "up{job=\"ai-worker\"}",
             "legendFormat": "Health"
           }
         ],

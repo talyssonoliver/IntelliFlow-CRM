@@ -115,7 +115,6 @@ export default defineConfig({
       'apps/ai-worker/vitest.config.ts',
       'apps/web/vitest.config.ts',
       'apps/workers/shared/vitest.config.ts',
-      'apps/workers/notifications-worker/vitest.config.ts',
       'apps/workers/events-worker/vitest.config.ts',
       'apps/workers/ingestion-worker/vitest.config.ts',
       'packages/ui/vitest.config.ts',

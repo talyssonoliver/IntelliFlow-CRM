@@ -167,7 +167,6 @@ service_alerts:
       - ai-worker
       - events-worker
       - ingestion-worker
-      - notifications-worker
     alerts:
       compute:
         metric: compute_hours
