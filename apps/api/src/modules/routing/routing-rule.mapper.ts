@@ -61,11 +61,24 @@ export interface RoutingRuleDto {
 }
 
 const conditionsSchema = z.array(routingConditionSchema);
-const actionsSchema = z.array(routingActionSchema);
 
 function leadView<T>(schema: z.ZodType<T[]>, value: unknown): T[] {
   const parsed = schema.safeParse(value);
   return parsed.success ? parsed.data : [];
+}
+
+/**
+ * Actions are read item by item: `notify` / `escalate` (and their `channels`)
+ * were once accepted but the engine never acted on them, so rules saved back
+ * then still carry them. They are dropped from the lead view (the editor never
+ * offers them) while the supported actions of the same rule stay editable.
+ */
+function leadActions(value: unknown): RoutingAction[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    const parsed = routingActionSchema.safeParse(item);
+    return parsed.success ? [parsed.data] : [];
+  });
 }
 
 export function toRoutingRuleDto(row: RoutingRuleRow): RoutingRuleDto {
@@ -77,7 +90,7 @@ export function toRoutingRuleDto(row: RoutingRuleRow): RoutingRuleDto {
     priority: row.priority,
     isActive: row.isActive,
     conditions: leadView(conditionsSchema, row.conditions),
-    actions: leadView(actionsSchema, row.actions),
+    actions: leadActions(row.actions),
     conditionsJson: row.conditions,
     actionsJson: row.actions,
     createdBy: row.createdBy,

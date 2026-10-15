@@ -46,12 +46,16 @@ export const ROUTING_CONDITION_FIELDS = [
 ] as const;
 export type RoutingConditionField = (typeof ROUTING_CONDITION_FIELDS)[number];
 
+/**
+ * Lead-routing actions the engine (LeadRoutingService) executes. Each one
+ * resolves a rule match to an assignee. `notify` and `escalate` were offered
+ * before but nothing ever acted on them, so they are not accepted any more:
+ * never offer an option that silently does nothing (#771).
+ */
 export const ROUTING_ACTION_TYPES = [
   'assign_to_user',
   'assign_to_team',
   'assign_by_skill',
-  'notify',
-  'escalate',
 ] as const;
 export type RoutingActionType = (typeof ROUTING_ACTION_TYPES)[number];
 

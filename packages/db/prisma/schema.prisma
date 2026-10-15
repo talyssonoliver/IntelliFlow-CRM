@@ -4276,7 +4276,9 @@ model RoutingAudit {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  ticketId    String
+  ticketId    String   // Lead-routing rows store the lead id here too (back-compat); see leadId.
+  leadId      String?  // #770: set by lead-routing writers; null for ticket-routing rows. Lets a
+                        // reader tell the two kinds of audit apart without the ticketId/details heuristic.
   ruleId      String?
   ruleName    String?
   fromUserId  String?
@@ -4289,6 +4291,7 @@ model RoutingAudit {
   createdAt   DateTime @default(now())
 
   @@index([ticketId])
+  @@index([leadId])
   @@index([toUserId])
   @@index([createdAt])
   @@index([tenantId])
