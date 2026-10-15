@@ -606,6 +606,24 @@ export class LeadRoutingService {
     return null;
   }
 
+  /**
+   * Availability, team and skill rows outlive a revoked membership, so a rule
+   * action may only pick users who are still live members of this tenant.
+   */
+  private async onlyLiveMembers(
+    tx: any,
+    tenantId: string,
+    agents: EligibleAgent[]
+  ): Promise<EligibleAgent[]> {
+    if (agents.length === 0) return agents;
+    const members: Array<{ id: string }> = await tx.user.findMany({
+      where: { id: { in: agents.map((a) => a.agentId) }, ...tenantUserWhere(tenantId) },
+      select: { id: true },
+    });
+    const live = new Set(members.map((m) => m.id));
+    return agents.filter((a) => live.has(a.agentId));
+  }
+
   private async resolveAction(
     tx: any,
     tenantId: string,
@@ -627,15 +645,19 @@ export class LeadRoutingService {
         where: { teamId: target, tenantId, team: { isActive: true } },
       });
       const memberIds = new Set(members.map((m) => m.userId));
-      const candidates = (await this.getEligibleAgentsInTx(tx, tenantId)).filter((a) =>
-        memberIds.has(a.agentId)
-      );
+      const candidates = (
+        await this.onlyLiveMembers(tx, tenantId, await this.getEligibleAgentsInTx(tx, tenantId))
+      ).filter((a) => memberIds.has(a.agentId));
       const pick = [...candidates].sort((a, b) => a.currentLoad - b.currentLoad)[0];
       return pick ? { assigneeId: pick.agentId, actionType: type, matchedSkill: null } : null;
     }
 
     if (type === 'assign_by_skill') {
-      const candidates = await this.getEligibleAgentsInTx(tx, tenantId, target);
+      const candidates = await this.onlyLiveMembers(
+        tx,
+        tenantId,
+        await this.getEligibleAgentsInTx(tx, tenantId, target)
+      );
       const pick = [...candidates].sort(
         (a, b) => (b.proficiency ?? 0) - (a.proficiency ?? 0) || a.currentLoad - b.currentLoad
       )[0];

@@ -75,7 +75,13 @@ function makeTx() {
     routingRule: { findMany: vi.fn() },
     routingAudit: { create: vi.fn() },
     teamMember: { findMany: vi.fn().mockResolvedValue([]) },
-    user: { findFirst: vi.fn().mockResolvedValue({ id: 'any-user' }) },
+    user: {
+      findFirst: vi.fn().mockResolvedValue({ id: 'any-user' }),
+      // By default every candidate is a live member of the tenant.
+      findMany: vi.fn(async (args: { where: { id: { in: string[] } } }) =>
+        args.where.id.in.map((id) => ({ id }))
+      ),
+    },
   };
 }
 
@@ -248,6 +254,35 @@ describe('assign_to_team', () => {
   it('F8: falls through when the team has no members', async () => {
     givenRules([makeRule([{ type: 'assign_to_team', target: TEAM_ID }])]);
     givenAgents([makeAgent({ userId: AGENT_1 })]);
+
+    expect(await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT)).toBeNull();
+  });
+});
+
+describe('revoked members', () => {
+  it('F6b: a revoked team member cannot win a team action', async () => {
+    givenRules([makeRule([{ type: 'assign_to_team', target: TEAM_ID }])]);
+    tx.teamMember.findMany.mockResolvedValue([{ userId: AGENT_1 }, { userId: AGENT_2 }]);
+    givenAgents([
+      makeAgent({ userId: AGENT_1, userName: 'Revoked', currentCapacity: 0 }),
+      makeAgent({ userId: AGENT_2, userName: 'Live', currentCapacity: 5 }),
+    ]);
+    tx.user.findMany.mockImplementation(async (args: { where: { id: { in: string[] } } }) =>
+      args.where.id.in.filter((id) => id !== AGENT_1).map((id) => ({ id }))
+    );
+
+    const result = await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT);
+
+    expect(result?.assigneeId).toBe(AGENT_2);
+    const call = tx.user.findMany.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(call.where).toHaveProperty('OR');
+  });
+
+  it('F9b: a revoked skilled agent cannot win a skill action', async () => {
+    givenRules([makeRule([{ type: 'assign_by_skill', target: 'sales' }])]);
+    givenAgents([makeAgent({ userId: AGENT_1 })]);
+    tx.agentSkill.findMany.mockResolvedValue([{ userId: AGENT_1, proficiency: 9 }]);
+    tx.user.findMany.mockResolvedValue([]);
 
     expect(await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT)).toBeNull();
   });
