@@ -205,6 +205,26 @@ describe('synthetic monitoring config', () => {
     expect(Object.keys(workflow.on ?? {})).toEqual(['workflow_dispatch']);
   });
 
+  it.each(['synthetic-monitoring.yml', 'grafana-alert-rules.yml'])(
+    'the %s sparse checkout includes the shared tools/scripts/lib the scripts import',
+    (file) => {
+      // Both apply scripts import ../lib/grafana-provisioning.mjs. A sparse
+      // checkout of only tools/scripts/observability leaves it out, so the job
+      // dies with ERR_MODULE_NOT_FOUND (and grafana-alert-rules.yml runs on
+      // push to main, so the merge itself would trip it).
+      const workflow = yaml.load(
+        readFileSync(join(__dirname, '../../../.github/workflows', file), 'utf8')
+      ) as { jobs: Record<string, { steps: { with?: { 'sparse-checkout'?: string } }[] }> };
+      const paths = Object.values(workflow.jobs)
+        .flatMap((j) => j.steps)
+        .map((s) => s.with?.['sparse-checkout'])
+        .filter((v): v is string => typeof v === 'string')
+        .flatMap((v) => v.split(/\r?\n/).map((l) => l.trim()))
+        .filter(Boolean);
+      expect(paths).toContain('tools/scripts/lib');
+    }
+  );
+
   it("never shares a rule group name with alert-rules.json, so that script's folder/rule-group PUT can never wipe this rule", () => {
     // apply-grafana-alert-rules.mjs replaces its ENTIRE named group's rule
     // list on every run (PUT /api/v1/provisioning/folder/{uid}/rule-groups/{name}),

@@ -55,6 +55,7 @@ jobs:
           sparse-checkout: |
             infra/monitoring/grafana/cloud
             tools/scripts/observability
+            tools/scripts/lib
       - uses: actions/setup-node@v7
         with:
           node-version: '24'
