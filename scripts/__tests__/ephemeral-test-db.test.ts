@@ -14,12 +14,14 @@ import {
   assertLocalServer,
   bootstrapStatements,
   childEnv,
+  createdAtOf,
   ephemeralName,
   expandVars,
   isEphemeralName,
   provision,
   quoteIdent,
   resolveServerUrl,
+  sweepStale,
   teardown,
   urlForDatabase,
 } from '../lib/ephemeral-test-db.mjs';
@@ -87,6 +89,17 @@ describe('server safety', () => {
     );
   });
 
+  it.each(['db.railway.internal', 'postgres.railway.internal', 'anything.internal', 'box.local'])(
+    'refuses private-network host %s that the shared guard would accept',
+    (host) => {
+      expect(() => assertLocalServer(pgUrl(5432, 'postgres', host))).toThrow(/non-local host/);
+    }
+  );
+
+  it.each(['localhost', '127.0.0.1', 'postgres', 'postgres-test', 'db'])('accepts %s', (host) => {
+    expect(() => assertLocalServer(pgUrl(5433, 'postgres', host))).not.toThrow();
+  });
+
   it('refuses when nothing resolved', () => {
     expect(() => assertLocalServer('')).toThrow(/No database server resolved/);
   });
@@ -133,6 +146,18 @@ describe('names and URLs', () => {
     expect(u.searchParams.get('schema')).toBe('public');
     expect(u.username).toBe('u');
     expect(new URL(adminUrlFor(pgUrl(25432))).pathname).toBe('/postgres');
+  });
+
+  it('creates the Supabase roles the baseline migration GRANTs to, idempotently', () => {
+    const joined = bootstrapStatements('intelliflow_test_run_x').join(' ');
+    for (const role of ['anon', 'authenticated', 'service_role']) {
+      expect(joined).toContain(`'${role}'`);
+    }
+    expect(joined).toMatch(/pg_roles/); // existence check, so re-running is a no-op
+    expect(joined).toMatch(/duplicate_object/); // two concurrent runs share one cluster
+    expect(joined).toMatch(/NOLOGIN BYPASSRLS/); // service_role bypasses RLS, as on Supabase
+    // roles must exist before the migration's GRANTs, i.e. be part of bootstrap
+    expect(bootstrapStatements('intelliflow_test_run_x')[0]).toMatch(/CREATE ROLE/);
   });
 
   it('pre-creates only the extensions schema and puts public first on the search_path', () => {
@@ -270,6 +295,58 @@ describe('teardown', () => {
       expect(server.log).toHaveLength(0);
     }
   );
+});
+
+describe('sweepStale', () => {
+  const serverUrl = pgUrl(5433);
+  const now = Date.UTC(2026, 9, 15, 12, 0, 0);
+  const nameAt = (ms: number, tag = 'a') =>
+    ephemeralName({ now: ms, pid: 1, rand: 0 }).replace(/_0000$/, `_${tag}`);
+
+  function sweepServer(names: string[]) {
+    const log: string[] = [];
+    const connect = async () => ({
+      query: async (sql: string) => {
+        log.push(sql);
+        return sql.startsWith('SELECT') ? { rows: names.map((datname) => ({ datname })) } : {};
+      },
+      end: async () => {},
+    });
+    return { log, connect };
+  }
+
+  it('recovers the creation time from the name', () => {
+    expect(createdAtOf(nameAt(now))).toBe(Math.floor(now / 1000) * 1000);
+    expect(createdAtOf('intelliflow_test')).toBeNull();
+  });
+
+  it('drops only databases older than the cut-off', async () => {
+    const old = nameAt(now - 2 * 3_600_000);
+    const fresh = nameAt(now - 60_000, 'b');
+    const server = sweepServer([old, fresh]);
+    const dropped = await sweepStale({ connect: server.connect, serverUrl, now });
+    expect(dropped).toEqual([old]);
+    const drops = server.log.filter((q) => q.startsWith('DROP'));
+    expect(drops).toHaveLength(1);
+    expect(drops[0]).toContain(old);
+  });
+
+  it('never drops a long-lived database even if the listing returns one', async () => {
+    const server = sweepServer(['intelliflow_test', 'postgres', 'intelliflow_dev']);
+    expect(await sweepStale({ connect: server.connect, serverUrl, now })).toEqual([]);
+    expect(server.log.filter((q) => q.startsWith('DROP'))).toHaveLength(0);
+  });
+
+  it('refuses a non-local server', async () => {
+    const server = sweepServer([]);
+    await expect(
+      sweepStale({
+        connect: server.connect,
+        serverUrl: pgUrl(5432, 'postgres', 'x.railway.internal'),
+      })
+    ).rejects.toThrow(/non-local host/);
+    expect(server.log).toHaveLength(0);
+  });
 });
 
 describe('childEnv', () => {

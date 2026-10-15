@@ -18,7 +18,30 @@
  * and the unit tests inject fakes.
  */
 
-import { isLocalUrl, hostOf } from '../../tools/scripts/lib/db-target.mjs';
+import { hostOf } from '../../tools/scripts/lib/db-target.mjs';
+
+/**
+ * Hosts this tooling will CREATE/DROP databases on. Deliberately NARROWER than the
+ * shared `isLocalUrl` guard, which also accepts any `*.internal` / `*.local` name:
+ * a Railway private hostname (`*.railway.internal`) would pass that and then have
+ * databases created, migrated and dropped on it. Loopback and the docker-compose
+ * service names only.
+ */
+const PROVISION_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '0.0.0.0',
+  '::1',
+  '[::1]',
+  'host.docker.internal',
+  'postgres',
+  'postgres-test',
+  'db',
+]);
+
+export function isProvisionableHost(url) {
+  return PROVISION_HOSTS.has(hostOf(url));
+}
 
 /** Every database this tooling creates starts with this prefix. */
 export const EPHEMERAL_PREFIX = 'intelliflow_test_run_';
@@ -57,7 +80,7 @@ export function resolveServerUrl(env) {
 /**
  * Refuse anything that is not a local/CI-local server. Provisioning issues
  * CREATE/DROP DATABASE, so a production URL leaking in from `.env.local` must
- * fail loudly (same allow-list the Prisma destructive-op guard uses).
+ * fail loudly (stricter than the Prisma destructive-op guard: see PROVISION_HOSTS).
  */
 export function assertLocalServer(serverUrl) {
   if (!serverUrl) {
@@ -65,7 +88,7 @@ export function assertLocalServer(serverUrl) {
       'No database server resolved. Set TEST_DATABASE_ADMIN_URL, TEST_DATABASE_URL or DATABASE_URL.'
     );
   }
-  if (!isLocalUrl(serverUrl)) {
+  if (!isProvisionableHost(serverUrl)) {
     throw new Error(
       `Refusing to provision on non-local host "${hostOf(serverUrl) || '(unparseable URL)'}": ` +
         'ephemeral test databases are created and dropped, so only local/CI servers are allowed.'
@@ -105,6 +128,33 @@ export function adminUrlFor(serverUrl) {
 }
 
 /**
+ * The baseline migration GRANTs to the Supabase roles, which a plain pgvector
+ * Postgres does not have (`P3018 role "anon" does not exist`). Roles are
+ * cluster-wide, so this must be idempotent AND safe when two runs bootstrap at the
+ * same time: the existence check is not atomic, hence the duplicate_object handler.
+ * Mirrors the "Bootstrap Supabase schemas + roles" step in .github/workflows/ci.yml.
+ */
+export const SUPABASE_ROLES_SQL = `DO $$
+DECLARE
+  spec text[];
+BEGIN
+  FOREACH spec SLICE 1 IN ARRAY ARRAY[
+    ARRAY['anon', 'NOLOGIN'],
+    ARRAY['authenticated', 'NOLOGIN'],
+    ARRAY['service_role', 'NOLOGIN BYPASSRLS']
+  ] LOOP
+    IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = spec[1]) THEN
+      BEGIN
+        EXECUTE format('CREATE ROLE %I %s', spec[1], spec[2]);
+      EXCEPTION WHEN duplicate_object OR unique_violation THEN
+        NULL; -- a concurrent run created it first
+      END;
+    END IF;
+  END LOOP;
+END
+$$`;
+
+/**
  * SQL run inside the NEW database before migrations. Only the `extensions` schema
  * is pre-created: the baseline migration itself installs uuid-ossp INTO it and
  * installs `vector` unqualified, i.e. into `public`, which is where the app's
@@ -116,6 +166,7 @@ export function adminUrlFor(serverUrl) {
  */
 export function bootstrapStatements(dbName) {
   return [
+    SUPABASE_ROLES_SQL,
     'CREATE SCHEMA IF NOT EXISTS extensions',
     `ALTER DATABASE ${quoteIdent(dbName)} SET search_path TO public, extensions`,
     `ALTER DATABASE ${quoteIdent(dbName)} SET timezone TO 'UTC'`,
@@ -178,6 +229,40 @@ export async function teardown({ connect, serverUrl, name }) {
   } finally {
     await admin.end();
   }
+}
+
+/** Epoch seconds encoded in an ephemeral name by ephemeralName(), or null. */
+export function createdAtOf(name) {
+  const m = /^intelliflow_test_run_([a-z0-9]+)_/.exec(name);
+  if (!m) return null;
+  const secs = parseInt(m[1], 36);
+  return Number.isFinite(secs) ? secs * 1000 : null;
+}
+
+/**
+ * Drop ephemeral databases older than `olderThanMs` (leaked by a killed `run`, or
+ * left by `up`). Only names matching the ephemeral pattern are ever dropped, and a
+ * database younger than the cut-off is left alone so a concurrent live run is safe.
+ * @returns {Promise<string[]>} the names dropped
+ */
+export async function sweepStale({ connect, serverUrl, olderThanMs = 3_600_000, now = Date.now() }) {
+  assertLocalServer(serverUrl);
+  const admin = await connect(adminUrlFor(serverUrl));
+  let names;
+  try {
+    const res = await admin.query(
+      `SELECT datname FROM pg_database WHERE starts_with(datname, '${EPHEMERAL_PREFIX}')`
+    );
+    names = (res?.rows ?? []).map((r) => r.datname);
+  } finally {
+    await admin.end();
+  }
+  const stale = names.filter((n) => {
+    const at = isEphemeralName(n) ? createdAtOf(n) : null;
+    return at !== null && now - at >= olderThanMs;
+  });
+  for (const name of stale) await teardown({ connect, serverUrl, name });
+  return stale;
 }
 
 /**

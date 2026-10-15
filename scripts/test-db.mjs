@@ -5,6 +5,7 @@
  *   pnpm test:db:run [--seed] -- <command...>   create a fresh DB, run <command> against it, drop it
  *   pnpm test:db:up  [--seed]                   create a fresh DB, print its URL, leave it for you
  *   pnpm test:db:down <name>                    drop a DB that `up` created
+ *   pnpm test:db:down --stale [--older-than-min N]   drop leaked intelliflow_test_run_* DBs (default: older than 60 min)
  *
  * The server is resolved from the suite's own env (process env over .env.test.local,
  * .env.test, .env.local, .env — the same order vite's loadEnv('test') and the
@@ -16,13 +17,14 @@
  */
 
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { spawn, spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 import { ENV_FILES, resolveEnv } from './lib/preship-integration-infra.mjs';
-import { childEnv, provision, resolveServerUrl, teardown } from './lib/ephemeral-test-db.mjs';
+import { childEnv, provision, resolveServerUrl, sweepStale, teardown } from './lib/ephemeral-test-db.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -93,6 +95,14 @@ async function main() {
   }
 
   if (command === 'down') {
+    if (flags.includes('--stale')) {
+      const i = flags.indexOf('--older-than-min');
+      const minutes = i === -1 ? 60 : Number(flags[i + 1]);
+      if (!Number.isFinite(minutes) || minutes < 0) throw new Error('--older-than-min needs a number');
+      const dropped = await sweepStale({ connect, serverUrl, olderThanMs: minutes * 60_000 });
+      process.stderr.write(`[test-db] swept ${dropped.length} stale database(s)${dropped.length ? ': ' + dropped.join(', ') : ''}\n`);
+      return 0;
+    }
     const name = flags.find((f) => !f.startsWith('--'));
     if (!name) throw new Error('usage: test-db down <database-name>');
     await teardown({ connect, serverUrl, name });
@@ -102,35 +112,57 @@ async function main() {
 
   if (command === 'run') {
     if (childArgv.length === 0) throw new Error('usage: test-db run [--seed] -- <command...>');
-    const { name, url } = await provision({ ...deps(env, withSeed), serverUrl });
-    process.stderr.write(`[test-db] using ephemeral ${name} on ${redact(serverUrl)}\n`);
-
+    // Installed BEFORE provisioning: a kill that lands while the database is being
+    // created or migrated (before any child exists) must still drop it.
     let child;
+    let aborted = null;
+    let name;
+    const onSignal = (signal) => () => {
+      aborted = signal;
+      if (child && !child.killed) child.kill(signal);
+    };
+    const handlers = [
+      ['SIGINT', onSignal('SIGINT')],
+      ['SIGTERM', onSignal('SIGTERM')],
+    ];
+    for (const [sig, fn] of handlers) process.on(sig, fn);
+    const cleanup = () => {
+      for (const [sig, fn] of handlers) process.removeListener(sig, fn);
+    };
+
+    let url;
+    try {
+      ({ name, url } = await provision({ ...deps(env, withSeed), serverUrl }));
+    } catch (e) {
+      cleanup();
+      throw e;
+    }
+    process.stderr.write(`[test-db] using ephemeral ${name} on ${redact(serverUrl)}\n`);
     const drop = () =>
       teardown({ connect, serverUrl, name }).then(
         () => process.stderr.write(`[test-db] dropped ${name}\n`),
         (e) => process.stderr.write(`[test-db] FAILED to drop ${name}: ${e.message}\n`)
       );
-    // Only signals this process receives are handled; the child is the one we started.
-    const onSignal = (signal) => () => {
-      if (child && !child.killed) child.kill(signal);
-    };
-    process.on('SIGINT', onSignal('SIGINT'));
-    process.on('SIGTERM', onSignal('SIGTERM'));
 
-    const code = await new Promise((resolve) => {
-      child = spawn(childArgv[0], childArgv.slice(1), {
-        cwd: repoRoot,
-        env: childEnv(env, url),
-        stdio: 'inherit',
-        shell: process.platform === 'win32',
-      });
-      child.on('error', (e) => {
-        process.stderr.write(`[test-db] could not start command: ${e.message}\n`);
-        resolve(1);
-      });
-      child.on('exit', (c, signal) => resolve(c ?? (signal ? 1 : 0)));
-    });
+    const code = aborted
+      ? 130
+      : await new Promise((resolve) => {
+          child = spawn(childArgv[0], childArgv.slice(1), {
+            cwd: repoRoot,
+            env: childEnv(env, url),
+            stdio: 'inherit',
+            shell: process.platform === 'win32',
+          });
+          child.on('error', (e) => {
+            process.stderr.write(`[test-db] could not start command: ${e.message}\n`);
+            resolve(1);
+          });
+          // A signal death is reported as the conventional 128+n, not a bare 1.
+          child.on('exit', (c, signal) =>
+            resolve(c ?? (signal ? 128 + (os.constants.signals[signal] ?? 1) : 0))
+          );
+        });
+    cleanup();
     await drop();
     return code;
   }
