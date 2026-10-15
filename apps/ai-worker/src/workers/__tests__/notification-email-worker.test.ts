@@ -158,7 +158,7 @@ describe('processNotificationEmailJob', () => {
       }
     );
 
-    expect(findUserEmail).toHaveBeenCalledWith('user-1');
+    expect(findUserEmail).toHaveBeenCalledWith('user-1', 'tenant-1');
     expect(sendEmail).toHaveBeenCalledTimes(1);
     const call = sendEmail.mock.calls[0][0] as {
       to: string[];
@@ -269,23 +269,69 @@ describe('processNotificationEmailJob', () => {
 // ---------------------------------------------------------------------------
 
 describe('createPrismaUserEmailLookup', () => {
-  it('returns the user email when found', async () => {
-    const findUnique = vi.fn().mockResolvedValue({ email: 'carol@example.com' });
-    const lookup = createPrismaUserEmailLookup({ user: { findUnique } });
+  it('returns the user email when the user has a current membership of the tenant', async () => {
+    const findFirst = vi.fn().mockResolvedValue({ email: 'carol@example.com' });
+    const lookup = createPrismaUserEmailLookup({ user: { findFirst } });
 
-    const email = await lookup.findUserEmail('user-3');
+    const email = await lookup.findUserEmail('user-3', 'tenant-1');
 
     expect(email).toBe('carol@example.com');
-    expect(findUnique).toHaveBeenCalledWith({
-      where: { id: 'user-3' },
-      select: { email: true },
+    expect(findFirst).toHaveBeenCalledTimes(1);
+    const args = findFirst.mock.calls[0][0] as {
+      where: { id: string; memberships: { some: Record<string, unknown> } };
+      select: unknown;
+    };
+    expect(args.where.id).toBe('user-3');
+    expect(args.where.memberships.some).toMatchObject({
+      tenantId: 'tenant-1',
+      revokedAt: null,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }],
     });
+    expect(args.select).toEqual({ email: true });
   });
 
-  it('returns null when the user does not exist', async () => {
-    const findUnique = vi.fn().mockResolvedValue(null);
-    const lookup = createPrismaUserEmailLookup({ user: { findUnique } });
+  it('returns null when the user does not exist or has no current membership', async () => {
+    const findFirst = vi.fn().mockResolvedValue(null);
+    const lookup = createPrismaUserEmailLookup({ user: { findFirst } });
 
-    expect(await lookup.findUserEmail('ghost')).toBeNull();
+    expect(await lookup.findUserEmail('ghost', 'tenant-1')).toBeNull();
+  });
+
+  it('never looks a user up by id alone (regression: unscoped-recipient-lookup)', async () => {
+    const findFirst = vi.fn().mockResolvedValue(null);
+    const lookup = createPrismaUserEmailLookup({ user: { findFirst } });
+
+    await lookup.findUserEmail('user-3', 'tenant-other');
+
+    const where = (findFirst.mock.calls[0][0] as { where: Record<string, unknown> }).where;
+    expect(Object.keys(where)).toContain('memberships');
+    expect(JSON.stringify(where)).toContain('tenant-other');
+  });
+});
+
+describe('processNotificationEmailJob tenant scoping', () => {
+  it('skips delivery and logs when the recipient has no current membership of the job tenant', async () => {
+    const findUserEmail = vi.fn(async (_u: string, tenantId: string) =>
+      tenantId === 'tenant-1' ? 'dave@example.com' : null
+    );
+    const sendEmail = vi.fn();
+    const warn = vi.fn();
+    const logger = { child: () => ({ warn, info: vi.fn() }) } as unknown as pino.Logger;
+
+    const result = await processNotificationEmailJob(
+      job({
+        type: 'ticket_assigned',
+        recipientUserId: 'user-4',
+        tenantId: 'tenant-revoked',
+        subject: 'Ticket assigned',
+        body: 'body',
+      }),
+      { users: { findUserEmail }, notificationService: { sendEmail }, logger }
+    );
+
+    expect(findUserEmail).toHaveBeenCalledWith('user-4', 'tenant-revoked');
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalled();
+    expect(result).toEqual({ delivered: false, reason: 'no-recipient-email' });
   });
 });

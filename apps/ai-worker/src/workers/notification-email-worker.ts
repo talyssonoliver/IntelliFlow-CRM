@@ -80,7 +80,11 @@ export interface NotificationEmailJobResult {
 // ============================================================================
 
 export interface UserEmailLookup {
-  findUserEmail(userId: string): Promise<string | null>;
+  /**
+   * Resolve a user's email ONLY while the user holds a current (not revoked,
+   * not expired) membership of `tenantId`. Returns null otherwise.
+   */
+  findUserEmail(userId: string, tenantId: string): Promise<string | null>;
 }
 
 export interface NotificationServiceLike {
@@ -116,13 +120,13 @@ export async function processNotificationEmailJob(
 
   let toEmail = input.recipientEmail;
   if (!toEmail && input.recipientUserId) {
-    toEmail = (await deps.users.findUserEmail(input.recipientUserId)) ?? undefined;
+    toEmail = (await deps.users.findUserEmail(input.recipientUserId, input.tenantId)) ?? undefined;
   }
 
   if (!toEmail) {
     jobLogger.warn(
       { recipientUserId: input.recipientUserId },
-      'No resolvable recipient email — skipping delivery'
+      'No resolvable recipient email (unknown user or no current membership of the job tenant) — skipping delivery'
     );
     return { delivered: false, reason: 'no-recipient-email' };
   }
@@ -228,12 +232,25 @@ export async function bootNotificationEmailWorker(
 // ============================================================================
 
 export function createPrismaUserEmailLookup(prisma: {
-  user: { findUnique(args: unknown): Promise<{ email: string } | null> };
+  user: { findFirst(args: unknown): Promise<{ email: string } | null> };
 }): UserEmailLookup {
   return {
-    async findUserEmail(userId: string): Promise<string | null> {
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
+    async findUserEmail(userId: string, tenantId: string): Promise<string | null> {
+      // Scoped to the job's tenant: the user must hold a current membership
+      // (not revoked, not expired), otherwise mail could reach a user whose
+      // access to that tenant has been removed.
+      const now = new Date();
+      const user = await prisma.user.findFirst({
+        where: {
+          id: userId,
+          memberships: {
+            some: {
+              tenantId,
+              revokedAt: null,
+              OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+            },
+          },
+        },
         select: { email: true },
       });
       return user?.email ?? null;
