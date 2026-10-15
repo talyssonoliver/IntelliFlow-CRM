@@ -235,7 +235,6 @@ describe('DSARWorkflow', () => {
 
       const result = await workflow.initiateDSAR(validRequest);
 
-      const now = new Date();
       const expectedDeadline = new Date();
       // UTC, like the implementation: local setDate() drifts an hour when the
       // 30-day window crosses a DST change (e.g. UK clocks back on 25/10).

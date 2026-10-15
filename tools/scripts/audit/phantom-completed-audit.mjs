@@ -462,7 +462,13 @@ the more surprising cases.
 
 | Added-in-commit | Date | Phantom rows | Subject |
 |---|---|---|---|
-${phantomBirthList.map((g) => `| \`${g.commit.slice(0, 9)}\` | ${g.date || '—'} | ${g.count} | ${(g.subject || '').replace(/\|/g, '\\|').slice(0, 70)} |`).join('\n')}
+${phantomBirthList.map((g) => `| \`${g.commit.slice(0, 9)}\` | ${g.date || '—'} | ${g.count} | ${(g.subject || '')
+  // Escape `\` before `|`: escaping the pipe alone lets a subject already
+  // ending in `\` combine with the inserted `\` into `\\|` — Markdown reads
+  // that as an escaped backslash followed by an unescaped, cell-breaking `|`.
+  .replace(/\\/g, '\\\\')
+  .replace(/\|/g, '\\|')
+  .slice(0, 70)} |`).join('\n')}
 
 ### Full phantom row list
 

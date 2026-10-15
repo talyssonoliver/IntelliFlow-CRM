@@ -23,7 +23,7 @@ import {
 import { LeadRepository, ContactRepository, AccountRepository } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort, LeadScoringResult } from '../../ports';
 import type { TransactionPort } from '@intelliflow/application';
-import { ValidationError, PersistenceError } from '../../errors';
+import { ValidationError } from '../../errors';
 
 // ENG-OPS-002: LeadService now requires a TransactionPort as its final
 // constructor arg. This fake just runs the callback — behaviour-neutral for

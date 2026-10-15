@@ -52,6 +52,21 @@ describe('toRoutingRuleDto', () => {
     expect(dto.actionsJson).toEqual(actions);
   });
 
+  it('drops legacy notify/escalate actions from the lead view but keeps the supported ones', () => {
+    const actions = [
+      { type: 'assign_to_team', target: 'team-1' },
+      { type: 'notify', channels: ['slack', 'email'] },
+      { type: 'escalate', target: 'manager' },
+    ];
+    const dto = toRoutingRuleDto(row({ actions }));
+    expect(dto.actions).toEqual([{ type: 'assign_to_team', target: 'team-1' }]);
+    expect(dto.actionsJson).toBe(actions);
+  });
+
+  it('returns no lead actions when the stored value is not an array', () => {
+    expect(toRoutingRuleDto(row({ actions: { escalate: true } })).actions).toEqual([]);
+  });
+
   it('keeps a legacy keyed-object rule intact in the JSON fields', () => {
     const conditions = { score: { operator: 'gte', value: 90 } };
     const dto = toRoutingRuleDto(row({ conditions }));
