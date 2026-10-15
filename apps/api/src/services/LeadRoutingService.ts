@@ -17,7 +17,7 @@
  * Schema fields: ticketId, leadId, ruleId, ruleName, toUserId, toUserName, reason, details
  */
 
-import type { PrismaClient } from '@intelliflow/db';
+import { tenantUserWhere, type PrismaClient } from '@intelliflow/db';
 import { LeadRoutedEvent, type LeadId } from '@intelliflow/domain';
 import type { Tracer } from '@opentelemetry/api';
 import { SpanStatusCode } from '@opentelemetry/api';
@@ -614,8 +614,9 @@ export class LeadRoutingService {
   ): Promise<RuleAssignment | null> {
     if (type === 'assign_to_user') {
       // A rule is stored data: never trust its target to be a user of THIS tenant.
+      // tenantUserWhere counts live inherited members and excludes revoked home members.
       const user = await tx.user.findFirst({
-        where: { id: target, tenantId },
+        where: { id: target, ...tenantUserWhere(tenantId) },
         select: { id: true },
       });
       return user ? { assigneeId: target, actionType: type, matchedSkill: null } : null;

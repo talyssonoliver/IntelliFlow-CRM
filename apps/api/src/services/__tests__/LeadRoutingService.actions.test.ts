@@ -8,7 +8,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockDeep, type DeepMockProxy } from 'vitest-mock-extended';
-import type { PrismaClient } from '@intelliflow/db';
+import { tenantUserWhere, type PrismaClient } from '@intelliflow/db';
 import { LeadRoutingService } from '../LeadRoutingService';
 
 const TENANT_ID = 'tenant-001';
@@ -179,10 +179,32 @@ describe('assign_to_user', () => {
     const result = await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT);
 
     expect(tx.user.findFirst).toHaveBeenCalledWith({
-      where: { id: 'foreign-user', tenantId: TENANT_ID },
+      where: { id: 'foreign-user', ...tenantUserWhere(TENANT_ID) },
       select: { id: true },
     });
     expect(result?.ruleId).toBe('rule-local');
+  });
+
+  it('F4c: membership decides, not the home tenant column (inherited member in, revoked home user out)', async () => {
+    const where = tenantUserWhere(TENANT_ID);
+    // Home branch excludes a revoked home membership; the other branch admits a live membership.
+    expect(where.OR[0]).toMatchObject({
+      tenantId: TENANT_ID,
+      NOT: { memberships: { some: { tenantId: TENANT_ID, revokedAt: { not: null } } } },
+    });
+    expect(where.OR[1]).toMatchObject({
+      memberships: { some: { tenantId: TENANT_ID, revokedAt: null } },
+    });
+
+    givenRules([makeRule([{ type: 'assign_to_user', target: 'visiting-member' }])]);
+    tx.user.findFirst.mockResolvedValue({ id: 'visiting-member' });
+
+    const result = await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT);
+
+    expect(result?.assigneeId).toBe('visiting-member');
+    const call = tx.user.findFirst.mock.calls[0][0] as { where: Record<string, unknown> };
+    expect(call.where).not.toHaveProperty('tenantId');
+    expect(call.where).toHaveProperty('OR');
   });
 
   it('F5: ignores an action with no target', async () => {
