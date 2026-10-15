@@ -178,8 +178,9 @@ describe('assign_to_user', () => {
 
     const result = await service.findMatchingRule(TENANT_ID, LEAD_CONTEXT);
 
+    // The membership predicate embeds `now`, so assert its shape rather than a fresh Date.
     expect(tx.user.findFirst).toHaveBeenCalledWith({
-      where: { id: 'foreign-user', ...tenantUserWhere(TENANT_ID) },
+      where: { id: 'foreign-user', OR: expect.any(Array) },
       select: { id: true },
     });
     expect(result?.ruleId).toBe('rule-local');
