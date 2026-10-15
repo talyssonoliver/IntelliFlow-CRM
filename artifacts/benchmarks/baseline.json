@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-07T13:50:49.164Z",
+  "timestamp": "2026-10-15T13:13:55.576Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -2876,7 +2876,7 @@
   },
   "workers_inventory": {
     "total_workers": 3,
-    "total_jobs": 6,
+    "total_jobs": 3,
     "workers": [
       {
         "name": "events",
@@ -2898,11 +2898,7 @@
       {
         "name": "notifications",
         "type": "notifications",
-        "jobs": [
-          "channel:email",
-          "channel:sms",
-          "channel:webhook"
-        ],
+        "jobs": [],
         "description": "Multi-channel notification delivery"
       }
     ]

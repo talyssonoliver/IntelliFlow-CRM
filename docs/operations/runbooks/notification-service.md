@@ -3,6 +3,17 @@
 **Document ID**: IFC-157-NOTIFICATION-RUNBOOK **Version**: 1.1.0 **Last
 Updated**: 2026-04-15 **Owner**: STOA-Domain (Backend Dev + SRE)
 
+> **#230 (2026-10-12):** `apps/workers/notifications-worker` — the process this
+> runbook's `docker restart notifications-worker` /
+> `docker logs notifications-worker` commands target — was removed. It was never
+> deployed (no `railway.json`, not in the build/deploy matrix), and its
+> `intelliflow-notifications-email` queue consumption has been folded into
+> `apps/ai-worker` (`src/workers/notification-email-worker.ts`) instead of a
+> standalone service. The circuit-breaker/DLQ/provider sections below describe
+> the pre-#230 design and have not been re-verified against the new consumer;
+> treat `docker restart notifications-worker` as `restart the ai-worker service`
+> on Railway until this runbook is updated end-to-end.
+
 > **Consolidated** 2026-04-15: absorbed `notifications.md` (IFC-163 BullMQ-level
 > ops) — circuit-breaker states, extended email retry table, `bullmq-cli` DLQ
 > commands, and per-provider rate-limit table now live here as the single

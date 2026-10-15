@@ -102,7 +102,7 @@ env:
     --project=web --project=ai-worker --project=domain --project=adapters
     --project=application --project=validators --project=ui
     --project=observability --project=worker-shared
-    --project=notifications-worker --project=events-worker
+    --project=events-worker
     --project=ingestion-worker --project=architecture --project=a11y
     --project=db --project=api --project=root --project=webhooks
 

@@ -5,6 +5,28 @@
 **Task ID**: IFC-163 **Last Updated**: 2026-01-01 **Owner**: the owner (sole
 operator)
 
+> **#230:** `notifications-worker` was removed from the repo. Its email queue
+> consumer (`intelliflow-notifications-email`) now runs inside `ai-worker`
+> (`apps/ai-worker/src/workers/notification-email-worker.ts`). The sections
+> below that mention `notifications-worker` predate this change and have not
+> been re-verified.
+>
+> **Release step:** after promoting `ai-worker` (list it in the promote
+> workflow's `redeploy` input), stop the `notifications-worker` Railway service
+> (0 replicas, not deleted). Do this only after the `ai-worker` consumer is
+> confirmed up, so the queue is never unconsumed.
+>
+> **`events-worker` is unchanged and still deployed.** Its outbox consumer and
+> maintenance scheduler stay in `apps/workers/events-worker`; folding them into
+> `ai-worker` needs a redesign first (multi-replica-safe locking, atomic
+> reminder dedup) and is tracked in the follow-up issue linked from #230. Its
+> image is still built and promoted.
+>
+> **Terraform:** `events-worker` and `notifications-worker` stay defined in
+> `infra/terraform/environments/*/terraform.tfvars`. Removing an entry would
+> make the next `terraform apply` destroy the Railway service; do that only on
+> the owner's explicit go.
+
 ## Overview
 
 This runbook covers operations for the three worker services:

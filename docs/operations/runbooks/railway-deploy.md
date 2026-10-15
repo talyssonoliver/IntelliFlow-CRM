@@ -249,34 +249,37 @@ reservations — actual billed usage idles well below them.
 
 ### Production footprint vs. the Hobby ceiling
 
-| Service                | Replicas | Mem limit | vCPU limit | RAM ceiling | vCPU ceiling | In TF? |
-| ---------------------- | -------- | --------- | ---------- | ----------- | ------------ | ------ |
-| `api`                  | 2        | 1 GB      | 1          | 2.0 GB      | 2.0          | yes    |
-| `ai-worker`            | 2        | 1 GB      | 1          | 2.0 GB      | 2.0          | yes    |
-| `events-worker`        | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
-| `ingestion-worker`     | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
-| `notifications-worker` | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
-| `Redis`                | 1        | ~0.5 GB   | ~0.5       | 0.5 GB      | 0.5          | no¹    |
-| `ws`                   | 1        | ~0.5 GB   | ~0.5       | 0.5 GB      | 0.5          | no¹    |
-| **Total (ceilings)**   |          |           |            | **~6.5 GB** | **~6.5**     |        |
-| **Hobby cap**          |          |           |            | **8 GB**    | **8**        |        |
+| Service              | Replicas | Mem limit | vCPU limit | RAM ceiling | vCPU ceiling | In TF? |
+| -------------------- | -------- | --------- | ---------- | ----------- | ------------ | ------ |
+| `api`                | 2        | 1 GB      | 1          | 2.0 GB      | 2.0          | yes    |
+| `ai-worker`          | 2        | 1 GB      | 1          | 2.0 GB      | 2.0          | yes    |
+| `events-worker`      | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
+| `ingestion-worker`   | 1        | 512 MB    | 0.5        | 0.5 GB      | 0.5          | yes    |
+| `Redis`              | 1        | ~0.5 GB   | ~0.5       | 0.5 GB      | 0.5          | no¹    |
+| `ws`                 | 1        | ~0.5 GB   | ~0.5       | 0.5 GB      | 0.5          | no¹    |
+| **Total (ceilings)** |          |           |            | **~6.0 GB** | **~6.0**     |        |
+| **Hobby cap**        |          |           |            | **8 GB**    | **8**        |        |
 
 ¹ `Redis` + `ws` exist live but are **not** Terraform-managed (left external on
 purpose). Only `Redis` uses a persistent **volume** (~a few GB) — disk usage is
 a rounding error against the 100 GB cap.
 
+`notifications-worker` was removed (#230): its email queue consumer now runs
+inside `ai-worker`. Its Railway service is stopped (0 replicas, not deleted) at
+the release that ships the fold; `events-worker` is unchanged.
+
 ### Verdict — are we good on Hobby?
 
 **Yes, comfortably for normal operation.** Even at _declared ceilings_ the fleet
-sums to ~6.5/8 GB and ~6.5/8 vCPU (real idle usage is far lower), and disk is a
+sums to ~6.0/8 GB and ~6.0/8 vCPU (real idle usage is far lower), and disk is a
 non-issue. Headroom notes:
 
 - **The 2× replicas on `api`/`ai-worker` are the main consumers** (4 GB / 4 vCPU
   of the ceiling). Live currently runs them at **`replicas=1`**; a full
   `terraform apply` would scale them to 2 (the SSOT default) — a deliberate +2
   GB / +2 vCPU step. Keep them at `replicas=1` until traffic warrants HA, and
-  the ceiling drops to ~4.5/8.
-- The 3 workers + Redis + ws are tiny (≤0.5 GB each).
+  the ceiling drops to ~4.0/8.
+- The 2 workers + Redis + ws are tiny (≤0.5 GB each).
 - Disk (100 GB) is effectively unlimited for this workload.
 
 ### Alerts
