@@ -278,14 +278,23 @@ describe('createPrismaUserEmailLookup', () => {
     expect(email).toBe('carol@example.com');
     expect(findFirst).toHaveBeenCalledTimes(1);
     const args = findFirst.mock.calls[0][0] as {
-      where: { id: string; memberships: { some: Record<string, unknown> } };
+      where: { id: string; OR: Array<Record<string, unknown>> };
       select: unknown;
     };
     expect(args.where.id).toBe('user-3');
-    expect(args.where.memberships.some).toMatchObject({
+    expect(args.where.OR[0]).toEqual({
+      memberships: {
+        some: {
+          tenantId: 'tenant-1',
+          revokedAt: null,
+          OR: [{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }],
+        },
+      },
+    });
+    // implicit home membership: users.tenantId matches and no row exists for the tenant
+    expect(args.where.OR[1]).toEqual({
       tenantId: 'tenant-1',
-      revokedAt: null,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: expect.any(Date) } }],
+      memberships: { none: { tenantId: 'tenant-1' } },
     });
     expect(args.select).toEqual({ email: true });
   });
@@ -304,7 +313,7 @@ describe('createPrismaUserEmailLookup', () => {
     await lookup.findUserEmail('user-3', 'tenant-other');
 
     const where = (findFirst.mock.calls[0][0] as { where: Record<string, unknown> }).where;
-    expect(Object.keys(where)).toContain('memberships');
+    expect(Object.keys(where)).toContain('OR');
     expect(JSON.stringify(where)).toContain('tenant-other');
   });
 });

@@ -236,20 +236,27 @@ export function createPrismaUserEmailLookup(prisma: {
 }): UserEmailLookup {
   return {
     async findUserEmail(userId: string, tenantId: string): Promise<string | null> {
-      // Scoped to the job's tenant: the user must hold a current membership
-      // (not revoked, not expired), otherwise mail could reach a user whose
-      // access to that tenant has been removed.
+      // Scoped to the job's tenant. Access is granted by EITHER a live
+      // (not revoked, not expired) membership row for the tenant, OR the
+      // implicit home membership: users.tenantId matches and NO membership
+      // row exists for that tenant (HOME rows are written lazily). A revoked
+      // or expired row, home or not, denies access.
       const now = new Date();
       const user = await prisma.user.findFirst({
         where: {
           id: userId,
-          memberships: {
-            some: {
-              tenantId,
-              revokedAt: null,
-              OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+          OR: [
+            {
+              memberships: {
+                some: {
+                  tenantId,
+                  revokedAt: null,
+                  OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+                },
+              },
             },
-          },
+            { tenantId, memberships: { none: { tenantId } } },
+          ],
         },
         select: { email: true },
       });
