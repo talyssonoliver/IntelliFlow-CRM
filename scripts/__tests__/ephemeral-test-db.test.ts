@@ -118,6 +118,14 @@ describe('names and URLs', () => {
     }
   });
 
+  it('draws its default salt from a CSPRNG, giving distinct valid names for identical now/pid', () => {
+    const names = new Set(
+      Array.from({ length: 60 }, () => ephemeralName({ now: 1_700_000_000_000, pid: 7 }))
+    );
+    expect(names.size).toBeGreaterThan(30);
+    for (const n of names) expect(isEphemeralName(n)).toBe(true);
+  });
+
   it('only treats this tooling’s own databases as droppable', () => {
     for (const bad of [
       'intelliflow_test',

@@ -18,6 +18,7 @@
  * and the unit tests inject fakes.
  */
 
+import { randomInt } from 'node:crypto';
 import { hostOf } from '../../tools/scripts/lib/db-target.mjs';
 
 /**
@@ -97,7 +98,11 @@ export function assertLocalServer(serverUrl) {
 }
 
 /** A unique, valid, lowercase database name for this run. */
-export function ephemeralName({ now = Date.now(), pid = process.pid, rand = Math.random() } = {}) {
+export function ephemeralName({
+  now = Date.now(),
+  pid = process.pid,
+  rand = randomInt(36 ** 4) / 36 ** 4,
+} = {}) {
   const stamp = Math.floor(now / 1000).toString(36);
   const salt = Math.floor(rand * 36 ** 4)
     .toString(36)
@@ -245,7 +250,12 @@ export function createdAtOf(name) {
  * database younger than the cut-off is left alone so a concurrent live run is safe.
  * @returns {Promise<string[]>} the names dropped
  */
-export async function sweepStale({ connect, serverUrl, olderThanMs = 3_600_000, now = Date.now() }) {
+export async function sweepStale({
+  connect,
+  serverUrl,
+  olderThanMs = 3_600_000,
+  now = Date.now(),
+}) {
   assertLocalServer(serverUrl);
   const admin = await connect(adminUrlFor(serverUrl));
   let names;
