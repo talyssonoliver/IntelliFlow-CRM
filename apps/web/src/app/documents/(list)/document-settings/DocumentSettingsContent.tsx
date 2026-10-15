@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared/page-header';
+import { Button, Card, toast } from '@intelliflow/ui';
+import { ModuleSettingsShell } from '@/components/shared/module-settings-shell';
 import type { CreateDocumentTagInput, UpdateDocumentTagInput } from '@intelliflow/validators';
 import { GeneralConfigCard, type DocumentGeneralConfigLocal } from './components/GeneralConfigCard';
 import { AntivirusCard } from './components/AntivirusCard';
@@ -416,74 +416,61 @@ export default function DocumentSettingsContent() {
 
   const tagsIsBusy = tagCreate.isPending || tagUpdate.isPending || tagDelete.isPending;
 
-  const actions = useMemo(
-    () => [
-      {
-        label: 'Reset to Defaults',
-        onClick: () => setResetOpen(true),
-        variant: 'secondary' as const,
-        icon: 'restart_alt',
-        hideOnMobile: true,
-      },
-      {
-        label: isSaving ? 'Saving…' : 'Save Changes',
-        onClick: handleSave,
-        variant: 'primary' as const,
-        icon: 'save',
-        disabled: !isDirty || isSaving || hasConflict,
-        loading: isSaving,
-      },
-    ],
-    [handleSave, isDirty, isSaving, hasConflict]
-  );
+  const canSave = isDirty && !isSaving && !hasConflict;
 
-  if (isLoading) return <DocumentSettingsLoading />;
-
-  if (error) {
-    return (
-      <div className="w-full text-center py-12">
-        <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
-        <button
-          onClick={async () => {
-            try {
-              await Promise.all([
-                generalQuery.refetch(),
-                duplicateRulesQuery.refetch(),
-                requiredFieldsQuery.refetch(),
-                tagsQuery.refetch(),
-                automationQuery.refetch(),
-                retentionQuery.refetch(),
-              ]);
-            } catch (err) {
-              toast({
-                title: 'Error reloading settings',
-                description: err instanceof Error ? err.message : 'Unknown error',
-                variant: 'destructive',
-              });
-            }
-          }}
-          className="text-sm text-primary hover:underline"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const errorFallback = error ? (
+    <div className="w-full text-center py-12">
+      <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
+      <button
+        onClick={async () => {
+          try {
+            await Promise.all([
+              generalQuery.refetch(),
+              duplicateRulesQuery.refetch(),
+              requiredFieldsQuery.refetch(),
+              tagsQuery.refetch(),
+              automationQuery.refetch(),
+              retentionQuery.refetch(),
+            ]);
+          } catch (err) {
+            toast({
+              title: 'Error reloading settings',
+              description: err instanceof Error ? err.message : 'Unknown error',
+              variant: 'destructive',
+            });
+          }
+        }}
+        className="text-sm text-primary hover:underline"
+      >
+        Retry
+      </button>
+    </div>
+  ) : undefined;
 
   return (
-    <div className="w-full">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Documents', href: '/documents' },
-          { label: 'Document Settings' },
-        ]}
-        title="Document Settings"
-        description="Configure file types, security, retention, and metadata policies."
-        actions={actions}
-        className="mb-6"
-      />
-
+    <ModuleSettingsShell
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' },
+        { label: 'Documents', href: '/documents' },
+        { label: 'Document Settings' },
+      ]}
+      title="Document Settings"
+      description="Configure file types, security, retention, and metadata policies."
+      errorTitle="Failed to load settings"
+      isLoading={isLoading}
+      errorMessage={error?.message ?? null}
+      loadingFallback={<DocumentSettingsLoading />}
+      errorFallback={errorFallback}
+      isSaving={isSaving}
+      canSave={canSave}
+      onSave={handleSave}
+      resetOpen={resetOpen}
+      onResetOpenChange={setResetOpen}
+      onResetConfirm={handleReset}
+      resetDescription="Reset General Config, Duplicate Rules, Required Fields, Automation, and Retention Policies to defaults? Tags and custom fields are preserved."
+      resetAction={{ icon: 'restart_alt', hideOnMobile: true }}
+      saveAction={{ icon: 'save' }}
+    >
       {/* ═════════════════════════════════════════════════════════════════
           BENTO GRID — 12 columns (stacks on mobile)
           Row 1: GeneralConfigCard (5)     + AntivirusCard (7)
@@ -492,88 +479,76 @@ export default function DocumentSettingsContent() {
           Row 4: RetentionPoliciesTab (8)  + TagsTab (4)
           Row 5: ConfigurationSummary (12)
           ═════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        {/* Row 1 */}
-        <GeneralConfigCard config={localGeneral} onConfigChange={handleGeneralChange} />
-        <AntivirusCard config={localGeneral} onConfigChange={handleGeneralChange} />
+      {/* Row 1 */}
+      <GeneralConfigCard config={localGeneral} onConfigChange={handleGeneralChange} />
+      <AntivirusCard config={localGeneral} onConfigChange={handleGeneralChange} />
 
-        {/* Row 2 */}
-        <DuplicateDetectionTab
-          rules={localRules}
-          onRulesChange={handleRulesChange}
-          hasConflict={hasConflict}
-        />
-        <RequiredFieldsTab fields={localRequired} onFieldsChange={handleRequiredChange} />
-
-        {/* Row 3 */}
-        <AutomationCard settings={localAutomation} onSettingsChange={handleAutomationChange} />
-        <AISettingsCard settings={localAutomation} onSettingsChange={handleAutomationChange} />
-
-        {/* Row 4 */}
-        <RetentionPoliciesTab policies={localRetention} onPoliciesChange={handleRetentionChange} />
-
-        {/* Tags */}
-        <Card className="lg:col-span-4 p-4 sm:p-6">
-          <SectionHeader
-            icon="label"
-            iconBg="bg-indigo-500/10"
-            iconFg="text-indigo-500"
-            title="Tags"
-            description="Tag vocabulary for the Documents module."
-            action={
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => tagsRef.current?.openCreate()}
-                disabled={tagsIsBusy}
-              >
-                <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
-                  add
-                </span>{' '}
-                New Tag
-              </Button>
-            }
-          />
-          <TagsTab
-            ref={tagsRef}
-            tags={tagRows}
-            onCreate={handleTagCreate}
-            onUpdate={handleTagUpdate}
-            onDelete={handleTagDelete}
-            isBusy={tagsIsBusy}
-          />
-        </Card>
-
-        {/* Row 5 — Configuration Summary */}
-        <Card className="lg:col-span-12 p-4 sm:p-6">
-          <SectionHeader
-            icon="summarize"
-            iconBg="bg-slate-100 dark:bg-slate-800"
-            iconFg="text-slate-600 dark:text-slate-300"
-            title="Configuration Summary"
-            description="Live overview of your document settings."
-          />
-          <ConfigurationSummary
-            general={localGeneral}
-            rules={localRules}
-            requiredFields={localRequired}
-            automation={localAutomation}
-            retention={localRetention}
-            lastUpdated={lastUpdated}
-            isDirty={isDirty}
-          />
-        </Card>
-      </div>
-
-      <ConfirmationDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset to Defaults"
-        description="Reset General Config, Duplicate Rules, Required Fields, Automation, and Retention Policies to defaults? Tags and custom fields are preserved."
-        confirmLabel="Reset"
-        variant="destructive"
-        onConfirm={handleReset}
+      {/* Row 2 */}
+      <DuplicateDetectionTab
+        rules={localRules}
+        onRulesChange={handleRulesChange}
+        hasConflict={hasConflict}
       />
-    </div>
+      <RequiredFieldsTab fields={localRequired} onFieldsChange={handleRequiredChange} />
+
+      {/* Row 3 */}
+      <AutomationCard settings={localAutomation} onSettingsChange={handleAutomationChange} />
+      <AISettingsCard settings={localAutomation} onSettingsChange={handleAutomationChange} />
+
+      {/* Row 4 */}
+      <RetentionPoliciesTab policies={localRetention} onPoliciesChange={handleRetentionChange} />
+
+      {/* Tags */}
+      <Card className="lg:col-span-4 p-4 sm:p-6">
+        <SectionHeader
+          icon="label"
+          iconBg="bg-indigo-500/10"
+          iconFg="text-indigo-500"
+          title="Tags"
+          description="Tag vocabulary for the Documents module."
+          action={
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => tagsRef.current?.openCreate()}
+              disabled={tagsIsBusy}
+            >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden="true">
+                add
+              </span>{' '}
+              New Tag
+            </Button>
+          }
+        />
+        <TagsTab
+          ref={tagsRef}
+          tags={tagRows}
+          onCreate={handleTagCreate}
+          onUpdate={handleTagUpdate}
+          onDelete={handleTagDelete}
+          isBusy={tagsIsBusy}
+        />
+      </Card>
+
+      {/* Row 5 — Configuration Summary */}
+      <Card className="lg:col-span-12 p-4 sm:p-6">
+        <SectionHeader
+          icon="summarize"
+          iconBg="bg-slate-100 dark:bg-slate-800"
+          iconFg="text-slate-600 dark:text-slate-300"
+          title="Configuration Summary"
+          description="Live overview of your document settings."
+        />
+        <ConfigurationSummary
+          general={localGeneral}
+          rules={localRules}
+          requiredFields={localRequired}
+          automation={localAutomation}
+          retention={localRetention}
+          lastUpdated={lastUpdated}
+          isDirty={isDirty}
+        />
+      </Card>
+    </ModuleSettingsShell>
   );
 }

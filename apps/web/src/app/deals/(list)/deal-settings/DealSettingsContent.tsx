@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared/page-header';
+import { Button, Card, toast } from '@intelliflow/ui';
+import { ModuleSettingsShell } from '@/components/shared/module-settings-shell';
 import {
   DEFAULT_DEAL_AUTOMATION,
   type CreateDealScoringRuleInput,
@@ -478,26 +478,7 @@ export default function DealSettingsContent() {
     tagsQuery.error ||
     automationQuery.error;
 
-  const actions = useMemo(
-    () => [
-      {
-        label: 'Reset to Defaults',
-        onClick: () => setResetOpen(true),
-        variant: 'secondary' as const,
-        icon: 'restart_alt',
-        hideOnMobile: true,
-      },
-      {
-        label: isSaving ? 'Saving…' : 'Save Changes',
-        onClick: handleSave,
-        variant: 'primary' as const,
-        icon: 'save',
-        disabled: !isDirty || isSaving,
-        loading: isSaving,
-      },
-    ],
-    [handleSave, isDirty, isSaving]
-  );
+  const canSave = isDirty && !isSaving;
 
   const tagsIsBusy = tagCreate.isPending || tagUpdate.isPending || tagDelete.isPending;
   const winLossIsBusy =
@@ -527,160 +508,147 @@ export default function DealSettingsContent() {
     }
   };
 
-  if (isLoading) return <DealSettingsLoading />;
-
-  if (error) {
-    return (
-      <div className="w-full text-center py-12">
-        <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
-        <button
-          type="button"
-          onClick={handleRetry}
-          className="text-sm text-primary hover:underline"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const errorFallback = error ? (
+    <div className="w-full text-center py-12">
+      <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
+      <button type="button" onClick={handleRetry} className="text-sm text-primary hover:underline">
+        Retry
+      </button>
+    </div>
+  ) : undefined;
 
   return (
-    <div className="w-full">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Deals', href: '/deals' },
-          { label: 'Deal Settings' },
-        ]}
-        title="Deal Settings"
-        description="Pipeline stages, win/loss reasons, scoring rules, duplicate detection, required fields, tags and automation."
-        actions={actions}
-        className="mb-6"
-      />
+    <ModuleSettingsShell
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' },
+        { label: 'Deals', href: '/deals' },
+        { label: 'Deal Settings' },
+      ]}
+      title="Deal Settings"
+      description="Pipeline stages, win/loss reasons, scoring rules, duplicate detection, required fields, tags and automation."
+      errorTitle="Failed to load settings"
+      isLoading={isLoading}
+      errorMessage={error?.message ?? null}
+      loadingFallback={<DealSettingsLoading />}
+      errorFallback={errorFallback}
+      isSaving={isSaving}
+      canSave={canSave}
+      onSave={handleSave}
+      resetOpen={resetOpen}
+      onResetOpenChange={setResetOpen}
+      onResetConfirm={handleReset}
+      resetDescription="This restores duplicate rules, required fields, win/loss reasons, scoring rules and automation to factory defaults. Tags and pipeline stages are preserved. This action cannot be undone."
+      resetAction={{ icon: 'restart_alt', hideOnMobile: true }}
+      saveAction={{ icon: 'save' }}
+    >
+      <Card id="pipeline" className="lg:col-span-7 p-4 sm:p-6">
+        <SectionHeader
+          icon="linear_scale"
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
+          iconFg="text-blue-600 dark:text-blue-400"
+          title="Pipeline Stages"
+          description="Stage order, colors and probabilities."
+        />
+        <DealPipelineCard />
+      </Card>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        <Card id="pipeline" className="lg:col-span-7 p-4 sm:p-6">
-          <SectionHeader
-            icon="linear_scale"
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            iconFg="text-blue-600 dark:text-blue-400"
-            title="Pipeline Stages"
-            description="Stage order, colors and probabilities."
-          />
-          <DealPipelineCard />
-        </Card>
+      <Card id="required-fields" className="lg:col-span-5 p-4 sm:p-6">
+        <SectionHeader
+          icon="checklist"
+          iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+          iconFg="text-emerald-600 dark:text-emerald-400"
+          title="Required Fields"
+          description="Fields that must be filled in before a deal can be saved."
+        />
+        <DealRequiredFieldsCard fields={localRequired} onFieldsChange={handleRequiredChange} />
+      </Card>
 
-        <Card id="required-fields" className="lg:col-span-5 p-4 sm:p-6">
-          <SectionHeader
-            icon="checklist"
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            iconFg="text-emerald-600 dark:text-emerald-400"
-            title="Required Fields"
-            description="Fields that must be filled in before a deal can be saved."
-          />
-          <DealRequiredFieldsCard fields={localRequired} onFieldsChange={handleRequiredChange} />
-        </Card>
+      <Card id="duplicate-detection" className="lg:col-span-6 p-4 sm:p-6">
+        <SectionHeader
+          icon="content_copy"
+          iconBg="bg-amber-100 dark:bg-amber-900/30"
+          iconFg="text-amber-600 dark:text-amber-400"
+          title="Duplicate Detection"
+          description="Rules that flag potential duplicate deals."
+        />
+        <DealDuplicateDetectionCard rules={localRules} onRulesChange={handleRulesChange} />
+      </Card>
 
-        <Card id="duplicate-detection" className="lg:col-span-6 p-4 sm:p-6">
-          <SectionHeader
-            icon="content_copy"
-            iconBg="bg-amber-100 dark:bg-amber-900/30"
-            iconFg="text-amber-600 dark:text-amber-400"
-            title="Duplicate Detection"
-            description="Rules that flag potential duplicate deals."
-          />
-          <DealDuplicateDetectionCard rules={localRules} onRulesChange={handleRulesChange} />
-        </Card>
+      <Card id="win-loss" className="lg:col-span-6 p-4 sm:p-6">
+        <SectionHeader
+          icon="emoji_events"
+          iconBg="bg-teal-100 dark:bg-teal-900/30"
+          iconFg="text-teal-600 dark:text-teal-400"
+          title="Win / Loss Reasons"
+          description="Taxonomy of reasons a deal was won or lost."
+        />
+        <DealWinLossCard
+          reasons={winLossRows}
+          onCreate={handleWinLossCreate}
+          onUpdate={handleWinLossUpdate}
+          onDelete={handleWinLossDelete}
+          isBusy={winLossIsBusy}
+        />
+      </Card>
 
-        <Card id="win-loss" className="lg:col-span-6 p-4 sm:p-6">
-          <SectionHeader
-            icon="emoji_events"
-            iconBg="bg-teal-100 dark:bg-teal-900/30"
-            iconFg="text-teal-600 dark:text-teal-400"
-            title="Win / Loss Reasons"
-            description="Taxonomy of reasons a deal was won or lost."
-          />
-          <DealWinLossCard
-            reasons={winLossRows}
-            onCreate={handleWinLossCreate}
-            onUpdate={handleWinLossUpdate}
-            onDelete={handleWinLossDelete}
-            isBusy={winLossIsBusy}
-          />
-        </Card>
+      <Card id="scoring" className="lg:col-span-6 p-4 sm:p-6">
+        <SectionHeader
+          icon="leaderboard"
+          iconBg="bg-violet-100 dark:bg-violet-900/30"
+          iconFg="text-violet-600 dark:text-violet-400"
+          title="Scoring Rules"
+          description="Rules that shape each deal's score (runtime via IFC-312)."
+        />
+        <DealScoringCard
+          rules={scoringRows}
+          onCreate={handleScoringCreate}
+          onUpdate={handleScoringUpdate}
+          onDelete={handleScoringDelete}
+          isBusy={scoringIsBusy}
+        />
+      </Card>
 
-        <Card id="scoring" className="lg:col-span-6 p-4 sm:p-6">
-          <SectionHeader
-            icon="leaderboard"
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
-            iconFg="text-violet-600 dark:text-violet-400"
-            title="Scoring Rules"
-            description="Rules that shape each deal's score (runtime via IFC-312)."
-          />
-          <DealScoringCard
-            rules={scoringRows}
-            onCreate={handleScoringCreate}
-            onUpdate={handleScoringUpdate}
-            onDelete={handleScoringDelete}
-            isBusy={scoringIsBusy}
-          />
-        </Card>
+      <Card id="tags" className="lg:col-span-6 p-4 sm:p-6">
+        <SectionHeader
+          icon="sell"
+          iconBg="bg-indigo-100 dark:bg-indigo-900/30"
+          iconFg="text-indigo-600 dark:text-indigo-400"
+          title="Tags"
+          description="Tag vocabulary for deals."
+          action={
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => tagsRef.current?.openCreate()}
+              disabled={tagsIsBusy}
+            >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
+                add
+              </span>{' '}
+              New Tag
+            </Button>
+          }
+        />
+        <DealTagsCard
+          ref={tagsRef}
+          tags={tagRows}
+          onCreate={handleTagCreate}
+          onUpdate={handleTagUpdate}
+          onDelete={handleTagDelete}
+          isBusy={tagsIsBusy}
+        />
+      </Card>
 
-        <Card id="tags" className="lg:col-span-6 p-4 sm:p-6">
-          <SectionHeader
-            icon="sell"
-            iconBg="bg-indigo-100 dark:bg-indigo-900/30"
-            iconFg="text-indigo-600 dark:text-indigo-400"
-            title="Tags"
-            description="Tag vocabulary for deals."
-            action={
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => tagsRef.current?.openCreate()}
-                disabled={tagsIsBusy}
-              >
-                <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
-                  add
-                </span>{' '}
-                New Tag
-              </Button>
-            }
-          />
-          <DealTagsCard
-            ref={tagsRef}
-            tags={tagRows}
-            onCreate={handleTagCreate}
-            onUpdate={handleTagUpdate}
-            onDelete={handleTagDelete}
-            isBusy={tagsIsBusy}
-          />
-        </Card>
-
-        <Card id="automation" className="lg:col-span-12 p-4 sm:p-6">
-          <SectionHeader
-            icon="bolt"
-            iconBg="bg-orange-100 dark:bg-orange-900/30"
-            iconFg="text-orange-600 dark:text-orange-400"
-            title="Automation"
-            description="Deal automation and AI hygiene behaviours."
-          />
-          <DealAutomationCard
-            settings={localAutomation}
-            onSettingsChange={handleAutomationChange}
-          />
-        </Card>
-      </div>
-
-      <ConfirmationDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset to Defaults"
-        description="This restores duplicate rules, required fields, win/loss reasons, scoring rules and automation to factory defaults. Tags and pipeline stages are preserved. This action cannot be undone."
-        confirmLabel="Reset"
-        variant="destructive"
-        onConfirm={handleReset}
-      />
-    </div>
+      <Card id="automation" className="lg:col-span-12 p-4 sm:p-6">
+        <SectionHeader
+          icon="bolt"
+          iconBg="bg-orange-100 dark:bg-orange-900/30"
+          iconFg="text-orange-600 dark:text-orange-400"
+          title="Automation"
+          description="Deal automation and AI hygiene behaviours."
+        />
+        <DealAutomationCard settings={localAutomation} onSettingsChange={handleAutomationChange} />
+      </Card>
+    </ModuleSettingsShell>
   );
 }
