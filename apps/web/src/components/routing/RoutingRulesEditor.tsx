@@ -54,6 +54,7 @@ import {
   ROUTING_CONDITION_OPERATORS,
   ROUTING_ACTION_TYPES,
 } from '@intelliflow/domain';
+import { prioritiesForOrder } from './reorder-priorities';
 import { useRouting } from '@/app/settings/routing/hooks/useRouting';
 import type { RoutingCondition, RoutingAction } from '@intelliflow/validators';
 
@@ -82,6 +83,12 @@ const emptyCondition: RoutingCondition = {
   value: '',
 };
 const emptyAction: RoutingAction = { type: 'assign_to_user', target: '' };
+
+const ACTION_TARGET_PLACEHOLDER: Record<RoutingAction['type'], string> = {
+  assign_to_user: 'User ID',
+  assign_to_team: 'Team ID',
+  assign_by_skill: 'Skill name',
+};
 
 function SortableRule({
   rule,
@@ -204,9 +211,9 @@ export function RoutingRulesEditor() {
       if (oldIndex === -1 || newIndex === -1) return;
 
       const reordered = arrayMove(rules, oldIndex, newIndex);
-      reorderRules.mutate({
-        rules: reordered.map((r, i) => ({ id: r.id, priority: i })),
-      });
+      // The list is in evaluation order and a higher priority runs first, so
+      // the rule now on top gets the highest number.
+      reorderRules.mutate({ rules: prioritiesForOrder(reordered) });
     },
     [rules, reorderRules]
   );
@@ -436,7 +443,7 @@ export function RoutingRulesEditor() {
                       <Input
                         value={action.target || ''}
                         onChange={(e) => updateAction(i, 'target', e.target.value)}
-                        placeholder="Target"
+                        placeholder={ACTION_TARGET_PLACEHOLDER[action.type]}
                         className="flex-1"
                         aria-label="Action target"
                       />
@@ -463,7 +470,8 @@ export function RoutingRulesEditor() {
                 disabled={
                   !formData.name ||
                   formData.conditions.length === 0 ||
-                  formData.actions.length === 0
+                  formData.actions.length === 0 ||
+                  formData.actions.some((a) => !a.target?.trim())
                 }
                 className="w-full"
               >
