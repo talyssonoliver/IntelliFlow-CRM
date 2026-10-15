@@ -1,5 +1,14 @@
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+
+// Per-test seed for the lists the cards render; mutable so tests can populate them.
+const seed = vi.hoisted(() => ({
+  sla: [] as unknown[],
+  req: [] as unknown[],
+  tags: [] as unknown[],
+  mutations: new Map<string, { mutateAsync: ReturnType<typeof vi.fn> }>(),
+  invalidations: new Map<string, { invalidate: ReturnType<typeof vi.fn> }>(),
+}));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => ({ user: { id: 'u1' }, isLoading: false, isAuthenticated: true }),
@@ -15,10 +24,12 @@ vi.mock('@/lib/trpc', () => {
   const mutationCache = new Map<string, unknown>();
   const invalidateCache = new Map<string, { invalidate: () => Promise<void> }>();
 
-  const mkQuery = (key: string, data: unknown) => {
+  const mkQuery = (key: string, data: unknown | (() => unknown)) => {
     if (!queryCache.has(key)) {
       queryCache.set(key, {
-        data,
+        get data() {
+          return typeof data === 'function' ? (data as () => unknown)() : data;
+        },
         isPending: false,
         isLoading: false,
         error: null,
@@ -30,12 +41,14 @@ vi.mock('@/lib/trpc', () => {
   const mkMutation = (key: string) => {
     if (!mutationCache.has(key)) {
       mutationCache.set(key, { mutateAsync: vi.fn(async () => ({})), isPending: false });
+      seed.mutations.set(key, mutationCache.get(key) as never);
     }
     return () => mutationCache.get(key);
   };
   const mkInvalidate = (key: string) => {
     if (!invalidateCache.has(key)) {
       invalidateCache.set(key, { invalidate: vi.fn(async () => {}) });
+      seed.invalidations.set(key, invalidateCache.get(key) as never);
     }
     return invalidateCache.get(key)!;
   };
@@ -87,12 +100,12 @@ vi.mock('@/lib/trpc', () => {
           resetToDefaults: { useMutation: mkMutation('dup.reset') },
         },
         requiredFields: {
-          getAll: { useQuery: mkQuery('req.getAll', []) },
+          getAll: { useQuery: mkQuery('req.getAll', () => seed.req) },
           updateAll: { useMutation: mkMutation('req.updateAll') },
           resetToDefaults: { useMutation: mkMutation('req.reset') },
         },
         tags: {
-          list: { useQuery: mkQuery('tags.list', []) },
+          list: { useQuery: mkQuery('tags.list', () => seed.tags) },
           create: { useMutation: mkMutation('tags.create') },
           update: { useMutation: mkMutation('tags.update') },
           delete: { useMutation: mkMutation('tags.delete') },
@@ -105,7 +118,7 @@ vi.mock('@/lib/trpc', () => {
       },
       ticketConfig: {
         slaPolicy: {
-          list: { useQuery: mkQuery('sla.list', []) },
+          list: { useQuery: mkQuery('sla.list', () => seed.sla) },
           setDefault: { useMutation: mkMutation('sla.setDefault') },
         },
       },
@@ -178,5 +191,80 @@ describe('TicketSettingsContent', () => {
     expect(screen.getByText(/dashboard/i)).toBeTruthy();
     // 'Tickets' also appears in a heading — assert at least one Tickets text exists
     expect(screen.getAllByText(/tickets/i).length).toBeGreaterThan(0);
+  });
+  describe('wiring of the shell sections', () => {
+    beforeEach(() => {
+      seed.sla = [];
+      seed.req = [];
+      seed.tags = [];
+    });
+
+    it('editing a section enables Save and persists the draft through the update mutation', async () => {
+      render(<TicketSettingsContent />);
+      const save = screen.getByRole('button', { name: /save changes/i });
+      expect(save).toBeDisabled();
+      fireEvent.click(screen.getByRole('button', { name: /add duplicate detection rule/i }));
+      await waitFor(() => expect(save).not.toBeDisabled());
+      fireEvent.click(save);
+      await waitFor(() =>
+        expect(seed.mutations.get('dup.updateAll')!.mutateAsync).toHaveBeenCalledTimes(1)
+      );
+      expect(seed.mutations.get('dup.updateAll')!.mutateAsync).toHaveBeenCalledWith({
+        rules: [expect.objectContaining({ isActive: true })],
+      });
+    });
+
+    it('toggling a required field and an automation switch marks the form dirty', async () => {
+      seed.req = [{ fieldKey: 'priority', isRequired: false, sortOrder: 0 }];
+      render(<TicketSettingsContent />);
+      const save = screen.getByRole('button', { name: /save changes/i });
+      fireEvent.click(screen.getByRole('switch', { name: 'Require Priority' }));
+      await waitFor(() => expect(save).not.toBeDisabled());
+      fireEvent.click(save);
+      await waitFor(() =>
+        expect(seed.mutations.get('req.updateAll')!.mutateAsync).toHaveBeenCalledWith({
+          fields: [expect.objectContaining({ fieldKey: 'priority', isRequired: true })],
+        })
+      );
+    });
+
+    it('toggling an automation switch saves the automation draft', async () => {
+      render(<TicketSettingsContent />);
+      const save = screen.getByRole('button', { name: /save changes/i });
+      fireEvent.click(screen.getByRole('switch', { name: 'Notify customer before auto-close' }));
+      await waitFor(() => expect(save).not.toBeDisabled());
+      fireEvent.click(save);
+      await waitFor(() =>
+        expect(seed.mutations.get('auto.update')!.mutateAsync).toHaveBeenCalledWith(
+          expect.objectContaining({ autoCloseNotifyCustomer: false })
+        )
+      );
+    });
+
+    it('choosing a default SLA policy records it in the automation draft', async () => {
+      seed.sla = [{ id: 'p1', name: 'Gold', isDefault: false, isActive: true, description: '' }];
+      render(<TicketSettingsContent />);
+      const save = screen.getByRole('button', { name: /save changes/i });
+      fireEvent.click(screen.getByRole('radio', { name: /set gold as default sla policy/i }));
+      await waitFor(() =>
+        expect(seed.mutations.get('sla.setDefault')!.mutateAsync).toHaveBeenCalledWith({ id: 'p1' })
+      );
+      await waitFor(() => expect(save).not.toBeDisabled());
+      fireEvent.click(save);
+      await waitFor(() =>
+        expect(seed.mutations.get('auto.update')!.mutateAsync).toHaveBeenCalledWith(
+          expect.objectContaining({ defaultSlaPolicyId: 'p1' })
+        )
+      );
+    });
+
+    it('deleting a tag refreshes the tag list through the section onRefresh', async () => {
+      seed.tags = [{ id: 't1', name: 'urgent', colorToken: 'rose' }];
+      render(<TicketSettingsContent />);
+      const refresh = seed.invalidations.get('u.tags.list')!.invalidate;
+      refresh.mockClear();
+      fireEvent.click(screen.getByRole('button', { name: 'Delete tag urgent' }));
+      await waitFor(() => expect(refresh).toHaveBeenCalled());
+    });
   });
 });
