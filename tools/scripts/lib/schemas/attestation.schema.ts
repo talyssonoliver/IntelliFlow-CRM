@@ -234,6 +234,12 @@ export const attestationSchema = z.object({
     ),
   spec_path: z.string().optional().describe('Repo-relative path to the spec file'),
   plan_path: z.string().optional().describe('Repo-relative path to the plan file'),
+  ceremony_tier: z
+    .enum(['light', 'full'])
+    .optional()
+    .describe(
+      'Informational (issue #579): tier the run followed. Not trusted by the provenance gate, which re-derives it from Sprint_plan.csv; a light run omits plan_reviewer_verdict'
+    ),
 });
 
 // Export TypeScript types inferred from Zod schema

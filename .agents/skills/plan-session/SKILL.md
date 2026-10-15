@@ -102,6 +102,16 @@ way:
     see Gate 14's "cannot be text-hacked" precedent). Do not add a bare
     `<!-- ceremony-tier: light -->` marker to that preflight's
     acceptable-evidence list without that re-verification.
+- **Attestation provenance gate.**
+  `tools/scripts/exec-preflight/check-attestation-provenance.mjs` runs after the
+  attestation is written (exec-attestation Phase 5 and
+  `generate-final-report.mjs`) and normally demands an affirmative
+  `plan_reviewer_verdict` plus the subagent marker for every `PG-`/`IFC-` task.
+  It accepts a skipped reviewer only when it re-derives `light` itself from
+  Sprint_plan.csv + `task-tiers.yaml`, this plan records `ceremony_tier: light`,
+  and the plan creates no `page.tsx`. So a light plan MUST contain the literal
+  line `ceremony_tier: light` in its sign-off section, and the attestation must
+  omit `plan_reviewer_verdict` (set `"ceremony_tier": "light"` instead).
 - Everything else (Phase 5 output format, CSV status updates, the Non-Negotiable
   Plan Rules above) is unchanged.
 

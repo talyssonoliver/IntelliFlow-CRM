@@ -23,6 +23,12 @@
  *   1 - BLOCK (provenance present-but-invalid, or absent on a mandatory UI/IFC/PG task)
  *   2 - usage error
  *
+ * Light ceremony tier (issue #579): a task whose tier, RE-DERIVED here from
+ * Sprint_plan.csv + .specify/memory/task-tiers.yaml (never trusted from the
+ * attestation or plan), is `light` may omit plan_reviewer_verdict and the
+ * plan-reviewer marker if its plan records `ceremony_tier: light` and creates
+ * no apps/web/src/app/**\/page.tsx. Any other combination still BLOCKs.
+ *
  * Provenance is REQUIRED (absence BLOCKs) for PG-* / IFC-* tasks; for other
  * prefixes (AUTOMATION-*, INFRA-*, EXC-*, ...) absence WARNs (exit 0). Present-
  * but-invalid provenance BLOCKs for ANY task type.
@@ -30,6 +36,8 @@
 
 import { readFileSync, existsSync } from 'node:fs';
 import { join, resolve, isAbsolute } from 'node:path';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 import { hasPlanReviewerSubagentMarker } from '../lib/plan-reviewer-marker.mjs';
 
 const REPO_ROOT = resolve(process.cwd());
@@ -93,6 +101,35 @@ function inferSprintFromCsv(taskId) {
     if (sprint && /^\d+$/.test(sprint)) return sprint;
   }
   return null;
+}
+
+// ── Ceremony tier (issue #579) ──────────────────────────────────────────────
+// A light-tier task legitimately skips the Plan-Reviewer subagent, so it has no
+// affirmative verdict and no marker. The attestation and the plan are both
+// authored by the executing agent, so neither may be trusted to CLAIM `light`:
+// the tier is RE-DERIVED here from Sprint_plan.csv + .specify/memory/task-tiers.yaml
+// by the same classifier /full-pipeline Phase 0.3 uses. Any failure to derive
+// (tool error, task not found, unparseable output) is treated as `full`.
+const AUDIT_SCRIPT = fileURLToPath(new URL('../ceremony-tier-audit.ts', import.meta.url));
+const AUDIT_CWD = fileURLToPath(new URL('../../..', import.meta.url));
+const PLAN_LIGHT_LINE_RE = /ceremony_tier\s*:\s*light/i;
+// A plan that creates a page.tsx always keeps the Plan-Reviewer (same carve-out
+// as /plan-session Light Tier Mode and check-plan-reviewer-subagent.mjs).
+const PLAN_CREATES_PAGE_RE = /apps\/web\/src\/app\/[^\s`'")]*page\.tsx/i;
+
+function deriveTier(taskId) {
+  try {
+    const res = spawnSync(
+      process.execPath,
+      ['--import', 'tsx', AUDIT_SCRIPT, '--task', taskId, '--json', '--repo-root', REPO_ROOT],
+      { encoding: 'utf8', cwd: AUDIT_CWD, timeout: 120000 }
+    );
+    if (res.status !== 0) return 'full';
+    const parsed = JSON.parse(res.stdout);
+    return parsed && parsed.tier === 'light' ? 'light' : 'full';
+  } catch {
+    return 'full';
+  }
 }
 
 // A repo-relative path: not absolute, no drive letter, no leading slash, no '..' escape.
@@ -159,10 +196,35 @@ function main() {
   // Provenance is present → validate fully (BLOCK on any failure, any task type).
   const reasons = [];
 
-  if (typeof verdict !== 'string' || !AFFIRMATIVE_VERDICTS.has(verdict)) {
-    reasons.push(
-      'plan_reviewer_verdict is "' + String(verdict) + '" — must be APPROVED or APPROVED_WITH_CHANGES.'
-    );
+  // The Plan-Reviewer waiver: ONLY when no verdict was claimed (a REJECTED or
+  // junk verdict still BLOCKs), the tier re-derived from the CSV is light, and
+  // the plan itself records the skip and creates no page.tsx.
+  let lightWaiver = false;
+  let lightWaiverNote = '';
+  if (verdict == null && typeof planPath === 'string' && isRepoRelative(planPath)) {
+    const planAbs = join(REPO_ROOT, planPath);
+    if (existsSync(planAbs)) {
+      const planText = readFileSync(planAbs, 'utf8');
+      if (PLAN_LIGHT_LINE_RE.test(planText) && !hasPlanReviewerSubagentMarker(planText)) {
+        if (PLAN_CREATES_PAGE_RE.test(planText)) {
+          lightWaiverNote = 'plan creates a page.tsx — the Plan-Reviewer is mandatory even on the light tier.';
+        } else if (deriveTier(taskId) === 'light') {
+          lightWaiver = true;
+        } else {
+          lightWaiverNote =
+            'plan claims ceremony_tier: light but Sprint_plan.csv + task-tiers.yaml classify ' + taskId + ' as full.';
+        }
+      }
+    }
+  }
+
+  if (!lightWaiver) {
+    if (typeof verdict !== 'string' || !AFFIRMATIVE_VERDICTS.has(verdict)) {
+      reasons.push(
+        'plan_reviewer_verdict is "' + String(verdict) + '" — must be APPROVED or APPROVED_WITH_CHANGES.' +
+          (lightWaiverNote ? ' ' + lightWaiverNote : '')
+      );
+    }
   }
 
   if (typeof consensus !== 'string' || consensus.trim() === '' || NON_AFFIRMATIVE_CONSENSUS.test(consensus.trim())) {
@@ -178,7 +240,7 @@ function main() {
     const abs = join(REPO_ROOT, planPath);
     if (!existsSync(abs)) {
       reasons.push('plan_path file does not exist on disk: ' + planPath);
-    } else if (!hasPlanReviewerSubagentMarker(readFileSync(abs, 'utf8'))) {
+    } else if (!lightWaiver && !hasPlanReviewerSubagentMarker(readFileSync(abs, 'utf8'))) {
       reasons.push(
         'plan_path file exists but lacks the `<!-- plan-reviewer: subagent -->` marker ' +
         '(self-review case — the plan was not produced by a real plan-reviewer subagent).'
@@ -201,8 +263,12 @@ function main() {
   }
 
   info('[preflight] OK — provenance affirmative and cross-validated against plan/spec on disk.');
-  info('           ✓ plan_reviewer_verdict: ' + verdict);
-  info('           ✓ plan_path carries the plan-reviewer subagent marker');
+  if (lightWaiver) {
+    info('           ✓ ceremony_tier: light (re-derived from Sprint_plan.csv) — Plan-Reviewer legitimately skipped');
+  } else {
+    info('           ✓ plan_reviewer_verdict: ' + verdict);
+    info('           ✓ plan_path carries the plan-reviewer subagent marker');
+  }
   info('           ✓ spec_path + plan_path exist (repo-relative)');
   process.exit(0);
 }

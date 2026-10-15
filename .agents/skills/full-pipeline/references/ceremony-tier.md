@@ -38,7 +38,7 @@ correction goes in `.specify/memory/task-tiers.yaml`.
 
 ```bash
 # Classify every backlog task (Status != Completed/Done), print a table,
-# write artifacts/reports/ceremony-tier-audit.json
+# write artifacts/reports/ceremony-tier-audit.json (git-ignored, regenerable)
 npx tsx tools/scripts/ceremony-tier-audit.ts
 
 # Classify one task — this is what /full-pipeline's Phase 0.3 runs
@@ -120,7 +120,8 @@ artifact of the fixture.
 Running the full audit against every current backlog task
 (`npx tsx tools/scripts/ceremony-tier-audit.ts`, no `--task`) classifies 188
 tasks: 21 `light`, 167 `full` — see `artifacts/reports/ceremony-tier-audit.json`
-for the complete, regenerable list.
+for the complete list (the file is git-ignored; regenerate it, it is not
+committed).
 
 ## How `/full-pipeline` consults it
 
@@ -168,7 +169,19 @@ When invoked with `--tier=light`:
   an `apps/web/src/app/**/page.tsx`\*\*. If it does, the Plan-Reviewer subagent
   still runs, full stop.
 
-This carve-out is deliberate, not an oversight:
+**Attestation provenance gate.** Skipping the Plan-Reviewer must also survive
+`tools/scripts/exec-preflight/check-attestation-provenance.mjs`, which runs
+after the attestation is written and requires an affirmative
+`plan_reviewer_verdict` plus the subagent marker for every `PG-`/`IFC-` task
+(all 21 current light tasks are `PG-`/`IFC-`). That gate now re-derives the tier
+itself (same classifier and overrides file as Phase 0.3) and waives the reviewer
+evidence only when ALL hold: no `plan_reviewer_verdict` was claimed, the
+re-derived tier is `light`, the plan carries `ceremony_tier: light`, and the
+plan creates no `page.tsx`. Failing to derive the tier counts as `full`. A light
+attestation therefore omits `plan_reviewer_verdict` and sets
+`"ceremony_tier": "light"` (informational only; the gate does not trust it).
+
+This page.tsx carve-out is deliberate, not an oversight:
 `tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs` hard-blocks any
 `PG-`/`IFC-` task that creates a page without real Plan-Reviewer subagent
 evidence, specifically because a self-review bypass (PG-184 iteration-3 §3.2
@@ -192,6 +205,14 @@ to the preflight's acceptable-evidence list without it.
   "ALL 4 validations are NON-NEGOTIABLE" regardless of how the task got there.
   The issue's "adversarial reviews skipped" is the spec-session CHALLENGE round,
   not MATOP.
+- **Skipping `/exec`'s adversarial/MATOP review for light tasks is an explicit
+  scope decision, not an omission.** The issue text can be read as asking for
+  it; this change deliberately does not implement it, because `/exec` MATOP
+  validation is the only independent correctness check on the code itself and
+  the issue's own premise is that ceremony, not correctness validation, is the
+  waste. The saving is therefore limited to the spec debate and (for non-page
+  tasks) the Plan-Reviewer. Revisit only with measured data from the
+  acceptance-criterion-4 comparison below.
 - **Measuring the actual wall-clock + token delta** between a light-tier and
   full-tier run of a matched pair of template tasks (the issue's 4th acceptance
   criterion) requires running `/full-pipeline` twice end-to-end on a real task —
@@ -202,3 +223,5 @@ to the preflight's acceptable-evidence list without it.
   picked and a go-ahead, not a unilateral spend. Pick a light-tier task from the
   audit's current list (e.g. one of `PG-196`..`PG-209`, `IFC-216`..`IFC-283`)
   and its nearest full-tier sibling to run the comparison when that's wanted.
+  **Because this criterion is open, the PR for this change must not close #579**
+  (use "Refs #579", not "Closes/Fixes").

@@ -7,6 +7,7 @@ import { describe, it, expect, afterEach } from 'vitest';
 import { mkdtempSync, writeFileSync, mkdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import { loadTierOverrides, TASK_TIERS_CONFIG_PATH } from './ceremony-tier-config';
 
 const tempDirs: string[] = [];
@@ -64,5 +65,19 @@ describe('loadTierOverrides', () => {
   it('ignores a malformed (non-mapping) overrides key rather than throwing', () => {
     const repoRoot = makeRepoRoot('overrides: "not a map"\n');
     expect(() => loadTierOverrides(repoRoot)).not.toThrow();
+  });
+});
+
+describe('ceremony-tier audit report', () => {
+  it('is git-ignored so its generated_at timestamp never churns the tree', () => {
+    const repoRoot = join(__dirname, '..', '..', '..');
+    const res = spawnSync(
+      'git',
+      ['check-ignore', '-q', 'artifacts/reports/ceremony-tier-audit.json'],
+      {
+        cwd: repoRoot,
+      }
+    );
+    expect(res.status).toBe(0);
   });
 });

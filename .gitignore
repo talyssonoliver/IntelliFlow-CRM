@@ -36,6 +36,10 @@ artifacts/test-results/playwright-junit.xml
 # regenerated on every push. No value committing it.
 artifacts/preship/
 
+# Ceremony tier audit report (issue #579): carries a generated_at timestamp and is
+# regenerable with tools/scripts/ceremony-tier-audit.ts, so it must not be committed.
+artifacts/reports/ceremony-tier-audit.json
+
 # Playwright output (consolidated under artifacts/misc/)
 # - playwright-output/: screenshots, videos, traces (ephemeral)
 # - playwright-report/data/: report assets (ephemeral)
