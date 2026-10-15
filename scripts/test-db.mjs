@@ -21,10 +21,16 @@ import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
 import { spawn, spawnSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { ENV_FILES, resolveEnv } from './lib/preship-integration-infra.mjs';
-import { childEnv, provision, resolveServerUrl, sweepStale, teardown } from './lib/ephemeral-test-db.mjs';
+import {
+  childEnv,
+  provision,
+  resolveServerUrl,
+  sweepStale,
+  teardown,
+} from './lib/ephemeral-test-db.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -63,12 +69,12 @@ function pnpm(args, env) {
   if (r.status !== 0) throw new Error(`pnpm ${args.join(' ')} exited with ${r.status}`);
 }
 
-function deps(env, withSeed) {
+function deps(env, withSeed, io) {
   return {
-    connect,
-    migrate: (url) => pnpm(['--filter', '@intelliflow/db', 'db:migrate'], childEnv(env, url)),
+    connect: io.connect,
+    migrate: (url) => io.pnpm(['--filter', '@intelliflow/db', 'db:migrate'], childEnv(env, url)),
     seed: withSeed
-      ? (url) => pnpm(['--filter', '@intelliflow/db', 'db:seed'], childEnv(env, url))
+      ? (url) => io.pnpm(['--filter', '@intelliflow/db', 'db:seed'], childEnv(env, url))
       : undefined,
   };
 }
@@ -77,20 +83,35 @@ function redact(url) {
   return url.replace(/:\/\/[^@/]*@/, '://***@');
 }
 
-async function main() {
-  const [command, ...rest] = process.argv.slice(2);
+/**
+ * Runs the CLI. Every side effect goes through `io` so tests can drive it with fakes;
+ * the defaults are the real thing.
+ */
+export async function main(argv = process.argv.slice(2), overrides = {}) {
+  const io = {
+    connect,
+    pnpm,
+    spawn,
+    env: undefined,
+    stderr: (t) => io.stderr(t),
+    stdout: (t) => io.stdout(t),
+    onSignal: (sig, fn) => process.on(sig, fn),
+    offSignal: (sig, fn) => process.removeListener(sig, fn),
+    ...overrides,
+  };
+  const [command, ...rest] = argv;
   const sep = rest.indexOf('--');
   const flags = sep === -1 ? rest : rest.slice(0, sep);
   const childArgv = sep === -1 ? [] : rest.slice(sep + 1);
   const withSeed = flags.includes('--seed');
-  const env = loadEnv();
+  const env = io.env ?? loadEnv();
   const serverUrl = resolveServerUrl(env);
 
   if (command === 'up') {
-    const { name, url } = await provision({ ...deps(env, withSeed), serverUrl });
-    process.stderr.write(`[test-db] created ${name} on ${redact(serverUrl)}\n`);
-    process.stderr.write(`[test-db] drop it with: pnpm test:db:down ${name}\n`);
-    process.stdout.write(`TEST_DATABASE_URL=${url}\n`);
+    const { name, url } = await provision({ ...deps(env, withSeed, io), serverUrl });
+    io.stderr(`[test-db] created ${name} on ${redact(serverUrl)}\n`);
+    io.stderr(`[test-db] drop it with: pnpm test:db:down ${name}\n`);
+    io.stdout(`TEST_DATABASE_URL=${url}\n`);
     return 0;
   }
 
@@ -98,15 +119,22 @@ async function main() {
     if (flags.includes('--stale')) {
       const i = flags.indexOf('--older-than-min');
       const minutes = i === -1 ? 60 : Number(flags[i + 1]);
-      if (!Number.isFinite(minutes) || minutes < 0) throw new Error('--older-than-min needs a number');
-      const dropped = await sweepStale({ connect, serverUrl, olderThanMs: minutes * 60_000 });
-      process.stderr.write(`[test-db] swept ${dropped.length} stale database(s)${dropped.length ? ': ' + dropped.join(', ') : ''}\n`);
+      if (!Number.isFinite(minutes) || minutes < 0)
+        throw new Error('--older-than-min needs a number');
+      const dropped = await sweepStale({
+        connect: io.connect,
+        serverUrl,
+        olderThanMs: minutes * 60_000,
+      });
+      io.stderr(
+        `[test-db] swept ${dropped.length} stale database(s)${dropped.length ? ': ' + dropped.join(', ') : ''}\n`
+      );
       return 0;
     }
     const name = flags.find((f) => !f.startsWith('--'));
     if (!name) throw new Error('usage: test-db down <database-name>');
-    await teardown({ connect, serverUrl, name });
-    process.stderr.write(`[test-db] dropped ${name}\n`);
+    await teardown({ connect: io.connect, serverUrl, name });
+    io.stderr(`[test-db] dropped ${name}\n`);
     return 0;
   }
 
@@ -125,36 +153,36 @@ async function main() {
       ['SIGINT', onSignal('SIGINT')],
       ['SIGTERM', onSignal('SIGTERM')],
     ];
-    for (const [sig, fn] of handlers) process.on(sig, fn);
+    for (const [sig, fn] of handlers) io.onSignal(sig, fn);
     const cleanup = () => {
-      for (const [sig, fn] of handlers) process.removeListener(sig, fn);
+      for (const [sig, fn] of handlers) io.offSignal(sig, fn);
     };
 
     let url;
     try {
-      ({ name, url } = await provision({ ...deps(env, withSeed), serverUrl }));
+      ({ name, url } = await provision({ ...deps(env, withSeed, io), serverUrl }));
     } catch (e) {
       cleanup();
       throw e;
     }
-    process.stderr.write(`[test-db] using ephemeral ${name} on ${redact(serverUrl)}\n`);
+    io.stderr(`[test-db] using ephemeral ${name} on ${redact(serverUrl)}\n`);
     const drop = () =>
-      teardown({ connect, serverUrl, name }).then(
-        () => process.stderr.write(`[test-db] dropped ${name}\n`),
-        (e) => process.stderr.write(`[test-db] FAILED to drop ${name}: ${e.message}\n`)
+      teardown({ connect: io.connect, serverUrl, name }).then(
+        () => io.stderr(`[test-db] dropped ${name}\n`),
+        (e) => io.stderr(`[test-db] FAILED to drop ${name}: ${e.message}\n`)
       );
 
     const code = aborted
       ? 130
       : await new Promise((resolve) => {
-          child = spawn(childArgv[0], childArgv.slice(1), {
+          child = io.spawn(childArgv[0], childArgv.slice(1), {
             cwd: repoRoot,
             env: childEnv(env, url),
             stdio: 'inherit',
             shell: process.platform === 'win32',
           });
           child.on('error', (e) => {
-            process.stderr.write(`[test-db] could not start command: ${e.message}\n`);
+            io.stderr(`[test-db] could not start command: ${e.message}\n`);
             resolve(1);
           });
           // A signal death is reported as the conventional 128+n, not a bare 1.
@@ -170,10 +198,12 @@ async function main() {
   throw new Error('usage: test-db <up|down|run> ...');
 }
 
-main().then(
-  (code) => process.exit(code),
-  (error) => {
-    process.stderr.write(`[test-db] ${error.message}\n`);
-    process.exit(1);
-  }
-);
+if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
+  main().then(
+    (code) => process.exit(code),
+    (error) => {
+      process.stderr.write(`[test-db] ${error.message}\n`);
+      process.exit(1);
+    }
+  );
+}
