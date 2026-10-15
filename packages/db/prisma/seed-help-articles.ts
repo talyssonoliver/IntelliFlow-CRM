@@ -1,7 +1,12 @@
 /**
  * Help Article Seed Script — migrates static DEFAULT_HELP_ARTICLES into the
- * HelpArticle + ArticleSection tables for the default tenant. Idempotent:
- * upserts by (tenantId, slug) and resyncs sections by delete-then-create.
+ * HelpArticle + ArticleSection tables for the default tenant, marked
+ * `isSystem: true` (#533) so every tenant — not just the default one — can
+ * read them; tenant-authored articles are untouched and stay isolated.
+ * Idempotent: upserts by (tenantId, slug) and resyncs sections by
+ * delete-then-create. Re-running this after the isSystem migration lands is
+ * what flips already-seeded rows in an existing environment to isSystem =
+ * true; see packages/db/prisma/migrations/20261008000000_help_article_system_scope.
  *
  * Run:
  *   pnpm --filter @intelliflow/db db:seed:help-articles
@@ -136,6 +141,9 @@ async function seedArticle(tenantId: string, article: (typeof DEFAULT_HELP_ARTIC
     order: article.order,
     status: 'PUBLISHED' as const,
     publishedAt,
+    // Built-in content: readable by every tenant (#533), not just the
+    // default one it is parented to for ownership/editing purposes.
+    isSystem: true,
   };
   return prisma.helpArticle.upsert({
     where: { tenantId_slug: { tenantId, slug: article.slug } },
