@@ -326,8 +326,21 @@ export const helpArticleRouter = createTRPCRouter({
       return [];
     }
 
+    // A built-in article shadowed by one of the caller's own (same slug) is
+    // omitted, as in getByCategory: its /help-center/<slug> link would open the
+    // tenant article (or 404 if that one is a draft) instead.
+    const ownArticles = await ctx.prismaWithTenant.helpArticle.findMany({
+      where: { tenantId },
+      select: { slug: true },
+    });
+    const ownSlugs = ownArticles.map((a) => a.slug);
+
     return ctx.prismaWithTenant.helpArticle.findMany({
-      where: { id: { in: relatedIds }, ...visibleToCaller, status: 'PUBLISHED' },
+      where: {
+        id: { in: relatedIds },
+        OR: [{ tenantId }, { isSystem: true, slug: { notIn: ownSlugs } }],
+        status: 'PUBLISHED',
+      },
       select: {
         id: true,
         slug: true,

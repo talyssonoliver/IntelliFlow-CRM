@@ -563,10 +563,36 @@ describe('helpArticleRouter', () => {
           }),
         })
       );
-      expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenLastCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true }],
+            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true, slug: { notIn: [] } }],
+          }),
+        })
+      );
+    });
+
+    it('omits a built-in related article shadowed by a tenant article with the same slug (#533)', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({
+        relatedArticleIds: [ARTICLE_ID_2],
+      });
+      (prismaMock.helpArticle as any).findMany
+        .mockResolvedValueOnce([{ slug: 'getting-started' }, { slug: 'draft-guide' }])
+        .mockResolvedValueOnce([]);
+
+      await caller.getRelated({ id: ARTICLE_ID_1 });
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ where: { tenantId: TEST_UUIDS.tenant } })
+      );
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { tenantId: TEST_UUIDS.tenant },
+              { isSystem: true, slug: { notIn: ['getting-started', 'draft-guide'] } },
+            ],
           }),
         })
       );
