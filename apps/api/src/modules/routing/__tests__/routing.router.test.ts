@@ -48,6 +48,18 @@ describe('Routing Router', () => {
       expect(result.nextCursor).toBeUndefined();
     });
 
+    it('lists rules in evaluation order: priority DESC (higher runs first), ties by creation', async () => {
+      (prismaMock.routingRule.findMany as any).mockResolvedValue([mockRule]);
+
+      await caller.list({ limit: 20 });
+
+      expect(prismaMock.routingRule.findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
+        })
+      );
+    });
+
     it('should filter by isActive', async () => {
       (prismaMock.routingRule.findMany as any).mockResolvedValue([mockRule]);
 
@@ -363,6 +375,46 @@ describe('Routing Router', () => {
       const result = await caller.getAssignments({ limit: 20 });
 
       expect(result.items.map((i) => i.leadId)).toEqual(['lead-auto', null, null]);
+    });
+
+    it('prefers the leadId column over the legacy details/ticketId heuristic (#770)', async () => {
+      const createdAt = new Date('2026-10-04T10:00:00Z');
+      (prismaMock.routingAudit.findMany as any).mockResolvedValue([
+        {
+          id: 'audit-new',
+          // Neither legacy signal applies: details.leadId is absent and
+          // entityType isn't 'lead', so the old heuristic would read null.
+          // The row is written by a lead-routing writer post-migration, so
+          // leadId is set directly and must be returned without consulting
+          // details/ticketId at all.
+          ticketId: 'ticket-should-be-ignored',
+          leadId: TEST_UUIDS.lead1,
+          reason: 'rule_match',
+          ruleId: null,
+          ruleName: null,
+          toUserId: TEST_UUIDS.user1,
+          toUserName: 'Test User',
+          details: { entityType: 'ticket' },
+          createdAt,
+        },
+      ]);
+
+      const result = await caller.getAssignments({ limit: 20 });
+
+      expect(result.items[0]?.leadId).toBe(TEST_UUIDS.lead1);
+    });
+
+    it('queries only lead audits, not ticket routing rows', async () => {
+      (prismaMock.routingAudit.findMany as any).mockResolvedValue([]);
+
+      await caller.getAssignments({ limit: 20 });
+
+      const args = (prismaMock.routingAudit.findMany as any).mock.calls.at(-1)[0];
+      expect(args.where.OR).toEqual([
+        { leadId: { not: null } },
+        { details: { path: ['entityType'], equals: 'lead' } },
+        { details: { path: ['leadId'], string_contains: '' } },
+      ]);
     });
   });
 

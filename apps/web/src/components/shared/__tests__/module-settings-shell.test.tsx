@@ -103,4 +103,68 @@ describe('ModuleSettingsShell (PG-191)', () => {
     fireEvent.click(await screen.findByRole('button', { name: /^reset$/i }));
     expect(onResetConfirm).toHaveBeenCalled();
   });
+
+  describe('per-page overrides (GH #576)', () => {
+    it('renders loadingFallback instead of the default skeleton', () => {
+      setup({ isLoading: true, loadingFallback: <div data-testid="custom-loading" /> });
+      expect(screen.getByTestId('custom-loading')).toBeInTheDocument();
+      expect(screen.queryByTestId('module-settings-skeleton')).not.toBeInTheDocument();
+    });
+
+    it('renders errorFallback instead of the default error card and sections', () => {
+      setup({ errorFallback: <button>Retry now</button> });
+      expect(screen.getByRole('button', { name: 'Retry now' })).toBeInTheDocument();
+      expect(screen.queryByTestId('section')).not.toBeInTheDocument();
+      expect(screen.queryByText('Failed to load widget settings')).not.toBeInTheDocument();
+    });
+
+    it('does not show errorFallback while loading', () => {
+      setup({ isLoading: true, errorFallback: <button>Retry now</button> });
+      expect(screen.queryByRole('button', { name: 'Retry now' })).not.toBeInTheDocument();
+      expect(screen.getByTestId('module-settings-skeleton')).toBeInTheDocument();
+    });
+
+    it('uses custom reset dialog title and confirm label', async () => {
+      setup({
+        resetOpen: true,
+        resetTitle: 'Reset widgets?',
+        resetConfirmLabel: 'Reset to Defaults',
+      });
+      expect(await screen.findByText('Reset widgets?')).toBeInTheDocument();
+      expect(
+        screen.getAllByRole('button', { name: /^reset to defaults$/i }).length
+      ).toBeGreaterThan(0);
+      expect(screen.queryByRole('button', { name: /^reset$/i })).not.toBeInTheDocument();
+    });
+
+    it('merges resetAction / saveAction overrides onto the header actions', () => {
+      setup({ resetAction: { disabled: true }, saveAction: { label: 'Store it' } });
+      expect(screen.getByRole('button', { name: /reset to defaults/i })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Store it' })).toBeInTheDocument();
+    });
+
+    it('applies headerClassName to the page header (default mb-6)', () => {
+      const { container } = render(
+        <ModuleSettingsShell
+          breadcrumbs={[{ label: 'Widget Settings' }]}
+          title="T"
+          description="D"
+          errorTitle="E"
+          isLoading={false}
+          isSaving={false}
+          canSave
+          onSave={() => {}}
+          resetOpen={false}
+          onResetOpenChange={() => {}}
+          onResetConfirm={() => {}}
+          resetDescription="R"
+          headerClassName="custom-header"
+        >
+          <div />
+        </ModuleSettingsShell>
+      );
+      expect(container.querySelector('.custom-header')).not.toBeNull();
+      expect(container.querySelector('.mb-6')).toBeNull();
+    });
+  });
 });
