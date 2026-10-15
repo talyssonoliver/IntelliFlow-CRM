@@ -55,6 +55,16 @@ RUN pnpm --filter notifications-worker build
 # Stage 3: Runner
 FROM node:24-alpine AS production
 
+# Patch OS packages flagged by image scanning: zlib 1.3.2-r0 -> 1.3.2-r1
+# (CVE-2026-85091). Runs as root, before the USER switch below.
+RUN apk add --no-cache --upgrade zlib
+
+# Drop the npm CLI bundled by the base image — never invoked at runtime (the
+# worker starts via `node`; builds use pnpm/corepack in earlier stages) but
+# its own vendored deps (undici, ip-address, brace-expansion, etc.) carry
+# known CVEs. corepack lives in a separate tree and is untouched.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
 # Set environment
 ENV NODE_ENV=production
 ENV LOG_LEVEL=info

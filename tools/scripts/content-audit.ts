@@ -144,7 +144,7 @@ const ROOT_LAYOUT_DEFAULTS: ParsedMetadata = {
   ogTitle: 'IntelliFlow CRM - AI-Powered Sales Intelligence',
   ogDescription:
     'Close more deals with AI-powered insights. Automated lead scoring, smart contact management, and real-time pipeline analytics.',
-  ogUrl: 'https://intelliflow-crm.com',
+  ogUrl: 'https://intelli-flow-crm-web.vercel.app',
   ogSiteName: 'IntelliFlow CRM',
   ogImage: null,
   twitterCard: 'summary_large_image',

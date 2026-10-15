@@ -833,7 +833,7 @@ export function generateOpenAPISpec() {
       },
       license: {
         name: 'Proprietary',
-        url: 'https://intelliflow-crm.com/terms',
+        url: 'https://intelli-flow-crm-web.vercel.app/terms',
       },
     },
     servers: SERVERS,

@@ -36,7 +36,7 @@ export async function generateMetadata({
       images: OG_IMAGES,
       title: `${release.title} | Aurora Press`,
       description: release.summary,
-      url: `https://intelliflow-crm.com/press/${release.id}`,
+      url: `https://intelli-flow-crm-web.vercel.app/press/${release.id}`,
       siteName: 'Aurora',
       type: 'article',
       publishedTime: release.date,

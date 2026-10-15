@@ -24,7 +24,7 @@ vi.mock('fs', () => ({
   },
 }));
 
-import { AgentActionLogger, createLogEntry } from '../logger';
+import { AgentActionLogger } from '../logger';
 
 // Credential-shaped fixture values are assembled at runtime so no literal sits in source.
 function fixtureValue(...parts: string[]): string {

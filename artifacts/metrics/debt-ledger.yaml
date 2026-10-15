@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-07-22
+last_updated: 2026-10-12
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -5234,22 +5234,24 @@ alerts:
     severity: medium
     description: 'CodeQL/Trivy alerts #2259 (CVE-2026-33671 HIGH) and #2260 (CVE-2026-33672 MED) flag picomatch 4.0.3 at usr/local/lib/node_modules/npm/node_modules/picomatch — the copy BUNDLED inside the npm CLI shipped with the node:22-alpine base image, NOT a workspace dependency. Our pnpm deps already force picomatch >=4.0.4 via the existing root override, so application code is patched; only the base-image npm bundles the vulnerable copy.'
     created_at: 2026-06-15
-    status: open
+    status: resolved
+    resolved_at: 2026-10-13
     expiry_date: 2026-09-15
     remediation_sprint: 19
     remediation_plan: 'Resolved when the node:22-alpine base image ships an npm whose bundled picomatch is >=4.0.4 (rebuild picks it up), or by running npm i -g npm@latest in the image build. Low impact: the bundled copy is only exercised by npm CLI globbing at build/admin time, not at runtime.'
-    notes: 'git issue #452. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+    notes: 'git issue #452. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8. RESOLVED (fix/trivy-image-cves, #452/#377): the whole npm CLI (and every dep it vendors, including this picomatch copy) is now deleted from the final runner stage of every image that ships it (API + 4 worker Dockerfiles) — it is never invoked at runtime, builds use pnpm/corepack in earlier stages. Supersedes the wait-for-upstream plan above; no vulnerable copy ships at all.'
   DEP-CVE-HIGHLIGHTJS-BULLBOARD-001:
     origin_task: '#452'
     owner: DevOps Lead
     severity: medium
-    description: 'CodeQL/Trivy alert #2269 (CVE-2020-26237, prototype pollution in highlight.js <9.18.2/<10.1.2) flags a vendored highlight.*.js asset inside @bull-board/ui dist (node_modules/.pnpm/@bull-board+ui@7.2.1/.../static/js/async/highlight.*.js). It is a pre-bundled UI asset, so a pnpm override on highlight.js does not replace it — the version is frozen inside @bull-board/ui published build.'
+    description: 'CodeQL/Trivy alert #2269 (CVE-2020-26237, prototype pollution in highlight.js <9.18.2/<10.1.2) flagged a vendored highlight.*.js asset inside @bull-board/ui dist (node_modules/.pnpm/@bull-board+ui@7.1.5/.../static/js/async/highlight.*.js). It is a pre-bundled UI asset, so a pnpm override on highlight.js does nothing to it — the version is frozen inside @bull-board/ui published build.'
     created_at: 2026-06-15
-    status: open
+    status: resolved
+    resolved_at: 2026-10-12
     expiry_date: 2026-09-15
     remediation_sprint: 19
-    remediation_plan: 'Bump @bull-board/ui to a release whose vendored highlight.js is >=10.1.2 (track upstream), or drop the Bull Board UI from the deployed image. Low impact: Bull Board UI is an internal admin/ops dashboard, not user-facing; the pollution vector requires attacker-controlled code-block language names rendered through highlight.js, which this dashboard does not expose.'
-    notes: 'git issue #452. Track B residual — vendored/pre-bundled asset, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+    remediation_plan: 'RESOLVED, not patched: an unrelated dependency bump already carried @bull-board/ui past the vulnerable range before this task ran. Verified 2026-10-12 three independent ways: (1) GitHub code-scanning alert #2269 itself is `state: "fixed"` (fixed_at 2026-10-06); (2) the currently installed @bull-board/ui@9.10.2 vendors highlight.js with embedded `versionString="11.12.0"` in the exact flagged file path; (3) @bull-board/ui@9.10.2''s own package.json devDependency pins `highlight.js: "^11.12.0"`. All three are far past the fixed thresholds (9.18.2 / 10.1.2), so there is no vulnerable code left to patch via patch-package/pnpm patch. Added a permanent regression guard (packages/platform/src/queues/bull-board-highlightjs.test.ts, issue #452) that resolves the installed @bull-board/ui package, reads its vendored highlight.js chunk(s), and fails CI if a future downgrade/pin reintroduces a build below 9.18.2/10.1.2 — so this stays closed rather than silently regressing.'
+    notes: 'git issue #452. Track B residual — vendored/pre-bundled asset, not fixable via pnpm.overrides. Tracked per project Rule 8. Closed with evidence, not a code patch: the premise (vulnerable code still vendored) no longer held by the time this task ran; see remediation_plan for the three-way verification and the regression test that now guards it.'
   DEP-CVE-JSYAML-V3-GRAYMATTER-DOCS-001:
     origin_task: '#485'
     owner: DevOps Lead
@@ -5267,11 +5269,12 @@ alerts:
     severity: medium
     description: 'Trivy alert #2346 (CVE-2026-53655, node-tar PAX/GNU long-name parser interpretation differential) flags tar 7.5.11 at usr/local/lib/node_modules/npm/node_modules/tar — the copy BUNDLED inside the npm CLI shipped with the node base image, NOT a workspace dependency (tar does not resolve in any of our lockfiles). Same class as the picomatch base-image residual (DEP-CVE-PICOMATCH-NPM-BUNDLED-001). A root pnpm override for tar (>=7.5.16) is present defensively but cannot replace the base-image npm bundle.'
     created_at: 2026-06-16
-    status: open
+    status: resolved
+    resolved_at: 2026-10-13
     expiry_date: 2026-09-16
     remediation_sprint: 19
     remediation_plan: 'Resolved when the node base image ships an npm whose bundled tar is >=7.5.16 (rebuild picks it up), or by running npm i -g npm@latest in the image build. Low impact: the bundled copy is only exercised by npm CLI tarball handling at build/admin time, not at runtime.'
-    notes: 'git issue #485. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+    notes: 'git issue #485. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8. RESOLVED (fix/trivy-image-cves, #452/#377): same fix as DEP-CVE-PICOMATCH-NPM-BUNDLED-001 — the npm CLI is deleted wholesale from every shipped runtime image, so no bundled tar copy (vulnerable or not) is present to flag. Current re-scan surfaced this same class again at CVE-2026-73566 (tar 7.5.19, alert #2792) before this fix; same resolution covers it.'
   MERGED-COVERAGE-UI-PROJECTS-EMPTY-001:
     origin_task: IFC-301
     owner: DevOps Lead
@@ -5574,3 +5577,101 @@ alerts:
       hard gate (see GOV-A-005). Separate remediation PR.
     status: open
     notes: 'Gate exists but not enforced in pre-ship/CI, so drift accumulated.'
+  DEP-CVE-BRACES-STACKOVERFLOW-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      Trivy alerts #3063 (app/node_modules/.pnpm/braces@3.0.3, intelliflow-crm-api
+      image) and #3059 (docs/pnpm-lock.yaml) flag braces 3.0.3, CVE-2026-93687
+      (stack-exhaustion DoS from deeply nested brace patterns). 3.0.3 is braces'
+      latest published release (npm view braces version => 3.0.3, verified
+      2026-10-13) and GHSA/NVD list first_patched_version: null — there is no
+      patched version to bump to. Pulled transitively by micromatch@4.0.8 (a
+      devDependency-of-devDependencies chain), which ships into the api image
+      because `pnpm prune --prod` is deliberately not run in Dockerfile.api (see
+      its own comment: pnpm v10 isolated-linker prune removes legitimate per-app
+      prod symlinks too, #742).
+    created_at: 2026-10-13
+    status: open
+    expiry_date: 2027-01-13
+    remediation_sprint: 20
+    remediation_plan: >-
+      No upstream fix exists today — re-check `npm view braces versions` and the
+      GHSA (GHSA for CVE-2026-93687) periodically; bump the moment a patched
+      release ships. The real structural fix is making the api runner image prod-
+      only again (resolve the pnpm v10 isolated-linker prune bug from the
+      Dockerfile.api NOTE, e.g. via `pnpm deploy --filter api --prod`), which
+      would drop this and the other app/node_modules residuals below in one
+      move; tracked separately, out of scope for a CVE-only fix.
+    notes: >-
+      git issues #452/#377. Track B residual — no fixed version published
+      upstream, confirmed via the GitHub Advisory Database vulnerable_version_range
+      "<= 3.0.3" / first_patched_version null. Not exploitable via untrusted
+      input in this codebase's actual usage. Tracked per project Rule 8.
+  DEP-CVE-EXTRACTZIP-SYMLINK-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      Trivy alerts #2780 (CVE-2026-56876) and #2917 (CVE-2026-19693) flag
+      extract-zip 2.0.1 at app/node_modules/.pnpm/extract-zip@2.0.1 in the
+      intelliflow-crm-api image — symlink path-traversal / arbitrary file write
+      from a crafted archive. 2.0.1 is extract-zip's latest published release
+      (npm view extract-zip version => 2.0.1, verified 2026-10-13) and both
+      GHSAs list first_patched_version: null. Pulled transitively via
+      @puppeteer/browsers (debug/extract-zip/tar-fs chain), a devDependency of
+      the monorepo root, shipped into the api image for the same
+      `pnpm prune --prod` reason as DEP-CVE-BRACES-STACKOVERFLOW-001. The
+      vulnerable code path (extracting an attacker-controlled zip) is never
+      reached by the API at runtime — it only exists because the full root
+      node_modules tree is copied into the runner stage.
+    created_at: 2026-10-13
+    status: open
+    expiry_date: 2027-01-13
+    remediation_sprint: 20
+    remediation_plan: >-
+      No upstream fix exists today. Same structural remediation as
+      DEP-CVE-BRACES-STACKOVERFLOW-001 (restore a prod-pruned api runner image)
+      removes this devDependency-only package from the shipped image entirely;
+      tracked there, not duplicated here.
+    notes: >-
+      git issues #452/#377. Track B residual — no fixed version published
+      upstream (GHSA vulnerable_version_range "<= 2.0.1" / first_patched_version
+      null for both CVEs). Dead code in this image: the API never calls
+      extract-zip itself. Tracked per project Rule 8.
+  DEP-CVE-SPRINTFJS-PRECISION-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      Trivy alerts #3113 (app/node_modules/.pnpm/sprintf-js@1.0.3, intelliflow-
+      crm-api image) and #3095 (root pnpm-lock.yaml) flag sprintf-js 1.0.3,
+      CVE-2026-97058 (DoS via unbounded precision specifiers to
+      toFixed/toExponential/toPrecision). GHSA-hp3w-g68c-fv3c lists
+      vulnerable_version_range "<= 1.1.3" with first_patched_version: null —
+      sprintf-js's own latest release (1.1.3, verified 2026-10-13) is still
+      vulnerable, so there is nothing to bump to, in either the api image or
+      the root lockfile. Pulled transitively via argparse@1.0.10 <- mammoth
+      (apps/ai-worker, apps/workers/ingestion-worker, apps/workers/shared all
+      depend on mammoth for real runtime .docx parsing). Confirmed via the
+      published mammoth tarball that argparse is required ONLY by mammoth's
+      bin/mammoth CLI script, never by lib/index.js or anything the workers
+      actually import — the vulnerable sprintf-js path is unreachable at
+      runtime, just present on disk.
+    created_at: 2026-10-13
+    status: open
+    expiry_date: 2027-01-13
+    remediation_sprint: 20
+    remediation_plan: >-
+      No upstream fix exists today (sprintf-js's own HEAD is vulnerable).
+      Options once one ships: bump sprintf-js directly via a pnpm override, or
+      get mammoth to drop its argparse dependency (it's CLI-only). Re-check
+      `npm view sprintf-js versions` and the GHSA periodically.
+    notes: >-
+      git issues #452/#377. Track B residual — no fixed version published
+      upstream for the whole sprintf-js project, confirmed via the GitHub
+      Advisory Database. Unlike the braces/extract-zip residuals above, this one
+      IS reachable from a real production dependency (mammoth) rather than a
+      pure devDependency leak, but only through mammoth's own unused CLI
+      entrypoint. Tracked per project Rule 8.

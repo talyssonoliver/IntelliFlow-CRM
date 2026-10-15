@@ -75,8 +75,19 @@ FROM node:24-alpine AS runner
 
 # Patch OS packages flagged by image scanning in the final (scanned) image:
 # libssl3/libcrypto3 3.5.6-r0 -> 3.5.7-r0 (CVE-2026-45447 and related OpenSSL CVEs).
+# zlib 1.3.2-r0 -> 1.3.2-r1 (CVE-2026-85091).
 # Runs as root, before the USER switch below.
-RUN apk add --no-cache --upgrade libssl3 libcrypto3
+RUN apk add --no-cache --upgrade libssl3 libcrypto3 zlib
+
+# The npm CLI bundled by the node:24-alpine base image is never invoked at
+# runtime (the API starts via tsx, builds use pnpm/corepack in earlier
+# stages) but its own vendored node_modules (undici, ip-address,
+# brace-expansion, postcss-selector-parser, http-cache-semantics, tar) carry
+# known CVEs Trivy flags on every scan. Drop it from the final image instead
+# of patching dependencies we don't ship for; corepack (used only at build
+# time, not here) lives in a separate /usr/local/lib/node_modules/corepack
+# tree and is untouched.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
 
 # Set environment
 ENV NODE_ENV=production

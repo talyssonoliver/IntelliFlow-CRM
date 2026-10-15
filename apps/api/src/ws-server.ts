@@ -25,7 +25,16 @@ import {
 // Configuration
 // ============================================================================
 
-const WS_PORT = Number(process.env.WS_PORT ?? 3001);
+// Railway injects PORT for every service with a generated public domain and
+// routes the domain's traffic to whatever port the container actually binds
+// (see apps/api/src/http-server.ts's API_PORT, which already follows this).
+// This server previously read only WS_PORT, so on a fresh/unconfigured
+// deployment (no WS_PORT set in the Railway dashboard) it fell straight to
+// the local-dev default of 3001 regardless of the port Railway assigned,
+// leaving the public domain unable to reach the process (issue #851). An
+// explicit WS_PORT still wins when set, so an existing hand-managed Railway
+// config that pins it keeps working unchanged.
+const WS_PORT = Number(process.env.WS_PORT ?? process.env.PORT ?? 3001);
 
 // ============================================================================
 // WebSocket Server

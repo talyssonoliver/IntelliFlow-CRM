@@ -437,7 +437,13 @@ export function installExitHandlers(cleanup, { exit = (c) => process.exit(c), lo
 
 function writeFileAtomic(file, text) {
   const tmp = `${file}.${process.pid}.tmp`;
-  fs.writeFileSync(tmp, text);
+  // STATE_DIR is a fixed, predictable path under the shared OS temp directory
+  // (needed so the watchdog, a separate process, can find it by convention),
+  // so `tmp`'s name is predictable too. `wx` (exclusive create) refuses to
+  // write through a file or symlink another local user planted there ahead
+  // of us, instead of silently following it; mode 0o600 keeps the content
+  // owner-only in the meantime.
+  fs.writeFileSync(tmp, text, { flag: 'wx', mode: 0o600 });
   fs.renameSync(tmp, file);
 }
 
@@ -450,7 +456,8 @@ export const gateStatePath = (pid, dir = STATE_DIR) => path.join(dir, `gate-${pi
 
 /** Write this gate's record: its pid and start, and the step process tree it is running. */
 export function writeGateState(state, dir = STATE_DIR) {
-  fs.mkdirSync(dir, { recursive: true });
+  // Owner-only: this directory's fixed, predictable name is shared machine-wide.
+  fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
   writeFileAtomic(gateStatePath(state.gate_pid, dir), JSON.stringify(state, null, 2));
 }
 

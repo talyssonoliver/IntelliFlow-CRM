@@ -451,11 +451,11 @@ AI features require:
 
 ### Environments
 
-| Environment | Purpose        | URL                         |
-| ----------- | -------------- | --------------------------- |
-| Development | Local dev      | localhost:3000              |
-| Staging     | Pre-production | staging.intelliflow-crm.com |
-| Production  | Live           | app.intelliflow-crm.com     |
+| Environment | Purpose        | URL                             |
+| ----------- | -------------- | ------------------------------- |
+| Development | Local dev      | localhost:3000                  |
+| Staging     | Pre-production | staging.intelliflow-crm.com     |
+| Production  | Live           | intelli-flow-crm-web.vercel.app |
 
 ### CI/CD Pipeline
 

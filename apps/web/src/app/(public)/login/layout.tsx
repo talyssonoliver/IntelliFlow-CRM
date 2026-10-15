@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: 'Sign In to Aurora',
     description:
       'Access your Aurora account. AI-powered sales tools, pipeline management, and team collaboration.',
-    url: 'https://intelliflow-crm.com/login',
+    url: 'https://intelli-flow-crm-web.vercel.app/login',
     siteName: 'Aurora',
     type: 'website',
   },

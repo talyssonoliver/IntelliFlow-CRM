@@ -42,7 +42,7 @@ describe('PrivacyPage', () => {
   it('exports metadata for the canonical privacy route', () => {
     expect(metadata.title).toBe('Privacy Policy');
     expect(metadata.alternates?.canonical).toBe('/privacy');
-    expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/privacy');
+    expect(metadata.openGraph?.url).toBe('https://intelli-flow-crm-web.vercel.app/privacy');
   });
 });
 

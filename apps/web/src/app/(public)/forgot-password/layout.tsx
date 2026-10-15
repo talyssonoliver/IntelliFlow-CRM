@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: 'Reset Your Aurora Password',
     description:
       'Forgot your password? Request a secure reset link to regain access to your Aurora account.',
-    url: 'https://intelliflow-crm.com/forgot-password',
+    url: 'https://intelli-flow-crm-web.vercel.app/forgot-password',
     siteName: 'Aurora',
     type: 'website',
   },

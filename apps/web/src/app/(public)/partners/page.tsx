@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     title: 'Partner with Aurora',
     description:
       'Technology integrations, reseller programs, and consultant certifications. Build with our API, earn revenue share, and grow your business.',
-    url: 'https://intelliflow-crm.com/partners',
+    url: 'https://intelli-flow-crm-web.vercel.app/partners',
     siteName: 'Aurora',
     type: 'website',
   },

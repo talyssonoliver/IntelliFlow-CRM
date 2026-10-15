@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: 'Start your free 14-day Aurora trial',
     description:
       'Get started with AI-powered CRM. Lead scoring, deal tracking, workflow automation, and enterprise-grade security. No credit card required.',
-    url: 'https://intelliflow-crm.com/signup',
+    url: 'https://intelli-flow-crm-web.vercel.app/signup',
     siteName: 'Aurora',
     type: 'website',
   },

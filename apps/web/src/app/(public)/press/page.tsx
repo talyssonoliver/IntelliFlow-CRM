@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     title: 'Press & Media',
     description:
       'Latest news and press releases from Aurora. AI-powered CRM for modern sales teams.',
-    url: 'https://intelliflow-crm.com/press',
+    url: 'https://intelli-flow-crm-web.vercel.app/press',
     siteName: 'Aurora',
     type: 'website',
   },

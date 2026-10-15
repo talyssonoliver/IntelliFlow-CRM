@@ -38,7 +38,9 @@ export interface GrafanaAlertRule {
   }>;
 }
 export function buildRule(entry: AlertRuleEntry, config: AlertRulesConfig): GrafanaAlertRule;
-export function validateConfig(config: { rules: Partial<AlertRuleEntry>[] }): string[];
+export function validateConfig(
+  config: Partial<Omit<AlertRulesConfig, 'rules'>> & { rules: Partial<AlertRuleEntry>[] }
+): string[];
 export function run(options?: {
   env?: Record<string, string | undefined>;
   argv?: string[];

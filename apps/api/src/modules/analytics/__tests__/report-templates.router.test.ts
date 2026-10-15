@@ -11,7 +11,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
 import { reportTemplatesRouter } from '../report-templates.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: 'Verify your Aurora email',
     description:
       'Complete your Aurora registration by verifying your email address. Secure account activation.',
-    url: 'https://intelliflow-crm.com/verify-email',
+    url: 'https://intelli-flow-crm-web.vercel.app/verify-email',
     siteName: 'Aurora',
     type: 'website',
   },

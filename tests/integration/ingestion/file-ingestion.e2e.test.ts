@@ -470,7 +470,7 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       }
 
       // Upload document for tenant-1
-      const result1 = await orchestrator.ingestFile(Buffer.from('tenant1 doc'), {
+      await orchestrator.ingestFile(Buffer.from('tenant1 doc'), {
         tenantId: TENANT_1,
         filename: 'tenant1.pdf',
         mimeType: 'application/pdf',

@@ -31,7 +31,7 @@
  *
  * Run from repo root. Exit 0 = all checks pass; 1 = a blocking check failed.
  */
-import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, statSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import { createRequire } from 'node:module';
 
