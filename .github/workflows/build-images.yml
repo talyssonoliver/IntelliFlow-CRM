@@ -41,8 +41,6 @@ jobs:
             dockerfile: apps/workers/events-worker/Dockerfile
           - service: ingestion-worker
             dockerfile: apps/workers/ingestion-worker/Dockerfile
-          - service: notifications-worker
-            dockerfile: apps/workers/notifications-worker/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v7

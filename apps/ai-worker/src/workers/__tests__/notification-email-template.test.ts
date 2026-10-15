@@ -1,5 +1,8 @@
+// Ported verbatim from
+// apps/workers/notifications-worker/src/templates/__tests__/notification-email.test.ts
+// (#230 fold) — only the import path changed.
 import { describe, it, expect } from 'vitest';
-import { renderNotificationEmail, escapeHtml } from '../notification-email';
+import { renderNotificationEmail, escapeHtml } from '../notification-email-template';
 
 describe('escapeHtml', () => {
   it('escapes the five HTML-significant characters', () => {
