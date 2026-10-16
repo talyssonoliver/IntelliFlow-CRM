@@ -11,6 +11,7 @@ export * from './common';
 
 // Storage Adapters
 export * from './storage/SupabaseStorageAdapter';
+export * from './storage/InMemoryStorageAdapter';
 
 // Antivirus Adapters
 export * from './antivirus/ClamAVScanner';
