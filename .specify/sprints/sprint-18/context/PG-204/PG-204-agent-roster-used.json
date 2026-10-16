@@ -1,0 +1,19 @@
+{
+  "task_id": "PG-204",
+  "written_at": "2026-10-13T06:23:10Z",
+  "note": "PG-204-agent-selection.json in this directory is now the real output of tools/scripts/lib/stoa/agent-selection.ts (selectAgents, run 2026-10-13T06:22:22.432Z). It replaced a hand-written file (see git HEAD 29c68754a for the old content). This file records the roster the spec session actually used, so the two can be compared honestly.",
+  "library_selection": ["Backend-Architect", "Frontend-Lead", "AI-Specialist", "Data-Engineer", "A11y-Expert"],
+  "library_rationale_also_listed_but_not_selected": ["Compliance (keyword: legal)", "Domain-Expert (always included)", "Test-Engineer (always included)"],
+  "roster_used_by_the_spec_session": {
+    "rounds_1_2_original": ["backend-architect", "data-engineer", "frontend-lead", "domain-expert", "test-engineer"],
+    "rounds_3_4_original": ["security-lead", "a11y-expert", "stoa-domain"],
+    "exploration_and_consensus_rerun_2026_10_13": ["backend-architect", "data-engineer", "frontend-lead", "domain-expert", "test-engineer", "security-lead", "a11y-expert", "stoa-domain"]
+  },
+  "differences": {
+    "AI-Specialist": "selected by the library on the keyword 'AI' (the row's 'AI defaults FALSE' DoD item); not used: the task adds no AI columns or AI logic.",
+    "Compliance": "listed by the library on the keyword 'legal' (the LEGAL module name); not used: no GDPR/DSAR surface changes.",
+    "Domain-Expert / Test-Engineer": "the library rationale says 'always included' but its selectedAgents omits them (5-agent cap); the session included both.",
+    "Security-Lead / STOA-Domain": "added by the session lead: tenant isolation + RBAC + a migration (security) and the task's STOA is domain."
+  },
+  "consensus": "Original session: 3 verdicts on a draft (no 8/8). Re-run 2026-10-13 on the final spec: 8/8 APPROVED in 1 round."
+}

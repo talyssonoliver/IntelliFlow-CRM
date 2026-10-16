@@ -185,6 +185,7 @@ model Tenant {
   caseRequiredFields        CaseRequiredField[]       @ignore
   caseTags                  CaseTag[]                 @ignore
   caseAutomationSettings    CaseAutomationSetting[]   @ignore
+  caseTypes                 CaseType[]                @ignore // PG-204
   appointmentSettings       AppointmentSettings[]     @ignore
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
@@ -2137,6 +2138,9 @@ model Case {
   closedAt     DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  /// PG-204 — case type applied at creation (ADR-076). Plain scalar: the tenant-consistent
+  /// FK ("tenantId","caseTypeId") -> case_types("tenantId","id") is SQL-only (see CaseType).
+  caseTypeId   String?
 
   // Multi-tenancy
   tenantId    String
@@ -2254,6 +2258,56 @@ model CaseAutomationSetting {
   @@map("case_automation_settings")
 }
 
+// ─── PG-204: Case Types ─────────────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261013120000_case_types, asserted by
+// tests/integration/case-types.test.ts — do not drop in a diff):
+//   - case_types_tenant_lower_name_key   UNIQUE ("tenantId", lower("name"))
+//   - case_types_one_default_key         UNIQUE ("tenantId") WHERE "isDefault"
+//   - cases_tenantId_caseTypeId_fkey     FOREIGN KEY ("tenantId","caseTypeId")
+//                                        REFERENCES case_types("tenantId","id") ON DELETE NO ACTION
+//     (Prisma cannot model an optional relation over the required tenantId)
+//   - CHECKs on colorToken, defaultSlaDays, name, requiredFields, checklist title/sortOrder
+//   - RLS tenant policies on both tables
+
+/// A tenant-defined case type whose defaults are applied when a case is created (ADR-076).
+model CaseType {
+  id              String        @id @default(cuid())
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String        @db.VarChar(100)
+  category        String?       @db.VarChar(60)
+  colorToken      String        @default("slate")
+  defaultPriority CasePriority?
+  defaultSlaDays  Int?
+  requiredFields  String[]      @default([])
+  isActive        Boolean       @default(true)
+  isDefault       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  checklist CaseTypeChecklistItem[]
+
+  // DBA-012: composite target for tenant-consistent child FKs
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive])
+  @@map("case_types")
+}
+
+/// One resolution-checklist step of a case type; seeded as a CaseTask on case creation.
+model CaseTypeChecklistItem {
+  id         String   @id @default(cuid())
+  tenantId   String
+  caseTypeId String
+  caseType   CaseType @relation(fields: [tenantId, caseTypeId], references: [tenantId, id], onDelete: Cascade)
+  title      String   @db.VarChar(200)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId, caseTypeId])
+  @@map("case_type_checklist_items")
+}
+
 /// PG-189 — per-tenant appointment / calendar module settings. Landed alongside
 /// PG-190 to unblock AC-007 after the PG-189 Ralph-loop shipped the router
 /// without the backing schema. See PG-190 attestation notes.
@@ -2351,6 +2405,9 @@ model CaseTask {
   completedAt DateTime?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  /// PG-204 — order of a step seeded from a case type's resolution checklist (0-based);
+  /// null for tasks added by hand (read order: position nulls last, then dueDate).
+  position    Int?
 
   tenantId    String
   tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -4276,7 +4333,9 @@ model RoutingAudit {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  ticketId    String
+  ticketId    String   // Lead-routing rows store the lead id here too (back-compat); see leadId.
+  leadId      String?  // #770: set by lead-routing writers; null for ticket-routing rows. Lets a
+                        // reader tell the two kinds of audit apart without the ticketId/details heuristic.
   ruleId      String?
   ruleName    String?
   fromUserId  String?
@@ -4289,6 +4348,7 @@ model RoutingAudit {
   createdAt   DateTime @default(now())
 
   @@index([ticketId])
+  @@index([leadId])
   @@index([toUserId])
   @@index([createdAt])
   @@index([tenantId])
@@ -5684,6 +5744,15 @@ model HelpArticle {
   status            ArticleStatus   @default(DRAFT)
   publishedAt       DateTime?
 
+  /// Built-in article maintained centrally and readable by EVERY tenant
+  /// (#533). Only the seed script may set this — create/update never accept
+  /// it from client input — so a tenant can never make its own content
+  /// globally visible. Mutations (update/delete/publish/unpublish) stay
+  /// scoped to `tenantId` as before: a system row's owning tenantId is never
+  /// a real customer tenant, so other tenants' tenantId-scoped writes can
+  /// never reach it.
+  isSystem          Boolean         @default(false)
+
   // Multi-tenancy
   tenantId          String
   tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -5702,6 +5771,7 @@ model HelpArticle {
   @@index([categoryId])
   @@index([status])
   @@index([tenantId, categoryId])
+  @@index([isSystem])
   @@map("help_articles")
 }
 

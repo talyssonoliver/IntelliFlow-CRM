@@ -19,6 +19,14 @@ Target: < 2s per lead.
 `src/agents/` — CrewAI agents for lead qualification, email generation,
 follow-ups.
 
+### Folded Workers (#230)
+
+`src/workers/notification-email-worker.ts` consumes
+`intelliflow-notifications-email` (ticket-assignment emails), folded in from the
+removed `apps/workers/notifications-worker`. Booted from
+`AIWorker.initPrismaDependentServices()`. `events-worker` (outbox dispatch and
+scheduled maintenance jobs) is NOT folded: it keeps running as its own service.
+
 ### Human-in-the-Loop
 
 All AI outputs include confidence scores and allow human override/feedback.

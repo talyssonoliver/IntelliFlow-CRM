@@ -86,7 +86,7 @@ import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
 import { setAuditLogAdapter } from './utils/audit-log';
 import { tenantContextStore } from './tracing/tenant-context.js';
 import { runWithLogContext } from '@intelliflow/observability';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { requiredProdEnv, isProductionEnv } from '@intelliflow/validators/required-url';
 
 // ============================================================================
 // Constants
@@ -141,6 +141,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private contactEmbedWorker?: import('./workers/contact-embed-worker.js').ContactEmbedWorker;
   // D5 / issue #259: ingestion queue consumers (text-extraction + ocr-processing).
   private ingestionWorkersHandle?: import('./workers/ingestion-workers.js').IngestionWorkersHandle;
+  // #230: notification-email queue consumer (folded from apps/workers/notifications-worker).
+  private notificationEmailWorkerHandle?: import('./workers/notification-email-worker.js').NotificationEmailWorkerHandle;
   /** Passive dead-letter queue — no worker, just for inspection and replay. */
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
@@ -289,6 +291,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
     await this.bootIngestionWorkers();
+    await this.bootNotificationEmailWorker();
   }
 
   /**
@@ -442,6 +445,123 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
         'Failed to boot ingestion workers — document processing jobs will remain queued'
+      );
+    }
+  }
+
+  /**
+   * #230: Boot the consumer for the notification-email queue.
+   *
+   * `intelliflow-notifications-email` has been produced by
+   * apps/api/.../ticket.router.ts since that router shipped, but its only
+   * intended consumer — apps/workers/notifications-worker, which WAS built,
+   * deployed and promoted — could not consume it (its job schema never
+   * matched the real payload, #230), so jobs have backlogged in Redis. Its
+   * Railway service is kept but must be scaled to 0 BEFORE this ai-worker is
+   * promoted (see docs/operations/runbooks/workers-runbook.md), otherwise the
+   * old worker would claim jobs and fail them. This wires a real BullMQ
+   * consumer inside the already-deployed ai-worker process instead.
+   *
+   * Email delivery reuses the same adapter apps/api wires in container.ts for
+   * production email (createEmailServiceAdapter → Resend/SendGrid, degrading
+   * to a mock in dev when no provider key is configured) rather than
+   * duplicating notifications-worker's own SMTP channel.
+   */
+  private async bootNotificationEmailWorker(): Promise<void> {
+    try {
+      const { bootNotificationEmailWorker, createPrismaUserEmailLookup } =
+        await import('./workers/notification-email-worker.js');
+      const {
+        createEmailServiceAdapter,
+        RealNotificationServiceAdapter,
+        MockNotificationServiceAdapter,
+      } = await import('@intelliflow/adapters');
+
+      const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
+      let notificationService;
+      if (emailProvider === 'resend') {
+        // codex-review finding mock-delivery-drains-real-queue: a missing
+        // RESEND_API_KEY used to fall through to the Mock adapter below,
+        // which reports every send as delivered — so a resend
+        // misconfiguration would silently drain the real backlog as
+        // "successful" without ever sending an email. Refuse to boot the
+        // consumer instead; jobs stay queued (not lost) until fixed.
+        if (!process.env.RESEND_API_KEY) {
+          this.logger.error(
+            { emailProvider },
+            'EMAIL_PROVIDER=resend but RESEND_API_KEY is not set — refusing to boot the ' +
+              'notification email worker (mis-delivery risk). Jobs remain queued.'
+          );
+          return;
+        }
+        notificationService = new RealNotificationServiceAdapter(
+          createEmailServiceAdapter({ resendApiKey: process.env.RESEND_API_KEY }),
+          {
+            fromAddress:
+              process.env.RESEND_FROM_EMAIL ||
+              process.env.EMAIL_FROM_ADDRESS ||
+              'crm@leangency.com',
+            fromName: process.env.EMAIL_FROM_NAME,
+          }
+        );
+      } else if (emailProvider === 'sendgrid') {
+        if (!process.env.SENDGRID_API_KEY) {
+          this.logger.error(
+            { emailProvider },
+            'EMAIL_PROVIDER=sendgrid but SENDGRID_API_KEY is not set — refusing to boot the ' +
+              'notification email worker (mis-delivery risk). Jobs remain queued.'
+          );
+          return;
+        }
+        notificationService = new RealNotificationServiceAdapter(
+          createEmailServiceAdapter({ sendgridApiKey: process.env.SENDGRID_API_KEY }),
+          {
+            fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@intelliflow.com',
+            fromName: process.env.EMAIL_FROM_NAME,
+          }
+        );
+      } else {
+        // codex-review finding mock-sender-drains-production-queue: an
+        // unset/unrecognized EMAIL_PROVIDER in production used to fall
+        // through to the Mock adapter too (same mis-delivery risk as the
+        // resend/sendgrid branches above — it reports every send as
+        // delivered). Mock is only safe in dev/test; require it to be
+        // explicit there and refuse to boot it at all in production.
+        if (isProductionEnv()) {
+          this.logger.error(
+            { emailProvider },
+            'EMAIL_PROVIDER is unset or not a supported real provider in production — ' +
+              'refusing to boot the notification email worker with the Mock adapter ' +
+              '(mis-delivery risk). Set EMAIL_PROVIDER=resend|sendgrid with its API key. ' +
+              'Jobs remain queued.'
+          );
+          return;
+        }
+        notificationService = new MockNotificationServiceAdapter();
+      }
+
+      const redisConnection = {
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
+      };
+
+      this.notificationEmailWorkerHandle = await bootNotificationEmailWorker(
+        redisConnection,
+        {
+          users: createPrismaUserEmailLookup(this.prisma as never),
+          notificationService,
+        },
+        this.logger
+      );
+      this.logger.info(
+        'Notification email worker started — intelliflow-notifications-email queue now consumed'
+      );
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to boot notification email worker — ticket-assignment emails will remain queued'
       );
     }
   }
@@ -859,6 +979,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.tryStop(this.ingestionWorkersHandle, 'IngestionWorkers');
     if (this.ingestionWorkersHandle) {
       this.logger.info('IngestionWorkers stopped');
+    }
+
+    // #230: Stop the notification-email worker cleanly.
+    await this.tryStop(this.notificationEmailWorkerHandle, 'NotificationEmailWorker');
+    if (this.notificationEmailWorkerHandle) {
+      this.logger.info('NotificationEmailWorker stopped');
     }
 
     // H8: Close DLQ queue and lifecycle event listeners

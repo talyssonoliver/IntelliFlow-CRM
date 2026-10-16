@@ -9,9 +9,15 @@
 
 import { useState, useCallback, useEffect, useRef } from 'react';
 import Link from 'next/link';
-import type { CasePriority } from '@intelliflow/domain';
+import type { CasePriority, CaseRequiredFieldKey } from '@intelliflow/domain';
 import { CASE_PRIORITIES } from '@intelliflow/domain';
+import type { CaseTypeOptionDto } from '@intelliflow/validators';
 import { api } from '@/lib/api';
+import {
+  defaultPriorityOptionLabel,
+  describeCaseTypeDefaults,
+  effectiveRequiredFields,
+} from './case-type-labels';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { TimezoneSelector } from '@/components/settings/TimezoneSelector';
 
@@ -31,8 +37,10 @@ function useDebounce(value: string, delay: number): string {
 interface CaseFormData {
   subject: string;
   description: string;
-  category: string;
-  priority: CasePriority;
+  /** PG-204: '' = no case type. */
+  caseTypeId: string;
+  /** PG-204: '' = use the type / Case Settings default (omitted from the payload). */
+  priority: CasePriority | '';
   clientSearch: string;
   clientId: string;
   clientName: string;
@@ -48,18 +56,28 @@ interface CaseFormProps {
   onCancel: () => void;
   isSubmitting: boolean;
   mode: 'create' | 'edit';
+  /** PG-204: active case types for the picker (the default one is preselected). */
+  caseTypes?: readonly CaseTypeOptionDto[];
+  /** PG-204: Case Settings required fields, used when no type (or a type without its own). */
+  moduleRequiredFields?: readonly CaseRequiredFieldKey[];
+}
+
+const NO_REQUIRED_FIELDS: readonly CaseRequiredFieldKey[] = [];
+const NO_CASE_TYPES: readonly CaseTypeOptionDto[] = [];
+
+/** `*` for sighted users, "(required)" for screen readers. */
+function RequiredMark() {
+  return (
+    <>
+      <span className="text-red-700 dark:text-red-300" aria-hidden="true">
+        {' *'}
+      </span>
+      <span className="sr-only"> (required)</span>
+    </>
+  );
 }
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-
-const CATEGORY_OPTIONS = [
-  { value: '', label: 'Select Category' },
-  { value: 'TECHNICAL', label: 'Technical Issue' },
-  { value: 'BILLING', label: 'Billing & Payment' },
-  { value: 'FEATURE_REQUEST', label: 'Feature Request' },
-  { value: 'ONBOARDING', label: 'Onboarding Assistance' },
-  { value: 'OTHER', label: 'Other' },
-];
 
 const PRIORITY_LABELS: Record<CasePriority, string> = {
   LOW: 'Low',
@@ -76,13 +94,15 @@ export function CaseForm({
   onCancel,
   isSubmitting,
   mode,
+  caseTypes = NO_CASE_TYPES,
+  moduleRequiredFields = NO_REQUIRED_FIELDS,
 }: Readonly<CaseFormProps>) {
   const { timezone: userTimezone } = useTimezoneContext();
   const [formData, setFormData] = useState<CaseFormData>({
     subject: initialData?.subject ?? '',
     description: initialData?.description ?? '',
-    category: initialData?.category ?? '',
-    priority: initialData?.priority ?? 'MEDIUM',
+    caseTypeId: initialData?.caseTypeId ?? '',
+    priority: initialData?.priority ?? '',
     clientSearch: initialData?.clientSearch ?? '',
     clientId: initialData?.clientId ?? '',
     clientName: '',
@@ -97,6 +117,25 @@ export function CaseForm({
   });
 
   const [errors, setErrors] = useState<Partial<Record<keyof CaseFormData, string>>>({});
+
+  // PG-204: preselect the default case type once types load, unless the user already chose.
+  const [caseTypeTouched, setCaseTypeTouched] = useState(false);
+  const defaultCaseTypeId = caseTypes.find((type) => type.isDefault)?.id;
+  useEffect(() => {
+    if (mode !== 'create' || caseTypeTouched || !defaultCaseTypeId) return;
+    setFormData((prev) => (prev.caseTypeId ? prev : { ...prev, caseTypeId: defaultCaseTypeId }));
+  }, [mode, caseTypeTouched, defaultCaseTypeId]);
+
+  const selectedCaseType = caseTypes.find((type) => type.id === formData.caseTypeId) ?? null;
+  const requiredFields = effectiveRequiredFields(
+    selectedCaseType?.requiredFields,
+    moduleRequiredFields
+  );
+  const descriptionRequired = requiredFields.has('description');
+  const jurisdictionRequired = requiredFields.has('jurisdiction');
+  // An SLA on the type fills the deadline, so it never has to be typed in.
+  const deadlineRequired =
+    requiredFields.has('deadline') && selectedCaseType?.defaultSlaDays == null;
 
   const updateField = useCallback(
     <K extends keyof CaseFormData>(field: K, value: CaseFormData[K]) => {
@@ -133,18 +172,19 @@ export function CaseForm({
 
   const teamMembers = assigneesQuery.data ?? [];
 
-  const contactQuery = api.contact.list.useQuery(
+  // PG-204: a case's client is an Account (cases.clientId → accounts). The picker
+  // previously searched contacts, whose ids the server rejects.
+  const clientQuery = api.account.list.useQuery(
     { search: debouncedClientSearch, limit: 5, page: 1 },
     { enabled: clientDropdownOpen && debouncedClientSearch.length >= 2 }
   );
 
   const clientResults: Array<{ id: string; name: string; email?: string; company?: string }> = (
-    contactQuery.data?.contacts ?? []
-  ).map((c) => ({
-    id: c.id,
-    name: [c.firstName, c.lastName].filter(Boolean).join(' '),
-    email: c.email ?? undefined,
-    company: (c as { account?: { name?: string } }).account?.name ?? undefined,
+    clientQuery.data?.accounts ?? []
+  ).map((account) => ({
+    id: account.id,
+    name: account.name,
+    company: account.industry ?? undefined,
   }));
 
   function handleClientSelect(id: string, name: string) {
@@ -174,6 +214,16 @@ export function CaseForm({
 
     if (formData.description && formData.description.length > 5000) {
       newErrors.description = 'Description must be 5000 characters or less';
+    } else if (descriptionRequired && !formData.description.trim()) {
+      newErrors.description = 'Description is required for this case';
+    }
+
+    if (deadlineRequired && !formData.deadline) {
+      newErrors.deadline = 'A deadline is required for this case';
+    }
+
+    if (jurisdictionRequired && !formData.jurisdiction.trim()) {
+      newErrors.jurisdiction = 'Jurisdiction is required for this case';
     }
 
     setErrors(newErrors);
@@ -182,16 +232,22 @@ export function CaseForm({
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate()) {
+      // After React commits the error state, focus the first invalid field (WCAG 3.3.1).
+      const form = e.currentTarget as HTMLFormElement;
+      setTimeout(() => form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(), 0);
+      return;
+    }
 
     const submitData: Record<string, unknown> = {
       title: formData.subject.trim(),
-      priority: formData.priority,
       clientId: formData.clientId,
     };
 
+    // PG-204: a blank priority lets the server apply the type / Case Settings default.
+    if (formData.priority) submitData.priority = formData.priority;
+    if (formData.caseTypeId) submitData.caseTypeId = formData.caseTypeId;
     if (formData.description.trim()) submitData.description = formData.description.trim();
-    if (formData.category) submitData.category = formData.category;
     if (
       formData.assigneeId &&
       formData.assigneeId !== 'unassigned' &&
@@ -200,7 +256,8 @@ export function CaseForm({
       submitData.assignedTo = formData.assigneeId;
     }
     // When 'me' is selected, omit assignedTo — backend defaults to current user
-    if (formData.deadline) submitData.deadline = new Date(formData.deadline);
+    // The calendar date is sent as typed: the API ends it in the case timezone.
+    if (formData.deadline) submitData.deadlineDate = formData.deadline;
     if (formData.timezone) submitData.timezone = formData.timezone;
     if (formData.jurisdiction) submitData.jurisdiction = formData.jurisdiction;
 
@@ -229,11 +286,13 @@ export function CaseForm({
           {/* Subject */}
           <div>
             <label htmlFor="subject" className="block text-sm font-semibold text-foreground mb-1.5">
-              Subject <span className="text-destructive">*</span>
+              Subject
+              <RequiredMark />
             </label>
             <input
               id="subject"
               type="text"
+              aria-required="true"
               value={formData.subject}
               onChange={(e) => updateField('subject', e.target.value)}
               className={inputClasses('subject')}
@@ -242,30 +301,39 @@ export function CaseForm({
               aria-describedby={errors.subject ? 'subject-error' : undefined}
             />
             {errors.subject && (
-              <p id="subject-error" className="text-xs text-destructive mt-1">
+              <p
+                id="subject-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
                 {errors.subject}
               </p>
             )}
           </div>
 
-          {/* Category & Priority */}
+          {/* Case type & Priority (PG-204: the type replaces the unpersisted category list) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
             <div>
               <label
-                htmlFor="category"
+                htmlFor="caseType"
                 className="block text-sm font-semibold text-foreground mb-1.5"
               >
-                Category
+                Case type
               </label>
               <select
-                id="category"
-                value={formData.category}
-                onChange={(e) => updateField('category', e.target.value)}
+                id="caseType"
+                value={formData.caseTypeId}
+                onChange={(e) => {
+                  setCaseTypeTouched(true);
+                  updateField('caseTypeId', e.target.value);
+                }}
                 className={selectClasses}
+                aria-describedby="case-type-hint"
               >
-                {CATEGORY_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
+                <option value="">None</option>
+                {caseTypes.map((type) => (
+                  <option key={type.id} value={type.id}>
+                    {type.category ? `${type.name} (${type.category})` : type.name}
                   </option>
                 ))}
               </select>
@@ -280,9 +348,11 @@ export function CaseForm({
               <select
                 id="priority"
                 value={formData.priority}
-                onChange={(e) => updateField('priority', e.target.value as CasePriority)}
+                onChange={(e) => updateField('priority', e.target.value as CasePriority | '')}
                 className={selectClasses}
+                aria-describedby="case-type-hint"
               >
+                <option value="">{defaultPriorityOptionLabel(selectedCaseType)}</option>
                 {CASE_PRIORITIES.map((p) => (
                   <option key={p} value={p}>
                     {PRIORITY_LABELS[p]}
@@ -290,6 +360,12 @@ export function CaseForm({
                 ))}
               </select>
             </div>
+            <output
+              id="case-type-hint"
+              className="block sm:col-span-2 -mt-2 text-xs text-muted-foreground"
+            >
+              {describeCaseTypeDefaults(selectedCaseType)}
+            </output>
           </div>
 
           {/* Description */}
@@ -299,17 +375,27 @@ export function CaseForm({
               className="block text-sm font-semibold text-foreground mb-1.5"
             >
               Description
+              {descriptionRequired && <RequiredMark />}
             </label>
             <textarea
               id="description"
               value={formData.description}
               onChange={(e) => updateField('description', e.target.value)}
+              aria-required={descriptionRequired || undefined}
+              aria-invalid={!!errors.description}
+              aria-describedby={errors.description ? 'description-error' : undefined}
               className="w-full px-3 py-2.5 rounded-lg border border-border text-sm bg-background min-h-[120px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               placeholder="Provide detailed information about the customer's request..."
               rows={4}
             />
             {errors.description && (
-              <p className="text-xs text-destructive mt-1">{errors.description}</p>
+              <p
+                id="description-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
+                {errors.description}
+              </p>
             )}
           </div>
         </div>
@@ -329,7 +415,8 @@ export function CaseForm({
               htmlFor="clientSearch"
               className="block text-sm font-semibold text-foreground mb-1.5"
             >
-              Link to Client/Account <span className="text-destructive">*</span>
+              Link to Client/Account
+              <RequiredMark />
             </label>
 
             {formData.clientId ? (
@@ -361,6 +448,7 @@ export function CaseForm({
                 <input
                   id="clientSearch"
                   type="text"
+                  aria-required="true"
                   value={formData.clientSearch}
                   onChange={(e) => {
                     updateField('clientSearch', e.target.value);
@@ -368,7 +456,7 @@ export function CaseForm({
                   }}
                   onFocus={() => setClientDropdownOpen(true)}
                   className={`${inputClasses('clientSearch')} pl-10`}
-                  placeholder="Search by name, email or company..."
+                  placeholder="Search accounts by name..."
                   disabled={isSubmitting}
                   aria-invalid={!!errors.clientSearch}
                   aria-describedby={errors.clientSearch ? 'client-error' : 'client-help'}
@@ -387,7 +475,7 @@ export function CaseForm({
                 id="client-listbox"
                 className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-background shadow-lg max-h-56 overflow-y-auto list-none m-0 p-0"
               >
-                {contactQuery.isLoading && (
+                {clientQuery.isLoading && (
                   <li className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
                     <span
                       className="material-symbols-outlined text-[16px] animate-spin"
@@ -398,12 +486,12 @@ export function CaseForm({
                     Searching...
                   </li>
                 )}
-                {!contactQuery.isLoading && clientResults.length === 0 && (
+                {!clientQuery.isLoading && clientResults.length === 0 && (
                   <li className="px-3 py-3 text-sm text-muted-foreground">
                     No clients found for &quot;{debouncedClientSearch}&quot;
                   </li>
                 )}
-                {!contactQuery.isLoading &&
+                {!clientQuery.isLoading &&
                   clientResults.map((client) => (
                     <li key={client.id}>
                       <button
@@ -435,13 +523,17 @@ export function CaseForm({
             {}
 
             {errors.clientSearch ? (
-              <p id="client-error" className="text-xs text-destructive mt-1">
+              <p
+                id="client-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
                 {errors.clientSearch}
               </p>
             ) : (
               <p id="client-help" className="text-xs text-muted-foreground mt-1.5 italic">
                 Type to search existing clients or{' '}
-                <Link href="/contacts/new" className="text-primary hover:underline">
+                <Link href="/accounts/new" className="text-primary hover:underline">
                   create a new one
                 </Link>
                 .
@@ -495,6 +587,7 @@ export function CaseForm({
               className="block text-sm font-semibold text-foreground mb-1.5"
             >
               Deadline / Due Date
+              {deadlineRequired && <RequiredMark />}
             </label>
             <input
               id="deadline"
@@ -502,7 +595,19 @@ export function CaseForm({
               value={formData.deadline}
               onChange={(e) => updateField('deadline', e.target.value)}
               className={inputClasses('deadline')}
+              aria-required={deadlineRequired || undefined}
+              aria-invalid={!!errors.deadline}
+              aria-describedby={errors.deadline ? 'deadline-error' : 'case-type-hint'}
             />
+            {errors.deadline && (
+              <p
+                id="deadline-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
+                {errors.deadline}
+              </p>
+            )}
           </div>
           <fieldset>
             <legend className="block text-sm font-semibold text-foreground mb-1.5">
@@ -519,6 +624,7 @@ export function CaseForm({
               className="block text-sm font-semibold text-foreground mb-1.5"
             >
               Jurisdiction
+              {jurisdictionRequired && <RequiredMark />}
             </label>
             <input
               id="jurisdiction"
@@ -528,7 +634,19 @@ export function CaseForm({
               onChange={(e) => updateField('jurisdiction', e.target.value)}
               maxLength={100}
               className={inputClasses('jurisdiction')}
+              aria-required={jurisdictionRequired || undefined}
+              aria-invalid={!!errors.jurisdiction}
+              aria-describedby={errors.jurisdiction ? 'jurisdiction-error' : undefined}
             />
+            {errors.jurisdiction && (
+              <p
+                id="jurisdiction-error"
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300 mt-1"
+              >
+                {errors.jurisdiction}
+              </p>
+            )}
             <p className="mt-1 text-xs text-muted-foreground">
               Legal jurisdiction for court deadlines and filing requirements
             </p>

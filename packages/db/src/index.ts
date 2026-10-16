@@ -90,6 +90,8 @@ export type {
   CaseRequiredField,
   CaseTag,
   CaseAutomationSetting,
+  CaseType,
+  CaseTypeChecklistItem,
   AppointmentSettings,
   PublicFeedback,
   LeadCustomField,

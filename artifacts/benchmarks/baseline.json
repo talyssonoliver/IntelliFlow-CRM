@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-07T13:50:49.164Z",
+  "timestamp": "2026-10-16T00:41:58.204Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 67,
-    "total_endpoints": 544,
-    "total_queries": 236,
-    "total_mutations": 308,
+    "total_routers": 68,
+    "total_endpoints": 550,
+    "total_queries": 238,
+    "total_mutations": 312,
     "routers": [
       {
         "name": "contact",
@@ -1261,6 +1261,12 @@
         "mutations": 4
       },
       {
+        "name": "caseTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "system",
         "endpoints": 6,
         "queries": 6,
@@ -1425,16 +1431,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 192,
-    "total_fields": 2769,
-    "total_indexes": 875,
-    "total_relations": 271,
+    "total_tables": 194,
+    "total_fields": 2795,
+    "total_indexes": 882,
+    "total_relations": 273,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 170,
+        "fields": 171,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1573,17 +1579,17 @@
         "hasEmbedding": false
       },
       {
+        "name": "Case",
+        "fields": 23,
+        "indexes": 8,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
         "name": "AutoResponseDraft",
         "fields": 23,
         "indexes": 6,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Case",
-        "fields": 22,
-        "indexes": 8,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1650,17 +1656,17 @@
         "hasEmbedding": false
       },
       {
+        "name": "HelpArticle",
+        "fields": 19,
+        "indexes": 7,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "MessageRecord",
         "fields": 18,
         "indexes": 5,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "HelpArticle",
-        "fields": 18,
-        "indexes": 6,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1797,6 +1803,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CaseTask",
+        "fields": 15,
+        "indexes": 7,
+        "relations": 3,
+        "hasEmbedding": false
+      },
+      {
         "name": "ContactReplyDraft",
         "fields": 15,
         "indexes": 3,
@@ -1814,6 +1827,13 @@
         "name": "AccountHealthScore",
         "fields": 15,
         "indexes": 6,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "RoutingAudit",
+        "fields": 15,
+        "indexes": 7,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1881,10 +1901,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "CaseTask",
+        "name": "CaseType",
         "fields": 14,
-        "indexes": 7,
-        "relations": 3,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1906,13 +1926,6 @@
         "fields": 14,
         "indexes": 4,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "RoutingAudit",
-        "fields": 14,
-        "indexes": 6,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2651,6 +2664,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "CaseTypeChecklistItem",
+        "fields": 7,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketRequiredField",
         "fields": 7,
         "indexes": 3,
@@ -2875,8 +2895,8 @@
     ]
   },
   "workers_inventory": {
-    "total_workers": 3,
-    "total_jobs": 6,
+    "total_workers": 2,
+    "total_jobs": 3,
     "workers": [
       {
         "name": "events",
@@ -2894,16 +2914,6 @@
           "extractText"
         ],
         "description": "Document ingestion and text extraction"
-      },
-      {
-        "name": "notifications",
-        "type": "notifications",
-        "jobs": [
-          "channel:email",
-          "channel:sms",
-          "channel:webhook"
-        ],
-        "description": "Multi-channel notification delivery"
       }
     ]
   },
@@ -3145,11 +3155,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 54,
-    "total_schemas": 606,
+    "total_validators": 55,
+    "total_schemas": 611,
     "by_complexity": {
       "complex": 34,
-      "moderate": 16,
+      "moderate": 17,
       "simple": 4
     },
     "validators": [
@@ -3362,6 +3372,12 @@
         "file": "ticket-automation-rule.ts",
         "schemas": 6,
         "complexity": "complex"
+      },
+      {
+        "name": "case-types",
+        "file": "case-types.ts",
+        "schemas": 5,
+        "complexity": "moderate"
       },
       {
         "name": "report-settings",
@@ -5273,6 +5289,38 @@
         "name": "caseSettings.delete",
         "method": "POST",
         "description": "Delete caseSettings"
+      }
+    ],
+    "caseTypes": [
+      {
+        "name": "caseTypes.list",
+        "method": "GET",
+        "description": "List caseTypess with pagination"
+      },
+      {
+        "name": "caseTypes.listActive",
+        "method": "GET",
+        "description": "List active"
+      },
+      {
+        "name": "caseTypes.create",
+        "method": "POST",
+        "description": "Create new caseTypes"
+      },
+      {
+        "name": "caseTypes.update",
+        "method": "POST",
+        "description": "Update caseTypes"
+      },
+      {
+        "name": "caseTypes.delete",
+        "method": "POST",
+        "description": "Delete caseTypes"
+      },
+      {
+        "name": "caseTypes.setDefault",
+        "method": "POST",
+        "description": "Set default"
       }
     ],
     "cases": [

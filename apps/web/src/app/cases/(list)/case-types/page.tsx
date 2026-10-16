@@ -1,20 +1,19 @@
-'use client';
+/**
+ * Case Types Page — PG-204 (served at /cases/case-types by the (list) route group).
+ *
+ * Server Component shell — streams the skeleton immediately, then hydrates
+ * CaseTypesContent (client component) via Suspense. Matches the PG-197
+ * territory-mapping pattern.
+ */
+
+import { Suspense } from 'react';
+import CaseTypesContent from './CaseTypesContent';
+import { CaseTypesLoading } from './CaseTypesLoading';
 
 export default function CaseTypesPage() {
   return (
-    <div className="flex flex-1 flex-col p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Case Types</h1>
-      <p className="text-muted-foreground mt-1">Manage case categories and SLA assignments.</p>
-      <div className="mt-8 flex flex-1 items-center justify-center">
-        <div className="text-center">
-          <span className="material-symbols-outlined text-5xl text-muted-foreground/40">
-            category
-          </span>
-          <p className="mt-4 text-sm text-muted-foreground">
-            Case types configuration coming soon.
-          </p>
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={<CaseTypesLoading />}>
+      <CaseTypesContent />
+    </Suspense>
   );
 }

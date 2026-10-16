@@ -17,6 +17,11 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  buildAlertRulePayload,
+  createApiClient,
+  querySeriesCount,
+} from '../lib/grafana-provisioning.mjs';
 
 const RULES_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -32,57 +37,15 @@ const RULES_PATH = join(
 
 /** Grafana alert rule (provisioning API shape) for one entry of the rules file. */
 export function buildRule(entry, config) {
-  return {
-    uid: entry.uid,
-    title: entry.title,
-    folderUID: config.folder.uid,
-    ruleGroup: config.group.name,
-    condition: 'C',
-    noDataState: entry.noData,
-    execErrState: 'Error',
-    for: entry.for,
-    labels: { severity: entry.severity, team: 'owner', source: 'ifc-032' },
-    annotations: { summary: entry.summary },
-    isPaused: false,
-    data: [
-      {
-        refId: 'A',
-        relativeTimeRange: { from: 900, to: 0 },
-        datasourceUid: config.datasourceUid,
-        model: {
-          refId: 'A',
-          expr: entry.expr,
-          instant: true,
-          intervalMs: 60000,
-          maxDataPoints: 43200,
-        },
-      },
-      {
-        refId: 'B',
-        datasourceUid: '__expr__',
-        model: { refId: 'B', type: 'reduce', expression: 'A', reducer: 'last' },
-      },
-      {
-        refId: 'C',
-        datasourceUid: '__expr__',
-        model: {
-          refId: 'C',
-          type: 'threshold',
-          expression: 'B',
-          conditions: [{ evaluator: { type: entry.operator, params: [entry.threshold] } }],
-        },
-      },
-    ],
-  };
+  return buildAlertRulePayload(entry, config, 'ifc-032');
 }
 
-// Every uid/name below is interpolated straight into a URL path segment in
-// client() below (e.g. `/api/v1/provisioning/alert-rules/${entry.uid}`), so
-// validateConfig restricts them to this charset before any of them reaches
-// an API call: no `/`, `?`, `#`, `..` or whitespace can turn one path segment
-// into two, redirect the request to a different endpoint, or smuggle a query
-// string. The committed alert-rules.json is reviewed source, not runtime
-// input, but the check costs nothing and holds even if that ever changes.
+// Every uid/name below is interpolated straight into a URL path segment of a
+// provisioning API call (see run()), so validateConfig restricts them to this
+// charset first: no slash, question mark, hash, dot-dot or whitespace can turn
+// one path segment into two, redirect the request to another endpoint, or
+// smuggle a query string. The committed alert-rules.json is reviewed source,
+// not runtime input, but the check costs nothing and holds if that changes.
 const SAFE_PATH_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
 
 function checkPathSegment(problems, label, value) {
@@ -125,44 +88,6 @@ export function validateConfig(config) {
   return problems;
 }
 
-/** Thin fetch wrapper for the provisioning API. `path` must already be built from
- * values validateConfig has checked (see SAFE_PATH_SEGMENT) — this layer only
- * adds the base URL, auth and JSON plumbing, it does not re-sanitize `path`. */
-function client(baseUrl, token, fetchImpl = fetch) {
-  return async (method, path, body) => {
-    const res = await fetchImpl(`${baseUrl.replace(/\/$/, '')}${path}`, {
-      method,
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-        // Keep the rules editable in the UI (no provenance lock).
-        'X-Disable-Provenance': 'true',
-      },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
-    const text = await res.text();
-    let json;
-    try {
-      json = text ? JSON.parse(text) : undefined;
-    } catch {
-      json = undefined;
-    }
-    return { status: res.status, json, text };
-  };
-}
-
-/** Number of live series a selector matches over the last hour, via the datasource proxy. */
-async function seriesCount(api, datasourceUid, selector) {
-  const query = encodeURIComponent(`count(last_over_time(${selector}[1h]))`);
-  const res = await api(
-    'GET',
-    `/api/datasources/proxy/uid/${datasourceUid}/api/v1/query?query=${query}`
-  );
-  if (res.status !== 200) throw new Error(`series check for ${selector}: HTTP ${res.status}`);
-  const value = res.json?.data?.result?.[0]?.value?.[1];
-  return value === undefined ? 0 : Number(value);
-}
-
 export async function run({
   env = process.env,
   argv = process.argv,
@@ -178,12 +103,12 @@ export async function run({
   if (!env.GRAFANA_URL || !env.GRAFANA_SA_TOKEN) {
     throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
   }
-  const api = client(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl);
+  const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl);
 
   // Every rule must watch metrics that exist, or it silently never fires.
   const empty = [];
   for (const entry of config.rules) {
-    const n = await seriesCount(api, config.datasourceUid, entry.selector);
+    const n = await querySeriesCount(api, config.datasourceUid, entry.selector);
     log(`series ${String(n).padStart(4)}  ${entry.uid}  ${entry.selector}`);
     if (n === 0 && entry.requireSeries !== false) empty.push(entry.uid);
   }

@@ -37,6 +37,7 @@ function makeTxMock() {
     },
     user: {
       findUnique: vi.fn(),
+      findFirst: vi.fn().mockResolvedValue({ id: AGENT_ID_1 }),
     },
   };
 }
@@ -113,6 +114,9 @@ beforeEach(() => {
   };
   (prismaMock as any).routingRule = {
     findMany: vi.fn().mockResolvedValue([]),
+  };
+  (prismaMock as any).user = {
+    findFirst: vi.fn().mockResolvedValue({ id: AGENT_ID_1 }),
   };
 
   service = new LeadRoutingService(prismaMock);
@@ -212,7 +216,7 @@ describe('Section A: Unit Tests', () => {
 
     expect(txMock.routingRule.findMany).toHaveBeenCalledWith({
       where: { tenantId: TENANT_ID, ruleType: 'LEAD', isActive: true },
-      orderBy: { priority: 'desc' },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
     expect(txMock.routingAudit.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
@@ -376,7 +380,7 @@ describe('Section A: Unit Tests', () => {
 
     expect((prismaMock as any).routingRule.findMany).toHaveBeenCalledWith({
       where: { tenantId: TENANT_ID, ruleType: 'LEAD', isActive: true },
-      orderBy: { priority: 'desc' },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
   });
 

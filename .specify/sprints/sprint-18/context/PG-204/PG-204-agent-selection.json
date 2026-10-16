@@ -1,0 +1,22 @@
+{
+  "taskId": "PG-204",
+  "selectedAgents": [
+    "Backend-Architect",
+    "Frontend-Lead",
+    "AI-Specialist",
+    "Data-Engineer",
+    "A11y-Expert"
+  ],
+  "selectionRationale": {
+    "Backend-Architect": "Keyword match: \"api\"",
+    "Frontend-Lead": "Keyword match: \"page\"",
+    "AI-Specialist": "Keyword match: \"AI\"",
+    "Data-Engineer": "Keyword match: \"prisma\"",
+    "A11y-Expert": "Path match: apps\\/web",
+    "Compliance": "Keyword match: \"legal\"",
+    "Domain-Expert": "Always included for all tasks",
+    "Test-Engineer": "Always included for all tasks"
+  },
+  "taskDomain": "cross-cutting",
+  "selectedAt": "2026-10-13T06:22:22.432Z"
+}

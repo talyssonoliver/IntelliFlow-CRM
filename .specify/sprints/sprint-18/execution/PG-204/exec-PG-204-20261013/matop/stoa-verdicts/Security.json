@@ -1,0 +1,106 @@
+{
+  "stoa": "Security",
+  "task_id": "PG-204",
+  "run_id": "exec-PG-204-20261013",
+  "verdict": "WARN",
+  "produced_by": "stoa-security sub-agent",
+  "produced_at": "2026-10-13T07:18:50Z",
+  "gates": [
+    {
+      "gate": "gitleaks (branch commits origin/main..HEAD)",
+      "result": "PASS",
+      "evidence": "gitleaks detect --redact --log-opts origin/main..HEAD: 33 commits scanned, no leaks found, exit 0",
+      "notes": "Repo gitleaks config applies."
+    },
+    {
+      "gate": "manual secret-shape grep of branch diff",
+      "result": "PASS",
+      "evidence": "Patterns: credentialed postgres URL, Bearer, ghp_, sk-, AKIA, ntn_, eyJ, private-key block, supabase.co, neon.tech over added lines (lighthouse/coverage artifacts excluded). One hit for 'sk-' is a substring of 'task-' in a Sprint_plan.csv row (false positive).",
+      "notes": "No secret values printed."
+    },
+    {
+      "gate": "pnpm audit --prod --audit-level=high",
+      "result": "PASS",
+      "evidence": "exit 0; 1 vulnerability found, moderate only; 0 high/critical",
+      "notes": "See finding F1. Branch changes no package.json or lockfile."
+    },
+    {
+      "gate": "SAST-style review: RBAC",
+      "result": "PASS",
+      "evidence": "case-types.router.ts: create/update/delete/setDefault all call assertCaseTypeAdmin (fail-closed isCaseTypeAdminRole; null role denied) after assertTenantContext; every procedure behind moduleTenantProcedure('LEGAL'); list/listActive read-only for LEGAL users; canEdit derived server-side.",
+      "notes": ""
+    },
+    {
+      "gate": "SAST-style review: tenant isolation",
+      "result": "PASS",
+      "evidence": "Every caseType/checklist/case query in case-types.router.ts and cases.router.ts create+getById carries explicit tenantId (find, updateMany, deleteMany, count, groupBy, findFirstOrThrow). Foreign case type, client and assignee in cases.create return NOT_FOUND via tenant-scoped lookups. Prisma data built field by field (no input spread). Migration: composite FKs (tenantId, caseTypeId) on checklist items and cases (validated), RLS enabled with tenant_isolation policies (USING + WITH CHECK) on both new tables.",
+      "notes": "RLS is not FORCEd (project-wide, documented in the migration); the app-level tenantId filter is the primary boundary and is present everywhere."
+    },
+    {
+      "gate": "SAST-style review: input validation",
+      "result": "PASS",
+      "evidence": "All mutations use Zod from @intelliflow/validators: trimmed length-bounded name, category and checklist titles; colorToken enum; SLA int 1..3650; requiredFields enum array max 6 with duplicate refine; checklist max from domain limits; ids via idSchema. DB CHECK constraints mirror the limits. Per-tenant type cap enforced.",
+      "notes": "Cap check (count then create) is a benign race; worst case slightly above the limit, no security impact."
+    },
+    {
+      "gate": "SAST-style review: error leakage and injection",
+      "result": "PASS",
+      "evidence": "Errors are generic (Case type not found, Client not found, conflict/precondition text). Only the caller's own submitted name is echoed in the CONFLICT message, as plain text. Unknown Prisma errors are rethrown to the tRPC formatter, not stringified. No raw SQL in router code. Web: grep for dangerouslySetInnerHTML, innerHTML, eval, console in case-types and new pages/components found nothing.",
+      "notes": "Migration is DDL only, no dynamic SQL, no data mutation (Class A per ADR-069)."
+    },
+    {
+      "gate": "OWASP Top 10 mapping",
+      "result": "PASS",
+      "evidence": "A01 access control: RBAC + tenant checks above. A03 injection: Prisma parameterised, Zod bounded. A04 insecure design: ADR-076; default and in-use guards enforced inside the write predicate (TOCTOU-safe updateMany/deleteMany) plus FK backstop. A05 misconfiguration: RLS + CHECKs. A09 info leak: generic errors.",
+      "notes": ""
+    },
+    {
+      "gate": "snyk",
+      "result": "UNAVAILABLE",
+      "evidence": "not run (SNYK_TOKEN not available to this STOA)",
+      "notes": "No result, not a pass."
+    },
+    {
+      "gate": "semgrep",
+      "result": "UNAVAILABLE",
+      "evidence": "not run (infrastructure not ready; heavy processes not permitted on this host right now)",
+      "notes": "No result, not a pass."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "MEDIUM",
+      "scope": "pre-existing, not PG-204 code",
+      "title": "sprintf-js <=1.1.3 DoS via unbounded precision (GHSA-hp3w-g68c-fv3c, CVE-2026-97058, CVSS 5.3)",
+      "location": "apps__ai-worker > mammoth > argparse > sprintf-js (transitive; outside the PG-204 diff)",
+      "status": "No patched version exists (patched_versions <0.0.0)",
+      "action": "Not fixable by this task. Strict stoa-security policy (any severity = FAIL) needs a fix or a recorded accepted risk (ADR / debt ledger). Recommend a separate tracked item rather than blocking PG-204.",
+      "tracking": "gh issue #876"
+    },
+    {
+      "id": "F2",
+      "severity": "INFO",
+      "scope": "pre-existing, tracked",
+      "title": "cases.update foreign-tenant assignedTo and removeTask without case check",
+      "location": "apps/api/src/modules/legal/cases.router.ts (update, removeTask)",
+      "status": "gh issue #880 OPEN; not PG-204 code (exploration E27). PG-204 only changed the tasks orderBy in update.",
+      "action": "None for PG-204; keep #880 open."
+    },
+    {
+      "id": "F3",
+      "severity": "INFO",
+      "title": "RLS not FORCEd on new tables",
+      "location": "migration 20261013120000_case_types",
+      "status": "Project-wide convention, documented in the migration; tenantId filter present on every query.",
+      "action": "None."
+    }
+  ],
+  "summary": "No secrets (gitleaks clean on 33 commits; grep clean). RBAC, tenant isolation, validation and error hygiene in the case types router, cases.create/getById, validators and migration all pass review. One moderate, unpatchable transitive advisory (sprintf-js via ai-worker/mammoth) exists on main and is untouched by this branch; pnpm audit at high level exits 0. Verdict is WARN only because strict policy has no clean pass with an open finding: the parent should either record F1 as accepted risk and treat this STOA as PASS, or treat it as FAIL under the strict reading. Snyk and semgrep were not run.",
+  "addendum": {
+    "head": "d7d91e5e8",
+    "checked_at": "2026-10-13T08:07:49Z",
+    "result": "PASS",
+    "notes": "Web-only commit (className changes on error text, swatch outline, one test, rename of superseded verdict file). Secret-shape grep of the diff: 0 hits. gitleaks HEAD~1..HEAD: no leaks. No router, validator, migration, dependency or lockfile changes; no new HTML injection sinks or links. F1 (sprintf-js) is tracked as gh issue #876 (open), recorded outside PG-204; it is a tracking issue, not an ADR acceptance, so verdict stays WARN."
+  }
+}

@@ -1,72 +1,435 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-204",
-  "run_id": "eng-ops-002-r16-pg-204-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "exec-PG-204-20261013",
+  "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-204 exec lane, branch agent/PG-204-case-types (renamed from feat/pg-204-case-types)",
+  "attestation_timestamp": "2026-10-13T14:24:16.629Z",
+  "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 68,
+    "validations_passed": 14,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "gates_passed": 20,
+    "gates_failed": 4,
+    "kpis_met": 3,
+    "kpis_missed": 1,
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/cases/(list)/case-types/page.tsx": "f4d255a6c3d3910350f0444b17f7e7d6cca4cfb8c3e24ddb7adb41d094be4254"
+    "apps/web/src/app/cases/(list)/case-types/page.tsx": "3ef6c0968c435574fe14224cecca7cb306646833ca685c96c09e7d3aab36cb4c",
+    "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx": "4871efd2b3d45af3e3d851a69a780d31137be92d0183f20164857c50a94ad8b6",
+    "apps/api/src/modules/legal/case-types.router.ts": "b5865324f8a16a2183fb9e86fcce6e18d56d66adbd08d953d8065628d5db83a4",
+    "packages/validators/src/case-types.ts": "2474203195a1de9bb6a2cde2c6e78eeb9b905037d38da446dd1860671741a518",
+    "packages/domain/src/legal/cases/case-type-defaults.ts": "2238d54af413849d2f90ede8ff5ea5d0f0d61185ce7e0d18db4a177e30560cfb",
+    "packages/db/prisma/migrations/20261013120000_case_types/migration.sql": "4f63282f4fc14056abd4450c07468410fa35fd966560eb90da00fd114db2e577",
+    "apps/api/src/lib/case-sla-deadline.ts": "9e0a66c250733e137ba4819739466a06aabcb9ff278e397cc0369fe81faa6b43",
+    "apps/api/src/lib/case-task-order.ts": "a6b77a25665795a6ca4302f920ec2d0fefa3ccd1358e11bf426444bbf294b045",
+    "apps/web/src/app/cases/(list)/case-types/CaseTypesLoading.tsx": "4c41c3657f1f7fed641ba15ef3cc2f9fb329c8be20f24d03a693a8916faeb8f1",
+    "apps/web/src/app/cases/(list)/case-types/components/CaseTypeList.tsx": "c17529fc27bd833dfb0287fa0d379dc8dd465034d283deaf6d20690fa0b2e24d",
+    "apps/web/src/app/cases/(list)/case-types/components/CaseTypeDialog.tsx": "63242a7cf5082aedd206d1ff37964925e86b2f9d053455f4644fcde5193f4eb5",
+    "apps/web/src/app/cases/(list)/case-types/components/ResolutionChecklistEditor.tsx": "762fe249c98856e9387bdb15a440c2159909fc40f9e48d965b3732be73d22db6",
+    "apps/web/src/app/cases/(list)/case-types/components/DeleteCaseTypeDialog.tsx": "749381d33fd2397be9637813daab01078101121134a5afb93e895b51fe3c270a",
+    "apps/web/src/components/cases/case-type-colors.ts": "b8364a185f0b21993a7a471156513c8dda12525548a52bfae25001a87fa0e12c",
+    "apps/web/src/components/cases/case-type-labels.ts": "792680ec03880143037a0092e2c2729aa9d9a6f74f92b184692e2188222eec98",
+    "packages/domain/src/index.ts": "ec192653fabc2aefcf2b28d7549d27458ed58943ea7793e9500df9a145240590",
+    "packages/db/src/index.ts": "e04e50fb5bf19a305c90da67a7fa64220863b75eefe9d011abd61e1a02f0455a",
+    "packages/validators/src/case-settings.ts": "f8ce00be61f49a8a062545020b2848d1a6c7740751354635868fb864e127240b",
+    "packages/validators/src/case.ts": "eded09b62d96d48fb5593f40459bfa5cd47e6581135db65449a9f95a49f7dfc1",
+    "packages/validators/src/index.ts": "870b4033c7f1b3f81282160a2ec18be3c46381d2fa9dbb71f41a64e2e1e1a9b1",
+    "apps/api/src/router.ts": "290b2ff70428ec8e28b1e5d1643315d4b103eda4c3516047fae0b672e03d25b1",
+    "apps/api/src/modules/legal/cases.router.ts": "3c5a11cc44207a22701714aded2af52f26d98909d98909521adfb5b80ea9ef36",
+    "apps/web/src/components/cases/CaseForm.tsx": "f1e126cfb2ca7c915739d1d3846ef70edc7a09ebef61183b7bc6827b27dc5ca9",
+    "apps/web/src/app/cases/(list)/new/page.tsx": "d47f1a38f3de48d5a7693a0e441e3dc5c686d444fde3ac646bd48fa15ef79c2e",
+    "apps/web/src/components/cases/CaseDetail.tsx": "a2bd60eaf1661534b83f3dcc09d771e1a63a53482959abe92140326ea0855ddc",
+    "apps/web/src/components/cases/types.ts": "db53d64bab335abfe7ed2276dfb27c43198ebc3a219e70c387de5bb3c2682076",
+    "packages/domain/src/legal/cases/__tests__/case-type-defaults.test.ts": "b889a751801c093b15547f11df26197c7fec06cdfef5b92789d7678d42163f6c",
+    "packages/validators/src/__tests__/case-types.test.ts": "e18d5f6c99cb1c698b2ee88c4bfcc70190e2737a5043821537d81e7aacbec0d2",
+    "apps/api/src/modules/legal/__tests__/case-types.router.test.ts": "3431f1819ef93b313e0637bba174b35d58eb4ab9d19ff3c79cfbd9d1a9ef66de",
+    "apps/api/src/modules/legal/__tests__/cases.router.case-types.test.ts": "44cf1e91ac04ec2d032ada7cd43d79ba6982d80c2c9b29781ff9f42dd10b8d42",
+    "apps/api/src/lib/__tests__/case-sla-deadline.test.ts": "9ecb926d203847dbab14ca9f2a62f3c9906ef27e7fe450f2da59c5dd0b619974",
+    "tests/integration/case-types.test.ts": "ba545c6a499a2b7c77f73f5ecd49ceedd928d4848f52b84d04630ff7a618583a",
+    "apps/web/src/app/cases/(list)/case-types/__tests__/page.test.tsx": "feb49e0b4e66811eed8145d235b80a7aef648edb451ac7da6f4483973b4b8839",
+    "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesContent.test.tsx": "e1d95d9426307c042dd830b235945141c2707275abd9e1184b71dfc5e553bcc4",
+    "apps/web/src/app/cases/(list)/case-types/__tests__/CaseTypesLoading.test.tsx": "781072757c782aeed20ba8227f7b425a67869fa2a4e83e762ae113d61ee8f12b",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeList.test.tsx": "657ee54de6b328485d89ba83f5c7f6697bfd0322e7226fe2343ffd272a56f447",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/CaseTypeDialog.test.tsx": "d365bcb50b978f6af89a49350030b39a14c4995393ea791834249b5f36102332",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/ResolutionChecklistEditor.test.tsx": "3143adb14a91573f9912896992e722f57c1f4f031917f338ef1cda64158758f9",
+    "apps/web/src/app/cases/(list)/case-types/components/__tests__/DeleteCaseTypeDialog.test.tsx": "6ac8e4dfee31b3d631ce8edd683ab90c35d5bfbfcbf8834173beab79977ad64a",
+    "apps/web/src/components/cases/__tests__/case-type-helpers.test.ts": "fdea1a2d168f7e7d089aa23110958a1f7c71f9882aaad2c3e17879916ae82a90",
+    "apps/web/src/components/cases/__tests__/CaseForm.test.tsx": "eff710bfcae4ab95ccf38a555a94ea8fbdd34c8b3776c5b92f08e56407fc2454",
+    "apps/web/src/app/cases/(list)/new/__tests__/page.test.tsx": "2fd52683777c1b3903e7e352a807d4ff06ac0eb6e8532066378ba33438ecf63a",
+    "packages/validators/src/__tests__/case.test.ts": "81f9d5fa5507a00373630d45d27a576613b86c46c6ed70a6bebaa9c2420e1b7c",
+    "packages/validators/src/__tests__/case-settings.test.ts": "d1759a38763d24845bc5d7a8f828216e1e731fe048face7da2a48af2d2e959de",
+    "packages/validators/__tests__/enum-consistency.spec.ts": "f166d47be40736f8a97bc58b4d36929bcbb68b1dced74534d8f5341f03dc3ea7",
+    "apps/api/src/modules/legal/__tests__/legal-module-entitlement.test.ts": "3e0770bb81203b26f3bbe5cc01c9f511c7289f01e6d4c8b714dc1b14269f11be",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "98d6edde111d03f69536f5eeab85788f7fabbb6949a5388a9c0542941a5a8fdc",
+    "packages/adapters/src/repositories/__tests__/PrismaCaseRepository.test.ts": "7c8357aa8b67184979654db629f5a92d0898c0adf960cd8e8f60c924b6d037b1",
+    "apps/web/src/components/cases/__tests__/CaseDetail.test.tsx": "0d0b476c400d64b05869ebe4a441a75181377ee3f28bd70f5edcb33ab5e34aea",
+    "apps/api/src/modules/legal/__tests__/cases.router.test.ts": "77ba3f35b6072b5141f2a9f051b055e703298fc9f0d556ac04900bbe4f2b63db",
+    "docs/architecture/adr/ADR-076-case-types-applied-at-case-creation.md": "99d7c38f51d0341e6cf6bed098865839c655d74418fdc41ec52931383de04e14",
+    "docs/architecture/adr/README.md": "7bf5da688bf64a72f22496aa29eddfb48118d11391b8cea10cef286be0f1e76b",
+    "docs/planning/prd-module-settings.md": "f07b46a5b3b28fe14da9bed47b6b8d222750f32732104a3886b9dd5a709a2717",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "17acfcd6d7c92243eebaadc88e4ab01a7705f158f7cd55a9907f15947ad8f34b",
+    "docs/design/page-registry.md": "156730f0d1eba735fc2565c42046aa7656d0755318f1c5b12aa3ed5f62a41d20",
+    "docs/design/sitemap.md": "594bf7c7860febc769ab4bc1353db8bd428b577409921d208ea218ccf92eced5",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "d31110cfde382a5ddd2db5d1070bf28fb965d94c77c2b3273dcb9f0eee2b60b9",
+    "docs/design/navigation-reachability-audit.md": "b5ec907f5640b9d3542a9af6ed4475f90d9411af40f67b2de77007e732d3da73",
+    "docs/design/ui-flow-mapping.md": "cb31333673347c6bb53b6a3385c7742d02f6a2cd37e1385423f59c5c89d24fd0",
+    "docs/design/information-architecture.md": "77e74a173245269d4bb144597e5e1c81f1100c0e65622279efc97269365ddeed",
+    "artifacts/metrics/debt-ledger.yaml": "3f510fb658af41df0f3ec190cd6d0b1f66bd59391df6c01d7de1ab5a10e07e73",
+    ".specify/sprints/sprint-18/findings/PG-204-findings.md": "f5f19b1d972984badc5814f7074bae204b5a437acb8821c90b675f4139a0d84f",
+    ".specify/sprints/sprint-18/attestations/PG-204/task-tracking.json": "945e0320ed40f9352fcd6bf6035313610013cfd8dbc58f6a2ff844ca01f731fa",
+    "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "1323e9c12c0c19b7a17de176a1f5fba44ce42532193d051780f8c769c6bd4c23",
+    "artifacts/lighthouse/PG-204/waiver-evidence.md": "2e8431f24605d08f4d4905da0ec33bf53795de3390c650cd9906acef883a171c",
+    "artifacts/lighthouse/PG-204/cases-case-types-r2.report.json": "609469b1cbfac7756c773154438932001850b44f4a49f0a524c44aaf54e50ee4",
+    "artifacts/lighthouse/PG-204/cases-new-r2.report.json": "3c498d709d5009d2bdb87dde889a0a19fa6d98fac9cd7443ca07a929fa3ab2c6",
+    ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json": "b01595452933787bbb85553f70eaac13ea1b9c2ce0a8b60cd159b0c22cfb9d3c"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript - tsc --noEmit on domain, validators, adapters, api, web: exit 0 [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-09-typecheck.log]",
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/adapters typecheck && pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T14:09:15.510Z"
+    },
+    {
+      "name": "TypeScript (root baseline) - turbo typecheck, 40/40 tasks (all turbo cache hits): exit 0; its lint:sonar:guard step skipped itself in local mode (no uncommitted TS files) - see the sonar-guard gate [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/turbo-typecheck.log]",
+      "command": "pnpm run typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T07:03:30.962Z"
+    },
+    {
+      "name": "Tests: domain resolver - case-type-defaults: 25 tests passed in 1 files [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-01-domain-new.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --dir packages/domain exec vitest run src/legal/cases/__tests__/case-type-defaults.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T06:39:57.997Z"
+    },
+    {
+      "name": "Tests: domain full - domain: 2957 tests passed in 103 files [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-02-domain-full.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/domain test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T06:40:21.159Z"
+    },
+    {
+      "name": "Tests: validators full - validators: 2563 tests passed in 53 files [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-03-validators-full.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/validators test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T13:53:14.574Z"
+    },
+    {
+      "name": "Tests: adapters full - adapters: 2967 tests passed in 109 files [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-04-adapters-full.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/adapters test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T06:41:00.234Z"
+    },
+    {
+      "name": "Tests: api full (case-creation regression suites included) - api: 7308 tests passed in 292 files (18 skipped) [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-06-api-full.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T13:58:27.867Z"
+    },
+    {
+      "name": "Tests: integration case-types (local test DB, Node 22) - integration: 21 tests passed in 1 files [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-07-integration-db.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/case-types.test.ts --reporter=verbose",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T14:23:07.223Z"
+    },
+    {
+      "name": "Tests: web full - web: 12682 tests passed in 797 files [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-08-web-full.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/web exec vitest run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T14:08:03.626Z"
+    },
+    {
+      "name": "Lint - eslint domain, validators, api, web: exit 0 (the matrix row lint:sonar:guard step skipped itself in local mode; the CI-mode sonar-guard gate covers the branch diff) [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-10-lint.log]",
+      "command": "pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/validators lint && pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint && pnpm run lint:sonar:guard",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T14:10:07.511Z"
+    },
+    {
+      "name": "Lint (root baseline) - turbo lint: exit 0 (cache hits) [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/turbo-lint.log]",
+      "command": "pnpm run lint",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T07:03:33.093Z"
+    },
+    {
+      "name": "Build - domain, validators, db, api builds + next build (224 pages; /cases/case-types and /cases/new in the route table): exit 0 [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-11-build.log]",
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/db build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/api build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T14:16:52.852Z"
+    },
+    {
+      "name": "DB build + typecheck - db build + typecheck: exit 0 [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-05-db.log]",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm --filter @intelliflow/db build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm --filter @intelliflow/db typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T13:54:01.302Z"
+    },
+    {
+      "name": "Diff coverage - TOTAL new_coverage 97.8%  (583/596) vs floor 80% [.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-13-diff-coverage.log]",
+      "command": "node scripts/check-diff-coverage.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-13T14:22:36.959Z"
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
+      "gate_id": "spec-exploration (Phase 0.75)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/context/PG-204/PG-204-spec-exploration.md: 8 Explore sub-agents, run 2026-10-13 06:12:43Z-06:17:16Z (skipped in the original session; run after the runner audit)"
+    },
+    {
+      "gate_id": "spec-consensus (re-run on the final spec)",
+      "passed": true,
+      "log_path": "PG-204-spec.md Agent Sign-offs: 8/8 APPROVED in 1 round, verdicts back by 2026-10-13T06:20:57Z (original session had 3 verdicts on a draft, not 8/8)"
+    },
+    {
+      "gate_id": "hydrate-context",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/context/PG-204/hydrated-context.json written by tools/scripts/lib/stoa/context-hydration.ts at 2026-10-13T06:22:17.459Z; its pattern scan returned 0 patterns on Windows (gh #881)"
+    },
+    {
+      "gate_id": "context-ack",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json: 15 files hashed at 2026-10-13T00:22:19.430Z (hash time; per-file read times were not recorded)"
+    },
+    {
+      "gate_id": "plan-reviewer-marker",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-plan-reviewer.log",
+      "timestamp": "2026-10-13T07:03:33.595Z",
+      "exit_code": 0
+    },
+    {
+      "gate_id": "exec-readiness",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-exec-readiness.log",
+      "timestamp": "2026-10-13T07:03:33.429Z",
+      "exit_code": 0
+    },
+    {
+      "gate_id": "nav-wiring",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-nav-wiring.log",
+      "timestamp": "2026-10-13T07:03:33.734Z",
+      "exit_code": 0
+    },
+    {
+      "gate_id": "page-doc-cochange",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-page-doc-cochange.log",
+      "timestamp": "2026-10-13T07:03:33.882Z",
+      "exit_code": 0
+    },
+    {
+      "gate_id": "validation-matrix (plan, 13 rows + 2 baselines + 4 preflights)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/validation-matrix.json (rows 03, 05-13 re-run 13:53-14:23Z at 653e23641/731a83a99 after the reboot, Docker healthy, rows 05-07 with --exclusive intelliflow-db; rows 01, 02, 04 at 6bf14467f stand because domain/adapters are unchanged since; earlier runs in gates/run1-at-6bf14467f/ and gates/run2-at-d7d91e5e8/)"
+    },
+    {
+      "gate_id": "sonar-guard (branch diff, CI mode)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/sonar-guard-branch-diff.log: 53 changed TS/TSX files + web a11y guard on 26 files, exit 0, CI mode at 731a83a99"
+    },
+    {
+      "gate_id": "gate-3c knip",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/gate-3c-knip.log: 12 unused files, all pre-existing (INFO); none of the 29 TS/TSX files PG-204 created is flagged"
+    },
+    {
+      "gate_id": "class-a migrate deploy (fresh DB)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/class-a-migrate-deploy-proof.log: prisma migrate deploy of all 68 migrations into a scratch DB (CI Supabase bootstrap), case_types migration finished, objects + RLS verified, scratch DB dropped"
+    },
+    {
+      "gate_id": "stoa-foundation",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/stoa-verdicts/Foundation.json (PASS, sub-agent, 2026-10-13T07:20:08Z)"
+    },
+    {
+      "gate_id": "stoa-domain",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/stoa-verdicts/Domain.json (PASS, sub-agent, 2026-10-13T07:17:49Z; addendum_2 PASS at 731a83a99 for the post-audit contract changes)"
+    },
+    {
+      "gate_id": "stoa-quality",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/stoa-verdicts/Quality.json (PASS, sub-agent, 2026-10-13T07:17:50Z)"
+    },
+    {
+      "gate_id": "stoa-security",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-204 requires page.tsx (exists), CaseTypesContent.tsx (MISSING), apps/api/src/modules/case/case-types.router.ts (MISSING), packages/validators/src/case-types.ts (MISSING), context_ack.json (MISSING). Broad grep for case-types router/validator logic across apps/api and packages/validators returned zero hits."
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/stoa-verdicts/Security.json (WARN: pre-existing moderate sprintf-js advisory via apps/ai-worker, gh #876; PG-204 code clean, gitleaks clean)"
+    },
+    {
+      "gate_id": "stoa-aggregate",
+      "passed": false,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/stoa-aggregate.json: WARN"
+    },
+    {
+      "gate_id": "a11y-expert WCAG 2.1 AA (contrast at exec)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/a11y-contrast-review.json (FAIL) -> fixed in d7d91e5e8 -> a11y-contrast-review-recheck.json (PASS WITH MINOR); remaining minors gh #882, app-wide token gh #885"
+    },
+    {
+      "gate_id": "codex-review",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/codex-review-653e23641.log: reviewer codex, Verdict PASS, 0 findings. Iterated from FAIL at a31603d21, 13cf1f0db (Claude fallback), 07b2f9044 and the staged tree; every finding fixed test-first, no waivers"
+    },
+    {
+      "gate_id": "code-review skill (/code-review full)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/code-review-summary.json (run 20261013-090440-0e4d60d4 at d7d91e5e8: typecheck/lint 0 issues, architecture 40/40; complexity and circular steps produced no evidence, gh #888; one timing-flaky root test, passes in isolation)"
+    },
+    {
+      "gate_id": "sonarqube-fix skill",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/sonarcloud-main-issues-on-changed-files.json: 0 new findings on changed lines (4 pre-existing MINOR issues on unchanged lines of 2 touched files); no PR analysis exists for an unpushed branch"
+    },
+    {
+      "gate_id": "secret-scan",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/stoa-verdicts/Security.json: gitleaks origin/main..HEAD no leaks; secret-shape grep of the diff clean"
+    },
+    {
+      "gate_id": "lighthouse-gte-90 (Gate 14)",
+      "passed": false,
+      "log_path": "NEEDS_HUMAN - .specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/check-lighthouse-evidence.log exit 1 and check-lighthouse-waiver.log exit 1 (expected per runner ruling 2): Path A evidence artifacts/lighthouse/PG-204/waiver-evidence.md (auth-gated routes redirect to /login); Path C needs a production test admin, which agents never create; no lighthouse_waiver_approved_by"
+    },
+    {
+      "gate_id": "worktree-landed (Gate 4b)",
+      "passed": false,
+      "log_path": "NEEDS_HUMAN (runner-owned) - .specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/check-worktree-landed*.log: BLOCK: [gate-4b] Uncommitted edits present. Commit your work first. See docs/runbooks/gate-4b-recovery.md; PASS: [gate-4b] Branch name \"agent/PG-204-case-types\" matches agent/<TASK_ID> pattern.; PASS: [gate-4b] Branch is 37 commit(s) ahead of origin/main.; BLOCK: [gate-4b] Branch not yet pushed. Run: `git push -u origin agent/PG-204-case-types --force-with-lease`"
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Domain resolver coverage (packages/domain/src/legal/cases/case-type-defaults.ts)",
+      "target": ">= 95%",
+      "actual": "Statements 100% (38/38), Branches 100% (26/26), Functions 100% (12/12), Lines 100% (32/32) - 25 tests, measured 2026-10-13T06:13Z through the slot wrapper (.specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/domain-resolver-coverage.log)",
+      "met": true
+    },
+    {
+      "kpi": "Diff coverage on changed lines (Sonar new_coverage mirror)",
+      "target": ">= 80%",
+      "actual": "TOTAL 97.8%  (583/596 lines + branch conditions) at 731a83a99; lowest file DeleteCaseTypeDialog.tsx 75.0% (3/4: the onOpenChange(true) arm, unreachable without a Radix Trigger)",
+      "met": true
+    },
+    {
+      "kpi": "Full suites of touched packages",
+      "target": "all green",
+      "actual": "Tests: domain resolver - case-type-defaults: 25 tests passed in 1 files; Tests: domain full - domain: 2957 tests passed in 103 files; Tests: validators full - validators: 2563 tests passed in 53 files; Tests: adapters full - adapters: 2967 tests passed in 109 files; Tests: api full (case-creation regression suites included) - api: 7308 tests passed in 292 files (18 skipped); Tests: integration case-types (local test DB, Node 22) - integration: 21 tests passed in 1 files; Tests: web full - web: 12682 tests passed in 797 files",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse (performance/accessibility) on /cases/case-types and /cases/new",
+      "target": ">= 90",
+      "actual": "open gate: Path A only reaches the /login redirect (see artifacts/lighthouse/PG-204/waiver-evidence.md)",
+      "met": false
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-190"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /cases/case-types renders",
+      "criterion": "Case types at /cases/case-types (category, default priority, default SLA, required fields, resolution workflow) - owner ruling Q1=A/Q2=Yes",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "case-types.router.ts + CaseTypesContent.tsx; cases.create applies type then PG-190 defaults (resolveCaseCreateDefaults); checklist seeded as CaseTasks"
     },
     {
-      "criterion": "Taxonomy: category, default priority, default SLA, required fields, resolution workflow implemented",
-      "met": false,
-      "evidence": "page.tsx (20 lines) is a static placeholder ('Case types configuration coming soon.'). No form, no data fetch, no case-type model."
+      "criterion": "PageHeader + bento grid",
+      "met": true,
+      "evidence": "CaseTypesContent.tsx (grid-cols-12, col-span-8/4)"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "canonical EmptyState (entity + phase=passive)",
+      "met": true,
+      "evidence": "CaseTypeList.tsx EmptyState entity=\"cases\" variant=\"folder\" phase=\"passive\""
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "system-compliant CTAs",
+      "met": true,
+      "evidence": "New Case Type size=\"sm\" in SectionHeader action; Add Step size=\"sm\" right-aligned"
+    },
+    {
+      "criterion": "TagsTab-style list via forwardRef",
+      "met": true,
+      "evidence": "CaseTypeList forwardRef + useImperativeHandle({ openCreate }); CaseTypeList.test.tsx"
+    },
+    {
+      "criterion": "$transaction on all destructive writes",
+      "met": true,
+      "evidence": "create/update/delete/setDefault in $transaction (case-types.router.test.ts)"
+    },
+    {
+      "criterion": "no skipDuplicates",
+      "met": true,
+      "evidence": "test asserts createMany has no skipDuplicates"
+    },
+    {
+      "criterion": "Zod superRefine for duplicate type names",
+      "met": true,
+      "evidence": "caseTypeNameSchema superRefine + findDuplicateCaseTypeName (case-types.test.ts); DB lower(name) unique index"
+    },
+    {
+      "criterion": "colorToken CHECK constraint",
+      "met": true,
+      "evidence": "case_types_colorToken_check (integration test rejects neon)"
+    },
+    {
+      "criterion": "AI defaults FALSE",
+      "met": true,
+      "evidence": "N/A - no AI columns added"
+    },
+    {
+      "criterion": "every Boolean toggle wired or declared",
+      "met": true,
+      "evidence": "isActive (listActive + create rejects inactive), isDefault (New Case preselect) - category 1"
+    },
+    {
+      "criterion": "cross-tenant negative test",
+      "met": true,
+      "evidence": "router NOT_FOUND tests per mutation; cases.create foreign type/client/assignee; DB composite FK rejects a cross-tenant link (integration)"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "NEEDS_HUMAN - artifacts/lighthouse/PG-204/waiver-evidence.md (Path A reaches only the /login redirect; no authenticated run possible without production users)"
+    },
+    {
+      "criterion": "verified by pnpm test",
+      "met": true,
+      "evidence": "full suites of every touched package green (validation_results)"
     }
   ],
-  "dependencies_verified": [],
+  "nav_wiring_confirmed": true,
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-204-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-204-plan.md",
+  "spec_session_consensus": "8/8 APPROVED in 1 round on the final amended spec (/spec-consensus re-run 2026-10-13, verdicts back by 06:20:57Z). The original session claimed 8/8 but had 3 APPROVE WITH MODIFICATIONS verdicts on a draft; corrected. Owner ruling Q1=A/Q2=Yes recorded.",
+  "plan_reviewer_verdict": "APPROVED_WITH_CHANGES",
+  "plan_reviewer_agent": "a66765eb167925037",
+  "plan_reviewer_marker": "<!-- plan-reviewer: subagent -->",
   "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "os": "Windows 11",
+    "node_version": "v25.2.1 host default for non-DB gates; v22.14.0 for the DB-backed integration test, coverage and the migrate-deploy proof",
+    "git_commit": "731a83a999d6fadd1514f430b978f56d6c8467a3",
+    "branch": "agent/PG-204-case-types"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 20-line 'coming soon' placeholder page.tsx. Its content was originally authored 2026-03-15 in commit 463445d54eea1901a0980ae03c637b9b9521e65b ('feat(web): add case, task, analytics, document, and agent-approval subpages') at path apps/web/src/app/cases/case-types/page.tsx, then moved unchanged (git-detected 100% rename, R100) into the current apps/web/src/app/cases/(list)/case-types/page.tsx path by an unrelated commit fa1dba47c104b0df15d29509b952ee6edd6f53a6 ('fix(security): upgrade next to 16.2.3...', 2026-04-20) during a broader Next.js route-group reorganization — confirmed by diffing that commit and finding an R100 (pure rename, zero content change) entry for this exact file. Neither commit added any feature logic. Missing per the CSV's own ARTIFACT/DoD list: CaseTypesContent.tsx, case-types.router.ts, case-types validators, context_ack.json — none exist anywhere under any name. environment.git_commit below cites the original content-authoring commit (2026-03-15), not the later path-move commit, since that is where the substantive (lack of) work actually happened. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-204/context_ack.json — absent"
-    ]
-  }
+  "notes": "PRISMA MIGRATION: packages/db/prisma/migrations/20261013120000_case_types (Class A, additive: two new tables, nullable cases.caseTypeId and case_tasks.position, cases FK added NOT VALID then validated in the same transaction, RLS). Proven with prisma migrate deploy on a fresh DB (68 migrations). Production apply is MANUAL and must precede the code. The shared local test DB holds these objects without a _prisma_migrations record (needs migrate resolve --applied there). PLAN REVIEWER: iteration 1 REVISE (6 errors, 5 warnings, 3 info) at 00:16:11Z, iteration 2 APPROVE on re-review; APPROVED_WITH_CHANGES is the schema enum for that outcome. CORRECTIONS (runner audit 2026-10-13): /spec-exploration and /hydrate-context had not run and now have; the 8/8 consensus was false and was re-run for real; the hand-written Domain.json was replaced by real STOA sub-agent verdicts (Foundation PASS, Domain PASS, Quality PASS, Security WARN -> aggregate WARN); the TDD log now claims RED only where a failing run was observed; task-tracking timestamps corrected. POST-AUDIT CODEX FIXES (2026-10-13, test-first, failing runs logged): typed deadline kept as a calendar date and ended in the case timezone (13cf1f0db), skipped-day end of day (07b2f9044), checklist order on the case page, list deadline shown in the case zone, offsets in ms (653e23641); plan re-verify tests (731a83a99). Provenance: .specify/sprints/sprint-18/context/PG-204/PG-204-provenance.md. EXPLORATION FIXES: E10, E11, E15, E18, E19, E28, E29 and the contrast fixes (d7d91e5e8) landed test-first where a failing run was observed. TRACKED: #864 #865 #866 #867 #880 #881 #882 #885 (#853, #876 owned elsewhere). The cases module is not claimed tenant-hardened (#880). NEEDS_HUMAN: Lighthouse (no production test admin; no approver named) and Gate 4b (runner pushes). Generated evidence files under .specify/sprints/*/execution are gitignored by repo policy and live in the worktree."
 }

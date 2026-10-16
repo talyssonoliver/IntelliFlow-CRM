@@ -52,7 +52,13 @@ export function DeadlineTracker({
     setShowForm(false);
   };
 
+  // PG-204: checklist steps keep their position order (whatever their status) and come
+  // before hand-added tasks, which keep the completed-last, due-date order.
   const sortedTasks = [...tasks].sort((a, b) => {
+    const aStep = typeof a.position === 'number';
+    const bStep = typeof b.position === 'number';
+    if (aStep && bStep) return (a.position as number) - (b.position as number);
+    if (aStep !== bStep) return aStep ? -1 : 1;
     if (a.status === 'COMPLETED' && b.status !== 'COMPLETED') return 1;
     if (a.status !== 'COMPLETED' && b.status === 'COMPLETED') return -1;
     if (a.dueDate && b.dueDate)

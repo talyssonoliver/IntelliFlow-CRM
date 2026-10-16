@@ -116,6 +116,23 @@ describe('CaseDetail', () => {
     expect(screen.getByText('Test Case Detail')).toBeInTheDocument();
   });
 
+  it('shows the case type badge when the case has one (PG-204)', () => {
+    render(
+      <CaseDetail
+        {...defaultProps}
+        caseData={{ ...mockCase, caseType: { id: 'ct1', name: 'Litigation', colorToken: 'blue' } }}
+      />
+    );
+    const badge = screen.getByTestId('case-type-badge');
+    expect(badge.textContent).toBe('Case type: Litigation');
+    expect(badge.querySelector('.bg-blue-500')).not.toBeNull();
+  });
+
+  it('shows no case type badge without a type (PG-204)', () => {
+    render(<CaseDetail {...defaultProps} caseData={{ ...mockCase, caseType: null }} />);
+    expect(screen.queryByTestId('case-type-badge')).toBeNull();
+  });
+
   it('renders left sidebar with case metadata', () => {
     render(<CaseDetail {...defaultProps} />);
     expect(screen.getByText('Acme Corp')).toBeInTheDocument();

@@ -27,6 +27,7 @@ import { createTestContext, prismaMock } from '../../../test/setup';
 import { casesRouter } from '../cases.router';
 import { appointmentsRouter } from '../appointments.router';
 import { caseSettingsRouter } from '../case-settings.router';
+import { caseTypesRouter } from '../case-types.router';
 import { documentSettingsRouter } from '../document-settings.router';
 import { documentsRouter } from '../documents.router';
 
@@ -36,6 +37,7 @@ import { documentsRouter } from '../documents.router';
 const LEGAL_ROUTERS = {
   cases: casesRouter,
   caseSettings: caseSettingsRouter,
+  caseTypes: caseTypesRouter, // PG-204 (incl. listActive used by the New Case form)
   documentSettings: documentSettingsRouter,
   documents: documentsRouter, // control: was already gated
 } as const;
