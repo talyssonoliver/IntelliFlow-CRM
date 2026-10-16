@@ -1,4 +1,4 @@
--- PG-201: scheduled reports on the existing report_schedules table (ADR-075).
+-- PG-201: scheduled reports on the existing report_schedules table (ADR-078).
 --
 -- Owner ruling 2026-10-13: evolve report_schedules IN PLACE, additively. Nothing is
 -- dropped: no table and no column. Every legacy column stays for future use.
@@ -25,7 +25,7 @@
 -- template, and an active schedule must reference one). Because of this copy the
 -- migration as a whole is CLASS B (a backfill): prepared autonomously, one owner
 -- escalation before the production apply. The apply is manual, as the table owner or a
--- BYPASSRLS role (report_settings has RLS), followed by ADR-075's post-apply check.
+-- BYPASSRLS role (report_settings has RLS), followed by ADR-078's post-apply check.
 --
 -- Recovery plan: forward-only. Copied rows are inactive and can be deleted by the
 -- owner from the UI. A down-migration (DROP TABLE / DROP COLUMN) is Class C,
