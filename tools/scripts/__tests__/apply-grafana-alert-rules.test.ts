@@ -57,6 +57,25 @@ describe('alert rules config', () => {
     ]);
   });
 
+  // #812: the only live traffic today is ai-worker's own OTel heartbeat spans.
+  // ifc032-telemetry-silent watches that, so it must keep failing the series
+  // check if it ever goes quiet. The other four watch traffic that does not
+  // exist yet (workflow.lead.route has no callers; #802 hasn't promoted the
+  // api SERVER spans) and opt out with requireSeries:false so the script can
+  // report them without failing the run.
+  it('the four traffic-less rules opt out of the live-series requirement; the safety check does not', () => {
+    const byUid = Object.fromEntries(
+      CONFIG.rules.map((r: { uid: string; requireSeries?: boolean }) => [r.uid, r.requireSeries])
+    );
+    expect(byUid).toEqual({
+      'ifc032-telemetry-silent': undefined,
+      'ifc032-lead-routing-failures': false,
+      'ifc032-workflow-error-rate': false,
+      'ifc032-workflow-p95-latency': false,
+      'ifc032-api-error-rate': false,
+    });
+  });
+
   it('reports missing fields, bad operators, bad thresholds and duplicates', () => {
     const bad = {
       rules: [
@@ -148,10 +167,21 @@ describe('run', () => {
   });
 
   it('fails loudly when a rule watches a metric with no live series', async () => {
-    const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
+    // ifc032-telemetry-silent is the one rule that still requires series (#812);
+    // the other four opted out with requireSeries:false, so forcing 0 series on
+    // one of THOSE (e.g. latency) must NOT fail the run — only telemetry-silent's
+    // selector (the only one matching "ai-worker") can trigger this failure.
+    const g = fakeGrafana({ series: (q) => (q.includes('ai-worker') ? 0 : 2) });
     await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
-      'match no live series (check metric names): ifc032-workflow-p95-latency'
+      'match no live series (check metric names): ifc032-telemetry-silent'
     );
+  });
+
+  it('does not fail the run when a requireSeries:false rule has no live series (#812)', async () => {
+    const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
+    const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
+    expect(result.applied).toBe(5);
+    expect(result.empty).toEqual([]);
   });
 
   it('never logs the token', async () => {

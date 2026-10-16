@@ -16,13 +16,17 @@
  * - OTEL_ENABLED: Enable/disable tracing (default: true)
  * - OTEL_SERVICE_NAME: Service name (default: intelliflow-api)
  * - OTEL_EXPORTER_OTLP_ENDPOINT: OTLP collector endpoint (default: http://localhost:4318)
+ * - OTEL_LOGS_EXPORTER: Logs exporter — 'otlp' (default via NodeSDK, same as
+ *   traces/metrics), 'console' or 'none'. The dev fallback below forces 'none'
+ *   when no custom endpoint is set, so local dev never dials a collector that
+ *   isn't running.
  * - NODE_ENV: Environment (development/production)
  *
  * @see https://opentelemetry.io/docs/instrumentation/js/
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { getStandardNodeInstrumentations } from '@intelliflow/observability/node-instrumentations';
 import { installQueryBudgetOtelEmitter } from './query-budget-otel';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
@@ -113,17 +117,7 @@ export function initializeOpenTelemetry(): NodeSDK | null {
   // For Sprint 1, we use a simplified setup to avoid version conflicts
   const sdk = new NodeSDK({
     resource,
-    instrumentations: [
-      getNodeAutoInstrumentations({
-        // Customize instrumentation
-        '@opentelemetry/instrumentation-fs': {
-          enabled: false, // Disable filesystem instrumentation (too noisy)
-        },
-        '@opentelemetry/instrumentation-http': {
-          enabled: true,
-        },
-      }),
-    ],
+    instrumentations: [getStandardNodeInstrumentations()],
   });
 
   console.log(`[OpenTelemetry] Initialized tracing for ${config.serviceName}`);
