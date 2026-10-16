@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { idSchema, paginationSchema } from './common';
+import { actorIdSchema, idSchema, paginationSchema } from './common';
 import { AUTO_RESPONSE_STATUSES, TRIGGER_TYPES, ALLOWED_LEAD_STATUSES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
@@ -148,7 +148,7 @@ export type AutoResponseQueryInput = z.infer<typeof autoResponseQuerySchema>;
 export const statusChangeSchema = z.object({
   status: autoResponseStatusSchema,
   changedAt: z.coerce.date(),
-  changedBy: idSchema.optional(),
+  changedBy: actorIdSchema.optional(),
   reason: z.string().optional(),
 });
 
@@ -168,7 +168,7 @@ export const autoResponseDraftResponseSchema = z.object({
   approvalDecision: z
     .object({
       decision: z.enum(['APPROVED', 'REJECTED']),
-      decidedBy: idSchema,
+      decidedBy: actorIdSchema,
       decidedAt: z.coerce.date(),
       reason: z.string().optional(),
       modifications: z
@@ -183,7 +183,7 @@ export const autoResponseDraftResponseSchema = z.object({
     .object({
       reason: z.string(),
       escalatedTo: idSchema,
-      escalatedBy: idSchema,
+      escalatedBy: actorIdSchema,
       escalatedAt: z.coerce.date(),
       expiresAt: z.coerce.date(),
       resolvedAt: z.coerce.date().optional(),

@@ -64,6 +64,8 @@ export type {
   AccountTerritory, // PG-197
   AccountTerritoryRule,
   AccountTerritoryMember,
+  ApprovalPolicy, // PG-198
+  ApprovalPolicyAssignment,
   DealWinLossReason,
   DealScoringRule,
   DealDuplicateRule,

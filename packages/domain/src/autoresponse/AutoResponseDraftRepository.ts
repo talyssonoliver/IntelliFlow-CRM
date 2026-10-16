@@ -15,6 +15,16 @@ export interface AutoResponseDraftQuery {
   offset?: number;
 }
 
+/** PG-198: filter for the approval sweep's candidate query. */
+export interface PendingOlderThanFilter {
+  before: Date;
+  /** Only drafts still unexpired at this time. */
+  notExpiredAt: Date;
+  triggerTypes: TriggerType[];
+  /** Keyset cursor: only drafts after this (createdAt, id) in the (createdAt, id) order. */
+  after?: { createdAt: Date; id: string };
+}
+
 /**
  * Repository interface for AutoResponseDraft persistence
  * Implemented by infrastructure layer
@@ -54,6 +64,24 @@ export interface AutoResponseDraftRepository {
    * Find all pending drafts for a lead (for invalidation on status change)
    */
   findPendingByLeadId(leadId: string, tenantId: string): Promise<AutoResponseDraft[]>;
+
+  /**
+   * PG-198: candidates for the approval sweep — a tenant's pending, never-escalated,
+   * unexpired drafts of the given triggers created before `before`, oldest first.
+   */
+  findPendingOlderThan(
+    tenantId: string,
+    filter: PendingOlderThanFilter,
+    limit: number
+  ): Promise<AutoResponseDraft[]>;
+
+  /**
+   * PG-198: persist an escalation made by the approval sweep, but only while the
+   * stored draft is still PENDING_APPROVAL and has never been escalated — so a
+   * decision or manual escalation made meanwhile is never overwritten.
+   * Returns false when the guard did not match (nothing written).
+   */
+  saveEscalation(draft: AutoResponseDraft): Promise<boolean>;
 
   /**
    * Find expired drafts that need cleanup

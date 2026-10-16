@@ -219,6 +219,25 @@ chain:
                                    │                         │
                                    │  >> IFC-181 DEPENDS <<  │
                                    └─────────────────────────┘
+                                               │
+                                               ▼
+                                   ┌─────────────────────────┐
+                                   │       PG-198            │
+                                   │   Approval Policies     │
+                                   │   (ADR-079)             │
+                                   │                         │
+                                   │  - Tenant rules for the │
+                                   │    agent-action AND the │
+                                   │    auto-response queues │
+                                   │  - Timeout, min role,   │
+                                   │    opt-in auto-approve, │
+                                   │    escalation sweep     │
+                                   │  - Approved actions now │
+                                   │    really execute       │
+                                   │                         │
+                                   │  Status: IN PROGRESS    │
+                                   │  Sprint: 18             │
+                                   └─────────────────────────┘
 ```
 
 ---

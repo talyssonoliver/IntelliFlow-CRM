@@ -3,7 +3,7 @@
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
 > Guide Components **Total Pages**: 214 implemented **Total Flows**: 42 **API
-> Routers**: 68 (396 procedures)
+> Routers**: 69 (403 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -746,7 +746,8 @@ data
 | `accountTerritories`         | 8          | `/accounts/territory-mapping` (PG-197)                | ✅ Active         |
 | `caseTypes`                  | 6          | `/cases/case-types`, `/cases/new` (PG-204)            | ✅ Active         |
 | `analytics.scheduledReports` | 10         | `/analytics/scheduled-reports` (PG-201)               | ✅ Active         |
-| **Total**                    | **396**    | **45 routers**                                        |                   |
+| `approvalPolicies`           | 7          | `/agent-approvals/approval-policies` (PG-198)         | ✅ Active         |
+| **Total**                    | **403**    | **46 routers**                                        |                   |
 
 ---
 

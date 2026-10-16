@@ -14,7 +14,7 @@
  * - impactToConfidence and confidenceToImpact roundtrip
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { mockDeep, mockReset, type DeepMockProxy } from 'vitest-mock-extended';
 import type { PrismaClient } from '@intelliflow/db';
 import { PrismaAgentActionStore } from '../prisma-action-store';
@@ -147,52 +147,63 @@ describe('add()', () => {
     expect(callArgs.data.tenantId).toBe(TENANT_ID);
   });
 
-  it('A2: maps MEDIUM estimatedImpact to confidenceScore 60', async () => {
+  it('A2: stores the caller confidence as a floored percent (RF-2)', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
-    const action = makePendingAction({
-      preview: { ...makePendingAction().preview, estimatedImpact: 'MEDIUM' },
-    });
-    await store.add(action);
+    await store.add(makePendingAction({ confidence: 0.899 }));
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
-    expect(data.confidenceScore).toBe(60);
+    expect(data.confidenceScore).toBe(89);
+    // Provenance marker: this is a real agent confidence, not a legacy score.
+    expect(JSON.parse(data.aiReasoning)).toEqual({
+      source: 'crm-agent',
+      version: '1.0',
+      confidenceSource: 'agent',
+    });
   });
 
-  it('A3: maps LOW estimatedImpact to confidenceScore 30', async () => {
+  it('A3: stores NULL when the caller supplied no confidence, whatever the impact', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
-    const action = makePendingAction({
-      preview: { ...makePendingAction().preview, estimatedImpact: 'LOW' },
-    });
-    await store.add(action);
+    await store.add(
+      makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'HIGH' } })
+    );
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
-    expect(data.confidenceScore).toBe(30);
+    expect(data.confidenceScore).toBeNull();
+    expect(JSON.parse(data.aiReasoning)).not.toHaveProperty('confidenceSource');
   });
 
-  it('A4: maps HIGH estimatedImpact to confidenceScore 90', async () => {
+  it('A4: stores NULL for an out-of-range confidence', async () => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
-    const action = makePendingAction({
-      preview: { ...makePendingAction().preview, estimatedImpact: 'HIGH' },
-    });
-    await store.add(action);
+    await store.add(makePendingAction({ confidence: 1.5 }));
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
-    expect(data.confidenceScore).toBe(90);
+    expect(data.confidenceScore).toBeNull();
   });
 
-  it('A5: maps undefined estimatedImpact to confidenceScore 50', async () => {
+  it.each([
+    [0.57, 57],
+    [0.29, 29],
+    [0.58, 58],
+    [0.9, 90],
+  ])('A2b: stores %s as %s (no binary floating-point underflow)', async (confidence, stored) => {
     (prismaMock.agentAction.create as any).mockResolvedValue({});
 
-    const preview = { ...makePendingAction().preview };
-    delete preview.estimatedImpact;
-    const action = makePendingAction({ preview });
-    await store.add(action);
+    await store.add(makePendingAction({ confidence }));
 
     const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
-    expect(data.confidenceScore).toBe(50);
+    expect(data.confidenceScore).toBe(stored);
+  });
+
+  it('A5: stores 100 for full confidence', async () => {
+    (prismaMock.agentAction.create as any).mockResolvedValue({});
+
+    await store.add(makePendingAction({ confidence: 1 }));
+
+    const data = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
+    expect(data.confidenceScore).toBe(100);
   });
 
   it('A6: stores input as previousState and preview as proposedState', async () => {
@@ -284,6 +295,46 @@ describe('get()', () => {
     expect(result!.createdBy).toBe(USER_ID); // agentId → createdBy
     expect(result!.agentSessionId).toBe(SESSION_ID); // agentName → agentSessionId
     expect(result!.status).toBe('PENDING'); // PENDING_APPROVAL → PENDING
+  });
+
+  it('B2b: keeps the execution state of a row claimed for execution (EXECUTING)', async () => {
+    // Shaped as claimForExecution persists it: APPROVED, executionStatus EXECUTING.
+    const row = makeAgentActionRow({
+      status: 'APPROVED',
+      proposedState: {
+        changes: [],
+        affectedEntities: [],
+        executionStatus: 'EXECUTING',
+        executedInput: { title: 'Ran' },
+      },
+    });
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+
+    const result: any = await store.get(ACTION_ID);
+
+    expect(result.executionStatus).toBe('EXECUTING');
+  });
+
+  it('B2c: keeps the execution error and result of a failed execution', async () => {
+    const row = makeAgentActionRow({
+      status: 'APPROVED',
+      proposedState: {
+        changes: [],
+        affectedEntities: [],
+        executionStatus: 'FAILED',
+        executionError: 'Client not found',
+        executionResult: { attempted: true },
+      },
+    });
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+
+    const result: any = await store.get(ACTION_ID);
+
+    expect(result).toMatchObject({
+      executionStatus: 'FAILED',
+      executionError: 'Client not found',
+      executionResult: { attempted: true },
+    });
   });
 
   it('B3: maps preview fields from proposedState', async () => {
@@ -453,7 +504,7 @@ describe('delete()', () => {
 // ════════════════════════════════════════════════════════════
 
 describe('findByUser()', () => {
-  it('E1: queries by agentId with PENDING_APPROVAL status and tenantId', async () => {
+  it('E1: queries the requester or escalation target with PENDING_APPROVAL status and tenantId', async () => {
     (prismaMock.agentAction.findMany as any).mockResolvedValue([makeAgentActionRow()]);
 
     const results = await store.findByUser(USER_ID);
@@ -461,7 +512,8 @@ describe('findByUser()', () => {
     expect(results).toHaveLength(1);
     expect(results[0].createdBy).toBe(USER_ID);
     const args = (prismaMock.agentAction.findMany as any).mock.calls[0][0];
-    expect(args.where.agentId).toBe(USER_ID);
+    // PG-198: an escalated action is listed for its escalation target too.
+    expect(args.where.OR).toEqual([{ agentId: USER_ID }, { escalatedTo: USER_ID }]);
     expect(args.where.status).toBe('PENDING_APPROVAL');
     expect(args.where.tenantId).toBe(TENANT_ID);
     expect(args.where.expiresAt).toEqual({ gt: expect.any(Date) });
@@ -669,6 +721,33 @@ describe('addExecuted()', () => {
     const proposedState = data.proposedState as Record<string, unknown>;
     expect(proposedState.rollbackToken).toBe('rb-token-xyz');
     expect(proposedState.rollbackAvailable).toBe(true);
+  });
+
+  it('G4b: persists the execution status and error with the preview (RF-1)', async () => {
+    (prismaMock.agentAction.update as any).mockResolvedValue({});
+
+    await store.addExecuted({
+      ...makePendingAction({ status: 'APPROVED' }),
+      executionStatus: 'FAILED',
+      executionError: 'Lead not found',
+      rollbackAvailable: false,
+    });
+
+    const proposedState = (prismaMock.agentAction.update as any).mock.calls[0][0].data
+      .proposedState as Record<string, unknown>;
+    expect(proposedState.executionStatus).toBe('FAILED');
+    expect(proposedState.executionError).toBe('Lead not found');
+    expect(proposedState.executedInput).toEqual(makePendingAction().input);
+  });
+
+  it('G4c: an executed record reads back the input that actually ran', async () => {
+    const row = makeAgentActionRow({ status: 'APPROVED', reviewedBy: 'approver-1' });
+    (row.proposedState as Record<string, unknown>).executedInput = { title: 'Modified' };
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+
+    const executed = await store.getExecuted(ACTION_ID);
+
+    expect(executed!.input).toEqual({ title: 'Modified' });
   });
 
   it('G5: uses new Date() as reviewedAt when executedAt is missing', async () => {
@@ -1057,140 +1136,148 @@ describe('Status mapping', () => {
 // Section M: impactToConfidence / confidenceToImpact roundtrip
 // ════════════════════════════════════════════════════════════
 
-describe('impact/confidence roundtrip', () => {
-  it('M1: LOW impact → confidence 30 → back to LOW', async () => {
-    (prismaMock.agentAction.create as any).mockResolvedValue({});
+describe('confidence and impact are independent (RF-2)', () => {
+  it('M1: impact is read from the stored preview, not from the confidence', async () => {
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(
       makeAgentActionRow({
-        confidenceScore: 30,
-        status: 'PENDING_APPROVAL',
+        confidenceScore: 95,
+        aiReasoning: JSON.stringify({ confidenceSource: 'agent' }),
         expiresAt: new Date(Date.now() + 60_000),
       })
     );
-
-    await store.add(
-      makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'LOW' } })
-    );
-
-    const addData = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
-    expect(addData.confidenceScore).toBe(30);
-
-    const retrieved = await store.get(ACTION_ID);
-    expect(retrieved!.preview.estimatedImpact).toBe('LOW');
-  });
-
-  it('M2: MEDIUM impact → confidence 60 → back to MEDIUM', async () => {
-    (prismaMock.agentAction.create as any).mockResolvedValue({});
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
-      makeAgentActionRow({
-        confidenceScore: 60,
-        status: 'PENDING_APPROVAL',
-        expiresAt: new Date(Date.now() + 60_000),
-      })
-    );
-
-    await store.add(
-      makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'MEDIUM' } })
-    );
-
-    const addData = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
-    expect(addData.confidenceScore).toBe(60);
-
-    const retrieved = await store.get(ACTION_ID);
-    expect(retrieved!.preview.estimatedImpact).toBe('MEDIUM');
-  });
-
-  it('M3: HIGH impact → confidence 90 → back to HIGH', async () => {
-    (prismaMock.agentAction.create as any).mockResolvedValue({});
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
-      makeAgentActionRow({
-        confidenceScore: 90,
-        status: 'PENDING_APPROVAL',
-        expiresAt: new Date(Date.now() + 60_000),
-      })
-    );
-
-    await store.add(
-      makePendingAction({ preview: { ...makePendingAction().preview, estimatedImpact: 'HIGH' } })
-    );
-
-    const addData = (prismaMock.agentAction.create as any).mock.calls[0][0].data;
-    expect(addData.confidenceScore).toBe(90);
-
-    const retrieved = await store.get(ACTION_ID);
-    expect(retrieved!.preview.estimatedImpact).toBe('HIGH');
-  });
-
-  it('M4: confidenceScore 0 maps to LOW impact', async () => {
-    const row = makeAgentActionRow({
-      confidenceScore: 0,
-      status: 'PENDING_APPROVAL',
-      expiresAt: new Date(Date.now() + 60_000),
-    });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
-
-    const result = await store.get(ACTION_ID);
-    expect(result!.preview.estimatedImpact).toBe('LOW');
-  });
-
-  it('M5: confidenceScore 39 maps to LOW impact (boundary)', async () => {
-    const row = makeAgentActionRow({
-      confidenceScore: 39,
-      status: 'PENDING_APPROVAL',
-      expiresAt: new Date(Date.now() + 60_000),
-    });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
-
-    const result = await store.get(ACTION_ID);
-    expect(result!.preview.estimatedImpact).toBe('LOW');
-  });
-
-  it('M6: confidenceScore 40 maps to MEDIUM impact (boundary)', async () => {
-    const row = makeAgentActionRow({
-      confidenceScore: 40,
-      status: 'PENDING_APPROVAL',
-      expiresAt: new Date(Date.now() + 60_000),
-    });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
     expect(result!.preview.estimatedImpact).toBe('MEDIUM');
+    expect(result!.confidence).toBe(0.95);
   });
 
-  it('M7: confidenceScore 69 maps to MEDIUM impact (boundary)', async () => {
-    const row = makeAgentActionRow({
-      confidenceScore: 69,
-      status: 'PENDING_APPROVAL',
-      expiresAt: new Date(Date.now() + 60_000),
-    });
+  it('M1b: a legacy (pre-PG-198) impact-derived score is not exposed as confidence', async () => {
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+      makeAgentActionRow({ confidenceScore: 90, expiresAt: new Date(Date.now() + 60_000) })
+    );
+
+    const result = await store.get(ACTION_ID);
+    expect(result!.confidence).toBeUndefined();
+  });
+
+  it('M2: a NULL confidence reads back as undefined', async () => {
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+      makeAgentActionRow({ confidenceScore: null, expiresAt: new Date(Date.now() + 60_000) })
+    );
+
+    const result = await store.get(ACTION_ID);
+    expect(result!.confidence).toBeUndefined();
+  });
+
+  it('M3: an unknown stored impact reads back as undefined', async () => {
+    const row = makeAgentActionRow({ expiresAt: new Date(Date.now() + 60_000) });
+    (row.proposedState as Record<string, unknown>).estimatedImpact = 'EXTREME';
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
-    expect(result!.preview.estimatedImpact).toBe('MEDIUM');
+    expect(result!.preview.estimatedImpact).toBeUndefined();
   });
 
-  it('M8: confidenceScore 70 maps to HIGH impact (boundary)', async () => {
-    const row = makeAgentActionRow({
-      confidenceScore: 70,
-      status: 'PENDING_APPROVAL',
-      expiresAt: new Date(Date.now() + 60_000),
-    });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+  it('M4: escalation columns are mapped', async () => {
+    const escalatedAt = new Date('2026-10-13T09:00:00Z');
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+      makeAgentActionRow({
+        escalatedAt,
+        escalatedTo: 'manager-1',
+        expiresAt: new Date(Date.now() + 60_000),
+      })
+    );
 
     const result = await store.get(ACTION_ID);
-    expect(result!.preview.estimatedImpact).toBe('HIGH');
+    expect(result!.escalatedAt).toEqual(escalatedAt);
+    expect(result!.escalatedTo).toBe('manager-1');
+  });
+});
+
+describe('claimForExecution() (RF-1)', () => {
+  it('M5: claims only a pending, unexpired action of the tenant and marks it EXECUTING', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
+    const now = new Date('2026-10-13T10:00:00Z');
+    const action = makePendingAction({ tenantId: 'tenant-x' });
+
+    await expect(store.claimForExecution(action, 'approver-1', now)).resolves.toBe(true);
+
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: action.id,
+        tenantId: 'tenant-x',
+        status: 'PENDING_APPROVAL',
+        expiresAt: { gt: now },
+      },
+      data: {
+        status: 'APPROVED',
+        reviewedAt: now,
+        reviewedBy: 'approver-1',
+        proposedState: {
+          ...action.preview,
+          executionStatus: 'EXECUTING',
+          executedInput: action.input,
+        },
+      },
+    });
   });
 
-  it('M9: confidenceScore 100 maps to HIGH impact', async () => {
-    const row = makeAgentActionRow({
-      confidenceScore: 100,
-      status: 'PENDING_APPROVAL',
-      expiresAt: new Date(Date.now() + 60_000),
-    });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+  it('M5b: records the input that is about to run with the claim', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
+    await store.claimForExecution(makePendingAction(), 'a', new Date(), { title: 'Modified' });
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
+    expect(data.proposedState.executedInput).toEqual({ title: 'Modified' });
+  });
 
-    const result = await store.get(ACTION_ID);
-    expect(result!.preview.estimatedImpact).toBe('HIGH');
+  it('M6: loses the race when another approver already claimed it', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 0 });
+    await expect(store.claimForExecution(makePendingAction(), 'a', new Date())).resolves.toBe(
+      false
+    );
+  });
+
+  it('M7: falls back to the store tenant for legacy actions without one', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
+    await store.claimForExecution(makePendingAction({ tenantId: undefined }), 'a', new Date());
+    const where = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].where;
+    expect(where.tenantId).toBe(TENANT_ID);
+  });
+});
+
+describe('findInterrupted() (A2)', () => {
+  it('M8: finds APPROVED actions still EXECUTING after 5 minutes for this user', async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-10-13T10:00:00Z'));
+    try {
+      const row = makeAgentActionRow({ status: 'APPROVED', reviewedBy: USER_ID });
+      (row.proposedState as Record<string, unknown>).executionStatus = 'EXECUTING';
+      (prismaMock.agentAction.findMany as any).mockResolvedValue([row]);
+
+      const result = await store.findInterrupted(USER_ID, 'tenant-x');
+
+      expect(prismaMock.agentAction.findMany).toHaveBeenCalledWith({
+        where: {
+          tenantId: 'tenant-x',
+          status: 'APPROVED',
+          proposedState: { path: ['executionStatus'], equals: 'EXECUTING' },
+          reviewedAt: { lt: new Date('2026-10-13T09:55:00Z') },
+          OR: [{ agentId: USER_ID }, { reviewedBy: USER_ID }],
+        },
+        orderBy: { reviewedAt: 'desc' },
+        take: 50,
+      });
+      expect(result[0]!.executionStatus).toBe('EXECUTING');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('M9: defaults to the store tenant', async () => {
+    (prismaMock.agentAction.findMany as any).mockResolvedValue([]);
+    await store.findInterrupted(USER_ID);
+    expect((prismaMock.agentAction.findMany as any).mock.calls[0][0].where.tenantId).toBe(
+      TENANT_ID
+    );
   });
 });
 

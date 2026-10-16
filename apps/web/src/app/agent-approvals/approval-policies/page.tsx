@@ -1,16 +1,19 @@
-'use client';
+/**
+ * Approval Policies Page - PG-198
+ *
+ * Server Component shell: streams the skeleton immediately, then hydrates
+ * ApprovalPoliciesContent (client component) via Suspense. Same pattern as the
+ * PG-196/PG-197 module-settings pages.
+ */
+
+import { Suspense } from 'react';
+import ApprovalPoliciesContent from './ApprovalPoliciesContent';
+import { ApprovalPoliciesLoading } from './ApprovalPoliciesLoading';
 
 export default function ApprovalPoliciesPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Approval Policies</h1>
-        <p className="text-muted-foreground mt-1">Configure review rules and escalation paths.</p>
-      </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        <span className="material-symbols-outlined text-4xl mb-2 block">policy</span>
-        <p>Approval policies configuration coming soon.</p>
-      </div>
-    </div>
+    <Suspense fallback={<ApprovalPoliciesLoading />}>
+      <ApprovalPoliciesContent />
+    </Suspense>
   );
 }
