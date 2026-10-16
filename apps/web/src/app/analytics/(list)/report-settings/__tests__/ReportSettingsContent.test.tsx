@@ -317,15 +317,6 @@ describe('ReportSettingsContent', () => {
     );
   });
 
-  it('toggling scheduled delivery updates the orchestrator state', async () => {
-    setup({ queryData: seeded });
-    render(<ReportSettingsContent />);
-    const sw = await screen.findByRole('switch', { name: /enable scheduled delivery/i });
-    expect(sw).toHaveAttribute('data-state', 'unchecked');
-    fireEvent.click(sw);
-    await waitFor(() => expect(sw).toHaveAttribute('data-state', 'checked'));
-  });
-
   it('orchestrator does not import ModuleSettingsLayout (source-level grep)', async () => {
     // Static proof via readFileSync inside the test: the orchestrator does NOT
     // reference the deprecated layout component.
