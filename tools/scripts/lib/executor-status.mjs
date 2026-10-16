@@ -27,6 +27,8 @@ export const ENABLE_ENV = 'INTELLIFLOW_EXECUTOR_STATUS';
 export const DEFAULT_HEARTBEAT_S = 60;
 /** A non-terminal file older than STALE_MULTIPLIER x heartbeat is stale. */
 export const STALE_MULTIPLIER = 3;
+/** Clock skew tolerated between writer and reader before a future date is invalid. */
+export const SKEW_ALLOWANCE_S = 60;
 
 export const PHASES = Object.freeze([
   'setup',
@@ -89,6 +91,11 @@ export function writeExecutorStatus(dir, taskId, fields, opts = {}) {
     throw new Error(`invalid gate_status: ${JSON.stringify(gate)}`);
   }
 
+  const heartbeat = fields.heartbeat_s ?? DEFAULT_HEARTBEAT_S;
+  if (typeof heartbeat !== 'number' || !Number.isFinite(heartbeat) || heartbeat <= 0) {
+    throw new Error(`invalid heartbeat_s: ${JSON.stringify(fields.heartbeat_s)}`);
+  }
+
   const file = statusFilePath(dir, taskId);
   const previous = readRaw(file);
   let seq = 1;
@@ -110,7 +117,7 @@ export function writeExecutorStatus(dir, taskId, fields, opts = {}) {
     terminal: TERMINAL_PHASES.includes(phase),
     seq,
     last_updated: now.toISOString(),
-    heartbeat_s: fields.heartbeat_s ?? DEFAULT_HEARTBEAT_S,
+    heartbeat_s: heartbeat,
     pid: opts.pid ?? process.pid,
   };
   for (const key of ['next_expected_event', 'detail', 'branch', 'mem_mb', 'cpu_s']) {
@@ -132,8 +139,15 @@ export function writeExecutorStatus(dir, taskId, fields, opts = {}) {
 /**
  * Interpret a task's status file.
  *
- * state: 'fresh' | 'stale' | 'terminal' | 'missing' | 'invalid'
+ * state: 'fresh' | 'stale' | 'terminal' | 'unbound' | 'missing' | 'invalid'
  * needsPoll: true unless the file can be trusted (fresh, or terminal).
+ *
+ * `opts.since` (Date, ISO string or epoch ms) is the dispatch time of the run
+ * being asked about. The status directory is shared and a task id is reused on
+ * re-dispatch, so a record written before `since` belongs to a previous run and
+ * is `stale`. A terminal record is only trusted when bound to a run this way:
+ * without `since` it comes back `unbound` (needsPoll: true), because a terminal
+ * file never ages out on its own.
  */
 export function readExecutorStatus(dir, taskId, opts = {}) {
   const file = statusFilePath(dir, taskId);
@@ -156,16 +170,62 @@ export function readExecutorStatus(dir, taskId, opts = {}) {
   const problem = validateStatus(status, taskId);
   if (problem) return { state: 'invalid', needsPoll: true, status: null, reason: problem };
 
-  // A terminal record is final: age is irrelevant, the executor will not write again.
-  if (status.terminal) return { state: 'terminal', needsPoll: false, status };
-
   const now = (opts.now ?? new Date()).getTime();
-  const ageMs = now - Date.parse(status.last_updated);
+  const updatedMs = Date.parse(status.last_updated);
+  const ageMs = now - updatedMs;
+  const skewMs = (opts.skewS ?? SKEW_ALLOWANCE_S) * 1000;
+  // A record dated in the future would otherwise read as fresh forever and mask
+  // a dead executor; a writer or clock that wrong is not to be trusted.
+  if (ageMs < -skewMs) {
+    return {
+      state: 'invalid',
+      needsPoll: true,
+      status: null,
+      reason: `last_updated is ${Math.round(-ageMs / 1000)}s in the future`,
+    };
+  }
+
+  const sinceMs = parseSince(opts.since);
+  if (Number.isNaN(sinceMs)) {
+    return { state: 'invalid', needsPoll: true, status: null, reason: 'since is not a timestamp' };
+  }
+  // The previous run's record, inherited through the shared directory.
+  if (sinceMs !== undefined && updatedMs < sinceMs) {
+    return {
+      state: 'stale',
+      needsPoll: true,
+      status,
+      reason: 'record predates this run (written before since)',
+      ageS: Math.round(ageMs / 1000),
+    };
+  }
+
+  if (status.terminal) {
+    // Final once bound to this run: age is irrelevant, the executor will not write again.
+    if (sinceMs === undefined) {
+      return {
+        state: 'unbound',
+        needsPoll: true,
+        status,
+        reason: 'terminal record not bound to a run; pass since (dispatch time)',
+      };
+    }
+    return { state: 'terminal', needsPoll: false, status };
+  }
+
   const limitMs = (opts.staleAfterS ?? status.heartbeat_s * STALE_MULTIPLIER) * 1000;
   if (ageMs > limitMs) {
     return { state: 'stale', needsPoll: true, status, ageS: Math.round(ageMs / 1000) };
   }
   return { state: 'fresh', needsPoll: false, status, ageS: Math.max(0, Math.round(ageMs / 1000)) };
+}
+
+/** undefined when absent, NaN when present but unparseable, else epoch ms. */
+function parseSince(since) {
+  if (since === undefined || since === null) return undefined;
+  const ms =
+    since instanceof Date ? since.getTime() : typeof since === 'number' ? since : Date.parse(since);
+  return Number.isFinite(ms) ? ms : Number.NaN;
 }
 
 function validateStatus(s, taskId) {

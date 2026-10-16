@@ -4,7 +4,12 @@
  *
  *   node tools/scripts/executor-status.mjs write <TASK> --phase <p> [--gate-status <g>]
  *        [--next <event>] [--detail <text>] [--branch <b>]   (no-op unless INTELLIFLOW_EXECUTOR_STATUS=1)
- *   node tools/scripts/executor-status.mjs read <TASK>       (exit 0 trusted, 2 = fall back to polling)
+ *   node tools/scripts/executor-status.mjs read <TASK> --since <dispatch ISO time>
+ *        exit 0 = trusted; exit 2 = fall back to polling. Exit 2 covers EVERY
+ *        untrusted outcome: missing, stale, invalid, unbound (no --since), an
+ *        unusable task id or --since, and a failure to resolve the directory.
+ *        A record written before --since is a previous run's and is stale.
+ *        Exit 1 is reserved for write/list errors, never for read.
  *   node tools/scripts/executor-status.mjs list
  *
  * The status directory is shared by every worktree of the repo: it defaults to
@@ -63,7 +68,14 @@ export function main(argv, env = process.env, out = console.log) {
     return 0;
   }
   if (cmd === 'read') {
-    const res = readExecutorStatus(defaultStatusDir(env), rest[0]);
+    // Every failure here must read as "poll instead" (exit 2), never as exit 1.
+    let res;
+    try {
+      const f = parseFlags(rest.slice(1));
+      res = readExecutorStatus(defaultStatusDir(env), rest[0], { since: f.since });
+    } catch (err) {
+      res = { state: 'invalid', needsPoll: true, status: null, reason: err.message };
+    }
     out(JSON.stringify(res));
     return res.needsPoll ? 2 : 0;
   }
