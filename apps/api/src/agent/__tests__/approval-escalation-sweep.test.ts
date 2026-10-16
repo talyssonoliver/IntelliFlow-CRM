@@ -473,6 +473,19 @@ describe('runApprovalSweep', () => {
   describe('auto-response drafts', () => {
     const draftPolicy = policyRow({ scope: 'AUTO_RESPONSE', escalateAfterMinutes: 30 });
 
+    // The aggregate refuses to escalate an expired draft and judges expiry by the clock, so a
+    // sweep at NOW must also run with the clock at NOW, or these fixtures expire once the real
+    // date passes their 24-48h window.
+    async function sweepAtNow(deps: Parameters<typeof runApprovalSweep>[0]) {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      vi.setSystemTime(NOW);
+      try {
+        return await runApprovalSweep(deps, NOW);
+      } finally {
+        vi.useRealTimers();
+      }
+    }
+
     it('escalates a due draft as the system actor, window bounded by its expiry', async () => {
       const draft = pendingDraft(new Date('2026-10-13T11:00:00Z'), 2);
       const { repo, deps, tx } = harness({ policies: [draftPolicy], drafts: [draft] });
@@ -574,7 +587,7 @@ describe('runApprovalSweep', () => {
         drafts: [draft],
         decidedMeanwhile: true,
       });
-      const report = await runApprovalSweep(deps, NOW);
+      const report = await sweepAtNow(deps);
       expect(report).toMatchObject({ draftsEscalated: 0, skipped: 1 });
       expect(deps.notify).not.toHaveBeenCalled();
       expect(deps.log!.warn).toHaveBeenCalledWith(
@@ -593,7 +606,7 @@ describe('runApprovalSweep', () => {
       );
       const { deps } = harness({ policies: [draftPolicy], drafts: overdue });
 
-      const report = await runApprovalSweep(deps, NOW);
+      const report = await sweepAtNow(deps);
 
       expect(report.draftsEscalated).toBe(150);
     });
@@ -614,17 +627,17 @@ describe('runApprovalSweep', () => {
       );
       const { repo, deps } = harness({ policies: [draftPolicy], drafts: [...blocking, overdue] });
 
-      const first = await runApprovalSweep(deps, NOW);
+      const first = await sweepAtNow(deps);
       expect(first.draftsEscalated).toBe(0);
       expect(repo.findPendingOlderThan).toHaveBeenCalledTimes(APPROVAL_SWEEP_MAX_PAGES);
 
-      const second = await runApprovalSweep(deps, NOW);
+      const second = await sweepAtNow(deps);
       expect(second.draftsEscalated).toBe(1);
       expect(overdue.status).toBe('ESCALATED');
 
       // The second tick reached the end, so the third starts from the beginning again.
       repo.findPendingOlderThan.mockClear();
-      await runApprovalSweep(deps, NOW);
+      await sweepAtNow(deps);
       expect(repo.findPendingOlderThan.mock.calls[0]![1].after).toBeUndefined();
     });
 
@@ -642,7 +655,7 @@ describe('runApprovalSweep', () => {
       );
       const { repo, deps } = harness({ policies: [draftPolicy], drafts: [...recent, overdue] });
 
-      const report = await runApprovalSweep(deps, NOW);
+      const report = await sweepAtNow(deps);
 
       expect(repo.findPendingOlderThan).toHaveBeenCalledTimes(2);
       const cursor = repo.findPendingOlderThan.mock.calls[1]![1].after;
