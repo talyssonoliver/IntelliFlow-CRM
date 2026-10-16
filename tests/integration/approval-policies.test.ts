@@ -2,8 +2,8 @@
  * PG-198 — approval policy tables, real-Database integration test.
  *
  * Lives in `tests/integration/` so it runs in the CI "Integration Tests" lane and pre-ship.
- * Proves the Class A migrations `20261013120000_approval_policies` and
- * `20261013120100_agent_actions_pending_sweep_idx` on a real Postgres: safe defaults
+ * Proves the Class A migrations `20261016120000_approval_policies` and
+ * `20261016120100_agent_actions_pending_sweep_idx` on a real Postgres: safe defaults
  * (AI auto-approval off), CHECK constraints, case-insensitive names and one default
  * per queue, one policy per (agent, action) pair, tenant- and scope-consistent
  * assignments, cascade/SET NULL behaviour, RLS, and the nullable agent confidence.
@@ -18,10 +18,10 @@ import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 
 const MIGRATIONS = join(__dirname, '../../packages/db/prisma/migrations');
-const POLICY_MIGRATION = join(MIGRATIONS, '20261013120000_approval_policies/migration.sql');
+const POLICY_MIGRATION = join(MIGRATIONS, '20261016120000_approval_policies/migration.sql');
 const INDEX_MIGRATION = join(
   MIGRATIONS,
-  '20261013120100_agent_actions_pending_sweep_idx/migration.sql'
+  '20261016120100_agent_actions_pending_sweep_idx/migration.sql'
 );
 
 /** Split migration SQL into statements, keeping `DO $$ ... $$` blocks whole. */

@@ -1654,8 +1654,8 @@ model AgentAction {
 
 // ─── PG-198: Approval Policies ──────────────────────────────────────────────
 // SQL-only objects (Prisma cannot express them; defined in
-// migrations/20261013120000_approval_policies and
-// migrations/20261013120100_agent_actions_pending_sweep_idx — do not drop in a diff):
+// migrations/20261016120000_approval_policies and
+// migrations/20261016120100_agent_actions_pending_sweep_idx — do not drop in a diff):
 //   - approval_policies_tenant_scope_lower_name_key  UNIQUE ("tenantId", "scope", lower("name"))
 //   - approval_policies_one_default_key              UNIQUE ("tenantId", "scope") WHERE "isDefault"
 //   - CHECKs on scope, colorToken, minReviewerRole, timeout/threshold/escalation ranges

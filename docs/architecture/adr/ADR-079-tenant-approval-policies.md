@@ -136,7 +136,7 @@ Chosen option 3.
 - Spec and plan: `.specify/sprints/sprint-18/{specifications,planning}/PG-198-*`
 - Owner rulings:
   `.specify/sprints/sprint-18/context/PG-198/PG-198-owner-ruling.md`
-- Migrations: `packages/db/prisma/migrations/20261013120000_approval_policies`,
-  `20261013120100_agent_actions_pending_sweep_idx`
+- Migrations: `packages/db/prisma/migrations/20261016120000_approval_policies`,
+  `20261016120100_agent_actions_pending_sweep_idx`
 - Related: ADR-006 (AI safety), ADR-069 (migration risk classes), ADR-074
   (module-settings pattern)

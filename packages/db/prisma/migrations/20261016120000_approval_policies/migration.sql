@@ -6,7 +6,7 @@
 --     backfill, no existing row changes. Existing rows keep their values.
 --   * No index on "agent_actions" here: a non-concurrent index inside the
 --     migration transaction would take a SHARE lock (blocks writes). The sweep
---     index ships CONCURRENTLY in 20261013120100_agent_actions_pending_sweep_idx.
+--     index ships CONCURRENTLY in 20261016120100_agent_actions_pending_sweep_idx.
 --   * Two NEW tables with their own constraints, indexes and RLS policies.
 --
 -- Recovery plan: forward-only. Operational rollback = delete the tenant's
