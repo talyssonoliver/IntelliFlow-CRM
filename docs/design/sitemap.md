@@ -186,7 +186,7 @@ intelliflow.com
 │   ├── /cases/case-workflows             Workflow builder (IFC-031)
 │   │   ├── /cases/case-workflows/[id]    Workflow detail with step editor
 │   │   └── /cases/case-workflows/new     Create new workflow
-│   ├── /cases/case-types                 Case type labels and SLA defaults
+│   ├── /cases/case-types                 Case types applied at case creation (PG-204)
 │   └── /cases/case-settings              Tenant case defaults and escalation rules
 │
 ├── TASKS ───────────────────────────────── Layout: tasks/(list)

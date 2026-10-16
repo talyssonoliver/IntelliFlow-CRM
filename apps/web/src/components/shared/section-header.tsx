@@ -17,6 +17,8 @@ export interface SectionHeaderProps {
   action?: ReactNode;
   /** Heading id, for `aria-labelledby` on the surrounding section. */
   titleId?: string;
+  /** Heading level; 2 when the section sits directly under the page h1. Default 3. */
+  headingLevel?: 2 | 3;
 }
 
 export function SectionHeader({
@@ -27,7 +29,9 @@ export function SectionHeader({
   description,
   action,
   titleId,
+  headingLevel = 3,
 }: Readonly<SectionHeaderProps>) {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
     <div className="flex items-start gap-3 mb-5">
       <div className={`w-9 h-9 rounded-lg ${iconBg} flex items-center justify-center shrink-0`}>
@@ -36,9 +40,9 @@ export function SectionHeader({
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <h3 id={titleId} className="text-base font-semibold text-foreground">
+        <Heading id={titleId} className="text-base font-semibold text-foreground">
           {title}
-        </h3>
+        </Heading>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
       {action && <div className="shrink-0">{action}</div>}

@@ -261,6 +261,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-073](./ADR-073-tenant-configurable-account-tiers.md)                    | Tenant-configurable account revenue tiers (derived via one domain resolver)                  | 📝 Proposed | 2026-10-07 | PG-196                      |
 | [ADR-074](./ADR-074-territory-based-account-owner-assignment.md)             | Territory-based account owner assignment                                                     | Accepted    | 2026-10-07 | PG-197                      |
 | [ADR-075](./ADR-075-production-secrets-management.md)                        | Production secrets: Terraform/HCP + Railway native env store, no separate Vault              | ✅ Accepted | 2026-10-12 | #317                        |
+| [ADR-076](./ADR-076-case-types-applied-at-case-creation.md)                  | Case types applied at case creation (defaults precedence, create-only, tenant-consistent FK) | Accepted    | 2026-10-13 | PG-204                      |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**
@@ -286,7 +287,7 @@ Previously missing from the index — added 2026-06-05:
 
 ## Next Steps
 
-Future ADRs use IDs **076+** (ADR-075 was the last one taken, 2026-10-12 — check
+Future ADRs use IDs **077+** (ADR-076 was the last one taken, 2026-10-13 — check
 the actual files in this directory before trusting this number, since this index
 has previously drifted behind them).
 

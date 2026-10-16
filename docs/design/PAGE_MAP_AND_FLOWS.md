@@ -282,17 +282,17 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 13. Cases (9 pages)
 
-| Route                        | Page                  | Description                                                                              |
-| ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
-| `/cases`                     | Cases List            | Legal/service case queue with stats and filters                                          |
-| `/cases/new`                 | New Case              | Case creation form                                                                       |
-| `/cases/[id]`                | Case Detail           | Case detail with documents                                                               |
-| `/cases/timeline`            | Case Timeline         | Case history and deadline engine                                                         |
-| `/cases/case-workflows`      | Case Workflow Builder | Visual workflow builder for case automation (IFC-031)                                    |
-| `/cases/case-workflows/[id]` | Workflow Detail       | Individual workflow view with step editor                                                |
-| `/cases/case-workflows/new`  | New Workflow          | Create new case automation workflow                                                      |
-| `/cases/case-types`          | Case Types            | Configure case category labels and SLA defaults                                          |
-| `/cases/case-settings`       | Case Settings         | Tenant-level case defaults: case prefix, default priority, auto-assign (PG-190 — active) |
+| Route                        | Page                  | Description                                                                               |
+| ---------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
+| `/cases`                     | Cases List            | Legal/service case queue with stats and filters                                           |
+| `/cases/new`                 | New Case              | Case creation form                                                                        |
+| `/cases/[id]`                | Case Detail           | Case detail with documents                                                                |
+| `/cases/timeline`            | Case Timeline         | Case history and deadline engine                                                          |
+| `/cases/case-workflows`      | Case Workflow Builder | Visual workflow builder for case automation (IFC-031)                                     |
+| `/cases/case-workflows/[id]` | Workflow Detail       | Individual workflow view with step editor                                                 |
+| `/cases/case-workflows/new`  | New Workflow          | Create new case automation workflow                                                       |
+| `/cases/case-types`          | Case Types            | Case types: priority, SLA deadline, required fields, checklist applied on create (PG-204) |
+| `/cases/case-settings`       | Case Settings         | Tenant-level case defaults: case prefix, default priority, auto-assign (PG-190 — active)  |
 
 ---
 

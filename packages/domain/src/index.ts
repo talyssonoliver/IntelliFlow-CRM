@@ -64,6 +64,7 @@ export * from './legal/cases/CaseTaskId';
 export * from './legal/cases/CaseTask';
 export * from './legal/cases/CaseEvents';
 export * from './legal/cases/CaseRepository';
+export * from './legal/cases/case-type-defaults';
 
 // Workflow Events (extends CaseEvents with workflow-specific events)
 export * from './events/case-events';
