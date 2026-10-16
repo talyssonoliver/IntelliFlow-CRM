@@ -3,7 +3,8 @@
  * slot aligned to the title row (module-settings playbook §1).
  *
  * Hoisted from the Account Settings page so Account Tiers (PG-196) and Account
- * Settings share one implementation.
+ * Settings share one implementation; Scheduled Reports (PG-201) uses the h2 +
+ * focusable-title options.
  */
 import type { ReactNode } from 'react';
 
@@ -17,8 +18,10 @@ export interface SectionHeaderProps {
   action?: ReactNode;
   /** Heading id, for `aria-labelledby` on the surrounding section. */
   titleId?: string;
-  /** Heading level; 2 when the section sits directly under the page h1. Default 3. */
+  /** Heading level; pages whose cards sit directly under the h1 use 2. */
   headingLevel?: 2 | 3;
+  /** Adds tabIndex=-1 so the page can move focus to the heading (e.g. after a delete). */
+  focusableTitle?: boolean;
 }
 
 export function SectionHeader({
@@ -30,6 +33,7 @@ export function SectionHeader({
   action,
   titleId,
   headingLevel = 3,
+  focusableTitle = false,
 }: Readonly<SectionHeaderProps>) {
   const Heading = headingLevel === 2 ? 'h2' : 'h3';
   return (
@@ -40,7 +44,11 @@ export function SectionHeader({
         </span>
       </div>
       <div className="min-w-0 flex-1">
-        <Heading id={titleId} className="text-base font-semibold text-foreground">
+        <Heading
+          id={titleId}
+          tabIndex={focusableTitle ? -1 : undefined}
+          className="text-base font-semibold text-foreground"
+        >
           {title}
         </Heading>
         <p className="text-sm text-muted-foreground">{description}</p>

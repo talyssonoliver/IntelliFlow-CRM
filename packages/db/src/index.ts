@@ -82,6 +82,8 @@ export type {
   DocumentRetentionPolicy,
   ReportSettings,
   ReportTemplate,
+  ReportSchedule, // PG-201
+  ReportScheduleTag,
   TaskSettings,
   Case,
   CaseTask,

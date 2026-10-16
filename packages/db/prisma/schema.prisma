@@ -189,6 +189,7 @@ model Tenant {
   appointmentSettings       AppointmentSettings[]     @ignore
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
+  reportScheduleTags        ReportScheduleTag[]       @ignore
   taskSettings              TaskSettings[]            @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
@@ -2385,6 +2386,11 @@ model ReportTemplate {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // PG-201: schedules that deliver this layout (FK ON DELETE NO ACTION).
+  schedules ReportSchedule[]
+
+  // PG-201: target of the tenant-consistent (tenantId, templateId) FK on report_schedules.
+  @@unique([tenantId, id])
   // Uniqueness enforced by partial indexes in migration 20260629000002:
   //   private  -> UNIQUE (tenantId, createdBy, name) WHERE sharingScope='private'
   //   shared   -> UNIQUE (tenantId, name) WHERE sharingScope!='private'
@@ -2392,6 +2398,26 @@ model ReportTemplate {
   @@index([tenantId])
   @@index([createdBy])
   @@map("report_templates")
+}
+
+/// PG-201 — per-tenant tag catalogue for scheduled reports (name + colour token).
+/// Schedules store tag names in `report_schedules.tags` (same model as Account.tags).
+/// SQL-only: UNIQUE (tenantId, lower(name)); CHECK colorToken IN the 18-token palette.
+model ReportScheduleTag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String   @db.VarChar(50)
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("report_schedule_tags")
 }
 
 model CaseTask {
@@ -4659,18 +4685,35 @@ model ReportDefinition {
   @@map("report_definitions")
 }
 
-/// Scheduled report
+/// Scheduled report (PG-201, ADR-078). Evolved in place, additively: every
+/// legacy column stays. IFC-308's BullMQ cron reads active rows with a
+/// `cronExpression` (pattern) + `timezone` (tz).
+///
+/// SQL-only (Prisma cannot express them — see migration 20261013120000_report_schedules_pg201):
+///   - UNIQUE (tenantId, lower(name))
+///   - CHECK colorToken IN the 18-token palette
+///   - CHECK cronExpression IS NULL OR exactly 5 space-separated fields
+///   - CHECK NOT isActive OR templateId IS NOT NULL OR reportId IS NOT NULL
 model ReportSchedule {
   id          String   @id @default(cuid())
-  reportId    String
-  report      ReportDefinition @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  frequency   String   // 'daily', 'weekly', 'monthly', 'quarterly'
+  reportId    String?
+  report      ReportDefinition? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  // PG-201: PG-200 layout to deliver; tenant-consistent composite FK.
+  templateId  String?
+  template    ReportTemplate? @relation(fields: [tenantId, templateId], references: [tenantId, id], onDelete: NoAction)
+  name        String?  @db.VarChar(100)
+  description String?
+  frequency   String   // 'daily', 'weekly', 'monthly', 'quarterly', 'custom' (kept consistent with cronExpression)
   dayOfWeek   Int?     // 0-6 for weekly
-  dayOfMonth  Int?     // 1-31 for monthly
-  timeOfDay   String   // HH:MM format
+  dayOfMonth  Int?     // 1-28 for monthly/quarterly presets
+  timeOfDay   String?  // HH:MM format; NULL for custom cron
+  cronExpression String? @db.VarChar(100) // 5-field cron (BullMQ pattern)
   timezone    String   @default("Europe/London")
   recipients  Json     // Array of email addresses
-  format      String   @default("pdf") // 'pdf', 'excel', 'csv'
+  format      String   @default("pdf") // 'pdf', 'csv', 'email_body', 'excel'
+  colorToken  String   @default("slate")
+  tags        String[] @default([])
+  createdBy   String?
   isActive    Boolean  @default(true)
   lastRunAt   DateTime?
   nextRunAt   DateTime?
@@ -4691,8 +4734,10 @@ model ReportSchedule {
 /// Report execution history
 model ReportExecution {
   id          String   @id @default(cuid())
-  reportId    String
-  report      ReportDefinition @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId    String?
+  report      ReportDefinition? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  // PG-201: template-only schedules record their run against the PG-200 layout.
+  templateId  String?
   scheduleId  String?
   triggeredBy String   // 'schedule', 'manual', 'api'
   status      ReportExecutionStatus

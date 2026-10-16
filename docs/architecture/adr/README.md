@@ -263,6 +263,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-075](./ADR-075-production-secrets-management.md)                        | Production secrets: Terraform/HCP + Railway native env store, no separate Vault              | ✅ Accepted | 2026-10-12 | #317                        |
 | [ADR-076](./ADR-076-case-types-applied-at-case-creation.md)                  | Case types applied at case creation (defaults precedence, create-only, tenant-consistent FK) | Accepted    | 2026-10-13 | PG-204                      |
 | [ADR-077](./ADR-077-push-based-executor-status.md)                           | Push-based executor status file in front of orchestrator polling                             | 📝 Proposed | 2026-10-16 | #581                        |
+| [ADR-078](./ADR-078-report-schedule-contract.md)                             | Report schedule contract (report_schedules read by the IFC-308 cron)                         | Accepted    | 2026-10-13 | PG-201                      |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**

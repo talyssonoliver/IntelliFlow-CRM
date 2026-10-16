@@ -2475,7 +2475,7 @@
     },
     {
       "route": "/analytics/scheduled-reports",
-      "file_path": "apps/web/src/app/analytics/scheduled-reports/page.tsx",
+      "file_path": "apps/web/src/app/analytics/(list)/scheduled-reports/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {

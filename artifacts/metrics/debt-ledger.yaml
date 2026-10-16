@@ -5695,6 +5695,45 @@ alerts:
       hard gate (see GOV-A-005). Separate remediation PR.
     status: open
     notes: 'Gate exists but not enforced in pre-ship/CI, so drift accumulated.'
+  PG-201-SCHEDULE-RECIPIENT-RESTRICTION:
+    origin_task: PG-201
+    owner: Backend Eng (STOA-Security)
+    severity: medium
+    description: >-
+      Scheduled report recipients accept any valid email address. Writes are limited
+      to admin/manager/owner roles and recipient changes are audited by count, but a
+      manager can still schedule tenant analytics to an external address.
+      Validator packages/validators/src/scheduled-reports.ts (recipientsSchema);
+      router apps/api/src/modules/analytics/scheduled-reports.router.ts (create/update).
+      GitHub issue #869.
+    created_at: 2026-10-13
+    expiry_date: 2026-12-13
+    remediation_sprint: 24
+    remediation_plan: >-
+      Tenant-level allowlist of external email domains (default: the tenant's own
+      domains); reject recipients that are neither tenant members nor on the
+      allowlist; decide before IFC-308 sends anything in production.
+    status: open
+    notes: 'Recorded as a follow-up by the owner''s delegate on 2026-10-13; not blocking PG-201.'
+  PG-201-SCHEDULE-ISACTIVE-CATEGORY-2:
+    origin_task: PG-201
+    owner: Tech Lead (STOA-Domain)
+    severity: low
+    description: >-
+      ReportSchedule.isActive is a category-2 toggle (module-settings-playbook §8):
+      PG-201 stores schedules and nextRunAt but adds no scheduler, so nothing is sent
+      until IFC-308's BullMQ cron reads report_schedules (ADR-078). The page states
+      this in its Delivery status card.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 24
+    remediation_plan: >-
+      IFC-308 registers one job scheduler per active row
+      (upsertJobScheduler('report-schedule:<id>', { pattern: cronExpression, tz: timezone })),
+      removes it on pause/delete, writes report_executions, updates lastRunAt/nextRunAt,
+      and adds the report_executions.scheduleId FK + index.
+    status: open
+    notes: 'Contract: docs/architecture/adr/ADR-078-report-schedule-contract.md.'
   DEP-CVE-BRACES-STACKOVERFLOW-001:
     origin_task: '#452'
     owner: DevOps Lead

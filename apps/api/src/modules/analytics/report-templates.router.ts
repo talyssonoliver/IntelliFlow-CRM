@@ -243,11 +243,24 @@ export const reportTemplatesRouter = createTRPCRouter({
     // Creator-only delete: mirrors the update ownership guard.
     // A user who can *see* a shared template (via list()) cannot delete it
     // if they are not the creator.
-    const result = await ctx.prismaWithTenant.$transaction(async (tx) => {
-      return tx.reportTemplate.deleteMany({
-        where: { id: input.id, tenantId, createdBy: userId },
+    let result: { count: number };
+    try {
+      result = await ctx.prismaWithTenant.$transaction(async (tx) => {
+        return tx.reportTemplate.deleteMany({
+          where: { id: input.id, tenantId, createdBy: userId },
+        });
       });
-    });
+    } catch (err: unknown) {
+      // PG-201: report_schedules.templateId is ON DELETE NO ACTION (a used template cannot be deleted).
+      if ((err as { code?: string }).code === 'P2003') {
+        throw new TRPCError({
+          code: 'CONFLICT',
+          message:
+            'This template is used by scheduled reports. Remove it from those schedules first.',
+        });
+      }
+      throw err;
+    }
 
     if (result.count === 0) {
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Report template not found.' });

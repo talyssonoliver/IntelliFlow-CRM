@@ -20,7 +20,9 @@ describe('Report Settings page.tsx', () => {
   it('exports metadata with title and description', () => {
     expect(metadata).toBeDefined();
     expect(metadata.title).toMatch(/Report Settings/i);
-    expect(metadata.description).toMatch(/date range|currency|delivery/i);
+    expect(metadata.description).toMatch(/date range|currency/i);
+    // PG-201: scheduled delivery moved to /analytics/scheduled-reports.
+    expect(metadata.description).not.toMatch(/scheduled delivery/i);
   });
 
   it('renders ReportSettingsContent inside Suspense', () => {

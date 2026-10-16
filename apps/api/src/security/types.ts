@@ -100,7 +100,8 @@ export type ResourceType =
   | 'session'
   | 'system'
   | 'pipeline_config'
-  | 'goal';
+  | 'goal'
+  | 'report_schedule'; // PG-201 audit trail
 
 /**
  * Permission actions

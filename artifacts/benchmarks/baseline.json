@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-16T00:41:58.204Z",
+  "timestamp": "2026-10-16T11:16:28.975Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 68,
-    "total_endpoints": 550,
-    "total_queries": 238,
-    "total_mutations": 312,
+    "total_routers": 69,
+    "total_endpoints": 556,
+    "total_queries": 240,
+    "total_mutations": 316,
     "routers": [
       {
         "name": "contact",
@@ -1243,6 +1243,12 @@
         "mutations": 4
       },
       {
+        "name": "scheduledReports",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "feedback",
         "endpoints": 6,
         "queries": 3,
@@ -1431,16 +1437,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 194,
-    "total_fields": 2795,
-    "total_indexes": 882,
-    "total_relations": 273,
+    "total_tables": 195,
+    "total_fields": 2815,
+    "total_indexes": 885,
+    "total_relations": 275,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 171,
+        "fields": 172,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1555,6 +1561,13 @@
         "fields": 25,
         "indexes": 7,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportSchedule",
+        "fields": 25,
+        "indexes": 5,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1712,13 +1725,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "ReportSchedule",
-        "fields": 17,
-        "indexes": 5,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "NotificationDLQ",
         "fields": 17,
         "indexes": 4,
@@ -1758,6 +1764,13 @@
         "fields": 16,
         "indexes": 6,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportExecution",
+        "fields": 16,
+        "indexes": 5,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1856,13 +1869,6 @@
         "fields": 15,
         "indexes": 6,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "ReportExecution",
-        "fields": 15,
-        "indexes": 5,
-        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2315,6 +2321,13 @@
       },
       {
         "name": "CaseTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ReportScheduleTag",
         "fields": 10,
         "indexes": 3,
         "relations": 1,
@@ -3155,10 +3168,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 55,
-    "total_schemas": 611,
+    "total_validators": 56,
+    "total_schemas": 626,
     "by_complexity": {
-      "complex": 34,
+      "complex": 35,
       "moderate": 17,
       "simple": 4
     },
@@ -3268,6 +3281,12 @@
       {
         "name": "feedback",
         "file": "feedback.ts",
+        "schemas": 15,
+        "complexity": "complex"
+      },
+      {
+        "name": "scheduled-reports",
+        "file": "scheduled-reports.ts",
         "schemas": 15,
         "complexity": "complex"
       },
@@ -4049,6 +4068,38 @@
         "name": "reportTemplates.delete",
         "method": "POST",
         "description": "Delete reportTemplates"
+      }
+    ],
+    "scheduledReports": [
+      {
+        "name": "scheduledReports.list",
+        "method": "GET",
+        "description": "List scheduledReportss with pagination"
+      },
+      {
+        "name": "scheduledReports.create",
+        "method": "POST",
+        "description": "Create new scheduledReports"
+      },
+      {
+        "name": "scheduledReports.update",
+        "method": "POST",
+        "description": "Update scheduledReports"
+      },
+      {
+        "name": "scheduledReports.delete",
+        "method": "POST",
+        "description": "Delete scheduledReports"
+      },
+      {
+        "name": "scheduledReports.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "scheduledReports.setActive",
+        "method": "POST",
+        "description": "Set active"
       }
     ],
     "auth": [
