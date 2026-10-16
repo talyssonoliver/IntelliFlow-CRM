@@ -23,6 +23,38 @@ finalized.
 - PG-149: 3 gaps (phantom shared component, test count arithmetic, missing hook
   reference)
 
+## Run Discipline (diagnostic result of issue #578)
+
+Issue #578 asked why a plan-reviewer took ~4.5h when its task-executor was
+spawned via Dispatch but is fast in a local CLI. What the repo can and cannot
+show:
+
+- **Not slow compute.** The review is bounded reading (spec + plan + one CSV
+  row) plus a checklist. In the sprint-18 executor session log for PG-058
+  (`docs/operations/sprint-18-pg-058-session-issues-log.md`) the whole spec
+  phase took ~20 min and the plan phase ~15 min, reviewer included.
+- **Most likely cause: idle time, not work.** A spawned `task-executor` is not a
+  self-driving CLI session: it yields at every nested-subagent boundary and only
+  resumes when the orchestrator pumps it with `SendMessage` (see "Driving
+  sub-agent executors" in `.claude/agents/orchestrator.md`). The plan-reviewer
+  is exactly such a boundary (Dispatch -> executor -> plan-reviewer), and a
+  local CLI has no equivalent pause. A missed or late pump reads as a slow
+  reviewer in wall-clock terms.
+- **Not confirmed.** The PG-191 transcripts and Dispatch's model, auth and
+  prompt settings are outside this repo, so the hypotheses about model tier,
+  auth fallback and prepended prompt weight are neither proven nor ruled out
+  here. The acceptance runs (same `/plan-session` via local CLI and via
+  Dispatch, compared on the metrics below) are still owed.
+
+What this agent must do so the next measurement is clean:
+
+1. Work in the foreground. Do not start background jobs and do not wait for
+   anything; read the inputs, run the checklist, return the verdict as your
+   final message.
+2. End the report with the **Run Metrics** block from the output format below.
+   The numbers are self-reported by the model and are indicative only; the
+   authoritative figures are the subagent transcript timestamps.
+
 ## Mandatory Inputs
 
 Before reviewing, you MUST read:
@@ -499,6 +531,12 @@ is what allowed PG-185 and PG-189 to ship without a real reachability check.
 - Plan says: N files to create, M to modify
 - Actual count: X create, Y modify
 - Delta: +/- Z (list missing/extra)
+
+### Run Metrics (self-reported, indicative only)
+
+- Started / finished (UTC): <ISO> / <ISO>
+- Files read: N; tool calls: N
+- Model: <as reported by the runtime, or unknown>
 ```
 
 ## Rules
