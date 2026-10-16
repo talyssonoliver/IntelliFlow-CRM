@@ -81,9 +81,7 @@ export function initializeOpenTelemetry(): NodeSDK | null {
 
   const sdk = new NodeSDK({
     resource,
-    // Shared with apps/api — see packages/observability/src/node-instrumentations.ts
-    // (IFC-032 / #809) for the fs/http/pino instrumentation config and rationale.
-    instrumentations: [getStandardNodeInstrumentations()],
+    instrumentations: getStandardNodeInstrumentations(),
   });
 
   console.log(`[OpenTelemetry] Initialized tracing for ${config.serviceName}`);

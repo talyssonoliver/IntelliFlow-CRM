@@ -117,8 +117,6 @@ export function initializeOpenTelemetry(): NodeSDK | null {
   // For Sprint 1, we use a simplified setup to avoid version conflicts
   const sdk = new NodeSDK({
     resource,
-    // Shared with apps/ai-worker — see packages/observability/src/node-instrumentations.ts
-    // (IFC-032 / #809) for the fs/http/pino instrumentation config and rationale.
     instrumentations: [getStandardNodeInstrumentations()],
   });
 
