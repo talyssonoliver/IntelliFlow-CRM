@@ -297,6 +297,46 @@ describe('get()', () => {
     expect(result!.status).toBe('PENDING'); // PENDING_APPROVAL → PENDING
   });
 
+  it('B2b: keeps the execution state of a row claimed for execution (EXECUTING)', async () => {
+    // Shaped as claimForExecution persists it: APPROVED, executionStatus EXECUTING.
+    const row = makeAgentActionRow({
+      status: 'APPROVED',
+      proposedState: {
+        changes: [],
+        affectedEntities: [],
+        executionStatus: 'EXECUTING',
+        executedInput: { title: 'Ran' },
+      },
+    });
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+
+    const result: any = await store.get(ACTION_ID);
+
+    expect(result.executionStatus).toBe('EXECUTING');
+  });
+
+  it('B2c: keeps the execution error and result of a failed execution', async () => {
+    const row = makeAgentActionRow({
+      status: 'APPROVED',
+      proposedState: {
+        changes: [],
+        affectedEntities: [],
+        executionStatus: 'FAILED',
+        executionError: 'Client not found',
+        executionResult: { attempted: true },
+      },
+    });
+    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+
+    const result: any = await store.get(ACTION_ID);
+
+    expect(result).toMatchObject({
+      executionStatus: 'FAILED',
+      executionError: 'Client not found',
+      executionResult: { attempted: true },
+    });
+  });
+
   it('B3: maps preview fields from proposedState', async () => {
     const row = makeAgentActionRow();
     (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);

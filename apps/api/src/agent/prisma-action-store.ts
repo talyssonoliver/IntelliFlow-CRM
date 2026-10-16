@@ -360,7 +360,14 @@ export class PrismaAgentActionStore {
   // Mappers
   // ---------------------------------------------------------------------------
 
-  private toPendingAction(row: AgentAction): PendingAction {
+  /**
+   * Execution fields ride along so a read by id (the detail view) shows an interrupted or
+   * failed execution the same way the queue does. `update()` never writes them back.
+   */
+  private toPendingAction(
+    row: AgentAction
+  ): PendingAction &
+    Pick<ExecutedAction, 'executionStatus' | 'executionResult' | 'executionError'> {
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     const input = (row.previousState as Record<string, unknown>) ?? {};
     const metadata = row.aiReasoning ? this.safeParseJson(row.aiReasoning) : undefined;
@@ -392,6 +399,9 @@ export class PrismaAgentActionStore {
       createdBy: row.agentId,
       agentSessionId: row.agentName,
       metadata,
+      executionStatus: proposed.executionStatus as ExecutionStatus | undefined,
+      executionResult: proposed.executionResult,
+      executionError: proposed.executionError as string | undefined,
     };
   }
 
