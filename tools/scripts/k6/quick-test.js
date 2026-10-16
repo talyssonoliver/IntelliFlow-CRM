@@ -104,7 +104,7 @@ export default function (data) {
   var input = encodeURIComponent(JSON.stringify({ json: { limit: 10 } }));
   var leadRes = http.get(BASE_URL + TRPC_PATH + '/lead.list?input=' + input, { headers: headers });
 
-  var leadOk = check(leadRes, {
+  check(leadRes, {
     'lead.list status 200': function (r) {
       return r.status === 200;
     },

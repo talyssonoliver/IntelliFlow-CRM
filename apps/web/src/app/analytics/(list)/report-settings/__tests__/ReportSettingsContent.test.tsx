@@ -105,7 +105,7 @@ describe('ReportSettingsContent', () => {
     expect(screen.getByRole('link', { name: 'Analytics' })).toBeInTheDocument();
   });
 
-  it('renders 3 sections (DefaultRange / Currency / ScheduledDelivery)', async () => {
+  it('renders DefaultRange and Currency plus the scheduled-delivery link card (PG-201)', async () => {
     setup({
       queryData: {
         defaultRange: '30d',
@@ -127,7 +127,17 @@ describe('ReportSettingsContent', () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByRole('button', { name: /select display currency/i })).toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: /enable scheduled delivery/i })).toBeInTheDocument();
+    // PG-201: the Scheduled Delivery card is replaced by a link to the new page.
+    expect(screen.queryByRole('switch', { name: /enable scheduled delivery/i })).toBeNull();
+    // Same level as the sibling Default Range / Currency section headings (h3), so the
+    // outline stays h1 > h3, h3, h3 instead of an h2 after its h3 siblings.
+    expect(
+      screen.getByRole('heading', { level: 3, name: /scheduled delivery has moved/i })
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /open scheduled reports/i })).toHaveAttribute(
+      'href',
+      '/analytics/scheduled-reports'
+    );
   });
 
   it('renders skeleton while loading', () => {
@@ -166,18 +176,17 @@ describe('ReportSettingsContent', () => {
     });
   });
 
-  it('falls back to defaults when server returns null scheduledDelivery', async () => {
+  it('keeps the server range and currency when the legacy scheduledDelivery is malformed (PG-201)', async () => {
     setup({
       queryData: {
-        defaultRange: '30d',
-        currency: 'USD',
+        defaultRange: '7d',
+        currency: 'EUR',
         scheduledDelivery: null,
       },
     });
     render(<ReportSettingsContent />);
     await waitFor(() => {
-      const sw = screen.getByRole('switch', { name: /enable scheduled delivery/i });
-      expect(sw).toHaveAttribute('data-state', 'unchecked');
+      expect(screen.getByRole('radio', { name: /7 days/i })).toBeChecked();
     });
   });
 
@@ -225,8 +234,35 @@ describe('ReportSettingsContent', () => {
     await waitFor(() => expect(save).not.toBeDisabled());
     fireEvent.click(save);
     await waitFor(() => expect(mutateUpdate).toHaveBeenCalled());
-    expect(mutateUpdate).toHaveBeenCalledWith(
-      expect.objectContaining({ defaultRange: '7d', currency: 'USD' })
+    // PG-201: Report Settings no longer sends the legacy scheduledDelivery blob.
+    expect(mutateUpdate).toHaveBeenCalledWith({ defaultRange: '7d', currency: 'USD' });
+  });
+
+  it('does not gate Save on legacy delivery recipients (PG-201: the card moved)', async () => {
+    // The removed Scheduled Delivery card blocked Save when delivery was enabled with no
+    // recipients. That legacy state must no longer stop range/currency changes.
+    const { mutateUpdate } = setup({
+      queryData: {
+        defaultRange: '30d',
+        currency: 'USD',
+        scheduledDelivery: {
+          enabled: true,
+          frequency: 'weekly',
+          dayOfWeek: 1,
+          time: '09:00',
+          recipients: [],
+          format: 'pdf',
+        },
+      },
+    });
+    render(<ReportSettingsContent />);
+    await waitFor(() => screen.getByRole('radio', { name: /7 days/i }));
+    fireEvent.click(screen.getByRole('radio', { name: /7 days/i }));
+    const save = screen.getByRole('button', { name: /save changes/i });
+    await waitFor(() => expect(save).not.toBeDisabled());
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(mutateUpdate).toHaveBeenCalledWith({ defaultRange: '7d', currency: 'USD' })
     );
   });
 
@@ -252,6 +288,33 @@ describe('ReportSettingsContent', () => {
     const confirm = await screen.findByRole('button', { name: /^reset$/i });
     fireEvent.click(confirm);
     await waitFor(() => expect(mutateReset).toHaveBeenCalled());
+  });
+
+  const seeded = {
+    defaultRange: '30d',
+    currency: 'USD',
+    scheduledDelivery: {
+      enabled: false,
+      frequency: 'weekly',
+      dayOfWeek: 1,
+      time: '09:00',
+      recipients: [],
+      format: 'pdf',
+    },
+  };
+
+  it('picking a currency marks the form dirty and saves the new currency', async () => {
+    const { mutateUpdate } = setup({ queryData: seeded });
+    render(<ReportSettingsContent />);
+    const save = await screen.findByRole('button', { name: /save changes/i });
+    expect(save).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /select display currency/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /EUR/ }));
+    await waitFor(() => expect(save).not.toBeDisabled());
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(mutateUpdate).toHaveBeenCalledWith(expect.objectContaining({ currency: 'EUR' }))
+    );
   });
 
   it('orchestrator does not import ModuleSettingsLayout (source-level grep)', async () => {

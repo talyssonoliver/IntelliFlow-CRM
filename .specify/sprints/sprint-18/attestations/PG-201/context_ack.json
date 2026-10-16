@@ -1,0 +1,38 @@
+{
+  "task_id": "PG-201",
+  "run_id": "PG-201-exec-20261013",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/analytics.ts",
+      "sha256": "e23e39f8f6efd94410114c33604e66768a8a97a2117b2b53bb4fc1694049fe8f",
+      "read_at": "2026-10-13T00:55:38.310Z"
+    },
+    {
+      "path": "apps/web/src/app/analytics/(list)/report-settings/page.tsx",
+      "sha256": "488a0d66931d14cf21136a68cbfbd1f39dc19648828dca88691e1c41fd970660",
+      "read_at": "2026-10-13T00:55:38.310Z"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "read_at": "2026-10-13T00:55:38.310Z"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "de6cea5c763e09dab9965658990e24507ca45c395e9893e66b0a8b4dc4cbb590",
+      "read_at": "2026-10-13T00:55:38.310Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Owner ruling 2026-10-13: evolve report_schedules in place; no new schedule table; no DROP TABLE/COLUMN; legacy columns stay.",
+    "A schedule that is active must reference a report template or a report definition (DB CHECK + router BAD_REQUEST).",
+    "tenantId comes only from ctx.tenant; every mutation is scoped by { id, tenantId } and a foreign-tenant id yields NOT_FOUND.",
+    "Every destructive write (update, setActive, delete, tag rename/delete) runs in $transaction; createMany never uses skipDuplicates.",
+    "PG-201 adds no scheduler, queue or worker: IFC-308 reads report_schedules (cron + IANA timezone) and owns the isActive runtime (category-2).",
+    "The report_settings.scheduledDelivery copy is a production data write: idempotent, tenant-scoped, inactive rows, legacy JSON untouched; flagged loudly.",
+    "Mutations require ADMIN/MANAGER/OWNER/SUPER_ADMIN; reads need the ANALYTICS module entitlement (moduleTenantProcedure).",
+    "Page follows the module-settings playbook: PageHeader + 12-col bento, canonical EmptyState without a CTA, TagsTab via forwardRef, colorToken CHECK.",
+    "Real data only: no seeded schedules and no fake delivery status; the page states delivery is pending IFC-308."
+  ],
+  "created_at": "2026-10-13T00:55:38.310Z"
+}

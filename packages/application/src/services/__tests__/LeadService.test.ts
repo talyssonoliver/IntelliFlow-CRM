@@ -10,11 +10,20 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { LeadService, LEAD_SCORE_THRESHOLDS } from '../LeadService';
-import { Lead, LeadId, Email, Account, Contact, Result, DomainError } from '@intelliflow/domain';
+import {
+  Lead,
+  LeadId,
+  Email,
+  Account,
+  Contact,
+  Result,
+  DomainError,
+  PhoneNumber,
+} from '@intelliflow/domain';
 import { LeadRepository, ContactRepository, AccountRepository } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort, LeadScoringResult } from '../../ports';
 import type { TransactionPort } from '@intelliflow/application';
-import { ValidationError, PersistenceError } from '../../errors';
+import { ValidationError } from '../../errors';
 
 // ENG-OPS-002: LeadService now requires a TransactionPort as its final
 // constructor arg. This fake just runs the callback — behaviour-neutral for
@@ -361,6 +370,102 @@ describe('LeadService', () => {
       expect(result.value.budget).toBe('Q3 approved');
       expect(result.value.timeline).toBe('short');
       expect(result.value.annualRevenue).toBe('10M-50M');
+    });
+  });
+
+  describe('updateLead() — clearable fields (IFC-412)', () => {
+    // Owner ruling 2026-10-12: company, phone, name (first/last), estimatedValue,
+    // location and website must be clearable from the lead edit form, including
+    // the "required-looking" ones. `updateLead` must accept an explicit `null`
+    // for these fields (forwarded to the domain's `updateContactInfo`) and must
+    // never touch a field the caller did not mention.
+    async function seedLead() {
+      const lead = Lead.create({
+        email: 'clear-via-service@example.com',
+        source: 'WEBSITE',
+        ownerId: 'owner-123',
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'Acme Corp',
+        phone: PhoneNumber.create('+15551234567').value,
+        location: 'NYC',
+        website: 'https://acme.example.com',
+        estimatedValue: 5000,
+        title: 'VP',
+      }).value;
+      leadRepository.add(lead);
+      return lead;
+    }
+
+    it.each([
+      ['firstName', null],
+      ['lastName', null],
+      ['company', null],
+      ['location', null],
+      ['website', null],
+      ['estimatedValue', null],
+    ] as const)('clears %s to undefined when updateLead receives null', async (field, value) => {
+      const lead = await seedLead();
+      const result = await leadService.updateLead(lead.id.value, { [field]: value });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value[field]).toBeUndefined();
+    });
+
+    it('clears phone to undefined when updateLead receives null', async () => {
+      const lead = await seedLead();
+      const result = await leadService.updateLead(lead.id.value, { phone: null });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.phone).toBeUndefined();
+    });
+
+    it('still validates a non-null phone (rejects an invalid number)', async () => {
+      const lead = await seedLead();
+      const result = await leadService.updateLead(lead.id.value, { phone: 'not-a-phone' });
+
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('leaves every untouched field unchanged when only one field is cleared', async () => {
+      const lead = await seedLead();
+      const result = await leadService.updateLead(lead.id.value, { company: null });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.company).toBeUndefined();
+      // Untouched:
+      expect(result.value.firstName).toBe('John');
+      expect(result.value.lastName).toBe('Doe');
+      expect(result.value.phone?.value).toBe('+15551234567');
+      expect(result.value.location).toBe('NYC');
+      expect(result.value.website).toBe('https://acme.example.com');
+      expect(result.value.estimatedValue).toBe(5000);
+      expect(result.value.title).toBe('VP');
+    });
+
+    it('clears several fields in one call and persists the clear via the repository', async () => {
+      const lead = await seedLead();
+      const result = await leadService.updateLead(lead.id.value, {
+        company: null,
+        phone: null,
+        estimatedValue: null,
+      });
+      expect(result.isSuccess).toBe(true);
+
+      const persisted = await leadRepository.findById(lead.id);
+      expect(persisted?.company).toBeUndefined();
+      expect(persisted?.phone).toBeUndefined();
+      expect(persisted?.estimatedValue).toBeUndefined();
+      expect(persisted?.firstName).toBe('John');
+      expect(persisted?.lastName).toBe('Doe');
+    });
+
+    it('still sets a real (non-null) value for a clearable field that is not cleared', async () => {
+      const lead = await seedLead();
+      const result = await leadService.updateLead(lead.id.value, { company: 'Globex' });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.company).toBe('Globex');
     });
   });
 

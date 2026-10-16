@@ -22,7 +22,6 @@ const DOCKERFILES = [
   'infra/docker/Dockerfile.web',
   'apps/workers/events-worker/Dockerfile',
   'apps/workers/ingestion-worker/Dockerfile',
-  'apps/workers/notifications-worker/Dockerfile',
 ];
 
 function readNvmrcMajor() {

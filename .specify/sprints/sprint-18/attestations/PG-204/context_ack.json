@@ -1,0 +1,80 @@
+{
+  "task_id": "PG-204",
+  "run_id": "exec-PG-204-20261013",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/cases.ts",
+      "sha256": "98cc02470a49a41cd646edb9518e7de5cc646026fe2ab990e8dcbcc419cd17c7"
+    },
+    {
+      "path": "apps/web/src/app/cases/(list)/case-settings/page.tsx",
+      "sha256": "c296a5dbffd4b137a0adc46e7c079c28aed3d83f52fc8b8829d60b8fa8b208a1"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "7f399921a3ff1dcdc021aded47052e50ad019f7de454d62be6b52bc045ce20f8"
+    },
+    {
+      "path": "apps/web/src/app/cases/(list)/case-types/page.tsx",
+      "sha256": "f4d255a6c3d3910350f0444b17f7e7d6cca4cfb8c3e24ddb7adb41d094be4254"
+    },
+    {
+      "path": "apps/api/src/modules/legal/cases.router.ts",
+      "sha256": "c8c50c49a5f1317ff34b35e8b024a498de4b6d74e8a80e428bc4be7de7fee3aa"
+    },
+    {
+      "path": "apps/api/src/modules/legal/case-settings.router.ts",
+      "sha256": "01241ccb4b609875a7072ec0eea51bf400bfaa542d58b86fbab306465217a664"
+    },
+    {
+      "path": "apps/api/src/modules/account/account-territories.router.ts",
+      "sha256": "7595f8384c4cad1303f5149074b41c1ddc7dfc8c935322995f51d475ddb2ea33"
+    },
+    {
+      "path": "packages/validators/src/case.ts",
+      "sha256": "df28953e97c70c753228544cf84ab3bc302fba428798a5081f7f712369e63168"
+    },
+    {
+      "path": "packages/validators/src/case-settings.ts",
+      "sha256": "e932906250697267fe52f71bd25add35949a0e6b5f9af80364d2ebb4c61ff24c"
+    },
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "sha256": "18d5f8f21b15c95b7a7d84acea92d4c55ce523c0a80418e5734bb08247161df1"
+    },
+    {
+      "path": "apps/web/src/components/cases/CaseForm.tsx",
+      "sha256": "2ace309dbd35ea3daf3d53f739933803087c6a78014144e89b7f719cfce6cdd6"
+    },
+    {
+      "path": "apps/api/src/lib/timezone-utils.ts",
+      "sha256": "45d0dadd46068596bc479fba21636170f1228a330636997eda7f2afeb5148497"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-076-case-types-applied-at-case-creation.md",
+      "sha256": "a80cbd6b0468329637e81253a88f36c237ffc2305e5094bf5f95ca3acfb1670a"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/context/PG-204/PG-204-owner-ruling.md",
+      "sha256": "d6b4877ce75d0097b64b7ac642b4b6754971239be9690873884913658a37b397"
+    }
+  ],
+  "hashed_at": "2026-10-13T00:22:19.430Z",
+  "read_at_note": "The 15 sha256 values were computed in one pass at hashed_at. Per-file read times were not recorded, so the earlier per-file read_at values (all identical) were the hash time, not read times. Relabelled 2026-10-13T06:43:36Z.",
+  "invariants_acknowledged": [
+    "Owner ruling Q1=A: case types are applied only at case creation (priority, deadline, required fields, checklist seeded as CaseTasks); caseTypeId is never changed by cases.update.",
+    "Owner ruling Q2=Yes: with no type, PG-190 CaseSettings.defaultPriority and tenant CaseRequiredField rows apply; precedence is explicit input > type > module default > MEDIUM.",
+    "Required fields follow the same fallback: a type with a non-empty requiredFields set uses it, otherwise tenant rows (or DEFAULT_CASE_REQUIRED_FIELDS); checked on effective, trimmed values.",
+    "Every caseTypes query and mutation passes tenantId explicitly; cases(tenantId, caseTypeId) -> case_types(tenantId, id) is a composite FK so a cross-tenant link fails at the DB.",
+    "All caseTypes procedures use moduleTenantProcedure(LEGAL); mutations require CASE_TYPE_ADMIN_ROLES (ADMIN, MANAGER; OWNER/SUPER_ADMIN forward-compat).",
+    "Multi-row writes run in $transaction; never skipDuplicates; P2002 maps to CONFLICT with constraint-specific static messages; Prisma messages are never returned.",
+    "The page is the existing stub at apps/web/src/app/cases/(list)/case-types/page.tsx (served at /cases/case-types); no second route is created; the sidebar entry already exists.",
+    "The migration is additive Class A (new tables + nullable column); it is applied only to the local test DB here and must be applied to production manually before the code ships (L13).",
+    "colorToken is one of the 8 CASE_TAG_COLOR_TOKENS, enforced by Zod and a DB CHECK; AI toggles: none added."
+  ],
+  "created_at": "2026-10-13T00:22:19.430Z"
+}

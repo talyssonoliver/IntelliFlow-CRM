@@ -1,5 +1,5 @@
 /**
- * Approval Policies Router - PG-198 (Module Settings: Approval Policies, ADR-077)
+ * Approval Policies Router - PG-198 (Module Settings: Approval Policies, ADR-079)
  *
  * Tenant policies that govern both approval queues: agent tool actions and AI
  * auto-response drafts. Reads are open to the tenant; every mutation needs an

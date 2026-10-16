@@ -159,8 +159,8 @@ async function createCase(
   options: ExecutionOptions
 ): Promise<ExecutionResult> {
   const { casesRouter } = await import('../modules/legal/cases.router.js');
-  // Explicit assignee — the requester, as the approval preview showed it — because
-  // cases.create cannot default one itself (#872).
+  // Explicit assignee — the requester, as the approval preview showed it. Left to
+  // itself, cases.create would assign the caller, which here is the approver.
   const assignedTo = input.assignedTo ?? options.requesterId ?? ctx.user?.userId;
   const created = await casesRouter.createCaller(ctx as CallerCtx).create({
     ...pick(input, ['title', 'description', 'priority', 'deadline', 'clientId']),

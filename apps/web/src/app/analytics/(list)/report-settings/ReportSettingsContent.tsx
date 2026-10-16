@@ -1,35 +1,37 @@
 'use client';
 
 // Report Settings Content — PG-187
-// PageHeader + 12-col bento grid (playbook §1).
-// Replaces the prior deprecated-layout-based orchestrator.
+// Report-specific state/validation over the shared ModuleSettingsShell, which
+// owns the page chrome (skeleton / error / header actions / grid / reset dialog).
+// Migrated onto the shell by GH #576 (MODULE-SETTINGS-SHELL-SIBLING-MIGRATION-001).
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Card, ConfirmationDialog, toast } from '@intelliflow/ui';
-import { PageHeader, type PageAction } from '@/components/shared/page-header';
+import { Card, toast } from '@intelliflow/ui';
+import { ModuleSettingsShell } from '@/components/shared/module-settings-shell';
 import {
   reportSettingsSchema,
   DEFAULT_REPORT_SETTINGS,
   type DefaultRange,
-  type ScheduledDelivery,
 } from '@intelliflow/validators';
 import { DefaultRangeSection } from './components/DefaultRangeSection';
 import { CurrencySection } from './components/CurrencySection';
-import { ScheduledDeliverySection } from './components/ScheduledDeliverySection';
 
-function parseServerSnapshot(data: unknown): {
-  defaultRange: DefaultRange;
-  currency: string;
-  scheduledDelivery: ScheduledDelivery;
-} {
-  const parsed = reportSettingsSchema.safeParse(data);
-  if (parsed.success) return parsed.data;
+// PG-201: scheduled delivery moved to /analytics/scheduled-reports (one schedule
+// per template instead of one tenant-wide setting). This page no longer reads or
+// writes report_settings.scheduledDelivery.
+const pageSettingsSchema = reportSettingsSchema.pick({ defaultRange: true, currency: true });
+
+function parseServerSnapshot(data: unknown): { defaultRange: DefaultRange; currency: string } {
+  const parsed = pageSettingsSchema.safeParse(data);
+  if (parsed.success) {
+    return { defaultRange: parsed.data.defaultRange, currency: parsed.data.currency };
+  }
   return {
     defaultRange: DEFAULT_REPORT_SETTINGS.defaultRange,
     currency: DEFAULT_REPORT_SETTINGS.currency,
-    scheduledDelivery: DEFAULT_REPORT_SETTINGS.scheduledDelivery,
   };
 }
 
@@ -53,9 +55,6 @@ export default function ReportSettingsContent() {
     DEFAULT_REPORT_SETTINGS.defaultRange
   );
   const [currency, setCurrency] = useState<string>(DEFAULT_REPORT_SETTINGS.currency);
-  const [scheduledDelivery, setScheduledDelivery] = useState<ScheduledDelivery>(
-    DEFAULT_REPORT_SETTINGS.scheduledDelivery
-  );
   const [initialSnapshot, setInitialSnapshot] = useState<string | null>(null);
   const [resetOpen, setResetOpen] = useState(false);
 
@@ -65,37 +64,22 @@ export default function ReportSettingsContent() {
     const snap = parseServerSnapshot(settingsQuery.data);
     setDefaultRange(snap.defaultRange);
     setCurrency(snap.currency);
-    setScheduledDelivery(snap.scheduledDelivery);
     setInitialSnapshot(JSON.stringify(snap));
   }, [settingsQuery.data]);
 
   const currentSnapshot = useMemo(
-    () => JSON.stringify({ defaultRange, currency, scheduledDelivery }),
-    [defaultRange, currency, scheduledDelivery]
+    () => JSON.stringify({ defaultRange, currency }),
+    [defaultRange, currency]
   );
   const isDirty = initialSnapshot !== null && currentSnapshot !== initialSnapshot;
 
-  const recipientsInvalid = scheduledDelivery.enabled && scheduledDelivery.recipients.length === 0;
-
   const isSaving = updateMutation.isPending || resetMutation.isPending;
-  const canSave = isDirty && !isSaving && !recipientsInvalid;
+  const canSave = isDirty && !isSaving;
 
   // ─── Handlers ──────────────────────────────────────────────────────────────
   const handleSave = useCallback(async () => {
-    if (recipientsInvalid) {
-      toast({
-        title: 'Cannot save',
-        description: 'At least one recipient is required when scheduled delivery is enabled.',
-        variant: 'destructive',
-      });
-      return;
-    }
     try {
-      await updateMutation.mutateAsync({
-        defaultRange,
-        currency,
-        scheduledDelivery,
-      });
+      await updateMutation.mutateAsync({ defaultRange, currency });
       toast({
         title: 'Settings saved',
         description: 'Report settings have been updated successfully.',
@@ -107,7 +91,7 @@ export default function ReportSettingsContent() {
         variant: 'destructive',
       });
     }
-  }, [currency, defaultRange, recipientsInvalid, scheduledDelivery, updateMutation]);
+  }, [currency, defaultRange, updateMutation]);
 
   const handleReset = useCallback(async () => {
     try {
@@ -126,82 +110,58 @@ export default function ReportSettingsContent() {
     }
   }, [resetMutation]);
 
-  // ─── Early returns ─────────────────────────────────────────────────────────
-  if (authLoading || settingsQuery.isLoading) {
-    return (
-      <div className="w-full">
-        <div className="mb-6">
-          <div className="h-7 bg-muted animate-pulse rounded-md w-64 mb-2" />
-          <div className="h-4 bg-muted animate-pulse rounded-md w-96" />
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-          <div className="lg:col-span-6 h-48 bg-muted animate-pulse rounded-md" />
-          <div className="lg:col-span-6 h-48 bg-muted animate-pulse rounded-md" />
-          <div className="lg:col-span-12 h-64 bg-muted animate-pulse rounded-md" />
-        </div>
-      </div>
-    );
-  }
-
-  if (settingsQuery.error) {
-    return (
-      <div className="w-full">
-        <Card className="p-6 text-center">
-          <h2 className="text-lg font-semibold">Failed to load report settings</h2>
-          <p className="text-sm text-muted-foreground mt-2">{settingsQuery.error.message}</p>
-        </Card>
-      </div>
-    );
-  }
-
-  const actions: PageAction[] = [
-    {
-      label: 'Reset to Defaults',
-      variant: 'secondary',
-      onClick: () => setResetOpen(true),
-      disabled: isSaving,
-    },
-    {
-      label: isSaving ? 'Saving…' : 'Save Changes',
-      variant: 'primary',
-      onClick: handleSave,
-      disabled: !canSave,
-      loading: isSaving,
-    },
-  ];
-
+  // ─── Render ────────────────────────────────────────────────────────────────
+  // The chrome (skeleton / error card / header actions / section grid / reset
+  // dialog) lives in ModuleSettingsShell; this component only supplies its
+  // config + sections. See components/shared/module-settings-shell.tsx.
   return (
-    <div className="w-full">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Analytics', href: '/analytics' },
-          { label: 'Report Settings' },
-        ]}
-        title="Report Settings"
-        description="Configure default date range, display currency, and scheduled report delivery."
-        actions={actions}
-        className="mb-6"
-      />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        <DefaultRangeSection value={defaultRange} onChange={(v) => setDefaultRange(v)} />
-        <CurrencySection value={currency} onChange={(v) => setCurrency(v)} />
-        <ScheduledDeliverySection
-          value={scheduledDelivery}
-          onChange={(v) => setScheduledDelivery(v)}
-        />
-      </div>
-
-      <ConfirmationDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset to Defaults"
-        description="This will restore all report settings to their factory defaults. This action cannot be undone."
-        confirmLabel="Reset"
-        variant="destructive"
-        onConfirm={handleReset}
-      />
-    </div>
+    <ModuleSettingsShell
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' },
+        { label: 'Analytics', href: '/analytics' },
+        { label: 'Report Settings' },
+      ]}
+      title="Report Settings"
+      description="Configure the default date range and display currency for analytics reports."
+      errorTitle="Failed to load report settings"
+      isLoading={authLoading || settingsQuery.isLoading}
+      errorMessage={settingsQuery.error?.message ?? null}
+      isSaving={isSaving}
+      canSave={canSave}
+      onSave={handleSave}
+      resetOpen={resetOpen}
+      onResetOpenChange={setResetOpen}
+      onResetConfirm={handleReset}
+      resetDescription="This will restore the default date range and currency to their factory defaults. Scheduled reports are not affected. This action cannot be undone."
+    >
+      <DefaultRangeSection value={defaultRange} onChange={(v) => setDefaultRange(v)} />
+      <CurrencySection value={currency} onChange={(v) => setCurrency(v)} />
+      <Card className="p-4 sm:p-5 lg:col-span-12" data-testid="scheduled-delivery-moved">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-start gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                schedule_send
+              </span>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-foreground">
+                Scheduled delivery has moved
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Set up recurring report emails per template, each with its own cadence, timezone and
+                recipients.
+              </p>
+            </div>
+          </div>
+          <Link
+            href="/analytics/scheduled-reports"
+            className="inline-flex shrink-0 items-center justify-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
+            Open Scheduled Reports
+          </Link>
+        </div>
+      </Card>
+    </ModuleSettingsShell>
   );
 }

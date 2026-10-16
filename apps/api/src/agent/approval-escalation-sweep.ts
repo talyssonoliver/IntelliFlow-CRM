@@ -1,5 +1,5 @@
 /**
- * Approval escalation sweep (PG-198, ADR-077, AC-014).
+ * Approval escalation sweep (PG-198, ADR-079, AC-014).
  *
  * One tick, run inside a single transaction guarded by a transaction-scoped
  * advisory lock so replicas never double-fire:

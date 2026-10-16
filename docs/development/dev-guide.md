@@ -130,20 +130,19 @@ development.
 
 ### Packages NOT Required for Daily Development
 
-| Package                             | When to Run                      |
-| ----------------------------------- | -------------------------------- |
-| `@intelliflow/architecture-tests`   | Pre-commit/CI only               |
-| `@intelliflow/plan-linter`          | When editing Sprint_plan.csv     |
-| `@intelliflow/ai-worker`            | Only if working on AI features   |
-| `@intelliflow/events-worker`        | Only if working on events        |
-| `@intelliflow/ingestion-worker`     | Only if working on ingestion     |
-| `@intelliflow/notifications-worker` | Only if working on notifications |
-| `@intelliflow/observability`        | Config only, rarely builds       |
-| `@intelliflow/sdk`                  | Only if building SDK             |
-| `@intelliflow/webhooks`             | Only if working on webhooks      |
-| `@intelliflow/worker-shared`        | Only if working on workers       |
-| `@intelliflow/workers`              | Umbrella package for workers     |
-| `@intelliflow/typescript-config`    | Config only, no build            |
+| Package                           | When to Run                    |
+| --------------------------------- | ------------------------------ |
+| `@intelliflow/architecture-tests` | Pre-commit/CI only             |
+| `@intelliflow/plan-linter`        | When editing Sprint_plan.csv   |
+| `@intelliflow/ai-worker`          | Only if working on AI features |
+| `@intelliflow/events-worker`      | Only if working on events      |
+| `@intelliflow/ingestion-worker`   | Only if working on ingestion   |
+| `@intelliflow/observability`      | Config only, rarely builds     |
+| `@intelliflow/sdk`                | Only if building SDK           |
+| `@intelliflow/webhooks`           | Only if working on webhooks    |
+| `@intelliflow/worker-shared`      | Only if working on workers     |
+| `@intelliflow/workers`            | Umbrella package for workers   |
+| `@intelliflow/typescript-config`  | Config only, no build          |
 
 ### Optimized Development Commands
 

@@ -37,7 +37,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        service: [events-worker, ingestion-worker, notifications-worker]
+        service: [events-worker, ingestion-worker]
     steps:
       - name: Install Railway CLI
         run: npm install -g @railway/cli

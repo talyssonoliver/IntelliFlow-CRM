@@ -133,6 +133,12 @@ export function forLog(value) {
 function cell(text) {
   return String(text ?? '')
     .replace(/\r?\n/g, ' ')
+    // Backslashes must be escaped BEFORE pipes: escaping `|` alone lets a
+    // value already ending in `\` combine with the inserted `\` into `\\|`,
+    // which Markdown reads as an escaped backslash followed by an
+    // unescaped, cell-breaking `|` (the same class of bug as #465 in
+    // phantom-completed-audit.mjs).
+    .replace(/\\/g, '\\\\')
     .replace(/\|/g, '\\|')
     .replace(/[<>]/g, '')
     .slice(0, 200);
@@ -250,6 +256,18 @@ function appendTo(file, text) {
 }
 
 /**
+ * A value made safe for a `key=value` line in `$GITHUB_OUTPUT`: CR/LF is the
+ * one character class that matters there (GitHub Actions parses that file
+ * line-by-line), so a deployment id/url containing one could inject an extra
+ * output variable. Vercel API fields, not just the CLI reason/actor, are
+ * untrusted for this purpose.
+ * @param {unknown} value
+ */
+function forOutput(value) {
+  return String(value ?? '').replace(/\r?\n/g, ' ');
+}
+
+/**
  * `resolve` subcommand.
  *
  * @param {Record<string, string | undefined>} env
@@ -270,7 +288,7 @@ export async function runResolve(env, { fetchImpl, log = console.log } = {}) {
   appendTo(env.GITHUB_STEP_SUMMARY, summary);
   appendTo(
     env.GITHUB_OUTPUT,
-    `current_id=${currentId}\ntarget_id=${target.uid}\ntarget_url=${target.url}\n`
+    `current_id=${forOutput(currentId)}\ntarget_id=${forOutput(target.uid)}\ntarget_url=${forOutput(target.url)}\n`
   );
   log(forLog(summary));
   return { currentId, target, dryRun: cfg.dryRun };

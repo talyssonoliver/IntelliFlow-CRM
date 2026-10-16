@@ -6,17 +6,18 @@
  * weighted scoring across agents based on capacity and skill match.
  *
  * Strategy evaluation order:
- * 1. Rule match (RoutingRule records by priority DESC)
+ * 1. Rule match (RoutingRule records by priority DESC — higher number is evaluated
+ *    first; actions: assign_to_user, assign_to_team, assign_by_skill)
  * 2. Skill match (HOT leads → highest proficiency agent)
  * 3. Load balance (lowest-load ONLINE agent)
  * 4. No-match (error — no eligible agents)
  *
  * CRITICAL: Writes ONLY schema-valid fields to RoutingAudit.
  * Does NOT replicate TicketRoutingService phantom-field bug.
- * Schema fields: ticketId, ruleId, ruleName, toUserId, toUserName, reason, details
+ * Schema fields: ticketId, leadId, ruleId, ruleName, toUserId, toUserName, reason, details
  */
 
-import type { PrismaClient } from '@intelliflow/db';
+import { tenantUserWhere, type PrismaClient } from '@intelliflow/db';
 import { LeadRoutedEvent, type LeadId } from '@intelliflow/domain';
 import type { Tracer } from '@opentelemetry/api';
 import { SpanStatusCode } from '@opentelemetry/api';
@@ -56,10 +57,35 @@ export interface EligibleAgent {
   routingScore?: number;
 }
 
-export interface MatchedRule {
+/** The assignment a rule's actions resolved to. */
+export interface RuleAssignment {
+  assigneeId: string;
+  /** Which action produced the assignee. */
+  actionType: 'assign_to_user' | 'assign_to_team' | 'assign_by_skill';
+  /** The skill matched, for assign_by_skill; otherwise null. */
+  matchedSkill: string | null;
+}
+
+export interface MatchedRule extends RuleAssignment {
   ruleId: string;
   ruleName: string;
-  assigneeId: string;
+}
+
+interface ParsedRuleAction {
+  type: string;
+  target: string | undefined;
+}
+
+function parseRuleActions(raw: unknown): ParsedRuleAction[] {
+  if (!Array.isArray(raw)) return [];
+  const parsed: ParsedRuleAction[] = [];
+  for (const item of raw) {
+    if (item && typeof item === 'object' && 'type' in item && typeof item.type === 'string') {
+      const target = 'target' in item && typeof item.target === 'string' ? item.target : undefined;
+      parsed.push({ type: item.type, target });
+    }
+  }
+  return parsed;
 }
 
 export interface LeadRouteParams {
@@ -102,53 +128,7 @@ export class LeadRoutingService {
    * Optionally filters by required skill.
    */
   async getEligibleAgents(tenantId: string, requiredSkill?: string): Promise<EligibleAgent[]> {
-    const availabilities = await (this.prisma as any).agentAvailability.findMany({
-      where: {
-        tenantId,
-        status: { in: ['ONLINE', 'BUSY'] },
-      },
-    });
-
-    // Filter agents under capacity
-    const underCapacity = availabilities.filter((a: any) => a.currentCapacity < a.maxCapacity);
-
-    if (requiredSkill) {
-      const skillRecords = await (this.prisma as any).agentSkill.findMany({
-        where: {
-          tenantId,
-          skillName: requiredSkill,
-          userId: { in: underCapacity.map((a: any) => a.userId) },
-        },
-        orderBy: { proficiency: 'desc' },
-      });
-
-      const skillMap = new Map<string, number>();
-      for (const sr of skillRecords) {
-        skillMap.set(sr.userId, sr.proficiency);
-      }
-
-      return underCapacity
-        .filter((a: any) => skillMap.has(a.userId))
-        .map((a: any) => ({
-          agentId: a.userId,
-          name: a.userName || 'Unknown',
-          skills: [requiredSkill],
-          currentLoad: a.currentCapacity,
-          maxCapacity: a.maxCapacity,
-          status: a.status,
-          proficiency: skillMap.get(a.userId),
-        }))
-        .sort((a: EligibleAgent, b: EligibleAgent) => (b.proficiency ?? 0) - (a.proficiency ?? 0));
-    }
-
-    return underCapacity.map((a: any) => ({
-      agentId: a.userId,
-      name: a.userName || 'Unknown',
-      skills: [],
-      currentLoad: a.currentCapacity,
-      maxCapacity: a.maxCapacity,
-      status: a.status,
-    }));
+    return this.getEligibleAgentsInTx(this.prisma, tenantId, requiredSkill);
   }
 
   /**
@@ -168,35 +148,7 @@ export class LeadRoutingService {
    * Rules are ordered by priority DESC — first match wins.
    */
   async findMatchingRule(tenantId: string, leadContext: LeadContext): Promise<MatchedRule | null> {
-    const rules = await (this.prisma as any).routingRule.findMany({
-      where: {
-        tenantId,
-        ruleType: 'LEAD',
-        isActive: true,
-      },
-      orderBy: { priority: 'desc' },
-    });
-
-    for (const rule of rules) {
-      const conditions: RoutingCondition[] =
-        typeof rule.conditions === 'string' ? JSON.parse(rule.conditions) : rule.conditions;
-
-      if (this.evaluateConditions(conditions, leadContext)) {
-        const actions = typeof rule.actions === 'string' ? JSON.parse(rule.actions) : rule.actions;
-
-        const assignAction = (actions as any[]).find((a: any) => a.type === 'assign_to_user');
-
-        if (assignAction?.target) {
-          return {
-            ruleId: rule.id,
-            ruleName: rule.name,
-            assigneeId: assignAction.target,
-          };
-        }
-      }
-    }
-
-    return null;
+    return this.findMatchingRuleInTx(this.prisma, tenantId, leadContext);
   }
 
   /**
@@ -276,6 +228,7 @@ export class LeadRoutingService {
       let reason: string;
       let routingMethod: string;
       let matchedSkill: string | null = null;
+      let ruleActionType: string | null = null;
       let ruleId: string | null = null;
       let ruleName: string | null = null;
       let routingScore = 0;
@@ -287,6 +240,8 @@ export class LeadRoutingService {
         routingMethod = 'rule_match';
         ruleId = matchedRule.ruleId;
         ruleName = matchedRule.ruleName;
+        matchedSkill = matchedRule.matchedSkill;
+        ruleActionType = matchedRule.actionType;
 
         // Pre-transaction lookup for toUserName (D8 — never write '')
         const availability = await tx.agentAvailability.findMany({
@@ -355,7 +310,8 @@ export class LeadRoutingService {
       const audit = await tx.routingAudit.create({
         data: {
           tenantId: params.tenantId,
-          ticketId: params.leadId, // RoutingAudit.ticketId stores leadId
+          ticketId: params.leadId, // RoutingAudit.ticketId stores leadId (back-compat)
+          leadId: params.leadId, // #770: the column a reader should actually use
           ruleId: ruleId,
           ruleName: ruleName,
           toUserId: assigneeId,
@@ -365,6 +321,7 @@ export class LeadRoutingService {
             entityType: 'lead',
             routingMethod,
             matchedSkill,
+            ruleActionType,
             executionTimeMs,
             score: routingScore,
           },
@@ -528,6 +485,12 @@ export class LeadRoutingService {
 
     const underCapacity = availabilities.filter((a: any) => a.currentCapacity < a.maxCapacity);
 
+    if (requiredSkill && !tx.agentSkill) {
+      // Fail closed: without the skill table nobody can be shown to have the
+      // skill, so returning every agent would make assign_by_skill match anyone.
+      return [];
+    }
+
     if (requiredSkill && tx.agentSkill) {
       const skillRecords = await tx.agentSkill.findMany({
         where: {
@@ -568,7 +531,10 @@ export class LeadRoutingService {
   }
 
   /**
-   * In-transaction version of findMatchingRule.
+   * Find the first rule (priority DESC, ties by creation order) that matches the
+   * lead AND resolves to an assignee. A matching rule whose assignment actions
+   * resolve nobody (empty team, no skilled agent with capacity, no target) is
+   * skipped so the next rule can still apply.
    */
   private async findMatchingRuleInTx(
     tx: any,
@@ -581,26 +547,121 @@ export class LeadRoutingService {
         ruleType: 'LEAD',
         isActive: true,
       },
-      orderBy: { priority: 'desc' },
+      orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
     });
 
     for (const rule of rules) {
-      const conditions: RoutingCondition[] =
-        typeof rule.conditions === 'string' ? JSON.parse(rule.conditions) : rule.conditions;
-
-      if (this.evaluateConditions(conditions, leadContext)) {
-        const actions = typeof rule.actions === 'string' ? JSON.parse(rule.actions) : rule.actions;
-
-        const assignAction = (actions as any[]).find((a: any) => a.type === 'assign_to_user');
-
-        if (assignAction?.target) {
-          return {
-            ruleId: rule.id,
-            ruleName: rule.name,
-            assigneeId: assignAction.target,
-          };
-        }
+      // #770: a rule seeded/stored before the array-shape fix holds a keyed
+      // object (`{ score: { operator, value } }`), which `for…of` cannot
+      // iterate. One such row must not crash routing for the whole tenant —
+      // skip it and keep evaluating the rest, same as the routing API's list
+      // procedure (routing-rule.mapper.ts) already does for display.
+      let conditions: unknown;
+      try {
+        conditions =
+          typeof rule.conditions === 'string' ? JSON.parse(rule.conditions) : rule.conditions;
+      } catch {
+        conditions = null;
       }
+      if (!Array.isArray(conditions)) {
+        console.warn('[routing] skipping rule with non-array conditions (legacy shape?)', {
+          ruleId: rule.id,
+          tenantId,
+        });
+        continue;
+      }
+
+      if (!this.evaluateConditions(conditions as RoutingCondition[], leadContext)) continue;
+
+      let rawActions: unknown;
+      try {
+        rawActions = typeof rule.actions === 'string' ? JSON.parse(rule.actions) : rule.actions;
+      } catch {
+        rawActions = null;
+      }
+      const resolved = await this.resolveRuleAssignee(tx, tenantId, parseRuleActions(rawActions));
+      if (resolved) {
+        return { ruleId: rule.id, ruleName: rule.name, ...resolved };
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Resolve a rule's assignment actions, in order, to one assignee. `notify` and
+   * `escalate` are not assignment actions and are not offered by the editor or
+   * accepted by the validator; if one is stored on a legacy rule it is ignored.
+   */
+  private async resolveRuleAssignee(
+    tx: any,
+    tenantId: string,
+    actions: ParsedRuleAction[]
+  ): Promise<RuleAssignment | null> {
+    for (const action of actions) {
+      if (!action.target) continue;
+      const resolved = await this.resolveAction(tx, tenantId, action.type, action.target);
+      if (resolved) return resolved;
+    }
+    return null;
+  }
+
+  /**
+   * Availability, team and skill rows outlive a revoked membership, so a rule
+   * action may only pick users who are still live members of this tenant.
+   */
+  private async onlyLiveMembers(
+    tx: any,
+    tenantId: string,
+    agents: EligibleAgent[]
+  ): Promise<EligibleAgent[]> {
+    if (agents.length === 0) return agents;
+    const members: Array<{ id: string }> = await tx.user.findMany({
+      where: { id: { in: agents.map((a) => a.agentId) }, ...tenantUserWhere(tenantId) },
+      select: { id: true },
+    });
+    const live = new Set(members.map((m) => m.id));
+    return agents.filter((a) => live.has(a.agentId));
+  }
+
+  private async resolveAction(
+    tx: any,
+    tenantId: string,
+    type: string,
+    target: string
+  ): Promise<RuleAssignment | null> {
+    if (type === 'assign_to_user') {
+      // A rule is stored data: never trust its target to be a user of THIS tenant.
+      // tenantUserWhere counts live inherited members and excludes revoked home members.
+      const user = await tx.user.findFirst({
+        where: { id: target, ...tenantUserWhere(tenantId) },
+        select: { id: true },
+      });
+      return user ? { assigneeId: target, actionType: type, matchedSkill: null } : null;
+    }
+
+    if (type === 'assign_to_team') {
+      const members: Array<{ userId: string }> = await tx.teamMember.findMany({
+        where: { teamId: target, tenantId, team: { isActive: true } },
+      });
+      const memberIds = new Set(members.map((m) => m.userId));
+      const candidates = (
+        await this.onlyLiveMembers(tx, tenantId, await this.getEligibleAgentsInTx(tx, tenantId))
+      ).filter((a) => memberIds.has(a.agentId));
+      const pick = [...candidates].sort((a, b) => a.currentLoad - b.currentLoad)[0];
+      return pick ? { assigneeId: pick.agentId, actionType: type, matchedSkill: null } : null;
+    }
+
+    if (type === 'assign_by_skill') {
+      const candidates = await this.onlyLiveMembers(
+        tx,
+        tenantId,
+        await this.getEligibleAgentsInTx(tx, tenantId, target)
+      );
+      const pick = [...candidates].sort(
+        (a, b) => (b.proficiency ?? 0) - (a.proficiency ?? 0) || a.currentLoad - b.currentLoad
+      )[0];
+      return pick ? { assigneeId: pick.agentId, actionType: type, matchedSkill: target } : null;
     }
 
     return null;

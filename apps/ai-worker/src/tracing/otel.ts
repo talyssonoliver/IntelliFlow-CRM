@@ -9,11 +9,12 @@
  * - OTEL_ENABLED: Enable/disable tracing (default: true)
  * - OTEL_SERVICE_NAME: Service name (default: intelliflow-ai-worker)
  * - OTEL_EXPORTER_OTLP_ENDPOINT: OTLP collector endpoint (default: http://localhost:4317)
+ * - OTEL_LOGS_EXPORTER: Logs exporter; semantics as documented in apps/api/src/tracing/otel.ts
  * - NODE_ENV: Environment (development/production)
  */
 
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+import { getStandardNodeInstrumentations } from '@intelliflow/observability/node-instrumentations';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
@@ -80,13 +81,7 @@ export function initializeOpenTelemetry(): NodeSDK | null {
 
   const sdk = new NodeSDK({
     resource,
-    instrumentations: [
-      getNodeAutoInstrumentations({
-        // Disable filesystem instrumentation — too noisy
-        '@opentelemetry/instrumentation-fs': { enabled: false },
-        '@opentelemetry/instrumentation-http': { enabled: true },
-      }),
-    ],
+    instrumentations: getStandardNodeInstrumentations(),
   });
 
   console.log(`[OpenTelemetry] Initialized tracing for ${config.serviceName}`);

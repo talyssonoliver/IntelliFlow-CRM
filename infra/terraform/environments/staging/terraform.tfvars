@@ -81,9 +81,11 @@ railway_services = {
       LOG_LEVEL = "info"
     }
   }
+  # #230: folded into ai-worker. The Railway service is kept but scaled to 0
+  # (not deleted); removing this entry would make `terraform apply` destroy it.
   notifications-worker = {
     image    = "ghcr.io/talyssonoliver/intelliflow-crm-notifications-worker:latest"
-    replicas = 1
+    replicas = 0
     memory   = "512Mi"
     cpu      = "0.5"
     env_vars = {

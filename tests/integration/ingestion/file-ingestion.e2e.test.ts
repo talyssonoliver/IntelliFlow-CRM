@@ -9,10 +9,10 @@ import { IngestionOrchestrator } from '../../../packages/application/src';
 import { PrismaCaseDocumentRepository } from '../../../packages/adapters/src';
 import {
   InMemoryEventBus,
+  InMemoryStorageAdapter,
   SupabaseStorageAdapter,
   MockAVScanner,
 } from '../../../packages/adapters/src';
-import { CaseDocument } from '../../../packages/domain/src';
 import { createHash } from 'crypto';
 
 /**
@@ -28,23 +28,40 @@ import { createHash } from 'crypto';
  * 7. Database persistence
  * 8. Event emission
  *
- * NOTE: This test requires:
- * - A running PostgreSQL database (DATABASE_URL or DATABASE_TEST_URL)
- * - Supabase with storage buckets (NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
- * - Storage buckets: 'case-documents-quarantine' and 'case-documents'
- *
- * Run `npx supabase db push` to create required storage buckets.
- * Tests will be skipped if infrastructure is not available.
+ * Two layers (#665):
+ * - 'File Ingestion Pipeline E2E' runs the orchestration, persistence and
+ *   domain-contract assertions against a real PostgreSQL database with an
+ *   in-memory StorageServicePort double (InMemoryStorageAdapter). It needs only
+ *   DATABASE_TEST_URL / DATABASE_URL, so it executes in ordinary PR CI.
+ * - 'File Ingestion Pipeline - Supabase storage round-trip' keeps the true
+ *   storage round-trip (nightly). It needs NEXT_PUBLIC_SUPABASE_URL,
+ *   SUPABASE_SERVICE_ROLE_KEY and the buckets 'case-documents-quarantine' and
+ *   'case-documents' (`npx supabase db push`), and is the only part that may skip
+ *   when Supabase is absent.
  */
 
 /**
- * Check if test infrastructure is actually available (not just env vars).
- * This validates connectivity to Supabase storage and required buckets.
+ * Is the database actually reachable? (Not just "is an env var set".) Storage is
+ * an in-memory double in the main suite, so this is its only infrastructure.
  */
-async function isInfrastructureAvailable(): Promise<{ available: boolean; reason?: string }> {
+async function isDatabaseAvailable(
+  prisma: PrismaClient
+): Promise<{ available: boolean; reason?: string }> {
+  try {
+    await prisma.$queryRaw`SELECT 1`;
+    return { available: true };
+  } catch (error) {
+    return { available: false, reason: `Database not reachable: ${error}` };
+  }
+}
+
+/**
+ * Is Supabase storage reachable with the required buckets? Only the storage
+ * round-trip spec needs this. Bucket names must match SupabaseStorageAdapter.
+ */
+async function isSupabaseStorageAvailable(): Promise<{ available: boolean; reason?: string }> {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const dbUrl = process.env.DATABASE_TEST_URL || process.env.DATABASE_URL;
 
   if (!supabaseUrl || !serviceKey) {
     return {
@@ -53,12 +70,7 @@ async function isInfrastructureAvailable(): Promise<{ available: boolean; reason
     };
   }
 
-  if (!dbUrl) {
-    return { available: false, reason: 'Missing DATABASE_URL or DATABASE_TEST_URL' };
-  }
-
   try {
-    // Check Supabase storage is accessible
     const response = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
       headers: { Authorization: `Bearer ${serviceKey}` },
     });
@@ -70,16 +82,12 @@ async function isInfrastructureAvailable(): Promise<{ available: boolean; reason
       };
     }
 
-    // Check required buckets exist (must match SupabaseStorageAdapter bucket names)
     const buckets = await response.json();
     const bucketNames = buckets.map((b: { name: string }) => b.name);
-    const hasQuarantine = bucketNames.includes('case-documents-quarantine');
-    const hasDocuments = bucketNames.includes('case-documents');
-
-    if (!hasQuarantine || !hasDocuments) {
-      const missing = [];
-      if (!hasQuarantine) missing.push('case-documents-quarantine');
-      if (!hasDocuments) missing.push('case-documents');
+    const missing = ['case-documents-quarantine', 'case-documents'].filter(
+      (name) => !bucketNames.includes(name)
+    );
+    if (missing.length > 0) {
       return {
         available: false,
         reason: `Missing storage buckets: ${missing.join(', ')}. Run: npx supabase db push`,
@@ -92,17 +100,12 @@ async function isInfrastructureAvailable(): Promise<{ available: boolean; reason
   }
 }
 
-// Basic env var check (fast, synchronous) - skip if no env vars at all
-const hasBasicConfig = Boolean(
-  process.env.NEXT_PUBLIC_SUPABASE_URL &&
-  process.env.SUPABASE_SERVICE_ROLE_KEY &&
-  (process.env.DATABASE_TEST_URL || process.env.DATABASE_URL)
-);
+const databaseUrl = process.env.DATABASE_TEST_URL || process.env.DATABASE_URL;
 
-// Use describe.skipIf for basic config check
-const describeOrSkip = hasBasicConfig ? describe : describe.skip;
+// Basic env var check (fast, synchronous): without a database URL nothing can run.
+const describeOrSkip = databaseUrl ? describe : describe.skip;
 
-// Track infrastructure availability for detailed check in beforeAll
+// Track database availability for the detailed check in beforeAll
 let infrastructureStatus: { available: boolean; reason?: string } = { available: false };
 
 /**
@@ -119,6 +122,8 @@ const USER_1 = 'cgap9useraaaaaaaaaaaaaaa1';
 /** Dedicated uploader so the "infected file was not saved" assertion stays
  *  meaningful now that the earlier ingest tests genuinely persist documents. */
 const USER_AV = 'cgap9useravaaaaaaaaaaaaa1';
+/** Dedicated uploader for the "storage keeps failing" persistence assertion. */
+const USER_STORAGE_DOWN = 'cgap9userdownaaaaaaaaaa1';
 const USER_TENANT_1 = 'cgap9usertenantaaaaaaaaa1';
 const USER_TENANT_2 = 'cgap9usertenantaaaaaaaaa2';
 
@@ -127,35 +132,29 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
   let orchestrator: IngestionOrchestrator;
   let repository: PrismaCaseDocumentRepository;
   let eventBus: InMemoryEventBus;
-  let storage: SupabaseStorageAdapter;
+  let storage: InMemoryStorageAdapter;
   let avScanner: MockAVScanner;
 
   beforeAll(async () => {
-    // First, validate infrastructure is actually available
-    infrastructureStatus = await isInfrastructureAvailable();
+    // Initialize test database (Prisma 7: construct with the pg driver adapter,
+    // NOT the removed `datasources.db.url` constructor option).
+    const adapter = new PrismaPg({ connectionString: databaseUrl });
+    prisma = new PrismaClient({ adapter });
+
+    infrastructureStatus = await isDatabaseAvailable(prisma);
 
     if (!infrastructureStatus.available) {
       console.log(`\n⏭️  File Ingestion E2E: Skipping tests - ${infrastructureStatus.reason}\n`);
-      // Note: Tests will still run but fail gracefully - see individual test checks
+      // Note: Tests will still run but skip gracefully - see individual test checks
       return;
     }
 
-    console.log('\n✅ File Ingestion E2E: Infrastructure available, running tests\n');
-
-    // Initialize test database (Prisma 7: construct with the pg driver adapter,
-    // NOT the removed `datasources.db.url` constructor option).
-    const adapter = new PrismaPg({
-      connectionString: process.env.DATABASE_TEST_URL || process.env.DATABASE_URL,
-    });
-    prisma = new PrismaClient({ adapter });
+    console.log('\n✅ File Ingestion E2E: Database available, running tests\n');
 
     // Initialize components
     repository = new PrismaCaseDocumentRepository(prisma);
     eventBus = new InMemoryEventBus();
-    storage = new SupabaseStorageAdapter(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    storage = new InMemoryStorageAdapter();
     avScanner = new MockAVScanner();
 
     orchestrator = new IngestionOrchestrator(repository, eventBus, storage, avScanner);
@@ -177,13 +176,15 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
   beforeEach(() => {
     if (!infrastructureStatus.available) return;
     eventBus.clearPublishedEvents();
+    storage.reset();
     avScanner.setInfected(false);
     avScanner.setShouldFail(false);
   });
 
   afterAll(async () => {
-    if (!infrastructureStatus.available || !prisma) return;
+    if (!prisma) return;
     try {
+      if (!infrastructureStatus.available) return;
       // Deleting the tenants cascades to their case documents and ACL rows.
       await prisma.tenant
         .deleteMany({
@@ -226,6 +227,9 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       // Verify content hash
       const expectedHash = createHash('sha256').update(fileContent).digest('hex');
       expect(document!.contentHash).toBe(expectedHash);
+
+      // Verify the bytes were promoted to primary storage under the document's key
+      expect(await storage.download(document!.storageKey)).toEqual(fileContent);
 
       // Verify event was emitted
       const events = eventBus.getPublishedEvents();
@@ -314,6 +318,10 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       const events = eventBus.getPublishedEvents();
       expect(events).toHaveLength(1);
       expect(events[0].eventType).toBe('document.ingestion_failed');
+
+      // The infected object must be purged from quarantine and never promoted.
+      expect(storage.quarantineKeys()).toHaveLength(0);
+      expect(storage.primaryKeys()).toHaveLength(0);
     });
 
     it('should detect EICAR test virus', async (context) => {
@@ -409,11 +417,60 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
 
   describe('Failure Handling', () => {
     it('should retry on transient storage failures', async (context) => {
-      // This test requires mocking storage service to fail then succeed.
-      // Skipped until a mock storage adapter is available for unit-level
-      // retry testing. Removed trailing `expect(true).toBe(true)` — after
-      // context.skip() throws, that assertion is unreachable dead code.
-      context.skip();
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
+      // Two transient quarantine-upload failures, then success: within maxRetries (3).
+      storage.failNext('uploadToQuarantine', 2);
+
+      const result = await orchestrator.ingestFile(
+        Buffer.from('retry me'),
+        {
+          tenantId: TENANT_1,
+          filename: 'retry.pdf',
+          mimeType: 'application/pdf',
+          uploadedBy: USER_1,
+        },
+        { retryDelayMs: 0 }
+      );
+
+      expect(result.success).toBe(true);
+      expect(storage.callCount('uploadToQuarantine')).toBe(3);
+      // The promoted object lives in primary storage and quarantine is drained.
+      expect(storage.primaryKeys()).toHaveLength(1);
+      expect(storage.quarantineKeys()).toHaveLength(0);
+      expect(eventBus.getPublishedEvents().map((e) => e.eventType)).toEqual([
+        'document.ingestion.created',
+      ]);
+    });
+
+    it('should fail and persist nothing when storage keeps failing', async (context) => {
+      if (!infrastructureStatus.available) {
+        context.skip();
+        return;
+      }
+
+      storage.failNext('uploadToQuarantine', 3);
+
+      const result = await orchestrator.ingestFile(
+        Buffer.from('storage is down'),
+        {
+          tenantId: TENANT_1,
+          filename: 'down.pdf',
+          mimeType: 'application/pdf',
+          uploadedBy: USER_STORAGE_DOWN,
+        },
+        { maxRetries: 3, retryDelayMs: 0 }
+      );
+
+      expect(result.success).toBe(false);
+      expect(storage.callCount('uploadToQuarantine')).toBe(3);
+      expect(await repository.findAccessibleByUser(USER_STORAGE_DOWN, TENANT_1)).toHaveLength(0);
+      expect(eventBus.getPublishedEvents().map((e) => e.eventType)).toEqual([
+        'document.ingestion_failed',
+      ]);
     });
 
     it('should emit failure event after max retries', async (context) => {
@@ -470,7 +527,7 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       }
 
       // Upload document for tenant-1
-      const result1 = await orchestrator.ingestFile(Buffer.from('tenant1 doc'), {
+      await orchestrator.ingestFile(Buffer.from('tenant1 doc'), {
         tenantId: TENANT_1,
         filename: 'tenant1.pdf',
         mimeType: 'application/pdf',
@@ -485,5 +542,79 @@ describeOrSkip('File Ingestion Pipeline E2E', () => {
       const tenant1Docs = await repository.findAccessibleByUser(USER_TENANT_1, TENANT_1);
       expect(tenant1Docs.length).toBeGreaterThan(0);
     });
+  });
+});
+
+/**
+ * The true storage round-trip: the part the in-memory double cannot prove. Needs a
+ * reachable Supabase storage API with the quarantine and primary buckets, so it
+ * truly executes only in preship-full-nightly. Declared in
+ * tools/scripts/infra-skip-gate.registry.json (maxSkipped: 1).
+ */
+const TENANT_STORAGE = 'cgap9tenantaaaaaaaaaaaaa3';
+const USER_STORAGE = 'cgap9userstorageaaaaaaa1';
+
+const describeStorageOrSkip =
+  databaseUrl && process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY
+    ? describe
+    : describe.skip;
+
+describeStorageOrSkip('File Ingestion Pipeline - Supabase storage round-trip', () => {
+  let prisma: PrismaClient;
+  let storageStatus: { available: boolean; reason?: string } = { available: false };
+
+  beforeAll(async () => {
+    storageStatus = await isSupabaseStorageAvailable();
+    if (!storageStatus.available) {
+      console.log(`\n⏭️  File Ingestion storage round-trip: Skipping - ${storageStatus.reason}\n`);
+      return;
+    }
+    prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
+    await prisma.tenant.upsert({
+      where: { id: TENANT_STORAGE },
+      create: { id: TENANT_STORAGE, name: 'Gap9 Storage Tenant', slug: TENANT_STORAGE },
+      update: {},
+    });
+  });
+
+  afterAll(async () => {
+    if (!prisma) return;
+    try {
+      await prisma.tenant.deleteMany({ where: { id: TENANT_STORAGE } }).catch(() => {});
+    } finally {
+      await prisma.$disconnect();
+    }
+  });
+
+  it('stores the uploaded bytes in the primary bucket and reads them back', async (context) => {
+    if (!storageStatus.available) {
+      context.skip();
+      return;
+    }
+
+    const storage = new SupabaseStorageAdapter(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+    const repository = new PrismaCaseDocumentRepository(prisma);
+    const orchestrator = new IngestionOrchestrator(
+      repository,
+      new InMemoryEventBus(),
+      storage,
+      new MockAVScanner()
+    );
+
+    const fileContent = Buffer.from(`%PDF-1.4\nround-trip ${Date.now()}`);
+    const result = await orchestrator.ingestFile(fileContent, {
+      tenantId: TENANT_STORAGE,
+      filename: 'round-trip.pdf',
+      mimeType: 'application/pdf',
+      uploadedBy: USER_STORAGE,
+    });
+
+    expect(result.success).toBe(true);
+    const document = await repository.findById(result.documentId!);
+    expect(document).toBeDefined();
+    expect(await storage.download(document!.storageKey)).toEqual(fileContent);
   });
 });

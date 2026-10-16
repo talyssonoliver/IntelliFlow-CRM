@@ -1,5 +1,5 @@
 /**
- * Approval policy constants (PG-198, ADR-077).
+ * Approval policy constants (PG-198, ADR-079).
  *
  * Canonical vocabulary for tenant approval policies that govern both approval
  * queues: agent tool actions (IFC-139) and AI auto-response drafts (IFC-029).

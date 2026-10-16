@@ -1,0 +1,28 @@
+{
+  "stoa": "Domain",
+  "taskId": "PG-204",
+  "verdict": "WARN",
+  "rationale": "All domain/API gates pass: domain + api typecheck green, domain suite 2957/2957, resolver 100% coverage, prisma generate + validate OK, full integration 357 passed (61 pre-existing env-gated skips), depcruise 0 errors. WARN only because the local shared test DB records 20261013120000_case_types as pending (its objects were applied by tests/integration/case-types.test.ts, not by migrate deploy, which was deliberately not run on the shared DB). Production apply is manual (L13).",
+  "toolIdsSelected": ["domain-typecheck", "api-typecheck", "domain-test", "test-integration", "prisma-generate", "migration-status", "depcruise"],
+  "toolIdsExecuted": ["domain-typecheck", "api-typecheck", "domain-test", "test-integration", "prisma-generate", "migration-status", "depcruise"],
+  "waiversProposed": [],
+  "findings": [
+    {
+      "gate": "migration-status",
+      "result": "WARN",
+      "detail": "Local test DB: last common migration 20261007130000_account_territories; 20261013120000_case_types not recorded as applied (objects present via the integration helper); 20260629000000_add_report_templates exists in the DB but not on this branch (another lane)."
+    },
+    {
+      "gate": "depcruise",
+      "result": "PASS",
+      "detail": "0 errors, 2 pre-existing warnings (packages/domain/src/crm/contact ContactEvents <-> Contact cycle), none in PG-204 code."
+    }
+  ],
+  "domainMetrics": {
+    "entitiesValidated": 3,
+    "aggregatesChecked": 1,
+    "useCasesCovered": 7,
+    "boundaryViolations": 0
+  },
+  "timestamp": "2026-10-13T02:25:00.000Z"
+}

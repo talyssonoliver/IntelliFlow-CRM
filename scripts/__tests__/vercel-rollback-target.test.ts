@@ -163,6 +163,19 @@ describe('renderSummary', () => {
     expect(md).toContain('a \\| b scriptx/script');
     expect(md).not.toContain('<script>');
   });
+  it('escapes a backslash before escaping pipes, so a message ending in "\\" cannot combine with the inserted escape and break out of its table cell', () => {
+    // Input has ONE backslash then a pipe: a , \ , | , b.
+    // Escaping `|` without first escaping `\` turns it into TWO backslashes
+    // (the original + the one just inserted) followed by a bare `|` — in
+    // Markdown, `\\` renders as one literal backslash, which leaves that `|`
+    // unescaped and able to close the cell early. Escaping `\` first means
+    // three backslashes precede the `|`: `\\` (one literal backslash) + `\|`
+    // (one literal, non-breaking pipe) — the correct, non-breaking render.
+    const evil = dep(4, { meta: { githubCommitMessage: 'a\\|b' } });
+    const md = renderSummary({ ...args, target: evil, dryRun: true });
+    expect(md).toContain('a\\\\\\|b'); // 3 backslashes + pipe + b (the fixed, safe form)
+    expect(md).not.toContain('a\\\\|b '); // 2 backslashes + pipe + space (the old, breakable form)
+  });
   it('tolerates missing metadata', () => {
     const md = renderSummary({
       current: { uid: 'dpl_1' },
@@ -258,6 +271,21 @@ describe('runResolve', () => {
     expect(fs.readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8')).toContain('bad release');
     expect(log).toHaveBeenCalledOnce();
     expect(JSON.stringify(log.mock.calls)).not.toContain(baseEnv.VERCEL_TOKEN);
+  });
+
+  it('neutralises a CR/LF in an API-returned id/url so it cannot inject an extra $GITHUB_OUTPUT line', async () => {
+    // The Vercel API, not just the CLI-supplied reason/actor, is untrusted for
+    // $GITHUB_OUTPUT purposes: a deployment field containing a newline could
+    // otherwise forge a wholly separate `key=value` output line.
+    const dir = tmp();
+    const env = { ...baseEnv, DRY_RUN: 'true', GITHUB_OUTPUT: path.join(dir, 'o.txt') };
+    const evilList = [dep(5), dep(4, { url: 'evil.vercel.app\npwned=true' }), dep(3), dep(2)];
+    const res = await runResolve(env, { fetchImpl: stubFetch('dpl_5', evilList) });
+    expect(res.target.uid).toBe('dpl_4');
+    const out = fs.readFileSync(env.GITHUB_OUTPUT, 'utf8');
+    expect(out).toBe('current_id=dpl_5\ntarget_id=dpl_4\ntarget_url=evil.vercel.app pwned=true\n');
+    expect(out.split('\n')).toHaveLength(4); // exactly 3 key=value lines (+ trailing "")
+    expect(out).not.toContain('\npwned=true');
   });
 
   it('works without GitHub files, an unlisted current deployment, and the default logger', async () => {

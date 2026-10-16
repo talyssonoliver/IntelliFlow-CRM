@@ -80,8 +80,8 @@
     },
     "intelliflow-notifications-email": {
       "producer": "apps/api",
-      "consumer": "apps/workers/notifications-worker",
-      "notes": "Email notifications — consumed by notifications-worker email channel"
+      "consumer": "apps/ai-worker",
+      "notes": "Email notifications (ticket assignment) — consumed by bootNotificationEmailWorker (#230). apps/workers/notifications-worker was removed: its own NotificationJobSchema did not match this queue's real payload shape (see workers/notification-email-worker.ts header)."
     },
     "intelliflow:webhook-delivery": {
       "producer": "apps/api",

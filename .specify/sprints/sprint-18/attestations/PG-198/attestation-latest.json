@@ -290,7 +290,7 @@
     "apps/web/src/lib/__tests__/color-tokens.test.ts": "1d8150223d26d28960546893bc48c4485bd833aa3a63eaf082b2eff5106090cf",
     "apps/web/src/lib/color-tokens.ts": "895f2c9c8b4b5b512fb86b72513bd9637aa0780339e3cba8124fa3f9c30ab8ef",
     "tests/integration/approval-policies.test.ts": "e18c04f8afdddaaffd7cfc86b474da33eb929c7ba0b03a78a2bd62ce0e1ec1c8",
-    "docs/architecture/adr/ADR-077-tenant-approval-policies.md": "0b097db065ddd737e7aa72ddb697e7da65a2d5ee9bbe7c270d004f77912677b9",
+    "docs/architecture/adr/ADR-079-tenant-approval-policies.md": "0b097db065ddd737e7aa72ddb697e7da65a2d5ee9bbe7c270d004f77912677b9",
     "artifacts/coverage/PG-198-before.json": "79f3208912852900185806c9a45ad021dd669ed37e3e58d384fff3c9647b0fdc",
     ".specify/sprints/sprint-18/context/PG-198/PG-198-consensus-rerun.md": "28e500b01148f7e9ca9747aaa931cc4f79ccaa199db7c81723923b46e6ca5e1f",
     ".specify/sprints/sprint-18/context/PG-198/PG-198-exploration.md": "27679b75e45c3cd49ae76a7091bd15b87b1d9c799b6347d6cd2906b494511308",

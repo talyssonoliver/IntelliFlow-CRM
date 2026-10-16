@@ -1,5 +1,5 @@
 /**
- * Approval policy loader (PG-198, ADR-077).
+ * Approval policy loader (PG-198, ADR-079).
  *
  * Reads a tenant's approval policies and resolves the effective rule for one
  * (queue, agent, action) through the domain resolver.

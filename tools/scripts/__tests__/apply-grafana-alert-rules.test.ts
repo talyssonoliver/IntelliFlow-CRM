@@ -57,6 +57,25 @@ describe('alert rules config', () => {
     ]);
   });
 
+  // #812: the only live traffic today is ai-worker's own OTel heartbeat spans.
+  // ifc032-telemetry-silent watches that, so it must keep failing the series
+  // check if it ever goes quiet. The other four watch traffic that does not
+  // exist yet (workflow.lead.route has no callers; #802 hasn't promoted the
+  // api SERVER spans) and opt out with requireSeries:false so the script can
+  // report them without failing the run.
+  it('the four traffic-less rules opt out of the live-series requirement; the safety check does not', () => {
+    const byUid = Object.fromEntries(
+      CONFIG.rules.map((r: { uid: string; requireSeries?: boolean }) => [r.uid, r.requireSeries])
+    );
+    expect(byUid).toEqual({
+      'ifc032-telemetry-silent': undefined,
+      'ifc032-lead-routing-failures': false,
+      'ifc032-workflow-error-rate': false,
+      'ifc032-workflow-p95-latency': false,
+      'ifc032-api-error-rate': false,
+    });
+  });
+
   it('reports missing fields, bad operators, bad thresholds and duplicates', () => {
     const bad = {
       rules: [
@@ -70,6 +89,26 @@ describe('alert rules config', () => {
       'ifc032-telemetry-silent: missing summary',
       'ifc032-telemetry-silent: duplicate uid',
     ]);
+  });
+
+  // Every value checked here is interpolated straight into a URL path segment
+  // in client()'s caller (run()); a `/`, `..` or `?` in any of them would let
+  // one path segment become two, retarget the request, or add a query string.
+  it('rejects a rule uid that would break out of its URL path segment', () => {
+    const bad = { ...CONFIG, rules: [{ ...CONFIG.rules[0], uid: 'a/../other' }] };
+    expect(validateConfig(bad)).toEqual([expect.stringContaining('a/../other')]);
+  });
+
+  it('rejects an unsafe folder.uid, group.name or deliveryTest.uid', () => {
+    expect(validateConfig({ ...CONFIG, folder: { ...CONFIG.folder, uid: 'x/y' } })).toEqual([
+      expect.stringContaining('folder.uid'),
+    ]);
+    expect(validateConfig({ ...CONFIG, group: { ...CONFIG.group, name: 'a?b=1' } })).toEqual([
+      expect.stringContaining('group.name'),
+    ]);
+    expect(
+      validateConfig({ ...CONFIG, deliveryTest: { ...CONFIG.deliveryTest, uid: 'a#frag' } })
+    ).toEqual([expect.stringContaining('deliveryTest.uid')]);
   });
 
   it('builds a query -> reduce -> threshold rule in the configured folder and group', () => {
@@ -128,10 +167,21 @@ describe('run', () => {
   });
 
   it('fails loudly when a rule watches a metric with no live series', async () => {
-    const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
+    // ifc032-telemetry-silent is the one rule that still requires series (#812);
+    // the other four opted out with requireSeries:false, so forcing 0 series on
+    // one of THOSE (e.g. latency) must NOT fail the run — only telemetry-silent's
+    // selector (the only one matching "ai-worker") can trigger this failure.
+    const g = fakeGrafana({ series: (q) => (q.includes('ai-worker') ? 0 : 2) });
     await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
-      'match no live series (check metric names): ifc032-workflow-p95-latency'
+      'match no live series (check metric names): ifc032-telemetry-silent'
     );
+  });
+
+  it('does not fail the run when a requireSeries:false rule has no live series (#812)', async () => {
+    const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
+    const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
+    expect(result.applied).toBe(5);
+    expect(result.empty).toEqual([]);
   });
 
   it('never logs the token', async () => {

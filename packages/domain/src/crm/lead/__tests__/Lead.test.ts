@@ -12,6 +12,7 @@ import { Lead, LeadAlreadyConvertedError, LeadCannotBeQualifiedError } from '../
 import { LeadId } from '../LeadId';
 import { Email } from '../Email';
 import { LeadScore } from '../LeadScore';
+import { PhoneNumber } from '../../../shared/PhoneNumber';
 import {
   LeadCreatedEvent,
   LeadScoredEvent,
@@ -467,6 +468,102 @@ describe('Lead Aggregate', () => {
         lead.updateContactInfo({ title: 'VP' });
         expect(lead.updatedAt).not.toEqual(originalUpdatedAt);
       }, 10);
+    });
+  });
+
+  describe('updateContactInfo() — clearing fields with explicit null (IFC-412)', () => {
+    // Owner ruling 2026-10-12: company, phone, name (first/last), estimatedValue,
+    // location and website must be clearable, including the "required-looking"
+    // ones. The domain's internal "no value" representation stays `undefined`
+    // (never `null` — every getter below returns `| undefined`); an explicit
+    // `null` is the caller-facing clear signal, normalized to `undefined`.
+    let lead: Lead;
+
+    beforeEach(() => {
+      const result = Lead.create({
+        email: 'clear@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        company: 'Acme Corp',
+        phone: PhoneNumber.create('+15551234567').value,
+        location: 'NYC',
+        website: 'https://acme.example.com',
+        estimatedValue: 5000,
+        ownerId: 'owner-123',
+      });
+      lead = result.value;
+    });
+
+    it('clears firstName to undefined when passed null', () => {
+      lead.updateContactInfo({ firstName: null });
+      expect(lead.firstName).toBeUndefined();
+    });
+
+    it('clears lastName to undefined when passed null', () => {
+      lead.updateContactInfo({ lastName: null });
+      expect(lead.lastName).toBeUndefined();
+    });
+
+    it('clears company to undefined when passed null', () => {
+      lead.updateContactInfo({ company: null });
+      expect(lead.company).toBeUndefined();
+    });
+
+    it('clears phone to undefined when passed null', () => {
+      lead.updateContactInfo({ phone: null });
+      expect(lead.phone).toBeUndefined();
+    });
+
+    it('clears location to undefined when passed null', () => {
+      lead.updateContactInfo({ location: null });
+      expect(lead.location).toBeUndefined();
+    });
+
+    it('clears website to undefined when passed null', () => {
+      lead.updateContactInfo({ website: null });
+      expect(lead.website).toBeUndefined();
+    });
+
+    it('clears estimatedValue to undefined when passed null', () => {
+      lead.updateContactInfo({ estimatedValue: null });
+      expect(lead.estimatedValue).toBeUndefined();
+    });
+
+    it('leaves every other field untouched when clearing just one field', () => {
+      lead.updateContactInfo({ company: null });
+
+      expect(lead.firstName).toBe('John');
+      expect(lead.lastName).toBe('Doe');
+      expect(lead.phone?.value).toBe('+15551234567');
+      expect(lead.location).toBe('NYC');
+      expect(lead.website).toBe('https://acme.example.com');
+      expect(lead.estimatedValue).toBe(5000);
+    });
+
+    it('clears multiple fields in one call while leaving the rest untouched', () => {
+      lead.updateContactInfo({ company: null, phone: null, estimatedValue: null });
+
+      expect(lead.company).toBeUndefined();
+      expect(lead.phone).toBeUndefined();
+      expect(lead.estimatedValue).toBeUndefined();
+      // Untouched:
+      expect(lead.firstName).toBe('John');
+      expect(lead.lastName).toBe('Doe');
+      expect(lead.location).toBe('NYC');
+      expect(lead.website).toBe('https://acme.example.com');
+    });
+
+    it('still applies a real (non-null) value for a field passed alongside a clear', () => {
+      lead.updateContactInfo({ company: null, title: 'CEO' });
+
+      expect(lead.company).toBeUndefined();
+      expect(lead.title).toBe('CEO');
+    });
+
+    it('bumps updatedAt when clearing a field', () => {
+      const before = lead.updatedAt;
+      lead.updateContactInfo({ company: null });
+      expect(lead.updatedAt.getTime()).toBeGreaterThanOrEqual(before.getTime());
     });
   });
 

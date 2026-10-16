@@ -1,0 +1,623 @@
+{
+  "task": "PG-204",
+  "produced_by": "a11y-expert sub-agent",
+  "produced_at": "2026-10-13T07:19:25Z",
+  "method": "Computed check, no browser/server/tests. Tokens read from apps/web/src/app/globals.css:150-202 (HSL channel triplets, converted exactly) and Tailwind 4 theme.css oklch values for *-500 (converted oklch to sRGB, gamut-clipped). WCAG 2.1 relative-luminance contrast. Translucent backgrounds alpha-composited over the opaque surface.",
+  "surfaces": {
+    "light": {
+      "background": "#f6f6f6 (hsl 0 0% 96.5%)",
+      "card": "#ffffff"
+    },
+    "dark": {
+      "background": "#0f1a29 (hsl 215 47% 11%)",
+      "card": "#1d2a39 (hsl 213 32% 17%)"
+    },
+    "note": "Dialog content uses bg-background (packages/ui/src/components/dialog.tsx:37); list rows sit on Card. Both surfaces computed."
+  },
+  "table": [
+    {
+      "element": "swatch slate (bg-slate-500) on card",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch slate (bg-slate-500) on background",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch blue (bg-blue-500) on card",
+      "foreground": "#2b7fff",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 3.76,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch blue (bg-blue-500) on background",
+      "foreground": "#2b7fff",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.48,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch red (bg-red-500) on card",
+      "foreground": "#fb2c36",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 3.82,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch red (bg-red-500) on background",
+      "foreground": "#fb2c36",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.54,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch amber (bg-amber-500) on card",
+      "foreground": "#fe9a00",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 2.15,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "swatch amber (bg-amber-500) on background",
+      "foreground": "#fe9a00",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 1.99,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "swatch green (bg-green-500) on card",
+      "foreground": "#00c950",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 2.22,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "swatch green (bg-green-500) on background",
+      "foreground": "#00c950",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 2.06,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "swatch violet (bg-violet-500) on card",
+      "foreground": "#8e51ff",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.4,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch violet (bg-violet-500) on background",
+      "foreground": "#8e51ff",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.08,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch rose (bg-rose-500) on card",
+      "foreground": "#ff2056",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 3.76,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch rose (bg-rose-500) on background",
+      "foreground": "#ff2056",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.48,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch teal (bg-teal-500) on card",
+      "foreground": "#00bba7",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 2.42,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "swatch teal (bg-teal-500) on background",
+      "foreground": "#00bba7",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 2.24,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "radio border+dot (border-primary/text-primary) on card",
+      "foreground": "#2877f6",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.16,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "radio border+dot on background (dialog)",
+      "foreground": "#2877f6",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.85,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "selected-colour ring (ring-primary) on background (dialog)",
+      "foreground": "#2877f6",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.85,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "text-destructive (field errors) on background",
+      "foreground": "#ef4343",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.5,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "text-destructive (CaseTypesContent:126, new/page:102) on background",
+      "foreground": "#ef4343",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.5,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "new/page:116 alert text-destructive on bg-destructive/5 over background",
+      "foreground": "#ef4343",
+      "background": "#f6eded",
+      "theme": "light",
+      "ratio": 3.29,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "new/page:116 alert text-destructive on bg-destructive/5 over card",
+      "foreground": "#ef4343",
+      "background": "#fef6f6",
+      "theme": "light",
+      "ratio": 3.55,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "alert border border-destructive/40 over background (1.4.11)",
+      "foreground": "#f3afaf",
+      "background": "#f6eded",
+      "theme": "light",
+      "ratio": 1.58,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "text-muted-foreground \"Saving the default case type…\" on card",
+      "foreground": "#5c6b7f",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 5.45,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "text-muted-foreground on background",
+      "foreground": "#5c6b7f",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 5.04,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "CaseForm focus border-primary on background",
+      "foreground": "#2877f6",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 3.85,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "CaseForm focus ring-primary/20 over background (alone)",
+      "foreground": "#cdddf6",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 1.28,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "CaseForm unfocused input border-border on background (1.4.11, pre-existing)",
+      "foreground": "#e1e7ef",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 1.15,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "label border-border row container on dialog bg (decorative; radio is the control)",
+      "foreground": "#e1e7ef",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 1.15,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "swatch slate (bg-slate-500) on card",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch slate (bg-slate-500) on background",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch blue (bg-blue-500) on card",
+      "foreground": "#2b7fff",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.87,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch blue (bg-blue-500) on background",
+      "foreground": "#2b7fff",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 4.66,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch red (bg-red-500) on card",
+      "foreground": "#fb2c36",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.81,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch red (bg-red-500) on background",
+      "foreground": "#fb2c36",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 4.59,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch amber (bg-amber-500) on card",
+      "foreground": "#fe9a00",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 6.78,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch amber (bg-amber-500) on background",
+      "foreground": "#fe9a00",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 8.16,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch green (bg-green-500) on card",
+      "foreground": "#00c950",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 6.54,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch green (bg-green-500) on background",
+      "foreground": "#00c950",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 7.88,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch violet (bg-violet-500) on card",
+      "foreground": "#8e51ff",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.3,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch violet (bg-violet-500) on background",
+      "foreground": "#8e51ff",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.98,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch rose (bg-rose-500) on card",
+      "foreground": "#ff2056",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.87,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch rose (bg-rose-500) on background",
+      "foreground": "#ff2056",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 4.66,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch teal (bg-teal-500) on card",
+      "foreground": "#00bba7",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 6,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch teal (bg-teal-500) on background",
+      "foreground": "#00bba7",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 7.23,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "radio border+dot (border-primary/text-primary) on card",
+      "foreground": "#2877f6",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.49,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "radio border+dot on background (dialog)",
+      "foreground": "#2877f6",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 4.21,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "selected-colour ring (ring-primary) on background (dialog)",
+      "foreground": "#2877f6",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 4.21,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "text-destructive (field errors) on background",
+      "foreground": "#811d1d",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 1.77,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "text-destructive (CaseTypesContent:126, new/page:102) on background",
+      "foreground": "#811d1d",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 1.77,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "new/page:116 alert text-destructive on bg-destructive/5 over background",
+      "foreground": "#811d1d",
+      "background": "#151a29",
+      "theme": "dark",
+      "ratio": 1.76,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "new/page:116 alert text-destructive on bg-destructive/5 over card",
+      "foreground": "#811d1d",
+      "background": "#222938",
+      "theme": "dark",
+      "ratio": 1.47,
+      "required": 4.5,
+      "pass": false
+    },
+    {
+      "element": "alert border border-destructive/40 over background (1.4.11)",
+      "foreground": "#3c1b24",
+      "background": "#151a29",
+      "theme": "dark",
+      "ratio": 1.14,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "text-muted-foreground \"Saving the default case type…\" on card",
+      "foreground": "#94a3b8",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 5.66,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "text-muted-foreground on background",
+      "foreground": "#94a3b8",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 6.81,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "CaseForm focus border-primary on background",
+      "foreground": "#2877f6",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 4.21,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "CaseForm focus ring-primary/20 over background (alone)",
+      "foreground": "#142c52",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 1.27,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "CaseForm unfocused input border-border on background (1.4.11, pre-existing)",
+      "foreground": "#344256",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 1.72,
+      "required": 3,
+      "pass": false
+    },
+    {
+      "element": "label border-border row container on dialog bg (decorative; radio is the control)",
+      "foreground": "#344256",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 1.72,
+      "required": 3,
+      "pass": false
+    }
+  ],
+  "failures": [
+    {
+      "id": "F1",
+      "sc": "1.4.3",
+      "severity": "major",
+      "summary": "text-destructive fails in dark (1.77:1 on background, 1.47:1 on bg-destructive/5 over card) and light (3.5:1 on background, 3.29-3.55:1 on destructive/5). --destructive is a fill token (0 63% 31% in .dark, globals.css:198; 0 84% 60% in :root, globals.css:166), not a text colour.",
+      "locations": [
+        "apps/web/src/app/cases/(list)/new/page.tsx:116 (alert)",
+        "apps/web/src/app/cases/(list)/new/page.tsx:102",
+        "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx:126",
+        "apps/web/src/app/cases/(list)/case-types/components/CaseTypeDialog.tsx:260,336 (field errors)"
+      ],
+      "fix": "Use text-red-700 dark:text-red-300. Computed: #b91c1c = 5.99 on light background and 5.52 on destructive/5; #fca5a5 = 9.23 on dark background and 9.14 on destructive/5 over dark background. text-red-600 (#dc2626) is only 4.47 on background and 4.15 on destructive/5, so do not use it. Cleaner alternative: add a --destructive-text token and fix every consumer once."
+    },
+    {
+      "id": "F2",
+      "sc": "1.4.11",
+      "severity": "minor",
+      "summary": "Light-theme swatches amber 1.99-2.15, green 2.06-2.22, teal 2.24-2.42 are below 3:1. Mitigation: swatches are aria-hidden and always paired with a text name (CaseTypeDialog.tsx:296) or the type name (CaseTypeList.tsx:66), so colour is not the sole carrier of information and the swatch is arguably not a required graphical object. A strict reading of the consensus condition still fails.",
+      "locations": [
+        "apps/web/src/components/cases/case-type-colors.ts:12-16 (amber, green, teal)"
+      ],
+      "fix": "Add a 1px outline to both swatch spans (CaseTypeList.tsx:60, CaseTypeDialog.tsx:293) in a colour that is 3:1 on both surfaces, e.g. ring-1 ring-inset ring-slate-500 (#62748e = 4.41 on light background, 4.77 on card, 3.05-3.67 in dark). Using -600 shades is not enough on the light background (amber-600 2.96, green-600 2.98)."
+    },
+    {
+      "id": "F3",
+      "sc": "1.4.11",
+      "severity": "minor",
+      "summary": "The alert border (border-destructive/40) is 1.58:1 light and 1.14:1 dark. Decorative only; the alert has text and role. Text contrast (F1) is the real issue.",
+      "locations": [
+        "apps/web/src/app/cases/(list)/new/page.tsx:116"
+      ],
+      "fix": "Optional once F1 is fixed."
+    }
+  ],
+  "minors": [
+    {
+      "id": "M1",
+      "ref": "gh #882",
+      "summary": "CaseForm focus ring-primary/20 alone is 1.28:1, but focus:border-primary (3.85 light / 4.21 dark on background) provides a 3:1 focus indicator, so SC 2.4.7 and 1.4.11 hold for focus. Keep as tracked minor. Unfocused input border-border is 1.15 light / 1.72 dark (pre-existing, shared across CaseForm.tsx:269,272,382; not a PG-204 regression).",
+      "locations": [
+        "apps/web/src/components/cases/CaseForm.tsx:269,272,382"
+      ]
+    },
+    {
+      "id": "M2",
+      "summary": "Row container border-border at CaseTypeDialog.tsx:289 is 1.15 / 1.72 but decorative; the radio (min 3.49) and the selected ring-primary (3.85 light, 4.21 dark) carry the state."
+    }
+  ],
+  "passes": [
+    "Radio border and dot (border-primary / text-primary) >= 3:1 in both themes on both surfaces (min 3.49, dark on card)",
+    "Selected-colour ring-primary on dialog background 3.85 light / 4.21 dark",
+    "Muted \"Saving the default case type…\" 5.45 light / 5.66 dark on card, also on background (see table)",
+    "All eight swatches >= 3:1 in dark theme (min slate 3.05 on card)",
+    "Light theme: slate and blue swatches pass"
+  ],
+  "unresolved": [
+    "Not verified on a rendered page: the actual surface behind each element is assumed (dialog = bg-background, list = Card). Computation is from tokens only.",
+    "oklch to sRGB uses standard OKLab matrices with gamut clipping; browser gamut mapping may differ slightly. Only dark slate on card (3.05) sits near a threshold.",
+    "Disabled radio (disabled:opacity-50) is exempt from contrast as an inactive component and was not measured.",
+    "Only :root and .dark in globals.css:150-210 were read plus a grep of --destructive declarations in apps/web CSS; no component-level override of destructive text was found."
+  ],
+  "verdict": "FAIL",
+  "verdict_reason": "text-destructive (SC 1.4.3, named in the consensus condition) fails 4.5:1 in both themes, severely in dark (1.77:1). Light swatch 3:1 misses (amber, green, teal) are minor given text labels. Radio, selected ring, muted text and focus indicator pass."
+}

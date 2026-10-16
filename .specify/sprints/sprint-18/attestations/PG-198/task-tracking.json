@@ -41,7 +41,7 @@
       "apps/web/src/lib/__tests__/color-tokens.test.ts",
       "apps/web/src/lib/color-tokens.ts",
       "artifacts/coverage/PG-198-before.json",
-      "docs/architecture/adr/ADR-077-tenant-approval-policies.md",
+      "docs/architecture/adr/ADR-079-tenant-approval-policies.md",
       "packages/db/prisma/migrations/20261013120000_approval_policies/migration.sql",
       "packages/db/prisma/migrations/20261013120100_agent_actions_pending_sweep_idx/migration.sql",
       "packages/domain/src/ai/approval-policy/__tests__/approval-policy.test.ts",

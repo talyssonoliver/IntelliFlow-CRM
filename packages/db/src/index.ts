@@ -84,6 +84,8 @@ export type {
   DocumentRetentionPolicy,
   ReportSettings,
   ReportTemplate,
+  ReportSchedule, // PG-201
+  ReportScheduleTag,
   TaskSettings,
   Case,
   CaseTask,
@@ -92,6 +94,8 @@ export type {
   CaseRequiredField,
   CaseTag,
   CaseAutomationSetting,
+  CaseType,
+  CaseTypeChecklistItem,
   AppointmentSettings,
   PublicFeedback,
   LeadCustomField,

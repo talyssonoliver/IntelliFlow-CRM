@@ -214,24 +214,44 @@ describe('Report Settings Router (PG-187)', () => {
   // ─── resetToDefaults ──────────────────────────────────────────────────────
 
   describe('resetToDefaults', () => {
-    it('restores factory defaults (30d/USD/scheduledDelivery disabled)', async () => {
+    it('restores the default range and currency', async () => {
       (prismaMock.reportSettings.upsert as any).mockResolvedValueOnce(mockExistingSettings);
 
       const result = await caller.resetToDefaults();
 
       expect(prismaMock.reportSettings.upsert).toHaveBeenCalledWith(
         expect.objectContaining({
-          update: expect.objectContaining({
-            defaultRange: '30d',
-            currency: 'USD',
-            scheduledDelivery: expect.objectContaining({
-              enabled: false,
-              frequency: 'weekly',
-            }),
-          }),
+          update: expect.objectContaining({ defaultRange: '30d', currency: 'USD' }),
         })
       );
       expect(result).toEqual(mockExistingSettings);
+    });
+
+    it('keeps the legacy scheduledDelivery of an existing row (PG-201: the migration copies it)', async () => {
+      const legacyDelivery = {
+        enabled: true,
+        frequency: 'monthly',
+        dayOfWeek: 1,
+        time: '07:30',
+        recipients: ['finance@example.invalid'],
+        format: 'csv',
+      };
+      (prismaMock.reportSettings.upsert as any).mockResolvedValueOnce({
+        ...mockExistingSettings,
+        defaultRange: '30d',
+        currency: 'USD',
+        scheduledDelivery: legacyDelivery,
+      });
+
+      const result = await caller.resetToDefaults();
+
+      const args = (prismaMock.reportSettings.upsert as any).mock.calls.at(-1)[0];
+      expect(args.update).not.toHaveProperty('scheduledDelivery');
+      // A row created by the reset has nothing to keep, so it gets the disabled default.
+      expect(args.create.scheduledDelivery).toEqual(
+        expect.objectContaining({ enabled: false, frequency: 'weekly' })
+      );
+      expect(result.scheduledDelivery).toEqual(legacyDelivery);
     });
 
     it('filters by tenantId (multi-tenant isolation)', async () => {

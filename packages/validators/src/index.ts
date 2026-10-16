@@ -123,6 +123,7 @@ export * from './report-settings';
 
 // Case Settings Schemas (PG-190)
 export * from './case-settings';
+export * from './case-types';
 
 // Appointment Settings Schemas (PG-189 — wired alongside PG-190 to unblock typecheck)
 export * from './appointment-settings';
@@ -138,5 +139,7 @@ export * from './required-url';
 
 // Report Template Schemas (PG-200)
 export * from './report-templates';
+// Scheduled Report Schemas (PG-201)
+export * from './scheduled-reports';
 // Terms Acceptance Schemas (IFC-309)
 export * from './terms-acceptance';

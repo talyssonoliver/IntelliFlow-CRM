@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Approval Policies — Module Settings (PG-198, ADR-077).
+ * Approval Policies — Module Settings (PG-198, ADR-079).
  *
  * Tenant rules for both approval queues (agent tool actions, AI email
  * auto-responses): timeout, minimum reviewer, opt-in auto-approval and

@@ -259,6 +259,71 @@ describe('helpArticleRouter', () => {
         code: 'NOT_FOUND',
       });
     });
+
+    // ── #533: built-in articles visible to every tenant; tenant-authored stay isolated ──
+
+    it('falls back to a built-in (system) article when the caller tenant has none with that slug', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      // The caller's own tenant never authored this slug.
+      (prismaMock.helpArticle as any).findUnique.mockResolvedValue(null);
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({
+        ...mockPublishedWithSections,
+        tenantId: TEST_UUIDS.otherTenant, // owned by the tenant that seeded it
+        isSystem: true,
+      });
+
+      const result = await caller.getBySlug({ slug: 'advanced-features' });
+
+      expect(result.slug).toBe('advanced-features');
+      expect((prismaMock.helpArticle as any).findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { slug: 'advanced-features', isSystem: true },
+        })
+      );
+    });
+
+    it('counts only the caller tenant feedback so a shared built-in article leaks no cross-tenant aggregate', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findUnique.mockResolvedValue(null);
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({
+        ...mockPublishedWithSections,
+        tenantId: TEST_UUIDS.otherTenant,
+        isSystem: true,
+      });
+
+      await caller.getBySlug({ slug: 'advanced-features' });
+
+      const scopedCount = { select: { feedback: { where: { tenantId: TEST_UUIDS.tenant } } } };
+      expect((prismaMock.helpArticle as any).findUnique).toHaveBeenCalledWith(
+        expect.objectContaining({ include: expect.objectContaining({ _count: scopedCount }) })
+      );
+      expect((prismaMock.helpArticle as any).findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ include: expect.objectContaining({ _count: scopedCount }) })
+      );
+    });
+
+    it("prefers the caller tenant's own article over a built-in one with the same slug", async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findUnique.mockResolvedValue(mockPublishedWithSections);
+
+      const result = await caller.getBySlug({ slug: 'advanced-features' });
+
+      expect(result.id).toBe(mockPublishedWithSections.id);
+      // The tenant's own article resolved the lookup — no fallback needed.
+      expect((prismaMock.helpArticle as any).findFirst).not.toHaveBeenCalled();
+    });
+
+    it("never falls back to another tenant's non-system article (stays isolated)", async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findUnique.mockResolvedValue(null);
+      // Real DB behaviour: a foreign tenant's authored (non-system) article
+      // never matches `{ slug, isSystem: true }`, so the fallback resolves null.
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
+
+      await expect(caller.getBySlug({ slug: 'someone-elses-article' })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+    });
   });
 
   // ─── getById ───────────────────────────────────────────────────────────────
@@ -339,7 +404,9 @@ describe('helpArticleRouter', () => {
       expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           select: expect.objectContaining({
-            _count: { select: { feedback: true, sections: true } },
+            _count: {
+              select: { feedback: { where: { tenantId: TEST_UUIDS.tenant } }, sections: true },
+            },
           }),
         })
       );
@@ -376,6 +443,66 @@ describe('helpArticleRouter', () => {
           where: expect.objectContaining({ status: 'PUBLISHED' }),
         })
       );
+    });
+
+    // ── #533: built-in articles visible to every tenant; tenant-authored stay isolated ──
+
+    it('scopes the lookup to the caller tenant OR built-in (system) articles', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findMany.mockResolvedValue([]);
+
+      await caller.getByCategory({ categoryId: 'cat-onboarding' });
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true, slug: { notIn: [] } }],
+          }),
+        })
+      );
+    });
+
+    it('omits built-in articles shadowed by a caller-owned article with the same slug', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      const findMany = (prismaMock.helpArticle as any).findMany;
+      // First call: the caller's own slugs (any category/status); second: the listing.
+      findMany.mockReset();
+      findMany
+        .mockResolvedValueOnce([{ slug: 'getting-started' }, { slug: 'draft-elsewhere' }])
+        .mockResolvedValueOnce([]);
+
+      await caller.getByCategory({ categoryId: 'cat-onboarding' });
+
+      expect(findMany).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ where: { tenantId: TEST_UUIDS.tenant } })
+      );
+      expect(findMany).toHaveBeenNthCalledWith(
+        2,
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { tenantId: TEST_UUIDS.tenant },
+              { isSystem: true, slug: { notIn: ['getting-started', 'draft-elsewhere'] } },
+            ],
+          }),
+        })
+      );
+    });
+
+    it('returns a built-in article even when the caller tenant authored none in that category', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findMany.mockResolvedValue([
+        {
+          ...mockPublishedArticle,
+          tenantId: TEST_UUIDS.otherTenant,
+          isSystem: true,
+          _count: { feedback: 0, sections: 2 },
+        },
+      ]);
+
+      const result = await caller.getByCategory({ categoryId: 'cat-onboarding' });
+      expect(result).toHaveLength(1);
+      expect(result[0].slug).toBe(mockPublishedArticle.slug);
     });
   });
 
@@ -420,7 +547,7 @@ describe('helpArticleRouter', () => {
       });
     });
 
-    it('filters by tenantId for security', async () => {
+    it('scopes to the caller tenant OR built-in (system) articles — never another tenant', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue({
         relatedArticleIds: [ARTICLE_ID_2],
@@ -428,11 +555,68 @@ describe('helpArticleRouter', () => {
       (prismaMock.helpArticle as any).findMany.mockResolvedValue([]);
 
       await caller.getRelated({ id: ARTICLE_ID_1 });
-      expect((prismaMock.helpArticle as any).findMany).toHaveBeenCalledWith(
+      expect((prismaMock.helpArticle as any).findFirst).toHaveBeenCalledWith(
         expect.objectContaining({
-          where: expect.objectContaining({ tenantId: TEST_UUIDS.tenant }),
+          where: expect.objectContaining({
+            id: ARTICLE_ID_1,
+            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true }],
+          }),
         })
       );
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true, slug: { notIn: [] } }],
+          }),
+        })
+      );
+    });
+
+    it('omits a built-in related article shadowed by a tenant article with the same slug (#533)', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({
+        relatedArticleIds: [ARTICLE_ID_2],
+      });
+      (prismaMock.helpArticle as any).findMany
+        .mockResolvedValueOnce([{ slug: 'getting-started' }, { slug: 'draft-guide' }])
+        .mockResolvedValueOnce([]);
+
+      await caller.getRelated({ id: ARTICLE_ID_1 });
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenNthCalledWith(
+        1,
+        expect.objectContaining({ where: { tenantId: TEST_UUIDS.tenant } })
+      );
+      expect((prismaMock.helpArticle as any).findMany).toHaveBeenLastCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({
+            OR: [
+              { tenantId: TEST_UUIDS.tenant },
+              { isSystem: true, slug: { notIn: ['getting-started', 'draft-guide'] } },
+            ],
+          }),
+        })
+      );
+    });
+
+    it('resolves a related article that is a built-in (system) article (#533)', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({
+        relatedArticleIds: [ARTICLE_ID_2],
+      });
+      (prismaMock.helpArticle as any).findMany.mockResolvedValue([
+        {
+          id: ARTICLE_ID_2,
+          slug: 'builtin-advanced-features',
+          title: 'Advanced Features (built-in)',
+          excerpt: 'Learn advanced features',
+          readTimeMinutes: 10,
+          categoryId: 'cat-advanced',
+        },
+      ]);
+
+      const result = await caller.getRelated({ id: ARTICLE_ID_1 });
+      expect(result).toHaveLength(1);
+      expect(result[0].slug).toBe('builtin-advanced-features');
     });
   });
 
@@ -844,7 +1028,7 @@ describe('helpArticleRouter', () => {
       });
     });
 
-    it('verifies article ownership before writing feedback', async () => {
+    it('verifies article visibility (own tenant OR built-in system article) before writing feedback', async () => {
       const caller = helpArticleRouter.createCaller(createTestContext());
       (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
       (prismaMock.articleFeedback as any).create.mockResolvedValue({
@@ -859,10 +1043,38 @@ describe('helpArticleRouter', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             id: ARTICLE_ID_1,
-            tenantId: TEST_UUIDS.tenant,
+            OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true }],
           }),
         })
       );
+    });
+
+    it('accepts feedback on a built-in (system) article even though it belongs to another tenantId (#533)', async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      // The article row is owned by a different tenantId (the one that seeded
+      // the built-in content) but isSystem: true makes it visible — the mock
+      // here only needs to resolve truthy to prove the router doesn't reject it.
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue({ id: ARTICLE_ID_1 });
+      (prismaMock.articleFeedback as any).create.mockResolvedValue({
+        id: generateTestUUID('feedback-7'),
+        helpful: true,
+        createdAt: new Date(),
+      });
+
+      await expect(
+        caller.submitFeedback({ articleId: ARTICLE_ID_1, value: 'helpful' })
+      ).resolves.toMatchObject({ helpful: true });
+    });
+
+    it("rejects feedback on another tenant's authored (non-system) article", async () => {
+      const caller = helpArticleRouter.createCaller(createTestContext());
+      // Real DB behaviour for a foreign tenant's article: it matches neither
+      // `tenantId = caller` nor `isSystem = true`, so findFirst resolves null.
+      (prismaMock.helpArticle as any).findFirst.mockResolvedValue(null);
+
+      await expect(
+        caller.submitFeedback({ articleId: ARTICLE_ID_1, value: 'helpful' })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
     });
   });
 

@@ -35,6 +35,7 @@ services:
       POSTGRES_DB: intelliflow_test
     volumes:
       - postgres_test_data:/var/lib/postgresql/data
+      - ./infra/docker/postgres/init-test.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ['CMD-SHELL', 'pg_isready -U postgres']
       interval: 10s

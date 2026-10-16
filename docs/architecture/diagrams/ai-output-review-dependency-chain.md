@@ -224,7 +224,7 @@ chain:
                                    ┌─────────────────────────┐
                                    │       PG-198            │
                                    │   Approval Policies     │
-                                   │   (ADR-077)             │
+                                   │   (ADR-079)             │
                                    │                         │
                                    │  - Tenant rules for the │
                                    │    agent-action AND the │

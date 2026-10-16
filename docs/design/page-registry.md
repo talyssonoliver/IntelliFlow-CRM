@@ -1053,18 +1053,18 @@ Each route entry uses this standard table format:
 
 ### New Case (`/cases/new`)
 
-| Field          | Value                                                     |
-| -------------- | --------------------------------------------------------- |
-| **Task ID**    | PG-138, IFC-136                                           |
-| **File Path**  | `apps/web/src/app/cases/(list)/new/page.tsx`              |
-| **Layout**     | `apps/web/src/app/cases/(list)/layout.tsx`                |
-| **API Router** | `apps/api/src/modules/legal/cases.router.ts`              |
-| **E2E Test**   | None                                                      |
-| **Unit Tests** | None                                                      |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms        |
-| **Status**     | Implemented                                               |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA             |
-| **Components** | "use client", CaseForm, PageHeader, toast, useRequireAuth |
+| Field          | Value                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-138, IFC-136, PG-204                                                                                                  |
+| **File Path**  | `apps/web/src/app/cases/(list)/new/page.tsx`                                                                             |
+| **Layout**     | `apps/web/src/app/cases/(list)/layout.tsx`                                                                               |
+| **API Router** | `apps/api/src/modules/legal/cases.router.ts`, `apps/api/src/modules/legal/case-types.router.ts` (`caseTypes.listActive`) |
+| **E2E Test**   | None                                                                                                                     |
+| **Unit Tests** | `apps/web/src/app/cases/(list)/new/__tests__/page.test.tsx`, `apps/web/src/components/cases/__tests__/CaseForm.test.tsx` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms                                                                       |
+| **Status**     | Implemented                                                                                                              |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                            |
+| **Components** | "use client", CaseForm, PageHeader, toast, useRequireAuth                                                                |
 
 ### Case Detail (`/cases/[id]`)
 
@@ -1459,7 +1459,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 15: Analytics (2 routes)
+## Section 15: Analytics (3 routes)
 
 ### Analytics Dashboard (`/analytics`)
 
@@ -1490,6 +1490,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                                                                 |
 | **RACI**       | R: Frontend / A: Product / C: AI Team / I: QA                                                               |
 | **Components** | "use client", NpsGauge, NpsTrendChart, SentimentDistributionChart (lazy loaded), useFeedbackSurveyDashboard |
+
+### Scheduled Reports (`/analytics/scheduled-reports`)
+
+| Field          | Value                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-201                                                                                                                          |
+| **File Path**  | `apps/web/src/app/analytics/(list)/scheduled-reports/page.tsx`                                                                  |
+| **Layout**     | `apps/web/src/app/analytics/(list)/layout.tsx`                                                                                  |
+| **API Router** | `apps/api/src/modules/analytics/scheduled-reports.router.ts` (`analytics.scheduledReports.*`)                                   |
+| **E2E Test**   | None                                                                                                                            |
+| **Unit Tests** | `apps/web/src/app/analytics/scheduled-reports/__tests__/`, `apps/web/src/app/analytics/scheduled-reports/components/__tests__/` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                                 |
+| **Status**     | Implemented (delivery runs once IFC-308 ships)                                                                                  |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                                   |
+| **Components** | ScheduledReportsContent, ScheduleList, ScheduleDialog, TagsTab (forwardRef), TimezoneSelector, PageHeader, EmptyState           |
 
 ---
 

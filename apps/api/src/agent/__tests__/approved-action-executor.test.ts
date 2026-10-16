@@ -77,7 +77,7 @@ describe('executeApprovedAction', () => {
       status: 'SUCCEEDED',
       result: { entityType: 'CASE', entityId: 'case-9' },
     });
-    // No assignee proposed and no requester known: the approver is assigned (#872).
+    // No assignee proposed and no requester known: the approver is assigned.
     expect(calls.cases.create).toHaveBeenCalledWith({
       title: 'T',
       priority: 'HIGH',
