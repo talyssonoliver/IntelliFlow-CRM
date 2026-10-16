@@ -1,0 +1,69 @@
+name: Synthetic Monitoring
+
+# Applies infra/monitoring/grafana/cloud/synthetic-monitoring.json: the
+# production /health/ready uptime probe and its alert rule (IFC-032
+# follow-up, #811). The JSON is the source of truth; this job only pushes it.
+#
+# workflow_dispatch ONLY, deliberately — no push trigger. Owner decision on
+# #811: "prepare the probe and alert config now; the owner enables the app
+# and creates the probe token, then it is applied." GRAFANA_SA_TOKEN (the
+# Admin-role token that can provision alert rules) already exists as a
+# Production environment secret, added for IFC-032 (#804) before this
+# workflow. SM_ACCESS_TOKEN/SM_API_URL are the only thing not yet in place,
+# so a push trigger on these paths would be fail-closed only until the owner
+# adds them — after that, any ordinary merge touching this config, the
+# script, or this file would silently apply the check and alert rule with no
+# further action from him, on a path he never chose as "switch it on now".
+# Keeping this dispatch-only means applying always takes an explicit action,
+# independent of which secrets happen to exist. Guarded by
+# tools/scripts/__tests__/apply-synthetic-monitoring.test.ts ("only applies
+# on an explicit manual dispatch, never on push").
+#
+# NOT runnable yet regardless. Two owner steps come first (see
+# docs/observability/README.md and PR #811):
+#   1. Initialize the Synthetic Monitoring app on the graysushi1880 stack
+#      (Grafana Cloud -> Testing & synthetics -> Synthetics -> "Initialize").
+#   2. Generate a Synthetic Monitoring access token (Synthetics -> Config ->
+#      Access tokens -> Generate access token) and the matching SM_API_URL
+#      (same Config tab), then add both as repo secrets/vars: SM_ACCESS_TOKEN
+#      (secret) and SM_API_URL (variable).
+# Without them this job fails, saying so; it never prints either token.
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only validate the config and resolve probe names'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: synthetic-monitoring
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    name: Apply Synthetic Monitoring check + alert rule
+    runs-on: ubuntu-latest
+    environment: Production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          sparse-checkout: |
+            infra/monitoring/grafana/cloud
+            tools/scripts/observability
+            tools/scripts/lib
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Apply
+        env:
+          SM_API_URL: ${{ vars.SM_API_URL }}
+          SM_ACCESS_TOKEN: ${{ secrets.SM_ACCESS_TOKEN }}
+          GRAFANA_URL: https://graysushi1880.grafana.net
+          GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: node tools/scripts/observability/apply-synthetic-monitoring.mjs $DRY_RUN

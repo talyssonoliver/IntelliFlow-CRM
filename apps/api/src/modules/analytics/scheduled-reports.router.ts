@@ -6,7 +6,7 @@
  * has a cron expression + IANA timezone (BullMQ `pattern` + `tz`), recipients, a
  * delivery format, a PG-200 template reference, tags and a colour label.
  *
- * PG-201 adds no scheduler. IFC-308's BullMQ cron reads active rows (ADR-075), so
+ * PG-201 adds no scheduler. IFC-308's BullMQ cron reads active rows (ADR-078), so
  * `isActive` has no runtime effect until IFC-308 ships (category-2 toggle).
  *
  * - Reads: any tenant user with the ANALYTICS entitlement (ADR-070).

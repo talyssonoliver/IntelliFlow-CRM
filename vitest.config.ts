@@ -115,7 +115,6 @@ export default defineConfig({
       'apps/ai-worker/vitest.config.ts',
       'apps/web/vitest.config.ts',
       'apps/workers/shared/vitest.config.ts',
-      'apps/workers/notifications-worker/vitest.config.ts',
       'apps/workers/events-worker/vitest.config.ts',
       'apps/workers/ingestion-worker/vitest.config.ts',
       'packages/ui/vitest.config.ts',
@@ -419,7 +418,7 @@ export default defineConfig({
         'packages/adapters/src/payments/paypal/**', // Future sprint
         'packages/adapters/src/email/outlook/**', // Future sprint
         'packages/adapters/src/erp/sap/**', // Future sprint
-        'packages/adapters/src/storage/**', // Future sprint
+        'packages/adapters/src/storage/SupabaseStorageAdapter.ts', // Future sprint (InMemoryStorageAdapter is real and measured)
         'packages/adapters/src/antivirus/**', // Future sprint
         'packages/adapters/src/shared/**', // Utilities for future adapters
         // SDK not yet implemented

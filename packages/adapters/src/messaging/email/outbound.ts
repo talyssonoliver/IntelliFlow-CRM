@@ -423,9 +423,10 @@ export class SendGridProvider implements EmailProvider {
 /**
  * Resend provider — sends over the Resend HTTP API (POST https://api.resend.com/emails,
  * HTTPS/443). This is the IntelliFlow stack's provider (SendGrid was superseded; see
- * ADR-041 + the Resend decision). Mirrors the notifications-worker's Resend transport so
- * the API-originated emails (receipts, welcome, auto-response, DSAR) actually send instead
- * of falling back to the mock provider. See git issue #360.
+ * ADR-041 + the Resend decision). Mirrors the Resend transport apps/ai-worker's
+ * notification-email-worker.ts now uses (folded from the former notifications-worker,
+ * #230) so the API-originated emails (receipts, welcome, auto-response, DSAR) actually
+ * send instead of falling back to the mock provider. See git issue #360.
  */
 export class ResendProvider implements EmailProvider {
   readonly name = 'resend';

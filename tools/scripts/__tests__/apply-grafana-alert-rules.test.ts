@@ -72,6 +72,26 @@ describe('alert rules config', () => {
     ]);
   });
 
+  // Every value checked here is interpolated straight into a URL path segment
+  // in client()'s caller (run()); a `/`, `..` or `?` in any of them would let
+  // one path segment become two, retarget the request, or add a query string.
+  it('rejects a rule uid that would break out of its URL path segment', () => {
+    const bad = { ...CONFIG, rules: [{ ...CONFIG.rules[0], uid: 'a/../other' }] };
+    expect(validateConfig(bad)).toEqual([expect.stringContaining('a/../other')]);
+  });
+
+  it('rejects an unsafe folder.uid, group.name or deliveryTest.uid', () => {
+    expect(validateConfig({ ...CONFIG, folder: { ...CONFIG.folder, uid: 'x/y' } })).toEqual([
+      expect.stringContaining('folder.uid'),
+    ]);
+    expect(validateConfig({ ...CONFIG, group: { ...CONFIG.group, name: 'a?b=1' } })).toEqual([
+      expect.stringContaining('group.name'),
+    ]);
+    expect(
+      validateConfig({ ...CONFIG, deliveryTest: { ...CONFIG.deliveryTest, uid: 'a#frag' } })
+    ).toEqual([expect.stringContaining('deliveryTest.uid')]);
+  });
+
   it('builds a query -> reduce -> threshold rule in the configured folder and group', () => {
     const rule = buildRule(CONFIG.rules[0], CONFIG);
     expect(rule).toMatchObject({

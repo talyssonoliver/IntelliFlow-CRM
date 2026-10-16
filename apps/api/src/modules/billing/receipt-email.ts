@@ -2,8 +2,10 @@
  * Brand-matched content for billing receipt emails.
  *
  * Builds the subject, plain-text body, and the IntelliFlow-branded HTML body (same dark
- * palette as the Supabase Auth templates + the notifications-worker shell) so receipts match
- * the rest of the system's email instead of bare `<p>` tags. Pure function — easy to test.
+ * palette as the Supabase Auth templates + the notification-email brand shell in
+ * apps/ai-worker/src/workers/notification-email-template.ts, folded from the former
+ * notifications-worker, #230) so receipts match the rest of the system's email
+ * instead of bare `<p>` tags. Pure function — easy to test.
  *
  * @module billing/receipt-email
  */

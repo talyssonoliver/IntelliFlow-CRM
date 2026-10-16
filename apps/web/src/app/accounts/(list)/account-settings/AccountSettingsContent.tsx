@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared/page-header';
+import { Button, Card, toast } from '@intelliflow/ui';
+import { ModuleSettingsShell } from '@/components/shared/module-settings-shell';
 import { SectionHeader } from '@/components/shared/section-header';
 import { useAccountTiers } from '@/hooks/useAccountTiers';
 import type {
@@ -534,79 +534,66 @@ export default function AccountSettingsContent() {
     return new Date(Math.max(...dates.map((d) => d.getTime())));
   }, [hierarchyQuery.data, automationQuery.data, industryQuery.data]);
 
-  const actions = useMemo(
-    () => [
-      {
-        label: 'Reset to Defaults',
-        onClick: () => setResetOpen(true),
-        variant: 'secondary' as const,
-        icon: 'restart_alt',
-        hideOnMobile: true,
-      },
-      {
-        label: isSaving ? 'Saving…' : 'Save Changes',
-        onClick: handleSave,
-        variant: 'primary' as const,
-        icon: 'save',
-        disabled: !isDirty || isSaving,
-        loading: isSaving,
-      },
-    ],
-    [handleSave, isDirty, isSaving]
-  );
-
-  if (isLoading) return <AccountSettingsLoading />;
-
-  if (error) {
-    const handleRetry = () => {
-      // Typed as thunks returning Promise<unknown> so the seven differently-typed tRPC
-      // query results are not unioned into one (excessively deep) type.
-      const refetchers: Array<() => Promise<unknown>> = [
-        () => hierarchyQuery.refetch(),
-        () => industryQuery.refetch(),
-        () => customFieldsQuery.refetch(),
-        () => duplicateRulesQuery.refetch(),
-        () => requiredFieldsQuery.refetch(),
-        () => tagsQuery.refetch(),
-        () => automationQuery.refetch(),
-      ];
-      Promise.all(refetchers.map((refetch) => refetch())).catch((err: unknown) => {
-        toast({
-          title: 'Could not reload settings',
-          description: err instanceof Error ? err.message : 'Unknown error',
-          variant: 'destructive',
-        });
-      });
-    };
-    return (
-      <div className="w-full text-center py-12">
-        <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
-        <button onClick={handleRetry} className="text-sm text-primary hover:underline">
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const canSave = isDirty && !isSaving;
 
   const industryIsBusy =
     industryCreate.isPending || industryUpdate.isPending || industryDelete.isPending;
   const fieldsIsBusy = fieldCreate.isPending || fieldUpdate.isPending || fieldDelete.isPending;
   const tagsIsBusy = tagCreate.isPending || tagUpdate.isPending || tagDelete.isPending;
 
-  return (
-    <div className="w-full">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Accounts', href: '/accounts' },
-          { label: 'Account Settings' },
-        ]}
-        title="Account Settings"
-        description="Hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, tags, automation and AI."
-        actions={actions}
-        className="mb-6"
-      />
+  const handleRetry = () => {
+    // Typed as thunks returning Promise<unknown> so the seven differently-typed tRPC
+    // query results are not unioned into one (excessively deep) type.
+    const refetchers: Array<() => Promise<unknown>> = [
+      () => hierarchyQuery.refetch(),
+      () => industryQuery.refetch(),
+      () => customFieldsQuery.refetch(),
+      () => duplicateRulesQuery.refetch(),
+      () => requiredFieldsQuery.refetch(),
+      () => tagsQuery.refetch(),
+      () => automationQuery.refetch(),
+    ];
+    Promise.all(refetchers.map((refetch) => refetch())).catch((err: unknown) => {
+      toast({
+        title: 'Could not reload settings',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    });
+  };
+  const errorFallback = error ? (
+    <div className="w-full text-center py-12">
+      <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
+      <button onClick={handleRetry} className="text-sm text-primary hover:underline">
+        Retry
+      </button>
+    </div>
+  ) : undefined;
 
+  return (
+    <ModuleSettingsShell
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' },
+        { label: 'Accounts', href: '/accounts' },
+        { label: 'Account Settings' },
+      ]}
+      title="Account Settings"
+      description="Hierarchy, industry taxonomy, custom fields, duplicate detection, required fields, tags, automation and AI."
+      errorTitle="Failed to load settings"
+      isLoading={isLoading}
+      errorMessage={error?.message ?? null}
+      loadingFallback={<AccountSettingsLoading />}
+      errorFallback={errorFallback}
+      isSaving={isSaving}
+      canSave={canSave}
+      onSave={handleSave}
+      resetOpen={resetOpen}
+      onResetOpenChange={setResetOpen}
+      onResetConfirm={handleReset}
+      resetDescription="This will restore hierarchy rules, industry taxonomy, duplicate-detection rules, and required-field policy to factory defaults. Custom fields, tags and automation are preserved. This action cannot be undone."
+      resetAction={{ icon: 'restart_alt', hideOnMobile: true }}
+      saveAction={{ icon: 'save' }}
+    >
       {/* ═════════════════════════════════════════════════════════════════
           BENTO GRID — 12 columns (stacks on mobile)
           Row 1: Hierarchy (5)            + Duplicate Detection (7)
@@ -615,199 +602,187 @@ export default function AccountSettingsContent() {
           Row 4: Custom Fields (8)        + Tags (4)
           Row 5: Configuration Summary (12)
           ═════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        {/* Hierarchy */}
-        <Card className="lg:col-span-5 p-4 sm:p-6">
-          <SectionHeader
-            icon="account_tree"
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            iconFg="text-blue-600 dark:text-blue-400"
-            title="Hierarchy"
-            description="Rules for parent/child account relationships."
-          />
-          <HierarchyTab
-            config={localHierarchy}
-            onConfigChange={handleHierarchyChange}
-            tierOptions={tierOptions}
-          />
-        </Card>
+      {/* Hierarchy */}
+      <Card className="lg:col-span-5 p-4 sm:p-6">
+        <SectionHeader
+          icon="account_tree"
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
+          iconFg="text-blue-600 dark:text-blue-400"
+          title="Hierarchy"
+          description="Rules for parent/child account relationships."
+        />
+        <HierarchyTab
+          config={localHierarchy}
+          onConfigChange={handleHierarchyChange}
+          tierOptions={tierOptions}
+        />
+      </Card>
 
-        {/* Duplicate Detection */}
-        <Card className="lg:col-span-7 p-4 sm:p-6">
-          <SectionHeader
-            icon="content_copy"
-            iconBg="bg-amber-100 dark:bg-amber-900/30"
-            iconFg="text-amber-600 dark:text-amber-400"
-            title="Duplicate Detection"
-            description="Rules that flag potential duplicate accounts on create or update."
-          />
-          <DuplicateDetectionTab rules={localRules} onRulesChange={handleRulesChange} />
-        </Card>
+      {/* Duplicate Detection */}
+      <Card className="lg:col-span-7 p-4 sm:p-6">
+        <SectionHeader
+          icon="content_copy"
+          iconBg="bg-amber-100 dark:bg-amber-900/30"
+          iconFg="text-amber-600 dark:text-amber-400"
+          title="Duplicate Detection"
+          description="Rules that flag potential duplicate accounts on create or update."
+        />
+        <DuplicateDetectionTab rules={localRules} onRulesChange={handleRulesChange} />
+      </Card>
 
-        {/* Required Fields */}
-        <Card className="lg:col-span-5 p-4 sm:p-6">
-          <SectionHeader
-            icon="checklist"
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            iconFg="text-emerald-600 dark:text-emerald-400"
-            title="Required Fields"
-            description="Fields that must be filled in before an account can be saved."
-          />
-          <RequiredFieldsTab fields={localRequired} onFieldsChange={handleRequiredChange} />
-        </Card>
+      {/* Required Fields */}
+      <Card className="lg:col-span-5 p-4 sm:p-6">
+        <SectionHeader
+          icon="checklist"
+          iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+          iconFg="text-emerald-600 dark:text-emerald-400"
+          title="Required Fields"
+          description="Fields that must be filled in before an account can be saved."
+        />
+        <RequiredFieldsTab fields={localRequired} onFieldsChange={handleRequiredChange} />
+      </Card>
 
-        {/* Automation */}
-        <Card className="lg:col-span-7 p-4 sm:p-6">
-          <SectionHeader
-            icon="bolt"
-            iconBg="bg-orange-100 dark:bg-orange-900/30"
-            iconFg="text-orange-600 dark:text-orange-400"
-            title="Automation"
-            description="Automated behaviours for account management and data hygiene."
-          />
-          <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
-        </Card>
+      {/* Automation */}
+      <Card className="lg:col-span-7 p-4 sm:p-6">
+        <SectionHeader
+          icon="bolt"
+          iconBg="bg-orange-100 dark:bg-orange-900/30"
+          iconFg="text-orange-600 dark:text-orange-400"
+          title="Automation"
+          description="Automated behaviours for account management and data hygiene."
+        />
+        <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
+      </Card>
 
-        {/* Industry */}
-        <Card className="lg:col-span-7 p-4 sm:p-6">
-          <SectionHeader
-            icon="business_center"
-            iconBg="bg-teal-100 dark:bg-teal-900/30"
-            iconFg="text-teal-600 dark:text-teal-400"
-            title="Industry"
-            description="Admin-configurable taxonomy of industries for account records."
-            action={
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => industryRef.current?.openCreate()}
-                disabled={industryIsBusy}
-              >
-                <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
-                  add
-                </span>{' '}
-                Add Industry
-              </Button>
-            }
-          />
-          <IndustryTab
-            ref={industryRef}
-            rows={industryRows}
-            onCreate={handleIndustryCreate}
-            onUpdate={handleIndustryUpdate}
-            onDelete={handleIndustryDelete}
-            isBusy={industryIsBusy}
-          />
-        </Card>
+      {/* Industry */}
+      <Card className="lg:col-span-7 p-4 sm:p-6">
+        <SectionHeader
+          icon="business_center"
+          iconBg="bg-teal-100 dark:bg-teal-900/30"
+          iconFg="text-teal-600 dark:text-teal-400"
+          title="Industry"
+          description="Admin-configurable taxonomy of industries for account records."
+          action={
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => industryRef.current?.openCreate()}
+              disabled={industryIsBusy}
+            >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
+                add
+              </span>{' '}
+              Add Industry
+            </Button>
+          }
+        />
+        <IndustryTab
+          ref={industryRef}
+          rows={industryRows}
+          onCreate={handleIndustryCreate}
+          onUpdate={handleIndustryUpdate}
+          onDelete={handleIndustryDelete}
+          isBusy={industryIsBusy}
+        />
+      </Card>
 
-        {/* AI & Intelligence */}
-        <Card className="lg:col-span-5 p-4 sm:p-6">
-          <SectionHeader
-            icon="neurology"
-            iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
-            iconFg="text-fuchsia-600 dark:text-fuchsia-400"
-            title="AI & Intelligence"
-            description="Control how Aurora's AI augments account records."
-          />
-          <AISettingsTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
-        </Card>
+      {/* AI & Intelligence */}
+      <Card className="lg:col-span-5 p-4 sm:p-6">
+        <SectionHeader
+          icon="neurology"
+          iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
+          iconFg="text-fuchsia-600 dark:text-fuchsia-400"
+          title="AI & Intelligence"
+          description="Control how Aurora's AI augments account records."
+        />
+        <AISettingsTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
+      </Card>
 
-        {/* Custom Fields */}
-        <Card className="lg:col-span-8 p-4 sm:p-6">
-          <SectionHeader
-            icon="dynamic_form"
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
-            iconFg="text-violet-600 dark:text-violet-400"
-            title="Custom Fields"
-            description="Additional data captured on account records."
-            action={
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => customFieldsRef.current?.openCreate()}
-                disabled={fieldsIsBusy}
-              >
-                <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
-                  add
-                </span>{' '}
-                Add Field
-              </Button>
-            }
-          />
-          <CustomFieldsTab
-            ref={customFieldsRef}
-            rows={fieldRows}
-            onCreate={handleFieldCreate}
-            onUpdate={handleFieldUpdate}
-            onDelete={handleFieldDelete}
-            isBusy={fieldsIsBusy}
-          />
-        </Card>
+      {/* Custom Fields */}
+      <Card className="lg:col-span-8 p-4 sm:p-6">
+        <SectionHeader
+          icon="dynamic_form"
+          iconBg="bg-violet-100 dark:bg-violet-900/30"
+          iconFg="text-violet-600 dark:text-violet-400"
+          title="Custom Fields"
+          description="Additional data captured on account records."
+          action={
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => customFieldsRef.current?.openCreate()}
+              disabled={fieldsIsBusy}
+            >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
+                add
+              </span>{' '}
+              Add Field
+            </Button>
+          }
+        />
+        <CustomFieldsTab
+          ref={customFieldsRef}
+          rows={fieldRows}
+          onCreate={handleFieldCreate}
+          onUpdate={handleFieldUpdate}
+          onDelete={handleFieldDelete}
+          isBusy={fieldsIsBusy}
+        />
+      </Card>
 
-        {/* Tags */}
-        <Card className="lg:col-span-4 p-4 sm:p-6">
-          <SectionHeader
-            icon="sell"
-            iconBg="bg-indigo-100 dark:bg-indigo-900/30"
-            iconFg="text-indigo-600 dark:text-indigo-400"
-            title="Tags"
-            description="Tag vocabulary for the Accounts module."
-            action={
-              <Button
-                type="button"
-                size="sm"
-                onClick={() => tagsRef.current?.openCreate()}
-                disabled={tagsIsBusy}
-              >
-                <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
-                  add
-                </span>{' '}
-                Add Tag
-              </Button>
-            }
-          />
-          <TagsTab
-            ref={tagsRef}
-            tags={tagRows}
-            onCreate={handleTagCreate}
-            onUpdate={handleTagUpdate}
-            onDelete={handleTagDelete}
-            isBusy={tagsIsBusy}
-          />
-        </Card>
+      {/* Tags */}
+      <Card className="lg:col-span-4 p-4 sm:p-6">
+        <SectionHeader
+          icon="sell"
+          iconBg="bg-indigo-100 dark:bg-indigo-900/30"
+          iconFg="text-indigo-600 dark:text-indigo-400"
+          title="Tags"
+          description="Tag vocabulary for the Accounts module."
+          action={
+            <Button
+              type="button"
+              size="sm"
+              onClick={() => tagsRef.current?.openCreate()}
+              disabled={tagsIsBusy}
+            >
+              <span className="material-symbols-outlined text-sm mr-1" aria-hidden>
+                add
+              </span>{' '}
+              Add Tag
+            </Button>
+          }
+        />
+        <TagsTab
+          ref={tagsRef}
+          tags={tagRows}
+          onCreate={handleTagCreate}
+          onUpdate={handleTagUpdate}
+          onDelete={handleTagDelete}
+          isBusy={tagsIsBusy}
+        />
+      </Card>
 
-        {/* Configuration Summary */}
-        <Card className="lg:col-span-12 p-4 sm:p-6">
-          <SectionHeader
-            icon="summarize"
-            iconBg="bg-slate-100 dark:bg-slate-800"
-            iconFg="text-slate-600 dark:text-slate-300"
-            title="Configuration Summary"
-            description="Live overview of your account settings."
-          />
-          <ConfigurationSummary
-            hierarchy={localHierarchy}
-            industries={industryRows}
-            customFields={fieldRows}
-            duplicateRules={localRules}
-            requiredFields={localRequired}
-            tags={tagRows}
-            automation={localAutomation}
-            lastUpdated={lastUpdated}
-            isDirty={isDirty}
-          />
-        </Card>
-      </div>
-
-      <ConfirmationDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset to Defaults"
-        description="This will restore hierarchy rules, industry taxonomy, duplicate-detection rules, and required-field policy to factory defaults. Custom fields, tags and automation are preserved. This action cannot be undone."
-        confirmLabel="Reset"
-        variant="destructive"
-        onConfirm={handleReset}
-      />
-    </div>
+      {/* Configuration Summary */}
+      <Card className="lg:col-span-12 p-4 sm:p-6">
+        <SectionHeader
+          icon="summarize"
+          iconBg="bg-slate-100 dark:bg-slate-800"
+          iconFg="text-slate-600 dark:text-slate-300"
+          title="Configuration Summary"
+          description="Live overview of your account settings."
+        />
+        <ConfigurationSummary
+          hierarchy={localHierarchy}
+          industries={industryRows}
+          customFields={fieldRows}
+          duplicateRules={localRules}
+          requiredFields={localRequired}
+          tags={tagRows}
+          automation={localAutomation}
+          lastUpdated={lastUpdated}
+          isDirty={isDirty}
+        />
+      </Card>
+    </ModuleSettingsShell>
   );
 }

@@ -1,6 +1,6 @@
 // IntelliFlow CRM - Scheduled Report Validators (PG-201)
 // Zod schemas for /analytics/scheduled-reports. Rows live in `report_schedules`;
-// IFC-308's BullMQ cron reads `cronExpression` + `timezone` (ADR-075).
+// IFC-308's BullMQ cron reads `cronExpression` + `timezone` (ADR-078).
 
 import { z } from 'zod';
 import { ACCOUNT_TAG_COLOR_TOKENS } from './account-settings';

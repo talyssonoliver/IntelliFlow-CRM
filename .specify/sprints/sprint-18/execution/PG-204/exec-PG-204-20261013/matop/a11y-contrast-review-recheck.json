@@ -1,0 +1,386 @@
+{
+  "task": "PG-204",
+  "produced_by": "a11y-expert sub-agent",
+  "produced_at": "2026-10-13T07:27:53Z",
+  "rechecks": "a11y-contrast-review.json (F1, F2), fix commit d7d91e5e8",
+  "method": "Same computed method as first review: globals.css tokens, Tailwind 4 theme.css oklch (red-700 oklch(50.5% .213 27.518) = #c10007, red-300 oklch(80.8% .114 19.571) = #ffa2a2, slate-500 = #62748e). Alert background is bg-destructive/5 alpha-composited over the surface. No browser, tests or build.",
+  "grep_confirmation": "No text-destructive remains as a text colour in CaseForm.tsx (72,306,394,528,605,644), CaseTypesContent.tsx:126, CaseTypeDialog.tsx:263,343, DeleteCaseTypeDialog.tsx:49, ResolutionChecklistEditor.tsx:175, new/page.tsx:102,116: all are text-red-700 dark:text-red-300. Remaining destructive references are border-destructive/40 and bg-destructive/5 on new/page.tsx:116 only.",
+  "swatch_classes": "case-type-colors.ts: every token = bg-<colour>-500 ring-1 ring-inset ring-slate-500; consumed by CaseTypeList.tsx:60 and CaseTypeDialog.tsx:297.",
+  "table": [
+    {
+      "element": "text-red-700 on background",
+      "foreground": "#c10007",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 5.94,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "text-red-700 on card",
+      "foreground": "#c10007",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 6.42,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "alert text on bg-destructive/5 over background (new/page.tsx:116)",
+      "foreground": "#c10007",
+      "background": "#f6eded",
+      "theme": "light",
+      "ratio": 5.58,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "alert text on bg-destructive/5 over card",
+      "foreground": "#c10007",
+      "background": "#fef6f6",
+      "theme": "light",
+      "ratio": 6.02,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (slate)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (slate)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (blue)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (blue)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (red)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (red)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (amber)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (amber)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (green)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (green)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (violet)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (violet)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (rose)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (rose)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (teal)",
+      "foreground": "#62748e",
+      "background": "#ffffff",
+      "theme": "light",
+      "ratio": 4.77,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (teal)",
+      "foreground": "#62748e",
+      "background": "#f6f6f6",
+      "theme": "light",
+      "ratio": 4.41,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "text-red-300 on background",
+      "foreground": "#ffa2a2",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 9.12,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "text-red-300 on card",
+      "foreground": "#ffa2a2",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 7.57,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "alert text on bg-destructive/5 over background (new/page.tsx:116)",
+      "foreground": "#ffa2a2",
+      "background": "#151a29",
+      "theme": "dark",
+      "ratio": 9.03,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "alert text on bg-destructive/5 over card",
+      "foreground": "#ffa2a2",
+      "background": "#222938",
+      "theme": "dark",
+      "ratio": 7.55,
+      "required": 4.5,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (slate)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (slate)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (blue)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (blue)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (red)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (red)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (amber)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (amber)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (green)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (green)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (violet)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (violet)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (rose)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (rose)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs card (teal)",
+      "foreground": "#62748e",
+      "background": "#1d2a39",
+      "theme": "dark",
+      "ratio": 3.05,
+      "required": 3,
+      "pass": true
+    },
+    {
+      "element": "swatch ring slate-500 vs background/dialog (teal)",
+      "foreground": "#62748e",
+      "background": "#0f1a29",
+      "theme": "dark",
+      "ratio": 3.67,
+      "required": 3,
+      "pass": true
+    }
+  ],
+  "results": {
+    "f1_error_text": "PASS (min 5.58:1, required 4.5)",
+    "f2_swatch_outline": "PASS (min 3.05:1 slate-500 vs dark card, required 3)"
+  },
+  "remaining_minors": [
+    "F3 alert border border-destructive/40 is decorative (1.58 light, 1.14 dark); text carries the message",
+    "gh #882 CaseForm focus ring-primary/20 (focus:border-primary gives 3.85/4.21)",
+    "CaseForm unfocused input border-border 1.15/1.72 pre-existing, not PG-204"
+  ],
+  "unresolved": [
+    "Computed from tokens only, no rendered page; surfaces assumed (dialog bg-background, list Card).",
+    "Ring is inset 1px on 12-16px dots; computed against the surface as the outer-edge contrast, anti-aliasing at that size not measured.",
+    "ring-1 on swatch in CaseTypeDialog sits inside a label with selected-state ring-primary on the label, not the swatch, so no clash."
+  ],
+  "verdict": "PASS WITH MINOR"
+}

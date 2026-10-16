@@ -290,6 +290,42 @@ describe('ReportSettingsContent', () => {
     await waitFor(() => expect(mutateReset).toHaveBeenCalled());
   });
 
+  const seeded = {
+    defaultRange: '30d',
+    currency: 'USD',
+    scheduledDelivery: {
+      enabled: false,
+      frequency: 'weekly',
+      dayOfWeek: 1,
+      time: '09:00',
+      recipients: [],
+      format: 'pdf',
+    },
+  };
+
+  it('picking a currency marks the form dirty and saves the new currency', async () => {
+    const { mutateUpdate } = setup({ queryData: seeded });
+    render(<ReportSettingsContent />);
+    const save = await screen.findByRole('button', { name: /save changes/i });
+    expect(save).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: /select display currency/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /EUR/ }));
+    await waitFor(() => expect(save).not.toBeDisabled());
+    fireEvent.click(save);
+    await waitFor(() =>
+      expect(mutateUpdate).toHaveBeenCalledWith(expect.objectContaining({ currency: 'EUR' }))
+    );
+  });
+
+  it('toggling scheduled delivery updates the orchestrator state', async () => {
+    setup({ queryData: seeded });
+    render(<ReportSettingsContent />);
+    const sw = await screen.findByRole('switch', { name: /enable scheduled delivery/i });
+    expect(sw).toHaveAttribute('data-state', 'unchecked');
+    fireEvent.click(sw);
+    await waitFor(() => expect(sw).toHaveAttribute('data-state', 'checked'));
+  });
+
   it('orchestrator does not import ModuleSettingsLayout (source-level grep)', async () => {
     // Static proof via readFileSync inside the test: the orchestrator does NOT
     // reference the deprecated layout component.

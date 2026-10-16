@@ -221,4 +221,32 @@ describe('DeadlineTracker', () => {
     const items = screen.getAllByRole('listitem');
     expect(items.length).toBe(2);
   });
+
+  // codex checklist-order-lost-in-ui (PG-204 spec D9): seeded checklist steps keep their
+  // position order whatever their status; hand-added tasks follow with the old sort.
+  it('keeps checklist steps in position order, before hand-added tasks', () => {
+    const step = (id: string, position: number, status: CaseTaskItem['status']) => ({
+      ...mockTasks[1],
+      id,
+      title: `Step ${position + 1}`,
+      dueDate: null,
+      isOverdue: false,
+      status,
+      position,
+    });
+    const tasks: CaseTaskItem[] = [
+      { ...mockTasks[1], id: 'manual', title: 'Manual dated task', position: null },
+      step('s3', 2, 'PENDING'),
+      step('s1', 0, 'COMPLETED'),
+      step('s2', 1, 'PENDING'),
+    ];
+    render(<DeadlineTracker {...defaultProps} tasks={tasks} />);
+    const titles = screen.getAllByRole('listitem').map((item) => item.textContent ?? '');
+    expect(titles.map((t) => t.match(/Step \d|Manual dated task/)?.[0])).toEqual([
+      'Step 1',
+      'Step 2',
+      'Step 3',
+      'Manual dated task',
+    ]);
+  });
 });

@@ -68,7 +68,7 @@ NEW_ARTIFACTS: dict[str, list[str]] = {
     'ENV-003-AI': [
         'ARTIFACT:apps/workers/events-worker/Dockerfile',
         'ARTIFACT:apps/workers/ingestion-worker/Dockerfile',
-        'ARTIFACT:apps/workers/notifications-worker/Dockerfile',
+        'ARTIFACT:infra/docker/Dockerfile.ai-worker',
         'ARTIFACT:docs/setup/docker-compose-overlays.md',
     ],
     'ENV-002-AI': [

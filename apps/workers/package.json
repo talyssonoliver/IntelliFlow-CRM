@@ -5,9 +5,9 @@
   "description": "IntelliFlow CRM Workers - Unified worker runtime",
   "scripts": {
     "build": "echo 'Workers meta-package - sub-workers built by root turbo'",
-    "dev": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run dev",
-    "typecheck": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run typecheck",
-    "lint": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/notifications-worker run lint",
+    "dev": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run dev",
+    "typecheck": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run typecheck",
+    "lint": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run lint",
     "clean": "rimraf .turbo dist"
   },
   "devDependencies": {

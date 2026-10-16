@@ -1090,7 +1090,7 @@ Runtime Wiring (IFC-222):
 Backend (done):  ANALYTICS-001 ✅ + IFC-003 ✅ + IFC-096 ✅ ──► IFC-200 ✅ ──► IFC-190 ✅
 Frontend (next): IFC-037 ⬜ ──► IFC-038 ⬜ (wires IFC-190 to UI)
 
-PG-201 (Scheduled Reports, ADR-075) ✅:
+PG-201 (Scheduled Reports, ADR-078) ✅:
   PG-178 ✅ + PG-187 ✅ (report settings) + PG-200 ✅ (report_templates)
     ──► validators scheduled-reports.ts (cadence presets, cron, IANA timezone, recipients, tags)
     ──► db migration 20261013120000_report_schedules_pg201
@@ -2444,6 +2444,36 @@ Parent hub:    apps/web/src/components/cases/CaseSettingsPanel.tsx:8-30
 Smoke guard:   apps/api/src/__tests__/app-router.smoke.test.ts (asserts
                every sub-router + procedures — closes PG-187/PG-189/PG-190
                de-registration defect class)
+```
+
+### Case Types (PG-204 — applied at case creation, ADR-076)
+
+```
+PG-178 ✅ + PG-190 ✅ ──► PG-204 (Case Types)
+
+Domain:  packages/domain/src/legal/cases/case-type-defaults.ts
+           resolveCaseCreateDefaults (explicit input > type > PG-190 module default)
+           CASE_REQUIRED_FIELD_KEYS · CASE_TYPE_LIMITS · CASE_TYPE_ADMIN_ROLES
+Validators: packages/validators/src/case-types.ts (+ case.ts: priority optional, caseTypeId)
+
+Prisma models (tenant-scoped, RLS on):
+  CaseType               @@map "case_types"                 (0..50 per tenant)
+  CaseTypeChecklistItem  @@map "case_type_checklist_items"  (0..20 per type)
+  Case.caseTypeId        nullable scalar
+    ├─ FK case_types.tenantId → Tenant (ON DELETE CASCADE)
+    ├─ FK (tenantId, caseTypeId) items → case_types(tenantId, id) (CASCADE)
+    └─ FK (tenantId, caseTypeId) cases → case_types(tenantId, id) (NO ACTION, SQL-only)
+
+Migration: 20261013120000_case_types/migration.sql (Class A, manual prod apply)
+
+appRouter.caseTypes: list / listActive / create / update / delete / setDefault
+appRouter.cases.create → resolveCaseCreateDefaults → $transaction(case + CaseTask seeds)
+appRouter.cases.getById → caseType {id, name, colorToken}
+
+/cases/(list)/case-types/page.tsx → CaseTypesContent → trpc.caseTypes.*
+/cases/(list)/new/page.tsx → CaseForm (type picker) → api.caseTypes.listActive,
+                             api.caseSettings.requiredFields.list, api.cases.create
+Sidebar entry: apps/web/src/components/sidebar/configs/cases.ts:14
 ```
 
 ---

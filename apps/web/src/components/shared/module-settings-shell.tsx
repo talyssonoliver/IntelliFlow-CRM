@@ -15,9 +15,11 @@
  * (OCP). The page keeps its own state/validation logic, which is genuinely
  * module-specific.
  *
- * Introduced by PG-191 (task-settings is the first consumer). The sibling
- * settings pages still carry their own inline copy of this chrome; migrating
- * them onto this shell is tracked in GH #576 (out of PG-191's scope).
+ * Introduced by PG-191 (task-settings is the first consumer); the sibling
+ * settings pages were migrated onto it by GH #576. Where a page's chrome
+ * differs in a small, real way (its own loading skeleton, a retry error panel,
+ * header-button icons, dialog copy) the shell takes it as an optional prop
+ * rather than being forked.
  */
 
 import type { ReactNode } from 'react';
@@ -58,6 +60,20 @@ export interface ModuleSettingsShellProps {
   onResetConfirm: () => void;
   /** Copy for the reset confirmation dialog body. */
   resetDescription: string;
+  /** Reset dialog title; defaults to 'Reset to Defaults'. */
+  resetTitle?: string;
+  /** Reset dialog confirm button label; defaults to 'Reset'. */
+  resetConfirmLabel?: string;
+  /** Replaces the default skeleton while loading (e.g. a page-specific bento skeleton). */
+  loadingFallback?: ReactNode;
+  /** Replaces the default error card; shown whenever it is provided (and not loading). */
+  errorFallback?: ReactNode;
+  /** Overrides merged onto the Reset header action (icon, hideOnMobile, disabled, ...). */
+  resetAction?: Partial<PageAction>;
+  /** Overrides merged onto the Save header action (icon, label, loading, ...). */
+  saveAction?: Partial<PageAction>;
+  /** Class for the PageHeader; defaults to 'mb-6'. */
+  headerClassName?: string;
   /** The module's section cards. */
   children: ReactNode;
 }
@@ -77,9 +93,17 @@ export function ModuleSettingsShell({
   onResetOpenChange,
   onResetConfirm,
   resetDescription,
+  resetTitle = 'Reset to Defaults',
+  resetConfirmLabel = 'Reset',
+  loadingFallback,
+  errorFallback,
+  resetAction,
+  saveAction,
+  headerClassName = 'mb-6',
   children,
 }: Readonly<ModuleSettingsShellProps>) {
   if (isLoading) {
+    if (loadingFallback) return <>{loadingFallback}</>;
     return (
       <div className="w-full" data-testid="module-settings-skeleton">
         <div className="mb-6 space-y-2">
@@ -99,6 +123,8 @@ export function ModuleSettingsShell({
     );
   }
 
+  if (errorFallback) return <>{errorFallback}</>;
+
   if (errorMessage) {
     return (
       <div className="w-full">
@@ -116,6 +142,7 @@ export function ModuleSettingsShell({
       variant: 'secondary',
       onClick: () => onResetOpenChange(true),
       disabled: isSaving,
+      ...resetAction,
     },
     {
       label: isSaving ? 'Saving…' : 'Save Changes',
@@ -123,6 +150,7 @@ export function ModuleSettingsShell({
       onClick: onSave,
       disabled: !canSave,
       loading: isSaving,
+      ...saveAction,
     },
   ];
 
@@ -133,7 +161,7 @@ export function ModuleSettingsShell({
         title={title}
         description={description}
         actions={actions}
-        className="mb-6"
+        className={headerClassName}
       />
 
       {/* Lock every section input while a save/reset is in flight, so the
@@ -145,9 +173,9 @@ export function ModuleSettingsShell({
       <ConfirmationDialog
         open={resetOpen}
         onOpenChange={onResetOpenChange}
-        title="Reset to Defaults"
+        title={resetTitle}
         description={resetDescription}
-        confirmLabel="Reset"
+        confirmLabel={resetConfirmLabel}
         variant="destructive"
         onConfirm={onResetConfirm}
       />

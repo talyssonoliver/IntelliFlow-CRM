@@ -235,17 +235,17 @@ Legend:
 
 ### Cases (9 routes)
 
-| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
-| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
-| `/cases`                     | YES | --  | SB  | IP  |    YES     | Header nav (LEGAL)               |
-| `/cases/new`                 | --  | --  | --  | IP  |     OK     | PageHeader action from `/cases`  |
-| `/cases/[id]`                | --  | --  | --  | IP  |     OK     | From list rows                   |
-| `/cases/timeline`            | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
-| `/cases/case-workflows`      | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
-| `/cases/case-workflows/[id]` | --  | --  | --  | IP  |     OK     | From workflow list rows          |
-| `/cases/case-workflows/new`  | --  | --  | --  | IP  |     OK     | PageHeader action from workflows |
-| `/cases/case-types`          | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
-| `/cases/case-settings`       | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
+| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                                       |
+| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------- |
+| `/cases`                     | YES | --  | SB  | IP  |    YES     | Header nav (LEGAL)                          |
+| `/cases/new`                 | --  | --  | --  | IP  |     OK     | PageHeader action from `/cases`             |
+| `/cases/[id]`                | --  | --  | --  | IP  |     OK     | From list rows                              |
+| `/cases/timeline`            | --  | --  | SB  | --  |    YES     | Cases sidebar                               |
+| `/cases/case-workflows`      | --  | --  | SB  | --  |    YES     | Cases sidebar                               |
+| `/cases/case-workflows/[id]` | --  | --  | --  | IP  |     OK     | From workflow list rows                     |
+| `/cases/case-workflows/new`  | --  | --  | --  | IP  |     OK     | PageHeader action from workflows            |
+| `/cases/case-types`          | --  | --  | SB  | IP  |    YES     | Cases sidebar; Case Settings panel (PG-204) |
+| `/cases/case-settings`       | --  | --  | SB  | --  |    YES     | Cases sidebar                               |
 
 ### Contacts (7 routes)
 

@@ -3,7 +3,7 @@
 // Scheduled Reports Content — PG-201
 // PageHeader + 12-col bento grid (module-settings-playbook §1): schedules list,
 // tags (TagsTab via forwardRef, §4) and an honest delivery-status card. Rows live
-// in report_schedules; IFC-308's BullMQ cron will read them (ADR-075).
+// in report_schedules; IFC-308's BullMQ cron will read them (ADR-078).
 
 import { useRef, useState } from 'react';
 import { ACCOUNT_OWNER_ADMIN_ROLES } from '@intelliflow/domain';

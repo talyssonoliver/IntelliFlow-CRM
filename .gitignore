@@ -388,3 +388,6 @@ artifacts/codex-review/
 # Playwright QA persona auth state (real tokens — never commit)
 tests/e2e/.auth/
 tools/scripts/k6/.data/
+
+# Push-based executor status (ADR-077): runtime heartbeat files, never committed
+.claude/executor-status/

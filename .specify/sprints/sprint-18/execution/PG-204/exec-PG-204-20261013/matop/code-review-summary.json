@@ -1,0 +1,24 @@
+{
+  "skill": "/code-review (scripts/code-review-analysis.ps1 -Sprint 18 -TaskId PG-204 -LinkToGates -Full) + node scripts/prioritize-reviews.js --sprint=18",
+  "run_id": "20261013-090440-0e4d60d4",
+  "head": "d7d91e5e8",
+  "started_at": "2026-10-13T08:04:39Z",
+  "finished_at": "2026-10-13T08:41:20Z",
+  "exit_code": 0,
+  "summarised_at": "2026-10-13T08:43:01Z",
+  "report_path": ".specify/sprints/sprint-18/reports/code-review/20261013-090440-0e4d60d4",
+  "results": {
+    "typecheck": "27 packages, 0 'error TS' lines in typecheck.txt",
+    "lint": "0 eslint problems in lint.txt (only a Node module-type warning from apps/project-tracker)",
+    "deadcode_knip": "pre-existing unused files only; no PG-204 file flagged (same as Gate 3c)",
+    "dependencies": "completed; no PG-204 dependency change",
+    "circular": "NO EVIDENCE: circular-deps.json is empty (0 bytes) although the step printed Completed (gh #888)",
+    "architecture": "tests/architecture: 6 files, 40 tests passed",
+    "coverage": "full-repo coverage: tests passed except tools/scripts/__tests__/rotate-secrets.test.ts > 'lists secrets that need immediate rotation' (timing-flaky; passes 31/31 when re-run in isolation right after the code review (log not timestamped); not PG-204 code; gh #888); per-project threshold breaches are existing debt",
+    "complexity": "NOT MEASURED: the step threw 'replaceAll' errors at code-review-analysis.ps1:259 for every high-complexity file, so 'High complexity files: 0' is not a real result (gh #888)",
+    "package_priority": ".specify/sprints/sprint-18/reports/code-review/package-review/REVIEW-PRIORITY.md (4 CRITICAL incl. @intelliflow/api, by package size and coverage data, not by PG-204 findings)"
+  },
+  "pg204_diff_verdict": "PASS for the PG-204 diff: no type errors, no lint problems, no PG-204 dead code, architecture tests green; two tool defects (complexity, circular) produce no evidence and are tracked in gh #888",
+  "passed": true,
+  "log_path": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/code-review-summary.json (run 20261013-090440-0e4d60d4 at d7d91e5e8: typecheck/lint 0 issues, architecture 40/40; complexity and circular steps produced no evidence, gh #888; one timing-flaky root test, passes in isolation)"
+}

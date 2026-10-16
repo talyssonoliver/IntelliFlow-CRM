@@ -8,7 +8,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
 import { helpArticleRouter } from '../help-article.router';
 import { prismaMock, createTestContext, TEST_UUIDS, generateTestUUID } from '../../../test/setup';
 
@@ -50,7 +49,8 @@ describe('helpArticleRouter.recordView (IFC-304)', () => {
   });
 
   it('rejects (NOT_FOUND) an article that is not in the caller tenant — cross-tenant guard', async () => {
-    // findFirst is tenant-scoped; a foreign article resolves to null.
+    // findFirst matches `tenantId = caller OR isSystem = true`; a foreign
+    // tenant's authored (non-system) article matches neither, so it resolves null.
     (prismaMock.helpArticle.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(null);
 
     const caller = helpArticleRouter.createCaller(createTestContext());
@@ -58,6 +58,29 @@ describe('helpArticleRouter.recordView (IFC-304)', () => {
       code: 'NOT_FOUND',
     });
     expect(prismaMock.helpArticleViewDaily.upsert).not.toHaveBeenCalled();
+  });
+
+  it('records a view for a built-in (system) article owned by another tenantId (#533)', async () => {
+    // The article row's own tenantId is whichever tenant seeded it — the
+    // lookup matches it via `isSystem: true`, not via tenantId equality.
+    (prismaMock.helpArticle.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: ARTICLE_ID,
+    });
+
+    const caller = helpArticleRouter.createCaller(createTestContext());
+    const result = await caller.recordView({ articleId: ARTICLE_ID });
+
+    expect(result).toEqual({ recorded: true, deduped: false });
+    expect(prismaMock.helpArticle.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: ARTICLE_ID, OR: [{ tenantId: TEST_UUIDS.tenant }, { isSystem: true }] },
+      })
+    );
+    // The view is still recorded under the VIEWING tenant, not the article's
+    // owning tenant — per-tenant analytics on shared content stay segregated.
+    const arg = (prismaMock.helpArticleViewDaily.upsert as ReturnType<typeof vi.fn>).mock
+      .calls[0][0];
+    expect(arg.where.tenantId_articleId_day.tenantId).toBe(TEST_UUIDS.tenant);
   });
 
   it('passes an idempotency key through to the dedup guard', async () => {

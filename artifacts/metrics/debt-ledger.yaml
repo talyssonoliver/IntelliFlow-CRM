@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-12
+last_updated: 2026-10-13
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -4502,15 +4502,133 @@ items:
       AUTOMATION-003 set to tier:B (mirrors sibling AUTOMATION-001/002) with
       debt_allowed:yes + waiver_expiry 2026-08-31. No gate/owner/evidence values
       fabricated. gh issue #574.
+  PG-204-CASES-NOTIFY-USER-ID-001:
+    origin_task: PG-204
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/legal/cases.router.ts:597 (changeStatus) and :647
+      (close) read (ctx.user as { id?: string }).id, but UserSession has userId,
+      not id, so notifications for unassigned cases are attributed to 'system'.
+      PG-204 fixed the same bug in cases.create ("Assign to me" failed).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Use ctx.tenant.userId at both sites, drop the casts, add caller-based tests.
+    status: open
+    notes: 'gh issue #864. Out of PG-204 scope (create path only).'
+  PG-204-CASES-ROUTER-TEST-FALSE-COVERAGE-001:
+    origin_task: PG-204
+    owner: Test Engineer
+    severity: medium
+    description: >-
+      apps/api/src/modules/legal/__tests__/cases.router.test.ts asserts against
+      mockPrisma directly and never calls the router (its createCaller helper is
+      unused), so cases.create looked covered while its default-assignee path was
+      broken in production.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Rewrite on prismaMock + createTestContext + casesRouter.createCaller, like
+      cases.router.case-types.test.ts (PG-204).
+    status: open
+    notes: 'gh issue #865. PG-204 added a real caller-based suite for create/getById/update.'
+  PG-204-CASE-UPDATE-REQUIRED-FIELDS-001:
+    origin_task: PG-204
+    owner: Product Owner
+    severity: medium
+    description: >-
+      The case required-field policy (case type set, else Case Settings rows) is
+      enforced on cases.create (PG-204, ADR-076) but not on cases.update, so a
+      required description or jurisdiction can be blanked after creation.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      After product confirmation (existing cases may already violate the policy),
+      apply the same required check to the merged values on update.
+    status: open
+    notes: 'gh issue #866. Out of scope by the owner ruling ("applied at case creation").'
+  PG-204-TIMEZONE-OFFSET-BEYOND-12H-001:
+    origin_task: PG-204
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/lib/timezone-utils.ts getTimezoneOffsetMinutes compares only
+      hour/minute and folds into +-12h, so UTC+13/+14 zones (Pacific/Kiritimati,
+      Tongatapu, Chatham) get offsets a day off; startOfDay/endOfDay/startOfMonth
+      helpers are wrong for those tenants.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Compare the full wall-clock date with Date.UTC (as
+      apps/api/src/lib/case-sla-deadline.ts offsetMinutesAt does) and add
+      Kiritimati/Chatham tests; then reuse it from case-sla-deadline.ts.
+    status: open
+    notes: 'gh issue #867. PG-204 sidestepped it with an exact local helper.'
+  PG-204-CASES-UPDATE-TENANT-SCOPE-001:
+    origin_task: PG-204
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Pre-existing in apps/api/src/modules/legal/cases.router.ts: cases.update
+      writes input.assignedTo with no tenant check and updates by { id } only
+      (:543-547), and removeTask deletes caseTask by { id: taskId } without
+      checking caseId or tenant (:752-754). Found by the PG-204 spec exploration.
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Tenant-check assignedTo with tenantUserWhere; updateMany on { id, tenantId };
+      removeTask via deleteMany { id, caseId, tenantId } with NOT_FOUND on count 0;
+      caller-based negative tests.
+    status: open
+    notes: 'gh issue #880. Not PG-204 code; security-lead required it filed before merge.'
+  PG-204-HYDRATION-WINDOWS-PATTERNS-001:
+    origin_task: PG-204
+    owner: Tech Lead
+    severity: low
+    description: >-
+      tools/scripts/lib/stoa/context-hydration.ts scanCodebasePatterns runs
+      grep with 2>/dev/null through execSync, which uses cmd.exe on Windows, so
+      every hydration on a Windows host returns 0 codebase patterns (exit 0).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Replace the shell pipeline with Node fs + RegExp (or execFileSync without
+      redirection) and test for a non-zero pattern count.
+    status: open
+    notes: 'gh issue #881. Hit when /hydrate-context PG-204 was run on 2026-10-13.'
+  PG-204-A11Y-MINORS-001:
+    origin_task: PG-204
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      WCAG 2.1 AA minors in the case types screens (modal-hidden live region,
+      aria-busy loading output, non-live duplicate-step error, empty-name Save
+      with no message, aria-disabled styling, disabled-while-pending focus loss)
+      and pre-existing CaseForm items (client combobox without listbox role,
+      small clear button, unverified focus-ring contrast).
+    created_at: 2026-10-13
+    expiry_date: 2027-01-13
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fix per gh issue #882; verify contrast on a rendered page in both themes.
+    status: open
+    notes: 'gh issue #882. The spec-required a11y items were fixed in PG-204.'
 summary:
-  total_items: 419
+  total_items: 426
   by_severity:
     critical: 241
     high: 12
-    medium: 152
-    low: 14
+    medium: 156
+    low: 17
   by_status:
-    open: 403
+    open: 410
     in_progress: 0
     resolved: 16
     wont_fix: 0
@@ -5234,11 +5352,12 @@ alerts:
     severity: medium
     description: 'CodeQL/Trivy alerts #2259 (CVE-2026-33671 HIGH) and #2260 (CVE-2026-33672 MED) flag picomatch 4.0.3 at usr/local/lib/node_modules/npm/node_modules/picomatch — the copy BUNDLED inside the npm CLI shipped with the node:22-alpine base image, NOT a workspace dependency. Our pnpm deps already force picomatch >=4.0.4 via the existing root override, so application code is patched; only the base-image npm bundles the vulnerable copy.'
     created_at: 2026-06-15
-    status: open
+    status: resolved
+    resolved_at: 2026-10-13
     expiry_date: 2026-09-15
     remediation_sprint: 19
     remediation_plan: 'Resolved when the node:22-alpine base image ships an npm whose bundled picomatch is >=4.0.4 (rebuild picks it up), or by running npm i -g npm@latest in the image build. Low impact: the bundled copy is only exercised by npm CLI globbing at build/admin time, not at runtime.'
-    notes: 'git issue #452. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+    notes: 'git issue #452. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8. RESOLVED (fix/trivy-image-cves, #452/#377): the whole npm CLI (and every dep it vendors, including this picomatch copy) is now deleted from the final runner stage of every image that ships it (API + 4 worker Dockerfiles) — it is never invoked at runtime, builds use pnpm/corepack in earlier stages. Supersedes the wait-for-upstream plan above; no vulnerable copy ships at all.'
   DEP-CVE-HIGHLIGHTJS-BULLBOARD-001:
     origin_task: '#452'
     owner: DevOps Lead
@@ -5268,11 +5387,12 @@ alerts:
     severity: medium
     description: 'Trivy alert #2346 (CVE-2026-53655, node-tar PAX/GNU long-name parser interpretation differential) flags tar 7.5.11 at usr/local/lib/node_modules/npm/node_modules/tar — the copy BUNDLED inside the npm CLI shipped with the node base image, NOT a workspace dependency (tar does not resolve in any of our lockfiles). Same class as the picomatch base-image residual (DEP-CVE-PICOMATCH-NPM-BUNDLED-001). A root pnpm override for tar (>=7.5.16) is present defensively but cannot replace the base-image npm bundle.'
     created_at: 2026-06-16
-    status: open
+    status: resolved
+    resolved_at: 2026-10-13
     expiry_date: 2026-09-16
     remediation_sprint: 19
     remediation_plan: 'Resolved when the node base image ships an npm whose bundled tar is >=7.5.16 (rebuild picks it up), or by running npm i -g npm@latest in the image build. Low impact: the bundled copy is only exercised by npm CLI tarball handling at build/admin time, not at runtime.'
-    notes: 'git issue #485. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8.'
+    notes: 'git issue #485. Track B residual — base-image / global-npm bundled dep, not fixable via pnpm.overrides. Tracked per project Rule 8. RESOLVED (fix/trivy-image-cves, #452/#377): same fix as DEP-CVE-PICOMATCH-NPM-BUNDLED-001 — the npm CLI is deleted wholesale from every shipped runtime image, so no bundled tar copy (vulnerable or not) is present to flag. Current re-scan surfaced this same class again at CVE-2026-73566 (tar 7.5.19, alert #2792) before this fix; same resolution covers it.'
   MERGED-COVERAGE-UI-PROJECTS-EMPTY-001:
     origin_task: IFC-301
     owner: DevOps Lead
@@ -5602,7 +5722,7 @@ alerts:
     description: >-
       ReportSchedule.isActive is a category-2 toggle (module-settings-playbook §8):
       PG-201 stores schedules and nextRunAt but adds no scheduler, so nothing is sent
-      until IFC-308's BullMQ cron reads report_schedules (ADR-075). The page states
+      until IFC-308's BullMQ cron reads report_schedules (ADR-078). The page states
       this in its Delivery status card.
     created_at: 2026-10-13
     expiry_date: 2027-01-13
@@ -5613,4 +5733,102 @@ alerts:
       removes it on pause/delete, writes report_executions, updates lastRunAt/nextRunAt,
       and adds the report_executions.scheduleId FK + index.
     status: open
-    notes: 'Contract: docs/architecture/adr/ADR-075-report-schedule-contract.md.'
+    notes: 'Contract: docs/architecture/adr/ADR-078-report-schedule-contract.md.'
+  DEP-CVE-BRACES-STACKOVERFLOW-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      Trivy alerts #3063 (app/node_modules/.pnpm/braces@3.0.3, intelliflow-crm-api
+      image) and #3059 (docs/pnpm-lock.yaml) flag braces 3.0.3, CVE-2026-93687
+      (stack-exhaustion DoS from deeply nested brace patterns). 3.0.3 is braces'
+      latest published release (npm view braces version => 3.0.3, verified
+      2026-10-13) and GHSA/NVD list first_patched_version: null — there is no
+      patched version to bump to. Pulled transitively by micromatch@4.0.8 (a
+      devDependency-of-devDependencies chain), which ships into the api image
+      because `pnpm prune --prod` is deliberately not run in Dockerfile.api (see
+      its own comment: pnpm v10 isolated-linker prune removes legitimate per-app
+      prod symlinks too, #742).
+    created_at: 2026-10-13
+    status: open
+    expiry_date: 2027-01-13
+    remediation_sprint: 20
+    remediation_plan: >-
+      No upstream fix exists today — re-check `npm view braces versions` and the
+      GHSA (GHSA for CVE-2026-93687) periodically; bump the moment a patched
+      release ships. The real structural fix is making the api runner image prod-
+      only again (resolve the pnpm v10 isolated-linker prune bug from the
+      Dockerfile.api NOTE, e.g. via `pnpm deploy --filter api --prod`), which
+      would drop this and the other app/node_modules residuals below in one
+      move; tracked separately, out of scope for a CVE-only fix.
+    notes: >-
+      git issues #452/#377. Track B residual — no fixed version published
+      upstream, confirmed via the GitHub Advisory Database vulnerable_version_range
+      "<= 3.0.3" / first_patched_version null. Not exploitable via untrusted
+      input in this codebase's actual usage. Tracked per project Rule 8.
+  DEP-CVE-EXTRACTZIP-SYMLINK-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      Trivy alerts #2780 (CVE-2026-56876) and #2917 (CVE-2026-19693) flag
+      extract-zip 2.0.1 at app/node_modules/.pnpm/extract-zip@2.0.1 in the
+      intelliflow-crm-api image — symlink path-traversal / arbitrary file write
+      from a crafted archive. 2.0.1 is extract-zip's latest published release
+      (npm view extract-zip version => 2.0.1, verified 2026-10-13) and both
+      GHSAs list first_patched_version: null. Pulled transitively via
+      @puppeteer/browsers (debug/extract-zip/tar-fs chain), a devDependency of
+      the monorepo root, shipped into the api image for the same
+      `pnpm prune --prod` reason as DEP-CVE-BRACES-STACKOVERFLOW-001. The
+      vulnerable code path (extracting an attacker-controlled zip) is never
+      reached by the API at runtime — it only exists because the full root
+      node_modules tree is copied into the runner stage.
+    created_at: 2026-10-13
+    status: open
+    expiry_date: 2027-01-13
+    remediation_sprint: 20
+    remediation_plan: >-
+      No upstream fix exists today. Same structural remediation as
+      DEP-CVE-BRACES-STACKOVERFLOW-001 (restore a prod-pruned api runner image)
+      removes this devDependency-only package from the shipped image entirely;
+      tracked there, not duplicated here.
+    notes: >-
+      git issues #452/#377. Track B residual — no fixed version published
+      upstream (GHSA vulnerable_version_range "<= 2.0.1" / first_patched_version
+      null for both CVEs). Dead code in this image: the API never calls
+      extract-zip itself. Tracked per project Rule 8.
+  DEP-CVE-SPRINTFJS-PRECISION-001:
+    origin_task: '#452'
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      Trivy alerts #3113 (app/node_modules/.pnpm/sprintf-js@1.0.3, intelliflow-
+      crm-api image) and #3095 (root pnpm-lock.yaml) flag sprintf-js 1.0.3,
+      CVE-2026-97058 (DoS via unbounded precision specifiers to
+      toFixed/toExponential/toPrecision). GHSA-hp3w-g68c-fv3c lists
+      vulnerable_version_range "<= 1.1.3" with first_patched_version: null —
+      sprintf-js's own latest release (1.1.3, verified 2026-10-13) is still
+      vulnerable, so there is nothing to bump to, in either the api image or
+      the root lockfile. Pulled transitively via argparse@1.0.10 <- mammoth
+      (apps/ai-worker, apps/workers/ingestion-worker, apps/workers/shared all
+      depend on mammoth for real runtime .docx parsing). Confirmed via the
+      published mammoth tarball that argparse is required ONLY by mammoth's
+      bin/mammoth CLI script, never by lib/index.js or anything the workers
+      actually import — the vulnerable sprintf-js path is unreachable at
+      runtime, just present on disk.
+    created_at: 2026-10-13
+    status: open
+    expiry_date: 2027-01-13
+    remediation_sprint: 20
+    remediation_plan: >-
+      No upstream fix exists today (sprintf-js's own HEAD is vulnerable).
+      Options once one ships: bump sprintf-js directly via a pnpm override, or
+      get mammoth to drop its argparse dependency (it's CLI-only). Re-check
+      `npm view sprintf-js versions` and the GHSA periodically.
+    notes: >-
+      git issues #452/#377. Track B residual — no fixed version published
+      upstream for the whole sprintf-js project, confirmed via the GitHub
+      Advisory Database. Unlike the braces/extract-zip residuals above, this one
+      IS reachable from a real production dependency (mammoth) rather than a
+      pure devDependency leak, but only through mammoth's own unused CLI
+      entrypoint. Tracked per project Rule 8.

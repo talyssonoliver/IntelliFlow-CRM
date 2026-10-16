@@ -99,7 +99,8 @@ test.describe('Agent Approvals Page', () => {
       const pending = page
         .locator('[data-testid="filter-buttons"]')
         .getByRole('button', { name: 'Pending', exact: true });
-      await expect(pending).toHaveClass(/bg-\[#137fec\]/);
+      // #842 (Aurora rebrand) recolored the active-filter chip #137fec -> #2a78f6.
+      await expect(pending).toHaveClass(/bg-\[#2a78f6\]/);
     });
   });
 

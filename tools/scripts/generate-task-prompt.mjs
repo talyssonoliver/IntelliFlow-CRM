@@ -143,7 +143,14 @@ const idLower = TASK_ID.toLowerCase();
 // real status from a feature commit on origin/main, filtering out chore/metrics/orchestrator noise.
 function featureCommitOnMain(id) {
   try {
-    const raw = execSync(`git log origin/main --grep=${id} --oneline`, { cwd: REPO_ROOT, encoding: 'utf8' });
+    // execFileSync + an argument array (not execSync's shell string): `id` is
+    // the CLI's own TASK-ID argument, so interpolating it into a shell
+    // command line would let a crafted argument (e.g. containing `;` or `` ` ``)
+    // run arbitrary commands instead of just being grepped for.
+    const raw = execFileSync('git', ['log', 'origin/main', `--grep=${id}`, '--oneline'], {
+      cwd: REPO_ROOT,
+      encoding: 'utf8',
+    });
     return raw
       .split('\n')
       .map((l) => l.trim())

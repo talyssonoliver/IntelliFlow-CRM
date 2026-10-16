@@ -122,6 +122,7 @@ export * from './report-settings';
 
 // Case Settings Schemas (PG-190)
 export * from './case-settings';
+export * from './case-types';
 
 // Appointment Settings Schemas (PG-189 — wired alongside PG-190 to unblock typecheck)
 export * from './appointment-settings';

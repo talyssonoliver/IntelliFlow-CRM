@@ -7,7 +7,7 @@
  *
  * PG-201 adds no scheduler: `nextRunAt` is stored as IFC-308's starting point and
  * the page shows the next occurrence computed on read (displayNextRun); IFC-308
- * registers the BullMQ job schedulers (ADR-075).
+ * registers the BullMQ job schedulers (ADR-078).
  */
 
 import parser from 'cron-parser';

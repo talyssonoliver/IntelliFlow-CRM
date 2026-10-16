@@ -97,6 +97,19 @@ export function imageBuildFor(workflowRuns, sha) {
 }
 
 /**
+ * A verdict line made safe for the step summary: the GitHub API (check
+ * status/conclusion), not just our own constants, feeds into these lines, so
+ * a CR/LF is flattened (it could otherwise forge an extra, believable
+ * PASS/FAIL line inside a summary this script's whole job is to be trusted)
+ * and a triple-backtick is broken up (it could otherwise close the ``` fence
+ * the lines are written inside, in main()).
+ * @param {string} line
+ */
+export function forSummary(line) {
+  return line.replace(/\r?\n/g, ' ').replace(/`{3,}/g, "'''");
+}
+
+/**
  * Combine the three gates into one verdict with human-readable lines.
  * @returns {{ok: boolean, lines: string[]}}
  */
@@ -180,7 +193,8 @@ export async function main(argv, env = process.env, out = console) {
   const v = verdict({ sha, mainChecks, pr, attestation, imageRun });
   for (const l of v.lines) out.log(l);
   if (env.GITHUB_STEP_SUMMARY) {
-    fs.appendFileSync(env.GITHUB_STEP_SUMMARY, ['```', ...v.lines, '```', ''].join('\n'));
+    const safeLines = v.lines.map(forSummary);
+    fs.appendFileSync(env.GITHUB_STEP_SUMMARY, ['```', ...safeLines, '```', ''].join('\n'));
   }
   return v.ok ? 0 : 1;
 }
