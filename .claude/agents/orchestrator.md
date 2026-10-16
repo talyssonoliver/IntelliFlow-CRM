@@ -158,13 +158,19 @@ A spawned `task-executor` is NOT a self-driving CLI session:
   executor has been idle for more than 10 minutes with no background job of
   yours outstanding, pump it now and note the idle minutes. A reviewer that
   "took hours" is first a question about when it was pumped.
-- **Prefer the status file when enabled (ADR-077, issue #581).** With
-  `INTELLIFLOW_EXECUTOR_STATUS=1`, executors publish a heartbeat to the shared
-  `.claude/executor-status/<TASK>.json`. Check it first with
-  `node tools/scripts/executor-status.mjs read <TASK>`: exit 0 means the file is
-  fresh or terminal and you can act on it; exit 2 means missing, stale or
-  invalid, so fall back to the transcript/git polling above. Never skip the git
-  checks for the Definition of Done; the file is a progress hint, not evidence.
+- **Status file, only when an executor has been told to publish (ADR-077, issue
+  #581).** Nothing makes an executor write it yet: your spawn prompt must tell
+  it to run `node tools/scripts/executor-status.mjs write <TASK> --phase <p>`
+  with `INTELLIFLOW_EXECUTOR_STATUS=1`. Only then check it first with
+  `node tools/scripts/executor-status.mjs read <TASK> --since <dispatch ISO time>`.
+  Always pass `--since`: the file lives in the shared main clone and a
+  re-dispatched task would otherwise inherit the previous run's
+  `failed`/`merged` record. Exit 0 means fresh or terminal for THIS run, so act
+  on it. Exit 2 means anything else (missing, stale, invalid, unbound, bad task
+  id or `--since`): fall back to the transcript/git polling above. If you did
+  not tell the executor to publish, do not read the file at all. Never skip the
+  git checks for the Definition of Done; the file is a progress hint, not
+  evidence.
 - Tell idle agents to **stand by silently** (stop self-monitoring CI) once you
   own the watch, to avoid notification churn.
 

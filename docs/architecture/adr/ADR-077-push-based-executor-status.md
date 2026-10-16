@@ -71,15 +71,23 @@ hide a dead executor.
    becomes event-driven.
 5. **Backwards compatibility.** Additive and off by default. Writing is a no-op
    unless `INTELLIFLOW_EXECUTOR_STATUS=1`. Reading returns `needsPoll: true`
-   unless the file is `fresh` or `terminal`, so the orchestrator's existing
-   polling path is unchanged and is what runs on any doubt. Migration is
-   gradual: enable per fleet run, compare against polling, then decide.
+   unless the file is `fresh`, or `terminal` and bound to the current run (see
+   point 6), so the orchestrator's existing polling path is unchanged and is
+   what runs on any doubt. Migration is gradual: enable per fleet run, compare
+   against polling, then decide.
 6. **Crash resilience.** The reader computes freshness itself:
    `now - last_updated > 3 x heartbeat_s` means `stale`, which sends the
    orchestrator back to polling. A dead executor therefore degrades to today's
    behaviour instead of showing its last phase forever. `blocked` and `failed`
    are terminal and written by executors that can still write; `ready` and
-   `merged` are terminal too.
+   `merged` are terminal too. Staleness covers non-terminal files only, and the
+   directory is shared across runs, so a terminal record would otherwise be
+   inherited by a re-dispatched task. The reader therefore takes the run's
+   dispatch time (`--since`): a record written before it is `stale`, and a
+   terminal record read without it is `unbound` (poll). A `last_updated` more
+   than 60 s in the future is `invalid`, so clock skew cannot make a dead
+   executor look fresh. The writer rejects a non-finite or non-positive
+   `heartbeat_s`, so it cannot emit a file its own reader refuses.
 7. **Multi-writer.** One file per task and one writer per file, so no locking. A
    second executor started on the same task shows up as a `pid` change and a
    `seq` that does not increase by one; that is a single-writer violation the
@@ -98,9 +106,12 @@ restricted to `[A-Za-z0-9][A-Za-z0-9_-]{0,63}` because they become file names.
 `tools/scripts/lib/executor-status.mjs` (writer, reader, lister) and
 `tools/scripts/executor-status.mjs` (CLI: `write`, `read`, `list`), both covered
 by `tools/scripts/lib/executor-status.test.ts`. Nothing calls the writer
-automatically: the executor prompt generator and the orchestrator guidance
-mention it, but behaviour is unchanged until `INTELLIFLOW_EXECUTOR_STATUS=1` is
-set and an executor chooses to call it.
+automatically, and neither the executor prompt generator nor the `plan-reviewer`
+spawn prompt mentions it. `orchestrator.md` describes it as something to use
+only when an executor has been told to publish. Behaviour is unchanged until
+`INTELLIFLOW_EXECUTOR_STATUS=1` is set and a spawn prompt tells an executor to
+call it. CLI `read` exits 0 (trusted) or 2 (poll) for every outcome, including a
+bad task id or `--since`.
 
 ### Positive Consequences
 
@@ -167,6 +178,8 @@ Open items, deliberately not done here:
 - [x] Stale, torn, foreign-task and unknown-version files all send the reader to
       polling
 - [x] Unsafe task ids cannot escape the status directory
+- [x] A terminal record from an earlier run is not trusted for a re-dispatch
+- [x] Future-dated records and non-positive `heartbeat_s` are rejected
 - [ ] Measured tokens per check, polling versus file read
 - [ ] One fleet run with `INTELLIFLOW_EXECUTOR_STATUS=1` and no regression
 

@@ -273,8 +273,10 @@ Previously missing from the index — added 2026-06-05:
 > recorded as **ADR-075** instead — see that file's "Links" section for the full
 > explanation.
 >
-> **Note on ADR-076:** claimed by the open PR #894 (case types, PG-204) and not
-> yet on `main`; ADR-077 was minted to avoid colliding with it.
+> **Note on ADR-076:** claimed by the open PR #894 (case types, PG-204; its diff
+> carries `ADR-076-case-types-applied-at-case-creation.md`, re-checked
+> 2026-10-16) and not yet on `main`; ADR-077 was minted to avoid colliding with
+> it.
 >
 > The next free sequential ID after those is **078**. ADRs 067–068 and 071–072
 > exist as files but are not yet listed in this index (pre-existing gap, out of
