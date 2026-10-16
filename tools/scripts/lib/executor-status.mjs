@@ -254,6 +254,6 @@ export function listExecutorStatuses(dir, opts = {}) {
     .filter((n) => n.endsWith('.json'))
     .map((n) => n.slice(0, -'.json'.length))
     .filter((id) => TASK_ID_RE.test(id))
-    .sort()
+    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
     .map((taskId) => ({ taskId, ...readExecutorStatus(dir, taskId, opts) }));
 }
