@@ -159,6 +159,21 @@ describe('create / regenerate — expiry from the policy (AC-009)', () => {
 
     expect(repo.save.mock.calls.at(-1)![0].aiConfidence).toBe(0.99);
   });
+
+  it('a plain regenerate of text a reviewer edited at approval drops the model confidence', async () => {
+    const original = draft(0.99);
+    original.submitForApproval(USER);
+    original.approve(USER, { body: 'Rewritten by the reviewer' });
+    original.markSendFailed('SMTP 550');
+    repo.findById.mockResolvedValue(original);
+    loadApprovalPolicy.mockResolvedValue(policy({}));
+
+    await autoResponseRouter.createCaller(ctx()).regenerate({ draftId: original.id.toString() });
+
+    const saved = repo.save.mock.calls.at(-1)![0];
+    expect(saved.content.toValue().body).toBe('Rewritten by the reviewer');
+    expect(saved.aiConfidence).toBe(0);
+  });
 });
 
 describe('approve / reject / resolveEscalation — actor and reviewer role', () => {

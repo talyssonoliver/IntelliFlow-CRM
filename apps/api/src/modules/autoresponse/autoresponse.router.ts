@@ -861,6 +861,15 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
+      // A reviewer's edits at approval are written into the content, so that text was not
+      // model-scored either.
+      const editedAtApproval = original.approvalDecision?.modifications;
+      const modelScoredContent =
+        input.subject === undefined &&
+        input.body === undefined &&
+        !editedAtApproval?.subject &&
+        !editedAtApproval?.body;
+
       // Create new draft reusing original parameters
       // leadTenantId === tenantId (validated at original creation), leadStatus defaults to CONTACTED
       const createResult = AutoResponseDraft.create({
@@ -872,8 +881,7 @@ export const autoResponseRouter = createTRPCRouter({
         content,
         // Replaced text was never evaluated by the model: its confidence must not carry
         // over (it could otherwise auto-approve content no model scored).
-        aiConfidence:
-          input.subject === undefined && input.body === undefined ? original.aiConfidence : 0,
+        aiConfidence: modelScoredContent ? original.aiConfidence : 0,
         modelVersion: original.modelVersion,
         recipientEmail: original.recipientEmail,
         expiryHours: await draftExpiryHours(ctx, typedCtx.tenant.tenantId, original.triggerType),
