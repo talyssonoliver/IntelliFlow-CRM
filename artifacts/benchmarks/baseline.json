@@ -2876,7 +2876,7 @@
   },
   "workers_inventory": {
     "total_workers": 3,
-    "total_jobs": 6,
+    "total_jobs": 3,
     "workers": [
       {
         "name": "events",
@@ -2898,11 +2898,7 @@
       {
         "name": "notifications",
         "type": "notifications",
-        "jobs": [
-          "channel:email",
-          "channel:sms",
-          "channel:webhook"
-        ],
+        "jobs": [],
         "description": "Multi-channel notification delivery"
       }
     ]

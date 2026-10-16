@@ -46,7 +46,7 @@ on:
       services:
         description: 'Images whose :latest moves (space-separated)'
         required: true
-        default: 'api ai-worker events-worker ingestion-worker notifications-worker'
+        default: 'api ai-worker events-worker ingestion-worker'
         type: string
       redeploy:
         description: 'Railway services to redeploy after the tag moves (space-separated; empty = none)'

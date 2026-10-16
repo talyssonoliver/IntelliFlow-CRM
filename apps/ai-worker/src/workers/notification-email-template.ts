@@ -1,13 +1,19 @@
 /**
  * Brand-matched HTML shell for notification emails.
  *
- * The notifications-worker delivers ~54 notification types over a single email
- * channel. This wraps each one in the IntelliFlow CRM brand (the same palette as
- * the Supabase Auth templates in supabase/templates/ and the app's reset-email
- * component) so every notification email looks consistent with the auth emails —
- * instead of a bare, unbranded body.
+ * Delivers ~54 notification types over a single email channel. This wraps
+ * each one in the IntelliFlow CRM brand (the same palette as the Supabase
+ * Auth templates in supabase/templates/ and the app's reset-email component)
+ * so every notification email looks consistent with the auth emails — instead
+ * of a bare, unbranded body.
  *
- * @module notifications-worker/templates
+ * Folded from apps/workers/notifications-worker/src/templates/notification-email.ts
+ * (#230) — pure function, no infra deps, content unchanged. Used by
+ * notification-email-worker.ts's BullMQ consumer (the worker that never
+ * existed in production; see that module's header).
+ *
+ * @module workers/notification-email-template
+ * @task IFC-163 / #230
  */
 
 export interface NotificationEmailInput {
