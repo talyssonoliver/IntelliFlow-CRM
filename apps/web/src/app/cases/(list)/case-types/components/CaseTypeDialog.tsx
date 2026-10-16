@@ -113,7 +113,7 @@ function fingerprint(draft: CaseTypeDraft): string {
     name: draft.name.trim(),
     category: draft.category.trim(),
     slaDays: draft.slaDays.trim(),
-    requiredFields: [...draft.requiredFields].sort(),
+    requiredFields: [...draft.requiredFields].sort((a, b) => a.localeCompare(b)),
     checklist: draft.checklist.map((item) => item.title.trim()).filter(Boolean),
   });
 }
