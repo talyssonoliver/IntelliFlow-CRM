@@ -27,7 +27,8 @@
       "for": "5m",
       "noData": "OK",
       "severity": "high",
-      "summary": "More than 5 lead-routing workflow spans ended in error in 5 minutes."
+      "summary": "More than 5 lead-routing workflow spans ended in error in 5 minutes.",
+      "requireSeries": false
     },
     {
       "uid": "ifc032-workflow-error-rate",
@@ -39,7 +40,8 @@
       "for": "5m",
       "noData": "OK",
       "severity": "high",
-      "summary": "More than 1% of workflow spans ended in error over 5 minutes."
+      "summary": "More than 1% of workflow spans ended in error over 5 minutes.",
+      "requireSeries": false
     },
     {
       "uid": "ifc032-workflow-p95-latency",
@@ -51,7 +53,8 @@
       "for": "5m",
       "noData": "OK",
       "severity": "medium",
-      "summary": "p95 duration of workflow.lead.route spans is above 500 ms."
+      "summary": "p95 duration of workflow.lead.route spans is above 500 ms.",
+      "requireSeries": false
     },
     {
       "uid": "ifc032-api-error-rate",
@@ -63,7 +66,8 @@
       "for": "10m",
       "noData": "OK",
       "severity": "high",
-      "summary": "More than 5% of api server spans ended in error over 10 minutes."
+      "summary": "More than 5% of api server spans ended in error over 10 minutes.",
+      "requireSeries": false
     }
   ],
   "deliveryTest": {
