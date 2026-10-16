@@ -151,6 +151,20 @@ A spawned `task-executor` is NOT a self-driving CLI session:
   (`git ls-remote origin refs/heads/feat/*`, `gh pr checks`, attestation read
   via blob hash) — NOT the agent's self-reports — using a `run_in_background`
   until-loop timer; don't tight-poll a parked agent.
+- **Time-box every boundary (issue #578).** Idle time at a boundary looks like
+  slow work from the outside, so record it. In the owner ledger keep, per
+  executor, `phase`, `phase_started_at` and `idle_since` (set when the executor
+  reports it spawned a nested subagent, or stops without a promise). If an
+  executor has been idle for more than 10 minutes with no background job of
+  yours outstanding, pump it now and note the idle minutes. A reviewer that
+  "took hours" is first a question about when it was pumped.
+- **Prefer the status file when enabled (ADR-077, issue #581).** With
+  `INTELLIFLOW_EXECUTOR_STATUS=1`, executors publish a heartbeat to the shared
+  `.claude/executor-status/<TASK>.json`. Check it first with
+  `node tools/scripts/executor-status.mjs read <TASK>`: exit 0 means the file is
+  fresh or terminal and you can act on it; exit 2 means missing, stale or
+  invalid, so fall back to the transcript/git polling above. Never skip the git
+  checks for the Definition of Done; the file is a progress hint, not evidence.
 - Tell idle agents to **stand by silently** (stop self-monitoring CI) once you
   own the watch, to avoid notification churn.
 
