@@ -607,14 +607,23 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 
 #### Step 18: Refactor pass
 **Type:** refactor
-- [ ] Remove duplication (no copied fixtures across test files; shared factories), check `knip` for unused exports,
+- [x] Remove duplication (no copied fixtures across test files; shared factories), check `knip` for unused exports,
       Sonar guard on touched files (`pnpm run lint:sonar:guard`), typecheck + lint of every touched package.
-- [ ] `node tools/scripts/subset-material-symbols.mjs --verify`; if a new glyph (e.g. the range/closure remove icon) is
-      missing, regenerate the subset font + audit JSON with the script and commit them with the UI.
-- [ ] Confirm `sonar-project.properties` (`sonar.coverage.exclusions`, :148-157 test-helper rule) and
+      *Verified:* shared factories `availability.test-utils.ts` (API) and `availability-fixtures.ts` (web); the
+      calendar-settings pointer is one component (`AvailabilityPointer.tsx`). `knip` (`matop/knip.log`) lists no PG-202
+      file. Sonar guard over all 69 changed TS files found 12 issues (cognitive complexity in `AvailabilityPolicy`,
+      `AvailabilityContent`, API test utils; nested ternaries; nested template literal; `role="region"` → `<section>`;
+      non-native interaction on the modal backdrop), all fixed, re-run exit 0. Workspace typecheck + staged lint passed
+      in the five commit hooks.
+- [x] `node tools/scripts/subset-material-symbols.mjs --verify`; if a new glyph (e.g. the range/closure remove icon) is
+      missing, regenerate the subset font + audit JSON with the script and commit them with the UI. *Verified:*
+      `audit OK — 370 icons`; no new glyph (schedule, public, event_busy, timer, close already in the subset).
+- [x] Confirm `sonar-project.properties` (`sonar.coverage.exclusions`, :148-157 test-helper rule) and
       `scripts/check-diff-coverage.mjs` treat `apps/api/src/modules/calendar/__tests__/availability.test-utils.ts` as a test
-      helper (excluded from new-code coverage); record the line that matches.
-- [ ] Re-run Steps 1-8 commands → all GREEN (`refactor-rerun.log`).
+      helper (excluded from new-code coverage); record the line that matches. *Verified:* `sonar-project.properties:158`
+      `**/__tests__/**` and `scripts/lib/diff-coverage.mjs:38` (`(__tests__|__mocks__|…)\/` segment).
+- [x] Re-run Steps 1-8 commands → all GREEN (`refactor-rerun.log`). *Verified:* 9 commands (Steps 1-8 + the ConfirmationDialog
+      test), 697 tests, every exit 0, overall 0.
 
 **Validation:** typecheck + lint rows of the Validation Matrix
 

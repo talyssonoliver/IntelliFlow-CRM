@@ -1,0 +1,126 @@
+Unused files (12)
+apps/ai-worker/src/case-tag-suggestion.chain.ts: apps/ai-worker/src/case-tag-suggestion.chain.ts
+apps/ai-worker/src/utils/openai-client.ts: apps/ai-worker/src/utils/openai-client.ts
+apps/api/src/modules/home/home.cache.bench.ts: apps/api/src/modules/home/home.cache.bench.ts
+apps/api/src/security/audit-coverage-test.ts: apps/api/src/security/audit-coverage-test.ts
+apps/web/src/app/settings/help-center/articles/actions.ts: apps/web/src/app/settings/help-center/articles/actions.ts
+apps/web/src/components/aurora-site/index.ts: apps/web/src/components/aurora-site/index.ts
+apps/web/src/components/home/index.ts: apps/web/src/components/home/index.ts
+apps/web/src/components/public/PublicHeader.tsx: apps/web/src/components/public/PublicHeader.tsx
+apps/web/src/components/workflows/admin/FieldDescriptorBuilder.tsx: apps/web/src/components/workflows/admin/FieldDescriptorBuilder.tsx
+apps/web/src/lib/auth/auth-status-cache.ts: apps/web/src/lib/auth/auth-status-cache.ts
+packages/observability/src/required-url.ts: packages/observability/src/required-url.ts
+tests/e2e/auth.setup.ts: tests/e2e/auth.setup.ts
+Unused dependencies (5)
+apps/ai-worker/package.json: @opentelemetry/auto-instrumentations-node, mammoth, pdf-parse
+apps/api/package.json: @opentelemetry/auto-instrumentations-node, @opentelemetry/winston-transport, jose
+apps/workers/ingestion-worker/package.json: mammoth, pdf-parse
+package.json: jose
+packages/ai/package.json: @langchain/core, zod
+Unused devDependencies (4)
+apps/project-tracker/package.json: tailwindcss
+apps/web/package.json: tailwindcss
+apps/workers/package.json: vitest
+packages/ui/package.json: @storybook/test
+Unlisted binaries (13)
+.github/workflows/migration.yml: prisma
+apps/project-tracker/app/api/code-analysis/route.ts: depcheck
+apps/project-tracker/app/api/metrics/web-vitals/route.ts: lighthouse
+apps/project-tracker/lib/claude-session-spawner.ts: claude
+apps/workers/package.json: rimraf
+package.json: pwsh, netstat, findstr, docker-compose, railway, terraform
+scripts/pre-ship.mjs: codex
+scripts/sonar-iterative.js: sonarqube-scanner
+scripts/sonarqube-helper.js: sonarqube-scanner
+tools/scripts/__tests__/precommit-lint-batch.test.ts: where
+tools/scripts/build-usability-video.ts: ffmpeg
+tools/scripts/parse-actions-usage.mjs: gh
+tools/scripts/refresh-ci-cost-freshness.mjs: gh
+Unused exports (43)
+apps/ai-worker/src/jobs/case-ai-automation.job.ts: CASE_AI_AUTOMATION_QUEUE
+apps/ai-worker/src/jobs/deal-ai-automation.job.ts: DEAL_AI_AUTOMATION_QUEUE
+apps/ai-worker/src/jobs/summarize-conversation.job.ts: DEFAULT_SUMMARIZE_JOB_OPTIONS
+apps/ai-worker/src/jobs/ticket-ai-automation.job.ts: TICKET_AI_AUTOMATION_QUEUE
+apps/ai-worker/src/metrics/prometheus-exporter.ts: _resetRetrainingTriggerCounters
+apps/api/src/middleware/rate-limit.ts: createAuthenticatedRateLimitMiddleware, __resetSharedRedisLimiter
+apps/api/src/modules/legal/case-duplicate-detection.service.ts: caseDuplicateDetectionService
+apps/api/src/modules/ticket/ticket-automation.ts: loadRequiredTicketFields, assertRequiredTicketFields
+apps/api/src/security/membership.ts: STAFF_MEMBERSHIP_TTL_MS
+apps/project-tracker/components/CollapsibleSection.tsx: CollapsibleSection
+apps/project-tracker/components/DailyWorkflowSummary.tsx: DailyWorkflowSummary
+apps/project-tracker/lib/data-sync/task-json-builder.ts: readTaskTracking
+apps/project-tracker/lib/paths.ts: buildSafeTaskFilename, buildSafeSessionFilename
+apps/web/src/components/aurora-landing/aurora-motion-system.ts: DESKTOP_QUERY, mountAuroraMotion
+apps/web/src/components/dashboard/WidgetSkeleton.tsx: WidgetSkeleton
+apps/web/src/components/leads/csv-importer.tsx: default
+apps/web/src/components/workflows/config-forms/types.ts: resetConfigFormRegistry
+apps/web/src/components/workflows/node-registry.tsx: workflowNodeTypes, getPaletteEntries, registerConfigForm, getConfigForm, unregisterCustomNodeType, getCustomNodeTypeDescriptor, isCanonicalNodeType
+apps/web/src/lib/public/feedback-service.ts: submitPublicFeedback
+apps/web/src/lib/workflow-types.ts: PALETTE_ITEMS
+apps/web/src/tracing/otel.ts: shutdownOpenTelemetry, getSDKInstance
+packages/partner-sdk/src/schemas.ts: ACTIVE_TENANT_HEADER, ASSERTION_CLOCK_LEEWAY_SECONDS, assertionHeaderSchema
+packages/test-fixtures/src/ids.ts: TEST_TENANT_ID_ALT, TEST_TENANT_ID_ALT2, TEST_OWNER_ID, TEST_OWNER_ID_ALT, TEST_OWNER_ID_ALT2, TEST_USER_ID, TEST_USER_ID_ALT
+tests/property/support/arbitraries/primitives.ts: arbCurrency, arbCents, arbAmount, arbTenantId, arbId, arbEmail, arbNonEmptyString, arbCount, arbCapacity
+tests/property/support/arbitraries/temporal.ts: arbInstant
+tests/property/support/assertions.ts: expectAtMostFulfilled, expectNeverNegative, expectWithinLimit, expectInvariant
+tests/property/support/commands/index.ts: defineAsyncCommand, defineCommand
+tests/property/support/model/index.ts: commands, modelRun, asyncModelRun
+tests/property/support/scheduler.ts: schedulerArb, scheduleAll, interleave, drain, settle
+tests/property/support/seed-reporter.ts: activePath, replayCommand
+tools/scripts/__tests__/pg195.vitest.config.ts: default
+tools/scripts/commitlint.config.js: default
+tools/scripts/conversion-tracking.js: trackPageView, trackFeatureView, trackFeatureLearnMore, trackCTAClick, initScrollTracking, trackTimeOnPage
+tools/scripts/docusaurus.config.js: default
+tools/scripts/k6/__tests__/auth-smoke.js: options, default, handleSummary
+tools/scripts/k6/authenticated-load-test.js: options, default, setup, teardown, handleSummary
+tools/scripts/k6/comprehensive-load-test.js: options, default, setup, teardown, handleSummary
+tools/scripts/k6/gate2-benchmark.js: options, setup, default, teardown
+tools/scripts/k6/ifc-033-critical-path.js: options, setup, ingest, convert, handleSummary
+tools/scripts/k6/load-test.js: options, default, setup, teardown, handleSummary
+tools/scripts/k6/mvp-load-test.js: options, default, handleSummary
+tools/scripts/k6/quick-test.js: options, default, setup, teardown, handleSummary
+tools/scripts/orchestration/vitest.config.ts: default
+Unused exported types (19)
+apps/api/src/modules/account/account-territories.router.ts: TerritoryDto
+apps/api/src/modules/agent/approval-policies.router.ts: ApprovalPolicyDto
+apps/api/src/modules/calendar/calendar-webhook.router.ts: CalendarWebhooksRouter
+apps/api/src/modules/contact/contact-duplicate-detection.service.ts: ContactDuplicateAction
+apps/api/src/modules/inbound/inbound.router.ts: InboundCallBookingInput, InboundSupportTicketInput
+apps/api/src/modules/legal/case-duplicate-detection.service.ts: CaseDuplicateAction
+apps/api/src/modules/partner/membership.ts: StoredRole, MembershipRow
+apps/api/src/modules/pm-events/pm-event-envelope.ts: PmEventEnvelope
+apps/web/src/components/deals/types.ts: OpportunityListItem
+apps/web/src/components/sidebar/configs/EmailSidebarContent.tsx: EmailLabelId
+apps/web/src/hooks/useCalendarVisibility.ts: CustomCalendarEntry
+apps/web/src/lib/ai-monitoring/workflow-types.ts: WorkflowStepDef, WorkflowStepResult
+apps/web/src/lib/legal/acceptance-tracker.ts: TermsMetadata, TermsSection
+apps/web/src/lib/legal/consent-tracker.ts: PrivacyPolicyMetadata, PrivacyPolicySection
+apps/web/src/lib/legal/cookie-policy-tracker.ts: CookiePolicyMetadata, CookiePolicySection
+apps/web/src/lib/legal/signature-handler.ts: DpaMetadata, DpaSection, DpaSignatureRecord
+apps/web/src/lib/legal/violation-tracker.ts: AupMetadata, AupSection
+apps/web/src/lib/workflow-types.ts: WorkflowNode, WorkflowEdge, WorkflowDefinition
+packages/partner-sdk/src/schemas.ts: PartnerScope, PartnerPlan, MemberRole, MembershipSource, AssertionClaims, Attribution, SessionProcedureName, ProcedureKind
+Duplicate exports (23)
+apps/ai-worker/src/services/document-indexer.ts: DocumentIndexer, default
+apps/ai-worker/src/services/embedding-purge.service.ts: EmbeddingPurgeService, default
+apps/ai-worker/src/services/retrieval-service.ts: RetrievalService, default
+apps/ai-worker/src/workers/ocr-worker.ts: OCRWorker, default
+apps/ai-worker/src/workers/reindex-worker.ts: ReindexWorker, default
+apps/api/src/modules/agent/conversation.router.ts: conversationRouter, default
+apps/api/src/modules/misc/timeline.ts: TimelineCommunicationService, default
+apps/api/src/security/encryption.ts: EncryptionService, default
+apps/api/src/security/key-rotation.ts: KeyRotationService, default
+apps/api/src/shared/subscription-demo.ts: subscriptionRouter, default
+apps/api/src/trpc.ts: publicProcedure, loggedProcedure
+apps/project-tracker/components/CollapsibleSection.tsx: CollapsibleSection, default
+apps/project-tracker/components/DailyWorkflowSummary.tsx: DailyWorkflowSummary, default
+apps/web/src/components/leads/csv-importer.tsx: CsvImporter, default
+apps/web/src/lib/agent/rollback-service.ts: rollbackService, default
+packages/adapters/src/email/gmail/client.ts: GmailAdapter, default
+packages/adapters/src/email/outlook/client.ts: OutlookAdapter, default
+packages/adapters/src/erp/sap/client.ts: SAPAdapter, default
+packages/adapters/src/messaging/teams/client.ts: TeamsAdapter, default
+packages/ui/src/components/empty-state.tsx: EmptyState, SharedEmptyState
+packages/validators/src/bulk-operations.ts: bulkIdsSchema, bulkArchiveLeadsSchema, bulkDeleteLeadsSchema, bulkEmailContactsSchema, bulkDeleteContactsSchema, bulkCloseTicketsSchema, bulkDownloadDocumentsSchema, bulkArchiveDocumentsSchema, bulkDeleteDocumentsSchema
+packages/validators/src/case-settings.ts: caseSettingsSchema, updateCaseSettingsSchema
+packages/validators/src/home.ts: updateDailyGoalInputSchema, setOrgGoalDefaultInputSchema
