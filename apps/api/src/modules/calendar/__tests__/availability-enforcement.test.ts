@@ -306,6 +306,27 @@ describe('availability-enforcement (PG-202)', () => {
       return { findFirstFreeCandidate: vi.fn().mockResolvedValue(result) };
     }
 
+    it('maps an invalid stored timezone to PRECONDITION_FAILED, like create and reschedule', async () => {
+      const uc = useCase();
+      await expect(
+        findNextSlotWithinAvailability(prismaMock, uc, {
+          tenantId: TENANT,
+          rules: { ...rules, timezone: 'Not/AZone' },
+          attendeeId: 'user-1',
+          startFrom: new Date('2026-04-13T00:00:00Z'),
+          durationMinutes: 60,
+          maxDaysAhead: 2,
+          bufferMinutesBefore: 0,
+          bufferMinutesAfter: 0,
+        })
+      ).rejects.toMatchObject({
+        code: 'PRECONDITION_FAILED',
+        message:
+          'The firm timezone is invalid. An administrator must fix it in Calendar > Availability.',
+      });
+      expect(uc.findFirstFreeCandidate).not.toHaveBeenCalled();
+    });
+
     it('passes generated candidates to one conflict check and returns the procedure shape', async () => {
       const uc = useCase(
         Result.ok({

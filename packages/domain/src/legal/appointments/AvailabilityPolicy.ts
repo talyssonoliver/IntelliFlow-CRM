@@ -113,7 +113,8 @@ const WEEKDAY_BY_SHORT: Record<string, Weekday> = {
 const MS_PER_MINUTE = 60_000;
 const MS_PER_DAY = 86_400_000;
 
-const INVALID_TIMEZONE_MESSAGE =
+/** Shown when a firm's stored timezone is not a valid IANA zone (create, reschedule and next-slot search). */
+export const INVALID_TIMEZONE_MESSAGE =
   'The firm timezone is invalid. An administrator must fix it in Calendar > Availability.';
 
 export function isValidTimezone(timezone: string): boolean {

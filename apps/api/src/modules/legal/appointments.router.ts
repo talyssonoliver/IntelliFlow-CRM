@@ -1123,11 +1123,7 @@ export const appointmentsRouter = createTRPCRouter({
           bufferMinutesAfter: input.bufferMinutesAfter,
         }
       );
-      const searchDurationMs = Date.now() - searchStart;
-      console.log(
-        `[appointments.findNextSlot] Availability search ${slot ? 'found' : 'found no slot'} in ${searchDurationMs.toFixed(2)}ms`
-      );
-      return { slot, searchDurationMs };
+      return { slot, searchDurationMs: Date.now() - searchStart };
     }
 
     const result = await container.checkConflictsUseCase.findNextSlot({

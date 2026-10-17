@@ -15,10 +15,12 @@ import type { CheckConflictsUseCase } from '@intelliflow/application';
 import {
   AVAILABILITY_LIMITS,
   CAP_COUNTED_STATUSES,
+  INVALID_TIMEZONE_MESSAGE,
   LEGACY_BOOKING_HOURS,
   capCountWindow,
   evaluateAvailability,
   generateCandidates,
+  isValidTimezone,
   toZonedParts,
   type AvailabilityRules,
   type Weekday,
@@ -221,6 +223,10 @@ export async function findNextSlotWithinAvailability(
   }
 ): Promise<{ startTime: Date; endTime: Date; durationMinutes: number } | null> {
   const { rules } = input;
+  // Same answer as create and reschedule, instead of silently finding no slot.
+  if (!isValidTimezone(rules.timezone)) {
+    throw new TRPCError({ code: 'PRECONDITION_FAILED', message: INVALID_TIMEZONE_MESSAGE });
+  }
   const from = new Date(Math.max(input.startFrom.getTime(), Date.now()));
   let candidates = generateCandidates({
     rules,
