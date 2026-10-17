@@ -76,6 +76,45 @@ Complexity threshold: >3 TDD phases, OR >5 files, OR cross-package (≥2
 packages). **Token cost warning**: Spawning Plan-Reviewer adds ~1x additional
 token cost.
 
+## Light Tier Mode (`--tier=light`, issue #579 — scoped)
+
+`/full-pipeline` passes `--tier=light` only when
+`tools/scripts/ceremony-tier-audit.ts` classified the task as light — see
+`.agents/skills/full-pipeline/references/ceremony-tier.md`. When invoked this
+way:
+
+- Phases 0–3 (load spec, dependency verification, TDD decomposition, CSV
+  artifact alignment) run **unchanged**.
+- **Phase 4 (spawn Plan-Reviewer) is skipped ONLY when the plan creates no
+  `apps/web/src/app/**/page.tsx`.** If the plan's Files to Create/Modify includes any `page.tsx`under`apps/web/src/app/`, spawn the Plan-Reviewer exactly as in full tier — no exception. In that case write a `##
+  Plan-Reviewer Sign-off`section with`ceremony_tier: light (skipped — no
+  page.tsx
+  created)`instead of a subagent marker, and record the ceremony-tier-audit's`checks`
+  output there as the paper trail.
+  - **Why this carve-out exists**:
+    `tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs` hard-blocks
+    every `PG-`/`IFC-` task that creates a page.tsx without real Plan-Reviewer
+    subagent evidence — it was hardened specifically because a self-review
+    bypass (PG-184 iteration-3, PG-057) cost a full exec cycle once. That
+    preflight does NOT recognize a ceremony-tier marker as acceptable evidence,
+    and must not be made to until it independently re-derives the tier from
+    Sprint_plan.csv itself (so a plan can't just claim `light` to dodge review —
+    see Gate 14's "cannot be text-hacked" precedent). Do not add a bare
+    `<!-- ceremony-tier: light -->` marker to that preflight's
+    acceptable-evidence list without that re-verification.
+- **Attestation provenance gate.**
+  `tools/scripts/exec-preflight/check-attestation-provenance.mjs` runs after the
+  attestation is written (exec-attestation Phase 5 and
+  `generate-final-report.mjs`) and normally demands an affirmative
+  `plan_reviewer_verdict` plus the subagent marker for every `PG-`/`IFC-` task.
+  It accepts a skipped reviewer only when it re-derives `light` itself from
+  Sprint_plan.csv + `task-tiers.yaml`, this plan records `ceremony_tier: light`,
+  and the plan creates no `page.tsx`. So a light plan MUST contain the literal
+  line `ceremony_tier: light` in its sign-off section, and the attestation must
+  omit `plan_reviewer_verdict` (set `"ceremony_tier": "light"` instead).
+- Everything else (Phase 5 output format, CSV status updates, the Non-Negotiable
+  Plan Rules above) is unchanged.
+
 ## Output Paths
 
 ```
