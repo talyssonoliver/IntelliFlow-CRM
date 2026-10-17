@@ -4,7 +4,9 @@ import React, { useMemo } from 'react';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { ColumnDef } from '@tanstack/react-table';
 import { DataTable, EmptyState, TableRowActions, type BulkAction, Skeleton } from '@intelliflow/ui';
+import type { ContactTypeOptionDto } from '@intelliflow/validators';
 import { EntityHoverCard } from '@/components/shared/entity-hover-card';
+import { ContactTypeBadge } from './ContactTypeBadge';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -21,6 +23,8 @@ interface Contact {
   accountId: string | null;
   status: ContactStatus;
   createdAt: Date | string;
+  /** Contact type key (PG-205); its name/colour come from `contactTypes`. */
+  contactType?: string | null;
   owner?: { id: string; email: string; name: string | null } | null;
   account?: { id: string; name: string } | null;
   _count?: { opportunities: number; tasks: number };
@@ -28,6 +32,8 @@ interface Contact {
 
 export interface ContactListProps {
   contacts: Contact[];
+  /** The tenant's contact types (incl. inactive) for the Type badges; undefined while loading. */
+  contactTypes?: readonly ContactTypeOptionDto[];
   total: number;
   isLoading: boolean;
   onRowClick: (contact: Contact) => void;
@@ -240,7 +246,8 @@ function ContactActionsCell({
 /** Column factory — defined at module level (not inside the component) to satisfy S6478. */
 function buildContactColumns(
   callbacks: ContactActionCallbacks,
-  timezone: string = 'Europe/London'
+  timezone: string = 'Europe/London',
+  contactTypes?: readonly ContactTypeOptionDto[]
 ): ColumnDef<Contact>[] {
   const { onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting } = callbacks;
   return [
@@ -255,6 +262,14 @@ function buildContactColumns(
       header: 'Account',
       size: 180,
       cell: ({ row }) => <ContactAccountCell contact={row.original} />,
+    },
+    {
+      id: 'contactType',
+      header: 'Type',
+      size: 120,
+      cell: ({ row }) => (
+        <ContactTypeBadge typeKey={row.original.contactType} types={contactTypes} />
+      ),
     },
     {
       accessorKey: 'email',
@@ -302,6 +317,7 @@ function buildContactColumns(
 
 export function ContactList({
   contacts,
+  contactTypes,
   total,
   isLoading,
   onRowClick,
@@ -322,9 +338,10 @@ export function ContactList({
     () =>
       buildContactColumns(
         { onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting },
-        timezone
+        timezone,
+        contactTypes
       ),
-    [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting, timezone]
+    [onDelete, onEdit, onCreateDeal, onCreateTicket, onScheduleMeeting, timezone, contactTypes]
   );
 
   const bulkActions: BulkAction<Contact>[] = useMemo(

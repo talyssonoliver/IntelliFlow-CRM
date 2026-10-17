@@ -72,6 +72,8 @@ export default function EditContactPage() {
         city: r.city ?? '',
         zipCode: r.zipCode ?? '',
         company: r.company ?? '',
+        accountId: r.accountId ?? '',
+        accountName: r.account?.name ?? '',
         jobTitle: r.title ?? '',
         department: r.department ?? '',
         linkedIn: r.linkedInUrl ?? '',
@@ -138,7 +140,8 @@ export default function EditContactPage() {
       zipCode: toOptional(data.zipCode),
       company: toOptional(data.company),
       linkedInUrl: toOptional(data.linkedIn),
-      contactType: toOptional(data.contactType),
+      // PG-205: "No type" removes the type (null), unlike other blank fields.
+      contactType: data.contactType || null,
       contactNotes: toOptional(data.notes),
       tags: data.tags.trim()
         ? data.tags
@@ -148,6 +151,9 @@ export default function EditContactPage() {
         : undefined,
       // email omitted — read-only
     };
+    // PG-205 ruling 9: send the account only when it changed; '' unlinks it (null).
+    const storedAccountId = record?.accountId ?? '';
+    if (data.accountId !== storedAccountId) payload.accountId = data.accountId || null;
 
     await mutation.mutateAsync(payload as never);
   };

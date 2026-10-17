@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
@@ -15,6 +15,8 @@ import {
 } from '@intelliflow/ui';
 import { trpc } from '@/lib/trpc';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { ContactTypeSelect } from '@/components/contacts/ContactTypeSelect';
+import { EntitySearchField } from '@/components/tasks/EntitySearchField';
 
 // Step configuration
 type StepId = 'personal' | 'company' | 'additional';
@@ -55,16 +57,6 @@ function validateCompanyStep(
   return errors;
 }
 
-function validateAdditionalStep(
-  formData: Pick<ContactFormData, 'contactType' | 'contactTypeOther'>
-): Partial<Record<keyof ContactFormData, string>> {
-  const errors: Partial<Record<keyof ContactFormData, string>> = {};
-  if (formData.contactType === 'other' && !formData.contactTypeOther.trim()) {
-    errors.contactTypeOther = 'Please specify the contact type';
-  }
-  return errors;
-}
-
 // Contact status type - aligned with domain CONTACT_STATUSES
 type ContactStatus = 'ACTIVE' | 'INACTIVE' | 'PROSPECT' | 'CUSTOMER' | 'FORMER_CUSTOMER';
 
@@ -80,14 +72,18 @@ interface ContactFormData {
   zipCode: string;
   // Step 2: Company & Role
   company: string;
+  /** Linked tenant account (PG-205 ruling 9): satisfies account-required types. */
+  accountId: string;
+  accountName: string;
   jobTitle: string;
   department: string;
   departmentOther: string;
   linkedIn: string;
   // Step 3: Additional Info
+  /** Tenant contact type key (PG-205), '' for no type. */
   contactType: string;
-  contactTypeOther: string;
-  status: ContactStatus;
+  /** '' = the contact type's default status (else ACTIVE), applied by the server (PG-205). */
+  status: ContactStatus | '';
   tags: string;
   notes: string;
 }
@@ -101,27 +97,17 @@ const initialFormData: ContactFormData = {
   city: '',
   zipCode: '',
   company: '',
+  accountId: '',
+  accountName: '',
   jobTitle: '',
   department: '',
   departmentOther: '',
   linkedIn: '',
   contactType: '',
-  contactTypeOther: '',
-  status: 'ACTIVE',
+  status: '',
   tags: '',
   notes: '',
 };
-
-// Contact type options
-const contactTypeOptions = [
-  { value: '', label: 'Select a type...' },
-  { value: 'customer', label: 'Customer' },
-  { value: 'prospect', label: 'Prospect' },
-  { value: 'partner', label: 'Partner' },
-  { value: 'vendor', label: 'Vendor' },
-  { value: 'investor', label: 'Investor' },
-  { value: 'other', label: 'Other' },
-];
 
 // Department options
 const departmentOptions = [
@@ -138,7 +124,12 @@ const departmentOptions = [
 ];
 
 // Status options - aligned with domain CONTACT_STATUSES
-const statusOptions: { value: ContactStatus; label: string; description: string }[] = [
+const statusOptions: { value: ContactStatus | ''; label: string; description: string }[] = [
+  {
+    value: '',
+    label: 'Type default',
+    description: "Uses the contact type's default status, or Active if it has none",
+  },
   { value: 'ACTIVE', label: 'Active', description: 'Currently engaged contact' },
   { value: 'INACTIVE', label: 'Inactive', description: 'Temporarily not engaged' },
   { value: 'PROSPECT', label: 'Prospect', description: 'Potential customer' },
@@ -206,12 +197,20 @@ export default function CreateNewContactPage() {
     }
   };
 
+  // PG-205: once a type is set (the default preselect or the user's choice), the default
+  // is not applied again, so an explicit "No type" survives leaving and re-entering the step.
+  const [typeChosen, setTypeChosen] = useState(false);
+  // Stable so ContactTypeSelect's default-preselect effect does not re-run each render.
+  const handleContactTypeChange = useCallback((key: string) => {
+    setTypeChosen(true);
+    setFormData((prev) => ({ ...prev, contactType: key }));
+  }, []);
+
   // Validate current step
   const validateStep = (): boolean => {
     let newErrors: Partial<Record<keyof ContactFormData, string>> = {};
     if (currentStep === 'personal') newErrors = validatePersonalStep(formData);
     else if (currentStep === 'company') newErrors = validateCompanyStep(formData);
-    else if (currentStep === 'additional') newErrors = validateAdditionalStep(formData);
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -266,18 +265,11 @@ export default function CreateNewContactPage() {
         city: toOptional(formData.city),
         zipCode: toOptional(formData.zipCode),
         company: toOptional(formData.company),
+        accountId: formData.accountId || undefined,
         linkedInUrl: toOptional(formData.linkedIn),
-        contactType:
-          formData.contactType === 'other'
-            ? ('other' as const)
-            : (toOptional(formData.contactType) as
-                | 'customer'
-                | 'prospect'
-                | 'partner'
-                | 'vendor'
-                | 'investor'
-                | undefined),
-        status: formData.status,
+        contactType: toOptional(formData.contactType),
+        // PG-205: "Type default" ('') is left to the contact type's default (else ACTIVE).
+        status: formData.status || undefined,
         tags: parseTags(formData.tags),
         contactNotes: toOptional(formData.notes),
       };
@@ -641,6 +633,21 @@ export default function CreateNewContactPage() {
                       />
                     </div>
 
+                    {/* Account (PG-205 ruling 9) */}
+                    <div className="space-y-1.5">
+                      <EntitySearchField
+                        entityType="account"
+                        value={formData.accountId}
+                        valueName={formData.accountName}
+                        onChange={(id, name) =>
+                          setFormData((prev) => ({ ...prev, accountId: id, accountName: name }))
+                        }
+                      />
+                      <p className="text-xs text-slate-400">
+                        Links the contact to an account; some contact types require one.
+                      </p>
+                    </div>
+
                     {/* Job Title */}
                     <div className="space-y-1.5">
                       <label
@@ -766,44 +773,15 @@ export default function CreateNewContactPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* Contact Type */}
-                    <div className="space-y-1.5">
-                      <label
-                        htmlFor="contactType"
-                        className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
-                      >
-                        Contact Type
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="contactType"
-                          value={formData.contactType}
-                          onChange={(e) => {
-                            updateField('contactType', e.target.value);
-                            // Clear contactTypeOther when switching away from 'other'
-                            if (e.target.value !== 'other') {
-                              updateField('contactTypeOther', '');
-                            }
-                          }}
-                          className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] appearance-none cursor-pointer transition-shadow"
-                        >
-                          {contactTypeOptions.map((option) => (
-                            <option
-                              key={option.value}
-                              value={option.value}
-                              disabled={option.value === ''}
-                            >
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
-                          <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M7.41 8.59 12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z" />
-                          </svg>
-                        </span>
-                      </div>
-                    </div>
+                    {/* Contact Type (PG-205: tenant types) */}
+                    <ContactTypeSelect
+                      id="contactType"
+                      label="Contact Type"
+                      value={formData.contactType}
+                      onChange={handleContactTypeChange}
+                      selectClassName="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] cursor-pointer transition-shadow"
+                      preselectDefault={!typeChosen}
+                    />
 
                     {/* Status */}
                     <div className="space-y-1.5">
@@ -855,33 +833,6 @@ export default function CreateNewContactPage() {
                       />
                       <p className="text-xs text-slate-400">Separate multiple tags with commas</p>
                     </div>
-
-                    {/* Other Contact Type Specification */}
-                    {formData.contactType === 'other' && (
-                      <div className="space-y-1.5 md:col-span-2">
-                        <label
-                          htmlFor="contactTypeOther"
-                          className="block text-sm font-semibold text-slate-700 dark:text-slate-300"
-                        >
-                          Please specify the contact type <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          id="contactTypeOther"
-                          value={formData.contactTypeOther}
-                          onChange={(e) => updateField('contactTypeOther', e.target.value)}
-                          placeholder="e.g. Consultant, Advisor, Media contact..."
-                          className={`w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-[#2a78f6]/20 focus:border-[#2a78f6] placeholder-slate-400 transition-shadow ${
-                            errors.contactTypeOther
-                              ? 'border-red-500'
-                              : 'border-slate-200 dark:border-slate-700'
-                          }`}
-                        />
-                        {errors.contactTypeOther && (
-                          <p className="text-xs text-red-500">{errors.contactTypeOther}</p>
-                        )}
-                      </div>
-                    )}
 
                     {/* Notes */}
                     <div className="space-y-1.5 md:col-span-2">
