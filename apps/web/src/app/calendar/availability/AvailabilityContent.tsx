@@ -184,8 +184,16 @@ export default function AvailabilityContent() {
       return;
     }
     try {
+      const submittedKey = normalize(draft);
       const saved = await updateMutation.mutateAsync(toUpdateInput(draft));
-      adopt(saved);
+      // Edits made while the request was in flight stay; only the saved baseline moves.
+      setSnapshot((current) => {
+        const fresh = snapshotOf(saved);
+        return !current || normalize(current.draft) === submittedKey
+          ? fresh
+          : { ...fresh, draft: current.draft };
+      });
+      setSubmitted(false);
       toast({ title: 'Availability saved' });
       void utils.calendar.availability.get.invalidate();
       setFocusTarget(WEEKLY_HOURS_TITLE_ID);

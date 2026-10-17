@@ -473,6 +473,36 @@ describe('evaluateAvailability — week boundary and DST', () => {
     expect(check(r, '2026-10-25T01:30:00Z', '2026-10-25T01:45:00Z').ok).toBe(true); // 01:30 GMT
   });
 
+  it('rejects a booking that passes through closed time in the repeated fall-back hour', () => {
+    // London 2026-10-25: 00:45Z is 01:45 BST, 01:15Z is 01:15 GMT. The booking also covers 01:00-01:15 GMT,
+    // which is outside 01:30-02:00 even though both endpoints read inside it.
+    const r = rules({ weeklyRanges: weekdays([[h(1, 30), h(2)]], [0]) });
+    expect(check(r, '2026-10-25T00:45:00Z', '2026-10-25T01:15:00Z')).toMatchObject({
+      code: 'OUTSIDE_HOURS',
+    });
+    // The same booking is fine when the whole repeated hour is open.
+    const open = rules({ weeklyRanges: weekdays([[h(0), h(3)]], [0]) });
+    expect(check(open, '2026-10-25T00:45:00Z', '2026-10-25T01:15:00Z')).toEqual({ ok: true });
+  });
+
+  it('accepts a booking across the spring-forward gap when the real time on both sides is open', () => {
+    // London 2026-03-29: 00:30Z is 00:30 GMT, 01:30Z is 02:30 BST; 01:00-02:00 local never happens.
+    const r = rules({
+      weeklyRanges: weekdays(
+        [
+          [h(0), h(1)],
+          [h(2), h(3)],
+        ],
+        [0]
+      ),
+    });
+    expect(check(r, '2026-03-29T00:30:00Z', '2026-03-29T01:30:00Z')).toEqual({ ok: true });
+    // Ending inside the gap's far side but past the second range still fails.
+    expect(check(r, '2026-03-29T00:30:00Z', '2026-03-29T02:30:00Z')).toMatchObject({
+      code: 'OUTSIDE_HOURS',
+    });
+  });
+
   it('handles a half-hour offset zone (Asia/Kolkata)', () => {
     const r = rules({ timezone: KOLKATA, weeklyRanges: weekdays([[h(9, 30), h(17, 30)]]) });
     expect(check(r, '2026-04-13T04:00:00Z', '2026-04-13T05:00:00Z').ok).toBe(true); // 09:30-10:30 IST
@@ -484,6 +514,54 @@ describe('evaluateAvailability — week boundary and DST', () => {
 
 describe('generateCandidates', () => {
   const base = rules({ weeklyRanges: weekdays([[h(9, 30), h(12, 30)]]) });
+
+  it('offers slots in the repeated fall-back hour (both occurrences, fit by elapsed time)', () => {
+    // London Sunday 2026-10-25, hours 01:00-02:00 local: 01:00-02:00 happens twice (00:00Z-01:00Z BST, 01:00Z-02:00Z GMT).
+    const fold = rules({ weeklyRanges: weekdays([[h(1), h(2)]], [0]) });
+    const ninety = generateCandidates({
+      rules: fold,
+      from: new Date('2026-10-25T00:00:00Z'),
+      durationMinutes: 90,
+      maxDaysAhead: 1,
+      limit: 5,
+    });
+    expect(ninety[0]?.start.toISOString()).toBe('2026-10-25T00:00:00.000Z');
+    expect(ninety[0]?.end.toISOString()).toBe('2026-10-25T01:30:00.000Z');
+
+    const hour = generateCandidates({
+      rules: fold,
+      from: new Date('2026-10-25T00:30:00Z'),
+      durationMinutes: 60,
+      maxDaysAhead: 1,
+      limit: 5,
+    });
+    expect(hour[0]?.start.toISOString()).toBe('2026-10-25T01:00:00.000Z');
+    // Chronological, no duplicates, and every candidate passes the policy.
+    const times = hour.map((c) => c.start.getTime());
+    expect([...times].sort((x, y) => x - y)).toEqual(times);
+    expect(new Set(times).size).toBe(times.length);
+    for (const c of [...ninety, ...hour]) {
+      expect(evaluateAvailability({ rules: fold, start: c.start, end: c.end })).toEqual({
+        ok: true,
+      });
+    }
+  });
+
+  it('does not repeat a slot when grid times fall in the spring-forward gap', () => {
+    // London 2026-03-29, hours 00:00-03:00: 01:00 and 01:30 local do not exist and resolve to 01:00Z (02:00 BST).
+    const gap = rules({ weeklyRanges: weekdays([[h(0), h(3)]], [0]) });
+    const got = generateCandidates({
+      rules: gap,
+      from: new Date('2026-03-29T00:00:00Z'),
+      durationMinutes: 30,
+      stepMinutes: 30,
+      maxDaysAhead: 1,
+      limit: 20,
+    });
+    const times = got.map((c) => c.start.getTime());
+    expect(new Set(times).size).toBe(times.length);
+    expect([...times].sort((x, y) => x - y)).toEqual(times);
+  });
 
   it('anchors candidates at each range start (09:30 range yields 09:30, 10:30, 11:30)', () => {
     const got = generateCandidates({

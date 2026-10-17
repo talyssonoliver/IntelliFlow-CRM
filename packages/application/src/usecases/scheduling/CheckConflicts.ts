@@ -266,14 +266,17 @@ export class CheckConflictsUseCase {
         return Result.fail(bufferResult.error);
       }
       const buffer = bufferResult.value;
+      // Existing appointments are compared by their buffered times, so the read also
+      // reaches back and forward by the largest buffer an existing appointment can hold.
+      const reach = Buffer.MAX_MINUTES * 60_000;
       const windowStart = Math.min(...input.candidates.map((c) => c.start.getTime()));
       const windowEnd = Math.max(...input.candidates.map((c) => c.end.getTime()));
 
       const existingAppointments = await this.appointmentRepository
         .forTenant(input.tenantId)
         .findForConflictCheck([input.attendeeId], {
-          startTime: buffer.adjustStartTime(new Date(windowStart)),
-          endTime: buffer.adjustEndTime(new Date(windowEnd)),
+          startTime: new Date(buffer.adjustStartTime(new Date(windowStart)).getTime() - reach),
+          endTime: new Date(buffer.adjustEndTime(new Date(windowEnd)).getTime() + reach),
         });
 
       for (const candidate of input.candidates) {

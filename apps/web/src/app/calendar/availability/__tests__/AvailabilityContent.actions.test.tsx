@@ -144,6 +144,25 @@ describe('Save', () => {
     );
   });
 
+  it('keeps edits made while a save is in flight and stays dirty', async () => {
+    let resolveSave: (dto: FixtureDto) => void = () => {};
+    h.update.mutateAsync.mockReturnValue(
+      new Promise<FixtureDto>((resolve) => (resolveSave = resolve))
+    );
+    render(<AvailabilityContent />);
+    fireEvent.change(screen.getByLabelText('Buffer before (minutes)'), { target: { value: '20' } });
+    fireEvent.click(save());
+    await waitFor(() => expect(h.update.mutateAsync).toHaveBeenCalledTimes(1));
+    // A further edit lands before the response.
+    fireEvent.change(screen.getByLabelText('Buffer after (minutes)'), { target: { value: '30' } });
+    resolveSave(availabilityDto({ bufferBeforeMinutes: 20 }));
+    await waitFor(() => expect(h.toast).toHaveBeenCalled());
+    expect(screen.getByLabelText('Buffer after (minutes)')).toHaveValue(30);
+    expect(screen.getByLabelText('Buffer before (minutes)')).toHaveValue(20);
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    expect(save()).not.toBeDisabled();
+  });
+
   it('first save of an unconfigured tenant that only adds a closure keeps 07:00-19:00 every day', async () => {
     load(unconfiguredDto());
     h.update.mutateAsync.mockResolvedValue(availabilityDto());

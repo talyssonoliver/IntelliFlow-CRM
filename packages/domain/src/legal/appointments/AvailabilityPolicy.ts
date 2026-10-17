@@ -302,10 +302,42 @@ function localEndMinute(s: ZonedParts, e: ZonedParts): number | null {
   return null;
 }
 
+/**
+ * The booking as wall-clock [start, end) minute segments of its start day.
+ * One segment unless the zone's offset changes inside the booking (a DST day):
+ * then it splits at the change, so the repeated autumn hour and the skipped
+ * spring hour are judged by the clock times that really happen.
+ */
+function wallClockSegments(
+  start: Date,
+  end: Date,
+  timezone: string,
+  s: ZonedParts,
+  endMinute: number
+): Array<[number, number]> {
+  const endOffset = offsetAt(end.getTime(), timezone);
+  if (offsetAt(start.getTime(), timezone) === endOffset) return [[s.minuteOfDay, endMinute]];
+  // First instant on the end's offset (a day holds at most one change).
+  let lo = start.getTime();
+  let hi = end.getTime();
+  while (hi - lo > 1) {
+    const mid = lo + Math.floor((hi - lo) / 2);
+    if (offsetAt(mid, timezone) === endOffset) hi = mid;
+    else lo = mid;
+  }
+  const beforeChange =
+    localEndMinute(s, toZonedParts(new Date(hi - 1), timezone)) ?? MINUTES_PER_DAY;
+  const afterChange = toZonedParts(new Date(hi), timezone).minuteOfDay;
+  return [
+    [s.minuteOfDay, beforeChange],
+    [afterChange, endMinute],
+  ];
+}
+
 function checkWeeklyHours(
   rules: AvailabilityRules,
   s: ZonedParts,
-  endMinute: number
+  segments: Array<[number, number]>
 ): AvailabilityResult {
   const dayRanges = mergeRanges(rules.weeklyRanges).filter((r) => r.weekday === s.weekday);
   if (dayRanges.length === 0) {
@@ -314,7 +346,10 @@ function checkWeeklyHours(
       `The firm is closed on ${WEEKDAY_NAMES[s.weekday]}s (${rules.timezone}).`
     );
   }
-  const fits = dayRanges.some((r) => s.minuteOfDay >= r.startMinute && endMinute <= r.endMinute);
+  // Every minute of the booking must be open; on ordinary days this is "inside one range".
+  const fits = segments.every(
+    ([from, to]) => to <= from || dayRanges.some((r) => from >= r.startMinute && to <= r.endMinute)
+  );
   if (!fits) {
     return violation(
       'OUTSIDE_HOURS',
@@ -365,7 +400,8 @@ export function evaluateAvailability(input: {
   if (isClosed(s.date, rules.closures)) {
     return violation('CLOSED_DATE', `The firm is closed on ${s.date}.`);
   }
-  const hours = checkWeeklyHours(rules, s, endMinute);
+  const segments = wallClockSegments(start, end, rules.timezone, s, endMinute);
+  const hours = checkWeeklyHours(rules, s, segments);
   if (!hours.ok) return hours;
   return checkDailyCap(rules, s.date, input.sameDayCount);
 }
@@ -394,14 +430,7 @@ export function generateCandidates(input: {
   const firstDate = toZonedParts(from, rules.timezone).date;
   const out: CandidateSlot[] = [];
 
-  for (const start of rangeStartsFrom(
-    firstDate,
-    maxDaysAhead + 1,
-    merged,
-    rules,
-    durationMinutes,
-    step
-  )) {
+  for (const start of rangeStartsFrom(firstDate, maxDaysAhead + 1, merged, rules, step)) {
     if (start.getTime() >= horizon) break;
     if (start.getTime() < from.getTime()) continue;
     const end = new Date(start.getTime() + durationMinutes * MS_PER_MINUTE);
@@ -413,29 +442,49 @@ export function generateCandidates(input: {
 }
 
 /**
- * Every `start + k * step` inside each merged range of each non-closed day
- * that leaves room for the duration, in chronological order.
+ * The UTC instants of each grid time `start + k * step` inside the given
+ * day's ranges, in chronological order without duplicates. A grid time in
+ * the repeated autumn hour yields both occurrences; one in the skipped spring
+ * hour resolves forward (and is dropped if that instant is already listed).
+ * Whether the duration fits is left to `evaluateAvailability`, which measures
+ * elapsed time.
  */
+function dayGridStarts(
+  date: string,
+  ranges: readonly WeeklyRange[],
+  timezone: string,
+  step: number
+): number[] {
+  const { startUtc, endUtc } = localDayBoundsUtc(date, timezone);
+  const repeat = offsetAt(startUtc.getTime(), timezone) - offsetAt(endUtc.getTime() - 1, timezone);
+  const instants = new Set<number>();
+  for (const range of ranges) {
+    for (let minute = range.startMinute; minute < range.endMinute; minute += step) {
+      const first = localToUtc(date, minute, timezone).getTime();
+      instants.add(first);
+      if (repeat > 0) {
+        const second = toZonedParts(new Date(first + repeat), timezone);
+        if (second.date === date && second.minuteOfDay === minute) instants.add(first + repeat);
+      }
+    }
+  }
+  return [...instants].sort((a, b) => a - b);
+}
+
+/** Grid starts of every non-closed day from `firstDate` to `firstDate + lastDayOffset`, earliest first. */
 function* rangeStartsFrom(
   firstDate: string,
   lastDayOffset: number,
   merged: readonly WeeklyRange[],
   rules: AvailabilityRules,
-  durationMinutes: number,
   step: number
 ): Generator<Date> {
   for (let day = 0; day <= lastDayOffset; day++) {
     const date = addDays(firstDate, day);
     if (isClosed(date, rules.closures)) continue;
     const weekday = weekdayOf(date);
-    for (const range of merged.filter((r) => r.weekday === weekday)) {
-      for (
-        let minute = range.startMinute;
-        minute + durationMinutes <= range.endMinute;
-        minute += step
-      ) {
-        yield localToUtc(date, minute, rules.timezone);
-      }
-    }
+    const ranges = merged.filter((r) => r.weekday === weekday);
+    for (const instant of dayGridStarts(date, ranges, rules.timezone, step))
+      yield new Date(instant);
   }
 }

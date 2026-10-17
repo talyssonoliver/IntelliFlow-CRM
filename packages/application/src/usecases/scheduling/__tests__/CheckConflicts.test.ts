@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { CheckConflictsUseCase } from '../CheckConflicts';
 import { InMemoryAppointmentRepository } from '../../../../../adapters/src/repositories/InMemoryAppointmentRepository';
-import { Appointment } from '@intelliflow/domain';
+import { Appointment, Buffer } from '@intelliflow/domain';
 
 describe('CheckConflictsUseCase', () => {
   let useCase: CheckConflictsUseCase;
@@ -335,14 +335,19 @@ describe('CheckConflictsUseCase', () => {
     const at = (hour: number, minute = 0) => new Date(2025, 0, 2, hour, minute, 0);
     const slot = (hour: number) => ({ start: at(hour), end: at(hour + 1) });
 
-    async function saveBusy(startHour: number, endHour: number) {
+    async function saveBusy(
+      startHour: number,
+      endHour: number,
+      extra: { endMinute?: number; after?: number } = {}
+    ) {
       const busy = Appointment.create({
         title: 'Busy',
         startTime: at(startHour),
-        endTime: at(endHour),
+        endTime: at(endHour, extra.endMinute ?? 0),
         appointmentType: 'INTERNAL_MEETING',
         organizerId: 'user-123',
         tenantId: 'tenant-1',
+        ...(extra.after ? { buffer: Buffer.create(0, extra.after).value } : {}),
       }).value;
       await repository.save(busy);
     }
@@ -375,7 +380,7 @@ describe('CheckConflictsUseCase', () => {
       expect(result.isSuccess).toBe(true);
       expect(result.value).toEqual(slot(10));
       expect(reads).toHaveBeenCalledTimes(1);
-      expect(reads).toHaveBeenCalledWith(['user-123'], { startTime: at(9), endTime: at(12) });
+      expect(reads).toHaveBeenCalledWith(['user-123'], { startTime: at(5), endTime: at(16) });
     });
 
     it('widens the read window and the conflict check by the buffers', async () => {
@@ -392,9 +397,22 @@ describe('CheckConflictsUseCase', () => {
 
       expect(result.value).toEqual(slot(11));
       expect(reads).toHaveBeenCalledWith(['user-123'], {
-        startTime: at(9, 45),
-        endTime: at(12, 15),
+        startTime: at(5, 45),
+        endTime: at(16, 15),
       });
+    });
+
+    it("treats a slot as busy when an existing appointment's own buffer runs into it", async () => {
+      // 08:00-08:55 with a 15-minute after-buffer occupies 08:00-09:10; the raw times end before 09:00.
+      await saveBusy(8, 8, { endMinute: 55, after: 15 });
+
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [slot(9), slot(10)],
+      });
+
+      expect(result.value).toEqual(slot(10));
     });
 
     it('returns null for an empty list without reading', async () => {

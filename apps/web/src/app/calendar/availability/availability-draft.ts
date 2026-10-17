@@ -97,16 +97,15 @@ export function timeToMinutes(value: string, role: 'start' | 'end'): number | nu
 }
 
 /**
- * Minutes of a range. An end of '00:00' is midnight (1440) only when the range
- * starts after 00:00, so '00:00'-'00:00' stays an invalid (empty) range.
+ * Minutes of a range. An end of '00:00' is always midnight at the end of the
+ * day (1440), so '00:00'-'00:00' is the whole day and a saved 0-1440 range
+ * round-trips through the editor.
  */
 export function rangeMinutes(range: Pick<DraftRange, 'start' | 'end'>): {
   start: number | null;
   end: number | null;
 } {
-  const start = timeToMinutes(range.start, 'start');
-  const end = timeToMinutes(range.end, 'end');
-  return { start, end: end === 1440 && start === 0 ? 0 : end };
+  return { start: timeToMinutes(range.start, 'start'), end: timeToMinutes(range.end, 'end') };
 }
 
 function timeLabel(minutes: number): string {

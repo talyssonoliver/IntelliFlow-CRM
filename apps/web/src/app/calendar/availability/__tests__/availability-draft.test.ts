@@ -191,12 +191,25 @@ describe('validateDraft', () => {
     ]);
   });
 
-  it('rejects a 00:00-00:00 range', () => {
+  it('treats 00:00-00:00 as the whole day', () => {
     const d = draft();
     d.days[2] = { ...d.days[2], open: true, ranges: [{ key: 'z', start: '00:00', end: '00:00' }] };
-    expect(validateDraft(d)).toEqual([
-      { fieldId: rangeFieldId(2, 0, 'end'), message: 'Tuesday range 1 must end after it starts' },
-    ]);
+    expect(validateDraft(d)).toEqual([]);
+    expect(toUpdateInput(d).days[2].ranges).toEqual([{ startMinute: 0, endMinute: 1440 }]);
+    expect(formatDaySummary(d.days[2])).toBe('00:00 to midnight (end of day)');
+  });
+
+  it('round-trips a saved all-day range (0-1440) without a validation error', () => {
+    const allDay = dto({
+      days: [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({
+        weekday,
+        ranges: weekday === 3 ? [{ startMinute: 0, endMinute: 1440 }] : [],
+      })),
+    });
+    const d = toDraft(allDay as never);
+    expect(d.days[3].ranges.map((r) => [r.start, r.end])).toEqual([['00:00', '00:00']]);
+    expect(validateDraft(d)).toEqual([]);
+    expect(toUpdateInput(d).days[3].ranges).toEqual([{ startMinute: 0, endMinute: 1440 }]);
   });
 
   it('does not validate the hidden ranges of a closed day', () => {
