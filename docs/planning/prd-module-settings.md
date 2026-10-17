@@ -803,6 +803,33 @@ findings: #864–#867 (see
 `20261013120000_case_types` (Class A) must be applied to production before this
 ships.
 
+## PG-205 Addendum: Contact Types (2026-10-17)
+
+Owner ruling (2026-10-17): types start as the current six (customer, prospect,
+partner, vendor, investor, other) and are tenant-editable, with no data
+migration of existing contacts; a type is applied at contact creation; "default
+labels" means default tags from the ContactTag list; "default fields" means
+default values. Spec:
+`.specify/sprints/sprint-18/specifications/PG-205-spec.md`. ADR-080. The row's
+person/organization wording is superseded (organisations are Accounts).
+
+### Additional User Stories
+
+- **US-CTY1 (Taxonomy)**: As a CRM Admin, I want to rename, recolour, add and
+  deactivate contact types, so that contacts are classified in our own terms.
+- **US-CTY2 (Defaults)**: As a CRM Admin, I want each contact type to carry
+  default values, extra required fields and default tags, so that new contacts
+  start correctly.
+- **US-CTY3 (Picker)**: As a sales rep, I want to pick a contact type when I
+  create or edit a contact, so that the type is recorded and its defaults apply.
+- **US-CTY4 (Find by type)**: As a sales rep, I want to filter the contacts list
+  by type and see the type in the list, so that the Partners/Vendors segments in
+  the sidebar actually work.
+
+### Additional Acceptance Criteria
+
+Defined as AC-CTY\* in the spec (finalised at spec consensus).
+
 ## PG-198 Addendum: Approval Policies (2026-10-13)
 
 Owner rulings R1–R3 (2026-10-13):
