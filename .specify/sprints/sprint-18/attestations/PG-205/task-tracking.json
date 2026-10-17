@@ -11,6 +11,11 @@
         "path": ".specify/sprints/sprint-18/specifications/PG-205-discussion.md",
         "sha256": "90323167011e7f52a600839a4f1c1e76736fb1d06061b7e67dc2b0684e09ed15",
         "created_at": "2026-10-17T16:17:17Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/PG-205-plan.md",
+        "sha256": "a2efb13714a40a3d4c7175bd27119649fe4d83e9a9f24a35b0883a0d31984088",
+        "created_at": "2026-10-17T16:33:06Z"
       }
     ],
     "expected": [
@@ -49,7 +54,7 @@
   },
   "kpis": {},
   "notes": "Contact types at /contacts/(list)/contact-types: taxonomy (person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "spec",
+  "phase": "plan",
   "started_at": "2026-10-17T14:47:19Z",
   "status_history": [
     {
@@ -66,6 +71,16 @@
       "status": "Spec Complete",
       "at": "2026-10-17T16:17:17Z",
       "note": "/spec-session complete: 7 explore + 3 rounds + /spec-consensus 7/7 APPROVED; owner rulings recorded"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-10-17T16:20:36Z",
+      "note": "/plan-session started"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-10-17T16:33:06Z",
+      "note": "/plan-session complete: plan-reviewer sub-agent iteration 1 REVISE (4E/10W/8I), iteration 2 APPROVE (0E/0W/3I)"
     }
   ],
   "stream": null,
