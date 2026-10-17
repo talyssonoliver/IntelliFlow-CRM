@@ -38,6 +38,11 @@ import { container } from '../../container';
 import { createNotification } from '../notifications/notifications.router';
 import { mapDomainErrorToTRPC } from './helpers';
 import { safeTimezone } from '../../lib/timezone-utils';
+import {
+  assertAppointmentWithinAvailability,
+  findNextSlotWithinAvailability,
+  loadTenantAvailability,
+} from '../calendar/availability-enforcement';
 
 // NOTE: appointments are NOT LEGAL-gated. This router is SHARED with the core
 // Calendar feature (CORE_CRM, all tiers): apps/web/.../calendar/(list)/page.tsx
@@ -188,14 +193,6 @@ function userScopeFilter(user: { userId: string; role: string }) {
   };
 }
 
-/**
- * Business-hours window (inclusive start, exclusive end) in 24-hour clock,
- * matching the calendar's day boundaries: 07:00 – 19:00.
- * Update both sides in sync if the range changes.
- */
-const BUSINESS_HOURS_START = 7;
-const BUSINESS_HOURS_END = 19;
-
 type ModuleAccessLike = {
   isModuleEnabled: (tenantId: string, moduleId: string) => Promise<boolean> | boolean;
 };
@@ -312,50 +309,6 @@ const tenantProcedure = baseTenantProcedure.use(async ({ ctx, next }) => {
   }
   return result;
 });
-
-function getLocalHour(date: Date, timezone?: string): number {
-  const tz = timezone ?? 'UTC';
-  // Use en-GB to get 24-hour format reliably
-  const hourStr = new Intl.DateTimeFormat('en-GB', {
-    hour: '2-digit',
-    hour12: false,
-    timeZone: tz,
-  }).format(date);
-  // en-GB can return "24" for midnight in some engines — normalise
-  const hour = parseInt(hourStr, 10);
-  return hour === 24 ? 0 : hour;
-}
-
-/**
- * Validates that the appointment's start and end fall within business hours
- * (07:00 – 19:00) in the provided timezone. Throws a BAD_REQUEST if outside.
- */
-function assertWithinBusinessHours(startTime: Date, endTime: Date, timezone?: string): void {
-  const startHour = getLocalHour(startTime, timezone);
-  const endHour = getLocalHour(endTime, timezone);
-  const startWithinDay = startHour >= BUSINESS_HOURS_START && startHour < BUSINESS_HOURS_END;
-  // End boundary: end hour == 19 is OK when minutes are 00 (meeting ends at 19:00 sharp)
-  const endMinutes = parseInt(
-    new Intl.DateTimeFormat('en-GB', {
-      minute: '2-digit',
-      timeZone: timezone ?? 'UTC',
-    }).format(endTime),
-    10
-  );
-  const endWithinDay =
-    (endHour >= BUSINESS_HOURS_START && endHour < BUSINESS_HOURS_END) ||
-    (endHour === BUSINESS_HOURS_END && endMinutes === 0);
-
-  if (!startWithinDay || !endWithinDay) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `Appointments must start and end between ${String(BUSINESS_HOURS_START).padStart(
-        2,
-        '0'
-      )}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`,
-    });
-  }
-}
 
 /**
  * Convert a Prisma appointment record to a domain Appointment for ICS/reminder handlers.
@@ -509,8 +462,14 @@ export const appointmentsRouter = createTRPCRouter({
   create: tenantProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    // Reject appointments outside business hours (07:00 – 19:00).
-    assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
+    // Firm availability (PG-202): hours, closures, daily cap. Tenants that never
+    // saved availability keep the 07:00-19:00 rule in input.timezone.
+    await assertAppointmentWithinAvailability(ctx.prismaWithTenant, {
+      tenantId: ctx.user.tenantId,
+      start: input.startTime,
+      end: input.endTime,
+      legacyTimezone: input.timezone,
+    });
 
     // Linking the new appointment to legal cases is a LEGAL feature, even on this
     // shared calendar router — require entitlement when caseIds are supplied.
@@ -783,8 +742,14 @@ export const appointmentsRouter = createTRPCRouter({
   reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
-    // Reject rescheduling outside business hours (07:00 – 19:00).
-    assertWithinBusinessHours(input.newStartTime, input.newEndTime);
+    // Firm availability (PG-202); the appointment does not count against its own day.
+    // Tenants that never saved availability keep the 07:00-19:00 rule in UTC.
+    await assertAppointmentWithinAvailability(ctx.prismaWithTenant, {
+      tenantId: ctx.user.tenantId,
+      start: input.newStartTime,
+      end: input.newEndTime,
+      excludeAppointmentId: input.id,
+    });
 
     const result = await container.rescheduleAppointmentUseCase.execute({
       appointmentId: input.id,
@@ -1136,10 +1101,34 @@ export const appointmentsRouter = createTRPCRouter({
    * Find next available slot
    *
    * Phase 2c: routed through CheckConflictsUseCase.findNextSlot (hexagonal migration).
-   * Working hours awareness (9 AM - 5 PM, weekdays), buffer time handling, weekend exclusion.
+   * PG-202: a tenant with saved availability gets slots from its own hours,
+   * closures and daily cap; otherwise 9 AM - 5 PM on weekdays as before.
    */
   findNextSlot: tenantProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
     const searchStart = Date.now();
+
+    const availability = await loadTenantAvailability(ctx.prismaWithTenant, ctx.user.tenantId);
+    if (availability.configured) {
+      const slot = await findNextSlotWithinAvailability(
+        ctx.prismaWithTenant,
+        container.checkConflictsUseCase,
+        {
+          tenantId: ctx.user.tenantId,
+          rules: availability.rules,
+          attendeeId: input.attendeeId,
+          startFrom: input.startFrom,
+          durationMinutes: input.durationMinutes,
+          maxDaysAhead: input.maxDaysAhead,
+          bufferMinutesBefore: input.bufferMinutesBefore,
+          bufferMinutesAfter: input.bufferMinutesAfter,
+        }
+      );
+      const searchDurationMs = Date.now() - searchStart;
+      console.log(
+        `[appointments.findNextSlot] Availability search ${slot ? 'found' : 'found no slot'} in ${searchDurationMs.toFixed(2)}ms`
+      );
+      return { slot, searchDurationMs };
+    }
 
     const result = await container.checkConflictsUseCase.findNextSlot({
       tenantId: ctx.user.tenantId,
