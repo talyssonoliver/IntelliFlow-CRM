@@ -4,7 +4,7 @@ import {
   Contact,
   ContactId,
   ContactStatus,
-  ContactType,
+  ContactTypeKey,
   Email,
   ContactRepository,
   AccountRepository,
@@ -131,7 +131,7 @@ export class ContactService {
       zipCode?: string;
       company?: string;
       linkedInUrl?: string;
-      contactType?: ContactType;
+      contactType?: ContactTypeKey;
       tags?: string[];
       contactNotes?: string;
     },

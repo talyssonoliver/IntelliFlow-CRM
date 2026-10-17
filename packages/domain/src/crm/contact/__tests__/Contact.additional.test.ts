@@ -21,6 +21,7 @@ import {
   Contact,
   ContactAlreadyLinkedToLeadError,
   ContactNotLinkedToLeadError,
+  InvalidContactTypeKeyError,
   CONTACT_TYPES,
   CONTACT_STATUSES,
 } from '../Contact';
@@ -843,6 +844,46 @@ describe('Contact Aggregate - Additional Coverage', () => {
       expect(payload.previousLeadId).toBe('lead-prev-payload');
       expect(payload.unlinkedBy).toBe('user-unlinker');
       expect(payload.unlinkedAt).toBeDefined();
+    });
+  });
+
+  describe('contactType key invariant (PG-205)', () => {
+    const base = {
+      email: 'key@example.com',
+      firstName: 'Key',
+      lastName: 'Check',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    };
+
+    it('accepts every seed key and a tenant-defined key', () => {
+      for (const key of [...CONTACT_TYPES, 'channel_partner']) {
+        const result = Contact.create({ ...base, contactType: key });
+        expect(result.isSuccess).toBe(true);
+        expect(result.value.contactType).toBe(key);
+      }
+    });
+
+    it('rejects a malformed key on create', () => {
+      const result = Contact.create({ ...base, contactType: 'Not A Key' });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidContactTypeKeyError);
+      expect(result.error.code).toBe('INVALID_CONTACT_TYPE_KEY');
+    });
+
+    it('rejects a malformed key on update and leaves the stored key untouched', () => {
+      const contact = Contact.create({ ...base, contactType: 'vendor' }).value;
+      const result = contact.updateContactInfo({ contactType: 'BAD KEY' }, 'user-1');
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidContactTypeKeyError);
+      expect(contact.contactType).toBe('vendor');
+    });
+
+    it('accepts a well-formed tenant key on update', () => {
+      const contact = Contact.create({ ...base, contactType: 'vendor' }).value;
+      const result = contact.updateContactInfo({ contactType: 'reseller_2' }, 'user-1');
+      expect(result.isSuccess).toBe(true);
+      expect(contact.contactType).toBe('reseller_2');
     });
   });
 });
