@@ -1,6 +1,11 @@
 import { z } from 'zod';
 import { emailSchema, phoneSchema, idSchema, paginationSchema, nameSchema } from './common';
-import { CONTACT_TYPES, CONTACT_STATUSES, CONTACT_INTERACTION_TYPES } from '@intelliflow/domain';
+import {
+  CONTACT_TYPES,
+  CONTACT_STATUSES,
+  CONTACT_INTERACTION_TYPES,
+  CONTACT_TYPE_KEY_PATTERN,
+} from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
 export { idSchema } from './common';
@@ -8,6 +13,19 @@ export { idSchema } from './common';
 // Enums - derived from domain constants (single source of truth)
 export const contactTypeSchema = z.enum(CONTACT_TYPES);
 export type ContactType = z.infer<typeof contactTypeSchema>;
+
+/**
+ * PG-205 (ADR-080): a contact's type is a tenant contact type key. The seed set
+ * above stays the six system keys; tenants can add their own, so create/update
+ * accept any key in this format and the API checks it is an active type of the
+ * caller's tenant.
+ */
+export const contactTypeKeySchema = z
+  .string()
+  .check(z.regex(CONTACT_TYPE_KEY_PATTERN, 'Invalid contact type key'));
+
+/** List segments the contacts list resolves server-side (sidebar `?segment=vip`). */
+export const CONTACT_LIST_SEGMENTS = ['vip'] as const;
 
 export const contactStatusSchema = z.enum(CONTACT_STATUSES);
 export type ContactStatus = z.infer<typeof contactStatusSchema>;
@@ -41,7 +59,7 @@ const baseContactFieldsSchema = z.object({
   zipCode: z.string().max(20).optional(),
   company: z.string().max(200).optional(),
   linkedInUrl: z.string().check(z.url()).max(500).optional().or(z.literal('')),
-  contactType: contactTypeSchema.optional(),
+  contactType: contactTypeKeySchema.optional(),
   tags: z.array(z.string().max(50)).max(20).optional(),
   contactNotes: z.string().max(5000).optional(),
 });
@@ -89,6 +107,9 @@ export const contactQuerySchema = paginationSchema.extend({
   ownerId: idSchema.optional(),
   department: z.string().optional(),
   status: contactStatusSchema.optional(),
+  // PG-205: filter by tenant contact type key; `segment: 'vip'` = contacts tagged "vip".
+  contactType: contactTypeKeySchema.optional(),
+  segment: z.enum(CONTACT_LIST_SEGMENTS).optional(),
   sortBy: z.enum(CONTACT_SORT_FIELDS).default('createdAt'),
 });
 

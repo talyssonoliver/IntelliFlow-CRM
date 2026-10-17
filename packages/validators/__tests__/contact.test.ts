@@ -741,4 +741,38 @@ describe('Contact Validators', () => {
       expect(result.success).toBe(true);
     });
   });
+  describe('contactType key (PG-205)', () => {
+    const base = {
+      email: 'type@example.com',
+      firstName: 'Type',
+      lastName: 'Check',
+    };
+
+    it.each(['customer', 'prospect', 'partner', 'vendor', 'investor', 'other', 'channel_partner'])(
+      'createContactSchema accepts the key %s',
+      (contactType) => {
+        expect(createContactSchema.safeParse({ ...base, contactType }).success).toBe(true);
+      }
+    );
+
+    it.each(['Customer', 'has space', '9lives', 'x'.repeat(41)])(
+      'createContactSchema rejects the malformed key %j',
+      (contactType) => {
+        expect(createContactSchema.safeParse({ ...base, contactType }).success).toBe(false);
+      }
+    );
+
+    it('updateContactSchema accepts a tenant key and rejects a malformed one', () => {
+      const id = '123e4567-e89b-12d3-a456-426614174000';
+      expect(updateContactSchema.safeParse({ id, contactType: 'reseller_2' }).success).toBe(true);
+      expect(updateContactSchema.safeParse({ id, contactType: 'Reseller' }).success).toBe(false);
+    });
+
+    it('contactQuerySchema accepts a contactType filter and the vip segment only', () => {
+      expect(contactQuerySchema.safeParse({ contactType: 'partner' }).success).toBe(true);
+      expect(contactQuerySchema.safeParse({ segment: 'vip' }).success).toBe(true);
+      expect(contactQuerySchema.safeParse({ segment: 'partners' }).success).toBe(false);
+      expect(contactQuerySchema.safeParse({ contactType: 'Not A Key' }).success).toBe(false);
+    });
+  });
 });
