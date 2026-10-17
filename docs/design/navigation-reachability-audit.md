@@ -226,12 +226,12 @@ Legend:
 
 ### Calendar (4 routes)
 
-| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                                             |
-| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------------- |
-| `/calendar`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) + appointments sidebar link |
-| `/calendar/availability`      | --  | --  | SB  | --  |    YES     | Calendar sidebar                                  |
-| `/calendar/event-types`       | --  | --  | SB  | --  |    YES     | Calendar sidebar                                  |
-| `/calendar/calendar-settings` | --  | --  | SB  | --  |    YES     | Calendar sidebar                                  |
+| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                                               |
+| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------------------------------- |
+| `/calendar`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) + appointments sidebar link   |
+| `/calendar/availability`      | --  | --  | SB  | IP  |    YES     | Calendar sidebar + Calendar Settings links (PG-202) |
+| `/calendar/event-types`       | --  | --  | SB  | --  |    YES     | Calendar sidebar                                    |
+| `/calendar/calendar-settings` | --  | --  | SB  | --  |    YES     | Calendar sidebar                                    |
 
 ### Cases (9 routes)
 

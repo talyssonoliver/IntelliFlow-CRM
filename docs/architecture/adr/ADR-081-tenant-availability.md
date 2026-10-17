@@ -130,3 +130,19 @@ server-local hour loop.
 
 - Bad: a 09:00 London rule stored as 08:00Z in summer becomes 08:00 local in
   winter. Rejected.
+
+## Implementation Notes (PG-202 exec, 2026-10-17)
+
+- Migration `packages/db/prisma/migrations/20261017130000_availability/` was
+  approved by an independent SQL review (Class A, six INFO findings, no fixes);
+  its hash is frozen in the PG-202 exec evidence. Production apply stays manual
+  and must happen before the API release.
+- The legacy rules are pinned by
+  `appointments.legacy-hours.characterization.test.ts` and unchanged for firms
+  that never saved availability, or when the migration is missing (Prisma
+  P2021/P2022 fall back with a logged error; other errors propagate).
+- Calendar Settings shows the buffers and timezone read-only with a link to
+  Availability, and its reset no longer touches them. The New Appointment form
+  drops its client-side 07:00-19:00 rule and shows the server's message instead.
+- `ConfirmationDialog` gained an optional `onCloseAutoFocus` so focus can move
+  to the Weekly hours title after Reset.

@@ -2492,7 +2492,7 @@ Sidebar entry: apps/web/src/components/sidebar/configs/cases.ts:14
 ### Availability (PG-202 — enforced at booking, ADR-081)
 
 ```
-PG-178 ✅ + PG-189 ✅ ──► PG-202 (Availability)
+PG-178 ✅ + PG-189 ✅ ──► PG-202 (Availability) ✅
 
 Domain:  packages/domain/src/legal/appointments/AvailabilityPolicy.ts
            evaluateAvailability · generateCandidates · localDayBoundsUtc · LEGACY_BOOKING_HOURS

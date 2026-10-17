@@ -969,3 +969,9 @@ colour tokens.
 
 **Prisma migration** `20261017130000_availability` (Class A) must be applied to
 production before this ships.
+
+**Delivery (2026-10-17):** implemented on `feat/pg-202-availability`: page,
+`calendar.availability` router, booking enforcement at create, reschedule and
+findNextSlot, Calendar Settings pointer and New Appointment buffer prefill. The
+migration was approved by an independent SQL review and is not applied to
+production.

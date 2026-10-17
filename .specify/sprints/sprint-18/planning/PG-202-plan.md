@@ -645,15 +645,19 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Create:**
 - `.specify/sprints/sprint-18/findings/PG-202-findings.md`
 
-- [ ] Change only PG-202's own additions in shared registries (PG-205 lane edits the same counts).
-- [ ] `legal-scheduling-dependency-chain.md`: add the PG-202 availability chain (AvailabilityPolicy → validators →
+- [x] Change only PG-202's own additions in shared registries (PG-205 lane edits the same counts). *Verified:* only the
+      Calendar rows/section counts, the `calendar.availability` router row and procedure total (header router count stays
+      69: a nested router is not a `router.ts` registration), and +5 debt-ledger items.
+- [x] `legal-scheduling-dependency-chain.md`: add the PG-202 availability chain (AvailabilityPolicy → validators →
       availability_hours/closures → calendar.availability + appointments create/reschedule/findNextSlot → page);
       `complete-dependency-chains.md` PG-202 entry marked ✅.
-- [ ] Red-flag tracking on all three surfaces (gh issue with file:line + fix, debt-ledger, findings doc): legacy
+- [x] Red-flag tracking on all three surfaces (gh issue with file:line + fix, debt-ledger, findings doc): legacy
       cross-midnight gap; `appointment_settings` RLS without `WITH CHECK`; `defaultTimezone` default 'UTC' vs ADR-044;
       stale `/calendar/new`, `/calendar/[id]` registry rows; recurring series checked on the first occurrence only;
-      findNextSlot has no UI caller; daily cap best-effort.
-- [ ] Reconciliation tests green: `pnpm --dir apps/web exec vitest run src/app/__tests__/ui-flow-mapping-reconciliation.test.ts src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/sitemap-reconciliation.test.ts src/__tests__/content-audit-schema.test.ts`.
+      findNextSlot has no UI caller; daily cap best-effort. *Verified:* gh #909-#913, debt-ledger
+      `PG-202-*` (5 items), `.specify/sprints/sprint-18/findings/PG-202-findings.md` (F1-F9 fixed, T1-T5 tracked).
+- [x] Reconciliation tests green: `pnpm --dir apps/web exec vitest run src/app/__tests__/ui-flow-mapping-reconciliation.test.ts src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/sitemap-reconciliation.test.ts src/__tests__/content-audit-schema.test.ts`. *Verified:* 29 passed (after keeping the header router count
+      at 69); `check-page-doc-cochange.mjs PG-202` exit 0.
 
 **Validation:** the reconciliation command above + `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202`
 
