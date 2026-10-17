@@ -5,6 +5,7 @@ import { Button } from '@intelliflow/ui';
 import type { DraftError } from '../availability-draft';
 
 export const READ_ONLY_NOTE_ID = 'availability-read-only-note';
+export const SERVER_ERROR_ID = 'availability-server-error';
 
 const UNCONFIGURED_NOTE =
   'Availability has not been saved yet. Until you save, the built-in booking rule applies (07:00-19:00 any day). Saving switches this firm to the availability set here.';
@@ -84,6 +85,7 @@ export function ServerErrorBanner({
   return (
     <div
       ref={ref}
+      id={SERVER_ERROR_ID}
       role="alert"
       tabIndex={-1}
       className={`${ALERT_BOX} flex flex-wrap items-center justify-between gap-3`}

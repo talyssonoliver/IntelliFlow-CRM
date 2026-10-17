@@ -32,6 +32,7 @@ import { BuffersCapCard } from './components/BuffersCapCard';
 import {
   ErrorSummary,
   PageNotes,
+  SERVER_ERROR_ID,
   ServerErrorBanner,
   type ServerError,
 } from './components/AvailabilityBanners';
@@ -123,7 +124,8 @@ export default function AvailabilityContent() {
   const [announcement, setAnnouncement] = useState('');
   const [focusTarget, setFocusTarget] = useState<string | null>(null);
   const closuresRef = useRef<ClosuresListHandle>(null);
-  const focusTitleOnCloseRef = useRef(false);
+  // Where focus goes when the Reset dialog closes (Radix would return it to the Reset button).
+  const focusOnResetCloseRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!focusTarget) return;
@@ -206,6 +208,7 @@ export default function AvailabilityContent() {
     const result = await query.refetch();
     if (result.data) adopt(result.data);
     setServerError(null);
+    setFocusTarget(WEEKLY_HOURS_TITLE_ID);
   };
 
   const confirmReset = async () => {
@@ -214,10 +217,11 @@ export default function AvailabilityContent() {
       const fresh = await resetMutation.mutateAsync();
       adopt(fresh);
       announce(RESET_ANNOUNCEMENT);
-      focusTitleOnCloseRef.current = true;
+      focusOnResetCloseRef.current = WEEKLY_HOURS_TITLE_ID;
       void utils.calendar.availability.get.invalidate();
     } catch (error) {
       setServerError({ message: errorMessage(error), conflict: false });
+      focusOnResetCloseRef.current = SERVER_ERROR_ID;
     }
   };
 
@@ -326,10 +330,11 @@ export default function AvailabilityContent() {
         onConfirm={confirmReset}
         isLoading={resetMutation.isPending}
         onCloseAutoFocus={(event) => {
-          if (!focusTitleOnCloseRef.current) return;
-          focusTitleOnCloseRef.current = false;
+          const target = focusOnResetCloseRef.current;
+          if (!target) return;
+          focusOnResetCloseRef.current = null;
           event.preventDefault();
-          focusById(WEEKLY_HOURS_TITLE_ID);
+          focusById(target);
         }}
       />
     </div>

@@ -12,6 +12,7 @@ import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { AppointmentDetailData } from './types';
 
 const ACTION_ERROR_FALLBACK = 'The action could not be completed. Please try again.';
+const DIALOG_TITLE_ID = 'appointment-dialog-title';
 
 export interface AppointmentDetailProps {
   appointment: AppointmentDetailData;
@@ -92,13 +93,17 @@ export function AppointmentDetail({
 
   useEffect(() => {
     setActionError(null);
-    if (!activeDialog) return;
+  }, [activeDialog]);
+
+  // Escape closes the open dialog, but not while its action is still running.
+  useEffect(() => {
+    if (!activeDialog || isActionLoading) return;
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') setActiveDialog(null);
     };
     document.addEventListener('keydown', closeOnEscape);
     return () => document.removeEventListener('keydown', closeOnEscape);
-  }, [activeDialog]);
+  }, [activeDialog, isActionLoading]);
 
   // The dialog closes only on success; on failure it stays open with the input kept.
   const handleAction = async (action: () => Promise<void>) => {
@@ -580,12 +585,16 @@ export function AppointmentDetail({
             ref={dialogRef}
             open
             aria-modal="true"
+            aria-labelledby={DIALOG_TITLE_ID}
             className="mx-4 w-full max-w-md rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-xl"
           >
             {actionErrorAlert}
             {activeDialog === 'complete' && (
               <>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+                <h3
+                  id={DIALOG_TITLE_ID}
+                  className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4"
+                >
                   Complete Appointment
                 </h3>
                 <label
@@ -622,7 +631,10 @@ export function AppointmentDetail({
 
             {activeDialog === 'cancel' && (
               <>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+                <h3
+                  id={DIALOG_TITLE_ID}
+                  className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4"
+                >
                   Cancel Appointment
                 </h3>
                 <label
@@ -659,7 +671,10 @@ export function AppointmentDetail({
 
             {activeDialog === 'reschedule' && (
               <>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+                <h3
+                  id={DIALOG_TITLE_ID}
+                  className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4"
+                >
                   Reschedule Appointment
                 </h3>
                 <div className="mb-4 space-y-3">
@@ -739,7 +754,10 @@ export function AppointmentDetail({
 
             {activeDialog === 'addAttendee' && (
               <>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+                <h3
+                  id={DIALOG_TITLE_ID}
+                  className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4"
+                >
                   Add Attendee
                 </h3>
                 <input
@@ -772,7 +790,10 @@ export function AppointmentDetail({
 
             {activeDialog === 'linkCase' && (
               <>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">
+                <h3
+                  id={DIALOG_TITLE_ID}
+                  className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4"
+                >
                   Link Case
                 </h3>
                 <input

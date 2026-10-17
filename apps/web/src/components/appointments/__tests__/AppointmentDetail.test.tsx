@@ -195,4 +195,24 @@ describe('AppointmentDetail', () => {
     const message = await screen.findByText('The action could not be completed. Please try again.');
     expect(message.closest('[role="alert"]')).not.toBeNull();
   });
+
+  it('names the open dialog by its title', () => {
+    render(<AppointmentDetail {...defaultProps} />);
+    openReschedule();
+    expect(screen.getByRole('dialog', { name: 'Reschedule Appointment' })).toBeInTheDocument();
+  });
+
+  it('ignores Escape while the dialog action is running', async () => {
+    let finish: () => void = () => {};
+    const onReschedule = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+    render(<AppointmentDetail {...defaultProps} onReschedule={onReschedule} />);
+    openReschedule();
+    const buttons = screen.getAllByRole('button', { name: 'Reschedule' });
+    fireEvent.click(buttons[buttons.length - 1]);
+    await waitFor(() => expect(onReschedule).toHaveBeenCalled());
+    fireEvent.keyDown(document, { key: 'Escape' });
+    expect(screen.getByLabelText('New Start Time')).toBeInTheDocument();
+    finish();
+    await waitFor(() => expect(screen.queryByLabelText('New Start Time')).not.toBeInTheDocument());
+  });
 });

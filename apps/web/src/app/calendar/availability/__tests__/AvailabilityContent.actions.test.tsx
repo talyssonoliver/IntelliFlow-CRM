@@ -210,6 +210,12 @@ describe('Save', () => {
     await waitFor(() => expect(h.refetch).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByLabelText('Buffer before (minutes)')).toHaveValue(30));
     expect(screen.queryByText(/changed by someone else/)).not.toBeInTheDocument();
+    // The focused banner is gone; focus moves to the Weekly hours title, not <body>.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        screen.getByRole('heading', { level: 2, name: 'Weekly hours' })
+      )
+    );
   });
 
   it('reports a FORBIDDEN save with the edit-rights message', async () => {
@@ -265,6 +271,8 @@ describe('Reset', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
     await screen.findByRole('alertdialog');
     fireEvent.click(screen.getByRole('button', { name: 'Reset Availability' }));
-    expect(await screen.findByText('Reset failed')).toBeInTheDocument();
+    const message = await screen.findByText('Reset failed');
+    // Focus lands on the error, not back on the Reset button.
+    await waitFor(() => expect(document.activeElement).toBe(message.closest('[role="alert"]')));
   });
 });
