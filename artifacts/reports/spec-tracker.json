@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-10-13T00:52:57.159Z",
+  "generated_at": "2026-10-17T14:36:08.524Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 527,
-    "completed": 431,
-    "partially_done": 31,
+    "completed": 436,
+    "partially_done": 26,
     "spec_only": 55,
     "uncertain": 10
   },
@@ -238,10 +238,16 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "PG-198",
+      "task_id": "PG-196",
       "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-198 when ready for implementation."
+      "issue": "Attestation confirms completion but CSV shows only 90% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "PG-197",
+      "severity": "MEDIUM",
+      "issue": "Attestation confirms completion but CSV shows only 90% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
       "task_id": "PG-199",
@@ -266,12 +272,6 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-203 when ready for implementation."
-    },
-    {
-      "task_id": "PG-204",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-204 when ready for implementation."
     },
     {
       "task_id": "PG-205",
@@ -6021,7 +6021,8 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-168",
-        "IFC-024"
+        "IFC-024",
+        "PG-201"
       ],
       "real_status": "SPEC_ONLY"
     },
@@ -8479,14 +8480,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-183"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-197",
@@ -8496,14 +8497,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-183"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-198",
@@ -8513,15 +8514,15 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-152",
         "PG-192"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-199",
@@ -8562,18 +8563,18 @@
       "task_id": "PG-201",
       "title": "Module Settings - Scheduled Reports (/analytics/scheduled-reports)",
       "sprint": 18,
-      "spec_path": ".specify/sprints/sprint-18/specifications/PG-201-spec.md",
-      "has_spec": true,
-      "has_plan": true,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-187"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-202",
@@ -8613,18 +8614,18 @@
       "task_id": "PG-204",
       "title": "Module Settings - Case Types (/cases/case-types)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-204-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-190"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-205",
