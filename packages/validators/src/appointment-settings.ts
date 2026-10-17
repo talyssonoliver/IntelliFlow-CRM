@@ -46,7 +46,17 @@ const appointmentSettingsShape = z.object({
 
 export const appointmentSettingsSchema = appointmentSettingsShape.superRefine(durationConsistency);
 
+/**
+ * Buffers and the timezone are edited only on /calendar/availability (PG-202,
+ * owner Q2): the update schema omits them, so an older client that still sends
+ * them has the keys stripped instead of overwriting availability.
+ */
 export const updateAppointmentSettingsSchema = appointmentSettingsShape
+  .omit({
+    defaultBufferBeforeMinutes: true,
+    defaultBufferAfterMinutes: true,
+    defaultTimezone: true,
+  })
   .partial()
   .superRefine(durationConsistency);
 

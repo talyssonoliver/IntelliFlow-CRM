@@ -127,6 +127,7 @@ export * from './case-types';
 
 // Appointment Settings Schemas (PG-189 — wired alongside PG-190 to unblock typecheck)
 export * from './appointment-settings';
+export * from './availability'; // PG-202
 
 // Help Article Schemas (IFC-299)
 export * from './help-article';
