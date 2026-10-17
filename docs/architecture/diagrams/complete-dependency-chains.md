@@ -2489,6 +2489,34 @@ appRouter.cases.getById → caseType {id, name, colorToken}
 Sidebar entry: apps/web/src/components/sidebar/configs/cases.ts:14
 ```
 
+### Availability (PG-202 — enforced at booking, ADR-081)
+
+```
+PG-178 ✅ + PG-189 ✅ ──► PG-202 (Availability)
+
+Domain:  packages/domain/src/legal/appointments/AvailabilityPolicy.ts
+           evaluateAvailability · generateCandidates · localDayBoundsUtc · LEGACY_BOOKING_HOURS
+         packages/domain/src/legal/appointments/availability-roles.ts (AVAILABILITY_ADMIN_ROLES)
+Application: CheckConflictsUseCase.findFirstFreeCandidate (one repository read)
+Validators: packages/validators/src/availability.ts (+ appointment-settings.ts: update omits buffers/timezone)
+
+Prisma models (tenant-scoped, RLS on):
+  AvailabilityHour     @@map "availability_hours"     (weekday, startMinute, endMinute; firm-zone local minutes)
+  AvailabilityClosure  @@map "availability_closures"  (startDate, endDate DATE; reason)
+  AppointmentSettings  + maxDailyBookings, availabilityConfiguredAt (NULL = legacy rules)
+
+Migration: 20261017130000_availability/migration.sql (Class A, manual prod apply BEFORE the API)
+
+appRouter.calendar.availability: get / update / resetToDefaults
+appRouter.appointments.create / reschedule → assertAppointmentWithinAvailability (availability-enforcement.ts)
+appRouter.appointments.findNextSlot → findNextSlotWithinAvailability (configured tenants; API-only)
+
+/calendar/availability/page.tsx → AvailabilityContent → trpc.calendar.availability.*
+/calendar/calendar-settings → links to Availability (no longer edits buffers/timezone)
+/appointments/new → AppointmentForm (firm default buffers prefill; server errors shown)
+Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:15-17
+```
+
 ---
 
 ## Governance Quality Report Pages Chain (PG-176)

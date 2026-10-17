@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                                  |
-| ------------- | ------------------------------------------------------ |
-| Feature Name  | Module Settings Pages                                  |
-| Status        | Active                                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-204 |
-| Created       | 2026-03-11                                             |
-| Last Updated  | 2026-10-13                                             |
-| Author        | Spec Session (PG-178)                                  |
+| Field         | Value                                                          |
+| ------------- | -------------------------------------------------------------- |
+| Feature Name  | Module Settings Pages                                          |
+| Status        | Active                                                         |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-202, PG-204 |
+| Created       | 2026-03-11                                                     |
+| Last Updated  | 2026-10-17                                                     |
+| Author        | Spec Session (PG-178)                                          |
 
 ## Problem Statement
 
@@ -914,3 +914,58 @@ Red flags tracked:
 - fixed on main by PG-204: #872 (the `cases.create` assignee default; the issue
   is still open on GitHub);
 - open: #856, #857, #883.
+
+## PG-202 Addendum: Availability (2026-10-17)
+
+Owner ruling (2026-10-17,
+`.specify/sprints/sprint-18/context/PG-202/PG-202-owner-ruling.md`): Q1 =
+firm-wide; Q2 = reuse the `AppointmentSettings` buffers and timezone, editing
+moves to Availability; Q3 = enforce at appointment create, reschedule and
+findNextSlot (coordinator cleared the overlap with the appointments lane); Q4 =
+all-day closures; Q5 = ADMIN + MANAGER edit; Q6 = an appointment fits one day;
+Q7 = the New Appointment form starts from the firm buffers. Spec:
+`.specify/sprints/sprint-18/specifications/PG-202-spec.md`. ADR-081.
+
+### Additional User Stories
+
+- **US-AV1 (Hours)**: As a firm admin or manager, I want to set our weekly
+  working hours per weekday (one or more ranges, in the firm timezone), so that
+  appointments are only booked when we are open.
+- **US-AV2 (Closures)**: As a firm admin or manager, I want to record all-day
+  closure date ranges with an optional reason, so that nobody books us on
+  holidays or office closures.
+- **US-AV3 (Limits)**: As a firm admin or manager, I want an optional maximum
+  number of bookings per day and default buffers, so that the calendar is not
+  overloaded and new appointments start with our usual buffer times.
+- **US-AV4 (Enforcement)**: As a user booking or rescheduling an appointment, I
+  want a clear message when the time is outside the firm's availability, so that
+  I can pick a valid time.
+
+### Additional Acceptance Criteria
+
+AC-001 to AC-027 are defined in the spec. In summary:
+
+- `/calendar/availability` follows the playbook (PageHeader, 12-column bento,
+  canonical EmptyState, playbook buttons, closures list `openCreate` via
+  `forwardRef`); read-only for non-admins.
+- Weekly hours stored as local minutes per weekday in the firm timezone (1..6
+  ranges, no overlaps); closures as inclusive `DATE` ranges (≤ 200, ≤ 366 days);
+  optional daily cap 1..500; buffers 0..240; named DB CHECKs, RLS.
+- Configured firms: create and reschedule reject bookings outside the start
+  day's hours, on closures, past local midnight or over the daily cap;
+  findNextSlot only offers valid slots. Firms that never saved availability keep
+  the legacy rules unchanged.
+- `/calendar/calendar-settings` stops editing buffers and timezone and links to
+  Availability.
+- Cross-tenant negative tests; WCAG 2.1 AA (axe in component tests); Lighthouse
+  ≥ 90 (NEEDS_HUMAN without credentials).
+
+### Boolean toggles (playbook §8)
+
+No persisted Boolean toggles. The weekday open switch and the "Limit bookings
+per day" switch are draft-only controls mapped to hour rows and
+`maxDailyBookings`, both enforced at booking (category 1). No AI toggles; no
+colour tokens.
+
+**Prisma migration** `20261017130000_availability` (Class A) must be applied to
+production before this ships.
