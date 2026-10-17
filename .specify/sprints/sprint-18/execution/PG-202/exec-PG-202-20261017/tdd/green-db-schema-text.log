@@ -1,0 +1,19 @@
+date: 2026-10-17T21:44:08Z
+head: de2a67b9392ff2447391f1d7a0a6b34856d6f83a (+ schema restored to main text + PG-202 changes)
+cmd: pnpm --filter @intelliflow/db test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\db
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/db
+
+
+ Test Files  15 passed | 1 skipped (16)
+      Tests  224 passed | 14 skipped (238)
+   Start at  22:44:09
+   Duration  2.85s (transform 1.93s, setup 0ms, import 3.52s, tests 500ms, environment 2ms)
+
+exit: 0

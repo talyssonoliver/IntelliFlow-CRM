@@ -29,6 +29,11 @@ all three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
 | F18 | a11y review F4: a failed Reset returned focus to the Reset button instead of the error. | `AvailabilityContent.tsx` `confirmReset` | `onCloseAutoFocus` focuses the error banner; asserted in the failed-reset test |
 | F19 | a11y review F8: Escape closed the detail dialog while its action was still running. | `AppointmentDetail.tsx` Escape listener | Listener off while `isActionLoading`; test |
 
+| F20 | STOA-Domain: `findNextSlot` returned "no slot" for a configured firm with an invalid stored timezone, where create and reschedule return PRECONDITION_FAILED. | `availability-enforcement.ts:225` | Same PRECONDITION_FAILED and message (exported `INVALID_TIMEZONE_MESSAGE`); RED/GREEN `*-api-nextslot-timezone.log` |
+| F21 | STOA-Foundation: a new `console.log` in the configured `findNextSlot` branch. | `appointments.router.ts` | Removed |
+| F22 | STOA-Foundation/Quality: `debt-ledger.yaml` and `codex-review-waivers.yaml` flipped LF to CRLF (whole-file diff), and the plan and coverage baseline were committed as CRLF. | Python text-mode writes on Windows | Converted back to LF. `schema.prisma`: see F23 |
+| F23 | `/code-review` coverage pass: the db suite's `field-encryption.test.ts` failed because `prisma format` had re-aligned every model in `schema.prisma` (that test pins the ChainVersion lines). The Validation Matrix DB row only built and typechecked, so it missed this. | `packages/db/src/__tests__/field-encryption.test.ts:39-57` | `schema.prisma` rebuilt as main's text plus the PG-202 changes (58/21 lines); db suite 224 passed; a db test row was added to the matrix. RED/GREEN `*-db-schema-text.log` |
+
 ## Tracked (out of scope)
 
 | # | Finding | gh issue | Debt ledger |
@@ -40,6 +45,7 @@ all three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
 | T5 | Known limits accepted in ADR-081: recurring series checked on the first occurrence only; `findNextSlot` has no UI caller; the daily cap is best-effort (Codex HIGH, waived in `tools/audit/codex-review-waivers.yaml` with this evidence, author marked pending owner confirmation). The legacy `CheckConflictsUseCase.findNextSlot` (pre-existing, unconfigured tenants) has the same existing-buffer read gap fixed in F13 for the new path. | #913 | `PG-202-AVAILABILITY-KNOWN-LIMITS-001` |
 | T6 | a11y review F5/F6: unchecked Switch track 1.24:1 (1.4.11) and white on primary 4.15:1. Shared tokens, pre-existing. | #871 (comment added) | (owned by #871) |
 | T7 | a11y review F7 (minor): after a failed Save the validation summary re-announces its count on each edit; F12: axe in jsdom skips colour contrast and does not cover the detail dialog or the pointer. | (recorded here; minor) | (none) |
+| T8 | STOA-Security: `findNextSlotSchema` has no bound on `attendeeId` and no maximum `durationMinutes` (pre-existing). | #914 | `PG-202-FINDNEXTSLOT-INPUT-BOUNDS-001` |
 
 ## Notes
 

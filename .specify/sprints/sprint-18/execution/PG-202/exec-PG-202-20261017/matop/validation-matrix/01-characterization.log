@@ -1,5 +1,5 @@
-date: 2026-10-17T20:37:49Z
-head: 1cd895b72447d31a6054a3f471775da0e573adbf
+date: 2026-10-17T21:50:58Z
+head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
 cmd: pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
@@ -7,7 +7,7 @@ cmd: pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointment
 
  Test Files  1 passed (1)
       Tests  9 passed (9)
-   Start at  21:37:50
-   Duration  4.21s (transform 1.36s, setup 579ms, import 3.35s, tests 107ms, environment 0ms)
+   Start at  22:50:59
+   Duration  4.53s (transform 1.97s, setup 716ms, import 3.43s, tests 131ms, environment 0ms)
 
 exit: 0

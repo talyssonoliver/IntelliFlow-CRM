@@ -1,6 +1,6 @@
 # PG-202 checkpoint (resume point for a fresh lane)
 
-Last rewritten: 2026-10-17T21:05:33Z · branch `feat/pg-202-availability` · HEAD `053c6874c` · worktree
+Last rewritten: 2026-10-17T21:22Z · branch `feat/pg-202-availability` · HEAD `053c6874c` · worktree
 `C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202` · not pushed, no PR yet.
 
 ## Where the pipeline is
@@ -52,36 +52,49 @@ a11y F1-F4, F8 fixed `015016c13`; F5/F6 on #871; F7/F12 minor, recorded.
   as benchmark churn, before pre-ship/push.
 - `.specify/.../matop/gate-selection.json` (written 21:0xZ) and this checkpoint.
 
-## Decisions since the last commit
+## Owner rulings (lane modal, 2026-10-17 ~21:10Z)
 
-- None from the owner. Lane decision: codex waiver author recorded as pending owner confirmation, not his handle.
+- Daily-cap codex waiver: **approved**. The author is now `talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)`, commit
+  "chore(pg-202): owner-approved daily-cap waiver". f1 is closed.
+- `artifacts/benchmarks/IFC-310-merge.json`: **commit as churn**. Done ("chore(pg-202): refresh merge benchmark timings").
+- Lighthouse, in his words: "We really need to automate it, but we should also be aware that we are using free quotas and no
+  users yet, so that could burn our own resources without a chance to get the real customers." Applied as: Path A local
+  attempt (no quota) + NEEDS_HUMAN for PG-202; the automation route (local Supabase auth) is recorded on gh #527.
+
+## STOA verdicts (sub-agents, 21:06-21:09Z, HEAD 053c6874c)
+
+Domain PASS, Security PASS (3 LOW), Foundation WARN, Quality WARN. Responses (uncommitted, see below):
+- Line-ending flips (debt-ledger, waivers LF->CRLF; plan and coverage baseline CRLF): converted to LF. The schema.prisma diff
+  is `prisma format` re-alignment, 58/21 real lines with `git diff -w`; disclose in the PR body.
+- New console.log in the configured findNextSlot branch: removed.
+- findNextSlot with an invalid stored timezone: now PRECONDITION_FAILED (RED/GREEN `tdd/*-api-nextslot-timezone.log`).
+  Both runs overlapped the /code-review coverage step (one-test-process rule broken; disclose).
+- findNextSlotSchema bounds (pre-existing): gh #914 + debt-ledger PG-202-FINDNEXTSLOT-INPUT-BOUNDS-001 + findings T8.
+- Stale web gates and summary.tsv row 18: rerun the WHOLE matrix at the final HEAD (matrix.sh fixed: lcov path rewrite,
+  defaults + Buffer coverage).
+- Web branch coverage 81-88% on new files: meets the apps/web 80% branch threshold; diff coverage 95.8%; disclose.
+
+## Uncommitted now
+
+apps/api/src/modules/calendar/availability-enforcement.ts, its test, apps/api/src/modules/legal/appointments.router.ts,
+packages/domain/src/legal/appointments/AvailabilityPolicy.ts (export), artifacts/metrics/debt-ledger.yaml (LF + #914),
+tools/audit/codex-review-waivers.yaml (LF), the plan (LF), artifacts/coverage/PG-202-before.json (LF), the findings doc,
+artifacts/reports/plan-lint-report.json (churn), this checkpoint, new tdd logs.
 
 ## Running now
 
-- `/code-review` full mode (`pwsh scripts/code-review-analysis.ps1 -Sprint 18 -TaskId PG-202 -LinkToGates -Full`).
-- STOA sub-agents (read-only, no tests): `pg202-stoa-foundation`, `-domain`, `-security`, `-quality`, writing
-  `matop/stoa-verdicts/{Foundation,Domain,Security,Quality}.json`.
+- `/code-review` full mode (in its coverage step at ~21:20Z). Commit and the matrix rerun wait for it.
 
 ## Exact next action
 
-1. Read the `/code-review` results; run `/sonarqube-fix` for any new finding on PG-202 files.
-2. Collect the four STOA verdicts; fix any FAIL; write `matop/stoa-aggregate.json`.
-3. First-load JS of `/calendar/availability` vs `/cases/case-types` from `matop/validation-matrix/11-build.log` (NF-003).
-4. Lighthouse Path A attempt (`next start -p 3400`, desktop preset) → expect the login redirect → NEEDS_HUMAN with
-   `artifacts/lighthouse/PG-202/waiver-evidence.md` (no `LHCI_TEST_*` credentials; prod-only Supabase users).
-5. Step 21: WCAG/VPAT rows, CSV artifacts + `configs/calendar.ts` prerequisite fix + splits, attestation (+ phrase and
-   provenance checks), `matop/pr-body.md`, `/compliance-check`, `/exec-attestation`, exec-metrics end,
-   `node tools/scripts/generate-final-report.mjs PG-202 --promise "<promise>"`.
-6. SHIP: re-merge origin/main if moved; pre-ship once via
-   `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-pre-ship -- node scripts/pre-ship.mjs`
-   (must end `pre-ship: PASS`); `git push -u origin feat/pg-202-availability`; `bash C:/Users/talys/ops/bin/ifc-pr-create.sh
-   --title "feat(<scope>): <subject> (PG-202)" --body-file <pr-body>`; SendMessage Aurora READY (PR#, head SHA,
-   refs/preship, attestation path, migration, NEEDS_HUMAN). Never merge.
+1. When /code-review finishes: read it; `/sonarqube-fix` for new findings on PG-202 files.
+2. Commit the STOA fixes (code) and then the evidence/LF fixes.
+3. Rerun the full matrix (scratchpad matrix.sh) at the final HEAD; update the STOA verdicts by messaging the Foundation and
+   Quality agents with the new logs.
+4. Then: first-load JS (NF-003), Lighthouse Path A + NEEDS_HUMAN, Step 21, SHIP (see the earlier list).
 
 ## NEEDS_HUMAN so far
 
 - Production apply of migration `20261017130000_availability` before the API ships; Class A gates 4 (staging), 7
   (snapshot id), 10-prod.
-- Lighthouse authenticated run (expected).
-- Owner confirmation of the daily-cap codex waiver (f1).
-- `artifacts/benchmarks/IFC-310-merge.json` stray rewrite (discard or commit).
+- Lighthouse authenticated run: no-quota route blocked by gh #527 (owner ruling above).

@@ -1,6 +1,6 @@
-date: 2026-10-17T20:56:55Z
-head: 1cd895b72447d31a6054a3f471775da0e573adbf
-cmd: pnpm --dir packages/domain exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/domain --coverage.include=src/legal/appointments/AvailabilityPolicy.ts --coverage.include=src/legal/appointments/availability-roles.ts src/legal/appointments/__tests__
+date: 2026-10-17T22:08:08Z
+head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
+cmd: pnpm --dir packages/domain exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/domain --coverage.include=src/legal/appointments/AvailabilityPolicy.ts --coverage.include=src/legal/appointments/availability-roles.ts --coverage.include=src/legal/appointments/Buffer.ts src/legal/appointments/__tests__
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain
       Coverage enabled with v8
@@ -8,21 +8,21 @@ cmd: pnpm --dir packages/domain exec vitest run --coverage.enabled --coverage.re
 
  Test Files  11 passed (11)
       Tests  364 passed (364)
-   Start at  21:56:57
-   Duration  1.46s (transform 630ms, setup 0ms, import 1.11s, tests 734ms, environment 1ms)
+   Start at  23:08:10
+   Duration  1.14s (transform 572ms, setup 0ms, import 919ms, tests 558ms, environment 1ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   99.47 |     96.9 |     100 |     100 |                   
- ...ilityPolicy.ts |   99.46 |    96.84 |     100 |     100 | 329,425,467       
+All files          |   99.55 |    97.41 |     100 |     100 |                   
+ ...ilityPolicy.ts |   99.46 |    96.84 |     100 |     100 | 330,426,468       
 -------------------|---------|----------|---------|---------|-------------------
 
 =============================== Coverage summary ===============================
-Statements   : 99.47% ( 190/191 )
-Branches     : 96.9% ( 94/97 )
-Functions    : 100% ( 39/39 )
-Lines        : 100% ( 162/162 )
+Statements   : 99.55% ( 226/227 )
+Branches     : 97.41% ( 113/116 )
+Functions    : 100% ( 57/57 )
+Lines        : 100% ( 198/198 )
 ================================================================================
 exit: 0

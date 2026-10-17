@@ -1,5 +1,5 @@
-date: 2026-10-17T20:57:15Z
-head: 1cd895b72447d31a6054a3f471775da0e573adbf
+date: 2026-10-17T22:08:22Z
+head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
 cmd: pnpm --dir apps/web exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/web --coverage.include='src/app/calendar/availability/**/*.{ts,tsx}' --coverage.include='src/app/calendar/calendar-settings/**/*.{ts,tsx}' --coverage.include=src/app/appointments/new/page.tsx --coverage.include=src/components/appointments/AppointmentForm.tsx --coverage.include=src/components/appointments/AppointmentDetail.tsx --coverage.include=src/components/settings/ModuleSettingsLayout.tsx --coverage.include=src/components/settings/TimezoneSelector.tsx src/app/calendar src/components/appointments/__tests__ src/app/appointments/new src/components/settings/__tests__/ModuleSettingsLayout.test.tsx src/components/settings/__tests__/TimezoneSelector.test.tsx
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
@@ -8,8 +8,8 @@ cmd: pnpm --dir apps/web exec vitest run --coverage.enabled --coverage.reporter=
 
  Test Files  25 passed (25)
       Tests  311 passed (311)
-   Start at  21:57:17
-   Duration  43.98s (transform 5.75s, setup 13.56s, import 22.64s, tests 55.78s, environment 33.88s)
+   Start at  23:08:23
+   Duration  24.60s (transform 4.47s, setup 9.67s, import 16.51s, tests 30.45s, environment 23.10s)
 
  % Coverage report from istanbul
 -------------------|---------|----------|---------|---------|-------------------
