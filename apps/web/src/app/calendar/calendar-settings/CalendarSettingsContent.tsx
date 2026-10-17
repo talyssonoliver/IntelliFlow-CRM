@@ -9,28 +9,30 @@ import {
   type ModuleSettingsTab,
 } from '@/components/settings/ModuleSettingsLayout';
 import { DurationDefaultsTab, type DurationSettings } from './components/DurationDefaultsTab';
-import { BufferRemindersTab, type BufferSettings } from './components/BufferRemindersTab';
+import { BufferRemindersTab, type ReminderSettings } from './components/BufferRemindersTab';
 import {
   CalendarIntegrationTab,
   type CalendarIntegrationSettings,
 } from './components/CalendarIntegrationTab';
 
+// Buffers and the timezone are edited on the Availability page (PG-202, owner Q2); they are
+// shown here read-only and never sent from this page.
 interface LocalSettings {
   duration: DurationSettings;
-  buffer: BufferSettings;
+  buffer: ReminderSettings;
   calendar: CalendarIntegrationSettings;
 }
+
+const RESET_DESCRIPTION =
+  'Resets durations, reminder and primary calendar. Buffers and timezone are managed in Availability and are not changed.';
 
 function mapSettings(s: {
   defaultDurationMinutes: number;
   minDurationMinutes: number;
   maxDurationMinutes: number;
-  defaultBufferBeforeMinutes: number;
-  defaultBufferAfterMinutes: number;
   defaultReminderMinutes: number | null;
   primaryCalendarId: string | null;
   syncExternalCalendars: boolean;
-  defaultTimezone: string;
 }): LocalSettings {
   return {
     duration: {
@@ -39,14 +41,11 @@ function mapSettings(s: {
       maxDurationMinutes: s.maxDurationMinutes,
     },
     buffer: {
-      defaultBufferBeforeMinutes: s.defaultBufferBeforeMinutes,
-      defaultBufferAfterMinutes: s.defaultBufferAfterMinutes,
       defaultReminderMinutes: s.defaultReminderMinutes,
     },
     calendar: {
       primaryCalendarId: s.primaryCalendarId,
       syncExternalCalendars: s.syncExternalCalendars,
-      defaultTimezone: s.defaultTimezone,
     },
   };
 }
@@ -58,7 +57,6 @@ function normalize(s: LocalSettings): string {
   return JSON.stringify({
     duration: s.duration,
     buffer: {
-      ...s.buffer,
       defaultReminderMinutes: s.buffer.defaultReminderMinutes ?? null,
     },
     calendar: s.calendar,
@@ -146,6 +144,11 @@ export default function CalendarSettingsContent() {
 
   if (authLoading || !isAuthenticated) return null;
 
+  const firm = settingsQuery.data;
+  const firmBuffers = firm
+    ? { before: firm.defaultBufferBeforeMinutes, after: firm.defaultBufferAfterMinutes }
+    : null;
+
   const availableCalendars = (calendarsQuery.data ?? []).map((c: { id: string; name: string }) => ({
     id: c.id,
     name: c.name,
@@ -166,13 +169,14 @@ export default function CalendarSettingsContent() {
     },
     {
       value: 'buffer',
-      label: 'Buffer & Reminders',
+      label: 'Reminders',
       content: localSettings ? (
         <BufferRemindersTab
           settings={localSettings.buffer}
           onSettingsChange={(buffer) =>
             setLocalSettings((prev) => (prev ? { ...prev, buffer } : null))
           }
+          firmBuffers={firmBuffers}
         />
       ) : null,
     },
@@ -186,6 +190,7 @@ export default function CalendarSettingsContent() {
             setLocalSettings((prev) => (prev ? { ...prev, calendar } : null))
           }
           availableCalendars={availableCalendars}
+          firmTimezone={firm?.defaultTimezone ?? null}
         />
       ) : null,
     },
@@ -194,11 +199,12 @@ export default function CalendarSettingsContent() {
   return (
     <ModuleSettingsLayout
       title="Appointment Settings"
-      description="Configure default durations, buffers, reminders, and calendar integrations."
+      description="Configure default durations, reminders, and calendar integrations."
       breadcrumbs={[{ label: 'Calendar', href: '/calendar' }, { label: 'Settings' }]}
       tabs={tabs}
       onSave={handleSave}
       onReset={handleReset}
+      resetDescription={RESET_DESCRIPTION}
       isSaving={updateMutation.isPending || resetMutation.isPending}
       isDirty={isDirty}
       lastUpdated={settingsQuery.data?.updatedAt ? new Date(settingsQuery.data.updatedAt) : null}

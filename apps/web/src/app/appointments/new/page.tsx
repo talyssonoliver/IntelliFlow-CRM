@@ -39,6 +39,16 @@ export default function NewAppointmentPage() {
 
   const utils = api.useUtils();
 
+  // The form reads its buffers once on mount, so it renders after the firm defaults settle
+  // (PG-202 owner Q7). If they cannot be read, the form starts without them.
+  const settingsQuery = api.appointmentSettings.get.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const firm = settingsQuery.data;
+  const defaultBuffers = firm
+    ? { before: firm.defaultBufferBeforeMinutes, after: firm.defaultBufferAfterMinutes }
+    : undefined;
+
   const createMutation = api.appointments.create.useMutation({
     onSuccess: () => {
       router.push('/appointments');
@@ -66,7 +76,7 @@ export default function NewAppointmentPage() {
     router.push('/appointments');
   }, [router]);
 
-  if (authLoading || !isAuthenticated) {
+  if (authLoading || !isAuthenticated || settingsQuery.isLoading) {
     return (
       <>
         <Skeleton className="h-6 w-64 mb-4" />
@@ -89,6 +99,7 @@ export default function NewAppointmentPage() {
       <AppointmentForm
         defaultStartTime={defaultStartTime}
         defaultEndTime={defaultEndTime}
+        defaultBuffers={defaultBuffers}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={createMutation.isPending}

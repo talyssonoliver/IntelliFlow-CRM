@@ -139,4 +139,60 @@ describe('AppointmentDetail', () => {
     const threeTexts = screen.getAllByText(/3/);
     expect(threeTexts.length).toBeGreaterThanOrEqual(1);
   });
+
+  // ── PG-202: a rejected reschedule stays visible ─────────────────────────
+
+  function openReschedule() {
+    fireEvent.click(screen.getByRole('button', { name: /Reschedule/ }));
+    fireEvent.change(screen.getByLabelText('New Start Time'), {
+      target: { value: '2026-04-18T10:00' },
+    });
+    fireEvent.change(screen.getByLabelText('New End Time'), {
+      target: { value: '2026-04-18T11:00' },
+    });
+  }
+
+  it('keeps the reschedule dialog open and shows the server message when rejected', async () => {
+    const onReschedule = vi
+      .fn()
+      .mockRejectedValue(new Error('The firm is closed on Saturdays (Europe/London).'));
+    render(<AppointmentDetail {...defaultProps} onReschedule={onReschedule} />);
+    openReschedule();
+    const buttons = screen.getAllByRole('button', { name: 'Reschedule' });
+    fireEvent.click(buttons[buttons.length - 1]);
+    const message = await screen.findByText('The firm is closed on Saturdays (Europe/London).');
+    expect(message.closest('[role="alert"]')).not.toBeNull();
+    expect(screen.getByLabelText('New Start Time')).toHaveValue('2026-04-18T10:00');
+  });
+
+  it('closes the reschedule dialog on success', async () => {
+    const onReschedule = vi.fn().mockResolvedValue(undefined);
+    render(<AppointmentDetail {...defaultProps} onReschedule={onReschedule} />);
+    openReschedule();
+    const buttons = screen.getAllByRole('button', { name: 'Reschedule' });
+    fireEvent.click(buttons[buttons.length - 1]);
+    await waitFor(() => expect(onReschedule).toHaveBeenCalled());
+    await waitFor(() => expect(screen.queryByLabelText('New Start Time')).not.toBeInTheDocument());
+  });
+
+  it('closes an open dialog on Escape', async () => {
+    render(<AppointmentDetail {...defaultProps} />);
+    openReschedule();
+    fireEvent.keyDown(document, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByLabelText('New Start Time')).not.toBeInTheDocument());
+  });
+
+  it('shows a failed quick action in an alert, with a fallback for a non-Error rejection', async () => {
+    const onConfirm = vi.fn().mockRejectedValue('nope');
+    render(
+      <AppointmentDetail
+        {...defaultProps}
+        appointment={{ ...mockAppointmentDetail, status: 'SCHEDULED' }}
+        onConfirm={onConfirm}
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: /Confirm/ }));
+    const message = await screen.findByText('The action could not be completed. Please try again.');
+    expect(message.closest('[role="alert"]')).not.toBeNull();
+  });
 });

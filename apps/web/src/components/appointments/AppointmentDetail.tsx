@@ -11,6 +11,8 @@ import {
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 import type { AppointmentDetailData } from './types';
 
+const ACTION_ERROR_FALLBACK = 'The action could not be completed. Please try again.';
+
 export interface AppointmentDetailProps {
   appointment: AppointmentDetailData;
   isLoading: boolean;
@@ -74,6 +76,8 @@ export function AppointmentDetail({
   const [searchInput, setSearchInput] = useState('');
   const [noteDraft, setNoteDraft] = useState(appointment.notes ?? '');
   const [isActionLoading, setIsActionLoading] = useState(false);
+  // A rejected action (e.g. a reschedule outside firm availability, PG-202) stays visible.
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const dialogRef = useFocusTrap<HTMLDialogElement>(!!activeDialog);
 
@@ -86,16 +90,41 @@ export function AppointmentDetail({
     setNoteDraft(appointment.notes ?? '');
   }, [appointment.id, appointment.notes]);
 
+  useEffect(() => {
+    setActionError(null);
+    if (!activeDialog) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setActiveDialog(null);
+    };
+    document.addEventListener('keydown', closeOnEscape);
+    return () => document.removeEventListener('keydown', closeOnEscape);
+  }, [activeDialog]);
+
+  // The dialog closes only on success; on failure it stays open with the input kept.
   const handleAction = async (action: () => Promise<void>) => {
     setIsActionLoading(true);
+    setActionError(null);
     try {
       await action();
-    } finally {
-      setIsActionLoading(false);
       setActiveDialog(null);
       setDialogInput('');
+    } catch (error) {
+      setActionError(
+        error instanceof Error && error.message ? error.message : ACTION_ERROR_FALLBACK
+      );
+    } finally {
+      setIsActionLoading(false);
     }
   };
+
+  const actionErrorAlert = actionError ? (
+    <div
+      role="alert"
+      className="mb-4 rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+    >
+      {actionError}
+    </div>
+  ) : null;
 
   if (isLoading) {
     return (
@@ -429,6 +458,7 @@ export function AppointmentDetail({
             <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-4">
               Quick Actions
             </h3>
+            {!activeDialog && actionErrorAlert}
 
             {!isTerminal && (
               <div className="space-y-3">
@@ -545,19 +575,14 @@ export function AppointmentDetail({
       </div>
 
       {activeDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-          aria-hidden="true"
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') setActiveDialog(null);
-          }}
-        >
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <dialog
             ref={dialogRef}
             open
             aria-modal="true"
             className="mx-4 w-full max-w-md rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-6 shadow-xl"
           >
+            {actionErrorAlert}
             {activeDialog === 'complete' && (
               <>
                 <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-4">

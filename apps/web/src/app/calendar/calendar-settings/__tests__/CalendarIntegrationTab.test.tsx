@@ -37,7 +37,6 @@ const mockCalendars = [
 const defaultSettings: CalendarIntegrationSettings = {
   primaryCalendarId: null,
   syncExternalCalendars: false,
-  defaultTimezone: 'UTC',
 };
 
 describe('CalendarIntegrationTab', () => {
@@ -54,6 +53,7 @@ describe('CalendarIntegrationTab', () => {
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={mockCalendars}
+        firmTimezone="Europe/London"
       />
     );
     expect(screen.getByText('Calendar Integration')).toBeInTheDocument();
@@ -65,6 +65,7 @@ describe('CalendarIntegrationTab', () => {
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={mockCalendars}
+        firmTimezone="Europe/London"
       />
     );
     expect(screen.getByRole('switch')).toBeInTheDocument();
@@ -76,6 +77,7 @@ describe('CalendarIntegrationTab', () => {
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={mockCalendars}
+        firmTimezone="Europe/London"
       />
     );
     expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'false');
@@ -87,6 +89,7 @@ describe('CalendarIntegrationTab', () => {
         settings={{ ...defaultSettings, syncExternalCalendars: true }}
         onSettingsChange={onSettingsChange}
         availableCalendars={mockCalendars}
+        firmTimezone="Europe/London"
       />
     );
     expect(screen.getByRole('switch')).toHaveAttribute('aria-checked', 'true');
@@ -98,6 +101,7 @@ describe('CalendarIntegrationTab', () => {
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={mockCalendars}
+        firmTimezone="Europe/London"
       />
     );
     expect(screen.getByText('Work Calendar')).toBeInTheDocument();
@@ -110,20 +114,23 @@ describe('CalendarIntegrationTab', () => {
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={[]}
+        firmTimezone="Europe/London"
       />
     );
     expect(screen.getByText(/no calendars/i)).toBeInTheDocument();
   });
 
-  it('renders timezone field', () => {
+  it('shows the firm timezone as text, not as an editable field (PG-202)', () => {
     render(
       <CalendarIntegrationTab
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={mockCalendars}
+        firmTimezone="Europe/London"
       />
     );
-    expect(screen.getByText('UTC')).toBeInTheDocument();
+    expect(screen.getByText(/Firm timezone: Europe\/London/)).toBeInTheDocument();
+    expect(screen.queryByText('Default Timezone')).not.toBeInTheDocument();
   });
 
   it('toggling sync calls onSettingsChange', () => {
@@ -132,6 +139,7 @@ describe('CalendarIntegrationTab', () => {
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={mockCalendars}
+        firmTimezone="Europe/London"
       />
     );
     fireEvent.click(screen.getByRole('switch'));
@@ -139,38 +147,35 @@ describe('CalendarIntegrationTab', () => {
     expect(onSettingsChange.mock.calls[0][0].syncExternalCalendars).toBe(true);
   });
 
-  // ── Editable timezone Select (PG-189 AC-007) ─────────────
+  // ── Timezone moved to Availability (PG-202, owner Q2) ────
 
-  it('renders an editable timezone Select populated with options', () => {
-    render(
-      <CalendarIntegrationTab
-        settings={defaultSettings}
-        onSettingsChange={onSettingsChange}
-        availableCalendars={mockCalendars}
-      />
-    );
-    // The Label is rendered for 'defaultTimezone' — its native <select> must exist
-    const tzLabel = screen.getByText('Default Timezone');
-    expect(tzLabel).toBeInTheDocument();
-    // Native selects render as comboboxes. The primary-calendar select also
-    // uses the same mock, so we assert on >=1 and that at least one option is UTC.
-    expect(screen.getAllByRole('combobox').length).toBeGreaterThanOrEqual(1);
-    expect(screen.getAllByRole('option').some((o) => o.textContent === 'UTC')).toBe(true);
-  });
-
-  it('emits onSettingsChange with the new timezone when user selects', () => {
+  it('links to Availability for working hours, buffers and timezone', () => {
     render(
       <CalendarIntegrationTab
         settings={defaultSettings}
         onSettingsChange={onSettingsChange}
         availableCalendars={[]}
+        firmTimezone={null}
       />
     );
-    // With availableCalendars=[], only ONE <select> renders (the timezone one).
-    const combobox = screen.getByRole('combobox');
-    fireEvent.change(combobox, { target: { value: 'America/New_York' } });
-    expect(onSettingsChange).toHaveBeenCalledWith(
-      expect.objectContaining({ defaultTimezone: 'America/New_York' })
+    const link = screen.getByRole('link', {
+      name: 'Manage working hours, buffers and timezone in Availability',
+    });
+    expect(link).toHaveAttribute('href', '/calendar/availability');
+    // Only the primary-calendar select could render a combobox, and with no calendars there is none.
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByText(/Firm timezone:/)).not.toBeInTheDocument();
+  });
+
+  it('keeps exactly one switch (sync) on the tab', () => {
+    render(
+      <CalendarIntegrationTab
+        settings={defaultSettings}
+        onSettingsChange={onSettingsChange}
+        availableCalendars={mockCalendars}
+        firmTimezone="UTC"
+      />
     );
+    expect(screen.getAllByRole('switch')).toHaveLength(1);
   });
 });
