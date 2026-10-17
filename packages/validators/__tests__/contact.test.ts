@@ -775,4 +775,21 @@ describe('Contact Validators', () => {
       expect(contactQuerySchema.safeParse({ contactType: 'Not A Key' }).success).toBe(false);
     });
   });
+
+  describe('clearing the contact type (PG-205)', () => {
+    it('updateContactSchema accepts null to clear the type; create does not', () => {
+      const id = '123e4567-e89b-12d3-a456-426614174000';
+      const update = updateContactSchema.safeParse({ id, contactType: null });
+      expect(update.success).toBe(true);
+      expect(update.data?.contactType).toBeNull();
+      expect(
+        createContactSchema.safeParse({
+          email: 'type@example.com',
+          firstName: 'Type',
+          lastName: 'Check',
+          contactType: null,
+        }).success
+      ).toBe(false);
+    });
+  });
 });

@@ -358,7 +358,8 @@ export class Contact extends AggregateRoot<ContactId> {
       zipCode: string;
       company: string;
       linkedInUrl: string;
-      contactType: ContactTypeKey;
+      /** A type key, or null to remove the contact's type (PG-205). */
+      contactType: ContactTypeKey | null;
       tags: string[];
       contactNotes: string;
     }>,
@@ -366,11 +367,19 @@ export class Contact extends AggregateRoot<ContactId> {
   ): Result<void, DomainError> {
     const updatedFields: string[] = [];
 
-    if (updates.contactType !== undefined && !isValidContactTypeKey(updates.contactType)) {
+    const { contactType, ...scalarUpdates } = updates;
+    if (contactType != null && !isValidContactTypeKey(contactType)) {
       return Result.fail(new InvalidContactTypeKeyError());
     }
 
-    this.applyScalarUpdates(updates, updatedFields);
+    if (contactType === null && this.props.contactType != null) {
+      this.props.contactType = undefined;
+      updatedFields.push('contactType');
+    }
+    this.applyScalarUpdates(
+      contactType === null ? scalarUpdates : { ...scalarUpdates, contactType },
+      updatedFields
+    );
 
     if (updates.phone !== undefined) {
       const phoneError = this.applyPhoneUpdate(updates.phone, updatedFields);
@@ -488,6 +497,30 @@ export class Contact extends AggregateRoot<ContactId> {
     this.addDomainEvent(
       new ContactAccountDisassociatedEvent(this.id, previousAccountId, disassociatedBy)
     );
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Move a linked contact to another account as one change (PG-205), so a caller can
+   * persist it with a single save instead of an unlink followed by a link.
+   */
+  replaceAccount(
+    accountId: string,
+    replacedBy: string
+  ): Result<void, ContactNotAssociatedWithAccountError> {
+    if (!this.hasAccount) {
+      return Result.fail(new ContactNotAssociatedWithAccountError());
+    }
+
+    const previousAccountId = this.props.accountId!;
+    this.props.accountId = accountId;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new ContactAccountDisassociatedEvent(this.id, previousAccountId, replacedBy)
+    );
+    this.addDomainEvent(new ContactAccountAssociatedEvent(this.id, accountId, replacedBy));
 
     return Result.ok(undefined);
   }

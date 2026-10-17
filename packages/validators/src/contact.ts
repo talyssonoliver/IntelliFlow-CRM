@@ -26,6 +26,7 @@ export const contactTypeKeySchema = z
 
 /** List segments the contacts list resolves server-side (sidebar `?segment=vip`). */
 export const CONTACT_LIST_SEGMENTS = ['vip'] as const;
+export type ContactListSegment = (typeof CONTACT_LIST_SEGMENTS)[number];
 
 export const contactStatusSchema = z.enum(CONTACT_STATUSES);
 export type ContactStatus = z.infer<typeof contactStatusSchema>;
@@ -74,6 +75,7 @@ export type CreateContactInput = z.infer<typeof createContactSchema>;
 export const updateContactSchema = baseContactFieldsSchema.omit({ email: true }).partial().extend({
   id: idSchema,
   accountId: idSchema.optional().nullable(), // Allow unsetting account
+  contactType: contactTypeKeySchema.nullable().optional(), // PG-205: null removes the type
 });
 
 export type UpdateContactInput = z.infer<typeof updateContactSchema>;
