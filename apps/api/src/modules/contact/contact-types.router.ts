@@ -40,6 +40,7 @@ import {
   assertContactTypeAdmin,
   ensureSystemContactTypes,
   lockTenantContactTypes,
+  prismaCode,
 } from './contact-type-resolver';
 
 type ContactTypeCtx = Pick<TenantAwareContext, 'tenant' | 'prismaWithTenant' | 'user' | 'prisma'>;
@@ -121,11 +122,6 @@ function toContactTypeDto(row: ContactTypeRow, contactCount: number): ContactTyp
   };
 }
 
-function prismaCode(err: unknown): string | undefined {
-  if (!err || typeof err !== 'object') return undefined;
-  return (err as { code?: string }).code;
-}
-
 /** create/update never change isDefault or key, so a P2002 there is the lower(name) index. */
 function rethrowNameConflict(err: unknown): never {
   if (prismaCode(err) === 'P2002')
@@ -167,8 +163,8 @@ function fieldsData(input: CreateContactTypeInput) {
   };
 }
 
-/** Default tags must be active tags of the caller's tenant — one message for foreign/missing/inactive. */
 /**
+ * Default tags must be tags of the caller's tenant (one message for foreign, missing or inactive).
  * Every tag must belong to the tenant and be active, except tags the type already
  * links (`keptIds`): deactivating a tag must not make its types unsavable.
  */

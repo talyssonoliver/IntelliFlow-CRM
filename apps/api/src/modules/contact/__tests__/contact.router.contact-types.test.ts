@@ -312,6 +312,15 @@ describe('contact.update with a contact type', () => {
     const { caller, updateContactInfo } = setupUpdate({ contactType: 'vendor' });
     await caller.update({ id: CONTACT_ID, contactType: 'vendor', firstName: 'Anna' });
     expect(updateContactInfo).toHaveBeenCalled();
+    // Nothing a type can require changed, so the type is not even looked up.
+    expect(prismaMock.contactType.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('looks the stored type up (inactive included) when a field it can require changes', async () => {
+    seededWith(typeRow({ isActive: false }));
+    const { caller, updateContactInfo } = setupUpdate({ contactType: 'vendor' });
+    await caller.update({ id: CONTACT_ID, contactType: 'vendor', phone: '+15550100' });
+    expect(updateContactInfo).toHaveBeenCalled();
     expect(prismaMock.contactType.findFirst).toHaveBeenCalledWith(
       expect.objectContaining({ where: { tenantId, key: 'vendor' } })
     );

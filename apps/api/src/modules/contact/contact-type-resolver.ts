@@ -48,7 +48,8 @@ export const SYSTEM_CONTACT_TYPE_SEED: ReadonlyArray<{
   { key: 'other', name: 'Other', colorToken: 'slate', sortOrder: 5 },
 ];
 
-function prismaCode(err: unknown): string | undefined {
+/** The Prisma error code of `err` (e.g. `P2002`), if it has one. */
+export function prismaCode(err: unknown): string | undefined {
   if (!err || typeof err !== 'object') return undefined;
   return (err as { code?: string }).code;
 }
@@ -295,17 +296,8 @@ export type ContactTypeFieldValues = Partial<
 >;
 
 /**
- * contact.update rules (ADR-080):
- * - a changed key must be an active type of the caller's tenant, and the new
- *   type's required fields are checked on the stored row merged with the input;
- * - an unchanged key is accepted even if its type is now inactive, and its
- *   required fields keep the explicit-clear rule (a field sent blank fails);
- * - defaults are never re-applied on update.
- */
-/**
- * A required account is satisfied only by an account of the caller's tenant. The
- * account association is written after the contact fields, so an unusable id must
- * fail here, before any write (it is treated as missing).
+ * A required account is satisfied only by an account of the caller's tenant. An
+ * unusable id must fail here, before any write (it is treated as missing).
  */
 async function dropUnusableAccount(
   ctx: ResolverCtx,
@@ -322,6 +314,33 @@ async function dropUnusableAccount(
   if (!account) values.accountId = null;
 }
 
+/** A changed key: an active type of the tenant, its required fields checked on stored + input. */
+async function assertNewContactType(
+  ctx: ResolverCtx,
+  nextKey: string,
+  stored: ContactTypeFieldValues,
+  changes: ContactTypeFieldValues
+): Promise<void> {
+  await ensureSystemContactTypes(ctx);
+  const type = await loadContactTypeByKey(ctx, nextKey, { activeOnly: true });
+  if (!type) throw invalidType();
+  const merged: ContactTypeFieldValues = { ...stored };
+  for (const key of CONTACT_TYPE_REQUIRED_FIELD_KEYS) {
+    if (changes[key] !== undefined) merged[key] = changes[key];
+  }
+  await dropUnusableAccount(ctx, type.requiredFields, changes, merged);
+  const missing = missingTypeRequiredFields(type.requiredFields, merged);
+  if (missing.length > 0) throw missingForType(missing);
+}
+
+/**
+ * contact.update rules (ADR-080):
+ * - a changed key must be an active type of the caller's tenant, and the new
+ *   type's required fields are checked on the stored row merged with the input;
+ * - an unchanged key is accepted even if its type is now inactive, and its
+ *   required fields keep the explicit-clear rule (a field sent blank fails);
+ * - defaults are never re-applied on update.
+ */
 export async function assertContactTypeOnUpdate(
   ctx: ResolverCtx,
   storedKey: string | null | undefined,
@@ -331,23 +350,15 @@ export async function assertContactTypeOnUpdate(
 ): Promise<void> {
   // Removing the type: no type, so no type rules (the tenant-wide rules still ran).
   if (nextKey === null) return;
-  const changed = nextKey !== undefined && nextKey !== storedKey;
-  if (changed) {
-    await ensureSystemContactTypes(ctx);
-    const type = await loadContactTypeByKey(ctx, nextKey, { activeOnly: true });
-    if (!type) throw invalidType();
-    const merged: ContactTypeFieldValues = { ...stored };
-    for (const key of CONTACT_TYPE_REQUIRED_FIELD_KEYS) {
-      if (changes[key] !== undefined) merged[key] = changes[key];
-    }
-    await dropUnusableAccount(ctx, type.requiredFields, changes, merged);
-    const missing = missingTypeRequiredFields(type.requiredFields, merged);
-    if (missing.length > 0) throw missingForType(missing);
+  if (nextKey !== undefined && nextKey !== storedKey) {
+    await assertNewContactType(ctx, nextKey, stored, changes);
     return;
   }
 
   const effectiveKey = nextKey ?? storedKey;
   if (!effectiveKey) return;
+  // None of the fields a type can require is changing: no type rule can fail.
+  if (!CONTACT_TYPE_REQUIRED_FIELD_KEYS.some((key) => changes[key] !== undefined)) return;
   const type = await loadContactTypeByKey(ctx, effectiveKey, { activeOnly: false });
   if (!type) return; // legacy key with no type row: no type rules to apply
   const cleared = CONTACT_TYPE_REQUIRED_FIELD_KEYS.filter(

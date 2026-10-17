@@ -109,10 +109,14 @@ export default function ContactsPageClient({
     { enabled: isAuthenticated && !authLoading, staleTime: CONTACT_TYPES_STALE_TIME_MS }
   );
   const contactTypes = useMemo(() => contactTypesData ?? [], [contactTypesData]);
-  const typeOptions: FilterOption[] = contactTypes.map((type) => ({
-    value: type.key,
-    label: type.isActive ? type.name : `${type.name} (inactive)`,
-  }));
+  const typeOptions: FilterOption[] = useMemo(
+    () =>
+      contactTypes.map((type) => ({
+        value: type.key,
+        label: type.isActive ? type.name : `${type.name} (inactive)`,
+      })),
+    [contactTypes]
+  );
 
   // Leaving a segment link's view: drop `?segment=` so a reload shows what is on screen.
   const clearSegmentFromUrl = () => {

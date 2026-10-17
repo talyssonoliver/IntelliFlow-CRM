@@ -279,25 +279,27 @@ async function handleDisassociateAccount(
 ): Promise<void> {
   const result = await contactService.disassociateFromAccount(id, userId);
   if (result.isFailure && !result.error.message.includes('not associated')) {
-    const msg = result.error.message;
-    throw new TRPCError({
-      code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
-      message: msg,
-    });
+    throwAccountChangeError(result.error.message);
   }
 }
 
 /**
- * Handle account association (non-null accountId) in update
+ * Link an account in update, or replace the linked one (PG-205). A replace is one
+ * service call that checks the target in the tenant and saves once, so a failure
+ * never leaves the contact unlinked.
  */
-async function handleAssociateAccount(
+async function handleLinkOrReplaceAccount(
   contactService: ReturnType<typeof getContactService>,
   id: string,
   accountId: string,
+  storedAccountId: string | null | undefined,
   userId: string,
   tenantId: string
 ): Promise<void> {
-  const result = await contactService.associateWithAccount(id, accountId, userId, tenantId);
+  if (accountId === storedAccountId) return;
+  const result = storedAccountId
+    ? await contactService.replaceAccount(id, accountId, userId, tenantId)
+    : await contactService.associateWithAccount(id, accountId, userId, tenantId);
   if (result.isFailure) throwAccountChangeError(result.error.message);
 }
 
@@ -491,31 +493,6 @@ async function applyContactInfoUpdates(
   }
 }
 
-/** Handle account association change (associate, replace, disassociate, or no-op). */
-async function applyContactAccountChange(
-  typedCtx: TenantAwareContext,
-  contactService: ReturnType<typeof getContactService>,
-  id: string,
-  accountId: string | null | undefined,
-  storedAccountId: string | null | undefined,
-  userId: string
-): Promise<void> {
-  if (accountId === undefined || accountId === storedAccountId) return;
-  if (accountId === null) {
-    await handleDisassociateAccount(contactService, id, userId);
-    return;
-  }
-  const tenantId = typedCtx.tenant.tenantId;
-  if (storedAccountId) {
-    // PG-205: replacing a linked account. One service call checks the target in the tenant
-    // and saves the move once, so a failure never leaves the contact unlinked.
-    const result = await contactService.replaceAccount(id, accountId, userId, tenantId);
-    if (result.isFailure) throwAccountChangeError(result.error.message);
-    return;
-  }
-  await handleAssociateAccount(contactService, id, accountId, userId, tenantId);
-}
-
 // ─── Extracted procedure handlers ───────────────────────────────────────────
 
 async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
@@ -589,23 +566,22 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
   // The two saves are ordered so a failure between them never leaves a contact type
   // without an account it requires: a link (or replace) runs before the other fields,
   // an unlink after them (once a type that needs the account has been changed).
-  const changeAccount = () =>
-    applyContactAccountChange(
-      typedCtx,
+  const { userId, tenantId } = typedCtx.tenant;
+  const storedAccountId = beforeContact?.accountId;
+  if (accountId) {
+    await handleLinkOrReplaceAccount(
       contactService,
       id,
       accountId,
-      beforeContact?.accountId,
-      typedCtx.tenant.userId
+      storedAccountId,
+      userId,
+      tenantId
     );
-  if (accountId !== null) await changeAccount();
-  await applyContactInfoUpdates(
-    contactService,
-    id,
-    hygienedData as UpdateContactData,
-    typedCtx.tenant.userId
-  );
-  if (accountId === null) await changeAccount();
+  }
+  await applyContactInfoUpdates(contactService, id, hygienedData as UpdateContactData, userId);
+  if (accountId === null && storedAccountId !== null) {
+    await handleDisassociateAccount(contactService, id, userId);
+  }
 
   // Fetch updated contact
   const updatedResult = await contactService.getContactById(id);

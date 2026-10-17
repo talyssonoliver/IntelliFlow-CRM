@@ -222,43 +222,9 @@ export class ContactService {
     associatedBy: string,
     tenantId: string
   ): Promise<Result<Contact, DomainError>> {
-    const contactIdResult = ContactId.create(contactId);
-    if (contactIdResult.isFailure) {
-      return Result.fail(contactIdResult.error);
-    }
-
-    const accountIdResult = AccountId.create(accountId);
-    if (accountIdResult.isFailure) {
-      return Result.fail(accountIdResult.error);
-    }
-
-    const [contact, account] = await Promise.all([
-      this.contactRepository.findById(contactIdResult.value),
-      this.accountRepository.findById(accountIdResult.value, tenantId),
-    ]);
-
-    if (!contact) {
-      return Result.fail(new ValidationError(`Contact not found: ${contactId}`));
-    }
-
-    if (!account) {
-      return Result.fail(new ValidationError(`Account not found: ${accountId}`));
-    }
-
-    const associateResult = contact.associateWithAccount(accountId, associatedBy);
-    if (associateResult.isFailure) {
-      return Result.fail(associateResult.error);
-    }
-
-    try {
-      await this.contactRepository.save(contact);
-    } catch {
-      return Result.fail(new PersistenceError('Failed to save contact'));
-    }
-
-    await this.publishEvents(contact);
-
-    return Result.ok(contact);
+    return this.changeAccount(contactId, accountId, tenantId, (contact) =>
+      contact.associateWithAccount(accountId, associatedBy)
+    );
   }
 
   /**
@@ -269,6 +235,18 @@ export class ContactService {
     accountId: string,
     replacedBy: string,
     tenantId: string
+  ): Promise<Result<Contact, DomainError>> {
+    return this.changeAccount(contactId, accountId, tenantId, (contact) =>
+      contact.replaceAccount(accountId, replacedBy)
+    );
+  }
+
+  /** Load the contact and the tenant's target account, apply `change`, save once. */
+  private async changeAccount(
+    contactId: string,
+    accountId: string,
+    tenantId: string,
+    change: (contact: Contact) => Result<void, DomainError>
   ): Promise<Result<Contact, DomainError>> {
     const contactIdResult = ContactId.create(contactId);
     if (contactIdResult.isFailure) {
@@ -293,9 +271,9 @@ export class ContactService {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
 
-    const replaceResult = contact.replaceAccount(accountId, replacedBy);
-    if (replaceResult.isFailure) {
-      return Result.fail(replaceResult.error);
+    const changeResult = change(contact);
+    if (changeResult.isFailure) {
+      return Result.fail(changeResult.error);
     }
 
     try {
