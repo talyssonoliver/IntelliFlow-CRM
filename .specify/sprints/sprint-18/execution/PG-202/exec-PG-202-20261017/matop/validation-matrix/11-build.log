@@ -1,0 +1,537 @@
+date: 2026-10-17T20:48:27Z
+head: 1cd895b72447d31a6054a3f471775da0e573adbf
+cmd: pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/application build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/db build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/api build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/web build
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/domain@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\domain
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\domain\tsup.config.ts
+[34mCLI[39m Target: es2022
+[34mCLI[39m Cleaning output folder
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mCJS[39m [1mdist\index.js     [22m[32m504.03 KB[39m
+[32mCJS[39m [1mdist\index.js.map [22m[32m981.13 KB[39m
+[32mCJS[39m ⚡️ Build success in 100ms
+[32mESM[39m [1mdist\index.mjs     [22m[32m470.06 KB[39m
+[32mESM[39m [1mdist\index.mjs.map [22m[32m972.38 KB[39m
+[32mESM[39m ⚡️ Build success in 100ms
+[34mDTS[39m Build start
+[32mDTS[39m ⚡️ Build success in 2509ms
+[32mDTS[39m [1mdist\index.d.ts  [22m[32m377.58 KB[39m
+[32mDTS[39m [1mdist\index.d.mts [22m[32m377.58 KB[39m
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/application@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\application
+> tsup src/index.ts --format cjs,esm --experimental-dts
+
+[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mTSC[39m Build start
+[32mTSC[39m ⚡️ Build success in 1801ms
+[34mDTS[39m Build start
+[34mCLI[39m Target: es2022
+[34mCJS[39m Build start
+[34mESM[39m Build start
+Analysis will use the bundled TypeScript version 5.8.2
+*** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+[36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\application\dist\_tsup-dts-rollup.d.ts[39m
+Analysis will use the bundled TypeScript version 5.8.2
+*** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+[36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\application\dist\_tsup-dts-rollup.d.mts[39m
+[32mDTS[39m ⚡️ Build success in 2965ms
+[32mCJS[39m [1mdist\index.js [22m[32m336.84 KB[39m
+[32mCJS[39m ⚡️ Build success in 3001ms
+[32mESM[39m [1mdist\index.mjs [22m[32m321.29 KB[39m
+[32mESM[39m ⚡️ Build success in 3000ms
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/validators@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\validators
+> tsup src/index.ts src/required-url.ts src/lead.ts src/contact.ts src/account.ts src/opportunity.ts src/task.ts src/ticket.ts src/common.ts src/env.ts src/base-schemas.ts src/ai-review.ts src/case.ts src/help-article.ts src/terms-acceptance.ts --format cjs,esm --dts
+
+[34mCLI[39m Building entry: src/account.ts, src/ai-review.ts, src/base-schemas.ts, src/case.ts, src/common.ts, src/contact.ts, src/help-article.ts, src/index.ts, src/lead.ts, src/opportunity.ts, src/required-url.ts, src/task.ts, src/terms-acceptance.ts, src/ticket.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Target: es2022
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mCJS[39m [1mdist\ai-review.js        [22m[32m11.79 KB[39m
+[32mCJS[39m [1mdist\account.js          [22m[32m41.17 KB[39m
+[32mCJS[39m [1mdist\base-schemas.js     [22m[32m6.38 KB[39m
+[32mCJS[39m [1mdist\case.js             [22m[32m12.71 KB[39m
+[32mCJS[39m [1mdist\contact.js          [22m[32m15.94 KB[39m
+[32mCJS[39m [1mdist\lead.js             [22m[32m15.48 KB[39m
+[32mCJS[39m [1mdist\common.js           [22m[32m6.04 KB[39m
+[32mCJS[39m [1mdist\opportunity.js      [22m[32m12.86 KB[39m
+[32mCJS[39m [1mdist\index.js            [22m[32m316.14 KB[39m
+[32mCJS[39m [1mdist\required-url.js     [22m[32m1.66 KB[39m
+[32mCJS[39m [1mdist\task.js             [22m[32m9.51 KB[39m
+[32mCJS[39m [1mdist\terms-acceptance.js [22m[32m1.92 KB[39m
+[32mCJS[39m [1mdist\ticket.js           [22m[32m9.01 KB[39m
+[32mCJS[39m [1mdist\help-article.js     [22m[32m4.20 KB[39m
+[32mCJS[39m ⚡️ Build success in 71ms
+[32mESM[39m [1mdist\opportunity.mjs      [22m[32m1.24 KB[39m
+[32mESM[39m [1mdist\lead.mjs             [22m[32m889.00 B[39m
+[32mESM[39m [1mdist\required-url.mjs     [22m[32m126.00 B[39m
+[32mESM[39m [1mdist\terms-acceptance.mjs [22m[32m270.00 B[39m
+[32mESM[39m [1mdist\task.mjs             [22m[32m739.00 B[39m
+[32mESM[39m [1mdist\ticket.mjs           [22m[32m725.00 B[39m
+[32mESM[39m [1mdist\account.mjs          [22m[32m2.47 KB[39m
+[32mESM[39m [1mdist\base-schemas.mjs     [22m[32m359.00 B[39m
+[32mESM[39m [1mdist\ai-review.mjs        [22m[32m915.00 B[39m
+[32mESM[39m [1mdist\common.mjs           [22m[32m614.00 B[39m
+[32mESM[39m [1mdist\contact.mjs          [22m[32m2.02 KB[39m
+[32mESM[39m [1mdist\case.mjs             [22m[32m839.00 B[39m
+[32mESM[39m [1mdist\help-article.mjs     [22m[32m468.00 B[39m
+[32mESM[39m [1mdist\chunk-Z6SQPZ4E.mjs   [22m[32m8.42 KB[39m
+[32mESM[39m [1mdist\index.mjs            [22m[32m179.01 KB[39m
+[32mESM[39m [1mdist\chunk-GKR73HH5.mjs   [22m[32m617.00 B[39m
+[32mESM[39m [1mdist\chunk-DH62V3K6.mjs   [22m[32m3.37 KB[39m
+[32mESM[39m [1mdist\chunk-HUEF4UZB.mjs   [22m[32m588.00 B[39m
+[32mESM[39m [1mdist\chunk-XR2W7LEU.mjs   [22m[32m3.08 KB[39m
+[32mESM[39m [1mdist\chunk-447GUJV3.mjs   [22m[32m21.74 KB[39m
+[32mESM[39m [1mdist\chunk-WZPLT47Q.mjs   [22m[32m6.13 KB[39m
+[32mESM[39m [1mdist\chunk-AF2FKFWR.mjs   [22m[32m5.72 KB[39m
+[32mESM[39m [1mdist\chunk-ZF774MQU.mjs   [22m[32m1.00 KB[39m
+[32mESM[39m [1mdist\chunk-BTD34BXU.mjs   [22m[32m6.15 KB[39m
+[32mESM[39m [1mdist\chunk-X7VI4AVA.mjs   [22m[32m3.78 KB[39m
+[32mESM[39m [1mdist\chunk-RHRHM4VU.mjs   [22m[32m7.58 KB[39m
+[32mESM[39m [1mdist\chunk-3ULOTD3D.mjs   [22m[32m2.29 KB[39m
+[32mESM[39m ⚡️ Build success in 71ms
+[34mDTS[39m Build start
+[32mDTS[39m ⚡️ Build success in 3517ms
+[32mDTS[39m [1mdist\index.d.ts             [22m[32m391.58 KB[39m
+[32mDTS[39m [1mdist\account.d.ts           [22m[32m19.85 KB[39m
+[32mDTS[39m [1mdist\ai-review.d.ts         [22m[32m11.14 KB[39m
+[32mDTS[39m [1mdist\base-schemas.d.ts      [22m[32m2.12 KB[39m
+[32mDTS[39m [1mdist\case.d.ts              [22m[32m10.71 KB[39m
+[32mDTS[39m [1mdist\contact.d.ts           [22m[32m18.78 KB[39m
+[32mDTS[39m [1mdist\help-article.d.ts      [22m[32m3.30 KB[39m
+[32mDTS[39m [1mdist\lead.d.ts              [22m[32m17.58 KB[39m
+[32mDTS[39m [1mdist\opportunity.d.ts       [22m[32m13.38 KB[39m
+[32mDTS[39m [1mdist\required-url.d.ts      [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\task.d.ts              [22m[32m8.52 KB[39m
+[32mDTS[39m [1mdist\terms-acceptance.d.ts  [22m[32m1.86 KB[39m
+[32mDTS[39m [1mdist\ticket.d.ts            [22m[32m7.12 KB[39m
+[32mDTS[39m [1mdist\common.d.ts            [22m[32m3.43 KB[39m
+[32mDTS[39m [1mdist\index.d.mts            [22m[32m391.59 KB[39m
+[32mDTS[39m [1mdist\account.d.mts          [22m[32m19.85 KB[39m
+[32mDTS[39m [1mdist\ai-review.d.mts        [22m[32m11.14 KB[39m
+[32mDTS[39m [1mdist\base-schemas.d.mts     [22m[32m2.12 KB[39m
+[32mDTS[39m [1mdist\case.d.mts             [22m[32m10.71 KB[39m
+[32mDTS[39m [1mdist\contact.d.mts          [22m[32m18.78 KB[39m
+[32mDTS[39m [1mdist\help-article.d.mts     [22m[32m3.30 KB[39m
+[32mDTS[39m [1mdist\lead.d.mts             [22m[32m17.58 KB[39m
+[32mDTS[39m [1mdist\opportunity.d.mts      [22m[32m13.38 KB[39m
+[32mDTS[39m [1mdist\required-url.d.mts     [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\task.d.mts             [22m[32m8.53 KB[39m
+[32mDTS[39m [1mdist\terms-acceptance.d.mts [22m[32m1.86 KB[39m
+[32mDTS[39m [1mdist\ticket.d.mts           [22m[32m7.12 KB[39m
+[32mDTS[39m [1mdist\common.d.mts           [22m[32m3.43 KB[39m
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\db
+> node -e "try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}" && tsup && node scripts/postbuild-esm.mjs
+
+[34mCLI[39m Building entry: src/client.ts, src/index.ts, src/seed-ids.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\db\tsup.config.ts
+[34mCLI[39m Target: es2022
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mCJS[39m [1mdist\index.js    [22m[32m26.97 KB[39m
+[32mCJS[39m [1mdist\seed-ids.js [22m[32m30.89 KB[39m
+[32mCJS[39m [1mdist\client.js   [22m[32m15.41 KB[39m
+[32mCJS[39m ⚡️ Build success in 21ms
+[32mESM[39m [1mdist\client.mjs         [22m[32m556.00 B[39m
+[32mESM[39m [1mdist\index.mjs          [22m[32m8.44 KB[39m
+[32mESM[39m [1mdist\chunk-M6A45O7W.mjs [22m[32m16.30 KB[39m
+[32mESM[39m [1mdist\seed-ids.mjs       [22m[32m29.85 KB[39m
+[32mESM[39m ⚡️ Build success in 21ms
+[prisma-esm] Patched 2 .mjs files with .js extensions
+[34mDTS[39m Build start
+[32mDTS[39m ⚡️ Build success in 18387ms
+[32mDTS[39m [1mdist\index.d.ts     [22m[32m18.83 KB[39m
+[32mDTS[39m [1mdist\client.d.ts    [22m[32m3.59 KB[39m
+[32mDTS[39m [1mdist\seed-ids.d.ts  [22m[32m25.64 KB[39m
+[32mDTS[39m [1mdist\index.d.mts    [22m[32m18.83 KB[39m
+[32mDTS[39m [1mdist\client.d.mts   [22m[32m3.59 KB[39m
+[32mDTS[39m [1mdist\seed-ids.d.mts [22m[32m25.64 KB[39m
+[postbuild-esm] Created generated/prisma/package.json (type: module)
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/api build
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/api@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\apps\api
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts, src/main.ts, src/ws-server.ts
+[34mCLI[39m Using tsconfig: tsconfig.build.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\apps\api\tsup.config.ts
+[34mCLI[39m Target: es2022
+[34mCLI[39m Cleaning output folder
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mESM[39m [1mdist\chunk-FH72RMLK.mjs                [22m[32m0 B[39m
+[32mESM[39m [1mdist\cases.router-NG5KDFAW.mjs         [22m[32m204.00 B[39m
+[32mESM[39m [1mdist\escalation-target-H4QBBF4Z.mjs    [22m[32m131.00 B[39m
+[32mESM[39m [1mdist\inbound.router-DMZF5DSS.mjs       [22m[32m350.00 B[39m
+[32mESM[39m [1mdist\index.mjs                         [22m[32m22.54 KB[39m
+[32mESM[39m [1mdist\chunk-5DX23VSP.mjs                [22m[32m4.23 KB[39m
+[32mESM[39m [1mdist\main.mjs                          [22m[32m49.52 KB[39m
+[32mESM[39m [1mdist\ws-server.mjs                     [22m[32m4.83 KB[39m
+[32mESM[39m [1mdist\chunk-GPRFMDF3.mjs                [22m[32m35.94 KB[39m
+[32mESM[39m [1mdist\chunk-R3T22MVH.mjs                [22m[32m23.62 KB[39m
+[32mESM[39m [1mdist\chunk-JFF6C52X.mjs                [22m[32m3.12 KB[39m
+[32mESM[39m [1mdist\audit-XXEDSSNO.mjs                [22m[32m865.00 B[39m
+[32mESM[39m [1mdist\lead.router-TDFPTE2U.mjs          [22m[32m264.00 B[39m
+[32mESM[39m [1mdist\notifications.router-EJWAI2JF.mjs [22m[32m306.00 B[39m
+[32mESM[39m [1mdist\chunk-EDMTEE2A.mjs                [22m[32m54.79 KB[39m
+[32mESM[39m [1mdist\contact.router-4MDK4T56.mjs       [22m[32m270.00 B[39m
+[32mESM[39m [1mdist\appointments.router-ZNTEF4GQ.mjs  [22m[32m280.00 B[39m
+[32mESM[39m [1mdist\chunk-VKUQDHCZ.mjs                [22m[32m80.91 KB[39m
+[32mESM[39m [1mdist\chunk-RCWQWZB6.mjs                [22m[32m5.07 KB[39m
+[32mESM[39m [1mdist\chunk-5FFTAF3D.mjs                [22m[32m253.36 KB[39m
+[32mESM[39m [1mdist\chunk-TFVEIYEU.mjs                [22m[32m3.36 KB[39m
+[32mESM[39m [1mdist\chunk-Q3TMUWFZ.mjs                [22m[32m20.79 KB[39m
+[32mESM[39m [1mdist\chunk-J6R2QKEE.mjs                [22m[32m23.02 KB[39m
+[32mESM[39m [1mdist\chunk-CXLTNHON.mjs                [22m[32m49.23 KB[39m
+[32mESM[39m [1mdist\chunk-Y6FXYEAI.mjs                [22m[32m390.00 B[39m
+[32mESM[39m [1mdist\chunk-6KD7JEW7.mjs                [22m[32m1.14 MB[39m
+[32mESM[39m ⚡️ Build success in 219ms
+[32mCJS[39m [1mdist\index.js     [22m[32m1.79 MB[39m
+[32mCJS[39m [1mdist\ws-server.js [22m[32m1.73 MB[39m
+[32mCJS[39m [1mdist\main.js      [22m[32m1.79 MB[39m
+[32mCJS[39m ⚡️ Build success in 220ms
+[34mDTS[39m Build start
+"isLiveMembership", "liveMembershipWhere", "seatUserWhere" and "MembershipLiveness" are imported from external module "@intelliflow/db" but never used in "src/security/membership.ts".
+"NODE_TYPE_IDS" is imported from external module "@intelliflow/domain" but never used in "src/modules/workflow/workflow.router.ts".
+"ACTIVE_TENANT_HEADER" is imported from external module "@intelliflow/partner-sdk" but never used in "src/security/membership.ts".
+[32mDTS[39m ⚡️ Build success in 45884ms
+[32mDTS[39m [1mdist\main.d.ts       [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist\ws-server.d.ts  [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\index.d.ts      [22m[32m900.72 KB[39m
+[32mDTS[39m [1mdist\main.d.mts      [22m[32m13.00 B[39m
+[32mDTS[39m [1mdist\ws-server.d.mts [22m[32m1.70 KB[39m
+[32mDTS[39m [1mdist\index.d.mts     [22m[32m900.72 KB[39m
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/web build
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/web@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\apps\web
+> next build --webpack
+
+▲ Next.js 16.3.8 (webpack)
+⚠ `eslint` configuration in next.config.js is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.js options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+⚠ `experimental.useCache` is deprecated. Please use the top-level `cacheComponents` option instead in next.config.js.
+✓ Running next.config.js took 703ms
+- Experiments (use with caution):
+  · clientTraceMetadata
+  · optimizePackageImports
+  · serverActions
+  ✓ useCache
+  ✓ webpackMemoryOptimizations
+
+  Creating an optimized production build ...
+⚠ Compiled with warnings in 3.5min
+
+../../node_modules/.pnpm/web-worker@1.5.0/node_modules/web-worker/src/node/index.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+../../node_modules/.pnpm/web-worker@1.5.0/node_modules/web-worker/src/node/index.js
+../../node_modules/.pnpm/make-asynchronous@1.1.0/node_modules/make-asynchronous/index.js
+../../node_modules/.pnpm/super-regex@1.1.0/node_modules/super-regex/index.js
+../../node_modules/.pnpm/is-identifier@1.0.1/node_modules/is-identifier/index.js
+../../node_modules/.pnpm/stringify-object@6.0.0/node_modules/stringify-object/index.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/httpsnippet-lite/targets/javascript/xhr/client.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/plugins/js/xhr/xhr.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/plugins/js/xhr/index.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/clients/index.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/snippetz.js
+../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/index.js
+../../node_modules/.pnpm/@scalar+api-client@3.10.4_a_caf8612ba14013726419ed8f3a84aced/node_modules/@scalar/api-client/dist/v2/blocks/operation-code-sample/helpers/generate-client-options.js
+../../node_modules/.pnpm/@scalar+api-client@3.10.4_a_caf8612ba14013726419ed8f3a84aced/node_modules/@scalar/api-client/dist/v2/blocks/operation-code-sample/index.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60._d892f6b841338b95f3d6f0423ad9ad18/node_modules/@scalar/api-reference/dist/helpers/load-from-perssistance.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60._d892f6b841338b95f3d6f0423ad9ad18/node_modules/@scalar/api-reference/dist/components/ApiReference.vue.script.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60._d892f6b841338b95f3d6f0423ad9ad18/node_modules/@scalar/api-reference/dist/components/ApiReference.vue.js
+../../node_modules/.pnpm/@scalar+api-reference@1.60._d892f6b841338b95f3d6f0423ad9ad18/node_modules/@scalar/api-reference/dist/index.js
+../../node_modules/.pnpm/@scalar+api-reference-react_ac623fc0254b4064e26e9b307988f32f/node_modules/@scalar/api-reference-react/dist/index.js
+./src/components/shared/api-reference-renderer.tsx
+./src/components/shared/api-reference-client.tsx
+
+  Skipping validation of types
+  Finished TypeScript config validation in 20ms ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/224) ...
+  Generating static pages using 11 workers (56/224) 
+  Generating static pages using 11 workers (112/224) 
+  Generating static pages using 11 workers (168/224) 
+✓ Generating static pages using 11 workers (224/224) in 19.6s
+  Finalizing page optimization ...
+  Collecting build traces ...
+
+Route (app)                                     Revalidate  Expire
+┌ ƒ /
+├ ○ /_not-found
+├ ○ /404
+├ ○ /500
+├ ƒ /about
+├ ƒ /accounts
+├ ƒ /accounts/[id]
+├ ƒ /accounts/[id]/edit
+├ ○ /accounts/account-settings
+├ ○ /accounts/account-tiers
+├ ○ /accounts/new
+├ ○ /accounts/territory-mapping
+├ ○ /activity
+├ ○ /agent-approvals
+├ ○ /agent-approvals/agents
+├ ○ /agent-approvals/ai-review
+├ ƒ /agent-approvals/ai-review/[id]
+├ ○ /agent-approvals/ai-search
+├ ○ /agent-approvals/ai-settings
+├ ○ /agent-approvals/approval-policies
+├ ○ /agent-approvals/churn-risk
+├ ○ /agent-approvals/drift
+├ ○ /agent-approvals/experiments
+├ ○ /agent-approvals/history
+├ ○ /agent-approvals/insights
+├ ○ /agent-approvals/latency
+├ ○ /agent-approvals/lead-scoring
+├ ○ /agent-approvals/logs
+├ ƒ /agent-approvals/logs/[id]
+├ ○ /agent-approvals/model-config
+├ ○ /agent-approvals/preview
+├ ○ /agent-approvals/sentiment
+├ ○ /agent-approvals/tools
+├ ○ /analytics
+├ ○ /analytics/feedback
+├ ○ /analytics/report-settings
+├ ○ /analytics/report-templates
+├ ○ /analytics/saved/monthly
+├ ○ /analytics/saved/quarterly
+├ ○ /analytics/saved/weekly
+├ ○ /analytics/scheduled-reports
+├ ƒ /api/adr
+├ ƒ /api/adr/create
+├ ƒ /api/adr/index
+├ ƒ /api/adr/status
+├ ƒ /api/adr/validate
+├ ƒ /api/avatar-proxy
+├ ƒ /api/billing/pdf-proxy
+├ ƒ /api/compliance/[standardId]
+├ ƒ /api/compliance/risks
+├ ƒ /api/compliance/timeline
+├ ƒ /api/developer/changelog-rss
+├ ƒ /api/developer/webhook-test
+├ ƒ /api/health
+├ ƒ /api/openapi
+├ ƒ /api/quality-reports
+├ ƒ /api/quality-reports/generate
+├ ƒ /api/quality-reports/status
+├ ƒ /api/quality-reports/test-run
+├ ƒ /api/quality-reports/test-run/[runId]
+├ ƒ /api/quality-reports/test-run/events
+├ ƒ /api/quality-reports/view
+├ ƒ /api/webhooks/google/calendar
+├ ƒ /api/webhooks/microsoft/calendar
+├ ○ /appointments
+├ ƒ /appointments/[id]
+├ ○ /appointments/new
+├ ƒ /aup
+├ ƒ /auth/callback
+├ ○ /billing
+├ ○ /billing/cancel
+├ ○ /billing/checkout
+├ ○ /billing/invoices
+├ ƒ /billing/invoices/[id]
+├ ○ /billing/payment-methods
+├ ○ /billing/plans
+├ ○ /billing/receipts
+├ ○ /billing/settings
+├ ○ /billing/subscriptions
+├ ○ /billing/upgrade
+├ ○ /billing/usage
+├ ƒ /blog
+├ ƒ /blog/[slug]
+├ ○ /calendar
+├ ○ /calendar/availability
+├ ○ /calendar/calendar-settings
+├ ○ /calendar/event-types
+├ ƒ /careers
+├ ƒ /careers/[id]
+├ ○ /cases
+├ ƒ /cases/[id]
+├ ○ /cases/case-settings
+├ ○ /cases/case-types
+├ ○ /cases/case-workflows
+├ ƒ /cases/case-workflows/[id]
+├ ○ /cases/case-workflows/new
+├ ○ /cases/new
+├ ○ /cases/timeline
+├ ƒ /contact
+├ ƒ /contacts
+├ ƒ /contacts/[id]
+├ ƒ /contacts/[id]/edit
+├ ○ /contacts/contact-settings
+├ ○ /contacts/contact-types
+├ ○ /contacts/import-export
+├ ○ /contacts/new
+├ ƒ /cookies
+├ ƒ /dashboard
+├ ○ /dashboard/customize
+├ ○ /dashboard/new
+├ ○ /deals
+├ ƒ /deals/[id]
+├ ƒ /deals/[id]/forecast
+├ ○ /deals/all/forecast
+├ ○ /deals/deal-automation
+├ ○ /deals/deal-settings
+├ ○ /deals/deal-stages
+├ ○ /deals/forecast
+├ ○ /deals/new
+├ ○ /deals/trash
+├ ○ /developers/apps
+├ ƒ /developers/apps/[id]
+├ ƒ /developers/apps/[id]/edit
+├ ○ /developers/apps/new
+├ ○ /docs
+├ ○ /docs/api
+├ ○ /docs/architecture
+├ ○ /docs/auth
+├ ○ /docs/changelog
+├ ○ /docs/cli
+├ ○ /docs/guides
+├ ○ /docs/integrations
+├ ○ /docs/sdk
+├ ○ /docs/webhooks
+├ ○ /documents
+├ ƒ /documents/[id]
+├ ○ /documents/document-settings
+├ ○ /documents/document-types
+├ ○ /documents/new
+├ ○ /documents/storage-policies
+├ ƒ /dpa
+├ ○ /email
+├ ƒ /email/[id]
+├ ○ /email/compose
+├ ○ /email/email-settings
+├ ○ /email/signatures
+├ ○ /email/templates
+├ ƒ /features
+├ ƒ /forgot-password
+├ ○ /governance
+├ ○ /governance/adr
+├ ○ /governance/compliance
+├ ○ /governance/policies
+├ ○ /governance/quality-reports
+├ ƒ /governance/quality-reports/[reportId]
+├ ○ /governance/quality-reports/coverage
+├ ○ /governance/quality-reports/lighthouse
+├ ○ /governance/quality-reports/performance
+├ ○ /governance/quality-reports/trpc-benchmark
+├ ○ /help-center
+├ ƒ /help-center/[article]
+├ ○ /help-center/search
+├ ○ /icon.svg
+├ ○ /insights
+├ ƒ /leads
+├ ƒ /leads/[id]
+├ ƒ /leads/[id]/edit
+├ ○ /leads/import
+├ ○ /leads/lead-settings
+├ ○ /leads/new
+├ ○ /leads/pipeline
+├ ○ /leads/routing
+├ ƒ /login
+├ ƒ /logout
+├ ƒ /lp/[slug]
+├ ƒ /maintenance
+├ ○ /manifest.webmanifest
+├ ƒ /mfa/verify
+├ ○ /notifications
+├ ○ /notifications/channels
+├ ○ /notifications/quiet-hours
+├ ○ /notifications/settings
+├ ○ /opengraph-image
+├ ƒ /partners
+├ ƒ /press
+├ ƒ /press/[id]
+├ ○ /preview/aurora                                     1d      1y
+├ ƒ /pricing
+├ ƒ /privacy
+├ ○ /profile
+├ ƒ /reset-password/[token]
+├ ƒ /reset-password/callback
+├ ○ /robots.txt
+├ ƒ /security
+├ ○ /settings
+├ ○ /settings/account
+├ ○ /settings/accounts
+├ ○ /settings/appointments
+├ ○ /settings/automation
+├ ○ /settings/automation/custom-actions
+├ ○ /settings/automation/custom-node-types
+├ ○ /settings/billing
+├ ○ /settings/cases
+├ ○ /settings/contacts
+├ ○ /settings/deals
+├ ○ /settings/documents
+├ ƒ /settings/help-center/articles
+├ ƒ /settings/help-center/articles/[id]/edit
+├ ○ /settings/help-center/articles/new
+├ ○ /settings/integrations
+├ ○ /settings/leads
+├ ○ /settings/notifications
+├ ○ /settings/pipeline
+├ ○ /settings/reports
+├ ○ /settings/routing
+├ ○ /settings/security/mfa
+├ ○ /settings/security/mfa/setup
+├ ○ /settings/tasks
+├ ○ /settings/team
+├ ○ /settings/tickets
+├ ƒ /signup
+├ ƒ /signup/success
+├ ○ /sitemap.xml
+├ ƒ /sso
+├ ƒ /status
+├ ○ /support/tickets
+├ ƒ /support/tickets/[id]
+├ ○ /support/tickets/new
+├ ○ /tasks
+├ ƒ /tasks/[id]
+├ ○ /tasks/automation
+├ ○ /tasks/task-settings
+├ ○ /tasks/task-types
+├ ƒ /terms
+├ ○ /tickets
+├ ƒ /tickets/[id]
+├ ○ /tickets/automations
+├ ○ /tickets/new
+├ ○ /tickets/sla-policies
+├ ○ /tickets/types
+├ ○ /upgrade
+├ ƒ /verify-email/[token]
+└ ƒ /verify-email/callback
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+exit: 0

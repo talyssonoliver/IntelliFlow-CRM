@@ -1,0 +1,20 @@
+date: 2026-10-17T20:38:14Z
+head: 1cd895b72447d31a6054a3f471775da0e573adbf
+cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/validators test
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/validators test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/validators@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\validators
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/validators
+
+
+ Test Files  58 passed (58)
+      Tests  2722 passed (2722)
+   Start at  21:38:15
+   Duration  5.25s (transform 1.81s, setup 0ms, import 7.92s, tests 1.12s, environment 5ms)
+
+exit: 0

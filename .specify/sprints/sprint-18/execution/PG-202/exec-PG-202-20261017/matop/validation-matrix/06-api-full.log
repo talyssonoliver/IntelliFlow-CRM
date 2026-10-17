@@ -1,0 +1,22 @@
+date: 2026-10-17T20:38:49Z
+head: 1cd895b72447d31a6054a3f471775da0e573adbf
+cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/api test
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/api test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/api@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\apps\api
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+(node:49864) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  308 passed (308)
+      Tests  7795 passed | 18 skipped (7813)
+   Start at  21:38:50
+   Duration  101.56s (transform 8.87s, setup 63.64s, import 196.07s, tests 78.57s, environment 27ms)
+
+exit: 0

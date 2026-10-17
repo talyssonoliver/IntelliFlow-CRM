@@ -1,0 +1,43 @@
+date: 2026-10-17T20:38:21Z
+head: 1cd895b72447d31a6054a3f471775da0e573adbf
+cmd: pnpm --filter @intelliflow/db build && pnpm --filter @intelliflow/db typecheck
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\db
+> node -e "try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}" && tsup && node scripts/postbuild-esm.mjs
+
+[34mCLI[39m Building entry: src/client.ts, src/index.ts, src/seed-ids.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\db\tsup.config.ts
+[34mCLI[39m Target: es2022
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mCJS[39m [1mdist\index.js    [22m[32m26.97 KB[39m
+[32mCJS[39m [1mdist\client.js   [22m[32m15.41 KB[39m
+[32mCJS[39m [1mdist\seed-ids.js [22m[32m30.89 KB[39m
+[32mCJS[39m ⚡️ Build success in 21ms
+[32mESM[39m [1mdist\client.mjs         [22m[32m556.00 B[39m
+[32mESM[39m [1mdist\index.mjs          [22m[32m8.44 KB[39m
+[32mESM[39m [1mdist\chunk-M6A45O7W.mjs [22m[32m16.30 KB[39m
+[32mESM[39m [1mdist\seed-ids.mjs       [22m[32m29.85 KB[39m
+[32mESM[39m ⚡️ Build success in 20ms
+[prisma-esm] Patched 2 .mjs files with .js extensions
+[34mDTS[39m Build start
+[32mDTS[39m ⚡️ Build success in 17389ms
+[32mDTS[39m [1mdist\index.d.ts     [22m[32m18.83 KB[39m
+[32mDTS[39m [1mdist\client.d.ts    [22m[32m3.59 KB[39m
+[32mDTS[39m [1mdist\seed-ids.d.ts  [22m[32m25.64 KB[39m
+[32mDTS[39m [1mdist\index.d.mts    [22m[32m18.83 KB[39m
+[32mDTS[39m [1mdist\client.d.mts   [22m[32m3.59 KB[39m
+[32mDTS[39m [1mdist\seed-ids.d.mts [22m[32m25.64 KB[39m
+[postbuild-esm] Created generated/prisma/package.json (type: module)
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\db
+> node -e "try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}" && tsc --noEmit && node scripts/fix-prisma-esm.mjs
+
+[fix-prisma-esm] Created 207 .js shim files in generated/prisma/
+exit: 0

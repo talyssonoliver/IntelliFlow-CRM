@@ -23,6 +23,12 @@ all three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
 | F13 | Codex: `findFirstFreeCandidate` read existing appointments by raw times, missing one whose own after-buffer runs into the candidate. | `CheckConflicts.ts` | Read widened by `Buffer.MAX_MINUTES`; RED/GREEN `*-application-existing-buffer.log` |
 | F14 | Codex: edits made while a save was in flight were overwritten by the response. | `AvailabilityContent.tsx` `handleSave` | Later edits kept, only the saved baseline moves; RED/GREEN `*-web-inflight-save.log` |
 
+| F15 | a11y review F1 (1.4.3): the Availability pointer link was `text-primary` on slate-50, 3.97:1 light / 3.52:1 dark. | `AvailabilityPointer.tsx:9` | `text-blue-700 dark:text-blue-300` |
+| F16 | a11y review F2 (2.4.3): after a CONFLICT Reload the focused banner unmounted and focus fell to `<body>`. | `AvailabilityContent.tsx` `handleReload` | Focus moves to the Weekly hours title (spec line 370); asserted in the CONFLICT test |
+| F17 | a11y review F3 (4.1.2): with `aria-hidden` gone, the detail `<dialog>` had no accessible name. | `AppointmentDetail.tsx:579` | `aria-labelledby` on the dialog's title; test finds `dialog` by name |
+| F18 | a11y review F4: a failed Reset returned focus to the Reset button instead of the error. | `AvailabilityContent.tsx` `confirmReset` | `onCloseAutoFocus` focuses the error banner; asserted in the failed-reset test |
+| F19 | a11y review F8: Escape closed the detail dialog while its action was still running. | `AppointmentDetail.tsx` Escape listener | Listener off while `isActionLoading`; test |
+
 ## Tracked (out of scope)
 
 | # | Finding | gh issue | Debt ledger |
@@ -32,6 +38,8 @@ all three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
 | T3 | `AppointmentSettings.defaultTimezone` defaults to `UTC`; ADR-044 names Europe/London. | #911 | `PG-202-DEFAULT-TIMEZONE-UTC-001` |
 | T4 | Design registries list `/calendar/new` and `/calendar/[id]`, which do not exist. | #912 | `PG-202-STALE-CALENDAR-REGISTRY-ROWS-001` |
 | T5 | Known limits accepted in ADR-081: recurring series checked on the first occurrence only; `findNextSlot` has no UI caller; the daily cap is best-effort (Codex HIGH, waived in `tools/audit/codex-review-waivers.yaml` with this evidence, author marked pending owner confirmation). The legacy `CheckConflictsUseCase.findNextSlot` (pre-existing, unconfigured tenants) has the same existing-buffer read gap fixed in F13 for the new path. | #913 | `PG-202-AVAILABILITY-KNOWN-LIMITS-001` |
+| T6 | a11y review F5/F6: unchecked Switch track 1.24:1 (1.4.11) and white on primary 4.15:1. Shared tokens, pre-existing. | #871 (comment added) | (owned by #871) |
+| T7 | a11y review F7 (minor): after a failed Save the validation summary re-announces its count on each edit; F12: axe in jsdom skips colour contrast and does not cover the detail dialog or the pointer. | (recorded here; minor) | (none) |
 
 ## Notes
 

@@ -1,0 +1,28 @@
+date: 2026-10-17T20:56:59Z
+head: 1cd895b72447d31a6054a3f471775da0e573adbf
+cmd: pnpm --dir packages/application exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/application --coverage.include=src/usecases/scheduling/CheckConflicts.ts src/usecases/scheduling/__tests__/CheckConflicts.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/application
+      Coverage enabled with v8
+
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  21:57:00
+   Duration  929ms (transform 384ms, setup 0ms, import 562ms, tests 30ms, environment 0ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|---------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s   
+-------------------|---------|----------|---------|---------|---------------------
+All files          |    91.8 |       70 |     100 |   91.07 |                     
+ CheckConflicts.ts |    91.8 |       70 |     100 |   91.07 | 103,143,188,209,245 
+-------------------|---------|----------|---------|---------|---------------------
+
+=============================== Coverage summary ===============================
+Statements   : 91.8% ( 56/61 )
+Branches     : 70% ( 35/50 )
+Functions    : 100% ( 10/10 )
+Lines        : 91.07% ( 51/56 )
+================================================================================
+exit: 0

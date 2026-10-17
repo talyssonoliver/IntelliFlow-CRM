@@ -1,0 +1,46 @@
+date: 2026-10-17T20:57:15Z
+head: 1cd895b72447d31a6054a3f471775da0e573adbf
+cmd: pnpm --dir apps/web exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/web --coverage.include='src/app/calendar/availability/**/*.{ts,tsx}' --coverage.include='src/app/calendar/calendar-settings/**/*.{ts,tsx}' --coverage.include=src/app/appointments/new/page.tsx --coverage.include=src/components/appointments/AppointmentForm.tsx --coverage.include=src/components/appointments/AppointmentDetail.tsx --coverage.include=src/components/settings/ModuleSettingsLayout.tsx --coverage.include=src/components/settings/TimezoneSelector.tsx src/app/calendar src/components/appointments/__tests__ src/app/appointments/new src/components/settings/__tests__/ModuleSettingsLayout.test.tsx src/components/settings/__tests__/TimezoneSelector.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+      Coverage enabled with istanbul
+
+
+ Test Files  25 passed (25)
+      Tests  311 passed (311)
+   Start at  21:57:17
+   Duration  43.98s (transform 5.75s, setup 13.56s, import 22.64s, tests 55.78s, environment 33.88s)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   90.71 |    85.32 |   83.78 |   91.61 |                   
+ ...pointments/new |   73.33 |    47.61 |   57.14 |   71.42 |                   
+  page.tsx         |   73.33 |    47.61 |   57.14 |   71.42 | ...37,65-66,76,80 
+ ...r/availability |   96.29 |    88.77 |   97.18 |   96.73 |                   
+  ...tyContent.tsx |   92.91 |       84 |   93.33 |   93.91 | 84-90,275         
+  ...lity-draft.ts |   99.25 |    91.96 |     100 |   99.18 | 240               
+ ...ity/components |   98.52 |    88.23 |   96.15 |    98.4 |                   
+  ...rsCapCard.tsx |    90.9 |      100 |   85.71 |      90 | 127               
+  ClosuresList.tsx |   97.82 |    81.25 |   94.44 |   97.61 | 164               
+  ...HoursCard.tsx |     100 |    81.81 |     100 |     100 | ...87,161-162,198 
+ ...endar-settings |   98.11 |       70 |     100 |     100 |                   
+  ...gsContent.tsx |   98.07 |       70 |     100 |     100 | ...77,190-193,210 
+ ...ngs/components |    92.3 |    83.33 |   91.66 |    92.3 |                   
+  ...rationTab.tsx |      75 |       75 |      75 |      75 | 57                
+  ...faultsTab.tsx |     100 |       50 |     100 |     100 | 21                
+ ...s/appointments |   76.35 |    84.44 |   56.41 |   78.65 |                   
+  ...entDetail.tsx |   63.46 |    77.31 |    41.3 |   66.66 | ...21-730,767-818 
+  ...tmentForm.tsx |   89.89 |    92.45 |   78.12 |   91.76 | ...28,368,408-409 
+ ...nents/settings |   98.11 |    97.72 |     100 |   98.03 |                   
+  ...eSelector.tsx |   97.61 |    96.55 |     100 |    97.5 | 80                
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 90.71% ( 694/765 )
+Branches     : 85.32% ( 564/661 )
+Functions    : 83.78% ( 217/259 )
+Lines        : 91.61% ( 634/692 )
+================================================================================
+exit: 0

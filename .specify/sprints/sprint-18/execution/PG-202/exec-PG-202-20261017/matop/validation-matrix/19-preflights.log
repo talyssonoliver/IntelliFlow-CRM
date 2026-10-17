@@ -1,0 +1,14 @@
+date: 2026-10-17T20:58:08Z
+head: 1cd895b72447d31a6054a3f471775da0e573adbf
+cmd: node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202 && node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202 && node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-202 && node tools/scripts/validate-task-json-schemas.mjs
+[preflight] Checking PG-202 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\.specify\sprints\sprint-18\planning\PG-202-plan.md
+[preflight] OK — plan does not create any page.tsx; § 3.2 gate does not apply.
+[preflight] Checking PG-202 plan at C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\.specify\sprints\sprint-18\planning\PG-202-plan.md
+[preflight] OK — real Plan-Reviewer subagent evidence found.
+           ✓ <!-- plan-reviewer: subagent -->
+           ✓ reviewer_subagent: … line
+[preflight] Category Y check: PASS — UI Reachability row found
+[nav-wiring] Checking PG-202 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\.specify\sprints\sprint-18\planning\PG-202-plan.md
+[nav-wiring] OK — plan does not create any page.tsx under apps/web/src/app/.
+[schema-validator] checked 431 files — 0 broken
+exit: 0
