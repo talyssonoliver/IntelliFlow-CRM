@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-13
+last_updated: 2026-10-17
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -4750,6 +4750,69 @@ items:
       Resolve clientId and assignedTo tenant-scoped before the write (NOT_FOUND/BAD_REQUEST), add cross-tenant negatives; verify appointments.create attendeeIds/linkedCaseIds the same way.
     status: open
     notes: 'Pre-existing in cases.router.ts:347-364; found by the PG-198 AI-governance review (G5) and Codex. Cases part fixed on main by PG-204 (loadCaseCreateContext tenant-checks the client and an explicit assignee; the default assignee is ctx.tenant.userId), so the PG-198 duplicate fix was dropped when main 9ddaa23d3 was merged. Appointments part still to verify. gh #890.'
+  PG-205-CONTACT-SETTINGS-NO-ROLE-GATE-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/contact/contact-settings.router.ts builds every
+      procedure on plain tenantProcedure (lines 63-278), so any tenant user can
+      change the required-field and automation policy, reset it, and create,
+      rename or delete contact tags. PG-205 contact types (ADMIN/MANAGER only)
+      reference those tags as default tags.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Gate the write procedures with isContactTypeAdminRole and
+      logPermissionDenied; keep reads open; add USER-role negative tests.
+    status: open
+    notes: 'gh issue #908 (item 1). Out of PG-205 scope.'
+  PG-205-CONTACT-TAG-UPDATE-SPREAD-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: low
+    description: >-
+      contact-settings.router.ts:224-230 tags.update passes the whole validated
+      input (minus id) as Prisma data, so a field added to updateContactTagSchema
+      later becomes writable without reviewing this call.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Name the writable columns explicitly (name, colorToken, isActive, sortOrder).
+    status: open
+    notes: 'gh issue #908 (item 2).'
+  PG-205-LEAD-BULK-CONVERT-SKIP-DUPLICATES-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/lead/lead.router.ts:1584 (and :1589) bulk conversion
+      calls createMany({ data: contactData as any, skipDuplicates: true }); a
+      conflicting contact is dropped without a report, and the cast hides the
+      payload type, including contactType.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Type the payload and return or log the skipped rows.
+    status: open
+    notes: 'gh issue #908 (item 3).'
+  PG-205-CONTACT-SERVICE-ACCOUNT-ID-ECHO-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: low
+    description: >-
+      packages/application/src/services/ContactService.ts:92 echoes the
+      caller-supplied accountId in the client-facing ValidationError message.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Use a fixed message ("Account not found") and keep the id in the server log.
+    status: open
+    notes: 'gh issue #908 (item 4).'
 summary:
   total_items: 426
   by_severity:

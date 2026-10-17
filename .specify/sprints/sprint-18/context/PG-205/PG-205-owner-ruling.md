@@ -51,3 +51,29 @@ Asked in a second AskUserQuestion modal after Round 1 ANALYSIS raised three prod
 7. **Owner default → per-type choice "creator" or "account owner".** `ACCOUNT_OWNER` uses the owner of the linked
    account and falls back to the creator when there is no account (the account must be in the caller's tenant).
    Never an arbitrary user id.
+
+## Third ruling (recorded 2026-10-17T19:49:33Z, at exec, codex-review-05)
+
+Asked in an AskUserQuestion modal after `node scripts/codex-review.mjs` re-raised finding `0f290e25`
+(`contact-types.router.ts` delete: a type deleted at the same moment a contact is saved with it leaves that contact
+holding the deleted key, because contacts have no FK to contact types, ADR-080).
+
+Options offered: accept and waive with the evidence (recommended) / fix it properly by running contact create/update
+and the type lookup in one transaction under the contact-types lock / stop as NEEDS_HUMAN.
+
+8. **"Accept and waive (Recommended)."** The waiver is added to `tools/audit/codex-review-waivers.yaml` under the
+   owner's handle with this ruling as its evidence. Existing mitigations: a key that contacts still carry is never
+   re-issued to a new type; such a key is shown as plain text in the list; and Edit can clear or change it. The PR
+   body and `PG-205-findings.md` state the residual risk.
+   The reviewer re-anchored the same finding on the in-use count line (fingerprint `148dd60f`, codex-review-07);
+   it is waived under this same ruling, cross-referencing `0f290e25`.
+
+## Fourth ruling (recorded 2026-10-17T19:56:01Z, at exec, codex-review-08)
+
+Codex finding `183f8dca`: a type can require "Account" and default the owner to the account's owner, but neither
+the New nor the Edit contact form had an account field, so those options could not be used from the UI. Options
+offered: add an account picker (recommended) / drop the Account required-field option / keep, warn and waive.
+
+9. **"Add account picker (Recommended)."** New and Edit Contact gain a searchable Account field over the tenant's
+   accounts (`account.list`, the PG-204 case-form pattern) and send `accountId`, so account-required types and the
+   ACCOUNT_OWNER owner rule work from the UI.

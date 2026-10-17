@@ -1,0 +1,12 @@
+# 2026-10-17T18:13:26Z HEAD dbb06a8db RED for codex-review-05 findings (35dbcd23, 5d433a8c)
+     × shows "Type default" as the initial status, so the form shows what is sent (codex 5d433a8c) 178ms
+     × keeps an explicit "No type" after leaving and re-entering the step (codex 35dbcd23) 90ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected 'ACTIVE' to be '' // Object.is equality
+- Expected
++ Received
+AssertionError: expected 'reseller' to be '' // Object.is equality
+- Expected
++ Received
+ Test Files  1 failed (1)
+      Tests  2 failed | 16 skipped (18)

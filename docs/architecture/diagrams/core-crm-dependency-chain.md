@@ -331,3 +331,26 @@ web      useAccountTiers → sidebar tier links (?tier=), AccountsPageClient fil
          TierBadge (AccountCard), AccountDetail, AccountHierarchy, HierarchyTab,
          /accounts/account-tiers (AccountTiersContent)
 ```
+
+---
+
+## PG-205: Tenant Contact Types (2026-10-17)
+
+Tenant-defined contact types keyed by the existing `contacts.contactType` string
+(ADR-080).
+
+```
+domain   contact-type-defaults.ts  resolveContactCreateDefaults / missingTypeRequiredFields
+         Contact.ts                ContactTypeKey (string) + key-format invariant
+  ↓
+validators contact-types.ts        create/update/delete/setDefault schemas, DTOs
+  ↓
+db       ContactType + ContactTypeDefaultTag (2 Class A migrations, RLS)
+  ↓
+api      contactTypes.list / listActive / create / update / delete / setDefault
+         contact.create → type defaults (status, department, owner, tags, required fields)
+         contact.update → active-key check · contact.list { contactType, segment: 'vip' }
+  ↓
+web      /contacts/contact-types (ContactTypesContent), ContactTypeSelect (New + Edit),
+         ContactsPageClient Type filter + sidebar ?segment= links, ContactList Type badge
+```

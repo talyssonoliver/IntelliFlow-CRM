@@ -1,0 +1,13 @@
+# 2026-10-17T17:16:49Z HEAD bd628081a (+ uncommitted migrations/router)
+# cmd: node with-slot --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/contact-types.test.ts
+[test-slot] slot1 taken for PG-205-int@feat/pg-205-contact-types (holding group-intelliflow-db): pnpm exec vitest run --project integration tests/integration/contact-types.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205
+
+
+ Test Files  1 passed (1)
+      Tests  24 passed (24)
+   Start at  18:16:51
+   Duration  2.79s (transform 578ms, setup 636ms, import 769ms, tests 1.21s, environment 0ms)
+
+# exit: 0

@@ -1,0 +1,12 @@
+# 2026-10-17T19:57:29Z HEAD dbb06a8db RED for owner ruling 9 (account picker; codex 183f8dca)
+     × links an account from the Company & Role step and sends its id (ruling 9, codex 183f8dca) 247ms
+       × renders the account search on the company step and submits the chosen account 247ms
+     × shows the linked account and does not resend it when unchanged (ruling 9) 200ms
+     × sends a newly linked account, and null when the account is cleared (ruling 9) 114ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Pick Globex"
+TestingLibraryElementError: Unable to find an element with the text: Selected: Acme. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Pick Globex"
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Pick Globex"
+ Test Files  3 failed (3)
+      Tests  4 failed | 1 passed | 57 skipped (62)

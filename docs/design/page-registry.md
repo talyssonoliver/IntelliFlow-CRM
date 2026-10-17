@@ -759,7 +759,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 5: CRM Core — Contacts (3 routes)
+## Section 5: CRM Core — Contacts (4 routes)
 
 ### Contacts List (`/contacts`)
 
@@ -778,18 +778,33 @@ Each route entry uses this standard table format:
 
 ### New Contact (`/contacts/new`)
 
-| Field          | Value                                                        |
-| -------------- | ------------------------------------------------------------ |
-| **Task ID**    | PG-064, IFC-184                                              |
-| **File Path**  | `apps/web/src/app/contacts/(list)/new/page.tsx`              |
-| **Layout**     | `apps/web/src/app/contacts/(list)/layout.tsx`                |
-| **API Router** | `apps/api/src/modules/contact/contact.router.ts`             |
-| **E2E Test**   | `tests/e2e/forms.spec.ts`                                    |
-| **Unit Tests** | None                                                         |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms           |
-| **Status**     | Implemented                                                  |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                |
-| **Components** | "use client", multi-step form (3 steps), Card, ToastProvider |
+| Field          | Value                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-064, IFC-184, PG-205                                                                                                              |
+| **File Path**  | `apps/web/src/app/contacts/(list)/new/page.tsx`                                                                                      |
+| **Layout**     | `apps/web/src/app/contacts/(list)/layout.tsx`                                                                                        |
+| **API Router** | `apps/api/src/modules/contact/contact.router.ts`, `apps/api/src/modules/contact/contact-types.router.ts` (`contactTypes.listActive`) |
+| **E2E Test**   | `tests/e2e/forms.spec.ts`                                                                                                            |
+| **Unit Tests** | `apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx`                                                                       |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms                                                                                   |
+| **Status**     | Implemented                                                                                                                          |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                                        |
+| **Components** | "use client", multi-step form (3 steps), Card, ToastProvider                                                                         |
+
+### Contact Types (`/contacts/contact-types`)
+
+| Field          | Value                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-205                                                                                                 |
+| **File Path**  | `apps/web/src/app/contacts/(list)/contact-types/page.tsx`                                              |
+| **Layout**     | `apps/web/src/app/contacts/(list)/layout.tsx`                                                          |
+| **API Router** | `apps/api/src/modules/contact/contact-types.router.ts` (`contactTypes.*`), `contactSettings.tags.list` |
+| **E2E Test**   | None                                                                                                   |
+| **Unit Tests** | `apps/web/src/app/contacts/(list)/contact-types/__tests__/`, `.../contact-types/components/__tests__/` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                        |
+| **Status**     | Implemented                                                                                            |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                          |
+| **Components** | Server Suspense shell, ContactTypesContent, ContactTypeList, ContactTypeDialog, DefaultTagPicker       |
 
 ### Contact Detail (`/contacts/[id]`)
 

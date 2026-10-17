@@ -161,15 +161,15 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 5. CRM Core — Contacts (7 pages)
 
-| Route                        | Page             | Description                                     |
-| ---------------------------- | ---------------- | ----------------------------------------------- |
-| `/contacts`                  | Contacts List    | All contacts with filters                       |
-| `/contacts/new`              | New Contact      | Create contact form                             |
-| `/contacts/[id]`             | Contact Detail   | Contact profile and history                     |
-| `/contacts/[id]/edit`        | Edit Contact     | Edit contact fields                             |
-| `/contacts/contact-types`    | Contact Types    | Configure contact type labels and custom fields |
-| `/contacts/contact-settings` | Contact Settings | Tenant-level contact defaults and dedup rules   |
-| `/contacts/import-export`    | Import / Export  | Bulk CSV import and export with field mapping   |
+| Route                        | Page             | Description                                                                                |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------ |
+| `/contacts`                  | Contacts List    | All contacts with filters                                                                  |
+| `/contacts/new`              | New Contact      | Create contact form                                                                        |
+| `/contacts/[id]`             | Contact Detail   | Contact profile and history                                                                |
+| `/contacts/[id]/edit`        | Edit Contact     | Edit contact fields                                                                        |
+| `/contacts/contact-types`    | Contact Types    | Contact types: status, department, owner, required fields, tags applied on create (PG-205) |
+| `/contacts/contact-settings` | Contact Settings | Tenant-level contact defaults and dedup rules                                              |
+| `/contacts/import-export`    | Import / Export  | Bulk CSV import and export with field mapping                                              |
 
 ---
 

@@ -1,0 +1,14 @@
+# 2026-10-17T17:50:05Z HEAD dbb06a8db (Step 14 web GREEN)
+# cmd: pnpm --filter ./apps/web exec vitest run "src/app/contacts/(list)/contact-types" "src/components/contacts/__tests__/ContactTypeSelect.test.tsx" "src/components/contacts/__tests__/ContactTypeBadge.test.tsx" "src/components/contacts/__tests__/contact-type-colors.test.ts" "src/app/contacts/[id]/edit" "src/components/sidebar/__tests__/contacts-config.test.ts" "src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx" "src/app/contacts/(list)/__tests__/page.test.tsx" "src/components/contacts/__tests__/ContactList.contact-types.test.tsx" "src/components/contacts/__tests__/ContactList.test.tsx" "src/app/contacts/(list)/new/__tests__/page.test.tsx" "src/components/contacts/__tests__/ContactForm.test.tsx" "src/lib/contacts/__tests__/contact-search.test.ts"
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/web
+
+
+ Test Files  19 passed (19)
+      Tests  254 passed (254)
+   Start at  18:50:06
+   Duration  14.46s (transform 1.80s, setup 5.70s, import 10.35s, tests 15.09s, environment 19.49s)
+
+# exit: 0

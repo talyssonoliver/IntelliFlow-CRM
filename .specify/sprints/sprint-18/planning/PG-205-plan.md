@@ -31,21 +31,21 @@ ADR-080)" section, Step 22). **Prerequisites:** PG-178 ✅, PG-182 ✅ (verified
 
 ## Preflight Checks
 
-- [ ] `git branch --show-current` = `feat/pg-205-contact-types`; tree clean except PG-205 files.
-- [ ] `docker ps --filter name=postgres-test --format "{{.Status}}"` contains `healthy`.
-- [ ] Packages built (`ls packages/{domain,validators,db}/dist`).
-- [ ] Exec preflights: `node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-205`,
+- [x] `git branch --show-current` = `feat/pg-205-contact-types`; tree clean except PG-205 files. *(2026-10-17: verified; only PG-205 tracking/CSV + hook-regenerated report files modified.)*
+- [x] `docker ps --filter name=postgres-test --format "{{.Status}}"` contains `healthy`. *("Up 32 hours (healthy)")*
+- [x] Packages built (`ls packages/{domain,validators,db}/dist`). *(dist present; 15/15 turbo build at provisioning)*
+- [x] Exec preflights: `node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-205`,
       `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-205`,
       `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-205`,
-      `node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-205` (logs saved under the run's `matop/gates/`).
-- [ ] Record the context acknowledgement (files read + SHA-256; CSV EVIDENCE artifact).
+      `node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-205` (logs saved under the run's `matop/gates/`). *(16:35-16:36Z: plan-reviewer, page-doc-cochange, nav-wiring exit 0; exec-readiness exit 1 (task JSON cache absent) → `pnpm generate:metrics` → rerun exit 0; lighthouse-evidence + task-json-schemas exit 0. Worktree-landed (Gate 4b) BLOCKs until the single push at ship — re-run then.)*
+- [x] Record the context acknowledgement (files read + SHA-256; CSV EVIDENCE artifact). *(context_ack.json 16:37:13Z, 5/5 hashes match the context pack manifest)*
 
 **Files to Create:**
 - `.specify/sprints/sprint-18/attestations/PG-205/context_ack.json`
 
-- [ ] Coverage BEFORE snapshot via `/exec-coverage` → `artifacts/coverage/PG-205-before.json`.
-- [ ] `SELECT DISTINCT "contactType" FROM contacts` on the **local test DB** only (never prod) — records the value set
-      the no-backfill design assumes; any value outside the six is reported (unknown keys degrade to a neutral label).
+- [x] Coverage BEFORE snapshot via `/exec-coverage` → `artifacts/coverage/PG-205-before.json`. *(from the committed coverage-summary baseline; source stated in the file)*
+- [x] `SELECT DISTINCT "contactType" FROM contacts` on the **local test DB** only (never prod) — records the value set
+      the no-backfill design assumes; any value outside the six is reported (unknown keys degrade to a neutral label). *(17 rows, all NULL — `matop/gates/preflight-distinct-contacttype.log`)*
 
 ## Dependencies Verified
 
@@ -194,19 +194,19 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - `packages/domain/src/crm/contact/__tests__/Contact.additional.test.ts` (key-format invariant cases only)
 
-- [ ] precedence: explicit status/department beat type defaults; type beats none.
-- [ ] owner: CREATOR → creator; ACCOUNT_OWNER with valid owner → owner; no account / no owner / invalid owner →
+- [x] precedence: explicit status/department beat type defaults; type beats none.
+- [x] owner: CREATOR → creator; ACCOUNT_OWNER with valid owner → owner; no account / no owner / invalid owner →
       creator with `ownerSource` recording the reason.
-- [ ] tags: input ∪ type tags, case-insensitive dedup keeps the first spelling, capped at 20.
-- [ ] `missingTypeRequiredFields` over real columns (`phone, company, title, department, accountId`); blanks count as missing.
-- [ ] `CONTACT_POLICY_FIELD_TO_COLUMN.jobTitle === 'title'` (B14).
-- [ ] `generateContactTypeKey`: slug, never one of the six reserved keys (`customer` → `customer_2`), suffixes on
+- [x] tags: input ∪ type tags, case-insensitive dedup keeps the first spelling, capped at 20.
+- [x] `missingTypeRequiredFields` over real columns (`phone, company, title, department, accountId`); blanks count as missing.
+- [x] `CONTACT_POLICY_FIELD_TO_COLUMN.jobTitle === 'title'` (B14).
+- [x] `generateContactTypeKey`: slug, never one of the six reserved keys (`customer` → `customer_2`), suffixes on
       collision, empty slug → `type`, ≤ 40 chars, matches `CONTACT_TYPE_KEY_PATTERN`.
-- [ ] `CONTACT_TYPE_ADMIN_ROLES` pinned to `['ADMIN','MANAGER','OWNER','SUPER_ADMIN']`; `isContactTypeAdminRole`
+- [x] `CONTACT_TYPE_ADMIN_ROLES` pinned to `['ADMIN','MANAGER','OWNER','SUPER_ADMIN']`; `isContactTypeAdminRole`
       false for USER/undefined.
-- [ ] resolver output keys == allowlist (no tenantId/email/dataClassification).
-- [ ] `Contact` rejects a malformed `contactType`; still accepts all six seed keys.
-- Validation: `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts` → RED log `01-domain.red.log`.
+- [x] resolver output keys == allowlist (no tenantId/email/dataClassification).
+- [x] `Contact` rejects a malformed `contactType`; still accepts all six seed keys.
+- Validation: `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts` → RED log `01-domain.red.log`. *(RED run 2026-10-17T16:39:21Z: 31 failed / 66 passed, all assertion failures — log saved)*
 
 #### Step 2: Validator tests (AC-CTY-004, AC-CTY-005, AC-CTY-009; DoD 7; CA-6)
 
@@ -217,15 +217,15 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `packages/validators/__tests__/enum-consistency.spec.ts` (new block)
 - `packages/validators/__tests__/contact.test.ts` (key-format cases; existing six-value fixtures kept)
 
-- [ ] create/update schemas: name trim 1-50, colour ∈ 18 tokens, owner enum, `requiredFields` ⊆ real columns (rejects
+- [x] create/update schemas: name trim 1-50, colour ∈ 18 tokens, owner enum, `requiredFields` ⊆ real columns (rejects
       `jobTitle`), ≤ 10 deduped `defaultTagIds`, update requires `id` + `isActive`; `.strict()` rejects `key`,
       `isSystem`, `tenantId`, raw `ownerId` (it.each table).
-- [ ] `contactTypeNameSchema(existing, excludeId)` superRefine flags case-insensitive duplicates;
+- [x] `contactTypeNameSchema(existing, excludeId)` superRefine flags case-insensitive duplicates;
       `findDuplicateContactTypeName` excludes the edited row.
-- [ ] `contactTypeKeySchema` accepts the six seeds and `customer_2`; rejects uppercase, leading digit, 41 chars, spaces.
-- [ ] `contactQuerySchema` accepts `contactType` and `segment: 'vip'`; rejects other segments.
-- [ ] enum-consistency: contact-type colour tokens == `TAG_COLOR_TOKENS`; validator required keys == domain constant.
-- Validation: `pnpm --filter ./packages/validators exec vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts` → `02-validators.red.log`.
+- [x] `contactTypeKeySchema` accepts the six seeds and `customer_2`; rejects uppercase, leading digit, 41 chars, spaces.
+- [x] `contactQuerySchema` accepts `contactType` and `segment: 'vip'`; rejects other segments.
+- [x] enum-consistency: contact-type colour tokens == `TAG_COLOR_TOKENS`; validator required keys == domain constant.
+- Validation: `pnpm --filter ./packages/validators exec vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts` → `02-validators.red.log`. *(RED run 2026-10-17T16:52:48Z: 43 failed / 76 passed, assertion failures)*
 
 #### Step 3: Resolver + router tests (AC-CTY-002, -003, -004, -007, -008, -015, -016; SEC-1..3, 9-18, 21; CA-1, CA-7)
 
@@ -236,24 +236,24 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - `apps/api/src/__tests__/app-router.smoke.test.ts` (twin of the `caseTypes` block at :177-186, six procedures)
 
-- [ ] resolver: fast path (six present) never takes the lock; missing rows → `$executeRaw` lock (tagged template, key
+- [x] resolver: fast path (six present) never takes the lock; missing rows → `$executeRaw` lock (tagged template, key
       built in JS) + `createMany` of only the missing keys, no `skipDuplicates`; P2002 → re-read; other errors abort.
-- [ ] resolver: `loadContactTypeByKey` scopes by `tenantId`; `activeOnly` excludes inactive; `resolveDefaultTagNames`
+- [x] resolver: `loadContactTypeByKey` scopes by `tenantId`; `activeOnly` excludes inactive; `resolveDefaultTagNames`
       returns only active same-tenant tag names.
-- [ ] router: unauthenticated rejected; USER FORBIDDEN on create/update/delete/setDefault with no write and
+- [x] router: unauthenticated rejected; USER FORBIDDEN on create/update/delete/setDefault with no write and
       `$transaction` not called (table); MANAGER allowed; missing role fails closed; denial audited.
-- [ ] FOREIGN id → NOT_FOUND with `where {id: FOREIGN, tenantId}` on update/delete/setDefault.
-- [ ] smuggled `tenantId`/`key`/`isSystem` rejected by `.strict()`; created row's `tenantId` = session tenant.
-- [ ] foreign or inactive default tag → one BAD_REQUEST; 11th tag rejected; 51st type rejected (cap counted under lock).
-- [ ] P2002 → fixed CONFLICT message without input echo; unknown errors rethrown.
-- [ ] delete refuses system ("deactivate instead"), default, and in-use (count by key + tenantId) types; count + delete
+- [x] FOREIGN id → NOT_FOUND with `where {id: FOREIGN, tenantId}` on update/delete/setDefault.
+- [x] smuggled `tenantId`/`key`/`isSystem` rejected by `.strict()`; created row's `tenantId` = session tenant.
+- [x] foreign or inactive default tag → one BAD_REQUEST; 11th tag rejected; 51st type rejected (cap counted under lock).
+- [x] P2002 → fixed CONFLICT message without input echo; unknown errors rethrown.
+- [x] delete refuses system ("deactivate instead"), default, and in-use (count by key + tenantId) types; count + delete
       in one `$transaction`; unused custom type deleted.
-- [ ] update cannot deactivate the default; replaces default-tag rows in the same transaction; key never changes.
-- [ ] setDefault: target must be active; clear then set in one `$transaction`; `id: null` clears.
-- [ ] list: ordered `sortOrder, name`; `defaultTags {id,name}`; `contactCount` from one `groupBy` with tenantId; `canEdit`.
-- [ ] audit payloads carry ids + changed field names only (no names of tags, no PII).
-- [ ] smoke: `contactTypes` registered with `list, listActive, create, update, delete, setDefault`.
-- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact-type-resolver.test.ts src/modules/contact/__tests__/contact-types.router.test.ts src/__tests__/app-router.smoke.test.ts` → `03-api-router.red.log`.
+- [x] update cannot deactivate the default; replaces default-tag rows in the same transaction; key never changes.
+- [x] setDefault: target must be active; clear then set in one `$transaction`; `id: null` clears.
+- [x] list: ordered `sortOrder, name`; `defaultTags {id,name}`; `contactCount` from one `groupBy` with tenantId; `canEdit`.
+- [x] audit payloads carry ids + changed field names only (no names of tags, no PII).
+- [x] smoke: `contactTypes` registered with `list, listActive, create, update, delete, setDefault`.
+- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact-type-resolver.test.ts src/modules/contact/__tests__/contact-types.router.test.ts src/__tests__/app-router.smoke.test.ts` → `03-api-router.red.log`. *(RED run 2026-10-17T16:58:23Z: 45 failed / 15 passed; assertion failures plus 2 `mock.calls[0]` TypeErrors on calls the stub never made)*
 
 #### Step 4: Contact create/update/list wiring tests (AC-CTY-010..-012, -014, -015; SEC-4..8; CA-3)
 
@@ -263,26 +263,30 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - `apps/api/src/modules/contact/__tests__/contact-automation.test.ts` (B14 cases)
 
-- [ ] create with an active key applies default status/department/tags; explicit input wins.
-- [ ] unknown, foreign and inactive keys → identical `BAD_REQUEST "Invalid contact type"`; `createContact` and quota
+- [x] create with an active key applies default status/department/tags; explicit input wins.
+- [x] unknown, foreign and inactive keys → identical `BAD_REQUEST "Invalid contact type"`; `createContact` and quota
       side effects not reached.
-- [ ] ACCOUNT_OWNER: same-tenant account owner passing `tenantUserWhere` → owner; foreign account / owner failing the
+- [x] ACCOUNT_OWNER: same-tenant account owner passing `tenantUserWhere` → owner; foreign account / owner failing the
       check → creator; `account.findFirst` asserted with `tenantId`; fallback recorded in audit metadata only.
-- [ ] required = tenant-wide ∪ type, checked after defaults; missing → BAD_REQUEST.
-- [ ] B14: tenant `jobTitle` rule checks `title` on create (missing → fails; present → passes) and on update (explicit clear fails).
-- [ ] update: unchanged stored inactive key accepted; new inactive/foreign key rejected; type change checks the new
+- [x] required = tenant-wide ∪ type, checked after defaults; missing → BAD_REQUEST.
+- [x] B14: tenant `jobTitle` rule checks `title` on create (missing → fails; present → passes) and on update (explicit clear fails).
+- [x] update: unchanged stored inactive key accepted; new inactive/foreign key rejected; type change checks the new
       type's required fields against stored row + input; defaults not re-applied.
-- [ ] all six seed keys accepted on create/update.
-- [ ] list: `contactType` filter and `segment: 'vip'` (ContactTag names matching `vip` case-insensitively ∪ `'vip'`,
+- [x] all six seed keys accepted on create/update.
+- [x] list: `contactType` filter and `segment: 'vip'` (ContactTag names matching `vip` case-insensitively ∪ `'vip'`,
       capped at 20) → `tags.hasSome`; `tenantId` always in `where`.
-- [ ] input `ownerId`/`tenantId`/`dataClassification` never honoured.
-- [ ] contact CREATE audit `afterState` contains `contactType`, `appliedDefaults` (field names only) and `ownerFallback`;
+- [x] input `ownerId`/`tenantId`/`dataClassification` never honoured.
+- [x] contact CREATE audit `afterState` contains `contactType`, `appliedDefaults` (field names only) and `ownerFallback`;
       no default values or PII (AC-CTY-016).
-- [ ] the ACCOUNT_OWNER account lookup and the contact insert run inside one `$transaction` (SEC-6 / CA-7): assert both
-      calls go through the transaction client.
-- [ ] SEC-19: no dedicated limiter is added; a test asserts the new procedures are plain `tenantProcedure` (inherited
-      AUTHENTICATED tier) and the caps (50 types, 10 tags) are enforced.
-- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact.router.contact-types.test.ts src/modules/contact/__tests__/contact-automation.test.ts` → `04-api-contact.red.log`.
+- [x] *(Revised at exec, 2026-10-17 — original text: "the ACCOUNT_OWNER account lookup and the contact insert run inside
+      one `$transaction` (SEC-6 / CA-7): assert both calls go through the transaction client". Not feasible without
+      refactoring `ContactService`: `createContact` writes through the container repository, not a request transaction;
+      L1 forbids that refactor here. Security-lead accepted the residual window in Round 3: same tenant only, no escalation.)*
+      Revised item: the ACCOUNT_OWNER account lookup is tenant-scoped and runs immediately before the insert; the test asserts
+      the lookup's call order precedes `createContact`. Recorded in the findings doc and delivery report.
+- [x] SEC-19: no dedicated limiter is added; a test asserts the new procedures are plain `tenantProcedure` (inherited
+      AUTHENTICATED tier) and the caps (50 types, 10 tags) are enforced. *(covered in `contact-types.router.test.ts`: module-denied tenant can list; 50-type cap; 10-tag cap in the validator tests)*
+- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact.router.contact-types.test.ts src/modules/contact/__tests__/contact-automation.test.ts` → `04-api-contact.red.log`. *(RED run 2026-10-17T17:01:20Z: 22 failed / 38 passed; the one TRPCError is the B14 bug itself rejecting a titled contact)*
 
 #### Step 5: DB integration test (AC-CTY-002, -004..-008, -015; SEC-18, SEC-21; CA-4, CA-6, D12)
 
@@ -290,23 +294,23 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `tests/integration/contact-types.test.ts` (template `tests/integration/case-types.test.ts`, index handling from
   `tests/integration/approval-policies.test.ts:83`)
 
-- [ ] `ensureMigrationSql()` replays `20261017120000` when its CHECK is absent; index migration in its own `beforeAll`
+- [x] `ensureMigrationSql()` replays `20261017120000` when its CHECK is absent; index migration in its own `beforeAll`
       as one `$executeRawUnsafe` statement outside any transaction, skipped if a valid index already exists.
-- [ ] setup failure **throws** (no silent `ctx.skip()`); only a missing `DATABASE_URL` may skip, and pre-ship always has it.
-- [ ] CHECKs reject: bad key, padded name, unknown colour, bad `defaultOwner`, `requiredFields` with `email`
+- [x] setup failure **throws** (no silent `ctx.skip()`); only a missing `DATABASE_URL` may skip, and pre-ship always has it.
+- [x] CHECKs reject: bad key, padded name, unknown colour, bad `defaultOwner`, `requiredFields` with `email`
       (23514), negative sortOrder, inactive default, custom row with key `partner` (23514).
-- [ ] migration colour list == `contact_tags_colorToken_check` list (read from `pg_constraint`).
-- [ ] `(tenantId,key)` and `(tenantId, lower(name))` unique per tenant; the same in another tenant succeeds; second
+- [x] migration colour list == `contact_tags_colorToken_check` list (read from `pg_constraint`).
+- [x] `(tenantId,key)` and `(tenantId, lower(name))` unique per tenant; the same in another tenant succeeds; second
       default rejected.
-- [ ] default tag of tenant B on a type of tenant A rejected by the composite FK; deleting a ContactTag removes its
+- [x] default tag of tenant B on a type of tenant A rejected by the composite FK; deleting a ContactTag removes its
       default-tag rows (and the tag delete succeeds); deleting a tenant cascades.
-- [ ] RLS enabled + `_tenant_isolation` policies present on both tables; isolation via a non-owner role when the
+- [x] RLS enabled + `_tenant_isolation` policies present on both tables; isolation via a non-owner role when the
       `authenticated` role exists (else that one assertion is disclosed as skipped, as PG-204).
-- [ ] two concurrent `ensureSystemContactTypes` on a fresh tenant → exactly six rows.
-- [ ] `contacts_tenantId_contactType_idx`: `indisvalid AND indisready`, columns `(tenantId, contactType)`.
-- [ ] orphan outcome: deleting an unused type while a contact is created with that key in another transaction —
+- [x] two concurrent `ensureSystemContactTypes` on a fresh tenant → exactly six rows.
+- [x] `contacts_tenantId_contactType_idx`: `indisvalid AND indisready`, columns `(tenantId, contactType)`.
+- [x] orphan outcome: deleting an unused type while a contact is created with that key in another transaction —
       the outcome (orphan key tolerated) is asserted and documented.
-- Validation: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-int --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/contact-types.test.ts` → `05-db.red.log`.
+- Validation: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-int --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/contact-types.test.ts` → `05-db.pre-migration.log`. *(Run 2026-10-17T17:02:46Z: NOT an assertion RED — before the migration exists setup fails (ENOENT), exit 1, 24 tests not run. Recorded as the pre-implementation state; it also shows the suite fails loudly instead of skipping.)*
 
 #### Step 6: Web tests (AC-CTY-001, -003, -013, -014, -017; A11Y-1..12; CA-2, CA-5)
 
@@ -334,42 +338,48 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `apps/web/src/components/contacts/__tests__/ContactForm.test.tsx` (trpc mock for the picker)
 - `apps/web/src/lib/contacts/__tests__/contact-search.test.ts` (filter fields, `isDefaultContactQuery`, `segmentToFilter`)
 
-- [ ] page: no "coming soon"; Suspense skeleton has the bento grid.
-- [ ] Content: loading, error + Retry, breadcrumbs, `lg:grid-cols-12`, read-only note for USER, default RadioGroup,
+- [x] page: no "coming soon"; Suspense skeleton has the bento grid.
+- [x] Content: loading, error + Retry, breadcrumbs, `lg:grid-cols-12`, read-only note for USER, default RadioGroup,
       CONFLICT shown inside the dialog with focus on name, `contactTypes` invalidated after each mutation, live output
       silent on mount, axe (color-contrast off) on page/dialog/delete/empty.
-- [ ] List: EmptyState `entity="contacts" phase="passive"`, no extra tab stop; rows show text badges (Default,
+- [x] List: EmptyState `entity="contacts" phase="passive"`, no extra tab stop; rows show text badges (Default,
       Inactive, System) and "N contacts"; Delete `aria-disabled` + focusable + visible reason for system/default/in-use;
       `openCreate` via ref; focus returns to the trigger; after delete focus goes to "New Contact Type".
-- [ ] Dialog: 18 labelled radios in fieldset/legend; arrows cycle all 18 in DOM order; checked glyph; required-field
+- [x] Dialog: 18 labelled radios in fieldset/legend; arrows cycle all 18 in DOM order; checked glyph; required-field
       checkboxes; owner RadioGroup; status Select; department; key read-only on edit; dirty fingerprint; Save disabled
       when clean; errors `role=alert` + `aria-invalid`; error text classes `text-red-700 dark:text-red-300`.
-- [ ] DefaultTagPicker: checkboxes in fieldset/legend; at 10 the rest are `aria-disabled`, focusable, hint linked,
+- [x] DefaultTagPicker: checkboxes in fieldset/legend; at 10 the rest are `aria-disabled`, focusable, hint linked,
       live message; inactive tags not offered.
-- [ ] Delete dialog: AlertDialog focuses Cancel; server error stays inside.
-- [ ] colours: every token maps to fixed classes; unknown → slate; **contrast test fails the run** if ring vs card <
+- [x] Delete dialog: AlertDialog focuses Cancel; server error stays inside.
+- [x] colours: every token maps to fixed classes; unknown → slate; **contrast test fails the run** if ring vs card <
       3:1 or badge text < 4.5:1 in light or dark.
-- [ ] Badge: text always rendered, dot `aria-hidden`; unknown key → neutral label.
-- [ ] Select: visible label; "No type"; stored inactive key shown "Name (inactive)" with `aria-describedby` hint; deleted
+- [x] Badge: text always rendered, dot `aria-hidden`; unknown key → neutral label.
+- [x] Select: visible label; "No type"; stored inactive key shown "Name (inactive)" with `aria-describedby` hint; deleted
       key shown "<key> (inactive)"; fetch error = one `role=alert` + retry, submit stays enabled; default preselected on
       New only after load and only if untouched.
-- [ ] New page: picker replaces the inline select; no "Please specify" field; payload sends the key.
-- [ ] Edit page (new test): picker in `ContactForm`; unchanged inactive key submitted as is.
-- [ ] list: Type filter; `?segment=partners|vendors` → type filter; `?segment=vip` → removable chip
+- [x] New page: picker replaces the inline select; no "Please specify" field; payload sends the key.
+- [x] Edit page (new test): picker in `ContactForm`; unchanged inactive key submitted as is.
+- [x] list: Type filter; `?segment=partners|vendors` → type filter; `?segment=vip` → removable chip
       "Remove filter: VIP" (focus to next chip else Type filter trigger; polite announcement); type filter not reset when
       its option is inactive; filter change `router.replace`s the URL; `useSearchParams` inside a Suspense boundary.
-- [ ] ContactList: badge per card; unknown key neutral label.
-- [ ] NF-002: `contactTypes.listActive` is queried with `staleTime: 5 * 60 * 1000` (asserted on the mocked `useQuery`
+- [x] ContactList: badge per card; unknown key neutral label.
+- [x] NF-002: `contactTypes.listActive` is queried with `staleTime: 5 * 60 * 1000` (asserted on the mocked `useQuery`
       options in `ContactTypeSelect.test.tsx`), and a settings mutation calls `utils.contactTypes.invalidate()`
       (asserted in `ContactTypesContent.test.tsx`).
-- [ ] A11Y-9: invalid dialog fields carry `aria-invalid` + `aria-describedby` → the error text id; on submit with errors
+- [x] A11Y-9: invalid dialog fields carry `aria-invalid` + `aria-describedby` → the error text id; on submit with errors
       focus moves to the first invalid field.
-- [ ] A11Y-11: the settings page renders exactly one `h1` and section headings are `h2` (no skipped level); the empty
+- [x] A11Y-11: the settings page renders exactly one `h1` and section headings are `h2` (no skipped level); the empty
       state adds no extra tab stop.
-- [ ] wiring: `ContactTypeDialog` renders `DefaultTagPicker`; `ContactList` renders `ContactTypeBadge`; the
+- [x] wiring: `ContactTypeDialog` renders `DefaultTagPicker`; `ContactList` renders `ContactTypeBadge`; the
       `ContactsPageClient` Type filter options come from `contactTypes.listActive`.
-- [ ] sidebar config: segment hrefs unchanged and mapped by `segmentToFilter`.
+- [x] sidebar config: segment hrefs unchanged and mapped by `segmentToFilter`.
 - Validation: `pnpm --filter ./apps/web exec vitest run "src/app/contacts/(list)/contact-types" src/components/contacts/__tests__/ContactTypeSelect.test.tsx src/components/contacts/__tests__/ContactTypeBadge.test.tsx src/components/contacts/__tests__/contact-type-colors.test.ts "src/app/contacts/[id]/edit" src/components/sidebar/__tests__/contacts-config.test.ts "src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx" src/components/contacts/__tests__/ContactList.contact-types.test.tsx "src/app/contacts/(list)/new/__tests__/page.test.tsx" src/components/contacts/__tests__/ContactForm.test.tsx src/lib/contacts/__tests__/contact-search.test.ts` → `06-web.red.log`.
+  *(Exec evidence: all 14 new + 3 modified test files written before the web code; `06-web.red.log` 123 failed /
+  131 passed (valid RED: assertions, not import errors). Same command GREEN in `14-web.green.log` 19 files / 254 tests,
+  exit 0. One test corrected at GREEN, disclosed: the Dialog arrow-key assertion now `await waitFor(...)`, because
+  Radix roving focus moves focus on the next tick (the behaviour under test is unchanged). `useSearchParams` sits
+  inside the route-level Suspense boundary of the existing `(list)/loading.tsx`, so `(list)/page.tsx` needed no
+  change. Only one chip exists (VIP), so focus moves to the Type filter.)*
 
 ### Phase 2 — GREEN: Make Tests Pass (layer order: domain → validators → db → adapters/application → api → web)
 
@@ -383,8 +393,8 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
   key-format invariant; `CONTACT_TYPES` unchanged)
 - `packages/domain/src/index.ts` (export the new module)
 
-- [ ] Step 1 tests GREEN → `07-domain.green.log`; `pnpm --filter ./packages/domain test` (full) and
-      `pnpm --filter ./packages/domain build` (dist rebuild before downstream packages).
+- [x] Step 1 tests GREEN → `07-domain.green.log`; `pnpm --filter ./packages/domain test` (full) and
+      `pnpm --filter ./packages/domain build` (dist rebuild before downstream packages). *(07-domain.green.log 97/97; full suite 105 files / 3056 tests exit 0; typecheck + build exit 0 — `matop/gates/step7-domain-*.log`)*
 
 #### Step 8: Validators
 
@@ -396,8 +406,8 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
   `contactType`, `segment`; `ContactType` type export renamed in line with D1)
 - `packages/validators/src/index.ts` (export `contact-types`)
 
-- [ ] Step 2 tests GREEN → `08-validators.green.log`; `pnpm --filter ./packages/validators test`;
-      `pnpm --filter ./packages/validators build`.
+- [x] Step 2 tests GREEN → `08-validators.green.log`; `pnpm --filter ./packages/validators test`;
+      `pnpm --filter ./packages/validators build`. *(08-validators.green.log 119/119; full 58 files / 2740 tests; typecheck, lint, build exit 0)*
 
 #### Step 9: Prisma schema + migrations (Class A, L13)
 
@@ -410,13 +420,12 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
   back-relation, `Contact @@index([tenantId, contactType])`, Tenant `contactTypes … @ignore`, SQL-only objects comment)
 - `packages/db/src/index.ts` (export `ContactType`, `ContactTypeDefaultTag`)
 
-- [ ] Header: Class A, additive, `contacts` untouched, brief `contact_tags` lock note, forward-only recovery, prod only
+- [x] Header: Class A, additive, `contacts` untouched, brief `contact_tags` lock note, forward-only recovery, prod only
       via `prisma migrate deploy`; CHECKs with `::text[]` casts.
-- [ ] `pnpm --filter ./packages/db exec prisma validate`; `pnpm --filter ./packages/db db:generate`.
-- [ ] Apply to the **local test DB** through the guard (`guard-db-target`, :5433 only) with `prisma migrate deploy`;
-      `prisma migrate diff` shows no unexpected drift (SQL-only objects documented).
-- [ ] `pnpm --filter ./packages/db test` (incl. `src/__tests__/rls-migrations.test.ts`); `pnpm --filter ./packages/db build`.
-- [ ] Step 5 integration test GREEN → `09-db.green.log` (slot + `--exclusive intelliflow-db`).
+- [x] `pnpm --filter ./packages/db exec prisma validate`; `pnpm --filter ./packages/db db:generate`.
+- [x] *(Revised at exec — original: "Apply to the local test DB through the guard with `prisma migrate deploy`". Done on a FRESH per-run DB on the same :5433 server instead of the shared DB other lanes use, as the batch-2 mission recommends.)* `pnpm test:db:run` created `intelliflow_test_run_tn2ab0_jhc_4tom` and `prisma migrate deploy` applied ALL migrations incl. both new ones ("All migrations have been successfully applied"). The tool then crashed (pre-existing bug: `io.stderr` calls itself in `scripts/test-db.mjs`) before running the diff or dropping the DB, so `prisma migrate diff --from-config-datasource --to-schema` was run against that DB directly: only pre-existing drift (cases FK, report_templates idx, document_type_definitions, users.locale), none from PG-205 — `matop/gates/step9-ephemeral-*.log`. The scratch DB was left for cleanup (mission: no test:db:down); tooling bug filed with the out-of-scope issue.
+- [x] `pnpm --filter ./packages/db test` (incl. `src/__tests__/rls-migrations.test.ts`); `pnpm --filter ./packages/db build`. *(build/typecheck exit 0; db test suite runs at Step 19)*
+- [x] Step 5 integration test GREEN → `09-db.green.log` (slot + `--exclusive intelliflow-db`). *(24/24 passed, none skipped; commit dbb06a8db)*
 
 #### Step 10: Application + adapters (type widening only)
 
@@ -424,7 +433,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `packages/application/src/services/ContactService.ts` (:7, :134 `ContactTypeKey`)
 - `packages/adapters/src/repositories/PrismaContactRepository.ts` (:8; remove the `as ContactType` casts at :114, :199, :245)
 
-- [ ] `pnpm --filter ./packages/application test`; `pnpm --filter ./packages/adapters test`; typecheck both.
+- [x] `pnpm --filter ./packages/application test`; `pnpm --filter ./packages/adapters test`; typecheck both. *(application 58 files / 1480 tests, adapters 110 / 2982, exit 0; typecheck exit 0 — `matop/gates/step10-*.log`. Done together with Step 7 because the pre-commit repo-wide typecheck requires it. Deviation: the adapter casts are kept, renamed to `ContactTypeKey`, so a NULL column still reconstitutes exactly as before — no runtime change. Commit `bd628081a`.)*
 
 #### Step 11: Contact-types router, resolver, registration, audit type
 
@@ -438,7 +447,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `docs/design/ui-flow-mapping.md`, `docs/design/information-architecture.md` (router +1, procedures +6 — **same
   commit** as the `router.ts` registration so the reconciliation tests stay green)
 
-- [ ] Step 3 tests GREEN → `11-api-router.green.log`; explicit `.output()` schemas (no casts, TS2589 rule).
+- [x] *(Revised at exec — original: "explicit `.output()` schemas". Implemented as explicit typed return contracts on every procedure (`Promise<ContactTypeDto>`, `Promise<ContactTypeListDto>`, `Promise<ContactTypeOptionDto[]>`), the merged PG-204 `caseTypes` pattern; this satisfies the TS2589 rule (explicit contracts, no casts) without runtime output parsing.)* Step 3 tests GREEN → `11-api-router.green.log`. *(60/60; API typecheck exit 0. `rbac.ts` role maps gained `contact_type` (required by the new ResourceType). Registry counts updated in the same commit dbb06a8db: reconciliation tests 15/15.)*
 
 #### Step 12: Contact create/update/list wiring + B14 (replaces the fixed enum and inline check)
 
@@ -447,10 +456,10 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
   `buildContactListWhere`, the `assertRequiredContactFields` calls)
 - `apps/api/src/modules/contact/contact-automation.ts` (B14 policy-key → column mapping)
 
-- [ ] Step 4 tests GREEN → `12-api-contact.green.log`.
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205 -- pnpm --filter ./apps/api test` (full suite);
-      existing suites that fail only for a missing `contactType` mock get the mock default (listed in the delivery report).
-- [ ] `pnpm --filter ./apps/api typecheck`.
+- [x] Step 4 tests GREEN → `12-api-contact.green.log`. *(60/60)*
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205 -- pnpm --filter ./apps/api test` (full suite);
+      existing suites that fail only for a missing `contactType` mock get the mock default (listed in the delivery report). *(307 files / 7791 passed / 18 skipped, exit 0 — no existing suite needed changes)*
+- [x] `pnpm --filter ./apps/api typecheck`.
 
 #### Step 13: Contact Types settings page (replaces the stub)
 
@@ -467,11 +476,11 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - `apps/web/src/app/contacts/(list)/contact-types/page.tsx` (stub → server Suspense shell)
 
-- [ ] Use `/frontend-design` guidance; Material Symbols only; playbook §1-§4 (PageHeader, bento, EmptyState passive,
+- [x] Use `/frontend-design` guidance; Material Symbols only; playbook §1-§4 (PageHeader, bento, EmptyState passive,
       CTAs, forwardRef); shared `apps/web/src/components/shared/section-header.tsx` (not the territory-local copy);
       no TagsTab copy (A8). If a new glyph is added (e.g. the checked-swatch `check`), run
       `node tools/scripts/subset-material-symbols.mjs --verify`.
-- [ ] Reuse (W2/W3): `contact-type-colors.ts` **imports** `swatchClass` / `toColorToken` / `COLOR_SWATCH_CLASSES` from
+- [x] Reuse (W2/W3): `contact-type-colors.ts` **imports** `swatchClass` / `toColorToken` / `COLOR_SWATCH_CLASSES` from
       `apps/web/src/lib/color-tokens.ts` (the shared 18-token map, PG-197/PG-198) and only adds the outline ring,
       text labels and badge (`-200`/`-900`) classes — no second swatch map. `ContactTypeBadge` composes the
       `@intelliflow/ui` `Badge`. `DefaultTagPicker` is NEW (verified): an inline capped checkbox fieldset; the
@@ -479,10 +488,12 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
       has no cap semantics. `ContactTypeList` / `DeleteContactTypeDialog` / `ContactTypesLoading` follow the PG-204
       case-types pattern module-locally (different payload; cross-module imports avoided) — recorded as accepted
       near-duplication in the findings doc.
-- [ ] Wiring: `ContactTypeDialog` renders `DefaultTagPicker`; `ContactTypeList`, `ContactTypeDialog` and
+- [x] Wiring: `ContactTypeDialog` renders `DefaultTagPicker`; `ContactTypeList`, `ContactTypeDialog` and
       `ContactTypeBadge` import `contact-type-colors`; `ContactTypesContent` invalidates `contactTypes` after every mutation.
-- [ ] A11Y-9 / A11Y-11 implemented (describedby + focus-first-invalid; one h1, h2 sections).
-- [ ] Step 6 settings-page tests GREEN.
+- [x] A11Y-9 / A11Y-11 implemented (describedby + focus-first-invalid; one h1, h2 sections).
+- [x] Step 6 settings-page tests GREEN. *(`14-web.green.log`: contact-types dir 10 files GREEN; glyphs `check`, `badge`
+      already in the subset — `subset-material-symbols.mjs --verify` "audit OK — 370 icons", exit 0; web typecheck and
+      lint exit 0 — `gates/14-web-typecheck.log`, `gates/14-web-lint.log`.)*
 
 #### Step 14: Picker, list filter, badge, segments (retires the hard-coded options and "Other")
 
@@ -498,12 +509,14 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `apps/web/src/app/contacts/(list)/ContactsPageClient.tsx`, `apps/web/src/lib/contacts/contact-search.ts`,
   `apps/web/src/components/contacts/ContactList.tsx`
 
-- [ ] Wiring: `ContactList` renders `ContactTypeBadge`; `ContactsPageClient` builds the Type filter from
+- [x] Wiring: `ContactList` renders `ContactTypeBadge`; `ContactsPageClient` builds the Type filter from
       `contactTypes.listActive`; New and Edit render `ContactTypeSelect`.
-- [ ] NF-002: `listActive` queried with `staleTime: 5 * 60 * 1000`.
-- [ ] Step 6 remaining tests GREEN → `14-web.green.log`.
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205 -- pnpm --filter ./apps/web exec vitest run` (full web suite).
-- [ ] `pnpm --filter ./apps/web typecheck`.
+- [x] NF-002: `listActive` queried with `staleTime: 5 * 60 * 1000`. *(`CONTACT_TYPES_STALE_TIME_MS`, shared by
+      `ContactTypeSelect` and `ContactsPageClient`; asserted in `ContactTypeSelect.test.tsx`)*
+- [x] Step 6 remaining tests GREEN → `14-web.green.log`. *(19 files / 254 tests, exit 0, run at 2026-10-17T17:50:05Z on HEAD dbb06a8db +
+      uncommitted web tree; `ContactListSegment` type export added to `packages/validators/src/contact.ts`)*
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205 -- pnpm --filter ./apps/web exec vitest run` (full web suite). *(825 files / 12976 tests, exit 0, 17:51:54Z-17:59:02Z — `gates/14-web-full-suite.log`)*
+- [x] `pnpm --filter ./apps/web typecheck`. *(exit 0 — `gates/14-web-typecheck.log`; lint exit 0 — `gates/14-web-lint.log`)*
 
 ### Phase 3 — REFACTOR: cleanup, docs, tracking
 
@@ -513,7 +526,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - none beyond the files already created/modified in Steps 7-14 (no behaviour change; any touched file is listed in the
   delivery report)
 
-- [ ] duplication check (`/simplify`-style review), lint all touched packages, tests still green.
+- [x] duplication check (`/simplify`-style review), lint all touched packages, tests still green. *(2026-10-17T21:30-21:50Z, recovery lane: Skill simplify, 4 parallel review sub-agents; applied/skipped list in `matop/step15-simplify.md`; lint 7/7 packages exit 0 (`matop/gates/step19-lint-*.log`); api contact 398 pass/2 skip, application ContactService 101/101; commit `75bec9439`)*
 
 #### Step 16: Docs, registries, ADR/PRD
 
@@ -531,10 +544,12 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` (row correction, Category A: KPI note, DoD taxonomy
   wording → owner ruling, artifacts list extended; old → new recorded in the findings doc) + `npx tsx tools/scripts/split-sprint-plan.ts`
 
-- [ ] `pnpm --filter ./apps/web exec vitest run src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/ui-flow-mapping-reconciliation.test.ts src/app/__tests__/sitemap-reconciliation.test.ts`.
-- [ ] `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-205`; `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-205`
+- [x] `pnpm --filter ./apps/web exec vitest run src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/ui-flow-mapping-reconciliation.test.ts src/app/__tests__/sitemap-reconciliation.test.ts`. *(with the CA-2 Suspense-boundary test: 4 files / 23 tests, exit 0 — `gates/16-reconciliation.log`. ADR-080 Accepted and the WCAG version row are written at Steps 22 / 20, after the reviews they report.)*
+- [x] `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-205`; `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-205`
       (known false-green on `(list)` route-group pages, #877 — the log also records the manual reachability evidence:
-      `sidebar/configs/contacts.ts:12-17`, `ContactSettingsPanel.tsx:16-22`, audit row updated).
+      `sidebar/configs/contacts.ts:12-17`, `ContactSettingsPanel.tsx:16-22`, audit row updated). *(both exit 0 —
+      "plan does not create any page.tsx" (the page is modified in place); manual evidence in
+      `gates/16-cochange-navwiring.log`)*
 
 #### Step 17: Red-flag / out-of-scope tracking (all three surfaces)
 
@@ -544,9 +559,10 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - `artifacts/metrics/debt-ledger.yaml`
 
-- [ ] One gh issue (file:line + proposed fix): contact-settings router has no role gate (`contact-settings.router.ts`);
+- [x] One gh issue (file:line + proposed fix): contact-settings router has no role gate (`contact-settings.router.ts`);
       tag `update` spreads input (:224-230); bulk lead conversion `skipDuplicates` (`lead.router.ts:1584`);
-      `ContactService.ts:92` echoes the account id. Same items in the debt ledger and findings doc.
+      `ContactService.ts:92` echoes the account id. Same items in the debt ledger and findings doc. *(gh #908; debt
+      ledger `PG-205-*` x4 under `items:`; findings T1-T4; the test-db bug was already #905, referenced as T5)*
 - [ ] Findings doc also records: declined event payload (D11), lead conversion untyped, VIP spelling caveat, CSV
       corrections, Lighthouse status.
 
@@ -557,9 +573,9 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - none (writes the untracked evidence file `matop/design-check.md` in the exec run directory)
 
-- [ ] No DESIGN mockup exists for this row (Sprint_plan_I.csv: no `DESIGN:` entry); compare against
+- [x] No DESIGN mockup exists for this row (Sprint_plan_I.csv: no `DESIGN:` entry); compare against
       `docs/design/mockups/create-new-contact.html` (picker placement), `contact-list.html` (badge/filter) and the PG-204
-      page; record in `matop/design-check.md`.
+      page; record in `matop/design-check.md`. *(written)*
 
 #### Step 19: Full validations (4 mandatory, every touched package)
 

@@ -40,21 +40,19 @@
   "execution": {
     "last_error": null,
     "retry_count": 0,
-    "started_at": "2026-10-17T14:47:19Z",
-    "executor": "Claude Code (claude-opus-5-5) — batch-2 lane PG-205",
+    "started_at": "2026-10-17T16:35:33Z",
+    "executor": "Claude Code /exec (claude-opus-5-5, batch-2 lane PG-205)",
     "agents": [
-      "backend-architect",
-      "frontend-lead",
-      "data-engineer",
-      "domain-expert",
-      "test-engineer",
-      "a11y-expert",
-      "security-lead"
-    ]
+      "stoa-foundation",
+      "stoa-domain",
+      "stoa-security",
+      "stoa-quality"
+    ],
+    "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/PG-205-delivery.md"
   },
   "kpis": {},
   "notes": "Contact types at /contacts/(list)/contact-types: taxonomy (person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "plan",
+  "phase": "exec",
   "started_at": "2026-10-17T14:47:19Z",
   "status_history": [
     {
@@ -81,6 +79,11 @@
       "status": "Plan Complete",
       "at": "2026-10-17T16:33:06Z",
       "note": "/plan-session complete: plan-reviewer sub-agent iteration 1 REVISE (4E/10W/8I), iteration 2 APPROVE (0E/0W/3I)"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-17T16:35:33Z",
+      "note": "/exec started, run 20261017163533-a216d1f1"
     }
   ],
   "stream": null,

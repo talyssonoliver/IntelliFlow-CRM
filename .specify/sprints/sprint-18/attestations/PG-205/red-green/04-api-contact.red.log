@@ -1,0 +1,629 @@
+# 2026-10-17T17:01:20Z HEAD bd628081a (+ staged validators, uncommitted RED tests and stubs)
+# cmd: pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact.router.contact-types.test.ts src/modules/contact/__tests__/contact-automation.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/api
+
+ ❯ |api| src/modules/contact/__tests__/contact-automation.test.ts (29 tests | 4 failed) 49ms
+     × reads the title field for the jobTitle policy key 6ms
+     × only carries the fields that are present (update semantics) 2ms
+     × makes a cleared title fail an update when job title is required 1ms
+     × makes a missing title fail a create when job title is required 3ms
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > applies the type defaults: status, department and active default tags
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":4,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > keeps explicit input over the type defaults and merges tags
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > rejects a unknown type with one identical message before any quota or write
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > rejects a foreign type with one identical message before any quota or write
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > rejects a inactive type with one identical message before any quota or write
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > ACCOUNT_OWNER: uses the linked same-tenant account owner who is a live member
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > ACCOUNT_OWNER: a foreign or missing account falls back to the creator
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > ACCOUNT_OWNER: an owner who is no longer a member falls back to the creator
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > enforces the type required fields after defaults (tenant ∪ type)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > audits the type, the applied default field names and no default values
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > B14: tenant "job title" required rule checks the title field > create passes with a title
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > accepts the unchanged stored key even when that type is inactive
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > rejects a change to an inactive, unknown or foreign type
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > checks the new type required fields against the stored row plus the input
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > keeps explicit-clear semantics for the effective type required fields
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.list type filter and vip segment > filters by contact type inside the tenant
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"list","method":"query","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.list type filter and vip segment > vip: matches the tenant tag spellings of "vip" case-insensitively
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"list","method":"query","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.list type filter and vip segment > vip: still matches the plain "vip" tag when the tenant has no tag row
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"list","method":"query","durationMs":0,"status":"success"}
+
+ ❯ |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts (31 tests | 18 failed) 120ms
+     × applies the type defaults: status, department and active default tags 16ms
+     × keeps explicit input over the type defaults and merges tags 6ms
+     × rejects a unknown type with one identical message before any quota or write 6ms
+     × rejects a foreign type with one identical message before any quota or write 3ms
+     × rejects a inactive type with one identical message before any quota or write 2ms
+     × ACCOUNT_OWNER: uses the linked same-tenant account owner who is a live member 3ms
+     × ACCOUNT_OWNER: a foreign or missing account falls back to the creator 2ms
+     × ACCOUNT_OWNER: an owner who is no longer a member falls back to the creator 3ms
+     × enforces the type required fields after defaults (tenant ∪ type) 3ms
+     × audits the type, the applied default field names and no default values 3ms
+     × create passes with a title 4ms
+     × accepts the unchanged stored key even when that type is inactive 3ms
+     × rejects a change to an inactive, unknown or foreign type 2ms
+     × checks the new type required fields against the stored row plus the input 4ms
+     × keeps explicit-clear semantics for the effective type required fields 2ms
+     × filters by contact type inside the tenant 2ms
+     × vip: matches the tenant tag spellings of "vip" case-insensitively 2ms
+     × vip: still matches the plain "vip" tag when the tenant has no tag row 2ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 22 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-automation.test.ts > toContactRequiredFieldPayload (PG-205 B14) > reads the title field for the jobTitle policy key
+AssertionError: expected {} to deeply equal { email: 'a@example.com', …(4) }
+
+- Expected
++ Received
+
+- {
+-   "company": "Acme",
+-   "email": "a@example.com",
+-   "jobTitle": "CTO",
+-   "ownerId": "user-1",
+-   "phone": "+1555",
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-automation.test.ts:204:7
+    202|         ownerId: 'user-1',
+    203|       })
+    204|     ).toEqual({
+       |       ^
+    205|       email: 'a@example.com',
+    206|       phone: '+1555',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-automation.test.ts > toContactRequiredFieldPayload (PG-205 B14) > only carries the fields that are present (update semantics)
+AssertionError: expected {} to deeply equal { jobTitle: '' }
+
+- Expected
++ Received
+
+- {
+-   "jobTitle": "",
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-automation.test.ts:215:21
+    213|   it('only carries the fields that are present (update semantics)', ()…
+    214|     const payload = toContactRequiredFieldPayload({ title: '' });
+    215|     expect(payload).toEqual({ jobTitle: '' });
+       |                     ^
+    216|     expect(Object.prototype.hasOwnProperty.call(payload, 'company')).t…
+    217|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-automation.test.ts > toContactRequiredFieldPayload (PG-205 B14) > makes a cleared title fail an update when job title is required
+AssertionError: expected function to throw an error, but it didn't
+ ❯ src/modules/contact/__tests__/contact-automation.test.ts:226:7
+    224|         'update'
+    225|       )
+    226|     ).toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
+       |       ^
+    227|   });
+    228|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-automation.test.ts > toContactRequiredFieldPayload (PG-205 B14) > makes a missing title fail a create when job title is required
+AssertionError: expected [Function] to not throw an error but 'TRPCError: Required field(s) missing …' was thrown
+
+- Expected:
+undefined
+
++ Received:
+"TRPCError: Required field(s) missing per tenant policy: jobTitle. Update the contact, or relax the policy in Contact Settings → Required Fields."
+
+ ❯ src/modules/contact/__tests__/contact-automation.test.ts:243:11
+    241|         'create'
+    242|       )
+    243|     ).not.toThrow();
+       |           ^
+    244|   });
+    245| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > applies the type defaults: status, department and active default tags
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:111:46
+    109|     await caller.create({ ...base, contactType: 'vendor' });
+    110|
+    111|     expect(prismaMock.contactType.findFirst).toHaveBeenCalledWith(
+       |                                              ^
+    112|       expect.objectContaining({ where: { tenantId, key: 'vendor', isAc…
+    113|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > keeps explicit input over the type defaults and merges tags
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+-   ObjectContaining {
++   {
++     "contactType": "vendor",
+      "department": "Sales",
++     "email": "new@example.com",
++     "firstName": "Ann",
++     "lastName": "Lee",
++     "ownerId": "b6e8d426-0000-4000-8000-b6e8d4260000",
++     "phone": undefined,
+      "status": "CUSTOMER",
+      "tags": [
+        "vip",
+-       "supplier",
+      ],
++     "tenantId": "344b1756-0000-4000-8000-344b17560000",
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:136:27
+    134|       tags: ['vip'],
+    135|     });
+    136|     expect(createContact).toHaveBeenCalledWith(
+       |                           ^
+    137|       expect.objectContaining({ status: 'CUSTOMER', department: 'Sales…
+    138|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > rejects a unknown type with one identical message before any quota or write
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > rejects a foreign type with one identical message before any quota or write
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > rejects a inactive type with one identical message before any quota or write
+AssertionError: promise resolved "{ …(23) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": null,
++   "city": null,
++   "company": null,
++   "contactNotes": null,
++   "contactType": null,
++   "createdAt": 2026-01-01T00:00:00.000Z,
++   "department": null,
++   "email": "new@example.com",
++   "firstName": "Ann",
++   "id": "18815e3c-0000-4000-8000-18815e3c0000",
++   "lastContactedAt": null,
++   "lastName": "Lee",
++   "leadId": null,
++   "linkedInUrl": null,
++   "ownerId": "b6e8d426-0000-4000-8000-b6e8d4260000",
++   "phone": null,
++   "status": "ACTIVE",
++   "streetAddress": null,
++   "tags": [],
++   "tenantId": "344b1756-0000-4000-8000-344b17560000",
++   "title": null,
++   "updatedAt": 2026-01-01T00:00:00.000Z,
++   "zipCode": null,
+  }
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:146:71
+    144|       seededWith(null);
+    145|       const { caller, createContact } = setupCreate();
+    146|       await expect(caller.create({ ...base, contactType: 'reseller' })…
+       |                                                                       ^
+    147|         code: 'BAD_REQUEST',
+    148|         message: 'Invalid contact type',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > ACCOUNT_OWNER: uses the linked same-tenant account owner who is a live member
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:170:42
+    168|     await caller.create({ ...base, contactType: 'vendor', accountId: A…
+    169|
+    170|     expect(prismaMock.account.findFirst).toHaveBeenCalledWith(
+       |                                          ^
+    171|       expect.objectContaining({ where: { id: ACCOUNT_ID, tenantId } })
+    172|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > ACCOUNT_OWNER: a foreign or missing account falls back to the creator
+AssertionError: expected undefined to be 'no_account' // Object.is equality
+
+- Expected:
+"no_account"
+
++ Received:
+undefined
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:190:49
+    188|     expect(prismaMock.user.findFirst).not.toHaveBeenCalled();
+    189|     const audit = logAction.mock.calls.find((c) => c[0] === 'CREATE');
+    190|     expect(audit?.[4].afterState.ownerFallback).toBe('no_account');
+       |                                                 ^
+    191|   });
+    192|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > ACCOUNT_OWNER: an owner who is no longer a member falls back to the creator
+AssertionError: expected undefined to be 'account_owner_invalid' // Object.is equality
+
+- Expected:
+"account_owner_invalid"
+
++ Received:
+undefined
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:201:49
+    199|     expect(createContact).toHaveBeenCalledWith(expect.objectContaining…
+    200|     const audit = logAction.mock.calls.find((c) => c[0] === 'CREATE');
+    201|     expect(audit?.[4].afterState.ownerFallback).toBe('account_owner_in…
+       |                                                 ^
+    202|   });
+    203|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > enforces the type required fields after defaults (tenant ∪ type)
+AssertionError: promise resolved "{ …(23) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": null,
++   "city": null,
++   "company": null,
++   "contactNotes": null,
++   "contactType": null,
++   "createdAt": 2026-01-01T00:00:00.000Z,
++   "department": null,
++   "email": "new@example.com",
++   "firstName": "Ann",
++   "id": "18815e3c-0000-4000-8000-18815e3c0000",
++   "lastContactedAt": null,
++   "lastName": "Lee",
++   "leadId": null,
++   "linkedInUrl": null,
++   "ownerId": "b6e8d426-0000-4000-8000-b6e8d4260000",
++   "phone": null,
++   "status": "ACTIVE",
++   "streetAddress": null,
++   "tags": [],
++   "tenantId": "344b1756-0000-4000-8000-344b17560000",
++   "title": null,
++   "updatedAt": 2026-01-01T00:00:00.000Z,
++   "zipCode": null,
+  }
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:208:67
+    206|     const { caller, createContact } = setupCreate();
+    207|     // department is filled by the type default; phone is still missin…
+    208|     await expect(caller.create({ ...base, contactType: 'vendor' })).re…
+       |                                                                   ^
+    209|       code: 'BAD_REQUEST',
+    210|       message: expect.stringContaining('phone'),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.create with a contact type > audits the type, the applied default field names and no default values
+AssertionError: expected { email: 'new@example.com', …(2) } to match object { contactType: 'vendor', …(2) }
+(3 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "appliedDefaults": [
+-     "status",
+-     "department",
+-     "tags",
+-   ],
+-   "contactType": "vendor",
+-   "ownerFallback": null,
++   "company": null,
++   "email": "new@example.com",
++   "status": "ACTIVE",
+  }
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:220:35
+    218|     await caller.create({ ...base, contactType: 'vendor' });
+    219|     const audit = logAction.mock.calls.find((c) => c[0] === 'CREATE');
+    220|     expect(audit?.[4].afterState).toMatchObject({
+       |                                   ^
+    221|       contactType: 'vendor',
+    222|       appliedDefaults: ['status', 'department', 'tags'],
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > B14: tenant "job title" required rule checks the title field > create passes with a title
+TRPCError: Required field(s) missing per tenant policy: jobTitle. Update the contact, or relax the policy in Contact Settings → Required Fields.
+ ❯ assertRequiredContactFields src/modules/contact/contact-automation.ts:242:9
+    240|
+    241|   if (missing.length === 0) return;
+    242|   throw new TRPCError({
+       |         ^
+    243|     code: 'BAD_REQUEST',
+    244|     message: `Required field(s) missing per tenant policy: ${missing.j…
+ ❯ src/modules/contact/contact.router.ts:616:5
+ ❯ resolveMiddleware ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:576:21
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+ ❯ src/tracing/middleware.ts:130:25
+ ❯ src/tracing/middleware.ts:121:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > accepts the unchanged stored key even when that type is inactive
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:305:46
+    303|     await caller.update({ id: CONTACT_ID, contactType: 'vendor', first…
+    304|     expect(updateContactInfo).toHaveBeenCalled();
+    305|     expect(prismaMock.contactType.findFirst).toHaveBeenCalledWith(
+       |                                              ^
+    306|       expect.objectContaining({ where: { tenantId, key: 'vendor' } })
+    307|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > rejects a change to an inactive, unknown or foreign type
+AssertionError: promise resolved "{ …(23) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": null,
++   "city": null,
++   "company": null,
++   "contactNotes": null,
++   "contactType": null,
++   "createdAt": 2026-01-01T00:00:00.000Z,
++   "department": null,
++   "email": "new@example.com",
++   "firstName": "Ann",
++   "id": "18815e3c-0000-4000-8000-18815e3c0000",
++   "lastContactedAt": null,
++   "lastName": "Lee",
++   "leadId": null,
++   "linkedInUrl": null,
++   "ownerId": "b6e8d426-0000-4000-8000-b6e8d4260000",
++   "phone": null,
++   "status": "ACTIVE",
++   "streetAddress": null,
++   "tags": [],
++   "tenantId": "344b1756-0000-4000-8000-344b17560000",
++   "title": null,
++   "updatedAt": 2026-01-01T00:00:00.000Z,
++   "zipCode": null,
+  }
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:313:74
+    311|     seededWith(null);
+    312|     const { caller, updateContactInfo } = setupUpdate({ contactType: '…
+    313|     await expect(caller.update({ id: CONTACT_ID, contactType: 'vendor'…
+       |                                                                          ^
+    314|       code: 'BAD_REQUEST',
+    315|       message: 'Invalid contact type',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > checks the new type required fields against the stored row plus the input
+AssertionError: promise resolved "{ …(23) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": null,
++   "city": null,
++   "company": null,
++   "contactNotes": null,
++   "contactType": null,
++   "createdAt": 2026-01-01T00:00:00.000Z,
++   "department": null,
++   "email": "new@example.com",
++   "firstName": "Ann",
++   "id": "18815e3c-0000-4000-8000-18815e3c0000",
++   "lastContactedAt": null,
++   "lastName": "Lee",
++   "leadId": null,
++   "linkedInUrl": null,
++   "ownerId": "b6e8d426-0000-4000-8000-b6e8d4260000",
++   "phone": null,
++   "status": "ACTIVE",
++   "streetAddress": null,
++   "tags": [],
++   "tenantId": "344b1756-0000-4000-8000-344b17560000",
++   "title": null,
++   "updatedAt": 2026-01-01T00:00:00.000Z,
++   "zipCode": null,
+  }
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:326:74
+    324|     seededWith(typeRow({ requiredFields: ['phone'] }));
+    325|     const { caller, updateContactInfo } = setupUpdate({ contactType: '…
+    326|     await expect(caller.update({ id: CONTACT_ID, contactType: 'vendor'…
+       |                                                                          ^
+    327|       code: 'BAD_REQUEST',
+    328|       message: expect.stringContaining('phone'),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.update with a contact type > keeps explicit-clear semantics for the effective type required fields
+AssertionError: promise resolved "{ …(23) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "accountId": null,
++   "city": null,
++   "company": null,
++   "contactNotes": null,
++   "contactType": null,
++   "createdAt": 2026-01-01T00:00:00.000Z,
++   "department": null,
++   "email": "new@example.com",
++   "firstName": "Ann",
++   "id": "18815e3c-0000-4000-8000-18815e3c0000",
++   "lastContactedAt": null,
++   "lastName": "Lee",
++   "leadId": null,
++   "linkedInUrl": null,
++   "ownerId": "b6e8d426-0000-4000-8000-b6e8d4260000",
++   "phone": null,
++   "status": "ACTIVE",
++   "streetAddress": null,
++   "tags": [],
++   "tenantId": "344b1756-0000-4000-8000-344b17560000",
++   "title": null,
++   "updatedAt": 2026-01-01T00:00:00.000Z,
++   "zipCode": null,
+  }
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:351:64
+    349|     seededWith(typeRow({ requiredFields: ['company'] }));
+    350|     const { caller, updateContactInfo } = setupUpdate({ contactType: '…
+    351|     await expect(caller.update({ id: CONTACT_ID, company: '' })).rejec…
+       |                                                                ^
+    352|       code: 'BAD_REQUEST',
+    353|       message: expect.stringContaining('company'),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.list type filter and vip segment > filters by contact type inside the tenant
+AssertionError: expected { …(2) } to match object { …(2) }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "contactType": "partner",
+    "tenantId": "344b1756-0000-4000-8000-344b17560000",
+  }
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:376:19
+    374|     await listCaller().list({ contactType: 'partner' });
+    375|     const where = (prismaMock.contact.findMany as any).mock.calls[0][0…
+    376|     expect(where).toMatchObject({ tenantId, contactType: 'partner' });
+       |                   ^
+    377|     expect((prismaMock.contact.count as any).mock.calls[0][0].where).t…
+    378|       contactType: 'partner',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.list type filter and vip segment > vip: matches the tenant tag spellings of "vip" case-insensitively
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:385:44
+    383|     (prismaMock.contactTag.findMany as any).mockResolvedValueOnce([{ n…
+    384|     await listCaller().list({ segment: 'vip' });
+    385|     expect(prismaMock.contactTag.findMany).toHaveBeenCalledWith(
+       |                                            ^
+    386|       expect.objectContaining({
+    387|         where: { tenantId, name: { equals: 'vip', mode: 'insensitive' …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/22]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact.router.contact-types.test.ts > contact.list type filter and vip segment > vip: still matches the plain "vip" tag when the tenant has no tag row
+AssertionError: expected undefined to deeply equal { hasSome: [ 'vip' ] }
+
+- Expected:
+{
+  "hasSome": [
+    "vip",
+  ],
+}
+
++ Received:
+undefined
+
+ ❯ src/modules/contact/__tests__/contact.router.contact-types.test.ts:399:24
+    397|     await listCaller().list({ segment: 'vip' });
+    398|     const where = (prismaMock.contact.findMany as any).mock.calls[0][0…
+    399|     expect(where.tags).toEqual({ hasSome: ['vip'] });
+       |                        ^
+    400|   });
+    401| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/22]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  22 failed | 38 passed (60)
+   Start at  18:01:21
+   Duration  2.43s (transform 1.20s, setup 1.14s, import 1.53s, tests 170ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/contact/__tests__/contact.router.contact-types.test.ts src/modules/contact/__tests__/contact-automation.test.ts
+# exit: 1

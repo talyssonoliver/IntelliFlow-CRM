@@ -2489,6 +2489,44 @@ appRouter.cases.getById → caseType {id, name, colorToken}
 Sidebar entry: apps/web/src/components/sidebar/configs/cases.ts:14
 ```
 
+### Contact Types (PG-205 — applied at contact creation, ADR-080)
+
+```
+PG-178 ✅ + PG-182 ✅ ──► PG-205 (Contact Types)
+
+Domain:  packages/domain/src/crm/contact/contact-type-defaults.ts
+           resolveContactCreateDefaults (explicit input > type default)
+           CONTACT_TYPE_LIMITS · CONTACT_TYPE_ADMIN_ROLES · CONTACT_POLICY_FIELD_TO_COLUMN
+         Contact.ts: ContactTypeKey = string + key-format invariant (CONTACT_TYPES = 6 reserved keys)
+Validators: packages/validators/src/contact-types.ts (+ contact.ts: contactTypeKeySchema,
+            contactQuerySchema.contactType / segment 'vip')
+
+Prisma models (tenant-scoped, RLS on; keyed by the existing contacts.contactType string — no FK):
+  ContactType            @@map "contact_types"              (0..50 per tenant, 6 system rows seeded lazily)
+  ContactTypeDefaultTag  @@map "contact_type_default_tags"  (0..10 tags per type)
+    ├─ FK contact_types.tenantId → Tenant (ON DELETE CASCADE)
+    ├─ FK (tenantId, contactTypeId) → contact_types(tenantId, id) (CASCADE)
+    └─ FK (tenantId, tagId) → contact_tags(tenantId, id) (CASCADE)
+  Contact @@index([tenantId, contactType])
+
+Migrations (Class A, manual prod apply BEFORE the API ships — L13):
+  20261017120000_contact_types/migration.sql
+  20261017120100_contacts_type_idx/migration.sql (CREATE INDEX CONCURRENTLY)
+
+appRouter.contactTypes: list / listActive / create / update / delete / setDefault
+appRouter.contact.create → resolveContactTypeForCreate → resolveContactCreateDefaults
+                           (status, department, owner rule, default tags, type required fields)
+appRouter.contact.update → assertContactTypeOnUpdate (no defaults re-applied)
+appRouter.contact.list   → { contactType, segment: 'vip' → tags hasSome }
+
+/contacts/(list)/contact-types/page.tsx → ContactTypesContent → trpc.contactTypes.*,
+                                          trpc.contactSettings.tags.list
+/contacts/(list)/new/page.tsx, ContactForm (edit) → ContactTypeSelect → contactTypes.listActive
+/contacts (ContactsPageClient) → Type filter + ?segment= links → contact.list; ContactList Type badge
+Sidebar entry: apps/web/src/components/sidebar/configs/contacts.ts:12-17
+Parent hub:    apps/web/src/components/contacts/ContactSettingsPanel.tsx:16-22
+```
+
 ---
 
 ## Governance Quality Report Pages Chain (PG-176)

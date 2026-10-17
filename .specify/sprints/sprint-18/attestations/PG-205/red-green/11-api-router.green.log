@@ -1,0 +1,14 @@
+# 2026-10-17T17:11:51Z HEAD bd628081a (+ uncommitted validators/db/router implementation)
+# cmd: pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact-type-resolver.test.ts src/modules/contact/__tests__/contact-types.router.test.ts src/__tests__/app-router.smoke.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/api
+
+
+ Test Files  3 passed (3)
+      Tests  60 passed (60)
+   Start at  18:11:52
+   Duration  4.26s (transform 3.43s, setup 1.58s, import 1.65s, tests 3.66s, environment 0ms)
+
+# exit: 0

@@ -249,15 +249,15 @@ Legend:
 
 ### Contacts (7 routes)
 
-| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
-| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
-| `/contacts`                  | YES | --  | SB  | --  |    YES     |                                  |
-| `/contacts/new`              | --  | --  | --  | IP  |     OK     | CaseForm cross-link, list action |
-| `/contacts/[id]`             | --  | --  | --  | IP  |     OK     | From list rows                   |
-| `/contacts/[id]/edit`        | --  | --  | --  | IP  |     OK     | From contact detail              |
-| `/contacts/contact-types`    | --  | --  | SB  | --  |    YES     | Contacts sidebar                 |
-| `/contacts/contact-settings` | --  | --  | SB  | --  |    YES     | Contacts sidebar                 |
-| `/contacts/import-export`    | --  | --  | SB  | --  |    YES     | Contacts sidebar                 |
+| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                                             |
+| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------------- |
+| `/contacts`                  | YES | --  | SB  | --  |    YES     |                                                   |
+| `/contacts/new`              | --  | --  | --  | IP  |     OK     | CaseForm cross-link, list action                  |
+| `/contacts/[id]`             | --  | --  | --  | IP  |     OK     | From list rows                                    |
+| `/contacts/[id]/edit`        | --  | --  | --  | IP  |     OK     | From contact detail                               |
+| `/contacts/contact-types`    | --  | --  | SB  | IP  |    YES     | Contacts sidebar; Contact Settings panel (PG-205) |
+| `/contacts/contact-settings` | --  | --  | SB  | --  |    YES     | Contacts sidebar                                  |
+| `/contacts/import-export`    | --  | --  | SB  | --  |    YES     | Contacts sidebar                                  |
 
 ### Deals (10 routes)
 

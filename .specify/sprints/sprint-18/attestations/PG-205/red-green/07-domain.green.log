@@ -1,0 +1,14 @@
+# 2026-10-17T16:44:30Z HEAD d8ae42d01 (+ domain implementation after lint fix: linear underscore trim)
+# cmd: pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/packages/domain
+
+
+ Test Files  2 passed (2)
+      Tests  97 passed (97)
+   Start at  17:44:31
+   Duration  347ms (transform 213ms, setup 0ms, import 282ms, tests 29ms, environment 0ms)
+
+# exit: 0
