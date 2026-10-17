@@ -78,6 +78,8 @@ export * from './legal/appointments/TimeSlot';
 export * from './legal/appointments/Recurrence';
 export * from './legal/appointments/Buffer';
 export * from './legal/appointments/ConflictDetector';
+export * from './legal/appointments/AvailabilityPolicy'; // PG-202
+export * from './legal/appointments/availability-roles'; // PG-202
 
 // Legal Domain - Terms Acceptance (IFC-309)
 export * from './legal/TermsAcceptance';

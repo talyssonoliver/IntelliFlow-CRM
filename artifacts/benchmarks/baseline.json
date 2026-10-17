@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-16T17:11:38.445Z",
+  "timestamp": "2026-10-17T19:49:33.850Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 70,
-    "total_endpoints": 563,
-    "total_queries": 242,
-    "total_mutations": 321,
+    "total_routers": 71,
+    "total_endpoints": 566,
+    "total_queries": 243,
+    "total_mutations": 323,
     "routers": [
       {
         "name": "contact",
@@ -1339,6 +1339,12 @@
         "mutations": 2
       },
       {
+        "name": "availability",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
         "name": "calendarWebhook",
         "endpoints": 3,
         "queries": 2,
@@ -1443,16 +1449,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 197,
-    "total_fields": 2846,
-    "total_indexes": 892,
-    "total_relations": 279,
+    "total_tables": 199,
+    "total_fields": 2864,
+    "total_indexes": 898,
+    "total_relations": 281,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 173,
+        "fields": 175,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1710,6 +1716,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AppointmentSettings",
+        "fields": 17,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketActivity",
         "fields": 17,
         "indexes": 6,
@@ -1819,13 +1832,6 @@
         "fields": 15,
         "indexes": 8,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AppointmentSettings",
-        "fields": 15,
-        "indexes": 3,
-        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2704,6 +2710,20 @@
         "hasEmbedding": false
       },
       {
+        "name": "AvailabilityHour",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AvailabilityClosure",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketRequiredField",
         "fields": 7,
         "indexes": 3,
@@ -3188,11 +3208,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 57,
-    "total_schemas": 634,
+    "total_validators": 58,
+    "total_schemas": 635,
     "by_complexity": {
       "complex": 35,
-      "moderate": 18,
+      "moderate": 19,
       "simple": 4
     },
     "validators": [
@@ -3523,6 +3543,12 @@
       {
         "name": "appointment-settings",
         "file": "appointment-settings.ts",
+        "schemas": 1,
+        "complexity": "moderate"
+      },
+      {
+        "name": "availability",
+        "file": "availability.ts",
         "schemas": 1,
         "complexity": "moderate"
       },
@@ -4378,6 +4404,23 @@
         "name": "billing.getPlanState",
         "method": "GET",
         "description": "Get plan state"
+      }
+    ],
+    "availability": [
+      {
+        "name": "availability.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "availability.update",
+        "method": "POST",
+        "description": "Update availability"
+      },
+      {
+        "name": "availability.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "calendarWebhook": [

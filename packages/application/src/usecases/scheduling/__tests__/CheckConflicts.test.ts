@@ -330,4 +330,125 @@ describe('CheckConflictsUseCase', () => {
       );
     });
   });
+
+  describe('findFirstFreeCandidate (PG-202)', () => {
+    const at = (hour: number, minute = 0) => new Date(2025, 0, 2, hour, minute, 0);
+    const slot = (hour: number) => ({ start: at(hour), end: at(hour + 1) });
+
+    async function saveBusy(startHour: number, endHour: number) {
+      const busy = Appointment.create({
+        title: 'Busy',
+        startTime: at(startHour),
+        endTime: at(endHour),
+        appointmentType: 'INTERNAL_MEETING',
+        organizerId: 'user-123',
+        tenantId: 'tenant-1',
+      }).value;
+      await repository.save(busy);
+    }
+
+    function spyOnConflictReads() {
+      const original = repository.forTenant.bind(repository);
+      const reads = vi.fn();
+      vi.spyOn(repository, 'forTenant').mockImplementation((tenantId: string) => {
+        const scoped = original(tenantId);
+        const find = scoped.findForConflictCheck.bind(scoped);
+        scoped.findForConflictCheck = (ids, range) => {
+          reads(ids, range);
+          return find(ids, range);
+        };
+        return scoped;
+      });
+      return reads;
+    }
+
+    it('returns the first candidate that has no conflict, with one repository read', async () => {
+      await saveBusy(9, 10);
+      const reads = spyOnConflictReads();
+
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [slot(9), slot(10), slot(11)],
+      });
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value).toEqual(slot(10));
+      expect(reads).toHaveBeenCalledTimes(1);
+      expect(reads).toHaveBeenCalledWith(['user-123'], { startTime: at(9), endTime: at(12) });
+    });
+
+    it('widens the read window and the conflict check by the buffers', async () => {
+      await saveBusy(9, 10);
+      const reads = spyOnConflictReads();
+
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [slot(10), slot(11)],
+        bufferMinutesBefore: 15,
+        bufferMinutesAfter: 15,
+      });
+
+      expect(result.value).toEqual(slot(11));
+      expect(reads).toHaveBeenCalledWith(['user-123'], {
+        startTime: at(9, 45),
+        endTime: at(12, 15),
+      });
+    });
+
+    it('returns null for an empty list without reading', async () => {
+      const reads = spyOnConflictReads();
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [],
+      });
+      expect(result.isSuccess).toBe(true);
+      expect(result.value).toBeNull();
+      expect(reads).not.toHaveBeenCalled();
+    });
+
+    it('returns null when every candidate conflicts', async () => {
+      await saveBusy(9, 12);
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [slot(9), slot(10), slot(11)],
+      });
+      expect(result.value).toBeNull();
+    });
+
+    it('skips a malformed candidate (end before start)', async () => {
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [{ start: at(11), end: at(10) }, slot(12)],
+      });
+      expect(result.value).toEqual(slot(12));
+    });
+
+    it('fails when the repository throws', async () => {
+      vi.spyOn(repository, 'forTenant').mockImplementation(() => {
+        throw new Error('db down');
+      });
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [slot(9)],
+      });
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('db down');
+    });
+
+    it('fails on an invalid buffer', async () => {
+      const result = await useCase.findFirstFreeCandidate({
+        tenantId: 'tenant-1',
+        attendeeId: 'user-123',
+        candidates: [slot(9)],
+        bufferMinutesBefore: 999,
+      });
+      expect(result.isFailure).toBe(true);
+    });
+  });
 });
