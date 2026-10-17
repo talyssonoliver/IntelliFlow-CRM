@@ -1,0 +1,57 @@
+date: 2026-10-17T20:26:29Z
+head: 6a8aec3038cbf11cfbe5fc8032d0869761d8a31b (+ codex fixes)
+cmd: pnpm --dir packages/domain exec vitest run src/legal/appointments/__tests__/AvailabilityPolicy.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain
+
+ ❯ |domain| src/legal/appointments/__tests__/AvailabilityPolicy.test.ts (52 tests | 2 failed) 276ms
+     × offers slots in the repeated fall-back hour (both occurrences, fit by elapsed time) 5ms
+     × does not repeat a slot when grid times fall in the spring-forward gap 3ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |domain| src/legal/appointments/__tests__/AvailabilityPolicy.test.ts > generateCandidates > offers slots in the repeated fall-back hour (both occurrences, fit by elapsed time)
+AssertionError: expected undefined to be '2026-10-25T00:00:00.000Z' // Object.is equality
+
+- Expected:
+"2026-10-25T00:00:00.000Z"
+
++ Received:
+undefined
+
+ ❯ src/legal/appointments/__tests__/AvailabilityPolicy.test.ts:520:44
+    518|       limit: 5,
+    519|     });
+    520|     expect(ninety[0]?.start.toISOString()).toBe('2026-10-25T00:00:00.0…
+       |                                            ^
+    521|     expect(ninety[0]?.end.toISOString()).toBe('2026-10-25T01:30:00.000…
+    522|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |domain| src/legal/appointments/__tests__/AvailabilityPolicy.test.ts > generateCandidates > does not repeat a slot when grid times fall in the spring-forward gap
+AssertionError: expected 4 to be 6 // Object.is equality
+
+- Expected
++ Received
+
+- 6
++ 4
+
+ ❯ src/legal/appointments/__tests__/AvailabilityPolicy.test.ts:552:33
+    550|     });
+    551|     const times = got.map((c) => c.start.getTime());
+    552|     expect(new Set(times).size).toBe(times.length);
+       |                                 ^
+    553|     expect([...times].sort((x, y) => x - y)).toEqual(times);
+    554|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 50 passed (52)
+   Start at  21:26:29
+   Duration  563ms (transform 75ms, setup 0ms, import 103ms, tests 276ms, environment 0ms)
+
+exit: 1

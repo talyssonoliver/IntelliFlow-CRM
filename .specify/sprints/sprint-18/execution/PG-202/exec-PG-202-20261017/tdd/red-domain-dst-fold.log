@@ -1,0 +1,64 @@
+date: 2026-10-17T20:21:25Z
+head: 6a8aec3038cbf11cfbe5fc8032d0869761d8a31b
+cmd: pnpm --dir packages/domain exec vitest run src/legal/appointments/__tests__/AvailabilityPolicy.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain
+
+ ❯ |domain| src/legal/appointments/__tests__/AvailabilityPolicy.test.ts (50 tests | 2 failed) 359ms
+     × rejects a booking that passes through closed time in the repeated fall-back hour 7ms
+     × accepts a booking across the spring-forward gap when the real time on both sides is open 2ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |domain| src/legal/appointments/__tests__/AvailabilityPolicy.test.ts > evaluateAvailability — week boundary and DST > rejects a booking that passes through closed time in the repeated fall-back hour
+AssertionError: expected { ok: true } to match object { code: 'OUTSIDE_HOURS' }
+(1 matching property omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "code": "OUTSIDE_HOURS",
++   "ok": true,
+  }
+
+ ❯ src/legal/appointments/__tests__/AvailabilityPolicy.test.ts:480:70
+    478|     // which is outside 01:30-02:00 even though both endpoints read in…
+    479|     const r = rules({ weeklyRanges: weekdays([[h(1, 30), h(2)]], [0]) …
+    480|     expect(check(r, '2026-10-25T00:45:00Z', '2026-10-25T01:15:00Z')).t…
+       |                                                                      ^
+    481|       code: 'OUTSIDE_HOURS',
+    482|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |domain| src/legal/appointments/__tests__/AvailabilityPolicy.test.ts > evaluateAvailability — week boundary and DST > accepts a booking across the spring-forward gap when the real time on both sides is open
+AssertionError: expected { ok: false, …(2) } to deeply equal { ok: true }
+
+- Expected
++ Received
+
+  {
+-   "ok": true,
++   "code": "OUTSIDE_HOURS",
++   "message": "Appointments on Sunday must fall within 00:00-01:00 or 02:00-03:00 (Europe/London).",
++   "ok": false,
+  }
+
+ ❯ src/legal/appointments/__tests__/AvailabilityPolicy.test.ts:491:70
+    489|     // London 2026-03-29: 00:30Z is 00:30 GMT, 01:30Z is 02:30 BST; 01…
+    490|     const r = rules({ weeklyRanges: weekdays([[h(0), h(1)], [h(2), h(3…
+    491|     expect(check(r, '2026-03-29T00:30:00Z', '2026-03-29T01:30:00Z')).t…
+       |                                                                      ^
+    492|     // Ending inside the gap's far side but past the second range stil…
+    493|     expect(check(r, '2026-03-29T00:30:00Z', '2026-03-29T02:30:00Z')).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 48 passed (50)
+   Start at  21:21:27
+   Duration  779ms (transform 149ms, setup 0ms, import 188ms, tests 359ms, environment 0ms)
+
+exit: 1

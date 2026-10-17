@@ -17,6 +17,12 @@ all three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
 | F8 | `ConfirmationDialog` always returned focus to its trigger, so a page could not move focus after a destructive confirm. | `packages/ui/src/components/confirmation-dialog.tsx` | Optional `onCloseAutoFocus` (additive, tested) |
 | F9 | Sonar guard on the PG-202 diff: cognitive complexity in `evaluateAvailability` (17), `generateCandidates` (26), `AvailabilityContent` (17) and the API test helper (16); nested ternaries; a nested template literal; `role="region"` on cards; a non-native interactive backdrop. | `lint-sonar-guard.ts` with `SONAR_GUARD_FILES` | All fixed before the first commit; integration SQL now uses positional parameters |
 
+| F10 | Codex: on the autumn DST night, checking only the endpoints accepted a booking that passes through closed time in the repeated hour (e.g. hours 01:30-02:00, booking 00:45Z-01:15Z London). | `AvailabilityPolicy.ts` `checkWeeklyHours` | Split at the offset change (`wallClockSegments`); every segment must be open; RED/GREEN `*-domain-dst-fold.log` |
+| F11 | Codex: the slot search skipped valid slots in the repeated autumn hour and could repeat a slot in the spring gap. | `AvailabilityPolicy.ts` slot generator | `dayGridStarts`: both occurrences, deduped, sorted; fit judged by elapsed time; RED/GREEN `*-domain-dst-slots.log` |
+| F12 | Codex: a saved all-day range (0-1440) loaded as an invalid "00:00-00:00" and blocked every later save. | `availability-draft.ts` `rangeMinutes` | An end of 00:00 is always midnight, so 00:00-00:00 is the whole day; RED/GREEN `*-web-allday.log` |
+| F13 | Codex: `findFirstFreeCandidate` read existing appointments by raw times, missing one whose own after-buffer runs into the candidate. | `CheckConflicts.ts` | Read widened by `Buffer.MAX_MINUTES`; RED/GREEN `*-application-existing-buffer.log` |
+| F14 | Codex: edits made while a save was in flight were overwritten by the response. | `AvailabilityContent.tsx` `handleSave` | Later edits kept, only the saved baseline moves; RED/GREEN `*-web-inflight-save.log` |
+
 ## Tracked (out of scope)
 
 | # | Finding | gh issue | Debt ledger |
@@ -25,7 +31,7 @@ all three surfaces (gh issue, `artifacts/metrics/debt-ledger.yaml`, this file).
 | T2 | `appointment_settings` RLS policy has `USING` but no `WITH CHECK`. | #910 | `PG-202-APPOINTMENT-SETTINGS-RLS-WITH-CHECK-001` |
 | T3 | `AppointmentSettings.defaultTimezone` defaults to `UTC`; ADR-044 names Europe/London. | #911 | `PG-202-DEFAULT-TIMEZONE-UTC-001` |
 | T4 | Design registries list `/calendar/new` and `/calendar/[id]`, which do not exist. | #912 | `PG-202-STALE-CALENDAR-REGISTRY-ROWS-001` |
-| T5 | Known limits accepted in ADR-081: recurring series checked on the first occurrence only; `findNextSlot` has no UI caller; the daily cap is best-effort. | #913 | `PG-202-AVAILABILITY-KNOWN-LIMITS-001` |
+| T5 | Known limits accepted in ADR-081: recurring series checked on the first occurrence only; `findNextSlot` has no UI caller; the daily cap is best-effort (Codex HIGH, waived in `tools/audit/codex-review-waivers.yaml` with this evidence, author marked pending owner confirmation). The legacy `CheckConflictsUseCase.findNextSlot` (pre-existing, unconfigured tenants) has the same existing-buffer read gap fixed in F13 for the new path. | #913 | `PG-202-AVAILABILITY-KNOWN-LIMITS-001` |
 
 ## Notes
 
