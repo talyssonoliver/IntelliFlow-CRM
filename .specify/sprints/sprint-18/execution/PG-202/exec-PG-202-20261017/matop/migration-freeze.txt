@@ -1,0 +1,3 @@
+date: 2026-10-17T18:07:03Z
+frozen after sql-review APPROVE
+124720c5723b62f8b9ce540212f9bbfb5f2131e22fa3652dac4490823ae0f85b *packages/db/prisma/migrations/20261017130000_availability/migration.sql

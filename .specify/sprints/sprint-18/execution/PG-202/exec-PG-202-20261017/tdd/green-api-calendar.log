@@ -1,0 +1,29 @@
+# 2026-10-17T17:50:39Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# pnpm --dir apps/api exec vitest run --coverage.enabled --coverage.include=src/modules/calendar/availability.router.ts --coverage.include=src/modules/calendar/availability-enforcement.ts --coverage.reporter=text src/modules/calendar/__tests__
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+      Coverage enabled with istanbul
+
+
+ Test Files  5 passed (5)
+      Tests  80 passed (80)
+   Start at  18:50:40
+   Duration  3.43s (transform 3.41s, setup 2.48s, import 7.07s, tests 447ms, environment 0ms)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   97.47 |    92.13 |     100 |     100 |                   
+ ...enforcement.ts |   97.01 |     93.1 |     100 |     100 | 43,117,244-245    
+ ...lity.router.ts |   98.07 |    90.32 |     100 |     100 | 36,68,82          
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 97.47% ( 116/119 )
+Branches     : 92.13% ( 82/89 )
+Functions    : 100% ( 25/25 )
+Lines        : 100% ( 106/106 )
+================================================================================
+# exit=0

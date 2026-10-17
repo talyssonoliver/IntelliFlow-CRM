@@ -35,17 +35,17 @@
 
 ## Preflight Checks
 
-- [ ] `git branch --show-current` = `feat/pg-202-availability`; `git status --short` shows only PG-202 files.
-- [ ] `docker ps --filter name=postgres-test --format "{{.Status}}"` contains `healthy`.
-- [ ] Packages built: `ls packages/{domain,validators,application,db}/dist` exist (provisioned 2026-10-17, 15/15).
-- [ ] `node -v` under the prefix prints `v22.14.0`.
-- [ ] Exec preflights: `node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202`,
+- [x] `git branch --show-current` = `feat/pg-202-availability`; `git status --short` shows only PG-202 files. *Verified 2026-10-17T17:19Z:* branch matches; modified files are PG-202 tracking (task-tracking.json, CSV + split, coverage-before) plus generator churn (`plan-lint-report.json`, `spec-tracker.json` timestamps), not committed.
+- [x] `docker ps --filter name=postgres-test --format "{{.Status}}"` contains `healthy`. *Verified 2026-10-17T17:19Z:* "Up 32 hours (healthy)".
+- [x] Packages built: `ls packages/{domain,validators,application,db}/dist` exist (provisioned 2026-10-17, 15/15). *Verified:* all four dist dirs exist.
+- [x] `node -v` under the prefix prints `v22.14.0`. *Verified:* v22.14.0.
+- [x] Exec preflights: `node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202`,
       `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202`,
       `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-202`,
-      `node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-202`.
-- [ ] Create `context_ack.json` (see Step 1 "Files to Create"; files read + SHA-256, `date -u` timestamp) — CSV
-      EVIDENCE artifact.
-- [ ] Confirmed in the plan session: `createTenantScopedPrisma` (`apps/api/src/security/tenant-context.ts:142-195`) issues
+      `node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-202`. *Verified 2026-10-17T17:18Z:* all four exit 0 (`.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/gates/preflight-*.log`); readiness needed `pnpm run generate:metrics` for the cached task JSON first. `check-worktree-landed` exits 1 by design until SHIP (unpushed branch), re-run at Step 21.
+- [x] Create `context_ack.json` (see Step 1 "Files to Create"; files read + SHA-256, `date -u` timestamp) — CSV
+      EVIDENCE artifact. *Done 2026-10-17T17:18:49Z:* 29 files hashed; context_pack.md + manifest built by `build-context-pack-cli.ts`.
+- [x] Confirmed in the plan session: `createTenantScopedPrisma` (`apps/api/src/security/tenant-context.ts:142-195`) issues
       independent queries (a session `SET` once per request, no wrapping transaction), so a failed availability read
       cannot abort the booking that follows — the P2021/P2022 fallback is safe.
 
@@ -204,16 +204,16 @@ Page counts are unchanged (no new `page.tsx`): `sitemap-reconciliation.test.ts`,
 - `.specify/sprints/sprint-18/attestations/PG-202/context_ack.json`
 - `apps/api/src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts`
 
-- [ ] `context_ack.json`: spec, plan, owner ruling, ADR-081, playbook, PRD, the CSV pre-requisite files and every source
+- [x] `context_ack.json`: spec, plan, owner ruling, ADR-081, playbook, PRD, the CSV pre-requisite files and every source
       file to modify, each with SHA-256 and the `date -u` time of hashing.
 
 Cases (router caller with the mocked container, clock pinned with `vi.useFakeTimers({ toFake: ['Date'] })`):
-- [ ] create: start 06:59 UTC rejected `Appointments must start and end between 07:00 and 19:00.`; 07:00 ok; end 19:00:00 ok;
+- [x] create: start 06:59 UTC rejected `Appointments must start and end between 07:00 and 19:00.`; 07:00 ok; end 19:00:00 ok;
       end 19:01 rejected; 18:00 → 08:00 next day accepted (gap pinned, test named "legacy path keeps the cross-midnight gap
       (recorded finding)"); `timezone: 'Asia/Tokyo'` shifts the window.
-- [ ] reschedule: evaluated in UTC (no timezone input).
-- [ ] findNextSlot: `checkConflictsUseCase.findNextSlot` called with `workingHoursStart: 9, workingHoursEnd: 17`.
-- [ ] Run on the untouched router → **GREEN**; log `characterization-legacy.log`. It must stay GREEN after Step 15
+- [x] reschedule: evaluated in UTC (no timezone input).
+- [x] findNextSlot: `checkConflictsUseCase.findNextSlot` called with `workingHoursStart: 9, workingHoursEnd: 17`. *Verified:* `tdd/characterization-legacy.log` (9 passed, exit 0, 2026-10-17).
+- [x] Run on the untouched router → **GREEN**; log `characterization-legacy.log`. It must stay GREEN after Step 15
       (the settings read returns `null` in this file: `prismaMock.appointmentSettings.findUnique.mockResolvedValue(null)`).
 
 **Validation:** `pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts`
@@ -226,29 +226,29 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `packages/domain/src/legal/appointments/__tests__/AvailabilityPolicy.test.ts`
 - `packages/domain/src/legal/appointments/__tests__/availability-roles.test.ts`
 
-- [ ] Per-weekday hours; touching merge (09-12 + 12-17 → 11:00-13:00 ok); gap not merged; closed weekday (message names
+- [x] Per-weekday hours; touching merge (09-12 + 12-17 → 11:00-13:00 ok); gap not merged; closed weekday (message names
       the weekday + zone); start exactly at closing time rejected; end exactly at close ok.
-- [ ] 24:00: range ending 1440 accepts 23:00-24:00; 23:30-00:30 → SPANS_MIDNIGHT (message "Book multi-day events as one
+- [x] 24:00: range ending 1440 accepts 23:00-24:00; 23:30-00:30 → SPANS_MIDNIGHT (message "Book multi-day events as one
       appointment per day."); end at next-day 00:00 with last range ending 1020 → OUTSIDE_HOURS.
-- [ ] Closures: start date, end date, inclusive first/last day, day before/after, next-day exemption for a 24:00 end,
+- [x] Closures: start date, end date, inclusive first/last day, day before/after, next-day exemption for a 24:00 end,
       closure precedes hours, firm-zone date (Pacific/Auckland instant on the previous UTC day).
-- [ ] Cap: `count = cap - 1` ok, `= cap` rejected; null unlimited; `undefined` with a cap set throws;
+- [x] Cap: `count = cap - 1` ok, `= cap` rejected; null unlimited; `undefined` with a cap set throws;
       `CAP_COUNTED_STATUSES ∪ {CANCELLED, NO_SHOW}` equals `APPOINTMENT_STATUSES` (guard).
-- [ ] Timezone: invalid zone → INVALID_TIMEZONE (no RangeError); `canonicalTimezone('Asia/Calcutta')` is valid and
+- [x] Timezone: invalid zone → INVALID_TIMEZONE (no RangeError); `canonicalTimezone('Asia/Calcutta')` is valid and
       idempotent; `toZonedParts` at local 00:00 → minuteOfDay 0.
-- [ ] DST: Europe/London 2026-03-29 and 2026-10-25, America/New_York 2026-03-08 and 2026-11-01 (09:00-17:00 local holds on
+- [x] DST: Europe/London 2026-03-29 and 2026-10-25, America/New_York 2026-03-08 and 2026-11-01 (09:00-17:00 local holds on
       both sides; 17:00 end ok / 17:01 not on transition days), Asia/Kolkata (+05:30); `localToUtc` gap/overlap;
       `localDayBoundsUtc` 23 h / 25 h; weekday mapping 2026-04-12 (Sun) … 2026-04-18 (Sat).
-- [ ] `generateCandidates`: anchored at range start (09:30 range yields 09:30, 10:30 …), mid-range `from` rounds up to the
+- [x] `generateCandidates`: anchored at range start (09:30 range yields 09:30, 10:30 …), mid-range `from` rounds up to the
       next grid point, skips closures and closed weekdays, respects duration/same-day, `maxDaysAhead`, `limit` 2000.
-- [ ] Messages never contain a closure reason or an id.
-- [ ] Week boundary: a 23:30 local start in Pacific/Auckland (previous UTC date) and in America/New_York resolves to the
+- [x] Messages never contain a closure reason or an id.
+- [x] Week boundary: a 23:30 local start in Pacific/Auckland (previous UTC date) and in America/New_York resolves to the
       firm-local weekday, not the UTC weekday.
-- [ ] `mergeRanges` leaves its input array and objects unchanged (frozen input).
-- [ ] No test depends on the wall clock: every case passes explicit instants and IANA zones; no `process.env.TZ`.
-- [ ] `isAvailabilityAdminRole`: ADMIN, MANAGER true; USER, undefined false; `AVAILABILITY_ADMIN_ROLES` is
+- [x] `mergeRanges` leaves its input array and objects unchanged (frozen input).
+- [x] No test depends on the wall clock: every case passes explicit instants and IANA zones; no `process.env.TZ`.
+- [x] `isAvailabilityAdminRole`: ADMIN, MANAGER true; USER, undefined false; `AVAILABILITY_ADMIN_ROLES` is
       `ACCOUNT_OWNER_ADMIN_ROLES` (identity assertion, so OWNER/SUPER_ADMIN follow the shared list, as PG-204).
-- [ ] RED log `red-domain.log` (module not found).
+- [x] RED log `red-domain.log` (module not found). *Verified:* "Cannot find module ../AvailabilityPolicy / ../availability-roles", 2 files failed, exit 1.
 
 **Validation:** `pnpm --dir packages/domain exec vitest run src/legal/appointments/__tests__/AvailabilityPolicy.test.ts src/legal/appointments/__tests__/availability-roles.test.ts`
 
@@ -257,10 +257,10 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `packages/application/src/usecases/scheduling/__tests__/CheckConflicts.test.ts`
 
-- [ ] One `findForConflictCheck` call over `[first.start - before, last.end + after]` with `attendeeIds: [attendeeId]`.
-- [ ] Returns the first free candidate (conflict on 1st, free 2nd); buffers cause a conflict; empty list → `null`;
+- [x] One `findForConflictCheck` call over `[first.start - before, last.end + after]` with `attendeeIds: [attendeeId]`.
+- [x] Returns the first free candidate (conflict on 1st, free 2nd); buffers cause a conflict; empty list → `null`;
       all busy → `null`; repository failure → `Result.fail`.
-- [ ] RED log `red-application.log` (method missing).
+- [x] RED log `red-application.log` (method missing). *Verified:* 6 failed "findFirstFreeCandidate is not a function", 13 existing passed, exit 1.
 
 **Validation:** `pnpm --dir packages/application exec vitest run src/usecases/scheduling/__tests__/CheckConflicts.test.ts`
 
@@ -271,17 +271,17 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `packages/validators/src/__tests__/appointment-settings.test.ts`
 
-- [ ] `valid()` + `issues()` + `it.each`: 7 unique weekdays (6, 8, duplicate rejected); minutes 0..1439 / 1..1440;
+- [x] `valid()` + `issues()` + `it.each`: 7 unique weekdays (6, 8, duplicate rejected); minutes 0..1439 / 1..1440;
       start ≥ end rejected; 6 ranges ok, 7 rejected; overlap rejected at `['days', d, 'ranges', j, 'startMinute']` (later
       range, unsorted input); touching allowed; duplicate range rejected.
-- [ ] Closures: invalid dates (`2026-02-30`, `2026-13-01`, datetime string), bounds 2000-01-01..2100-12-31, end < start,
+- [x] Closures: invalid dates (`2026-02-30`, `2026-13-01`, datetime string), bounds 2000-01-01..2100-12-31, end < start,
       366 days ok / 367 rejected (incl. 2028-02-29), reason trimmed, blank → null, 201 chars rejected, overlapping and
       duplicate closures rejected at `['closures', j, 'startDate']`, 200 ok / 201 rejected.
-- [ ] Buffers 0/240 ok, -1/241 rejected; cap null/1/500 ok, 0/501/1.5 rejected; timezone valid/alias canonicalised/
+- [x] Buffers 0/240 ok, -1/241 rejected; cap null/1/500 ok, 0/501/1.5 rejected; timezone valid/alias canonicalised/
       invalid (`Not/AZone`, `''`); `tenantId` stripped.
-- [ ] `updateAppointmentSettingsSchema` strips `defaultBufferBeforeMinutes`, `defaultBufferAfterMinutes`,
+- [x] `updateAppointmentSettingsSchema` strips `defaultBufferBeforeMinutes`, `defaultBufferAfterMinutes`,
       `defaultTimezone`; duration refine still rejects min > max.
-- [ ] RED log `red-validators.log`.
+- [x] RED log `red-validators.log`. *Verified:* "Cannot find module ../availability"; the new strip test fails on the current schema (1 failed, 25 passed), exit 1.
 
 **Validation:** `pnpm --dir packages/validators exec vitest run src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts`
 
@@ -292,32 +292,32 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `apps/api/src/modules/calendar/__tests__/availability-enforcement.test.ts`
 - `apps/api/src/modules/calendar/__tests__/availability.router.test.ts`
 
-- [ ] Helpers: `stubTenantAvailability(prismaMock, { configured, timezone, ranges, closures, cap, count })` stubs ALL four
+- [x] Helpers: `stubTenantAvailability(prismaMock, { configured, timezone, ranges, closures, cap, count })` stubs ALL four
       reads; `expectEveryCallTenantScoped(prismaMock, tenantId)` iterates every model's calls.
-- [ ] Enforcement legacy: settings `null`, `undefined`, non-object, `availabilityConfiguredAt: null` → legacy message;
+- [x] Enforcement legacy: settings `null`, `undefined`, non-object, `availabilityConfiguredAt: null` → legacy message;
       Prisma `P2021` and `P2022` on each loader read (settings, hours, closures) → legacy + `console.error` asserted; other
       codes propagate; a failure of the cap `count` (any code, incl. P2022) propagates and never falls back to legacy;
       create uses `legacyTimezone`, reschedule UTC.
-- [ ] Enforcement configured: each violation code → BAD_REQUEST with the exact contract message; INVALID_TIMEZONE →
+- [x] Enforcement configured: each violation code → BAD_REQUEST with the exact contract message; INVALID_TIMEZONE →
       PRECONDITION_FAILED; `input.timezone` ignored; `forceOverrideConflicts` irrelevant; cap null → `count` not called;
       cap set → `count` where = `{tenantId, status in CAP_COUNTED_STATUSES, startTime gte/lt window, id not excludeId}`
       (23 h / 25 h windows); unstubbed `count` → throws (not allow); `toHaveBeenCalledTimes` per model.
-- [ ] findNextSlot configured: ≤ 5 queries (settings, hours, closures, cap `findMany` bounded to the candidate span,
+- [x] findNextSlot configured: ≤ 5 queries (settings, hours, closures, cap `findMany` bounded to the candidate span,
       one `findFirstFreeCandidate`); full day dropped (`count = cap` dropped, `cap - 1` offered); `null` at horizon/limit;
       starts at `max(startFrom, now)`; returns `{ slot: {startTime, endTime, durationMinutes} | null, searchDurationMs }`.
-- [ ] Real-use-case contract test: `findNextSlotWithinAvailability` with the REAL `CheckConflictsUseCase` over an
+- [x] Real-use-case contract test: `findNextSlotWithinAvailability` with the REAL `CheckConflictsUseCase` over an
       in-memory `AppointmentRepository` (one busy appointment) returns the first free candidate — anchors the mocked
       `findFirstFreeCandidate` result shape used elsewhere.
-- [ ] Router get: any role; no lazy create (`create`/`upsert`/`createMany` not called); unconfigured timezone from
+- [x] Router get: any role; no lazy create (`create`/`upsert`/`createMany` not called); unconfigured timezone from
       `ctx.user.timezone`; `canEdit` true for ADMIN/MANAGER, false for USER; every query tenant-scoped.
-- [ ] Router update: ADMIN ok, MANAGER ok, USER FORBIDDEN (no write calls), unauthenticated UNAUTHORIZED; one
+- [x] Router update: ADMIN ok, MANAGER ok, USER FORBIDDEN (no write calls), unauthenticated UNAUTHORIZED; one
       `$transaction` with call order upsert → hours delete/create → closures delete/create (`mock.invocationCallOrder`);
       no `skipDuplicates`; smuggled `tenantId` ignored; P2002 from settings upsert / hours / closures → CONFLICT;
       `availabilityConfiguredAt` = pinned NOW; upsert `update` keys exactly buffers/timezone/cap/configuredAt; create
       branch uses `DEFAULT_APPOINTMENT_SETTINGS`; closure dates sent as UTC-midnight `Date`s and read back as `YYYY-MM-DD`.
-- [ ] Router reset: ADMIN/MANAGER only; call order `updateMany` → hours → closures; buffers/timezone untouched; no-row safe
+- [x] Router reset: ADMIN/MANAGER only; call order `updateMany` → hours → closures; buffers/timezone untouched; no-row safe
       (`count: 0`); returns unconfigured DTO; cross-tenant: tenant A caller never sees tenant B rows.
-- [ ] RED log `red-api-calendar.log` (modules missing).
+- [x] RED log `red-api-calendar.log` (modules missing). *Verified:* "Cannot find module ../availability-enforcement / ../availability.router", exit 1.
 
 **Validation:** `pnpm --dir apps/api exec vitest run src/modules/calendar/__tests__/availability-enforcement.test.ts src/modules/calendar/__tests__/availability.router.test.ts`
 
@@ -332,20 +332,20 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `apps/api/src/agent/__tests__/approved-action-executor.test.ts`
 - `apps/api/src/modules/legal/__tests__/legal-module-entitlement.test.ts`
 
-- [ ] Caller `describe('availability enforcement (PG-202)')`: configured create/reschedule blocked (hours, closure, cap,
+- [x] Caller `describe('availability enforcement (PG-202)')`: configured create/reschedule blocked (hours, closure, cap,
       midnight) with the use case NOT called; allowed case calls it; firm zone governs (08:30Z ok in London BST, input
       `Asia/Tokyo` ignored); unconfigured keeps legacy; availability runs before the use case (call order); reschedule
       within the same full day passes (excludes itself), into a full day fails; findNextSlot configured vs unconfigured;
       cross-tenant A (Mon-Fri 09-12) / B (unconfigured): B Sat 15:00 ok, A Sat 15:00 blocked, every read for A carries A.
-- [ ] Boundary guard: `appointments.router.ts` contains no `BUSINESS_HOURS_` / `assertWithinBusinessHours` and calls
+- [x] Boundary guard: `appointments.router.ts` contains no `BUSINESS_HOURS_` / `assertWithinBusinessHours` and calls
       `assertAppointmentWithinAvailability` exactly twice.
-- [ ] appointment-settings router: `update` with old-client buffers/timezone leaves them out of `upsert.update`;
+- [x] appointment-settings router: `update` with old-client buffers/timezone leaves them out of `upsert.update`;
       `resetToDefaults` update branch has no buffers/timezone and sets `primaryCalendarId: null`; `get` unchanged.
-- [ ] Smoke: root `appRouter._def.record.calendar` exposes `availability.{get,update,resetToDefaults}` (+ typo guard);
+- [x] Smoke: root `appRouter._def.record.calendar` exposes `availability.{get,update,resetToDefaults}` (+ typo guard);
       runtime check that the real `container.checkConflictsUseCase.findFirstFreeCandidate` is a function.
-- [ ] Executor: an availability BAD_REQUEST from `create`/`reschedule` surfaces as a failed execution, not a crash.
-- [ ] Entitlement: `calendar.availability` not in `LEGAL_ROUTERS` (calendar is core).
-- [ ] RED log `red-api-wiring.log` (the characterization file stays GREEN).
+- [x] Executor: an availability BAD_REQUEST from `create`/`reschedule` surfaces as a failed execution, not a crash.
+- [x] Entitlement: `calendar.availability` not in `LEGAL_ROUTERS` (calendar is core).
+- [x] RED log `red-api-wiring.log` (the characterization file stays GREEN). *Verified:* 22 failed / 128 passed; the characterization, legacy and executor guard cases pass (the executor router is mocked, so those two are regression guards, not RED-able); exit 1.
 
 **Validation:** `pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts src/modules/legal/__tests__/appointments.availability-boundary.test.ts src/modules/legal/__tests__/appointment-settings.router.test.ts src/__tests__/app-router.smoke.test.ts src/agent/__tests__/approved-action-executor.test.ts src/modules/legal/__tests__/legal-module-entitlement.test.ts`
 
@@ -354,23 +354,23 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Create:**
 - `tests/integration/availability.test.ts`
 
-- [ ] `describeDb` gate with a visible skip reason; random run prefix (`pg202_${Date.now()}_${rand}`), cleanup in
+- [x] `describeDb` gate with a visible skip reason; random run prefix (`pg202_${Date.now()}_${rand}`), cleanup in
       `afterAll` (hours, closures, settings, tenants) + stale-prefix sweep; `ensureMigrationSql()` probes BOTH
       `availability_hours_range_check` and `appointment_settings_maxDailyBookings_check`.
-- [ ] Insert-failure matrix (23514/23505/23503): weekday -1/7, start -1, end 1441, start == end, start > end,
+- [x] Insert-failure matrix (23514/23505/23503): weekday -1/7, start -1, end 1441, start == end, start > end,
       endDate < startDate, blank reason, reason 201 chars, cap 0/501, duplicate hours row, duplicate closure, missing tenant;
       accepted boundaries 0-1440, cap NULL/1/500; columns nullable with no default.
-- [ ] Tenant delete cascades hours + closures.
-- [ ] RLS with `SET LOCAL app.current_tenant_id` inside a transaction on the `authenticated` role: tenant A cannot read or
+- [x] Tenant delete cascades hours + closures.
+- [x] RLS with `SET LOCAL app.current_tenant_id` inside a transaction on the `authenticated` role: tenant A cannot read or
       insert tenant B rows (skip disclosed when the role is missing — never counted as a pass).
-- [ ] DATE round-trip: `SET TIME ZONE 'Pacific/Auckland'`, write 2026-03-29 via Prisma, read via Prisma and
+- [x] DATE round-trip: `SET TIME ZONE 'Pacific/Auckland'`, write 2026-03-29 via Prisma, read via Prisma and
       `SELECT "startDate"::text` → `2026-03-29`.
-- [ ] Real adapter error shape (consensus mod 1): in a throwaway database from `scripts/lib/ephemeral-test-db.mjs`
+- [x] Real adapter error shape (consensus mod 1): in a throwaway database from `scripts/lib/ephemeral-test-db.mjs`
       (never the shared DB), drop `appointment_settings."availabilityConfiguredAt"` after `migrate deploy`, call
       `loadTenantAvailability` with a real `PrismaClient` + `PrismaPg` adapter, and assert it returns `{configured:false}`
       and that the caught error carries `code: 'P2022'` (the shape the unit tests mock). Skip disclosed if the ephemeral DB
       helper cannot run.
-- [ ] RED log `red-integration.log` (tables missing).
+- [x] RED log `red-integration.log` (tables missing). *Verified:* "Cannot find module …/availability-enforcement" (module + migration absent), exit 1, run under `--exclusive intelliflow-db`. Probe uses a throwaway Postgres schema instead of a whole ephemeral DB (same real adapter error, no shared table touched).
 
 **Validation:** `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/availability.test.ts`
 
@@ -397,47 +397,47 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `apps/web/src/components/settings/__tests__/TimezoneSelector.test.tsx`
 - `apps/web/src/components/aurora-landing/sections/__tests__/InboxCalendarSection.test.tsx`
 
-- [ ] page: server shell renders `AvailabilityLoading` fallback then content; no "coming soon".
-- [ ] AvailabilityLoading: wrapper `aria-busy="true"`, sr-only `<output>` "Loading availability", skeletons `aria-hidden`,
+- [x] page: server shell renders `AvailabilityLoading` fallback then content; no "coming soon".
+- [x] AvailabilityLoading: wrapper `aria-busy="true"`, sr-only `<output>` "Loading availability", skeletons `aria-hidden`,
       four card skeletons in bento order (8 / 4 / 8 / 4 spans).
-- [ ] Closure reasons are shown to every tenant member, read-only view included (text rows), and never in booking errors.
-- [ ] AvailabilityContent (jsdom pragma, `vi.hoisted` trpc mock, real PageHeader, axe-core): bento order Weekly / Timezone /
+- [x] Closure reasons are shown to every tenant member, read-only view included (text rows), and never in booking errors.
+- [x] AvailabilityContent (jsdom pragma, `vi.hoisted` trpc mock, real PageHeader, axe-core): bento order Weekly / Timezone /
       Closures / Buffers; headings `[1,2,2,2,2]` (+ EmptyState h3 under Closures); query error `role="alert"` + Retry;
       unconfigured prefill 07:00-19:00 × 7 from `LEGACY_BOOKING_HOURS` + the exact unconfigured note; first save with only a
       closure sends full prefill hours; viewer-zone note only when zones differ; closure dates displayed without a day shift
       for an America/Los_Angeles viewer (context formatters not called with closure strings); read-only: no combobox/
       spinbutton/switch/textbox, values as text, no Save/Reset; axe zero violations in default, unconfigured,
       validation-error, empty-closures, read-only.
-- [ ] Actions: Save disabled when clean (enabled when unconfigured + canEdit), enabled when dirty, disabled while saving;
+- [x] Actions: Save disabled when clean (enabled when unconfigured + canEdit), enabled when dirty, disabled while saving;
       label "Save Changes" stable; no `hideOnMobile`; validation runs on click → `role="alert"` summary "N problems need
       fixing", focus first invalid; success → toast only, snapshot refreshed, focus on the Weekly hours title; server
       error → `role="alert"`, focus on it, no destructive toast; CONFLICT → alert + Reload (Save disabled until reload);
       Reset → `ConfirmationDialog` text lists reset vs kept, Cancel keeps the draft, Confirm calls `resetToDefaults` once,
       announces in the polite region, focus to the Weekly hours title.
-- [ ] availability-draft: minute↔`HH:MM` incl. 00:00, 23:59, end `00:00` ⇔ 1440 (start > 0), `00:00`-`00:00` invalid;
+- [x] availability-draft: minute↔`HH:MM` incl. 00:00, 23:59, end `00:00` ⇔ 1440 (start > 0), `00:00`-`00:00` invalid;
       `toUpdateInput` sends open days only; `normalize` stable; Sun..Sat ↔ Monday-first issue-path mapping (Sunday case).
-- [ ] WeeklyHoursCard: fieldset/legend per day (Monday first), Switch "Monday open" + description, positional names, Add
+- [x] WeeklyHoursCard: fieldset/legend per day (Monday first), Switch "Monday open" + description, positional names, Add
       range ("Add range for Monday"), Remove only when > 1 range, 6-range `aria-disabled` + announcement, focus after
       add/remove, switch off hides controls and keeps ranges in the draft, closed days not validated.
-- [ ] TimezoneCard: label + selector id, detect button hidden, confirm note while unconfigured, zone-change helper text.
-- [ ] BuffersCapCard: labelled number inputs with help, empty → error (no null-for-number), cap Switch off → `null`,
+- [x] TimezoneCard: label + selector id, detect button hidden, confirm note while unconfigured, zone-change helper text.
+- [x] BuffersCapCard: labelled number inputs with help, empty → error (no null-for-number), cap Switch off → `null`,
       on + empty → error, 0/501 rejected.
-- [ ] ClosuresList: `forwardRef` `openCreate` adds a row and focuses its start date; EmptyState exact props, no CTA inside;
+- [x] ClosuresList: `forwardRef` `openCreate` adds a row and focuses its start date; EmptyState exact props, no CTA inside;
       per-row names; end < start error; reason limit; remove focus order; 200 limit; draft order kept while editing.
-- [ ] calendar-settings: no buffer inputs; tab/heading "Reminders"; pointer text with current values + link
+- [x] calendar-settings: no buffer inputs; tab/heading "Reminders"; pointer text with current values + link
       `getByRole('link', {name: 'Manage working hours, buffers and timezone in Availability'})` →
       `/calendar/availability` in both tabs; save payload has no buffers/timezone; dirty detection still works on remaining
       fields; one switch on the integration tab; `resetDescription` text passed.
-- [ ] AppointmentForm: "submits a 06:00 start (no client-side business-hours rule)" (RED on current code); rejected
+- [x] AppointmentForm: "submits a 06:00 start (no client-side business-hours rule)" (RED on current code); rejected
       `onSubmit` (Error and non-Error) → `role="alert"` `form-submit-error` with `text-red-700 dark:text-red-300`, cleared on
       next submit and on field edit, submit re-enabled; `defaultBuffers` initialise new-appointment buffers, edit mode keeps
       the appointment's own; Event Timezone help text.
-- [ ] AppointmentDetail: rejected reschedule keeps the dialog open, shows the message in `role="alert"`, input preserved;
+- [x] AppointmentDetail: rejected reschedule keeps the dialog open, shows the message in `role="alert"`, input preserved;
       success closes it.
-- [ ] new/page: renders the form after `appointmentSettings.get` settles and passes `defaultBuffers`.
-- [ ] ModuleSettingsLayout: custom `resetDescription` shown; default unchanged. TimezoneSelector: `showDetect={false}` hides
+- [x] new/page: renders the form after `appointmentSettings.get` settles and passes `defaultBuffers`.
+- [x] ModuleSettingsLayout: custom `resetDescription` shown; default unchanged. TimezoneSelector: `showDetect={false}` hides
       the button; default shows it.
-- [ ] RED log `red-web.log` (one run over the listed files).
+- [x] RED log `red-web.log` (one run over the listed files). *Verified:* 17 files failed / 9 passed, 25 tests failed / 200 passed (new modules missing; changed contracts fail on current components), exit 1.
 
 **Validation:** `pnpm --dir apps/web exec vitest run src/app/calendar src/components/appointments/__tests__ src/app/appointments/new src/components/settings/__tests__/ModuleSettingsLayout.test.tsx src/components/settings/__tests__/TimezoneSelector.test.tsx src/components/aurora-landing/sections/__tests__/InboxCalendarSection.test.tsx`
 
@@ -451,9 +451,9 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `packages/domain/src/index.ts`
 
-- [ ] Implement the spec "Domain" contract (pure; `Intl` only; `DomainError` subclass per `Buffer.ts:4-10`).
-- [ ] Barrel exports after `packages/domain/src/index.ts:80`; `pnpm --filter @intelliflow/domain build` (stale-dist rule).
-- [ ] GREEN log `green-domain.log`; coverage ≥ 95% on both files.
+- [x] Implement the spec "Domain" contract (pure; `Intl` only; `DomainError` subclass per `Buffer.ts:4-10`).
+- [x] Barrel exports after `packages/domain/src/index.ts:80`; `pnpm --filter @intelliflow/domain build` (stale-dist rule).
+- [x] GREEN log `green-domain.log`; coverage ≥ 95% on both files. *Verified:* 51 passed; All files 98.7% stmts / 97.46% branches / 100% funcs / 100% lines; `pnpm --filter @intelliflow/domain build` exit 0.
 
 **Validation:** Step 2 command, then `pnpm --dir packages/domain exec vitest run --coverage.enabled --coverage.include=src/legal/appointments/AvailabilityPolicy.ts --coverage.include=src/legal/appointments/availability-roles.ts src/legal/appointments/__tests__`
 
@@ -462,9 +462,9 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `packages/application/src/usecases/scheduling/CheckConflicts.ts`
 
-- [ ] `findFirstFreeCandidate` per spec (one repository read, the existing pure conflict check per candidate, wraps
+- [x] `findFirstFreeCandidate` per spec (one repository read, the existing pure conflict check per candidate, wraps
       `[attendeeId]`). No container change. `pnpm --filter @intelliflow/application build`.
-- [ ] GREEN log `green-application.log`; coverage > 90% on the new method's lines.
+- [x] GREEN log `green-application.log`; coverage > 90% on the new method's lines. *Verified:* 20 passed; the uncovered lines (103, 143, 188, 209, 245) are pre-existing, every added line is covered; build exit 0.
 
 **Validation:** Step 3 command, then `pnpm --dir packages/application exec vitest run --coverage.enabled --coverage.include=src/usecases/scheduling/CheckConflicts.ts src/usecases/scheduling/__tests__/CheckConflicts.test.ts`
 
@@ -476,8 +476,8 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `packages/validators/src/appointment-settings.ts`
 - `packages/validators/src/index.ts`
 
-- [ ] Schemas, DTO types, re-exports of `LEGACY_BOOKING_HOURS` / `AVAILABILITY_LIMITS`; update schema `.omit(...)`.
-- [ ] `pnpm --filter @intelliflow/validators build`; GREEN log `green-validators.log`; coverage > 90%.
+- [x] Schemas, DTO types, re-exports of `LEGACY_BOOKING_HOURS` / `AVAILABILITY_LIMITS`; update schema `.omit(...)`.
+- [x] `pnpm --filter @intelliflow/validators build`; GREEN log `green-validators.log`; coverage > 90%. *Verified:* 68 passed; availability.ts 100% lines / 92% branches; appointment-settings.ts 100%; build + typecheck exit 0.
 
 **Validation:** Step 4 command, then `pnpm --dir packages/validators exec vitest run --coverage.enabled --coverage.include=src/availability.ts --coverage.include=src/appointment-settings.ts src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts`
 
@@ -489,16 +489,16 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `packages/db/prisma/schema.prisma`
 - `packages/db/src/index.ts`
 
-- [ ] Migration per the R2 data-engineer draft (header: Class A bullets, forward-only recovery, "merged, not applied").
-- [ ] Models + Tenant `@ignore` relations + two `AppointmentSettings` fields; allowlist after :99; grep `packages/db/src`
+- [x] Migration per the R2 data-engineer draft (header: Class A bullets, forward-only recovery, "merged, not applied").
+- [x] Models + Tenant `@ignore` relations + two `AppointmentSettings` fields; allowlist after :99; grep `packages/db/src`
       for any other model registry.
-- [ ] Index names stay the Prisma defaults (`availability_hours_tenantId_weekday_startMinute_key`, …) so
+- [x] Index names stay the Prisma defaults (`availability_hours_tenantId_weekday_startMinute_key`, …) so
       `prisma migrate diff` shows no drift.
-- [ ] `pnpm --filter @intelliflow/db exec prisma generate` (never `--no-engine`), `pnpm --filter @intelliflow/db build`.
-- [ ] Independent SQL review by a sub-agent (Class A gate 1) on `migration.sql` only → `matop/sql-review.json`; then
-      freeze the file.
-- [ ] Apply to the local test DB (fresh DB via `scripts/lib/ephemeral-test-db.mjs` where available) and run Step 7 →
-      GREEN log `green-integration.log`.
+- [x] `pnpm --filter @intelliflow/db exec prisma generate` (never `--no-engine`), `pnpm --filter @intelliflow/db build`.
+- [x] Independent SQL review by a sub-agent (Class A gate 1) on `migration.sql` only → `matop/sql-review.json`; then
+      freeze the file. *Verified:* `pg202-sql-reviewer` (data-engineer) APPROVE, 6 INFO findings, no fixes required; sha256 in `matop/migration-freeze.txt`.
+- [x] Apply to the local test DB (fresh DB via `scripts/lib/ephemeral-test-db.mjs` where available) and run Step 7 →
+      GREEN log `green-integration.log`. *Verified:* 20 passed (verbose list in the log) incl. RLS session check and the real-adapter P2022 probe; applied via the test's `ensureMigrationSql()` (shared DB, exclusive slot), not `migrate deploy`, so the shared DB's migration history is untouched.
 
 **Validation:** `pnpm --filter @intelliflow/db typecheck` and the Step 7 command
 
@@ -509,7 +509,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `apps/api/src/modules/legal/appointment-settings.router.ts`
 
-- [ ] Move `DEFAULT_APPOINTMENT_SETTINGS`; reset update branch = defaults minus buffers/timezone + `primaryCalendarId: null`.
+- [x] Move `DEFAULT_APPOINTMENT_SETTINGS`; reset update branch = defaults minus buffers/timezone + `primaryCalendarId: null`.
 
 **Validation:** `pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointment-settings.router.test.ts`
 
@@ -521,16 +521,16 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `apps/api/src/modules/calendar/calendar.router.ts`
 
-- [ ] Router per spec (plain `tenantProcedure`, `assertTenantContext`, explicit `tenantId`, settings-first transaction,
+- [x] Router per spec (plain `tenantProcedure`, `assertTenantContext`, explicit `tenantId`, settings-first transaction,
       P2002 → CONFLICT, no lazy create).
-- [ ] Helper per spec (structural `AvailabilityPrisma` type over the four delegates; legacy branch = the router's
+- [x] Helper per spec (structural `AvailabilityPrisma` type over the four delegates; legacy branch = the router's
       `getLocalHour` + `assertWithinBusinessHours` moved verbatim with constants from `LEGACY_BOOKING_HOURS`; P2021/P2022
       fallback with `console.error`; `findNextSlotWithinAvailability`).
-- [ ] `availability.router.ts` imports `DEFAULT_APPOINTMENT_SETTINGS` from `../legal/appointment-settings.defaults` and
+- [x] `availability.router.ts` imports `DEFAULT_APPOINTMENT_SETTINGS` from `../legal/appointment-settings.defaults` and
       `isAvailabilityAdminRole` from `@intelliflow/domain`; the helper imports `evaluateAvailability`, `capCountWindow`,
       `generateCandidates`, `CAP_COUNTED_STATUSES`, `LEGACY_BOOKING_HOURS` from `@intelliflow/domain`.
-- [ ] `availability: availabilityRouter` in `calendar.router.ts`.
-- [ ] GREEN log `green-api-calendar.log`; coverage > 90% on both new files.
+- [x] `availability: availabilityRouter` in `calendar.router.ts`.
+- [x] GREEN log `green-api-calendar.log`; coverage > 90% on both new files. *Verified:* 80 passed; 97.47% stmts / 92.13% branches / 100% lines.
 
 **Validation:** Step 5 command, then `pnpm --dir apps/api exec vitest run --coverage.enabled --coverage.include=src/modules/calendar/availability.router.ts --coverage.include=src/modules/calendar/availability-enforcement.ts src/modules/calendar/__tests__`
 
@@ -539,12 +539,12 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `apps/api/src/modules/legal/appointments.router.ts`
 
-- [ ] Import; create `:512-513` and reschedule `:786-787` swaps exactly as the spec; findNextSlot `:1141-1177` configured
+- [x] Import; create `:512-513` and reschedule `:786-787` swaps exactly as the spec; findNextSlot `:1141-1177` configured
       branch; delete `:191-197` and `:316-358`; keep the `tenantProcedure` shadow `:307-314`; update comments.
-- [ ] If `appointments.router.test.ts` / `.comprehensive.test.ts` crash on the new settings read, add
+- [x] If `appointments.router.test.ts` / `.comprehensive.test.ts` crash on the new settings read, add
       `prismaMock.appointmentSettings.findUnique.mockResolvedValue(null)` to their `beforeEach` (conditional).
-- [ ] Runtime check: `container.checkConflictsUseCase.findFirstFreeCandidate` is a function (smoke test).
-- [ ] GREEN log `green-api-wiring.log`; characterization log re-run GREEN (`characterization-legacy-after.log`).
+- [x] Runtime check: `container.checkConflictsUseCase.findFirstFreeCandidate` is a function (smoke test).
+- [x] GREEN log `green-api-wiring.log`; characterization log re-run GREEN (`characterization-legacy-after.log`). *Verified:* 11 files / 288 passed incl. untouched appointments.router.test / comprehensive / tenant-isolation; characterization 9 passed after the swap; api typecheck exit 0.
 
 **Validation:** Step 6 command + Step 1 command
 
@@ -561,10 +561,12 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 **Files to Modify:**
 - `apps/web/src/app/calendar/availability/page.tsx`
 - `apps/web/src/components/settings/TimezoneSelector.tsx`
+- `packages/ui/src/components/confirmation-dialog.tsx` (exec addition: optional `onCloseAutoFocus` so focus can move to
+  the Weekly hours title after Reset; test `packages/ui/__tests__/confirmation-dialog.test.tsx`)
 
-- [ ] Invoke `/frontend-design` before writing UI; follow the playbook §1-§4 and the PG-204 case-types page as the visual
+- [x] Invoke `/frontend-design` before writing UI; follow the playbook §1-§4 and the PG-204 case-types page as the visual
       reference (no Figma mockup exists for this route; design check recorded in `matop/design-check-availability.md`).
-- [ ] Shared pieces reused (no new shared component): `PageHeader` (`apps/web/src/components/shared/page-header.tsx`,
+- [x] Shared pieces reused (no new shared component): `PageHeader` (`apps/web/src/components/shared/page-header.tsx`,
       `actions` with `variant:'primary'|'secondary'`, no `hideOnMobile`), `SectionHeader`
       (`apps/web/src/components/shared/section-header.tsx`, `headingLevel={2}`, `titleId`, `action`, `focusableTitle` on
       Weekly hours), `ConfirmationDialog` + `EmptyState entity="appointments" phase="passive" size="sm"
@@ -572,9 +574,9 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       `TimezoneSelector` (`apps/web/src/components/settings/TimezoneSelector.tsx`, `id`/`invalid`/`describedBy`/new
       `showDetect`), `useTimezoneContext` (`apps/web/src/providers/TimezoneProvider.tsx:106`); `trpc` from `@/lib/trpc`;
       `useRequireAuth` from `@/lib/auth/AuthContext`.
-- [ ] Material Symbols only (`docs/design/ICON_USAGE.md`); decorative icons `aria-hidden`; error text
+- [x] Material Symbols only (`docs/design/ICON_USAGE.md`); decorative icons `aria-hidden`; error text
       `text-red-700 dark:text-red-300`; no `fieldset className="contents"`; no new dependency.
-- [ ] GREEN log `green-web-availability.log`.
+- [x] GREEN log `green-web-availability.log`.
 
 **Validation:** `pnpm --dir apps/web exec vitest run src/app/calendar/availability src/components/settings/__tests__/TimezoneSelector.test.tsx`
 
@@ -588,13 +590,16 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `apps/web/src/components/appointments/AppointmentForm.tsx`
 - `apps/web/src/app/appointments/new/page.tsx`
 - `apps/web/src/components/appointments/AppointmentDetail.tsx`
+- Exec additions: `apps/web/src/app/calendar/calendar-settings/components/AvailabilityPointer.tsx` (the one pointer + link
+  shared by both tabs, instead of a copied block); `AppointmentDetail` modal backdrop loses `aria-hidden="true"`, which hid
+  the whole dialog (and the new alert) from assistive technology.
 
-- [ ] calendar-settings per spec (`next/link` pointers, "Reminders", payload/mapSettings/normalize, `resetDescription`).
-- [ ] AppointmentForm: delete `:118-138`; catch `onSubmit`; `defaultBuffers`; Event Timezone help. No change to
+- [x] calendar-settings per spec (`next/link` pointers, "Reminders", payload/mapSettings/normalize, `resetDescription`).
+- [x] AppointmentForm: delete `:118-138`; catch `onSubmit`; `defaultBuffers`; Event Timezone help. No change to
       attendee/client/assignee/conflict logic.
-- [ ] new/page: wait for `appointmentSettings.get`, pass `defaultBuffers`.
-- [ ] AppointmentDetail `handleAction`: catch → `actionError`, close only on success.
-- [ ] GREEN log `green-web-surfaces.log`.
+- [x] new/page: wait for `appointmentSettings.get`, pass `defaultBuffers`.
+- [x] AppointmentDetail `handleAction`: catch → `actionError`, close only on success.
+- [x] GREEN log `green-web-surfaces.log`. *Verified:* 26 files / 313 tests passed, exit 0.
 
 **Validation:** Step 8 command
 
