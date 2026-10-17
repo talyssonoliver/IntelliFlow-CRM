@@ -1085,7 +1085,7 @@ waivers:
       the cap under exact concurrency; no cross-tenant or data-corruption effect. Tracked for a
       locked fix (per-tenant pg_advisory_xact_lock + race test) in gh #913 and debt-ledger
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
-    author: pg-202-lane (pending owner confirmation, listed as NEEDS_HUMAN in the PR)
+    author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
     date: '2026-10-17'
   - fingerprint: 1a5ce81b9e098cca8625ccee5e210cf8ce672f62143c36f504158b6947f6c4aa
     reason: >-
@@ -1094,7 +1094,7 @@ waivers:
       Same evidence: spec NF-004 / ADR-081 best-effort cap, Aurora's PG-202 boundary (only the two
       availability calls in appointments.router.ts change), tracked in gh #913 and debt-ledger
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
-    author: pg-202-lane (pending owner confirmation, listed as NEEDS_HUMAN in the PR)
+    author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
     date: '2026-10-17'
   - fingerprint: 846f69b2cc7bea8e6f95445eb395652486145070427ff4d6de25e7f369bdb753
     reason: >-
@@ -1102,5 +1102,5 @@ waivers:
       anchored on line 186 alone (the prisma.appointment.count call). Same evidence and tracking:
       spec NF-004 / ADR-081, Aurora's PG-202 boundary, gh #913, debt-ledger
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
-    author: pg-202-lane (pending owner confirmation, listed as NEEDS_HUMAN in the PR)
+    author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
     date: '2026-10-17'
