@@ -15,16 +15,17 @@ docs/compliance-and-governance/
 
 ## Compliance (`compliance/`)
 
-| Document                                                                          | Scope                                       |
-| --------------------------------------------------------------------------------- | ------------------------------------------- |
-| [gdpr-checklist.md](compliance/gdpr-checklist.md)                                 | GDPR compliance controls + evidence mapping |
-| [iso-14001-checklist.md](compliance/iso-14001-checklist.md)                       | ISO 14001 environmental management          |
-| [iso-27001-checklist.md](compliance/iso-27001-checklist.md)                       | ISO 27001 information security              |
-| [iso-42001-checklist.md](compliance/iso-42001-checklist.md)                       | ISO 42001 AI management system              |
-| [accessibility-gap-assessment.md](compliance/accessibility-gap-assessment.md)     | WCAG 2.1 AA gap analysis                    |
-| [wcag-conformance-statement.md](compliance/wcag-conformance-statement.md)         | WCAG conformance statement                  |
-| [vpat-2.5.md](compliance/vpat-2.5.md)                                             | Voluntary Product Accessibility Template    |
-| [quarterly-a11y-review-template.md](compliance/quarterly-a11y-review-template.md) | Quarterly accessibility review checklist    |
+| Document                                                                          | Scope                                                            |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| [gdpr-checklist.md](compliance/gdpr-checklist.md)                                 | GDPR compliance controls + evidence mapping                      |
+| [vendor-dpa-register.md](compliance/vendor-dpa-register.md)                       | Per-sub-processor DPA status, tier gating, UK transfer mechanism |
+| [iso-14001-checklist.md](compliance/iso-14001-checklist.md)                       | ISO 14001 environmental management                               |
+| [iso-27001-checklist.md](compliance/iso-27001-checklist.md)                       | ISO 27001 information security                                   |
+| [iso-42001-checklist.md](compliance/iso-42001-checklist.md)                       | ISO 42001 AI management system                                   |
+| [accessibility-gap-assessment.md](compliance/accessibility-gap-assessment.md)     | WCAG 2.1 AA gap analysis                                         |
+| [wcag-conformance-statement.md](compliance/wcag-conformance-statement.md)         | WCAG conformance statement                                       |
+| [vpat-2.5.md](compliance/vpat-2.5.md)                                             | Voluntary Product Accessibility Template                         |
+| [quarterly-a11y-review-template.md](compliance/quarterly-a11y-review-template.md) | Quarterly accessibility review checklist                         |
 
 ## Data Governance (`data-governance/`)
 
