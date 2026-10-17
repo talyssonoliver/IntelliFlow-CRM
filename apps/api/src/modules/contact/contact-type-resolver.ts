@@ -302,13 +302,35 @@ export type ContactTypeFieldValues = Partial<
  *   required fields keep the explicit-clear rule (a field sent blank fails);
  * - defaults are never re-applied on update.
  */
+/**
+ * A required account is satisfied only by an account of the caller's tenant. The
+ * account association is written after the contact fields, so an unusable id must
+ * fail here, before any write (it is treated as missing).
+ */
+async function dropUnusableAccount(
+  ctx: ResolverCtx,
+  requiredFields: readonly string[],
+  changes: ContactTypeFieldValues,
+  values: ContactTypeFieldValues
+): Promise<void> {
+  const accountId = changes.accountId;
+  if (!requiredFields.includes('accountId') || typeof accountId !== 'string' || !accountId) return;
+  const account = await ctx.prismaWithTenant.account.findFirst({
+    where: { id: accountId, tenantId: ctx.tenant.tenantId },
+    select: { id: true },
+  });
+  if (!account) values.accountId = null;
+}
+
 export async function assertContactTypeOnUpdate(
   ctx: ResolverCtx,
   storedKey: string | null | undefined,
-  nextKey: string | undefined,
+  nextKey: string | null | undefined,
   stored: ContactTypeFieldValues,
   changes: ContactTypeFieldValues
 ): Promise<void> {
+  // Removing the type: no type, so no type rules (the tenant-wide rules still ran).
+  if (nextKey === null) return;
   const changed = nextKey !== undefined && nextKey !== storedKey;
   if (changed) {
     await ensureSystemContactTypes(ctx);
@@ -318,6 +340,7 @@ export async function assertContactTypeOnUpdate(
     for (const key of CONTACT_TYPE_REQUIRED_FIELD_KEYS) {
       if (changes[key] !== undefined) merged[key] = changes[key];
     }
+    await dropUnusableAccount(ctx, type.requiredFields, changes, merged);
     const missing = missingTypeRequiredFields(type.requiredFields, merged);
     if (missing.length > 0) throw missingForType(missing);
     return;
@@ -330,10 +353,11 @@ export async function assertContactTypeOnUpdate(
   const cleared = CONTACT_TYPE_REQUIRED_FIELD_KEYS.filter(
     (key) => changes[key] !== undefined && type.requiredFields.includes(key)
   );
-  const missing = missingTypeRequiredFields(
-    cleared,
-    Object.fromEntries(cleared.map((key) => [key, changes[key]]))
+  const incoming: ContactTypeFieldValues = Object.fromEntries(
+    cleared.map((key) => [key, changes[key]])
   );
+  await dropUnusableAccount(ctx, type.requiredFields, changes, incoming);
+  const missing = missingTypeRequiredFields(cleared, incoming);
   if (missing.length > 0) throw missingForType(missing);
 }
 

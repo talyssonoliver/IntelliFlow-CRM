@@ -168,10 +168,26 @@ function fieldsData(input: CreateContactTypeInput) {
 }
 
 /** Default tags must be active tags of the caller's tenant — one message for foreign/missing/inactive. */
-async function assertTagsAvailable(tx: ContactTypeTx, tenantId: string, tagIds: readonly string[]) {
+/**
+ * Every tag must belong to the tenant and be active, except tags the type already
+ * links (`keptIds`): deactivating a tag must not make its types unsavable.
+ */
+async function assertTagsAvailable(
+  tx: ContactTypeTx,
+  tenantId: string,
+  tagIds: readonly string[],
+  keptIds: readonly string[] = []
+) {
   if (tagIds.length === 0) return;
+  const kept = keptIds.filter((id) => tagIds.includes(id));
   const found = await tx.contactTag.count({
-    where: { tenantId, id: { in: [...tagIds] }, isActive: true },
+    where: {
+      tenantId,
+      id: { in: [...tagIds] },
+      ...(kept.length > 0
+        ? { OR: [{ isActive: true }, { id: { in: kept } }] }
+        : { isActive: true }),
+    },
   });
   if (found !== tagIds.length)
     throw new TRPCError({ code: 'BAD_REQUEST', message: TAGS_UNAVAILABLE });
@@ -320,7 +336,14 @@ export const contactTypesRouter = createTRPCRouter({
             where: { tenantId },
             select: { key: true },
           });
-          const key = generateContactTypeKey(input.name, new Set(taken.map((t) => t.key)));
+          const takenKeys = new Set(taken.map((t) => t.key));
+          let key = generateContactTypeKey(input.name, takenKeys);
+          // No FK from contacts (ADR-080): a deleted type's key can live on in contacts, so
+          // never re-issue it — a new type must not silently adopt those contacts.
+          while ((await tx.contact.count({ where: { tenantId, contactType: key } })) > 0) {
+            takenKeys.add(key);
+            key = generateContactTypeKey(input.name, takenKeys);
+          }
           await assertTagsAvailable(tx, tenantId, input.defaultTagIds);
           const last = await tx.contactType.aggregate({
             where: { tenantId },
@@ -368,7 +391,12 @@ export const contactTypesRouter = createTRPCRouter({
 
       try {
         const row = await ctx.prismaWithTenant.$transaction(async (tx) => {
-          await assertTagsAvailable(tx, tenantId, input.defaultTagIds);
+          await assertTagsAvailable(
+            tx,
+            tenantId,
+            input.defaultTagIds,
+            existing.defaultTags.map((t) => t.contactTagId)
+          );
           // Deactivating: the guard is in the write, so a concurrent setDefault cannot
           // leave an inactive type as the default (the row lock re-checks the WHERE).
           const updated = await tx.contactType.updateMany({

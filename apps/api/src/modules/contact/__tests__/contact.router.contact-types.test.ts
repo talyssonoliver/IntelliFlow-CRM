@@ -298,6 +298,9 @@ describe('contact.update with a contact type', () => {
       .fn()
       .mockResolvedValue({ isSuccess: true, isFailure: false, value: domainContact() });
     ctx.services!.contact!.updateContactInfo = updateContactInfo;
+    ctx.services!.contact!.associateWithAccount = vi
+      .fn()
+      .mockResolvedValue({ isSuccess: true, isFailure: false, value: domainContact() });
     ctx.services!.contact!.getContactById = vi
       .fn()
       .mockResolvedValue({ isSuccess: true, isFailure: false, value: domainContact() });
@@ -360,6 +363,141 @@ describe('contact.update with a contact type', () => {
       message: expect.stringContaining('company'),
     });
     expect(updateContactInfo).not.toHaveBeenCalled();
+  });
+
+  it('a type that requires an account rejects an unknown or foreign account before any write (codex 068bafef)', async () => {
+    seededWith(typeRow({ requiredFields: ['accountId'] }));
+    (prismaMock.account.findFirst as any).mockResolvedValue(null);
+    const { caller, updateContactInfo } = setupUpdate({ contactType: 'customer', accountId: null });
+    await expect(
+      caller.update({ id: CONTACT_ID, contactType: 'vendor', accountId: ACCOUNT_ID })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST', message: expect.stringContaining('account') });
+    expect(prismaMock.account.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ACCOUNT_ID, tenantId } })
+    );
+    expect(updateContactInfo).not.toHaveBeenCalled();
+  });
+
+  it('a type that requires an account accepts a same-tenant account', async () => {
+    seededWith(typeRow({ requiredFields: ['accountId'] }));
+    (prismaMock.account.findFirst as any).mockResolvedValue({ id: ACCOUNT_ID });
+    const { caller, updateContactInfo } = setupUpdate({ contactType: 'customer', accountId: null });
+    await caller.update({ id: CONTACT_ID, contactType: 'vendor', accountId: ACCOUNT_ID });
+    expect(updateContactInfo).toHaveBeenCalled();
+  });
+
+  it('replaces a linked account in one service call, before the other fields (codex 18941caa, a3d0b852)', async () => {
+    const OTHER_ACCOUNT = generateTestUUID('account-other');
+    seededWith(null);
+    const ctx = createTestContext();
+    (prismaMock.contact.findFirst as any).mockResolvedValue({ id: CONTACT_ID });
+    (prismaMock.contact.findUnique as any).mockResolvedValue({
+      id: CONTACT_ID,
+      accountId: ACCOUNT_ID,
+    });
+    const ok = { isSuccess: true, isFailure: false, value: domainContact() };
+    const calls: string[] = [];
+    ctx.services!.contact!.updateContactInfo = vi.fn(async () => (calls.push('info'), ok)) as any;
+    ctx.services!.contact!.disassociateFromAccount = vi.fn(
+      async () => (calls.push('unlink'), ok)
+    ) as any;
+    ctx.services!.contact!.associateWithAccount = vi.fn(
+      async () => (calls.push('link'), ok)
+    ) as any;
+    ctx.services!.contact!.replaceAccount = vi.fn(async () => (calls.push('replace'), ok)) as any;
+    ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue(ok);
+
+    await contactRouter
+      .createCaller(ctx)
+      .update({ id: CONTACT_ID, accountId: OTHER_ACCOUNT, firstName: 'Anna' });
+
+    expect(ctx.services!.contact!.replaceAccount).toHaveBeenCalledWith(
+      CONTACT_ID,
+      OTHER_ACCOUNT,
+      expect.any(String),
+      tenantId
+    );
+    // One atomic replace, and it runs first, so a failed link leaves the other fields unsaved.
+    expect(calls).toEqual(['replace', 'info']);
+  });
+
+  it('unlinking saves the other fields first, so a failed unlink never leaves a type without its required account (codex 068bafef)', async () => {
+    seededWith(null);
+    const ctx = createTestContext();
+    (prismaMock.contact.findFirst as any).mockResolvedValue({ id: CONTACT_ID });
+    (prismaMock.contact.findUnique as any).mockResolvedValue({
+      id: CONTACT_ID,
+      accountId: ACCOUNT_ID,
+    });
+    const ok = { isSuccess: true, isFailure: false, value: domainContact() };
+    const calls: string[] = [];
+    ctx.services!.contact!.updateContactInfo = vi.fn(async () => (calls.push('info'), ok)) as any;
+    ctx.services!.contact!.disassociateFromAccount = vi.fn(
+      async () => (calls.push('unlink'), ok)
+    ) as any;
+    ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue(ok);
+
+    await contactRouter
+      .createCaller(ctx)
+      .update({ id: CONTACT_ID, accountId: null, contactType: null });
+
+    expect(calls).toEqual(['info', 'unlink']);
+  });
+
+  it('replacing with an unknown or foreign account fails before any other write', async () => {
+    seededWith(null);
+    const ctx = createTestContext();
+    (prismaMock.contact.findFirst as any).mockResolvedValue({ id: CONTACT_ID });
+    (prismaMock.contact.findUnique as any).mockResolvedValue({
+      id: CONTACT_ID,
+      accountId: ACCOUNT_ID,
+    });
+    const ok = { isSuccess: true, isFailure: false, value: domainContact() };
+    const missing = { isSuccess: false, isFailure: true, error: new Error('Account not found: x') };
+    ctx.services!.contact!.updateContactInfo = vi.fn().mockResolvedValue(ok);
+    ctx.services!.contact!.disassociateFromAccount = vi.fn().mockResolvedValue(ok);
+    ctx.services!.contact!.replaceAccount = vi.fn().mockResolvedValue(missing);
+    ctx.services!.contact!.getContactById = vi.fn().mockResolvedValue(ok);
+
+    await expect(
+      contactRouter
+        .createCaller(ctx)
+        .update({ id: CONTACT_ID, accountId: generateTestUUID('account-foreign'), firstName: 'A' })
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(ctx.services!.contact!.disassociateFromAccount).not.toHaveBeenCalled();
+    expect(ctx.services!.contact!.updateContactInfo).not.toHaveBeenCalled();
+  });
+
+  it('a replace that fails for another reason is a bad request', async () => {
+    seededWith(null);
+    const ctx = createTestContext();
+    (prismaMock.contact.findFirst as any).mockResolvedValue({ id: CONTACT_ID });
+    (prismaMock.contact.findUnique as any).mockResolvedValue({
+      id: CONTACT_ID,
+      accountId: ACCOUNT_ID,
+    });
+    const failed = {
+      isSuccess: false,
+      isFailure: true,
+      error: new Error('Failed to save contact'),
+    };
+    ctx.services!.contact!.replaceAccount = vi.fn().mockResolvedValue(failed);
+    ctx.services!.contact!.updateContactInfo = vi.fn();
+
+    await expect(
+      contactRouter
+        .createCaller(ctx)
+        .update({ id: CONTACT_ID, accountId: generateTestUUID('account-b'), firstName: 'A' })
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    expect(ctx.services!.contact!.updateContactInfo).not.toHaveBeenCalled();
+  });
+
+  it('null clears the stored type without looking up any type (codex 1f2a3c92)', async () => {
+    seededWith(typeRow({ requiredFields: ['company'] }));
+    const { caller, updateContactInfo } = setupUpdate({ contactType: 'vendor', company: null });
+    await caller.update({ id: CONTACT_ID, contactType: null });
+    expect(prismaMock.contactType.findFirst).not.toHaveBeenCalled();
+    expect(updateContactInfo.mock.calls[0][1]).toEqual({ contactType: null });
   });
 
   it('skips type rules when the stored key has no type row (legacy data)', async () => {

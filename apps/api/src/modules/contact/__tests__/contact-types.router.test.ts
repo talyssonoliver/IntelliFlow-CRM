@@ -269,6 +269,30 @@ describe('contactTypesRouter (PG-205)', () => {
       );
     });
 
+    it('never re-issues a key that contacts still carry (no FK, ADR-080; codex 0f290e25)', async () => {
+      seeded();
+      (prismaMock.contactType.count as any).mockResolvedValueOnce(7);
+      (prismaMock.contactType.findMany as any).mockResolvedValueOnce([]);
+      // Contacts kept "reseller" after its type was deleted: the new type must not adopt them.
+      (prismaMock.contact.count as any).mockResolvedValueOnce(2).mockResolvedValueOnce(0);
+      (prismaMock.contactTag.count as any).mockResolvedValueOnce(1);
+      (prismaMock.contactType.aggregate as any).mockResolvedValueOnce({ _max: { sortOrder: 6 } });
+      (prismaMock.contactType.create as any).mockResolvedValueOnce({ id: T1 });
+      (prismaMock.contactType.findFirstOrThrow as any).mockResolvedValueOnce(
+        row({ key: 'reseller_2' })
+      );
+
+      await admin.create(input);
+
+      expect(prismaMock.contact.count).toHaveBeenNthCalledWith(1, {
+        where: { tenantId, contactType: 'reseller' },
+      });
+      expect(prismaMock.contact.count).toHaveBeenNthCalledWith(2, {
+        where: { tenantId, contactType: 'reseller_2' },
+      });
+      expect((prismaMock.contactType.create as any).mock.calls[0][0].data.key).toBe('reseller_2');
+    });
+
     it('rejects a smuggled tenantId (strict input)', async () => {
       await expectCode(
         admin.create({ ...input, tenantId: 'smuggled' } as typeof input),
@@ -395,6 +419,28 @@ describe('contactTypesRouter (PG-205)', () => {
       const audit = logAction.mock.calls[0];
       expect(audit.slice(0, 4)).toEqual(['UPDATE', 'contact_type', T1, tenantId]);
       expect(audit[4].afterState).toEqual({ changedFields: ['name', 'defaultTags'] });
+    });
+
+    it('keeps a linked default tag that is now inactive; new tags must be active (codex 3a11a307)', async () => {
+      seeded();
+      // TAG_A is already linked and may have been deactivated since (findOwnedContactType shape).
+      (prismaMock.contactType.findFirst as any).mockResolvedValueOnce(
+        row({ defaultTags: [{ contactTagId: TAG_A }] })
+      );
+      (prismaMock.contactTag.count as any).mockResolvedValueOnce(2);
+      (prismaMock.contactType.updateMany as any).mockResolvedValueOnce({ count: 1 });
+      (prismaMock.contactType.findFirstOrThrow as any).mockResolvedValueOnce(row());
+      (prismaMock.contact.count as any).mockResolvedValueOnce(0);
+
+      await admin.update({ ...input, id: T1, defaultTagIds: [TAG_A, TAG_B] });
+
+      expect(prismaMock.contactTag.count).toHaveBeenCalledWith({
+        where: {
+          tenantId,
+          id: { in: [TAG_A, TAG_B] },
+          OR: [{ isActive: true }, { id: { in: [TAG_A] } }],
+        },
+      });
     });
 
     it('guards deactivation in the write (concurrent setDefault)', async () => {

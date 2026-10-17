@@ -116,7 +116,8 @@ type UpdateContactData = Record<string, unknown> & {
   zipCode?: string;
   company?: string;
   linkedInUrl?: string;
-  contactType?: string;
+  /** null removes the contact's type (PG-205). */
+  contactType?: string | null;
   tags?: string[];
   contactNotes?: string;
 };
@@ -297,13 +298,14 @@ async function handleAssociateAccount(
   tenantId: string
 ): Promise<void> {
   const result = await contactService.associateWithAccount(id, accountId, userId, tenantId);
-  if (result.isFailure) {
-    const msg = result.error.message;
-    throw new TRPCError({
-      code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
-      message: msg,
-    });
-  }
+  if (result.isFailure) throwAccountChangeError(result.error.message);
+}
+
+function throwAccountChangeError(msg: string): never {
+  throw new TRPCError({
+    code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
+    message: msg,
+  });
 }
 
 /**
@@ -489,20 +491,29 @@ async function applyContactInfoUpdates(
   }
 }
 
-/** Handle account association change (associate, disassociate, or no-op). */
+/** Handle account association change (associate, replace, disassociate, or no-op). */
 async function applyContactAccountChange(
+  typedCtx: TenantAwareContext,
   contactService: ReturnType<typeof getContactService>,
   id: string,
   accountId: string | null | undefined,
-  userId: string,
-  tenantId: string
+  storedAccountId: string | null | undefined,
+  userId: string
 ): Promise<void> {
-  if (accountId === undefined) return;
+  if (accountId === undefined || accountId === storedAccountId) return;
   if (accountId === null) {
     await handleDisassociateAccount(contactService, id, userId);
-  } else {
-    await handleAssociateAccount(contactService, id, accountId, userId, tenantId);
+    return;
   }
+  const tenantId = typedCtx.tenant.tenantId;
+  if (storedAccountId) {
+    // PG-205: replacing a linked account. One service call checks the target in the tenant
+    // and saves the move once, so a failure never leaves the contact unlinked.
+    const result = await contactService.replaceAccount(id, accountId, userId, tenantId);
+    if (result.isFailure) throwAccountChangeError(result.error.message);
+    return;
+  }
+  await handleAssociateAccount(contactService, id, accountId, userId, tenantId);
 }
 
 // ─── Extracted procedure handlers ───────────────────────────────────────────
@@ -575,19 +586,26 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
     }
   }
 
+  // The two saves are ordered so a failure between them never leaves a contact type
+  // without an account it requires: a link (or replace) runs before the other fields,
+  // an unlink after them (once a type that needs the account has been changed).
+  const changeAccount = () =>
+    applyContactAccountChange(
+      typedCtx,
+      contactService,
+      id,
+      accountId,
+      beforeContact?.accountId,
+      typedCtx.tenant.userId
+    );
+  if (accountId !== null) await changeAccount();
   await applyContactInfoUpdates(
     contactService,
     id,
     hygienedData as UpdateContactData,
     typedCtx.tenant.userId
   );
-  await applyContactAccountChange(
-    contactService,
-    id,
-    accountId,
-    typedCtx.tenant.userId,
-    typedCtx.tenant.tenantId
-  );
+  if (accountId === null) await changeAccount();
 
   // Fetch updated contact
   const updatedResult = await contactService.getContactById(id);
