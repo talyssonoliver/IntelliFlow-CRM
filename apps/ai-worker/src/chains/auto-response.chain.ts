@@ -215,7 +215,9 @@ export class AutoResponseChain {
       parsed = autoResponseLLMSchema.parse({
         subject: raw.subject ?? 'Re: Your inquiry',
         body: raw.body ?? '',
-        confidence: typeof raw.confidence === 'number' ? raw.confidence : 0.7,
+        // PG-198 (RF-2, #854): never invent a confidence. A missing value is 0, which
+        // validateResponse flags for human review and no auto-approval policy accepts.
+        confidence: typeof raw.confidence === 'number' ? raw.confidence : 0,
         tone: raw.tone,
         suggestedFollowUp: raw.suggestedFollowUp,
       });

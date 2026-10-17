@@ -171,7 +171,7 @@ Legend:
 | `/agent-approvals/ai-review/[id]`    | --  | --  |   --   | IP  |     OK      | From review list                            |
 | `/agent-approvals/ai-search`         | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |
 | `/agent-approvals/ai-settings`       | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
-| `/agent-approvals/approval-policies` | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
+| `/agent-approvals/approval-policies` | --  | --  |   SB   | IP  |     YES     | Sidebar + AI settings panel (PG-198)        |
 | `/agent-approvals/churn-risk`        | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
 | `/agent-approvals/drift`             | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
 | `/agent-approvals/experiments`       | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools                           |
@@ -196,7 +196,7 @@ Legend:
 | `/analytics/saved/monthly`     | --  | --  | SB  | --  |    YES     | Sidebar: Saved Reports     |
 | `/analytics/saved/quarterly`   | --  | --  | SB  | --  |    YES     | Sidebar: Saved Reports     |
 | `/analytics/report-templates`  | --  | --  | SB  | --  |    YES     | Sidebar: Report Management |
-| `/analytics/scheduled-reports` | --  | --  | SB  | --  |    YES     | Sidebar: Report Management |
+| `/analytics/scheduled-reports` | --  | --  | SB  | IP  |    YES     | Sidebar + Report Settings  |
 | `/analytics/report-settings`   | --  | --  | SB  | --  |    YES     | Sidebar: settingsHref      |
 
 ### Appointments (3 routes)
@@ -235,17 +235,17 @@ Legend:
 
 ### Cases (9 routes)
 
-| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                            |
-| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------- |
-| `/cases`                     | YES | --  | SB  | IP  |    YES     | Header nav (LEGAL)               |
-| `/cases/new`                 | --  | --  | --  | IP  |     OK     | PageHeader action from `/cases`  |
-| `/cases/[id]`                | --  | --  | --  | IP  |     OK     | From list rows                   |
-| `/cases/timeline`            | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
-| `/cases/case-workflows`      | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
-| `/cases/case-workflows/[id]` | --  | --  | --  | IP  |     OK     | From workflow list rows          |
-| `/cases/case-workflows/new`  | --  | --  | --  | IP  |     OK     | PageHeader action from workflows |
-| `/cases/case-types`          | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
-| `/cases/case-settings`       | --  | --  | SB  | --  |    YES     | Cases sidebar                    |
+| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                                       |
+| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------- |
+| `/cases`                     | YES | --  | SB  | IP  |    YES     | Header nav (LEGAL)                          |
+| `/cases/new`                 | --  | --  | --  | IP  |     OK     | PageHeader action from `/cases`             |
+| `/cases/[id]`                | --  | --  | --  | IP  |     OK     | From list rows                              |
+| `/cases/timeline`            | --  | --  | SB  | --  |    YES     | Cases sidebar                               |
+| `/cases/case-workflows`      | --  | --  | SB  | --  |    YES     | Cases sidebar                               |
+| `/cases/case-workflows/[id]` | --  | --  | --  | IP  |     OK     | From workflow list rows                     |
+| `/cases/case-workflows/new`  | --  | --  | --  | IP  |     OK     | PageHeader action from workflows            |
+| `/cases/case-types`          | --  | --  | SB  | IP  |    YES     | Cases sidebar; Case Settings panel (PG-204) |
+| `/cases/case-settings`       | --  | --  | SB  | --  |    YES     | Cases sidebar                               |
 
 ### Contacts (7 routes)
 

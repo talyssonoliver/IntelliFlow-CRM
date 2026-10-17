@@ -1,12 +1,12 @@
 {
-  "generated_at": "2026-07-26T10:27:33.762Z",
+  "generated_at": "2026-10-17T14:36:08.524Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
-    "total_specs_analyzed": 519,
-    "completed": 450,
-    "partially_done": 12,
-    "spec_only": 48,
-    "uncertain": 9
+    "total_specs_analyzed": 527,
+    "completed": 436,
+    "partially_done": 26,
+    "spec_only": 55,
+    "uncertain": 10
   },
   "status_legend": {
     "COMPLETED": "All evidence confirms task is done: attestation present, CSV=Completed, plan checkboxes done",
@@ -48,8 +48,8 @@
     {
       "task_id": "ENG-OPS-002.R03",
       "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec ENG-OPS-002.R03 when ready for implementation."
     },
     {
       "task_id": "ENG-OPS-002.R10",
@@ -62,6 +62,12 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec ENG-OPS-002.R16 when ready for implementation."
+    },
+    {
+      "task_id": "IFC-056",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec IFC-056 when ready for implementation."
     },
     {
       "task_id": "IFC-211",
@@ -98,6 +104,12 @@
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
+    },
+    {
+      "task_id": "IFC-234",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec IFC-234 when ready for implementation."
     },
     {
       "task_id": "IFC-242",
@@ -172,12 +184,6 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "INFRA-TF-004",
-      "severity": "MEDIUM",
-      "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
-      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
-    },
-    {
       "task_id": "INFRA-TF-005",
       "severity": "MEDIUM",
       "issue": "Attestation confirms completion but CSV shows only 0% complete. Likely a CSV update lag.",
@@ -234,20 +240,14 @@
     {
       "task_id": "PG-196",
       "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-196 when ready for implementation."
+      "issue": "Attestation confirms completion but CSV shows only 90% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
       "task_id": "PG-197",
       "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-197 when ready for implementation."
-    },
-    {
-      "task_id": "PG-198",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-198 when ready for implementation."
+      "issue": "Attestation confirms completion but CSV shows only 90% complete. Likely a CSV update lag.",
+      "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
       "task_id": "PG-199",
@@ -262,12 +262,6 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "PG-201",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-201 when ready for implementation."
-    },
-    {
       "task_id": "PG-202",
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
@@ -280,16 +274,16 @@
       "recommendation": "Run /exec PG-203 when ready for implementation."
     },
     {
-      "task_id": "PG-204",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-204 when ready for implementation."
-    },
-    {
       "task_id": "PG-205",
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-205 when ready for implementation."
+    },
+    {
+      "task_id": "PG-206",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec PG-206 when ready for implementation."
     },
     {
       "task_id": "PG-207",
@@ -308,6 +302,12 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-209 when ready for implementation."
+    },
+    {
+      "task_id": "SALES-001",
+      "severity": "MEDIUM",
+      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
+      "recommendation": "Run /exec SALES-001 when ready for implementation."
     }
   ],
   "tasks": [
@@ -793,13 +793,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "NOT_FOUND",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENG-OPS-002"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "ENG-OPS-002.R10",
@@ -894,6 +894,20 @@
     {
       "task_id": "ENG-OPS-003.Gap2-CodeQL",
       "title": "ENG-OPS-003.Gap2-CodeQL",
+      "sprint": 19,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": true,
+      "csv_status": "NOT_IN_CSV",
+      "metric_status": "NOT_FOUND",
+      "acceptance_criteria_count": 0,
+      "dependencies": [],
+      "real_status": "UNCERTAIN"
+    },
+    {
+      "task_id": "ENG-OPS-003.Gap9-FileIngestionFailures",
+      "title": "ENG-OPS-003.Gap9-FileIngestionFailures",
       "sprint": 19,
       "spec_path": null,
       "has_spec": false,
@@ -1025,13 +1039,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-005-AI"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "ENV-009-AI",
@@ -1209,14 +1223,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-003-AI",
         "ENV-008-AI"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "EXC-INIT-001",
@@ -1882,13 +1896,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-026"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-028",
@@ -1963,7 +1977,7 @@
       "has_plan": false,
       "has_attestation": true,
       "csv_status": "Completed",
-      "metric_status": "NOT_FOUND",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-030"
@@ -1978,14 +1992,14 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "NOT_FOUND",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-030",
         "IFC-032"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-039",
@@ -2018,6 +2032,26 @@
         "IFC-013"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "IFC-043",
+      "title": "Operational runbooks (deploy, rollback, incident response, backup/restore, access requests)",
+      "sprint": 25,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "ENV-008-AI",
+        "IFC-112",
+        "IFC-113",
+        "IFC-115",
+        "IFC-130"
+      ],
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-044",
@@ -2100,6 +2134,23 @@
       "real_status": "SPEC_ONLY"
     },
     {
+      "task_id": "IFC-052",
+      "title": "Production Deployment",
+      "sprint": 27,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-040",
+        "IFC-050"
+      ],
+      "real_status": "PARTIALLY_DONE"
+    },
+    {
       "task_id": "IFC-054",
       "title": "Technical Complexity Monitoring",
       "sprint": 7,
@@ -2135,13 +2186,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-009"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-057",
@@ -2350,6 +2401,22 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "IFC-071",
+      "title": "Multi-Region Setup",
+      "sprint": 25,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-040"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "IFC-072",
       "title": "Zero Trust Security Model",
       "sprint": 2,
@@ -2390,13 +2457,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-003"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-075",
@@ -2755,13 +2822,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-007"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-098",
@@ -3055,13 +3122,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-074"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-117",
@@ -3071,14 +3138,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-005",
         "AUTOMATION-002"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-118",
@@ -3476,13 +3543,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "ENV-008-AI"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-143",
@@ -3633,14 +3700,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-150",
         "ENV-008-AI"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-152",
@@ -4421,14 +4488,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-106",
         "IFC-127"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-200",
@@ -4455,8 +4522,8 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-072",
@@ -4465,7 +4532,7 @@
         "IFC-106",
         "IFC-124"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-202",
@@ -4508,13 +4575,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": false,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-069"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "IFC-205",
@@ -4982,11 +5049,11 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "IFC-235",
@@ -5308,11 +5375,11 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [],
-      "real_status": "UNCERTAIN"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-258",
@@ -5882,15 +5949,15 @@
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
-      "has_attestation": false,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "has_attestation": true,
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-303",
         "PG-180"
       ],
-      "real_status": "SPEC_ONLY"
+      "real_status": "UNCERTAIN"
     },
     {
       "task_id": "IFC-305",
@@ -5954,7 +6021,8 @@
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-168",
-        "IFC-024"
+        "IFC-024",
+        "PG-201"
       ],
       "real_status": "SPEC_ONLY"
     },
@@ -6096,13 +6164,13 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "INFRA-TF-001"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "INFRA-TF-005",
@@ -6363,15 +6431,15 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-001",
         "GTM-002",
         "BRAND-001"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-015",
@@ -7226,6 +7294,40 @@
       "real_status": "COMPLETED"
     },
     {
+      "task_id": "PG-110",
+      "title": "Permissions",
+      "sprint": 26,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-109",
+        "IFC-201"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
+      "task_id": "PG-114",
+      "title": "Webhooks",
+      "sprint": 27,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-099",
+        "IFC-201"
+      ],
+      "real_status": "SPEC_ONLY"
+    },
+    {
       "task_id": "PG-124",
       "title": "Implement SSO (SAML/OAuth) and social login providers",
       "sprint": 15,
@@ -7277,6 +7379,24 @@
         "PG-002"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-127",
+      "title": "Partner Application Workflow - Dedicated partner application form with specialized fields, routing, and onboarding process",
+      "sprint": 20,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "PG-006",
+        "PG-005",
+        "GTM-002"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PG-128",
@@ -7574,6 +7694,23 @@
         "IFC-197"
       ],
       "real_status": "COMPLETED"
+    },
+    {
+      "task_id": "PG-147",
+      "title": "Workflow List & Status UI - Active workflows execution status step visualization logs",
+      "sprint": 28,
+      "spec_path": null,
+      "has_spec": false,
+      "has_plan": false,
+      "has_attestation": false,
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
+      "acceptance_criteria_count": 0,
+      "dependencies": [
+        "IFC-028",
+        "IFC-141"
+      ],
+      "real_status": "SPEC_ONLY"
     },
     {
       "task_id": "PG-148",
@@ -8343,14 +8480,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-183"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-197",
@@ -8360,14 +8497,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-183"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-198",
@@ -8377,15 +8514,15 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-152",
         "PG-192"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-199",
@@ -8430,14 +8567,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-187"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-202",
@@ -8477,18 +8614,18 @@
       "task_id": "PG-204",
       "title": "Module Settings - Case Types (/cases/case-types)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-204-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-190"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "PG-205",
@@ -8515,14 +8652,14 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-186"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-207",
@@ -8630,14 +8767,14 @@
       "has_spec": false,
       "has_plan": false,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "Backlog",
+      "metric_status": "BACKLOG",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "GTM-002",
         "BRAND-001"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "SALES-002",

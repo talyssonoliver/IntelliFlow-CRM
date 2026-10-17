@@ -135,13 +135,16 @@ function ActionButton({ action }: Readonly<ActionButtonProps>) {
       {(() => {
         if (loading)
           return (
-            <span className="material-symbols-outlined text-[20px] animate-spin">
+            <span className="material-symbols-outlined text-[20px] animate-spin" aria-hidden="true">
               progress_activity
             </span>
           );
         if (icon)
           return (
-            <span className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform">
+            <span
+              className="material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform"
+              aria-hidden="true"
+            >
               {icon}
             </span>
           );

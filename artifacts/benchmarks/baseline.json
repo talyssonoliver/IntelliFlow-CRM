@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-15T19:31:40.263Z",
+  "timestamp": "2026-10-16T17:11:38.445Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 67,
-    "total_endpoints": 544,
-    "total_queries": 236,
-    "total_mutations": 308,
+    "total_routers": 70,
+    "total_endpoints": 563,
+    "total_queries": 242,
+    "total_mutations": 321,
     "routers": [
       {
         "name": "contact",
@@ -1225,6 +1225,12 @@
         "mutations": 4
       },
       {
+        "name": "approvalPolicies",
+        "endpoints": 7,
+        "queries": 2,
+        "mutations": 5
+      },
+      {
         "name": "ticketConfig",
         "endpoints": 7,
         "queries": 2,
@@ -1243,6 +1249,12 @@
         "mutations": 4
       },
       {
+        "name": "scheduledReports",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "feedback",
         "endpoints": 6,
         "queries": 3,
@@ -1256,6 +1268,12 @@
       },
       {
         "name": "caseSettings",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "caseTypes",
         "endpoints": 6,
         "queries": 2,
         "mutations": 4
@@ -1425,16 +1443,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 192,
-    "total_fields": 2771,
-    "total_indexes": 877,
-    "total_relations": 271,
+    "total_tables": 197,
+    "total_fields": 2846,
+    "total_indexes": 892,
+    "total_relations": 279,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 170,
+        "fields": 173,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1448,9 +1466,9 @@
       },
       {
         "name": "User",
-        "fields": 45,
+        "fields": 46,
         "indexes": 7,
-        "relations": 7,
+        "relations": 8,
         "hasEmbedding": false
       },
       {
@@ -1545,6 +1563,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AgentAction",
+        "fields": 25,
+        "indexes": 8,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "Document",
         "fields": 25,
         "indexes": 7,
@@ -1552,16 +1577,16 @@
         "hasEmbedding": false
       },
       {
-        "name": "CallRecord",
-        "fields": 24,
-        "indexes": 6,
-        "relations": 1,
+        "name": "ReportSchedule",
+        "fields": 25,
+        "indexes": 5,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
-        "name": "AgentAction",
-        "fields": 23,
-        "indexes": 8,
+        "name": "CallRecord",
+        "fields": 24,
+        "indexes": 6,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1573,17 +1598,17 @@
         "hasEmbedding": false
       },
       {
+        "name": "Case",
+        "fields": 23,
+        "indexes": 8,
+        "relations": 4,
+        "hasEmbedding": false
+      },
+      {
         "name": "AutoResponseDraft",
         "fields": 23,
         "indexes": 6,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Case",
-        "fields": 22,
-        "indexes": 8,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1618,6 +1643,13 @@
         "name": "ActivityEvent",
         "fields": 19,
         "indexes": 6,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ApprovalPolicy",
+        "fields": 19,
+        "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1706,13 +1738,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "ReportSchedule",
-        "fields": 17,
-        "indexes": 5,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "NotificationDLQ",
         "fields": 17,
         "indexes": 4,
@@ -1755,6 +1780,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ReportExecution",
+        "fields": 16,
+        "indexes": 5,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "WebhookEndpoint",
         "fields": 16,
         "indexes": 4,
@@ -1794,6 +1826,13 @@
         "fields": 15,
         "indexes": 3,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseTask",
+        "fields": 15,
+        "indexes": 7,
+        "relations": 3,
         "hasEmbedding": false
       },
       {
@@ -1846,13 +1885,6 @@
         "hasEmbedding": false
       },
       {
-        "name": "ReportExecution",
-        "fields": 15,
-        "indexes": 5,
-        "relations": 2,
-        "hasEmbedding": false
-      },
-      {
         "name": "WebhookDelivery",
         "fields": 15,
         "indexes": 6,
@@ -1888,10 +1920,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "CaseTask",
+        "name": "CaseType",
         "fields": 14,
-        "indexes": 7,
-        "relations": 3,
+        "indexes": 3,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2308,6 +2340,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ReportScheduleTag",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketDuplicateRule",
         "fields": 10,
         "indexes": 3,
@@ -2539,6 +2578,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ApprovalPolicyAssignment",
+        "fields": 8,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "AppointmentCase",
         "fields": 8,
         "indexes": 4,
@@ -2647,6 +2693,13 @@
         "name": "CaseRequiredField",
         "fields": 7,
         "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "CaseTypeChecklistItem",
+        "fields": 7,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2875,7 +2928,7 @@
     ]
   },
   "workers_inventory": {
-    "total_workers": 3,
+    "total_workers": 2,
     "total_jobs": 3,
     "workers": [
       {
@@ -2894,12 +2947,6 @@
           "extractText"
         ],
         "description": "Document ingestion and text extraction"
-      },
-      {
-        "name": "notifications",
-        "type": "notifications",
-        "jobs": [],
-        "description": "Multi-channel notification delivery"
       }
     ]
   },
@@ -3141,11 +3188,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 54,
-    "total_schemas": 606,
+    "total_validators": 57,
+    "total_schemas": 634,
     "by_complexity": {
-      "complex": 34,
-      "moderate": 16,
+      "complex": 35,
+      "moderate": 18,
       "simple": 4
     },
     "validators": [
@@ -3258,6 +3305,12 @@
         "complexity": "complex"
       },
       {
+        "name": "scheduled-reports",
+        "file": "scheduled-reports.ts",
+        "schemas": 15,
+        "complexity": "complex"
+      },
+      {
         "name": "task",
         "file": "task.ts",
         "schemas": 14,
@@ -3306,15 +3359,15 @@
         "complexity": "complex"
       },
       {
-        "name": "ticket-settings",
-        "file": "ticket-settings.ts",
+        "name": "common",
+        "file": "common.ts",
         "schemas": 9,
         "complexity": "complex"
       },
       {
-        "name": "common",
-        "file": "common.ts",
-        "schemas": 8,
+        "name": "ticket-settings",
+        "file": "ticket-settings.ts",
+        "schemas": 9,
         "complexity": "complex"
       },
       {
@@ -3334,6 +3387,12 @@
         "file": "account-territories.ts",
         "schemas": 7,
         "complexity": "complex"
+      },
+      {
+        "name": "approval-policies",
+        "file": "approval-policies.ts",
+        "schemas": 7,
+        "complexity": "moderate"
       },
       {
         "name": "events",
@@ -3358,6 +3417,12 @@
         "file": "ticket-automation-rule.ts",
         "schemas": 6,
         "complexity": "complex"
+      },
+      {
+        "name": "case-types",
+        "file": "case-types.ts",
+        "schemas": 5,
+        "complexity": "moderate"
       },
       {
         "name": "report-settings",
@@ -3815,6 +3880,43 @@
         "description": "Get pending count"
       }
     ],
+    "approvalPolicies": [
+      {
+        "name": "approvalPolicies.list",
+        "method": "GET",
+        "description": "List approvalPoliciess with pagination"
+      },
+      {
+        "name": "approvalPolicies.create",
+        "method": "POST",
+        "description": "Create new approvalPolicies"
+      },
+      {
+        "name": "approvalPolicies.update",
+        "method": "POST",
+        "description": "Update approvalPolicies"
+      },
+      {
+        "name": "approvalPolicies.delete",
+        "method": "POST",
+        "description": "Delete approvalPolicies"
+      },
+      {
+        "name": "approvalPolicies.setDefault",
+        "method": "POST",
+        "description": "Set default"
+      },
+      {
+        "name": "approvalPolicies.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      },
+      {
+        "name": "approvalPolicies.preview",
+        "method": "GET",
+        "description": "Preview"
+      }
+    ],
     "conversation": [
       {
         "name": "conversation.create",
@@ -4029,6 +4131,38 @@
         "name": "reportTemplates.delete",
         "method": "POST",
         "description": "Delete reportTemplates"
+      }
+    ],
+    "scheduledReports": [
+      {
+        "name": "scheduledReports.list",
+        "method": "GET",
+        "description": "List scheduledReportss with pagination"
+      },
+      {
+        "name": "scheduledReports.create",
+        "method": "POST",
+        "description": "Create new scheduledReports"
+      },
+      {
+        "name": "scheduledReports.update",
+        "method": "POST",
+        "description": "Update scheduledReports"
+      },
+      {
+        "name": "scheduledReports.delete",
+        "method": "POST",
+        "description": "Delete scheduledReports"
+      },
+      {
+        "name": "scheduledReports.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "scheduledReports.setActive",
+        "method": "POST",
+        "description": "Set active"
       }
     ],
     "auth": [
@@ -5269,6 +5403,38 @@
         "name": "caseSettings.delete",
         "method": "POST",
         "description": "Delete caseSettings"
+      }
+    ],
+    "caseTypes": [
+      {
+        "name": "caseTypes.list",
+        "method": "GET",
+        "description": "List caseTypess with pagination"
+      },
+      {
+        "name": "caseTypes.listActive",
+        "method": "GET",
+        "description": "List active"
+      },
+      {
+        "name": "caseTypes.create",
+        "method": "POST",
+        "description": "Create new caseTypes"
+      },
+      {
+        "name": "caseTypes.update",
+        "method": "POST",
+        "description": "Update caseTypes"
+      },
+      {
+        "name": "caseTypes.delete",
+        "method": "POST",
+        "description": "Delete caseTypes"
+      },
+      {
+        "name": "caseTypes.setDefault",
+        "method": "POST",
+        "description": "Set default"
       }
     ],
     "cases": [

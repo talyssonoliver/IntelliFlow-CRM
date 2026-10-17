@@ -33,10 +33,12 @@ import { casesRouter } from './modules/legal/cases.router';
 import { documentsRouter } from './modules/legal/documents.router';
 import { documentSettingsRouter } from './modules/legal/document-settings.router';
 import { caseSettingsRouter } from './modules/legal/case-settings.router';
+import { caseTypesRouter } from './modules/legal/case-types.router';
 import { appointmentSettingsRouter } from './modules/legal/appointment-settings.router';
 import { reportSettingsRouter } from './modules/analytics/report-settings.router';
 import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
+import { approvalPoliciesRouter } from './modules/agent/approval-policies.router'; // PG-198
 import { conversationRouter } from './modules/agent/conversation.router';
 import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
@@ -148,6 +150,7 @@ export const appRouter = createTRPCRouter({
   dealSettings: dealSettingsRouter, // PG-184: Deal Settings Configuration
   ticketSettings: ticketSettingsRouter, // PG-185: Ticket Settings Configuration
   caseSettings: caseSettingsRouter, // PG-190: Case Settings Configuration
+  caseTypes: caseTypesRouter, // PG-204: Case Types (applied at case creation, ADR-076)
   appointmentSettings: appointmentSettingsRouter, // PG-189: Appointment/Calendar Settings (wired alongside PG-190)
   reportSettings: reportSettingsRouter, // PG-187: Report Settings (wired alongside PG-190)
   taskSettings: taskSettingsRouter, // PG-191: Task Settings Configuration
@@ -165,6 +168,7 @@ export const appRouter = createTRPCRouter({
 
   // AI & Automation
   agent: agentRouter,
+  approvalPolicies: approvalPoliciesRouter, // PG-198: Approval Policies
   conversation: conversationRouter, // IFC-148: Conversation records, messages, tool calls
   chainVersion: chainVersionRouter,
   zepBudget: zepBudgetRouter,

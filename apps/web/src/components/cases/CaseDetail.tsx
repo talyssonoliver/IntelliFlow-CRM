@@ -27,6 +27,7 @@ import { ActivityFeed } from '@/components/shared/activity-feed';
 import { DeadlineTracker } from './DeadlineTracker';
 import { PartyManager } from './PartyManager';
 import { DocumentLinks } from './DocumentLinks';
+import { swatchClass } from './case-type-colors';
 import type { CaseDetailData, CaseAssigneeOption, PartyData, TimelineEntry } from './types';
 import type { AddCaseTaskInput } from '@intelliflow/validators/case';
 
@@ -258,6 +259,22 @@ export function CaseDetail({
               >
                 {priorityCfg.label} Priority
               </span>
+              {caseData.caseType && (
+                <span
+                  className="inline-flex items-center gap-1.5 rounded border border-border px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-foreground"
+                  data-testid="case-type-badge"
+                >
+                  <span
+                    className={cn(
+                      'inline-block h-2 w-2 rounded-full',
+                      swatchClass(caseData.caseType.colorToken)
+                    )}
+                    aria-hidden="true"
+                  />
+                  <span className="sr-only">Case type: </span>
+                  {caseData.caseType.name}
+                </span>
+              )}
               <button className="text-muted-foreground hover:text-foreground">
                 <span className="material-symbols-outlined">more_vert</span>
               </button>

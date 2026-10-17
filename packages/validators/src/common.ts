@@ -8,6 +8,12 @@ export const uuidSchema = z.uuid();
 export const cuidSchema = z.string().check(z.regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID'));
 export const idSchema = z.union([uuidSchema, cuidSchema]);
 
+/** A user id, or a `system:<name>` actor for automated decisions (PG-198). */
+export const actorIdSchema = z.union([
+  idSchema,
+  z.string().check(z.regex(/^system:[a-z][a-z-]*$/, 'Invalid system actor')),
+]);
+
 // Common string schemas
 export const emailSchema = z
   .string()

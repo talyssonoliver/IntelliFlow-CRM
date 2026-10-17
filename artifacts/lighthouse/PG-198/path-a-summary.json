@@ -1,0 +1,8 @@
+{
+  "requestedUrl": "http://localhost:3400/agent-approvals/approval-policies",
+  "finalDisplayedUrl": "http://localhost:3400/agent-approvals/approval-policies",
+  "fetchTime": "2026-10-13T14:27:20.523Z",
+  "performance": 0.93,
+  "accessibility": 0.87,
+  "runtimeError": null
+}

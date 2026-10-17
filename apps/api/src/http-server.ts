@@ -16,6 +16,8 @@ import {
   getReadinessHealth,
 } from './modules/misc/health.service';
 import { container, containerReady } from './container';
+import { approvalSweepIntervalFromEnv, startApprovalSweep } from './agent/approval-sweep-scheduler';
+import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
 import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
@@ -554,6 +556,15 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
   // that arrives mid-init simply waits inside its handler.
   server.listen(port, () => {
     console.log(`[API] HTTP server listening on http://localhost:${port}`);
+  });
+
+  // PG-198: approval escalation/expiry sweep — long-lived server process only.
+  startApprovalSweep({
+    intervalMs: approvalSweepIntervalFromEnv(process.env),
+    run: async () => {
+      await containerReady;
+      return runApprovalSweep(await createDefaultSweepDeps());
+    },
   });
 
   return server;

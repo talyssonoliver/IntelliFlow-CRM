@@ -186,7 +186,7 @@ intelliflow.com
 │   ├── /cases/case-workflows             Workflow builder (IFC-031)
 │   │   ├── /cases/case-workflows/[id]    Workflow detail with step editor
 │   │   └── /cases/case-workflows/new     Create new workflow
-│   ├── /cases/case-types                 Case type labels and SLA defaults
+│   ├── /cases/case-types                 Case types applied at case creation (PG-204)
 │   └── /cases/case-settings              Tenant case defaults and escalation rules
 │
 ├── TASKS ───────────────────────────────── Layout: tasks/(list)
@@ -227,7 +227,7 @@ intelliflow.com
 │   │   └── /agent-approvals/ai-review/[id]  Review detail
 │   ├── /agent-approvals/ai-search        AI-powered search
 │   ├── /agent-approvals/ai-settings      AI configuration settings
-│   ├── /agent-approvals/approval-policies  Approval policy rules
+│   ├── /agent-approvals/approval-policies  Approval rules for both AI queues (PG-198)
 │   ├── /agent-approvals/churn-risk       Churn risk analysis
 │   ├── /agent-approvals/drift            Model drift monitoring
 │   ├── /agent-approvals/experiments      A/B experiment hub

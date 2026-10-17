@@ -82,6 +82,27 @@ describe('PrismaCaseRepository', () => {
         })
       );
     });
+
+    it('never writes caseTypeId — a case type is set only by cases.create (PG-204)', async () => {
+      mockPrisma.case.upsert.mockResolvedValue(mockRecord);
+      const legalCase = Case.reconstitute(testCaseId, {
+        title: 'Typed Case',
+        description: 'Description',
+        status: 'OPEN',
+        priority: 'MEDIUM',
+        clientId: 'client-1',
+        assignedTo: 'user-1',
+        tasks: [],
+        documentIds: [],
+        createdAt: new Date('2026-01-15'),
+        updatedAt: new Date('2026-02-01'),
+      });
+
+      await repo.save(legalCase);
+      const args = mockPrisma.case.upsert.mock.calls.at(-1)[0];
+      expect(args.create).not.toHaveProperty('caseTypeId');
+      expect(args.update).not.toHaveProperty('caseTypeId');
+    });
   });
 
   describe('findById', () => {

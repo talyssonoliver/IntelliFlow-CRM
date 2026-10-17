@@ -88,6 +88,10 @@ export const reportSettingsRouter = createTRPCRouter({
 
   /**
    * Reset report settings to factory defaults.
+   *
+   * PG-201: an existing row keeps its legacy scheduledDelivery. Scheduled delivery
+   * moved to /analytics/scheduled-reports, the reset dialog promises scheduled
+   * reports are not affected, and the 20261013120000 migration copies this JSON.
    */
   resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
@@ -103,8 +107,6 @@ export const reportSettingsRouter = createTRPCRouter({
       update: {
         defaultRange: DEFAULT_REPORT_SETTINGS.defaultRange,
         currency: DEFAULT_REPORT_SETTINGS.currency,
-        scheduledDelivery:
-          DEFAULT_REPORT_SETTINGS.scheduledDelivery as unknown as Prisma.InputJsonValue,
       },
     });
     return normalizeRow(row);

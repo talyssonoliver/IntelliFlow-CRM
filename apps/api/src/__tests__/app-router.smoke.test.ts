@@ -139,6 +139,52 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     }
   });
 
+  it('registers the approvalPolicies router with every procedure (PG-198)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const policies = record.approvalPolicies as Record<string, unknown> | undefined;
+
+    expect(policies).toBeDefined();
+    for (const procedure of [
+      'list',
+      'create',
+      'update',
+      'delete',
+      'setDefault',
+      'resetToDefaults',
+      'preview',
+    ]) {
+      expect(policies?.[procedure]).toBeDefined();
+    }
+  });
+
+  it('registers analytics.scheduledReports with every procedure and the tags router (PG-201)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const analytics = record.analytics as Record<string, unknown> | undefined;
+    const scheduled = analytics?.scheduledReports as Record<string, unknown> | undefined;
+
+    expect(scheduled).toBeDefined();
+    for (const procedure of ['list', 'get', 'create', 'update', 'setActive', 'delete']) {
+      expect(scheduled?.[procedure]).toBeDefined();
+    }
+    const tags = scheduled?.tags as Record<string, unknown> | undefined;
+    for (const procedure of ['list', 'create', 'update', 'delete']) {
+      expect(tags?.[procedure]).toBeDefined();
+    }
+  });
+
+  it('registers the caseTypes router with every procedure (PG-204)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const caseTypes = record.caseTypes as Record<string, unknown> | undefined;
+
+    expect(caseTypes).toBeDefined();
+    for (const procedure of ['list', 'listActive', 'create', 'update', 'delete', 'setDefault']) {
+      expect(caseTypes?.[procedure]).toBeDefined();
+    }
+  });
+
   it('registers appointmentSettings and reportSettings routers', async () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, unknown>;

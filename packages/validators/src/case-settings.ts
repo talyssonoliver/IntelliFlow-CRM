@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { CASE_REQUIRED_FIELD_KEYS } from '@intelliflow/domain';
 import { casePrioritySchema } from './case';
 
 // ─── General (v1) ───────────────────────────────────────────────────────────
@@ -83,14 +84,8 @@ export type UpdateCaseDuplicateRulesInput = z.infer<typeof updateCaseDuplicateRu
 
 // ─── Required Fields (v2) ───────────────────────────────────────────────────
 
-export const caseRequiredFieldKeySchema = z.enum([
-  'title',
-  'description',
-  'deadline',
-  'jurisdiction',
-  'clientId',
-  'assignedTo',
-]);
+// PG-204: keys live in the domain (CASE_REQUIRED_FIELD_KEYS) so the case-type resolver shares them.
+export const caseRequiredFieldKeySchema = z.enum(CASE_REQUIRED_FIELD_KEYS);
 export type CaseRequiredFieldKey = z.infer<typeof caseRequiredFieldKeySchema>;
 
 export const caseRequiredFieldSchema = z.object({

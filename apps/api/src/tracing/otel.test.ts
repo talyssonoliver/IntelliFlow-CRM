@@ -10,6 +10,7 @@ vi.unmock('./otel');
 vi.unmock('@opentelemetry/api');
 
 let lastNodeSdkOptions: unknown;
+let lastAutoInstrumentationsConfig: unknown;
 const nodeSdkStart = vi.fn();
 const nodeSdkShutdown = vi.fn(async () => {});
 
@@ -28,7 +29,10 @@ vi.mock('@opentelemetry/sdk-node', () => ({
 }));
 
 vi.mock('@opentelemetry/auto-instrumentations-node', () => ({
-  getNodeAutoInstrumentations: () => [],
+  getNodeAutoInstrumentations: (config: unknown) => {
+    lastAutoInstrumentationsConfig = config;
+    return [];
+  },
 }));
 
 describe('OpenTelemetry SDK (otel.ts)', () => {
@@ -37,6 +41,7 @@ describe('OpenTelemetry SDK (otel.ts)', () => {
   beforeEach(() => {
     process.env = { ...originalEnv };
     lastNodeSdkOptions = undefined;
+    lastAutoInstrumentationsConfig = undefined;
     nodeSdkStart.mockClear();
     nodeSdkShutdown.mockClear();
     vi.spyOn(console, 'log').mockImplementation(() => {});
@@ -120,4 +125,26 @@ describe('OpenTelemetry SDK (otel.ts)', () => {
     const sdk = initializeOpenTelemetry();
     expect(sdk).not.toBeNull();
   }, 30000);
+
+  // #809 (IFC-032 follow-up): production logs must reach the same OTLP gateway
+  // as traces/metrics, with trace_id/span_id attached, so Grafana's "Logs for
+  // this trace" is not empty. @opentelemetry/instrumentation-pino is bundled
+  // inside auto-instrumentations-node and ships disableLogSending:false by
+  // default — this asserts the config makes that deliberate and visible rather
+  // than relying on the bundle's implicit default.
+  it('enables pino log sending to the OTel Logs SDK', async () => {
+    process.env.OTEL_ENABLED = 'true';
+    process.env.NODE_ENV = 'development';
+
+    const { initializeOpenTelemetry } = await import('./otel.js');
+    initializeOpenTelemetry();
+
+    const config = lastAutoInstrumentationsConfig as Record<
+      string,
+      { disableLogSending?: boolean } | undefined
+    >;
+    const pinoConfig = config['@opentelemetry/instrumentation-pino'];
+    expect(pinoConfig).toBeDefined();
+    expect(pinoConfig?.disableLogSending).toBe(false);
+  });
 });

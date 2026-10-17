@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                  |
-| ------------- | -------------------------------------- |
-| Feature Name  | Module Settings Pages                  |
-| Status        | Active                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197 |
-| Created       | 2026-03-11                             |
-| Last Updated  | 2026-10-07                             |
-| Author        | Spec Session (PG-178)                  |
+| Field         | Value                                                  |
+| ------------- | ------------------------------------------------------ |
+| Feature Name  | Module Settings Pages                                  |
+| Status        | Active                                                 |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-204 |
+| Created       | 2026-03-11                                             |
+| Last Updated  | 2026-10-13                                             |
+| Author        | Spec Session (PG-178)                                  |
 
 ## Problem Statement
 
@@ -650,3 +650,267 @@ Spec: `.specify/sprints/sprint-18/specifications/PG-197-spec.md`. ADR-074.
 
 No AI toggles were added. Out-of-scope finding filed: #830 (Deals sidebar
 "Territory Map" is a dead link).
+
+## PG-201 Addendum: Scheduled Reports (2026-10-13)
+
+Owner ruling (2026-10-13): no new table — the existing `report_schedules` table
+is evolved in place and nothing is dropped; schedules are a cron expression plus
+an IANA timezone (presets keep the legacy frequency/day/time columns
+consistent); the Report Settings "Scheduled Delivery" card becomes a link and
+its saved setting is copied once into `report_schedules`; schedules get tags
+(TagsTab via `forwardRef`). Contract for the future IFC-308 cron:
+`docs/architecture/adr/ADR-078-report-schedule-contract.md`.
+
+### Additional User Stories
+
+- As an admin or manager, I schedule a report template to be emailed to a list
+  of recipients on a daily, weekly, monthly or quarterly cadence, or on a custom
+  cron, in my team's timezone.
+- As an admin or manager, I pause, edit, tag and delete schedules.
+- As any analytics user, I can see the tenant's schedules and when each runs
+  next.
+- As a tenant that used the old Report Settings delivery, I find my saved
+  setting as a paused schedule I only need to attach a template to.
+
+### Additional Acceptance Criteria
+
+- AC-SR-001: `/analytics/scheduled-reports` shows real `report_schedules` rows
+  or the canonical EmptyState (`entity="reports"`, `phase="passive"`, no
+  button).
+- AC-SR-002: PageHeader + 12-column bento grid; New Schedule is the only primary
+  CTA.
+- AC-SR-003: presets and a custom 5-field cron, each with an IANA timezone; the
+  server derives the cron for presets and keeps the legacy columns consistent.
+- AC-SR-004: 1–50 recipients, case-insensitive duplicates rejected.
+- AC-SR-005: new schedules choose PDF / CSV / email body; Excel stays only on
+  copied rows that already use it (create rejects it, update refuses a switch to
+  it, the dialog offers it only to such a row).
+- AC-SR-006: an active schedule always references a template or a report
+  definition (DB CHECK + API); private templates of other users stay hidden; a
+  template still used by a schedule cannot be deleted (CONFLICT).
+- AC-SR-007: duplicate names rejected by a Zod superRefine in the dialog and by
+  the `(tenantId, lower(name))` unique index.
+- AC-SR-008: tags via TagsTab (`forwardRef`); rename/delete rewrite schedule
+  tags in one transaction; colorToken CHECK on schedules and tags.
+- AC-SR-009: every destructive write in `$transaction`; no `skipDuplicates`.
+- AC-SR-010: cross-tenant ids return NOT_FOUND and never touch another tenant.
+- AC-SR-011: active schedules show their next occurrence, computed from the cron
+  and timezone when read (never a past time); paused schedules show "Paused".
+- AC-SR-012: writes limited to ADMIN / MANAGER / OWNER / SUPER_ADMIN; at most
+  one run per hour (also across DST changes); at most 100 active and 500 total
+  schedules per tenant; activation re-validates the stored recipients;
+  activation and recipient changes are audited (count only, no addresses).
+- AC-SR-013: Report Settings links to the new page and no longer writes
+  `scheduledDelivery`; its Reset to Defaults keeps the legacy value.
+- AC-SR-014: additive migration; the one-time copy is idempotent, tenant-scoped
+  and leaves the legacy JSON untouched (production data write — owner applies).
+- AC-SR-015: the page states that automated delivery waits for IFC-308.
+- AC-SR-016: WCAG 2.1 AA; Lighthouse >= 90 (authenticated run needs the owner).
+
+### Boolean toggles (playbook §8)
+
+- `ReportSchedule.isActive` — category 2: consumed by IFC-308 (Backlog).
+- `ReportScheduleTag.isActive` — category 1: the dialog only offers active tags.
+- AI toggles — none on this entity ("AI defaults FALSE" is N/A).
+
+### Follow-ups
+
+- Restrict recipients to tenant members or approved domains (owner's delegate,
+  2026-10-13: follow-up, not blocking).
+- IFC-308 registers/removes BullMQ job schedulers and adds the
+  `report_executions.scheduleId` FK + index.
+
+## PG-204 Addendum: Case Types (2026-10-13)
+
+Owner ruling (2026-10-13): Q1 = A, case types are applied at case creation; Q2 =
+Yes, with no type the PG-190 module defaults apply (type first, then module
+defaults). Spec: `.specify/sprints/sprint-18/specifications/PG-204-spec.md`.
+ADR-076.
+
+### Additional User Stories
+
+- **US-CT1 (Taxonomy)**: As a CRM Admin, I want to define case types with a
+  name, category and colour, so that cases are classified consistently.
+- **US-CT2 (Defaults)**: As a CRM Admin, I want each case type to carry a
+  default priority, an SLA in days, required fields and a resolution checklist,
+  so that new cases start correctly without manual setup.
+- **US-CT3 (Picker)**: As a case handler, I want to pick a case type when I
+  create a case and see which defaults it will apply, so that I only fill in
+  what differs.
+- **US-CT4 (Module defaults)**: As a CRM Admin, I want the Case Settings default
+  priority and required fields to apply when no type is picked, so that those
+  settings actually take effect.
+
+### Additional Acceptance Criteria
+
+AC-CT1 to AC-CT16 are defined in the spec. In summary:
+
+- `/cases/case-types` follows the playbook (PageHeader, 12-column bento grid,
+  canonical EmptyState, playbook buttons, list `openCreate` via `forwardRef`).
+- Names are tenant-unique (case-insensitive); there are 8 colour tokens (DB
+  CHECK), an SLA of 1–3650 days, at most 20 checklist items and at most 50
+  types.
+- At most one default type, which must be active. A type used by cases cannot be
+  deleted (deactivate it instead).
+- Changes are limited to admins and managers; reads are open; everything is
+  LEGAL-gated and tenant-scoped (cross-tenant negative tests).
+- On create, priority is chosen as explicit > type > Case Settings default >
+  MEDIUM, and the deadline as explicit > end of the local day N days ahead >
+  none.
+- Required fields are the type's set if it has one, otherwise the tenant's.
+  Values are checked after defaults are applied.
+- The checklist is seeded as PENDING case tasks in the same transaction as the
+  case.
+- New Case gets a Case type picker that replaces the unpersisted Category
+  select, a "Use default" priority option and a hint. Case detail shows the
+  type.
+- Lighthouse ≥ 90 on `/cases/case-types` and `/cases/new`. WCAG 2.1 AA.
+
+### Boolean toggles (playbook §8)
+
+| Toggle               | Category  | Runtime consumer                                  |
+| -------------------- | --------- | ------------------------------------------------- |
+| `CaseType.isActive`  | 1 — wired | `caseTypes.listActive`; `cases.create` rejects it |
+| `CaseType.isDefault` | 1 — wired | New Case picker preselection                      |
+
+No AI toggles were added.
+
+### Delivery Status (2026-10-13, branch `feat/pg-204-case-types`)
+
+| AC      | Status    | Evidence                                                                                                                                 |
+| ------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-CT1  | Delivered | `CaseTypesContent.tsx` (PageHeader, 12-column grid, EmptyState `cases`/`folder`/`passive`, `New Case Type` in the SectionHeader)         |
+| AC-CT2  | Delivered | `case-types.ts` validators (superRefine), `case_types` CHECKs + `lower(name)` index (`tests/integration/case-types.test.ts`)             |
+| AC-CT3  | Delivered | `CaseTypeList.tsx` `forwardRef` + `useImperativeHandle({ openCreate })`                                                                  |
+| AC-CT4  | Delivered | `case-types.router.ts` `$transaction` on create/update/delete/setDefault; no `skipDuplicates`; P2002 → CONFLICT                          |
+| AC-CT5  | Delivered | `setDefault` clear-then-set; partial unique index; default cannot be deleted or deactivated                                              |
+| AC-CT6  | Delivered | `delete` → CONFLICT with the case count; composite FK `cases(tenantId, caseTypeId)` (integration test)                                   |
+| AC-CT7  | Delivered | admin-only mutations, LEGAL gate (`legal-module-entitlement.test.ts`), cross-tenant NOT_FOUND tests                                      |
+| AC-CT8  | Delivered | `CaseForm` type picker, "Use default", status hint; the unpersisted category list is gone                                                |
+| AC-CT9  | Delivered | `resolveCaseCreateDefaults` + `computeSlaDeadline` (DST and +14h tests)                                                                  |
+| AC-CT10 | Delivered | required fields checked on effective values; `BAD_REQUEST` names them                                                                    |
+| AC-CT11 | Delivered | checklist seeded as PENDING `CaseTask`s in the case transaction                                                                          |
+| AC-CT12 | Delivered | tenant preflight for type, client and assignee                                                                                           |
+| AC-CT13 | Delivered | `getById.caseType` + `CaseDetail` badge; `updateCaseSchema` strips `caseTypeId`                                                          |
+| AC-CT14 | Delivered | PG-190 defaults applied with no type; "Assign to me" fixed (`ctx.tenant.userId`)                                                         |
+| AC-CT15 | **Open**  | Lighthouse not run: `LHCI_TEST_EMAIL`/`LHCI_TEST_PASSWORD` are not configured and the harness authenticates against production Supabase. |
+| AC-CT16 | Delivered | axe checks in component tests; a11y-expert review recorded in the attestation                                                            |
+
+Also fixed: the New Case client picker searched contacts while `cases.clientId`
+references accounts, so cases could not be created from the UI. Out-of-scope
+findings: #864–#867 (see
+`.specify/sprints/sprint-18/findings/PG-204-findings.md`). **Prisma migration**
+`20261013120000_case_types` (Class A) must be applied to production before this
+ships.
+
+## PG-198 Addendum: Approval Policies (2026-10-13)
+
+Owner rulings R1–R3 (2026-10-13):
+
+- The router lives in `apps/api/src/modules/agent/`.
+- Policies govern **both** approval queues: agent tool actions and AI email
+  auto-response drafts.
+- All four rules are enforced now: timeout, minimum reviewer, auto-approve and
+  escalation.
+- The reviewer rule is a **minimum role**.
+- Each policy carries a **colour token**.
+
+Spec: `.specify/sprints/sprint-18/specifications/PG-198-spec.md`. ADR-079.
+
+### Additional User Stories
+
+- **US-P1 (Timeouts)**: As a CRM Admin, I want to set how long AI work may wait
+  for review in each queue, so that stale items expire instead of being approved
+  late.
+- **US-P2 (Reviewer seniority)**: As a CRM Admin, I want to require a minimum
+  reviewer role per policy, so that sensitive AI actions are decided by
+  managers.
+- **US-P3 (Bounded automation)**: As a CRM Admin, I want to opt specific agents
+  into auto-approval above a high confidence threshold, so that routine,
+  low-impact work doesn't wait for a person. It must stay off by default and
+  need a confirmation to turn on.
+- **US-P4 (Escalation)**: As a CRM Admin, I want undecided items to escalate to
+  a named person after a delay, so that nothing sits unnoticed until it expires.
+- **US-P5 (Per-agent overrides)**: As a CRM Admin, I want to route particular
+  agents or actions to a different policy, and see which policy decides each
+  kind of item.
+- **US-P6 (Trust)**: As a reviewer, I want approved actions to really run, to
+  see a real model confidence or none, and to see when an item was escalated.
+
+### Additional Acceptance Criteria
+
+AC-P1..AC-P22 are spec AC-001..AC-022, in order.
+
+- AC-P1: The page follows the module-settings playbook.
+- AC-P2: Admin-only mutations; others read only (FORBIDDEN server-side).
+- AC-P3: Policy fields and limits:
+  - name unique per queue;
+  - an 18-token colour;
+  - timeout 5..10080 min;
+  - minimum role;
+  - auto-approve OFF by default, threshold 90..99;
+  - escalation with a delay below the timeout and a target in the tenant.
+- AC-P4: Per-agent overrides. Duplicate pairs are rejected ("rows N and M"). A
+  pair already on another policy is a CONFLICT.
+- AC-P5: Multi-row writes are transactional.
+- AC-P6: Everything is tenant-scoped; a foreign id is NOT_FOUND.
+- AC-P7: With no policies, behaviour is unchanged.
+- AC-P8 / AC-P9: New agent actions and new drafts take their expiry from the
+  effective policy.
+- AC-P10: Decisions require the policy minimum role. Draft actors come from the
+  session.
+- AC-P11: Approving runs the real mutation exactly once. Failures are stored,
+  never reported as success.
+- AC-P12: Confidence is real or absent, never derived.
+- AC-P13: Auto-approve fires only within its strict conditions and is
+  audit-logged.
+- AC-P14: Overdue items escalate once with a notification. Replicas never
+  double-fire.
+- AC-P15: Colour CHECK. The AI default FALSE is restated in SQL.
+- AC-P16: Lighthouse ≥ 90 (NEEDS_HUMAN when credentials are unavailable).
+- AC-P17: TagsTab N/A.
+- AC-P18: A deleted escalation target shows "(former user)" with a warning.
+- AC-P19: Non-admins see no mutation controls.
+- AC-P20: Enabling auto-approve asks for confirmation.
+- AC-P21: Colour chips carry the policy name.
+- AC-P22: The preview queue shows real confidence or "—", impact separately, and
+  an Escalated badge.
+
+### Delivery Status (2026-10-13, branch `feat/pg-198-approval-policies`)
+
+| AC             | Status    | Evidence                                                                                                                                       |
+| -------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| AC-P1          | Delivered | `ApprovalPoliciesContent.tsx` (PageHeader, 12-column bento, EmptyState `rules`/`passive`), `PolicyDialog` Save rule, `ApprovalPoliciesLoading` |
+| AC-P2, AC-P19  | Delivered | `assertAgentSettingsAdmin` on every `approvalPolicies` mutation; `list.canManage` hides controls                                               |
+| AC-P3, AC-P15  | Delivered | `approval-policies.ts` validators + migration `20261013120000` CHECKs (colour, timeout, threshold, delay < timeout)                            |
+| AC-P4          | Delivered | `superRefine` "rows N and M"; unique `(tenantId, scope, agentKey, actionType)` → CONFLICT; `AssignmentsEditor` client check                    |
+| AC-P5, AC-P6   | Delivered | `$transaction` on all multi-row writes; explicit `tenantId`; composite FK `(tenantId, policyId, scope)`; RLS                                   |
+| AC-P7          | Delivered | `APPROVAL_POLICY_DEFAULTS` (30 min / 24 h, permission-only, no auto-approve, no escalation)                                                    |
+| AC-P8, AC-P9   | Delivered | `resolveAgentToolExpiry` in the five approval tools; `draftPolicy` in `autoResponse.create/regenerate`                                         |
+| AC-P10         | Delivered | `assertPolicyReviewer` (agent), `assertDraftReviewer` + `sessionActor` (auto-response)                                                         |
+| AC-P11         | Delivered | `claimForExecution` + `approved-action-executor` (tRPC caller of the target module); `executionError`; no rollback token (#856)                |
+| AC-P12, AC-P22 | Delivered | Store keeps caller confidence or NULL; chain no 0.7 fallback; preview shows "—" for none and 0% for a reported 0                               |
+| AC-P13         | Delivered | `evaluateAutoApproval`; `system:approval-policy` actor; audit with policy id, threshold, confidence                                            |
+| AC-P14         | Delivered | `approval-escalation-sweep.ts` (advisory xact lock, once-only, post-commit notify + audit)                                                     |
+| AC-P16         | **Open**  | Authenticated Lighthouse needs `LHCI_TEST_*` credentials; the only Supabase is production (NEEDS_HUMAN, same as PG-196/197)                    |
+| AC-P17         | N/A       | Policies carry no tags                                                                                                                         |
+| AC-P18         | Delivered | `hasFormerTarget` → card note + dialog "(former user)" option and warning                                                                      |
+| AC-P20, AC-P21 | Delivered | `ConfirmationDialog` before enabling; `PolicyChip` renders the name next to the swatch                                                         |
+
+#### Playbook §8 — Boolean toggle categories (PG-198)
+
+| Toggle                              | Category  | Consumer                                                                                         |
+| ----------------------------------- | --------- | ------------------------------------------------------------------------------------------------ |
+| `ApprovalPolicy.autoApproveEnabled` | 1 — wired | `agent.executeTool` → `tryAutoApprove`; `autoResponse.submitForApproval` → `tryAutoApproveDraft` |
+| `ApprovalPolicy.escalationEnabled`  | 1 — wired | `runApprovalSweep` (in-process scheduler)                                                        |
+| `ApprovalPolicy.isDefault`          | 1 — wired | `resolveApprovalPolicy` scope-default fallback                                                   |
+
+AI toggle default: `autoApproveEnabled` is FALSE in Zod, Prisma and SQL
+(playbook §7).
+
+Red flags tracked:
+
+- fixed on this branch: #853, #854, #855, #870, #874;
+- fixed on main by PG-204: #872 (the `cases.create` assignee default; the issue
+  is still open on GitHub);
+- open: #856, #857, #883.

@@ -20,7 +20,15 @@
  */
 
 import type { PrismaClient } from '@intelliflow/db';
-import type { PendingAction, ExecutedAction, ApprovalStatus } from './types';
+import { confidenceToPercent } from '@intelliflow/domain';
+import type { PendingAction, ExecutedAction, ApprovalStatus, ExecutionStatus } from './types';
+
+/** Provenance marker (in aiReasoning) for a confidence supplied by the calling agent. */
+const CONFIDENCE_SOURCE_KEY = 'confidenceSource';
+const AGENT_CONFIDENCE = 'agent';
+
+/** An approved action still EXECUTING after this long was interrupted (crash/restart). */
+const INTERRUPTED_AFTER_MS = 5 * 60 * 1000;
 
 // Infer the AgentAction row type from Prisma's findUnique return
 type AgentAction = NonNullable<Awaited<ReturnType<PrismaClient['agentAction']['findUnique']>>>;
@@ -52,13 +60,20 @@ export class PrismaAgentActionStore {
   // ---------------------------------------------------------------------------
 
   async add(action: PendingAction): Promise<void> {
+    const confidenceScore = this.toConfidenceScore(action.confidence);
     await this.prisma.agentAction.create({
       data: {
         id: action.id,
         actionType: action.toolName,
         description: action.preview.summary,
-        aiReasoning: JSON.stringify(action.metadata ?? {}),
-        confidenceScore: this.impactToConfidence(action.preview.estimatedImpact),
+        // The marker tells real model confidence apart from legacy impact-derived scores.
+        aiReasoning: JSON.stringify(
+          confidenceScore === null
+            ? (action.metadata ?? {})
+            : { ...action.metadata, [CONFIDENCE_SOURCE_KEY]: AGENT_CONFIDENCE }
+        ),
+        // RF-2 (#854): the caller's real confidence (0-100) or NULL — never derived from impact.
+        confidenceScore,
         status: STATUS_TO_DB[action.status] as any,
         entityId: (action.input.entityId as string) ?? action.id,
         entityType: action.entityType.toLowerCase(),
@@ -124,7 +139,8 @@ export class PrismaAgentActionStore {
   async findByUser(userId: string, tenantId: string = this.tenantId): Promise<PendingAction[]> {
     const rows = await this.prisma.agentAction.findMany({
       where: {
-        agentId: userId,
+        // PG-198: the requester's own actions plus those escalated to this user.
+        OR: [{ agentId: userId }, { escalatedTo: userId }],
         status: 'PENDING_APPROVAL' as any,
         expiresAt: { gt: new Date() },
         tenantId,
@@ -178,6 +194,83 @@ export class PrismaAgentActionStore {
     return result.count;
   }
 
+  /**
+   * PG-198 (RF-1, #853): atomically take a pending, unexpired action for execution.
+   * Only one caller can win (status-guarded update), so an action never runs twice.
+   */
+  async claimForExecution(
+    action: PendingAction,
+    reviewedBy: string,
+    now: Date,
+    executedInput: Record<string, unknown> = action.input
+  ): Promise<boolean> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id: action.id,
+        tenantId: action.tenantId ?? this.tenantId,
+        status: 'PENDING_APPROVAL' as any,
+        expiresAt: { gt: now },
+      },
+      data: {
+        status: 'APPROVED' as any,
+        reviewedAt: now,
+        reviewedBy,
+        // The input that is about to run is recorded atomically with EXECUTING, so an
+        // interrupted execution still shows what actually ran.
+        proposedState: { ...action.preview, executionStatus: 'EXECUTING', executedInput } as any,
+      },
+    });
+    return result.count === 1;
+  }
+
+  /**
+   * PG-198: reject a still-pending action with the same status guard the approval
+   * claim uses, so an approval and a rejection can never both win.
+   */
+  async rejectIfPending(
+    action: PendingAction,
+    reviewedBy: string,
+    reason: string | undefined,
+    now: Date
+  ): Promise<boolean> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id: action.id,
+        tenantId: action.tenantId ?? this.tenantId,
+        status: 'PENDING_APPROVAL' as any,
+      },
+      data: {
+        status: 'REJECTED' as any,
+        reviewedAt: now,
+        reviewedBy,
+        feedback: reason ?? null,
+      },
+    });
+    return result.count === 1;
+  }
+
+  /**
+   * Approved actions whose execution never finished (left EXECUTING by a crash),
+   * requested or approved by this user. They are shown, never re-run.
+   */
+  async findInterrupted(
+    userId: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction[]> {
+    const rows = await this.prisma.agentAction.findMany({
+      where: {
+        tenantId,
+        status: 'APPROVED' as any,
+        proposedState: { path: ['executionStatus'], equals: 'EXECUTING' },
+        reviewedAt: { lt: new Date(Date.now() - INTERRUPTED_AFTER_MS) },
+        OR: [{ agentId: userId }, { reviewedBy: userId }],
+      },
+      orderBy: { reviewedAt: 'desc' },
+      take: 50,
+    });
+    return rows.map((r) => this.toExecutedAction(r));
+  }
+
   // ---------------------------------------------------------------------------
   // ExecutedActionsStore API
   // ---------------------------------------------------------------------------
@@ -192,6 +285,10 @@ export class PrismaAgentActionStore {
         feedback: action.approval?.reason,
         proposedState: {
           ...(action.preview as any),
+          executionStatus: action.executionStatus,
+          // The input that actually ran (approver modifications included); the
+          // original proposal stays in previousState.
+          executedInput: action.input,
           executionResult: action.executionResult,
           executionError: action.executionError,
           rollbackAvailable: action.rollbackAvailable,
@@ -263,9 +360,17 @@ export class PrismaAgentActionStore {
   // Mappers
   // ---------------------------------------------------------------------------
 
-  private toPendingAction(row: AgentAction): PendingAction {
+  /**
+   * Execution fields ride along so a read by id (the detail view) shows an interrupted or
+   * failed execution the same way the queue does. `update()` never writes them back.
+   */
+  private toPendingAction(
+    row: AgentAction
+  ): PendingAction &
+    Pick<ExecutedAction, 'executionStatus' | 'executionResult' | 'executionError'> {
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     const input = (row.previousState as Record<string, unknown>) ?? {};
+    const metadata = row.aiReasoning ? this.safeParseJson(row.aiReasoning) : undefined;
 
     return {
       id: row.id,
@@ -279,14 +384,24 @@ export class PrismaAgentActionStore {
         changes: (proposed.changes as any[]) ?? [],
         affectedEntities: (proposed.affectedEntities as any[]) ?? [],
         warnings: (proposed.warnings as string[]) ?? [],
-        estimatedImpact: this.confidenceToImpact(row.confidenceScore),
+        estimatedImpact: this.toImpact(proposed.estimatedImpact),
       },
+      // Legacy rows (before PG-198) hold an impact-derived score: not a confidence.
+      confidence:
+        row.confidenceScore !== null && metadata?.[CONFIDENCE_SOURCE_KEY] === AGENT_CONFIDENCE
+          ? row.confidenceScore / 100
+          : undefined,
+      escalatedAt: row.escalatedAt ?? undefined,
+      escalatedTo: row.escalatedTo ?? undefined,
       status: STATUS_FROM_DB[row.status] ?? 'PENDING',
       createdAt: row.createdAt,
       expiresAt: row.expiresAt,
       createdBy: row.agentId,
       agentSessionId: row.agentName,
-      metadata: row.aiReasoning ? this.safeParseJson(row.aiReasoning) : undefined,
+      metadata,
+      executionStatus: proposed.executionStatus as ExecutionStatus | undefined,
+      executionResult: proposed.executionResult,
+      executionError: proposed.executionError as string | undefined,
     };
   }
 
@@ -296,6 +411,8 @@ export class PrismaAgentActionStore {
 
     return {
       ...pending,
+      input: (proposed.executedInput as Record<string, unknown> | undefined) ?? pending.input,
+      executionStatus: proposed.executionStatus as ExecutionStatus | undefined,
       executedAt: row.reviewedAt ?? undefined,
       executionResult: proposed.executionResult,
       executionError: proposed.executionError as string | undefined,
@@ -313,23 +430,17 @@ export class PrismaAgentActionStore {
     };
   }
 
-  private impactToConfidence(impact?: 'LOW' | 'MEDIUM' | 'HIGH'): number {
-    switch (impact) {
-      case 'LOW':
-        return 30;
-      case 'MEDIUM':
-        return 60;
-      case 'HIGH':
-        return 90;
-      default:
-        return 50;
-    }
+  /** 0..1 → whole percent (floored, so 0.899 never reads as 90); invalid/absent → null. */
+  private toConfidenceScore(confidence: unknown): number | null {
+    const percent = confidenceToPercent(confidence);
+    // Floor, never round up (0.899 -> 89), but absorb float error: 0.57 * 100 is
+    // 56.99999999999999 in binary floating point and must store 57.
+    return percent === null ? null : Math.floor(percent + 1e-9);
   }
 
-  private confidenceToImpact(confidence: number): 'LOW' | 'MEDIUM' | 'HIGH' {
-    if (confidence >= 70) return 'HIGH';
-    if (confidence >= 40) return 'MEDIUM';
-    return 'LOW';
+  /** The impact stored with the preview; anything else is unknown. */
+  private toImpact(value: unknown): 'LOW' | 'MEDIUM' | 'HIGH' | undefined {
+    return value === 'LOW' || value === 'MEDIUM' || value === 'HIGH' ? value : undefined;
   }
 
   private inferActionType(actionType: string): 'SEARCH' | 'CREATE' | 'UPDATE' | 'DELETE' | 'DRAFT' {

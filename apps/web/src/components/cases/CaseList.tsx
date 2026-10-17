@@ -252,7 +252,7 @@ function CaseDeadlineCell({ row }: Readonly<{ row: CaseListItem }>) {
   }
   return (
     <span className={cn('text-sm', deadlineCls)}>
-      {isClosed ? 'Completed' : formatDeadline(row.deadline)}
+      {isClosed ? 'Completed' : formatDeadline(row.deadline, row.timezone ?? 'UTC')}
     </span>
   );
 }

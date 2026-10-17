@@ -46,4 +46,5 @@ export {
 export {
   type AutoResponseDraftRepository,
   type AutoResponseDraftQuery,
+  type PendingOlderThanFilter,
 } from './AutoResponseDraftRepository';

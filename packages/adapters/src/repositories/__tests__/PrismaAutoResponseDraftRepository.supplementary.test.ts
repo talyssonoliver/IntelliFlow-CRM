@@ -10,7 +10,7 @@
  * - parseApprovalDecision: invalid date returns undefined, string value parsing
  * - parseEscalation: invalid dates return undefined, resolvedAt present
  * - find: triggerType filter, offset parameter
- * - version handling: Math.max(version - 1, 0) for version 0
+ * - version handling: save() matches the loaded version and writes version + 1 (#874)
  * - safeParseJSON: invalid JSON
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';

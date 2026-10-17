@@ -1,0 +1,99 @@
+{
+  "stoa": "Quality",
+  "task_id": "PG-204",
+  "run_id": "exec-PG-204-20261013",
+  "verdict": "PASS",
+  "produced_by": "stoa-quality sub-agent",
+  "produced_at": "2026-10-13T07:17:50Z",
+  "gates": [
+    {
+      "gate": "test-execution",
+      "result": "PASS",
+      "evidence": "matop/gates/validation-matrix-02,03,04,06,07,08 logs; HEAD 6bf14467f",
+      "notes": "domain 2957/2957, validators 2558/2558, adapters 2967/2967, api 7295 passed + 18 skipped, integration case-types 17/17, web 12677/12677. 0 failures anywhere. The 18 API skips are in no file changed by PG-204 (grep of changed tests found none)."
+    },
+    {
+      "gate": "integration-actually-ran",
+      "result": "PASS",
+      "evidence": "validation-matrix-07 log: 17 passed (17), none skipped",
+      "notes": "tests/integration/case-types.test.ts uses describe.skip when DATABASE_URL is unset; the run reports 17 passed and 0 skipped, so the DB-gated suite executed."
+    },
+    {
+      "gate": "diff-coverage (Sonar new_coverage >= 80%)",
+      "result": "PASS",
+      "evidence": "validation-matrix-13: TOTAL 97.9% (558/570), script exit 0",
+      "notes": "14 of 15 files >= 89.7%. DeleteCaseTypeDialog.tsx is 75% (3/4) on one Radix onOpenChange close branch that cannot be reached from tests (the dialog is controlled by name !== null). It does not move the aggregate."
+    },
+    {
+      "gate": "layer-coverage",
+      "result": "PASS",
+      "evidence": "gates/domain-resolver-coverage.log + summary json",
+      "notes": "Domain case-type-defaults.ts: 100% statements, 100% branches, 100% functions, 100% lines (25 tests). The domain layer requirement is >95%. Validators case-types.ts 100% on new lines. API new helper libs 100%."
+    },
+    {
+      "gate": "global-coverage-thresholds",
+      "result": "NOT_APPLICABLE",
+      "evidence": "validation-matrix-12: related-only run, 9.07% statements overall",
+      "notes": "A related-only run breaches the per-project global thresholds by design (7 projects reported as debt), as the briefing stated. It is judged on diff coverage, not the global 90%. No full-suite global coverage run was done on this host for this task, so the 90% global number is unverified here. CI sharded runners own it."
+    },
+    {
+      "gate": "regression-prevention",
+      "result": "PASS",
+      "evidence": "full-suite runs of all touched packages, plus baseline turbo typecheck and lint (exit 0), build row 11 exit 0",
+      "notes": "The full web suite is 797 files green, so pre-existing tests around CaseForm, CaseDetail and cases.router are not regressed."
+    },
+    {
+      "gate": "tests-can-fail",
+      "result": "PASS",
+      "evidence": "grep of 22 changed test files for it.skip, describe.skip, test.todo, .only, xit, xdescribe, istanbul ignore, v8 ignore; per-file test and expect counts",
+      "notes": "The only skip is the DATABASE_URL-gated describe.skip above, which was not triggered. There are no istanbul or v8 ignores, no .only and no todo. Every file has at least as many expect calls as tests, so there are no assertion-free files. The TDD record was corrected to claim RED only where a failing run was observed (e.g. axe heading-order failed 06:26Z, CaseForm 3 failures 06:28Z)."
+    },
+    {
+      "gate": "a11y (axe in component tests + WCAG review)",
+      "result": "PASS",
+      "evidence": "axe present in CaseTypeDialog, CaseTypeList, DeleteCaseTypeDialog, ResolutionChecklistEditor, CaseTypesContent, CaseTypesLoading, CaseForm tests; delivery.md TDD table; a11y-expert PASS WITH MINOR (fixed in e3f23e584)",
+      "notes": "axe runs in the 7 component test files. The two route wrappers (case-types/page.test.tsx, new/page.test.tsx) have no axe, but they only compose already-audited components. The axe run on CaseForm was corrected to check the container, not document.body. Two Lighthouse rounds exist per page."
+    },
+    {
+      "gate": "thresholdAutoUpdate",
+      "result": "PASS",
+      "evidence": "grep of vitest configs",
+      "notes": "Not set to true anywhere."
+    },
+    {
+      "gate": "a11y-contrast (WCAG 1.4.3/1.4.11)",
+      "result": "PASS",
+      "evidence": "matop/a11y-contrast-review.json (FAIL) -> d7d91e5e8 -> matop/a11y-contrast-review-recheck.json (PASS WITH MINOR)",
+      "notes": "Initial FAIL fixed and re-checked; see addendum."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "low",
+      "finding": "DeleteCaseTypeDialog.tsx per-file diff coverage is 75% (3/4 lines) because of one unreachable Radix branch. The aggregate is 97.9%, well above the 80% floor."
+    },
+    {
+      "severity": "low",
+      "finding": "Global 90% per-project coverage was not re-measured in a full run for this task. Only the related-only coverage run is on record, and it breaches by design. The gap is covered by diff coverage, and CI runs the full suite."
+    },
+    {
+      "severity": "info",
+      "finding": "The integration suite skips itself without DATABASE_URL. It ran here (17 passed), but a CI job without a DB would silently skip it. Issue #658's runtime silent-skip gate covers that class."
+    },
+    {
+      "severity": "info",
+      "finding": "I ran no tests myself, per the single-test-process constraint. The verdict rests on the logs at HEAD 6bf14467f and a static read of the test files."
+    },
+    {
+      "severity": "low",
+      "finding": "Contrast re-check is computed from design tokens, not browser-measured, and no Lighthouse re-run is on record at d7d91e5e8."
+    }
+  ],
+  "summary": "PASS. All suites green at HEAD 6bf14467f with 0 failures. Diff coverage is 97.9% against the 80% floor and the domain resolver is 100% on all four metrics. The DB integration suite really executed (17/17, not skipped). There are no skips, ignores, .only or assertion-free tests in the changed files. axe coverage is present on all 7 component test files. Residual risks are the 75% on one file (an unreachable Radix branch) and the global 90% figure being unverified locally.",
+  "addendum": {
+    "head": "d7d91e5e8",
+    "checked_at": "2026-10-13T08:05:37Z",
+    "result": "PASS",
+    "notes": "d7d91e5e8 is web-only (9 files: error text classes now text-red-700 dark:text-red-300; colour swatches gain ring-1 ring-inset ring-slate-500 in case-type-colors.ts; test-first RED in case-type-helpers.test.ts). Web rows re-run at this head, read from logs and not re-run by me: full web suite 797 files and 12677 tests passed (exit 0); diff coverage 97.9% (559/571), exit 0, with DeleteCaseTypeDialog.tsx still 75% (3/4) for the same unreachable Radix branch. Non-web rows (domain, validators, adapters, api, integration) are unaffected because the commit touches only apps/web. The a11y contrast gate had a first-pass FAIL (a11y-contrast-review.json, findings F1/F2: destructive text colour and swatch contrast). The fix is verified by a computed re-check (a11y-contrast-review-recheck.json, PASS WITH MINOR): text-red-700 is 5.94 to 6.42 on light surfaces and the alert on bg-destructive/5 is 5.58, all over the 4.5 AA minimum. The recheck is computed from tokens, not measured in a browser, and no Lighthouse re-run is recorded at the new head. Residual (minor): contrast evidence is computed only; the dark-theme red-300 and swatch ring ratios are in the recheck json and I did not independently recompute them."
+  }
+}

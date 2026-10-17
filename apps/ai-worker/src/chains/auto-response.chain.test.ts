@@ -386,6 +386,27 @@ describe('AutoResponseChain', () => {
       await expect(chain.generateResponse(input)).rejects.toThrow();
     });
 
+    it('records confidence 0 (never an invented value) when the model omits it (PG-198)', async () => {
+      (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({
+        invoke: vi.fn().mockRejectedValue(new Error('structured unsupported')),
+      }));
+      (chain as any).llm.invoke.mockResolvedValueOnce({
+        content: JSON.stringify({ subject: 'Hello', body: 'Thanks for reaching out.' }),
+      });
+
+      const output = await chain.generateResponse({
+        triggerType: 'EMAIL_RECEIVED',
+        leadInfo: { id: 'lead-1', name: 'Test User', email: 'test@example.com', status: 'NEW' },
+        context: { originalMessage: 'Test' },
+        tenantSettings: { companyName: 'IntelliFlow', tone: 'professional' },
+      });
+
+      expect(output.confidence).toBe(0);
+      expect(chain.validateResponse(output).issues).toEqual(
+        expect.arrayContaining([expect.stringMatching(/requires human review/)])
+      );
+    });
+
     it('should throw error for invalid LLM response format on fallback path', async () => {
       // Force structured-output path to fail so we exercise the raw-invoke + JSON.parse fallback.
       (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({
