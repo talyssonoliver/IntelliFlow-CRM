@@ -7,6 +7,7 @@ const DEFAULT_KEYS = ['cty-default-0', 'cty-default-1', 'cty-default-2'] as cons
 export function ContactTypesLoading() {
   return (
     <div className="w-full" aria-busy="true">
+      <h1 className="sr-only">Contact Types</h1>
       <output className="sr-only">Loading contact types</output>
       <div className="mb-6 space-y-2">
         <Skeleton className="h-4 w-48" />

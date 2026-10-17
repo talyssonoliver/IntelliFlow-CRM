@@ -17,6 +17,11 @@ describe('ContactTypesLoading', () => {
     expect(container.querySelector('.lg\\:col-span-4')).not.toBeNull();
   });
 
+  it('keeps the page h1 while loading (a11y review #6)', () => {
+    render(<ContactTypesLoading />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Contact Types' })).toBeInTheDocument();
+  });
+
   it('has no axe violations', async () => {
     const { container } = render(<ContactTypesLoading />);
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });

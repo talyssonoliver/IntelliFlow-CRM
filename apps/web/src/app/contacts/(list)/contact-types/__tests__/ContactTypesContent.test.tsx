@@ -277,11 +277,22 @@ describe('ContactTypesContent', () => {
     expect(screen.getByRole('button', { name: 'New Contact Type' })).toHaveFocus();
   });
 
-  it('sets the default type from the radio group; inactive types cannot be chosen', () => {
+  it('sets the default type only on Save default, not on each radio move (a11y review #1)', () => {
     render(<ContactTypesContent />);
     expect(screen.getByRole('radio', { name: 'Old (inactive)' })).toBeDisabled();
+    const saveDefault = screen.getByRole('button', { name: 'Save default' });
+    expect(saveDefault).toBeDisabled();
     fireEvent.click(screen.getByRole('radio', { name: 'No default' }));
+    expect(h.mutations.setDefault.mutate).not.toHaveBeenCalled();
+    expect(saveDefault).toBeEnabled();
+    fireEvent.click(saveDefault);
     expect(h.mutations.setDefault.mutate).toHaveBeenCalledWith({ id: null }, expect.anything());
+  });
+
+  it('the error state still has the page h1 (a11y review #6)', () => {
+    h.list = { data: undefined, isLoading: false, error: { message: 'boom' } };
+    render(<ContactTypesContent />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Contact Types' })).toBeInTheDocument();
   });
 
   it('the live region is silent on mount', () => {

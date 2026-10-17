@@ -79,6 +79,7 @@ export function DefaultTagPicker({
                   disabled={disabled}
                   aria-disabled={blocked ? true : undefined}
                   aria-describedby={blocked ? HINT_ID : undefined}
+                  className="aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
                   onCheckedChange={(next) => toggle(tag.id, next === true)}
                 />
                 <Label htmlFor={`contact-type-tag-${tag.id}`}>

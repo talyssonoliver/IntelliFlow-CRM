@@ -643,7 +643,7 @@ export default function CreateNewContactPage() {
                           setFormData((prev) => ({ ...prev, accountId: id, accountName: name }))
                         }
                       />
-                      <p className="text-xs text-slate-400">
+                      <p className="text-xs text-slate-500 dark:text-slate-400">
                         Links the contact to an account; some contact types require one.
                       </p>
                     </div>

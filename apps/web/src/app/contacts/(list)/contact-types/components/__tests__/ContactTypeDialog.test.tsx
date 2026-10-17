@@ -59,6 +59,26 @@ describe('ContactTypeDialog', () => {
     expect(save()).toBeEnabled();
   });
 
+  it('a blank name says why on Save and moves focus to the name (A11Y-9, a11y review #2)', () => {
+    const { onSave } = renderDialog({ contactType: RESELLER });
+    const name = screen.getByLabelText('Name');
+    expect(name).toHaveAttribute('aria-required', 'true');
+    fireEvent.change(name, { target: { value: '   ' } });
+    expect(save()).toBeEnabled();
+    fireEvent.click(save());
+    expect(onSave).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert')).toHaveTextContent('Name is required.');
+    expect(name).toHaveAttribute('aria-invalid', 'true');
+    expect(name).toHaveFocus();
+  });
+
+  it('shows the read-only key as a labelled field (a11y review #3)', () => {
+    renderDialog({ contactType: RESELLER });
+    const key = screen.getByLabelText('Key');
+    expect(key).toHaveAttribute('readonly');
+    expect(key).toHaveValue(RESELLER.key);
+  });
+
   it('offers 18 labelled colour radios in a fieldset; arrow keys move through them in order', async () => {
     renderDialog();
     const group = screen.getByRole('group', { name: 'Colour' });
@@ -87,7 +107,7 @@ describe('ContactTypeDialog', () => {
   it('loads an existing type, shows its key read-only and builds the save input', async () => {
     const { onSave, onClose } = renderDialog({ contactType: RESELLER });
     expect(screen.getByRole('dialog', { name: 'Edit Reseller' })).toBeInTheDocument();
-    expect(screen.getByText('reseller')).toBeInTheDocument();
+    expect(screen.getByLabelText('Key')).toHaveValue('reseller');
     expect(screen.getByRole('checkbox', { name: 'Company' })).toHaveAttribute(
       'data-state',
       'checked'
@@ -120,7 +140,7 @@ describe('ContactTypeDialog', () => {
   });
 
   it('rejects an empty or duplicate name with an inline alert (aria-invalid + describedby)', () => {
-    renderDialog();
+    const renderDialogResult = renderDialog();
     const name = screen.getByLabelText('Name');
     fireEvent.change(name, { target: { value: '  reseller ' } });
     expect(name).toHaveAttribute('aria-invalid', 'true');
@@ -129,7 +149,11 @@ describe('ContactTypeDialog', () => {
     expect(error).toHaveAttribute('role', 'alert');
     expect(error).toHaveTextContent('A contact type named “Reseller” already exists.');
     expect(error?.className).toContain('text-red-700');
-    expect(save()).toBeDisabled();
+    // Save stays operable: activating it saves nothing and returns focus to the name.
+    const { onSave } = renderDialogResult;
+    fireEvent.click(save());
+    expect(onSave).not.toHaveBeenCalled();
+    expect(name).toHaveFocus();
   });
 
   it('a server CONFLICT keeps the dialog open and moves focus to the invalid name (A11Y-9)', async () => {

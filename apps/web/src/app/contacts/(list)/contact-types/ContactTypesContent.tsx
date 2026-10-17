@@ -105,14 +105,18 @@ export default function ContactTypesContent() {
     }
   };
 
-  const changeDefault = (value: string) => {
-    // The group stays focusable while saving (disabling it drops focus to <body>), so ignore changes here.
+  // Radix radios select on arrow focus, so moving through the group only changes a draft;
+  // the default is saved by the "Save default" button (one write, on purpose).
+  const [draftDefaultId, setDraftDefaultId] = useState<string | null>(null);
+
+  const saveDefault = (value: string) => {
     if (isBusy) return;
     const id = value === NO_DEFAULT ? null : value;
     setDefaultMutation.mutate(
       { id },
       {
         onSuccess: () => {
+          setDraftDefaultId(null);
           const name = types.find((t) => t.id === id)?.name;
           setAnnouncement(
             name ? `Default contact type set to ${name}.` : 'Default contact type cleared.'
@@ -133,6 +137,7 @@ export default function ContactTypesContent() {
   if (listQuery.error || !listQuery.data) {
     return (
       <div className="w-full text-center py-12">
+        <h1 className="sr-only">Contact Types</h1>
         <p className="text-red-700 dark:text-red-300 mb-4" role="alert">
           Failed to load contact types{listQuery.error ? `: ${listQuery.error.message}` : '.'}
         </p>
@@ -143,7 +148,8 @@ export default function ContactTypesContent() {
     );
   }
 
-  const defaultId = types.find((t) => t.isDefault)?.id ?? NO_DEFAULT;
+  const savedDefaultId = types.find((t) => t.isDefault)?.id ?? NO_DEFAULT;
+  const defaultId = draftDefaultId ?? savedDefaultId;
   const describedBy = canEdit ? undefined : READ_ONLY_NOTE_ID;
 
   return (
@@ -219,7 +225,7 @@ export default function ContactTypesContent() {
           />
           <RadioGroup
             value={defaultId}
-            onValueChange={changeDefault}
+            onValueChange={setDraftDefaultId}
             aria-labelledby="default-contact-type-heading"
             aria-describedby={describedBy}
             className="flex flex-col gap-3"
@@ -244,6 +250,15 @@ export default function ContactTypesContent() {
               </div>
             ))}
           </RadioGroup>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-4"
+            onClick={() => saveDefault(defaultId)}
+            disabled={!canEdit || isBusy || defaultId === savedDefaultId}
+          >
+            Save default
+          </Button>
           {setDefaultMutation.isPending && (
             <p className="mt-3 text-sm text-muted-foreground" aria-hidden="true">
               Saving the default contact type…

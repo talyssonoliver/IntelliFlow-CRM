@@ -196,9 +196,11 @@ export function ContactTypeDialog({
   const isDefault = contactType?.isDefault ?? false;
   const hasConflict = !trimmedName || duplicateName !== null;
   const isDirty = fingerprint(draft) !== fingerprint(snapshot);
+  const [saveAttempted, setSaveAttempted] = useState(false);
   const nameError =
     serverError ??
-    (duplicateName ? `A contact type named “${duplicateName}” already exists.` : null);
+    (duplicateName ? `A contact type named “${duplicateName}” already exists.` : null) ??
+    (saveAttempted && !trimmedName ? 'Name is required.' : null);
 
   const toggleRequired = (key: ContactTypeRequiredFieldKey, checked: boolean) =>
     set(
@@ -207,6 +209,12 @@ export function ContactTypeDialog({
     );
 
   const save = async () => {
+    // Save stays operable with a bad name, so a keyboard user hears why it did nothing.
+    if (hasConflict) {
+      setSaveAttempted(true);
+      nameRef.current?.focus();
+      return;
+    }
     const result = await onSave(toSaveInput(draft));
     if (!result.ok) {
       if (result.error) {
@@ -239,6 +247,7 @@ export function ContactTypeDialog({
                 value={draft.name}
                 maxLength={CONTACT_TYPE_LIMITS.maxNameLength}
                 onChange={(e) => set('name', e.target.value)}
+                aria-required="true"
                 aria-invalid={nameError ? true : undefined}
                 aria-describedby={nameError ? 'contact-type-name-error' : undefined}
               />
@@ -254,15 +263,13 @@ export function ContactTypeDialog({
             </div>
             {contactType && (
               <div className="space-y-1.5">
-                <span className="text-sm font-medium leading-none" id="contact-type-key-label">
-                  Key
-                </span>
-                <p
-                  className="flex h-10 items-center rounded-md border border-border bg-muted px-3 font-mono text-sm text-muted-foreground"
-                  aria-labelledby="contact-type-key-label"
-                >
-                  {contactType.key}
-                </p>
+                <Label htmlFor="contact-type-key">Key</Label>
+                <Input
+                  id="contact-type-key"
+                  readOnly
+                  value={contactType.key}
+                  className="bg-muted font-mono text-muted-foreground"
+                />
                 <p className="text-xs text-muted-foreground">
                   Stored on contacts; it never changes when you rename the type.
                 </p>
@@ -416,7 +423,7 @@ export function ContactTypeDialog({
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="button" onClick={save} disabled={!isDirty || isSaving || hasConflict}>
+          <Button type="button" onClick={save} disabled={!isDirty || isSaving}>
             {isSaving ? 'Saving…' : 'Save'}
           </Button>
         </DialogFooter>
