@@ -870,7 +870,10 @@ already wired.
 | -------------------------------------------------- | ----------- |
 | Domain, validators, DB (2 Class A migrations), API | Implemented |
 | Settings page, picker, list filter/badge, segments | Implemented |
-| Validations, reviews, Lighthouse, attestation      | In Progress |
+| Validations (typecheck, tests, lint, build, knip)  | Done        |
+| Reviews (simplify, a11y WCAG 2.1 AA, codex)        | Done        |
+| Lighthouse (authenticated routes)                  | NEEDS_HUMAN |
+| Code review, STOA, attestation                     | In Progress |
 
 ## PG-198 Addendum: Approval Policies (2026-10-13)
 

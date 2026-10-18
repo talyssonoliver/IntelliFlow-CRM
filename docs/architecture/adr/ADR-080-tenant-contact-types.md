@@ -1,7 +1,8 @@
 # ADR-080: Tenant-Defined Contact Types Keyed by the Existing `contactType` Column
 
-**Status:** Proposed (2026-10-17 — PG-205 spec session; to be finalised at spec
-consensus)
+**Status:** Accepted (2026-10-18 — implemented on `feat/pg-205-contact-types`;
+GREEN validations passed: typecheck, lint, full suites of every touched package,
+build)
 
 **Date:** 2026-10-17
 
@@ -80,6 +81,12 @@ Accepted when the implementation passes its validations.
   survivor's own type; `ContactCreatedEvent` is unchanged.
 
 ### Consequences (if option 1)
+
+- **Deploy order (L13):** both Class A migrations,
+  `20261017120000_contact_types` and `20261017120100_contacts_type_idx`
+  (`CREATE INDEX CONCURRENTLY`), must be applied to production with
+  `prisma migrate deploy` **before** the API that reads `contact_types` is
+  promoted. The production apply is manual.
 
 - No FK: deleting a type that contacts still use is refused at the application
   layer (count by `tenantId` + `contactType = key`); deactivating is the safe

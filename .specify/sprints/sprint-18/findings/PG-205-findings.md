@@ -69,6 +69,13 @@ The remaining non-atomicity (fields and account are still two `ContactService` s
 intermediate state breaks a type rule. A single save for both would need a combined `ContactService` operation,
 which is out of PG-205's scope.
 
+## Lighthouse status (DoD 12): NEEDS_HUMAN
+
+Path A ran once (2026-10-17T22:03-22:04Z, Lighthouse 12.6.1). Both `/contacts/contact-types` and `/contacts/new`
+redirect to `/login`, so the scores (perf 0.87/0.88, a11y 0.93) measure the login page, not PG-205. No
+non-production `LHCI_TEST_*` credentials exist for Path C. Evidence and the owner's options are in
+`artifacts/lighthouse/PG-205/waiver-evidence.md`. No waiver approver is named.
+
 ## CSV corrections (Category A, `Sprint_plan.csv` row PG-205; splits regenerated)
 
 | Field | Old | New | Why |

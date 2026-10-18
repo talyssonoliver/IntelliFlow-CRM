@@ -2492,7 +2492,7 @@ Sidebar entry: apps/web/src/components/sidebar/configs/cases.ts:14
 ### Contact Types (PG-205 — applied at contact creation, ADR-080)
 
 ```
-PG-178 ✅ + PG-182 ✅ ──► PG-205 (Contact Types)
+PG-178 ✅ + PG-182 ✅ ──► PG-205 ✅ (Contact Types, delivered on feat/pg-205-contact-types)
 
 Domain:  packages/domain/src/crm/contact/contact-type-defaults.ts
            resolveContactCreateDefaults (explicit input > type default)

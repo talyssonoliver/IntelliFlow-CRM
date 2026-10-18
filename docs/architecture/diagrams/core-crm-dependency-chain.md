@@ -337,7 +337,7 @@ web      useAccountTiers → sidebar tier links (?tier=), AccountsPageClient fil
 ## PG-205: Tenant Contact Types (2026-10-17)
 
 Tenant-defined contact types keyed by the existing `contacts.contactType` string
-(ADR-080).
+(ADR-080). Delivered on `feat/pg-205-contact-types`.
 
 ```
 domain   contact-type-defaults.ts  resolveContactCreateDefaults / missingTypeRequiredFields

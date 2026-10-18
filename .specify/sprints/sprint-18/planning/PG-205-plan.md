@@ -526,7 +526,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - none beyond the files already created/modified in Steps 7-14 (no behaviour change; any touched file is listed in the
   delivery report)
 
-- [x] duplication check (`/simplify`-style review), lint all touched packages, tests still green. *(2026-10-17T21:30-21:50Z, recovery lane: Skill simplify, 4 parallel review sub-agents; applied/skipped list in `matop/step15-simplify.md`; lint 7/7 packages exit 0 (`matop/gates/step19-lint-*.log`); api contact 398 pass/2 skip, application ContactService 101/101; commit `75bec9439`)*
+- [x] duplication check (`/simplify`-style review), lint all touched packages, tests still green. *(recovery lane, between the 21:27:35Z checkpoint and commit `75bec9439` at 21:38:17Z: Skill simplify, 4 parallel review sub-agents; applied/skipped list in `matop/step15-simplify.md`; lint 7/7 packages exit 0 (`matop/gates/step19-lint-*.log`); api contact 398 pass/2 skip, application ContactService 101/101; commit `75bec9439`)*
 
 #### Step 16: Docs, registries, ADR/PRD
 
@@ -563,8 +563,9 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
       tag `update` spreads input (:224-230); bulk lead conversion `skipDuplicates` (`lead.router.ts:1584`);
       `ContactService.ts:92` echoes the account id. Same items in the debt ledger and findings doc. *(gh #908; debt
       ledger `PG-205-*` x4 under `items:`; findings T1-T4; the test-db bug was already #905, referenced as T5)*
-- [ ] Findings doc also records: declined event payload (D11), lead conversion untyped, VIP spelling caveat, CSV
-      corrections, Lighthouse status.
+- [x] Findings doc also records: declined event payload (D11), lead conversion untyped, VIP spelling caveat, CSV
+      corrections, Lighthouse status. *(D11/lead/VIP/CSV written by the prior lane; accepted risk, codex fixes and
+      the Lighthouse NEEDS_HUMAN status added by the recovery lane after the 22:04Z Path A run)*
 
 ### Phase 4 — VALIDATION
 
@@ -582,27 +583,30 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - none (logs under the exec run's `matop/gates/`)
 
-- [ ] NF checks: NF-001 (Step 3 fast-path test: no lock when six rows exist; one indexed type lookup per create),
+- [x] NF checks: NF-001 (Step 3 fast-path test: no lock when six rows exist; one indexed type lookup per create),
       NF-002 (Step 6 `staleTime` + invalidation test), NF-003 (web build graph: no server-only imports in the new
-      components, web build passes), NF-004 (coverage below).
-- [ ] TypeScript: `pnpm --filter ./packages/domain typecheck`, `./packages/validators`, `./packages/db`,
-      `./packages/application`, `./packages/adapters`, `./apps/api`, `./apps/web`.
-- [ ] Tests: full suite per touched package through the slot (domain, validators, db, application, adapters, api, web
+      components, web build passes), NF-004 (coverage below). *(NF-001 `contact-type-resolver.test.ts:63` "takes the fast path (no lock, no write)"
+      and the `(tenantId, contactType)` index migration; NF-002 `ContactTypeSelect.test.tsx:69`; NF-003 grep of the
+      PG-205 web sources for server-only/prisma/db/pg/node:fs imports found none, and the web build passed at
+      `7319f0d2c`; NF-004 below)*
+- [x] TypeScript: `pnpm --filter ./packages/domain typecheck`, `./packages/validators`, `./packages/db`,
+      `./packages/application`, `./packages/adapters`, `./apps/api`, `./apps/web`. *(7/7 exit 0, `matop/gates/step19-typecheck-*.log`; web typecheck re-run exit 0 after the a11y fixes `7319f0d2c`)*
+- [x] Tests: full suite per touched package through the slot (domain, validators, db, application, adapters, api, web
       with `vitest run`), plus the integration project via slot + `--exclusive intelliflow-db`, plus
-      `pnpm exec vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/docs-integrity-audit.test.ts`.
-- [ ] Lint: `pnpm --filter <each touched pkg> lint`.
-- [ ] Build: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-build -- pnpm --filter ./apps/web build`
-      and `pnpm turbo build --filter='./packages/*'`.
-- [ ] knip on touched packages (no unused exports/files from this task).
-- [ ] `/exec-coverage` AFTER; changed-line coverage ≥ 80%; domain > 95%.
+      `pnpm exec vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/docs-integrity-audit.test.ts`. *(HEAD `e929eb220`, `matop/gates/step19-test-*.log`, all exit 0: domain 3060, validators 2741, db 224+14 skipped, application 1486, adapters 2982, api 7801+18 skipped, web 825 files/12990, tools 33, integration 440+50 skipped; contact-types integration alone 24/24 none skipped. After the a11y fixes `7319f0d2c` the contacts (list) web tests re-ran 142/142; pre-ship re-runs the related suites at the final SHA.)*
+- [x] Lint: `pnpm --filter <each touched pkg> lint`. *(7/7 exit 0, `matop/gates/step19-lint-*.log`; sonar-guard on the a11y-fix files exit 0)*
+- [x] Build: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-build -- pnpm --filter ./apps/web build`
+      and `pnpm turbo build --filter='./packages/*'`. *(HEAD `7319f0d2c`: packages 15/15, web exit 0 with `/contacts/contact-types` prerendered; only warning is third-party web-worker; `matop/gates/step19-build-*.log`)*
+- [x] knip on touched packages (no unused exports/files from this task). *(repo knip `--exclude unlisted,unresolved` at `7319f0d2c`: 110 pre-existing issues, 0 in the 37 PG-205 source files — `matop/gates/step19-knip.{log,json}`)*
+- [x] `/exec-coverage` AFTER; changed-line coverage ≥ 80%; domain > 95%. *(Skill exec-coverage; 2026-10-18T08:39:33Z `check-diff-coverage.mjs` after the scoped `test:coverage` at `7319f0d2c`: **95.4%** (960/1006), exit 0 — `matop/gates/step19-{coverage-after,diff-coverage}.log`; domain package: lines 95.25%, statements 95.2%, branches 92.16% (`step19-coverage-domain.log`); changed domain files 100% lines)*
 
 #### Step 20: Reviews
 
 **Files to Modify:**
 - only files a review finding requires (each listed in the delivery report)
 
-- [ ] `/code-review` on the diff; `/sonarqube-fix` for any new finding.
-- [ ] a11y-expert (WCAG 2.1 AA) review sub-agent on the shipped UI + computed contrast review for the 18 tokens.
+- [x] `/code-review` on the diff; `/sonarqube-fix` for any new finding. *(Skill code-review: quick run `20261018-094054-f0c501fc`, 0 TS errors / 0 lint problems, `matop/code-review-summary.json` (Full mode not used: unslotted full-repo tests); Skill sonarqube-fix: branch-wide sonar-guard 62 files exit 0, 3 pre-commit findings fixed, duplication ≈2.0% < 3% — `matop/sonarqube-fix-report.md`)*
+- [x] a11y-expert (WCAG 2.1 AA) review sub-agent on the shipped UI + computed contrast review for the 18 tokens. *(a11y-expert sub-agent, PASS_WITH_FIXES; 18/18 badge pairs ≥ 6.78:1, outlines/rings ≥ 3.10:1; Medium #1/#2 + Lows #3/#4/#5/#6 fixed TDD in `7319f0d2c` (`red-green/22-*`); `matop/a11y-review.md`)*
 - [ ] `node scripts/codex-review.mjs` iterated until clean (fallback reviews block the same way; waivers only with evidence).
 
 #### Step 21: Lighthouse (DoD 12)
@@ -610,9 +614,11 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - none (reports or attempt logs under `artifacts/lighthouse/PG-205/`)
 
-- [ ] Follow `docs/claude-refs/lighthouse-playbook.md` for `/contacts/contact-types` (auth path
+- [x] Follow `docs/claude-refs/lighthouse-playbook.md` for `/contacts/contact-types` (auth path
       `pnpm --filter @intelliflow/web lighthouse:auth` with `LHCI_URLS` / `LHCI_OUTPUT_DIR=./artifacts/lighthouse/PG-205`).
-      If no non-production credentials exist, record NEEDS_HUMAN with the attempt logs (`artifacts/lighthouse/PG-205/`), never a score.
+      If no non-production credentials exist, record NEEDS_HUMAN with the attempt logs (`artifacts/lighthouse/PG-205/`), never a score. *(2026-10-17T22:03:57Z / 22:04:14Z Path A at `7319f0d2c`: both routes end on `/login`;
+      no `LHCI_TEST_*` anywhere (checked by name) → NEEDS_HUMAN, `artifacts/lighthouse/PG-205/waiver-evidence.md`
+      + two `*-r1.report.json`)*
 
 #### Step 22: Dependency chain + PRD/ADR finalisation
 
@@ -623,8 +629,8 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `docs/architecture/adr/ADR-080-tenant-contact-types.md`
 - `docs/architecture/adr/README.md`
 
-- [ ] Chain sections marked delivered; PRD addendum delivery-status table; ADR-080 → Accepted (README row too).
-- [ ] L13 stated in ADR-080 (consequences: both migrations applied to production before the API is promoted).
+- [x] Chain sections marked delivered; PRD addendum delivery-status table; ADR-080 → Accepted (README row too). *(2026-10-18T08:35Z, after the Step 19 validations passed)*
+- [x] L13 stated in ADR-080 (consequences: both migrations applied to production before the API is promoted). *("Deploy order (L13)" bullet under Consequences)*
 
 #### Step 23: MATOP (STOA sub-agents) + compliance
 

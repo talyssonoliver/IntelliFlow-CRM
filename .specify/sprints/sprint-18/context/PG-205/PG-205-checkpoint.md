@@ -1,6 +1,6 @@
 # PG-205 checkpoint (recovery lane, session ffa3728c)
 
-Updated: 2026-10-17T21:27:35Z. HEAD `7045bbfb1` on `feat/pg-205-contact-types`.
+Updated: 2026-10-18T08:47:12Z. HEAD `7319f0d2c` + docs commit pending.
 
 ## Phase
 
@@ -36,19 +36,38 @@ each still have one box open.
 
 The codex gate must re-run at the end: lint fixes and a resolver comment change landed after round 12.
 
+## Since the first checkpoint
+
+- Step 15 done: Skill simplify (4 review sub-agents); commit `75bec9439`; `matop/step15-simplify.md`.
+- Step 17: the findings doc now covers the accepted risk and the codex fixes. Its box stays open until the
+  Lighthouse status (Step 21) is written in.
+- Step 19: typecheck 7/7 and lint 7/7 exit 0 (`matop/gates/step19-typecheck-*.log`, `step19-lint-*.log`).
+  Full suites running in the background (`scratchpad/step19-tests.sh` → `matop/gates/step19-test-*.log`).
+- Step 20: an a11y-expert sub-agent is running.
+- Docs/tracking commit `e929eb220` (red-green logs force-added like PG-204's evidence).
+- Lighthouse: no `LHCI_TEST_*` in any .env (names checked) → Path A once, then NEEDS_HUMAN (PG-204 precedent).
+
+## Since the second checkpoint (2026-10-17T21:43:13Z → 2026-10-18T08:47:12Z)
+
+- Step 19 complete: full suites exit 0 (domain 3060, validators 2741, db 224, application 1486, adapters 2982,
+  api 7801, web 12990, tools 33, integration 440; contact-types integration 24/24). Build packages + web exit 0.
+  knip: 0 issues in PG-205 files. Diff coverage 95.4%; domain lines 95.25%.
+- Step 20: a11y-expert PASS_WITH_FIXES; fixes TDD (`red-green/22-*`), commit `7319f0d2c`. /code-review quick
+  (0 TS, 0 lint). /sonarqube-fix: branch sonar-guard clean, duplication ≈2.0%.
+- Step 21: Lighthouse Path A → /login; NEEDS_HUMAN (`artifacts/lighthouse/PG-205/waiver-evidence.md`).
+- Step 22: ADR-080 Accepted + L13 consequence; README, chains, PRD, WCAG statement 1.9.0.
+- Nothing ran between the Lighthouse run (22:04:14Z) and knip (08:34:18Z): the session or host was idle
+  overnight. It was not a slot wait (the coverage script's header, written before the slot wrapper, says 08:35:22Z).
+- The ralph-loop state file shows `active: false` (changed outside this session). The work continues regardless.
+
 ## Uncommitted
 
-- `apps/api/src/modules/contact/contact-type-resolver.ts` (staged; comment only, says the account is no longer
-  written after the fields). Goes in with the docs commit.
-- Docs, registries, CSV, plan, task-tracking, owner-ruling, findings doc, debt ledger, coverage-before, reports:
-  Step 16/17 docs work from the prior lane. To be committed as a docs/tracking commit.
-
-## Owner rulings since the last commit
-
-None new in this session (rulings 8 and 9 were recorded by the prior lane in PG-205-owner-ruling.md).
+- `artifacts/benchmarks/IFC-310-merge.json`, `artifacts/reports/plan-lint-report.json`,
+  `artifacts/reports/spec-tracker.json`: generated churn from test and report runs, deliberately NOT committed.
+- Exec run evidence under `.specify/sprints/sprint-18/execution/PG-205/` (gitignored): force-add at attestation.
 
 ## Next action
 
-Step 15 (`/simplify` review, lint, tests) → Step 17 findings additions → commit docs → Step 19 full validations
-(typecheck/test/lint/build/knip/coverage via slot) → Step 20 (/code-review, /sonarqube-fix, a11y-expert, final
-codex) → 21 Lighthouse → 22 ADR/PRD → 23 /exec-gates + STOA sub-agents + /compliance-check → 24 attestation → ship.
+Commit docs → final codex round at the new HEAD → /exec-gates → STOA sub-agents (foundation, domain, security,
+quality) → /compliance-check → /exec-attestation → /exec-metrics → generate-context → merge origin/main if moved
+→ pre-ship (exclusive slot) → push → PR → Aurora READY.
