@@ -72,6 +72,8 @@ async function create(start: string, end: string, timezone?: string) {
 }
 
 async function reschedule(start: string, end: string) {
+  // The target is loaded and authorised before the hours check (PG-202 review round).
+  prismaMock.appointment.findFirst.mockResolvedValue({ id: APPOINTMENT_ID } as never);
   const caller = appointmentsRouter.createCaller(createTestContext());
   return caller.reschedule({ id: APPOINTMENT_ID, newStartTime: at(start), newEndTime: at(end) });
 }

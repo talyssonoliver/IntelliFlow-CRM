@@ -319,6 +319,11 @@ describe('Appointments Router - Caller Tests', () => {
   });
 
   describe('reschedule', () => {
+    beforeEach(() => {
+      // reschedule loads and authorises the target before anything else.
+      prismaMock.appointment.findFirst.mockResolvedValue({ id: mockAppointment.id } as any);
+    });
+
     it('should reschedule an appointment', async () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
@@ -1089,6 +1094,27 @@ describe('availability enforcement (PG-202)', () => {
   });
 
   describe('reschedule', () => {
+    beforeEach(() => {
+      prismaMock.appointment.findFirst.mockResolvedValue({ id: APPT } as any);
+    });
+
+    it('returns NOT_FOUND for an unknown or foreign appointment before any availability check', async () => {
+      stubTenantAvailability(prismaMock, {
+        ranges: MON_FRI_9_12,
+        closures: [{ startDate: '2026-04-15', endDate: '2026-04-15' }],
+      });
+      prismaMock.appointment.findFirst.mockResolvedValue(null);
+      okReschedule();
+      await expect(
+        reschedule('2026-04-15T09:00:00Z', '2026-04-15T10:00:00Z')
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(prismaMock.appointment.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: APPT, tenantId: TENANT } })
+      );
+      expect(prismaMock.appointmentSettings.findUnique).not.toHaveBeenCalled();
+      expect(container.rescheduleAppointmentUseCase.execute).not.toHaveBeenCalled();
+    });
+
     it('rejects a move onto a closure date', async () => {
       stubTenantAvailability(prismaMock, {
         ranges: MON_FRI_9_12,

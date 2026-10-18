@@ -742,6 +742,19 @@ export const appointmentsRouter = createTRPCRouter({
   reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
 
+    // Load and authorise the target first (tenant-scoped), so an unknown or foreign id
+    // gets NOT_FOUND rather than an availability answer about someone else's booking.
+    const target = await ctx.prismaWithTenant.appointment.findFirst({
+      where: { id: input.id, tenantId: ctx.user.tenantId },
+      select: { id: true },
+    });
+    if (!target) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
     // Firm availability (PG-202); the appointment does not count against its own day.
     // Tenants that never saved availability keep the 07:00-19:00 rule in UTC.
     await assertAppointmentWithinAvailability(ctx.prismaWithTenant, {

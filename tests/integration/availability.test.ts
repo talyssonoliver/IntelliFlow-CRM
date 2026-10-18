@@ -55,6 +55,7 @@ function splitStatements(sql: string): string[] {
 
 const CHECK_NAMES = [
   'availability_hours_range_check',
+  'availability_hours_startMinute_bounds_check',
   'appointment_settings_maxDailyBookings_check',
 ];
 
@@ -214,11 +215,27 @@ describeDb('PG-202 availability (real DB)', () => {
         'appointment_settings_maxDailyBookings_check',
         'availability_closures_range_check',
         'availability_closures_reason_check',
-        'availability_hours_endMinute_check',
+        'availability_hours_endMinute_bounds_check',
         'availability_hours_range_check',
-        'availability_hours_startMinute_check',
+        'availability_hours_startMinute_bounds_check',
         'availability_hours_weekday_check',
       ].sort()
+    );
+  });
+
+  it('bounds startMinute to 0..1439 and endMinute to 1..1440 explicitly', async () => {
+    const defs: Array<{ conname: string; def: string }> = await prisma.$queryRawUnsafe(
+      `SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint
+        WHERE conname = ANY($1::text[]) ORDER BY conname`,
+      ['availability_hours_endMinute_bounds_check', 'availability_hours_startMinute_bounds_check']
+    );
+    expect(defs).toHaveLength(2);
+    const byName = Object.fromEntries(defs.map((d) => [d.conname, d.def]));
+    expect(byName.availability_hours_startMinute_bounds_check).toBe(
+      'CHECK ((("startMinute" >= 0) AND ("startMinute" <= 1439)))'
+    );
+    expect(byName.availability_hours_endMinute_bounds_check).toBe(
+      'CHECK ((("endMinute" >= 1) AND ("endMinute" <= 1440)))'
     );
   });
 

@@ -15,7 +15,7 @@ const h = vi.hoisted(() => ({
   query: {
     data: undefined as unknown,
     isLoading: false,
-    error: null as null | { message: string },
+    error: null as null | { message: string; data?: { code: string } },
   },
   refetch: vi.fn(),
   invalidate: vi.fn(),
@@ -139,6 +139,23 @@ describe('AvailabilityContent — states', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Network down');
     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
     expect(h.refetch).toHaveBeenCalled();
+  });
+
+  it('shows a calm notice, not an error, while the API does not have availability yet (deploy skew)', () => {
+    h.query = {
+      data: undefined,
+      isLoading: false,
+      error: {
+        message: 'No procedure found on path "calendar.availability.get"',
+        data: { code: 'NOT_FOUND' },
+      },
+    };
+    render(<AvailabilityContent />);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Availability settings will be available after the next release.'
+    );
+    expect(screen.getByRole('heading', { level: 1, name: 'Availability' })).toBeInTheDocument();
   });
 
   it('renders nothing while unauthenticated', () => {

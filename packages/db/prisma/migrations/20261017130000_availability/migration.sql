@@ -38,8 +38,8 @@ CREATE TABLE "availability_hours" (
 
     CONSTRAINT "availability_hours_pkey" PRIMARY KEY ("id"),
     CONSTRAINT "availability_hours_weekday_check" CHECK ("weekday" BETWEEN 0 AND 6),
-    CONSTRAINT "availability_hours_startMinute_check" CHECK ("startMinute" >= 0),
-    CONSTRAINT "availability_hours_endMinute_check" CHECK ("endMinute" <= 1440),
+    CONSTRAINT "availability_hours_startMinute_bounds_check" CHECK ("startMinute" BETWEEN 0 AND 1439),
+    CONSTRAINT "availability_hours_endMinute_bounds_check" CHECK ("endMinute" BETWEEN 1 AND 1440),
     CONSTRAINT "availability_hours_range_check" CHECK ("startMinute" < "endMinute")
 );
 

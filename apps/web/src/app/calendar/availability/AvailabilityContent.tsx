@@ -38,6 +38,11 @@ import {
 } from './components/AvailabilityBanners';
 
 const CLOSURES_TITLE_ID = 'availability-closures-title';
+const BREADCRUMBS = [
+  { label: 'Dashboard', href: '/' },
+  { label: 'Calendar', href: '/calendar' },
+  { label: 'Availability' },
+];
 
 const RESET_DESCRIPTION =
   'This clears the saved working hours, closures and daily booking limit, so bookings go back to the built-in 07:00-19:00 rule. The timezone and buffer times are kept.';
@@ -151,6 +156,24 @@ export default function AvailabilityContent() {
   if (!isAuthenticated && !authLoading) return null;
   if (authLoading || query.isLoading) return <AvailabilityLoading />;
 
+  // Between the web release and the API promote, the API has no calendar.availability yet
+  // (tRPC NOT_FOUND for an unknown procedure): explain calmly instead of failing.
+  if (errorCode(query.error) === 'NOT_FOUND') {
+    return (
+      <div className="w-full">
+        <PageHeader
+          breadcrumbs={BREADCRUMBS}
+          title="Availability"
+          description="When the firm can be booked: weekly hours, closures, buffers and a daily limit, in the firm timezone."
+          className="mb-6"
+        />
+        <output className="block rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+          Availability settings will be available after the next release.
+        </output>
+      </div>
+    );
+  }
+
   if (query.error || !snapshot || !draft) {
     return (
       <div className="w-full text-center py-12">
@@ -235,11 +258,7 @@ export default function AvailabilityContent() {
   return (
     <div className="w-full">
       <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Calendar', href: '/calendar' },
-          { label: 'Availability' },
-        ]}
+        breadcrumbs={BREADCRUMBS}
         title="Availability"
         description="When the firm can be booked: weekly hours, closures, buffers and a daily limit, in the firm timezone."
         actions={
