@@ -1,0 +1,20 @@
+{
+  "stoa": "Security",
+  "task_id": "PG-205",
+  "run_id": "20261017163533-a216d1f1",
+  "verdict": "PASS",
+  "produced_by": "stoa-security sub-agent",
+  "produced_at": "2026-10-18T09:01:39Z",
+  "head": "3ae41b2dfe79773cb7c6f0f4600044901ba5cc0f",
+  "gates": [
+    {"gate": "gitleaks git --log-opts=origin/main..HEAD --redact", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-gitleaks.log", "notes": "exit 0, 1s, no leaks in branch commit range"},
+    {"gate": "secret-shape grep over added diff lines (postgres creds, Bearer, ghp_, sk-, AKIA, ntn_, JWT, private key, supabase.co, neon.tech, dangerouslySetInnerHTML)", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-secret-grep.log", "notes": "0 matches"},
+    {"gate": "dependency audit (pnpm audit/osv)", "result": "NOT_RUN", "evidence_log": "", "notes": "No pnpm-lock.yaml / package.json changes in origin/main...HEAD (empty diff stat), so no new dependency surface; not run, not claimed as pass."},
+    {"gate": "manual OWASP review of new surface", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-review.log", "notes": "RBAC, tenant scoping, strict inputs, SQL injection, owner/account tenant checks, RLS policies, error/audit leakage reviewed"}
+  ],
+  "unavailableTools": ["snyk (SNYK_TOKEN not checked/available)", "semgrep (not run)", "trivy (not run)"],
+  "findings": [
+    {"severity": "INFO", "file": "packages/validators/src/contact-types.ts", "line": 88, "issue": "deleteContactTypeSchema and setDefaultContactTypeSchema are non-strict z.object; unknown keys are stripped.", "recommendation": "No action required: handlers read only id. Optionally add .strict() for consistency."}
+  ],
+  "summary": "No secrets in branch history or diff; no dependency changes. New surface reviewed: all writes admin-gated and audited on denial, every query tenant-scoped, strict inputs prevent smuggling tenantId/key/isSystem, advisory lock uses bound parameter (no SQL injection), owner resolution limited to same-tenant users, RLS policies present on both new tables, no PII in audit payloads, no dangerouslySetInnerHTML. Known out-of-scope items (gh #908, findings doc, waiver 0f290e25) not re-flagged. Static-analysis tools and dependency audit were not run (see gates)."
+}

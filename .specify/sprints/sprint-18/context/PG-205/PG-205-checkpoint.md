@@ -1,6 +1,6 @@
 # PG-205 checkpoint (recovery lane, session ffa3728c)
 
-Updated: 2026-10-18T08:47:12Z. HEAD `7319f0d2c` + docs commit pending.
+Updated: 2026-10-18T09:14:40Z. HEAD after the attestation commit (see git log).
 
 ## Phase
 
@@ -66,8 +66,16 @@ The codex gate must re-run at the end: lint fixes and a resolver comment change 
   `artifacts/reports/spec-tracker.json`: generated churn from test and report runs, deliberately NOT committed.
 - Exec run evidence under `.specify/sprints/sprint-18/execution/PG-205/` (gitignored): force-add at attestation.
 
+## Since the third checkpoint
+
+- codex round 13 FAIL 2f19f195 (tag length 50 vs 60) → fixed TDD (`red-green/23-*`) `a6b5ad8d8`; round 14 PASS.
+- /exec-gates: gate logs `matop/gates/gate-*`; STOA Security PASS, Domain PASS, Quality WARN (re-check WARN),
+  Foundation FAIL (prettier) → `24a91a9f6` → PASS; aggregate WARN. /compliance-check → `matop/compliance-check.md`.
+- origin/main #907 merged (`583b12fa0`, CSV PG-205 row re-applied, spec-tracker taken from main).
+- Delivery report, /exec-attestation (verdict NEEDS_HUMAN: Lighthouse + runner-owned Gate 4b), /exec-metrics
+  session end, generate-context. Plan 118/118 ticked.
+
 ## Next action
 
-Commit docs → final codex round at the new HEAD → /exec-gates → STOA sub-agents (foundation, domain, security,
-quality) → /compliance-check → /exec-attestation → /exec-metrics → generate-context → merge origin/main if moved
-→ pre-ship (exclusive slot) → push → PR → Aurora READY.
+Commit the attestation → pre-ship ONCE through the exclusive slot → `git push -u origin feat/pg-205-contact-types`
+→ ifc-pr-create.sh → SendMessage Aurora READY → final report via generate-final-report.mjs.

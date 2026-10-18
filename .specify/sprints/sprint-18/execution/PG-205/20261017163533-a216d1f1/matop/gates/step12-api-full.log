@@ -1,0 +1,20 @@
+2026-10-17T17:17:05Z
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: pnpm --filter ./apps/api test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/api@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\api
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/api
+
+(node:49456) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  307 passed (307)
+      Tests  7791 passed | 18 skipped (7809)
+   Start at  18:17:06
+   Duration  108.27s (transform 10.01s, setup 67.62s, import 208.53s, tests 83.97s, environment 32ms)
+
+# exit: 0

@@ -1,0 +1,25 @@
+# 2026-10-18T08:57:17Z HEAD a6b5ad8d8 node tools/scripts/exec-preflight/check-worktree-landed.mjs PG-205 18
+[gate-4b] Checking worktree-landed state for PG-205 (sprint 18)
+BLOCK: [gate-4b] Uncommitted edits present. Commit your work first. See docs/runbooks/gate-4b-recovery.md
+BLOCK: [gate-4b] Branch feat/pg-205-contact-types does not match `agent/<TASK_ID>` pattern
+PASS: [gate-4b] Branch is 12 commit(s) ahead of origin/main.
+BLOCK: [gate-4b] Branch not yet pushed. Run: `git push -u origin feat/pg-205-contact-types --force-with-lease`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  BLOCK: Gate 4b — Worktree Landed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Task: PG-205  Sprint: 18
+
+  One or more checks above failed. The worktree work has NOT landed
+  on the remote branch yet. Marking the task COMPLETE at this stage
+  would stamp a verdict against state that can be silently lost.
+
+  IFC-227, IFC-031, PG-053, and PG-054 were all stamped COMPLETE
+  against worktree-only state. Three of them were permanently lost.
+
+  Recovery steps and waiver procedure: docs/runbooks/gate-4b-recovery.md
+
+  Source: .claude/skills/exec/references/phase4-completion-gates.md Gate 4b
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# exit: 1

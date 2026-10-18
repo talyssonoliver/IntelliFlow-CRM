@@ -1,0 +1,249 @@
+{
+  "stoa": "Foundation",
+  "task_id": "PG-205",
+  "run_id": "20261017163533-a216d1f1",
+  "verdict": "PASS",
+  "produced_by": "stoa-foundation sub-agent (re-check)",
+  "produced_at": "2026-10-18T09:07:59Z",
+  "head": "24a91a9f6f360a5db6ce588ad7b2f2983ed68c51",
+  "initial_verdict": {
+    "stoa": "Foundation",
+    "task_id": "PG-205",
+    "run_id": "20261017163533-a216d1f1",
+    "verdict": "FAIL",
+    "produced_by": "stoa-foundation sub-agent",
+    "produced_at": "2026-10-18T09:04:52Z",
+    "head": "3ae41b2dfe79773cb7c6f0f4600044901ba5cc0f",
+    "gates": [
+      {
+        "gate": "typecheck (7 packages)",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-typecheck-*.log (HEAD 7045bbfb1, exit 0 x7) + .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-posthead-recheck.log (HEAD 3ae41b2df: application, validators, api, web exit 0)",
+        "notes": "Original logs predate 75bec9439/7319f0d2c/a6b5ad8d8 for application/api/web. I re-ran those 4 at HEAD (wrapped in with-slot, Node 22). domain/db/adapters not re-run post-run, but no source changes to them after 7045bbfb1 (git diff verified)."
+      },
+      {
+        "gate": "build packages + web",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-packages.log, .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-web.log",
+        "notes": "Both exit 0 at HEAD 7319f0d2c. Only later source change is a6b5ad8d8 (validators tag-length); covered by red-green 23 (validators 2743 pass, api contact 398 pass, web contacts 521 pass, typecheck validators/api/web) and my HEAD typecheck. Build not re-run at final HEAD; judged adequate (type-level and test-level change only, no new imports)."
+      },
+      {
+        "gate": "lint (per-package eslint)",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-lint-*.log; .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-posthead-recheck.log",
+        "notes": "7 package lints exit 0 at 7045bbfb1+wt. eslint --max-warnings=0 on the 17 TS/TSX files changed since then: exit 0 at HEAD. Repo-wide 'eslint .' not run (package-scoped used). sonar-guard-branch exit 0."
+      },
+      {
+        "gate": "format:check (changed files vs origin/main)",
+        "result": "FAIL",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-posthead-recheck.log (code files OK); prettier --check on 89 changed ts/tsx/md/yaml/json files run inline",
+        "notes": "prettier --check exits 1 at HEAD 3ae41b2df: apps/web/src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx has code style issues. Introduced by 7319f0d2c (a11y fixes touched this test). Tier 1 formatting is non-waivable. Fix: prettier --write that one file. I did not edit tests per instructions."
+      },
+      {
+        "gate": "dependency architecture (depcruise)",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-depcruise.log",
+        "notes": "0 errors, 242 warnings (1337 violations total, pre-existing class). First run OOM'd at default heap (exit 134); re-run with NODE_OPTIONS=--max-old-space-size=8192 exit 0."
+      },
+      {
+        "gate": "artifact paths lint",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-artifact-paths.log",
+        "notes": "exit 0 (105 warnings, not attributed to PG-205)."
+      },
+      {
+        "gate": "new dependencies / lockfile",
+        "result": "PASS",
+        "evidence_log": "git diff origin/main...HEAD -- '*package.json' pnpm-lock.yaml",
+        "notes": "No package.json or lockfile changes. No Docker/compose/.github changes. Only non-code infra-adjacent files: artifacts/metrics/debt-ledger.yaml and tools/audit/codex-review-waivers.yaml."
+      },
+      {
+        "gate": "migrations Class A",
+        "result": "PASS",
+        "evidence_log": "packages/db/prisma/migrations/20261017120000_contact_types, 20261017120100_contacts_type_idx; .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-prisma-validate.log",
+        "notes": "Read both: additive (new tables, FKs, CREATE INDEX CONCURRENTLY IF NOT EXISTS as sole statement); no DROP/TRUNCATE/DELETE/UPDATE/NOT NULL on existing data (only ON DELETE CASCADE FKs on new tables and DROP mentioned in comments). prisma validate exit 0 at a6b5ad8d8. Staging/SQL-review gates of Class A were not in my scope and not verified."
+      },
+      {
+        "gate": "secret-shaped strings in diff",
+        "result": "PASS",
+        "evidence_log": "git diff origin/main...HEAD (excluding json/lcov/lockfile)",
+        "notes": "Regex scan for postgres URLs, Bearer, ghp_, sk-, AKIA, ntn_, JWT, private-key blocks, neon.tech: no hits in added lines. JSON artifacts (lighthouse reports, coverage) excluded from scan."
+      },
+      {
+        "gate": "web build graph / server-only imports (L11)",
+        "result": "PASS",
+        "evidence_log": "grep over changed apps/web/src files",
+        "notes": "No imports of @intelliflow/db, adapters, application, server-only or @prisma in changed web files. Web imports @intelliflow/domain only for constants (CONTACT_STATUSES, CONTACT_TYPE_LIMITS...), same pattern already on origin/main (150 domain imports in web)."
+      },
+      {
+        "gate": "plan deliverables exist at planned paths",
+        "result": "PASS",
+        "evidence_log": "plan lines 83-160",
+        "notes": "All 84 path-like tokens in the Create/Modify sections exist on disk except 2 placeholders (<run>/, red-green/NN-*.red.log). I did not recount the stated totals (38/44) exactly."
+      },
+      {
+        "gate": "preflight check-worktree-landed (gate 4b)",
+        "result": "FAIL",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-check-worktree-landed.log",
+        "notes": "exit 1 at a6b5ad8d8: uncommitted edits, branch name not agent/<TASK_ID>, not pushed. Outside Foundation's gate list but unresolved; the tracked artifacts/ modifications in git status remain uncommitted."
+      }
+    ],
+    "findings": [
+      {
+        "severity": "blocking",
+        "id": "F1",
+        "text": "Prettier check fails on apps/web/src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx (introduced by 7319f0d2c; no later format check exists in the logs). Run prettier --write on that file, commit, re-verify."
+      },
+      {
+        "severity": "medium",
+        "id": "F2",
+        "text": "Post-run re-verification only partial: 75bec9439, 7319f0d2c and a6b5ad8d8 changed api/application/web/validators sources after the step19 typecheck/lint logs (HEAD 7045bbfb1). red-green 22/23 cover tests; I filled the typecheck and changed-file lint gap at HEAD. Final-HEAD web/packages build was not re-run (build logs at 7319f0d2c)."
+      },
+      {
+        "severity": "low",
+        "id": "F3",
+        "text": "gate-check-worktree-landed exits 1 (unpushed/uncommitted/branch naming); resolve at push time. Dirty tracked artifacts (coverage, spec-tracker, plan-lint-report, IFC-310-merge.json) are unrelated churn and should not be committed with PG-205."
+      },
+      {
+        "severity": "low",
+        "id": "F4",
+        "text": "Repo-wide 'eslint .' and 'pnpm run format:check' were not run; package-scoped lint and changed-file prettier were used. depcruise needs a larger heap on this host."
+      }
+    ],
+    "summary": "FAIL on one non-waivable Tier 1 item: prettier fails on ContactTypesContent.test.tsx at HEAD. Everything else I checked passes: typecheck (7 packages, 4 re-run at HEAD), builds at 7319f0d2c, lint, depcruise 0 errors, artifact paths, no dependency/lockfile/Docker changes, Class A migrations, no secret-shaped strings, no server-only imports in web, plan paths exist. Fix the one file and re-run prettier --check to flip to PASS."
+  },
+  "recheck": {
+    "scope": "Re-check of the single blocking item F1 (prettier) at HEAD 24a91a9f6, plus regression check of commits 3ae41b2df..24a91a9f6.",
+    "node": "v22.14.0 first on PATH",
+    "commands": [
+      {
+        "cmd": "git diff --name-only origin/main...HEAD | grep ts/tsx/md/json/yaml/yml/mjs | grep -v ^artifacts/ | xargs -0 npx prettier --check (89 files, paths NUL-separated)",
+        "exit_code": 0,
+        "result": "All matched files use Prettier code style!",
+        "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-recheck-prettier.log"
+      },
+      {
+        "cmd": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-stoa -- pnpm --filter @intelliflow/web typecheck (next typegen && tsc --noEmit)",
+        "exit_code": 0,
+        "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-recheck-typecheck.log"
+      },
+      {
+        "cmd": "(cwd apps/web) node with-slot.mjs --label PG-205-stoa -- pnpm exec eslint --max-warnings=0 on the 3 changed test files since 3ae41b2df",
+        "exit_code": 0,
+        "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-recheck-eslint.log"
+      }
+    ],
+    "files_changed_since_initial": [
+      "apps/web/src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx",
+      "apps/web/src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx",
+      "apps/web/src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx",
+      "docs/architecture/adr/ADR-080-tenant-contact-types.md"
+    ],
+    "regression_review": "git diff --stat 3ae41b2df..HEAD: 4 files, 60 insertions, 4 deletions; 3 test files (additive) and ADR-080 (docs). No source, package.json, lockfile, migration, Docker or import changes, so build, depcruise, artifact-paths, dependency, migration, web-build-graph and plan-path results from the initial run are unaffected. Secret-shaped-string scan and the build gate were not re-run.",
+    "gate_updates": {
+      "format:check (changed files vs origin/main)": "PASS (F1 resolved)"
+    },
+    "caveats": [
+      "gate-check-worktree-landed (F3, low) not re-run; still expected to be unresolved until push.",
+      "Tracked artifacts/ churn and docs/compliance-and-governance/compliance/vpat-2.5.md are modified in the working tree but are not part of the branch diff and were not checked; do not commit them with PG-205.",
+      "Repo-wide eslint . and pnpm run format:check not run; changed-file scope used, as in the initial run."
+    ]
+  },
+  "gates": [
+    {
+      "gate": "typecheck (7 packages)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-typecheck-*.log (HEAD 7045bbfb1, exit 0 x7) + .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-posthead-recheck.log (HEAD 3ae41b2df: application, validators, api, web exit 0)",
+      "notes": "Original logs predate 75bec9439/7319f0d2c/a6b5ad8d8 for application/api/web. I re-ran those 4 at HEAD (wrapped in with-slot, Node 22). domain/db/adapters not re-run post-run, but no source changes to them after 7045bbfb1 (git diff verified)."
+    },
+    {
+      "gate": "build packages + web",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-packages.log, .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-web.log",
+      "notes": "Both exit 0 at HEAD 7319f0d2c. Only later source change is a6b5ad8d8 (validators tag-length); covered by red-green 23 (validators 2743 pass, api contact 398 pass, web contacts 521 pass, typecheck validators/api/web) and my HEAD typecheck. Build not re-run at final HEAD; judged adequate (type-level and test-level change only, no new imports)."
+    },
+    {
+      "gate": "lint (per-package eslint)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-lint-*.log; .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-posthead-recheck.log",
+      "notes": "7 package lints exit 0 at 7045bbfb1+wt. eslint --max-warnings=0 on the 17 TS/TSX files changed since then: exit 0 at HEAD. Repo-wide 'eslint .' not run (package-scoped used). sonar-guard-branch exit 0."
+    },
+    {
+      "gate": "format:check (changed files vs origin/main)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-recheck-prettier.log",
+      "notes": "Re-checked at 24a91a9f6: prettier --check exit 0 on 89 changed files (excl. artifacts/). Initially FAIL at 3ae41b2df; fixed by 24a91a9f6."
+    },
+    {
+      "gate": "dependency architecture (depcruise)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-depcruise.log",
+      "notes": "0 errors, 242 warnings (1337 violations total, pre-existing class). First run OOM'd at default heap (exit 134); re-run with NODE_OPTIONS=--max-old-space-size=8192 exit 0."
+    },
+    {
+      "gate": "artifact paths lint",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-foundation-artifact-paths.log",
+      "notes": "exit 0 (105 warnings, not attributed to PG-205)."
+    },
+    {
+      "gate": "new dependencies / lockfile",
+      "result": "PASS",
+      "evidence_log": "git diff origin/main...HEAD -- '*package.json' pnpm-lock.yaml",
+      "notes": "No package.json or lockfile changes. No Docker/compose/.github changes. Only non-code infra-adjacent files: artifacts/metrics/debt-ledger.yaml and tools/audit/codex-review-waivers.yaml."
+    },
+    {
+      "gate": "migrations Class A",
+      "result": "PASS",
+      "evidence_log": "packages/db/prisma/migrations/20261017120000_contact_types, 20261017120100_contacts_type_idx; .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-prisma-validate.log",
+      "notes": "Read both: additive (new tables, FKs, CREATE INDEX CONCURRENTLY IF NOT EXISTS as sole statement); no DROP/TRUNCATE/DELETE/UPDATE/NOT NULL on existing data (only ON DELETE CASCADE FKs on new tables and DROP mentioned in comments). prisma validate exit 0 at a6b5ad8d8. Staging/SQL-review gates of Class A were not in my scope and not verified."
+    },
+    {
+      "gate": "secret-shaped strings in diff",
+      "result": "PASS",
+      "evidence_log": "git diff origin/main...HEAD (excluding json/lcov/lockfile)",
+      "notes": "Regex scan for postgres URLs, Bearer, ghp_, sk-, AKIA, ntn_, JWT, private-key blocks, neon.tech: no hits in added lines. JSON artifacts (lighthouse reports, coverage) excluded from scan."
+    },
+    {
+      "gate": "web build graph / server-only imports (L11)",
+      "result": "PASS",
+      "evidence_log": "grep over changed apps/web/src files",
+      "notes": "No imports of @intelliflow/db, adapters, application, server-only or @prisma in changed web files. Web imports @intelliflow/domain only for constants (CONTACT_STATUSES, CONTACT_TYPE_LIMITS...), same pattern already on origin/main (150 domain imports in web)."
+    },
+    {
+      "gate": "plan deliverables exist at planned paths",
+      "result": "PASS",
+      "evidence_log": "plan lines 83-160",
+      "notes": "All 84 path-like tokens in the Create/Modify sections exist on disk except 2 placeholders (<run>/, red-green/NN-*.red.log). I did not recount the stated totals (38/44) exactly."
+    },
+    {
+      "gate": "preflight check-worktree-landed (gate 4b)",
+      "result": "FAIL",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-check-worktree-landed.log",
+      "notes": "exit 1 at a6b5ad8d8: uncommitted edits, branch name not agent/<TASK_ID>, not pushed. Outside Foundation's gate list but unresolved; the tracked artifacts/ modifications in git status remain uncommitted."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "resolved",
+      "id": "F1",
+      "text": "Prettier check fails on apps/web/src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx (introduced by 7319f0d2c; no later format check exists in the logs). Run prettier --write on that file, commit, re-verify. RESOLVED at 24a91a9f6: prettier --check exit 0."
+    },
+    {
+      "severity": "medium",
+      "id": "F2",
+      "text": "Post-run re-verification only partial: 75bec9439, 7319f0d2c and a6b5ad8d8 changed api/application/web/validators sources after the step19 typecheck/lint logs (HEAD 7045bbfb1). red-green 22/23 cover tests; I filled the typecheck and changed-file lint gap at HEAD. Final-HEAD web/packages build was not re-run (build logs at 7319f0d2c)."
+    },
+    {
+      "severity": "low",
+      "id": "F3",
+      "text": "gate-check-worktree-landed exits 1 (unpushed/uncommitted/branch naming); resolve at push time. Dirty tracked artifacts (coverage, spec-tracker, plan-lint-report, IFC-310-merge.json) are unrelated churn and should not be committed with PG-205."
+    },
+    {
+      "severity": "low",
+      "id": "F4",
+      "text": "Repo-wide 'eslint .' and 'pnpm run format:check' were not run; package-scoped lint and changed-file prettier were used. depcruise needs a larger heap on this host."
+    }
+  ],
+  "summary": "PASS on re-check at 24a91a9f6. The sole blocking item (prettier on ContactTypesContent.test.tsx) is fixed: prettier --check exits 0 on all 89 changed files. Web typecheck and eslint --max-warnings=0 on the 3 changed test files exit 0. The commits since 3ae41b2df are test additions and an ADR edit only; no other Foundation gate is affected. Unresolved low items: F3 (worktree-landed, push-time) and F4 (scope)."
+}

@@ -650,10 +650,13 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `.specify/sprints/sprint-18/attestations/PG-205/attestation.json`
 - `.specify/sprints/sprint-18/attestations/PG-205/task-tracking.json`
 
-- [ ] `/exec-attestation` (every gate PASS or NEEDS_HUMAN with reason); `/exec-metrics` session end;
-      `npx tsx apps/project-tracker/scripts/generate-context.ts`.
-- [ ] L13 present in: the attestation (`notes` / migration entry), the PR body (loud section), the Aurora READY
-      message, and ADR-080 (Step 22).
+- [x] `/exec-attestation` (every gate PASS or NEEDS_HUMAN with reason); `/exec-metrics` session end;
+      `npx tsx apps/project-tracker/scripts/generate-context.ts`. *(2026-10-18: Skill exec-attestation → verdict NEEDS_HUMAN (Lighthouse + runner-owned
+      Gate 4b, disclosed in `notes`); Skill exec-metrics → task-tracking.json session end 09:13:26Z; generate-context
+      exit 0 (`matop/gates/step24-generate-context.log`))*
+- [x] L13 present in: the attestation (`notes` / migration entry), the PR body (loud section), the Aurora READY
+      message, and ADR-080 (Step 22). *(attestation `notes` first line, ADR-080 "Deploy order (L13)", delivery report;
+      the PR body and Aurora READY carry the same section at ship)*
 
 ## Validation Matrix
 

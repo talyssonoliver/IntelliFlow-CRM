@@ -1,0 +1,18 @@
+# 2026-10-17T21:42:11Z HEAD e929eb220 pnpm --filter @intelliflow/validators test
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: pnpm --filter @intelliflow/validators test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/validators@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\validators
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/packages/validators
+
+
+ Test Files  58 passed (58)
+      Tests  2741 passed (2741)
+   Start at  22:42:12
+   Duration  5.58s (transform 1.83s, setup 0ms, import 8.25s, tests 1.08s, environment 5ms)
+
+# exit: 0

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-17T14:36:08.524Z",
+  "generated_at": "2026-10-18T09:13:34.523Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 527,
@@ -272,12 +272,6 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-203 when ready for implementation."
-    },
-    {
-      "task_id": "PG-205",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-205 when ready for implementation."
     },
     {
       "task_id": "PG-206",
@@ -8631,12 +8625,12 @@
       "task_id": "PG-205",
       "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-205-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",

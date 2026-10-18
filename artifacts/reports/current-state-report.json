@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T14:35:58.201Z",
+  "generatedAt": "2026-10-18T09:13:34.527Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -547,10 +547,10 @@
     "totalNumberedSprintTasks": 613,
     "continuousTaskCount": 6,
     "completedTasks": 436,
-    "backlogTasks": 166,
+    "backlogTasks": 165,
     "blockedTasks": 0,
     "completionPercentage": 70.44,
-    "inProgressTasks": 17,
+    "inProgressTasks": 18,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -668,7 +668,7 @@
       },
       {
         "taskId": "PG-205",
-        "status": "Backlog",
+        "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json"
       },
@@ -1107,39 +1107,6 @@
         }
       },
       {
-        "taskId": "PG-205",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
-        "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
-        "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /contacts/(list)/contact-types renders; Taxonomy:...",
-        "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Route /contacts/(list)/contact-types renders; Taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
-        "dependencies": [
-          "PG-178",
-          "PG-182"
-        ],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json",
-          "verdict": "INCOMPLETE",
-          "timestamp": "2026-07-25T17:18:29Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "PG-206",
         "sprint": 18,
         "status": "Backlog",
@@ -1222,6 +1189,39 @@
         "attestation": {
           "exists": true,
           "path": ".specify/sprints/sprint-18/attestations/PG-208/attestation.json",
+          "verdict": "INCOMPLETE",
+          "timestamp": "2026-07-25T17:18:29Z",
+          "sprintFolder": 18
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-209",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Task Types (/tasks/(list)/task-types)",
+        "description": "Module Settings - Task Types (/tasks/(list)/task-types)",
+        "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /tasks/(list)/task-types renders; Taxonomy: category, default duration, default priority, reminder defaults implemented; PageHeader+bento grid;...",
+        "definitionOfDone": "Task types at /tasks/(list)/task-types (taxonomy: category, default duration, default priority, reminder defaults). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Route /tasks/(list)/task-types renders; Taxonomy: category, default duration, default priority, reminder defaults implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names;...",
+        "dependencies": [
+          "PG-178",
+          "PG-191"
+        ],
+        "attestation": {
+          "exists": true,
+          "path": ".specify/sprints/sprint-18/attestations/PG-209/attestation.json",
           "verdict": "INCOMPLETE",
           "timestamp": "2026-07-25T17:18:29Z",
           "sprintFolder": 18
@@ -18081,9 +18081,9 @@
       "summarySource": "specify",
       "totalTasks": 67,
       "completedTasks": 57,
-      "backlogTasks": 9,
+      "backlogTasks": 8,
       "blockedTasks": 0,
-      "inProgressTasks": 1,
+      "inProgressTasks": 2,
       "attestedCompletedTasks": 57,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
@@ -18254,6 +18254,39 @@
       ],
       "openTasks": [
         {
+          "taskId": "PG-205",
+          "sprint": 18,
+          "status": "In Progress",
+          "section": "Settings",
+          "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+          "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+          "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /contacts/(list)/contact-types renders; Taxonomy:...",
+          "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: tenant contact types seeded from the six existing CONTACT_TYPES per owner ruling 2026-10-17 - organisations are Accounts; required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Route /contacts/(list)/contact-types renders; Taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
+          "dependencies": [
+            "PG-178",
+            "PG-182"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json",
+            "verdict": "INCOMPLETE",
+            "timestamp": "2026-07-25T17:18:29Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
           "taskId": "INFRA-TF-004",
           "sprint": 18,
           "status": "In Progress",
@@ -18366,39 +18399,6 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/PG-202/attestation.json",
-            "verdict": "INCOMPLETE",
-            "timestamp": "2026-07-25T17:18:29Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-203",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Settings",
-          "title": "Module Settings - Event Types (/calendar/event-types)",
-          "description": "Module Settings - Event Types (/calendar/event-types)",
-          "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /calendar/event-types renders; Meeting type definitions:...",
-          "definitionOfDone": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate booking slugs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Route /calendar/event-types renders; Meeting type definitions: duration, color, default description, booking link slug, required form fields, location type implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
-          "dependencies": [
-            "PG-178",
-            "PG-189"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/PG-203/attestation.json",
             "verdict": "INCOMPLETE",
             "timestamp": "2026-07-25T17:18:29Z",
             "sprintFolder": 18
@@ -20254,12 +20254,12 @@
         {
           "taskId": "PG-205",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Settings",
           "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
           "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
           "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /contacts/(list)/contact-types renders; Taxonomy:...",
-          "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: tenant contact types seeded from the six existing CONTACT_TYPES per owner ruling 2026-10-17 - organisations are Accounts; required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
           "definitionOfDoneSnapshot": "Route /contacts/(list)/contact-types renders; Taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
           "dependencies": [
             "PG-178",
