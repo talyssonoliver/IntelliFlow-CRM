@@ -607,7 +607,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 
 - [x] `/code-review` on the diff; `/sonarqube-fix` for any new finding. *(Skill code-review: quick run `20261018-094054-f0c501fc`, 0 TS errors / 0 lint problems, `matop/code-review-summary.json` (Full mode not used: unslotted full-repo tests); Skill sonarqube-fix: branch-wide sonar-guard 62 files exit 0, 3 pre-commit findings fixed, duplication ≈2.0% < 3% — `matop/sonarqube-fix-report.md`)*
 - [x] a11y-expert (WCAG 2.1 AA) review sub-agent on the shipped UI + computed contrast review for the 18 tokens. *(a11y-expert sub-agent, PASS_WITH_FIXES; 18/18 badge pairs ≥ 6.78:1, outlines/rings ≥ 3.10:1; Medium #1/#2 + Lows #3/#4/#5/#6 fixed TDD in `7319f0d2c` (`red-green/22-*`); `matop/a11y-review.md`)*
-- [ ] `node scripts/codex-review.mjs` iterated until clean (fallback reviews block the same way; waivers only with evidence).
+- [x] `node scripts/codex-review.mjs` iterated until clean (fallback reviews block the same way; waivers only with evidence). *(rounds 01-09 prior lane; recovery lane rounds 10-14: a3d0b852, 068bafef, 0dc7d185, 2f19f195 fixed TDD (`red-green/20,21,23-*`); round 14 (2026-10-18T08:54:41Z) PASS, 0 unwaived; only waiver 0f290e25/148dd60f = owner ruling 8 — `gates/codex-review-1*.log`)*
 
 #### Step 21: Lighthouse (DoD 12)
 

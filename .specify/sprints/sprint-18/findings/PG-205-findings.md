@@ -64,6 +64,7 @@ lock, a refactor of the shared `ContactService` save path. The owner chose not t
 | a3d0b852 | Replacing a contact's account unlinked and linked in two saves, so a failed link left the contact unlinked | `Contact.replaceAccount` + `ContactService.replaceAccount`: target checked in the tenant, one save (`red-green/20-*`) |
 | 068bafef | Unlinking an account and clearing a type that requires it were two saves; a failure between them could leave the type without its account | `contact.update` orders the saves: link/replace before the other fields, unlink after them (`red-green/21-*`) |
 | 0dc7d185 | Navigating from `?segment=` to plain `/contacts` kept the segment filter | The list re-seeds the filters on any URL change except its own URL cleanup (`red-green/21-*`) |
+| 2f19f195 | Default tags merged at creation could be 51-60 characters (ContactTag limit 60) while contact tags allowed 50, so such a contact could not be edited | One limit `CONTACT_TAG_NAME_MAX_LENGTH` (60) for both (`red-green/23-*`) |
 
 The remaining non-atomicity (fields and account are still two `ContactService` saves) is ordered so that neither
 intermediate state breaks a type rule. A single save for both would need a combined `ContactService` operation,
