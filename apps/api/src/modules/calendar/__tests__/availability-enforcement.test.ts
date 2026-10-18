@@ -327,6 +327,39 @@ describe('availability-enforcement (PG-202)', () => {
       expect(uc.findFirstFreeCandidate).not.toHaveBeenCalled();
     });
 
+    it('keeps searching in batches until the horizon when the first batch has no free slot', async () => {
+      // 24 h every day, hourly slots: 2000 candidates cover ~83 days, well short of a 365-day horizon.
+      const allDay = {
+        ...rules,
+        weeklyRanges: weekdayRanges([[0, 1440]], [0, 1, 2, 3, 4, 5, 6]) as never,
+      };
+      const later = {
+        start: new Date('2026-09-01T10:00:00Z'),
+        end: new Date('2026-09-01T11:00:00Z'),
+      };
+      const uc = {
+        findFirstFreeCandidate: vi
+          .fn()
+          .mockResolvedValueOnce(Result.ok(null))
+          .mockResolvedValueOnce(Result.ok(later)),
+      };
+      const slot = await findNextSlotWithinAvailability(prismaMock, uc, {
+        tenantId: TENANT,
+        rules: allDay,
+        attendeeId: 'user-1',
+        startFrom: new Date('2026-04-13T00:00:00Z'),
+        durationMinutes: 60,
+        maxDaysAhead: 365,
+        bufferMinutesBefore: 0,
+        bufferMinutesAfter: 0,
+      });
+      expect(uc.findFirstFreeCandidate).toHaveBeenCalledTimes(2);
+      const [first, second] = uc.findFirstFreeCandidate.mock.calls.map((c) => c[0].candidates);
+      expect(first).toHaveLength(2000);
+      expect(second[0].start.getTime()).toBeGreaterThan(first[first.length - 1].start.getTime());
+      expect(slot).toEqual({ startTime: later.start, endTime: later.end, durationMinutes: 60 });
+    });
+
     it('passes generated candidates to one conflict check and returns the procedure shape', async () => {
       const uc = useCase(
         Result.ok({

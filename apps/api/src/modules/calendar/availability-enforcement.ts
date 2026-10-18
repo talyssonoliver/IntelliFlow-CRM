@@ -202,40 +202,31 @@ export async function assertAppointmentWithinAvailability(
   }
 }
 
+interface NextSlotInput {
+  tenantId: string;
+  rules: AvailabilityRules;
+  attendeeId: string;
+  startFrom: Date;
+  durationMinutes: number;
+  maxDaysAhead: number;
+  bufferMinutesBefore: number;
+  bufferMinutesAfter: number;
+}
+
+const MS_PER_DAY = 86_400_000;
+
 /**
- * findNextSlot for a configured tenant: candidates come from the saved hours and
- * closures, full days are dropped with one bounded read, and conflicts are
- * checked with one repository read (≤ 5 queries including the loader's 3).
+ * The first free candidate of one batch: days already at the cap are dropped
+ * with one bounded read, then conflicts are checked with one repository read.
  */
-export async function findNextSlotWithinAvailability(
+async function firstFreeInBatch(
   prisma: AvailabilityPrisma,
   useCase: Pick<CheckConflictsUseCase, 'findFirstFreeCandidate'>,
-  input: {
-    tenantId: string;
-    rules: AvailabilityRules;
-    attendeeId: string;
-    startFrom: Date;
-    durationMinutes: number;
-    maxDaysAhead: number;
-    bufferMinutesBefore: number;
-    bufferMinutesAfter: number;
-  }
-): Promise<{ startTime: Date; endTime: Date; durationMinutes: number } | null> {
+  input: NextSlotInput,
+  batch: Array<{ start: Date; end: Date }>
+): Promise<{ start: Date; end: Date } | null> {
   const { rules } = input;
-  // Same answer as create and reschedule, instead of silently finding no slot.
-  if (!isValidTimezone(rules.timezone)) {
-    throw new TRPCError({ code: 'PRECONDITION_FAILED', message: INVALID_TIMEZONE_MESSAGE });
-  }
-  const from = new Date(Math.max(input.startFrom.getTime(), Date.now()));
-  let candidates = generateCandidates({
-    rules,
-    from,
-    durationMinutes: input.durationMinutes,
-    maxDaysAhead: input.maxDaysAhead,
-    limit: AVAILABILITY_LIMITS.maxFindNextSlotCandidates,
-  });
-  if (candidates.length === 0) return null;
-
+  let candidates = batch;
   const cap = rules.maxDailyBookings;
   if (cap !== null) {
     const booked = await prisma.appointment.findMany({
@@ -268,8 +259,45 @@ export async function findNextSlotWithinAvailability(
     bufferMinutesAfter: input.bufferMinutesAfter,
   });
   if (result.isFailure) throw mapErrorToTRPCError(result.error);
-  const slot = result.value;
-  return slot
-    ? { startTime: slot.start, endTime: slot.end, durationMinutes: input.durationMinutes }
-    : null;
+  return result.value;
+}
+
+/**
+ * findNextSlot for a configured tenant: candidates come from the saved hours and
+ * closures, in batches of `maxFindNextSlotCandidates` so work per read stays
+ * bounded while the search still covers the whole requested horizon. Each batch
+ * costs at most two reads (cap and conflicts); a batch shorter than the limit is
+ * the last one.
+ */
+export async function findNextSlotWithinAvailability(
+  prisma: AvailabilityPrisma,
+  useCase: Pick<CheckConflictsUseCase, 'findFirstFreeCandidate'>,
+  input: NextSlotInput
+): Promise<{ startTime: Date; endTime: Date; durationMinutes: number } | null> {
+  const { rules } = input;
+  // Same answer as create and reschedule, instead of silently finding no slot.
+  if (!isValidTimezone(rules.timezone)) {
+    throw new TRPCError({ code: 'PRECONDITION_FAILED', message: INVALID_TIMEZONE_MESSAGE });
+  }
+  const limit = AVAILABILITY_LIMITS.maxFindNextSlotCandidates;
+  const firstFrom = Math.max(input.startFrom.getTime(), Date.now());
+  const horizonEnd = firstFrom + input.maxDaysAhead * MS_PER_DAY;
+  let from = firstFrom;
+  while (from < horizonEnd) {
+    const batch = generateCandidates({
+      rules,
+      from: new Date(from),
+      durationMinutes: input.durationMinutes,
+      maxDaysAhead: (horizonEnd - from) / MS_PER_DAY,
+      limit,
+    });
+    if (batch.length === 0) return null;
+    const slot = await firstFreeInBatch(prisma, useCase, input, batch);
+    if (slot) {
+      return { startTime: slot.start, endTime: slot.end, durationMinutes: input.durationMinutes };
+    }
+    if (batch.length < limit) return null;
+    from = batch[batch.length - 1].start.getTime() + 1;
+  }
+  return null;
 }

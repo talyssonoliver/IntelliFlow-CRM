@@ -45,6 +45,13 @@ describe('BuffersCapCard', () => {
     expect(onChange).toHaveBeenCalledWith({ bufferBefore: '' });
   });
 
+  it('reports a typed daily limit', () => {
+    render(<Harness initial={{ ...base, capEnabled: true, cap: '5' }} />);
+    const cap = screen.getByLabelText('Maximum bookings per day');
+    fireEvent.change(cap, { target: { value: '12' } });
+    expect(cap).toHaveValue(12);
+  });
+
   it('shows the cap input only when the limit switch is on', () => {
     render(<Harness />);
     expect(screen.queryByLabelText('Maximum bookings per day')).not.toBeInTheDocument();
