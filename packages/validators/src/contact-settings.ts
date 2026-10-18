@@ -99,8 +99,14 @@ export const TAG_COLOR_TOKENS = [
 export const tagColorTokenSchema = z.enum(TAG_COLOR_TOKENS);
 export type TagColorToken = z.infer<typeof tagColorTokenSchema>;
 
+/**
+ * Longest ContactTag name. Contact `tags` use the same limit (PG-205): contact types
+ * merge tag names into new contacts, so a valid tag must also be a valid contact tag.
+ */
+export const CONTACT_TAG_NAME_MAX_LENGTH = 60;
+
 export const createContactTagSchema = z.object({
-  name: z.string().min(1).max(60),
+  name: z.string().min(1).max(CONTACT_TAG_NAME_MAX_LENGTH),
   colorToken: tagColorTokenSchema.default('slate'),
   description: z.string().max(200).optional(),
   sortOrder: z.number().int().min(0).optional(),
@@ -109,7 +115,7 @@ export type CreateContactTagInput = z.infer<typeof createContactTagSchema>;
 
 export const updateContactTagSchema = z.object({
   id: z.string().min(1),
-  name: z.string().min(1).max(60).optional(),
+  name: z.string().min(1).max(CONTACT_TAG_NAME_MAX_LENGTH).optional(),
   colorToken: tagColorTokenSchema.optional(),
   description: z.string().max(200).optional(),
   sortOrder: z.number().int().min(0).optional(),

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { emailSchema, phoneSchema, idSchema, paginationSchema, nameSchema } from './common';
+import { CONTACT_TAG_NAME_MAX_LENGTH } from './contact-settings';
 import {
   CONTACT_TYPES,
   CONTACT_STATUSES,
@@ -61,7 +62,7 @@ const baseContactFieldsSchema = z.object({
   company: z.string().max(200).optional(),
   linkedInUrl: z.string().check(z.url()).max(500).optional().or(z.literal('')),
   contactType: contactTypeKeySchema.optional(),
-  tags: z.array(z.string().max(50)).max(20).optional(),
+  tags: z.array(z.string().max(CONTACT_TAG_NAME_MAX_LENGTH)).max(20).optional(),
   contactNotes: z.string().max(5000).optional(),
 });
 

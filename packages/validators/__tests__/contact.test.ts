@@ -14,6 +14,7 @@ import {
   contactResponseSchema,
   contactListResponseSchema,
 } from '../src/contact';
+import { createContactTagSchema, CONTACT_TAG_NAME_MAX_LENGTH } from '../src/contact-settings';
 
 describe('Contact Validators', () => {
   describe('createContactSchema', () => {
@@ -790,6 +791,29 @@ describe('Contact Validators', () => {
           contactType: null,
         }).success
       ).toBe(false);
+    });
+  });
+
+  describe('contact tags share the ContactTag name contract (PG-205, codex 2f19f195)', () => {
+    const base = { email: 'tags@example.com', firstName: 'Tag', lastName: 'Len' };
+    const longest = 'x'.repeat(CONTACT_TAG_NAME_MAX_LENGTH);
+
+    it('a tag as long as the longest ContactTag name is a valid contact tag', () => {
+      expect(CONTACT_TAG_NAME_MAX_LENGTH).toBe(60);
+      expect(createContactTagSchema.safeParse({ name: longest }).success).toBe(true);
+      expect(createContactSchema.safeParse({ ...base, tags: [longest] }).success).toBe(true);
+      expect(
+        updateContactSchema.safeParse({
+          id: '00000000-0000-4000-8000-000000000001',
+          tags: [longest],
+        }).success
+      ).toBe(true);
+    });
+
+    it('rejects a tag one character over in both places', () => {
+      const over = longest + 'x';
+      expect(createContactTagSchema.safeParse({ name: over }).success).toBe(false);
+      expect(createContactSchema.safeParse({ ...base, tags: [over] }).success).toBe(false);
     });
   });
 });
