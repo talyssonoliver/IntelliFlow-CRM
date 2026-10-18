@@ -46,7 +46,8 @@ export function BufferRemindersTab({
             aria-describedby="defaultReminderMinutes-help"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
               onSettingsChange({
-                defaultReminderMinutes: e.target.value === '' ? null : parseInt(e.target.value, 10),
+                defaultReminderMinutes:
+                  e.target.value === '' ? null : Number.parseInt(e.target.value, 10),
               })
             }
           />

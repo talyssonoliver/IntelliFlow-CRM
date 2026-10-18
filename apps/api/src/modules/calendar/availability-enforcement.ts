@@ -109,16 +109,15 @@ export async function loadTenantAvailability(
 
 // ── Legacy rule (moved verbatim from appointments.router.ts, PG-202) ────────
 
-function getLocalHour(date: Date, timezone?: string): number {
-  const tz = timezone ?? 'UTC';
+function getLocalHour(date: Date, timezone = 'UTC'): number {
   // Use en-GB to get 24-hour format reliably
   const hourStr = new Intl.DateTimeFormat('en-GB', {
     hour: '2-digit',
     hour12: false,
-    timeZone: tz,
+    timeZone: timezone,
   }).format(date);
   // en-GB can return "24" for midnight in some engines — normalise
-  const hour = parseInt(hourStr, 10);
+  const hour = Number.parseInt(hourStr, 10);
   return hour === 24 ? 0 : hour;
 }
 
@@ -132,7 +131,7 @@ function assertLegacyBusinessHours(startTime: Date, endTime: Date, timezone?: st
   const { startHour: open, endHour: close } = LEGACY_BOOKING_HOURS;
   const startWithinDay = startHour >= open && startHour < close;
   // End boundary: end hour == 19 is OK when minutes are 00 (meeting ends at 19:00 sharp)
-  const endMinutes = parseInt(
+  const endMinutes = Number.parseInt(
     new Intl.DateTimeFormat('en-GB', {
       minute: '2-digit',
       timeZone: timezone ?? 'UTC',

@@ -29,19 +29,17 @@ export const appointmentSettingsRouter = createTRPCRouter({
     });
   }),
 
-  update: tenantProcedure
-    .input(updateAppointmentSettingsSchema)
-    .mutation(async ({ ctx, input }) => {
-      const tenantId = ctx.tenant.tenantId;
-      return ctx.prismaWithTenant.appointmentSettings.upsert({
-        where: { tenantId },
-        create: { tenantId, ...DEFAULT_APPOINTMENT_SETTINGS, ...input },
-        update: input,
-        include: INCLUDE_PRIMARY_CALENDAR,
-      });
-    }),
+  update: tenantProcedure.input(updateAppointmentSettingsSchema).mutation(({ ctx, input }) => {
+    const tenantId = ctx.tenant.tenantId;
+    return ctx.prismaWithTenant.appointmentSettings.upsert({
+      where: { tenantId },
+      create: { tenantId, ...DEFAULT_APPOINTMENT_SETTINGS, ...input },
+      update: input,
+      include: INCLUDE_PRIMARY_CALENDAR,
+    });
+  }),
 
-  resetToDefaults: tenantProcedure.mutation(async ({ ctx }) => {
+  resetToDefaults: tenantProcedure.mutation(({ ctx }) => {
     const tenantId = ctx.tenant.tenantId;
     return ctx.prismaWithTenant.appointmentSettings.upsert({
       where: { tenantId },
