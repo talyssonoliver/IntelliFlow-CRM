@@ -1,5 +1,5 @@
-date: 2026-10-18T09:16:31Z
-head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
+date: 2026-10-18T11:41:30Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
 cmd: pnpm --dir apps/web exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/web --coverage.include='src/app/calendar/availability/**/*.{ts,tsx}' --coverage.include='src/app/calendar/calendar-settings/**/*.{ts,tsx}' --coverage.include=src/app/appointments/new/page.tsx --coverage.include=src/components/appointments/AppointmentForm.tsx --coverage.include=src/components/appointments/AppointmentDetail.tsx --coverage.include=src/components/settings/ModuleSettingsLayout.tsx --coverage.include=src/components/settings/TimezoneSelector.tsx src/app/calendar src/components/appointments/__tests__ src/app/appointments/new src/components/settings/__tests__/ModuleSettingsLayout.test.tsx src/components/settings/__tests__/TimezoneSelector.test.tsx
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
@@ -7,19 +7,19 @@ cmd: pnpm --dir apps/web exec vitest run --coverage.enabled --coverage.reporter=
 
 
  Test Files  25 passed (25)
-      Tests  312 passed (312)
-   Start at  10:16:33
-   Duration  18.75s (transform 3.01s, setup 8.47s, import 12.98s, tests 23.83s, environment 18.35s)
+      Tests  314 passed (314)
+   Start at  12:41:31
+   Duration  15.69s (transform 2.54s, setup 7.29s, import 11.26s, tests 20.58s, environment 15.85s)
 
  % Coverage report from istanbul
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   90.71 |    85.02 |   84.16 |   91.61 |                   
+All files          |   90.89 |    85.21 |   84.23 |   91.66 |                   
  ...pointments/new |   73.33 |    47.61 |   57.14 |   71.42 |                   
   page.tsx         |   73.33 |    47.61 |   57.14 |   71.42 | ...37,65-66,76,80 
- ...r/availability |   96.29 |    88.77 |   97.18 |   96.73 |                   
-  ...tyContent.tsx |   92.91 |       84 |   93.33 |   93.91 | 84-90,275         
+ ...r/availability |   96.71 |    89.41 |   97.22 |   96.78 |                   
+  ...tyContent.tsx |   93.89 |    85.71 |   93.54 |   94.11 | 89-95,299         
   ...lity-draft.ts |   99.25 |    91.96 |     100 |   99.18 | 240               
  ...ity/components |   99.26 |    88.23 |   98.07 |    99.2 |                   
   ClosuresList.tsx |   97.82 |    81.25 |   94.44 |   97.61 | 164               
@@ -37,9 +37,9 @@ All files          |   90.71 |    85.02 |   84.16 |   91.61 |
 -------------------|---------|----------|---------|---------|-------------------
 
 =============================== Coverage summary ===============================
-Statements   : 90.71% ( 694/765 )
-Branches     : 85.02% ( 562/661 )
-Functions    : 84.16% ( 218/259 )
-Lines        : 91.61% ( 634/692 )
+Statements   : 90.89% ( 699/769 )
+Branches     : 85.21% ( 565/663 )
+Functions    : 84.23% ( 219/260 )
+Lines        : 91.66% ( 638/696 )
 ================================================================================
 exit: 0

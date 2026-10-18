@@ -1,5 +1,5 @@
-date: 2026-10-18T09:04:07Z
-head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
+date: 2026-10-18T11:30:20Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
 cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/availability.test.ts tests/integration/rls-tenant-isolation.test.ts
 [test-slot] slot1 taken for PG-202@feat/pg-202-availability (holding group-intelliflow-db): pnpm exec vitest run --project integration tests/integration/availability.test.ts tests/integration/rls-tenant-isolation.test.ts
 
@@ -7,8 +7,8 @@ cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive
 
 
  Test Files  2 passed (2)
-      Tests  20 passed | 5 skipped (25)
-   Start at  10:04:08
-   Duration  2.81s (transform 724ms, setup 2.13s, import 986ms, tests 610ms, environment 0ms)
+      Tests  21 passed | 5 skipped (26)
+   Start at  12:30:22
+   Duration  2.32s (transform 669ms, setup 1.46s, import 897ms, tests 561ms, environment 0ms)
 
 exit: 0

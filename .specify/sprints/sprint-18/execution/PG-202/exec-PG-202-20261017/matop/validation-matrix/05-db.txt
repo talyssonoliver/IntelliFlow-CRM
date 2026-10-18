@@ -1,5 +1,5 @@
-date: 2026-10-18T09:01:25Z
-head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
+date: 2026-10-18T11:26:02Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
 cmd: pnpm --filter @intelliflow/db build && pnpm --filter @intelliflow/db typecheck
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
@@ -15,17 +15,17 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 [34mCJS[39m Build start
 [34mESM[39m Build start
 [32mESM[39m [1mdist\client.mjs         [22m[32m556.00 B[39m
-[32mESM[39m [1mdist\index.mjs          [22m[32m8.44 KB[39m
-[32mESM[39m [1mdist\seed-ids.mjs       [22m[32m29.85 KB[39m
 [32mESM[39m [1mdist\chunk-M6A45O7W.mjs [22m[32m16.30 KB[39m
-[32mESM[39m ⚡️ Build success in 29ms
-[32mCJS[39m [1mdist\client.js   [22m[32m15.41 KB[39m
-[32mCJS[39m [1mdist\seed-ids.js [22m[32m30.89 KB[39m
+[32mESM[39m [1mdist\seed-ids.mjs       [22m[32m29.85 KB[39m
+[32mESM[39m [1mdist\index.mjs          [22m[32m8.44 KB[39m
+[32mESM[39m ⚡️ Build success in 130ms
 [32mCJS[39m [1mdist\index.js    [22m[32m26.97 KB[39m
-[32mCJS[39m ⚡️ Build success in 29ms
+[32mCJS[39m [1mdist\seed-ids.js [22m[32m30.89 KB[39m
+[32mCJS[39m [1mdist\client.js   [22m[32m15.41 KB[39m
+[32mCJS[39m ⚡️ Build success in 154ms
 [prisma-esm] Patched 2 .mjs files with .js extensions
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 23381ms
+[32mDTS[39m ⚡️ Build success in 63309ms
 [32mDTS[39m [1mdist\index.d.ts     [22m[32m18.83 KB[39m
 [32mDTS[39m [1mdist\client.d.ts    [22m[32m3.59 KB[39m
 [32mDTS[39m [1mdist\seed-ids.d.ts  [22m[32m25.64 KB[39m

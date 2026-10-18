@@ -1,7 +1,7 @@
 # Delivery Report: PG-202
 
 **Run ID**: exec-PG-202-20261017
-**Date**: 2026-10-18T09:27:09Z (head `188323b41`)
+**Date**: 2026-10-18T11:44:36Z (head `72051d193`)
 **Task**: PG-202 - Module Settings - Availability (`/calendar/availability`)
 **Attestation verdict**: NEEDS_HUMAN (Lighthouse; Class A migration gates 4/7/10-prod)
 
@@ -17,17 +17,17 @@ ADR-081 and the owner ruling (Q1-Q7). The full narrative, behaviour changes and 
 | File | Lines | Purpose |
 |---|---|---|
 | `apps/api/src/modules/calendar/__tests__/availability-enforcement.test.ts` | +511 | test |
-| `apps/api/src/modules/calendar/__tests__/availability.router.test.ts` | +436 | test |
+| `apps/api/src/modules/calendar/__tests__/availability.router.test.ts` | +434 | test |
 | `apps/api/src/modules/calendar/__tests__/availability.test-utils.ts` | +112 | test |
 | `apps/api/src/modules/calendar/availability-enforcement.ts` | +303 | Loader, legacy rule, booking assertion, batched next-slot search |
 | `apps/api/src/modules/calendar/availability.router.ts` | +177 | calendar.availability get / update / resetToDefaults |
 | `apps/api/src/modules/legal/__tests__/appointments.availability-boundary.test.ts` | +33 | test |
-| `apps/api/src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts` | +176 | test |
+| `apps/api/src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts` | +178 | test |
 | `apps/api/src/modules/legal/appointment-settings.defaults.ts` | +30 | Shared settings defaults and reset fields |
-| `apps/web/src/app/calendar/availability/AvailabilityContent.tsx` | +342 | Availability page (draft, save, reset, conflict, read-only) |
+| `apps/web/src/app/calendar/availability/AvailabilityContent.tsx` | +366 | Availability page (draft, save, reset, conflict, read-only) |
 | `apps/web/src/app/calendar/availability/AvailabilityLoading.tsx` | +53 | Skeleton mirroring the bento |
-| `apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.actions.test.tsx` | +278 | test |
-| `apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.test.tsx` | +229 | test |
+| `apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.actions.test.tsx` | +298 | test |
+| `apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.test.tsx` | +246 | test |
 | `apps/web/src/app/calendar/availability/__tests__/AvailabilityLoading.test.tsx` | +25 | test |
 | `apps/web/src/app/calendar/availability/__tests__/availability-draft.test.ts` | +314 | test |
 | `apps/web/src/app/calendar/availability/__tests__/availability-fixtures.ts` | +45 | test |
@@ -50,7 +50,7 @@ ADR-081 and the owner ruling (Q1-Q7). The full narrative, behaviour changes and 
 | `packages/domain/src/legal/appointments/availability-roles.ts` | +14 | Admin/manager write roles |
 | `packages/validators/src/__tests__/availability.test.ts` | +286 | test |
 | `packages/validators/src/availability.ts` | +179 | Zod schemas and the AvailabilityDto |
-| `tests/integration/availability.test.ts` | +416 | test |
+| `tests/integration/availability.test.ts` | +433 | test |
 
 ### Files Modified (39)
 
@@ -60,10 +60,10 @@ ADR-081 and the owner ruling (Q1-Q7). The full narrative, behaviour changes and 
 | `apps/api/src/agent/__tests__/approved-action-executor.test.ts` | +37 / -0 | |
 | `apps/api/src/modules/calendar/calendar.router.ts` | +4 / -0 | |
 | `apps/api/src/modules/legal/__tests__/appointment-settings.router.test.ts` | +31 / -7 | |
-| `apps/api/src/modules/legal/__tests__/appointments.router.caller.test.ts` | +305 / -2 | |
+| `apps/api/src/modules/legal/__tests__/appointments.router.caller.test.ts` | +331 / -2 | |
 | `apps/api/src/modules/legal/__tests__/legal-module-entitlement.test.ts` | +14 / -0 | |
 | `apps/api/src/modules/legal/appointment-settings.router.ts` | +16 / -25 | |
-| `apps/api/src/modules/legal/appointments.router.ts` | +42 / -57 | |
+| `apps/api/src/modules/legal/appointments.router.ts` | +55 / -57 | |
 | `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` | +1 / -1 | |
 | `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv` | +1 / -1 | |
 | `apps/web/src/app/appointments/new/__tests__/page.onsuccess.test.tsx` | +23 / -1 | |
@@ -129,8 +129,8 @@ and found real tests for each. Definition-of-done items:
 | Application CheckConflicts.ts (new findFirstFreeCandidate lines) | > 90% | file: statements 91.8%, branches 70.0% (pre-existing legacy branches); the 25 changed lines are 100% covered (diff coverage) | yes |
 | Validators new files coverage (availability.ts, appointment-settings.ts) | > 90% | statements 100.0%, branches 97.36% | yes |
 | API new files coverage (availability.router, availability-enforcement, calendar.router, settings defaults) | > 90% | statements 97.4%, branches 92.59%, lines 99.29% | yes |
-| Web scoped coverage (apps/web thresholds: statements/lines/functions >= 90%, branches >= 80%) | stmts>=90 br>=80 fn>=90 lines>=90 | statements 90.71%, branches 85.02%, functions 84.16%, lines 91.61%. Every new web file is >= 93% functions; the scoped function average is pulled down by pre-existing untested handlers in touched files (AppointmentDetail 41%, appointments/new page 57%, CalendarIntegrationTab 75%, AppointmentForm 78%). Changed web lines are covered by the 96.2% diff coverage | no |
-| Diff coverage on changed lines (Sonar new_coverage mirror) | >= 80% | 96.2% (1131/1176) | yes |
+| Web scoped coverage (apps/web thresholds: statements/lines/functions >= 90%, branches >= 80%) | stmts>=90 br>=80 fn>=90 lines>=90 | statements 90.89%, branches 85.21%, functions 84.23%, lines 91.66%. Every new web file is >= 93% functions; the scoped function average is pulled down by pre-existing untested handlers in touched files (AppointmentDetail 41%, appointments/new page 57%, CalendarIntegrationTab 75%, AppointmentForm 78%). Changed web lines are covered by the 96.2% diff coverage | no |
+| Diff coverage on changed lines (Sonar new_coverage mirror) | >= 80% | 96.3% (1138/1182) | yes |
 | First-load JS vs /cases/case-types (NF-003) | no larger than the reference page | 871.0 KB vs 876.7 KB gzip | yes |
 | Lighthouse >= 90 on /calendar/availability (GATE:lighthouse-gte-90, AC-025) | >= 90 all categories | NEEDS_HUMAN: the Path A attempt measured the global error page (no Supabase URL compiled: perf 0.93, a11y 0.90, best-practices 0.93, SEO 0.66), so no score measures this page. An authenticated run needs a non-production Supabase (no LHCI_TEST_* credentials). Owner direction: automate without spending hosted free quota (gh #527) | no |
 
@@ -139,7 +139,7 @@ and found real tests for each. Definition-of-done items:
 | Name | Command | Exit | Detail |
 |---|---|---|---|
 | TypeScript | `pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/application typecheck && pnpm --filt` | 0 | tsc --noEmit for domain, application, validators, api, web (next typegen) and ui |
-| Tests | `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --dir apps/web exec vitest run` | 0 | web full suite: 12955 passed (12955) |
+| Tests | `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --dir apps/web exec vitest run` | 0 | web full suite: 12957 passed (12957) |
 | Lint | `pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/application lint && pnpm --filter @intell` | 0 | eslint for domain, application, validators, api, web + CI=1 sonar guard over the branch di |
 | Build | `pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/application build && pnpm --filter @inte` | 0 | domain, application, validators, db, api (tsup) and web (next build --webpack, /calendar/a |
 

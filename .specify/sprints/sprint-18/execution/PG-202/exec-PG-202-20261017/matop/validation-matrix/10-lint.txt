@@ -1,5 +1,5 @@
-date: 2026-10-18T09:12:33Z
-head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
+date: 2026-10-18T11:37:14Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
 cmd: pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/application lint && pnpm --filter @intelliflow/validators lint && pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint && CI=1 pnpm run lint:sonar:guard
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})

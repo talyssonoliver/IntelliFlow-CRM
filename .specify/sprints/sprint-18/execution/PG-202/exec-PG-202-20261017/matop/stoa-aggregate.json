@@ -1,55 +1,55 @@
 {
   "task_id": "PG-202",
   "run_id": "exec-PG-202-20261017",
-  "aggregated_at": "2026-10-18T09:24:00Z",
-  "method": "computed from the sub-agent verdict files; the final verdict per STOA is its re-check",
+  "aggregated_at": "2026-10-18T11:44:16Z",
+  "method": "computed from the sub-agent verdict files; each STOA final verdict is its latest file (final > recheck)",
   "stoas": {
     "Foundation": {
       "first": {
         "verdict": "WARN",
-        "head": "053c6874c9f4ae9d29bc6a7955013d0d4ce2df3e",
-        "produced_at": "2026-10-17T21:04:57Z"
+        "head": "053c6874c9f4ae9d29bc6a7955013d0d4ce2df3e"
       },
       "final": {
         "verdict": "PASS",
-        "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
-        "produced_at": "2026-10-18T09:17:17Z"
+        "head": "72051d1931b0e4830b573349395eba1a4ca3c405",
+        "produced_at": "2026-10-18T11:42:39Z",
+        "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Foundation.final.json"
       }
     },
     "Domain": {
       "first": {
         "verdict": "PASS",
-        "head": "f3115da9b6c619c88ef7dd7cb91bb365215ffb94",
-        "produced_at": "2026-10-17T21:09:30Z"
+        "head": "f3115da9b6c619c88ef7dd7cb91bb365215ffb94"
       },
       "final": {
         "verdict": "PASS",
         "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
-        "produced_at": "2026-10-18T09:10:00Z"
+        "produced_at": "2026-10-18T09:01:53Z",
+        "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Domain.recheck.json"
       }
     },
     "Security": {
       "first": {
         "verdict": "PASS",
-        "head": "053c6874c9f4ae9d29bc6a7955013d0d4ce2df3e",
-        "produced_at": "2026-10-17T21:06:00Z"
+        "head": "053c6874c9f4ae9d29bc6a7955013d0d4ce2df3e"
       },
       "final": {
         "verdict": "PASS",
-        "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
-        "produced_at": "2026-10-18T09:01:56Z"
+        "head": "72051d1931b0e4830b573349395eba1a4ca3c405",
+        "produced_at": "2026-10-18T11:43:52Z",
+        "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Security.final.json"
       }
     },
     "Quality": {
       "first": {
         "verdict": "WARN",
-        "head": "f3115da9b6c619c88ef7dd7cb91bb365215ffb94",
-        "produced_at": "2026-10-17T21:08:03Z"
+        "head": "f3115da9b6c619c88ef7dd7cb91bb365215ffb94"
       },
       "final": {
         "verdict": "PASS",
-        "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
-        "produced_at": "2026-10-18T09:17:22Z"
+        "head": "72051d1931b0e4830b573349395eba1a4ca3c405",
+        "produced_at": "2026-10-18T11:42:48Z",
+        "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Quality.final.json"
       }
     }
   },

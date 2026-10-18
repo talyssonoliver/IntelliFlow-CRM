@@ -1,5 +1,5 @@
-date: 2026-10-18T09:13:20Z
-head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
+date: 2026-10-18T11:37:58Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
 cmd: pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/application build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/db build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/api build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/web build
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
@@ -17,12 +17,12 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 [34mESM[39m Build start
 [32mCJS[39m [1mdist\index.js     [22m[32m504.11 KB[39m
 [32mCJS[39m [1mdist\index.js.map [22m[32m981.25 KB[39m
-[32mCJS[39m ⚡️ Build success in 85ms
+[32mCJS[39m ⚡️ Build success in 82ms
 [32mESM[39m [1mdist\index.mjs     [22m[32m470.09 KB[39m
 [32mESM[39m [1mdist\index.mjs.map [22m[32m972.49 KB[39m
-[32mESM[39m ⚡️ Build success in 85ms
+[32mESM[39m ⚡️ Build success in 83ms
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 2426ms
+[32mDTS[39m ⚡️ Build success in 2345ms
 [32mDTS[39m [1mdist\index.d.ts  [22m[32m377.84 KB[39m
 [32mDTS[39m [1mdist\index.d.mts [22m[32m377.84 KB[39m
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
@@ -35,22 +35,22 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 [34mCLI[39m Using tsconfig: tsconfig.json
 [34mCLI[39m tsup v8.5.1
 [34mTSC[39m Build start
-[32mTSC[39m ⚡️ Build success in 1796ms
+[32mTSC[39m ⚡️ Build success in 1520ms
 [34mDTS[39m Build start
+[34mCLI[39m Target: es2022
+[34mCJS[39m Build start
+[34mESM[39m Build start
 Analysis will use the bundled TypeScript version 5.8.2
 *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
 [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\application\dist\_tsup-dts-rollup.d.ts[39m
 Analysis will use the bundled TypeScript version 5.8.2
 *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
 [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\application\dist\_tsup-dts-rollup.d.mts[39m
-[32mDTS[39m ⚡️ Build success in 3142ms
-[34mCLI[39m Target: es2022
-[34mCJS[39m Build start
-[34mESM[39m Build start
-[32mCJS[39m [1mdist\index.js [22m[32m336.84 KB[39m
-[32mCJS[39m ⚡️ Build success in 56ms
+[32mDTS[39m ⚡️ Build success in 3323ms
 [32mESM[39m [1mdist\index.mjs [22m[32m321.29 KB[39m
-[32mESM[39m ⚡️ Build success in 56ms
+[32mESM[39m ⚡️ Build success in 3358ms
+[32mCJS[39m [1mdist\index.js [22m[32m336.84 KB[39m
+[32mCJS[39m ⚡️ Build success in 3360ms
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 
@@ -63,51 +63,51 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 [34mCLI[39m Target: es2022
 [34mCJS[39m Build start
 [34mESM[39m Build start
-[32mCJS[39m [1mdist\account.js          [22m[32m41.17 KB[39m
-[32mCJS[39m [1mdist\case.js             [22m[32m12.71 KB[39m
 [32mCJS[39m [1mdist\base-schemas.js     [22m[32m6.38 KB[39m
 [32mCJS[39m [1mdist\ai-review.js        [22m[32m11.79 KB[39m
-[32mCJS[39m [1mdist\contact.js          [22m[32m15.94 KB[39m
-[32mCJS[39m [1mdist\help-article.js     [22m[32m4.20 KB[39m
+[32mCJS[39m [1mdist\case.js             [22m[32m12.71 KB[39m
+[32mCJS[39m [1mdist\account.js          [22m[32m41.17 KB[39m
 [32mCJS[39m [1mdist\common.js           [22m[32m6.04 KB[39m
-[32mCJS[39m [1mdist\index.js            [22m[32m316.14 KB[39m
-[32mCJS[39m [1mdist\opportunity.js      [22m[32m12.86 KB[39m
+[32mCJS[39m [1mdist\help-article.js     [22m[32m4.20 KB[39m
+[32mCJS[39m [1mdist\contact.js          [22m[32m15.94 KB[39m
 [32mCJS[39m [1mdist\lead.js             [22m[32m15.48 KB[39m
 [32mCJS[39m [1mdist\required-url.js     [22m[32m1.66 KB[39m
+[32mCJS[39m [1mdist\index.js            [22m[32m316.14 KB[39m
 [32mCJS[39m [1mdist\task.js             [22m[32m9.51 KB[39m
-[32mCJS[39m [1mdist\terms-acceptance.js [22m[32m1.92 KB[39m
 [32mCJS[39m [1mdist\ticket.js           [22m[32m9.01 KB[39m
-[32mCJS[39m ⚡️ Build success in 86ms
-[32mESM[39m [1mdist\task.mjs             [22m[32m739.00 B[39m
+[32mCJS[39m [1mdist\opportunity.js      [22m[32m12.86 KB[39m
+[32mCJS[39m [1mdist\terms-acceptance.js [22m[32m1.92 KB[39m
+[32mCJS[39m ⚡️ Build success in 67ms
 [32mESM[39m [1mdist\lead.mjs             [22m[32m889.00 B[39m
 [32mESM[39m [1mdist\opportunity.mjs      [22m[32m1.24 KB[39m
 [32mESM[39m [1mdist\required-url.mjs     [22m[32m126.00 B[39m
-[32mESM[39m [1mdist\ticket.mjs           [22m[32m725.00 B[39m
+[32mESM[39m [1mdist\task.mjs             [22m[32m739.00 B[39m
 [32mESM[39m [1mdist\terms-acceptance.mjs [22m[32m270.00 B[39m
-[32mESM[39m [1mdist\ai-review.mjs        [22m[32m915.00 B[39m
-[32mESM[39m [1mdist\account.mjs          [22m[32m2.47 KB[39m
+[32mESM[39m [1mdist\ticket.mjs           [22m[32m725.00 B[39m
 [32mESM[39m [1mdist\base-schemas.mjs     [22m[32m359.00 B[39m
+[32mESM[39m [1mdist\account.mjs          [22m[32m2.47 KB[39m
+[32mESM[39m [1mdist\ai-review.mjs        [22m[32m915.00 B[39m
+[32mESM[39m [1mdist\common.mjs           [22m[32m614.00 B[39m
 [32mESM[39m [1mdist\case.mjs             [22m[32m839.00 B[39m
 [32mESM[39m [1mdist\help-article.mjs     [22m[32m468.00 B[39m
 [32mESM[39m [1mdist\contact.mjs          [22m[32m2.02 KB[39m
-[32mESM[39m [1mdist\common.mjs           [22m[32m614.00 B[39m
 [32mESM[39m [1mdist\chunk-Z6SQPZ4E.mjs   [22m[32m8.42 KB[39m
-[32mESM[39m [1mdist\chunk-GKR73HH5.mjs   [22m[32m617.00 B[39m
-[32mESM[39m [1mdist\chunk-HUEF4UZB.mjs   [22m[32m588.00 B[39m
 [32mESM[39m [1mdist\index.mjs            [22m[32m179.01 KB[39m
-[32mESM[39m [1mdist\chunk-WZPLT47Q.mjs   [22m[32m6.13 KB[39m
-[32mESM[39m [1mdist\chunk-XR2W7LEU.mjs   [22m[32m3.08 KB[39m
-[32mESM[39m [1mdist\chunk-ZF774MQU.mjs   [22m[32m1.00 KB[39m
+[32mESM[39m [1mdist\chunk-GKR73HH5.mjs   [22m[32m617.00 B[39m
 [32mESM[39m [1mdist\chunk-DH62V3K6.mjs   [22m[32m3.37 KB[39m
+[32mESM[39m [1mdist\chunk-HUEF4UZB.mjs   [22m[32m588.00 B[39m
 [32mESM[39m [1mdist\chunk-447GUJV3.mjs   [22m[32m21.74 KB[39m
+[32mESM[39m [1mdist\chunk-XR2W7LEU.mjs   [22m[32m3.08 KB[39m
+[32mESM[39m [1mdist\chunk-WZPLT47Q.mjs   [22m[32m6.13 KB[39m
+[32mESM[39m [1mdist\chunk-ZF774MQU.mjs   [22m[32m1.00 KB[39m
 [32mESM[39m [1mdist\chunk-AF2FKFWR.mjs   [22m[32m5.72 KB[39m
 [32mESM[39m [1mdist\chunk-BTD34BXU.mjs   [22m[32m6.15 KB[39m
 [32mESM[39m [1mdist\chunk-RHRHM4VU.mjs   [22m[32m7.58 KB[39m
-[32mESM[39m [1mdist\chunk-3ULOTD3D.mjs   [22m[32m2.29 KB[39m
 [32mESM[39m [1mdist\chunk-X7VI4AVA.mjs   [22m[32m3.78 KB[39m
-[32mESM[39m ⚡️ Build success in 87ms
+[32mESM[39m [1mdist\chunk-3ULOTD3D.mjs   [22m[32m2.29 KB[39m
+[32mESM[39m ⚡️ Build success in 68ms
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 3911ms
+[32mDTS[39m ⚡️ Build success in 3450ms
 [32mDTS[39m [1mdist\index.d.ts             [22m[32m391.58 KB[39m
 [32mDTS[39m [1mdist\account.d.ts           [22m[32m19.85 KB[39m
 [32mDTS[39m [1mdist\ai-review.d.ts         [22m[32m11.14 KB[39m
@@ -154,13 +154,13 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 [32mCJS[39m [1mdist\seed-ids.js [22m[32m30.89 KB[39m
 [32mCJS[39m ⚡️ Build success in 21ms
 [32mESM[39m [1mdist\client.mjs         [22m[32m556.00 B[39m
-[32mESM[39m [1mdist\index.mjs          [22m[32m8.44 KB[39m
 [32mESM[39m [1mdist\chunk-M6A45O7W.mjs [22m[32m16.30 KB[39m
+[32mESM[39m [1mdist\index.mjs          [22m[32m8.44 KB[39m
 [32mESM[39m [1mdist\seed-ids.mjs       [22m[32m29.85 KB[39m
 [32mESM[39m ⚡️ Build success in 21ms
 [prisma-esm] Patched 2 .mjs files with .js extensions
 [34mDTS[39m Build start
-[32mDTS[39m ⚡️ Build success in 18557ms
+[32mDTS[39m ⚡️ Build success in 18219ms
 [32mDTS[39m [1mdist\index.d.ts     [22m[32m18.83 KB[39m
 [32mDTS[39m [1mdist\client.d.ts    [22m[32m3.59 KB[39m
 [32mDTS[39m [1mdist\seed-ids.d.ts  [22m[32m25.64 KB[39m
@@ -184,41 +184,41 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 [34mCJS[39m Build start
 [34mESM[39m Build start
 [32mESM[39m [1mdist\chunk-FH72RMLK.mjs                [22m[32m0 B[39m
+[32mESM[39m [1mdist\escalation-target-H4QBBF4Z.mjs    [22m[32m131.00 B[39m
 [32mESM[39m [1mdist\cases.router-NG5KDFAW.mjs         [22m[32m204.00 B[39m
 [32mESM[39m [1mdist\inbound.router-DMZF5DSS.mjs       [22m[32m350.00 B[39m
-[32mESM[39m [1mdist\escalation-target-H4QBBF4Z.mjs    [22m[32m131.00 B[39m
-[32mESM[39m [1mdist\main.mjs                          [22m[32m49.52 KB[39m
 [32mESM[39m [1mdist\index.mjs                         [22m[32m22.54 KB[39m
-[32mESM[39m [1mdist\chunk-5DX23VSP.mjs                [22m[32m4.23 KB[39m
 [32mESM[39m [1mdist\ws-server.mjs                     [22m[32m4.83 KB[39m
-[32mESM[39m [1mdist\chunk-GPRFMDF3.mjs                [22m[32m35.94 KB[39m
+[32mESM[39m [1mdist\main.mjs                          [22m[32m49.52 KB[39m
+[32mESM[39m [1mdist\chunk-5DX23VSP.mjs                [22m[32m4.23 KB[39m
 [32mESM[39m [1mdist\chunk-R3T22MVH.mjs                [22m[32m23.62 KB[39m
+[32mESM[39m [1mdist\chunk-GPRFMDF3.mjs                [22m[32m35.94 KB[39m
 [32mESM[39m [1mdist\chunk-JFF6C52X.mjs                [22m[32m3.12 KB[39m
 [32mESM[39m [1mdist\audit-XXEDSSNO.mjs                [22m[32m865.00 B[39m
 [32mESM[39m [1mdist\notifications.router-EJWAI2JF.mjs [22m[32m306.00 B[39m
 [32mESM[39m [1mdist\lead.router-TDFPTE2U.mjs          [22m[32m264.00 B[39m
-[32mESM[39m [1mdist\contact.router-4MDK4T56.mjs       [22m[32m270.00 B[39m
 [32mESM[39m [1mdist\chunk-EDMTEE2A.mjs                [22m[32m54.79 KB[39m
-[32mESM[39m [1mdist\chunk-VKUQDHCZ.mjs                [22m[32m80.91 KB[39m
+[32mESM[39m [1mdist\contact.router-4MDK4T56.mjs       [22m[32m270.00 B[39m
 [32mESM[39m [1mdist\chunk-RCWQWZB6.mjs                [22m[32m5.07 KB[39m
-[32mESM[39m [1mdist\appointments.router-ZJQ4NAG3.mjs  [22m[32m280.00 B[39m
-[32mESM[39m [1mdist\chunk-XAGDW4N4.mjs                [22m[32m253.83 KB[39m
+[32mESM[39m [1mdist\chunk-VKUQDHCZ.mjs                [22m[32m80.91 KB[39m
+[32mESM[39m [1mdist\appointments.router-LPM2PX22.mjs  [22m[32m280.00 B[39m
 [32mESM[39m [1mdist\chunk-TFVEIYEU.mjs                [22m[32m3.36 KB[39m
-[32mESM[39m [1mdist\chunk-Q3TMUWFZ.mjs                [22m[32m20.79 KB[39m
+[32mESM[39m [1mdist\chunk-A6Z4NGPM.mjs                [22m[32m254.14 KB[39m
 [32mESM[39m [1mdist\chunk-J6R2QKEE.mjs                [22m[32m23.02 KB[39m
+[32mESM[39m [1mdist\chunk-Q3TMUWFZ.mjs                [22m[32m20.79 KB[39m
 [32mESM[39m [1mdist\chunk-CXLTNHON.mjs                [22m[32m49.23 KB[39m
 [32mESM[39m [1mdist\chunk-Y6FXYEAI.mjs                [22m[32m390.00 B[39m
-[32mESM[39m [1mdist\chunk-GOMKVEDC.mjs                [22m[32m1.14 MB[39m
-[32mESM[39m ⚡️ Build success in 194ms
-[32mCJS[39m [1mdist\ws-server.js [22m[32m1.73 MB[39m
+[32mESM[39m [1mdist\chunk-HCA5HU3K.mjs                [22m[32m1.14 MB[39m
+[32mESM[39m ⚡️ Build success in 158ms
 [32mCJS[39m [1mdist\main.js      [22m[32m1.79 MB[39m
 [32mCJS[39m [1mdist\index.js     [22m[32m1.79 MB[39m
-[32mCJS[39m ⚡️ Build success in 194ms
+[32mCJS[39m [1mdist\ws-server.js [22m[32m1.73 MB[39m
+[32mCJS[39m ⚡️ Build success in 159ms
 [34mDTS[39m Build start
 "isLiveMembership", "liveMembershipWhere", "seatUserWhere" and "MembershipLiveness" are imported from external module "@intelliflow/db" but never used in "src/security/membership.ts".
 "NODE_TYPE_IDS" is imported from external module "@intelliflow/domain" but never used in "src/modules/workflow/workflow.router.ts".
 "ACTIVE_TENANT_HEADER" is imported from external module "@intelliflow/partner-sdk" but never used in "src/security/membership.ts".
-[32mDTS[39m ⚡️ Build success in 39657ms
+[32mDTS[39m ⚡️ Build success in 36545ms
 [32mDTS[39m [1mdist\main.d.ts       [22m[32m13.00 B[39m
 [32mDTS[39m [1mdist\ws-server.d.ts  [22m[32m1.70 KB[39m
 [32mDTS[39m [1mdist\index.d.ts      [22m[32m900.72 KB[39m
@@ -238,7 +238,7 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 ⚠     Unrecognized key(s) in object: 'eslint'
 ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
 ⚠ `experimental.useCache` is deprecated. Please use the top-level `cacheComponents` option instead in next.config.js.
-✓ Running next.config.js took 580ms
+✓ Running next.config.js took 567ms
 - Experiments (use with caution):
   · clientTraceMetadata
   · optimizePackageImports
@@ -247,7 +247,7 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
   ✓ webpackMemoryOptimizations
 
   Creating an optimized production build ...
-⚠ Compiled with warnings in 47s
+⚠ Compiled with warnings in 74s
 
 ../../node_modules/.pnpm/web-worker@1.5.0/node_modules/web-worker/src/node/index.js
 Critical dependency: the request of a dependency is an expression
@@ -275,13 +275,13 @@ Import trace for requested module:
 ./src/components/shared/api-reference-client.tsx
 
   Skipping validation of types
-  Finished TypeScript config validation in 6ms ...
+  Finished TypeScript config validation in 134ms ...
   Collecting page data using 11 workers ...
   Generating static pages using 11 workers (0/224) ...
   Generating static pages using 11 workers (56/224) 
   Generating static pages using 11 workers (112/224) 
   Generating static pages using 11 workers (168/224) 
-✓ Generating static pages using 11 workers (224/224) in 14.0s
+✓ Generating static pages using 11 workers (224/224) in 11.5s
   Finalizing page optimization ...
   Collecting build traces ...
 

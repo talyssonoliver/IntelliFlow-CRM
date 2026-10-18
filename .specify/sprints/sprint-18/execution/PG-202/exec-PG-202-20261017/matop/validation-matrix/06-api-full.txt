@@ -1,7 +1,7 @@
-date: 2026-10-18T09:02:05Z
-head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
+date: 2026-10-18T11:27:27Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
 cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/api test
-[test-slot] slot3 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/api test
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/api test
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 
@@ -11,12 +11,12 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
 
-(node:3188) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(node:44748) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
 (Use `node --trace-warnings ...` to show where the warning was created)
 
  Test Files  308 passed (308)
-      Tests  7797 passed | 18 skipped (7815)
-   Start at  10:02:06
-   Duration  121.01s (transform 10.45s, setup 74.42s, import 235.22s, tests 93.80s, environment 34ms)
+      Tests  7798 passed | 18 skipped (7816)
+   Start at  12:27:29
+   Duration  171.70s (transform 28.47s, setup 91.81s, import 328.53s, tests 139.99s, environment 41ms)
 
 exit: 0
