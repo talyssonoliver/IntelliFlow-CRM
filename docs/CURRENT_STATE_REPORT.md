@@ -1,21 +1,21 @@
 # Current State Report
-_Generated: 2026-10-12T23:27:54.702Z_
+_Generated: 2026-10-17T14:35:58.201Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 433/619 tasks completed (69.95%), 169 backlog, 0 blocked, 17 in progress.
-- Numbered sprint progress alone: 428/613 tasks completed or attested inside numbered sprints.
+- Overall progress: 436/619 tasks completed (70.44%), 166 backlog, 0 blocked, 17 in progress.
+- Numbered sprint progress alone: 431/613 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: SALES-001 (Sprint 1), IFC-056 (Sprint 9), IFC-234 (Sprint 18), PG-198 (Sprint 18), PG-199 (Sprint 18).
+- Ready-to-start work: SALES-001 (Sprint 1), IFC-056 (Sprint 9), IFC-234 (Sprint 18), PG-199 (Sprint 18), PG-202 (Sprint 18).
 - Active focus band: Sprints 0, 1, 6, 8 carry the earliest remaining backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-033 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-198 (Backlog), PG-199 (Backlog), PG-201 (Backlog), PG-202 (Backlog), PG-203 (Backlog), PG-204 (Backlog), PG-205 (Backlog), PG-206 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002 (In Progress), ENG-OPS-002.R03 (Backlog), ENG-OPS-002.R16 (Backlog).
+- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-033 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-199 (Backlog), PG-202 (Backlog), PG-203 (Backlog), PG-205 (Backlog), PG-206 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002 (In Progress), ENG-OPS-002.R03 (Backlog), ENG-OPS-002.R16 (Backlog).
 
 ## Continuous Work
 
@@ -289,9 +289,9 @@ _Generated: 2026-10-12T23:27:54.702Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 54/67 completed, 12 backlog, 0 blocked, 1 in progress.
+- Status: 57/67 completed, 9 backlog, 0 blocked, 1 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
-- Evidence coverage: 54/54 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 57/57 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **DOC-015** — Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth. DOC-015 (Docs Integrity / route-total reconciliation, Issue #019 / R-023) closure. The substantive reconciliation was completed in a prior session but its uncommitted changes were stranded in the working tree on main after PR #590 merged.......
@@ -303,9 +303,9 @@ _Generated: 2026-10-12T23:27:54.702Z_
 **Open Work**
 - **INFRA-TF-004** — Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).. tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces
 - **IFC-234** — Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.. Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%
-- **PG-198** — Module Settings - Approval Policies (/agent-approvals/approval-policies). Route /agent-approvals/approval-policies renders; Policy rules: auto-approve thresholds, required reviewers, escalation paths, SLAs, per-agent overrides implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...
 - **PG-199** — Module Settings - Model Config (/agent-approvals/model-config). Route /agent-approvals/model-config renders; Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented; Never-Downgrade rule respected; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...
-- **PG-201** — Module Settings - Scheduled Reports (/analytics/scheduled-reports). Route /analytics/scheduled-reports renders; Cron schedules, recipient lists, delivery format, template ref implemented — schema must match the IFC-308 BullMQ cron job's expectations; PageHeader+bento grid; canonical EmptyState; TagsTab;...
+- **PG-202** — Module Settings - Availability (/calendar/availability). Route /calendar/availability renders; Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented; UTC-in-DB / useTimezoneContext() display per the timezone refactor; PageHeader+bento grid;...
+- **PG-203** — Module Settings - Event Types (/calendar/event-types). Route /calendar/event-types renders; Meeting type definitions: duration, color, default description, booking link slug, required form fields, location type implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...
 
 ## Sprint 19 - Sprint 19
 
