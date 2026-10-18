@@ -666,14 +666,20 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 #### Step 20: Full validation, reviews, Lighthouse
 **Type:** validation
 - [ ] Validation Matrix in order (one process at a time); L5 health-server flake: re-run once and report both runs.
-- [ ] `node scripts/codex-review.mjs` iterated until clean (waivers only with evidence).
+- [x] `node scripts/codex-review.mjs` iterated until clean (waivers only with evidence). *Verified:* 6 runs, run 6 PASS
+      (`matop/codex-review/`); 6 real findings fixed test-first; daily-cap race waived with ADR-081/#913 evidence, approved by
+      the owner in the lane modal 2026-10-17.
 - [ ] `/code-review` on the diff; `/sonarqube-fix` for any new finding; `knip`; a11y-expert WCAG 2.1 AA review on the built
       UI (→ `matop/a11y-review.json`, fix findings); STOA Foundation by a spawned `stoa-foundation` sub-agent (+ others the
       gate selection names).
-- [ ] First-load JS of `/calendar/availability` vs `/cases/case-types` from `next build` output (NF-003).
-- [ ] Lighthouse: run `lighthouse:auth` with `LHCI_URLS`/`LHCI_OUTPUT_DIR=artifacts/lighthouse/PG-202` only if
+- [x] First-load JS of `/calendar/availability` vs `/cases/case-types` from `next build` output (NF-003). *Verified:*
+      871.0 KB vs 876.7 KB gzip (unique `<script src>` chunks of the prerendered HTML; Next 16 no longer prints sizes),
+      `matop/first-load-js.json`.
+- [x] Lighthouse: run `lighthouse:auth` with `LHCI_URLS`/`LHCI_OUTPUT_DIR=artifacts/lighthouse/PG-202` only if
       `LHCI_TEST_EMAIL`/`LHCI_TEST_PASSWORD` exist for a non-production auth target; otherwise Path A attempt + NEEDS_HUMAN
-      with evidence (`artifacts/lighthouse/PG-202/waiver-evidence.md`).
+      with evidence (`artifacts/lighthouse/PG-202/waiver-evidence.md`). *Verified:* no `LHCI_TEST_*` credentials;
+      Path A attempt (Lighthouse 12.6.1, `next start -p 3412`) measured the global error page (no Supabase URL compiled);
+      NEEDS_HUMAN with evidence; owner direction (no hosted quota) recorded on gh #527.
 
 #### Step 21: Attestation, tracking, close
 **Type:** validation
@@ -689,13 +695,13 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - [ ] Attestation: every gate PASS or NEEDS_HUMAN with reason (Lighthouse, Class A gates 4/7/10-prod); artifact hashes incl.
       the migration; KPIs from logs; `node tools/scripts/exec-preflight/check-attestation-phrases.mjs PG-202` and
       `check-attestation-provenance.mjs PG-202`.
-- [ ] WCAG 1.9.0 / VPAT 1.10.0 rows with the real review result.
-- [ ] CSV artifacts list updated with the new files, and the pre-requisite `FILE:apps/web/src/components/sidebar/configs/appointments.ts`
+- [x] WCAG 1.9.0 / VPAT 1.10.0 rows with the real review result. *Verified:* PASS WITH MINOR after fixes; known gap #871 listed.
+- [x] CSV artifacts list updated with the new files, and the pre-requisite `FILE:apps/web/src/components/sidebar/configs/appointments.ts`
       corrected to `configs/calendar.ts` (where the entry lives); status → `Completed` only via /exec Phase 5 after all
       gates pass.
-- [ ] After every `Sprint_plan.csv` edit, regenerate the splits with `npx tsx tools/scripts/split-sprint-plan.ts` (updates
+- [x] After every `Sprint_plan.csv` edit, regenerate the splits with `npx tsx tools/scripts/split-sprint-plan.ts` (updates
       `Sprint_plan_I.csv`), then run the plan validation the repo uses for CSV edits and keep only PG-202's row changes.
-- [ ] PR body draft (`matop/pr-body.md`, used at SHIP): the four accepted behaviour changes for configured tenants (spec
+- [x] PR body draft (`matop/pr-body.md`, used at SHIP): the four accepted behaviour changes for configured tenants (spec
       Overview), the legacy default for unconfigured tenants, the **migration-before-API** order with Class A gates
       4/7/10-prod NEEDS_HUMAN, the AppointmentForm/AppointmentDetail changes disclosed to Aurora, and every NEEDS_HUMAN item.
 

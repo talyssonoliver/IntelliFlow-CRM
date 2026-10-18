@@ -1,5 +1,5 @@
-date: 2026-10-17T22:08:52Z
-head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
+date: 2026-10-18T08:53:17Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21
 cmd: DIFF_COVER_LCOV=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/merged-lcov.info node scripts/check-diff-coverage.mjs
 check-diff-coverage: new-line coverage vs origin/main (floor 80%):
 
@@ -9,7 +9,7 @@ check-diff-coverage: new-line coverage vs origin/main (floor 80%):
   ✓  92.9%  13/14  apps/web/src/app/calendar/availability/components/BuffersCapCard.tsx
   ✓  95.5%  63/66  apps/web/src/app/calendar/availability/components/WeeklyHoursCard.tsx
   ✓  95.7%  22/23  apps/web/src/components/appointments/AppointmentDetail.tsx
-  ✓  96.5%  111/115  apps/api/src/modules/calendar/availability-enforcement.ts
+  ✓  96.4%  108/112  apps/api/src/modules/calendar/availability-enforcement.ts
   ✓  96.8%  214/221  apps/web/src/app/calendar/availability/availability-draft.ts
   ✓  98.4%  63/64  apps/api/src/modules/calendar/availability.router.ts
   ✓  98.8%  251/254  packages/domain/src/legal/appointments/AvailabilityPolicy.ts
@@ -26,6 +26,6 @@ check-diff-coverage: new-line coverage vs origin/main (floor 80%):
   ✓ 100.0%  5/5  packages/domain/src/legal/appointments/availability-roles.ts
   ✓ 100.0%  65/65  packages/validators/src/availability.ts
 
-  TOTAL new_coverage: 96.1%  (1120/1165 lines + branch conditions)
+  TOTAL new_coverage: 96.1%  (1117/1162 lines + branch conditions)
 ✅ Diff coverage meets the 80% floor.
 exit: 0

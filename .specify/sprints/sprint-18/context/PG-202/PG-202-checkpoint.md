@@ -1,6 +1,6 @@
 # PG-202 checkpoint (resume point for a fresh lane)
 
-Last rewritten: 2026-10-17T21:22Z · branch `feat/pg-202-availability` · HEAD `053c6874c` · worktree
+Last rewritten: 2026-10-18T08:5xZ · branch `feat/pg-202-availability` · HEAD `053c6874c` · worktree
 `C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202` · not pushed, no PR yet.
 
 ## Where the pipeline is
@@ -74,24 +74,35 @@ Domain PASS, Security PASS (3 LOW), Foundation WARN, Quality WARN. Responses (un
   defaults + Buffer coverage).
 - Web branch coverage 81-88% on new files: meets the apps/web 80% branch threshold; diff coverage 95.8%; disclose.
 
-## Uncommitted now
+## Progress since 2026-10-17T21:22Z (UTC times)
 
-apps/api/src/modules/calendar/availability-enforcement.ts, its test, apps/api/src/modules/legal/appointments.router.ts,
-packages/domain/src/legal/appointments/AvailabilityPolicy.ts (export), artifacts/metrics/debt-ledger.yaml (LF + #914),
-tools/audit/codex-review-waivers.yaml (LF), the plan (LF), artifacts/coverage/PG-202-before.json (LF), the findings doc,
-artifacts/reports/plan-lint-report.json (churn), this checkpoint, new tdd logs.
+- /code-review full finished (~22:3xZ local run 20261017-220406): typecheck and lint clean, no circular imports, architecture
+  green; complexity step crashed (#888). It caught the db suite failing on the schema.prisma re-alignment → fixed in
+  4c6ac696e (main's schema text + PG-202 changes, 58/21 lines; db suite 224 passed). F23.
+- STOA fixes (timezone guard, console.log) in 4c6ac696e. Evidence and LF fixes in 0d20f9096. Domain verdict rephrased by
+  its agent (gitleaks false positive on a log filename).
+- Matrix full rerun at 4c6ac696e: 20 rows green, diff coverage 96.1%.
+- /sonarqube-fix: SonarCloud main issues on modified files; fixes in fdd76e690 (Number.parseInt, default param, no-await async).
+- Lighthouse Path A (2026-10-17T22:13Z): global error page (no Supabase URL compiled) → NEEDS_HUMAN,
+  `artifacts/lighthouse/PG-202/waiver-evidence.md` + report json.
+- First-load JS: 871.0 vs 876.7 KB gzip (`matop/first-load-js.json`).
+- WCAG 1.9.0 / VPAT 1.10.0 rows, CSV row (prerequisite configs/calendar.ts + artifacts) + splits, validate:sprint-data and
+  plan-lint pass, PR body draft `matop/pr-body.md`. Uncommitted (waiting for the matrix to finish before committing).
 
 ## Running now
 
-- `/code-review` full mode (in its coverage step at ~21:20Z). Commit and the matrix rerun wait for it.
+- Matrix full rerun at fdd76e690 (started ~2026-10-18T08:4xZ).
+- Foundation and Quality STOA re-checks (told to wait for summary.tsv "done"), writing `*.recheck.json`.
 
 ## Exact next action
 
-1. When /code-review finishes: read it; `/sonarqube-fix` for new findings on PG-202 files.
-2. Commit the STOA fixes (code) and then the evidence/LF fixes.
-3. Rerun the full matrix (scratchpad matrix.sh) at the final HEAD; update the STOA verdicts by messaging the Foundation and
-   Quality agents with the new logs.
-4. Then: first-load JS (NF-003), Lighthouse Path A + NEEDS_HUMAN, Step 21, SHIP (see the earlier list).
+1. When the matrix is done: check all rows; commit docs/evidence (WCAG, VPAT, CSV + split, plan, pr-body, lighthouse,
+   first-load, sonar json, checkpoint).
+2. Collect the Foundation and Quality re-check verdicts; write `matop/stoa-aggregate.json`; tick the Step 20 items.
+3. Step 21: attestation (+ check-attestation-phrases / -provenance), /compliance-check, /exec-attestation, exec-metrics end,
+   CSV status per /exec Phase 5, regenerate SESSION_CONTEXT, `generate-final-report.mjs`.
+4. SHIP (merge origin/main if moved, pre-ship once in the exclusive slot, push, PR, SendMessage Aurora). Commit the
+   artifacts/coverage/* refresh that pre-ship leaves only if it's from the final run.
 
 ## NEEDS_HUMAN so far
 

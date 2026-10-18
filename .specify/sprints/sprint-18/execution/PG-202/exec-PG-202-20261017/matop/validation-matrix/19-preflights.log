@@ -1,5 +1,5 @@
-date: 2026-10-17T22:08:52Z
-head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
+date: 2026-10-18T08:53:17Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21
 cmd: node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202 && node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202 && node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-202 && node tools/scripts/validate-task-json-schemas.mjs
 [preflight] Checking PG-202 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\.specify\sprints\sprint-18\planning\PG-202-plan.md
 [preflight] OK — plan does not create any page.tsx; § 3.2 gate does not apply.

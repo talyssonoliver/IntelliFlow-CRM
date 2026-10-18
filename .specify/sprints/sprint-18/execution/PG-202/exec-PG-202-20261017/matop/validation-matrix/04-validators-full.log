@@ -1,5 +1,5 @@
-date: 2026-10-17T21:51:31Z
-head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
+date: 2026-10-18T08:38:09Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21
 cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/validators test
 [test-slot] slot2 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/validators test
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
@@ -14,7 +14,7 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 
  Test Files  58 passed (58)
       Tests  2722 passed (2722)
-   Start at  22:51:33
-   Duration  7.59s (transform 2.68s, setup 0ms, import 11.28s, tests 1.58s, environment 13ms)
+   Start at  09:38:10
+   Duration  5.87s (transform 2.03s, setup 0ms, import 8.69s, tests 1.20s, environment 6ms)
 
 exit: 0

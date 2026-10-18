@@ -1,0 +1,26 @@
+date: 2026-10-18T08:53:49Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21 (+ test-only)
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar/availability/components/__tests__/BuffersCapCard.test.tsx --coverage.enabled --coverage.reporter=text --coverage.include=src/app/calendar/availability/components/BuffersCapCard.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+      Coverage enabled with istanbul
+
+
+ Test Files  1 passed (1)
+      Tests  8 passed (8)
+   Start at  09:53:51
+   Duration  3.44s (transform 992ms, setup 302ms, import 1.72s, tests 285ms, environment 939ms)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 11/11 )
+Branches     : 100% ( 14/14 )
+Functions    : 100% ( 7/7 )
+Lines        : 100% ( 10/10 )
+================================================================================
+exit: 0

@@ -1,5 +1,5 @@
-date: 2026-10-17T22:08:48Z
-head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
+date: 2026-10-18T08:53:13Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21
 cmd: pnpm --dir packages/ui exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/ui --coverage.include=src/components/confirmation-dialog.tsx __tests__/confirmation-dialog.test.tsx
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/ui
@@ -8,8 +8,8 @@ cmd: pnpm --dir packages/ui exec vitest run --coverage.enabled --coverage.report
 
  Test Files  1 passed (1)
       Tests  11 passed (11)
-   Start at  23:08:49
-   Duration  2.30s (transform 77ms, setup 310ms, import 190ms, tests 447ms, environment 1.05s)
+   Start at  09:53:14
+   Duration  2.24s (transform 78ms, setup 309ms, import 192ms, tests 471ms, environment 984ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|-------------------

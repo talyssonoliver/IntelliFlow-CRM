@@ -1,5 +1,5 @@
-date: 2026-10-17T21:54:23Z
-head: 4c6ac696eedeeb375786b6e28e83588c13ad1ce5
+date: 2026-10-18T08:40:52Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21
 cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --dir apps/web exec vitest run
 [test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --dir apps/web exec vitest run
 
@@ -464,7 +464,7 @@ Not implemented: navigation to another Document
 
  Test Files  820 passed (820)
       Tests  12954 passed (12954)
-   Start at  22:54:25
-   Duration  479.59s (transform 26.03s, setup 306.93s, import 303.08s, tests 386.99s, environment 701.61s)
+   Start at  09:40:53
+   Duration  410.81s (transform 21.54s, setup 256.15s, import 261.62s, tests 364.06s, environment 582.36s)
 
 exit: 0
