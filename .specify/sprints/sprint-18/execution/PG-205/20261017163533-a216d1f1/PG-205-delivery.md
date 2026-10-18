@@ -79,13 +79,23 @@ and no non-production `LHCI_TEST_*` credentials exist (`artifacts/lighthouse/PG-
 - `packages/domain/src/crm/contact/Contact.ts`: `replaceAccount`.
 - `packages/application/src/services/ContactService.ts`: `replaceAccount` and the shared `changeAccount`.
 - `packages/validators/src/contact-settings.ts`: `CONTACT_TAG_NAME_MAX_LENGTH`.
-- `docs/compliance-and-governance/compliance/vpat-2.5.md`: row 1.10.0.
+- `docs/compliance-and-governance/compliance/vpat-2.5.md`: row 1.11.0 (WCAG statement row 1.10.0; renumbered after the PG-202 merge).
 
 ## Runner audit fix round (2026-10-18)
 
 P1-1 evidence logs renamed `.log` → `.txt`; P1-2 integration colour test independent of `db push`; P1-3 Edit
 Contact sends `contactType` only when changed (deploy-skew safe); P2(a) the dialog validates names with the
 superRefine schema; P2(b)-(d) claims corrected (see findings doc). TDD logs `red-green/24-*`, `25-*`, `26-*`.
+
+## Main merge and SonarCloud round (2026-10-18)
+
+- Merged origin/main `a593ea1b5` (#916, PG-202). Both sides were kept in every conflict (see the findings doc).
+- S2871: the id sorts now use `localeCompare`.
+- New duplication 3.6%: the loading skeleton and delete dialog are shared with PG-204 through
+  `apps/web/src/components/settings/{TypeSettingsLoading,DeleteTypeDialog}.tsx`, which removes 47 duplicated lines.
+- Tests: contact-types, case-types and settings web 165, in `matop/gates/sonar-dedup-web-tests.txt`. API contact
+  plus router smoke 411 (+2 skipped), in `sonar-s2871-server-tests.txt`.
+- Typecheck web and api: exit 0, in `sonar-round-typecheck.txt`.
 
 ## Migrations (L13, loud)
 

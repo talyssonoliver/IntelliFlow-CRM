@@ -1,6 +1,6 @@
 # PG-205 checkpoint (recovery lane, session ffa3728c)
 
-Updated: 2026-10-18T10:43:17Z. Runner-audit fix round in progress (code commit 5ab1d3731).
+Updated: 2026-10-18T15:46:53Z. Main merge + SonarCloud round (merge commit a3f4711cc).
 
 ## Phase
 
@@ -100,6 +100,16 @@ The codex gate must re-run at the end: lint fixes and a resolver comment change 
   regenerated without self-hashes. codex round 15 PASS. Ruling 8 re-confirmation recorded as relayed.
 - Picker on old API: "No type" + inline alert, save still works (PR body line).
 
+## Main merge + SonarCloud round (2026-10-18, Aurora)
+
+- Pre-ship PASS at `cc032deef`; pushed; Aurora READY sent. Then #916 (PG-202) merged and #915 conflicted, with
+  SonarCloud red.
+- Merge of origin/main `a593ea1b5`: commit `a3f4711cc`, both sides kept (findings doc). The VPAT and WCAG rows for
+  PG-205 were renumbered to 1.11.0 and 1.10.0.
+- S2871 fixed with `localeCompare`.
+- Duplication: shared TypeSettingsLoading and DeleteTypeDialog, removing 47 of 132 lines.
+- Tests: web 165 and api 411. Typecheck: exit 0.
+
 ## Next action
 
-Commit the evidence → pre-ship ONCE (exclusive slot) → push once → update PR body → Aurora READY (new SHA + ref).
+Commit → attestation → pre-ship ONCE (exclusive slot) → push once → PR body → Aurora READY (new head + ref + conflicts).

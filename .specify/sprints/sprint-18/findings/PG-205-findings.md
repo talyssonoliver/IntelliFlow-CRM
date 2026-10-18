@@ -86,6 +86,22 @@ Deploy-skew notes (web can deploy before the API is promoted): the New/Edit type
 an inline alert when `contactTypes.*` is unavailable (old API) and saving still works; the contacts list Type filter
 and segments are ignored by the old API until promote (accepted as transient by the runner).
 
+## Main merge and SonarCloud round (2026-10-18, PR #915)
+
+origin/main `a593ea1b5` (#916, PG-202) was merged, not rebased. Conflicts were resolved by keeping both sides:
+
+- `app-router.smoke.test.ts`: both router tests.
+- ADR README, dependency chains, debt ledger (6 PG-202 + 4 PG-205 entries) and codex waivers: both.
+- `ui-flow-mapping.md`: 70 routers, 412 procedures, 48 in the table.
+- The VPAT row for PG-205 is now 1.11.0 and the WCAG statement row is 1.10.0, after PG-202's.
+- Generated reports and `baseline.json` were regenerated.
+- The split CSVs came from main, with only the PG-205 row re-applied.
+
+| Sonar item | Fix |
+|---|---|
+| S2871 `contact-types.router.ts:232`, `sort()` without a compare function | both id sorts in `changedFields` use `localeCompare`. The order only feeds an equality check, so there is no behaviour change and no RED. |
+| New duplicated lines 3.6% (132 of 3634; limit 3%) | the loading skeleton and the delete dialog were extracted to `apps/web/src/components/settings/` and are shared with PG-204 case types. This removes 47 duplicated lines. Evidence: `matop/gates/sonar-duplication-round.txt`. |
+
 ## Lighthouse status (DoD 12): NEEDS_HUMAN
 
 Path A ran once (2026-10-17T22:03-22:04Z, Lighthouse 12.6.1). Both `/contacts/contact-types` and `/contacts/new`

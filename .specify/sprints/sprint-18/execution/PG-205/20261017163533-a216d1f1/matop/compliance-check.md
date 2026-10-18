@@ -14,6 +14,6 @@
 | 8 | Key objectives | PASS with NEEDS_HUMAN | coverage diff 95.4%; Security STOA PASS; performance: NF-001 fast path; Lighthouse NEEDS_HUMAN (auth routes) |
 | 9 | Architecture | PASS | depcruise 0 errors (Domain + Foundation STOA logs); domain imports no infrastructure |
 | 10 | PRD/ADR governance | PASS | ADR-080 Accepted (README row), PRD addendum delivery status |
-| 11 | Accessibility doc gate | PASS | WCAG statement lists `/contacts/contact-types` in Section 2 + version 1.9.0; VPAT row 1.10.0 (route count unchanged, 92) |
+| 11 | Accessibility doc gate | PASS | WCAG statement lists `/contacts/contact-types` in Section 2 + version 1.10.0; VPAT row 1.11.0 (route count unchanged, 92; renumbered after PG-202 took 1.9.0 and 1.10.0 on main) |
 | 12 | Navigation wiring | PASS (with the #877 caveat) | `gates/gate-check-nav-wiring.txt` (the page is modified, not created); manual evidence: sidebar `configs/contacts.ts` + ContactSettingsPanel link (`gates/16-cochange-navwiring.txt`) |
 | 13 | Lighthouse evidence | after attestation | KPI met:false, NEEDS_HUMAN; no approver named |
