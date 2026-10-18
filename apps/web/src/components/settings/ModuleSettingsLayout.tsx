@@ -24,6 +24,9 @@ export interface ModuleSettingsBreadcrumb {
   href?: string;
 }
 
+const DEFAULT_RESET_DESCRIPTION =
+  'This will restore all settings to their factory defaults. This action cannot be undone.';
+
 export interface ModuleSettingsLayoutProps {
   title: string;
   description: string;
@@ -31,6 +34,8 @@ export interface ModuleSettingsLayoutProps {
   tabs: ModuleSettingsTab[];
   onSave: () => Promise<void>;
   onReset: () => Promise<void>;
+  /** Reset confirmation text; say what is kept when the reset is partial. */
+  resetDescription?: string;
   isSaving?: boolean;
   isDirty?: boolean;
   lastUpdated?: Date | null;
@@ -46,6 +51,7 @@ export function ModuleSettingsLayout({
   tabs,
   onSave,
   onReset,
+  resetDescription = DEFAULT_RESET_DESCRIPTION,
   isSaving = false,
   isDirty = false,
   lastUpdated,
@@ -160,7 +166,7 @@ export function ModuleSettingsLayout({
         open={resetDialogOpen}
         onOpenChange={setResetDialogOpen}
         title="Reset to Defaults"
-        description="This will restore all settings to their factory defaults. This action cannot be undone."
+        description={resetDescription}
         confirmLabel="Reset"
         variant="destructive"
         onConfirm={handleReset}

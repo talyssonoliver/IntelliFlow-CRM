@@ -1,0 +1,12 @@
+{
+  "task_id": "PG-202",
+  "written_at": "2026-10-17T15:59:36Z",
+  "note": "PG-202-agent-selection.json in this directory is the real output of tools/scripts/lib/stoa/agent-selection.ts (selectAgents, run 2026-10-17 during /hydrate-context). This file records the roster the spec session actually used, so the two can be compared honestly.",
+  "library_selection": ["Backend-Architect", "Frontend-Lead", "AI-Specialist", "A11y-Expert", "Domain-Expert"],
+  "roster_used_by_the_spec_session": ["backend-architect", "data-engineer", "frontend-lead", "domain-expert", "test-engineer", "a11y-expert"],
+  "differences": {
+    "AI-Specialist": "selected by the library on the keyword 'AI' (the row's boilerplate 'AI defaults FALSE' DoD item); not used: the task adds no AI columns or AI logic.",
+    "Data-Engineer": "added by the session lead: the task needs new Prisma tables and a Class A migration.",
+    "Test-Engineer": "spec-session rules say Test-Engineer is always included; the library's 5-agent cap dropped it."
+  }
+}

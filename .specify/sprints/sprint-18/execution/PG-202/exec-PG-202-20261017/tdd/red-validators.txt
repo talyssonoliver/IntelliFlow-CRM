@@ -1,0 +1,53 @@
+# 2026-10-17T17:23:48Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# pnpm --dir packages/validators exec vitest run src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/validators
+
+ ❯ |validators| src/__tests__/availability.test.ts (0 test)
+ ❯ |validators| src/__tests__/appointment-settings.test.ts (26 tests | 1 failed) 18ms
+       × strips buffers and timezone (edited only on Availability, PG-202 owner Q2) 4ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |validators| src/__tests__/availability.test.ts [ src/__tests__/availability.test.ts ]
+Error: Cannot find module '../availability' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/validators/src/__tests__/availability.test.ts
+ ❯ src/__tests__/availability.test.ts:5:1
+      3|  */
+      4| import { describe, it, expect } from 'vitest';
+      5| import {
+       | ^
+      6|   updateAvailabilitySchema,
+      7|   availabilityClosureInputSchema,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |validators| src/__tests__/appointment-settings.test.ts > appointment-settings validators > updateAppointmentSettingsSchema > strips buffers and timezone (edited only on Availability, PG-202 owner Q2)
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/__tests__/appointment-settings.test.ts:227:30
+    225|         defaultTimezone: 'Europe/London',
+    226|       });
+    227|       expect(result.success).toBe(true);
+       |                              ^
+    228|       expect(result.data).toEqual({ defaultDurationMinutes: 45 });
+    229|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  1 failed | 25 passed (26)
+   Start at  18:23:49
+   Duration  545ms (transform 88ms, setup 0ms, import 138ms, tests 18ms, environment 0ms)
+
+# exit=1

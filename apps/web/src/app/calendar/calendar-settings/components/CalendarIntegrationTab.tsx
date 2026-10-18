@@ -10,12 +10,11 @@ import {
   SelectValue,
   Switch,
 } from '@intelliflow/ui';
-import { getAvailableTimezones } from '@/lib/shared/timezone-utils';
+import { AvailabilityPointer } from './AvailabilityPointer';
 
 export interface CalendarIntegrationSettings {
   primaryCalendarId: string | null;
   syncExternalCalendars: boolean;
-  defaultTimezone: string;
 }
 
 export interface AvailableCalendar {
@@ -27,15 +26,16 @@ interface CalendarIntegrationTabProps {
   settings: CalendarIntegrationSettings;
   onSettingsChange: (settings: CalendarIntegrationSettings) => void;
   availableCalendars: AvailableCalendar[];
+  /** The firm timezone, edited on the Availability page; `null` while loading. */
+  firmTimezone: string | null;
 }
 
 export function CalendarIntegrationTab({
   settings,
   onSettingsChange,
   availableCalendars,
+  firmTimezone,
 }: Readonly<CalendarIntegrationTabProps>) {
-  const timezones = getAvailableTimezones();
-
   return (
     <Card className="p-6">
       <div className="mb-4">
@@ -89,26 +89,9 @@ export function CalendarIntegrationTab({
           />
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="defaultTimezone">Default Timezone</Label>
-          <Select
-            value={settings.defaultTimezone}
-            onValueChange={(value: string) =>
-              onSettingsChange({ ...settings, defaultTimezone: value })
-            }
-          >
-            <SelectTrigger id="defaultTimezone">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {timezones.map((tz) => (
-                <SelectItem key={tz} value={tz}>
-                  {tz}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <AvailabilityPointer>
+          {firmTimezone && `Firm timezone: ${firmTimezone}`}
+        </AvailabilityPointer>
       </div>
     </Card>
   );

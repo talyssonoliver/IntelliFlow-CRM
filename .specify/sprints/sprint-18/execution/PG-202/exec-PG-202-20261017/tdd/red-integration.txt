@@ -1,0 +1,30 @@
+# 2026-10-17T17:31:47Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/availability.test.ts
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability (holding group-intelliflow-db): pnpm exec vitest run --project integration tests/integration/availability.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202
+
+ ❯ |integration| availability.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| availability.test.ts [ tests/integration/availability.test.ts ]
+Error: Cannot find module '../../apps/api/src/modules/calendar/availability-enforcement' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/tests/integration/availability.test.ts
+ ❯ availability.test.ts:18:1
+     16| import { PrismaPg } from '@prisma/adapter-pg';
+     17| import { PrismaClient } from '../../packages/db/generated/prisma/clien…
+     18| import { loadTenantAvailability } from '../../apps/api/src/modules/cal…
+       | ^
+     19|
+     20| const MIGRATION_PATH = join(
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  18:31:48
+   Duration  1.19s (transform 298ms, setup 658ms, import 0ms, tests 0ms, environment 0ms)
+
+# exit=1

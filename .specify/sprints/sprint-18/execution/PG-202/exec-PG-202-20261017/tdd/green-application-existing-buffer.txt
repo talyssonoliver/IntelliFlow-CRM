@@ -1,0 +1,13 @@
+date: 2026-10-17T20:29:30Z
+head: 6a8aec3038cbf11cfbe5fc8032d0869761d8a31b (+ codex fixes)
+cmd: pnpm --dir packages/application exec vitest run src/usecases/scheduling/__tests__/CheckConflicts.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/application
+
+
+ Test Files  1 passed (1)
+      Tests  21 passed (21)
+   Start at  21:29:31
+   Duration  544ms (transform 244ms, setup 0ms, import 345ms, tests 17ms, environment 0ms)
+
+exit: 0

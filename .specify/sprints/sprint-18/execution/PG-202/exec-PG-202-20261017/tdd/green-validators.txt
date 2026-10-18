@@ -1,0 +1,28 @@
+# 2026-10-17T17:45:36Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# pnpm --dir packages/validators exec vitest run --coverage.enabled --coverage.include=src/availability.ts --coverage.include=src/appointment-settings.ts --coverage.reporter=text src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/validators
+      Coverage enabled with v8
+
+
+ Test Files  2 passed (2)
+      Tests  68 passed (68)
+   Start at  18:45:37
+   Duration  797ms (transform 358ms, setup 0ms, import 568ms, tests 73ms, environment 0ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |     100 |       95 |     100 |     100 |                   
+ availability.ts   |     100 |       92 |     100 |     100 | 110-118           
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 57/57 )
+Branches     : 95% ( 38/40 )
+Functions    : 100% ( 15/15 )
+Lines        : 100% ( 55/55 )
+================================================================================
+# exit=0

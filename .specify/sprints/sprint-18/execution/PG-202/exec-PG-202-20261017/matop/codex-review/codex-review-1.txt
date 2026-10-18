@@ -1,0 +1,44 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 132 files total
+[codex-review] in scope : 67 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T20:20:08.896Z
+Base ref  : origin/main
+Files in scope : 67
+Total findings : 3
+  Waived       : 0
+  Unwaived     : 3
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] apps/api/src/modules/calendar/availability-enforcement.ts:186-197 — non-atomic-daily-cap
+    Issue    : Concurrent bookings can exceed the firm's daily booking limit because counting and persistence are separate operations.
+    Evidence : The helper awaits `prisma.appointment.count(...)` and evaluates `sameDayCount`, then returns before appointments.create calls `scheduleAppointmentUseCase.execute`, whose repository saves in a separate transaction. With cap 1 and zero bookings, two concurrent requests for different non-overlapping slots both count zero and both persist successfully. The same race applies to rescheduling.
+    Fix      : Serialize bookings for the tenant and local day, and perform the cap check and appointment write in the same transaction under that lock.
+    Fingerprint: 25c5826ce3b9259f52ce545671308c7f3a26a92adab5c21a2fe8bee058178a6b
+
+  [MEDIUM] packages/domain/src/legal/appointments/AvailabilityPolicy.ts:317 — dst-fold-interval-escape
+    Issue    : Checking only endpoint wall-clock minutes accepts appointments that cross closed time during the autumn clock change.
+    Evidence : `s.minuteOfDay >= r.startMinute && endMinute <= r.endMinute` returns true for Sunday hours 01:30–02:00 Europe/London and a booking from 2026-10-25T00:45Z to 2026-10-25T01:15Z. These endpoints become 01:45 BST and 01:15 GMT; the booking crosses the closed 01:00–01:15 period after clocks roll back. Executing evaluateAvailability with these inputs returned `{ ok: true }`.
+    Fix      : Check containment of the entire UTC interval against timezone-aware open intervals, splitting at offset transitions so repeated-hour closed periods cannot be crossed.
+    Fingerprint: 60326bb7443635be764121027a78906f9abe8d7b3720670ca6a130ddb01289ff
+
+  [MEDIUM] apps/web/src/app/calendar/availability/availability-draft.ts:109 — all-day-range-roundtrip-loss
+    Issue    : A valid saved all-day range becomes invalid when loaded into the availability editor.
+    Evidence : The API accepts `{ startMinute: 0, endMinute: 1440 }`, but toDraft formats both endpoints as `00:00`. The expression `end === 1440 && start === 0 ? 0 : end` then converts its end to zero, so validation rejects the saved range and prevents saving unrelated changes. The existing test explicitly asserts that 00:00–00:00 is invalid, encoding this incompatible assumption.
+    Fix      : Preserve the distinction between an empty range and an all-day range, for example by representing the end as 24:00 or retaining an explicit end-of-day flag.
+    Fingerprint: 2d3ff4edf5e4b3245ebf21a4c4d1b018c22d94111549541eb20715a60405a2c1
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 3 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+exit 1

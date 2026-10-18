@@ -1,24 +1,24 @@
 # Session Context Snapshot
-_Generated: 2026-10-17T14:35:58.346Z • Branch: chore/tracker-flip-pg198-pg201-pg204_
+_Generated: 2026-10-18T09:24:17.488Z • Branch: feat/pg-202-availability_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 17 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 4s ago; 619 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 619 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 436/619 tasks completed (70.44%) — 166 backlog, 0 blocked, 17 in progress.
+- **Progress:** 436/619 tasks completed (70.44%) — 165 backlog, 0 blocked, 18 in progress.
 - **Focus band:** Sprints 0, 1, 6, 8 carry the earliest remaining backlog.
 - **Evidence issues:** 27 attested but CSV not updated.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
 
-- **[ENV-008-AI]** Automated Observability with Predictive Monitoring — started 11d ago, Backend Dev + AI Specialist (STOA-Intelligence)
+- **[ENV-008-AI]** Automated Observability with Predictive Monitoring — started 12d ago, Backend Dev + AI Specialist (STOA-Intelligence)
   - artifacts: 0 created / 0 missing
-- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 11d ago, DevOps + Claude Code (STOA-Automation)
+- **[EP-001-AI]** EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline) — started 12d ago, DevOps + Claude Code (STOA-Automation)
   - artifacts: 0 created / 0 missing
 
 ## Recently Completed (last 5)
@@ -37,19 +37,19 @@ Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 17 task(s
 
 ## Git Activity
 
-- **Branch:** `chore/tracker-flip-pg198-pg201-pg204` (5 dirty file(s))
-- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv`, `artifacts/reports/current-state-report.json`, `artifacts/reports/spec-tracker.json`, `docs/CURRENT_STATE_REPORT.md`
+- **Branch:** `feat/pg-202-availability` (37 dirty file(s))
+- **Dirty preview:** `.specify/sprints/sprint-18/attestations/PG-202/attestation.json`, `.specify/sprints/sprint-18/attestations/PG-202/task-tracking.json`, `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Foundation.recheck.json`, `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Quality.recheck.json`, `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/01-characterization.log` …
 - **Last 10 commits:**
-  - `28d93df47` feat(agent-approvals): tenant approval policies for ai work (pg-198) (#906) — Talysson Oliveira, 20 hours ago
-  - `9ddaa23d3` feat(pg-201): scheduled reports module settings page (#895) — Talysson Oliveira, 24 hours ago
-  - `b8bf98148` fix(infra): scope alert rules to live traffic, wire otlp log export (#884) — Talysson Oliveira, 27 hours ago
-  - `e686b5217` fix(harness): bind executor status to the run and bound plan-reviewer idle time (#904) — Talysson Oliveira, 2 days ago
-  - `25ce7bbb3` feat(cases): case types settings applied at case creation (PG-204) (#894) — Talysson Oliveira, 2 days ago
-  - `4abdec5e6` test(infra): in-memory storage double and ephemeral test database (#901) — Talysson Oliveira, 2 days ago
-  - `f3f4cf229` refactor(workers): fold notifications-worker email consumer into ai-worker (#897) — Talysson Oliveira, 2 days ago
-  - `62b4b6d2f` refactor(web): migrate module-settings pages onto ModuleSettingsShell (#900) — Talysson Oliveira, 2 days ago
-  - `960efd79f` fix(routing): align rule priority, enforce rule actions, separate lead audit ids (#899) — Talysson Oliveira, 2 days ago
-  - `dbe3f7d7e` fix(help-center): make built-in help articles visible to every tenant (#898) — Talysson Oliveira, 2 days ago
+  - `2ac93b60f` docs(pg-202): wcag/vpat rows, csv artifacts, lighthouse evidence, pr body — Talysson Oliveira, 24 minutes ago
+  - `9620f4cce` fix(pg-202): next-slot search covers the whole horizon in batches — Talysson Oliveira, 26 minutes ago
+  - `fdd76e690` refactor(pg-202): sonarcloud rule fixes on lines this branch touches — Talysson Oliveira, 49 minutes ago
+  - `d65141274` chore(pg-202): refresh merge benchmark timings — Talysson Oliveira, 11 hours ago
+  - `0d20f9096` chore(pg-202): stoa verdicts, code-review results and lf line endings — Talysson Oliveira, 11 hours ago
+  - `4c6ac696e` fix(pg-202): keep main's schema text, timezone guard in next-slot search — Talysson Oliveira, 12 hours ago
+  - `de2a67b93` chore(pg-202): refresh merge benchmark timings — Talysson Oliveira, 12 hours ago
+  - `f0c07127d` chore(pg-202): owner-approved daily-cap waiver — Talysson Oliveira, 12 hours ago
+  - `f3115da9b` chore(pg-202): resume checkpoint and stoa gate selection — Talysson Oliveira, 12 hours ago
+  - `053c6874c` chore(pg-202): validation matrix, a11y review and findings f15-f19 — Talysson Oliveira, 12 hours ago
 
 ## Key File References
 

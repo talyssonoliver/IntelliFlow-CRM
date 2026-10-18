@@ -1,0 +1,223 @@
+{
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "files_read": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/appointments.ts",
+      "sha256": "6051736091c046ff488153814d6c0e25df3aaba0d3c08d5b9ee28c4e54dec33e",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "6051736091c046ff488153814d6c0e25df3aaba0d3c08d5b9ee28c4e54dec33e",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/app/calendar/calendar-settings/page.tsx",
+      "sha256": "adc97f2590b815f2da0475464478e47d92bc2902d89eae28f918b442c35722c6",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "adc97f2590b815f2da0475464478e47d92bc2902d89eae28f918b442c35722c6",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/lib/shared/timezone-utils.ts",
+      "sha256": "4ad1cb050228d126a8ebfaf404a2059ffbdb54a0e9b9f17f9ef6cded578b0169",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "4ad1cb050228d126a8ebfaf404a2059ffbdb54a0e9b9f17f9ef6cded578b0169",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/providers/TimezoneProvider.tsx",
+      "sha256": "8a499da5877084e4dc572e5f7ccb787001fb1dfc66ba235b56856a09cab3790b",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "8a499da5877084e4dc572e5f7ccb787001fb1dfc66ba235b56856a09cab3790b",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "7fab1b169c23a8e2349b42752b0550c5f141da983ccdfa4312955357690a537b",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "9a39313ccdf81786f6d1f0c42feb640a643bdbb442b3b27cff86496e1c6531a2",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/specifications/PG-202-spec.md",
+      "sha256": "44dd9aae5434e45b60d0fdcfb3ce2f89283d21ec505549e443eb4388b720291f",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "44dd9aae5434e45b60d0fdcfb3ce2f89283d21ec505549e443eb4388b720291f",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/planning/PG-202-plan.md",
+      "sha256": "51ff5a83232172c2139187a2961807bae5c8877e34582b7502d33ecb85ff1346",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "9940e3e34de4873a7dcde4d00a5c686891584206421801f3820792cd6e7794a9",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": ".specify/sprints/sprint-18/context/PG-202/PG-202-owner-ruling.md",
+      "sha256": "29c8f5748fc1145541fd330f6064d9b89d5ad4881e50ee058c9a9b5c9cd24e7d",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "29c8f5748fc1145541fd330f6064d9b89d5ad4881e50ee058c9a9b5c9cd24e7d",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-081-tenant-availability.md",
+      "sha256": "28998cbd611b1db0090e14228a3dbec1b7b2b8b48017ff6189249b73d9806369",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "dc2f6ca332714d3b69a4aff20c26b80ccc52ab3604221ba76973b77111666ffc",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/components/sidebar/configs/calendar.ts",
+      "sha256": "28bcf48807bf8a838de162b0d640864c40553be9ebfa139096e3f7000b8fa4d6",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "28bcf48807bf8a838de162b0d640864c40553be9ebfa139096e3f7000b8fa4d6",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "packages/domain/src/index.ts",
+      "sha256": "4488aca8d09192e8cd926d0256b0b5dc9cc9f9da5713f49cb61a082840b018db",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "3f26efcfcf8389acf48e33dd05752fd927a14b471bd0136c3c6c1ef5e697785d",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "packages/application/src/usecases/scheduling/CheckConflicts.ts",
+      "sha256": "e51ab5f36725be99bfa53fd8bd9161fdd363eef9884358ea0bb9b54e3ebca861",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "a293e4a2aed886e226f88f5f8ed41b317c9ba7d644f4755836429622faf2d134",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "packages/validators/src/appointment-settings.ts",
+      "sha256": "883617f151377d19553a1e7bd3cf56798065059f9d922c691482e88cd1e521aa",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "a7b379db39115a250682864096bc58eb201f8d1fd58b8c0b0d38a17938539ed1",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "packages/validators/src/index.ts",
+      "sha256": "fe8edb20f373c9a755f6736973a397d1c5e503bec158131f1447f5258bf60899",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "5e25faa601b628146ebb8d956fc9358f25e4d6b576bf77cfe60040ac367aa2be",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "packages/db/prisma/schema.prisma",
+      "sha256": "9254b37db31422dbe2f5375afc0ad68f2a920234e62d91229b4261bbaaae7637",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "cf668aad20807d1be72497f579d280c00343c6497d666cdfd5b79462d89a0129",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "packages/db/src/index.ts",
+      "sha256": "4214c459341b2bbfef695921632384e33b72f40110054229c0973aad135bd2e5",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "cb4fbf017f3f9887127a9de8bb0bdae1edcae87f1a1df9bffe48e7c17392fcb4",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/api/src/modules/calendar/calendar.router.ts",
+      "sha256": "33518a5068bbfe307ca9964efbb71de2fbfbd4635562b15fe4f69ad4fa2289c6",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "b8e0a95faf31caeb4150eced03c40d6c013636b2b5c95db4ce36f6c31b358cdd",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/api/src/modules/legal/appointments.router.ts",
+      "sha256": "c4330bc7727205d9b5646aac92915b06ead27a052c81d2c4389da31b2deb9468",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "8a5802c7450b721c52bfbf4ce02a13b399ff30701eb7b8d71f28efd45c3ccca2",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/api/src/modules/legal/appointment-settings.router.ts",
+      "sha256": "9aaf4fd83be9d372d5730629db4f43e2c7112b8f602c682994290c896889e9e6",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "dcfe01cf02c07038a3a87e6f7e66a02a21bf64d22622cc1b52e81eb93784cfaa",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/app/calendar/availability/page.tsx",
+      "sha256": "4177a758c1498eb346cd6742a0fb32b836fd395a40fd45835ae4cbf5051c0a24",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "6ba2a62f92879f90965c7aea2445d01b63591ce0b213ead19156a715439714c7",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/app/calendar/calendar-settings/CalendarSettingsContent.tsx",
+      "sha256": "98f3bc126571ed9bd4c4142e2b65452a3ce291ee506f39a2e9021272ce8419a7",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "9e85ae812ac3a50b9f3a14fc06437e85a4cf134ab2ca529da5603f48aeb346ed",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/app/calendar/calendar-settings/components/BufferRemindersTab.tsx",
+      "sha256": "091ba5fc904c5b69bba1c47f1ba44aaea537437499b10024ed77c54e81263238",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "895b35204c5f88074f2b004038cdb5f5a4fcc8b6810e0b1654bc9badb710f589",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/app/calendar/calendar-settings/components/CalendarIntegrationTab.tsx",
+      "sha256": "4de2274e4b781e7817b53cd5c62a74840aa0228b5fd9ed5f5e73c58fd44fb003",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "ad4ac145c8b7edc81b16bfb3489bb4139d1a005cef2b737c0833bebe111b0126",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/components/settings/ModuleSettingsLayout.tsx",
+      "sha256": "af912a957330ac414cf7e9149775e78365736bd77314f0fa5758650f3d296c4d",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "6a7af139bdd658a1590bd8a102085f1c6002a01013b562ca9826cfc2043ba982",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/components/settings/TimezoneSelector.tsx",
+      "sha256": "748540fac8253976646dc39d91b41353edfac079cdc1ea4643a0a16b98103bc7",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "73278b778e8be8e99dd4b8bb47142fb1c94ccde902031aba181b5af11b85c8fa",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/components/appointments/AppointmentForm.tsx",
+      "sha256": "e8d6e00274f5701813ddaee7c355de7756c8e5c776dbd3a3c128c34c4d35dafd",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "2be32792419d1e30392a670e2e0f384b51a47897e54e0ed8daca9e21646cb5df",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/app/appointments/new/page.tsx",
+      "sha256": "271dd3fcef8f5d3c57620b65fdbac5528d5cdb642aaa87dfaa8a84e9031f1ee2",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "e5995f17ad0705dc3c02186c7539e6d9d0f1787de7de38124e2eeb8fddab5c89",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    },
+    {
+      "path": "apps/web/src/components/appointments/AppointmentDetail.tsx",
+      "sha256": "27dc81ccfd386d27e3e51feceb7f27350735f5612621884ec07f3dcc74ad24f2",
+      "read_at": "2026-10-17T17:18:49Z",
+      "final_sha256": "4f0ba5b6d9b992bbbabb6784c70bc8f8ca2ba10af8a7dbe592bd5dc580e30fe5",
+      "final_hashed_at": "2026-10-18T09:19:36Z"
+    }
+  ],
+  "read_at_note": "read_at is the time each file was hashed in one pass at exec start; the files were read during the spec and plan sessions (see PG-202-discussion.md and the plan's Preflight Checks).",
+  "invariants_acknowledged": [
+    "Firm-wide availability only (owner Q1): one configuration per tenant; no per-user overrides.",
+    "Buffers and timezone stay in AppointmentSettings (owner Q2): availability.update is the only writer; appointmentSettings.update/resetToDefaults and /calendar/calendar-settings stop writing them.",
+    "Weekly hours are local minutes-of-day in AppointmentSettings.defaultTimezone; closures are DATE values; appointment instants stay UTC (ADR-081).",
+    "Unconfigured tenants (availabilityConfiguredAt NULL, no row, or migration missing via P2021/P2022) keep the legacy rules byte-for-byte: create 07-19 in input.timezone, reschedule 07-19 in UTC, findNextSlot 9-17 weekdays.",
+    "Aurora boundary: appointments.router.ts changes are limited to the two assertWithinBusinessHours swaps, the findNextSlot branch and the old helper's removal; never touch attendeeIds/linkedCaseIds/clientId/assignedTo ownership checks, ScheduleAppointmentUseCase id checks or cases.router.ts.",
+    "Writes limited to AVAILABILITY_ADMIN_ROLES (owner Q5); every query filters by tenantId explicitly; update/reset run in one $transaction with the settings row first; no skipDuplicates; P2002 -> CONFLICT.",
+    "An appointment must fit inside one merged range of its firm-local start day (owner Q6); forceOverrideConflicts never bypasses availability; the daily cap is best-effort.",
+    "Migration 20261017130000_availability is Class A, merged not applied; the production apply is manual and must precede the API.",
+    "No secret-shaped strings in code, tests, fixtures or commits; Material Symbols only; error text text-red-700 dark:text-red-300."
+  ],
+  "created_at": "2026-10-17T17:18:49Z",
+  "final_refresh_note": "Final hash refresh 2026-10-18T09:19:36Z at the end of exec: sha256/read_at are the exec-start values; final_sha256 is the value at refresh. 21 of the original files changed during the task (the files PG-202 modifies)."
+}

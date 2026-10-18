@@ -1,0 +1,31 @@
+date: 2026-10-18T11:41:24Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
+cmd: pnpm --dir apps/api exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/api --coverage.include=src/modules/calendar/availability.router.ts --coverage.include=src/modules/calendar/availability-enforcement.ts --coverage.include=src/modules/calendar/calendar.router.ts --coverage.include=src/modules/legal/appointment-settings.defaults.ts src/modules/calendar/__tests__ src/__tests__/app-router.smoke.test.ts src/modules/legal/__tests__/appointment-settings.router.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+      Coverage enabled with istanbul
+
+
+ Test Files  7 passed (7)
+      Tests  109 passed (109)
+   Start at  12:41:25
+   Duration  4.22s (transform 4.43s, setup 2.60s, import 7.00s, tests 4.53s, environment 1ms)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |    97.4 |    92.59 |     100 |   99.29 |                   
+ calendar          |   97.36 |    92.59 |     100 |   99.28 |                   
+  ...nforcement.ts |   96.29 |    93.44 |     100 |   98.64 | 302               
+  ...ity.router.ts |   98.07 |    90.32 |     100 |     100 | 39,72,89          
+  ...dar.router.ts |     100 |    93.75 |     100 |     100 | 87                
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 97.4% ( 150/154 )
+Branches     : 92.59% ( 100/108 )
+Functions    : 100% ( 30/30 )
+Lines        : 99.29% ( 140/141 )
+================================================================================
+exit: 0

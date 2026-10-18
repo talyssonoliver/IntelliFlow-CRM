@@ -1,0 +1,30 @@
+date: 2026-10-18T08:55:42Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21 (+ codex run 7 fix)
+cmd: pnpm --dir apps/api exec vitest run src/modules/calendar/__tests__/availability-enforcement.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+ ❯ |api| src/modules/calendar/__tests__/availability-enforcement.test.ts (34 tests | 1 failed) 432ms
+       × keeps searching in batches until the horizon when the first batch has no free slot 308ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/calendar/__tests__/availability-enforcement.test.ts > availability-enforcement (PG-202) > findNextSlotWithinAvailability > keeps searching in batches until the horizon when the first batch has no free slot
+AssertionError: expected "vi.fn()" to be called 2 times, but got 1 times
+ ❯ src/modules/calendar/__tests__/availability-enforcement.test.ts:350:41
+    348|         bufferMinutesAfter: 0,
+    349|       });
+    350|       expect(uc.findFirstFreeCandidate).toHaveBeenCalledTimes(2);
+       |                                         ^
+    351|       const [first, second] = uc.findFirstFreeCandidate.mock.calls.map…
+    352|       expect(first).toHaveLength(2000);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 33 passed (34)
+   Start at  09:55:43
+   Duration  2.33s (transform 1.11s, setup 595ms, import 1.10s, tests 432ms, environment 0ms)
+
+exit: 1

@@ -1,0 +1,31 @@
+{
+  "reviewer": "pg202-sql-reviewer (data-engineer sub-agent)",
+  "migration": "packages/db/prisma/migrations/20261017130000_availability/migration.sql",
+  "verdict": "APPROVE",
+  "class": "A",
+  "statements": [
+    {"sql": "ALTER TABLE appointment_settings ADD COLUMN maxDailyBookings INTEGER", "lock": "ACCESS EXCLUSIVE, metadata-only (nullable, no default, PG11+), held to commit", "risk": "none"},
+    {"sql": "ALTER TABLE appointment_settings ADD COLUMN availabilityConfiguredAt TIMESTAMP(3)", "lock": "ACCESS EXCLUSIVE, metadata-only", "risk": "none"},
+    {"sql": "ADD CONSTRAINT appointment_settings_maxDailyBookings_check CHECK (...) NOT VALID", "lock": "ACCESS EXCLUSIVE, no scan", "risk": "none"},
+    {"sql": "VALIDATE CONSTRAINT appointment_settings_maxDailyBookings_check", "lock": "SHARE UPDATE EXCLUSIVE, but the ACCESS EXCLUSIVE from the earlier ALTER is still held (single migration transaction); scan covers only one row per tenant, all NULL", "risk": "low"},
+    {"sql": "CREATE TABLE availability_hours / availability_closures (+ CHECKs)", "lock": "none on existing objects", "risk": "none"},
+    {"sql": "CREATE [UNIQUE] INDEX x4 on the new empty tables", "lock": "SHARE on new empty tables only", "risk": "none"},
+    {"sql": "ADD FOREIGN KEY (tenantId) REFERENCES tenants(id) x2", "lock": "SHARE ROW EXCLUSIVE on tenants (blocks concurrent writes to tenants, not reads) plus the new table; new table is empty so no validation scan; tenants is small, hold is milliseconds", "risk": "low"},
+    {"sql": "ENABLE ROW LEVEL SECURITY + CREATE POLICY x2 (DO block, duplicate_object guard)", "lock": "ACCESS EXCLUSIVE on new tables only", "risk": "none"}
+  ],
+  "drift_check": "Compared by reading, not by running prisma migrate diff. Column types match Prisma mapping: Int @db.SmallInt -> SMALLINT, Int? -> INTEGER, DateTime? -> TIMESTAMP(3), DateTime @db.Date -> DATE, String? @db.VarChar(200) -> VARCHAR(200), cuid id -> TEXT, createdAt DEFAULT CURRENT_TIMESTAMP. Nullability matches (maxDailyBookings, availabilityConfiguredAt, reason nullable; rest NOT NULL). Index names match Prisma defaults: availability_hours_tenantId_weekday_startMinute_key (unique), availability_hours_tenantId_weekday_idx, availability_closures_tenantId_startDate_endDate_key (unique), availability_closures_tenantId_startDate_idx. FK names availability_*_tenantId_fkey with ON DELETE CASCADE ON UPDATE CASCADE match the Prisma default for a required relation with onDelete Cascade. CHECK constraints and RLS are invisible to Prisma, so they cannot cause drift. Migration is the newest directory (after 20261016120100), so ordering is correct. Recommend the lead still run `prisma migrate diff --from-migrations ... --to-schema-datamodel --exit-code` against the ephemeral test DB as mechanical confirmation.",
+  "findings": [
+    {"severity": "INFO", "detail": "NOT VALID then VALIDATE on the maxDailyBookings CHECK gives no lock benefit here: the ADD already took ACCESS EXCLUSIVE and the migration runs in one transaction, so it is held to commit. Harmless because the scan is tiny and cannot fail (all NULL), and it mirrors the 20261013120000_case_types precedent.", "fix": "None required. Optionally simplify to a plain ADD CONSTRAINT ... CHECK, or leave the comment accurate (it already is)."},
+    {"sql": "n/a", "severity": "INFO", "detail": "FK to tenants takes SHARE ROW EXCLUSIVE on tenants briefly; a concurrent tenant insert/update waits for the migration transaction. Acceptable for Class A (case_types precedent does the same).", "fix": "None."},
+    {"severity": "INFO", "detail": "RLS policy bodies are identical to 20261013120000_case_types (USING and WITH CHECK on current_setting('app.current_tenant_id', true), duplicate_object guard, RLS enabled but not FORCEd). Behaviour on rows with an unset GUC is deny (NULL comparison) for non-owner roles, same as precedent.", "fix": "None."},
+    {"severity": "INFO", "detail": "Not idempotent on re-run (CREATE TABLE/INDEX without IF NOT EXISTS, ADD COLUMN without IF NOT EXISTS), consistent with the repo's Prisma migrations; migrate deploy records applied state and the whole file is one transaction, so a failure rolls back cleanly.", "fix": "None."},
+    {"severity": "INFO", "detail": "Schema ids are Prisma-generated cuid TEXT with no DB default, same as precedent. Overlap of hour ranges for the same weekday is only prevented by the (tenantId, weekday, startMinute) unique key, not by an exclusion constraint; overlapping ranges with different start minutes are an application-level rule.", "fix": "Ensure the domain/validator rejects overlapping ranges (application concern, not a migration blocker)."},
+    {"severity": "INFO", "detail": "Recovery plan is correct and matches Class C boundaries: forward-only, operational rollback via clearing availabilityConfiguredAt, destructive down-migration human-only. Comment that the migration must be applied before the API is promoted is correct since the API reads the new columns.", "fix": "None."}
+  ],
+  "reviewed_files": [
+    "packages/db/prisma/migrations/20261017130000_availability/migration.sql",
+    "packages/db/prisma/migrations/20261013120000_case_types/migration.sql",
+    "packages/db/prisma/schema.prisma (AppointmentSettings 2385-2408, AvailabilityHour 2412-2424, AvailabilityClosure 2428-2440)",
+    "packages/db/prisma/migrations/20260419200100_appointment_settings/migration.sql (grep)"
+  ]
+}

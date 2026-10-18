@@ -1,0 +1,31 @@
+{
+  "stoa": "Foundation",
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "verdict": "PASS",
+  "produced_by": "stoa-foundation sub-agent",
+  "produced_at": "2026-10-18T11:42:39Z",
+  "head": "72051d1931b0e4830b573349395eba1a4ca3c405",
+  "supersedes": "Foundation.recheck.json (PASS at 2ac93b60f)",
+  "gates": [
+    {"gate": "matrix completeness and head", "result": "PASS", "evidence_log": "matop/validation-matrix/summary.tsv: 20 rows all exit 0, last line 'done'; all 20 .txt log headers show head 72051d193; no .log files remain in the directory", "notes": ""},
+    {"gate": "typecheck (domain, application, validators, api, web, ui)", "result": "PASS", "evidence_log": "matop/validation-matrix/09-typecheck.txt (exit 0)", "notes": ""},
+    {"gate": "lint + CI=1 sonar guard", "result": "PASS", "evidence_log": "matop/validation-matrix/10-lint.txt (exit 0)", "notes": ""},
+    {"gate": "build (domain, application, validators, db, api, web next build)", "result": "PASS", "evidence_log": "matop/validation-matrix/11-build.txt (exit 0); line 373 lists '/calendar/availability' in the route table", "notes": ""},
+    {"gate": "tests", "result": "PASS", "evidence_log": "summary.tsv rows 01-08 and 05b exit 0; 06-api-full.txt: 7798 passed, 18 skipped; 08-web-full.txt: 12957 passed", "notes": "Domain, db and integration counts (db 224, integration 21) come from the lead's message and the summary exit codes."},
+    {"gate": "diff coverage", "result": "PASS", "evidence_log": "matop/validation-matrix/18-diff-coverage.txt (exit 0, TOTAL new_coverage 96.3%, 1138/1182)", "notes": ""},
+    {"gate": "preflights", "result": "PASS", "evidence_log": "summary.tsv row 19 exit 0", "notes": ""},
+    {"gate": "no tracked log/coverage/tsbuildinfo files", "result": "PASS", "evidence_log": "git ls-files | grep -cE '\\.(log|coverage|tsbuildinfo)$' = 0", "notes": ""},
+    {"gate": "dependency hygiene", "result": "PASS", "evidence_log": "git diff origin/main...HEAD --name-only: no package.json or pnpm-lock.yaml", "notes": ""},
+    {"gate": "forbidden constructs in non-test code", "result": "PASS", "evidence_log": "grep of added non-test .ts/.tsx lines for any, ts-ignore, ts-expect-error, istanbul ignore, console.log: no matches (includes the changes in AvailabilityContent.tsx and appointments.router.ts since 2ac93b60f)", "notes": ""},
+    {"gate": "secret-shaped strings", "result": "PASS", "evidence_log": "grep of added lines for credentialed DB URLs, Bearer, GitHub/OpenAI/AWS/Notion token prefixes, JWT, private key, neon.tech: only hits are pattern descriptions in earlier verdict JSON files; the migration.sql change and other files since 2ac93b60f show none", "notes": "Run gitleaks on this file as requested."},
+    {"gate": "diff hygiene", "result": "PASS", "evidence_log": "git diff --numstat origin/main...HEAD: schema.prisma 58/21, codex-review-waivers.yaml 30/0", "notes": ""},
+    {"gate": "call site verification", "result": "PASS", "evidence_log": "apps/api/src/modules/legal/appointments.router.ts:467 (create) and :760 (reschedule) call assertAppointmentWithinAvailability; reschedule moved from line 747 to 760 with the authorise-first change", "notes": "I did not read the new authorisation ordering; Domain and Security STOAs own that."},
+    {"gate": "codex review", "result": "PASS for 2ac93b60f code, not rerun after 66f8f400e", "evidence_log": "matop/codex-review/codex-review-8.txt (head fdd76e690 plus uncommitted batching fix, Verdict PASS, 08:56Z)", "notes": "Shipped code changed after run 8 in 6ba9061f1 and 66f8f400e (reschedule authorisation order, skew notice, migration CHECK bounds). The migration change has its own SQL re-review (APPROVE per the lead). The pre-push gate reruns codex."}
+  ],
+  "findings": [
+    {"severity": "low", "file": "matop/codex-review/codex-review-8.txt", "line": 0, "issue": "The last codex run predates the review-round fixes in 66f8f400e.", "fix": "Optional: one codex run at final HEAD; the pre-push gate does this anyway."},
+    {"severity": "low", "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/*.txt, summary.tsv", "line": 0, "issue": "These 21 evidence files show as modified (uncommitted) in the worktree: the rerun at 72051d193 is not in a commit yet. Also modified: artifacts/benchmarks/IFC-310-merge.json, artifacts/coverage/*, artifacts/reports/a11y-route-reconcile.json.", "fix": "Commit the matrix evidence before push so the PR carries the logs this verdict relied on; keep the artifacts files out of the PR."}
+  ],
+  "limitations": "Read-only review: nothing was run. The verdict rests on the summary and the headers and tails of the logs; only the api and web counts were read from row logs. Files changed since 2ac93b60f were reviewed by list and by the grep checks, not line by line. The matrix logs I read are the uncommitted working-tree versions."
+}

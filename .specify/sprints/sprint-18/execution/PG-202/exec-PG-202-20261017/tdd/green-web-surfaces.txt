@@ -1,0 +1,13 @@
+date: 2026-10-17T18:11:23Z
+head: 1b9202314f7de784a3a693fe68eacc423db6e019
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar src/components/appointments/__tests__ src/app/appointments/new src/components/settings/__tests__/ModuleSettingsLayout.test.tsx src/components/settings/__tests__/TimezoneSelector.test.tsx src/components/aurora-landing/sections/__tests__/InboxCalendarSection.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+
+ Test Files  26 passed (26)
+      Tests  313 passed (313)
+   Start at  19:11:24
+   Duration  19.28s (transform 1.88s, setup 8.30s, import 12.26s, tests 26.30s, environment 20.46s)
+
+exit: 0

@@ -1,0 +1,19 @@
+date: 2026-10-18T11:27:24Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
+cmd: pnpm --filter @intelliflow/db test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\db
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/db
+
+
+ Test Files  15 passed | 1 skipped (16)
+      Tests  224 passed | 14 skipped (238)
+   Start at  12:27:25
+   Duration  2.38s (transform 1.62s, setup 0ms, import 2.98s, tests 424ms, environment 2ms)
+
+exit: 0

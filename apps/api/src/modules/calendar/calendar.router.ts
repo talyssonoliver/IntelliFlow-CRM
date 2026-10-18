@@ -12,8 +12,12 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { createCalendarSchema, updateCalendarSchema } from '@intelliflow/validators';
+import { availabilityRouter } from './availability.router';
 
 export const calendarRouter = createTRPCRouter({
+  /** Firm availability: weekly hours, closures, daily cap (PG-202). */
+  availability: availabilityRouter,
+
   /**
    * List all custom calendars for the current tenant
    */

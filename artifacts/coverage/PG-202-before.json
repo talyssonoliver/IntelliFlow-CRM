@@ -1,0 +1,309 @@
+{
+  "task_id": "PG-202",
+  "phase": "before",
+  "captured_at": "2026-10-17T17:17:25.493Z",
+  "source": "artifacts/coverage/coverage-summary.json (committed baseline @ 1b9202314, branch feat/pg-202-availability); no fresh full coverage run (shared machine, slot limits) - PG-204 precedent",
+  "total": {
+    "lines": {
+      "total": 96052,
+      "covered": 9899,
+      "skipped": 0,
+      "pct": 10.3
+    },
+    "statements": {
+      "total": 104374,
+      "covered": 10522,
+      "skipped": 0,
+      "pct": 10.08
+    },
+    "functions": {
+      "total": 22572,
+      "covered": 2652,
+      "skipped": 0,
+      "pct": 11.74
+    },
+    "branches": {
+      "total": 66726,
+      "covered": 6156,
+      "skipped": 0,
+      "pct": 9.22
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "files": {
+    "apps/api/src/modules/calendar/calendar.router.ts": {
+      "lines": {
+        "total": 19,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 5.26
+      },
+      "functions": {
+        "total": 4,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 19,
+        "covered": 1,
+        "skipped": 0,
+        "pct": 5.26
+      },
+      "branches": {
+        "total": 16,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/app/calendar/calendar-settings/CalendarSettingsContent.tsx": {
+      "lines": {
+        "total": 42,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 16,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 49,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 36,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/app/calendar/calendar-settings/components/BufferRemindersTab.tsx": {
+      "lines": {
+        "total": 6,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 5,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 6,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 4,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/app/calendar/calendar-settings/components/CalendarIntegrationTab.tsx": {
+      "lines": {
+        "total": 7,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 6,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 7,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 6,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/components/appointments/AppointmentDetail.tsx": {
+      "lines": {
+        "total": 80,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 43,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 89,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 107,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/components/appointments/AppointmentForm.tsx": {
+      "lines": {
+        "total": 90,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 30,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 107,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 114,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/components/settings/ModuleSettingsLayout.tsx": {
+      "lines": {
+        "total": 10,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 6,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 10,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 14,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "apps/web/src/components/settings/TimezoneSelector.tsx": {
+      "lines": {
+        "total": 39,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 10,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 40,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 18,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "packages/application/src/usecases/scheduling/CheckConflicts.ts": {
+      "lines": {
+        "total": 39,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 7,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 39,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 36,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    },
+    "packages/validators/src/appointment-settings.ts": {
+      "lines": {
+        "total": 11,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 1,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 11,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 15,
+        "covered": 0,
+        "skipped": 0,
+        "pct": 0
+      }
+    }
+  },
+  "files_without_baseline": [
+    "packages/domain/src/index.ts",
+    "packages/validators/src/index.ts",
+    "packages/db/src/index.ts",
+    "apps/api/src/modules/legal/appointments.router.ts",
+    "apps/api/src/modules/legal/appointment-settings.router.ts",
+    "apps/web/src/app/calendar/availability/page.tsx",
+    "apps/web/src/app/appointments/new/page.tsx"
+  ]
+}

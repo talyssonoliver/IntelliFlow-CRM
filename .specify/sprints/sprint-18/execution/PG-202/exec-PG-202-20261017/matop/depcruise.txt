@@ -1,0 +1,29 @@
+date: 2026-10-18T09:17:24Z
+head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
+cmd: npx depcruise --config .dependency-cruiser.cjs packages/domain/src packages/application/src packages/validators/src apps/api/src/modules/calendar
+  warn no-circular: apps/api/src/middleware/rate-limit.ts → 
+      apps/api/src/context.ts →
+      apps/api/src/container.ts →
+      apps/api/src/modules/account/account-duplicate-detection.service.ts →
+      apps/api/src/modules/notifications/notifications.router.ts →
+      apps/api/src/trpc.ts →
+      apps/api/src/middleware/rate-limit.ts
+  warn no-circular: apps/api/src/container.ts → 
+      apps/api/src/security/index.ts →
+      apps/api/src/security/middleware.ts →
+      apps/api/src/context.ts →
+      apps/api/src/container.ts
+  warn no-circular: apps/api/src/container.ts → 
+      apps/api/src/modules/contact/contact-duplicate-detection.service.ts →
+      apps/api/src/modules/notifications/notifications.router.ts →
+      apps/api/src/context.ts →
+      apps/api/src/container.ts
+  warn no-circular: apps/api/src/container.ts → 
+      apps/api/src/modules/account/account-duplicate-detection.service.ts →
+      apps/api/src/modules/notifications/notifications.router.ts →
+      apps/api/src/context.ts →
+      apps/api/src/container.ts
+
+x 212 dependency violations (0 errors, 212 warnings). 1080 modules, 3074 dependencies cruised.
+
+exit: 0

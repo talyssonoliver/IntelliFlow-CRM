@@ -5,12 +5,18 @@
  * to achieve real code coverage for appointments.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
 import { Result } from '@intelliflow/domain';
 import { appointmentsRouter } from '../appointments.router';
-import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
+import { prismaMock, createTestContext, generateTestUUID, TEST_UUIDS } from '../../../test/setup';
 import { container } from '../../../container';
+import {
+  h,
+  weekdayRanges,
+  stubTenantAvailability,
+  expectEveryCallTenantScoped,
+} from '../../calendar/__tests__/availability.test-utils';
 
 // Mock the AppointmentDomainService
 vi.mock('../../../services', () => ({
@@ -313,6 +319,11 @@ describe('Appointments Router - Caller Tests', () => {
   });
 
   describe('reschedule', () => {
+    beforeEach(() => {
+      // reschedule loads and authorises the target before anything else.
+      prismaMock.appointment.findFirst.mockResolvedValue({ id: mockAppointment.id } as any);
+    });
+
     it('should reschedule an appointment', async () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
@@ -931,6 +942,324 @@ describe('Appointments Router - Caller Tests', () => {
       expect(result).toBeDefined();
       expect(result.total).toBe(10);
       expect(result.byStatus).toBeDefined();
+    });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PG-202: firm availability enforced at booking (AC-015, AC-016, AC-017, AC-020)
+// ---------------------------------------------------------------------------
+describe('availability enforcement (PG-202)', () => {
+  const NOW = new Date('2026-04-13T06:00:00Z'); // Monday 07:00 BST
+  const APPT = TEST_UUIDS.task1;
+  const TENANT = TEST_UUIDS.tenant;
+  const MON_FRI_9_12 = weekdayRanges([[h(9), h(12)]]);
+
+  function okCreate() {
+    vi.mocked(container.scheduleAppointmentUseCase.execute).mockResolvedValue(
+      Result.ok({ appointment: { id: { value: APPT } } as any, conflictWarnings: [] })
+    );
+    prismaMock.appointment.findUnique.mockResolvedValue({
+      id: APPT,
+      attendees: [],
+      linkedCases: [],
+    } as any);
+  }
+
+  function okReschedule() {
+    vi.mocked(container.rescheduleAppointmentUseCase.execute).mockResolvedValue(
+      Result.ok({ previousTimeSlot: { startTime: NOW, endTime: NOW }, conflictWarnings: [] } as any)
+    );
+    prismaMock.appointment.findUnique.mockResolvedValue({
+      id: APPT,
+      attendees: [],
+      linkedCases: [],
+    } as any);
+  }
+
+  const create = (start: string, end: string, extra: Record<string, unknown> = {}) =>
+    appointmentsRouter.createCaller(createTestContext()).create({
+      title: 'Client call',
+      startTime: new Date(start),
+      endTime: new Date(end),
+      appointmentType: 'MEETING',
+      ...extra,
+    } as any);
+
+  const reschedule = (start: string, end: string) =>
+    appointmentsRouter
+      .createCaller(createTestContext())
+      .reschedule({ id: APPT, newStartTime: new Date(start), newEndTime: new Date(end) });
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(NOW);
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  describe('create', () => {
+    it('allows a booking inside the firm hours and calls the use case', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12 });
+      okCreate();
+      await expect(create('2026-04-14T09:00:00Z', '2026-04-14T10:00:00Z')).resolves.toBeDefined();
+      expect(container.scheduleAppointmentUseCase.execute).toHaveBeenCalledTimes(1);
+      expectEveryCallTenantScoped(prismaMock, TENANT);
+    });
+
+    it.each([
+      [
+        'outside hours',
+        {},
+        '2026-04-14T12:00:00Z',
+        '2026-04-14T13:00:00Z',
+        /Tuesday must fall within 09:00-12:00/,
+      ],
+      [
+        'a closed weekday',
+        {},
+        '2026-04-18T09:00:00Z',
+        '2026-04-18T10:00:00Z',
+        /closed on Saturdays/,
+      ],
+      [
+        'a closure date',
+        { closures: [{ startDate: '2026-04-14', endDate: '2026-04-14' }] },
+        '2026-04-14T09:00:00Z',
+        '2026-04-14T10:00:00Z',
+        /closed on 2026-04-14/,
+      ],
+      [
+        'the daily cap',
+        { cap: 1, count: 1 },
+        '2026-04-14T09:00:00Z',
+        '2026-04-14T10:00:00Z',
+        /daily booking limit/,
+      ],
+      [
+        'running past midnight',
+        { ranges: weekdayRanges([[0, 1440]], [0, 1, 2, 3, 4, 5, 6]) },
+        '2026-04-14T22:30:00Z',
+        '2026-04-14T23:30:00Z',
+        /past midnight/,
+      ],
+    ])('rejects %s before the use case runs', async (_label, stub, start, end, message) => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12, ...stub });
+      okCreate();
+      await expect(create(start, end)).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+        message: expect.stringMatching(message),
+      });
+      expect(container.scheduleAppointmentUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('is not bypassed by forceOverrideConflicts', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12 });
+      okCreate();
+      await expect(
+        create('2026-04-18T09:00:00Z', '2026-04-18T10:00:00Z', { forceOverrideConflicts: true })
+      ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    });
+
+    it('uses the firm zone and ignores input.timezone', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12 });
+      okCreate();
+      // 08:30Z = 09:30 BST (open); in Tokyo it is 17:30.
+      await expect(
+        create('2026-04-14T08:30:00Z', '2026-04-14T09:30:00Z', { timezone: 'Asia/Tokyo' })
+      ).resolves.toBeDefined();
+    });
+
+    it('keeps the legacy 07:00-19:00 rule for a tenant that never saved availability', async () => {
+      stubTenantAvailability(prismaMock, { configured: false });
+      okCreate();
+      await expect(create('2026-04-18T15:00:00Z', '2026-04-18T16:00:00Z')).resolves.toBeDefined(); // Saturday ok
+      await expect(create('2026-04-14T06:00:00Z', '2026-04-14T07:00:00Z')).rejects.toMatchObject({
+        message: 'Appointments must start and end between 07:00 and 19:00.',
+      });
+    });
+
+    it('runs the availability check before the use case', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12 });
+      okCreate();
+      await create('2026-04-14T09:00:00Z', '2026-04-14T10:00:00Z');
+      const settingsRead = prismaMock.appointmentSettings.findUnique.mock.invocationCallOrder[0];
+      const useCase = vi.mocked(container.scheduleAppointmentUseCase.execute).mock
+        .invocationCallOrder[0];
+      expect(settingsRead).toBeLessThan(useCase);
+    });
+  });
+
+  describe('reschedule', () => {
+    beforeEach(() => {
+      prismaMock.appointment.findFirst.mockResolvedValue({ id: APPT } as any);
+    });
+
+    it('returns NOT_FOUND for an unknown or foreign appointment before any availability check', async () => {
+      stubTenantAvailability(prismaMock, {
+        ranges: MON_FRI_9_12,
+        closures: [{ startDate: '2026-04-15', endDate: '2026-04-15' }],
+      });
+      prismaMock.appointment.findFirst.mockResolvedValue(null);
+      okReschedule();
+      await expect(
+        reschedule('2026-04-15T09:00:00Z', '2026-04-15T10:00:00Z')
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(prismaMock.appointment.findFirst).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: APPT, tenantId: TENANT } })
+      );
+      expect(prismaMock.appointmentSettings.findUnique).not.toHaveBeenCalled();
+      expect(container.rescheduleAppointmentUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('rejects a move onto a closure date', async () => {
+      stubTenantAvailability(prismaMock, {
+        ranges: MON_FRI_9_12,
+        closures: [{ startDate: '2026-04-15', endDate: '2026-04-15' }],
+      });
+      okReschedule();
+      await expect(
+        reschedule('2026-04-15T09:00:00Z', '2026-04-15T10:00:00Z')
+      ).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+        message: 'The firm is closed on 2026-04-15.',
+      });
+      expect(container.rescheduleAppointmentUseCase.execute).not.toHaveBeenCalled();
+    });
+
+    it('excludes the appointment itself from the daily cap', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12, cap: 2, count: 1 });
+      okReschedule();
+      await expect(
+        reschedule('2026-04-14T09:00:00Z', '2026-04-14T10:00:00Z')
+      ).resolves.toBeDefined();
+      expect(prismaMock.appointment.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ tenantId: TENANT, id: { not: APPT } }),
+      });
+    });
+
+    it('rejects a move into a full day', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12, cap: 2, count: 2 });
+      okReschedule();
+      await expect(
+        reschedule('2026-04-14T09:00:00Z', '2026-04-14T10:00:00Z')
+      ).rejects.toMatchObject({
+        message: 'The daily booking limit for 2026-04-14 has been reached.',
+      });
+    });
+
+    it('uses the firm zone, not UTC', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12 });
+      okReschedule();
+      // 11:30Z is inside the legacy UTC window but 12:30 BST, after the firm closes at 12:00.
+      await expect(
+        reschedule('2026-04-14T08:00:00Z', '2026-04-14T09:00:00Z')
+      ).resolves.toBeDefined();
+      await expect(
+        reschedule('2026-04-14T11:30:00Z', '2026-04-14T12:00:00Z')
+      ).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+      });
+    });
+
+    it('keeps the legacy UTC rule for a tenant that never saved availability', async () => {
+      stubTenantAvailability(prismaMock, { configured: false });
+      okReschedule();
+      await expect(
+        reschedule('2026-04-14T06:00:00Z', '2026-04-14T07:00:00Z')
+      ).rejects.toMatchObject({
+        message: 'Appointments must start and end between 07:00 and 19:00.',
+      });
+    });
+  });
+
+  describe('findNextSlot', () => {
+    it('keeps the legacy 9-17 call for an unconfigured tenant', async () => {
+      stubTenantAvailability(prismaMock, { configured: false });
+      vi.mocked(container.checkConflictsUseCase.findNextSlot).mockResolvedValue(
+        Result.ok({ slot: null, searchedUntil: NOW } as any)
+      );
+      await appointmentsRouter
+        .createCaller(createTestContext())
+        .findNextSlot({ attendeeId: TEST_UUIDS.user1, startFrom: NOW, durationMinutes: 60 });
+      expect(container.checkConflictsUseCase.findNextSlot).toHaveBeenCalledWith(
+        expect.objectContaining({ workingHoursStart: 9, workingHoursEnd: 17 })
+      );
+    });
+
+    it('offers only slots inside saved availability for a configured tenant', async () => {
+      stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12 });
+      const findFirstFreeCandidate = vi
+        .fn()
+        .mockImplementation(async ({ candidates }: any) => Result.ok(candidates[1]));
+      (container.checkConflictsUseCase as any).findFirstFreeCandidate = findFirstFreeCandidate;
+
+      const result = await appointmentsRouter
+        .createCaller(createTestContext())
+        .findNextSlot({ attendeeId: TEST_UUIDS.user1, startFrom: NOW, durationMinutes: 60 });
+
+      expect(container.checkConflictsUseCase.findNextSlot).not.toHaveBeenCalled();
+      expect(result.slot).toEqual({
+        startTime: new Date('2026-04-13T09:00:00Z'), // 10:00 BST Monday, second grid point
+        endTime: new Date('2026-04-13T10:00:00Z'),
+        durationMinutes: 60,
+      });
+      expect(typeof result.searchDurationMs).toBe('number');
+    });
+  });
+
+  describe('cross-tenant isolation', () => {
+    const OTHER = generateTestUUID('tenant-b');
+
+    function stubPerTenant() {
+      // Tenant A (TENANT): Mon-Fri 09-12. Tenant B (OTHER): never configured.
+      prismaMock.appointmentSettings.findUnique.mockImplementation((async (args: any) =>
+        args.where.tenantId === TENANT
+          ? {
+              availabilityConfiguredAt: new Date('2026-04-01T00:00:00Z'),
+              defaultTimezone: 'Europe/London',
+              maxDailyBookings: null,
+            }
+          : null) as any);
+      prismaMock.availabilityHour.findMany.mockImplementation((async (args: any) =>
+        args.where.tenantId === TENANT ? MON_FRI_9_12 : []) as any);
+      prismaMock.availabilityClosure.findMany.mockResolvedValue([] as any);
+    }
+
+    function ctxFor(tenantId: string) {
+      const base = createTestContext();
+      return createTestContext({
+        user: { ...base.user!, tenantId },
+        tenant: { ...base.tenant!, tenantId },
+      });
+    }
+
+    it('the hours of tenant A never govern a booking of tenant B', async () => {
+      stubPerTenant();
+      okCreate();
+      const input = {
+        title: 'Call',
+        startTime: new Date('2026-04-18T14:00:00Z'), // Saturday
+        endTime: new Date('2026-04-18T15:00:00Z'),
+        appointmentType: 'MEETING',
+      } as any;
+
+      await expect(
+        appointmentsRouter.createCaller(ctxFor(OTHER)).create(input)
+      ).resolves.toBeDefined();
+      await expect(
+        appointmentsRouter.createCaller(ctxFor(TENANT)).create(input)
+      ).rejects.toMatchObject({
+        code: 'BAD_REQUEST',
+      });
+
+      const tenantsRead = prismaMock.appointmentSettings.findUnique.mock.calls.map(
+        (c: any) => c[0].where.tenantId
+      );
+      expect(tenantsRead).toEqual([OTHER, TENANT]);
     });
   });
 });

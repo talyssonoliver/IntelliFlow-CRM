@@ -63,6 +63,15 @@ export interface FindNextSlotOutput {
   searchedUntil: Date;
 }
 
+export interface FindFirstFreeCandidateInput {
+  tenantId: string;
+  attendeeId: string;
+  /** Candidate slots in the order they should be tried (PG-202: generated from firm availability). */
+  candidates: { start: Date; end: Date }[];
+  bufferMinutesBefore?: number;
+  bufferMinutesAfter?: number;
+}
+
 /**
  * Check Conflicts Use Case
  * Checks for scheduling conflicts and availability
@@ -236,6 +245,55 @@ export class CheckConflictsUseCase {
       return Result.fail(
         new PersistenceError(
           `Failed to find next slot: ${error instanceof Error ? error.message : 'Unknown error'}`
+        )
+      );
+    }
+  }
+  /**
+   * First candidate with no conflict (PG-202). One repository read covers the
+   * whole candidate window; each candidate is then checked in memory.
+   */
+  async findFirstFreeCandidate(
+    input: FindFirstFreeCandidateInput
+  ): Promise<Result<{ start: Date; end: Date } | null, DomainError>> {
+    if (input.candidates.length === 0) return Result.ok(null);
+    try {
+      const bufferResult = Buffer.create(
+        input.bufferMinutesBefore ?? 0,
+        input.bufferMinutesAfter ?? 0
+      );
+      if (bufferResult.isFailure) {
+        return Result.fail(bufferResult.error);
+      }
+      const buffer = bufferResult.value;
+      // Existing appointments are compared by their buffered times, so the read also
+      // reaches back and forward by the largest buffer an existing appointment can hold.
+      const reach = Buffer.MAX_MINUTES * 60_000;
+      const windowStart = Math.min(...input.candidates.map((c) => c.start.getTime()));
+      const windowEnd = Math.max(...input.candidates.map((c) => c.end.getTime()));
+
+      const existingAppointments = await this.appointmentRepository
+        .forTenant(input.tenantId)
+        .findForConflictCheck([input.attendeeId], {
+          startTime: new Date(buffer.adjustStartTime(new Date(windowStart)).getTime() - reach),
+          endTime: new Date(buffer.adjustEndTime(new Date(windowEnd)).getTime() + reach),
+        });
+
+      for (const candidate of input.candidates) {
+        const slot = TimeSlot.create(candidate.start, candidate.end);
+        if (slot.isFailure) continue;
+        const result = ConflictDetector.checkTimeSlotConflicts(
+          slot.value,
+          buffer,
+          existingAppointments
+        );
+        if (!result.hasConflicts) return Result.ok(candidate);
+      }
+      return Result.ok(null);
+    } catch (error) {
+      return Result.fail(
+        new PersistenceError(
+          `Failed to find a free slot: ${error instanceof Error ? error.message : 'Unknown error'}`
         )
       );
     }
