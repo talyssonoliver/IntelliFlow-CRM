@@ -228,8 +228,9 @@ function changedFields(existing: OwnedContactType, input: CreateContactTypeInput
   const changed: string[] = EDITABLE_FIELDS.filter(
     (field) => JSON.stringify(existing[field]) !== JSON.stringify(fieldsData(input)[field])
   );
-  const before = existing.defaultTags.map((t) => t.contactTagId).sort();
-  const after = [...input.defaultTagIds].sort();
+  const byId = (a: string, b: string) => a.localeCompare(b);
+  const before = existing.defaultTags.map((t) => t.contactTagId).sort(byId);
+  const after = [...input.defaultTagIds].sort(byId);
   if (JSON.stringify(before) !== JSON.stringify(after)) changed.push('defaultTags');
   return changed;
 }
