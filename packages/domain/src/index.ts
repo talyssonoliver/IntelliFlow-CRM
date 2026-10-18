@@ -113,6 +113,9 @@ export * from './ai/review';
 // AI Domain - Conversation Records (IFC-148)
 export * from './ai/conversation-record';
 
+// AI Domain - Approval Policies (PG-198)
+export * from './ai/approval-policy';
+
 // Auth Domain - Constants
 export * from './auth/AuthConstants';
 

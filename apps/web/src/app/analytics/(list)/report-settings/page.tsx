@@ -7,8 +7,7 @@ import ReportSettingsLoading from './loading';
 
 export const metadata = {
   title: 'Report Settings — Aurora',
-  description:
-    'Configure default date range, display currency, and scheduled delivery for analytics reports.',
+  description: 'Configure the default date range and display currency for analytics reports.',
 };
 
 export default function ReportSettingsPage() {

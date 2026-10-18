@@ -91,6 +91,7 @@ describe('PrismaAutoResponseDraftRepository', () => {
         escalationCount: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
+        incrementVersion: vi.fn(),
       };
 
       await repo.save(draft as any);

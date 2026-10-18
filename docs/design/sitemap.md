@@ -227,7 +227,7 @@ intelliflow.com
 │   │   └── /agent-approvals/ai-review/[id]  Review detail
 │   ├── /agent-approvals/ai-search        AI-powered search
 │   ├── /agent-approvals/ai-settings      AI configuration settings
-│   ├── /agent-approvals/approval-policies  Approval policy rules
+│   ├── /agent-approvals/approval-policies  Approval rules for both AI queues (PG-198)
 │   ├── /agent-approvals/churn-risk       Churn risk analysis
 │   ├── /agent-approvals/drift            Model drift monitoring
 │   ├── /agent-approvals/experiments      A/B experiment hub

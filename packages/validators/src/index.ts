@@ -107,6 +107,7 @@ export * from './contact-settings';
 export * from './account-settings';
 export * from './account-tiers';
 export * from './account-territories';
+export * from './approval-policies';
 
 // Deal Settings Schemas (PG-184)
 export * from './deal-settings';
@@ -138,5 +139,7 @@ export * from './required-url';
 
 // Report Template Schemas (PG-200)
 export * from './report-templates';
+// Scheduled Report Schemas (PG-201)
+export * from './scheduled-reports';
 // Terms Acceptance Schemas (IFC-309)
 export * from './terms-acceptance';

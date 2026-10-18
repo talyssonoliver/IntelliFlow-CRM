@@ -1089,6 +1089,16 @@ Runtime Wiring (IFC-222):
 
 Backend (done):  ANALYTICS-001 ✅ + IFC-003 ✅ + IFC-096 ✅ ──► IFC-200 ✅ ──► IFC-190 ✅
 Frontend (next): IFC-037 ⬜ ──► IFC-038 ⬜ (wires IFC-190 to UI)
+
+PG-201 (Scheduled Reports, ADR-078) ✅:
+  PG-178 ✅ + PG-187 ✅ (report settings) + PG-200 ✅ (report_templates)
+    ──► validators scheduled-reports.ts (cadence presets, cron, IANA timezone, recipients, tags)
+    ──► db migration 20261013120000_report_schedules_pg201
+          (report_schedules evolved in place, report_schedule_tags, report_executions.templateId,
+           one-time report_settings.scheduledDelivery copy)
+    ──► api scheduled-reports.router.ts (analytics.scheduledReports.*, cron-parser nextRunAt)
+    ──► web /analytics/scheduled-reports (ScheduledReportsContent) + Report Settings link card
+    ──► IFC-308 ⬜ BullMQ cron reads active report_schedules (pattern + tz) — category-2 consumer
 ```
 
 ---
@@ -1300,6 +1310,19 @@ Dependency Chain:
   IFC-021 (Agents) ✅ ──┬──► IFC-139 (Tools Auth) ✅ ──► IFC-149 (Approval) ✅ ──► agent.router ✅ ──► UI ⬜
                         ├──► IFC-148 (Memory) ✅ ────────────────────────────────────────────────────┘
                         └──► IFC-125 (Guardrails) ✅ ──► IFC-128 (Review) ⏳ ────────────────────────┘
+
+PG-198 (Approval Policies, ADR-079) — extends IFC-149 and IFC-029:
+  domain ai/approval-policy (constants, resolver, predicates)
+    ──► validators approval-policies.ts
+    ──► db migrations 20261016120000_approval_policies (2 tables, CHECKs, RLS; agent_actions
+          escalatedAt/escalatedTo, confidenceScore nullable)
+          + 20261016120100_agent_actions_pending_sweep_idx (CONCURRENTLY)
+    ──► api approval-policy-loader + approved-action-executor + approval-escalation-sweep/scheduler
+          ──► agent.router (expiry, min role, auto-approve, real execution)
+          ──► autoResponse.router (expiry, min role, auto-approve, session actor)
+    ──► api modules/agent/approval-policies.router.ts (approvalPolicies.*)
+    ──► web /agent-approvals/approval-policies (ApprovalPoliciesContent)
+          + /agent-approvals/preview (real confidence, Escalated badge)
 ```
 
 ---

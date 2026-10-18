@@ -24,14 +24,20 @@ import {
   idSchema,
 } from '@intelliflow/validators';
 import {
+  AUTO_RESPONSE_AGENT_KEY,
   AutoResponseDraft,
   AutoResponseDraftId,
   ResponseContent,
+  SYSTEM_APPROVAL_ACTOR,
+  canReview,
+  evaluateAutoApproval,
   type AutoResponseDraftRepository,
+  type TriggerType,
 } from '@intelliflow/domain';
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
+import { loadApprovalPolicy, type LoadOptions } from '../../agent/approval-policy-loader';
 
 // Lazy-load the repository implementation to avoid workspace resolution issues
 let _repositoryClass: (new (prisma: any) => AutoResponseDraftRepository) | null = null;
@@ -66,6 +72,112 @@ async function publishEvents(draft: AutoResponseDraft): Promise<void> {
     );
   }
   draft.clearDomainEvents();
+}
+
+// ─── PG-198: approval policies ──────────────────────────────────────────────
+
+/**
+ * RF-3 (#855): the deciding actor is always the signed-in user. A client-supplied
+ * actor id that names someone else is refused rather than recorded.
+ */
+export function sessionActor(
+  ctx: Pick<Context, 'user'>,
+  claimed: string | undefined,
+  field: string
+): string {
+  const userId = ctx.user?.userId;
+  if (!userId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Authentication required' });
+  }
+  if (claimed !== undefined && claimed !== userId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: `${field} must be the signed-in user.`,
+    });
+  }
+  return userId;
+}
+
+function draftPolicy(ctx: Context, tenantId: string, trigger: TriggerType, options?: LoadOptions) {
+  return loadApprovalPolicy(
+    getTenantContext(ctx).prismaWithTenant,
+    tenantId,
+    'AUTO_RESPONSE',
+    AUTO_RESPONSE_AGENT_KEY,
+    trigger,
+    options
+  );
+}
+
+/** AC-009: new drafts wait as long as the tenant policy says (built-in: 24 h). */
+async function draftExpiryHours(ctx: Context, tenantId: string, trigger: TriggerType) {
+  return (await draftPolicy(ctx, tenantId, trigger)).rule.timeoutMinutes / 60;
+}
+
+/** AC-010: the policy minimum reviewer role, read fresh so the check fails closed. */
+async function assertDraftReviewer(
+  ctx: Context,
+  tenantId: string,
+  draft: AutoResponseDraft
+): Promise<void> {
+  const resolved = await draftPolicy(ctx, tenantId, draft.triggerType, { fresh: true });
+  if (canReview(ctx.user?.role, resolved.rule)) return;
+  throw new TRPCError({
+    code: 'FORBIDDEN',
+    message: `This draft needs a reviewer with the ${resolved.rule.minReviewerRole} role or above.`,
+  });
+}
+
+/**
+ * AC-013: when the policy allows it, approve a just-submitted draft as the system
+ * actor. Only for a requester (the signed-in submitter) who could approve it, and
+ * only on the model's confidence strictly above the threshold. The status history
+ * records the policy, threshold and confidence. Any policy-read error leaves the
+ * draft pending (fail closed).
+ */
+/**
+ * An escalated draft is decided by its reviewer from the queue: resolve the escalation
+ * on the same aggregate first, so approve/reject (which require PENDING_APPROVAL) apply
+ * and both land in one optimistic-locked save. Not escalated: no-op.
+ */
+function resolveIfEscalated(draft: AutoResponseDraft, decidedBy: string): void {
+  if (draft.status !== 'ESCALATED') return;
+  const resolved = draft.resolveEscalation(decidedBy);
+  if (resolved.isFailure) {
+    throw new TRPCError({ code: 'BAD_REQUEST', message: resolved.error.message });
+  }
+}
+
+async function tryAutoApproveDraft(
+  ctx: Context,
+  tenantId: string,
+  draft: AutoResponseDraft
+): Promise<boolean> {
+  let resolved;
+  try {
+    resolved = await draftPolicy(ctx, tenantId, draft.triggerType, { fresh: true });
+  } catch (error) {
+    // Fail closed, but visibly: a broken policy table must not hide behind "pending".
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[AutoResponse] approval policy unavailable; draft left for review: ${message}`);
+    return false;
+  }
+  const verdict = evaluateAutoApproval({
+    scope: 'AUTO_RESPONSE',
+    rule: resolved.rule,
+    confidence: draft.aiConfidence,
+    agentKey: AUTO_RESPONSE_AGENT_KEY,
+    actionType: draft.triggerType,
+    requesterRole: ctx.user?.role,
+    // Drafts have no separate approve permission; the policy role is the gate.
+    requesterCanApprove: true,
+    hasSessionRequester: Boolean(ctx.user?.userId),
+  });
+  if (!verdict.approve) return false;
+  const reason =
+    `Auto-approved by policy "${String(resolved.policyName)}" (${String(resolved.policyId)}): ` +
+    `${verdict.reason}; requested by ${String(ctx.user?.userId)}`;
+  return draft.approve(SYSTEM_APPROVAL_ACTOR, undefined, reason).isSuccess;
 }
 
 export const autoResponseRouter = createTRPCRouter({
@@ -124,7 +236,8 @@ export const autoResponseRouter = createTRPCRouter({
         aiConfidence: input.aiConfidence,
         modelVersion: input.modelVersion,
         recipientEmail: input.recipientEmail,
-        expiryHours: input.expiryHours,
+        // PG-198 (AC-009): the policy timeout replaces the client expiryHours.
+        expiryHours: await draftExpiryHours(ctx, typedCtx.tenant.tenantId, input.triggerType),
       });
 
       if (createResult.isFailure) {
@@ -271,6 +384,9 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
+      // PG-198 (AC-013): the requester is the signed-in submitter, never approverId.
+      const autoApproved = await tryAutoApproveDraft(ctx, typedCtx.tenant.tenantId, draft);
+
       try {
         await repository.save(draft);
       } catch {
@@ -282,7 +398,7 @@ export const autoResponseRouter = createTRPCRouter({
 
       await publishEvents(draft);
 
-      return { success: true, status: draft.status };
+      return { success: true, status: draft.status, autoApproved };
     }),
 
   /**
@@ -309,7 +425,11 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
-      const approveResult = draft.approve(input.decidedBy, input.modifications, input.reason);
+      const decidedBy = sessionActor(ctx, input.decidedBy, 'decidedBy');
+      await assertDraftReviewer(ctx, typedCtx.tenant.tenantId, draft);
+      resolveIfEscalated(draft, decidedBy);
+
+      const approveResult = draft.approve(decidedBy, input.modifications, input.reason);
 
       if (approveResult.isFailure) {
         throw new TRPCError({
@@ -358,7 +478,11 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
-      const rejectResult = draft.reject(input.decidedBy, input.reason);
+      const decidedBy = sessionActor(ctx, input.decidedBy, 'decidedBy');
+      await assertDraftReviewer(ctx, typedCtx.tenant.tenantId, draft);
+      resolveIfEscalated(draft, decidedBy);
+
+      const rejectResult = draft.reject(decidedBy, input.reason);
       if (rejectResult.isFailure) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -404,8 +528,9 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
+      const escalatedBy = sessionActor(ctx, input.escalatedBy, 'escalatedBy');
       const escalateResult = draft.escalate(
-        input.escalatedBy,
+        escalatedBy,
         input.escalatedTo,
         input.reason,
         input.escalationExpiryHours
@@ -482,7 +607,10 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
-      const resolveResult = draft.resolveEscalation(input.resolvedBy, input.feedback);
+      const resolvedBy = sessionActor(ctx, input.resolvedBy, 'resolvedBy');
+      await assertDraftReviewer(ctx, typedCtx.tenant.tenantId, draft);
+
+      const resolveResult = draft.resolveEscalation(resolvedBy, input.feedback);
       if (resolveResult.isFailure) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
@@ -733,6 +861,15 @@ export const autoResponseRouter = createTRPCRouter({
         });
       }
 
+      // A reviewer's edits at approval are written into the content, so that text was not
+      // model-scored either.
+      const editedAtApproval = original.approvalDecision?.modifications;
+      const modelScoredContent =
+        input.subject === undefined &&
+        input.body === undefined &&
+        !editedAtApproval?.subject &&
+        !editedAtApproval?.body;
+
       // Create new draft reusing original parameters
       // leadTenantId === tenantId (validated at original creation), leadStatus defaults to CONTACTED
       const createResult = AutoResponseDraft.create({
@@ -742,9 +879,12 @@ export const autoResponseRouter = createTRPCRouter({
         leadStatus: 'CONTACTED',
         triggerType: original.triggerType,
         content,
-        aiConfidence: original.aiConfidence,
+        // Replaced text was never evaluated by the model: its confidence must not carry
+        // over (it could otherwise auto-approve content no model scored).
+        aiConfidence: modelScoredContent ? original.aiConfidence : 0,
         modelVersion: original.modelVersion,
         recipientEmail: original.recipientEmail,
+        expiryHours: await draftExpiryHours(ctx, typedCtx.tenant.tenantId, original.triggerType),
       });
 
       if (createResult.isFailure) {
@@ -783,7 +923,11 @@ export const autoResponseRouter = createTRPCRouter({
     .input(z.object({ tenantId: idSchema }).optional())
     .query(async ({ ctx, input }) => {
       const repository = await getRepository(ctx);
-      const tenantId = input?.tenantId ?? ctx.tenant.tenantId;
+      const tenantId = ctx.tenant.tenantId;
+      // The session decides the tenant; a client-supplied one may only repeat it.
+      if (input?.tenantId !== undefined && input.tenantId !== tenantId) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Cannot read another tenant' });
+      }
 
       if (!tenantId) {
         throw new TRPCError({

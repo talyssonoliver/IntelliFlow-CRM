@@ -22,12 +22,8 @@ import {
   DraftMessageInputSchema,
 } from '../types';
 import { agentLogger } from '../logger';
+import { resolveAgentToolExpiry } from '../approval-policy-loader';
 import { pendingActionsStore } from '../approval-workflow';
-
-/**
- * Approval expiry time (30 minutes)
- */
-const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
 
 export type MessageRecipientType = 'LEAD' | 'CONTACT' | 'ACCOUNT';
 
@@ -210,9 +206,18 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
         preview,
         status: 'PENDING',
         createdAt: now,
-        expiresAt: new Date(now.getTime() + APPROVAL_EXPIRY_MS),
+        // PG-198: the tenant's approval policy decides how long this waits.
+        expiresAt: await resolveAgentToolExpiry(
+          context.prisma,
+          context.tenantId,
+          'draft_message',
+          'DRAFT',
+          now
+        ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
         metadata: {
           recipientType: input.recipientType,
           recipientId: input.recipientId,

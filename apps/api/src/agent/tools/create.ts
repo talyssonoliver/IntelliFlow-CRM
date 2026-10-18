@@ -24,12 +24,8 @@ import {
   CreateAppointmentInputSchema,
 } from '../types';
 import { agentLogger } from '../logger';
+import { resolveAgentToolExpiry } from '../approval-policy-loader';
 import { pendingActionsStore } from '../approval-workflow';
-
-/**
- * Approval expiry time (30 minutes)
- */
-const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
 
 /**
  * Created case result structure
@@ -122,9 +118,18 @@ export const createCaseTool: AgentToolDefinition<CreateCaseInput, CreatedCaseRes
         preview,
         status: 'PENDING',
         createdAt: now,
-        expiresAt: new Date(now.getTime() + APPROVAL_EXPIRY_MS),
+        // PG-198: the tenant's approval policy decides how long this waits.
+        expiresAt: await resolveAgentToolExpiry(
+          context.prisma,
+          context.tenantId,
+          'create_case',
+          'CREATE',
+          now
+        ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
       };
 
       // Store pending action for approval
@@ -369,9 +374,18 @@ export const createAppointmentTool: AgentToolDefinition<
         preview,
         status: 'PENDING',
         createdAt: now,
-        expiresAt: new Date(now.getTime() + APPROVAL_EXPIRY_MS),
+        // PG-198: the tenant's approval policy decides how long this waits.
+        expiresAt: await resolveAgentToolExpiry(
+          context.prisma,
+          context.tenantId,
+          'create_appointment',
+          'CREATE',
+          now
+        ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
       };
 
       // Store pending action for approval

@@ -11,6 +11,7 @@ import { initializeSentry } from './tracing/sentry';
 import { disconnectPrisma } from '@intelliflow/db';
 import { shutdownAllQueues } from '@intelliflow/platform/queues';
 import { startApiServer } from './http-server';
+import { stopApprovalSweep } from './agent/approval-sweep-scheduler';
 
 initializeSentry()
   .catch((err) => {
@@ -24,6 +25,7 @@ initializeSentry()
 
 process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
+  stopApprovalSweep();
   await shutdownAllQueues();
   await disconnectPrisma();
   process.exit(0);
