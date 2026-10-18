@@ -77,3 +77,9 @@ offered: add an account picker (recommended) / drop the Account required-field o
 9. **"Add account picker (Recommended)."** New and Edit Contact gain a searchable Account field over the tenant's
    accounts (`account.list`, the PG-204 case-form pattern) and send `accountId`, so account-required types and the
    ACCOUNT_OWNER owner rule work from the UI.
+
+## Ruling 8 re-confirmed (recorded 2026-10-18T10:36:29Z)
+
+Relayed by the runner (Aurora) in its PR #915 fix-round message on 2026-10-18: "Ruling 8 is confirmed by Talysson
+today, so waivers 0f290e25 and 148dd60f stand." It was not asked in a modal in this session; recorded as relayed.
+

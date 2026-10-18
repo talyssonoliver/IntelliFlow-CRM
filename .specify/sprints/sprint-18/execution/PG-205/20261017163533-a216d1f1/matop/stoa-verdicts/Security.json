@@ -7,10 +7,10 @@
   "produced_at": "2026-10-18T09:01:39Z",
   "head": "3ae41b2dfe79773cb7c6f0f4600044901ba5cc0f",
   "gates": [
-    {"gate": "gitleaks git --log-opts=origin/main..HEAD --redact", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-gitleaks.log", "notes": "exit 0, 1s, no leaks in branch commit range"},
-    {"gate": "secret-shape grep over added diff lines (postgres creds, Bearer, ghp_, sk-, AKIA, ntn_, JWT, private key, supabase.co, neon.tech, dangerouslySetInnerHTML)", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-secret-grep.log", "notes": "0 matches"},
+    {"gate": "gitleaks git --log-opts=origin/main..HEAD --redact", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-gitleaks.txt", "notes": "exit 0, 1s, no leaks in branch commit range"},
+    {"gate": "secret-shape grep over added diff lines (postgres creds, Bearer, ghp_, sk-, AKIA, ntn_, JWT, private key, supabase.co, neon.tech, dangerouslySetInnerHTML)", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-secret-grep.txt", "notes": "0 matches"},
     {"gate": "dependency audit (pnpm audit/osv)", "result": "NOT_RUN", "evidence_log": "", "notes": "No pnpm-lock.yaml / package.json changes in origin/main...HEAD (empty diff stat), so no new dependency surface; not run, not claimed as pass."},
-    {"gate": "manual OWASP review of new surface", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-review.log", "notes": "RBAC, tenant scoping, strict inputs, SQL injection, owner/account tenant checks, RLS policies, error/audit leakage reviewed"}
+    {"gate": "manual OWASP review of new surface", "result": "PASS", "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-security-review.txt", "notes": "RBAC, tenant scoping, strict inputs, SQL injection, owner/account tenant checks, RLS policies, error/audit leakage reviewed"}
   ],
   "unavailableTools": ["snyk (SNYK_TOKEN not checked/available)", "semgrep (not run)", "trivy (not run)"],
   "findings": [

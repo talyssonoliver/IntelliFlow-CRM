@@ -1,6 +1,6 @@
 # PG-205 checkpoint (recovery lane, session ffa3728c)
 
-Updated: 2026-10-18T09:14:40Z. HEAD after the attestation commit (see git log).
+Updated: 2026-10-18T10:43:17Z. Runner-audit fix round in progress (code commit 5ab1d3731).
 
 ## Phase
 
@@ -11,7 +11,7 @@ each still have one box open.
 ## What ran in this session (date -u)
 
 - 20:49:35Z: ralph-loop state file `.claude/ralph-loops/PG-205.local.md`; Skill full-pipeline; Skill exec.
-- 20:50:08Z: re-verified GREEN for codex 18941caa (`red-green/19-account-replace.reverify.log`). The RED log was
+- 20:50:08Z: re-verified GREEN for codex 18941caa (`red-green/19-account-replace.reverify.txt`). The RED log was
   captured by the prior lane at 20:01:38Z. RED was not re-run because the fix was already on disk.
 - Exec preflights (page-doc-cochange, plan-reviewer, exec-readiness, nav-wiring, schema sweep): all exit 0.
 - 20:50:55Z codex round 10: FAIL, a3d0b852 (non-atomic account replacement).
@@ -41,8 +41,8 @@ The codex gate must re-run at the end: lint fixes and a resolver comment change 
 - Step 15 done: Skill simplify (4 review sub-agents); commit `75bec9439`; `matop/step15-simplify.md`.
 - Step 17: the findings doc now covers the accepted risk and the codex fixes. Its box stays open until the
   Lighthouse status (Step 21) is written in.
-- Step 19: typecheck 7/7 and lint 7/7 exit 0 (`matop/gates/step19-typecheck-*.log`, `step19-lint-*.log`).
-  Full suites running in the background (`scratchpad/step19-tests.sh` → `matop/gates/step19-test-*.log`).
+- Step 19: typecheck 7/7 and lint 7/7 exit 0 (`matop/gates/step19-typecheck-*.txt`, `step19-lint-*.txt`).
+  Full suites running in the background (`scratchpad/step19-tests.sh` → `matop/gates/step19-test-*.txt`).
 - Step 20: an a11y-expert sub-agent is running.
 - Docs/tracking commit `e929eb220` (red-green logs force-added like PG-204's evidence).
 - Lighthouse: no `LHCI_TEST_*` in any .env (names checked) → Path A once, then NEEDS_HUMAN (PG-204 precedent).
@@ -75,7 +75,31 @@ The codex gate must re-run at the end: lint fixes and a resolver comment change 
 - Delivery report, /exec-attestation (verdict NEEDS_HUMAN: Lighthouse + runner-owned Gate 4b), /exec-metrics
   session end, generate-context. Plan 118/118 ticked.
 
+## Shipped
+
+- pre-ship PASS at `4c1df7cac` (30m10s, 32/34, full scope), `git push -u` once, `refs/preship/4c1df7cac` on origin.
+- PR #915 opened via ifc-pr-create.sh; body lines <= 100; Aurora READY sent (delivery not confirmed by the route).
+- generate-final-report.mjs: NOT READY, no promise. Remaining BLOCKs are the disclosed NEEDS_HUMAN items
+  (attestation verdict, 4 failed gates: Lighthouse, Gate 4b, stoa-quality WARN, stoa-aggregate WARN;
+  completed_at unset). WARNs: agent-selection format (generator vs auditor, same as PG-204), container
+  registration parser (router is registered at router.ts:148), compliance not named in attestation notes.
+
+## Uncommitted after the push (local only, needs a runner decision)
+
+- `.specify/sprints/sprint-18/context/PG-205/PG-205-hydrated-context.{json,md}` (gitignored dir): structured
+  shared-component and route-conflict audits transcribed from the spec, written after the final-report audit
+  flagged them MISSING. Committing them means a new commit, so a fresh pre-ship and a second push.
+- This checkpoint update and the generated artifacts churn.
+
+## Runner-audit fix round (2026-10-18, Aurora)
+
+- P1-1 147 tracked .log → .txt (git mv), citations rewritten, `git ls-files | grep -cE '\.(log|coverage|tsbuildinfo)$'` = 0.
+- P1-2 integration colour test db-push-proof (24/24, `red-green/25-*`).
+- P1-3 edit payload deploy-skew safe (RED/GREEN `red-green/24-*`).
+- P2(a) superRefine wired in the dialog (RED/GREEN `red-green/26-*`); P2(b)-(d) claims corrected; attestation
+  regenerated without self-hashes. codex round 15 PASS. Ruling 8 re-confirmation recorded as relayed.
+- Picker on old API: "No type" + inline alert, save still works (PR body line).
+
 ## Next action
 
-Commit the attestation → pre-ship ONCE through the exclusive slot → `git push -u origin feat/pg-205-contact-types`
-→ ifc-pr-create.sh → SendMessage Aurora READY → final report via generate-final-report.mjs.
+Commit the evidence → pre-ship ONCE (exclusive slot) → push once → update PR body → Aurora READY (new SHA + ref).

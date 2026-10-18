@@ -45,7 +45,7 @@ ADR-080)" section, Step 22). **Prerequisites:** PG-178 ✅, PG-182 ✅ (verified
 
 - [x] Coverage BEFORE snapshot via `/exec-coverage` → `artifacts/coverage/PG-205-before.json`. *(from the committed coverage-summary baseline; source stated in the file)*
 - [x] `SELECT DISTINCT "contactType" FROM contacts` on the **local test DB** only (never prod) — records the value set
-      the no-backfill design assumes; any value outside the six is reported (unknown keys degrade to a neutral label). *(17 rows, all NULL — `matop/gates/preflight-distinct-contacttype.log`)*
+      the no-backfill design assumes; any value outside the six is reported (unknown keys degrade to a neutral label). *(17 rows, all NULL — `matop/gates/preflight-distinct-contacttype.txt`)*
 
 ## Dependencies Verified
 
@@ -118,7 +118,7 @@ Tests (20): `packages/domain/src/crm/contact/__tests__/contact-type-defaults.tes
 
 Evidence/docs (3): `.specify/sprints/sprint-18/attestations/PG-205/context_ack.json`;
 `.specify/sprints/sprint-18/findings/PG-205-findings.md`; `.specify/sprints/sprint-18/attestations/PG-205/red-green/red-green-index.md`
-(+ the per-layer `NN-<layer>.red.log` / `.green.log` files it indexes).
+(+ the per-layer `NN-<layer>.red.txt` / `.green.txt` files it indexes).
 
 **Files to Modify (44):**
 
@@ -157,8 +157,8 @@ Docs/registries/tracking (17): `docs/design/ui-flow-mapping.md`; `docs/design/in
 17 docs/registries/tracking) · conditional: up to 5 existing contact router suites (mock defaults only).
 
 **Evidence outputs (untracked or exec-run artifacts, not counted above):** `artifacts/coverage/PG-205-before.json` /
-after snapshot, `red-green/NN-*.red.log` / `.green.log`, `.specify/sprints/sprint-18/execution/PG-205/<run>/`
-(`PG-205-delivery.md`, `matop/design-check.md`, `matop/gates/*.log`, `matop/stoa-verdicts/*.json`),
+after snapshot, `red-green/NN-*.red.txt` / `.green.txt`, `.specify/sprints/sprint-18/execution/PG-205/<run>/`
+(`PG-205-delivery.md`, `matop/design-check.md`, `matop/gates/*.txt`, `matop/stoa-verdicts/*.json`),
 `artifacts/lighthouse/PG-205/*`.
 
 ## CSV Alignment (Sprint_plan.csv row PG-205)
@@ -182,7 +182,7 @@ after snapshot, `red-green/NN-*.red.log` / `.green.log`, `.specify/sprints/sprin
 ### Phase 1 — RED: Write Failing Tests
 
 Each RED step: add the minimal export stub first (so the run fails on **assertions**, not missing modules), run the
-new test file, save `NN-<layer>.red.log` under `.specify/sprints/sprint-18/attestations/PG-205/red-green/`, commit the
+new test file, save `NN-<layer>.red.txt` under `.specify/sprints/sprint-18/attestations/PG-205/red-green/`, commit the
 tests. A RED that fails only on import/compile errors does not count. Every test with a date-sensitive assertion pins
 the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 
@@ -206,7 +206,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
       false for USER/undefined.
 - [x] resolver output keys == allowlist (no tenantId/email/dataClassification).
 - [x] `Contact` rejects a malformed `contactType`; still accepts all six seed keys.
-- Validation: `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts` → RED log `01-domain.red.log`. *(RED run 2026-10-17T16:39:21Z: 31 failed / 66 passed, all assertion failures — log saved)*
+- Validation: `pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts` → RED log `01-domain.red.txt`. *(RED run 2026-10-17T16:39:21Z: 31 failed / 66 passed, all assertion failures — log saved)*
 
 #### Step 2: Validator tests (AC-CTY-004, AC-CTY-005, AC-CTY-009; DoD 7; CA-6)
 
@@ -225,7 +225,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - [x] `contactTypeKeySchema` accepts the six seeds and `customer_2`; rejects uppercase, leading digit, 41 chars, spaces.
 - [x] `contactQuerySchema` accepts `contactType` and `segment: 'vip'`; rejects other segments.
 - [x] enum-consistency: contact-type colour tokens == `TAG_COLOR_TOKENS`; validator required keys == domain constant.
-- Validation: `pnpm --filter ./packages/validators exec vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts` → `02-validators.red.log`. *(RED run 2026-10-17T16:52:48Z: 43 failed / 76 passed, assertion failures)*
+- Validation: `pnpm --filter ./packages/validators exec vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts` → `02-validators.red.txt`. *(RED run 2026-10-17T16:52:48Z: 43 failed / 76 passed, assertion failures)*
 
 #### Step 3: Resolver + router tests (AC-CTY-002, -003, -004, -007, -008, -015, -016; SEC-1..3, 9-18, 21; CA-1, CA-7)
 
@@ -253,7 +253,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - [x] list: ordered `sortOrder, name`; `defaultTags {id,name}`; `contactCount` from one `groupBy` with tenantId; `canEdit`.
 - [x] audit payloads carry ids + changed field names only (no names of tags, no PII).
 - [x] smoke: `contactTypes` registered with `list, listActive, create, update, delete, setDefault`.
-- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact-type-resolver.test.ts src/modules/contact/__tests__/contact-types.router.test.ts src/__tests__/app-router.smoke.test.ts` → `03-api-router.red.log`. *(RED run 2026-10-17T16:58:23Z: 45 failed / 15 passed; assertion failures plus 2 `mock.calls[0]` TypeErrors on calls the stub never made)*
+- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact-type-resolver.test.ts src/modules/contact/__tests__/contact-types.router.test.ts src/__tests__/app-router.smoke.test.ts` → `03-api-router.red.txt`. *(RED run 2026-10-17T16:58:23Z: 45 failed / 15 passed; assertion failures plus 2 `mock.calls[0]` TypeErrors on calls the stub never made)*
 
 #### Step 4: Contact create/update/list wiring tests (AC-CTY-010..-012, -014, -015; SEC-4..8; CA-3)
 
@@ -286,7 +286,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
       the lookup's call order precedes `createContact`. Recorded in the findings doc and delivery report.
 - [x] SEC-19: no dedicated limiter is added; a test asserts the new procedures are plain `tenantProcedure` (inherited
       AUTHENTICATED tier) and the caps (50 types, 10 tags) are enforced. *(covered in `contact-types.router.test.ts`: module-denied tenant can list; 50-type cap; 10-tag cap in the validator tests)*
-- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact.router.contact-types.test.ts src/modules/contact/__tests__/contact-automation.test.ts` → `04-api-contact.red.log`. *(RED run 2026-10-17T17:01:20Z: 22 failed / 38 passed; the one TRPCError is the B14 bug itself rejecting a titled contact)*
+- Validation: `pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact.router.contact-types.test.ts src/modules/contact/__tests__/contact-automation.test.ts` → `04-api-contact.red.txt`. *(RED run 2026-10-17T17:01:20Z: 22 failed / 38 passed; the one TRPCError is the B14 bug itself rejecting a titled contact)*
 
 #### Step 5: DB integration test (AC-CTY-002, -004..-008, -015; SEC-18, SEC-21; CA-4, CA-6, D12)
 
@@ -309,8 +309,11 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - [x] two concurrent `ensureSystemContactTypes` on a fresh tenant → exactly six rows.
 - [x] `contacts_tenantId_contactType_idx`: `indisvalid AND indisready`, columns `(tenantId, contactType)`.
 - [x] orphan outcome: deleting an unused type while a contact is created with that key in another transaction —
-      the outcome (orphan key tolerated) is asserted and documented.
-- Validation: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-int --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/contact-types.test.ts` → `05-db.pre-migration.log`. *(Run 2026-10-17T17:02:46Z: NOT an assertion RED — before the migration exists setup fails (ENOENT), exit 1, 24 tests not run. Recorded as the pre-implementation state; it also shows the suite fails loudly instead of skipping.)*
+      the outcome (orphan key tolerated) is asserted and documented. *(Corrected 2026-10-18 after the runner audit:
+      the integration test runs the delete and the create SEQUENTIALLY, so it asserts the orphan-key end state, not the
+      concurrent race. The race itself is covered by owner ruling 8 (accepted risk, waivers 0f290e25/148dd60f), not by
+      a test.)*
+- Validation: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-int --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/contact-types.test.ts` → `05-db.pre-migration.txt`. *(Run 2026-10-17T17:02:46Z: NOT an assertion RED — before the migration exists setup fails (ENOENT), exit 1, 24 tests not run. Recorded as the pre-implementation state; it also shows the suite fails loudly instead of skipping.)*
 
 #### Step 6: Web tests (AC-CTY-001, -003, -013, -014, -017; A11Y-1..12; CA-2, CA-5)
 
@@ -373,9 +376,9 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - [x] wiring: `ContactTypeDialog` renders `DefaultTagPicker`; `ContactList` renders `ContactTypeBadge`; the
       `ContactsPageClient` Type filter options come from `contactTypes.listActive`.
 - [x] sidebar config: segment hrefs unchanged and mapped by `segmentToFilter`.
-- Validation: `pnpm --filter ./apps/web exec vitest run "src/app/contacts/(list)/contact-types" src/components/contacts/__tests__/ContactTypeSelect.test.tsx src/components/contacts/__tests__/ContactTypeBadge.test.tsx src/components/contacts/__tests__/contact-type-colors.test.ts "src/app/contacts/[id]/edit" src/components/sidebar/__tests__/contacts-config.test.ts "src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx" src/components/contacts/__tests__/ContactList.contact-types.test.tsx "src/app/contacts/(list)/new/__tests__/page.test.tsx" src/components/contacts/__tests__/ContactForm.test.tsx src/lib/contacts/__tests__/contact-search.test.ts` → `06-web.red.log`.
-  *(Exec evidence: all 14 new + 3 modified test files written before the web code; `06-web.red.log` 123 failed /
-  131 passed (valid RED: assertions, not import errors). Same command GREEN in `14-web.green.log` 19 files / 254 tests,
+- Validation: `pnpm --filter ./apps/web exec vitest run "src/app/contacts/(list)/contact-types" src/components/contacts/__tests__/ContactTypeSelect.test.tsx src/components/contacts/__tests__/ContactTypeBadge.test.tsx src/components/contacts/__tests__/contact-type-colors.test.ts "src/app/contacts/[id]/edit" src/components/sidebar/__tests__/contacts-config.test.ts "src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx" src/components/contacts/__tests__/ContactList.contact-types.test.tsx "src/app/contacts/(list)/new/__tests__/page.test.tsx" src/components/contacts/__tests__/ContactForm.test.tsx src/lib/contacts/__tests__/contact-search.test.ts` → `06-web.red.txt`.
+  *(Exec evidence: all 14 new + 3 modified test files written before the web code; `06-web.red.txt` 123 failed /
+  131 passed (valid RED: assertions, not import errors). Same command GREEN in `14-web.green.txt` 19 files / 254 tests,
   exit 0. One test corrected at GREEN, disclosed: the Dialog arrow-key assertion now `await waitFor(...)`, because
   Radix roving focus moves focus on the next tick (the behaviour under test is unchanged). `useSearchParams` sits
   inside the route-level Suspense boundary of the existing `(list)/loading.tsx`, so `(list)/page.tsx` needed no
@@ -393,8 +396,8 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
   key-format invariant; `CONTACT_TYPES` unchanged)
 - `packages/domain/src/index.ts` (export the new module)
 
-- [x] Step 1 tests GREEN → `07-domain.green.log`; `pnpm --filter ./packages/domain test` (full) and
-      `pnpm --filter ./packages/domain build` (dist rebuild before downstream packages). *(07-domain.green.log 97/97; full suite 105 files / 3056 tests exit 0; typecheck + build exit 0 — `matop/gates/step7-domain-*.log`)*
+- [x] Step 1 tests GREEN → `07-domain.green.txt`; `pnpm --filter ./packages/domain test` (full) and
+      `pnpm --filter ./packages/domain build` (dist rebuild before downstream packages). *(07-domain.green.txt 97/97; full suite 105 files / 3056 tests exit 0; typecheck + build exit 0 — `matop/gates/step7-domain-*.txt`)*
 
 #### Step 8: Validators
 
@@ -406,8 +409,8 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
   `contactType`, `segment`; `ContactType` type export renamed in line with D1)
 - `packages/validators/src/index.ts` (export `contact-types`)
 
-- [x] Step 2 tests GREEN → `08-validators.green.log`; `pnpm --filter ./packages/validators test`;
-      `pnpm --filter ./packages/validators build`. *(08-validators.green.log 119/119; full 58 files / 2740 tests; typecheck, lint, build exit 0)*
+- [x] Step 2 tests GREEN → `08-validators.green.txt`; `pnpm --filter ./packages/validators test`;
+      `pnpm --filter ./packages/validators build`. *(08-validators.green.txt 119/119; full 58 files / 2740 tests; typecheck, lint, build exit 0)*
 
 #### Step 9: Prisma schema + migrations (Class A, L13)
 
@@ -423,9 +426,9 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - [x] Header: Class A, additive, `contacts` untouched, brief `contact_tags` lock note, forward-only recovery, prod only
       via `prisma migrate deploy`; CHECKs with `::text[]` casts.
 - [x] `pnpm --filter ./packages/db exec prisma validate`; `pnpm --filter ./packages/db db:generate`.
-- [x] *(Revised at exec — original: "Apply to the local test DB through the guard with `prisma migrate deploy`". Done on a FRESH per-run DB on the same :5433 server instead of the shared DB other lanes use, as the batch-2 mission recommends.)* `pnpm test:db:run` created `intelliflow_test_run_tn2ab0_jhc_4tom` and `prisma migrate deploy` applied ALL migrations incl. both new ones ("All migrations have been successfully applied"). The tool then crashed (pre-existing bug: `io.stderr` calls itself in `scripts/test-db.mjs`) before running the diff or dropping the DB, so `prisma migrate diff --from-config-datasource --to-schema` was run against that DB directly: only pre-existing drift (cases FK, report_templates idx, document_type_definitions, users.locale), none from PG-205 — `matop/gates/step9-ephemeral-*.log`. The scratch DB was left for cleanup (mission: no test:db:down); tooling bug filed with the out-of-scope issue.
+- [x] *(Revised at exec — original: "Apply to the local test DB through the guard with `prisma migrate deploy`". Done on a FRESH per-run DB on the same :5433 server instead of the shared DB other lanes use, as the batch-2 mission recommends.)* `pnpm test:db:run` created `intelliflow_test_run_tn2ab0_jhc_4tom` and `prisma migrate deploy` applied ALL migrations incl. both new ones ("All migrations have been successfully applied"). The tool then crashed (pre-existing bug: `io.stderr` calls itself in `scripts/test-db.mjs`) before running the diff or dropping the DB, so `prisma migrate diff --from-config-datasource --to-schema` was run against that DB directly: only pre-existing drift (cases FK, report_templates idx, document_type_definitions, users.locale), none from PG-205 — `matop/gates/step9-ephemeral-*.txt`. The scratch DB was left for cleanup (mission: no test:db:down); tooling bug filed with the out-of-scope issue.
 - [x] `pnpm --filter ./packages/db test` (incl. `src/__tests__/rls-migrations.test.ts`); `pnpm --filter ./packages/db build`. *(build/typecheck exit 0; db test suite runs at Step 19)*
-- [x] Step 5 integration test GREEN → `09-db.green.log` (slot + `--exclusive intelliflow-db`). *(24/24 passed, none skipped; commit dbb06a8db)*
+- [x] Step 5 integration test GREEN → `09-db.green.txt` (slot + `--exclusive intelliflow-db`). *(24/24 passed, none skipped; commit dbb06a8db)*
 
 #### Step 10: Application + adapters (type widening only)
 
@@ -433,7 +436,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `packages/application/src/services/ContactService.ts` (:7, :134 `ContactTypeKey`)
 - `packages/adapters/src/repositories/PrismaContactRepository.ts` (:8; remove the `as ContactType` casts at :114, :199, :245)
 
-- [x] `pnpm --filter ./packages/application test`; `pnpm --filter ./packages/adapters test`; typecheck both. *(application 58 files / 1480 tests, adapters 110 / 2982, exit 0; typecheck exit 0 — `matop/gates/step10-*.log`. Done together with Step 7 because the pre-commit repo-wide typecheck requires it. Deviation: the adapter casts are kept, renamed to `ContactTypeKey`, so a NULL column still reconstitutes exactly as before — no runtime change. Commit `bd628081a`.)*
+- [x] `pnpm --filter ./packages/application test`; `pnpm --filter ./packages/adapters test`; typecheck both. *(application 58 files / 1480 tests, adapters 110 / 2982, exit 0; typecheck exit 0 — `matop/gates/step10-*.txt`. Done together with Step 7 because the pre-commit repo-wide typecheck requires it. Deviation: the adapter casts are kept, renamed to `ContactTypeKey`, so a NULL column still reconstitutes exactly as before — no runtime change. Commit `bd628081a`.)*
 
 #### Step 11: Contact-types router, resolver, registration, audit type
 
@@ -447,7 +450,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `docs/design/ui-flow-mapping.md`, `docs/design/information-architecture.md` (router +1, procedures +6 — **same
   commit** as the `router.ts` registration so the reconciliation tests stay green)
 
-- [x] *(Revised at exec — original: "explicit `.output()` schemas". Implemented as explicit typed return contracts on every procedure (`Promise<ContactTypeDto>`, `Promise<ContactTypeListDto>`, `Promise<ContactTypeOptionDto[]>`), the merged PG-204 `caseTypes` pattern; this satisfies the TS2589 rule (explicit contracts, no casts) without runtime output parsing.)* Step 3 tests GREEN → `11-api-router.green.log`. *(60/60; API typecheck exit 0. `rbac.ts` role maps gained `contact_type` (required by the new ResourceType). Registry counts updated in the same commit dbb06a8db: reconciliation tests 15/15.)*
+- [x] *(Revised at exec — original: "explicit `.output()` schemas". Implemented as explicit typed return contracts on every procedure (`Promise<ContactTypeDto>`, `Promise<ContactTypeListDto>`, `Promise<ContactTypeOptionDto[]>`), the merged PG-204 `caseTypes` pattern; this satisfies the TS2589 rule (explicit contracts, no casts) without runtime output parsing.)* Step 3 tests GREEN → `11-api-router.green.txt`. *(60/60; API typecheck exit 0. `rbac.ts` role maps gained `contact_type` (required by the new ResourceType). Registry counts updated in the same commit dbb06a8db: reconciliation tests 15/15.)*
 
 #### Step 12: Contact create/update/list wiring + B14 (replaces the fixed enum and inline check)
 
@@ -456,7 +459,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
   `buildContactListWhere`, the `assertRequiredContactFields` calls)
 - `apps/api/src/modules/contact/contact-automation.ts` (B14 policy-key → column mapping)
 
-- [x] Step 4 tests GREEN → `12-api-contact.green.log`. *(60/60)*
+- [x] Step 4 tests GREEN → `12-api-contact.green.txt`. *(60/60)*
 - [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205 -- pnpm --filter ./apps/api test` (full suite);
       existing suites that fail only for a missing `contactType` mock get the mock default (listed in the delivery report). *(307 files / 7791 passed / 18 skipped, exit 0 — no existing suite needed changes)*
 - [x] `pnpm --filter ./apps/api typecheck`.
@@ -491,9 +494,9 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - [x] Wiring: `ContactTypeDialog` renders `DefaultTagPicker`; `ContactTypeList`, `ContactTypeDialog` and
       `ContactTypeBadge` import `contact-type-colors`; `ContactTypesContent` invalidates `contactTypes` after every mutation.
 - [x] A11Y-9 / A11Y-11 implemented (describedby + focus-first-invalid; one h1, h2 sections).
-- [x] Step 6 settings-page tests GREEN. *(`14-web.green.log`: contact-types dir 10 files GREEN; glyphs `check`, `badge`
+- [x] Step 6 settings-page tests GREEN. *(`14-web.green.txt`: contact-types dir 10 files GREEN; glyphs `check`, `badge`
       already in the subset — `subset-material-symbols.mjs --verify` "audit OK — 370 icons", exit 0; web typecheck and
-      lint exit 0 — `gates/14-web-typecheck.log`, `gates/14-web-lint.log`.)*
+      lint exit 0 — `gates/14-web-typecheck.txt`, `gates/14-web-lint.txt`.)*
 
 #### Step 14: Picker, list filter, badge, segments (retires the hard-coded options and "Other")
 
@@ -513,10 +516,10 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
       `contactTypes.listActive`; New and Edit render `ContactTypeSelect`.
 - [x] NF-002: `listActive` queried with `staleTime: 5 * 60 * 1000`. *(`CONTACT_TYPES_STALE_TIME_MS`, shared by
       `ContactTypeSelect` and `ContactsPageClient`; asserted in `ContactTypeSelect.test.tsx`)*
-- [x] Step 6 remaining tests GREEN → `14-web.green.log`. *(19 files / 254 tests, exit 0, run at 2026-10-17T17:50:05Z on HEAD dbb06a8db +
+- [x] Step 6 remaining tests GREEN → `14-web.green.txt`. *(19 files / 254 tests, exit 0, run at 2026-10-17T17:50:05Z on HEAD dbb06a8db +
       uncommitted web tree; `ContactListSegment` type export added to `packages/validators/src/contact.ts`)*
-- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205 -- pnpm --filter ./apps/web exec vitest run` (full web suite). *(825 files / 12976 tests, exit 0, 17:51:54Z-17:59:02Z — `gates/14-web-full-suite.log`)*
-- [x] `pnpm --filter ./apps/web typecheck`. *(exit 0 — `gates/14-web-typecheck.log`; lint exit 0 — `gates/14-web-lint.log`)*
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205 -- pnpm --filter ./apps/web exec vitest run` (full web suite). *(825 files / 12976 tests, exit 0, 17:51:54Z-17:59:02Z — `gates/14-web-full-suite.txt`)*
+- [x] `pnpm --filter ./apps/web typecheck`. *(exit 0 — `gates/14-web-typecheck.txt`; lint exit 0 — `gates/14-web-lint.txt`)*
 
 ### Phase 3 — REFACTOR: cleanup, docs, tracking
 
@@ -526,7 +529,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - none beyond the files already created/modified in Steps 7-14 (no behaviour change; any touched file is listed in the
   delivery report)
 
-- [x] duplication check (`/simplify`-style review), lint all touched packages, tests still green. *(recovery lane, between the 21:27:35Z checkpoint and commit `75bec9439` at 21:38:17Z: Skill simplify, 4 parallel review sub-agents; applied/skipped list in `matop/step15-simplify.md`; lint 7/7 packages exit 0 (`matop/gates/step19-lint-*.log`); api contact 398 pass/2 skip, application ContactService 101/101; commit `75bec9439`)*
+- [x] duplication check (`/simplify`-style review), lint all touched packages, tests still green. *(recovery lane, between the 21:27:35Z checkpoint and commit `75bec9439` at 21:38:17Z: Skill simplify, 4 parallel review sub-agents; applied/skipped list in `matop/step15-simplify.md`; lint 7/7 packages exit 0 (`matop/gates/step19-lint-*.txt`); api contact 398 pass/2 skip, application ContactService 101/101; commit `75bec9439`)*
 
 #### Step 16: Docs, registries, ADR/PRD
 
@@ -544,12 +547,12 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv` (row correction, Category A: KPI note, DoD taxonomy
   wording → owner ruling, artifacts list extended; old → new recorded in the findings doc) + `npx tsx tools/scripts/split-sprint-plan.ts`
 
-- [x] `pnpm --filter ./apps/web exec vitest run src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/ui-flow-mapping-reconciliation.test.ts src/app/__tests__/sitemap-reconciliation.test.ts`. *(with the CA-2 Suspense-boundary test: 4 files / 23 tests, exit 0 — `gates/16-reconciliation.log`. ADR-080 Accepted and the WCAG version row are written at Steps 22 / 20, after the reviews they report.)*
+- [x] `pnpm --filter ./apps/web exec vitest run src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/ui-flow-mapping-reconciliation.test.ts src/app/__tests__/sitemap-reconciliation.test.ts`. *(with the CA-2 Suspense-boundary test: 4 files / 23 tests, exit 0 — `gates/16-reconciliation.txt`. ADR-080 Accepted and the WCAG version row are written at Steps 22 / 20, after the reviews they report.)*
 - [x] `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-205`; `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-205`
       (known false-green on `(list)` route-group pages, #877 — the log also records the manual reachability evidence:
       `sidebar/configs/contacts.ts:12-17`, `ContactSettingsPanel.tsx:16-22`, audit row updated). *(both exit 0 —
       "plan does not create any page.tsx" (the page is modified in place); manual evidence in
-      `gates/16-cochange-navwiring.log`)*
+      `gates/16-cochange-navwiring.txt`)*
 
 #### Step 17: Red-flag / out-of-scope tracking (all three surfaces)
 
@@ -590,15 +593,15 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
       PG-205 web sources for server-only/prisma/db/pg/node:fs imports found none, and the web build passed at
       `7319f0d2c`; NF-004 below)*
 - [x] TypeScript: `pnpm --filter ./packages/domain typecheck`, `./packages/validators`, `./packages/db`,
-      `./packages/application`, `./packages/adapters`, `./apps/api`, `./apps/web`. *(7/7 exit 0, `matop/gates/step19-typecheck-*.log`; web typecheck re-run exit 0 after the a11y fixes `7319f0d2c`)*
+      `./packages/application`, `./packages/adapters`, `./apps/api`, `./apps/web`. *(7/7 exit 0, `matop/gates/step19-typecheck-*.txt`; web typecheck re-run exit 0 after the a11y fixes `7319f0d2c`)*
 - [x] Tests: full suite per touched package through the slot (domain, validators, db, application, adapters, api, web
       with `vitest run`), plus the integration project via slot + `--exclusive intelliflow-db`, plus
-      `pnpm exec vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/docs-integrity-audit.test.ts`. *(HEAD `e929eb220`, `matop/gates/step19-test-*.log`, all exit 0: domain 3060, validators 2741, db 224+14 skipped, application 1486, adapters 2982, api 7801+18 skipped, web 825 files/12990, tools 33, integration 440+50 skipped; contact-types integration alone 24/24 none skipped. After the a11y fixes `7319f0d2c` the contacts (list) web tests re-ran 142/142; pre-ship re-runs the related suites at the final SHA.)*
-- [x] Lint: `pnpm --filter <each touched pkg> lint`. *(7/7 exit 0, `matop/gates/step19-lint-*.log`; sonar-guard on the a11y-fix files exit 0)*
+      `pnpm exec vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/docs-integrity-audit.test.ts`. *(HEAD `e929eb220`, `matop/gates/step19-test-*.txt`, all exit 0: domain 3060, validators 2741, db 224+14 skipped, application 1486, adapters 2982, api 7801+18 skipped, web 825 files/12990, tools 33, integration 440+50 skipped; contact-types integration alone 24/24 none skipped. After the a11y fixes `7319f0d2c` the contacts (list) web tests re-ran 142/142; pre-ship re-runs the related suites at the final SHA.)*
+- [x] Lint: `pnpm --filter <each touched pkg> lint`. *(7/7 exit 0, `matop/gates/step19-lint-*.txt`; sonar-guard on the a11y-fix files exit 0)*
 - [x] Build: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-build -- pnpm --filter ./apps/web build`
-      and `pnpm turbo build --filter='./packages/*'`. *(HEAD `7319f0d2c`: packages 15/15, web exit 0 with `/contacts/contact-types` prerendered; only warning is third-party web-worker; `matop/gates/step19-build-*.log`)*
+      and `pnpm turbo build --filter='./packages/*'`. *(HEAD `7319f0d2c`: packages 15/15, web exit 0 with `/contacts/contact-types` prerendered; only warning is third-party web-worker; `matop/gates/step19-build-*.txt`)*
 - [x] knip on touched packages (no unused exports/files from this task). *(repo knip `--exclude unlisted,unresolved` at `7319f0d2c`: 110 pre-existing issues, 0 in the 37 PG-205 source files — `matop/gates/step19-knip.{log,json}`)*
-- [x] `/exec-coverage` AFTER; changed-line coverage ≥ 80%; domain > 95%. *(Skill exec-coverage; 2026-10-18T08:39:33Z `check-diff-coverage.mjs` after the scoped `test:coverage` at `7319f0d2c`: **95.4%** (960/1006), exit 0 — `matop/gates/step19-{coverage-after,diff-coverage}.log`; domain package: lines 95.25%, statements 95.2%, branches 92.16% (`step19-coverage-domain.log`); changed domain files 100% lines)*
+- [x] `/exec-coverage` AFTER; changed-line coverage ≥ 80%; domain > 95%. *(Skill exec-coverage; 2026-10-18T08:39:33Z `check-diff-coverage.mjs` after the scoped `test:coverage` at `7319f0d2c`: **95.4%** (960/1006), exit 0 — `matop/gates/step19-{coverage-after,diff-coverage}.txt`; domain package: lines 95.25%, statements 95.2%, branches 92.16% (`step19-coverage-domain.txt`); changed domain files 100% lines)*
 
 #### Step 20: Reviews
 
@@ -606,8 +609,8 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - only files a review finding requires (each listed in the delivery report)
 
 - [x] `/code-review` on the diff; `/sonarqube-fix` for any new finding. *(Skill code-review: quick run `20261018-094054-f0c501fc`, 0 TS errors / 0 lint problems, `matop/code-review-summary.json` (Full mode not used: unslotted full-repo tests); Skill sonarqube-fix: branch-wide sonar-guard 62 files exit 0, 3 pre-commit findings fixed, duplication ≈2.0% < 3% — `matop/sonarqube-fix-report.md`)*
-- [x] a11y-expert (WCAG 2.1 AA) review sub-agent on the shipped UI + computed contrast review for the 18 tokens. *(a11y-expert sub-agent, PASS_WITH_FIXES; 18/18 badge pairs ≥ 6.78:1, outlines/rings ≥ 3.10:1; Medium #1/#2 + Lows #3/#4/#5/#6 fixed TDD in `7319f0d2c` (`red-green/22-*`); `matop/a11y-review.md`)*
-- [x] `node scripts/codex-review.mjs` iterated until clean (fallback reviews block the same way; waivers only with evidence). *(rounds 01-09 prior lane; recovery lane rounds 10-14: a3d0b852, 068bafef, 0dc7d185, 2f19f195 fixed TDD (`red-green/20,21,23-*`); round 14 (2026-10-18T08:54:41Z) PASS, 0 unwaived; only waiver 0f290e25/148dd60f = owner ruling 8 — `gates/codex-review-1*.log`)*
+- [x] a11y-expert (WCAG 2.1 AA) review sub-agent on the shipped UI + computed contrast review for the 18 tokens. *(a11y-expert sub-agent, PASS_WITH_FIXES; 18/18 badge pairs ≥ 6.78:1, outlines/rings ≥ 3.10:1; #1/#2/#3/#6 fixed test-first in `7319f0d2c` (`red-green/22-*`: the RED covers these four); #4 (hint colour class) and #5 (aria-disabled styling) were class-only fixes in the same commit with no failing test of their own (corrected 2026-10-18 after the runner audit); `matop/a11y-review.md`)*
+- [x] `node scripts/codex-review.mjs` iterated until clean (fallback reviews block the same way; waivers only with evidence). *(rounds 01-09 prior lane; recovery lane rounds 10-14: a3d0b852, 068bafef, 0dc7d185, 2f19f195 fixed TDD (`red-green/20,21,23-*`); round 14 (2026-10-18T08:54:41Z) PASS, 0 unwaived; only waiver 0f290e25/148dd60f = owner ruling 8 — `gates/codex-review-1*.txt`)*
 
 #### Step 21: Lighthouse (DoD 12)
 
@@ -653,7 +656,7 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 - [x] `/exec-attestation` (every gate PASS or NEEDS_HUMAN with reason); `/exec-metrics` session end;
       `npx tsx apps/project-tracker/scripts/generate-context.ts`. *(2026-10-18: Skill exec-attestation → verdict NEEDS_HUMAN (Lighthouse + runner-owned
       Gate 4b, disclosed in `notes`); Skill exec-metrics → task-tracking.json session end 09:13:26Z; generate-context
-      exit 0 (`matop/gates/step24-generate-context.log`))*
+      exit 0 (`matop/gates/step24-generate-context.txt`))*
 - [x] L13 present in: the attestation (`notes` / migration entry), the PR body (loud section), the Aurora READY
       message, and ADR-080 (Step 22). *(attestation `notes` first line, ADR-080 "Deploy order (L13)", delivery report;
       the PR body and Aurora READY carry the same section at ship)*

@@ -143,6 +143,11 @@
       "status": "Needs Human",
       "at": "2026-10-18T09:13:26Z",
       "note": "/exec complete except NEEDS_HUMAN items: Lighthouse DoD 12 (auth routes) and runner-owned pre-ship + push (Gate 4b); attestation verdict NEEDS_HUMAN; STOA aggregate WARN"
+    },
+    {
+      "status": "Needs Human",
+      "at": "2026-10-18T10:42:49Z",
+      "note": "Runner audit fix round (PR #915): P1-1 .log->.txt evidence, P1-2 integration test db-push-proof, P1-3 deploy-skew-safe edit payload, P2(a) superRefine wired, P2(b)-(d) claims corrected; attestation regenerated (still NEEDS_HUMAN: Lighthouse)"
     }
   ],
   "stream": null,
@@ -155,7 +160,7 @@
       "exit_code": 0,
       "passed": true,
       "evidence": [
-        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-typecheck-*.log (+ stoa-foundation-recheck-typecheck.log at 24a91a9f6)"
+        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-typecheck-*.txt (+ stoa-foundation-recheck-typecheck.txt at 24a91a9f6)"
       ]
     },
     {
@@ -165,7 +170,7 @@
       "exit_code": 0,
       "passed": true,
       "evidence": [
-        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-test-*.log: domain 3060, validators 2741, db 224+14 skipped, application 1486, adapters 2982, api 7801+18 skipped, web 12990, tools 33, integration 440+50 skipped; contact-types integration 24/24; post-run commits re-verified in red-green/22-23 and the STOA re-checks"
+        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-test-*.txt: domain 3060, validators 2741, db 224+14 skipped, application 1486, adapters 2982, api 7801+18 skipped, web 12990, tools 33, integration 440+50 skipped; contact-types integration 24/24; post-run commits re-verified in red-green/22-23 and the STOA re-checks"
       ]
     },
     {
@@ -175,7 +180,7 @@
       "exit_code": 0,
       "passed": true,
       "evidence": [
-        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-lint-*.log, sonar-guard-branch.log"
+        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-lint-*.txt, sonar-guard-branch.txt"
       ]
     },
     {
@@ -185,7 +190,7 @@
       "exit_code": 0,
       "passed": true,
       "evidence": [
-        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-packages.log, step19-build-web.log (HEAD 7319f0d2c)"
+        ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-packages.txt, step19-build-web.txt (HEAD 7319f0d2c)"
       ]
     }
   ]

@@ -48,17 +48,17 @@ and no non-production `LHCI_TEST_*` credentials exist (`artifacts/lighthouse/PG-
 
 | Check | Result | Log |
 |---|---|---|
-| Typecheck, 7 packages | exit 0 | `step19-typecheck-*.log`; web/api/application/validators re-run after later commits (`stoa-foundation-*recheck*`, red-green 23) |
-| Lint, 7 packages | exit 0 | `step19-lint-*.log`; branch-wide sonar-guard `sonar-guard-branch.log` (62 files) |
+| Typecheck, 7 packages | exit 0 | `step19-typecheck-*.txt`; web/api/application/validators re-run after later commits (`stoa-foundation-*recheck*`, red-green 23) |
+| Lint, 7 packages | exit 0 | `step19-lint-*.txt`; branch-wide sonar-guard `sonar-guard-branch.txt` (62 files) |
 | Tests, full suites at `e929eb220` | all exit 0 | domain 3060, validators 2741, db 224 (+14 skipped), application 1486, adapters 2982, api 7801 (+18 skipped), web 12990 (825 files), tools 33, integration 440 (+50 skipped), contact-types integration 24/24 |
 | Tests after later commits | exit 0 | contacts (list) web 142 → contact-types 60; validators 2743; api contact 398; web contacts 521 |
-| Build: packages + web at `7319f0d2c` | exit 0 | `step19-build-{packages,web}.log` |
-| knip | 0 PG-205 issues | `step19-knip.log` |
-| Diff coverage (Sonar new_coverage) | 95.4% | `step19-diff-coverage.log` |
-| Domain package coverage | lines 95.25% | `step19-coverage-domain.log` |
-| Scoped coverage, created files | S 96.46 / B 90.91 / F 92.40 / L 97.21 | `gate-3b-scoped-coverage.log`; contact-types web after follow-ups 97.24 / 85.07 / 96.05 / 98.46 |
-| prisma validate | exit 0 | `step19-prisma-validate.log` |
-| Codex review | round 14 PASS | `../gates/codex-review-1{0..4}.log` |
+| Build: packages + web at `7319f0d2c` | exit 0 | `step19-build-{packages,web}.txt` |
+| knip | 0 PG-205 issues | `step19-knip.txt` |
+| Diff coverage (Sonar new_coverage) | 95.4% | `step19-diff-coverage.txt` |
+| Domain package coverage | lines 95.25% | `step19-coverage-domain.txt` |
+| Scoped coverage, created files | S 96.46 / B 90.91 / F 92.40 / L 97.21 | `gate-3b-scoped-coverage.txt`; contact-types web after follow-ups 97.24 / 85.07 / 96.05 / 98.46 |
+| prisma validate | exit 0 | `step19-prisma-validate.txt` |
+| Codex review | round 14 PASS | `../gates/codex-review-1{0..4}.txt` |
 | Duplication (jscpd) | ≈2.0% new | `jscpd-touched.txt` |
 
 **Not run here:** pre-ship at the final SHA. The runner owns it and runs it once, after the attestation commit.
@@ -80,6 +80,12 @@ and no non-production `LHCI_TEST_*` credentials exist (`artifacts/lighthouse/PG-
 - `packages/application/src/services/ContactService.ts`: `replaceAccount` and the shared `changeAccount`.
 - `packages/validators/src/contact-settings.ts`: `CONTACT_TAG_NAME_MAX_LENGTH`.
 - `docs/compliance-and-governance/compliance/vpat-2.5.md`: row 1.10.0.
+
+## Runner audit fix round (2026-10-18)
+
+P1-1 evidence logs renamed `.log` → `.txt`; P1-2 integration colour test independent of `db push`; P1-3 Edit
+Contact sends `contactType` only when changed (deploy-skew safe); P2(a) the dialog validates names with the
+superRefine schema; P2(b)-(d) claims corrected (see findings doc). TDD logs `red-green/24-*`, `25-*`, `26-*`.
 
 ## Migrations (L13, loud)
 

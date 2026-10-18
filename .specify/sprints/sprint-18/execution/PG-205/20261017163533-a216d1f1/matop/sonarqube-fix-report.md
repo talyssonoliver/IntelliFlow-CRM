@@ -5,7 +5,7 @@
 - SonarCloud has no analysis of this branch until the PR exists. There is no local `artifacts/reports/sonarqube/`,
   and no Sonar MCP server is attached. Local proxies were used instead:
   - **sonarjs rules**: `CI=1 SONAR_GUARD_BASE=origin/main pnpm run lint:sonar:guard` over all 62 changed TS/TSX files
-    (plus the web a11y guard on 29): **exit 0, 0 findings** (`gates/sonar-guard-branch.log`). Earlier in the run
+    (plus the web a11y guard on 29): **exit 0, 0 findings** (`gates/sonar-guard-branch.txt`). Earlier in the run
     the pre-commit guard found 3 real issues, all fixed before commit: `react/jsx-child-element-spacing` and
     `jsx-a11y/prefer-tag-over-role` (web, fixed before `b253a83ff`), and `sonarjs/cognitive-complexity` 16 > 15 in
     `assertContactTypeOnUpdate` (fixed by extracting `assertNewContactType`, `75bec9439`).

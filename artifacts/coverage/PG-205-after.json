@@ -10,7 +10,7 @@
     "covered": 960,
     "total": 1006,
     "exit_code": 0,
-    "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-diff-coverage.log"
+    "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-diff-coverage.txt"
   },
   "domain_package": {
     "lines_pct": 95.25,
@@ -18,7 +18,7 @@
     "branches_pct": 92.16,
     "functions_pct": 93.3,
     "tests": 3060,
-    "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-coverage-domain.log"
+    "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-coverage-domain.txt"
   },
   "note": "The before snapshot is the committed repo baseline (10.3% lines repo-wide), not a fresh run, so a package-wide delta is not comparable; changed-line coverage is the gate (mirrors Sonar new_coverage)."
 }

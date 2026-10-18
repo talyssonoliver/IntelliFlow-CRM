@@ -70,6 +70,22 @@ The remaining non-atomicity (fields and account are still two `ContactService` s
 intermediate state breaks a type rule. A single save for both would need a combined `ContactService` operation,
 which is out of PG-205's scope.
 
+## Runner audit fix round (2026-10-18, PR #915)
+
+| Item | Finding | Fix |
+|---|---|---|
+| P1-1 | 147 tracked `.log` evidence files fail CI "Validate .gitignore Coverage" | renamed to `.txt`, every citation updated |
+| P1-2 | integration test assumed `contact_tags_colorToken_check`, which `db push` (CI) never creates | asserts the `contact_types` CHECK against the shared 18 tokens; `contact_tags` only when present (`red-green/25-*`) |
+| P1-3 | Edit Contact sent `contactType: null` for untyped contacts; the pre-promote API rejects null | the type is sent only when it changed, null only when an existing type is cleared (`red-green/24-*`) |
+| P2(a) | the duplicate-name superRefine schema was unused in production | ContactTypeDialog validates names with `contactTypeNameSchema` (`red-green/26-*`) |
+| P2(b) | a11y #4/#5 were claimed "fixed TDD" | they were class-only fixes without their own RED (claim corrected) |
+| P2(c) | attestation hashed itself and task-tracking.json | removed |
+| P2(d) | the race box implied a concurrency test | the integration test is sequential; the race is covered by ruling 8 |
+
+Deploy-skew notes (web can deploy before the API is promoted): the New/Edit type picker falls back to "No type" with
+an inline alert when `contactTypes.*` is unavailable (old API) and saving still works; the contacts list Type filter
+and segments are ignored by the old API until promote (accepted as transient by the runner).
+
 ## Lighthouse status (DoD 12): NEEDS_HUMAN
 
 Path A ran once (2026-10-17T22:03-22:04Z, Lighthouse 12.6.1). Both `/contacts/contact-types` and `/contacts/new`

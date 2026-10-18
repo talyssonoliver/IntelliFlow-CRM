@@ -18,25 +18,25 @@
       {
         "gate": "full-suite-tests",
         "result": "PASS",
-        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-test-*.log",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-test-*.txt",
         "notes": "Read from logs, not re-run. At e929eb220: adapters 2982, api 7801 (+18 skipped), application 1486, db 224 (+14 skipped), domain 3060, validators 2741, web 12990 passed; integration 440 passed (+50 skipped), contact-types integration 24/24, tools 33. 0 failed in every log."
       },
       {
         "gate": "diff-coverage (Sonar new_coverage mirror)",
         "result": "PASS",
-        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-diff-coverage.log",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-diff-coverage.txt",
         "notes": "95.4% (960/1006) vs 80% floor, run at 7319f0d2c. One file below floor: DeleteContactTypeDialog.tsx 25.0% (1/4)."
       },
       {
         "gate": "domain-coverage",
         "result": "PASS",
-        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-coverage-domain.log",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-coverage-domain.txt",
         "notes": "S 95.2 / B 92.16 / F 93.3 / L 95.25 against the domain >95% line target; lines pass narrowly."
       },
       {
         "gate": "scoped-coverage-13-created-files",
         "result": "WARN",
-        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-3b-scoped-coverage.log",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-3b-scoped-coverage.txt",
         "notes": "Aggregate S 96.46 / B 90.91 / F 92.40 / L 97.21 passes 90%. Per-file: DeleteContactTypeDialog 50/75/50/50; ContactTypesContent B 80.88 F 80.95; ContactTypeList B 81.25; ContactTypeDialog B 84.74 F 82.14. The gate log itself uses a branch floor of 80, not 90."
       },
       {
@@ -48,7 +48,7 @@
       {
         "gate": "sonar-guard",
         "result": "PASS",
-        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-guard-branch.log",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-guard-branch.txt",
         "notes": "exit 0, 62 changed TS/TSX files checked."
       },
       {
@@ -60,7 +60,7 @@
       {
         "gate": "post-full-run commits re-verified",
         "result": "PASS",
-        "evidence_log": ".specify/sprints/sprint-18/attestations/PG-205/red-green/22-a11y-review.green.log, .specify/sprints/sprint-18/attestations/PG-205/red-green/23-tag-length.green.log",
+        "evidence_log": ".specify/sprints/sprint-18/attestations/PG-205/red-green/22-a11y-review.green.txt, .specify/sprints/sprint-18/attestations/PG-205/red-green/23-tag-length.green.txt",
         "notes": "7319f0d2c (web a11y) covered by 22-green (142 passed) plus scoped coverage and diff-coverage at 7319f0d2c. a6b5ad8d8 (validators tag length) covered by 23-green: validators 2743, api 398 passed, a third suite 521 passed. The full web/api/validators suites were not re-run on the final tree."
       },
       {
@@ -128,7 +128,7 @@
       "export PATH=/c/Users/talys/AppData/Roaming/nvm/v22.14.0:$PATH (node v22.14.0)",
       "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-stoa -- pnpm --filter @intelliflow/web exec vitest run \"src/app/contacts/(list)/contact-types\" --coverage --coverage.reporter=text --coverage.reportsDirectory=../../artifacts/coverage-vitest/pg-205-stoa-recheck \"--coverage.include=**/contact-types/**/*.tsx\""
     ],
-    "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-quality-recheck-coverage.log",
+    "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-quality-recheck-coverage.txt",
     "results": {
       "exit_code": 0,
       "test_files": "7 passed (7)",

@@ -27,7 +27,9 @@ pass 3:1. Muted foreground: 5.43 / 5.74. Error text: 6.47 / 7.76.
 
 ## Fix log
 
-RED 2026-10-17T21:53:06Z / GREEN 21:54:39Z (`red-green/22-a11y-review.*`):
+RED 2026-10-17T21:53:06Z / GREEN 21:54:39Z (`red-green/22-a11y-review.*`). The RED covers #1, #2, #3 and #6
+only; #4 and #5 were class-only changes in the same commit, with no failing test of their own (corrected
+2026-10-18):
 
 - #1 fixed: the radio group only changes a draft; a "Save default" button saves (disabled while unchanged or busy).
 - #2 fixed: Save is no longer natively disabled on a bad name; activating it shows "Name is required." (role=alert,
