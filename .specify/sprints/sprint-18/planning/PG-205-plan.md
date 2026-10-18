@@ -637,8 +637,12 @@ the clock (`vi.useFakeTimers()` + `vi.setSystemTime`) around the call (CA-6).
 **Files to Modify:**
 - none (verdict files written by the STOA sub-agents under `matop/stoa-verdicts/`)
 
-- [ ] `/exec-gates`, then spawned STOA sub-agents: Foundation (row), Domain, Security, Quality — each writes its own
-      verdict file; `/compliance-check PG-205`.
+- [x] `/exec-gates`, then spawned STOA sub-agents: Foundation (row), Domain, Security, Quality — each writes its own
+      verdict file; `/compliance-check PG-205`. *(Skill exec-gates: gate logs `matop/gates/gate-*`, Gate 2 82/82, 2b 13/13
+      imported, 2c/2d/3/3a/3b/3c PASS, 4b BLOCK until push (runner-owned); STOA sub-agents 2026-10-18: Security PASS,
+      Domain PASS, Quality WARN (re-check WARN: per-file branches 81-87%), Foundation FAIL (prettier) → fixed
+      `24a91a9f6` → re-check PASS; aggregate WARN (`matop/stoa-aggregate.json`); Skill compliance-check →
+      `matop/compliance-check.md`)*
 
 #### Step 24: Attestation + tracking
 
