@@ -67,6 +67,8 @@ const save = () => screen.getByRole('button', { name: 'Save Changes' });
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Like the real tRPC utils, invalidate returns a promise.
+  h.invalidate.mockResolvedValue(undefined);
   h.update = { mutateAsync: vi.fn(), isPending: false };
   h.reset = { mutateAsync: vi.fn(), isPending: false };
   load(availabilityDto());
@@ -142,6 +144,24 @@ describe('Save', () => {
     expect(document.activeElement).toBe(
       screen.getByRole('heading', { level: 2, name: 'Weekly hours' })
     );
+  });
+
+  it('logs a failed background cache refresh without turning a saved change into an error', async () => {
+    const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    h.invalidate.mockRejectedValueOnce(new Error('network down'));
+    h.update.mutateAsync.mockResolvedValue(availabilityDto({ bufferBeforeMinutes: 20 }));
+    render(<AvailabilityContent />);
+    fireEvent.change(screen.getByLabelText('Buffer before (minutes)'), { target: { value: '20' } });
+    fireEvent.click(save());
+    await waitFor(() =>
+      expect(errorSpy).toHaveBeenCalledWith(
+        '[availability] cache refresh failed:',
+        expect.any(Error)
+      )
+    );
+    expect(h.toast).toHaveBeenCalledWith(expect.objectContaining({ title: 'Availability saved' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    errorSpy.mockRestore();
   });
 
   it('keeps edits made while a save is in flight and stays dirty', async () => {

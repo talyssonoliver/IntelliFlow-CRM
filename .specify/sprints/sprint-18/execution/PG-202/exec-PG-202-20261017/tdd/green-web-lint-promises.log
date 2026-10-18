@@ -1,0 +1,28 @@
+date: 2026-10-18T09:58:10Z
+head: 81cb909fdde68ac358a80d1a60189a0e801f5d67 (+ lint-promises fix)
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar/availability --coverage.enabled --coverage.reporter=text --coverage.include=src/app/calendar/availability/AvailabilityContent.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+      Coverage enabled with istanbul
+
+
+ Test Files  9 passed (9)
+      Tests  93 passed (93)
+   Start at  10:58:12
+   Duration  7.51s (transform 2.31s, setup 2.64s, import 8.69s, tests 6.06s, environment 9.22s)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   92.96 |       84 |   93.54 |   93.96 |                   
+ ...ityContent.tsx |   92.96 |       84 |   93.54 |   93.96 | 84-90,280         
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 92.96% ( 119/128 )
+Branches     : 84% ( 63/75 )
+Functions    : 93.54% ( 29/31 )
+Lines        : 93.96% ( 109/116 )
+================================================================================
+exit: 0

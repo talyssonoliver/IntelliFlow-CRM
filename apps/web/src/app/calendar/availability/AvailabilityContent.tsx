@@ -90,6 +90,11 @@ function collectErrors(draft: AvailabilityDraft): DraftError[] {
   return mapped;
 }
 
+/** The page already shows the saved data; a failed background refresh only delays the next cache update. */
+function logCacheRefreshFailure(error: unknown) {
+  console.error('[availability] cache refresh failed:', error);
+}
+
 function focusById(id: string) {
   document.getElementById(id)?.focus();
 }
@@ -197,7 +202,7 @@ export default function AvailabilityContent() {
       });
       setSubmitted(false);
       toast({ title: 'Availability saved' });
-      void utils.calendar.availability.get.invalidate();
+      utils.calendar.availability.get.invalidate().catch(logCacheRefreshFailure);
       setFocusTarget(WEEKLY_HOURS_TITLE_ID);
     } catch (error) {
       setServerError({ message: errorMessage(error), conflict: errorCode(error) === 'CONFLICT' });
@@ -218,7 +223,7 @@ export default function AvailabilityContent() {
       adopt(fresh);
       announce(RESET_ANNOUNCEMENT);
       focusOnResetCloseRef.current = WEEKLY_HOURS_TITLE_ID;
-      void utils.calendar.availability.get.invalidate();
+      utils.calendar.availability.get.invalidate().catch(logCacheRefreshFailure);
     } catch (error) {
       setServerError({ message: errorMessage(error), conflict: false });
       focusOnResetCloseRef.current = SERVER_ERROR_ID;
