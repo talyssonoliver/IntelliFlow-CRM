@@ -210,8 +210,8 @@ Checking: Attestation
   - kpi_results.1.met: Invalid input: expected boolean, received undefined
   - kpi_results.2.met: Invalid input: expected boolean, received undefined
   ✓ .\.specify\sprints\sprint-6\attestations\IFC-132\attestation.json
-  ✓ .\.specify\sprints\sprint-6\attestations\IFC-125\attestation.json
   ✓ .\.specify\sprints\sprint-6\attestations\IFC-129\attestation.json
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-125\attestation.json
   ✗ .\.specify\sprints\sprint-6\attestations\IFC-117\attestation.json
   - validation_results.0.timestamp: Invalid input: expected string, received undefined
   - validation_results.1.timestamp: Invalid input: expected string, received undefined
@@ -286,27 +286,27 @@ Checking: Attestation
   - artifact_hashes.artifacts/reports/web-vitals-report.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - artifact_hashes.artifacts/misc/axe-audit-results.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✓ .\.specify\sprints\sprint-6\attestations\IFC-013\attestation.json
-  ✓ .\.specify\sprints\sprint-6\attestations\IFC-010\attestation.json
   ✗ .\.specify\sprints\sprint-6\attestations\IFC-012\attestation.json
   - kpi_results.1.met: Invalid input: expected boolean, received string
+  ✓ .\.specify\sprints\sprint-6\attestations\IFC-010\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\PG-134\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\PG-133\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-189\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-187\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-186\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-180\attestation.json
-  ✓ .\.specify\sprints\sprint-5\attestations\IFC-150\attestation.json
   ✗ .\.specify\sprints\sprint-5\attestations\IFC-179\attestation.json
   - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-150\attestation.json
   ✗ .\.specify\sprints\sprint-5\attestations\IFC-147\attestation.json
   - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-138\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-130\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-127\attestation.json
-  ✓ .\.specify\sprints\sprint-5\attestations\IFC-111\attestation.json
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-112\attestation.json
+  ✓ .\.specify\sprints\sprint-5\attestations\IFC-111\attestation.json
   ✗ .\.specify\sprints\sprint-5\attestations\IFC-098\attestation.json
   - gate_results.0.gate_id: Invalid input: expected string, received undefined
   ✓ .\.specify\sprints\sprint-5\attestations\IFC-089\attestation.json
@@ -402,14 +402,14 @@ Checking: Attestation
   - artifact_hashes.packages/domain/src/aggregates/lead/lead.test.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - gate_results.0.gate_id: Invalid input: expected string, received undefined
   ✓ .\.specify\sprints\sprint-2\attestations\IFC-085\attestation.json
-  ✗ .\.specify\sprints\sprint-2\attestations\IFC-072\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✗ .\.specify\sprints\sprint-2\attestations\IFC-073\attestation.json
   - artifact_hashes.artifacts/reports/gdpr-compliance.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - artifact_hashes.artifacts/reports/risk-matrix.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - artifact_hashes.docs/security/dpia.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-2\attestations\IFC-072\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✗ .\.specify\sprints\sprint-2\attestations\IFC-008\attestation.json
   - artifact_hashes.artifacts/reports/compliance-report.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - artifact_hashes.docs/security/owasp-checklist.md: Invalid string: must match pattern /^[a-f0-9]{64}$/
@@ -686,6 +686,62 @@ Checking: Attestation
   - validation_results.3.passed: Invalid input: expected boolean, received undefined
   - validation_results.3.timestamp: Invalid input: expected string, received undefined
   - dependencies_verified: Invalid input
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-195\attestation.json
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-186\attestation.json
+  - kpi_results.0.target: Invalid input: expected string, received number
+  - kpi_results.0.actual: Invalid input: expected string, received number
+  - kpi_results.1.target: Invalid input: expected string, received number
+  - kpi_results.1.actual: Invalid input: expected string, received number
+  - kpi_results.2.target: Invalid input: expected string, received number
+  - kpi_results.2.actual: Invalid input: expected string, received number
+  - kpi_results.3.target: Invalid input: expected string, received number
+  - kpi_results.3.actual: Invalid input: expected string, received number
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-185\attestation.json
+  - task_id: Invalid input: expected string, received undefined
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - kpi_results.2.kpi: Invalid input: expected string, received undefined
+  - kpi_results.3.kpi: Invalid input: expected string, received undefined
+  - kpi_results.4.kpi: Invalid input: expected string, received undefined
+  - kpi_results.5.kpi: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-184\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-183\attestation.json
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-182\attestation.json
+  - kpi_results.0.kpi: Invalid input: expected string, received undefined
+  - kpi_results.1.kpi: Invalid input: expected string, received undefined
+  - kpi_results.2.kpi: Invalid input: expected string, received undefined
+  ✗ .\.specify\sprints\sprint-17\attestations\PG-126\attestation.json
+  - artifact_hashes: Invalid input: expected record, received array
+  - kpi_results.0.target: Invalid input: expected string, received number
+  - kpi_results.0.actual: Invalid input: expected string, received number
+  - kpi_results.1.target: Invalid input: expected string, received number
+  - kpi_results.1.actual: Invalid input: expected string, received number
+  - kpi_results.2.target: Invalid input: expected string, received number
+  - kpi_results.2.actual: Invalid input: expected string, received number
+  - kpi_results.3.target: Invalid input: expected string, received number
+  - kpi_results.3.actual: Invalid input: expected string, received number
+  - kpi_results.5.target: Invalid input: expected string, received number
+  - dependencies_verified: Invalid input
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-057\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-056\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-055\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-054\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-053\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-052\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-051\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\PG-050\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-303\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-300\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-299\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-298\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-196\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-031\attestation.json
+  ✓ .\.specify\sprints\sprint-17\attestations\IFC-030\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\PM-OPS-002\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\PG-209\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\PG-208\attestation.json
@@ -823,15 +879,6 @@ Checking: Attestation
   ✓ .\.specify\sprints\sprint-18\attestations\INFRA-TF-002\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\INFRA-TF-001\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\IFC-314\attestation.json
-  ✗ .\.specify\sprints\sprint-18\attestations\IFC-311\attestation.json
-  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.5.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.6.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.7.criterion: Invalid input: expected string, received undefined
   ✗ .\.specify\sprints\sprint-18\attestations\IFC-310\attestation.json
   - kpi_results.0.target: Invalid input: expected string, received number
   - kpi_results.0.actual: Invalid input: expected string, received number
@@ -844,6 +891,15 @@ Checking: Attestation
   - kpi_results.4.target: Invalid input: expected string, received number
   - kpi_results.4.actual: Invalid input: expected string, received number
   - dependencies_verified: Invalid input
+  ✗ .\.specify\sprints\sprint-18\attestations\IFC-311\attestation.json
+  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.5.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.6.criterion: Invalid input: expected string, received undefined
+  - definition_of_done_items.7.criterion: Invalid input: expected string, received undefined
   ✓ .\.specify\sprints\sprint-18\attestations\IFC-309\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\IFC-302\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\IFC-301\attestation.json
@@ -907,62 +963,6 @@ Checking: Attestation
   ✓ .\.specify\sprints\sprint-18\attestations\DOC-016\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\DOC-015\attestation.json
   ✓ .\.specify\sprints\sprint-18\attestations\AUTOMATION-003\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-195\attestation.json
-  ✗ .\.specify\sprints\sprint-17\attestations\PG-186\attestation.json
-  - kpi_results.0.target: Invalid input: expected string, received number
-  - kpi_results.0.actual: Invalid input: expected string, received number
-  - kpi_results.1.target: Invalid input: expected string, received number
-  - kpi_results.1.actual: Invalid input: expected string, received number
-  - kpi_results.2.target: Invalid input: expected string, received number
-  - kpi_results.2.actual: Invalid input: expected string, received number
-  - kpi_results.3.target: Invalid input: expected string, received number
-  - kpi_results.3.actual: Invalid input: expected string, received number
-  ✗ .\.specify\sprints\sprint-17\attestations\PG-185\attestation.json
-  - task_id: Invalid input: expected string, received undefined
-  - kpi_results.0.kpi: Invalid input: expected string, received undefined
-  - kpi_results.1.kpi: Invalid input: expected string, received undefined
-  - kpi_results.2.kpi: Invalid input: expected string, received undefined
-  - kpi_results.3.kpi: Invalid input: expected string, received undefined
-  - kpi_results.4.kpi: Invalid input: expected string, received undefined
-  - kpi_results.5.kpi: Invalid input: expected string, received undefined
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-184\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-183\attestation.json
-  ✗ .\.specify\sprints\sprint-17\attestations\PG-182\attestation.json
-  - kpi_results.0.kpi: Invalid input: expected string, received undefined
-  - kpi_results.1.kpi: Invalid input: expected string, received undefined
-  - kpi_results.2.kpi: Invalid input: expected string, received undefined
-  ✗ .\.specify\sprints\sprint-17\attestations\PG-126\attestation.json
-  - artifact_hashes: Invalid input: expected record, received array
-  - kpi_results.0.target: Invalid input: expected string, received number
-  - kpi_results.0.actual: Invalid input: expected string, received number
-  - kpi_results.1.target: Invalid input: expected string, received number
-  - kpi_results.1.actual: Invalid input: expected string, received number
-  - kpi_results.2.target: Invalid input: expected string, received number
-  - kpi_results.2.actual: Invalid input: expected string, received number
-  - kpi_results.3.target: Invalid input: expected string, received number
-  - kpi_results.3.actual: Invalid input: expected string, received number
-  - kpi_results.5.target: Invalid input: expected string, received number
-  - dependencies_verified: Invalid input
-  - definition_of_done_items.0.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.1.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.2.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.3.criterion: Invalid input: expected string, received undefined
-  - definition_of_done_items.4.criterion: Invalid input: expected string, received undefined
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-057\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-056\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-055\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-054\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-053\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-052\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-051\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\PG-050\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\IFC-303\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\IFC-300\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\IFC-299\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\IFC-298\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\IFC-196\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\IFC-031\attestation.json
-  ✓ .\.specify\sprints\sprint-17\attestations\IFC-030\attestation.json
   ✗ .\.specify\sprints\sprint-16\attestations\PG-193\attestation.json
   - gate_results: Invalid input: expected array, received object
   - kpi_results: Invalid input: expected array, received object
@@ -1074,10 +1074,10 @@ Checking: Attestation
   ✗ .\.specify\sprints\sprint-15\attestations\PG-169\attestation.json
   - gate_results: Invalid input: expected array, received object
   ✓ .\.specify\sprints\sprint-15\attestations\PG-164\attestation.json
+  ✓ .\.specify\sprints\sprint-15\attestations\PG-163\attestation.json
   ✗ .\.specify\sprints\sprint-15\attestations\PG-160\attestation.json
   - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✓ .\.specify\sprints\sprint-15\attestations\PG-163\attestation.json
   ✓ .\.specify\sprints\sprint-15\attestations\PG-159\attestation.json
   ✓ .\.specify\sprints\sprint-15\attestations\PG-158\attestation.json
   ✓ .\.specify\sprints\sprint-15\attestations\PG-157\attestation.json
@@ -1132,6 +1132,62 @@ Checking: Attestation
   ✓ .\.specify\sprints\sprint-15\attestations\DOC-012\attestation.json
   ✓ .\.specify\sprints\sprint-15\attestations\DOC-011\attestation.json
   ✓ .\.specify\sprints\sprint-15\attestations\DOC-010\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-014\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/status/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/status/status-monitor.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/lib/status/incident-tracker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-12\attestations\PG-013\attestation.json
+  ✓ .\.specify\sprints\sprint-12\attestations\PG-012\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-011\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/careers/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/shared/application-form.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/job-listings.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-010\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/blog/[slug]/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/markdown-renderer.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/comments-widget.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/__tests__/markdown-renderer.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/__tests__/comments-widget.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-12\attestations\PG-009\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/app/(public)/blog/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/web/src/components/blog/blog-pagination.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/logs/blog-categories.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-171\attestation.json
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-170\attestation.json
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-169\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\IFC-081\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.apps/api/openapi.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.artifacts/misc/postman-collection.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-12\attestations\IFC-042\attestation.json
+  ✗ .\.specify\sprints\sprint-12\attestations\EXP-SCRIPTS-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tools/scripts/cleanup-task-data.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.tools/scripts/fix-schema.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.scripts/monitor-dev.sh: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✗ .\.specify\sprints\sprint-12\attestations\EXP-PLATFORM-001\attestation.json
+  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/feature-flags/index.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/resilience/circuit-breaker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  - artifact_hashes.packages/platform/src/jobs/queue.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✓ .\.specify\sprints\sprint-13\attestations\PG-140\attestation.json
   ✓ .\.specify\sprints\sprint-13\attestations\PG-104\attestation.json
   ✗ .\.specify\sprints\sprint-13\attestations\PG-024\attestation.json
@@ -1228,8 +1284,8 @@ Checking: Attestation
   - context_acknowledgment.files_read.4.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - context_acknowledgment.files_read.5.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✓ .\.specify\sprints\sprint-14\attestations\IFC-063\attestation.json
-  ✓ .\.specify\sprints\sprint-14\attestations\IFC-061\attestation.json
   ✓ .\.specify\sprints\sprint-14\attestations\IFC-062\attestation.json
+  ✓ .\.specify\sprints\sprint-14\attestations\IFC-061\attestation.json
   ✓ .\.specify\sprints\sprint-14\attestations\IFC-045\attestation.json
   ✓ .\.specify\sprints\sprint-14\attestations\IFC-024\attestation.json
   ✓ .\.specify\sprints\sprint-14\attestations\EXP-ARTIFACTS-003\attestation.json
@@ -1270,62 +1326,6 @@ Checking: Attestation
   - validation_results.2.timestamp: Invalid input: expected string, received undefined
   - validation_results.3.timestamp: Invalid input: expected string, received undefined
   - dependencies_verified: Invalid input
-  ✗ .\.specify\sprints\sprint-12\attestations\PG-014\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/app/(public)/status/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/components/status/status-monitor.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/lib/status/incident-tracker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✓ .\.specify\sprints\sprint-12\attestations\PG-012\attestation.json
-  ✓ .\.specify\sprints\sprint-12\attestations\PG-013\attestation.json
-  ✗ .\.specify\sprints\sprint-12\attestations\PG-011\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/app/(public)/careers/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/components/shared/application-form.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.artifacts/misc/job-listings.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✗ .\.specify\sprints\sprint-12\attestations\PG-010\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.3.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/app/(public)/blog/[slug]/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/components/blog/markdown-renderer.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/components/blog/comments-widget.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/components/blog/__tests__/markdown-renderer.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/components/blog/__tests__/comments-widget.test.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✗ .\.specify\sprints\sprint-12\attestations\PG-009\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/app/(public)/blog/page.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/web/src/components/blog/blog-pagination.tsx: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.artifacts/logs/blog-categories.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✓ .\.specify\sprints\sprint-12\attestations\IFC-171\attestation.json
-  ✓ .\.specify\sprints\sprint-12\attestations\IFC-170\attestation.json
-  ✓ .\.specify\sprints\sprint-12\attestations\IFC-169\attestation.json
-  ✗ .\.specify\sprints\sprint-12\attestations\IFC-081\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.apps/api/openapi.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.artifacts/misc/postman-collection.json: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✓ .\.specify\sprints\sprint-12\attestations\IFC-042\attestation.json
-  ✗ .\.specify\sprints\sprint-12\attestations\EXP-SCRIPTS-001\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.tools/scripts/cleanup-task-data.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.tools/scripts/fix-schema.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.scripts/monitor-dev.sh: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✗ .\.specify\sprints\sprint-12\attestations\EXP-PLATFORM-001\attestation.json
-  - context_acknowledgment.files_read.0.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.1.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - context_acknowledgment.files_read.2.sha256: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.packages/platform/src/feature-flags/index.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.packages/platform/src/resilience/circuit-breaker.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  - artifact_hashes.packages/platform/src/jobs/queue.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✓ .\.specify\sprints\sprint-11\attestations\PG-141\attestation.json
   ✓ .\.specify\sprints\sprint-11\attestations\PG-008\attestation.json
   ✓ .\.specify\sprints\sprint-11\attestations\PG-007\attestation.json
@@ -1497,9 +1497,9 @@ Checking: Attestation
   - artifact_hashes.artifacts/misc/self-healing-rules.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✗ .\.specify\sprints\sprint-0\attestations\ENV-007-AI\attestation.json
   - artifact_hashes.apps/web/src/lib/trpc.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
-  ✓ .\.specify\sprints\sprint-0\attestations\ENV-005-AI\attestation.json
   ✗ .\.specify\sprints\sprint-0\attestations\ENV-006-AI\attestation.json
   - artifact_hashes.packages/db/prisma/seed.ts: Invalid string: must match pattern /^[a-f0-9]{64}$/
+  ✓ .\.specify\sprints\sprint-0\attestations\ENV-005-AI\attestation.json
   ✗ .\.specify\sprints\sprint-0\attestations\ENV-004-AI\attestation.json
   - artifact_hashes.supabase/.gitignore: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✓ .\.specify\sprints\sprint-0\attestations\ENV-003-AI\attestation.json
@@ -1534,6 +1534,12 @@ Checking: Attestation
   - artifact_hashes.artifacts/misc/team-licenses.csv: Invalid string: must match pattern /^[a-f0-9]{64}$/
   - artifact_hashes.artifacts/misc/workflow-automation.yaml: Invalid string: must match pattern /^[a-f0-9]{64}$/
   ✓ .\.specify\sprints\sprint-0\attestations\AI-SETUP-001\attestation.json
+  ✓ .\.specify\sprints\sprint-19\attestations\SEC-643\context_ack.json
+  ✓ .\.specify\sprints\sprint-19\attestations\PG-065\context_ack.json
+  ✓ .\.specify\sprints\sprint-19\attestations\PG-064\context_ack.json
+  ✓ .\.specify\sprints\sprint-19\attestations\IFC-306\context_ack.json
+  ✓ .\.specify\sprints\sprint-19\attestations\IFC-304\context_ack.json
+  ✓ .\.specify\sprints\sprint-19\attestations\IFC-033\context_ack.json
   ✓ .\.specify\sprints\sprint-18\attestations\PG-206\context_ack.json
   ✓ .\.specify\sprints\sprint-18\attestations\PG-204\context_ack.json
   ✓ .\.specify\sprints\sprint-18\attestations\PG-202\context_ack.json
@@ -1546,12 +1552,6 @@ Checking: Attestation
   ✓ .\.specify\sprints\sprint-18\attestations\IFC-230\context_ack.json
   ✓ .\.specify\sprints\sprint-18\attestations\IFC-214\context_ack.json
   ✓ .\.specify\sprints\sprint-18\attestations\DOC-016\context_ack.json
-  ✓ .\.specify\sprints\sprint-19\attestations\SEC-643\context_ack.json
-  ✓ .\.specify\sprints\sprint-19\attestations\PG-065\context_ack.json
-  ✓ .\.specify\sprints\sprint-19\attestations\PG-064\context_ack.json
-  ✓ .\.specify\sprints\sprint-19\attestations\IFC-306\context_ack.json
-  ✓ .\.specify\sprints\sprint-19\attestations\IFC-304\context_ack.json
-  ✓ .\.specify\sprints\sprint-19\attestations\IFC-033\context_ack.json
 Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-9\IFC-145.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-9\IFC-124.json
@@ -1590,6 +1590,22 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-7\IFC-080.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-7\IFC-079.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-7\IFC-054.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\PG-134.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\PG-133.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-189.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-187.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-186.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-180.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-179.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-150.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-147.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-138.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-130.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-127.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-112.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-111.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-098.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-089.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-6\PG-137.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-6\PG-136.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-6\PG-135.json
@@ -1629,22 +1645,6 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-6\IFC-013.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-6\IFC-012.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-6\IFC-010.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\PG-134.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\PG-133.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-189.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-187.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-186.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-180.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-179.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-150.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-147.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-138.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-130.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-127.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-112.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-111.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-098.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-5\IFC-089.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-3\IFC-176.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-3\IFC-136.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-3\IFC-128.json
@@ -1666,9 +1666,9 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-4\IFC-009.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-29\IFC-199.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-28\PG-147.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-26\PG-110.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-27\PG-114.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-27\IFC-052.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-26\PG-110.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-25\IFC-201.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-25\IFC-071.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-25\IFC-048.json
@@ -1730,6 +1730,48 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-20\IFC-165.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-20\IFC-164.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-20\IFC-087.json
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-195.json
+  - execution.log_path: Invalid input: expected string, received null
+  - kpis.glyph_coverage_percent.actual: Invalid input
+  - kpis.lighthouse_performance_404.actual: Invalid input
+  - kpis.lighthouse_performance_500.actual: Invalid input
+  - kpis.material_symbols_woff2_kib.actual: Invalid input
+  - kpis.total_page_byte_weight_500_kib.actual: Invalid input
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-186.json
+  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.3.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-184.json
+  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.3.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - execution.log_path: Invalid input: expected string, received null
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-183.json
+  - execution.log_path: Invalid input: expected string, received null
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-182.json
+  - execution.log_path: Invalid input: expected string, received null
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-126.json
+  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.3.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - execution.log_path: Invalid input: expected string, received null
+  - kpis: Invalid input: expected record, received array
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-057.json
+  - kpis: Invalid input: expected record, received array
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\PG-051.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\PG-050.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-303.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-300.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-299.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-298.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-196.json
+  ✗ .\apps\project-tracker\docs\metrics\sprint-17\IFC-031.json
+  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-030.json
   ✗ .\apps\project-tracker\docs\metrics\sprint-19\PG-069.json
   - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
   - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
@@ -1778,6 +1820,20 @@ Checking: Task Status
   - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
   - status_history.3.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
   - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - validations.0.executed_at: Invalid input: expected string, received undefined
+  - validations.1.executed_at: Invalid input: expected string, received undefined
+  - validations.2.executed_at: Invalid input: expected string, received undefined
+  - validations.3.executed_at: Invalid input: expected string, received undefined
+  - validations.4.executed_at: Invalid input: expected string, received undefined
+  - validations.5.executed_at: Invalid input: expected string, received undefined
+  - validations.6.executed_at: Invalid input: expected string, received undefined
+  - validations.7.executed_at: Invalid input: expected string, received undefined
+  - validations.8.executed_at: Invalid input: expected string, received undefined
+  - validations.9.executed_at: Invalid input: expected string, received undefined
+  - validations.10.executed_at: Invalid input: expected string, received undefined
+  - validations.11.executed_at: Invalid input: expected string, received undefined
+  - validations.12.executed_at: Invalid input: expected string, received undefined
+  - validations.13.executed_at: Invalid input: expected string, received undefined
   ✗ .\apps\project-tracker\docs\metrics\sprint-18\PG-201.json
   - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
   - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
@@ -2138,48 +2194,6 @@ Checking: Task Status
   - validations.3.executed_at: Invalid input: expected string, received undefined
   - validations.3.exit_code: Invalid input: expected number, received undefined
   - validations.3.passed: Invalid input: expected boolean, received undefined
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-195.json
-  - execution.log_path: Invalid input: expected string, received null
-  - kpis.glyph_coverage_percent.actual: Invalid input
-  - kpis.lighthouse_performance_404.actual: Invalid input
-  - kpis.lighthouse_performance_500.actual: Invalid input
-  - kpis.material_symbols_woff2_kib.actual: Invalid input
-  - kpis.total_page_byte_weight_500_kib.actual: Invalid input
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-186.json
-  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.3.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-184.json
-  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.3.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - execution.log_path: Invalid input: expected string, received null
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-183.json
-  - execution.log_path: Invalid input: expected string, received null
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-182.json
-  - execution.log_path: Invalid input: expected string, received null
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-126.json
-  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.3.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - execution.log_path: Invalid input: expected string, received null
-  - kpis: Invalid input: expected record, received array
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\PG-057.json
-  - kpis: Invalid input: expected record, received array
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\PG-051.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\PG-050.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-303.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-300.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-299.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-298.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-196.json
-  ✗ .\apps\project-tracker\docs\metrics\sprint-17\IFC-031.json
-  - status_history.1.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  - status_history.2.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
-  ✓ .\apps\project-tracker\docs\metrics\sprint-17\IFC-030.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-16\PG-045.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-16\IFC-281.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-16\IFC-279.json
@@ -2227,6 +2241,26 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-15\DOC-012.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-15\DOC-011.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-15\DOC-010.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-140.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-104.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-024.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-023.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-022.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-021.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-020.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-019.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-018.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-017.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-016.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-015.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-200.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-198.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-183.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-182.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-173.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-172.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-163.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-159.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-14\PG-165.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-14\PG-129.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-14\PG-128.json
@@ -2250,26 +2284,19 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-14\DOC-004.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-14\DOC-003.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-14\DOC-002.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-140.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-104.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-024.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-023.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-022.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-021.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-020.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-019.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-018.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-017.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-016.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\PG-015.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-200.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-198.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-183.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-182.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-173.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-172.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-163.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-13\IFC-159.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-014.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-013.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-012.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-011.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-010.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-009.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-171.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-170.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-169.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-081.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-042.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\EXP-SCRIPTS-001.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-12\EXP-PLATFORM-001.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-11\PG-141.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-11\PG-008.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-11\PG-007.json
@@ -2284,19 +2311,11 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-11\IFC-143.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-11\IFC-140.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-11\IFC-058.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-014.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-013.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-012.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-011.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-010.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\PG-009.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-171.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-170.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-169.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-081.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\IFC-042.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\EXP-SCRIPTS-001.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-12\EXP-PLATFORM-001.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-141.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-121.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-113.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-099.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-076.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-1\SALES-001.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-1\IFC-135.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-1\IFC-119.json
@@ -2310,11 +2329,6 @@ Checking: Task Status
   ✓ .\apps\project-tracker\docs\metrics\sprint-1\ENV-018-AI.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-1\ENV-017-AI.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-1\BRAND-002.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-141.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-121.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-113.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-099.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-10\IFC-076.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-0\PM-OPS-001.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-0\IFC-160.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-0\IFC-044.json
@@ -2358,17 +2372,17 @@ Checking: Sprint Summary
   ✓ .\apps\project-tracker\docs\metrics\sprint-5\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-4\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-3\_summary.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-29\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-28\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-27\_summary.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-29\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-26\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-25\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-24\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-23\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-22\_summary.json
+  ✓ .\apps\project-tracker\docs\metrics\sprint-21\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-20\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-2\_summary.json
-  ✓ .\apps\project-tracker\docs\metrics\sprint-21\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-19\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-18\_summary.json
   ✓ .\apps\project-tracker\docs\metrics\sprint-17\_summary.json

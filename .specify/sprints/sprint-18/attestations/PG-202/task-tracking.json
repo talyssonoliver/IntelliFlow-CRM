@@ -68,10 +68,13 @@
       "apps/web/src/components/settings/TimezoneSelector.tsx",
       "apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx",
       "apps/web/src/components/settings/__tests__/TimezoneSelector.test.tsx",
+      "artifacts/coverage/PG-202-after.json",
       "artifacts/coverage/PG-202-before.json",
       "artifacts/lighthouse/PG-202/calendar-availability-pathA-r1.report.json",
       "artifacts/lighthouse/PG-202/waiver-evidence.md",
       "artifacts/metrics/debt-ledger.yaml",
+      "docs/CURRENT_STATE_REPORT.md",
+      "docs/SESSION_CONTEXT.md",
       "docs/architecture/adr/ADR-081-tenant-availability.md",
       "docs/architecture/adr/README.md",
       "docs/architecture/diagrams/complete-dependency-chains.md",
@@ -131,8 +134,8 @@
       "apps/api/src/modules/legal/appointment-settings.defaults.ts": "23768a780f916b4c578af0b3bb8cacec4c2987bda5a097e66a991971322eead1",
       "apps/api/src/modules/legal/appointment-settings.router.ts": "dcfe01cf02c07038a3a87e6f7e66a02a21bf64d22622cc1b52e81eb93784cfaa",
       "apps/api/src/modules/legal/appointments.router.ts": "8a5802c7450b721c52bfbf4ce02a13b399ff30701eb7b8d71f28efd45c3ccca2",
-      "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "2a31c06631991d502ee07046d6a9090a0983a27c6d25e4255e0b7e22500fb315",
-      "apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv": "a8104a829b06d1813d8aa7be8b563bd0fe37266d7184c64c6d40ef6a9810b0ff",
+      "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "7eb104ccf6d10c32dd7a198206d51e996cc52bf7ac5405a4f9fb61712aa656ea",
+      "apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv": "a187c54dccf7300f59196c7bf4efa3ea63db8fe08abc1057992ec9cb0a517c63",
       "apps/web/src/app/appointments/new/__tests__/page.onsuccess.test.tsx": "61242ff8f0e5e2c98f253c987f5b2908b095c6d813f52971eed60ce63b4be1d7",
       "apps/web/src/app/appointments/new/page.tsx": "e5995f17ad0705dc3c02186c7539e6d9d0f1787de7de38124e2eeb8fddab5c89",
       "apps/web/src/app/calendar/availability/AvailabilityContent.tsx": "2c70c5533ab8c2d759f177ae99584b0e2954bfebb368c63a0195da140537cb2c",
@@ -170,10 +173,13 @@
       "apps/web/src/components/settings/TimezoneSelector.tsx": "73278b778e8be8e99dd4b8bb47142fb1c94ccde902031aba181b5af11b85c8fa",
       "apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx": "4135a7ef5ec4ac5eb3e4be0f36e2e0927195e7a4389ad036eb9e002df8711d93",
       "apps/web/src/components/settings/__tests__/TimezoneSelector.test.tsx": "8be088564a1b4e03fd5bd328750e24e9f6d3cba4318f8abd9f0a8d3421661c07",
+      "artifacts/coverage/PG-202-after.json": "acb985dae3956d03d3c8a7c6d4a174dd98928846b5229443e59661647eacc076",
       "artifacts/coverage/PG-202-before.json": "38f239fbbe9b22e3a9221b79537dd4a8afe72e44e3b4dc314ad80e6af9fc7521",
       "artifacts/lighthouse/PG-202/calendar-availability-pathA-r1.report.json": "da3dcd6967b6abe52e221a5396c9511671744e01d7cc082b8d62527ab7579bfa",
       "artifacts/lighthouse/PG-202/waiver-evidence.md": "10c23d81c8c0acc5d514ac6fcdf1e0bacc4a923fc098ded979a89d26831061f0",
       "artifacts/metrics/debt-ledger.yaml": "bd6baf3f5cd26f1766d5ed4e3859943be0bcc0c3358b75e62376ce060ed0e9e1",
+      "docs/CURRENT_STATE_REPORT.md": "1617731ff9df42e4616d9235f85020b7aafdbc299e03d027ad1013a96763845c",
+      "docs/SESSION_CONTEXT.md": "3a846dafbc0c399adcd286d2f4f757c088e28bc57fcbdcd724e33eb00f70ae84",
       "docs/architecture/adr/ADR-081-tenant-availability.md": "dc2f6ca332714d3b69a4aff20c26b80ccc52ab3604221ba76973b77111666ffc",
       "docs/architecture/adr/README.md": "3c9edcdba688a9d0d2af9709fb127eb4e711bdd507404651922b702a2f036aeb",
       "docs/architecture/diagrams/complete-dependency-chains.md": "50fe4e3ec3d16e0e12a8ff0c0efe0f0faa11ee7891853e1177d9b4ae523be814",
@@ -215,7 +221,7 @@
       ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/a11y-review-recheck.json": "7e1916f90d8430c97663c510e333d8b67a26f01b189507081e972a187e36ea0e",
       ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/summary.tsv": "3a42dd676394fbf461a6f548bbdac5fb97245ee5b51d87ee1110f8b199905235",
       ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/18-diff-coverage.log": "ab47a68b6d07da3eb2585de490cc89e93b61797d5fec58133ce8dc0caf15c036",
-      ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/compliance/compliance-report.md": "fb51dc547591ff99a3f16fdcde8d4a6f8e69a4b452a11e91fd2eb99a4db91ede",
+      ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/compliance/compliance-report.md": "feca7bc6fca6e13a7c6707b8b7784cdde0d8f367e601de9469468dda653e1014",
       ".specify/sprints/sprint-18/findings/PG-202-findings.md": "9615c18df314c41d5f885de51025c982d7db09bbda744494cce6be6b67618aa1",
       ".specify/sprints/sprint-18/attestations/PG-202/context_ack.json": "809a399d54e2198ae6ebc7c4e9c95bac585477d096ab9733823bb706cc03a9de"
     }
@@ -364,76 +370,6 @@
       "exit_code": 0,
       "passed": true,
       "timestamp": "2026-10-18T09:16:19Z"
-    },
-    {
-      "name": "Tests (domain full)",
-      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/domain test",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:01:04Z"
-    },
-    {
-      "name": "Tests (application full)",
-      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/application test",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:01:17Z"
-    },
-    {
-      "name": "Tests (validators full)",
-      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/validators test",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:01:25Z"
-    },
-    {
-      "name": "Tests (db full)",
-      "command": "pnpm --filter @intelliflow/db test",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:02:05Z"
-    },
-    {
-      "name": "Tests (api full)",
-      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/api test",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:04:07Z"
-    },
-    {
-      "name": "Tests (integration, exclusive DB slot)",
-      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/availability.test.ts tests/integration/rls-tenant-isolation.test.ts",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:04:11Z"
-    },
-    {
-      "name": "Characterization (legacy rules)",
-      "command": "pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:00:55Z"
-    },
-    {
-      "name": "DB build + typecheck",
-      "command": "pnpm --filter @intelliflow/db build && pnpm --filter @intelliflow/db typecheck",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:02:01Z"
-    },
-    {
-      "name": "Diff coverage (Sonar new_coverage mirror)",
-      "command": "DIFF_COVER_LCOV=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/merged-lcov.info node scripts/check-diff-coverage.mjs",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:16:55Z"
-    },
-    {
-      "name": "Exec preflights",
-      "command": "node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202 && node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202 && node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-202 && node tools/scripts/validate-task-json-schemas.mjs",
-      "exit_code": 0,
-      "passed": true,
-      "timestamp": "2026-10-18T09:16:56Z"
     }
   ]
 }
