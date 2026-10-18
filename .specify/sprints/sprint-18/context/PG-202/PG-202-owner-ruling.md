@@ -79,3 +79,10 @@ user and the page renders read-only for others. Members lose the buffer/timezone
 Consequences: SPANS_MIDNIGHT stays for configured firms, with a message telling the user to book one appointment per
 day; the New Appointment form initialises its buffer inputs from the firm defaults (editing an existing appointment
 keeps its own values); server-side booking input handling is unchanged.
+
+## Daily-cap codex waiver (2026-10-17 / 2026-10-18)
+
+- 2026-10-17: Talysson approved the codex waiver for the best-effort daily cap (non-atomic count then insert; spec NF-004,
+  ADR-081, gh #913) in the PG-202 lane modal. The three entries in `tools/audit/codex-review-waivers.yaml` name him.
+- 2026-10-18: Talysson confirmed the same waiver to Aurora by modal (relayed in Aurora's PR #916 review). The three
+  waiver entries stand.

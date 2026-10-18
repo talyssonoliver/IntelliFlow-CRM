@@ -1,0 +1,38 @@
+date: 2026-10-18T11:08:51Z
+head: 6ba9061f118c7ed174a6d63bd59f0169479d49bd (+ aurora round 1)
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar/availability/__tests__/AvailabilityContent.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+ ❯ |web| src/app/calendar/availability/__tests__/AvailabilityContent.test.tsx (16 tests | 1 failed) 3100ms
+     × shows a calm notice, not an error, while the API does not have availability yet (deploy skew) 27ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/app/calendar/availability/__tests__/AvailabilityContent.test.tsx > AvailabilityContent — states > shows a calm notice, not an error, while the API does not have availability yet (deploy skew)
+Error: [2mexpect([22m[31melement[39m[2m).not.toBeInTheDocument()[22m
+
+[31mexpected document not to contain element, found <p
+  class="text-red-700 dark:text-red-300 mb-4"
+  role="alert"
+>
+  Failed to load availability
+  : No procedure found on path "calendar.availability.get"
+</p> instead[39m
+ ❯ src/app/calendar/availability/__tests__/AvailabilityContent.test.tsx:151:45
+    149|     };
+    150|     render(<AvailabilityContent />);
+    151|     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+       |                                             ^
+    152|     expect(screen.getByRole('status')).toHaveTextContent(
+    153|       'Availability settings will be available after the next release.'
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 15 passed (16)
+   Start at  12:08:55
+   Duration  30.58s (transform 18.22s, setup 1.38s, import 22.93s, tests 3.10s, environment 2.56s)
+
+exit: 1

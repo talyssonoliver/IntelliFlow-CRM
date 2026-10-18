@@ -24,8 +24,8 @@
   `--exclusive intelliflow-db`. The shared :5433 / :6380 containers are never stopped or reset.
 - `@intelliflow/web`'s `test` script is watch mode, so web runs use `pnpm --dir apps/web exec vitest run <path>`.
 - Never pipe a gate into `tail`/`head`; write logs with `> <log> 2>&1; echo "exit=$?" >> <log>`.
-- TDD logs: `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/` — `characterization-*.log` (GREEN on
-  current code), `red-*.log`, `green-*.log`. Each log starts with `# date -u`, `# git rev-parse HEAD`, `# <command>`
+- TDD logs: `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/` — `characterization-*.txt` (GREEN on
+  current code), `red-*.txt`, `green-*.txt`. Each log starts with `# date -u`, `# git rev-parse HEAD`, `# <command>`
   and ends with `# exit=<code>`. No RED claim without its log.
 - Commits: small, staged by name, message via `-F <file>`, hooks on, no AI attribution, no secret-shaped strings (build
   test strings from parts, `*.example.invalid`). No push/PR until SHIP.
@@ -42,7 +42,7 @@
 - [x] Exec preflights: `node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202`,
       `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202`,
       `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-202`,
-      `node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-202`. *Verified 2026-10-17T17:18Z:* all four exit 0 (`.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/gates/preflight-*.log`); readiness needed `pnpm run generate:metrics` for the cached task JSON first. `check-worktree-landed` exits 1 by design until SHIP (unpushed branch), re-run at Step 21.
+      `node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-202`. *Verified 2026-10-17T17:18Z:* all four exit 0 (`.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/gates/preflight-*.txt`); readiness needed `pnpm run generate:metrics` for the cached task JSON first. `check-worktree-landed` exits 1 by design until SHIP (unpushed branch), re-run at Step 21.
 - [x] Create `context_ack.json` (see Step 1 "Files to Create"; files read + SHA-256, `date -u` timestamp) — CSV
       EVIDENCE artifact. *Done 2026-10-17T17:18:49Z:* 29 files hashed; context_pack.md + manifest built by `build-context-pack-cli.ts`.
 - [x] Confirmed in the plan session: `createTenantScopedPrisma` (`apps/api/src/security/tenant-context.ts:142-195`) issues
@@ -191,7 +191,7 @@ to `beforeEach`. Not counted.
 Page counts are unchanged (no new `page.tsx`): `sitemap-reconciliation.test.ts`, `content-audit-schema.test.ts` are
 **run, not modified**. Lighthouse evidence goes to `artifacts/lighthouse/PG-202/` (not counted).
 
-**Total: 14 + 18 + 18 + 16 + 20 = 86 files.** Execution evidence (`exec-PG-202-20261017/tdd/*.log`, `matop/*`,
+**Total: 14 + 18 + 18 + 16 + 20 = 86 files.** Execution evidence (`exec-PG-202-20261017/tdd/*.txt`, `matop/*`,
 `artifacts/lighthouse/PG-202/*`, a regenerated Material Symbols subset if Step 18 needs it) is not counted.
 
 ## Execution Steps
@@ -212,8 +212,8 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       end 19:01 rejected; 18:00 → 08:00 next day accepted (gap pinned, test named "legacy path keeps the cross-midnight gap
       (recorded finding)"); `timezone: 'Asia/Tokyo'` shifts the window.
 - [x] reschedule: evaluated in UTC (no timezone input).
-- [x] findNextSlot: `checkConflictsUseCase.findNextSlot` called with `workingHoursStart: 9, workingHoursEnd: 17`. *Verified:* `tdd/characterization-legacy.log` (9 passed, exit 0, 2026-10-17).
-- [x] Run on the untouched router → **GREEN**; log `characterization-legacy.log`. It must stay GREEN after Step 15
+- [x] findNextSlot: `checkConflictsUseCase.findNextSlot` called with `workingHoursStart: 9, workingHoursEnd: 17`. *Verified:* `tdd/characterization-legacy.txt` (9 passed, exit 0, 2026-10-17).
+- [x] Run on the untouched router → **GREEN**; log `characterization-legacy.txt`. It must stay GREEN after Step 15
       (the settings read returns `null` in this file: `prismaMock.appointmentSettings.findUnique.mockResolvedValue(null)`).
 
 **Validation:** `pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts`
@@ -248,7 +248,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - [x] No test depends on the wall clock: every case passes explicit instants and IANA zones; no `process.env.TZ`.
 - [x] `isAvailabilityAdminRole`: ADMIN, MANAGER true; USER, undefined false; `AVAILABILITY_ADMIN_ROLES` is
       `ACCOUNT_OWNER_ADMIN_ROLES` (identity assertion, so OWNER/SUPER_ADMIN follow the shared list, as PG-204).
-- [x] RED log `red-domain.log` (module not found). *Verified:* "Cannot find module ../AvailabilityPolicy / ../availability-roles", 2 files failed, exit 1.
+- [x] RED log `red-domain.txt` (module not found). *Verified:* "Cannot find module ../AvailabilityPolicy / ../availability-roles", 2 files failed, exit 1.
 
 **Validation:** `pnpm --dir packages/domain exec vitest run src/legal/appointments/__tests__/AvailabilityPolicy.test.ts src/legal/appointments/__tests__/availability-roles.test.ts`
 
@@ -260,7 +260,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - [x] One `findForConflictCheck` call over `[first.start - before, last.end + after]` with `attendeeIds: [attendeeId]`.
 - [x] Returns the first free candidate (conflict on 1st, free 2nd); buffers cause a conflict; empty list → `null`;
       all busy → `null`; repository failure → `Result.fail`.
-- [x] RED log `red-application.log` (method missing). *Verified:* 6 failed "findFirstFreeCandidate is not a function", 13 existing passed, exit 1.
+- [x] RED log `red-application.txt` (method missing). *Verified:* 6 failed "findFirstFreeCandidate is not a function", 13 existing passed, exit 1.
 
 **Validation:** `pnpm --dir packages/application exec vitest run src/usecases/scheduling/__tests__/CheckConflicts.test.ts`
 
@@ -281,7 +281,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       invalid (`Not/AZone`, `''`); `tenantId` stripped.
 - [x] `updateAppointmentSettingsSchema` strips `defaultBufferBeforeMinutes`, `defaultBufferAfterMinutes`,
       `defaultTimezone`; duration refine still rejects min > max.
-- [x] RED log `red-validators.log`. *Verified:* "Cannot find module ../availability"; the new strip test fails on the current schema (1 failed, 25 passed), exit 1.
+- [x] RED log `red-validators.txt`. *Verified:* "Cannot find module ../availability"; the new strip test fails on the current schema (1 failed, 25 passed), exit 1.
 
 **Validation:** `pnpm --dir packages/validators exec vitest run src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts`
 
@@ -317,7 +317,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       branch uses `DEFAULT_APPOINTMENT_SETTINGS`; closure dates sent as UTC-midnight `Date`s and read back as `YYYY-MM-DD`.
 - [x] Router reset: ADMIN/MANAGER only; call order `updateMany` → hours → closures; buffers/timezone untouched; no-row safe
       (`count: 0`); returns unconfigured DTO; cross-tenant: tenant A caller never sees tenant B rows.
-- [x] RED log `red-api-calendar.log` (modules missing). *Verified:* "Cannot find module ../availability-enforcement / ../availability.router", exit 1.
+- [x] RED log `red-api-calendar.txt` (modules missing). *Verified:* "Cannot find module ../availability-enforcement / ../availability.router", exit 1.
 
 **Validation:** `pnpm --dir apps/api exec vitest run src/modules/calendar/__tests__/availability-enforcement.test.ts src/modules/calendar/__tests__/availability.router.test.ts`
 
@@ -345,7 +345,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       runtime check that the real `container.checkConflictsUseCase.findFirstFreeCandidate` is a function.
 - [x] Executor: an availability BAD_REQUEST from `create`/`reschedule` surfaces as a failed execution, not a crash.
 - [x] Entitlement: `calendar.availability` not in `LEGAL_ROUTERS` (calendar is core).
-- [x] RED log `red-api-wiring.log` (the characterization file stays GREEN). *Verified:* 22 failed / 128 passed; the characterization, legacy and executor guard cases pass (the executor router is mocked, so those two are regression guards, not RED-able); exit 1.
+- [x] RED log `red-api-wiring.txt` (the characterization file stays GREEN). *Verified:* 22 failed / 128 passed; the characterization, legacy and executor guard cases pass (the executor router is mocked, so those two are regression guards, not RED-able); exit 1.
 
 **Validation:** `pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts src/modules/legal/__tests__/appointments.availability-boundary.test.ts src/modules/legal/__tests__/appointment-settings.router.test.ts src/__tests__/app-router.smoke.test.ts src/agent/__tests__/approved-action-executor.test.ts src/modules/legal/__tests__/legal-module-entitlement.test.ts`
 
@@ -370,7 +370,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       `loadTenantAvailability` with a real `PrismaClient` + `PrismaPg` adapter, and assert it returns `{configured:false}`
       and that the caught error carries `code: 'P2022'` (the shape the unit tests mock). Skip disclosed if the ephemeral DB
       helper cannot run.
-- [x] RED log `red-integration.log` (tables missing). *Verified:* "Cannot find module …/availability-enforcement" (module + migration absent), exit 1, run under `--exclusive intelliflow-db`. Probe uses a throwaway Postgres schema instead of a whole ephemeral DB (same real adapter error, no shared table touched).
+- [x] RED log `red-integration.txt` (tables missing). *Verified:* "Cannot find module …/availability-enforcement" (module + migration absent), exit 1, run under `--exclusive intelliflow-db`. Probe uses a throwaway Postgres schema instead of a whole ephemeral DB (same real adapter error, no shared table touched).
 
 **Validation:** `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/availability.test.ts`
 
@@ -437,7 +437,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - [x] new/page: renders the form after `appointmentSettings.get` settles and passes `defaultBuffers`.
 - [x] ModuleSettingsLayout: custom `resetDescription` shown; default unchanged. TimezoneSelector: `showDetect={false}` hides
       the button; default shows it.
-- [x] RED log `red-web.log` (one run over the listed files). *Verified:* 17 files failed / 9 passed, 25 tests failed / 200 passed (new modules missing; changed contracts fail on current components), exit 1.
+- [x] RED log `red-web.txt` (one run over the listed files). *Verified:* 17 files failed / 9 passed, 25 tests failed / 200 passed (new modules missing; changed contracts fail on current components), exit 1.
 
 **Validation:** `pnpm --dir apps/web exec vitest run src/app/calendar src/components/appointments/__tests__ src/app/appointments/new src/components/settings/__tests__/ModuleSettingsLayout.test.tsx src/components/settings/__tests__/TimezoneSelector.test.tsx src/components/aurora-landing/sections/__tests__/InboxCalendarSection.test.tsx`
 
@@ -453,7 +453,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 
 - [x] Implement the spec "Domain" contract (pure; `Intl` only; `DomainError` subclass per `Buffer.ts:4-10`).
 - [x] Barrel exports after `packages/domain/src/index.ts:80`; `pnpm --filter @intelliflow/domain build` (stale-dist rule).
-- [x] GREEN log `green-domain.log`; coverage ≥ 95% on both files. *Verified:* 51 passed; All files 98.7% stmts / 97.46% branches / 100% funcs / 100% lines; `pnpm --filter @intelliflow/domain build` exit 0.
+- [x] GREEN log `green-domain.txt`; coverage ≥ 95% on both files. *Verified:* 51 passed; All files 98.7% stmts / 97.46% branches / 100% funcs / 100% lines; `pnpm --filter @intelliflow/domain build` exit 0.
 
 **Validation:** Step 2 command, then `pnpm --dir packages/domain exec vitest run --coverage.enabled --coverage.include=src/legal/appointments/AvailabilityPolicy.ts --coverage.include=src/legal/appointments/availability-roles.ts src/legal/appointments/__tests__`
 
@@ -464,7 +464,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 
 - [x] `findFirstFreeCandidate` per spec (one repository read, the existing pure conflict check per candidate, wraps
       `[attendeeId]`). No container change. `pnpm --filter @intelliflow/application build`.
-- [x] GREEN log `green-application.log`; coverage > 90% on the new method's lines. *Verified:* 20 passed; the uncovered lines (103, 143, 188, 209, 245) are pre-existing, every added line is covered; build exit 0.
+- [x] GREEN log `green-application.txt`; coverage > 90% on the new method's lines. *Verified:* 20 passed; the uncovered lines (103, 143, 188, 209, 245) are pre-existing, every added line is covered; build exit 0.
 
 **Validation:** Step 3 command, then `pnpm --dir packages/application exec vitest run --coverage.enabled --coverage.include=src/usecases/scheduling/CheckConflicts.ts src/usecases/scheduling/__tests__/CheckConflicts.test.ts`
 
@@ -477,7 +477,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `packages/validators/src/index.ts`
 
 - [x] Schemas, DTO types, re-exports of `LEGACY_BOOKING_HOURS` / `AVAILABILITY_LIMITS`; update schema `.omit(...)`.
-- [x] `pnpm --filter @intelliflow/validators build`; GREEN log `green-validators.log`; coverage > 90%. *Verified:* 68 passed; availability.ts 100% lines / 92% branches; appointment-settings.ts 100%; build + typecheck exit 0.
+- [x] `pnpm --filter @intelliflow/validators build`; GREEN log `green-validators.txt`; coverage > 90%. *Verified:* 68 passed; availability.ts 100% lines / 92% branches; appointment-settings.ts 100%; build + typecheck exit 0.
 
 **Validation:** Step 4 command, then `pnpm --dir packages/validators exec vitest run --coverage.enabled --coverage.include=src/availability.ts --coverage.include=src/appointment-settings.ts src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts`
 
@@ -498,7 +498,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - [x] Independent SQL review by a sub-agent (Class A gate 1) on `migration.sql` only → `matop/sql-review.json`; then
       freeze the file. *Verified:* `pg202-sql-reviewer` (data-engineer) APPROVE, 6 INFO findings, no fixes required; sha256 in `matop/migration-freeze.txt`.
 - [x] Apply to the local test DB (fresh DB via `scripts/lib/ephemeral-test-db.mjs` where available) and run Step 7 →
-      GREEN log `green-integration.log`. *Verified:* 20 passed (verbose list in the log) incl. RLS session check and the real-adapter P2022 probe; applied via the test's `ensureMigrationSql()` (shared DB, exclusive slot), not `migrate deploy`, so the shared DB's migration history is untouched.
+      GREEN log `green-integration.txt`. *Verified:* 20 passed (verbose list in the log) incl. RLS session check and the real-adapter P2022 probe; applied via the test's `ensureMigrationSql()` (shared DB, exclusive slot), not `migrate deploy`, so the shared DB's migration history is untouched.
 
 **Validation:** `pnpm --filter @intelliflow/db typecheck` and the Step 7 command
 
@@ -530,7 +530,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       `isAvailabilityAdminRole` from `@intelliflow/domain`; the helper imports `evaluateAvailability`, `capCountWindow`,
       `generateCandidates`, `CAP_COUNTED_STATUSES`, `LEGACY_BOOKING_HOURS` from `@intelliflow/domain`.
 - [x] `availability: availabilityRouter` in `calendar.router.ts`.
-- [x] GREEN log `green-api-calendar.log`; coverage > 90% on both new files. *Verified:* 80 passed; 97.47% stmts / 92.13% branches / 100% lines.
+- [x] GREEN log `green-api-calendar.txt`; coverage > 90% on both new files. *Verified:* 80 passed; 97.47% stmts / 92.13% branches / 100% lines.
 
 **Validation:** Step 5 command, then `pnpm --dir apps/api exec vitest run --coverage.enabled --coverage.include=src/modules/calendar/availability.router.ts --coverage.include=src/modules/calendar/availability-enforcement.ts src/modules/calendar/__tests__`
 
@@ -544,7 +544,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - [x] If `appointments.router.test.ts` / `.comprehensive.test.ts` crash on the new settings read, add
       `prismaMock.appointmentSettings.findUnique.mockResolvedValue(null)` to their `beforeEach` (conditional).
 - [x] Runtime check: `container.checkConflictsUseCase.findFirstFreeCandidate` is a function (smoke test).
-- [x] GREEN log `green-api-wiring.log`; characterization log re-run GREEN (`characterization-legacy-after.log`). *Verified:* 11 files / 288 passed incl. untouched appointments.router.test / comprehensive / tenant-isolation; characterization 9 passed after the swap; api typecheck exit 0.
+- [x] GREEN log `green-api-wiring.txt`; characterization log re-run GREEN (`characterization-legacy-after.txt`). *Verified:* 11 files / 288 passed incl. untouched appointments.router.test / comprehensive / tenant-isolation; characterization 9 passed after the swap; api typecheck exit 0.
 
 **Validation:** Step 6 command + Step 1 command
 
@@ -576,7 +576,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       `useRequireAuth` from `@/lib/auth/AuthContext`.
 - [x] Material Symbols only (`docs/design/ICON_USAGE.md`); decorative icons `aria-hidden`; error text
       `text-red-700 dark:text-red-300`; no `fieldset className="contents"`; no new dependency.
-- [x] GREEN log `green-web-availability.log`.
+- [x] GREEN log `green-web-availability.txt`.
 
 **Validation:** `pnpm --dir apps/web exec vitest run src/app/calendar/availability src/components/settings/__tests__/TimezoneSelector.test.tsx`
 
@@ -599,7 +599,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       attendee/client/assignee/conflict logic.
 - [x] new/page: wait for `appointmentSettings.get`, pass `defaultBuffers`.
 - [x] AppointmentDetail `handleAction`: catch → `actionError`, close only on success.
-- [x] GREEN log `green-web-surfaces.log`. *Verified:* 26 files / 313 tests passed, exit 0.
+- [x] GREEN log `green-web-surfaces.txt`. *Verified:* 26 files / 313 tests passed, exit 0.
 
 **Validation:** Step 8 command
 
@@ -610,7 +610,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - [x] Remove duplication (no copied fixtures across test files; shared factories), check `knip` for unused exports,
       Sonar guard on touched files (`pnpm run lint:sonar:guard`), typecheck + lint of every touched package.
       *Verified:* shared factories `availability.test-utils.ts` (API) and `availability-fixtures.ts` (web); the
-      calendar-settings pointer is one component (`AvailabilityPointer.tsx`). `knip` (`matop/knip.log`) lists no PG-202
+      calendar-settings pointer is one component (`AvailabilityPointer.tsx`). `knip` (`matop/knip.txt`) lists no PG-202
       file. Sonar guard over all 69 changed TS files found 12 issues (cognitive complexity in `AvailabilityPolicy`,
       `AvailabilityContent`, API test utils; nested ternaries; nested template literal; `role="region"` → `<section>`;
       non-native interaction on the modal backdrop), all fixed, re-run exit 0. Workspace typecheck + staged lint passed
@@ -622,7 +622,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
       `scripts/check-diff-coverage.mjs` treat `apps/api/src/modules/calendar/__tests__/availability.test-utils.ts` as a test
       helper (excluded from new-code coverage); record the line that matches. *Verified:* `sonar-project.properties:158`
       `**/__tests__/**` and `scripts/lib/diff-coverage.mjs:38` (`(__tests__|__mocks__|…)\/` segment).
-- [x] Re-run Steps 1-8 commands → all GREEN (`refactor-rerun.log`). *Verified:* 9 commands (Steps 1-8 + the ConfirmationDialog
+- [x] Re-run Steps 1-8 commands → all GREEN (`refactor-rerun.txt`). *Verified:* 9 commands (Steps 1-8 + the ConfirmationDialog
       test), 697 tests, every exit 0, overall 0.
 
 **Validation:** typecheck + lint rows of the Validation Matrix
@@ -732,7 +732,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 | After Step | Verification | Command |
 |---|---|---|
 | 1 | legacy pinned GREEN | Step 1 command |
-| 8 | all RED logs saved | `ls .specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/red-*.log` |
+| 8 | all RED logs saved | `ls .specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/red-*.txt` |
 | 9 | domain green + built | Step 9 commands |
 | 11 | validators green; api compiles | `pnpm --filter @intelliflow/api typecheck` |
 | 12 | migration applies; integration green | Step 7 command |

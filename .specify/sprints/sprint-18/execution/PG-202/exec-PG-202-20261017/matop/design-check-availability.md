@@ -38,8 +38,8 @@ Two additive props, no new shared component:
 - `TimezoneSelector.showDetect` (default `true`), so the firm-zone field hides "detect my browser zone".
 - `ConfirmationDialog.onCloseAutoFocus` (optional, passed to `AlertDialogContent`), so focus can move to the Weekly hours
   title after Reset instead of returning to the Reset button. Covered by
-  `packages/ui/__tests__/confirmation-dialog.test.tsx` (RED/GREEN logs `red-ui-confirmation-dialog.log`,
-  `green-ui-confirmation-dialog.log`).
+  `packages/ui/__tests__/confirmation-dialog.test.tsx` (RED/GREEN logs `red-ui-confirmation-dialog.txt`,
+  `green-ui-confirmation-dialog.txt`).
 
 ## Accessibility behaviours wired
 
@@ -55,4 +55,4 @@ Two additive props, no new shared component:
 
 ## Evidence
 
-`tdd/green-web-availability.log`: 10 files, 104 tests passed, exit 0.
+`tdd/green-web-availability.txt`: 10 files, 104 tests passed, exit 0.

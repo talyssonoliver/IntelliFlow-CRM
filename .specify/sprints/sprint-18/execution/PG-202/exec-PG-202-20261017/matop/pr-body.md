@@ -63,9 +63,36 @@ P2021/P2022) falls back to the same rules with a logged error.
 > Class A gates 4 (staging verification), 7 (backup or snapshot id) and 10-prod (`prisma migrate deploy` on production) are
 > **NEEDS_HUMAN**.
 
+### Release order and the gap between web and API
+
+The web deploys on merge, while the API is promoted manually after the migration. Between the two:
+- **Buffer and timezone editing pauses.** The new Calendar Settings no longer edits them, and `/calendar/availability`
+  needs `calendar.availability`, which the old API does not have. The page shows a calm "Availability settings will be
+  available after the next release" notice instead of an error. The tRPC NOT_FOUND for the unknown procedure is handled in
+  `AvailabilityContent.tsx`, with a test.
+- **Saving durations or the reminder does not reset buffers or timezone.** The old update takes a partial schema (main
+  `packages/validators/src/appointment-settings.ts:49-50`, `.partial()`) and writes only the keys it gets (main
+  `apps/api/src/modules/legal/appointment-settings.router.ts:47`, `update: input`). The new web sends only duration,
+  reminder and calendar keys (`apps/web/src/app/calendar/calendar-settings/CalendarSettingsContent.tsx:114-118`). Codex's
+  claim is false for update.
+- **But Reset on Calendar Settings does reset them during the gap.** The old `resetToDefaults` writes the defaults for
+  buffers and timezone too (main `appointment-settings.router.ts:57`). The new reset text says they are kept, which is only
+  true once the API is promoted. Avoid Calendar Settings Reset between merge and promote, or promote the API first.
+
+### Small behaviour notes
+
+- `findNextSlot` for configured firms anchors its hourly grid at each range's opening time (09:30, 10:30, … for a 09:30
+  opening), not the old fixed 09:00 grid. Pinned by `AvailabilityPolicy.test.ts` › generateCandidates › "anchors candidates
+  at each range start (09:30 range yields 09:30, 10:30, 11:30)".
+- `reschedule` loads and authorises the target appointment (tenant-scoped) before the availability check. An unknown or
+  foreign id gets NOT_FOUND, never an availability answer (test in `appointments.router.caller.test.ts`).
+- `findNextSlot` searches in batches until the requested horizon. The spec's query bound (≤ 5) becomes 3 + 2 per batch:
+  at most 13 for a 365-day search on an hourly grid.
+- Migration CHECKs bound `startMinute` to 0..1439 and `endMinute` to 1..1440 explicitly (review round 1).
+
 ## Evidence
 
-Every number comes from a log under `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/`.
+Every number comes from a log under `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/`. Evidence logs are stored as `.txt`, because CI rejects tracked `*.log` (`matop/EVIDENCE-RENAMES.md`).
 
 - **Validation Matrix** (`matop/validation-matrix/`): the full matrix ran one row at a time at the final code. Every row
   exited 0:

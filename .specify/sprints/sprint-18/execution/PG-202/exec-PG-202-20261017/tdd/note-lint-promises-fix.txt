@@ -1,0 +1,18 @@
+PG-202 lint-promises fix (commit 6ba9061f1): lint-driven, no behavioural RED captured.
+
+Trigger: pre-ship run 2 at 81cb909fd failed the required step lint-promises
+(node scripts/lint-promises.mjs, eslint.promises.config.mjs with ignoreVoid: false):
+
+  apps/web/src/app/calendar/availability/AvailabilityContent.tsx
+    200:7  error  Promises must be awaited, end with a call to .catch, or end with a call to .then
+                  with a rejection handler  @typescript-eslint/no-floating-promises
+    221:7  error  (same rule)
+
+Both lines were `void utils.calendar.availability.get.invalidate();` after a successful save and reset.
+The step's own log (artifacts/preship/logs/lint-promises.log) was overwritten by pre-ship run 3, so the
+output above is quoted from the session transcript.
+
+Fix: `.catch(logCacheRefreshFailure)`. The behaviour test "logs a failed background cache refresh without
+turning a saved change into an error" was written alongside the fix, so it has no separate RED run. Three
+existing tests failed once because the invalidate test double returned undefined (the real tRPC utils
+return a promise); the double now resolves. GREEN: tdd/green-web-lint-promises.txt (93 passed).

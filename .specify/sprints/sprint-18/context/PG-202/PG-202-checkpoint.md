@@ -14,13 +14,13 @@ Last rewritten: 2026-10-18T08:5xZ · branch `feat/pg-202-availability` · HEAD `
 
 - Steps 1-15 (characterization, RED for every layer, GREEN domain → api, migration): logs in
   `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/`.
-- Step 16 web page GREEN 18:0xZ (`green-web-availability.log`, 104 tests); `/frontend-design` invoked earlier;
+- Step 16 web page GREEN 18:0xZ (`green-web-availability.txt`, 104 tests); `/frontend-design` invoked earlier;
   design check `matop/design-check-availability.md`.
-- Step 17 surfaces GREEN (`green-web-surfaces.log`, 26 files / 313 tests).
+- Step 17 surfaces GREEN (`green-web-surfaces.txt`, 26 files / 313 tests).
 - SQL review: `pg202-sql-reviewer` (data-engineer sub-agent) APPROVE; `matop/sql-review.json`; migration sha256 frozen
   in `matop/migration-freeze.txt` (unchanged in HEAD).
 - Commits 1-5 at 19:58-20:06Z (domain/app, validators/db, api, web, evidence). Sonar guard fixes made before commit 1.
-- Step 18 refactor rerun 20:08-20:09Z: 9 commands, 697 tests, all exit 0 (`tdd/refactor-rerun.log`); knip `matop/knip.log`.
+- Step 18 refactor rerun 20:08-20:09Z: 9 commands, 697 tests, all exit 0 (`tdd/refactor-rerun.txt`); knip `matop/knip.txt`.
 - Merge `origin/main` 20:10Z (`c8512e8ad`; CSV conflict resolved per row: main's PG-201, ours PG-202).
 - Step 19 docs 20:17Z (`6a8aec303`); gh issues #909-#913; debt-ledger `PG-202-*` x5; findings doc.
 - Codex review (`node scripts/codex-review.mjs`) runs 1-6, 20:20-20:36Z, logs `matop/codex-review/`; run 6 PASS.
@@ -67,7 +67,7 @@ Domain PASS, Security PASS (3 LOW), Foundation WARN, Quality WARN. Responses (un
 - Line-ending flips (debt-ledger, waivers LF->CRLF; plan and coverage baseline CRLF): converted to LF. The schema.prisma diff
   is `prisma format` re-alignment, 58/21 real lines with `git diff -w`; disclose in the PR body.
 - New console.log in the configured findNextSlot branch: removed.
-- findNextSlot with an invalid stored timezone: now PRECONDITION_FAILED (RED/GREEN `tdd/*-api-nextslot-timezone.log`).
+- findNextSlot with an invalid stored timezone: now PRECONDITION_FAILED (RED/GREEN `tdd/*-api-nextslot-timezone.txt`).
   Both runs overlapped the /code-review coverage step (one-test-process rule broken; disclose).
 - findNextSlotSchema bounds (pre-existing): gh #914 + debt-ledger PG-202-FINDNEXTSLOT-INPUT-BOUNDS-001 + findings T8.
 - Stale web gates and summary.tsv row 18: rerun the WHOLE matrix at the final HEAD (matrix.sh fixed: lcov path rewrite,
@@ -107,7 +107,7 @@ Domain PASS, Security PASS (3 LOW), Foundation WARN, Quality WARN. Responses (un
 
 ## Exact next action
 
-1. pre-ship must end `pre-ship: PASS` (log in scratchpad pre-ship.log; artifacts/preship/last-run.json).
+1. pre-ship must end `pre-ship: PASS` (log in scratchpad pre-ship.txt; artifacts/preship/last-run.json).
 2. `git push -u origin feat/pg-202-availability` once (hook reuses the cached PASS for the same HEAD).
 3. Gate 4b re-run (`check-worktree-landed.mjs PG-202 18`), refs/preship check.
 4. `bash C:/Users/talys/ops/bin/ifc-pr-create.sh --title "feat(calendar): firm availability settings enforced at booking (PG-202)" --body-file <matop/pr-body.md>`.
