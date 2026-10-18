@@ -145,12 +145,13 @@ describe('Edit Contact page — contact type (PG-205)', () => {
     expect(screen.getByRole('option', { name: 'Investor (inactive)' })).toBeInTheDocument();
   });
 
-  it('submits the unchanged stored key as is', async () => {
+  it('an unchanged stored key (even inactive) is not resent', async () => {
     render(<EditContactPage />);
     goToLastStep();
     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
     await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
-    expect(h.mutateAsync.mock.calls[0][0]).toMatchObject({ id: 'c1', contactType: 'investor' });
+    expect(h.mutateAsync.mock.calls[0][0]).toMatchObject({ id: 'c1' });
+    expect(h.mutateAsync.mock.calls[0][0]).not.toHaveProperty('contactType');
   });
 
   it('submits a newly chosen type', async () => {
@@ -169,6 +170,25 @@ describe('Edit Contact page — contact type (PG-205)', () => {
     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
     await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
     expect(h.mutateAsync.mock.calls[0][0].contactType).toBeNull();
+  });
+
+  it('an untyped contact saved without a type change sends no contactType key (deploy skew)', async () => {
+    h.record = { ...h.record, contactType: null };
+    render(<EditContactPage />);
+    goToLastStep();
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    expect(h.mutateAsync.mock.calls[0][0]).not.toHaveProperty('contactType');
+  });
+
+  it('an untyped contact given a type sends that key', async () => {
+    h.record = { ...h.record, contactType: null };
+    render(<EditContactPage />);
+    goToLastStep();
+    fireEvent.change(screen.getByLabelText('Contact type'), { target: { value: 'customer' } });
+    fireEvent.click(screen.getByRole('button', { name: /Save Changes/i }));
+    await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1));
+    expect(h.mutateAsync.mock.calls[0][0].contactType).toBe('customer');
   });
 
   it('shows the linked account and does not resend it when unchanged (ruling 9)', async () => {

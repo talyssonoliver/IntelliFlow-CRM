@@ -33,7 +33,7 @@ import {
 } from '@intelliflow/domain';
 import {
   CONTACT_TYPE_COLOR_TOKENS,
-  findDuplicateContactTypeName,
+  contactTypeNameSchema,
   type ContactTypeDto,
 } from '@intelliflow/validators';
 import {
@@ -192,15 +192,16 @@ export function ContactTypeDialog({
   // The stored default tags: kept selectable even if a tag was deactivated since.
   const keptTagIds = snapshot.defaultTagIds;
   const trimmedName = draft.name.trim();
-  const duplicateName = findDuplicateContactTypeName(existing, trimmedName, contactType?.id);
+  // The shared schema (superRefine) owns the duplicate-name rule; the DB lower(name) index
+  // stays authoritative for races.
+  const nameCheck = contactTypeNameSchema(existing, contactType?.id).safeParse(draft.name);
   const isDefault = contactType?.isDefault ?? false;
-  const hasConflict = !trimmedName || duplicateName !== null;
+  const hasConflict = !nameCheck.success;
   const isDirty = fingerprint(draft) !== fingerprint(snapshot);
   const [saveAttempted, setSaveAttempted] = useState(false);
-  const nameError =
-    serverError ??
-    (duplicateName ? `A contact type named “${duplicateName}” already exists.` : null) ??
-    (saveAttempted && !trimmedName ? 'Name is required.' : null);
+  const blankError = saveAttempted ? 'Name is required.' : null;
+  const schemaError = nameCheck.success ? null : nameCheck.error.issues[0].message;
+  const nameError = serverError ?? (trimmedName ? schemaError : blankError);
 
   const toggleRequired = (key: ContactTypeRequiredFieldKey, checked: boolean) =>
     set(

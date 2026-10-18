@@ -216,14 +216,20 @@ describeDb('PG-205 contact types (real DB)', () => {
     });
 
     it('uses the same 18 colour tokens as contact_tags', async () => {
+      // CI builds its DB with `db push`, which never creates the hand-written
+      // contact_tags_colorToken_check, so only contact_types' CHECK is required here;
+      // contact_tags is compared against the shared constant only when it exists.
       const rows: Array<{ conname: string; def: string }> = await prisma.$queryRawUnsafe(
         `SELECT conname, pg_get_constraintdef(oid) AS def FROM pg_constraint
          WHERE conname IN ('contact_types_colorToken_check', 'contact_tags_colorToken_check')`
       );
-      expect(rows).toHaveLength(2);
-      for (const row of rows) {
-        for (const token of TAG_COLOR_TOKENS) expect(row.def).toContain(`'${token}'`);
-      }
+      const tokensIn = (def: string) => [...def.matchAll(/'([a-z]+)'/g)].map((m) => m[1]).sort();
+      const expected = [...TAG_COLOR_TOKENS].sort();
+      const own = rows.find((row) => row.conname === 'contact_types_colorToken_check');
+      expect(own).toBeDefined();
+      expect(tokensIn(own!.def)).toEqual(expected);
+      const tags = rows.find((row) => row.conname === 'contact_tags_colorToken_check');
+      if (tags) expect(tokensIn(tags.def)).toEqual(expected);
     });
   });
 

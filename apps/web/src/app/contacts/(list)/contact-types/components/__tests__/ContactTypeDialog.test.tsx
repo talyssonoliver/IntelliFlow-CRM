@@ -7,6 +7,14 @@ import { render, screen, fireEvent, act, waitFor } from '@testing-library/react'
 import axe from 'axe-core';
 import { CONTACT_TYPE_COLOR_TOKENS, type ContactTypeDto } from '@intelliflow/validators';
 import { ContactTypeDialog, draftFromContactType, toSaveInput } from '../ContactTypeDialog';
+import * as validators from '@intelliflow/validators';
+
+// The dialog must validate the name through the shared superRefine schema (DoD: "Zod
+// superRefine for duplicate type names"), not a parallel check.
+vi.mock('@intelliflow/validators', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@intelliflow/validators')>();
+  return { ...actual, contactTypeNameSchema: vi.fn(actual.contactTypeNameSchema) };
+});
 
 const TAGS = [
   { id: 'tag-a', name: 'supplier', isActive: true },
@@ -149,6 +157,15 @@ describe('ContactTypeDialog', () => {
     });
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({ defaultStatus: 'ACTIVE', defaultOwner: 'CREATOR', isActive: false })
+    );
+  });
+
+  it('validates the name with the shared superRefine schema (contactTypeNameSchema)', () => {
+    renderDialog({ contactType: RESELLER });
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'customer' } });
+    expect(validators.contactTypeNameSchema).toHaveBeenCalledWith(
+      expect.arrayContaining([expect.objectContaining({ name: 'Reseller' })]),
+      RESELLER.id
     );
   });
 

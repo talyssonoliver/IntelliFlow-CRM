@@ -123,7 +123,7 @@ export function contactTypeNameSchema(
       if (duplicate) {
         ctx.addIssue({
           code: 'custom',
-          message: `A contact type named "${duplicate}" already exists.`,
+          message: `A contact type named “${duplicate}” already exists.`,
         });
       }
     });

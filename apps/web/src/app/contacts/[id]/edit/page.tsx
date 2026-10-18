@@ -140,8 +140,6 @@ export default function EditContactPage() {
       zipCode: toOptional(data.zipCode),
       company: toOptional(data.company),
       linkedInUrl: toOptional(data.linkedIn),
-      // PG-205: "No type" removes the type (null), unlike other blank fields.
-      contactType: data.contactType || null,
       contactNotes: toOptional(data.notes),
       tags: data.tags.trim()
         ? data.tags
@@ -151,6 +149,11 @@ export default function EditContactPage() {
         : undefined,
       // email omitted — read-only
     };
+    // PG-205: send the type only when it changed; "No type" on a typed contact clears it
+    // (null). An untyped contact saved unchanged sends no key, so an API that predates
+    // contact types still accepts the update during a web-before-API deploy.
+    const storedContactType = record?.contactType ?? '';
+    if (data.contactType !== storedContactType) payload.contactType = data.contactType || null;
     // PG-205 ruling 9: send the account only when it changed; '' unlinks it (null).
     const storedAccountId = record?.accountId ?? '';
     if (data.accountId !== storedAccountId) payload.accountId = data.accountId || null;
