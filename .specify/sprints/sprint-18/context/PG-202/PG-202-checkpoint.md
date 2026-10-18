@@ -89,20 +89,30 @@ Domain PASS, Security PASS (3 LOW), Foundation WARN, Quality WARN. Responses (un
 - WCAG 1.9.0 / VPAT 1.10.0 rows, CSV row (prerequisite configs/calendar.ts + artifacts) + splits, validate:sprint-data and
   plan-lint pass, PR body draft `matop/pr-body.md`. Uncommitted (waiting for the matrix to finish before committing).
 
+## State at 2026-10-18T09:4xZ
+
+- Code final at 9620f4cce (batched next-slot search; codex run 8 PASS). Evidence/docs through 89d8c6d6d.
+- Final matrix at 2ac93b60f: 20 rows green, diff coverage 96.2%. STOA re-checks: Foundation/Domain/Security/Quality all
+  PASS at 2ac93b60f (aggregate PASS). a11y re-check PASS WITH MINOR. /compliance-check 1-12 PASS, Section 13 NEEDS_HUMAN.
+- Attestation verdict NEEDS_HUMAN; delivery report written; generate-final-report: spec/plan audits pass, exec blocks only
+  on the NEEDS_HUMAN gates → no promise emitted (correct).
+- CSV: In Progress / 90 (PG-201/PG-204 convention: Completed only after merge).
+- Uncommitted on purpose: artifacts/coverage/{coverage-final.json,coverage-summary.json,lcov.info} and
+  artifacts/reports/a11y-route-reconcile.json (generated; rewritten by pre-ship's coverage step). Must not commit between
+  pre-ship and push (pre-ship caches PASS by HEAD).
+
 ## Running now
 
-- Matrix full rerun at fdd76e690 (started ~2026-10-18T08:4xZ).
-- Foundation and Quality STOA re-checks (told to wait for summary.tsv "done"), writing `*.recheck.json`.
+- SHIP step 1: pre-ship via `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-pre-ship -- node scripts/pre-ship.mjs`.
 
 ## Exact next action
 
-1. When the matrix is done: check all rows; commit docs/evidence (WCAG, VPAT, CSV + split, plan, pr-body, lighthouse,
-   first-load, sonar json, checkpoint).
-2. Collect the Foundation and Quality re-check verdicts; write `matop/stoa-aggregate.json`; tick the Step 20 items.
-3. Step 21: attestation (+ check-attestation-phrases / -provenance), /compliance-check, /exec-attestation, exec-metrics end,
-   CSV status per /exec Phase 5, regenerate SESSION_CONTEXT, `generate-final-report.mjs`.
-4. SHIP (merge origin/main if moved, pre-ship once in the exclusive slot, push, PR, SendMessage Aurora). Commit the
-   artifacts/coverage/* refresh that pre-ship leaves only if it's from the final run.
+1. pre-ship must end `pre-ship: PASS` (log in scratchpad pre-ship.log; artifacts/preship/last-run.json).
+2. `git push -u origin feat/pg-202-availability` once (hook reuses the cached PASS for the same HEAD).
+3. Gate 4b re-run (`check-worktree-landed.mjs PG-202 18`), refs/preship check.
+4. `bash C:/Users/talys/ops/bin/ifc-pr-create.sh --title "feat(calendar): firm availability settings enforced at booking (PG-202)" --body-file <matop/pr-body.md>`.
+5. SendMessage Aurora READY (PR#, head SHA, refs/preship present?, attestation path, migration, NEEDS_HUMAN).
+6. Ask the owner (modal) about the four generated files left modified.
 
 ## NEEDS_HUMAN so far
 
