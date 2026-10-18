@@ -1,0 +1,42 @@
+# 2026-10-17T21:02:16Z codex-review round 11 (recovery session ffa3728c), HEAD dbb06a8db + staged
+[codex-review] base ref : origin/main
+[codex-review] changed  : 84 files total
+[codex-review] in scope : 59 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T21:03:21.464Z
+Base ref  : origin/main
+Files in scope : 59
+Total findings : 3
+  Waived       : 1
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/contact/contact.router.ts:590-603 — non-atomic-account-and-type-update
+    Issue    : Account changes commit independently before the corresponding contact type and field changes.
+    Evidence : `await applyContactAccountChange(...)` saves and publishes the account change before `await applyContactInfoUpdates(...)` performs a separate save. For a contact whose current type requires accountId, submitting `{ accountId: null, contactType: null }` passes validation because removing the type bypasses type requirements. If the second save fails, the old type remains persisted with no required account, despite the request returning an error.
+    Fix      : Persist the account change and contact information changes together in one transaction, publishing events only after the complete update commits.
+    Fingerprint: 068bafefb39a2bdb1464a3e9fd1c66f6e97132f44975f45598db2dd3d8ac0150
+
+  [MEDIUM] apps/web/src/app/contacts/(list)/ContactsPageClient.tsx:69-74 — segment-navigation-retains-stale-filter
+    Issue    : Navigating from a segment URL to the unfiltered contacts URL retains the previous segment filter.
+    Evidence : The URL synchronization updates filters only inside `if (segmentParam !== null)`. When client navigation or browser history changes `/contacts?segment=vendors` to `/contacts`, the same page component retains `typeFilter: 'vendor'`; similarly, leaving the VIP URL retains `segmentFilter: 'vip'`. The resulting list query remains filtered although the URL requests the default contacts view.
+    Fix      : Reset filters when external navigation removes the segment, and distinguish that navigation from the component's own URL cleanup using an explicit ref or URL-backed filter state.
+    Fingerprint: 0dc7d1855f73326eb410c57c47c0e1948374332297b022b915d2e87b71580de6
+
+WAIVED FINDINGS (suppressed):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:451 — concurrent-type-delete-orphans-contacts (fp: 0f290e25353c...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

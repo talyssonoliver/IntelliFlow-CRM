@@ -33,6 +33,7 @@ export * from './crm/contact/ContactId';
 export * from './crm/contact/ContactEvents';
 export * from './crm/contact/ContactRepository';
 export * from './crm/contact/CrossTenantOrNotFoundError';
+export * from './crm/contact/contact-type-defaults';
 
 // CRM Domain - Accounts
 export * from './crm/account/Account';

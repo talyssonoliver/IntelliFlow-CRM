@@ -1,0 +1,3 @@
+# 2026-10-18T10:30:33Z HEAD 4c1df7cac GREEN for Aurora P1-3 (edit page sends contactType only when changed; old 'submits the unchanged stored key' test updated to the new contract: unchanged key not resent)
+ Test Files  23 passed (23)
+      Tests  327 passed (327)

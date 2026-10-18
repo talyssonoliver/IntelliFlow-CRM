@@ -36,9 +36,29 @@ export const CONTACT_STATUSES = [
 export const CONTACT_INTERACTION_TYPES = ['EMAIL', 'CALL', 'MEETING', 'NOTE'] as const;
 
 // Derive types from const arrays
-export type ContactType = (typeof CONTACT_TYPES)[number];
+/** A tenant contact type key (PG-205): one of CONTACT_TYPES or a tenant-defined key. */
+export type ContactTypeKey = string;
 export type ContactStatus = (typeof CONTACT_STATUSES)[number];
 export type ContactInteractionType = (typeof CONTACT_INTERACTION_TYPES)[number];
+
+/**
+ * PG-205 (ADR-080): contact types are tenant-configurable, keyed by the value
+ * stored here. CONTACT_TYPES above is the seed set; any key in this format is
+ * accepted by the entity, and the API checks it is an active type of the
+ * caller's tenant.
+ */
+export const CONTACT_TYPE_KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
+
+export function isValidContactTypeKey(key: string): boolean {
+  return CONTACT_TYPE_KEY_PATTERN.test(key);
+}
+
+export class InvalidContactTypeKeyError extends DomainError {
+  readonly code = 'INVALID_CONTACT_TYPE_KEY';
+  constructor() {
+    super('Contact type key must be lowercase letters, digits or underscores');
+  }
+}
 
 export class ContactAlreadyHasAccountError extends DomainError {
   readonly code = 'CONTACT_ALREADY_HAS_ACCOUNT';
@@ -86,7 +106,7 @@ interface ContactProps {
   zipCode?: string;
   company?: string;
   linkedInUrl?: string;
-  contactType?: ContactType;
+  contactType?: ContactTypeKey;
   tags?: string[];
   contactNotes?: string;
   lastContactedAt?: Date; // IFC-192
@@ -112,7 +132,7 @@ export interface CreateContactProps {
   zipCode?: string;
   company?: string;
   linkedInUrl?: string;
-  contactType?: ContactType;
+  contactType?: ContactTypeKey;
   tags?: string[];
   contactNotes?: string;
 }
@@ -243,6 +263,10 @@ export class Contact extends AggregateRoot<ContactId> {
       return Result.fail(emailResult.error);
     }
 
+    if (props.contactType !== undefined && !isValidContactTypeKey(props.contactType)) {
+      return Result.fail(new InvalidContactTypeKeyError());
+    }
+
     // Convert phone to PhoneNumber if string provided
     let phoneNumber: PhoneNumber | undefined = undefined;
     if (props.phone) {
@@ -334,7 +358,8 @@ export class Contact extends AggregateRoot<ContactId> {
       zipCode: string;
       company: string;
       linkedInUrl: string;
-      contactType: ContactType;
+      /** A type key, or null to remove the contact's type (PG-205). */
+      contactType: ContactTypeKey | null;
       tags: string[];
       contactNotes: string;
     }>,
@@ -342,7 +367,19 @@ export class Contact extends AggregateRoot<ContactId> {
   ): Result<void, DomainError> {
     const updatedFields: string[] = [];
 
-    this.applyScalarUpdates(updates, updatedFields);
+    const { contactType, ...scalarUpdates } = updates;
+    if (contactType != null && !isValidContactTypeKey(contactType)) {
+      return Result.fail(new InvalidContactTypeKeyError());
+    }
+
+    if (contactType === null && this.props.contactType != null) {
+      this.props.contactType = undefined;
+      updatedFields.push('contactType');
+    }
+    this.applyScalarUpdates(
+      contactType === null ? scalarUpdates : { ...scalarUpdates, contactType },
+      updatedFields
+    );
 
     if (updates.phone !== undefined) {
       const phoneError = this.applyPhoneUpdate(updates.phone, updatedFields);
@@ -383,7 +420,7 @@ export class Contact extends AggregateRoot<ContactId> {
       zipCode: string;
       company: string;
       linkedInUrl: string;
-      contactType: ContactType;
+      contactType: ContactTypeKey;
       tags: string[];
       contactNotes: string;
     }>,
@@ -460,6 +497,30 @@ export class Contact extends AggregateRoot<ContactId> {
     this.addDomainEvent(
       new ContactAccountDisassociatedEvent(this.id, previousAccountId, disassociatedBy)
     );
+
+    return Result.ok(undefined);
+  }
+
+  /**
+   * Move a linked contact to another account as one change (PG-205), so a caller can
+   * persist it with a single save instead of an unlink followed by a link.
+   */
+  replaceAccount(
+    accountId: string,
+    replacedBy: string
+  ): Result<void, ContactNotAssociatedWithAccountError> {
+    if (!this.hasAccount) {
+      return Result.fail(new ContactNotAssociatedWithAccountError());
+    }
+
+    const previousAccountId = this.props.accountId!;
+    this.props.accountId = accountId;
+    this.props.updatedAt = new Date();
+
+    this.addDomainEvent(
+      new ContactAccountDisassociatedEvent(this.id, previousAccountId, replacedBy)
+    );
+    this.addDomainEvent(new ContactAccountAssociatedEvent(this.id, accountId, replacedBy));
 
     return Result.ok(undefined);
   }

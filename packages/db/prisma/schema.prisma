@@ -155,6 +155,7 @@ model Tenant {
   contactRequiredFields  ContactRequiredField[]   @ignore
   contactTags            ContactTag[]             @ignore
   contactAutomationSettings ContactAutomationSetting[] @ignore
+  contactTypes           ContactType[]            @ignore // PG-205
   dealWinLossReasons     DealWinLossReason[]      @ignore
   dealScoringRules       DealScoringRule[]        @ignore
   dealDuplicateRules     DealDuplicateRule[]      @ignore
@@ -845,6 +846,9 @@ model Contact {
   @@index([tenantId, lastContactedAt])
   // HOME-PERF: home.getAIInsights stale-contact query (ownerId + lastContactedAt)
   @@index([tenantId, ownerId, lastContactedAt])
+  // PG-205: contact type filter / segments / type-in-use count. Built CONCURRENTLY by
+  // migrations/20261017120100_contacts_type_idx (single-statement migration).
+  @@index([tenantId, contactType])
   @@map("contacts")
 }
 
@@ -6177,9 +6181,66 @@ model ContactTag {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  defaultForTypes ContactTypeDefaultTag[] // PG-205
+
   @@unique([tenantId, name])
+  // PG-205 / DBA-012: composite target for contact_type_default_tags(tenantId, contactTagId)
+  @@unique([tenantId, id])
   @@index([tenantId])
   @@map("contact_tags")
+}
+
+// ─── PG-205: Contact Types ──────────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261017120000_contact_types, asserted by
+// tests/integration/contact-types.test.ts — do not drop in a diff):
+//   - contact_types_tenant_lower_name_key  UNIQUE ("tenantId", lower("name"))
+//   - contact_types_one_default_key        UNIQUE ("tenantId") WHERE "isDefault"
+//   - CHECKs on key format, name, colorToken, defaultOwner, defaultDepartment,
+//     sortOrder, requiredFields, default => active, reserved system keys
+//   - RLS tenant policies on both tables
+// contacts.contactType stores the type `key` (no FK, no backfill — ADR-080).
+
+/// A tenant contact type whose defaults are applied when a contact is created (ADR-080).
+model ContactType {
+  id                String         @id @default(cuid())
+  tenantId          String
+  tenant            Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  key               String         @db.VarChar(40)
+  name              String         @db.VarChar(50)
+  colorToken        String         @default("slate")
+  isSystem          Boolean        @default(false)
+  isActive          Boolean        @default(true)
+  isDefault         Boolean        @default(false)
+  sortOrder         Int            @default(0)
+  defaultStatus     ContactStatus?
+  defaultDepartment String?        @db.VarChar(100)
+  defaultOwner      String         @default("CREATOR") // CREATOR | ACCOUNT_OWNER (SQL CHECK)
+  requiredFields    String[]       @default([])
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  defaultTags ContactTypeDefaultTag[]
+
+  @@unique([tenantId, key])
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive])
+  @@map("contact_types")
+}
+
+/// A ContactTag added to new contacts of a type (PG-205 "default labels").
+model ContactTypeDefaultTag {
+  tenantId      String
+  contactTypeId String
+  contactTagId  String
+  createdAt     DateTime    @default(now())
+
+  contactType ContactType @relation(fields: [tenantId, contactTypeId], references: [tenantId, id], onDelete: Cascade)
+  contactTag  ContactTag  @relation(fields: [tenantId, contactTagId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([contactTypeId, contactTagId])
+  @@index([tenantId, contactTagId])
+  @@map("contact_type_default_tags")
 }
 
 model ContactAutomationSetting {

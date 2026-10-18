@@ -21,6 +21,8 @@ import {
   Contact,
   ContactAlreadyLinkedToLeadError,
   ContactNotLinkedToLeadError,
+  ContactNotAssociatedWithAccountError,
+  InvalidContactTypeKeyError,
   CONTACT_TYPES,
   CONTACT_STATUSES,
 } from '../Contact';
@@ -32,6 +34,8 @@ import {
   ContactConvertedFromLeadEvent,
   ContactLinkedToLeadEvent,
   ContactUnlinkedFromLeadEvent,
+  ContactAccountAssociatedEvent,
+  ContactAccountDisassociatedEvent,
 } from '../ContactEvents';
 
 describe('Contact Aggregate - Additional Coverage', () => {
@@ -843,6 +847,110 @@ describe('Contact Aggregate - Additional Coverage', () => {
       expect(payload.previousLeadId).toBe('lead-prev-payload');
       expect(payload.unlinkedBy).toBe('user-unlinker');
       expect(payload.unlinkedAt).toBeDefined();
+    });
+  });
+
+  describe('contactType key invariant (PG-205)', () => {
+    const base = {
+      email: 'key@example.com',
+      firstName: 'Key',
+      lastName: 'Check',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    };
+
+    it('accepts every seed key and a tenant-defined key', () => {
+      for (const key of [...CONTACT_TYPES, 'channel_partner']) {
+        const result = Contact.create({ ...base, contactType: key });
+        expect(result.isSuccess).toBe(true);
+        expect(result.value.contactType).toBe(key);
+      }
+    });
+
+    it('rejects a malformed key on create', () => {
+      const result = Contact.create({ ...base, contactType: 'Not A Key' });
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidContactTypeKeyError);
+      expect(result.error.code).toBe('INVALID_CONTACT_TYPE_KEY');
+    });
+
+    it('rejects a malformed key on update and leaves the stored key untouched', () => {
+      const contact = Contact.create({ ...base, contactType: 'vendor' }).value;
+      const result = contact.updateContactInfo({ contactType: 'BAD KEY' }, 'user-1');
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(InvalidContactTypeKeyError);
+      expect(contact.contactType).toBe('vendor');
+    });
+
+    it('accepts a well-formed tenant key on update', () => {
+      const contact = Contact.create({ ...base, contactType: 'vendor' }).value;
+      const result = contact.updateContactInfo({ contactType: 'reseller_2' }, 'user-1');
+      expect(result.isSuccess).toBe(true);
+      expect(contact.contactType).toBe('reseller_2');
+    });
+  });
+
+  describe('clearing the contact type (PG-205)', () => {
+    const base = {
+      email: 'clear@example.com',
+      firstName: 'Clear',
+      lastName: 'Type',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    };
+
+    it('null removes a stored type and records the change', () => {
+      const contact = Contact.create({ ...base, contactType: 'vendor' }).value;
+      contact.clearDomainEvents();
+      const result = contact.updateContactInfo({ contactType: null }, 'user-1');
+      expect(result.isSuccess).toBe(true);
+      expect(contact.contactType).toBeUndefined();
+      const events = contact.getDomainEvents();
+      expect(events).toHaveLength(1);
+      expect((events[0] as unknown as { updatedFields: string[] }).updatedFields).toEqual([
+        'contactType',
+      ]);
+    });
+
+    it('null on a contact without a type changes nothing', () => {
+      const contact = Contact.create(base).value;
+      contact.clearDomainEvents();
+      expect(contact.updateContactInfo({ contactType: null }, 'user-1').isSuccess).toBe(true);
+      expect(contact.contactType).toBeUndefined();
+      expect(contact.getDomainEvents()).toHaveLength(0);
+    });
+  });
+  describe('replaceAccount (PG-205, codex a3d0b852)', () => {
+    const base = {
+      email: 'replace@example.com',
+      firstName: 'Re',
+      lastName: 'Place',
+      ownerId: 'owner-1',
+      tenantId: 'tenant-1',
+    };
+
+    it('moves a linked contact to another account in one change', () => {
+      const contact = Contact.create({ ...base, accountId: 'account-old' }).value;
+      contact.clearDomainEvents();
+      const result = contact.replaceAccount('account-new', 'user-1');
+      expect(result.isSuccess).toBe(true);
+      expect(contact.accountId).toBe('account-new');
+      const events = contact.getDomainEvents();
+      expect(events).toHaveLength(2);
+      expect(events[0]).toBeInstanceOf(ContactAccountDisassociatedEvent);
+      expect((events[0] as ContactAccountDisassociatedEvent).previousAccountId).toBe('account-old');
+      expect(events[1]).toBeInstanceOf(ContactAccountAssociatedEvent);
+      expect((events[1] as ContactAccountAssociatedEvent).accountId).toBe('account-new');
+    });
+
+    it('fails on a contact with no account and changes nothing', () => {
+      const contact = Contact.create(base).value;
+      contact.clearDomainEvents();
+      const result = contact.replaceAccount('account-new', 'user-1');
+      expect(result.isFailure).toBe(true);
+      expect(result.error).toBeInstanceOf(ContactNotAssociatedWithAccountError);
+      expect(contact.accountId).toBeUndefined();
+      expect(contact.getDomainEvents()).toHaveLength(0);
     });
   });
 });

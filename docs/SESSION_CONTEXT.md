@@ -1,15 +1,15 @@
 # Session Context Snapshot
-_Generated: 2026-10-18T09:24:17.488Z • Branch: feat/pg-202-availability_
+_Generated: 2026-10-18T15:34:36.996Z • Branch: feat/pg-205-contact-types_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 619 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 19 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 619 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 436/619 tasks completed (70.44%) — 165 backlog, 0 blocked, 18 in progress.
+- **Progress:** 436/619 tasks completed (70.44%) — 164 backlog, 0 blocked, 19 in progress.
 - **Focus band:** Sprints 0, 1, 6, 8 carry the earliest remaining backlog.
 - **Evidence issues:** 27 attested but CSV not updated.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
@@ -37,19 +37,19 @@ Active sprint: **Sprint 0** (sprint-0) — 94% complete (32/34 tasks). 18 task(s
 
 ## Git Activity
 
-- **Branch:** `feat/pg-202-availability` (37 dirty file(s))
-- **Dirty preview:** `.specify/sprints/sprint-18/attestations/PG-202/attestation.json`, `.specify/sprints/sprint-18/attestations/PG-202/task-tracking.json`, `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Foundation.recheck.json`, `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Quality.recheck.json`, `.specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/01-characterization.log` …
+- **Branch:** `feat/pg-205-contact-types` (254 dirty file(s))
+- **Dirty preview:** `.specify/sprints/sprint-18/attestations/PG-202/attestation.json`, `.specify/sprints/sprint-18/attestations/PG-202/context_ack.json`, `.specify/sprints/sprint-18/attestations/PG-202/task-tracking.json`, `.specify/sprints/sprint-18/context/PG-202/PG-202-agent-roster-used.json`, `.specify/sprints/sprint-18/context/PG-202/PG-202-agent-selection.json` …
 - **Last 10 commits:**
-  - `2ac93b60f` docs(pg-202): wcag/vpat rows, csv artifacts, lighthouse evidence, pr body — Talysson Oliveira, 24 minutes ago
-  - `9620f4cce` fix(pg-202): next-slot search covers the whole horizon in batches — Talysson Oliveira, 26 minutes ago
-  - `fdd76e690` refactor(pg-202): sonarcloud rule fixes on lines this branch touches — Talysson Oliveira, 49 minutes ago
-  - `d65141274` chore(pg-202): refresh merge benchmark timings — Talysson Oliveira, 11 hours ago
-  - `0d20f9096` chore(pg-202): stoa verdicts, code-review results and lf line endings — Talysson Oliveira, 11 hours ago
-  - `4c6ac696e` fix(pg-202): keep main's schema text, timezone guard in next-slot search — Talysson Oliveira, 12 hours ago
-  - `de2a67b93` chore(pg-202): refresh merge benchmark timings — Talysson Oliveira, 12 hours ago
-  - `f0c07127d` chore(pg-202): owner-approved daily-cap waiver — Talysson Oliveira, 12 hours ago
-  - `f3115da9b` chore(pg-202): resume checkpoint and stoa gate selection — Talysson Oliveira, 12 hours ago
-  - `053c6874c` chore(pg-202): validation matrix, a11y review and findings f15-f19 — Talysson Oliveira, 12 hours ago
+  - `cc032deef` docs(pg-205): evidence logs as txt, corrected claims, hydrated-context audits, attestation — Talysson Oliveira, 5 hours ago
+  - `5ab1d3731` fix(contacts): deploy-safe contact type edits, wired name schema, db-push-proof test (pg-205) — Talysson Oliveira, 5 hours ago
+  - `4c1df7cac` docs(pg-205): attestation needs-human, exec evidence, session metrics and context — Talysson Oliveira, 6 hours ago
+  - `583b12fa0` Merge remote-tracking branch 'origin/main' into feat/pg-205-contact-types — Talysson Oliveira, 6 hours ago
+  - `c28cb1442` docs(pg-205): vpat 1.10.0 row, step 23 gates and stoa tick, regenerated spec tracker — Talysson Oliveira, 6 hours ago
+  - `24a91a9f6` test(contacts): cover contact types dialog close, default save callbacks and field edits (pg-205) — Talysson Oliveira, 6 hours ago
+  - `3ae41b2df` docs(pg-205): red-green index, tag-length codex fix in findings, codex gate tick — Talysson Oliveira, 7 hours ago
+  - `a6b5ad8d8` fix(contacts): contact tags accept the full contact tag name length (pg-205) — Talysson Oliveira, 7 hours ago
+  - `ab5c70b0f` docs(pg-205): adr-080 accepted, lighthouse needs-human, validation and review evidence — Talysson Oliveira, 7 hours ago
+  - `7319f0d2c` fix(contacts): contact types a11y review fixes (pg-205) — Talysson Oliveira, 18 hours ago
 
 ## Key File References
 

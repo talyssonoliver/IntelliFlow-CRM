@@ -803,6 +803,78 @@ findings: #864–#867 (see
 `20261013120000_case_types` (Class A) must be applied to production before this
 ships.
 
+## PG-205 Addendum: Contact Types (2026-10-17)
+
+Owner ruling (2026-10-17): types start as the current six (customer, prospect,
+partner, vendor, investor, other) and are tenant-editable, with no data
+migration of existing contacts; a type is applied at contact creation; "default
+labels" means default tags from the ContactTag list; "default fields" means
+default values. Spec:
+`.specify/sprints/sprint-18/specifications/PG-205-spec.md`. ADR-080. The row's
+person/organization wording is superseded (organisations are Accounts).
+
+### Additional User Stories
+
+- **US-CTY1 (Taxonomy)**: As a CRM Admin, I want to rename, recolour, add and
+  deactivate contact types, so that contacts are classified in our own terms.
+- **US-CTY2 (Defaults)**: As a CRM Admin, I want each contact type to carry
+  default values, extra required fields and default tags, so that new contacts
+  start correctly.
+- **US-CTY3 (Picker)**: As a sales rep, I want to pick a contact type when I
+  create or edit a contact, so that the type is recorded and its defaults apply.
+- **US-CTY4 (Find by type)**: As a sales rep, I want to filter the contacts list
+  by type and see the type in the list, so that the Partners/Vendors segments in
+  the sidebar actually work.
+
+### Additional Acceptance Criteria
+
+Defined as AC-CTY-001..018 in the spec (finalised at spec consensus). In
+summary:
+
+- AC-CTY-001: the page follows the module-settings playbook.
+- AC-CTY-002: each tenant gets the six system types on first use, seeded for
+  that tenant only.
+- AC-CTY-003: admins and managers create (up to 50), rename, recolour,
+  deactivate and set the default type; others read only.
+- AC-CTY-004 to 006: names unique per tenant (case-insensitive), an 18-token
+  colour, server-generated keys that are immutable and never reserved.
+- AC-CTY-007 / 008: at most one default type, which must be active. System types
+  cannot be deleted; custom types only when unused and not the default.
+- AC-CTY-009 / 010: each type stores a default status, department, owner rule,
+  required fields and default tags. On create, explicit input wins over the
+  type's defaults.
+- AC-CTY-011: an unknown, foreign or inactive key is rejected with one message;
+  an unchanged stored key is kept.
+- AC-CTY-012: the "job title required" rule checks the real `title` field.
+- AC-CTY-013 / 014: type picker on New and Edit ("Other" free text removed);
+  type badge, Type filter and working sidebar segments on the list.
+- AC-CTY-015 / 016: everything tenant-scoped; changes and denials audit-logged
+  without PII.
+- AC-CTY-017 / 018: WCAG 2.1 AA, Lighthouse ≥ 90 (or NEEDS_HUMAN), registries
+  updated.
+
+### Boolean toggles (playbook §8)
+
+| Toggle                  | Category | Runtime consumer                                             |
+| ----------------------- | -------- | ------------------------------------------------------------ |
+| `ContactType.isActive`  | 1, wired | `listActive`; contact create/update reject new inactive keys |
+| `ContactType.isDefault` | 1, wired | New Contact picker preselection                              |
+| `ContactType.isSystem`  | 1, wired | delete refused; reserved-key CHECK                           |
+
+No AI toggles were added. The 12 existing `ContactAutomationSetting` flags were
+already wired.
+
+### Delivery status
+
+| Item                                               | Status      |
+| -------------------------------------------------- | ----------- |
+| Domain, validators, DB (2 Class A migrations), API | Implemented |
+| Settings page, picker, list filter/badge, segments | Implemented |
+| Validations (typecheck, tests, lint, build, knip)  | Done        |
+| Reviews (simplify, a11y WCAG 2.1 AA, codex)        | Done        |
+| Lighthouse (authenticated routes)                  | NEEDS_HUMAN |
+| Code review, STOA, attestation                     | In Progress |
+
 ## PG-198 Addendum: Approval Policies (2026-10-13)
 
 Owner rulings R1–R3 (2026-10-13):

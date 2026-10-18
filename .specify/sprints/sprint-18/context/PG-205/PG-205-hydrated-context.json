@@ -1,0 +1,113 @@
+{
+  "task_id": "PG-205",
+  "provenance": {
+    "compiled_at": "2026-10-18T09:50:59Z",
+    "compiled_by": "Claude Code /exec recovery lane (session ffa3728c), at exec, after the workflow audit (tools/scripts/audit-workflow-execution.mjs) reported these keys missing",
+    "honesty_note": "The /spec-session did this analysis but recorded it only in prose and tables: PG-205-spec.md \"### Web\" reuse-tag table, \"## Runtime Wiring & Replacement Paths\", \"## Navigation & Reachability\" and the findings doc F2-F4. It never wrote these JSON keys. This file transcribes that analysis; it adds no new spec-phase decisions. The exec-time verification of the same items is Gate 2c/2d in matop/compliance-check.md.",
+    "hydration_source": ".specify/sprints/sprint-18/context/PG-205/hydrated-context.json (written by tools/scripts/lib/stoa/context-hydration.ts at 2026-10-17T14:44:39.900Z, sha256 d98eb7f1a1ac14599ae396f10113ca476a9b7f04dfc5aa1f95f961eff810ee06)"
+  },
+  "source": ".specify/sprints/sprint-18/specifications/PG-205-spec.md",
+  "relatedPrd": [
+    "docs/planning/prd-module-settings.md"
+  ],
+  "relatedAdrs": [
+    "docs/architecture/adr/ADR-080-tenant-contact-types.md",
+    "docs/architecture/adr/ADR-076-case-types-applied-at-case-creation.md"
+  ],
+  "shared_component_audit": {
+    "searched_directories": [
+      "apps/web/src/components/shared/",
+      "packages/ui/src/components/",
+      "apps/web/src/app/cases/(list)/case-types/ (PG-204 pattern)",
+      "apps/web/src/lib/color-tokens.ts"
+    ],
+    "components_found": [
+      "PageHeader",
+      "SectionHeader",
+      "EmptyState",
+      "SearchFilterBar",
+      "AlertDialog",
+      "Dialog",
+      "RadioGroup",
+      "Checkbox",
+      "Switch",
+      "Card",
+      "Button",
+      "Badge",
+      "Skeleton",
+      "COLOR_SWATCH_CLASSES (lib/color-tokens)"
+    ],
+    "reuse_decisions": [
+      {
+        "need": "page header + breadcrumbs",
+        "existing": "PageHeader",
+        "action": "REUSE"
+      },
+      {
+        "need": "section header with action",
+        "existing": "SectionHeader",
+        "action": "REUSE"
+      },
+      {
+        "need": "empty list",
+        "existing": "EmptyState entity=contacts phase=passive",
+        "action": "REUSE"
+      },
+      {
+        "need": "list Type filter",
+        "existing": "SearchFilterBar",
+        "action": "EXTEND (new filter entry)"
+      },
+      {
+        "need": "type badge",
+        "existing": "@intelliflow/ui Badge",
+        "action": "COMPOSE (ContactTypeBadge)"
+      },
+      {
+        "need": "colour swatches",
+        "existing": "lib/color-tokens.ts COLOR_SWATCH_CLASSES",
+        "action": "REUSE (imported by contact-type-colors.ts)"
+      },
+      {
+        "need": "delete confirmation with inline server error",
+        "existing": "ConfirmationDialog (no inline error)",
+        "action": "COMPOSE AlertDialog (PG-204 pattern)"
+      },
+      {
+        "need": "multi-select default tags capped at 10",
+        "existing": "none (TagsTab is a CRUD tab, not a picker)",
+        "action": "NEW DefaultTagPicker (justified)"
+      },
+      {
+        "need": "contact type select in New + Edit forms",
+        "existing": "native selects in both host forms",
+        "action": "NEW ContactTypeSelect (shared by both forms)"
+      }
+    ]
+  },
+  "route_conflict_audit": {
+    "routes_searched": [
+      "/contacts/**",
+      "apps/web/src/app/contacts/(list)/**",
+      "apps/web/src/components/contacts/**",
+      "apps/web/src/components/sidebar/configs/contacts.ts"
+    ],
+    "conflicts_found": [
+      {
+        "path": "apps/web/src/app/contacts/(list)/contact-types/page.tsx",
+        "data_source": "stub (\"coming soon\")",
+        "action": "REPLACED in place (no second route)"
+      },
+      {
+        "path": "apps/web/src/app/contacts/(list)/new/page.tsx (contactTypeOptions + \"Other - please specify\")",
+        "data_source": "fake (hard-coded options; free text discarded)",
+        "action": "REPLACED by ContactTypeSelect over contactTypes.listActive (owner ruling 6)"
+      },
+      {
+        "path": "apps/web/src/components/sidebar/configs/contacts.ts ?segment=vip|partners|vendors",
+        "data_source": "dead links (nothing read ?segment)",
+        "action": "WIRED via segmentToFilter in ContactsPageClient"
+      }
+    ]
+  }
+}

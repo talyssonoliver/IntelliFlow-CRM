@@ -1,0 +1,13 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+Scope: 2 of 26 workspace projects
+apps/api typecheck$ tsc --noEmit
+apps/api typecheck: Done
+apps/web typecheck$ pnpm run typegen && tsc --noEmit
+apps/web typecheck: ../..                                    |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/web typecheck: ../ai-worker                             |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/web typecheck: > @intelliflow/web@0.1.0 typegen C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\web
+apps/web typecheck: > next typegen
+apps/web typecheck: Generating route types...
+apps/web typecheck: ✓ Types generated successfully
+apps/web typecheck: Done

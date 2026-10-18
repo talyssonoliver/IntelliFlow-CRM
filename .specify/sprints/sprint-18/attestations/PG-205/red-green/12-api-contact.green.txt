@@ -1,0 +1,14 @@
+# 2026-10-17T17:14:21Z HEAD bd628081a (+ uncommitted contact wiring)
+# cmd: pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact.router.contact-types.test.ts src/modules/contact/__tests__/contact-automation.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/api
+
+
+ Test Files  2 passed (2)
+      Tests  60 passed (60)
+   Start at  18:14:22
+   Duration  2.25s (transform 1.29s, setup 1.09s, import 1.67s, tests 139ms, environment 0ms)
+
+# exit: 0

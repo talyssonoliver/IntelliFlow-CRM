@@ -1,0 +1,8 @@
+# 2026-10-17T18:09:17Z pnpm --filter ./packages/validators typecheck
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/validators@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\validators
+> tsc --noEmit
+
+# exit: 0

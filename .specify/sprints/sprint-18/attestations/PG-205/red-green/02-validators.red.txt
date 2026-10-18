@@ -1,0 +1,595 @@
+# 2026-10-17T16:52:48Z HEAD bd628081a (+ uncommitted RED tests and stubs)
+# cmd: pnpm --filter ./packages/validators exec vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/packages/validators
+
+ ❯ |validators| src/__tests__/contact-types.test.ts (44 tests | 37 failed) 26ms
+     × accepts a full type and trims the name 8ms
+     × applies defaults for the optional fields 3ms
+     × turns a blank department into null 0ms
+     × rejects empty name 1ms
+     × rejects whitespace name 0ms
+     × rejects 51-char name 0ms
+     × rejects unknown colour 0ms
+     × rejects unknown status 0ms
+     × rejects 101-char department 1ms
+     × rejects raw user id as owner 0ms
+     × rejects jobTitle required field 0ms
+     × rejects email required field 0ms
+     × rejects 11 default tags 0ms
+     × rejects non-id tag 0ms
+     × rejects the unknown key key (strict) 0ms
+     × rejects the unknown key isSystem (strict) 0ms
+     × rejects the unknown key tenantId (strict) 0ms
+     × rejects the unknown key ownerId (strict) 0ms
+     × rejects the unknown key isDefault (strict) 0ms
+     × reports duplicate required fields at the second row 0ms
+     × reports duplicate default tags at the second row 0ms
+     × requires id and isActive 0ms
+     × never accepts a key change 0ms
+     × keeps the duplicate checks 0ms
+     × delete needs an id 0ms
+     × setDefault accepts an id or null 0ms
+     × colour tokens are the 18 contact tag tokens 1ms
+     × owner defaults and required keys 1ms
+     × rejects "Customer" 0ms
+     × rejects "1vendor" 0ms
+     × rejects "has space" 0ms
+     × rejects "" 0ms
+     × rejects "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" 0ms
+     × finds a case-insensitive trimmed duplicate 0ms
+     × ignores the type being edited 0ms
+     × contactTypeNameSchema rejects a duplicate with a clear message 0ms
+     × contactTypeNameSchema accepts a unique or self name and enforces length 0ms
+ ❯ |validators| __tests__/contact.test.ts (57 tests | 3 failed) 27ms
+       × createContactSchema accepts the key channel_partner 6ms
+       × updateContactSchema accepts a tenant key and rejects a malformed one 1ms
+       × contactQuerySchema accepts a contactType filter and the vip segment only 1ms
+ ❯ |validators| __tests__/enum-consistency.spec.ts (18 tests | 3 failed) 13ms
+       × should derive contactTypeRequiredFieldKeySchema from domain CONTACT_TYPE_REQUIRED_FIELD_KEYS 5ms
+       × should derive contactTypeOwnerDefaultSchema from domain CONTACT_TYPE_OWNER_DEFAULTS 1ms
+       × should use the contact tag colour tokens for contact types 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 43 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |validators| __tests__/contact.test.ts > Contact Validators > contactType key (PG-205) > createContactSchema accepts the key channel_partner
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ __tests__/contact.test.ts:754:81
+    752|       'createContactSchema accepts the key %s',
+    753|       (contactType) => {
+    754|         expect(createContactSchema.safeParse({ ...base, contactType })…
+       |                                                                                 ^
+    755|       }
+    756|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/43]⎯
+
+ FAIL  |validators| __tests__/contact.test.ts > Contact Validators > contactType key (PG-205) > updateContactSchema accepts a tenant key and rejects a malformed one
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ __tests__/contact.test.ts:767:88
+    765|     it('updateContactSchema accepts a tenant key and rejects a malform…
+    766|       const id = '123e4567-e89b-12d3-a456-426614174000';
+    767|       expect(updateContactSchema.safeParse({ id, contactType: 'reselle…
+       |                                                                                        ^
+    768|       expect(updateContactSchema.safeParse({ id, contactType: 'Reselle…
+    769|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/43]⎯
+
+ FAIL  |validators| __tests__/contact.test.ts > Contact Validators > contactType key (PG-205) > contactQuerySchema accepts a contactType filter and the vip segment only
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ __tests__/contact.test.ts:774:77
+    772|       expect(contactQuerySchema.safeParse({ contactType: 'partner' }).…
+    773|       expect(contactQuerySchema.safeParse({ segment: 'vip' }).success)…
+    774|       expect(contactQuerySchema.safeParse({ segment: 'partners' }).suc…
+       |                                                                             ^
+    775|       expect(contactQuerySchema.safeParse({ contactType: 'Not A Key' }…
+    776|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/43]⎯
+
+ FAIL  |validators| __tests__/enum-consistency.spec.ts > Enum Consistency - DRY Architecture > Contact type enums (PG-205) > should derive contactTypeRequiredFieldKeySchema from domain CONTACT_TYPE_REQUIRED_FIELD_KEYS
+AssertionError: expected [ 'stub' ] to deeply equal [ 'phone', 'company', 'title', …(2) ]
+
+- Expected
++ Received
+
+  [
+-   "phone",
+-   "company",
+-   "title",
+-   "department",
+-   "accountId",
++   "stub",
+  ]
+
+ ❯ __tests__/enum-consistency.spec.ts:155:57
+    153|
+    154|     it('should derive contactTypeRequiredFieldKeySchema from domain CO…
+    155|       expect(contactTypeRequiredFieldKeySchema.options).toEqual([...CO…
+       |                                                         ^
+    156|     });
+    157|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/43]⎯
+
+ FAIL  |validators| __tests__/enum-consistency.spec.ts > Enum Consistency - DRY Architecture > Contact type enums (PG-205) > should derive contactTypeOwnerDefaultSchema from domain CONTACT_TYPE_OWNER_DEFAULTS
+AssertionError: expected [ 'stub' ] to deeply equal [ 'CREATOR', 'ACCOUNT_OWNER' ]
+
+- Expected
++ Received
+
+  [
+-   "CREATOR",
+-   "ACCOUNT_OWNER",
++   "stub",
+  ]
+
+ ❯ __tests__/enum-consistency.spec.ts:159:53
+    157|
+    158|     it('should derive contactTypeOwnerDefaultSchema from domain CONTAC…
+    159|       expect(contactTypeOwnerDefaultSchema.options).toEqual([...CONTAC…
+       |                                                     ^
+    160|     });
+    161|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/43]⎯
+
+ FAIL  |validators| __tests__/enum-consistency.spec.ts > Enum Consistency - DRY Architecture > Contact type enums (PG-205) > should use the contact tag colour tokens for contact types
+AssertionError: expected [] to deeply equal [ 'slate', 'red', 'orange', …(15) ]
+
+- Expected
++ Received
+
+- [
+-   "slate",
+-   "red",
+-   "orange",
+-   "amber",
+-   "yellow",
+-   "lime",
+-   "green",
+-   "emerald",
+-   "teal",
+-   "cyan",
+-   "sky",
+-   "blue",
+-   "indigo",
+-   "violet",
+-   "purple",
+-   "fuchsia",
+-   "pink",
+-   "rose",
+- ]
++ []
+
+ ❯ __tests__/enum-consistency.spec.ts:163:46
+    161|
+    162|     it('should use the contact tag colour tokens for contact types', (…
+    163|       expect([...CONTACT_TYPE_COLOR_TOKENS]).toEqual([...TAG_COLOR_TOK…
+       |                                              ^
+    164|     });
+    165|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > accepts a full type and trims the name
+AssertionError: expected '  Reseller  ' to be 'Reseller' // Object.is equality
+
+Expected: "Reseller"
+Received: "  Reseller  "
+
+ ❯ src/__tests__/contact-types.test.ts:41:50
+     39|     const result = createContactTypeSchema.safeParse(valid({ name: '  …
+     40|     expect(result.success).toBe(true);
+     41|     if (result.success) expect(result.data.name).toBe('Reseller');
+       |                                                  ^
+     42|   });
+     43|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > applies defaults for the optional fields
+AssertionError: expected { name: 'Supplier' } to deeply equal { name: 'Supplier', …(7) }
+
+- Expected
++ Received
+
+  {
+-   "colorToken": "slate",
+-   "defaultDepartment": null,
+-   "defaultOwner": "CREATOR",
+-   "defaultStatus": null,
+-   "defaultTagIds": [],
+-   "isActive": true,
+    "name": "Supplier",
+-   "requiredFields": [],
+  }
+
+ ❯ src/__tests__/contact-types.test.ts:48:27
+     46|     expect(result.success).toBe(true);
+     47|     if (result.success) {
+     48|       expect(result.data).toEqual({
+       |                           ^
+     49|         name: 'Supplier',
+     50|         colorToken: 'slate',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > turns a blank department into null
+AssertionError: expected '   ' to be null
+
+- Expected:
+null
+
++ Received:
+"   "
+
+ ❯ src/__tests__/contact-types.test.ts:64:63
+     62|     const result = createContactTypeSchema.safeParse(valid({ defaultDe…
+     63|     expect(result.success).toBe(true);
+     64|     if (result.success) expect(result.data.defaultDepartment).toBeNull…
+       |                                                               ^
+     65|   });
+     66|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects empty name
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects whitespace name
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects 51-char name
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects unknown colour
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects unknown status
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects 101-char department
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects raw user id as owner
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects jobTitle required field
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects email required field
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects 11 default tags
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects non-id tag
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:80:73
+     78|     ['non-id tag', { defaultTagIds: ['not an id'] }],
+     79|   ])('rejects %s', (_label, overrides) => {
+     80|     expect(createContactTypeSchema.safeParse(valid(overrides)).success…
+       |                                                                         ^
+     81|   });
+     82|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects the unknown key key (strict)
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects the unknown key isSystem (strict)
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects the unknown key tenantId (strict)
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects the unknown key ownerId (strict)
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > rejects the unknown key isDefault (strict)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:86:80
+     84|     'rejects the unknown key %s (strict)',
+     85|     (key) => {
+     86|       expect(createContactTypeSchema.safeParse(valid({ [key]: 'x' })).…
+       |                                                                                ^
+     87|     }
+     88|   );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > reports duplicate required fields at the second row
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:94:28
+     92|       valid({ requiredFields: ['phone', 'title', 'phone'] })
+     93|     );
+     94|     expect(result.success).toBe(false);
+       |                            ^
+     95|     if (!result.success) {
+     96|       const issue = result.error.issues[0];
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > createContactTypeSchema > reports duplicate default tags at the second row
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:104:28
+    102|   it('reports duplicate default tags at the second row', () => {
+    103|     const result = createContactTypeSchema.safeParse(valid({ defaultTa…
+    104|     expect(result.success).toBe(false);
+       |                            ^
+    105|     if (!result.success) {
+    106|       expect(result.error.issues[0].path).toEqual(['defaultTagIds', 1]…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > updateContactTypeSchema > requires id and isActive
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:115:64
+    113|   it('requires id and isActive', () => {
+    114|     expect(updateContactTypeSchema.safeParse(valid({ id: ID })).succes…
+    115|     expect(updateContactTypeSchema.safeParse(valid()).success).toBe(fa…
+       |                                                                ^
+    116|     const { isActive: _omit, ...withoutActive } = valid({ id: ID });
+    117|     expect(updateContactTypeSchema.safeParse(withoutActive).success).t…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > updateContactTypeSchema > never accepts a key change
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:121:88
+    119|
+    120|   it('never accepts a key change', () => {
+    121|     expect(updateContactTypeSchema.safeParse(valid({ id: ID, key: 'oth…
+       |                                                                                        ^
+    122|   });
+    123|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > updateContactTypeSchema > keeps the duplicate checks
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:127:7
+    125|     expect(
+    126|       updateContactTypeSchema.safeParse(valid({ id: ID, requiredFields…
+    127|     ).toBe(false);
+       |       ^
+    128|   });
+    129| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > delete / setDefault schemas > delete needs an id
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:134:59
+    132|   it('delete needs an id', () => {
+    133|     expect(deleteContactTypeSchema.safeParse({ id: ID }).success).toBe…
+    134|     expect(deleteContactTypeSchema.safeParse({}).success).toBe(false);
+       |                                                           ^
+    135|   });
+    136|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > delete / setDefault schemas > setDefault accepts an id or null
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:140:77
+    138|     expect(setDefaultContactTypeSchema.safeParse({ id: ID }).success).…
+    139|     expect(setDefaultContactTypeSchema.safeParse({ id: null }).success…
+    140|     expect(setDefaultContactTypeSchema.safeParse({ id: 'bad id' }).suc…
+       |                                                                             ^
+    141|   });
+    142| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > enums > colour tokens are the 18 contact tag tokens
+AssertionError: expected [] to have a length of 18 but got +0
+
+- Expected
++ Received
+
+- 18
++ 0
+
+ ❯ src/__tests__/contact-types.test.ts:146:39
+    144| describe('enums', () => {
+    145|   it('colour tokens are the 18 contact tag tokens', () => {
+    146|     expect(CONTACT_TYPE_COLOR_TOKENS).toHaveLength(18);
+       |                                       ^
+    147|     expect(contactTypeColorTokenSchema.options).toEqual([...CONTACT_TY…
+    148|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > enums > owner defaults and required keys
+AssertionError: expected [ 'stub' ] to deeply equal [ 'CREATOR', 'ACCOUNT_OWNER' ]
+
+- Expected
++ Received
+
+  [
+-   "CREATOR",
+-   "ACCOUNT_OWNER",
++   "stub",
+  ]
+
+ ❯ src/__tests__/contact-types.test.ts:151:51
+    149|
+    150|   it('owner defaults and required keys', () => {
+    151|     expect(contactTypeOwnerDefaultSchema.options).toEqual(['CREATOR', …
+       |                                                   ^
+    152|     expect(contactTypeRequiredFieldKeySchema.options).toEqual([
+    153|       'phone',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > contactTypeKeySchema > rejects "Customer"
+ FAIL  |validators| src/__tests__/contact-types.test.ts > contactTypeKeySchema > rejects "1vendor"
+ FAIL  |validators| src/__tests__/contact-types.test.ts > contactTypeKeySchema > rejects "has space"
+ FAIL  |validators| src/__tests__/contact-types.test.ts > contactTypeKeySchema > rejects ""
+ FAIL  |validators| src/__tests__/contact-types.test.ts > contactTypeKeySchema > rejects "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:171:57
+    169|
+    170|   it.each(['Customer', '1vendor', 'has space', '', 'a'.repeat(41)])('r…
+    171|     expect(contactTypeKeySchema.safeParse(key).success).toBe(false);
+       |                                                         ^
+    172|   });
+    173| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > duplicate type names (superRefine) > finds a case-insensitive trimmed duplicate
+AssertionError: expected null to be 'Customer' // Object.is equality
+
+- Expected:
+"Customer"
+
++ Received:
+null
+
+ ❯ src/__tests__/contact-types.test.ts:182:67
+    180|
+    181|   it('finds a case-insensitive trimmed duplicate', () => {
+    182|     expect(findDuplicateContactTypeName(existing, '  customer ')).toBe…
+       |                                                                   ^
+    183|     expect(findDuplicateContactTypeName(existing, 'Supplier')).toBeNul…
+    184|     expect(findDuplicateContactTypeName(existing, '   ')).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > duplicate type names (superRefine) > ignores the type being edited
+AssertionError: expected null to be 'Reseller' // Object.is equality
+
+- Expected:
+"Reseller"
+
++ Received:
+null
+
+ ❯ src/__tests__/contact-types.test.ts:189:69
+    187|   it('ignores the type being edited', () => {
+    188|     expect(findDuplicateContactTypeName(existing, 'Reseller', 'b')).to…
+    189|     expect(findDuplicateContactTypeName(existing, 'Reseller', 'a')).to…
+       |                                                                     ^
+    190|   });
+    191|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > duplicate type names (superRefine) > contactTypeNameSchema rejects a duplicate with a clear message
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:194:28
+    192|   it('contactTypeNameSchema rejects a duplicate with a clear message',…
+    193|     const result = contactTypeNameSchema(existing).safeParse('RESELLER…
+    194|     expect(result.success).toBe(false);
+       |                            ^
+    195|     if (!result.success) {
+    196|       expect(result.error.issues[0].message).toBe('A contact type name…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/43]⎯
+
+ FAIL  |validators| src/__tests__/contact-types.test.ts > duplicate type names (superRefine) > contactTypeNameSchema accepts a unique or self name and enforces length
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/__tests__/contact-types.test.ts:203:67
+    201|     expect(contactTypeNameSchema(existing).safeParse('Supplier').succe…
+    202|     expect(contactTypeNameSchema(existing, 'b').safeParse('Reseller').…
+    203|     expect(contactTypeNameSchema(existing).safeParse('').success).toBe…
+       |                                                                   ^
+    204|     expect(contactTypeNameSchema(existing).safeParse('x'.repeat(51)).s…
+    205|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/43]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  43 failed | 76 passed (119)
+   Start at  17:52:49
+   Duration  707ms (transform 457ms, setup 0ms, import 1.16s, tests 66ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\validators:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts
+# exit: 1

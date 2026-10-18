@@ -1,0 +1,13 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 db:generate C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\db
+> prisma generate && node scripts/fix-prisma-esm.mjs
+
+Loaded Prisma config from prisma.config.ts.
+
+Prisma schema loaded from prisma\schema.prisma.
+
+✔ Generated Prisma Client (7.8.0) to .\generated\prisma in 816ms
+
+[fix-prisma-esm] Created 207 .js shim files in generated/prisma/

@@ -1,0 +1,20 @@
+
+[exec-readiness] PG-205 — sprint 18
+  ✗ (1) Task JSON $schema path resolves                    BLOCK
+      Task JSON not found for PG-205 in sprint 18.
+  ✓ (2) Exec session-start metrics recorded                PASS
+      started_at=2026-10-17T14:47:19Z; 6 status transitions recorded
+  ✓ (3) Coverage before-capture snapshot                   PASS
+      before-capture exists at C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\artifacts\coverage\PG-205-before.json
+  ✓ (4) Dependency attestations on disk                    PASS
+      2/2 dep attestations located: PG-178, PG-182
+  ✓ (5) Plan has Preflight Checks section (or N/A)         PASS
+      ## Preflight Checks section present.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  BLOCK: Exec Readiness preflight — 1 of 5 checks failed
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Fix each BLOCKed row above, then rerun:
+    node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-205
+  Source memory: feedback_exec_phase1_preflight.md
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

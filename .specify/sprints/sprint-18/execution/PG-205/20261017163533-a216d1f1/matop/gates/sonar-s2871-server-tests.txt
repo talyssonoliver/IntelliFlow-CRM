@@ -1,0 +1,10 @@
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: bash -c cd apps/api && npx vitest run src/modules/contact src/__tests__/app-router.smoke.test.ts 2>&1
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/api
+
+
+ Test Files  18 passed (18)
+      Tests  411 passed | 2 skipped (413)
+   Start at  16:44:14
+   Duration  10.21s (transform 4.41s, setup 5.72s, import 21.75s, tests 6.25s, environment 2ms)
+

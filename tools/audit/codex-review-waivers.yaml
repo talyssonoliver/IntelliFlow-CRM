@@ -1074,6 +1074,30 @@ waivers:
       Class B data migration.
     author: talyssonoliver
     date: '2026-10-01'
+  - fingerprint: '0f290e25353ca62952bf64106e850b33aa19086e3ba2075cb0a63815a579da92'
+    reason: >-
+      Accepted risk, owner ruling 8 (PG-205, 2026-10-17, recorded in
+      .specify/sprints/sprint-18/context/PG-205/PG-205-owner-ruling.md). contactTypes.delete
+      counts contacts using the key and deletes in one transaction, but contacts have no FK to
+      contact_types (ADR-080: keyed by the existing contacts.contactType string, no backfill).
+      So a contact saved at the same moment can keep the deleted key. That is the same state
+      as any legacy key, which the design already handles: the list shows the raw key as a
+      neutral badge, the Type filter still works, Edit can clear or change it, update skips
+      type rules for a key with no type row, and contactTypes.create never re-issues a key
+      that contacts still carry (test "never re-issues a key that contacts still carry").
+      Closing the window fully needs contact create/update and the type check in one
+      transaction under the contact-types lock, a refactor of the shared ContactService save
+      path that the owner chose not to take in PG-205.
+    author: talyssonoliver
+    date: '2026-10-17'
+  - fingerprint: '148dd60f01f2caecd1fe4ecddb68c425fd4f11d40ea657ce50914b6dd64767d4'
+    reason: >-
+      Same finding as waiver 0f290e25 (the contactTypes.delete race with a concurrent contact
+      save, no FK by ADR-080), anchored by the reviewer on the in-use count line instead of the
+      delete. Accepted under the same owner ruling 8 (PG-205, 2026-10-17); the evidence and
+      mitigations are in waiver 0f290e25 and in .specify/sprints/sprint-18/findings/PG-205-findings.md.
+    author: talyssonoliver
+    date: '2026-10-17'
   - fingerprint: 25c5826ce3b9259f52ce545671308c7f3a26a92adab5c21a2fe8bee058178a6b
     reason: >-
       PG-202 non-atomic daily cap (availability-enforcement.ts count then insert). Accepted design,

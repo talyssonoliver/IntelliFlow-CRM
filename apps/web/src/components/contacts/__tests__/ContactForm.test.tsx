@@ -17,6 +17,53 @@ import userEvent from '@testing-library/user-event';
 import { ContactForm } from '../ContactForm';
 import { createMockFormData, createMockHandlers, resetAllMocks } from './contact-test-utils';
 
+// PG-205: the contact type picker inside the form reads the tenant types.
+// PG-205 (ruling 9): the shared account search is stubbed; it has its own tests.
+vi.mock('@/components/tasks/EntitySearchField', () => ({
+  EntitySearchField: (props: {
+    entityType: string;
+    value: string;
+    valueName: string;
+    onChange: (id: string, name: string) => void;
+  }) => (
+    <div data-testid={`entity-search-${props.entityType}`}>
+      <span>{props.value ? `Selected: ${props.valueName}` : 'No account'}</span>
+      <button type="button" onClick={() => props.onChange('acc-2', 'Globex')}>
+        Pick Globex
+      </button>
+      <button type="button" onClick={() => props.onChange('', '')}>
+        Clear account
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    contactTypes: {
+      listActive: {
+        useQuery: () => ({
+          data: [
+            {
+              id: 't1',
+              key: 'partner',
+              name: 'Partner',
+              colorToken: 'violet',
+              isActive: true,
+              isDefault: false,
+              isSystem: true,
+              requiredFields: [],
+            },
+          ],
+          isLoading: false,
+          isError: false,
+          refetch: vi.fn(),
+        }),
+      },
+    },
+  },
+}));
+
 // Mock Card component
 vi.mock('@intelliflow/ui', () => ({
   Card: ({ children, className }: Readonly<{ children: React.ReactNode; className?: string }>) => (
@@ -675,6 +722,49 @@ describe('ContactForm', () => {
       await waitFor(() => {
         const firstNameInput = screen.getByLabelText(/First Name/i);
         expect(firstNameInput).toHaveAttribute('aria-describedby', 'firstName-error');
+      });
+    });
+  });
+
+  describe('Contact type (PG-205)', () => {
+    it('renders the type picker on the last step and submits the chosen key', async () => {
+      const user = userEvent.setup();
+      render(
+        <ContactForm
+          mode="edit"
+          contact={createMockFormData()}
+          onSubmit={handlers.onSubmit}
+          onCancel={handlers.onCancel}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: /Next Step/i }));
+      await user.click(screen.getByRole('button', { name: /Next Step/i }));
+      await user.selectOptions(screen.getByLabelText('Contact type'), 'partner');
+      await user.click(screen.getByRole('button', { name: /Save Changes/i }));
+      await waitFor(() => expect(handlers.onSubmit).toHaveBeenCalled());
+      expect(handlers.onSubmit.mock.calls[0][0].contactType).toBe('partner');
+    });
+  });
+
+  describe('Account (PG-205 ruling 9)', () => {
+    it('renders the account search on the company step and submits the chosen account', async () => {
+      const user = userEvent.setup();
+      render(
+        <ContactForm
+          mode="edit"
+          contact={createMockFormData()}
+          onSubmit={handlers.onSubmit}
+          onCancel={handlers.onCancel}
+        />
+      );
+      await user.click(screen.getByRole('button', { name: /Next Step/i }));
+      await user.click(screen.getByRole('button', { name: 'Pick Globex' }));
+      await user.click(screen.getByRole('button', { name: /Next Step/i }));
+      await user.click(screen.getByRole('button', { name: /Save Changes/i }));
+      await waitFor(() => expect(handlers.onSubmit).toHaveBeenCalled());
+      expect(handlers.onSubmit.mock.calls[0][0]).toMatchObject({
+        accountId: 'acc-2',
+        accountName: 'Globex',
       });
     });
   });

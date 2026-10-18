@@ -1,0 +1,36 @@
+# 2026-10-17T19:59:50Z codex-review after account picker (ruling 9) (staged)
+[codex-review] base ref : origin/main
+[codex-review] changed  : 83 files total
+[codex-review] in scope : 58 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T20:00:39.432Z
+Base ref  : origin/main
+Files in scope : 58
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/app/contacts/[id]/edit/page.tsx:156 — account-replacement-contract
+    Issue    : Selecting a different account for an already linked contact always fails and can leave other submitted edits partially saved.
+    Evidence : The form sends the replacement directly via `payload.accountId = data.accountId || null`. The update handler calls `associateWithAccount` without disassociating first, while Contact.associateWithAccount returns ContactAlreadyHasAccountError whenever `this.hasAccount` is true. The handler also saves contact information before attempting the association. The new page test merely asserts that the replacement ID was submitted to a mocked mutation.
+    Fix      : Implement an atomic account replacement operation that validates the target account and saves the contact fields and replacement association together.
+    Fingerprint: 18941caae9d2bd39c6570af5f1cad2517980d54c864f4a3d42f07e4e7f1b6f06
+
+WAIVED FINDINGS (suppressed):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:449-459 — contact-type-delete-race (fp: 0f290e25353c...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

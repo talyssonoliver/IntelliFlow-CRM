@@ -1,0 +1,38 @@
+{
+  "task_id": "PG-205",
+  "run_id": "20261017163533-a216d1f1",
+  "aggregated_at": "2026-10-18T09:08:37Z",
+  "rule": "worst verdict wins (FAIL > WARN > PASS)",
+  "verdicts": {
+    "Domain": {
+      "verdict": "PASS",
+      "produced_at": "2026-10-18T09:02:23Z",
+      "head": "3ae41b2dfe79773cb7c6f0f4600044901ba5cc0f",
+      "produced_by": "stoa-domain sub-agent",
+      "file": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Domain.json"
+    },
+    "Foundation": {
+      "verdict": "PASS",
+      "produced_at": "2026-10-18T09:07:59Z",
+      "head": "24a91a9f6f360a5db6ce588ad7b2f2983ed68c51",
+      "produced_by": "stoa-foundation sub-agent (re-check)",
+      "file": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Foundation.json"
+    },
+    "Quality": {
+      "verdict": "WARN",
+      "produced_at": "2026-10-18T09:08:12Z",
+      "head": "24a91a9f6f360a5db6ce588ad7b2f2983ed68c51",
+      "produced_by": "stoa-quality sub-agent (re-check)",
+      "file": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Quality.json"
+    },
+    "Security": {
+      "verdict": "PASS",
+      "produced_at": "2026-10-18T09:01:39Z",
+      "head": "3ae41b2dfe79773cb7c6f0f4600044901ba5cc0f",
+      "produced_by": "stoa-security sub-agent",
+      "file": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Security.json"
+    }
+  },
+  "aggregate": "WARN",
+  "note": "Quality WARN: per-file branch coverage 81-87% in four web files (aggregate branches 85-91% >= the 80% Gate 3b floor); pre-ship at the final SHA is runner-owned. Foundation was FAIL (prettier) at 3ae41b2df and PASS on re-check at 24a91a9f6."
+}

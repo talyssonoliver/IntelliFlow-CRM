@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-17T19:49:33.850Z",
+  "timestamp": "2026-10-18T15:34:14.855Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 71,
-    "total_endpoints": 566,
-    "total_queries": 243,
-    "total_mutations": 323,
+    "total_routers": 72,
+    "total_endpoints": 572,
+    "total_queries": 245,
+    "total_mutations": 327,
     "routers": [
       {
         "name": "contact",
@@ -1255,6 +1255,12 @@
         "mutations": 4
       },
       {
+        "name": "contactTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "feedback",
         "endpoints": 6,
         "queries": 3,
@@ -1449,16 +1455,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 199,
-    "total_fields": 2864,
-    "total_indexes": 898,
-    "total_relations": 281,
+    "total_tables": 201,
+    "total_fields": 2889,
+    "total_indexes": 906,
+    "total_relations": 284,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 175,
+        "fields": 176,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1480,7 +1486,7 @@
       {
         "name": "Contact",
         "fields": 37,
-        "indexes": 14,
+        "indexes": 15,
         "relations": 4,
         "hasEmbedding": true
       },
@@ -1752,6 +1758,13 @@
       },
       {
         "name": "NotificationDLQ",
+        "fields": 17,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactType",
         "fields": 17,
         "indexes": 4,
         "relations": 1,
@@ -2262,6 +2275,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ContactTag",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "DocumentGeneralConfig",
         "fields": 11,
         "indexes": 2,
@@ -2417,13 +2437,6 @@
       },
       {
         "name": "ContactDuplicateRule",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "ContactTag",
         "fields": 10,
         "indexes": 3,
         "relations": 1,
@@ -2812,6 +2825,13 @@
         "fields": 6,
         "indexes": 4,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactTypeDefaultTag",
+        "fields": 6,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -3208,11 +3228,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 58,
-    "total_schemas": 635,
+    "total_validators": 59,
+    "total_schemas": 639,
     "by_complexity": {
       "complex": 35,
-      "moderate": 19,
+      "moderate": 20,
       "simple": 4
     },
     "validators": [
@@ -3460,6 +3480,12 @@
         "name": "ticket-routing",
         "file": "ticket-routing.ts",
         "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "contact-types",
+        "file": "contact-types.ts",
+        "schemas": 4,
         "complexity": "moderate"
       },
       {
@@ -4579,6 +4605,38 @@
         "name": "contactSettings.get",
         "method": "GET",
         "description": "Get"
+      }
+    ],
+    "contactTypes": [
+      {
+        "name": "contactTypes.list",
+        "method": "GET",
+        "description": "List contactTypess with pagination"
+      },
+      {
+        "name": "contactTypes.listActive",
+        "method": "GET",
+        "description": "List active"
+      },
+      {
+        "name": "contactTypes.create",
+        "method": "POST",
+        "description": "Create new contactTypes"
+      },
+      {
+        "name": "contactTypes.update",
+        "method": "POST",
+        "description": "Update contactTypes"
+      },
+      {
+        "name": "contactTypes.delete",
+        "method": "POST",
+        "description": "Delete contactTypes"
+      },
+      {
+        "name": "contactTypes.setDefault",
+        "method": "POST",
+        "description": "Set default"
       }
     ],
     "contact": [

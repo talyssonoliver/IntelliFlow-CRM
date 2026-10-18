@@ -102,6 +102,7 @@ export * from './lead-settings';
 
 // Contact Settings Schemas (PG-182)
 export * from './contact-settings';
+export * from './contact-types';
 
 // Account Settings Schemas (PG-183)
 export * from './account-settings';

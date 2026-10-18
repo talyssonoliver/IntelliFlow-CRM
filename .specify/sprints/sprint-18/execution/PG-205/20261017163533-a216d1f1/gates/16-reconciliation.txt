@@ -1,0 +1,13 @@
+# 2026-10-17T17:59:23Z Step 16 reconciliation + CA-2 suspense test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/web
+
+
+ Test Files  4 passed (4)
+      Tests  23 passed (23)
+   Start at  18:59:24
+   Duration  2.34s (transform 251ms, setup 1.56s, import 184ms, tests 553ms, environment 2.89s)
+
+# exit: 0

@@ -1,0 +1,27 @@
+# 2026-10-18T08:53:46Z codex-review round 14, HEAD ab5c70b0f + staged tag-length fix
+[codex-review] base ref : origin/main
+[codex-review] changed  : 129 files total
+[codex-review] in scope : 60 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-18T08:54:41.158Z
+Base ref  : origin/main
+Files in scope : 60
+Total findings : 1
+  Waived       : 1
+  Unwaived     : 0
+
+WAIVED FINDINGS (suppressed):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:449-457 — contact-type-delete-race (fp: 0f290e25353c...)
+
+Verdict: PASS
+[codex-review] Gate PASS — no unwaived findings.
+# exit: 0

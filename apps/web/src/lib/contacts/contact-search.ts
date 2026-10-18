@@ -11,6 +11,7 @@
  */
 
 import { CONTACT_STATUSES } from '@intelliflow/domain';
+import type { ContactListSegment } from '@intelliflow/validators';
 
 /** UI sort dropdown values. */
 export type ContactSortValue = 'newest' | 'oldest' | 'name';
@@ -43,6 +44,10 @@ export interface ContactListFilterState {
   /** Candidate account id from the Company filter (guarded before use). */
   companyFilter: string;
   sortOrder: ContactSortValue | string;
+  /** Contact type key from the Type filter (PG-205). */
+  typeFilter?: string;
+  /** Named segment from a `?segment=` link (PG-205). */
+  segmentFilter?: ContactListSegment | '';
 }
 
 /** Resolved input for the `contact.list` tRPC query. */
@@ -53,6 +58,8 @@ export interface ContactListQuery {
   department?: string;
   status?: (typeof CONTACT_STATUSES)[number];
   accountId?: string;
+  contactType?: string;
+  segment?: ContactListSegment;
   sortBy: ContactSortBy;
   sortOrder: 'asc' | 'desc';
 }
@@ -109,6 +116,8 @@ export function buildContactListQuery(state: ContactListFilterState): ContactLis
       state.companyFilter && isValidAccountId(state.companyFilter)
         ? state.companyFilter
         : undefined,
+    contactType: state.typeFilter || undefined,
+    segment: state.segmentFilter || undefined,
     sortBy,
     sortOrder,
   };
@@ -122,7 +131,14 @@ export function buildContactListQuery(state: ContactListFilterState): ContactLis
 export function isDefaultContactQuery(
   state: Pick<
     ContactListFilterState,
-    'page' | 'search' | 'departmentFilter' | 'statusFilter' | 'companyFilter' | 'sortOrder'
+    | 'page'
+    | 'search'
+    | 'departmentFilter'
+    | 'statusFilter'
+    | 'companyFilter'
+    | 'sortOrder'
+    | 'typeFilter'
+    | 'segmentFilter'
   >
 ): boolean {
   return (
@@ -131,6 +147,29 @@ export function isDefaultContactQuery(
     !state.departmentFilter &&
     !state.statusFilter &&
     !state.companyFilter &&
+    !state.typeFilter &&
+    !state.segmentFilter &&
     state.sortOrder === 'newest'
   );
+}
+
+/**
+ * Maps a sidebar `?segment=` value to the list filter it stands for (PG-205).
+ * `partners` / `vendors` are contact types; `vip` is the tag segment the API
+ * resolves (owner ruling: "Filter by 'vip' tag"). Anything else is ignored.
+ */
+export function segmentToFilter(segment: string | null): {
+  typeFilter: string;
+  segmentFilter: ContactListSegment | '';
+} {
+  switch (segment) {
+    case 'partners':
+      return { typeFilter: 'partner', segmentFilter: '' };
+    case 'vendors':
+      return { typeFilter: 'vendor', segmentFilter: '' };
+    case 'vip':
+      return { typeFilter: '', segmentFilter: 'vip' };
+    default:
+      return { typeFilter: '', segmentFilter: '' };
+  }
 }

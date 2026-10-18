@@ -134,7 +134,7 @@ intelliflow.com
 │   ├── /contacts/new                     → FLOW-016 (create form)
 │   ├── /contacts/[id]                    → FLOW-020 (profile, NO sidebar)
 │   ├── /contacts/[id]/edit               Edit contact fields
-│   ├── /contacts/contact-types           Contact type labels and custom fields
+│   ├── /contacts/contact-types           Contact types applied at contact creation (PG-205)
 │   ├── /contacts/contact-settings        Tenant contact defaults and dedup rules
 │   └── /contacts/import-export           Bulk CSV import and export
 │

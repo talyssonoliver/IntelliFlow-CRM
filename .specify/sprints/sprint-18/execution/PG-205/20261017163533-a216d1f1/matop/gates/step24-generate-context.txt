@@ -1,0 +1,29 @@
+# 2026-10-18T09:13:31Z npx tsx apps/project-tracker/scripts/generate-context.ts
+======================================================================
+SPRINT PLAN SPLIT COMPLETE (Token-Based)
+======================================================================
+Source: Sprint_plan.csv (619 rows)
+Token limit per file: ~18000 tokens (~72000 chars)
+
+Generated Parts:
+  Sprint_plan_A.csv: rows 1-69 (69 rows, ~17981 tokens, 71922 chars)
+  Sprint_plan_B.csv: rows 70-143 (74 rows, ~17888 tokens, 71551 chars)
+  Sprint_plan_C.csv: rows 144-216 (73 rows, ~17717 tokens, 70866 chars)
+  Sprint_plan_D.csv: rows 217-286 (70 rows, ~17922 tokens, 71687 chars)
+  Sprint_plan_E.csv: rows 287-350 (64 rows, ~17965 tokens, 71860 chars)
+  Sprint_plan_F.csv: rows 351-415 (65 rows, ~17890 tokens, 71557 chars)
+  Sprint_plan_G.csv: rows 416-479 (64 rows, ~17794 tokens, 71173 chars)
+  Sprint_plan_H.csv: rows 480-542 (63 rows, ~17764 tokens, 71056 chars)
+  Sprint_plan_I.csv: rows 543-587 (45 rows, ~17822 tokens, 71286 chars)
+  Sprint_plan_J.csv: rows 588-619 (32 rows, ~8267 tokens, 33065 chars)
+
+IMPORTANT: Sprint_plan.csv is the source of truth.
+           Edit ONLY Sprint_plan.csv, then run this script to regenerate parts.
+======================================================================
+spec-tracker.json generated: 527 tasks analyzed
+  COMPLETED: 436, PARTIALLY_DONE: 26, SPEC_ONLY: 55, UNCERTAIN: 10
+  Issues detected: 48
+  State report: 436/619 tasks
+Wrote C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\docs\SESSION_CONTEXT.md (3839 bytes)
+  Sources: 5 files
+# exit: 0
