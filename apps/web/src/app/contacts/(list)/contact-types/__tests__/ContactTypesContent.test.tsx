@@ -289,6 +289,31 @@ describe('ContactTypesContent', () => {
     expect(h.mutations.setDefault.mutate).toHaveBeenCalledWith({ id: null }, expect.anything());
   });
 
+  it('announces a saved default and toasts a failed one', () => {
+    render(<ContactTypesContent />);
+    fireEvent.click(screen.getByRole('radio', { name: 'No default' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save default' }));
+    const callbacks = h.mutations.setDefault.mutate.mock.calls[0][1];
+    act(() => callbacks.onSuccess());
+    expect(document.querySelector('output[aria-live="polite"]')?.textContent).toBe(
+      'Default contact type cleared.'
+    );
+    act(() => callbacks.onError(new Error('nope')));
+    expect(h.toast).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Could not change the default contact type',
+        description: 'nope',
+      })
+    );
+  });
+
+  it('cancelling the delete dialog closes it and clears its error', () => {
+    render(<ContactTypesContent />);
+    act(() => h.deleteProps!.onCancel());
+    expect(h.deleteProps!.name).toBeNull();
+    expect(h.deleteProps!.error).toBeNull();
+  });
+
   it('the error state still has the page h1 (a11y review #6)', () => {
     h.list = { data: undefined, isLoading: false, error: { message: 'boom' } };
     render(<ContactTypesContent />);

@@ -139,6 +139,19 @@ describe('ContactTypeDialog', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
+  it('saves the default status, owner rule and active flag the user changed', async () => {
+    const { onSave } = renderDialog({ contactType: RESELLER });
+    fireEvent.change(screen.getByLabelText('Default status'), { target: { value: 'ACTIVE' } });
+    fireEvent.click(screen.getByRole('radio', { name: 'Creator' }));
+    fireEvent.click(screen.getByRole('switch', { name: 'Active' }));
+    await act(async () => {
+      fireEvent.click(save());
+    });
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({ defaultStatus: 'ACTIVE', defaultOwner: 'CREATOR', isActive: false })
+    );
+  });
+
   it('rejects an empty or duplicate name with an inline alert (aria-invalid + describedby)', () => {
     const renderDialogResult = renderDialog();
     const name = screen.getByLabelText('Name');

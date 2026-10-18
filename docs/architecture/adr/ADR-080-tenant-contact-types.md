@@ -45,7 +45,7 @@ How do configurable types relate to the existing column without rewriting
 
 ## Considered Options
 
-1. **Stable key, string match (proposed).** New `ContactType` table with an
+1. **Stable key, string match (chosen).** New `ContactType` table with an
    immutable `key` (unique per tenant) and an editable display `name`.
    `Contact.contactType` keeps storing the key. The six system keys are seeded
    per tenant on first use (idempotent upsert, no `skipDuplicates`). Contact
@@ -58,8 +58,8 @@ How do configurable types relate to the existing column without rewriting
 
 ## Decision Outcome
 
-Chosen option 1 (PG-205 spec consensus 7/7, 2026-10-17). Status moves to
-Accepted when the implementation passes its validations.
+Chosen option 1 (PG-205 spec consensus 7/7, 2026-10-17). Accepted 2026-10-18
+after the implementation passed its validations.
 
 - `contact_types` table with an immutable server-generated `key`, editable
   `name`; the six `CONTACT_TYPES` are system rows (`isSystem`), seeded lazily
@@ -80,7 +80,7 @@ Accepted when the implementation passes its validations.
   owner; lead conversion creates untyped contacts; auto-merge keeps the
   survivor's own type; `ContactCreatedEvent` is unchanged.
 
-### Consequences (if option 1)
+### Consequences
 
 - **Deploy order (L13):** both Class A migrations,
   `20261017120000_contact_types` and `20261017120100_contacts_type_idx`
@@ -91,6 +91,17 @@ Accepted when the implementation passes its validations.
 - No FK: deleting a type that contacts still use is refused at the application
   layer (count by `tenantId` + `contactType = key`); deactivating is the safe
   path.
+- **Accepted risk (owner ruling 8, 2026-10-17):** with no FK, a contact saved at
+  the same moment a type is deleted can keep the deleted key. It then behaves
+  like any legacy key (neutral badge, filterable, editable), and
+  `contactTypes.create` never re-issues a key that contacts still carry. Closing
+  the window needs contact writes and the type check in one transaction under
+  the contact-types lock (codex waivers `0f290e25` / `148dd60f`).
+- **Update save ordering:** `contact.update` writes the account change and the
+  other fields in two `ContactService` saves. A link or replace (one
+  `replaceAccount` save, target checked in the tenant) runs before the fields,
+  and an unlink runs after them, so a failure between the saves never leaves a
+  type without an account it requires.
 - Renaming a type changes only its label; stored contacts follow automatically.
 - Contacts holding a key with no type row (pre-seed data) remain readable; they
   are shown with the key's default label.

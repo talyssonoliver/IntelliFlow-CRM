@@ -37,6 +37,13 @@ describe('DeleteContactTypeDialog', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
   });
 
+  it('Escape closes the dialog through onCancel', () => {
+    const { onCancel, onConfirm } = renderDialog();
+    fireEvent.keyDown(screen.getByRole('alertdialog'), { key: 'Escape' });
+    expect(onCancel).toHaveBeenCalledTimes(1);
+    expect(onConfirm).not.toHaveBeenCalled();
+  });
+
   it('asks to confirm and focuses Cancel (A11Y-10)', () => {
     const { onConfirm } = renderDialog();
     const dialog = screen.getByRole('alertdialog', { name: 'Delete Reseller?' });
