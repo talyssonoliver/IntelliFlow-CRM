@@ -1,0 +1,57 @@
+{
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "aggregated_at": "2026-10-18T09:24:00Z",
+  "method": "computed from the sub-agent verdict files; the final verdict per STOA is its re-check",
+  "stoas": {
+    "Foundation": {
+      "first": {
+        "verdict": "WARN",
+        "head": "053c6874c9f4ae9d29bc6a7955013d0d4ce2df3e",
+        "produced_at": "2026-10-17T21:04:57Z"
+      },
+      "final": {
+        "verdict": "PASS",
+        "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+        "produced_at": "2026-10-18T09:17:17Z"
+      }
+    },
+    "Domain": {
+      "first": {
+        "verdict": "PASS",
+        "head": "f3115da9b6c619c88ef7dd7cb91bb365215ffb94",
+        "produced_at": "2026-10-17T21:09:30Z"
+      },
+      "final": {
+        "verdict": "PASS",
+        "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+        "produced_at": "2026-10-18T09:10:00Z"
+      }
+    },
+    "Security": {
+      "first": {
+        "verdict": "PASS",
+        "head": "053c6874c9f4ae9d29bc6a7955013d0d4ce2df3e",
+        "produced_at": "2026-10-17T21:06:00Z"
+      },
+      "final": {
+        "verdict": "PASS",
+        "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+        "produced_at": "2026-10-18T09:01:56Z"
+      }
+    },
+    "Quality": {
+      "first": {
+        "verdict": "WARN",
+        "head": "f3115da9b6c619c88ef7dd7cb91bb365215ffb94",
+        "produced_at": "2026-10-17T21:08:03Z"
+      },
+      "final": {
+        "verdict": "PASS",
+        "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+        "produced_at": "2026-10-18T09:17:22Z"
+      }
+    }
+  },
+  "aggregate": "PASS"
+}

@@ -1,7 +1,7 @@
-date: 2026-10-18T08:37:42Z
-head: fdd76e690fdcb87113b116a836e9550ca2497d21
+date: 2026-10-18T09:00:55Z
+head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
 cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/domain test
-[test-slot] slot2 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/domain test
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/domain test
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 
@@ -14,7 +14,7 @@ apps/ai-worker                           |  WARN  Unsupported engine: wanted
 
  Test Files  106 passed (106)
       Tests  3072 passed (3072)
-   Start at  09:37:43
-   Duration  10.88s (transform 4.17s, setup 0ms, import 8.10s, tests 2.24s, environment 15ms)
+   Start at  10:00:56
+   Duration  7.59s (transform 2.17s, setup 0ms, import 5.43s, tests 1.64s, environment 11ms)
 
 exit: 0

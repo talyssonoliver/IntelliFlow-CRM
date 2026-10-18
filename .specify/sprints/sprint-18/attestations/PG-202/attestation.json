@@ -1,72 +1,489 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-202",
-  "run_id": "eng-ops-002-r16-pg-202-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "exec-PG-202-20261017",
+  "attestor": "Claude Code (claude-opus-5-5) - /loop /full-pipeline PG-202 exec lane, branch feat/pg-202-availability",
+  "attestation_timestamp": "2026-10-18T09:22:52Z",
+  "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 103,
+    "validations_passed": 14,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "gates_passed": 17,
+    "gates_failed": 5,
+    "kpis_met": 6,
+    "kpis_missed": 2,
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/calendar/availability/page.tsx": "4177a758c1498eb346cd6742a0fb32b836fd395a40fd45835ae4cbf5051c0a24"
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "82c737df143e6fd3df64b74bdbad3d30814bc620da7fe978cc955de9807777ec",
+    "apps/api/src/agent/__tests__/approved-action-executor.test.ts": "fc1d0ec2ac95642336232d33082c5c037cd33e2343368f2e2f010a5549354708",
+    "apps/api/src/modules/calendar/__tests__/availability-enforcement.test.ts": "4c9631bc0d29f33640a2e8392a6dd467757e47d0522fbfadd4147080cd00fe59",
+    "apps/api/src/modules/calendar/__tests__/availability.router.test.ts": "dd02ee9878364afcedf1d54122a863412e2861575d529fe84d132c726b633ab8",
+    "apps/api/src/modules/calendar/__tests__/availability.test-utils.ts": "9013b2ae3dfa6fb60418137132abc5027720cba457bbb01d05e855207567516f",
+    "apps/api/src/modules/calendar/availability-enforcement.ts": "75aa5a5f10780eb31cad630bfdc84a24b6374da86571acc3eb6de82b0b1dcdf4",
+    "apps/api/src/modules/calendar/availability.router.ts": "202692ed81ec0e233cab09b3a16bb5022b2a9ecb24072ce14282d3f5d63c9766",
+    "apps/api/src/modules/calendar/calendar.router.ts": "b8e0a95faf31caeb4150eced03c40d6c013636b2b5c95db4ce36f6c31b358cdd",
+    "apps/api/src/modules/legal/__tests__/appointment-settings.router.test.ts": "bb7684b3589c0541ea3fed4c24945371abca2571c2b5565b72b26b96485802ad",
+    "apps/api/src/modules/legal/__tests__/appointments.availability-boundary.test.ts": "f374c1b3b9b953f12cbaaa5897d9bb99682a0965fcb3e6b62b60bfd926378362",
+    "apps/api/src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts": "ec587da9d8c429533d588e76763cb184ea12523595ea2a2c4cf253cb6d26c390",
+    "apps/api/src/modules/legal/__tests__/appointments.router.caller.test.ts": "211bb6e8a49e51f21ccb194e1494f3c5f8d0260bded1b2a2d59a75a97655aa17",
+    "apps/api/src/modules/legal/__tests__/legal-module-entitlement.test.ts": "da037592e4f8f5d97993761dc05875f876c5d4e5036c11af726023b944269648",
+    "apps/api/src/modules/legal/appointment-settings.defaults.ts": "23768a780f916b4c578af0b3bb8cacec4c2987bda5a097e66a991971322eead1",
+    "apps/api/src/modules/legal/appointment-settings.router.ts": "dcfe01cf02c07038a3a87e6f7e66a02a21bf64d22622cc1b52e81eb93784cfaa",
+    "apps/api/src/modules/legal/appointments.router.ts": "8a5802c7450b721c52bfbf4ce02a13b399ff30701eb7b8d71f28efd45c3ccca2",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "2a31c06631991d502ee07046d6a9090a0983a27c6d25e4255e0b7e22500fb315",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv": "a8104a829b06d1813d8aa7be8b563bd0fe37266d7184c64c6d40ef6a9810b0ff",
+    "apps/web/src/app/appointments/new/__tests__/page.onsuccess.test.tsx": "61242ff8f0e5e2c98f253c987f5b2908b095c6d813f52971eed60ce63b4be1d7",
+    "apps/web/src/app/appointments/new/page.tsx": "e5995f17ad0705dc3c02186c7539e6d9d0f1787de7de38124e2eeb8fddab5c89",
+    "apps/web/src/app/calendar/availability/AvailabilityContent.tsx": "2c70c5533ab8c2d759f177ae99584b0e2954bfebb368c63a0195da140537cb2c",
+    "apps/web/src/app/calendar/availability/AvailabilityLoading.tsx": "5ebb43e44058c93a53b29e041a4a0ba9ffdeeff198ee7be16cf0bbc77ed7c2d2",
+    "apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.actions.test.tsx": "10157058565db193b03b8338877180ea6a110f7f57d3f51cfdb0f67b115e4f73",
+    "apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.test.tsx": "16208de107e548c73be4a49d55252443ca9c4dbe305b48f42a97e31b11e38509",
+    "apps/web/src/app/calendar/availability/__tests__/AvailabilityLoading.test.tsx": "0a72bc6d78e2f6c4aaae2a84a2498ccb69925dc2de5d9e79109bc6ca66f92ad4",
+    "apps/web/src/app/calendar/availability/__tests__/availability-draft.test.ts": "1ca01c5ce1ad0add94a17a43216f366fd4f7a9719b6d68ff816b5d6b50d731d8",
+    "apps/web/src/app/calendar/availability/__tests__/availability-fixtures.ts": "6015718b359eb3fc3a6db56ea7c5239abc1b48e7bb79be1fdcc46a9384c1a77b",
+    "apps/web/src/app/calendar/availability/__tests__/page.test.tsx": "cd8b85bf5aa3b090788594f42bafcb944510534d614fafa1adc7eb5db0e945b3",
+    "apps/web/src/app/calendar/availability/availability-draft.ts": "f2d99769d3e8cc932addd2260a196a297d24d1858b7c6764fec24f01797b31e3",
+    "apps/web/src/app/calendar/availability/components/AvailabilityBanners.tsx": "40ec3da2b810893a4f8c9f801a96a8f3e70652245a55aab77e50c8bfda193e0c",
+    "apps/web/src/app/calendar/availability/components/BuffersCapCard.tsx": "95a0da8a1ef65dbc42b66d1f082156c6f91e99e38ebedf77ee17b32335f3631e",
+    "apps/web/src/app/calendar/availability/components/ClosuresList.tsx": "4f7cc3a89a135ee5cf02d1d6563301fdb56f52d88667c585a9dbb69f5a4819c7",
+    "apps/web/src/app/calendar/availability/components/TimezoneCard.tsx": "6536f6fd21e3655112cd7338af7c0245d030db6e1434dcc8df0c7e11af9cb72e",
+    "apps/web/src/app/calendar/availability/components/WeeklyHoursCard.tsx": "bb692baf7292373624301d8ce4c5524594df905108515f9ea11d103f2c8bb8b6",
+    "apps/web/src/app/calendar/availability/components/__tests__/BuffersCapCard.test.tsx": "207806664ca7e31abece3fe4dd3222d3b7e5789ee2dc281ea648269fb96b1802",
+    "apps/web/src/app/calendar/availability/components/__tests__/ClosuresList.test.tsx": "a6988e3bf8f94d0a03f75e22e43a9160dbe1a2aac1793cfc8b67a9f00fe4e793",
+    "apps/web/src/app/calendar/availability/components/__tests__/TimezoneCard.test.tsx": "5fc3a089f414e6a6d179854abf5cc506907ab6ae23acefe979496cc2487402a7",
+    "apps/web/src/app/calendar/availability/components/__tests__/WeeklyHoursCard.test.tsx": "4880bad6aa02ce045201a4c1b4b5ec003370ad294a611a1687a079333d428138",
+    "apps/web/src/app/calendar/availability/page.tsx": "6ba2a62f92879f90965c7aea2445d01b63591ce0b213ead19156a715439714c7",
+    "apps/web/src/app/calendar/calendar-settings/CalendarSettingsContent.tsx": "9e85ae812ac3a50b9f3a14fc06437e85a4cf134ab2ca529da5603f48aeb346ed",
+    "apps/web/src/app/calendar/calendar-settings/__tests__/BufferRemindersTab.test.tsx": "2b8bbf32f349a62017d26c6761cd4f83e1b9d2c756f2160489a56415a3cf1018",
+    "apps/web/src/app/calendar/calendar-settings/__tests__/CalendarIntegrationTab.test.tsx": "e7360cf8d16e16cd483fad2781bb0c95ab5460d734b0dea76e465bf337c8a6a7",
+    "apps/web/src/app/calendar/calendar-settings/__tests__/CalendarSettingsContent.test.tsx": "49987b0f569fc7753e2ba81768a5a1d39072747238b04464d40e6238e6c6f6f8",
+    "apps/web/src/app/calendar/calendar-settings/components/AvailabilityPointer.tsx": "4ed61a8933c5206436ca46a3b4bc3d00f1bce562f430e68e0d7e25aee38ab7d0",
+    "apps/web/src/app/calendar/calendar-settings/components/BufferRemindersTab.tsx": "895b35204c5f88074f2b004038cdb5f5a4fcc8b6810e0b1654bc9badb710f589",
+    "apps/web/src/app/calendar/calendar-settings/components/CalendarIntegrationTab.tsx": "ad4ac145c8b7edc81b16bfb3489bb4139d1a005cef2b737c0833bebe111b0126",
+    "apps/web/src/components/appointments/AppointmentDetail.tsx": "4f0ba5b6d9b992bbbabb6784c70bc8f8ca2ba10af8a7dbe592bd5dc580e30fe5",
+    "apps/web/src/components/appointments/AppointmentForm.tsx": "2be32792419d1e30392a670e2e0f384b51a47897e54e0ed8daca9e21646cb5df",
+    "apps/web/src/components/appointments/__tests__/AppointmentDetail.test.tsx": "71e4303451bfb2d6dadc50f0edad44eaad8f902fd47e6bc9687fe62a19cdfe4e",
+    "apps/web/src/components/appointments/__tests__/AppointmentForm.test.tsx": "fdb670148772f0f855cff11652fd6ae530608e4db006133063ae9d9bed2dd6af",
+    "apps/web/src/components/aurora-landing/sections/__tests__/InboxCalendarSection.test.tsx": "ddf6b3c2b83bfc53b91053375436aafb4b991d63cfa2de9354e565e7bfe24448",
+    "apps/web/src/components/settings/ModuleSettingsLayout.tsx": "6a7af139bdd658a1590bd8a102085f1c6002a01013b562ca9826cfc2043ba982",
+    "apps/web/src/components/settings/TimezoneSelector.tsx": "73278b778e8be8e99dd4b8bb47142fb1c94ccde902031aba181b5af11b85c8fa",
+    "apps/web/src/components/settings/__tests__/ModuleSettingsLayout.test.tsx": "4135a7ef5ec4ac5eb3e4be0f36e2e0927195e7a4389ad036eb9e002df8711d93",
+    "apps/web/src/components/settings/__tests__/TimezoneSelector.test.tsx": "8be088564a1b4e03fd5bd328750e24e9f6d3cba4318f8abd9f0a8d3421661c07",
+    "artifacts/coverage/PG-202-before.json": "38f239fbbe9b22e3a9221b79537dd4a8afe72e44e3b4dc314ad80e6af9fc7521",
+    "artifacts/lighthouse/PG-202/calendar-availability-pathA-r1.report.json": "da3dcd6967b6abe52e221a5396c9511671744e01d7cc082b8d62527ab7579bfa",
+    "artifacts/lighthouse/PG-202/waiver-evidence.md": "10c23d81c8c0acc5d514ac6fcdf1e0bacc4a923fc098ded979a89d26831061f0",
+    "artifacts/metrics/debt-ledger.yaml": "bd6baf3f5cd26f1766d5ed4e3859943be0bcc0c3358b75e62376ce060ed0e9e1",
+    "docs/architecture/adr/ADR-081-tenant-availability.md": "dc2f6ca332714d3b69a4aff20c26b80ccc52ab3604221ba76973b77111666ffc",
+    "docs/architecture/adr/README.md": "3c9edcdba688a9d0d2af9709fb127eb4e711bdd507404651922b702a2f036aeb",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "50fe4e3ec3d16e0e12a8ff0c0efe0f0faa11ee7891853e1177d9b4ae523be814",
+    "docs/architecture/diagrams/legal-scheduling-dependency-chain.md": "271b772e45bcbaa79eea6757644f3b5e68fdfa09147c98dfcc99494143dc5d5e",
+    "docs/compliance-and-governance/compliance/vpat-2.5.md": "e84d7df165f8e6a5480ab0f1bd25a27953535f38e49344bd2a28f83eb3072180",
+    "docs/compliance-and-governance/compliance/wcag-conformance-statement.md": "249f31db628df437d380fed12231e031d43590ced2250803e5e909438b5c368e",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "3361598964c509c3864a846b2388f6d97929da82168bb14d352f87e6a3d9dfc7",
+    "docs/design/information-architecture.md": "8a7a2cc08598128593dd0b39dc1a83682a26fc1f6a5da4279d7df94c35d4ed90",
+    "docs/design/navigation-reachability-audit.md": "5595cf879623682203aa560ca99ca3098be5fd6204c96270e296cf546d96b101",
+    "docs/design/page-registry.md": "0681181adac4cd24d025ef6e8f8d22501e6a7f303e3164063c9ea5a6cdd99d9c",
+    "docs/design/sitemap.md": "bcb6cee43c460880132554fe3d5effb07d2a930c60348125413667ba92273e5e",
+    "docs/design/ui-flow-mapping.md": "ae1c788aa158db66f6c9c0d4ba165c163399b1680e60423411cc17bedf824745",
+    "docs/planning/prd-module-settings.md": "9a39313ccdf81786f6d1f0c42feb640a643bdbb442b3b27cff86496e1c6531a2",
+    "packages/application/src/usecases/scheduling/CheckConflicts.ts": "a293e4a2aed886e226f88f5f8ed41b317c9ba7d644f4755836429622faf2d134",
+    "packages/application/src/usecases/scheduling/__tests__/CheckConflicts.test.ts": "ea033deb7bf06cfeb2bee927863cbd3075e7c34cd871001bcdfc65430a955765",
+    "packages/db/prisma/migrations/20261017130000_availability/migration.sql": "124720c5723b62f8b9ce540212f9bbfb5f2131e22fa3652dac4490823ae0f85b",
+    "packages/db/prisma/schema.prisma": "cf668aad20807d1be72497f579d280c00343c6497d666cdfd5b79462d89a0129",
+    "packages/db/src/index.ts": "cb4fbf017f3f9887127a9de8bb0bdae1edcae87f1a1df9bffe48e7c17392fcb4",
+    "packages/domain/src/index.ts": "3f26efcfcf8389acf48e33dd05752fd927a14b471bd0136c3c6c1ef5e697785d",
+    "packages/domain/src/legal/appointments/AvailabilityPolicy.ts": "7ffe01999ba1eb664b441c3df76a156b0580496c3cad9f729975657198cdc746",
+    "packages/domain/src/legal/appointments/Buffer.ts": "95359296af53176db2f0320322dbe863983f3065c047e71ae1fa1426dde2376a",
+    "packages/domain/src/legal/appointments/__tests__/AvailabilityPolicy.test.ts": "c14ead232b7b622b04477bb8e23aa06d6e076532bcc3880784bcb75036695077",
+    "packages/domain/src/legal/appointments/__tests__/availability-roles.test.ts": "41251f59ffd481ec3a4b71c2d9389d2a85501a89a6f7d0a024c581e33f57b977",
+    "packages/domain/src/legal/appointments/availability-roles.ts": "3169d3da3be823565c86ff1f18308341cd568897f541402ed183ef42dc8b3232",
+    "packages/ui/__tests__/confirmation-dialog.test.tsx": "526517a030f3c3b07fc8465cb249ee336b9aad789c34f68eb5686b4e0c9b1ecb",
+    "packages/ui/src/components/confirmation-dialog.tsx": "7a44ccbec98d332c8aff7b2f2bb43272ad790ffb42b5ef456ddf4f9a9a3ce081",
+    "packages/validators/src/__tests__/appointment-settings.test.ts": "f050641176de938dae8ee124927056d48146473f3993e116b49e936037e6d4a4",
+    "packages/validators/src/__tests__/availability.test.ts": "4e404f63c737ca5ae8516d489ac5d22fe859f1c5cc566774cae259109549f8ab",
+    "packages/validators/src/appointment-settings.ts": "a7b379db39115a250682864096bc58eb201f8d1fd58b8c0b0d38a17938539ed1",
+    "packages/validators/src/availability.ts": "ce50ff7795617d205aae14593e89e6384839185f9c6464c808f3dfb018c1335c",
+    "packages/validators/src/index.ts": "5e25faa601b628146ebb8d956fc9358f25e4d6b576bf77cfe60040ac367aa2be",
+    "tests/integration/availability.test.ts": "349472d80f3d202f761139ce4a821a597e91d7f0bc6b462a796099aa5de97245",
+    "tools/audit/codex-review-waivers.yaml": "99376a2363f45819626cceaba84fd2d60a46999003ed24152d379f7f921e0c7e",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/sql-review.json": "37d6d539bf1f0c284fa20b6bf588bf04b4dce71788d9256315007c183904d7a9",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/migration-freeze.txt": "4127c8a8b2c6d20bbdaccd8fc0800a8cef344003bfdb68242b31cec648bb7577",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/pr-body.md": "b0e3dc534e0a5bc9b110f55a72849271ba444c157785a26675f0da6129ecd4be",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/first-load-js.json": "d3d3cb730525d8f20637ed4dfc0be3dc1126c9345bc67b835886bffe61102bd6",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/a11y-review.json": "3216b0ad638bd8895571aea21bfe2c5978b3e86f0917c3c0eeed1c5ac8c4d452",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/a11y-review-recheck.json": "7e1916f90d8430c97663c510e333d8b67a26f01b189507081e972a187e36ea0e",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/summary.tsv": "3a42dd676394fbf461a6f548bbdac5fb97245ee5b51d87ee1110f8b199905235",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/18-diff-coverage.log": "ab47a68b6d07da3eb2585de490cc89e93b61797d5fec58133ce8dc0caf15c036",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/compliance/compliance-report.md": "fb51dc547591ff99a3f16fdcde8d4a6f8e69a4b452a11e91fd2eb99a4db91ede",
+    ".specify/sprints/sprint-18/findings/PG-202-findings.md": "9615c18df314c41d5f885de51025c982d7db09bbda744494cce6be6b67618aa1",
+    ".specify/sprints/sprint-18/attestations/PG-202/context_ack.json": "809a399d54e2198ae6ebc7c4e9c95bac585477d096ab9733823bb706cc03a9de"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/application typecheck && pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck && pnpm --filter @intelliflow/ui typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:12:33Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/09-typecheck.log",
+      "details": "tsc --noEmit for domain, application, validators, api, web (next typegen) and ui"
+    },
+    {
+      "name": "Tests",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --dir apps/web exec vitest run",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:11:42Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/08-web-full.log",
+      "details": "web full suite: 12955 passed (12955)"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/application lint && pnpm --filter @intelliflow/validators lint && pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint && CI=1 pnpm run lint:sonar:guard",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:13:20Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/10-lint.log",
+      "details": "eslint for domain, application, validators, api, web + CI=1 sonar guard over the branch diff"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/application build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/db build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/api build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:16:19Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/11-build.log",
+      "details": "domain, application, validators, db, api (tsup) and web (next build --webpack, /calendar/availability in the route table)"
+    },
+    {
+      "name": "Tests (domain full)",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/domain test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:01:04Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/02-domain-full.log",
+      "details": "3072 passed (3072)"
+    },
+    {
+      "name": "Tests (application full)",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/application test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:01:17Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/03-application-full.log",
+      "details": "1488 passed (1488)"
+    },
+    {
+      "name": "Tests (validators full)",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/validators test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:01:25Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/04-validators-full.log",
+      "details": "2722 passed (2722)"
+    },
+    {
+      "name": "Tests (db full)",
+      "command": "pnpm --filter @intelliflow/db test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:02:05Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/05b-db-tests.log",
+      "details": "224 passed | 14 skipped (238)"
+    },
+    {
+      "name": "Tests (api full)",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/api test",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:04:07Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/06-api-full.log",
+      "details": "7797 passed | 18 skipped (7815)"
+    },
+    {
+      "name": "Tests (integration, exclusive DB slot)",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/availability.test.ts tests/integration/rls-tenant-isolation.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:04:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/07-integration.log",
+      "details": "20 passed | 5 skipped (25)"
+    },
+    {
+      "name": "Characterization (legacy rules)",
+      "command": "pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:00:55Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/01-characterization.log",
+      "details": "9 passed (9)"
+    },
+    {
+      "name": "DB build + typecheck",
+      "command": "pnpm --filter @intelliflow/db build && pnpm --filter @intelliflow/db typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:02:01Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/05-db.log",
+      "details": "pnpm --filter @intelliflow/db build && pnpm --filter @intelliflow/db typecheck"
+    },
+    {
+      "name": "Diff coverage (Sonar new_coverage mirror)",
+      "command": "DIFF_COVER_LCOV=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/merged-lcov.info node scripts/check-diff-coverage.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:16:55Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/18-diff-coverage.log",
+      "details": "DIFF_COVER_LCOV=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/merged-lcov.info node scripts/check-diff-coverage.mjs"
+    },
+    {
+      "name": "Exec preflights",
+      "command": "node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202 && node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202 && node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-202 && node tools/scripts/validate-task-json-schemas.mjs",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T09:16:56Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/19-preflights.log",
+      "details": "node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202 && node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-202 && node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-202 && node tools/scripts/validate-task-json-schemas.mjs"
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
+      "gate_id": "spec-session (consensus)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/specifications/PG-202-spec.md",
+      "notes": "Round 4 consensus 6/6 APPROVED (2026-10-17T16:59:15Z)"
+    },
+    {
+      "gate_id": "plan-reviewer sub-agent",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/planning/PG-202-plan.md",
+      "notes": "APPROVE on iteration 3; marker <!-- plan-reviewer: subagent -->"
+    },
+    {
+      "gate_id": "exec preflights (page-doc, plan-reviewer, readiness, nav-wiring, schema sweep)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/19-preflights.log; .specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/compliance/",
+      "notes": ""
+    },
+    {
+      "gate_id": "TDD RED/GREEN logs per layer",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/",
+      "notes": "red-*/green-* for domain, application, validators, api, integration, web, ui, db, and one pair per codex/STOA fix"
+    },
+    {
+      "gate_id": "Validation Matrix (full, one process at a time)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/summary.tsv",
+      "notes": "20 rows at head 2ac93b60f"
+    },
+    {
+      "gate_id": "Independent SQL review (Class A gate 1)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/sql-review.json",
+      "notes": "APPROVE; migration sha256 frozen in matop/migration-freeze.txt"
+    },
+    {
+      "gate_id": "Codex semantic review (node scripts/codex-review.mjs)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/codex-review/codex-review-8.log",
+      "notes": "8 runs; run 8 at final code PASS; 7 real findings fixed test-first; the best-effort daily cap is waived (ADR-081, gh #913), the waiver approved by the owner in the lane modal 2026-10-17"
+    },
+    {
+      "gate_id": "/code-review (full)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/code-review-20261017-220406/",
+      "notes": "typecheck and lint clean, no circular imports, architecture green; complexity step crashed on the known tooling bug #888; caught the db schema-text regression, fixed in 4c6ac696e"
+    },
+    {
+      "gate_id": "/sonarqube-fix",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/sonarcloud-main-issues-on-changed-files.json",
+      "notes": "issues on touched lines fixed in fdd76e690"
+    },
+    {
+      "gate_id": "knip",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/knip.log",
+      "notes": "no PG-202 file listed"
+    },
+    {
+      "gate_id": "Architecture (tests/architecture + dependency-cruiser)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/architecture-tests.log; .specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/depcruise.log",
+      "notes": "40 passed; depcruise 0 errors, 212 pre-existing no-circular warnings, none involving PG-202 files"
+    },
+    {
+      "gate_id": "a11y-expert WCAG 2.1 AA review",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/a11y-review.json; .specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/a11y-review-recheck.json",
+      "notes": "FAIL (3 major), fixed in 015016c13, re-check PASS WITH MINOR"
+    },
+    {
+      "gate_id": "STOA Foundation",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Foundation.recheck.json",
+      "notes": "first verdict WARN, re-check PASS at 2ac93b60f"
+    },
+    {
+      "gate_id": "STOA Domain",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Domain.recheck.json",
+      "notes": "first verdict PASS, re-check PASS at 2ac93b60f"
+    },
+    {
+      "gate_id": "STOA Security",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Security.recheck.json",
+      "notes": "first verdict PASS, re-check PASS at 2ac93b60f"
+    },
+    {
+      "gate_id": "STOA Quality",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/stoa-verdicts/Quality.recheck.json",
+      "notes": "first verdict WARN, re-check PASS at 2ac93b60f"
+    },
+    {
+      "gate_id": "Compliance check (/compliance-check, sections 1-12)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/compliance/compliance-report.md",
+      "notes": ""
+    },
+    {
+      "gate_id": "Lighthouse evidence (Guard 9)",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-202 requires page.tsx (exists), AvailabilityContent.tsx (MISSING), apps/api/src/modules/calendar/availability.router.ts (MISSING), packages/validators/src/availability.ts (MISSING), context_ack.json (MISSING). Broad grep for a dedicated availability router/validator across apps/api and packages/validators returned zero hits (matches found are unrelated generic uses of the word 'availability' in other modules)."
+      "log_path": "artifacts/lighthouse/PG-202/waiver-evidence.md",
+      "notes": "NEEDS_HUMAN: no measurement of the page; no waiver approver named (approval is the owner's)"
+    },
+    {
+      "gate_id": "Class A migration gate 4 (staging verification)",
+      "passed": false,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/sql-review.json",
+      "notes": "NEEDS_HUMAN: no staging environment step available to the lane"
+    },
+    {
+      "gate_id": "Class A migration gate 7 (backup / snapshot id)",
+      "passed": false,
+      "log_path": "",
+      "notes": "NEEDS_HUMAN: production snapshot id before apply"
+    },
+    {
+      "gate_id": "Class A migration gate 10-prod (prisma migrate deploy on production)",
+      "passed": false,
+      "log_path": "",
+      "notes": "NEEDS_HUMAN: manual production apply BEFORE the API ships"
+    },
+    {
+      "gate_id": "worktree-landed (Gate 4b)",
+      "passed": false,
+      "log_path": "",
+      "notes": "NEEDS_HUMAN (runner-owned): the branch is pushed once at SHIP after pre-ship, as the dispatch note requires; the branch name feat/pg-202-availability was set by the dispatch note (not agent/<TASK>). Gate 4b is re-run after the push and reported to Aurora"
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Domain new files coverage (AvailabilityPolicy, availability-roles, Buffer)",
+      "target": ">= 95%",
+      "actual": "statements 99.55%, branches 97.41%, functions 100.0%, lines 100.0%",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/12-cov-domain.log"
+    },
+    {
+      "kpi": "Application CheckConflicts.ts (new findFirstFreeCandidate lines)",
+      "target": "> 90%",
+      "actual": "file: statements 91.8%, branches 70.0% (pre-existing legacy branches); the 25 changed lines are 100% covered (diff coverage)",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/13-cov-application.log; .specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/18-diff-coverage.log"
+    },
+    {
+      "kpi": "Validators new files coverage (availability.ts, appointment-settings.ts)",
+      "target": "> 90%",
+      "actual": "statements 100.0%, branches 97.36%",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/14-cov-validators.log"
+    },
+    {
+      "kpi": "API new files coverage (availability.router, availability-enforcement, calendar.router, settings defaults)",
+      "target": "> 90%",
+      "actual": "statements 97.4%, branches 92.59%, lines 99.29%",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/15-cov-api.log"
+    },
+    {
+      "kpi": "Web scoped coverage (apps/web thresholds: statements/lines/functions >= 90%, branches >= 80%)",
+      "target": "stmts>=90 br>=80 fn>=90 lines>=90",
+      "actual": "statements 90.71%, branches 85.02%, functions 84.16%, lines 91.61%. Every new web file is >= 93% functions; the scoped function average is pulled down by pre-existing untested handlers in touched files (AppointmentDetail 41%, appointments/new page 57%, CalendarIntegrationTab 75%, AppointmentForm 78%). Changed web lines are covered by the 96.2% diff coverage",
+      "met": false,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/16-cov-web.log"
+    },
+    {
+      "kpi": "Diff coverage on changed lines (Sonar new_coverage mirror)",
+      "target": ">= 80%",
+      "actual": "96.2% (1131/1176)",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/18-diff-coverage.log"
+    },
+    {
+      "kpi": "First-load JS vs /cases/case-types (NF-003)",
+      "target": "no larger than the reference page",
+      "actual": "871.0 KB vs 876.7 KB gzip",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/first-load-js.json"
+    },
+    {
+      "kpi": "Lighthouse >= 90 on /calendar/availability (GATE:lighthouse-gte-90, AC-025)",
+      "target": ">= 90 all categories",
+      "actual": "NEEDS_HUMAN: the Path A attempt measured the global error page (no Supabase URL compiled: perf 0.93, a11y 0.90, best-practices 0.93, SEO 0.66), so no score measures this page. An authenticated run needs a non-production Supabase (no LHCI_TEST_* credentials). Owner direction: automate without spending hosted free quota (gh #527)",
+      "met": false,
+      "evidence": "artifacts/lighthouse/PG-202/waiver-evidence.md; artifacts/lighthouse/PG-202/calendar-availability-pathA-r1.report.json"
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-189"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /calendar/availability renders",
+      "criterion": "Availability at /calendar/availability: working hours per weekday, timezone, buffers before/after, max daily bookings, unavailable date ranges",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "AvailabilityContent + WeeklyHoursCard, TimezoneCard, BuffersCapCard, ClosuresList; calendar.availability router; web 12955 passed"
     },
     {
-      "criterion": "Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented; UTC-in-DB / useTimezoneContext() display per the timezone refactor",
-      "met": false,
-      "evidence": "page.tsx (16 lines) is a static placeholder ('Availability configuration coming soon.'). No form, no data fetch, no working-hours model, and therefore no timezone handling either — the task's own TIMEZONE-REFACTOR-AWARE note has nothing to apply to."
+      "criterion": "TIMEZONE-REFACTOR-AWARE: instants UTC, wall-clock rules in the firm zone (ADR-081)",
+      "met": true,
+      "evidence": "AvailabilityPolicy toZonedParts/localToUtc, DST fold/gap tests; appointment instants unchanged (UTC)"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for overlapping time ranges; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "Follows docs/planning/module-settings-playbook.md",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/design-check-availability.md"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "Enforced at booking (owner Q3 = B): create, reschedule, findNextSlot",
+      "met": true,
+      "evidence": "appointments.router.ts create/reschedule -> assertAppointmentWithinAvailability; findNextSlot -> findNextSlotWithinAvailability; characterization keeps legacy for unconfigured firms"
+    },
+    {
+      "criterion": "Lighthouse >= 90 (GATE:lighthouse-gte-90)",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "NEEDS_HUMAN, artifacts/lighthouse/PG-202/waiver-evidence.md"
     }
   ],
-  "dependencies_verified": [],
+  "nav_wiring_confirmed": true,
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-202-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-202-plan.md",
+  "spec_session_consensus": "6/6 APPROVED in Round 4 (2026-10-17T16:59:15Z) on spec v2; owner ruling Q1-Q7 in context/PG-202/PG-202-owner-ruling.md",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "pg202-plan-reviewer (.claude/agents/plan-reviewer.md sub-agent, iteration 3 APPROVE)",
+  "plan_reviewer_marker": "<!-- plan-reviewer: subagent -->",
   "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "os": "Windows 11",
+    "node_version": "v22.14.0 (nvm) for every gate",
+    "git_commit": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+    "branch": "feat/pg-202-availability"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit e18a18a92e061d48ffc57916b85cec7f5837c985 ('feat(web): add email, calendar, and notification settings pages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: AvailabilityContent.tsx, availability.router.ts, availability validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-202/context_ack.json — absent"
-    ]
-  }
+  "notes": "PRISMA MIGRATION: packages/db/prisma/migrations/20261017130000_availability (Class A, additive; independent SQL review APPROVE; sha256 frozen). Merged, NOT applied: the production apply is manual and must happen BEFORE the API ships (the API reads the new columns); Class A gates 4, 7 and 10-prod are NEEDS_HUMAN. Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:17 (/calendar/availability), plus links from both Calendar Settings tabs (AvailabilityPointer.tsx). Firms that never saved availability keep the legacy rules (create 07:00-19:00 in the event timezone, reschedule 07:00-19:00 UTC, findNextSlot 9-17 weekdays), pinned by appointments.legacy-hours.characterization.test.ts. Integration: the 5 skipped tests are the pre-existing rls-tenant-isolation suite (shared local DB authenticated role has no grants); PG-202's own RLS check ran; CI sets DATABASE_URL (.github/workflows/ci.yml:360). Disclosed process slips: two quick API test runs and one db run overlapped a /code-review coverage pass (one-test-process rule); the final Validation Matrix ran alone. Out of scope, tracked: gh #909, #910, #911, #912, #913, #914; comments on #871 and #527."
 }

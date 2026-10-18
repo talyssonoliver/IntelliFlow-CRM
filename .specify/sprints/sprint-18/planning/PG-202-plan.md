@@ -665,11 +665,13 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 
 #### Step 20: Full validation, reviews, Lighthouse
 **Type:** validation
-- [ ] Validation Matrix in order (one process at a time); L5 health-server flake: re-run once and report both runs.
+- [x] Validation Matrix in order (one process at a time); L5 health-server flake: re-run once and report both runs.
+      *Verified:* final full run at 2ac93b60f, 20 rows exit 0 (`matop/validation-matrix/summary.tsv`); no health-server flake
+      occurred. Earlier full runs at 4c6ac696e and fdd76e690 were also green; the first run was stopped when code changed.
 - [x] `node scripts/codex-review.mjs` iterated until clean (waivers only with evidence). *Verified:* 6 runs, run 6 PASS
       (`matop/codex-review/`); 6 real findings fixed test-first; daily-cap race waived with ADR-081/#913 evidence, approved by
       the owner in the lane modal 2026-10-17.
-- [ ] `/code-review` on the diff; `/sonarqube-fix` for any new finding; `knip`; a11y-expert WCAG 2.1 AA review on the built
+- [x] `/code-review` on the diff; `/sonarqube-fix` for any new finding; `knip`; a11y-expert WCAG 2.1 AA review on the built
       UI (→ `matop/a11y-review.json`, fix findings); STOA Foundation by a spawned `stoa-foundation` sub-agent (+ others the
       gate selection names).
 - [x] First-load JS of `/calendar/availability` vs `/cases/case-types` from `next build` output (NF-003). *Verified:*
@@ -692,7 +694,7 @@ Cases (router caller with the mocked container, clock pinned with `vi.useFakeTim
 - `docs/compliance-and-governance/compliance/wcag-conformance-statement.md`
 - `docs/compliance-and-governance/compliance/vpat-2.5.md`
 
-- [ ] Attestation: every gate PASS or NEEDS_HUMAN with reason (Lighthouse, Class A gates 4/7/10-prod); artifact hashes incl.
+- [x] Attestation: every gate PASS or NEEDS_HUMAN with reason (Lighthouse, Class A gates 4/7/10-prod); artifact hashes incl.
       the migration; KPIs from logs; `node tools/scripts/exec-preflight/check-attestation-phrases.mjs PG-202` and
       `check-attestation-provenance.mjs PG-202`.
 - [x] WCAG 1.9.0 / VPAT 1.10.0 rows with the real review result. *Verified:* PASS WITH MINOR after fixes; known gap #871 listed.

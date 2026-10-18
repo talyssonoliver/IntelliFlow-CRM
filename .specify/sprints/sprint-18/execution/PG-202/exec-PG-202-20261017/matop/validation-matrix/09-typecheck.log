@@ -1,5 +1,5 @@
-date: 2026-10-18T08:47:44Z
-head: fdd76e690fdcb87113b116a836e9550ca2497d21
+date: 2026-10-18T09:11:42Z
+head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
 cmd: pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/application typecheck && pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck && pnpm --filter @intelliflow/ui typecheck
 .                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
 apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})

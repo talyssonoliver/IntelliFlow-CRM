@@ -4,27 +4,27 @@
   "run_id": "exec-PG-202-20261017",
   "verdict": "PASS",
   "produced_by": "stoa-foundation sub-agent",
-  "produced_at": "2026-10-17T22:10:52Z",
-  "head": "d65141274e380abd3377e4eef53f71459b9ac291",
-  "supersedes": "Foundation.json (WARN at 053c6874c)",
+  "produced_at": "2026-10-18T09:17:17Z",
+  "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+  "supersedes": "Foundation.json (WARN at 053c6874c) and the earlier Foundation.recheck.json (PASS at d65141274)",
   "gates": [
-    {"gate": "typecheck (domain, application, validators, api, web, ui)", "result": "PASS", "evidence_log": "matop/validation-matrix/09-typecheck.log (header head 4c6ac696e, ran 22:02:25-22:03:35Z, exit 0)", "notes": "Ran after the a11y fix commit 015016c13 and after the last code commit 4c6ac696e. Commits after 4c6ac696e touch only evidence, artifacts and waiver/ledger files."},
-    {"gate": "lint + CI=1 sonar guard", "result": "PASS", "evidence_log": "matop/validation-matrix/10-lint.log (22:03:35-22:04:37Z, exit 0)", "notes": ""},
-    {"gate": "build (domain, application, validators, db, api, web next build)", "result": "PASS", "evidence_log": "matop/validation-matrix/11-build.log (22:04:37-22:08:08Z, exit 0); line 373 lists '/calendar/availability' in the route table", "notes": "Head 4c6ac696e."},
-    {"gate": "test rows 01-08 plus 05b-db-tests", "result": "PASS", "evidence_log": "matop/validation-matrix/summary.tsv rows 01-08 and 05b exit 0; 08-web-full.log line 466: 'Tests 12954 passed (12954)'", "notes": "Only the web count was read from the row log; other counts rely on the summary exit codes."},
-    {"gate": "diff coverage", "result": "PASS", "evidence_log": "matop/validation-matrix/18-diff-coverage.log (head 4c6ac696e, exit 0, TOTAL new_coverage 96.1%, 1120/1165); summary.tsv row 18 now exit 0", "notes": "The earlier mismatch between the summary and the log is resolved."},
-    {"gate": "preflights", "result": "PASS", "evidence_log": "summary.tsv row 19 exit 0", "notes": "Only the summary exit code was read this time."},
-    {"gate": "codex review", "result": "PASS with waiver", "evidence_log": "matop/codex-review/codex-review-6.log ('Verdict: PASS', one waived HIGH non-atomic-daily-cap); tools/audit/codex-review-waivers.yaml entries now authored 'talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)'", "notes": "The last codex run (21:33) predates code commit 4c6ac696e (a 6-line timezone guard in availability-enforcement.ts and appointments.router.ts, plus schema text restoration). /code-review ran after it. Owner approval of the waiver rests on the lane's statement; I could not verify the modal."},
-    {"gate": "dependency hygiene", "result": "PASS", "evidence_log": "git diff origin/main...HEAD --name-only: no package.json or pnpm-lock.yaml; no foreign icon library imports in added lines", "notes": ""},
-    {"gate": "forbidden constructs in non-test code", "result": "PASS", "evidence_log": "grep of added non-test .ts/.tsx lines for any, ts-ignore, ts-expect-error, istanbul ignore, console.log: no matches. appointments.router.ts has 6 console.log, same count as origin/main", "notes": "The added console.log is gone. Test files still use 'any' mocks, which the lead says is test-only."},
-    {"gate": "secret-shaped strings in the diff", "result": "PASS", "evidence_log": "grep of added lines for credentialed DB URLs, Bearer, GitHub/OpenAI/AWS/Notion token prefixes, JWT, private key, neon.tech: only hits are the pattern descriptions inside earlier verdict JSON files", "notes": "Run gitleaks on the verdict files as the lead requested."},
-    {"gate": "line-ending churn", "result": "PASS", "evidence_log": "git diff --numstat origin/main...HEAD: schema.prisma 58/21, codex-review-waivers.yaml 30/0, debt-ledger.yaml 104/6", "notes": "schema.prisma and the waivers file are back to their real size. debt-ledger rose from 89/6 to 104/6, which is real content, not churn."},
-    {"gate": "call site verification", "result": "PASS", "evidence_log": "appointments.router.ts:467 (create) and :747 (reschedule) call assertAppointmentWithinAvailability; AvailabilityContent.tsx and availability-draft.ts reference calendar.availability; page.tsx renders the content", "notes": ""}
+    {"gate": "matrix completeness and head", "result": "PASS", "evidence_log": "matop/validation-matrix/summary.tsv: 20 rows all exit 0, last line 'done'; all 20 row log headers show head 2ac93b60f", "notes": "Code commits after 4c6ac696e are fdd76e690 and 9620f4cce; every row reran at the final HEAD."},
+    {"gate": "typecheck (domain, application, validators, api, web, ui)", "result": "PASS", "evidence_log": "matop/validation-matrix/09-typecheck.log (exit 0)", "notes": ""},
+    {"gate": "lint + CI=1 sonar guard", "result": "PASS", "evidence_log": "matop/validation-matrix/10-lint.log (exit 0)", "notes": ""},
+    {"gate": "build (domain, application, validators, db, api, web next build)", "result": "PASS", "evidence_log": "matop/validation-matrix/11-build.log (exit 0); line 373 lists '/calendar/availability' in the route table", "notes": ""},
+    {"gate": "tests", "result": "PASS", "evidence_log": "summary.tsv rows 01-08 and 05b exit 0; 06-api-full.log: 7797 passed, 18 skipped; 08-web-full.log: 12955 passed", "notes": "Domain, application, validators, db and integration counts come from the lead's message and the summary exit codes; I read only the api and web counts from the logs."},
+    {"gate": "diff coverage", "result": "PASS", "evidence_log": "matop/validation-matrix/18-diff-coverage.log (exit 0, TOTAL new_coverage 96.2%, 1131/1176)", "notes": ""},
+    {"gate": "preflights", "result": "PASS", "evidence_log": "summary.tsv row 19 exit 0", "notes": ""},
+    {"gate": "codex review at final code", "result": "PASS", "evidence_log": "matop/codex-review/codex-review-8.log: 'Verdict: PASS', 'no unwaived findings'", "notes": "Run 8 postdates the last code change 9620f4cce. The daily-cap waiver is owner-approved per the waiver text (not independently verified)."},
+    {"gate": "dependency hygiene", "result": "PASS", "evidence_log": "git diff origin/main...HEAD --name-only: no package.json or pnpm-lock.yaml", "notes": ""},
+    {"gate": "forbidden constructs in non-test code", "result": "PASS", "evidence_log": "grep of added non-test .ts/.tsx lines for any, ts-ignore, ts-expect-error, istanbul ignore, console.log: no matches", "notes": ""},
+    {"gate": "diff hygiene", "result": "PASS", "evidence_log": "git diff --numstat origin/main...HEAD: schema.prisma 58/21, codex-review-waivers.yaml 30/0", "notes": "No line-ending churn."},
+    {"gate": "secret-shaped strings", "result": "PASS", "evidence_log": "no secret-shaped strings in the earlier full-diff scan; commits since then change source, tests, a Lighthouse report and docs only", "notes": "Run gitleaks on this file as requested."},
+    {"gate": "call site verification", "result": "PASS", "evidence_log": "apps/api/src/modules/legal/appointments.router.ts still has 2 calls to assertAppointmentWithinAvailability (create and reschedule); the availability page still uses calendar.availability", "notes": "Not re-read line by line after the latest commits."}
   ],
   "findings": [
-    {"severity": "low", "file": "tools/audit/codex-review-waivers.yaml", "line": 0, "issue": "Three waiver entries for one finding (three fingerprints for slightly different line anchors).", "fix": "Optional: leave as is, since each fingerprint is a distinct anchor that the gate matches."},
-    {"severity": "low", "file": "artifacts/coverage/*, artifacts/reports/a11y-route-reconcile.json", "line": 0, "issue": "Tracked generated files show as modified in the worktree (coverage-final.json, coverage-summary.json, lcov.info, a11y-route-reconcile.json).", "fix": "Keep them out of the PR unless the task intends to update them."},
-    {"severity": "low", "file": "matop/codex-review", "line": 0, "issue": "Codex review evidence predates the final 6-line code change in 4c6ac696e.", "fix": "Optional: one more codex run at final HEAD if the gate is cheap; /code-review and the full matrix already cover it."}
+    {"severity": "low", "file": "artifacts/coverage/*, artifacts/reports/a11y-route-reconcile.json", "line": 0, "issue": "Tracked generated files showed as modified in the worktree at the last check.", "fix": "Keep them out of the PR."},
+    {"severity": "low", "file": "tools/audit/codex-review-waivers.yaml", "line": 0, "issue": "Three waiver entries for one finding.", "fix": "Optional; each fingerprint is a distinct anchor."}
   ],
-  "limitations": "Read-only review: no tests, builds, typecheck or lint were run. Exit codes and head hashes come from summary.tsv and the headers and tails of the 08, 09, 10, 11 and 18 logs. Other row logs were not opened. Commits after 4c6ac696e were checked by file list only (evidence, artifacts, waivers, ledger). The owner approval of the waiver is taken from the waiver text, not verified independently."
+  "limitations": "Read-only review: nothing was run. Verdict rests on the summary and the headers and tails of the logs; only the api and web test counts were read from row logs. Commits after 4c6ac696e were reviewed by file list, not line by line. Owner approval of the waiver is taken from the waiver text."
 }

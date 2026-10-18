@@ -1,21 +1,21 @@
-date: 2026-10-18T08:53:17Z
-head: fdd76e690fdcb87113b116a836e9550ca2497d21
+date: 2026-10-18T09:16:55Z
+head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
 cmd: DIFF_COVER_LCOV=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/merged-lcov.info node scripts/check-diff-coverage.mjs
 check-diff-coverage: new-line coverage vs origin/main (floor 80%):
 
   ✓  80.0%  4/5  apps/web/src/app/calendar/calendar-settings/CalendarSettingsContent.tsx
   ✓  89.7%  165/184  apps/web/src/app/calendar/availability/AvailabilityContent.tsx
   ✓  92.2%  59/64  apps/web/src/app/calendar/availability/components/ClosuresList.tsx
-  ✓  92.9%  13/14  apps/web/src/app/calendar/availability/components/BuffersCapCard.tsx
   ✓  95.5%  63/66  apps/web/src/app/calendar/availability/components/WeeklyHoursCard.tsx
   ✓  95.7%  22/23  apps/web/src/components/appointments/AppointmentDetail.tsx
-  ✓  96.4%  108/112  apps/api/src/modules/calendar/availability-enforcement.ts
+  ✓  96.0%  121/126  apps/api/src/modules/calendar/availability-enforcement.ts
   ✓  96.8%  214/221  apps/web/src/app/calendar/availability/availability-draft.ts
   ✓  98.4%  63/64  apps/api/src/modules/calendar/availability.router.ts
   ✓  98.8%  251/254  packages/domain/src/legal/appointments/AvailabilityPolicy.ts
   ✓ 100.0%  2/2  apps/api/src/modules/legal/appointment-settings.defaults.ts
   ✓ 100.0%  7/7  apps/web/src/app/calendar/availability/AvailabilityLoading.tsx
   ✓ 100.0%  21/21  apps/web/src/app/calendar/availability/components/AvailabilityBanners.tsx
+  ✓ 100.0%  14/14  apps/web/src/app/calendar/availability/components/BuffersCapCard.tsx
   ✓ 100.0%  12/12  apps/web/src/app/calendar/availability/components/TimezoneCard.tsx
   ✓ 100.0%  1/1  apps/web/src/app/calendar/calendar-settings/components/AvailabilityPointer.tsx
   ✓ 100.0%  1/1  apps/web/src/app/calendar/calendar-settings/components/BufferRemindersTab.tsx
@@ -26,6 +26,6 @@ check-diff-coverage: new-line coverage vs origin/main (floor 80%):
   ✓ 100.0%  5/5  packages/domain/src/legal/appointments/availability-roles.ts
   ✓ 100.0%  65/65  packages/validators/src/availability.ts
 
-  TOTAL new_coverage: 96.1%  (1117/1162 lines + branch conditions)
+  TOTAL new_coverage: 96.2%  (1131/1176 lines + branch conditions)
 ✅ Diff coverage meets the 80% floor.
 exit: 0

@@ -1,5 +1,5 @@
-date: 2026-10-18T08:40:52Z
-head: fdd76e690fdcb87113b116a836e9550ca2497d21
+date: 2026-10-18T09:04:11Z
+head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
 cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --dir apps/web exec vitest run
 [test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --dir apps/web exec vitest run
 
@@ -310,9 +310,6 @@ DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "h
     at _destroy (node:_http_client:898:9)
     at onSocketNT (node:_http_client:918:5)
     at processTicksAndRejections (node:internal/process/task_queues:91:21)
-    at runNextTicks (node:internal/process/task_queues:69:3)
-    at listOnTimeout (node:internal/timers:555:9)
-    at processTimers (node:internal/timers:529:7)
 DOMException [AbortError]: The operation was aborted.
     at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
     at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
@@ -463,8 +460,8 @@ Not implemented: navigation to another Document
 Not implemented: navigation to another Document
 
  Test Files  820 passed (820)
-      Tests  12954 passed (12954)
-   Start at  09:40:53
-   Duration  410.81s (transform 21.54s, setup 256.15s, import 261.62s, tests 364.06s, environment 582.36s)
+      Tests  12955 passed (12955)
+   Start at  10:04:13
+   Duration  449.01s (transform 33.89s, setup 283.73s, import 289.77s, tests 377.22s, environment 641.26s)
 
 exit: 0

@@ -1,5 +1,5 @@
-date: 2026-10-18T08:52:43Z
-head: fdd76e690fdcb87113b116a836e9550ca2497d21
+date: 2026-10-18T09:16:21Z
+head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
 cmd: pnpm --dir packages/application exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/application --coverage.include=src/usecases/scheduling/CheckConflicts.ts src/usecases/scheduling/__tests__/CheckConflicts.test.ts
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/application
@@ -8,8 +8,8 @@ cmd: pnpm --dir packages/application exec vitest run --coverage.enabled --covera
 
  Test Files  1 passed (1)
       Tests  21 passed (21)
-   Start at  09:52:44
-   Duration  650ms (transform 263ms, setup 0ms, import 379ms, tests 18ms, environment 0ms)
+   Start at  10:16:22
+   Duration  658ms (transform 257ms, setup 0ms, import 390ms, tests 19ms, environment 0ms)
 
  % Coverage report from v8
 -------------------|---------|----------|---------|---------|---------------------

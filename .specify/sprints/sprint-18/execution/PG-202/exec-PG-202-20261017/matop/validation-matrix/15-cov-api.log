@@ -1,5 +1,5 @@
-date: 2026-10-18T08:52:46Z
-head: fdd76e690fdcb87113b116a836e9550ca2497d21
+date: 2026-10-18T09:16:25Z
+head: 2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d
 cmd: pnpm --dir apps/api exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/api --coverage.include=src/modules/calendar/availability.router.ts --coverage.include=src/modules/calendar/availability-enforcement.ts --coverage.include=src/modules/calendar/calendar.router.ts --coverage.include=src/modules/legal/appointment-settings.defaults.ts src/modules/calendar/__tests__ src/__tests__/app-router.smoke.test.ts src/modules/legal/__tests__/appointment-settings.router.test.ts
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
@@ -7,25 +7,25 @@ cmd: pnpm --dir apps/api exec vitest run --coverage.enabled --coverage.reporter=
 
 
  Test Files  7 passed (7)
-      Tests  108 passed (108)
-   Start at  09:52:48
-   Duration  4.54s (transform 4.99s, setup 2.93s, import 7.58s, tests 4.24s, environment 1ms)
+      Tests  109 passed (109)
+   Start at  10:16:26
+   Duration  4.64s (transform 5.18s, setup 3.16s, import 7.52s, tests 4.93s, environment 1ms)
 
  % Coverage report from istanbul
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |   97.87 |    92.45 |     100 |     100 |                   
- calendar          |   97.84 |    92.45 |     100 |     100 |                   
-  ...nforcement.ts |   97.05 |    93.22 |     100 |     100 | 45,121,258-260    
+All files          |    97.4 |    92.59 |     100 |   99.29 |                   
+ calendar          |   97.36 |    92.59 |     100 |   99.28 |                   
+  ...nforcement.ts |   96.29 |    93.44 |     100 |   98.64 | 302               
   ...ity.router.ts |   98.07 |    90.32 |     100 |     100 | 39,72,89          
   ...dar.router.ts |     100 |    93.75 |     100 |     100 | 87                
 -------------------|---------|----------|---------|---------|-------------------
 
 =============================== Coverage summary ===============================
-Statements   : 97.87% ( 138/141 )
-Branches     : 92.45% ( 98/106 )
-Functions    : 100% ( 29/29 )
-Lines        : 100% ( 129/129 )
+Statements   : 97.4% ( 150/154 )
+Branches     : 92.59% ( 100/108 )
+Functions    : 100% ( 30/30 )
+Lines        : 99.29% ( 140/141 )
 ================================================================================
 exit: 0
