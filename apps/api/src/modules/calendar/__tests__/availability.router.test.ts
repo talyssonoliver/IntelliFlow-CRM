@@ -278,14 +278,12 @@ describe('availabilityRouter (PG-202)', () => {
 
     it('skips createMany when there are no hours or closures', async () => {
       const tx = useTx();
-      await availabilityRouter
-        .createCaller(createAdminContext())
-        .update(
-          updateInput({
-            days: [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ weekday, ranges: [] })),
-            closures: [],
-          })
-        );
+      await availabilityRouter.createCaller(createAdminContext()).update(
+        updateInput({
+          days: [0, 1, 2, 3, 4, 5, 6].map((weekday) => ({ weekday, ranges: [] })),
+          closures: [],
+        })
+      );
       expect(tx.availabilityHour.deleteMany).toHaveBeenCalled();
       expect(tx.availabilityHour.createMany).not.toHaveBeenCalled();
       expect(tx.availabilityClosure.createMany).not.toHaveBeenCalled();
