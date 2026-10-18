@@ -1098,3 +1098,33 @@ waivers:
       mitigations are in waiver 0f290e25 and in .specify/sprints/sprint-18/findings/PG-205-findings.md.
     author: talyssonoliver
     date: '2026-10-17'
+  - fingerprint: 25c5826ce3b9259f52ce545671308c7f3a26a92adab5c21a2fe8bee058178a6b
+    reason: >-
+      PG-202 non-atomic daily cap (availability-enforcement.ts count then insert). Accepted design,
+      not an oversight: spec NF-004 and ADR-081 ("Daily-cap race: best-effort; no lock on the
+      populated appointments table") chose a best-effort cap. A serialised check needs the count and
+      the appointment insert in one locked transaction, which means rewriting appointments.create /
+      reschedule around ScheduleAppointmentUseCase; the coordinator (Aurora) limited PG-202 to
+      swapping the two availability calls in appointments.router.ts. Worst case is one booking over
+      the cap under exact concurrency; no cross-tenant or data-corruption effect. Tracked for a
+      locked fix (per-tenant pg_advisory_xact_lock + race test) in gh #913 and debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
+    date: '2026-10-17'
+  - fingerprint: 1a5ce81b9e098cca8625ccee5e210cf8ce672f62143c36f504158b6947f6c4aa
+    reason: >-
+      Same PG-202 non-atomic daily-cap finding as fingerprint 25c5826c... above, anchored on a
+      slightly different line range (availability-enforcement.ts:184-194) by a later review run.
+      Same evidence: spec NF-004 / ADR-081 best-effort cap, Aurora's PG-202 boundary (only the two
+      availability calls in appointments.router.ts change), tracked in gh #913 and debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
+    date: '2026-10-17'
+  - fingerprint: 846f69b2cc7bea8e6f95445eb395652486145070427ff4d6de25e7f369bdb753
+    reason: >-
+      Same PG-202 non-atomic daily-cap finding as fingerprints 25c5826c... and 1a5ce81b... above,
+      anchored on line 186 alone (the prisma.appointment.count call). Same evidence and tracking:
+      spec NF-004 / ADR-081, Aurora's PG-202 boundary, gh #913, debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
+    date: '2026-10-17'

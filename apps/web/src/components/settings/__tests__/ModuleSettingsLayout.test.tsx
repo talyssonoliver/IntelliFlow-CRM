@@ -39,10 +39,11 @@ vi.mock('@intelliflow/ui', () => ({
       {children}
     </button>
   ),
-  ConfirmationDialog: ({ open, onConfirm, title, onOpenChange }: any) =>
+  ConfirmationDialog: ({ open, onConfirm, title, description, onOpenChange }: any) =>
     open ? (
       <div data-testid="confirmation-dialog">
         <p>{title}</p>
+        <p data-testid="confirmation-description">{description}</p>
         <button onClick={onConfirm}>Confirm</button>
         <button onClick={() => onOpenChange(false)}>Cancel</button>
       </div>
@@ -171,6 +172,27 @@ describe('ModuleSettingsLayout', () => {
 
     expect(onReset).not.toHaveBeenCalled();
     expect(screen.queryByTestId('confirmation-dialog')).not.toBeInTheDocument();
+  });
+
+  it('uses the default reset description when none is given', () => {
+    render(<ModuleSettingsLayout {...defaultProps} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
+    expect(screen.getByTestId('confirmation-description')).toHaveTextContent(
+      'This will restore all settings to their factory defaults. This action cannot be undone.'
+    );
+  });
+
+  it('shows a custom resetDescription (PG-202)', () => {
+    render(
+      <ModuleSettingsLayout
+        {...defaultProps}
+        resetDescription="Resets durations and reminder. Buffers and timezone are not changed."
+      />
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
+    expect(screen.getByTestId('confirmation-description')).toHaveTextContent(
+      'Resets durations and reminder. Buffers and timezone are not changed.'
+    );
   });
 
   it('Save button is disabled when isDirty=false', () => {

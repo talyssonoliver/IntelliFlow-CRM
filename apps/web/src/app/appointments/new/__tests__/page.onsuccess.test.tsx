@@ -12,6 +12,7 @@ const h = vi.hoisted(() => ({
   push: vi.fn(),
   revalidateCalendarCache: vi.fn(),
   user: { id: 'user-1' } as { id: string } | null,
+  formProps: null as null | Record<string, unknown>,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -30,7 +31,12 @@ vi.mock('@/lib/calendar/revalidate-calendar-cache', () => ({
 }));
 vi.mock('@intelliflow/ui', () => ({ Skeleton: () => null }));
 vi.mock('@/components/shared', () => ({ PageHeader: () => null }));
-vi.mock('@/components/appointments', () => ({ AppointmentForm: () => null }));
+vi.mock('@/components/appointments', () => ({
+  AppointmentForm: (props: Record<string, unknown>) => {
+    h.formProps = props;
+    return null;
+  },
+}));
 
 import NewAppointmentPage from '../page';
 
@@ -40,6 +46,7 @@ describe('NewAppointmentPage create onSuccess', () => {
     h.push.mockReset();
     h.revalidateCalendarCache.mockReset().mockResolvedValue(undefined);
     h.user = { id: 'user-1' };
+    h.formProps = null;
   });
 
   it('navigates to the list and returns the list, stats and calendar refresh', async () => {
@@ -58,5 +65,20 @@ describe('NewAppointmentPage create onSuccess', () => {
     await capture.mutations['appointments.create'].onSuccess?.();
     expect(h.push).toHaveBeenCalledWith('/appointments');
     expect(h.revalidateCalendarCache).not.toHaveBeenCalled();
+  });
+
+  it('passes the firm default buffers to the form (PG-202 owner Q7)', () => {
+    capture.queryData['appointmentSettings.get'] = {
+      defaultBufferBeforeMinutes: 15,
+      defaultBufferAfterMinutes: 30,
+    };
+    render(<NewAppointmentPage />);
+    expect(h.formProps?.defaultBuffers).toEqual({ before: 15, after: 30 });
+  });
+
+  it('renders the form without defaults when the settings are unavailable', () => {
+    render(<NewAppointmentPage />);
+    expect(h.formProps).not.toBeNull();
+    expect(h.formProps?.defaultBuffers).toBeUndefined();
   });
 });

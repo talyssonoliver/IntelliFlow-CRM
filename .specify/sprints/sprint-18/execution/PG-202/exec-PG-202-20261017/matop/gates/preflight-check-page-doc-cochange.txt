@@ -1,0 +1,6 @@
+# 2026-10-17T17:18:23Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-202
+[preflight] Checking PG-202 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\.specify\sprints\sprint-18\planning\PG-202-plan.md
+[preflight] OK — plan does not create any page.tsx; § 3.2 gate does not apply.
+# exit=0

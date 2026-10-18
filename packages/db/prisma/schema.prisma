@@ -189,6 +189,8 @@ model Tenant {
   caseAutomationSettings    CaseAutomationSetting[]   @ignore
   caseTypes                 CaseType[]                @ignore // PG-204
   appointmentSettings       AppointmentSettings[]     @ignore
+  availabilityHours              AvailabilityHour[]               @ignore // PG-202
+  availabilityClosures           AvailabilityClosure[]            @ignore // PG-202
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
   reportScheduleTags        ReportScheduleTag[]       @ignore
@@ -1515,7 +1517,7 @@ model DealAutomationSetting {
   notifyOnOwnerChange        Boolean @default(false)
   notifyOnStageChange        Boolean @default(false)
   notifyOnHighValueStageMove Boolean @default(false)
-  highValueThreshold         Decimal @db.Decimal(15, 2) @default(50000)
+  highValueThreshold         Decimal @default(50000) @db.Decimal(15, 2)
 
   // AI & Intelligence (defaults FALSE — playbook §7)
   aiDuplicateDetection     Boolean @default(false)
@@ -2397,12 +2399,48 @@ model AppointmentSettings {
   primaryCalendar            Calendar? @relation("AppointmentSettingsPrimaryCalendar", fields: [primaryCalendarId], references: [id], onDelete: SetNull)
   syncExternalCalendars      Boolean   @default(false)
   defaultTimezone            String    @default("UTC")
+  /// PG-202 — NULL = no daily cap. CHECK 1..500 lives in SQL (appointment_settings_maxDailyBookings_check).
+  maxDailyBookings           Int?
+  /// PG-202 — NULL = availability never saved; every booking path keeps its legacy rule (ADR-081).
+  availabilityConfiguredAt   DateTime?
   tenant                     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdAt                  DateTime  @default(now())
   updatedAt                  DateTime  @updatedAt
 
   @@index([primaryCalendarId])
   @@map("appointment_settings")
+}
+
+/// PG-202 — firm-wide weekly working hours: local minutes-of-day in AppointmentSettings.defaultTimezone.
+/// weekday 0 = Sunday. CHECKs (weekday 0-6, 0 <= start < end <= 1440) are SQL-only.
+model AvailabilityHour {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  weekday     Int      @db.SmallInt
+  startMinute Int      @db.SmallInt
+  endMinute   Int      @db.SmallInt
+  createdAt   DateTime @default(now())
+
+  @@unique([tenantId, weekday, startMinute])
+  @@index([tenantId, weekday])
+  @@map("availability_hours")
+}
+
+/// PG-202 — all-day closure, inclusive calendar dates in the firm timezone. DATE columns are read and
+/// written as UTC-midnight Dates; convert with the YYYY-MM-DD string at the boundary, never via local time.
+model AvailabilityClosure {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  reason    String?  @db.VarChar(200)
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, startDate, endDate])
+  @@index([tenantId, startDate])
+  @@map("availability_closures")
 }
 
 /// PG-187 — per-tenant report defaults. Landed alongside PG-190 to unblock
@@ -2696,9 +2734,9 @@ model SLAPolicy {
   tickets                 Ticket[]
   ticketAutomationSettings TicketAutomationSetting[]
 
-  @@index([tenantId])
   // DBA-014: Tenant-scoped name uniqueness
   @@unique([tenantId, name])
+  @@index([tenantId])
   @@map("sla_policies")
 }
 
@@ -3908,11 +3946,11 @@ model EmailTemplate {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([category])
   @@index([isActive])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("email_templates")
 }
 
@@ -4417,12 +4455,12 @@ model RoutingRule {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([isActive])
   @@index([priority])
   @@index([tenantId])
   @@index([tenantId, isActive, priority]) // IFC-030: Active rules by priority for routing
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("routing_rules")
 }
 
@@ -4477,13 +4515,13 @@ model TicketCategory {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-013: Tenant-scoped category name uniqueness
+  @@unique([tenantId, name])
   @@index([parentId])
   @@index([isActive])
   // DBA-033: Missing slaPolicyId index for SLA policy lookups
   @@index([slaPolicyId])
   @@index([tenantId])
-  // DBA-013: Tenant-scoped category name uniqueness
-  @@unique([tenantId, name])
   @@map("ticket_categories")
 }
 
@@ -4640,12 +4678,12 @@ model BusinessRule {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([entityType])
   @@index([ruleType])
   @@index([isActive])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("business_rules")
 }
 
@@ -4697,11 +4735,11 @@ model DashboardConfig {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([userId])
   @@index([isDefault])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("dashboard_configs")
 }
 
@@ -4749,11 +4787,11 @@ model ReportDefinition {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([category])
   @@index([createdBy])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("report_definitions")
 }
 
@@ -4985,10 +5023,10 @@ model WebhookEndpoint {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([isActive])
-  @@index([tenantId])
   // DBA-014: Tenant-scoped name uniqueness
   @@unique([tenantId, name])
+  @@index([isActive])
+  @@index([tenantId])
   @@map("webhook_endpoints")
 }
 
@@ -5128,7 +5166,7 @@ model CaseDocument {
   title             String
   description       String?  @db.Text
   documentType      String   @map("document_type") // CONTRACT, AGREEMENT, EVIDENCE, etc.
-  documentTypeLabel String?  @db.Text @map("document_type_label")
+  documentTypeLabel String?  @map("document_type_label") @db.Text
   classification    String   // PUBLIC, INTERNAL, CONFIDENTIAL, PRIVILEGED
   tags              String[] @default([])
 
@@ -5147,7 +5185,7 @@ model CaseDocument {
   signedAt          DateTime? @map("signed_at")
   signatureHash     String?  @map("signature_hash")
   signatureIpAddress String? @map("signature_ip_address")
-  signatureUserAgent String? @db.Text @map("signature_user_agent")
+  signatureUserAgent String?   @map("signature_user_agent") @db.Text
 
   // Audit
   createdBy         String   @map("created_by")
@@ -5219,8 +5257,8 @@ model CaseDocumentAudit {
   // Actor
   userId      String   @map("user_id")
   // DBA-017: IP addresses capped at 45 chars for IPv6-mapped-IPv4
-  ipAddress   String?  @db.VarChar(45) @map("ip_address")
-  userAgent   String?  @db.Text @map("user_agent")
+  ipAddress String? @map("ip_address") @db.VarChar(45)
+  userAgent String? @map("user_agent") @db.Text
 
   // Change details
   changes     Json? // Before/after values for updates
@@ -5475,7 +5513,6 @@ enum DLQStatus {
   RESOLVED
   DISCARDED
 }
-
 
 // ============================================
 // LEAD CONVERSION AUDIT (IFC-061, FLOW-006)

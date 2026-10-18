@@ -196,6 +196,20 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     }
   });
 
+  it('registers calendar.availability with every procedure (PG-202)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, any>;
+    const availability = record.calendar?.availability as Record<string, unknown> | undefined;
+
+    expect(availability).toBeDefined();
+    for (const procedure of ['get', 'update', 'resetToDefaults']) {
+      expect(availability?.[procedure]).toBeDefined();
+    }
+    // Typo guards: availability is nested under calendar, never a top-level key.
+    expect(record['availability']).toBeUndefined();
+    expect(record.calendar?.['availabilities']).toBeUndefined();
+  });
+
   it('registers appointmentSettings and reportSettings routers', async () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, unknown>;

@@ -3,7 +3,7 @@
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
 > Guide Components **Total Pages**: 214 implemented **Total Flows**: 42 **API
-> Routers**: 70 (409 procedures)
+> Routers**: 70 (412 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -326,11 +326,12 @@ required.
 
 ### Calendar Section
 
-| Route            | Task ID | Sprint | Status | Primary Flow | Components Required                     | API Router       |
-| ---------------- | ------- | ------ | ------ | ------------ | --------------------------------------- | ---------------- |
-| `/calendar`      | -       | 14     | ✅     | FLOW-020     | calendar-view, card, badge, btn-primary | `appointments.*` |
-| `/calendar/new`  | -       | 14     | ✅     | FLOW-020     | modal, input, select, datetime-picker   | `appointments.*` |
-| `/calendar/[id]` | -       | 14     | ✅     | FLOW-020     | card, tab-nav, badge, datetime-picker   | `appointments.*` |
+| Route                    | Task ID | Sprint | Status | Primary Flow | Components Required                               | API Router                |
+| ------------------------ | ------- | ------ | ------ | ------------ | ------------------------------------------------- | ------------------------- |
+| `/calendar`              | -       | 14     | ✅     | FLOW-020     | calendar-view, card, badge, btn-primary           | `appointments.*`          |
+| `/calendar/new`          | -       | 14     | ✅     | FLOW-020     | modal, input, select, datetime-picker             | `appointments.*`          |
+| `/calendar/[id]`         | -       | 14     | ✅     | FLOW-020     | card, tab-nav, badge, datetime-picker             | `appointments.*`          |
+| `/calendar/availability` | PG-202  | 18     | ✅     | FLOW-019     | card, switch, input, timezone-select, empty-state | `calendar.availability.*` |
 
 **Appointments Router Procedures** (19 total):
 
@@ -748,7 +749,8 @@ data
 | `contactTypes`               | 6          | `/contacts/contact-types`, `/contacts/new` (PG-205)   | ✅ Active         |
 | `analytics.scheduledReports` | 10         | `/analytics/scheduled-reports` (PG-201)               | ✅ Active         |
 | `approvalPolicies`           | 7          | `/agent-approvals/approval-policies` (PG-198)         | ✅ Active         |
-| **Total**                    | **409**    | **47 routers**                                        |                   |
+| `calendar.availability`      | 3          | `/calendar/availability` (PG-202)                     | ✅ Active         |
+| **Total**                    | **412**    | **48 routers**                                        |                   |
 
 ---
 

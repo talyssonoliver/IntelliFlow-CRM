@@ -220,12 +220,12 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 **Calendar** — month/week/day view with merged tasks:
 
-| Route                         | Page              | Description                                        |
-| ----------------------------- | ----------------- | -------------------------------------------------- |
-| `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)        |
-| `/calendar/availability`      | Availability      | Set working hours, time zones, and booking windows |
-| `/calendar/event-types`       | Event Types       | Configure reusable event type templates            |
-| `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations    |
+| Route                         | Page              | Description                                                                 |
+| ----------------------------- | ----------------- | --------------------------------------------------------------------------- |
+| `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)                                 |
+| `/calendar/availability`      | Availability      | Firm hours, closures, buffers and daily limit, enforced at booking (PG-202) |
+| `/calendar/event-types`       | Event Types       | Configure reusable event type templates                                     |
+| `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations                             |
 
 **Appointments** — dedicated table view (separate from /calendar):
 

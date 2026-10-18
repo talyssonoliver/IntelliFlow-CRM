@@ -1147,7 +1147,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 12: Calendar (3 routes)
+## Section 12: Calendar (4 routes)
 
 ### Calendar (`/calendar`)
 
@@ -1193,6 +1193,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                                 |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                               |
 | **Components** | "use client", AppointmentDetail, PageHeader, Card, Skeleton, useRequireAuth |
+
+### Availability (`/calendar/availability`)
+
+| Field          | Value                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-202                                                                                                                   |
+| **File Path**  | `apps/web/src/app/calendar/availability/page.tsx`                                                                        |
+| **Layout**     | `apps/web/src/app/calendar/layout.tsx`                                                                                   |
+| **API Router** | `apps/api/src/modules/calendar/availability.router.ts` (`calendar.availability.*`), `appointments.create` / `reschedule` |
+| **E2E Test**   | None                                                                                                                     |
+| **Unit Tests** | `apps/web/src/app/calendar/availability/__tests__/`, `apps/web/src/app/calendar/availability/components/__tests__/`      |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                          |
+| **Status**     | Implemented (enforced at booking once the migration is applied, ADR-081)                                                 |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                            |
+| **Components** | AvailabilityContent, WeeklyHoursCard, TimezoneCard, ClosuresList (forwardRef), BuffersCapCard, PageHeader, EmptyState    |
 
 ---
 

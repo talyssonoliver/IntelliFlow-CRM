@@ -1,0 +1,20 @@
+date: 2026-10-18T11:25:29Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
+cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --filter @intelliflow/application test
+[test-slot] slot2 taken for PG-202@feat/pg-202-availability: pnpm --filter @intelliflow/application test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/application@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\application
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/application
+
+
+ Test Files  58 passed (58)
+      Tests  1488 passed (1488)
+   Start at  12:25:30
+   Duration  12.87s (transform 3.38s, setup 0ms, import 12.12s, tests 8.16s, environment 8ms)
+
+exit: 0

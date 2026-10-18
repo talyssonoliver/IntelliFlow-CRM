@@ -1,0 +1,5 @@
+# 2026-10-17T17:18:25Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# node tools/scripts/exec-preflight/check-lighthouse-evidence.mjs PG-202 18
+[lighthouse-evidence] OK — no Lighthouse KPI in attestation. N/A.
+# exit=0

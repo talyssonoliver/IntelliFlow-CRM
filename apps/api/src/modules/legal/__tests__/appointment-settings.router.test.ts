@@ -107,8 +107,19 @@ describe('Appointment Settings Router', () => {
       expect(result.primaryCalendarId).toBeNull();
     });
 
-    it('rejects bufferBefore > 240', async () => {
-      await expect(caller.update({ defaultBufferBeforeMinutes: 241 })).rejects.toThrow();
+    it('ignores buffers and timezone from an old client (edited on Availability, PG-202)', async () => {
+      (prismaMock.appointmentSettings.upsert as any).mockResolvedValue(mockSettings);
+
+      await caller.update({
+        defaultReminderMinutes: 30,
+        defaultBufferBeforeMinutes: 241,
+        defaultBufferAfterMinutes: 10,
+        defaultTimezone: 'Europe/London',
+      } as never);
+
+      const args = (prismaMock.appointmentSettings.upsert as any).mock.calls[0][0];
+      expect(args.update).toEqual({ defaultReminderMinutes: 30 });
+      expect(args.create).toMatchObject({ defaultBufferBeforeMinutes: 0, defaultTimezone: 'UTC' });
     });
 
     it('rejects defaultDurationMinutes < 5', async () => {
@@ -128,19 +139,32 @@ describe('Appointment Settings Router', () => {
         expect.objectContaining({
           where: { tenantId },
           create: expect.objectContaining({ tenantId, defaultDurationMinutes: 30 }),
-          update: expect.objectContaining({
+          update: {
             defaultDurationMinutes: 30,
             minDurationMinutes: 5,
             maxDurationMinutes: 480,
-            defaultBufferBeforeMinutes: 0,
-            defaultBufferAfterMinutes: 0,
             defaultReminderMinutes: 15,
             syncExternalCalendars: false,
-            defaultTimezone: 'UTC',
-          }),
+            primaryCalendarId: null,
+          },
         })
       );
       expect(result.defaultDurationMinutes).toBe(30);
+    });
+
+    it('leaves buffers, timezone and the availability columns untouched (PG-202)', async () => {
+      (prismaMock.appointmentSettings.upsert as any).mockResolvedValue(mockSettings);
+      await caller.resetToDefaults();
+      const { update } = (prismaMock.appointmentSettings.upsert as any).mock.calls[0][0];
+      for (const key of [
+        'defaultBufferBeforeMinutes',
+        'defaultBufferAfterMinutes',
+        'defaultTimezone',
+        'maxDailyBookings',
+        'availabilityConfiguredAt',
+      ]) {
+        expect(update).not.toHaveProperty(key);
+      }
     });
   });
 

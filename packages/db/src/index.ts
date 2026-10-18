@@ -99,6 +99,8 @@ export type {
   CaseType,
   CaseTypeChecklistItem,
   AppointmentSettings,
+  AvailabilityHour, // PG-202
+  AvailabilityClosure,
   PublicFeedback,
   LeadCustomField,
 } from '../generated/prisma/client';

@@ -1,0 +1,13 @@
+date: 2026-10-18T11:09:47Z
+head: 6ba9061f118c7ed174a6d63bd59f0169479d49bd (+ aurora round 1)
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar/availability
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+
+ Test Files  9 passed (9)
+      Tests  94 passed (94)
+   Start at  12:09:51
+   Duration  35.77s (transform 34.11s, setup 13.82s, import 70.22s, tests 22.26s, environment 23.74s)
+
+exit: 0

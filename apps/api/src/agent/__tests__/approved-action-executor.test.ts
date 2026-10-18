@@ -161,6 +161,43 @@ describe('executeApprovedAction', () => {
     expect(calls.appointments.update).not.toHaveBeenCalled();
   });
 
+  it('create_appointment surfaces a firm-availability rejection as a failed execution (PG-202)', async () => {
+    const { TRPCError } = await import('@trpc/server');
+    calls.appointments.create.mockRejectedValue(
+      new TRPCError({ code: 'BAD_REQUEST', message: 'The firm is closed on 2026-12-24.' })
+    );
+    const start = new Date('2026-12-24T10:00:00Z');
+    const outcome = await executeApprovedAction(
+      'create_appointment',
+      {
+        title: 'T',
+        startTime: start,
+        endTime: new Date('2026-12-24T11:00:00Z'),
+        appointmentType: 'MEETING',
+      },
+      ctx()
+    );
+    expect(outcome.error).toBe('The firm is closed on 2026-12-24.');
+  });
+
+  it('update_appointment surfaces a firm-availability rejection on reschedule (PG-202)', async () => {
+    const { TRPCError } = await import('@trpc/server');
+    calls.appointments.reschedule.mockRejectedValue(
+      new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'The daily booking limit for 2026-10-15 has been reached.',
+      })
+    );
+    const start = new Date('2026-10-15T10:00:00Z');
+    const outcome = await executeApprovedAction(
+      'update_appointment',
+      { id: 'appt-1', startTime: start, endTime: new Date('2026-10-15T11:00:00Z') },
+      ctx()
+    );
+    expect(outcome.error).toBe('The daily booking limit for 2026-10-15 has been reached.');
+    expect(calls.appointments.update).not.toHaveBeenCalled();
+  });
+
   it('update_appointment reports a partial write honestly', async () => {
     calls.appointments.update.mockRejectedValue('nope');
     const start = new Date('2026-10-15T10:00:00Z');

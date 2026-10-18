@@ -35,6 +35,8 @@ export interface ConfirmationDialogProps {
   isLoading?: boolean;
   /** Icon to display (Material Symbols name) */
   icon?: string;
+  /** Runs when the dialog closes; call `event.preventDefault()` to move focus somewhere other than the trigger. */
+  onCloseAutoFocus?: (event: Event) => void;
 }
 
 /**
@@ -66,6 +68,7 @@ export function ConfirmationDialog({
   variant = 'default',
   isLoading = false,
   icon,
+  onCloseAutoFocus,
 }: Readonly<ConfirmationDialogProps>) {
   const [internalLoading, setInternalLoading] = React.useState(false);
 
@@ -85,7 +88,7 @@ export function ConfirmationDialog({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="sm:max-w-[425px]">
+      <AlertDialogContent className="sm:max-w-[425px]" onCloseAutoFocus={onCloseAutoFocus}>
         <AlertDialogHeader>
           {icon && (
             <div className="flex justify-center mb-4">

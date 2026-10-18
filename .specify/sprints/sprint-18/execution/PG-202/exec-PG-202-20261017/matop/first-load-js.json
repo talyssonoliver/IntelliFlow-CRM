@@ -1,0 +1,14 @@
+{
+  "/calendar/availability": {
+    "chunks": 47,
+    "raw_kb": 2889.4,
+    "gzip_kb": 871.0
+  },
+  "/cases/case-types": {
+    "chunks": 48,
+    "raw_kb": 2911.1,
+    "gzip_kb": 876.7
+  },
+  "delta_gzip_kb": -5.7,
+  "method": "unique <script src> chunks in the prerendered HTML of the production build (next build, matrix row 11), gzip -9"
+}

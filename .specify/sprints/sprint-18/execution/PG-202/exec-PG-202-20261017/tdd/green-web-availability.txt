@@ -1,0 +1,13 @@
+date: 2026-10-17T18:05:49Z
+head: 1b9202314f7de784a3a693fe68eacc423db6e019
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar/availability src/components/settings/__tests__/TimezoneSelector.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+
+ Test Files  10 passed (10)
+      Tests  104 passed (104)
+   Start at  19:05:50
+   Duration  8.65s (transform 1.63s, setup 3.42s, import 8.53s, tests 7.65s, environment 10.83s)
+
+exit: 0

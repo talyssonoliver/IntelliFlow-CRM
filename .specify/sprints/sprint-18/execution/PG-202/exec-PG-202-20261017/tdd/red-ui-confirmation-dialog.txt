@@ -1,0 +1,43 @@
+date: 2026-10-17T18:02:55Z
+head: 1b9202314f7de784a3a693fe68eacc423db6e019
+cmd: pnpm --dir packages/ui exec vitest run __tests__/confirmation-dialog.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/ui
+
+ ❯ |ui| __tests__/confirmation-dialog.test.tsx (11 tests | 1 failed) 1333ms
+     × passes onCloseAutoFocus so the caller can move focus when the dialog closes 1030ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |ui| __tests__/confirmation-dialog.test.tsx > ConfirmationDialog > passes onCloseAutoFocus so the caller can move focus when the dialog closes
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+
+Ignored nodes: comments, script, style
+[36m<html>[39m
+  [36m<head />[39m
+  [36m<body[39m
+    [33mstyle[39m=[32m""[39m
+  [36m>[39m
+    [36m<div />[39m
+  [36m</body>[39m
+[36m</html>[39m
+ ❯ __tests__/confirmation-dialog.test.tsx:97:50
+     95|       <ConfirmationDialog {...defaultProps} open={false} onCloseAutoFo…
+     96|     );
+     97|     await waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalledTimes…
+       |                                                  ^
+     98|   });
+     99| });
+ ❯ runWithExpensiveErrorDiagnosticsDisabled ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:47:12
+ ❯ checkCallback ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:124:77
+ ❯ Timeout.checkRealTimersCallback ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/wait-for.js:118:16
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 10 passed (11)
+   Start at  19:02:56
+   Duration  3.05s (transform 76ms, setup 296ms, import 198ms, tests 1.33s, environment 1.04s)
+
+exit: 1

@@ -180,4 +180,14 @@ describe('TimezoneSelector', () => {
 
     vi.restoreAllMocks();
   });
+
+  it('shows the browser-detect button by default', () => {
+    render(<TimezoneSelector value="UTC" onChange={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Detect from browser' })).toBeInTheDocument();
+  });
+
+  it('hides the browser-detect button when showDetect is false (firm zone, PG-202)', () => {
+    render(<TimezoneSelector value="UTC" onChange={vi.fn()} showDetect={false} />);
+    expect(screen.queryByRole('button', { name: 'Detect from browser' })).not.toBeInTheDocument();
+  });
 });

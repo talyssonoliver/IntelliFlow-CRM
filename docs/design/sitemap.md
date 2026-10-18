@@ -200,7 +200,7 @@ intelliflow.com
 ├── CALENDAR ────────────────────────────── Layout: calendar/(list)
 │   │
 │   ├── /calendar                         Calendar view
-│   ├── /calendar/availability            Working hours, time zones, booking windows
+│   ├── /calendar/availability            Firm hours, closures, buffers, daily limit (PG-202)
 │   ├── /calendar/event-types             Reusable event type templates
 │   └── /calendar/calendar-settings       Tenant calendar defaults and integrations
 │
