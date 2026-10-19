@@ -79,6 +79,13 @@ async function importFactory(provider: 'litellm' | 'mock' | 'ollama' | 'openai' 
 // Tests
 // ---------------------------------------------------------------------------
 
+/** The tracing/metering meta of the last model built (PG-199: pricing follows the model that runs). */
+async function lastTraceMeta(): Promise<Record<string, unknown>> {
+  const { wrapModelWithTracing } = await import('../../tracing/llm-tracer.js');
+  const calls = (wrapModelWithTracing as ReturnType<typeof vi.fn>).mock.calls;
+  return calls[calls.length - 1][1] as Record<string, unknown>;
+}
+
 describe('createLLMForTenant()', () => {
   beforeEach(() => {
     vi.resetModules();
@@ -185,6 +192,7 @@ describe('createLLMForTenant()', () => {
     await createLLMForTenant('qualification', 'standard', { tenantId: 'tenant-pin' });
 
     expect(lastChatArgs().modelName).toBe('catalog-gpt-4o');
+    expect((await lastTraceMeta()).modelId).toBe('gpt-4o');
   });
 
   it('pinned model on OpenRouter → uses the mapped OpenRouter id', async () => {
@@ -212,6 +220,8 @@ describe('createLLMForTenant()', () => {
     await createLLMForTenant('scoring', 'standard', { tenantId: 'tenant-or2' });
 
     expect(lastChatArgs().modelName).toBe('openai/gpt-oss-120b:free');
+    // The pin did not run, so spend is priced as the tier default, not as mistral-small.
+    expect((await lastTraceMeta()).modelId).toBeUndefined();
     expect(warn.mock.calls.some((c) => String(c[0]).includes('pin_unavailable_for_provider'))).toBe(
       true
     );
@@ -232,6 +242,7 @@ describe('createLLMForTenant()', () => {
     expect((ChatOllama as ReturnType<typeof vi.fn>).mock.calls[0][0]).toMatchObject({
       model: 'mistral',
     });
+    expect((await lastTraceMeta()).modelId).toBeUndefined();
     warn.mockRestore();
   });
 

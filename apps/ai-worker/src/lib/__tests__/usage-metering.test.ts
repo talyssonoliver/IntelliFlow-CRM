@@ -111,6 +111,96 @@ describe('PG-199 metering in the tracing wrappers', () => {
     expect(recordUsage).not.toHaveBeenCalled();
   });
 
+  describe('structured output and bound models (real ChatOpenAI)', () => {
+    // ChatOpenAI.withConfig / withStructuredOutput / bindTools return a NEW ChatOpenAI built
+    // from the same fields, so a wrapper that only patched the original instance never saw
+    // structured calls. Driven through the real class with a fake fetch, no network.
+    async function realModel() {
+      const { ChatOpenAI } = await import('@langchain/openai');
+      const fetch = vi.fn(async () =>
+        Response.json({
+          id: 'chatcmpl-1',
+          object: 'chat.completion',
+          created: 0,
+          model: 'scoring-free',
+          choices: [
+            {
+              index: 0,
+              finish_reason: 'stop',
+              message: { role: 'assistant', content: '{"score":7}' },
+            },
+          ],
+          usage: { prompt_tokens: 40, completion_tokens: 6, total_tokens: 46 },
+        })
+      );
+      const model = new ChatOpenAI({
+        apiKey: 'placeholder-key',
+        model: 'scoring-free',
+        maxRetries: 0,
+        configuration: { baseURL: 'http://llm.example.invalid/v1', fetch },
+      });
+      return { model, fetch };
+    }
+
+    it('meters a withStructuredOutput call exactly once with the provider usage', async () => {
+      const { wrapModelWithTracing } = await load();
+      const { z } = await import('zod');
+      const { model, fetch } = await realModel();
+      const traced = wrapModelWithTracing(model as never, { purpose: 'scoring', tier: 'free' });
+
+      const result = await traced
+        .withStructuredOutput(z.object({ score: z.number() }), { method: 'jsonMode' })
+        .invoke('score this lead as JSON');
+
+      expect(result).toEqual({ score: 7 });
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(recordUsage).toHaveBeenCalledTimes(1);
+      expect(recordUsage.mock.calls[0][0]).toMatchObject({
+        model: 'scoring-free',
+        inputTokens: 40,
+        outputTokens: 6,
+        operationType: 'llm:scoring',
+      });
+    });
+
+    it('meters a model bound with withConfig, and still meters the original once', async () => {
+      const { wrapModelWithTracing } = await load();
+      const { model } = await realModel();
+      const traced = wrapModelWithTracing(model as never, { purpose: 'email', tier: 'free' });
+
+      await traced.withConfig({ tags: ['draft'] }).invoke('hi');
+      await traced.invoke('hi');
+
+      expect(recordUsage).toHaveBeenCalledTimes(2);
+      expect(recordUsage.mock.calls.map((c) => c[0].operationType)).toEqual([
+        'llm:email',
+        'llm:email',
+      ]);
+    });
+
+    it('does not re-wrap a binding that delegates to the wrapped model (no double count)', async () => {
+      const { wrapModelWithTracing } = await load();
+      type Invokable = { invoke: (input: unknown) => Promise<unknown> };
+      class Binding {
+        constructor(private readonly bound: Invokable) {}
+        invoke(input: unknown) {
+          return this.bound.invoke(input);
+        }
+      }
+      const base = {
+        invoke: vi.fn().mockResolvedValue({ content: 'ok' }),
+        withConfig(this: Invokable) {
+          return new Binding(this);
+        },
+      };
+      const traced = wrapModelWithTracing(base as never, { purpose: 'email', tier: 'free' });
+
+      await traced.withConfig({ tags: ['x'] }).invoke('hi');
+
+      expect(recordUsage).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('embeddings (owner Q8: rag is metered and capped)', () => {
     function embeddings() {
       return {

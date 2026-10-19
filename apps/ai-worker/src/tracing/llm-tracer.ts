@@ -98,6 +98,20 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
     );
   };
 
+  // PG-199: withStructuredOutput / bindTools go through withConfig, which returns a new
+  // model built from the same fields (not this patched instance). Wrap those clones too,
+  // or every structured call would skip the span and the metering. A binding that
+  // delegates to this instance (e.g. RunnableBinding) is left alone: it is already metered.
+  const withConfig = (model as { withConfig?: unknown }).withConfig;
+  if (typeof withConfig === 'function') {
+    const originalWithConfig = withConfig.bind(model) as (config: unknown) => BaseChatModel;
+    (model as unknown as Record<string, unknown>)['withConfig'] = (config: unknown) => {
+      const bound = originalWithConfig(config);
+      const isClone = bound !== model && bound?.constructor === model.constructor;
+      return isClone ? wrapModelWithTracing(bound, meta) : bound;
+    };
+  }
+
   return model;
 }
 

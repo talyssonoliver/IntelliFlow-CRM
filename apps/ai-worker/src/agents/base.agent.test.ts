@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BaseAgent, AgentTask, BaseAgentConfig, AgentResult } from './base.agent';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory.js';
+import { tenantContextStore } from '../tracing/tenant-context.js';
 import { z } from 'zod';
 
 // Mock hallucinationChecker so L4 confidence tests are deterministic
@@ -584,6 +585,31 @@ describe('BaseAgent tenant model (PG-199)', () => {
     expect(createLLMForTenant).not.toHaveBeenCalled();
     expect(createLLM).toHaveBeenCalledWith('qualification', 'free', expect.any(Object));
     expect(result.output).toEqual({ response: 'Mocked LLM response' });
+  });
+
+  it('falls back to the job tenant when the task carries none (prediction jobs)', async () => {
+    const agent = new TestAgent(tenantConfig);
+    await tenantContextStore.run({ tenantId: 'tenant-job' }, () => agent.execute(task()));
+
+    expect(createLLMForTenant).toHaveBeenCalledWith(
+      'qualification',
+      'free',
+      expect.objectContaining({ tenantId: 'tenant-job' })
+    );
+  });
+
+  it('prefers the task tenant over the job tenant, and ignores an unknown job tenant', async () => {
+    const agent = new TestAgent(tenantConfig);
+    await tenantContextStore.run({ tenantId: 'tenant-job' }, () =>
+      agent.execute(task({ tenantId: 'tenant-task' }))
+    );
+    expect(vi.mocked(createLLMForTenant).mock.calls[0][2]).toMatchObject({
+      tenantId: 'tenant-task',
+    });
+
+    vi.mocked(createLLMForTenant).mockClear();
+    await tenantContextStore.run({ tenantId: 'unknown' }, () => agent.execute(task()));
+    expect(createLLMForTenant).not.toHaveBeenCalled();
   });
 
   it('isolates concurrent tasks of different tenants', async () => {

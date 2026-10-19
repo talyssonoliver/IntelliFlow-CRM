@@ -5,6 +5,7 @@ import { aiConfig } from '../config/ai.config';
 import { countTokens } from '../utils/token-counter';
 import { ConversationRecordCallbackHandler } from '../callbacks/conversation-record.handler';
 import { createLLM, createLLMForTenant, type LLMPurpose } from '../lib/llm-factory';
+import { tenantContextStore } from '../tracing/tenant-context.js';
 import { hallucinationChecker } from '../monitoring/hallucination-checker';
 import pino from 'pino';
 
@@ -385,11 +386,15 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
   }
 
   /**
-   * The tenant's model for this task (pin, fallbacks, temperature, max tokens, ceiling),
-   * or the constructor default when the task carries no tenant.
+   * The tenant's model for this task (pin, fallbacks, temperature, max tokens, ceiling):
+   * the task's own tenant, else the tenant of the job running it (prediction jobs build
+   * tasks without one); the constructor default when neither is known.
    */
   private async resolveTaskModel(task: AgentTask<TInput, TOutput>): Promise<LLMModel> {
-    const tenantId = task.context?.metadata?.tenantId as string | undefined;
+    const jobTenant = tenantContextStore.getStore()?.tenantId;
+    const tenantId =
+      (task.context?.metadata?.tenantId as string | undefined) ??
+      (jobTenant && jobTenant !== 'unknown' && !jobTenant.startsWith('__') ? jobTenant : undefined);
     if (!tenantId) return this.model;
     return (await createLLMForTenant(this.purpose, 'free', {
       tenantId,

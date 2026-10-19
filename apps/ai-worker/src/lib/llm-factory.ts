@@ -470,8 +470,16 @@ export function createLLM(
     });
   }
 
-  // Wrap with OTel tracing so every .invoke() call emits an llm.invoke span.
-  const instrumented = wrapModelWithTracing(model, { purpose, tier, modelId: pinned?.id });
+  // Wrap with OTel tracing so every .invoke() call emits an llm.invoke span. Spend is
+  // priced as the model that actually runs: a pin the provider ignores (Ollama, or no
+  // OpenRouter mapping) is billed as the tier default, not as the pinned model.
+  const pinApplies =
+    provider !== 'ollama' && (provider !== 'openrouter' || !!pinned?.providers.openrouter);
+  const instrumented = wrapModelWithTracing(model, {
+    purpose,
+    tier,
+    modelId: pinApplies ? pinned?.id : undefined,
+  });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;
 }
