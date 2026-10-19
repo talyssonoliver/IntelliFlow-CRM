@@ -20,6 +20,7 @@ import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { CONTACT_TYPES } from '../../packages/domain/src/crm/contact/Contact';
 import { TAG_COLOR_TOKENS } from '../../packages/validators/src/contact-settings';
 import { ensureSystemContactTypes } from '../../apps/api/src/modules/contact/contact-type-resolver';
+import { applySchemaSql, createIndexConcurrently } from './schema-lock';
 
 const MIGRATIONS = join(__dirname, '../../packages/db/prisma/migrations');
 const TYPES_MIGRATION = join(MIGRATIONS, '20261017120000_contact_types/migration.sql');
@@ -62,29 +63,30 @@ function splitStatements(sql: string): string[] {
  * unique indexes and the RLS policies are absent there. When they are missing,
  * rebuild the two contact-type tables from the migration's own SQL (they hold
  * only this suite's rows). `contact_tags` is shared and never dropped: its unique
- * index is created only if missing.
+ * index is created only if missing. The DDL runs under the shared schema lock.
  */
 async function ensureMigrationSql(client: any): Promise<void> {
   const present = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'contact_types_colorToken_check'`
   );
   if (present.length === 0) {
-    await client.$executeRawUnsafe(
-      'DROP TABLE IF EXISTS "contact_type_default_tags", "contact_types" CASCADE'
-    );
-    for (const stmt of splitStatements(withoutComments(TYPES_MIGRATION))) {
-      const shared = stmt.replace(
+    const statements = splitStatements(withoutComments(TYPES_MIGRATION)).map((stmt) =>
+      stmt.replace(
         /^CREATE UNIQUE INDEX "contact_tags_tenantId_id_key"/,
         'CREATE UNIQUE INDEX IF NOT EXISTS "contact_tags_tenantId_id_key"'
-      );
-      await client.$executeRawUnsafe(shared);
-    }
+      )
+    );
+    await applySchemaSql(DB_URL!, [
+      'DROP TABLE IF EXISTS "contact_type_default_tags", "contact_types" CASCADE',
+      ...statements,
+    ]);
   }
 }
 
 /**
  * The CONCURRENTLY index cannot run inside a transaction: run its single statement on its
  * own, before any data write of this suite, and only when no valid index is present.
+ * Both steps hold the shared schema lock (see ./schema-lock).
  */
 async function ensureContactsTypeIndex(client: any): Promise<void> {
   const valid = await client.$queryRawUnsafe(
@@ -93,10 +95,10 @@ async function ensureContactsTypeIndex(client: any): Promise<void> {
   );
   if (valid.length > 0) return;
   // An INVALID leftover from an aborted build would make IF NOT EXISTS a no-op.
-  await client.$executeRawUnsafe('DROP INDEX IF EXISTS "contacts_tenantId_contactType_idx"');
+  await applySchemaSql(DB_URL!, ['DROP INDEX IF EXISTS "contacts_tenantId_contactType_idx"']);
   const statements = splitStatements(withoutComments(INDEX_MIGRATION));
   expect(statements).toHaveLength(1);
-  await client.$executeRawUnsafe(statements[0]);
+  await createIndexConcurrently(DB_URL!, statements[0]);
 }
 
 const DB_URL = process.env.DATABASE_URL;
