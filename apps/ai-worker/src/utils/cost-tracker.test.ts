@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { CostTracker, UsageMetrics } from './cost-tracker';
+import { CostTracker, UsageMetrics, USAGE_HISTORY_LIMIT } from './cost-tracker';
 
 // Mock the ai.config
 vi.mock('../config/ai.config', () => ({
@@ -44,6 +44,26 @@ describe('CostTracker', () => {
     it('should initialize with warning threshold only', () => {
       const customTracker = new CostTracker(15);
       expect(customTracker).toBeDefined();
+    });
+  });
+
+  describe('bounded usage history (PG-199: every model call is metered)', () => {
+    it('keeps at most USAGE_HISTORY_LIMIT records, evicting the oldest', () => {
+      const bounded = new CostTracker(1e9, 1e9);
+      for (let i = 0; i <= USAGE_HISTORY_LIMIT; i++) {
+        bounded.recordUsage({
+          model: 'gpt-4',
+          inputTokens: 1,
+          outputTokens: 1,
+          operationType: `op-${i}`,
+        });
+      }
+      const history = bounded.exportHistory();
+      expect(USAGE_HISTORY_LIMIT).toBe(1000);
+      expect(history).toHaveLength(USAGE_HISTORY_LIMIT);
+      expect(history[0].operationType).toBe('op-1');
+      expect(history[history.length - 1].operationType).toBe(`op-${USAGE_HISTORY_LIMIT}`);
+      expect(bounded.getStatistics().totalOperations).toBe(USAGE_HISTORY_LIMIT);
     });
   });
 

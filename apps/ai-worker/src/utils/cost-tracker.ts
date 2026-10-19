@@ -40,6 +40,13 @@ export interface CostStatistics {
  */
 export type UsageListener = (usage: UsageMetrics) => void;
 
+/**
+ * Most recent usage records kept in memory. Every model and embedding call is metered
+ * (PG-199), so an unbounded history would grow the long-lived worker's heap until it is
+ * killed; statistics cover the records kept.
+ */
+export const USAGE_HISTORY_LIMIT = 1000;
+
 export class CostTracker {
   private usageHistory: UsageMetrics[] = [];
   private readonly listeners = new Set<UsageListener>();
@@ -89,6 +96,9 @@ export class CostTracker {
     };
 
     this.usageHistory.push(usage);
+    if (this.usageHistory.length > USAGE_HISTORY_LIMIT) {
+      this.usageHistory.splice(0, this.usageHistory.length - USAGE_HISTORY_LIMIT);
+    }
     this.dailyCost += cost;
 
     // Notify before the threshold check: that check can throw, and the spend already happened.
