@@ -197,6 +197,14 @@ These are from the final matrix, 2026-10-19 14:18–14:33Z, run one at a time wi
   - edits lost while a save was pending
 - Codex round 11: PASS, 0 findings. The final pre-ship result and the PR are in the READY message to Aurora.
 
+## Review round 1 (Aurora, PR #935)
+
+- **P1:** the cost-tracker usage history was unbounded, and an OOM risk once every call is metered. It is now capped at 1000 records (164b6c6ba).
+- **P2a:** a metering failure, such as the daily cost limit check throwing, failed a paid, successful call. It is now logged as usage_not_metered (3eb5f3936).
+- **P2b:** NBA answered a ceiling refusal with heuristics. It now rethrows (f50b383ff).
+- RED: `logs/40-aurora-r1-red.txt`; GREEN: `logs/40-aurora-r1-green.txt`. The full ai-worker suite passes (2382).
+- Accepted with no change, and noted in the PR body: `get` is open to readers, the audit write is best-effort after commit, and tasks with no tenant skip the ceiling. The PR body also asks projects-64 to pre-count CHECK violators before VALIDATE.
+
 ## Follow-up issues
 
 - #924 ChainVersion.model unused

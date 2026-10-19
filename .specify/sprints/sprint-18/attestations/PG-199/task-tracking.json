@@ -69,12 +69,12 @@
       },
       {
         "path": "apps/ai-worker/src/lib/usage-metering.ts",
-        "sha256": "ac5a34ac4961560fcfdc6ff0199ef391ed61ab922f98f2da2144fdbd1f9d181e",
+        "sha256": "54e562c5e63304cbe6a537c177c9fc205a9379cbfd95019f9c1ba4994b0533b4",
         "created_at": "2026-10-19T15:16:39Z"
       },
       {
         "path": ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/PG-199-delivery.md",
-        "sha256": "84d9d29b1eec88c6a54292c0ff5f5dc88075ad3c5424a4ee9259e83663c964e6",
+        "sha256": "5088e30f714c26049442f9fc2b73f71ac0ce1d2538f7bf96942b96480b563ac4",
         "created_at": "2026-10-19T15:16:39Z"
       },
       {
