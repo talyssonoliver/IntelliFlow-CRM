@@ -1,7 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 
-const notePurposeSpend = vi.hoisted(() => vi.fn());
-vi.mock('../lib/purpose-ceiling.js', () => ({ notePurposeSpend }));
+const { notePurposeSpend, notePurposeSpendTotal } = vi.hoisted(() => ({
+  notePurposeSpend: vi.fn(),
+  notePurposeSpendTotal: vi.fn(),
+}));
+vi.mock('../lib/purpose-ceiling.js', () => ({ notePurposeSpend, notePurposeSpendTotal }));
 import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './tenant-ai-spend';
 import { tenantContextStore } from '../tracing/tenant-context';
 
@@ -192,6 +195,18 @@ describe('createPurposeSpendRecorder (PG-199)', () => {
     await record({ cost: 0.0001, metadata: { purpose: 'email' } }); // 1 new, writes 101
     expect(addSpend).toHaveBeenLastCalledWith('tenant-1', 'email', '2026-10', 101);
     expect(notePurposeSpend.mock.calls.map((c) => c[2])).toEqual([100, 1]);
+  });
+
+  it('reports the persisted total of each successful write to the ceiling cache', async () => {
+    notePurposeSpendTotal.mockClear();
+    const { record } = purposeSetup('tenant-1', vi.fn().mockResolvedValue(4_321));
+    await record({ cost: 0.0123, metadata: { purpose: 'reasoning' } });
+    expect(notePurposeSpendTotal).toHaveBeenCalledWith(
+      'tenant-1',
+      'reasoning',
+      4_321,
+      expect.any(Date)
+    );
   });
 
   it('starts a fresh carry in a new month', async () => {

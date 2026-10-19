@@ -15,7 +15,7 @@
 
 import type { PurposeSpendPort, QuotaService } from '@intelliflow/application';
 import { LLM_PURPOSES, purposeSpendPeriod, type LLMPurpose } from '@intelliflow/domain';
-import { notePurposeSpend } from '../lib/purpose-ceiling.js';
+import { notePurposeSpend, notePurposeSpendTotal } from '../lib/purpose-ceiling.js';
 import type { UsageMetrics } from './cost-tracker';
 
 export const AI_SPEND_KEY = 'aiSpendCentsPerMonth' as const;
@@ -125,7 +125,9 @@ export function createPurposeSpendRecorder(options: PurposeSpendRecorderOptions)
     if (fresh > 0) notePurposeSpend(tenantId, purpose as LLMPurpose, fresh, at);
     return spend
       .addSpend(tenantId, purpose as LLMPurpose, period, whole)
-      .then(() => undefined)
+      .then((total) => {
+        notePurposeSpendTotal(tenantId, purpose as LLMPurpose, total, at);
+      })
       .catch((error: unknown) => {
         unwritten.set(key, Math.min((unwritten.get(key) ?? 0) + whole, maxCarryCentiCents));
         logger.warn(

@@ -78,11 +78,13 @@ const SPEND_CACHE_TTL_MS = 30_000;
 export const _spendCache = new Map<string, SpendCacheEntry>();
 
 /**
- * One spend read per key at a time, and the spend noted while it is in flight, so a
- * concurrent miss never replaces a newer local balance with an older read.
+ * One spend read per key at a time. Month-to-date spend only grows, so the cache never
+ * lowers a balance: a read, a local note and a persisted total are combined with max().
+ * A stale read cannot reopen a purpose, and spend already in a read is never counted twice.
  */
 const inflightReads = new Map<string, Promise<number | null>>();
-const notedDuringRead = new Map<string, number>();
+/** Persisted totals reported while a read for the same key is in flight. */
+const totalsDuringRead = new Map<string, number>();
 
 function spendKey(tenantId: string, purpose: LLMPurpose, period: string): string {
   return `${tenantId}:${purpose}:${period}`;
@@ -109,11 +111,27 @@ export function notePurposeSpend(
   now: Date = new Date()
 ): void {
   if (!(centiCents > 0)) return;
+  const entry = _spendCache.get(spendKey(tenantId, purpose, purposeSpendPeriod(now)));
+  if (entry) entry.centiCents += centiCents;
+}
+
+/**
+ * The persisted month-to-date total returned by a spend write. Authoritative and
+ * monotonic, so it only ever raises the cached balance (or the result of a read in flight).
+ */
+export function notePurposeSpendTotal(
+  tenantId: string,
+  purpose: LLMPurpose,
+  totalCentiCents: number,
+  now: Date = new Date()
+): void {
+  if (!(totalCentiCents > 0)) return;
   const key = spendKey(tenantId, purpose, purposeSpendPeriod(now));
   const entry = _spendCache.get(key);
-  if (entry) entry.centiCents += centiCents;
-  if (inflightReads.has(key))
-    notedDuringRead.set(key, (notedDuringRead.get(key) ?? 0) + centiCents);
+  if (entry) entry.centiCents = Math.max(entry.centiCents, totalCentiCents);
+  if (inflightReads.has(key)) {
+    totalsDuringRead.set(key, Math.max(totalsDuringRead.get(key) ?? 0, totalCentiCents));
+  }
 }
 
 async function readSpend(tenantId: string, purpose: LLMPurpose, now: Date): Promise<number | null> {
@@ -134,7 +152,7 @@ async function readSpend(tenantId: string, purpose: LLMPurpose, now: Date): Prom
     return await read;
   } finally {
     inflightReads.delete(key);
-    notedDuringRead.delete(key);
+    totalsDuringRead.delete(key);
   }
 }
 
@@ -148,7 +166,11 @@ async function fetchSpend(
 ): Promise<number | null> {
   try {
     const spend = await reader.getSpend(tenantId, period, [purpose]);
-    const centiCents = (spend[purpose] ?? 0) + (notedDuringRead.get(key) ?? 0);
+    const centiCents = Math.max(
+      spend[purpose] ?? 0,
+      totalsDuringRead.get(key) ?? 0,
+      _spendCache.get(key)?.centiCents ?? 0
+    );
     _spendCache.set(key, { centiCents, expiresAt: now.getTime() + SPEND_CACHE_TTL_MS });
     return centiCents;
   } catch (err) {

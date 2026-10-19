@@ -8,6 +8,7 @@ import {
   setPurposeSpendReader,
   getPurposeSpendReader,
   notePurposeSpend,
+  notePurposeSpendTotal,
   isPurposeCeilingReached,
   PurposeCeilingReachedError,
   PURPOSE_CEILING_REACHED,
@@ -137,18 +138,47 @@ describe('purpose ceiling (PG-199)', () => {
       );
     });
 
-    it('keeps spend noted while the read is in flight', async () => {
+    it('keeps a persisted total reported while the read is in flight (stale read)', async () => {
       const r = deferredReader();
       setPurposeSpendReader(r);
       const pendingCheck = assertWithinCeiling('t1', 'email', 100, OCT);
-      notePurposeSpend('t1', 'email', 1_500, OCT); // recorded before the read returns
-      r.pending[0]({ email: 9_000 });
-      // The read itself already counts the noted spend: 9 000 + 1 500 >= 10 000.
+      notePurposeSpendTotal('t1', 'email', 10_500, OCT); // a write committed meanwhile
+      r.pending[0]({ email: 9_000 }); // the snapshot predates it
       await expect(pendingCheck).rejects.toBeInstanceOf(PurposeCeilingReachedError);
 
       await expect(assertWithinCeiling('t1', 'email', 100, OCT)).rejects.toBeInstanceOf(
         PurposeCeilingReachedError
       );
+    });
+
+    it('never counts spend twice when the read already includes it', async () => {
+      const r = deferredReader();
+      setPurposeSpendReader(r);
+      const pendingCheck = assertWithinCeiling('t1', 'email', 100, OCT);
+      notePurposeSpend('t1', 'email', 1_500, OCT); // optimistic, before the write
+      notePurposeSpendTotal('t1', 'email', 9_500, OCT); // that write's persisted total
+      r.pending[0]({ email: 9_500 }); // the snapshot already includes it
+      await pendingCheck; // 9 500 < 10 000: still open
+      await assertWithinCeiling('t1', 'email', 100, OCT);
+      expect(_spendCache.get(`t1:email:2026-10`)?.centiCents).toBe(9_500);
+    });
+
+    it('never lowers an existing balance with an older read', async () => {
+      const r = deferredReader();
+      setPurposeSpendReader(r);
+      _spendCache.set('t1:email:2026-10', { centiCents: 10_500, expiresAt: 0 }); // expired
+      const pendingCheck = assertWithinCeiling('t1', 'email', 100, OCT);
+      r.pending[0]({ email: 9_000 });
+      await expect(pendingCheck).rejects.toBeInstanceOf(PurposeCeilingReachedError);
+    });
+
+    it('raises an existing entry from a persisted total, never lowers it', () => {
+      _spendCache.set('t1:email:2026-10', { centiCents: 5_000, expiresAt: Date.now() + 30_000 });
+      notePurposeSpendTotal('t1', 'email', 7_000, OCT);
+      expect(_spendCache.get('t1:email:2026-10')?.centiCents).toBe(7_000);
+      notePurposeSpendTotal('t1', 'email', 6_000, OCT);
+      notePurposeSpendTotal('t1', 'email', 0, OCT);
+      expect(_spendCache.get('t1:email:2026-10')?.centiCents).toBe(7_000);
     });
 
     it('lets a later miss read again after a failed shared read', async () => {
