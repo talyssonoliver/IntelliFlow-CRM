@@ -343,10 +343,6 @@ describe('Agent Tools', () => {
         expect(preview.warnings?.some((w) => w.includes('URGENT'))).toBe(true);
         expect(preview.estimatedImpact).toBe('HIGH');
       });
-
-      it('should have rollback capability', () => {
-        expect(createCaseTool.rollback).toBeDefined();
-      });
     });
 
     describe('createAppointmentTool', () => {
@@ -417,10 +413,6 @@ describe('Agent Tools', () => {
         expect(preview.changes.some((c) => c.field === 'status')).toBe(true);
         expect(preview.warnings?.some((w) => w.includes('Closing'))).toBe(true);
         expect(preview.estimatedImpact).toBe('HIGH');
-      });
-
-      it('should have rollback capability', () => {
-        expect(updateCaseTool.rollback).toBeDefined();
       });
     });
 
@@ -568,43 +560,6 @@ describe('Agent Tools', () => {
         const preview = await draftMessageTool.generatePreview(input, context);
 
         expect(preview.estimatedImpact).toBe('LOW');
-      });
-
-      it('should handle rollback for unsent messages', async () => {
-        const context = createTestContext();
-        const executionResult = {
-          id: 'msg-123',
-          type: 'EMAIL' as const,
-          recipientType: 'CONTACT' as const,
-          recipientId: 'contact-123',
-          subject: 'Test',
-          body: 'Test body',
-          status: 'DRAFT' as const,
-          createdAt: new Date(),
-        };
-
-        const result = await draftMessageTool.rollback?.('action-123', executionResult, context);
-
-        expect(result?.success).toBe(true);
-      });
-
-      it('should prevent rollback of sent messages', async () => {
-        const context = createTestContext();
-        const executionResult = {
-          id: 'msg-123',
-          type: 'EMAIL' as const,
-          recipientType: 'CONTACT' as const,
-          recipientId: 'contact-123',
-          subject: 'Test',
-          body: 'Test body',
-          status: 'SENT' as const,
-          createdAt: new Date(),
-        };
-
-        const result = await draftMessageTool.rollback?.('action-123', executionResult, context);
-
-        expect(result?.success).toBe(false);
-        expect(result?.error).toContain('already been sent');
       });
     });
   });

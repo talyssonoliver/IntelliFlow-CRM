@@ -67,6 +67,7 @@ const mockApprovalGetPendingAction = vi.fn();
 const mockApprovalGetInterruptedActions = vi.fn().mockResolvedValue([]);
 const mockApprovalApproveAction = vi.fn();
 const mockApprovalRejectAction = vi.fn();
+const mockApprovalRollbackAction = vi.fn();
 const mockPendingActionsAdd = vi.fn().mockResolvedValue(undefined);
 const mockAuthorizeToolExecution = vi.fn().mockResolvedValue({ authorized: true, reason: null });
 const mockLoggerLog = vi.fn().mockResolvedValue(undefined);
@@ -129,6 +130,8 @@ vi.mock('../../../agent/approval-workflow', () => ({
       mockApprovalApproveAction(decision, context, requestCtx),
     rejectAction: (decision: unknown, context: unknown) =>
       mockApprovalRejectAction(decision, context),
+    rollbackAction: (request: unknown, context: unknown, requestCtx?: unknown) =>
+      mockApprovalRollbackAction(request, context, requestCtx),
   },
   pendingActionsStore: {
     add: (action: unknown) => mockPendingActionsAdd(action),
@@ -906,6 +909,61 @@ describe('agentRouter', () => {
         expect.objectContaining({ code: 'FORBIDDEN' })
       );
       expect(mockApprovalApproveAction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('rollbackAction (#856)', () => {
+    const input = { actionId: 'action_123', rollbackToken: 'token-1', reason: 'Wrong client' };
+
+    it('rolls back on the caller request context, as the caller', async () => {
+      mockApprovalRollbackAction.mockResolvedValue({ success: true, actionId: 'action_123' });
+      const ctx = createAgentTestContext(true, true);
+      const caller = agentRouter.createCaller(ctx);
+
+      const result = await caller.rollbackAction(input);
+
+      expect(result).toEqual({ success: true, actionId: 'action_123' });
+      const [request, agentContext, requestCtx] = mockApprovalRollbackAction.mock.calls[0];
+      expect(request).toEqual({
+        actionId: 'action_123',
+        rollbackToken: 'token-1',
+        requestedBy: TEST_UUIDS.user1,
+        reason: 'Wrong client',
+      });
+      expect(agentContext).toMatchObject({ tenantId: TEST_UUIDS.tenant });
+      expect(requestCtx).toBeDefined();
+    });
+
+    it('is FORBIDDEN without the approve grant', async () => {
+      const ctx = createAgentTestContext(true, false);
+      (ctx.prisma as any).userPermission = { findFirst: vi.fn().mockResolvedValue(null) };
+      (ctx.prisma as any).userRoleAssignment = { findMany: vi.fn().mockResolvedValue([]) };
+      const caller = agentRouter.createCaller(ctx);
+
+      await expect(caller.rollbackAction(input)).rejects.toThrow(
+        expect.objectContaining({ code: 'FORBIDDEN' })
+      );
+      expect(mockApprovalRollbackAction).not.toHaveBeenCalled();
+    });
+
+    it('returns NOT_FOUND for a cross-tenant action and rolls nothing back', async () => {
+      mockApprovalGetPendingAction.mockResolvedValue({
+        id: 'action_123',
+        tenantId: '99999999-0000-4000-8000-000099999999',
+      });
+      const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+      await expect(caller.rollbackAction(input)).rejects.toThrow(
+        expect.objectContaining({ code: 'NOT_FOUND' })
+      );
+      expect(mockApprovalRollbackAction).not.toHaveBeenCalled();
+    });
+
+    it('requires a reason', async () => {
+      const caller = agentRouter.createCaller(createAgentTestContext(true, true));
+
+      await expect(caller.rollbackAction({ ...input, reason: '' })).rejects.toThrow();
+      expect(mockApprovalRollbackAction).not.toHaveBeenCalled();
     });
   });
 

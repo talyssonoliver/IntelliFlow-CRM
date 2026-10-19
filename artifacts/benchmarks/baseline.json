@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-18T15:34:14.855Z",
+  "timestamp": "2026-10-19T16:56:02.409Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1016,9 +1016,9 @@
   },
   "api_inventory": {
     "total_routers": 72,
-    "total_endpoints": 572,
+    "total_endpoints": 573,
     "total_queries": 245,
-    "total_mutations": 327,
+    "total_mutations": 328,
     "routers": [
       {
         "name": "contact",
@@ -1129,6 +1129,12 @@
         "mutations": 3
       },
       {
+        "name": "agent",
+        "endpoints": 9,
+        "queries": 5,
+        "mutations": 4
+      },
+      {
         "name": "aiMonitoring",
         "endpoints": 9,
         "queries": 8,
@@ -1157,12 +1163,6 @@
         "endpoints": 8,
         "queries": 2,
         "mutations": 6
-      },
-      {
-        "name": "agent",
-        "endpoints": 8,
-        "queries": 5,
-        "mutations": 3
       },
       {
         "name": "aiReview",
@@ -3925,6 +3925,11 @@
         "name": "agent.rejectAction",
         "method": "POST",
         "description": "Reject action"
+      },
+      {
+        "name": "agent.rollbackAction",
+        "method": "POST",
+        "description": "Rollback action"
       },
       {
         "name": "agent.getPendingCount",
