@@ -58,9 +58,9 @@ export const actionStore = new PrismaAgentActionStore(sharedPrisma as never, DEF
 // Legacy aliases for callers that import these directly
 export const pendingActionsStore = {
   add: (a: PendingAction) => actionStore.add(a),
-  get: (id: string) => actionStore.get(id),
-  update: (a: PendingAction) => actionStore.update(a),
-  delete: (id: string) => actionStore.delete(id),
+  get: (id: string, tenantId?: string) => actionStore.get(id, tenantId),
+  update: (a: PendingAction, tenantId?: string) => actionStore.update(a, tenantId),
+  delete: (id: string, tenantId?: string) => actionStore.delete(id, tenantId),
   findByUser: (userId: string, tenantId?: string) => actionStore.findByUser(userId, tenantId),
   findBySession: (sessionId: string) => actionStore.findBySession(sessionId),
   findPending: () => actionStore.findPending(),
@@ -69,9 +69,9 @@ export const pendingActionsStore = {
 
 export const executedActionsStore = {
   add: (a: ExecutedAction) => actionStore.addExecuted(a),
-  get: (id: string) => actionStore.getExecuted(id),
+  get: (id: string, tenantId?: string) => actionStore.getExecuted(id, tenantId),
   findByRollbackToken: (token: string) => actionStore.findByRollbackToken(token),
-  disableRollback: (id: string) => actionStore.disableRollback(id),
+  disableRollback: (id: string, tenantId?: string) => actionStore.disableRollback(id, tenantId),
   findAll: () => actionStore.findAllExecuted(),
 };
 
@@ -208,8 +208,8 @@ export class ApprovalWorkflowService {
   /**
    * Get a specific pending action by ID
    */
-  async getPendingAction(actionId: string): Promise<PendingAction | undefined> {
-    return pendingActionsStore.get(actionId);
+  async getPendingAction(actionId: string, tenantId?: string): Promise<PendingAction | undefined> {
+    return pendingActionsStore.get(actionId, tenantId);
   }
 
   /**
@@ -221,7 +221,7 @@ export class ApprovalWorkflowService {
     decision: ApprovalDecision,
     context: AgentAuthContext
   ): Promise<{ action: PendingAction; inputToExecute: Record<string, unknown> }> {
-    const action = await pendingActionsStore.get(decision.actionId);
+    const action = await pendingActionsStore.get(decision.actionId, context.tenantId);
 
     if (!action) {
       throw new Error(`Pending action not found: ${decision.actionId}`);
@@ -342,7 +342,7 @@ export class ApprovalWorkflowService {
     decision: ApprovalDecision,
     context: AgentAuthContext
   ): Promise<PendingAction> {
-    const action = await pendingActionsStore.get(decision.actionId);
+    const action = await pendingActionsStore.get(decision.actionId, context.tenantId);
 
     if (!action) {
       throw new Error(`Pending action not found: ${decision.actionId}`);
@@ -410,7 +410,7 @@ export class ApprovalWorkflowService {
     // Check rollback window
     const executedAt = executedAction.executedAt;
     if (executedAt && Date.now() - executedAt.getTime() > this.rollbackWindowMs) {
-      await executedActionsStore.disableRollback(executedAction.id);
+      await executedActionsStore.disableRollback(executedAction.id, executedAction.tenantId);
       return {
         success: false,
         actionId: request.actionId,
@@ -442,7 +442,7 @@ export class ApprovalWorkflowService {
 
       if (result.success) {
         // Disable further rollbacks
-        await executedActionsStore.disableRollback(executedAction.id);
+        await executedActionsStore.disableRollback(executedAction.id, executedAction.tenantId);
       }
 
       // Log the rollback
