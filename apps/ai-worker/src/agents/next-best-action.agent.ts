@@ -720,5 +720,7 @@ export async function getNextBestActions(context: NBAContext): Promise<AgentResu
     description: `Generate NBA for ${context.entityType} ${context.entityId}`,
     input: context,
     expectedOutput: nbaResultSchema,
+    // PG-199: the tenant's model settings and ceiling apply even outside a job context.
+    context: { metadata: { tenantId: context.tenantId } },
   });
 }

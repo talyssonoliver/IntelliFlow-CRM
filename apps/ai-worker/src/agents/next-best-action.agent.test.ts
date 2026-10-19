@@ -463,6 +463,22 @@ describe('NextBestActionAgent', () => {
       expect(result).toHaveProperty('timestamp');
       expect(result).toHaveProperty('duration');
     });
+
+    it('runs on the context tenant settings without a job tenant context (PG-199)', async () => {
+      vi.mocked(createLLMForTenant).mockClear();
+      await getNextBestActions({
+        entityType: 'lead',
+        entityId: '550e8400-e29b-41d4-a716-446655440000',
+        tenantId: '550e8400-e29b-41d4-a716-446655440001',
+        userId: '550e8400-e29b-41d4-a716-446655440002',
+      });
+
+      expect(createLLMForTenant).toHaveBeenCalledWith(
+        'reasoning',
+        'free',
+        expect.objectContaining({ tenantId: '550e8400-e29b-41d4-a716-446655440001' })
+      );
+    });
   });
 
   describe('Result Metadata', () => {
