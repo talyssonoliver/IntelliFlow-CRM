@@ -12,6 +12,7 @@ import { useMemo, useRef, useState } from 'react';
 import { Button, Card, Label, RadioGroup, RadioGroupItem, toast } from '@intelliflow/ui';
 import type { CaseTypeDto } from '@intelliflow/validators';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { errorCode } from '@/lib/trpc-errors';
 import { trpc } from '@/lib/trpc';
 import { PageHeader } from '@/components/shared/page-header';
 import { SectionHeader } from '@/components/shared/section-header';
@@ -24,11 +25,8 @@ const NO_DEFAULT = '__none__';
 const READ_ONLY_NOTE_ID = 'case-types-read-only-note';
 
 /** The tRPC error code of a failed mutation, if any. */
-export function errorCode(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object' || !('data' in error)) return undefined;
-  const data = (error as { data?: { code?: unknown } }).data;
-  return typeof data?.code === 'string' ? data.code : undefined;
-}
+// Kept as a re-export for this page's tests; the helper is shared (PG-199).
+export { errorCode };
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Please try again.';
