@@ -10,7 +10,7 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { parse } from 'yaml';
 import {
   CALLER_DEFAULT_TIERS,
@@ -22,7 +22,7 @@ import {
   type LLMPurpose,
   type LLMTier,
 } from '@intelliflow/domain';
-import { MODEL_PRICING } from '../../config/ai.config';
+import { MODEL_PRICING, calculateCost } from '../../config/ai.config';
 
 const SRC = resolve(__dirname, '../..');
 const LITELLM_CONFIG = resolve(__dirname, '../../../../../infra/litellm/config.yaml');
@@ -141,5 +141,17 @@ describe('CALLER_DEFAULT_TIERS ⇄ ai-worker call sites', () => {
     for (const purpose of [...purposes, 'reasoning']) {
       expect(CALLER_DEFAULT_TIERS[purpose as LLMPurpose]).toContain('free');
     }
+  });
+});
+
+describe('calculateCost with an unknown pricing key (PG-199)', () => {
+  it('still prices it as gpt-3.5-turbo but warns once per key instead of staying silent', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const first = calculateCost('pg199-unknown-model', 1000, 1000);
+    calculateCost('pg199-unknown-model', 1000, 1000);
+    expect(first).toBeCloseTo(PRICING['gpt-3.5-turbo'].input + PRICING['gpt-3.5-turbo'].output);
+    const mentions = warn.mock.calls.filter((c) => String(c[0]).includes('pg199-unknown-model'));
+    expect(mentions).toHaveLength(1);
+    warn.mockRestore();
   });
 });

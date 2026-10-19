@@ -7,6 +7,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const h = vi.hoisted(() => ({
   capturedListeners: [] as Array<(usage: unknown) => void>,
   record: vi.fn(),
+  recordPurpose: vi.fn(),
+  setReader: vi.fn(),
 }));
 
 vi.mock('@intelliflow/worker-shared', () => ({
@@ -118,6 +120,9 @@ vi.mock('@intelliflow/adapters', () => ({
   DurableAuditLogAdapter: vi.fn().mockImplementation(() => ({})),
   PrismaQuotaRepository: class {},
   PrismaTenantModuleRepository: class {},
+  PrismaPurposeSpendRepository: class {
+    constructor(readonly prisma: unknown) {}
+  },
 }));
 
 vi.mock('@intelliflow/application', () => ({
@@ -126,6 +131,11 @@ vi.mock('@intelliflow/application', () => ({
 
 vi.mock('../utils/tenant-ai-spend', () => ({
   createTenantAiSpendRecorder: () => h.record,
+  createPurposeSpendRecorder: () => h.recordPurpose,
+}));
+
+vi.mock('../lib/purpose-ceiling', () => ({
+  setPurposeSpendReader: (...args: unknown[]) => h.setReader(...args),
 }));
 
 vi.mock('../utils/audit-log', () => ({
@@ -198,6 +208,8 @@ describe('AIWorker.wireTenantAiSpend listener', () => {
   beforeEach(() => {
     h.capturedListeners.length = 0;
     h.record.mockReset();
+    h.recordPurpose.mockReset().mockResolvedValue(undefined);
+    h.setReader.mockReset();
   });
 
   async function wire() {
@@ -217,6 +229,39 @@ describe('AIWorker.wireTenantAiSpend listener', () => {
 
     expect(h.record).toHaveBeenCalledWith({ cost: 0.02 });
     expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  // PG-199: the same listener feeds the per-purpose counter, and the repository is the
+  // spend reader for the pre-call ceiling check.
+  it('registers the purpose spend repository as the ceiling spend reader', async () => {
+    h.record.mockResolvedValue(undefined);
+    await wire();
+    expect(h.setReader).toHaveBeenCalledTimes(1);
+    expect(h.setReader.mock.calls[0][0]).toMatchObject({ prisma: expect.any(Object) });
+  });
+
+  it('hands each usage event to the per-purpose recorder too', async () => {
+    h.record.mockResolvedValue(undefined);
+    const { listener, logger } = await wire();
+
+    listener({ cost: 0.02, metadata: { purpose: 'email' } });
+    await Promise.resolve();
+
+    expect(h.recordPurpose).toHaveBeenCalledWith({ cost: 0.02, metadata: { purpose: 'email' } });
+    expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  it('logs a warning when the per-purpose recorder rejects', async () => {
+    h.record.mockResolvedValue(undefined);
+    h.recordPurpose.mockRejectedValue(new Error('counter store down'));
+    const { listener, logger } = await wire();
+
+    listener({ cost: 0.02 });
+    await vi.waitFor(() => expect(logger.warn).toHaveBeenCalledTimes(1));
+    expect(logger.warn).toHaveBeenCalledWith(
+      { error: 'counter store down' },
+      expect.stringContaining('Per-purpose AI spend recorder failed')
+    );
   });
 
   it('logs a warning when the recorder rejects with an Error', async () => {

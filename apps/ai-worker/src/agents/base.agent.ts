@@ -1,8 +1,7 @@
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
-import { costTracker } from '../utils/cost-tracker';
-import { countMessagesTokens, countTokens } from '../utils/token-counter';
+import { countTokens } from '../utils/token-counter';
 import { ConversationRecordCallbackHandler } from '../callbacks/conversation-record.handler';
 import { createLLM, type LLMPurpose } from '../lib/llm-factory';
 import { hallucinationChecker } from '../monitoring/hallucination-checker';
@@ -663,8 +662,6 @@ You MUST NOT:
    * Invoke the LLM with messages
    */
   protected async invokeLLM(messages: BaseMessage[]): Promise<string> {
-    const startTime = Date.now();
-
     // Notify callback handler of LLM start (input messages)
     if (this.conversationCallback) {
       const prompt = messages.map((m) => `[${m._getType()}] ${m.content}`).join('\n');
@@ -679,28 +676,11 @@ You MUST NOT:
 
     try {
       const response = await this.model.invoke(messages);
-      const duration = Date.now() - startTime;
       const responseText = response.content as string;
 
-      // Track costs for all providers — LiteLLM returns OpenAI-compatible token counts
-      // regardless of the underlying provider (Groq, Anthropic, Mistral, etc.).
-      // ADR-048: provider is now 'litellm' by default; gate on provider===openai was wrong.
-      if (aiConfig.costTracking.enabled) {
-        // Logical model name: e.g. "reasoning-free" (resolved by LiteLLM proxy at runtime)
-        const modelName = `${this.purpose}-free`;
-        const inputTokens = countMessagesTokens(messages, modelName);
-        const outputTokens = countTokens(responseText, modelName);
-
-        costTracker.recordUsage({
-          model: modelName,
-          inputTokens,
-          outputTokens,
-          operationType: `agent:${this.config.name}`,
-          metadata: {
-            duration,
-          },
-        });
-      }
+      // Cost is metered once per model call by the tracing wrapper (PG-199,
+      // lib/usage-metering.ts) with the real purpose, tier and pinned model; recording it
+      // here too would count every agent call twice.
 
       // Notify callback handler of LLM end (response)
       if (this.conversationCallback) {

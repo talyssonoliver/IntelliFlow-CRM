@@ -471,7 +471,7 @@ export function createLLM(
   }
 
   // Wrap with OTel tracing so every .invoke() call emits an llm.invoke span.
-  const instrumented = wrapModelWithTracing(model, { purpose, tier });
+  const instrumented = wrapModelWithTracing(model, { purpose, tier, modelId: pinned?.id });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;
 }
@@ -537,6 +537,14 @@ export async function createLLMForTenant(
   return withModelFallbacks(primary, fallbacks);
 }
 
+/** PG-199: MODEL_PRICING key of the embeddings provider createEmbeddings builds. */
+function embeddingsPricingKey(tier: LLMTier): string {
+  if (aiConfig.provider !== 'mock' && process.env['EMBEDDING_PROVIDER'] === 'gemini') {
+    return process.env['GEMINI_EMBEDDING_MODEL'] || 'gemini-embedding-001';
+  }
+  return `rag-${tier}`;
+}
+
 /**
  * Sibling factory for embedding models.
  * Follows the same provider routing logic as createLLM().
@@ -599,5 +607,5 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
   // Wrap with OTel tracing so every .embedQuery() / .embedDocuments() call
   // emits an llm.embed span. Guard inside wrapEmbeddingsWithTracing handles
   // mocks that don't implement the embeddings interface.
-  return wrapEmbeddingsWithTracing(embeddings, { tier });
+  return wrapEmbeddingsWithTracing(embeddings, { tier, pricingKey: embeddingsPricingKey(tier) });
 }

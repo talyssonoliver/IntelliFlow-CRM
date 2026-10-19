@@ -13,6 +13,9 @@
  * - llm.provider — runtime aiConfig.provider
  * - llm.model_name — logical alias sent to LiteLLM
  * - tenant.id    — from tenantContextStore (AsyncLocalStorage) or 'unknown'
+ *
+ * PG-199: the wrappers are also the single metering site — every successful call is
+ * recorded once (lib/usage-metering.ts), and embeddings check the rag ceiling first.
  */
 
 import { trace, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api';
@@ -21,16 +24,26 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import type { LLMPurpose, LLMTier } from '../lib/llm-factory.js';
 import { aiConfig } from '../config/ai.config.js';
 import { tenantContextStore } from './tenant-context.js';
+import {
+  chatPricingKey,
+  guardEmbeddingCall,
+  recordEmbeddingUsage,
+  recordModelUsage,
+} from '../lib/usage-metering.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
 
 export interface LLMTracingMeta {
   purpose: LLMPurpose;
   tier: LLMTier;
+  /** PG-199: catalog model pinned by the tenant, when any. */
+  modelId?: string;
 }
 
 export interface EmbeddingsTracingMeta {
   tier: LLMTier;
+  /** PG-199: MODEL_PRICING key of the embeddings provider in use (default `rag-${tier}`). */
+  pricingKey?: string;
 }
 
 /**
@@ -64,7 +77,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           'llm.purpose': meta.purpose,
           'llm.tier': meta.tier,
           'llm.provider': aiConfig.provider,
-          'llm.model_name': `${meta.purpose}-${meta.tier}`,
+          'llm.model_name': meta.modelId ? chatPricingKey(meta) : `${meta.purpose}-${meta.tier}`,
           'tenant.id': tenantId,
         },
       },
@@ -72,6 +85,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
         try {
           const result = await originalInvoke(input, options);
           span.setStatus({ code: SpanStatusCode.OK });
+          recordModelUsage(meta, input, result);
           return result;
         } catch (err) {
           span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
@@ -114,7 +128,9 @@ export function wrapEmbeddingsWithTracing(
     );
 
     asRecord['embedQuery'] = async (text: string): Promise<number[]> => {
-      const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
+      const jobTenantId = tenantContextStore.getStore()?.tenantId;
+      const tenantId = jobTenantId ?? 'unknown';
+      await guardEmbeddingCall(jobTenantId, meta.tier);
 
       return tracer.startActiveSpan(
         'llm.embed',
@@ -131,6 +147,7 @@ export function wrapEmbeddingsWithTracing(
           try {
             const result = await originalEmbedQuery(text);
             span.setStatus({ code: SpanStatusCode.OK });
+            recordEmbeddingUsage(jobTenantId, meta, [text]);
             return result;
           } catch (err) {
             span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
@@ -150,7 +167,9 @@ export function wrapEmbeddingsWithTracing(
     ).bind(embeddings);
 
     asRecord['embedDocuments'] = async (texts: string[]): Promise<number[][]> => {
-      const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
+      const jobTenantId = tenantContextStore.getStore()?.tenantId;
+      const tenantId = jobTenantId ?? 'unknown';
+      await guardEmbeddingCall(jobTenantId, meta.tier);
 
       return tracer.startActiveSpan(
         'llm.embed',
@@ -167,6 +186,7 @@ export function wrapEmbeddingsWithTracing(
           try {
             const result = await originalEmbedDocuments(texts);
             span.setStatus({ code: SpanStatusCode.OK });
+            recordEmbeddingUsage(jobTenantId, meta, texts);
             return result;
           } catch (err) {
             span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });

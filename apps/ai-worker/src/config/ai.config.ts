@@ -278,8 +278,18 @@ export type ModelName = keyof typeof MODEL_PRICING;
 /**
  * Calculate cost for a given number of tokens
  */
+/** Unknown pricing keys already reported (PG-199: never price an unknown model silently). */
+const unknownPricingWarned = new Set<string>();
+
 export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = MODEL_PRICING[model as ModelName] || MODEL_PRICING['gpt-3.5-turbo'];
+  const known = MODEL_PRICING[model as ModelName];
+  if (!known && !unknownPricingWarned.has(model)) {
+    unknownPricingWarned.add(model);
+    console.warn(
+      `[ai.config] No MODEL_PRICING entry for "${model}" — cost estimated at gpt-3.5-turbo rates`
+    );
+  }
+  const pricing = known || MODEL_PRICING['gpt-3.5-turbo'];
 
   const inputCost = (inputTokens / 1000) * pricing.input;
   const outputCost = (outputTokens / 1000) * pricing.output;
