@@ -105,6 +105,30 @@ describe('PG-199 metering in the tracing wrappers', () => {
     expect(usage.outputTokens).toBeGreaterThan(0);
   });
 
+  it('estimates tokens from message lists, text parts and other shapes', async () => {
+    const { wrapModelWithTracing } = await load();
+    const shapes: { input: unknown; output: unknown }[] = [
+      // chat messages with string and multi-part content
+      {
+        input: [{ content: 'system rules' }, { content: [{ text: 'part one' }, 'part two'] }],
+        output: { content: [{ text: 'structured answer' }] },
+      },
+      // a prompt value with toString, and a value object
+      { input: { toString: () => 'prompt value text' }, output: { value: 'value text' } },
+      // a plain object (JSON fallback), a number, and null output
+      { input: { question: 'what next?' }, output: 42 },
+      { input: 'ask', output: null },
+    ];
+    for (const { input, output } of shapes) {
+      recordUsage.mockClear();
+      const model = wrapModelWithTracing(chatModel(output), { purpose: 'email', tier: 'free' });
+      await model.invoke(input as never);
+      const usage = recordUsage.mock.calls[0][0];
+      expect(usage.inputTokens).toBeGreaterThan(0);
+      expect(usage.outputTokens).toBeGreaterThanOrEqual(0);
+    }
+  });
+
   it('records nothing when cost tracking is disabled', async () => {
     const { wrapModelWithTracing } = await load(false);
     const model = wrapModelWithTracing(chatModel({ content: 'ok' }), {
