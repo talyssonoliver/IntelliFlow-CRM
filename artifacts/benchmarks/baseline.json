@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-19T12:12:31.108Z",
+  "timestamp": "2026-10-19T12:29:03.069Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 72,
-    "total_endpoints": 572,
-    "total_queries": 245,
-    "total_mutations": 327,
+    "total_routers": 73,
+    "total_endpoints": 575,
+    "total_queries": 246,
+    "total_mutations": 329,
     "routers": [
       {
         "name": "contact",
@@ -1336,6 +1336,12 @@
         "name": "user",
         "endpoints": 4,
         "queries": 2,
+        "mutations": 2
+      },
+      {
+        "name": "modelConfig",
+        "endpoints": 3,
+        "queries": 1,
         "mutations": 2
       },
       {
@@ -4043,6 +4049,23 @@
         "name": "conversation.archiveOld",
         "method": "POST",
         "description": "Archive old"
+      }
+    ],
+    "modelConfig": [
+      {
+        "name": "modelConfig.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "modelConfig.update",
+        "method": "POST",
+        "description": "Update modelConfig"
+      },
+      {
+        "name": "modelConfig.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "aiMonitoring": [
