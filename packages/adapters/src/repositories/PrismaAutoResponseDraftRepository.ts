@@ -440,11 +440,12 @@ function safeParseJSON(value: string): unknown {
   }
 }
 
-/** The approver recorded at submission: the latest PENDING_APPROVAL entry's actor. */
+/**
+ * The approver recorded at submission: the actor of the FIRST PENDING_APPROVAL entry.
+ * Later PENDING_APPROVAL entries are escalation resolutions, whose actor is the
+ * resolver and must not reassign the draft.
+ */
 function assignedApprover(draft: AutoResponseDraft): string | undefined {
-  const entries = draft.statusHistory;
-  for (let i = entries.length - 1; i >= 0; i--) {
-    if (entries[i].status === 'PENDING_APPROVAL') return entries[i].changedBy || undefined;
-  }
-  return undefined;
+  const submitted = draft.statusHistory.find((entry) => entry.status === 'PENDING_APPROVAL');
+  return submitted?.changedBy || undefined;
 }

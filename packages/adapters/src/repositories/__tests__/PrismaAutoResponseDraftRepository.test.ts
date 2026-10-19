@@ -351,6 +351,28 @@ describe('PrismaAutoResponseDraftRepository', () => {
       expect(forB.map((d) => d.id.toString())).toEqual([DRAFT_ID_2]);
     });
 
+    it('keeps the assignee after a manager resolves an escalation', async () => {
+      const at = new Date().toISOString();
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        createMockDraftData({
+          id: DRAFT_ID_1,
+          status: 'PENDING_APPROVAL',
+          statusHistory: JSON.stringify([
+            { status: 'DRAFT', changedAt: at },
+            { status: 'PENDING_APPROVAL', changedAt: at, changedBy: 'approver-a' },
+            { status: 'ESCALATED', changedAt: at, changedBy: 'approver-a' },
+            { status: 'PENDING_APPROVAL', changedAt: at, changedBy: 'manager-b' },
+          ]),
+        }),
+      ] as never);
+
+      const forA = await repository.findPendingForApprover('approver-a', 'tenant-1');
+      const forC = await repository.findPendingForApprover('approver-c', 'tenant-1');
+
+      expect(forA).toHaveLength(1);
+      expect(forC).toHaveLength(0);
+    });
+
     it('keeps a draft that names no approver visible to everyone', async () => {
       vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
         submittedTo(undefined, DRAFT_ID_1),
