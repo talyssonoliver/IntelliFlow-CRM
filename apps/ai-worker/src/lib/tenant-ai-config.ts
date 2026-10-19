@@ -27,7 +27,12 @@ const logger = pino({
 // ---------------------------------------------------------------------------
 
 interface CacheEntry {
-  tier: LLMTier;
+  /**
+   * The row's own tier, or null when no row / NULL tier / invalid tier: the caller's
+   * default is applied on read, because callers of one purpose pass different defaults
+   * (PG-199 A1) and a cached default must never leak from one caller to another.
+   */
+  tier: LLMTier | null;
   temperature?: number | null;
   maxTokens?: number | null;
   expiresAt: number; // ms epoch
@@ -82,7 +87,11 @@ export async function resolveEffectiveTier(
   // 1. Cache hit
   const cached = _tierCache.get(key);
   if (cached && cached.expiresAt > now) {
-    return { tier: cached.tier, temperature: cached.temperature, maxTokens: cached.maxTokens };
+    return {
+      tier: cached.tier ?? defaultTier,
+      temperature: cached.temperature,
+      maxTokens: cached.maxTokens,
+    };
   }
 
   // 2. DB lookup
@@ -92,9 +101,9 @@ export async function resolveEffectiveTier(
     });
 
     if (!row) {
-      // No override configured — cache the default so we skip DB on the next call.
+      // No override configured — cache "no row" so we skip DB on the next call.
       _tierCache.set(key, {
-        tier: defaultTier,
+        tier: null,
         temperature: null,
         maxTokens: null,
         expiresAt: now + CACHE_TTL_MS,
@@ -102,14 +111,14 @@ export async function resolveEffectiveTier(
       return { tier: defaultTier };
     }
 
-    // Validate tier value
-    if (!VALID_TIERS.has(row.tier)) {
+    // Validate tier value (NULL = this caller's default tier, PG-199)
+    if (row.tier !== null && !VALID_TIERS.has(row.tier)) {
       logger.warn(
         { tenantId, purpose, rowTier: row.tier },
         'TenantAIConfig row has invalid tier value — falling back to default'
       );
       _tierCache.set(key, {
-        tier: defaultTier,
+        tier: null,
         temperature: null,
         maxTokens: null,
         expiresAt: now + CACHE_TTL_MS,
@@ -117,9 +126,10 @@ export async function resolveEffectiveTier(
       return { tier: defaultTier };
     }
 
-    const effectiveTier = row.tier as LLMTier;
+    const rowTier = row.tier as LLMTier | null;
+    const effectiveTier = rowTier ?? defaultTier;
     const entry: CacheEntry = {
-      tier: effectiveTier,
+      tier: rowTier,
       temperature: row.temperature ?? null,
       maxTokens: row.maxTokens ?? null,
       expiresAt: now + CACHE_TTL_MS,

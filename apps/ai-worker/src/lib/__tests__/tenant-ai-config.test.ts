@@ -54,6 +54,54 @@ describe('resolveEffectiveTier()', () => {
     vi.useRealTimers();
   });
 
+  // PG-199 A1: a NULL tier means "this caller's default tier", and the row's other
+  // overrides still apply (the page saves temperature/maxTokens without a tier).
+  it('NULL tier → caller default tier, keeping the row temperature and maxTokens', async () => {
+    mockFindUnique.mockResolvedValue({ tier: null, temperature: 0.3, maxTokens: 500 });
+
+    const result = await resolveEffectiveTier(
+      't-null',
+      'scoring' as LLMPurpose,
+      'standard' as LLMTier
+    );
+
+    expect(result).toEqual({ tier: 'standard', temperature: 0.3, maxTokens: 500 });
+  });
+
+  // PG-199 A1: callers of one purpose pass different defaults (e.g. structured: free and
+  // standard). A cached "no override" must not hand the first caller's default to the next.
+  it('cache never leaks one caller default tier to another caller of the same purpose', async () => {
+    mockFindUnique.mockResolvedValue(null);
+
+    const first = await resolveEffectiveTier(
+      't-cache',
+      'structured' as LLMPurpose,
+      'free' as LLMTier
+    );
+    const second = await resolveEffectiveTier(
+      't-cache',
+      'structured' as LLMPurpose,
+      'standard' as LLMTier
+    );
+
+    expect(first.tier).toBe('free');
+    expect(second.tier).toBe('standard');
+    expect(mockFindUnique).toHaveBeenCalledTimes(1); // second call is a cache hit
+  });
+
+  it('cache never leaks a caller default for a NULL-tier row either', async () => {
+    mockFindUnique.mockResolvedValue({ tier: null, temperature: null, maxTokens: 900 });
+
+    await resolveEffectiveTier('t-cache2', 'email' as LLMPurpose, 'free' as LLMTier);
+    const second = await resolveEffectiveTier(
+      't-cache2',
+      'email' as LLMPurpose,
+      'standard' as LLMTier
+    );
+
+    expect(second).toEqual({ tier: 'standard', temperature: null, maxTokens: 900 });
+  });
+
   // 1. No row → default tier
   it('no DB row → returns defaultTier', async () => {
     mockFindUnique.mockResolvedValue(null);
