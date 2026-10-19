@@ -53,8 +53,6 @@ export { emailWriterOutputSchema, type EmailWriterOutput } from '@intelliflow/va
  * Uses context from lead qualification and previous interactions
  */
 export class EmailWriterAgent extends BaseAgent<EmailWriterInput, EmailWriterOutput> {
-  private readonly structuredModel: { invoke(input: unknown): Promise<unknown> };
-
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
       name: 'Email Writer Specialist',
@@ -75,8 +73,6 @@ and response rates.`,
       confidenceThreshold: 0.5,
       ...config,
     });
-
-    this.structuredModel = (this.model as any).withStructuredOutput(emailWriterOutputSchema);
   }
 
   /**
@@ -144,7 +140,9 @@ and response rates.`,
 
     // Parse structured output
     try {
-      const result = (await this.structuredModel.invoke(response)) as EmailWriterOutput;
+      const result = (await this.structuredFor(emailWriterOutputSchema).invoke(
+        response
+      )) as EmailWriterOutput;
 
       // Determine if human review is needed
       const reviewReasons = this.checkForHumanReview(input, result);

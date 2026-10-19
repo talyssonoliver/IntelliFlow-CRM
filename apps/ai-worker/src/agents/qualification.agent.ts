@@ -64,8 +64,6 @@ export type QualificationOutput = z.infer<typeof qualificationOutputSchema>;
  * Provides detailed reasoning and recommended next steps
  */
 export class LeadQualificationAgent extends BaseAgent<QualificationInput, QualificationOutput> {
-  private readonly structuredModel: { invoke(input: unknown): Promise<unknown> };
-
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
       name: 'Lead Qualification Specialist',
@@ -84,8 +82,6 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
       usesReflection: true,
       ...config,
     });
-
-    this.structuredModel = (this.model as any).withStructuredOutput(qualificationOutputSchema);
   }
 
   /**
@@ -155,7 +151,9 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
 
     // Parse structured output
     try {
-      const result = (await this.structuredModel.invoke(response)) as QualificationOutput;
+      const result = (await this.structuredFor(qualificationOutputSchema).invoke(
+        response
+      )) as QualificationOutput;
 
       logger.info(
         {

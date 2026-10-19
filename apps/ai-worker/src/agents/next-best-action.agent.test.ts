@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
+import { createLLMForTenant } from '../lib/llm-factory.js';
 import {
   NextBestActionAgent,
   createNBAAgent,
@@ -89,6 +90,15 @@ vi.mock('../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue({}),
     })),
   })),
+  // PG-199: agents resolve the tenant model at execute time.
+  createLLMForTenant: vi.fn(async () =>
+    (() => ({
+      invoke: vi.fn().mockResolvedValue({ content: 'mock response' }),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue({}),
+      })),
+    }))()
+  ),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
@@ -565,5 +575,36 @@ describe('NextBestActionAgent', () => {
       expect(minimalResult.confidence).toBe(0.7);
       expect(richResult.confidence).toBe(0.7);
     });
+  });
+});
+
+// PG-199 (owner Q3): the agent runs on the tenant's model settings.
+describe('tenant model (PG-199)', () => {
+  it('resolves the tenant model for its purpose and uses it for the task', async () => {
+    const context: NBAContext = {
+      entityType: 'opportunity',
+      entityId: '550e8400-e29b-41d4-a716-446655440000',
+      tenantId: '550e8400-e29b-41d4-a716-446655440001',
+      userId: '550e8400-e29b-41d4-a716-446655440002',
+      stage: 'PROPOSAL_SENT',
+      value: 50000,
+    };
+    const task = {
+      id: 'test-task',
+      description: 'Generate NBA',
+      input: context,
+      context: { metadata: { tenantId: 'tenant-pg199' } },
+    };
+    const tenantAgent = new NextBestActionAgent();
+    vi.mocked(createLLMForTenant).mockClear();
+
+    const result = await tenantAgent.execute(task as never);
+
+    expect(createLLMForTenant).toHaveBeenCalledWith(
+      'reasoning',
+      'free',
+      expect.objectContaining({ tenantId: 'tenant-pg199' })
+    );
+    expect(result.success).toBe(true);
   });
 });

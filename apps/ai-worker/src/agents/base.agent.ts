@@ -1,9 +1,10 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
 import { countTokens } from '../utils/token-counter';
 import { ConversationRecordCallbackHandler } from '../callbacks/conversation-record.handler';
-import { createLLM, type LLMPurpose } from '../lib/llm-factory';
+import { createLLM, createLLMForTenant, type LLMPurpose } from '../lib/llm-factory';
 import { hallucinationChecker } from '../monitoring/hallucination-checker';
 import pino from 'pino';
 
@@ -21,6 +22,18 @@ const DEFAULT_CONFIDENCE_THRESHOLD = 0.3;
 interface LLMModel {
   invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
 }
+
+/** A structured-output runnable (`model.withStructuredOutput(schema)`). */
+interface StructuredRunnable {
+  invoke(input: unknown): Promise<unknown>;
+}
+
+/**
+ * PG-199 (owner Q3): the model a task runs on. `execute()` resolves the tenant's model
+ * settings once per task and runs the task inside this store, so one agent instance can
+ * serve concurrent tasks of different tenants without sharing a model.
+ */
+const taskModelStore = new AsyncLocalStorage<LLMModel>();
 
 const logger = pino({
   name: 'base-agent',
@@ -140,6 +153,9 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
   protected readonly purpose: LLMPurpose;
   protected config: BaseAgentConfig;
   protected executionCount: number = 0;
+
+  /** Structured-output runnables per model and schema (PG-199). */
+  private readonly structuredCache = new WeakMap<object, Map<unknown, StructuredRunnable>>();
 
   /** Optional callback handler for recording LLM calls to the database. */
   private conversationCallback?: ConversationRecordCallbackHandler;
@@ -354,6 +370,62 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
    * to the pre-ADR-049 implementation — zero regression for existing subclasses.
    */
   async execute(task: AgentTask<TInput, TOutput>, attempt = 0): Promise<AgentResult<TOutput>> {
+    // Retries run inside the scope opened by the first attempt.
+    if (taskModelStore.getStore()) return this.executeWithModel(task, attempt);
+
+    let model: LLMModel;
+    try {
+      model = await this.resolveTaskModel(task);
+    } catch (error) {
+      // e.g. the purpose reached its monthly AI ceiling: agents have no non-AI fallback,
+      // so the task fails visibly (PG-199, AC-015).
+      return this.buildExecutionErrorResult(error, task, Date.now()).result;
+    }
+    return taskModelStore.run(model, () => this.executeWithModel(task, attempt));
+  }
+
+  /**
+   * The tenant's model for this task (pin, fallbacks, temperature, max tokens, ceiling),
+   * or the constructor default when the task carries no tenant.
+   */
+  private async resolveTaskModel(task: AgentTask<TInput, TOutput>): Promise<LLMModel> {
+    const tenantId = task.context?.metadata?.tenantId as string | undefined;
+    if (!tenantId) return this.model;
+    return (await createLLMForTenant(this.purpose, 'free', {
+      tenantId,
+      temperature: aiConfig.openai.temperature,
+      maxTokens: aiConfig.openai.maxTokens,
+      timeout: aiConfig.openai.timeout,
+    })) as unknown as LLMModel;
+  }
+
+  /** The model of the task being executed, else the constructor default. */
+  protected currentModel(): LLMModel {
+    return taskModelStore.getStore() ?? this.model;
+  }
+
+  /** `withStructuredOutput(schema)` on the current task model, built once per model. */
+  protected structuredFor(schema: unknown): StructuredRunnable {
+    const model = this.currentModel() as unknown as {
+      withStructuredOutput: (s: unknown) => StructuredRunnable;
+    };
+    let bySchema = this.structuredCache.get(model);
+    if (!bySchema) {
+      bySchema = new Map();
+      this.structuredCache.set(model, bySchema);
+    }
+    let runnable = bySchema.get(schema);
+    if (!runnable) {
+      runnable = model.withStructuredOutput(schema);
+      bySchema.set(schema, runnable);
+    }
+    return runnable;
+  }
+
+  private async executeWithModel(
+    task: AgentTask<TInput, TOutput>,
+    attempt: number
+  ): Promise<AgentResult<TOutput>> {
     const startTime = Date.now();
     // Only increment executionCount on the first attempt (not on retries)
     if (attempt === 0) {
@@ -675,7 +747,7 @@ You MUST NOT:
     }
 
     try {
-      const response = await this.model.invoke(messages);
+      const response = await this.currentModel().invoke(messages);
       const responseText = response.content as string;
 
       // Cost is metered once per model call by the tracing wrapper (PG-199,

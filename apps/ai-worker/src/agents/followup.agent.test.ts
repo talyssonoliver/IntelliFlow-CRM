@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createLLMForTenant } from '../lib/llm-factory.js';
 import {
   FollowupAgent,
   FollowupInput,
@@ -66,6 +67,15 @@ vi.mock('../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue(FOLLOWUP_PARSED_RESPONSE),
     })),
   })),
+  // PG-199: agents resolve the tenant model at execute time.
+  createLLMForTenant: vi.fn(async () =>
+    (() => ({
+      invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(FOLLOWUP_PARSED_RESPONSE) }),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(FOLLOWUP_PARSED_RESPONSE),
+      })),
+    }))()
+  ),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
@@ -450,5 +460,34 @@ describe('FollowupAgent', () => {
         expect(result.success).toBe(true);
       });
     });
+  });
+});
+
+// PG-199 (owner Q3): the agent runs on the tenant's model settings.
+describe('tenant model (PG-199)', () => {
+  it('resolves the tenant model for its purpose and uses it for the task', async () => {
+    const input: FollowupInput = {
+      leadId: 'lead-123',
+      leadEmail: 'john@example.com',
+      leadName: 'John Doe',
+      currentStatus: 'CONTACTED',
+      qualificationLevel: 'MEDIUM',
+      leadScore: 65,
+      interactionHistory: [],
+      daysSinceLastContact: 7,
+    };
+    const task = createFollowupTask(input);
+    task.context = { metadata: { tenantId: 'tenant-pg199' } };
+    const tenantAgent = new FollowupAgent();
+    vi.mocked(createLLMForTenant).mockClear();
+
+    const result = await tenantAgent.execute(task as never);
+
+    expect(createLLMForTenant).toHaveBeenCalledWith(
+      'reasoning',
+      'free',
+      expect.objectContaining({ tenantId: 'tenant-pg199' })
+    );
+    expect(result.success).toBe(true);
   });
 });

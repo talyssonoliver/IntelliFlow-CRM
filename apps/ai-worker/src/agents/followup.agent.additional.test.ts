@@ -52,6 +52,15 @@ vi.mock('../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue(DEFAULT_FOLLOWUP_PARSED),
     })),
   })),
+  // PG-199: agents resolve the tenant model at execute time.
+  createLLMForTenant: vi.fn(async () =>
+    (() => ({
+      invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(DEFAULT_FOLLOWUP_PARSED) }),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(DEFAULT_FOLLOWUP_PARSED),
+      })),
+    }))()
+  ),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
@@ -152,6 +161,10 @@ describe('FollowupAgent - Execution', () => {
     // (with isolate:false, another file's @langchain/openai mock factory may win)
     (agent as any).model = {
       invoke: vi.fn().mockResolvedValue({ content: defaultFollowupResponse }),
+      // PG-199: structured output is built from the model the task runs on.
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(DEFAULT_FOLLOWUP_PARSED),
+      })),
     };
   });
 
@@ -207,14 +220,14 @@ describe('FollowupAgent - Execution', () => {
 
   describe('Parser failure - fallback path', () => {
     it('should return conservative fallback when parser fails', async () => {
-      // Pattern A (B2b): override structuredModel to throw — this triggers the catch/fallback.
+      // Pattern A (B2b): stub structuredFor (PG-199) to throw — this triggers the catch/fallback.
       // Overriding only model.invoke is insufficient because structuredModel is separate.
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: 'Unparseable response from the LLM...' }),
       };
-      (agent as any).structuredModel = {
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
         invoke: vi.fn().mockRejectedValue(new Error('ZodError: parse failure')),
-      };
+      });
 
       const input = makeInput({ assignedSalesRep: 'Alice Johnson' });
       const task = createFollowupTask(input);
@@ -233,9 +246,9 @@ describe('FollowupAgent - Execution', () => {
 
     it('should use default owner when assignedSalesRep is not provided', async () => {
       (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'Bad response' }) };
-      (agent as any).structuredModel = {
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
         invoke: vi.fn().mockRejectedValue(new Error('ZodError: parse failure')),
-      };
+      });
 
       const input = makeInput({ assignedSalesRep: undefined });
       const task = createFollowupTask(input);
@@ -355,7 +368,9 @@ describe('FollowupAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         leadCompany: 'TechCo',
@@ -429,7 +444,9 @@ describe('FollowupAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         leadCompany: undefined,
@@ -701,7 +718,9 @@ describe('FollowupAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         currentStatus: 'LOST',
