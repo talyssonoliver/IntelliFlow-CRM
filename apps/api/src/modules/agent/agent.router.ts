@@ -60,8 +60,11 @@ const protectedProcedure = baseProtectedProcedure.use(requireModule('AI_INTELLIG
  */
 async function requireTenantOwnedAction(ctx: Context, actionId: string): Promise<PendingAction> {
   const callerTenant = ctx.user?.tenantId;
-  const action = await approvalWorkflowService.getPendingAction(actionId);
-  if (!action || !callerTenant || action.tenantId !== callerTenant) {
+  if (!callerTenant) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
+  }
+  const action = await approvalWorkflowService.getPendingAction(actionId, callerTenant);
+  if (!action || action.tenantId !== callerTenant) {
     throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
   }
   return action;
@@ -614,7 +617,7 @@ export const agentRouter = createTRPCRouter({
       // PG-198 (AC-010): the policy's minimum reviewer role, on top of the permission.
       await assertPolicyReviewer(ctx, action);
 
-      const agentContext = buildAgentContext(ctx);
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
 
       const decision = {
         actionId: input.actionId,
