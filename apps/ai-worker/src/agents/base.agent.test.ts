@@ -612,6 +612,28 @@ describe('BaseAgent tenant model (PG-199)', () => {
     expect(createLLMForTenant).not.toHaveBeenCalled();
   });
 
+  it('runs the model calls in the resolved tenant context, so spend is billed to it', async () => {
+    const seen: (string | undefined)[] = [];
+    vi.mocked(createLLMForTenant).mockImplementation(
+      async () =>
+        ({
+          invoke: vi.fn(async () => {
+            seen.push(tenantContextStore.getStore()?.tenantId);
+            return { content: 'ok' };
+          }),
+          withStructuredOutput: vi.fn(),
+        }) as never
+    );
+    const agent = new TestAgent(tenantConfig);
+
+    await agent.execute(task({ tenantId: 'tenant-meta' })); // no job context
+    await tenantContextStore.run({ tenantId: 'tenant-job' }, () =>
+      agent.execute(task({ tenantId: 'tenant-override' }))
+    );
+
+    expect(seen).toEqual(['tenant-meta', 'tenant-override']);
+  });
+
   it('isolates concurrent tasks of different tenants', async () => {
     vi.mocked(createLLMForTenant).mockImplementation(
       async (_p, _t, opts) =>

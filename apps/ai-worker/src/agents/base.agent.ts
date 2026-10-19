@@ -374,15 +374,30 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
     // Retries run inside the scope opened by the first attempt.
     if (taskModelStore.getStore()) return this.executeWithModel(task, attempt);
 
+    const tenantId = this.taskTenant(task);
     let model: LLMModel;
     try {
-      model = await this.resolveTaskModel(task);
+      model = await this.resolveTaskModel(tenantId);
     } catch (error) {
       // e.g. the purpose reached its monthly AI ceiling: agents have no non-AI fallback,
       // so the task fails visibly (PG-199, AC-015).
       return this.buildExecutionErrorResult(error, task, Date.now()).result;
     }
-    return taskModelStore.run(model, () => this.executeWithModel(task, attempt));
+    const run = () => taskModelStore.run(model, () => this.executeWithModel(task, attempt));
+    // The calls are billed to the tenant whose model and ceiling were chosen: both spend
+    // recorders read the tenant from tenantContextStore.
+    const current = tenantContextStore.getStore();
+    if (!tenantId || current?.tenantId === tenantId) return run();
+    return tenantContextStore.run({ ...current, tenantId }, run);
+  }
+
+  /** The task's own tenant, else the billable tenant of the job running it. */
+  private taskTenant(task: AgentTask<TInput, TOutput>): string | undefined {
+    const jobTenant = tenantContextStore.getStore()?.tenantId;
+    return (
+      (task.context?.metadata?.tenantId as string | undefined) ??
+      (jobTenant && jobTenant !== 'unknown' && !jobTenant.startsWith('__') ? jobTenant : undefined)
+    );
   }
 
   /**
@@ -390,11 +405,7 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
    * the task's own tenant, else the tenant of the job running it (prediction jobs build
    * tasks without one); the constructor default when neither is known.
    */
-  private async resolveTaskModel(task: AgentTask<TInput, TOutput>): Promise<LLMModel> {
-    const jobTenant = tenantContextStore.getStore()?.tenantId;
-    const tenantId =
-      (task.context?.metadata?.tenantId as string | undefined) ??
-      (jobTenant && jobTenant !== 'unknown' && !jobTenant.startsWith('__') ? jobTenant : undefined);
+  private async resolveTaskModel(tenantId: string | undefined): Promise<LLMModel> {
     if (!tenantId) return this.model;
     return (await createLLMForTenant(this.purpose, 'free', {
       tenantId,
