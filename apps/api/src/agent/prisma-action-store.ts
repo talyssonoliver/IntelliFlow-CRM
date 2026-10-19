@@ -92,8 +92,13 @@ export class PrismaAgentActionStore {
     });
   }
 
-  async get(id: string): Promise<PendingAction | undefined> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  /**
+   * #883: every by-id access is scoped by tenant. `tenantId` defaults to the store's
+   * default tenant (background callers); request paths pass the caller's tenant. A row
+   * of another tenant is indistinguishable from a missing one, and is never written.
+   */
+  async get(id: string, tenantId: string = this.tenantId): Promise<PendingAction | undefined> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return undefined;
 
     const action = this.toPendingAction(row);
@@ -101,15 +106,18 @@ export class PrismaAgentActionStore {
     // Check expiry
     if (action.status === 'PENDING' && action.expiresAt < new Date()) {
       action.status = 'EXPIRED';
-      await this.update(action);
+      await this.update(action, tenantId);
     }
 
     return action;
   }
 
-  async update(action: PendingAction): Promise<void> {
-    await this.prisma.agentAction.update({
-      where: { id: action.id },
+  async update(
+    action: PendingAction,
+    tenantId: string = action.tenantId ?? this.tenantId
+  ): Promise<void> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: { id: action.id, tenantId },
       data: {
         status: STATUS_TO_DB[action.status] as any,
         previousState: action.input as any,
@@ -118,12 +126,15 @@ export class PrismaAgentActionStore {
           action.status === 'APPROVED' || action.status === 'REJECTED' ? new Date() : undefined,
       },
     });
+    if (result.count === 0) {
+      throw new Error(`Agent action not found in tenant: ${action.id}`);
+    }
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, tenantId: string = this.tenantId): Promise<boolean> {
     try {
-      await this.prisma.agentAction.delete({ where: { id } });
-      return true;
+      const result = await this.prisma.agentAction.deleteMany({ where: { id, tenantId } });
+      return result.count > 0;
     } catch {
       return false;
     }
@@ -276,8 +287,8 @@ export class PrismaAgentActionStore {
   // ---------------------------------------------------------------------------
 
   async addExecuted(action: ExecutedAction): Promise<void> {
-    await this.prisma.agentAction.update({
-      where: { id: action.id },
+    const result = await this.prisma.agentAction.updateMany({
+      where: { id: action.id, tenantId: action.tenantId ?? this.tenantId },
       data: {
         status: 'APPROVED' as any,
         reviewedAt: action.executedAt ?? new Date(),
@@ -296,10 +307,16 @@ export class PrismaAgentActionStore {
         } as any,
       },
     });
+    if (result.count === 0) {
+      throw new Error(`Agent action not found in tenant: ${action.id}`);
+    }
   }
 
-  async getExecuted(id: string): Promise<ExecutedAction | undefined> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  async getExecuted(
+    id: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction | undefined> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row || row.status !== ('APPROVED' as any)) return undefined;
     return this.toExecutedAction(row);
   }
@@ -333,14 +350,14 @@ export class PrismaAgentActionStore {
     return undefined;
   }
 
-  async disableRollback(id: string): Promise<void> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  async disableRollback(id: string, tenantId: string = this.tenantId): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return;
 
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     proposed.rollbackAvailable = false;
-    await this.prisma.agentAction.update({
-      where: { id },
+    await this.prisma.agentAction.updateMany({
+      where: { id, tenantId },
       data: { proposedState: proposed as any },
     });
   }

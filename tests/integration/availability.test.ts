@@ -16,6 +16,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vites
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { loadTenantAvailability } from '../../apps/api/src/modules/calendar/availability-enforcement';
+import { applySchemaSql } from './schema-lock';
 
 const MIGRATION_PATH = join(
   __dirname,
@@ -64,33 +65,40 @@ const CHECK_NAMES = [
  * columns from schema.prisma but never runs migration SQL: the named CHECKs and the
  * RLS policies are absent there. When either probe constraint is missing, add the
  * shared-table columns in place (never dropped) and rebuild the two availability
- * tables (they hold only this suite's rows) from the migration's own SQL.
+ * tables (they hold only this suite's rows) from the migration's own SQL. The DDL runs
+ * under the shared schema lock: other suites write these tables' parents concurrently.
  */
 async function ensureMigrationSql(client: any): Promise<void> {
-  await client.$executeRawUnsafe(
-    'ALTER TABLE "appointment_settings" ADD COLUMN IF NOT EXISTS "maxDailyBookings" INTEGER'
-  );
-  await client.$executeRawUnsafe(
-    'ALTER TABLE "appointment_settings" ADD COLUMN IF NOT EXISTS "availabilityConfiguredAt" TIMESTAMP(3)'
-  );
+  const shared = [
+    'ALTER TABLE "appointment_settings" ADD COLUMN IF NOT EXISTS "maxDailyBookings" INTEGER',
+    'ALTER TABLE "appointment_settings" ADD COLUMN IF NOT EXISTS "availabilityConfiguredAt" TIMESTAMP(3)',
+  ];
   const present: Array<{ conname: string }> = await client.$queryRawUnsafe(
     'SELECT conname FROM pg_constraint WHERE conname = ANY($1::text[])',
     CHECK_NAMES
   );
-  if (present.length === CHECK_NAMES.length) return;
-  await client.$executeRawUnsafe(
-    'DROP TABLE IF EXISTS "availability_hours", "availability_closures" CASCADE'
+  if (present.length === CHECK_NAMES.length) {
+    await applySchemaSql(DB_URL!, shared);
+    return;
+  }
+  const settingsCheck = present.some(
+    (row) => row.conname === 'appointment_settings_maxDailyBookings_check'
   );
+  const statements = [
+    ...shared,
+    'DROP TABLE IF EXISTS "availability_hours", "availability_closures" CASCADE',
+  ];
   for (const stmt of splitStatements(migrationSql())) {
     if (/^ALTER TABLE "appointment_settings" ADD COLUMN/.test(stmt)) continue;
-    if (/^ALTER TABLE "appointment_settings" (ADD|VALIDATE) CONSTRAINT/.test(stmt)) {
-      const exists: unknown[] = await client.$queryRawUnsafe(
-        `SELECT 1 FROM pg_constraint WHERE conname = 'appointment_settings_maxDailyBookings_check'`
-      );
-      if (exists.length > 0) continue;
+    if (
+      settingsCheck &&
+      /^ALTER TABLE "appointment_settings" (ADD|VALIDATE) CONSTRAINT/.test(stmt)
+    ) {
+      continue;
     }
-    await client.$executeRawUnsafe(stmt);
+    statements.push(stmt);
   }
+  await applySchemaSql(DB_URL!, statements);
 }
 
 const DB_URL = process.env.DATABASE_URL;

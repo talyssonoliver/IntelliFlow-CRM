@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
+import { applySchemaSql, createIndexConcurrently } from './schema-lock';
 
 const MIGRATIONS = join(__dirname, '../../packages/db/prisma/migrations');
 const POLICY_MIGRATION = join(MIGRATIONS, '20261016120000_approval_policies/migration.sql');
@@ -62,25 +63,28 @@ function readSql(path: string): string[] {
  * expression/partial unique indexes and the RLS policies this suite asserts are
  * absent there. When they are missing, rebuild the two policy tables from the
  * migration's own SQL (they hold only this suite's rows). The agent_actions
- * column changes are applied only when db push has not already made them.
+ * column changes are applied only when db push has not already made them. All of it
+ * runs under the shared schema lock (see ./schema-lock).
  */
 async function ensureMigrationSql(client: any): Promise<void> {
   const present = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'approval_policies_scope_check'`
   );
   if (present.length === 0) {
-    await client.$executeRawUnsafe(
-      'DROP TABLE IF EXISTS "approval_policy_assignments", "approval_policies" CASCADE'
-    );
     const columns = await client.$queryRawUnsafe(
       `SELECT 1 FROM information_schema.columns WHERE table_name = 'agent_actions' AND column_name = 'escalatedAt'`
     );
+    const statements = [
+      'DROP TABLE IF EXISTS "approval_policy_assignments", "approval_policies" CASCADE',
+    ];
     for (const stmt of readSql(POLICY_MIGRATION)) {
       if (columns.length > 0 && /^ALTER TABLE "agent_actions"/.test(stmt)) continue;
-      await client.$executeRawUnsafe(stmt);
+      statements.push(stmt);
     }
+    await applySchemaSql(DB_URL!, statements);
   }
-  for (const stmt of readSql(INDEX_MIGRATION)) await client.$executeRawUnsafe(stmt);
+  // CONCURRENTLY cannot run in a transaction: one statement at a time, outside it.
+  for (const stmt of readSql(INDEX_MIGRATION)) await createIndexConcurrently(DB_URL!, stmt);
 }
 
 const DB_URL = process.env.DATABASE_URL;

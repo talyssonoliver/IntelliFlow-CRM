@@ -24,6 +24,7 @@ import type {
   AppointmentCase,
 } from '@intelliflow/db';
 import { TRPCError } from '@trpc/server';
+import { tenantUserWhere } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure as baseTenantProcedure } from '../../trpc';
 import { AppointmentDomainService } from '../../services';
 import {
@@ -452,6 +453,39 @@ export interface AppointmentListPage {
   hasMore: boolean;
 }
 
+/**
+ * #890: attendees and linked cases are written by id, and `prismaWithTenant` does not
+ * inject the tenant into nested ids, so a foreign id would be accepted. Check ownership
+ * in the caller's tenant before any write. A foreign id and a missing id fail the same
+ * way (NOT_FOUND), so the response reveals nothing about other tenants.
+ */
+async function assertAppointmentRefsInTenant(
+  ctx: { prismaWithTenant: any; user: { tenantId: string } },
+  refs: { attendeeIds?: readonly string[]; linkedCaseIds?: readonly string[]; caseId?: string }
+): Promise<void> {
+  const tenantId = ctx.user.tenantId;
+  const attendees = [...new Set(refs.attendeeIds ?? [])];
+  if (attendees.length > 0) {
+    const found = await ctx.prismaWithTenant.user.count({
+      where: { id: { in: attendees }, ...tenantUserWhere(tenantId) },
+    });
+    if (found !== attendees.length) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Attendee not found' });
+    }
+  }
+  const cases = [
+    ...new Set([...(refs.linkedCaseIds ?? []), ...(refs.caseId ? [refs.caseId] : [])]),
+  ];
+  if (cases.length > 0) {
+    const found = await ctx.prismaWithTenant.case.count({
+      where: { id: { in: cases }, tenantId },
+    });
+    if (found !== cases.length) {
+      throw new TRPCError({ code: 'NOT_FOUND', message: 'Linked case not found' });
+    }
+  }
+}
+
 export const appointmentsRouter = createTRPCRouter({
   /**
    * Create a new appointment
@@ -461,6 +495,11 @@ export const appointmentsRouter = createTRPCRouter({
    */
   create: tenantProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
     const startTime = performance.now();
+
+    await assertAppointmentRefsInTenant(ctx, {
+      attendeeIds: input.attendeeIds,
+      linkedCaseIds: input.linkedCaseIds,
+    });
 
     // Firm availability (PG-202): hours, closures, daily cap. Tenants that never
     // saved availability keep the 07:00-19:00 rule in input.timezone.
@@ -1181,6 +1220,7 @@ export const appointmentsRouter = createTRPCRouter({
     .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       await assertLegalEntitlement(ctx); // case-linking requires the LEGAL module
+      await assertAppointmentRefsInTenant(ctx, { caseId: input.caseId });
       const existing = await ctx.prismaWithTenant.appointment.findUnique({
         where: { id: input.appointmentId },
       });

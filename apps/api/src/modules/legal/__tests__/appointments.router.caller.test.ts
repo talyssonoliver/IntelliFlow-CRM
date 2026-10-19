@@ -172,6 +172,81 @@ describe('Appointments Router - Caller Tests', () => {
     });
   });
 
+  describe('attendee and linked-case ownership (#890)', () => {
+    const create = (extra: Record<string, unknown>) =>
+      appointmentsRouter.createCaller(createTestContext()).create({
+        title: 'Test Appointment',
+        startTime: now,
+        endTime: oneHourLater,
+        appointmentType: 'MEETING',
+        ...extra,
+      });
+
+    it('rejects a create with an attendee of another tenant before scheduling', async () => {
+      prismaMock.user.count.mockResolvedValue(0);
+
+      await expect(create({ attendeeIds: [TEST_UUIDS.user2] })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+        message: 'Attendee not found',
+      });
+      expect(vi.mocked(container.scheduleAppointmentUseCase.execute)).not.toHaveBeenCalled();
+      expect(prismaMock.user.count).toHaveBeenCalledWith({
+        where: expect.objectContaining({ id: { in: [TEST_UUIDS.user2] } }),
+      });
+    });
+
+    it('rejects a create linked to a case of another tenant before scheduling', async () => {
+      prismaMock.case.count.mockResolvedValue(0);
+
+      await expect(create({ linkedCaseIds: [TEST_UUIDS.account1] })).rejects.toMatchObject({
+        code: 'NOT_FOUND',
+      });
+      expect(vi.mocked(container.scheduleAppointmentUseCase.execute)).not.toHaveBeenCalled();
+      expect(prismaMock.case.count).toHaveBeenCalledWith({
+        where: { id: { in: [TEST_UUIDS.account1] }, tenantId: TEST_UUIDS.tenant },
+      });
+    });
+
+    it('rejects when only some of the attendees belong to the tenant', async () => {
+      prismaMock.user.count.mockResolvedValue(1);
+
+      await expect(
+        create({ attendeeIds: [TEST_UUIDS.user1, TEST_UUIDS.user2] })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(vi.mocked(container.scheduleAppointmentUseCase.execute)).not.toHaveBeenCalled();
+    });
+
+    it('rejects linkToCase for a case of another tenant without writing the link', async () => {
+      prismaMock.case.count.mockResolvedValue(0);
+
+      await expect(
+        appointmentsRouter
+          .createCaller(createTestContext())
+          .linkToCase({ appointmentId: mockAppointment.id, caseId: TEST_UUIDS.account1 })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(prismaMock.appointmentCase.create).not.toHaveBeenCalled();
+    });
+
+    it('schedules when every attendee and case belongs to the tenant', async () => {
+      prismaMock.user.count.mockResolvedValue(1);
+      prismaMock.case.count.mockResolvedValue(1);
+      vi.mocked(container.scheduleAppointmentUseCase.execute).mockResolvedValue(
+        Result.ok({
+          appointment: { id: { value: mockAppointment.id } } as any,
+          conflictWarnings: [],
+        })
+      );
+      prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
+
+      const result = await create({
+        attendeeIds: [TEST_UUIDS.user2],
+        linkedCaseIds: [TEST_UUIDS.account1],
+      });
+
+      expect(result.id).toBe(mockAppointment.id);
+    });
+  });
+
   describe('getById', () => {
     it('should return an appointment by ID', async () => {
       const ctx = createTestContext();
@@ -735,6 +810,7 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
+      prismaMock.case.count.mockResolvedValue(1);
       prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
       prismaMock.appointmentCase.findUnique.mockResolvedValue(null);
       prismaMock.appointmentCase.create.mockResolvedValue({
@@ -755,6 +831,7 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
+      prismaMock.case.count.mockResolvedValue(1);
       prismaMock.appointment.findUnique.mockResolvedValue(mockAppointment as any);
       prismaMock.appointmentCase.findUnique.mockResolvedValue({
         id: 'link-1',
@@ -775,6 +852,7 @@ describe('Appointments Router - Caller Tests', () => {
       const ctx = createTestContext();
       const caller = appointmentsRouter.createCaller(ctx);
 
+      prismaMock.case.count.mockResolvedValue(1);
       prismaMock.appointment.findUnique.mockResolvedValue(null);
 
       await expect(

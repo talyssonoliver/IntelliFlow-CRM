@@ -85,6 +85,9 @@ vi.mock('@intelliflow/db', () => ({
         agentActionRows.push(row);
         return row;
       }),
+      findFirst: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        return agentActionRows.find((row) => matchesWhere(row, where)) ?? null;
+      }),
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
         return agentActionRows.find((row) => row.id === where.id) ?? null;
       }),
@@ -105,6 +108,13 @@ vi.mock('@intelliflow/db', () => ({
 
         const [deleted] = agentActionRows.splice(index, 1);
         return deleted;
+      }),
+      deleteMany: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        const before = agentActionRows.length;
+        for (let i = agentActionRows.length - 1; i >= 0; i--) {
+          if (matchesWhere(agentActionRows[i], where)) agentActionRows.splice(i, 1);
+        }
+        return { count: before - agentActionRows.length };
       }),
       findMany: vi.fn(
         async ({

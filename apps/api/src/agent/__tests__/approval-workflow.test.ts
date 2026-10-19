@@ -70,6 +70,9 @@ vi.mock('@intelliflow/db', () => ({
         agentActionRows.push(row);
         return row;
       }),
+      findFirst: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        return agentActionRows.find((row) => matchesWhere(row, where)) ?? null;
+      }),
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
         return agentActionRows.find((row) => row.id === where.id) ?? null;
       }),
@@ -90,6 +93,13 @@ vi.mock('@intelliflow/db', () => ({
 
         const [deleted] = agentActionRows.splice(index, 1);
         return deleted;
+      }),
+      deleteMany: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        const before = agentActionRows.length;
+        for (let i = agentActionRows.length - 1; i >= 0; i--) {
+          if (matchesWhere(agentActionRows[i], where)) agentActionRows.splice(i, 1);
+        }
+        return { count: before - agentActionRows.length };
       }),
       findMany: vi.fn(
         async ({
@@ -561,6 +571,73 @@ describe('Approval Workflow', () => {
         await expect(approvalWorkflowService.rejectAction(decision, testContext)).rejects.toThrow(
           'Pending action not found'
         );
+      });
+    });
+
+    describe('cross-tenant isolation (#883)', () => {
+      const tenantA = '11111111-1111-4111-8111-111111111111';
+      const tenantB = '22222222-2222-4222-8222-222222222222';
+
+      const decisionFor = (actionId: string, decision: 'APPROVE' | 'REJECT'): ApprovalDecision => ({
+        actionId,
+        decision,
+        decidedBy: 'user-b',
+        decidedAt: new Date(),
+        reason: 'x',
+      });
+
+      it('approveAction from another tenant cannot see or claim the action', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'xt-1', tenantId: tenantA }));
+
+        await expect(
+          approvalWorkflowService.approveAction(decisionFor('xt-1', 'APPROVE'), {
+            ...testContext,
+            tenantId: tenantB,
+          })
+        ).rejects.toThrow('Pending action not found');
+
+        expect(agentActionRows.find((r) => r.id === 'xt-1')?.status).toBe('PENDING_APPROVAL');
+        expect(executeSpy).not.toHaveBeenCalled();
+      });
+
+      it('rejectAction from another tenant cannot see or reject the action', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'xt-2', tenantId: tenantA }));
+
+        await expect(
+          approvalWorkflowService.rejectAction(decisionFor('xt-2', 'REJECT'), {
+            ...testContext,
+            tenantId: tenantB,
+          })
+        ).rejects.toThrow('Pending action not found');
+
+        expect(agentActionRows.find((r) => r.id === 'xt-2')?.status).toBe('PENDING_APPROVAL');
+      });
+
+      it('getPendingAction and get() do not return, or expire, an action of another tenant', async () => {
+        await pendingActionsStore.add(
+          createTestPendingAction({
+            id: 'xt-3',
+            tenantId: tenantA,
+            expiresAt: new Date(Date.now() - 1000),
+          })
+        );
+
+        expect(await approvalWorkflowService.getPendingAction('xt-3', tenantB)).toBeUndefined();
+        // Row untouched: the foreign read must not have flipped it to EXPIRED.
+        expect(agentActionRows.find((r) => r.id === 'xt-3')?.status).toBe('PENDING_APPROVAL');
+        expect(await pendingActionsStore.delete('xt-3', tenantB)).toBe(false);
+        expect(agentActionRows.some((r) => r.id === 'xt-3')).toBe(true);
+      });
+
+      it('the owning tenant still approves its own action', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'xt-4', tenantId: tenantA }));
+
+        const executed = await approvalWorkflowService.approveAction(
+          decisionFor('xt-4', 'APPROVE'),
+          { ...testContext, tenantId: tenantA }
+        );
+
+        expect(executed.id).toBe('xt-4');
       });
     });
 
