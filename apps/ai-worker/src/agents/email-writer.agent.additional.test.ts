@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { PurposeCeilingReachedError } from '../lib/purpose-ceiling.js';
 
 // Pattern A: mock the factory — agent calls createLLM and uses invoke() with JSON parsing.
 // Use vi.hoisted so the constant is available inside the hoisted vi.mock() factory.
@@ -321,6 +322,19 @@ describe('EmailWriterAgent - Execution', () => {
   });
 
   describe('Parser failure - fallback path', () => {
+    it('fails the task when the purpose ceiling is reached mid-task, never a fallback answer (PG-199)', async () => {
+      (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'draft' }) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockRejectedValue(new PurposeCeilingReachedError('email', 100, 100)),
+      });
+
+      const result = await agent.execute(createEmailWriterTask(makeInput()));
+
+      expect(result.success).toBe(false);
+      expect(result.output).toBeUndefined();
+      expect(result.error).toContain('monthly AI ceiling reached');
+    });
+
     it('should return fallback output when parser fails', async () => {
       // Stub structuredFor (PG-199) to throw (simulates structured parse failure)
       (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'not valid json' }) };

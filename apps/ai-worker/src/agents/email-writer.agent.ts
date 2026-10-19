@@ -12,6 +12,7 @@ import {
   communicationToneSchema,
   emailLengthSchema,
 } from '@intelliflow/validators';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
 
 const logger = pino({
   name: 'email-writer-agent',
@@ -163,6 +164,8 @@ and response rates.`,
 
       return result;
     } catch (parseError) {
+      // PG-199: a budget refusal is not a parse failure; never turn it into a fallback answer.
+      if (isPurposeCeilingReached(parseError)) throw parseError;
       logger.error(
         {
           recipientEmail: input.recipientEmail,

@@ -3,6 +3,7 @@ import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
 import { ensurePromptBudget } from '../utils/prompt-budget.js';
 import { replayConversation } from '../utils/conversation-replay.js';
 import pino from 'pino';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
 
 const logger = pino({
   name: 'qualification-agent',
@@ -167,6 +168,8 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
 
       return result;
     } catch (parseError) {
+      // PG-199: a budget refusal is not a parse failure; never turn it into a fallback answer.
+      if (isPurposeCeilingReached(parseError)) throw parseError;
       logger.error(
         {
           leadId: lead.leadId,

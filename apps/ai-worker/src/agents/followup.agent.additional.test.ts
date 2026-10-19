@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { PurposeCeilingReachedError } from '../lib/purpose-ceiling.js';
 
 // Pattern A: mock the factory — agent calls createLLM and uses invoke() for string-based
 // response parsing (followup agent uses JSON.parse on invoke result content).
@@ -219,6 +220,19 @@ describe('FollowupAgent - Execution', () => {
   });
 
   describe('Parser failure - fallback path', () => {
+    it('fails the task when the purpose ceiling is reached mid-task, never a fallback answer (PG-199)', async () => {
+      (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'analysis' }) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockRejectedValue(new PurposeCeilingReachedError('reasoning', 100, 100)),
+      });
+
+      const result = await agent.execute(createFollowupTask(makeInput()));
+
+      expect(result.success).toBe(false);
+      expect(result.output).toBeUndefined();
+      expect(result.error).toContain('monthly AI ceiling reached');
+    });
+
     it('should return conservative fallback when parser fails', async () => {
       // Pattern A (B2b): stub structuredFor (PG-199) to throw — this triggers the catch/fallback.
       // Overriding only model.invoke is insufficient because structuredModel is separate.

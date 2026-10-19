@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { PurposeCeilingReachedError } from '../lib/purpose-ceiling.js';
 import { createLLMForTenant } from '../lib/llm-factory.js';
 import {
   LeadQualificationAgent,
@@ -197,6 +198,27 @@ describe('LeadQualificationAgent', () => {
 
       expect(result.success).toBe(true);
       expect(result.output).toBeDefined();
+    });
+
+    it('fails the task when the purpose ceiling is reached mid-task, never a fallback answer (PG-199)', async () => {
+      const cappedAgent = new LeadQualificationAgent();
+      vi.spyOn(cappedAgent as any, 'structuredFor').mockReturnValue({
+        invoke: vi
+          .fn()
+          .mockRejectedValue(new PurposeCeilingReachedError('qualification', 100, 100)),
+      });
+
+      const result = await cappedAgent.execute(
+        createQualificationTask({
+          leadId: 'lead-cap',
+          email: 'cap@example.invalid',
+          source: 'WEBSITE',
+        })
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.output).toBeUndefined();
+      expect(result.error).toContain('monthly AI ceiling reached');
     });
 
     it('should handle parsing errors gracefully', async () => {

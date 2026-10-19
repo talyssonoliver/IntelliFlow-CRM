@@ -10,6 +10,7 @@ import {
 } from '@intelliflow/validators';
 import { replayConversation } from '../utils/conversation-replay.js';
 import { ensurePromptBudget } from '../utils/prompt-budget.js';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
 
 const logger = pino({
   name: 'followup-agent',
@@ -180,6 +181,8 @@ the specific context of each lead. You excel at balancing persistence with profe
 
       return result;
     } catch (parseError) {
+      // PG-199: a budget refusal is not a parse failure; never turn it into a fallback answer.
+      if (isPurposeCeilingReached(parseError)) throw parseError;
       logger.error(
         {
           leadId: input.leadId,
