@@ -204,6 +204,7 @@ These are from the final matrix, 2026-10-19 14:18–14:33Z, run one at a time wi
 - **P2b:** NBA answered a ceiling refusal with heuristics. It now rethrows (f50b383ff).
 - RED: `logs/40-aurora-r1-red.txt`; GREEN: `logs/40-aurora-r1-green.txt`. The full ai-worker suite passes (2382).
 - Accepted with no change, and noted in the PR body: `get` is open to readers, the audit write is best-effort after commit, and tasks with no tenant skip the ceiling. The PR body also asks projects-64 to pre-count CHECK violators before VALIDATE.
+- Pre-ship at 94c3541de (after the codex quota reset) passed 31 of 34 steps and failed codex-review with one real finding: a batch embed with a failed sibling request recorded no spend for the requests that succeeded and were billed. Each Gemini and OpenAI-compatible embedding request is now metered on its own (2da1c0c62). RED: `logs/42-codex-r-red.txt`; GREEN: `logs/42-codex-r-green.txt`; the full ai-worker suite passes (2385, `logs/42-codex-r-suite.txt`).
 
 ## Follow-up issues
 
