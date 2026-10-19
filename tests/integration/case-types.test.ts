@@ -18,6 +18,7 @@ import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { CASE_REQUIRED_FIELD_KEYS } from '../../packages/domain/src/legal/cases/case-type-defaults';
 import { CASE_TASK_ORDER } from '../../apps/api/src/lib/case-task-order';
 import { endOfCalendarDayInTimezone } from '../../apps/api/src/lib/case-sla-deadline';
+import { applySchemaSql } from './schema-lock';
 
 const MIGRATION_PATH = join(
   __dirname,
@@ -62,26 +63,32 @@ function splitStatements(sql: string): string[] {
  * are absent there. When they are missing, rebuild the two case-type tables from
  * the migration's own SQL (they hold only this suite's rows). The `cases` table is
  * never dropped — other suites write it concurrently; its column is only added
- * when missing (a local DB that was not pushed with this schema).
+ * when missing (a local DB that was not pushed with this schema). The DDL runs under
+ * the shared schema lock (see ./schema-lock).
  */
 async function ensureMigrationSql(client: any): Promise<void> {
   // Columns on shared tables are added in place (never dropped); safe to repeat.
-  await client.$executeRawUnsafe('ALTER TABLE "cases" ADD COLUMN IF NOT EXISTS "caseTypeId" TEXT');
-  await client.$executeRawUnsafe(
-    'ALTER TABLE "case_tasks" ADD COLUMN IF NOT EXISTS "position" INTEGER'
-  );
+  const shared = [
+    'ALTER TABLE "cases" ADD COLUMN IF NOT EXISTS "caseTypeId" TEXT',
+    'ALTER TABLE "case_tasks" ADD COLUMN IF NOT EXISTS "position" INTEGER',
+  ];
   const present = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'case_types_colorToken_check'`
   );
-  if (present.length > 0) return;
-  await client.$executeRawUnsafe(
-    'DROP TABLE IF EXISTS "case_type_checklist_items", "case_types" CASCADE'
-  );
-  for (const stmt of splitStatements(migrationSql())) {
-    // Shared-table columns were ensured above.
-    if (/^ALTER TABLE "(cases|case_tasks)" ADD COLUMN/.test(stmt)) continue;
-    await client.$executeRawUnsafe(stmt);
+  if (present.length > 0) {
+    await applySchemaSql(DB_URL!, shared);
+    return;
   }
+  const statements = [
+    ...shared,
+    'DROP TABLE IF EXISTS "case_type_checklist_items", "case_types" CASCADE',
+  ];
+  for (const stmt of splitStatements(migrationSql())) {
+    // Shared-table columns are ensured by the statements above.
+    if (/^ALTER TABLE "(cases|case_tasks)" ADD COLUMN/.test(stmt)) continue;
+    statements.push(stmt);
+  }
+  await applySchemaSql(DB_URL!, statements);
 }
 
 const DB_URL = process.env.DATABASE_URL;
