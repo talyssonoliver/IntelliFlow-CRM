@@ -31,6 +31,14 @@ import { canCompensate, compensateApprovedAction } from '../approved-action-comp
 
 const TENANT = 'tenant-1';
 
+const DRAFT_COLUMNS = {
+  subject: 'Follow-up',
+  body: '<p>Hi</p>',
+  toEmail: 'lead@example.invalid',
+  ccEmails: null,
+  bccEmails: null,
+};
+
 interface TargetState {
   caseStatus?: string | null;
   appointmentStatus?: string | null;
@@ -57,6 +65,7 @@ function ctx(state: TargetState = {}) {
       },
       emailRecord: {
         findFirst: row(state.draft === undefined ? { isDraft: true } : state.draft, (metadata) => ({
+          ...DRAFT_COLUMNS,
           metadata,
         })),
         updateMany: vi.fn().mockResolvedValue({ count: 1 }),
@@ -161,15 +170,24 @@ describe('compensateApprovedAction', () => {
     );
 
     expect(outcome).toEqual({ success: true, restoredState: { trashedDraftId: 'email-1' } });
+    // One compare-and-set on the metadata just read, with processEmail('delete')'s flags.
     expect(requester.prisma.emailRecord.findFirst).toHaveBeenCalledWith({
       where: { id: 'email-1', tenantId: TENANT },
-      select: { metadata: true },
+      select: {
+        subject: true,
+        body: true,
+        toEmail: true,
+        ccEmails: true,
+        bccEmails: true,
+        metadata: true,
+      },
     });
-    // One compare-and-set on the metadata just read, with processEmail('delete')'s flags.
+    // One compare-and-set on every editable column just read, with processEmail('delete')'s flags.
     expect(requester.prisma.emailRecord.updateMany).toHaveBeenCalledWith({
       where: {
         id: 'email-1',
         tenantId: TENANT,
+        ...DRAFT_COLUMNS,
         metadata: { equals: { isDraft: true, textBody: 'Hi' } },
       },
       data: {

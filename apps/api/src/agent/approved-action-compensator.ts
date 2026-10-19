@@ -80,29 +80,46 @@ const cancelAppointment: Compensator = {
   restoredState: (id) => ({ cancelledAppointmentId: id }),
 };
 
-async function emailMetadata(id: string, ctx: Context): Promise<Record<string, unknown>> {
+/** Every column saveDraft can change: a rollback trashes the draft only if none moved. */
+const DRAFT_FIELDS = {
+  subject: true,
+  body: true,
+  toEmail: true,
+  ccEmails: true,
+  bccEmails: true,
+  metadata: true,
+} as const;
+
+async function emailDraft(id: string, ctx: Context) {
   const record = await ctx.prisma.emailRecord.findFirst({
     where: { id, tenantId: tenantOf(ctx) },
-    select: { metadata: true },
+    select: DRAFT_FIELDS,
   });
   if (!record) throw new Error('The email draft was not found.');
-  return (record.metadata as Record<string, unknown> | null) ?? {};
+  return { ...record, metadata: (record.metadata as Record<string, unknown> | null) ?? {} };
 }
 
 const trashEmailDraft: Compensator = {
   async isUndone(id, ctx) {
-    return (await emailMetadata(id, ctx)).isTrashed === true;
+    return (await emailDraft(id, ctx)).metadata.isTrashed === true;
   },
   async undo(id, ctx) {
     // Archived, sent on or otherwise moved: it is no longer the draft the agent made.
-    const meta = await emailMetadata(id, ctx);
-    if (meta.isDraft !== true) throw new Error('The email is no longer a draft.');
+    const draft = await emailDraft(id, ctx);
+    if (draft.metadata.isDraft !== true) throw new Error('The email is no longer a draft.');
     // The same flags inbound processEmail('delete') sets, as one compare-and-set on the
-    // metadata just read: an email archived or edited in between is left untouched.
+    // draft just read: an email archived or edited in between is left untouched.
+    const { metadata, ...columns } = draft;
     const { count } = await ctx.prisma.emailRecord.updateMany({
-      where: { id, tenantId: tenantOf(ctx), metadata: { equals: meta as never } },
+      where: { id, tenantId: tenantOf(ctx), ...columns, metadata: { equals: metadata as never } },
       data: {
-        metadata: { ...meta, isTrashed: true, isArchived: false, isSpam: false, isDraft: false },
+        metadata: {
+          ...metadata,
+          isTrashed: true,
+          isArchived: false,
+          isSpam: false,
+          isDraft: false,
+        } as never,
       },
     });
     if (count !== 1) throw new Error('The email changed while rolling back; nothing was trashed.');
