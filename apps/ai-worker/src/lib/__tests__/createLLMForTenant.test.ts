@@ -318,6 +318,62 @@ describe('createLLMForTenant()', () => {
     ceiling.setPurposeSpendReader(null);
   });
 
+  it('checks the ceiling again before each later call on the returned model', async () => {
+    mockResolveEffectiveTier.mockResolvedValue({ tier: 'free', ceilingCents: 100 });
+    const { createLLMForTenant } = await importFactory('mock');
+    const ceiling = await import('../purpose-ceiling.js');
+    ceiling.setPurposeSpendReader({ getSpend: vi.fn().mockResolvedValue({ email: 0 }) });
+
+    const model = await createLLMForTenant('email', 'free', { tenantId: 'tenant-mid' });
+    // The task's first call reached the ceiling (recorded spend lands in the cache).
+    ceiling.notePurposeSpend('tenant-mid', 'email', 10_000);
+
+    await expect(model.invoke('next call')).rejects.toMatchObject({
+      code: 'PURPOSE_CEILING_REACHED',
+    });
+    ceiling.setPurposeSpendReader(null);
+  });
+
+  describe('withCeilingGuard (per-call ceiling check)', () => {
+    it('runs the guard before invoke and before structured invoke', async () => {
+      const { withCeilingGuard } = await importFactory('mock');
+      const order: string[] = [];
+      const guard = vi.fn(async () => {
+        order.push('guard');
+      });
+      const structured = {
+        invoke: vi.fn(async () => {
+          order.push('structured');
+          return { ok: true };
+        }),
+      };
+      const base = {
+        invoke: vi.fn(async () => {
+          order.push('invoke');
+          return 'answer';
+        }),
+        withStructuredOutput: vi.fn(() => structured),
+        modelName: 'm',
+      };
+      const guarded = withCeilingGuard(base as never, guard) as unknown as typeof base;
+
+      expect(await guarded.invoke('x')).toBe('answer');
+      expect(await guarded.withStructuredOutput({}).invoke('y')).toEqual({ ok: true });
+      expect(order).toEqual(['guard', 'invoke', 'guard', 'structured']);
+      expect(guarded.modelName).toBe('m');
+    });
+
+    it('does not call the model when the guard throws', async () => {
+      const { withCeilingGuard } = await importFactory('mock');
+      const base = { invoke: vi.fn(), withStructuredOutput: vi.fn() };
+      const guarded = withCeilingGuard(base as never, async () => {
+        throw new Error('ceiling');
+      });
+      await expect(guarded.invoke('x')).rejects.toThrow('ceiling');
+      expect(base.invoke).not.toHaveBeenCalled();
+    });
+  });
+
   describe('withModelFallbacks (tenant fallback chain)', () => {
     function fake(name: string, behaviour: () => unknown) {
       const run = vi.fn(async () => behaviour());

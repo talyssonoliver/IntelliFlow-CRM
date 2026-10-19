@@ -331,6 +331,32 @@ export function withModelFallbacks(
   });
 }
 
+/**
+ * PG-199: run `guard` (the purpose ceiling check) before every call on `model`, plain and
+ * structured, so a task that reaches the ceiling mid-way stops at its next call instead of
+ * only at model construction. A per-tenant view over the shared cached model.
+ */
+export function withCeilingGuard(model: BaseChatModel, guard: () => Promise<void>): BaseChatModel {
+  const guarded = (target: Invokable): Invokable => ({
+    invoke: async (input: unknown, options?: unknown) => {
+      await guard();
+      return target.invoke(input, options);
+    },
+  });
+  return new Proxy(model, {
+    get(target, prop, receiver) {
+      if (prop === 'invoke') return guarded(target as unknown as Invokable).invoke;
+      if (prop === 'withStructuredOutput') {
+        return (...args: unknown[]) =>
+          guarded(
+            (target.withStructuredOutput as (...a: unknown[]) => Invokable).apply(target, args)
+          );
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+}
+
 // ============================================================================
 // LLM Factory
 // ============================================================================
@@ -542,7 +568,11 @@ export async function createLLMForTenant(
   const fallbacks = fallbackIds.map((id) =>
     createLLM(purpose, effectiveTier, { ...effectiveOptions, model: id })
   );
-  return withModelFallbacks(primary, fallbacks);
+  const model = withModelFallbacks(primary, fallbacks);
+  if (resolved.ceilingCents === null || resolved.ceilingCents === undefined) return model;
+  return withCeilingGuard(model, () =>
+    assertWithinCeiling(tenantId, purpose, resolved.ceilingCents)
+  );
 }
 
 /** PG-199: MODEL_PRICING key of the embeddings provider createEmbeddings builds. */

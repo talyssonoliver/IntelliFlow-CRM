@@ -98,7 +98,11 @@ export function createPurposeSpendRecorder(options: PurposeSpendRecorderOptions)
     now = () => new Date(),
     maxCarryCentiCents = 10_000_000,
   } = options;
-  const carry = new Map<string, number>();
+  // Sub-centicent remainder of new usage, and whole centicents whose write failed. Kept
+  // apart so a retried amount is written again but never counted twice in the local
+  // ceiling cache.
+  const fraction = new Map<string, number>();
+  const unwritten = new Map<string, number>();
 
   return function recordPurposeSpend(
     usage: Pick<UsageMetrics, 'cost' | 'metadata'>
@@ -111,17 +115,19 @@ export function createPurposeSpendRecorder(options: PurposeSpendRecorderOptions)
     const at = now();
     const period = purposeSpendPeriod(at);
     const key = `${tenantId}:${purpose}:${period}`;
-    const pending = (carry.get(key) ?? 0) + usage.cost * 10_000;
-    const whole = Math.floor(pending);
-    carry.set(key, pending - whole);
+    const pending = (fraction.get(key) ?? 0) + usage.cost * 10_000;
+    const fresh = Math.floor(pending);
+    fraction.set(key, pending - fresh);
+    const whole = fresh + (unwritten.get(key) ?? 0);
+    unwritten.delete(key);
     if (whole < 1) return Promise.resolve();
 
-    notePurposeSpend(tenantId, purpose as LLMPurpose, whole, at);
+    if (fresh > 0) notePurposeSpend(tenantId, purpose as LLMPurpose, fresh, at);
     return spend
       .addSpend(tenantId, purpose as LLMPurpose, period, whole)
       .then(() => undefined)
       .catch((error: unknown) => {
-        carry.set(key, Math.min((carry.get(key) ?? 0) + whole, maxCarryCentiCents));
+        unwritten.set(key, Math.min((unwritten.get(key) ?? 0) + whole, maxCarryCentiCents));
         logger.warn(
           { tenantId, purpose, period, centiCents: whole, error: String(error) },
           'USAGE_NOT_RECORDED: failed to record per-purpose AI spend; will retry with the next call'
