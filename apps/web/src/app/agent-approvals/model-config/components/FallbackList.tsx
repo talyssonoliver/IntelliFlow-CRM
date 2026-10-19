@@ -29,8 +29,12 @@ export interface FallbackListProps {
   /** Entry index → message. */
   errors?: Record<number, string>;
   disabled?: boolean;
+  /** Id of an error about the whole list, shown by the parent. */
+  listErrorId?: string;
   onChange: (ids: string[]) => void;
 }
+
+const ICON_BUTTON = 'h-11 w-11 p-0 aria-disabled:cursor-not-allowed aria-disabled:opacity-50';
 
 type FocusTarget = { kind: 'up' | 'down'; index: number } | { kind: 'add' } | null;
 
@@ -46,9 +50,13 @@ export function FallbackList({
   max,
   errors = {},
   disabled = false,
+  listErrorId,
   onChange,
 }: Readonly<FallbackListProps>) {
-  const [announcement, setAnnouncement] = useState('');
+  const [announcement, setAnnouncementText] = useState('');
+  // A repeated message would not be re-read, so alternate a zero-width suffix.
+  const setAnnouncement = (message: string) =>
+    setAnnouncementText((previous) => (previous === message ? `${message}\u200B` : message));
   const [choice, setChoice] = useState('');
   const [focusTarget, setFocusTarget] = useState<FocusTarget>(null);
   const listRef = useRef<HTMLOListElement>(null);
@@ -75,7 +83,10 @@ export function FallbackList({
       setAnnouncement(`Maximum of ${max} fallbacks reached.`);
       return;
     }
-    if (!choice || ids.includes(choice)) return;
+    if (!choice || ids.includes(choice)) {
+      setAnnouncement('Choose a model to add first.');
+      return;
+    }
     const next = [...ids, choice];
     onChange(next);
     setChoice('');
@@ -92,7 +103,13 @@ export function FallbackList({
 
   const move = (index: number, delta: -1 | 1) => {
     const target = index + delta;
-    if (disabled || target < 0 || target >= ids.length) return;
+    if (disabled) return;
+    if (target < 0 || target >= ids.length) {
+      setAnnouncement(
+        delta === -1 ? `${ids[index]} is already first.` : `${ids[index]} is already last.`
+      );
+      return;
+    }
     const next = [...ids];
     [next[index], next[target]] = [next[target], next[index]];
     onChange(next);
@@ -105,6 +122,10 @@ export function FallbackList({
   };
 
   const addId = `${purpose}-fallback-add`;
+  const errorIds = ids
+    .map((_, index) => (errors[index] ? `${purpose}-fallback-${index}-error` : null))
+    .filter((id): id is string => id !== null);
+  if (listErrorId) errorIds.push(listErrorId);
   const helpId = `${purpose}-fallback-help`;
 
   return (
@@ -117,18 +138,16 @@ export function FallbackList({
         {announcement}
       </output>
       {ids.length === 0 ? (
-        <div className="space-y-1">
-          <EmptyState
-            entity="rules"
-            phase="passive"
-            size="sm"
-            aria-label={`No ${label} fallbacks`}
-            className="py-4 px-3 gap-2"
-          />
-          <p className="text-xs text-muted-foreground">
-            No fallbacks: if the model is unavailable, the feature&apos;s built-in fallback runs.
-          </p>
-        </div>
+        <EmptyState
+          entity="rules"
+          phase="passive"
+          size="sm"
+          title="No fallbacks"
+          description="If the model is unavailable, the feature's built-in fallback runs."
+          tabIndex={-1}
+          aria-label={`No ${label} fallbacks`}
+          className="py-4 px-3 gap-2"
+        />
       ) : (
         <ol ref={listRef} aria-label={`${title} fallback models`} className="space-y-2">
           {ids.map((id, index) => {
@@ -145,10 +164,7 @@ export function FallbackList({
                   >
                     {index + 1}.
                   </span>
-                  <span
-                    className="flex-1 truncate text-sm text-foreground"
-                    aria-describedby={errors[index] ? errorId : undefined}
-                  >
+                  <span className="flex-1 truncate text-sm text-foreground">
                     {id}
                     <span className="ml-2 text-xs text-muted-foreground">
                       {price === undefined ? '(retired)' : formatModelPrice(price)}
@@ -158,7 +174,7 @@ export function FallbackList({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-11 w-11 p-0"
+                    className={ICON_BUTTON}
                     aria-label={`Move fallback ${index + 1} up`}
                     aria-disabled={first || undefined}
                     data-fallback-control={`up-${index}`}
@@ -172,7 +188,7 @@ export function FallbackList({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-11 w-11 p-0"
+                    className={ICON_BUTTON}
                     aria-label={`Move fallback ${index + 1} down`}
                     aria-disabled={last || undefined}
                     data-fallback-control={`down-${index}`}
@@ -186,8 +202,9 @@ export function FallbackList({
                     type="button"
                     size="sm"
                     variant="ghost"
-                    className="h-11 w-11 p-0"
+                    className={ICON_BUTTON}
                     aria-label={`Remove fallback ${index + 1}`}
+                    aria-describedby={errors[index] ? errorId : undefined}
                     onClick={() => remove(index)}
                   >
                     <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
@@ -210,7 +227,7 @@ export function FallbackList({
           <SelectTrigger
             id={addId}
             aria-label={`Add a ${label} fallback model`}
-            aria-describedby={helpId}
+            aria-describedby={[helpId, ...errorIds].join(' ')}
             className="h-11 sm:flex-1"
           >
             <SelectValue placeholder="Choose a model" />
@@ -228,7 +245,7 @@ export function FallbackList({
           type="button"
           size="sm"
           variant="outline"
-          className="h-11"
+          className="h-11 aria-disabled:cursor-not-allowed aria-disabled:opacity-50"
           aria-disabled={atLimit || undefined}
           onClick={add}
         >

@@ -45,6 +45,10 @@ describe('FallbackList', () => {
     render(<Harness initial={[]} />);
     const empty = screen.getByLabelText('No qualification fallbacks');
     expect(within(empty).queryByRole('button')).toBeNull();
+    // Fallback wording, not the generic rules copy, and no extra tab stop.
+    expect(within(empty).getByText('No fallbacks')).toBeInTheDocument();
+    expect(within(empty).queryByText(/no rules configured/i)).toBeNull();
+    expect(empty.getAttribute('tabindex')).toBe('-1');
     expect(screen.getByText(/built-in fallback runs/i)).toBeInTheDocument();
   });
 
@@ -72,6 +76,10 @@ describe('FallbackList', () => {
     render(<Harness initial={[]} />);
     fireEvent.click(screen.getByRole('button', { name: 'Add fallback' }));
     expect(ids()).toBe('');
+    expect(live()).toBe('Choose a model to add first.');
+    fireEvent.click(screen.getByRole('button', { name: 'Add fallback' }));
+    // The same message again is still re-announced.
+    expect(live()).toBe('Choose a model to add first.​');
   });
 
   it('reorders with labelled 44 px buttons that stay focusable at the ends', () => {
@@ -82,6 +90,7 @@ describe('FallbackList', () => {
     expect(up1.className).toContain('w-11');
     fireEvent.click(up1);
     expect(ids()).toBe('gpt-4o|mistral-medium');
+    expect(live()).toBe('gpt-4o is already first.');
 
     fireEvent.click(screen.getByRole('button', { name: 'Move fallback 2 up' }));
     expect(ids()).toBe('mistral-medium|gpt-4o');

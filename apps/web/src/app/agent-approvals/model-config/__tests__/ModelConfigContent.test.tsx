@@ -207,8 +207,10 @@ describe('ModelConfigContent — save', () => {
     });
     expect(screen.queryByRole('alertdialog')).toBeNull();
     await waitFor(() => expect(h.invalidate).toHaveBeenCalled());
-    expect(document.querySelector('output[aria-live="polite"]')).toHaveTextContent(
-      'Model settings saved.'
+    await waitFor(() =>
+      expect(document.querySelector('output[aria-live="polite"]')).toHaveTextContent(
+        'Model settings saved.'
+      )
     );
   });
 
@@ -222,6 +224,7 @@ describe('ModelConfigContent — save', () => {
     expect(
       screen.getByText('Use dollars with at most two decimals, e.g. 25 or 12.50.')
     ).toBeInTheDocument();
+    await waitFor(() => expect(document.activeElement).toBe(input));
   });
 
   it('asks once for every downgrade, naming models and prices, then acknowledges', async () => {
@@ -358,6 +361,29 @@ describe('ModelConfigContent — save', () => {
 });
 
 describe('ModelConfigContent — reset and permissions', () => {
+  it('retries the reset (not a save) when the server finds a downgrade the page did not', async () => {
+    load(modelConfigDto({ qualification: { updatedAt: T0 } }));
+    h.reset.mutateAsync
+      .mockRejectedValueOnce(
+        trpcError(
+          'PRECONDITION_FAILED',
+          'DOWNGRADE_UNCONFIRMED: qualification primary gpt-4o → default'
+        )
+      )
+      .mockResolvedValueOnce({ reset: 1 });
+    render(<ModelConfigContent />);
+    fireEvent.click(screen.getByRole('button', { name: 'Reset to Defaults' }));
+    fireEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Reset' })
+    );
+    const again = await screen.findByRole('alertdialog');
+    expect(again).toHaveTextContent('qualification primary gpt-4o → default');
+    fireEvent.click(within(again).getByRole('button', { name: 'Reset' }));
+    await waitFor(() => expect(h.reset.mutateAsync).toHaveBeenCalledTimes(2));
+    expect(h.reset.mutateAsync.mock.calls[1][0].acknowledgeDowngrade).toBe(true);
+    expect(h.update.mutateAsync).not.toHaveBeenCalled();
+  });
+
   it('confirms reset, listing what is reset, what is kept and any cheaper model', async () => {
     load(modelConfigDto({ reasoning: { modelId: 'claude-sonnet-4-5', updatedAt: T0 } }));
     render(<ModelConfigContent />);

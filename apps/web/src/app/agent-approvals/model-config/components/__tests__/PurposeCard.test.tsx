@@ -131,7 +131,11 @@ describe('PurposeCard — parameters', () => {
     fireEvent.change(input, { target: { value: '900' } });
     expect(draft().maxTokens).toBe('900');
     expect(input.getAttribute('aria-invalid')).toBe('true');
-    expect(screen.getByText('Too big').id).toBe(input.getAttribute('aria-describedby'));
+    // Error and help are both read, so the constraint is not lost.
+    expect(input.getAttribute('aria-describedby')?.split(' ')).toEqual([
+      'email-max-tokens-help',
+      screen.getByText('Too big').id,
+    ]);
   });
 
   it('edits the fallback chain', () => {
@@ -202,6 +206,30 @@ describe('PurposeCard — rag and view-only', () => {
     expect(screen.getByText(/embedding spend is estimated/i)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Monthly ceiling (USD)'), { target: { value: '5' } });
     expect(draft().ceilingUsd).toBe('5');
+  });
+
+  it('ties model and temperature errors to their controls and voices the default value', () => {
+    render(
+      <Harness
+        row={purposeRow('scoring')}
+        errors={{ modelId: 'Not available', temperature: 'Too hot' }}
+      />
+    );
+    const select = screen.getByLabelText('Scoring model');
+    expect(select).toHaveAttribute('aria-invalid', 'true');
+    expect(select.getAttribute('aria-describedby')).toContain(screen.getByText('Not available').id);
+    const range = screen.getByLabelText('Scoring temperature');
+    expect(range).toHaveAttribute('aria-invalid', 'true');
+    expect(range).toHaveAttribute('aria-describedby', screen.getByText('Too hot').id);
+    expect(range).toHaveAttribute('aria-valuetext', 'Default');
+  });
+
+  it('announces notes that appear after a pick through a mounted live region', () => {
+    render(<Harness row={purposeRow('scoring', { modelId: 'gpt-4o-mini' })} />);
+    fireEvent.change(screen.getByLabelText('Scoring model'), {
+      target: { value: 'llama-3.1-8b-instant' },
+    });
+    expect(screen.getByRole('note', { name: /cheaper model/i }).closest('output')).not.toBeNull();
   });
 
   it('disables every control for a reader', () => {

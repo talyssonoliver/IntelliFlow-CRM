@@ -7,6 +7,7 @@
  * is editable. A cheaper pick shows a non-modal note here; the confirm itself
  * happens once, at Save (owner R2/Q4).
  */
+import type { ReactNode } from 'react';
 import {
   Card,
   Input,
@@ -68,6 +69,16 @@ function FieldError({ id, message }: Readonly<{ id: string; message?: string }>)
       {message}
     </p>
   );
+}
+
+/** Help text plus, when present, the error: keeps the constraint read with the error. */
+function describedBy(helpId: string, errorId: string, error: string | undefined): string {
+  return error ? `${helpId} ${errorId}` : helpId;
+}
+
+/** Always mounted, so notes that appear after a pick are announced (WCAG 4.1.3). */
+function NoticeRegion({ children }: Readonly<{ children: ReactNode }>) {
+  return <output className="block space-y-1">{children}</output>;
 }
 
 function Notice({
@@ -157,18 +168,20 @@ export function PurposeCard({
             disabled={disabled}
             onChange={(e) => onChange({ ...draft, ceilingUsd: e.target.value })}
             aria-invalid={errors.ceilingUsd ? true : undefined}
-            aria-describedby={errors.ceilingUsd ? ceilingErrorId : ceilingHelpId}
+            aria-describedby={describedBy(ceilingHelpId, ceilingErrorId, errors.ceilingUsd)}
           />
           <p id={ceilingHelpId} className="text-xs text-muted-foreground">
             Leave empty for no ceiling. $0 blocks AI for this purpose.
           </p>
           <FieldError id={ceilingErrorId} message={errors.ceilingUsd} />
           <p className="text-xs text-muted-foreground">{spent}</p>
-          {isBelowSpend(draft, row.spentCents) && (
-            <Notice label="Ceiling already reached" icon="warning">
-              {`Month-to-date spend already reaches this ceiling, so ${stopsOnSave} when you save.`}
-            </Notice>
-          )}
+          <NoticeRegion>
+            {isBelowSpend(draft, row.spentCents) && (
+              <Notice label="Ceiling already reached" icon="warning">
+                {`Month-to-date spend already reaches this ceiling, so ${stopsOnSave} when you save.`}
+              </Notice>
+            )}
+          </NoticeRegion>
         </div>
       </Card>
     </section>
@@ -261,7 +274,8 @@ function ModelFields({
           <SelectTrigger
             id={modelId}
             aria-label={`${title} model`}
-            aria-describedby={modelHelpId}
+            aria-invalid={errors.modelId ? true : undefined}
+            aria-describedby={describedBy(modelHelpId, `${modelId}-error`, errors.modelId)}
             className="h-11"
           >
             <SelectValue />
@@ -283,18 +297,20 @@ function ModelFields({
         <p id={modelHelpId} className="text-xs text-muted-foreground">
           {`Default uses ${listModels(row.defaultModelIds)}, depending on the feature.`}
         </p>
-        {!known && (
-          <Notice label="Retired model" icon="info">
-            This model is no longer offered. Pick another model or return to Default.
-          </Notice>
-        )}
         <FieldError id={`${modelId}-error`} message={errors.modelId} />
-        {cheaper && (
-          <Notice label="Cheaper model selected" icon="info">
-            The new choice costs less per token than the current one. You will be asked to confirm
-            when you save.
-          </Notice>
-        )}
+        <NoticeRegion>
+          {!known && (
+            <Notice label="Retired model" icon="info">
+              This model is no longer offered. Pick another model or return to Default.
+            </Notice>
+          )}
+          {cheaper && (
+            <Notice label="Cheaper model selected" icon="info">
+              The new choice costs less per token than the current one. You will be asked to confirm
+              when you save.
+            </Notice>
+          )}
+        </NoticeRegion>
       </div>
 
       <div className="space-y-1">
@@ -324,6 +340,9 @@ function ModelFields({
           id={tempId}
           type="range"
           aria-label={`${title} temperature`}
+          aria-valuetext={draft.temperature === null ? 'Default' : draft.temperature.toFixed(1)}
+          aria-invalid={errors.temperature ? true : undefined}
+          aria-describedby={errors.temperature ? `${tempId}-error` : undefined}
           min={limits.temperatureMin}
           max={limits.temperatureMax}
           step={0.1}
@@ -345,7 +364,7 @@ function ModelFields({
           disabled={disabled}
           onChange={(e) => onChange({ ...draft, maxTokens: e.target.value })}
           aria-invalid={errors.maxTokens ? true : undefined}
-          aria-describedby={errors.maxTokens ? tokensErrorId : tokensHelpId}
+          aria-describedby={describedBy(tokensHelpId, tokensErrorId, errors.maxTokens)}
         />
         <p id={tokensHelpId} className="text-xs text-muted-foreground">
           {`Leave empty for the feature's default. ${limits.maxTokensMin}–${limits.maxTokensMax}.`}
@@ -361,6 +380,7 @@ function ModelFields({
         max={limits.maxFallbacks}
         errors={fallbackErrors(errors)}
         disabled={disabled}
+        listErrorId={errors.fallbackModelIds ? `${purpose}-fallbacks-error` : undefined}
         onChange={(fallbackModelIds) => onChange({ ...draft, fallbackModelIds })}
       />
       <FieldError id={`${purpose}-fallbacks-error`} message={errors.fallbackModelIds} />

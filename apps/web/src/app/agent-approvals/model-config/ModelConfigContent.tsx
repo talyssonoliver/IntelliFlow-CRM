@@ -118,6 +118,15 @@ export default function ModelConfigContent() {
   const [announcement, setAnnouncement] = useState('');
   const [queued, setQueued] = useState<string | null>(null);
   const resync = useRef(false);
+  // After a confirm the trigger (Save/Reset) is disabled while saving, so focus goes to the
+  // period line instead of being dropped on <body> (WCAG 2.4.3).
+  const confirmed = useRef(false);
+  const [focusInvalid, setFocusInvalid] = useState(false);
+  useEffect(() => {
+    if (!focusInvalid) return;
+    setFocusInvalid(false);
+    document.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [focusInvalid, errors]);
 
   const isDirty = snapshot ? changedDrafts(snapshot, drafts).length > 0 : false;
   const dirtyRef = useRef(isDirty);
@@ -153,7 +162,7 @@ export default function ModelConfigContent() {
     await utils.modelConfig.get.invalidate();
   };
 
-  const handleWriteError = (error: unknown, sent: LLMPurpose[]) => {
+  const handleWriteError = (error: unknown, kind: PendingConfirm['kind'], sent: LLMPurpose[]) => {
     const code = errorCode(error);
     const message = errorMessage(error);
     if (code === 'CONFLICT') {
@@ -162,13 +171,15 @@ export default function ModelConfigContent() {
       return;
     }
     if (code === 'PRECONDITION_FAILED' && message.startsWith(DOWNGRADE_PREFIX)) {
-      setConfirm({ kind: 'save', lines: [message.slice(DOWNGRADE_PREFIX.length).trim()] });
+      // Retry the same action (save or reset) once the server's downgrade is confirmed.
+      setConfirm({ kind, lines: [message.slice(DOWNGRADE_PREFIX.length).trim()] });
       return;
     }
     if (code === 'BAD_REQUEST') {
       const mapped = mapServerIssues(message, sent);
       if (hasErrors(mapped)) {
         setErrors(mapped);
+        setFocusInvalid(true);
         announce('Some fields need attention before saving.', true);
         return;
       }
@@ -190,6 +201,7 @@ export default function ModelConfigContent() {
     } catch (error) {
       handleWriteError(
         error,
+        'save',
         payload.purposes.map((p) => p.purpose)
       );
     }
@@ -204,6 +216,7 @@ export default function ModelConfigContent() {
     }
     setErrors(clientErrors);
     if (hasErrors(clientErrors)) {
+      setFocusInvalid(true);
       announce('Some fields need attention before saving.', true);
       return;
     }
@@ -224,7 +237,7 @@ export default function ModelConfigContent() {
       await adoptLatest();
       announce('Model settings reset to the platform defaults.');
     } catch (error) {
-      handleWriteError(error, []);
+      handleWriteError(error, 'reset', []);
     }
   };
 
@@ -236,11 +249,14 @@ export default function ModelConfigContent() {
     setErrors({});
   };
 
-  const handleConfirm = async () => {
+  // Not awaited: the dialog closes itself once onConfirm resolves, which would also close
+  // a second confirm opened by a server-found downgrade during the write.
+  const handleConfirm = () => {
     const pending = confirm;
+    confirmed.current = true;
     setConfirm(null);
-    if (pending?.kind === 'reset') await handleReset(pending.lines.length > 0);
-    else await submit(true);
+    if (pending?.kind === 'reset') void handleReset(pending.lines.length > 0);
+    else void submit(true);
   };
 
   const hasOverrides = snapshot?.some((row) => row.updatedAt !== null) ?? false;
@@ -342,7 +358,7 @@ export default function ModelConfigContent() {
         {announcement}
       </output>
 
-      <p className="mb-4 text-sm text-muted-foreground">
+      <p id="mc-period" tabIndex={-1} className="mb-4 text-sm text-muted-foreground">
         Spend and ceilings for {formatPeriod(data.period)}.
       </p>
 
@@ -386,13 +402,25 @@ export default function ModelConfigContent() {
 
       <ConfirmationDialog
         open={confirm !== null}
-        onOpenChange={(open) => (open ? null : setConfirm(null))}
+        onOpenChange={(open) => {
+          if (open) return;
+          // Close only the confirm this dialog showed: a late close must not dismiss a new
+          // confirm opened meanwhile (a server-found downgrade during the write).
+          const shown = confirm;
+          setConfirm((current) => (current === shown ? null : current));
+        }}
         title={confirm?.kind === 'reset' ? 'Reset model settings?' : 'Save with cheaper models?'}
         description={confirmDescription}
         confirmLabel={confirm?.kind === 'reset' ? 'Reset' : 'Save with cheaper models'}
         variant={confirm?.kind === 'reset' ? 'destructive' : 'default'}
         isLoading={isSaving}
         onConfirm={handleConfirm}
+        onCloseAutoFocus={(event) => {
+          if (!confirmed.current) return;
+          confirmed.current = false;
+          event.preventDefault();
+          document.getElementById('mc-period')?.focus();
+        }}
       />
     </div>
   );
