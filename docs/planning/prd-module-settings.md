@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                                          |
-| ------------- | -------------------------------------------------------------- |
-| Feature Name  | Module Settings Pages                                          |
-| Status        | Active                                                         |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-202, PG-204 |
-| Created       | 2026-03-11                                                     |
-| Last Updated  | 2026-10-17                                                     |
-| Author        | Spec Session (PG-178)                                          |
+| Field         | Value                                                                  |
+| ------------- | ---------------------------------------------------------------------- |
+| Feature Name  | Module Settings Pages                                                  |
+| Status        | Active                                                                 |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-199, PG-201, PG-202, PG-204 |
+| Created       | 2026-03-11                                                             |
+| Last Updated  | 2026-10-19                                                             |
+| Author        | Spec Session (PG-178)                                                  |
 
 ## Problem Statement
 
@@ -1047,3 +1047,62 @@ production before this ships.
 findNextSlot, Calendar Settings pointer and New Appointment buffer prefill. The
 migration was approved by an independent SQL review and is not applied to
 production.
+
+## PG-199 Addendum: Model Configuration (2026-10-19)
+
+Owner rulings (2026-10-13 R1/R2 inherited from PG-198; 2026-10-19 Q1–Q8,
+`.specify/sprints/sprint-18/context/PG-199/PG-199-owner-ruling.md`): one row per
+AI purpose (scoring, qualification, email, reasoning, structured, rag); a
+monthly USD ceiling per purpose blocks that purpose when reached; agents and the
+conversation-summary job honour tenant settings; any pick of a cheaper model
+(primary or fallback) needs a confirm and an audit entry naming the actor; the
+rag model is locked (ceiling only); email at its ceiling shows a visible
+"ceiling reached"; the Never-Downgrade ranking is by price; embeddings are
+metered. Spec: `.specify/sprints/sprint-18/specifications/PG-199-spec.md`.
+ADR-082.
+
+### Additional User Stories
+
+- **US-MC1 (Model per purpose)**: As an admin or manager, I want to choose which
+  allowed model each AI purpose uses, with its temperature, max tokens and an
+  ordered fallback list, so that our AI runs on models we have approved.
+- **US-MC2 (Never-Downgrade)**: As an owner, I want any switch to a cheaper
+  model to require an explicit confirmation that is recorded with who made it,
+  so that quality is never lowered silently.
+- **US-MC3 (Cost ceilings)**: As an admin, I want a monthly cost ceiling per AI
+  purpose that stops that purpose when reached while the others keep working, so
+  that one feature cannot exhaust our AI budget.
+- **US-MC4 (Transparency)**: As an admin, I want to see month-to-date spend,
+  which purposes are blocked and when a pinned model does not apply on the
+  current provider, so that the page tells the truth about what runs.
+
+### Additional Acceptance Criteria
+
+AC-001 to AC-028 are defined in the spec. In summary:
+
+- `/agent-approvals/model-config` follows the playbook (PageHeader, 12-column
+  bento, one card per purpose, page-level Save/Reset with a dirty snapshot,
+  canonical EmptyState); read-only for users without admin/manager/owner roles.
+- Models come from a code-owned catalog priced from `MODEL_PRICING`; a strictly
+  cheaper pick needs one combined confirm at Save and is refused by the API
+  without acknowledgement; equal price is lateral; every change is audited with
+  the actor and the prices at decision time.
+- Settings stored on `tenant_ai_config` (nullable `tier`, model pin, fallbacks,
+  monthly ceiling in cents) with named DB CHECKs; tenant RLS policy in a
+  separate migration; cross-tenant negative tests.
+- The AI worker applies pins (LiteLLM catalog aliases; OpenRouter where mapped),
+  runs the fallback chain, meters chat and embedding spend per purpose once per
+  call, and blocks a purpose at its ceiling (soft limit; email shows "monthly AI
+  ceiling reached"; rag jobs are delayed, never dropped).
+- Reset restores defaults and keeps rate-limit overrides. Calm notice when the
+  API is older than the page. Lighthouse ≥ 90 (NEEDS_HUMAN without credentials).
+
+### Boolean toggles (playbook §8)
+
+None. The page has no Boolean setting: "no ceiling" is an empty value and "block
+now" is a ceiling of $0. TagsTab and colour tokens do not apply (rows are keyed
+by purpose, not user-labelled entities).
+
+**Prisma migrations** `20261019120000_tenant_model_config` and
+`20261019120100_tenant_ai_config_rls` (Class A) must be applied to production
+before the API is promoted.

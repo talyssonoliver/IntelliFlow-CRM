@@ -2,7 +2,21 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "artifacts": {
     "created": [
-      "apps/web/src/app/agent-approvals/model-config/page.tsx"
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-199-spec.md",
+        "sha256": "0f9c7f9cd5149ef880fb0aa78486791ec2e3ec3a0fc633396b06f5a57dc901dc",
+        "created_at": "2026-10-19T11:39:05Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-199-discussion.md",
+        "sha256": "1807533c117292fb1bf57e480ddf9478cb57aa8b4d42e74d3a93635f5d77a0e3",
+        "created_at": "2026-10-19T11:39:05Z"
+      },
+      {
+        "path": "docs/architecture/adr/ADR-082-tenant-model-config.md",
+        "sha256": "ed8d23a788ce4edba5783d45e8b693d937325c3c09c99b52b085f69d122eb499",
+        "created_at": "2026-10-19T11:39:05Z"
+      }
     ],
     "expected": [
       "apps/web/src/app/agent-approvals/model-config/page.tsx",
@@ -30,12 +44,22 @@
   "kpis": {},
   "notes": "Model config at /agent-approvals/model-config: per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings. MUST follow docs/planning/module-settings-playbook.md. Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md). Wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312.",
   "phase": "",
-  "started_at": null,
+  "started_at": "2026-10-19T10:39:24Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-10-19T10:39:24Z",
+      "note": "/spec-session started (batch-3 lane, worktree pg-199 at origin/main 797904a36)"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-10-19T11:39:05Z",
+      "note": "/spec-session complete: 6 Explore + R1-R3 (6 agents) + /spec-consensus round 1 5/6 (backend REJECTED single BASELINE_TIER) -> amendments A1-A8 -> round 2 6/6 APPROVED; owner rulings Q1-Q8"
     }
   ],
   "stream": null,
