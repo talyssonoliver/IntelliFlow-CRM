@@ -8,6 +8,7 @@ import { resolveEffectiveTier } from './tenant-ai-config.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { GeminiEmbeddings } from './gemini-embeddings.js';
+import type { LLMPurpose as DomainLLMPurpose, LLMTier as DomainLLMTier } from '@intelliflow/domain';
 
 // Local-dev LiteLLM proxy key. Assembled at runtime so no key-shaped literal sits in source.
 const DEV_LITELLM_KEY = ['sk', 'litellm', 'dev', 'change', 'me'].join('-');
@@ -33,7 +34,7 @@ function openRouterModelForTier(tier: LLMTier): string {
  * Logical purpose of the LLM call — maps to a model alias in LiteLLM's model_list.
  * LiteLLM resolves `${purpose}-${tier}` to a concrete provider + model at runtime.
  */
-export type LLMPurpose = 'scoring' | 'qualification' | 'email' | 'reasoning' | 'structured' | 'rag';
+export type LLMPurpose = DomainLLMPurpose; // PG-199: single source in @intelliflow/domain
 
 /**
  * Cost / capability tier.
@@ -41,7 +42,7 @@ export type LLMPurpose = 'scoring' | 'qualification' | 'email' | 'reasoning' | '
  * - standard → balanced cost/quality (e.g. Mistral Small, Llama 3.1 70B)
  * - premium  → highest capability (e.g. Claude 3 Opus, GPT-4o)
  */
-export type LLMTier = 'free' | 'standard' | 'premium';
+export type LLMTier = DomainLLMTier; // PG-199: single source in @intelliflow/domain
 
 export interface CreateLLMOptions {
   temperature?: number;

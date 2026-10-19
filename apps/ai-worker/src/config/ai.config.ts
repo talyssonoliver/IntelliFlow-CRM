@@ -266,6 +266,11 @@ export const MODEL_PRICING = {
   'reasoning-premium': { input: 0.003, output: 0.015 },
   // openai/text-embedding-3-small: $0.02/M (input only; no output tokens for embeddings)
   'rag-premium': { input: 0.00002, output: 0 },
+
+  // PG-199: production embeddings (EMBEDDING_PROVIDER=gemini, llm-factory createEmbeddings).
+  // gemini-embedding-001: $0.15/M input (OpenRouter API pricing for google/gemini-embedding-001,
+  // checked 2026-10-19). Without this key calculateCost priced it as gpt-3.5-turbo.
+  'gemini-embedding-001': { input: 0.00015, output: 0 },
 } as const;
 
 export type ModelName = keyof typeof MODEL_PRICING;
