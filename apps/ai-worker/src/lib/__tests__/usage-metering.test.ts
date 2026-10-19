@@ -20,7 +20,8 @@ describe('PG-199 metering in the tracing wrappers', () => {
     vi.doMock('../../utils/cost-tracker', () => ({ costTracker: { recordUsage } }));
     vi.doMock('../purpose-ceiling.js', () => ({ assertWithinCeiling }));
     vi.doMock('../tenant-ai-config.js', () => ({ resolveEffectiveTier }));
-    vi.doMock('../../config/ai.config.js', () => ({
+    vi.doMock('../../config/ai.config.js', async () => ({
+      ...(await vi.importActual<Record<string, unknown>>('../../config/ai.config.js')),
       aiConfig: { provider: 'litellm', costTracking: { enabled: costTrackingEnabled } },
     }));
     const tracerMod = await import('../../tracing/llm-tracer.js');
@@ -74,6 +75,38 @@ describe('PG-199 metering in the tracing wrappers', () => {
     await model.invoke('x');
 
     expect(recordUsage.mock.calls[0][0]).toMatchObject({ model: 'openai/gpt-oss-120b:free' });
+  });
+
+  it('prices from the model the gateway reports serving (a paid gateway fallback)', async () => {
+    const { wrapModelWithTracing } = await load();
+    const model = wrapModelWithTracing(
+      chatModel({
+        content: 'ok',
+        usage_metadata: { input_tokens: 10, output_tokens: 5 },
+        // LiteLLM fell back from reasoning-free (free) to reasoning-standard (paid).
+        response_metadata: { model_name: 'claude-haiku-4-5-20251001' },
+      }),
+      { purpose: 'reasoning', tier: 'free' }
+    );
+
+    await model.invoke('x');
+
+    expect(recordUsage.mock.calls[0][0]).toMatchObject({
+      model: 'reasoning-standard',
+      operationType: 'llm:reasoning',
+    });
+  });
+
+  it('keeps the construction pricing when the served model is unknown', async () => {
+    const { wrapModelWithTracing } = await load();
+    const model = wrapModelWithTracing(
+      chatModel({ content: 'ok', response_metadata: { model_name: 'mistral' } }),
+      { purpose: 'qualification', tier: 'free', pricingKey: 'ollama' }
+    );
+
+    await model.invoke('x');
+
+    expect(recordUsage.mock.calls[0][0]).toMatchObject({ model: 'ollama' });
   });
 
   it('prices a pinned model with its catalog pricing key', async () => {

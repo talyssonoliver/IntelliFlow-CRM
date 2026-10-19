@@ -62,3 +62,9 @@ domain catalog with a parity test. A pick is a downgrade iff its price is strict
 current effective model's; equal price is a lateral move (no confirm, still audited). Unknown /
 retired current model ⇒ treat as downgrade (safe toward confirm). Embedding models are ranked only
 against embedding models (rag model stays locked per Q5, so this only matters for the catalog).
+
+## Ship-time ruling (2026-10-19, AskUserQuestion during SHIP)
+
+| # | Question | Answer |
+|---|----------|--------|
+| Q9 | Codex (pre-ship) found LiteLLM gateway fallbacks (reasoning-free -> reasoning-standard, structured-free -> structured-standard) are metered at the free alias price, so purpose ceilings undercount. Waive + issue, fix now, or remove the gateway fallbacks? | **B. Fix now** - price each chat call from the model the gateway reports serving (response_metadata.model_name mapped to MODEL_PRICING via a table parity-tested against infra/litellm/config.yaml); construction metadata only when the response names no known model. |

@@ -279,6 +279,43 @@ export type ModelName = keyof typeof MODEL_PRICING;
  * Calculate cost for a given number of tokens
  */
 /** Unknown pricing keys already reported (PG-199: never price an unknown model silently). */
+/**
+ * PG-199 (owner Q9): the model the LiteLLM gateway reports serving (its deployment model,
+ * provider prefix stripped) → the MODEL_PRICING key priced like it. Lets metering price a
+ * gateway fallback (e.g. reasoning-free → reasoning-standard) as the model that ran.
+ * Kept in parity with infra/litellm/config.yaml by model-config-parity.test.ts.
+ */
+export const LITELLM_SERVED_PRICING: Readonly<Record<string, string>> = {
+  'llama-3.1-8b-instant': 'scoring-free',
+  'llama-3.3-70b-versatile': 'qualification-free',
+  'openai/gpt-oss-20b:free': 'reasoning-free',
+  'gemini-2.5-flash': 'structured-free',
+  'mistral-small-latest': 'scoring-standard',
+  'mistral-medium-latest': 'qualification-standard',
+  'claude-haiku-4-5': 'reasoning-standard',
+  'gpt-4o-mini': 'scoring-premium',
+  'gpt-4o': 'qualification-premium',
+  'claude-sonnet-4-5': 'reasoning-premium',
+};
+
+const SERVED_MODELS_LONGEST_FIRST = Object.keys(LITELLM_SERVED_PRICING).sort(
+  (a, b) => b.length - a.length || a.localeCompare(b)
+);
+
+function matchServed(name: string): string | undefined {
+  if (LITELLM_SERVED_PRICING[name]) return LITELLM_SERVED_PRICING[name];
+  // Providers append a version date (claude-haiku-4-5-20251001, gpt-4o-mini-2024-07-18).
+  const model = SERVED_MODELS_LONGEST_FIRST.find((known) => name.startsWith(`${known}-`));
+  return model ? LITELLM_SERVED_PRICING[model] : undefined;
+}
+
+/** MODEL_PRICING key for a served model name, or undefined when it is not a known deployment. */
+export function servedPricingKey(served: string | undefined): string | undefined {
+  const name = served?.trim().toLowerCase();
+  if (!name) return undefined;
+  return matchServed(name) ?? matchServed(name.split('/').slice(1).join('/'));
+}
+
 const unknownPricingWarned = new Set<string>();
 
 export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {

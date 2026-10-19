@@ -15,7 +15,7 @@
  */
 
 import { getCatalogEntry, type LLMPurpose, type LLMTier } from '@intelliflow/domain';
-import { aiConfig } from '../config/ai.config.js';
+import { aiConfig, servedPricingKey } from '../config/ai.config.js';
 import { costTracker } from '../utils/cost-tracker';
 import { countTokens } from '../utils/token-counter.js';
 import { assertWithinCeiling } from './purpose-ceiling.js';
@@ -72,9 +72,14 @@ function textOf(value: unknown): string {
 /** Record one successful chat call. */
 export function recordModelUsage(meta: ModelUsageMeta, input: unknown, result: unknown): void {
   if (!costTrackingEnabled()) return;
-  const usage = (result as { usage_metadata?: { input_tokens?: number; output_tokens?: number } })
-    ?.usage_metadata;
-  const model = chatPricingKey(meta);
+  const message = result as {
+    usage_metadata?: { input_tokens?: number; output_tokens?: number };
+    response_metadata?: { model_name?: string };
+  };
+  const usage = message?.usage_metadata;
+  // The gateway may serve another (e.g. a paid fallback) model than the one asked for:
+  // price what ran when the response names a known deployment (owner Q9).
+  const model = servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta);
   costTracker.recordUsage({
     model,
     inputTokens: usage?.input_tokens ?? countTokens(textOf(input), model),

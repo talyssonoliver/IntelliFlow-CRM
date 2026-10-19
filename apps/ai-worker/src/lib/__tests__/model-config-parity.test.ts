@@ -22,7 +22,12 @@ import {
   type LLMPurpose,
   type LLMTier,
 } from '@intelliflow/domain';
-import { MODEL_PRICING, calculateCost } from '../../config/ai.config';
+import {
+  LITELLM_SERVED_PRICING,
+  MODEL_PRICING,
+  calculateCost,
+  servedPricingKey,
+} from '../../config/ai.config';
 
 const SRC = resolve(__dirname, '../..');
 const LITELLM_CONFIG = resolve(__dirname, '../../../../../infra/litellm/config.yaml');
@@ -141,6 +146,40 @@ describe('CALLER_DEFAULT_TIERS ⇄ ai-worker call sites', () => {
     for (const purpose of [...purposes, 'reasoning']) {
       expect(CALLER_DEFAULT_TIERS[purpose as LLMPurpose]).toContain('free');
     }
+  });
+});
+
+describe('served-model pricing ⇄ infra/litellm/config.yaml (PG-199, Q9)', () => {
+  const price = (key: string) => PRICING[key].input + PRICING[key].output;
+  const chatEntries = modelList.filter(
+    (m) => !m.model_name.startsWith('rag-') && !m.litellm_params.model.startsWith('ollama/')
+  );
+
+  it('maps every chat deployment to a pricing key priced like the alias that serves it', () => {
+    for (const entry of chatEntries) {
+      const served = entry.litellm_params.model.split('/').slice(1).join('/');
+      const key = LITELLM_SERVED_PRICING[served];
+      expect(key, `${entry.litellm_params.model} has no served-model price`).toBeDefined();
+      if (PRICING[entry.model_name]) {
+        expect(price(key), entry.model_name).toBe(price(entry.model_name));
+      }
+    }
+  });
+
+  it('resolves dated provider names and prefixed names to the longest known model', () => {
+    expect(servedPricingKey('claude-haiku-4-5-20251001')).toBe('reasoning-standard');
+    expect(servedPricingKey('gpt-4o-mini-2024-07-18')).toBe('scoring-premium');
+    expect(servedPricingKey('gpt-4o-2024-08-06')).toBe('qualification-premium');
+    expect(servedPricingKey('anthropic/claude-sonnet-4-5')).toBe('reasoning-premium');
+    expect(servedPricingKey('openai/gpt-oss-20b:free')).toBe('reasoning-free');
+    expect(servedPricingKey('GEMINI-2.5-FLASH')).toBe('structured-free');
+  });
+
+  it('returns undefined for models it does not know (caller keeps its own pricing)', () => {
+    expect(servedPricingKey(undefined)).toBeUndefined();
+    expect(servedPricingKey('')).toBeUndefined();
+    expect(servedPricingKey('mistral')).toBeUndefined(); // a local Ollama model
+    expect(servedPricingKey('openai/gpt-oss-120b:free')).toBeUndefined();
   });
 });
 
