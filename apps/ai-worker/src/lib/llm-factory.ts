@@ -424,6 +424,8 @@ export function createLLM(
   }
 
   let model: BaseChatModel;
+  // The OpenRouter model id that runs (OpenRouter does not use the LiteLLM aliases).
+  let openRouterModel: string | undefined;
 
   // Offline escape hatch — local Ollama only (no LiteLLM dependency).
   if (provider === 'ollama') {
@@ -447,9 +449,10 @@ export function createLLM(
     // OpenRouter is OpenAI-compatible — real model ids (e.g. openai/gpt-oss-120b:free),
     // NOT the litellm logical `${purpose}-${tier}` aliases. Used for production chat
     // (free models); dev stays on Ollama. No proxy required.
+    openRouterModel = openRouterModelName(tier, pinned);
     model = new ChatOpenAI({
       apiKey: process.env['OPENROUTER_API_KEY'] || '',
-      modelName: openRouterModelName(tier, pinned),
+      modelName: openRouterModel,
       temperature,
       maxTokens,
       timeout,
@@ -505,6 +508,8 @@ export function createLLM(
     purpose,
     tier,
     modelId: pinApplies ? pinned?.id : undefined,
+    // Unpinned (or unmapped) on OpenRouter: price the OpenRouter model, not the alias.
+    pricingKey: openRouterModel && !pinApplies ? openRouterModel : undefined,
   });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;

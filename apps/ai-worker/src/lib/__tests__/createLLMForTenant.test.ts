@@ -206,6 +206,16 @@ describe('createLLMForTenant()', () => {
     await createLLMForTenant('reasoning', 'free', { tenantId: 'tenant-or' });
 
     expect(lastChatArgs().modelName).toBe('anthropic/claude-sonnet-4.5');
+    expect(await lastTraceMeta()).toMatchObject({ modelId: 'claude-sonnet-4-5' });
+    expect((await lastTraceMeta()).pricingKey).toBeUndefined();
+  });
+
+  it('unpinned on OpenRouter → priced as the OpenRouter model that runs, not the LiteLLM alias', async () => {
+    mockResolveEffectiveTier.mockResolvedValue({ tier: 'free', fallbackModelIds: [] });
+    const { createLLMForTenant } = await importFactory('openrouter');
+    await createLLMForTenant('qualification', 'free', { tenantId: 'tenant-or3' });
+    expect(lastChatArgs().modelName).toBe('openai/gpt-oss-120b:free');
+    expect(await lastTraceMeta()).toMatchObject({ pricingKey: 'openai/gpt-oss-120b:free' });
   });
 
   it('pin without an OpenRouter mapping → tier default plus a pin_unavailable_for_provider warning', async () => {
@@ -220,8 +230,9 @@ describe('createLLMForTenant()', () => {
     await createLLMForTenant('scoring', 'standard', { tenantId: 'tenant-or2' });
 
     expect(lastChatArgs().modelName).toBe('openai/gpt-oss-120b:free');
-    // The pin did not run, so spend is priced as the tier default, not as mistral-small.
+    // The pin did not run, so spend is priced as the model that ran, not as mistral-small.
     expect((await lastTraceMeta()).modelId).toBeUndefined();
+    expect((await lastTraceMeta()).pricingKey).toBe('openai/gpt-oss-120b:free');
     expect(warn.mock.calls.some((c) => String(c[0]).includes('pin_unavailable_for_provider'))).toBe(
       true
     );

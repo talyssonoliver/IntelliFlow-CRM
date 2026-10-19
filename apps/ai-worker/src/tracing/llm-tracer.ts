@@ -38,6 +38,8 @@ export interface LLMTracingMeta {
   tier: LLMTier;
   /** PG-199: catalog model pinned by the tenant, when any. */
   modelId?: string;
+  /** PG-199: pricing key of the model the provider actually runs, when it is not the alias. */
+  pricingKey?: string;
 }
 
 export interface EmbeddingsTracingMeta {
@@ -77,7 +79,8 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           'llm.purpose': meta.purpose,
           'llm.tier': meta.tier,
           'llm.provider': aiConfig.provider,
-          'llm.model_name': meta.modelId ? chatPricingKey(meta) : `${meta.purpose}-${meta.tier}`,
+          'llm.model_name':
+            meta.modelId || meta.pricingKey ? chatPricingKey(meta) : `${meta.purpose}-${meta.tier}`,
           'tenant.id': tenantId,
         },
       },

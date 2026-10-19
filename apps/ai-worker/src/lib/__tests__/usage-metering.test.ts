@@ -64,6 +64,18 @@ describe('PG-199 metering in the tracing wrappers', () => {
     });
   });
 
+  it('prices with an explicit provider pricing key when the factory gives one', async () => {
+    const { wrapModelWithTracing } = await load();
+    const model = wrapModelWithTracing(
+      chatModel({ content: 'ok', usage_metadata: { input_tokens: 10, output_tokens: 5 } }),
+      { purpose: 'qualification', tier: 'free', pricingKey: 'openai/gpt-oss-120b:free' }
+    );
+
+    await model.invoke('x');
+
+    expect(recordUsage.mock.calls[0][0]).toMatchObject({ model: 'openai/gpt-oss-120b:free' });
+  });
+
   it('prices a pinned model with its catalog pricing key', async () => {
     const { wrapModelWithTracing } = await load();
     const model = wrapModelWithTracing(

@@ -26,6 +26,8 @@ export interface ModelUsageMeta {
   tier: LLMTier;
   /** Catalog id when the tenant pinned a model. */
   modelId?: string;
+  /** MODEL_PRICING key of the model the provider actually runs, when it is not the alias. */
+  pricingKey?: string;
 }
 
 export interface EmbeddingUsageMeta {
@@ -36,6 +38,7 @@ export interface EmbeddingUsageMeta {
 
 /** The MODEL_PRICING key a chat call is priced with. */
 export function chatPricingKey(meta: ModelUsageMeta): string {
+  if (meta.pricingKey) return meta.pricingKey;
   const pinned = meta.modelId ? getCatalogEntry(meta.modelId) : undefined;
   return pinned?.pricingKey ?? `${meta.purpose}-${meta.tier}`;
 }

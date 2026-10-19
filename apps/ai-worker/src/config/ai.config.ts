@@ -282,6 +282,8 @@ export type ModelName = keyof typeof MODEL_PRICING;
 const unknownPricingWarned = new Set<string>();
 
 export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {
+  // PG-199: OpenRouter's explicit free variants (`<vendor>/<model>:free`) cost nothing.
+  if (model.endsWith(':free')) return 0;
   const known = MODEL_PRICING[model as ModelName];
   if (!known && !unknownPricingWarned.has(model)) {
     unknownPricingWarned.add(model);

@@ -144,6 +144,15 @@ describe('CALLER_DEFAULT_TIERS ⇄ ai-worker call sites', () => {
   });
 });
 
+describe('calculateCost for OpenRouter free variants (PG-199)', () => {
+  it('prices an explicit `:free` model at zero, without a warning', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(calculateCost('openai/gpt-oss-120b:free', 5000, 5000)).toBe(0);
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
 describe('calculateCost with an unknown pricing key (PG-199)', () => {
   it('still prices it as gpt-3.5-turbo but warns once per key instead of staying silent', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
