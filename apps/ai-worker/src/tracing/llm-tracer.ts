@@ -24,6 +24,7 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import type { LLMPurpose, LLMTier } from '../lib/llm-factory.js';
 import { aiConfig } from '../config/ai.config.js';
 import { tenantContextStore } from './tenant-context.js';
+import { GeminiEmbeddings } from '../lib/gemini-embeddings.js';
 import {
   chatPricingKey,
   guardEmbeddingCall,
@@ -119,6 +120,41 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
 }
 
 /**
+ * Meter each provider request instead of the whole call: `embedDocuments` fans out into
+ * several requests (Promise.all), and when one fails the ones that succeeded were still
+ * billed and must still count toward the rag ceiling. Returns false for a provider without a
+ * known per-request method; the call wrappers then meter the whole successful call.
+ */
+function meterEmbeddingRequests(embeddings: Embeddings, meta: EmbeddingsTracingMeta): boolean {
+  const asRecord = embeddings as unknown as Record<string, unknown>;
+  let method: string;
+  let textsOf: (arg: unknown) => string[];
+  if (embeddings instanceof GeminiEmbeddings) {
+    // One embedContent request per text.
+    method = 'embed';
+    textsOf = (text) => [String(text)];
+  } else if (typeof asRecord['embeddingWithRetry'] === 'function') {
+    // OpenAIEmbeddings (LiteLLM / OpenAI): one request per batch of `input`.
+    method = 'embeddingWithRetry';
+    textsOf = (request) => {
+      const input = (request as { input?: unknown } | undefined)?.input;
+      return Array.isArray(input) ? input.map(String) : [String(input ?? '')];
+    };
+  } else {
+    return false;
+  }
+  const original = (
+    asRecord[method] as (arg: unknown, ...rest: unknown[]) => Promise<unknown>
+  ).bind(embeddings);
+  asRecord[method] = async (arg: unknown, ...rest: unknown[]): Promise<unknown> => {
+    const result = await original(arg, ...rest);
+    recordEmbeddingUsage(tenantContextStore.getStore()?.tenantId, meta, textsOf(arg));
+    return result;
+  };
+  return true;
+}
+
+/**
  * Return a proxy of `embeddings` whose `.embedQuery()` and `.embedDocuments()`
  * methods are each wrapped in an OTel span named `llm.embed`.
  *
@@ -138,6 +174,10 @@ export function wrapEmbeddingsWithTracing(
   // Guard for test mocks or minimal stubs that don't implement the embeddings
   // interface. Skip wrapping rather than throwing at instrumentation time.
   const asRecord = embeddings as unknown as Record<string, unknown>;
+  const metersRequests = meterEmbeddingRequests(embeddings, meta);
+  const recordCall = (tenantId: string | undefined, texts: string[]): void => {
+    if (!metersRequests) recordEmbeddingUsage(tenantId, meta, texts);
+  };
 
   if (typeof asRecord['embedQuery'] === 'function') {
     const originalEmbedQuery = (asRecord['embedQuery'] as (text: string) => Promise<number[]>).bind(
@@ -164,7 +204,7 @@ export function wrapEmbeddingsWithTracing(
           try {
             const result = await originalEmbedQuery(text);
             span.setStatus({ code: SpanStatusCode.OK });
-            recordEmbeddingUsage(jobTenantId, meta, [text]);
+            recordCall(jobTenantId, [text]);
             return result;
           } catch (err) {
             span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
@@ -203,7 +243,7 @@ export function wrapEmbeddingsWithTracing(
           try {
             const result = await originalEmbedDocuments(texts);
             span.setStatus({ code: SpanStatusCode.OK });
-            recordEmbeddingUsage(jobTenantId, meta, texts);
+            recordCall(jobTenantId, texts);
             return result;
           } catch (err) {
             span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });

@@ -361,4 +361,102 @@ describe('PG-199 metering in the tracing wrappers', () => {
       expect(recordUsage).not.toHaveBeenCalled();
     });
   });
+
+  // A batch fans out into several provider requests (Promise.all): when one fails, the ones
+  // that succeeded were still billed and must still count toward the rag ceiling.
+  describe('partial batch failures (real providers, fake fetch)', () => {
+    afterEach(() => {
+      vi.unstubAllGlobals();
+    });
+
+    it('meters the Gemini requests that succeeded when a sibling request fails', async () => {
+      const { wrapEmbeddingsWithTracing, tenantContextStore } = await load();
+      const { GeminiEmbeddings } = await import('../gemini-embeddings.js');
+      vi.stubGlobal(
+        'fetch',
+        vi.fn(async (_url: string, init: { body: string }) =>
+          init.body.includes('fails')
+            ? new Response('upstream error', { status: 500 })
+            : Response.json({ embedding: { values: [0.6, 0.8] } })
+        )
+      );
+      const wrapped = wrapEmbeddingsWithTracing(
+        new GeminiEmbeddings({ apiKey: 'test-key', dimensions: 2, maxRetries: 0 }),
+        { tier: 'free', pricingKey: 'gemini-embedding-001' }
+      );
+
+      await expect(
+        tenantContextStore.run({ tenantId: 't9' } as never, () =>
+          wrapped.embedDocuments(['billed document', 'this one fails'])
+        )
+      ).rejects.toThrow('HTTP 500');
+
+      expect(recordUsage).toHaveBeenCalledTimes(1);
+      expect(recordUsage.mock.calls[0][0]).toMatchObject({
+        model: 'gemini-embedding-001',
+        operationType: 'llm:rag',
+      });
+    });
+
+    function openAiEmbeddings(batchSize: number, failOn?: string) {
+      return import('@langchain/openai').then(
+        ({ OpenAIEmbeddings }) =>
+          new OpenAIEmbeddings({
+            apiKey: 'test-key',
+            model: 'rag-premium',
+            batchSize,
+            maxRetries: 0,
+            configuration: {
+              baseURL: 'http://litellm.example.invalid/v1',
+              fetch: async (_url: unknown, init?: { body?: unknown }) => {
+                const body = String(init?.body ?? '');
+                if (failOn && body.includes(failOn)) {
+                  return new Response('{"error":{"message":"upstream"}}', { status: 400 });
+                }
+                const inputs = JSON.parse(body).input as string[] | string;
+                const count = Array.isArray(inputs) ? inputs.length : 1;
+                return Response.json({
+                  object: 'list',
+                  model: 'rag-premium',
+                  data: Array.from({ length: count }, (_, index) => ({
+                    object: 'embedding',
+                    index,
+                    embedding: [0.1, 0.2],
+                  })),
+                  usage: { prompt_tokens: 3, total_tokens: 3 },
+                });
+              },
+            },
+          })
+      );
+    }
+
+    it('meters the OpenAI batches that succeeded when a sibling batch fails', async () => {
+      const { wrapEmbeddingsWithTracing, tenantContextStore } = await load();
+      const wrapped = wrapEmbeddingsWithTracing(await openAiEmbeddings(1, 'fails'), {
+        tier: 'premium',
+      });
+
+      await expect(
+        tenantContextStore.run({ tenantId: 't9' } as never, () =>
+          wrapped.embedDocuments(['billed document', 'this one fails'])
+        )
+      ).rejects.toThrow();
+
+      expect(recordUsage).toHaveBeenCalledTimes(1);
+      expect(recordUsage.mock.calls[0][0].model).toBe('rag-premium');
+    });
+
+    it('meters each successful OpenAI request once, with no aggregate double count', async () => {
+      const { wrapEmbeddingsWithTracing, tenantContextStore } = await load();
+      const wrapped = wrapEmbeddingsWithTracing(await openAiEmbeddings(1), { tier: 'premium' });
+
+      await tenantContextStore.run({ tenantId: 't9' } as never, async () => {
+        await wrapped.embedDocuments(['one', 'two']);
+        await wrapped.embedQuery('three');
+      });
+
+      expect(recordUsage).toHaveBeenCalledTimes(3);
+    });
+  });
 });
