@@ -65,7 +65,14 @@ describe('resolveEffectiveTier()', () => {
       'standard' as LLMTier
     );
 
-    expect(result).toEqual({ tier: 'standard', temperature: 0.3, maxTokens: 500 });
+    expect(result).toEqual({
+      tier: 'standard',
+      temperature: 0.3,
+      maxTokens: 500,
+      modelId: null,
+      fallbackModelIds: [],
+      ceilingCents: null,
+    });
   });
 
   // PG-199 A1: callers of one purpose pass different defaults (e.g. structured: free and
@@ -99,7 +106,86 @@ describe('resolveEffectiveTier()', () => {
       'standard' as LLMTier
     );
 
-    expect(second).toEqual({ tier: 'standard', temperature: null, maxTokens: 900 });
+    expect(second).toEqual({
+      tier: 'standard',
+      temperature: null,
+      maxTokens: 900,
+      modelId: null,
+      fallbackModelIds: [],
+      ceilingCents: null,
+    });
+  });
+
+  // PG-199: model pin, fallbacks and ceiling travel with the row.
+  it('returns the model pin, fallbacks and monthly ceiling from the row', async () => {
+    mockFindUnique.mockResolvedValue({
+      tier: 'premium',
+      temperature: null,
+      maxTokens: null,
+      modelId: 'claude-sonnet-4-5',
+      fallbackModelIds: ['claude-haiku-4-5'],
+      monthlyCostCeilingCents: 2500,
+    });
+
+    const result = await resolveEffectiveTier(
+      't-pin',
+      'reasoning' as LLMPurpose,
+      'free' as LLMTier
+    );
+
+    expect(result).toEqual({
+      tier: 'premium',
+      temperature: null,
+      maxTokens: null,
+      modelId: 'claude-sonnet-4-5',
+      fallbackModelIds: ['claude-haiku-4-5'],
+      ceilingCents: 2500,
+    });
+  });
+
+  // PG-199 deploy skew: new worker, database not migrated yet (columns missing → P2022).
+  it('pre-migration database → retries with the legacy columns, keeps the tier override, no ceiling', async () => {
+    mockFindUnique
+      .mockRejectedValueOnce(
+        Object.assign(new Error('column "modelId" does not exist'), { code: 'P2022' })
+      )
+      .mockResolvedValueOnce({ tier: 'standard', temperature: 0.2, maxTokens: null });
+
+    const result = await resolveEffectiveTier('t-skew', 'email' as LLMPurpose, 'free' as LLMTier);
+
+    expect(result).toEqual({
+      tier: 'standard',
+      temperature: 0.2,
+      maxTokens: null,
+      modelId: null,
+      fallbackModelIds: [],
+      ceilingCents: null,
+    });
+    expect(mockFindUnique).toHaveBeenCalledTimes(2);
+    expect(mockFindUnique.mock.calls[1][0]).toMatchObject({
+      select: { tier: true, temperature: true, maxTokens: true },
+    });
+  });
+
+  // PG-199: a DB outage must not lift a blocked purpose — the last known row keeps applying.
+  it('DB error after a cached row expired → serves the stale row (ceiling still enforced)', async () => {
+    vi.useFakeTimers();
+    mockFindUnique.mockResolvedValueOnce({
+      tier: null,
+      temperature: null,
+      maxTokens: null,
+      modelId: null,
+      fallbackModelIds: [],
+      monthlyCostCeilingCents: 0,
+    });
+    await resolveEffectiveTier('t-stale', 'email' as LLMPurpose, 'free' as LLMTier);
+
+    vi.advanceTimersByTime(61_000);
+    mockFindUnique.mockRejectedValueOnce(new Error('connection refused'));
+    const result = await resolveEffectiveTier('t-stale', 'email' as LLMPurpose, 'free' as LLMTier);
+
+    expect(result.ceilingCents).toBe(0);
+    vi.useRealTimers();
   });
 
   // 1. No row → default tier
