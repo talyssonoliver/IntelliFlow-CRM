@@ -214,6 +214,29 @@ describe('ModelConfigContent — save', () => {
     );
   });
 
+  it('makes the form read-only until the save and its refresh finish (no lost edits)', async () => {
+    let finishSave: (value: unknown) => void = () => {};
+    h.update.mutateAsync.mockImplementationOnce(
+      () =>
+        new Promise((resolve) => {
+          finishSave = resolve;
+        })
+    );
+    render(<ModelConfigContent />);
+    fireEvent.change(within(region('Email')).getByLabelText('Max tokens'), {
+      target: { value: '900' },
+    });
+    fireEvent.click(saveButton());
+
+    await waitFor(() =>
+      expect(within(region('Scoring')).getByLabelText('Max tokens')).toBeDisabled()
+    );
+    finishSave({ updated: ['email'], updatedAt: {} });
+    await waitFor(() =>
+      expect(within(region('Scoring')).getByLabelText('Max tokens')).toBeEnabled()
+    );
+  });
+
   it('blocks Save on a client validation error and points at the field', async () => {
     render(<ModelConfigContent />);
     const input = within(region('Email')).getByLabelText('Monthly ceiling (USD)');

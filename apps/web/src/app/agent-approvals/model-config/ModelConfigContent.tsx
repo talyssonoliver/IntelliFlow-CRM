@@ -115,6 +115,9 @@ export default function ModelConfigContent() {
   const [hasConflict, setHasConflict] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<PendingConfirm | null>(null);
+  // From the write until the refreshed settings land, edits would be replaced by the
+  // server state, so the form is read-only meanwhile.
+  const [writing, setWriting] = useState(false);
   const [announcement, setAnnouncement] = useState('');
   const [queued, setQueued] = useState<string | null>(null);
   const resync = useRef(false);
@@ -154,7 +157,7 @@ export default function ModelConfigContent() {
     toast({ title: message, variant: destructive ? 'destructive' : undefined });
   };
 
-  const isSaving = updateMutation.isPending || resetMutation.isPending;
+  const isSaving = updateMutation.isPending || resetMutation.isPending || writing;
   const canManage = data?.canManage ?? false;
 
   const adoptLatest = async () => {
@@ -198,6 +201,7 @@ export default function ModelConfigContent() {
     const payload = buildUpdatePayload(snapshot, drafts, acknowledge);
     if (payload.purposes.length === 0) return;
     setServerError(null);
+    setWriting(true);
     try {
       await updateMutation.mutateAsync(payload);
       setErrors({});
@@ -209,6 +213,8 @@ export default function ModelConfigContent() {
         'save',
         payload.purposes.map((p) => p.purpose)
       );
+    } finally {
+      setWriting(false);
     }
   };
 
@@ -236,6 +242,7 @@ export default function ModelConfigContent() {
   const handleReset = async (acknowledge: boolean) => {
     if (!snapshot) return;
     setServerError(null);
+    setWriting(true);
     try {
       await resetMutation.mutateAsync(buildResetPayload(snapshot, acknowledge));
       setErrors({});
@@ -243,6 +250,8 @@ export default function ModelConfigContent() {
       announce('Model settings reset to the platform defaults.');
     } catch (error) {
       handleWriteError(error, 'reset', []);
+    } finally {
+      setWriting(false);
     }
   };
 
@@ -393,7 +402,7 @@ export default function ModelConfigContent() {
             draft={draftFor(row)}
             catalog={data.catalog}
             limits={data.limits}
-            canManage={canManage}
+            canManage={canManage && !writing}
             errors={errors[row.purpose]}
             onChange={(next) =>
               setDrafts((current) =>
