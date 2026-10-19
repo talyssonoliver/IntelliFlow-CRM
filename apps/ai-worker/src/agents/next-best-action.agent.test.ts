@@ -446,6 +446,31 @@ describe('NextBestActionAgent', () => {
     });
   });
 
+  describe('Purpose ceiling (PG-199)', () => {
+    it('fails the task at the ceiling instead of returning heuristic recommendations', async () => {
+      const { PurposeCeilingReachedError } = await import('../lib/purpose-ceiling.js');
+      vi.spyOn(agent as any, 'invokeLLM').mockRejectedValue(
+        new PurposeCeilingReachedError('reasoning', 100, 100)
+      );
+
+      const result = await agent.execute({
+        id: 'nba-cap',
+        description: 'NBA at the ceiling',
+        input: {
+          entityType: 'lead',
+          entityId: '550e8400-e29b-41d4-a716-446655440000',
+          tenantId: '550e8400-e29b-41d4-a716-446655440001',
+          userId: '550e8400-e29b-41d4-a716-446655440002',
+        },
+        expectedOutput: {} as never,
+      } as never);
+
+      expect(result.success).toBe(false);
+      expect(result.output).toBeUndefined();
+      expect(result.error).toContain('monthly AI ceiling reached');
+    });
+  });
+
   describe('Convenience Function', () => {
     it('should provide getNextBestActions helper', async () => {
       const context: NBAContext = {
