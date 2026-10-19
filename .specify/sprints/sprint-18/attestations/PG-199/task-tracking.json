@@ -4,7 +4,7 @@
     "created": [
       {
         "path": ".specify/sprints/sprint-18/specifications/PG-199-spec.md",
-        "sha256": "0f9c7f9cd5149ef880fb0aa78486791ec2e3ec3a0fc633396b06f5a57dc901dc",
+        "sha256": "142cf8854fe1574434d4872cfe0da80894b6a67c7d6842c4da4e052b49f3c195",
         "created_at": "2026-10-19T11:39:05Z"
       },
       {
@@ -16,6 +16,11 @@
         "path": "docs/architecture/adr/ADR-082-tenant-model-config.md",
         "sha256": "ed8d23a788ce4edba5783d45e8b693d937325c3c09c99b52b085f69d122eb499",
         "created_at": "2026-10-19T11:39:05Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/PG-199-plan.md",
+        "sha256": "10324b8efa152213d182ba64d3e91ddc7cee99273e5ede174b9163fb96f930a8",
+        "created_at": "2026-10-19T11:53:14Z"
       }
     ],
     "expected": [
@@ -60,6 +65,16 @@
       "status": "Spec Complete",
       "at": "2026-10-19T11:39:05Z",
       "note": "/spec-session complete: 6 Explore + R1-R3 (6 agents) + /spec-consensus round 1 5/6 (backend REJECTED single BASELINE_TIER) -> amendments A1-A8 -> round 2 6/6 APPROVED; owner rulings Q1-Q8"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-10-19T11:42:15Z",
+      "note": "/plan-session started"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-10-19T11:53:14Z",
+      "note": "/plan-session complete: plan-reviewer sub-agent iteration 1 REVISE (7E/10W/5I), iteration 2 REVISE (3E/3W/2I), iteration 3 APPROVE (0E/0W/1I)"
     }
   ],
   "stream": null,

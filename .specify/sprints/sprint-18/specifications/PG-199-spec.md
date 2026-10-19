@@ -84,7 +84,9 @@ Extract shared pieces instead of copying (Sonar new-duplication < 3%).
   `infra/litellm/config.yaml:11-117` routes to, plus the production embedding model (Gemini) with a
   real price verified from the provider's pricing page during exec.
 - `defaults.ts`: `LLM_PURPOSES` (6), `LLM_TIERS` (3), `DEFAULT_MODEL[purpose][tier]` (partial — no
-  `rag-standard`), `CALLER_DEFAULT_TIERS[purpose]` (exported constant that callers import),
+  `rag-standard`), `CALLER_DEFAULT_TIERS[purpose]` (exported constant consumed by the resolver and `findDowngrades`;
+the ~21 caller files stay unchanged — a parity test scanning the call sites enforces it, per plan
+review E7),
   limits (temperature 0–2, maxTokens 1–32768, fallbacks ≤ 3, ceiling 0–2,000,000 cents; 0 = block
   outright, null = none), `purposeSpendKey(purpose)` = `aiSpendCentiCents:<purpose>`.
 - `rules.ts`: `priceOf(id)`, `effectiveModel(purpose, tier|null, modelId|null)`,
