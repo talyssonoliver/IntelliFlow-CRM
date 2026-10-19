@@ -14,6 +14,7 @@ import { join } from 'node:path';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
+import { applySchemaSql } from './schema-lock';
 
 const MIGRATIONS = join(__dirname, '../../packages/db/prisma/migrations');
 const CONFIG_MIGRATION = join(MIGRATIONS, '20261019120000_tenant_model_config/migration.sql');
@@ -66,14 +67,17 @@ async function ensureMigrationSql(client: any): Promise<void> {
   );
   const hasColumn = (name: string) => columns.some((c) => c.column_name === name);
   const hasConstraint = (name: string) => constraints.some((c) => c.conname === name);
+  const statements: string[] = [];
   for (const stmt of readSql(CONFIG_MIGRATION)) {
     const addColumn = /ADD COLUMN\s+"(\w+)"/.exec(stmt);
     if (addColumn && hasColumn(addColumn[1])) continue;
     const addConstraint = /ADD CONSTRAINT\s+"(\w+)"/.exec(stmt);
     if (addConstraint && hasConstraint(addConstraint[1])) continue;
-    await client.$executeRawUnsafe(stmt);
+    statements.push(stmt);
   }
-  for (const stmt of readSql(RLS_MIGRATION)) await client.$executeRawUnsafe(stmt);
+  statements.push(...readSql(RLS_MIGRATION));
+  // Serialised with every other DDL suite (#930: parallel DDL deadlocked on 40P01).
+  await applySchemaSql(DB_URL!, statements);
 }
 
 const DB_URL = process.env.DATABASE_URL;
