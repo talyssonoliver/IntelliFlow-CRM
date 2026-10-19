@@ -19,6 +19,7 @@
  * @task IFC-139
  */
 
+import { randomUUID } from 'node:crypto';
 import type { PrismaClient } from '@intelliflow/db';
 import { confidenceToPercent } from '@intelliflow/domain';
 import type { PendingAction, ExecutedAction, ApprovalStatus, ExecutionStatus } from './types';
@@ -384,15 +385,19 @@ export class PrismaAgentActionStore {
    * Take the rollback for one caller (#856). The update matches only while the rollback is
    * available or its previous claim is stale, so of two concurrent requests exactly one
    * runs the compensation. The claim time lets an interrupted request's claim be retaken.
+   *
+   * Returns the claim id, or null when not claimed. Release and record are fenced on it, so
+   * a request whose stale claim was retaken cannot release or overwrite the newer claim.
    */
   async claimRollback(
     id: string,
     tenantId: string,
     token: string,
     now: number = Date.now()
-  ): Promise<boolean> {
+  ): Promise<string | null> {
     const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
-    if (!row) return false;
+    if (!row) return null;
+    const claimId = randomUUID();
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     const result = await this.prisma.agentAction.updateMany({
       where: {
@@ -406,21 +411,36 @@ export class PrismaAgentActionStore {
         ],
       },
       data: {
-        proposedState: { ...proposed, rollbackAvailable: false, rollbackClaimedAt: now } as any,
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: false,
+          rollbackClaimedAt: now,
+          rollbackClaimId: claimId,
+        } as any,
       },
     });
-    return result.count === 1;
+    return result.count === 1 ? claimId : null;
   }
 
-  /** Give a claimed rollback back after a compensation that changed nothing. */
-  async releaseRollback(id: string, tenantId: string): Promise<void> {
+  /** Give a claimed rollback back after a compensation that left the target as it was. */
+  async releaseRollback(id: string, tenantId: string, claimId: string): Promise<void> {
     const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row || row.status !== ('APPROVED' as any)) return;
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     await this.prisma.agentAction.updateMany({
-      where: { id, tenantId, status: 'APPROVED' as any },
+      where: {
+        id,
+        tenantId,
+        status: 'APPROVED' as any,
+        proposedState: { path: ['rollbackClaimId'], equals: claimId },
+      },
       data: {
-        proposedState: { ...proposed, rollbackAvailable: true, rollbackClaimedAt: null } as any,
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: true,
+          rollbackClaimedAt: null,
+          rollbackClaimId: null,
+        } as any,
       },
     });
   }
@@ -429,6 +449,7 @@ export class PrismaAgentActionStore {
   async markRolledBack(
     id: string,
     tenantId: string,
+    claimId: string,
     rollback: {
       rolledBackBy: string;
       rolledBackAt: Date;
@@ -439,8 +460,9 @@ export class PrismaAgentActionStore {
     const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return;
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    // Fenced like release: a superseded claim's holder leaves the newer claim to record it.
     await this.prisma.agentAction.updateMany({
-      where: { id, tenantId },
+      where: { id, tenantId, proposedState: { path: ['rollbackClaimId'], equals: claimId } },
       data: {
         status: 'ROLLED_BACK' as any,
         rolledBackAt: rollback.rolledBackAt,

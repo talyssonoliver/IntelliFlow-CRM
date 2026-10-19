@@ -154,6 +154,7 @@ vi.mock('@intelliflow/db', () => ({
 }));
 import {
   ApprovalWorkflowService,
+  actionStore,
   pendingActionsStore,
   executedActionsStore,
   rollbackStore,
@@ -611,6 +612,7 @@ describe('Approval Workflow (supplementary)', () => {
       expect(row.status).toBe('APPROVED');
       expect(row.proposedState.rollbackAvailable).toBe(true);
       expect(row.proposedState.rollbackClaimedAt).toBeNull();
+      expect(row.proposedState.rollbackClaimId).toBeNull();
       expect((await rollback('rb-fail')).success).toBe(true);
     });
 
@@ -673,6 +675,39 @@ describe('Approval Workflow (supplementary)', () => {
       expect(result.success).toBe(true);
       expect(compensateSpy).toHaveBeenCalledTimes(1);
       expect(row.status).toBe('ROLLED_BACK');
+    });
+
+    it('a superseded claim cannot release or record over the claim that replaced it', async () => {
+      await storeRollbackable('rb-fence');
+      const tenant = '00000000-0000-4000-8000-000000000001';
+      const longAgo = Date.now() - 10 * 60 * 1000;
+
+      // Worker A claims, then stalls past the stale threshold; worker B retakes the claim.
+      const claimA = await actionStore.claimRollback('rb-fence', tenant, 'rb-fence-token', longAgo);
+      const claimB = await actionStore.claimRollback('rb-fence', tenant, 'rb-fence-token');
+      expect(claimA).toBeTruthy();
+      expect(claimB).toBeTruthy();
+      expect(claimB).not.toBe(claimA);
+
+      // A wakes up and reports: neither its release nor its record touches B's claim.
+      await actionStore.releaseRollback('rb-fence', tenant, claimA!);
+      await actionStore.markRolledBack('rb-fence', tenant, claimA!, {
+        rolledBackBy: 'worker-a',
+        rolledBackAt: new Date(),
+      });
+      const row = agentActionRows.find((r) => r.id === 'rb-fence');
+      expect(row.status).toBe('APPROVED');
+      expect(row.proposedState.rollbackAvailable).toBe(false);
+      expect(row.proposedState.rollbackClaimId).toBe(claimB);
+      // So no third worker can claim while B holds it.
+      expect(await actionStore.claimRollback('rb-fence', tenant, 'rb-fence-token')).toBeNull();
+
+      await actionStore.markRolledBack('rb-fence', tenant, claimB!, {
+        rolledBackBy: 'worker-b',
+        rolledBackAt: new Date(),
+      });
+      expect(row.status).toBe('ROLLED_BACK');
+      expect(row.rolledBackBy).toBe('worker-b');
     });
 
     it('does not let a fresh claim be taken by a second request', async () => {

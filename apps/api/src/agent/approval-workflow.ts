@@ -435,7 +435,12 @@ export class ApprovalWorkflowService {
       return fail('Tool does not support rollback');
     }
 
-    if (!(await actionStore.claimRollback(executedAction.id, tenantId, request.rollbackToken))) {
+    const claimId = await actionStore.claimRollback(
+      executedAction.id,
+      tenantId,
+      request.rollbackToken
+    );
+    if (!claimId) {
       return fail('Rollback is no longer available for this action');
     }
 
@@ -447,14 +452,14 @@ export class ApprovalWorkflowService {
     const rolledBackAt = new Date();
 
     if (outcome.success) {
-      await actionStore.markRolledBack(executedAction.id, tenantId, {
+      await actionStore.markRolledBack(executedAction.id, tenantId, claimId, {
         rolledBackBy: request.requestedBy,
         rolledBackAt,
         reason: request.reason,
         restoredState: outcome.restoredState,
       });
     } else {
-      await actionStore.releaseRollback(executedAction.id, tenantId);
+      await actionStore.releaseRollback(executedAction.id, tenantId, claimId);
     }
 
     await agentLogger.log({
