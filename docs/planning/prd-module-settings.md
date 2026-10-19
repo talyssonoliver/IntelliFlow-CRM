@@ -1106,3 +1106,10 @@ by purpose, not user-labelled entities).
 **Prisma migrations** `20261019120000_tenant_model_config` and
 `20261019120100_tenant_ai_config_rls` (Class A) must be applied to production
 before the API is promoted.
+
+**Delivery (2026-10-19):** implemented on `feat/pg-199-model-config`: page,
+`modelConfig` router, ai-worker pins, fallback chains, per-purpose metering
+(chat and embeddings) and ceilings, agents and the summary job on tenant
+settings, settings search entry. Temperature uses a native range input because
+the shared Slider does not label its thumb (issue filed). Neither migration is
+applied to production.
