@@ -313,6 +313,55 @@ describe('PrismaAutoResponseDraftRepository', () => {
     });
   });
 
+  describe('findPendingForApprover (#857)', () => {
+    const submittedTo = (approverId: string | undefined, id: string) =>
+      createMockDraftData({
+        id,
+        status: 'PENDING_APPROVAL',
+        statusHistory: JSON.stringify([
+          { status: 'DRAFT', changedAt: new Date().toISOString() },
+          {
+            status: 'PENDING_APPROVAL',
+            changedAt: new Date().toISOString(),
+            ...(approverId ? { changedBy: approverId } : {}),
+          },
+        ]),
+      });
+
+    it('does not return a draft assigned to another approver', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        submittedTo('approver-a', DRAFT_ID_1),
+      ] as never);
+
+      const forB = await repository.findPendingForApprover('approver-b', 'tenant-1');
+      const forA = await repository.findPendingForApprover('approver-a', 'tenant-1');
+
+      expect(forB).toHaveLength(0);
+      expect(forA).toHaveLength(1);
+    });
+
+    it('returns only the own drafts of the approver from a mixed queue', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        submittedTo('approver-a', DRAFT_ID_1),
+        submittedTo('approver-b', DRAFT_ID_2),
+      ] as never);
+
+      const forB = await repository.findPendingForApprover('approver-b', 'tenant-1');
+
+      expect(forB.map((d) => d.id.toString())).toEqual([DRAFT_ID_2]);
+    });
+
+    it('keeps a draft that names no approver visible to everyone', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        submittedTo(undefined, DRAFT_ID_1),
+      ] as never);
+
+      const result = await repository.findPendingForApprover('approver-b', 'tenant-1');
+
+      expect(result).toHaveLength(1);
+    });
+  });
+
   describe('save', () => {
     it('should persist new draft', async () => {
       const draft = createMockDraft();
