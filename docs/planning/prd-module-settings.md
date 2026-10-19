@@ -950,24 +950,24 @@ AC-P1..AC-P22 are spec AC-001..AC-022, in order.
 
 ### Delivery Status (2026-10-13, branch `feat/pg-198-approval-policies`)
 
-| AC             | Status    | Evidence                                                                                                                                       |
-| -------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-P1          | Delivered | `ApprovalPoliciesContent.tsx` (PageHeader, 12-column bento, EmptyState `rules`/`passive`), `PolicyDialog` Save rule, `ApprovalPoliciesLoading` |
-| AC-P2, AC-P19  | Delivered | `assertAgentSettingsAdmin` on every `approvalPolicies` mutation; `list.canManage` hides controls                                               |
-| AC-P3, AC-P15  | Delivered | `approval-policies.ts` validators + migration `20261013120000` CHECKs (colour, timeout, threshold, delay < timeout)                            |
-| AC-P4          | Delivered | `superRefine` "rows N and M"; unique `(tenantId, scope, agentKey, actionType)` → CONFLICT; `AssignmentsEditor` client check                    |
-| AC-P5, AC-P6   | Delivered | `$transaction` on all multi-row writes; explicit `tenantId`; composite FK `(tenantId, policyId, scope)`; RLS                                   |
-| AC-P7          | Delivered | `APPROVAL_POLICY_DEFAULTS` (30 min / 24 h, permission-only, no auto-approve, no escalation)                                                    |
-| AC-P8, AC-P9   | Delivered | `resolveAgentToolExpiry` in the five approval tools; `draftPolicy` in `autoResponse.create/regenerate`                                         |
-| AC-P10         | Delivered | `assertPolicyReviewer` (agent), `assertDraftReviewer` + `sessionActor` (auto-response)                                                         |
-| AC-P11         | Delivered | `claimForExecution` + `approved-action-executor` (tRPC caller of the target module); `executionError`; no rollback token (#856)                |
-| AC-P12, AC-P22 | Delivered | Store keeps caller confidence or NULL; chain no 0.7 fallback; preview shows "—" for none and 0% for a reported 0                               |
-| AC-P13         | Delivered | `evaluateAutoApproval`; `system:approval-policy` actor; audit with policy id, threshold, confidence                                            |
-| AC-P14         | Delivered | `approval-escalation-sweep.ts` (advisory xact lock, once-only, post-commit notify + audit)                                                     |
-| AC-P16         | **Open**  | Authenticated Lighthouse needs `LHCI_TEST_*` credentials; the only Supabase is production (NEEDS_HUMAN, same as PG-196/197)                    |
-| AC-P17         | N/A       | Policies carry no tags                                                                                                                         |
-| AC-P18         | Delivered | `hasFormerTarget` → card note + dialog "(former user)" option and warning                                                                      |
-| AC-P20, AC-P21 | Delivered | `ConfirmationDialog` before enabling; `PolicyChip` renders the name next to the swatch                                                         |
+| AC             | Status    | Evidence                                                                                                                                                                 |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| AC-P1          | Delivered | `ApprovalPoliciesContent.tsx` (PageHeader, 12-column bento, EmptyState `rules`/`passive`), `PolicyDialog` Save rule, `ApprovalPoliciesLoading`                           |
+| AC-P2, AC-P19  | Delivered | `assertAgentSettingsAdmin` on every `approvalPolicies` mutation; `list.canManage` hides controls                                                                         |
+| AC-P3, AC-P15  | Delivered | `approval-policies.ts` validators + migration `20261013120000` CHECKs (colour, timeout, threshold, delay < timeout)                                                      |
+| AC-P4          | Delivered | `superRefine` "rows N and M"; unique `(tenantId, scope, agentKey, actionType)` → CONFLICT; `AssignmentsEditor` client check                                              |
+| AC-P5, AC-P6   | Delivered | `$transaction` on all multi-row writes; explicit `tenantId`; composite FK `(tenantId, policyId, scope)`; RLS                                                             |
+| AC-P7          | Delivered | `APPROVAL_POLICY_DEFAULTS` (30 min / 24 h, permission-only, no auto-approve, no escalation)                                                                              |
+| AC-P8, AC-P9   | Delivered | `resolveAgentToolExpiry` in the five approval tools; `draftPolicy` in `autoResponse.create/regenerate`                                                                   |
+| AC-P10         | Delivered | `assertPolicyReviewer` (agent), `assertDraftReviewer` + `sessionActor` (auto-response)                                                                                   |
+| AC-P11         | Delivered | `claimForExecution` + `approved-action-executor` (tRPC caller of the target module); `executionError`; rollback token only where a real compensation exists (#856, #931) |
+| AC-P12, AC-P22 | Delivered | Store keeps caller confidence or NULL; chain no 0.7 fallback; preview shows "—" for none and 0% for a reported 0                                                         |
+| AC-P13         | Delivered | `evaluateAutoApproval`; `system:approval-policy` actor; audit with policy id, threshold, confidence                                                                      |
+| AC-P14         | Delivered | `approval-escalation-sweep.ts` (advisory xact lock, once-only, post-commit notify + audit)                                                                               |
+| AC-P16         | **Open**  | Authenticated Lighthouse needs `LHCI_TEST_*` credentials; the only Supabase is production (NEEDS_HUMAN, same as PG-196/197)                                              |
+| AC-P17         | N/A       | Policies carry no tags                                                                                                                                                   |
+| AC-P18         | Delivered | `hasFormerTarget` → card note + dialog "(former user)" option and warning                                                                                                |
+| AC-P20, AC-P21 | Delivered | `ConfirmationDialog` before enabling; `PolicyChip` renders the name next to the swatch                                                                                   |
 
 #### Playbook §8 — Boolean toggle categories (PG-198)
 

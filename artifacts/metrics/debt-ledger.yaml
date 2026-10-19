@@ -4670,8 +4670,27 @@ items:
     remediation_sprint: 19
     remediation_plan: >-
       Implement per-tool compensating actions, then re-enable rollback tokens. PG-198 stops issuing rollback tokens (rollbackAvailable false) until then.
+    status: resolved
+    resolved_at: 2026-10-19T00:00:00.000Z
+    resolution: >-
+      approved-action-compensator.ts undoes create_case (CANCELLED), create_appointment (cancel) and email drafts (trash)
+      through the target module's procedures, via agent.rollbackAction; tokens are issued only for those. Updates and
+      notes moved to PG-198-RF4-UPDATE-NOTE-ROLLBACK (gh #931).
+    notes: 'gh #856 (safe subset). Remainder: gh #931.'
+  PG-198-RF4-UPDATE-NOTE-ROLLBACK:
+    origin_task: PG-198
+    owner: Backend Architect
+    severity: low
+    description: >-
+      Approved update_case, update_appointment and note actions cannot be rolled back; no rollback token is issued for them (gh #931).
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      Capture the before-state at execution, restore only if unchanged since, and add a tenant-scoped delete-note
+      procedure; per-tool design in gh #931.
     status: open
-    notes: 'Tracked, not fixed in PG-198 (spec RF-4). gh #856.'
+    notes: 'Split from PG-198-RF4-SIMULATED-ROLLBACK (gh #856).'
   PG-198-A11-FIND-PENDING-IGNORES-APPROVER:
     origin_task: PG-198
     owner: Backend Architect

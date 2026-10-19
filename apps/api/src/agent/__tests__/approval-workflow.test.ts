@@ -14,13 +14,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const agentActionRows = vi.hoisted(() => [] as any[]);
-const rollbackSpy = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({
-    success: true,
-    actionId: 'rollback-action',
-    rolledBackAt: new Date(),
-  })
-);
 
 function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
   if (!orderBy) return rows;
@@ -148,7 +141,6 @@ vi.mock('../tools', () => ({
                 ? { success: true, data: value }
                 : { success: false, error: { message: 'title is required' } },
           },
-          rollback: rollbackSpy,
         }
   ),
 }));
@@ -208,7 +200,6 @@ describe('Approval Workflow', () => {
 
   beforeEach(async () => {
     agentActionRows.length = 0;
-    rollbackSpy.mockClear();
     vi.clearAllMocks();
     executeSpy.mockResolvedValue({
       status: 'SUCCEEDED',
@@ -319,8 +310,9 @@ describe('Approval Workflow', () => {
         });
         expect(executed.executionStatus).toBe('SUCCEEDED');
         expect(executed.executionResult).toEqual({ entityType: 'CASE', entityId: 'case-42' });
-        expect(executed.rollbackAvailable).toBe(false);
-        expect(executed.rollbackToken).toBeUndefined();
+        // #856: a created case can really be undone (cancelled), so a token is offered.
+        expect(executed.rollbackAvailable).toBe(true);
+        expect(executed.rollbackToken).toMatch(/^[0-9a-f-]{36}$/);
 
         const row = agentActionRows.find((r) => r.id === 'approve-test-1');
         expect(row.status).toBe('APPROVED');

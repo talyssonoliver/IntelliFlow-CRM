@@ -321,7 +321,10 @@ export class PrismaAgentActionStore {
     return this.toExecutedAction(row);
   }
 
-  async findByRollbackToken(token: string): Promise<ExecutedAction | undefined> {
+  async findByRollbackToken(
+    token: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction | undefined> {
     // Rollback token is stored inside proposedState JSON (no generated column yet).
     // Filter on the JSON path directly (proposedState->>"rollbackToken") so the DB
     // returns only the matching row(s) — this is correctness-critical: without it,
@@ -334,7 +337,7 @@ export class PrismaAgentActionStore {
     const rows = await this.prisma.agentAction.findMany({
       where: {
         status: 'APPROVED' as any,
-        tenantId: this.tenantId,
+        tenantId,
         proposedState: { path: ['rollbackToken'], equals: token },
       },
       orderBy: { createdAt: 'desc' },
@@ -359,6 +362,70 @@ export class PrismaAgentActionStore {
     await this.prisma.agentAction.updateMany({
       where: { id, tenantId },
       data: { proposedState: proposed as any },
+    });
+  }
+
+  /**
+   * Take the rollback for one caller (#856): flips rollbackAvailable off only while it is
+   * still on, so of two concurrent requests exactly one runs the compensation.
+   */
+  async claimRollback(id: string, tenantId: string, token: string): Promise<boolean> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row) return false;
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id,
+        tenantId,
+        status: 'APPROVED' as any,
+        AND: [
+          { proposedState: { path: ['rollbackToken'], equals: token } },
+          { proposedState: { path: ['rollbackAvailable'], equals: true } },
+        ],
+      },
+      data: { proposedState: { ...proposed, rollbackAvailable: false } as any },
+    });
+    return result.count === 1;
+  }
+
+  /** Give a claimed rollback back after a compensation that changed nothing. */
+  async releaseRollback(id: string, tenantId: string): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row || row.status !== ('APPROVED' as any)) return;
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    await this.prisma.agentAction.updateMany({
+      where: { id, tenantId, status: 'APPROVED' as any },
+      data: { proposedState: { ...proposed, rollbackAvailable: true } as any },
+    });
+  }
+
+  /** Record that the action's effect was undone: by whom, why, and what was restored. */
+  async markRolledBack(
+    id: string,
+    tenantId: string,
+    rollback: {
+      rolledBackBy: string;
+      rolledBackAt: Date;
+      reason?: string;
+      restoredState?: Record<string, unknown>;
+    }
+  ): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row) return;
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    await this.prisma.agentAction.updateMany({
+      where: { id, tenantId },
+      data: {
+        status: 'ROLLED_BACK' as any,
+        rolledBackAt: rollback.rolledBackAt,
+        rolledBackBy: rollback.rolledBackBy,
+        rollbackReason: rollback.reason ?? null,
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: false,
+          rollbackRestoredState: rollback.restoredState,
+        } as any,
+      },
     });
   }
 
