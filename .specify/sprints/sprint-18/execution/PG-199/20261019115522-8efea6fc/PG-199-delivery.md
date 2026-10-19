@@ -156,6 +156,28 @@ These are from the final matrix, 2026-10-19 14:18–14:33Z, run one at a time wi
 
 **Consensus**: WARN. Verdict files are in `matop/stoa-verdicts/`.
 
+## Compliance Check Results
+
+/compliance-check PG-199 (2026-10-19):
+
+| Section | Status | Details |
+|---|---|---|
+| 2 Source of truth | PASS | CSV row In Progress, 90%; artifact path corrected (R1) |
+| 3 Tests, typecheck, lint | PASS | full matrix (see Validation Commands) |
+| 4 Plan deliverables | PASS | 122/124 plan boxes; the 2 open are Lighthouse and the ADR-082 flip, which depends on it |
+| 5 Context acknowledgement | PASS | attestations/PG-199/context_ack.json |
+| 6 CSV artifacts vs plan | PASS | all 5 CSV artifacts in the plan and on disk (validate-artifacts reports a structural MISMATCH) |
+| 6b Attestation forensics / schema | PASS | validate-schemas: attestation.json valid; provenance check exit 0 |
+| 6c Attestation phrases (Guards 6, 8) | PASS | check-attestation-phrases: OK |
+| 7 Mock coverage | PASS | page tests mock only tRPC, auth and the Radix Select; real PageHeader and domain |
+| 9 Architecture | PASS | architecture tests 40/40; depcruise 0 errors (Domain STOA) |
+| 10 PRD/ADR governance | PASS | PRD addendum and delivery note; ADR-082 Proposed (flip blocked by Lighthouse) |
+| 11 Accessibility doc gate | PASS | WCAG statement 1.11.0 and VPAT 1.12.0 entries added; route already in scope (92) |
+| 12 Navigation wiring | PASS | check-nav-wiring exit 0; sidebar + AI settings panel |
+| 13 Lighthouse evidence (Guard 9) | **BLOCK** | met:false with no human approver: the NEEDS_HUMAN item |
+
+**Compliance verdict**: NEEDS_HUMAN (Section 13 only).
+
 ## NEEDS_HUMAN
 
 1. **Lighthouse (AC-028, CSV GATE).**
