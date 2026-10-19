@@ -1,72 +1,452 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-199",
-  "run_id": "eng-ops-002-r16-pg-199-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "20261019115522-8efea6fc",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-10-19T15:19:40Z",
+  "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 152,
+    "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "gates_passed": 13,
+    "gates_failed": 2,
+    "kpis_met": 4,
+    "kpis_missed": 1,
+    "placeholders_found": 0
   },
-  "artifact_hashes": {
-    "apps/web/src/app/agent-approvals/model-config/page.tsx": "8996b340f3cdb602340e8f11d45565d515f4dbf304e0f6a0a65cc8cc2afdf5df"
-  },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter domain,validators,application,adapters,api,ai-worker,web typecheck (matrix step 10)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-19T14:28:16Z",
+      "duration_ms": 66000
+    },
+    {
+      "name": "Tests",
+      "command": "node with-slot.mjs --label PG-199 -- full suites: domain 3152, validators 2817, application 1494, adapters 2989, api 7942, ai-worker 2365, web 13191; integration 15 (exclusive DB slot); root route totals 15",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-19T14:18:50Z",
+      "duration_ms": 566000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter (same 7 packages) lint (matrix step 11)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-19T14:29:22Z",
+      "duration_ms": 51000
+    },
+    {
+      "name": "Build",
+      "command": "node with-slot.mjs --label PG-199 -- pnpm turbo build --filter=./packages/* --filter=@intelliflow/api --filter=@intelliflow/ai-worker --filter=@intelliflow/web (16/16)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-19T14:30:13Z",
+      "duration_ms": 178000
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
+      "gate_id": "context_ack",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "plan_checkboxes",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-199 requires page.tsx (exists), ModelConfigContent.tsx (MISSING), apps/api/src/modules/agent-approval/model-config.router.ts (MISSING), packages/validators/src/model-config.ts (MISSING), context_ack.json (MISSING). Broad grep for model-config router/validator logic across apps/api and packages/validators returned zero hits."
+      "exit_code": 1,
+      "score": 98
+    },
+    {
+      "gate_id": "artifact_hashes",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "runtime_wiring",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "shared_component_reuse",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "build_validation",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "validation_matrix",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "diff_coverage",
+      "passed": true,
+      "exit_code": 0,
+      "score": 95.1
+    },
+    {
+      "gate_id": "dead_code",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "duplication",
+      "passed": true,
+      "exit_code": 0,
+      "score": 1.03
+    },
+    {
+      "gate_id": "codex_review",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "a11y_review",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "stoa_verdicts",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "nav_wiring",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "lighthouse_evidence",
+      "passed": false,
+      "exit_code": 1
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Changed-line coverage (diff-coverage vs merge-base 797904a36, Sonar new_coverage parity)",
+      "target": ">= 80%",
+      "actual": "95.1% (1304/1371 lines + branch conditions) at 421640491",
+      "met": true
+    },
+    {
+      "kpi": "New-code duplication (non-test lines)",
+      "target": "< 3%",
+      "actual": "1.03% (35/3408)",
+      "met": true
+    },
+    {
+      "kpi": "Codex semantic review",
+      "target": "0 unwaived findings",
+      "actual": "round 5 PASS, 0 findings (rounds 1-4: 9 real defects fixed with tests)",
+      "met": true
+    },
+    {
+      "kpi": "Full validation matrix",
+      "target": "every command exit 0",
+      "actual": "all steps exit 0 except validate-artifacts (structural: plan 107 vs CSV 5; all 5 CSV artifacts in plan and on disk)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse >= 90 on /agent-approvals/model-config (authenticated)",
+      "target": "Performance >= 0.90 and Accessibility >= 0.90 on the authenticated page",
+      "actual": "Unauthenticated Path A only: performance 0.93, accessibility 0.90, best-practices 0.93, SEO 0.66, which is the auth-pending shell, not the page. The authenticated Path C needs LHCI_TEST_* credentials for a non-production Supabase; none exist locally and production must not be used. See artifacts/lighthouse/PG-199/README.md",
+      "met": false
     }
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /agent-approvals/model-config renders",
+      "criterion": "Model config at /agent-approvals/model-config: per-agent (per-purpose, owner Q1) model selection, temperature, max tokens, fallback chain, cost ceilings",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "apps/web/src/app/agent-approvals/model-config/**; modelConfig router; web 72 page tests"
     },
     {
-      "criterion": "Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented; Never-Downgrade rule respected",
-      "met": false,
-      "evidence": "page.tsx (16 lines) is a static placeholder ('Model config configuration coming soon.'). No form, no data fetch, no model-selection logic — the Never-Downgrade rule (memory/feedback_never_downgrade_without_approval.md) has nothing to apply to."
+      "criterion": "Never-Downgrade for model ids",
+      "met": true,
+      "evidence": "domain findDowngrades (price input+output, Q7-B); router PRECONDITION_FAILED DOWNGRADE_UNCONFIRMED incl. legacy tier overrides; one combined confirm; audit ModelConfigDowngraded with actorId"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate agent keys; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "PageHeader + bento grid",
+      "met": true,
+      "evidence": "ModelConfigContent.tsx (grid-cols-1 lg:grid-cols-12)"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "Canonical EmptyState (entity + phase=passive)",
+      "met": true,
+      "evidence": "FallbackList.tsx EmptyState entity=\"rules\" phase=\"passive\" with fallback copy"
+    },
+    {
+      "criterion": "System-compliant CTAs",
+      "met": true,
+      "evidence": "PageHeader actions (Save changes / Reset to Defaults / Chain versions), 44 px targets"
+    },
+    {
+      "criterion": "TagsTab via forwardRef",
+      "met": true,
+      "evidence": "N/A: no tags card; rows are keyed by AI purpose, not user-labelled entities"
+    },
+    {
+      "criterion": "$transaction on all destructive writes",
+      "met": true,
+      "evidence": "update/resetToDefaults in prismaWithTenant.$transaction under pg_advisory_xact_lock"
+    },
+    {
+      "criterion": "No skipDuplicates",
+      "met": true,
+      "evidence": "grep of branch diff: none"
+    },
+    {
+      "criterion": "Zod superRefine for duplicate agent keys",
+      "met": true,
+      "evidence": "updateModelConfigSchema \"Duplicate purpose: items N and M\""
+    },
+    {
+      "criterion": "colorToken CHECK constraint",
+      "met": true,
+      "evidence": "N/A: no colour token; rows are keyed by purpose, not user-labelled"
+    },
+    {
+      "criterion": "AI defaults FALSE",
+      "met": true,
+      "evidence": "N/A: no Boolean column or toggle (\"no ceiling\" is empty, \"block\" is $0)"
+    },
+    {
+      "criterion": "Wire every Boolean toggle or declare category-2 under IFC-310/311/312",
+      "met": true,
+      "evidence": "N/A: the page has no Boolean toggles"
+    },
+    {
+      "criterion": "Cross-tenant negative test",
+      "met": true,
+      "evidence": "model-config.router.test.ts:161; tests/integration/model-config.test.ts (two tenants, RLS)"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "NEEDS_HUMAN: authenticated run needs credentials (artifacts/lighthouse/PG-199/README.md)"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "full matrix, execution/PG-199/20261019115522-8efea6fc/logs/32-matrix-summary.txt"
     }
   ],
-  "dependencies_verified": [],
-  "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
-  },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 463445d54eea1901a0980ae03c637b9b9521e65b ('feat(web): add case, task, analytics, document, and agent-approval subpages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: ModelConfigContent.tsx, model-config.router.ts, model-config validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-199/context_ack.json — absent"
+  "dependencies_verified": [
+    "PG-178 (Completed)",
+    "PG-152 (Completed)",
+    "PG-192 (Completed)"
+  ],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-10-19T11:57:03Z",
+    "files_read": [
+      {
+        "path": "apps/web/src/components/sidebar/configs/agent-approvals.ts",
+        "sha256": "3226a6fd60569f683e228b74450b23b8724a80e646e7d25df1ad87176748c700",
+        "read_at": "2026-10-19T11:57:03Z"
+      },
+      {
+        "path": "apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx",
+        "sha256": "753857eab9931d5d9f8fdfd6db645a8dba7eed21273096553f79cd66abca5e5b",
+        "read_at": "2026-10-19T11:57:03Z"
+      },
+      {
+        "path": "docs/planning/module-settings-playbook.md",
+        "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+        "read_at": "2026-10-19T11:57:03Z"
+      },
+      {
+        "path": "docs/planning/prd-module-settings.md",
+        "sha256": "0a6b3b251ce9af78591354f2adee5f08cdf3b7cf950ed1474a16158893e08dfd",
+        "read_at": "2026-10-19T11:57:03Z"
+      }
+    ],
+    "invariants_acknowledged": [
+      "One row per LLMPurpose (6): scoring, qualification, email, reasoning, structured, rag (owner Q1); TenantAIConfig stays keyed (tenantId, purpose)",
+      "Never-Downgrade by price (owner Q7, R2, Q4): a strictly cheaper effective model, primary or fallback, needs one confirm and is refused server-side without acknowledgeDowngrade; every change audited with actorId",
+      "rag model is locked (Q5): only its monthly ceiling is editable, enforced by validator AND router",
+      "Ceiling reached blocks only that purpose pre-call (Q2); email surfaces monthly AI ceiling reached for email (Q6); rag embedding jobs are delayed, never dead-lettered; ceilings are soft and fail open only pre-migration with a logged reason",
+      "tier is nullable; the router never writes or edits tier (NULL = each caller default), so saving a ceiling never moves another feature model (consensus A1)",
+      "Every query carries explicit tenantId; RLS policy is defence in depth in a separately removable migration and no code relies on it; cross-tenant negative test required",
+      "Destructive writes (update, resetToDefaults) run in $transaction under a per-tenant advisory lock; no skipDuplicates; P2002 maps to CONFLICT; reset keeps rateLimitPerMinute overrides",
+      "Web degrades calmly on tRPC NOT_FOUND (deploy skew) and never sends tier or fields the old API rejects; playbook PageHeader + bento + canonical EmptyState; Material Symbols only",
+      "Spend metered exactly once per chat/embedding call in the tracer wrappers; base.agent.ts and insight-generation recorders removed in the same change",
+      "Never commit secret-shaped strings or *.log/*.coverage/*.tsbuildinfo files; never touch projects-64 overlap files (prisma-action-store, approval-workflow, agent/tools, AutoResponseDraft*, autoresponse.router, cases.router, appointments validation)"
     ]
-  }
+  },
+  "artifact_hashes": {
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-agent-selection.json": "1baa5f3de5fe9ebe4815702b99effe71193a3a9a6d31483d2fae2fb9f4c8257a",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-hydrated-context.json": "8e6baf9c2034be5ae22da4dd830b88f5f5b79a664c86f9f607002443fe8ff91c",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-hydrated-context.md": "53d15f1ce2feaf5046c299bd02073145a16203886aa43f572579daced4f09f58",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-owner-ruling.md": "b54bb9bcedbd5ce2ab1e43067a31ec2eae7755f086bb947f1e78dc5cda29a0d1",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-plan-review-iter1.md": "dbccb1b3a5d03532c65ad6be32046fc4632ff3830a0269ffc9d85c4604827ca9",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-plan-review-iter2.md": "1dd6f2e6c5ec216985e841eaae370753cad2b33e7dd27584508ff771e5b93ebe",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-plan-review-iter3.md": "ad7f4d1c442502fa7350329ec9d873acb346b0f33715ba21cb052d01ee5914cc",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-plan-session.json": "9d0c66447418124ae1c5b780006af981265d6d3b328cba8e64190da1ebab294f",
+    ".specify/sprints/sprint-18/context/PG-199/PG-199-spec-exploration.md": "62234b8ae2a74e20791f9b2ffdc84a5563cf609fca0be6a981a3fcfae348ef1f",
+    ".specify/sprints/sprint-18/context/PG-199/hydrated-context.json": "58ff918a47ae84c0df7bb0dcf2dc89b74302da49c768119110f097e7a3d2dd4c",
+    ".specify/sprints/sprint-18/context/PG-199/hydrated-context.md": "724d7eed3ed5896ed518cb96a96efef6afae1b69d549b3cc266cde4ca4d1a065",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R1-ai-specialist.md": "2aacc941e8eba7a154a6f6538444c258d007b8ad1d9ccffc8c84f684a917d4b7",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R1-backend-architect.md": "910d50e07ae6610520e167a84b245c8538933b49fc4437c0cb76870d5e08caf6",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R1-data-engineer.md": "81cdb82c6d5cb1d07c084325ce3869a5983e5876d48357006191bbdd2a270e4a",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R1-domain-expert.md": "32bc35f0a69ed4e02edc0287a1c987f1b9dca0859e1a191945a97404d571fd73",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R1-frontend-lead.md": "064441ad87d4da9847813182db8f8e88322289dd718501057440a8c1e64c7c6d",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R1-test-engineer.md": "04f4e4640541d4b52388a0d24167b6bbb3a661bc96affffed82c9e48ac3fc332",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R2-ai-specialist.md": "c8f985160eb81057261e82a4c3b7dda86e6f49c628e16811966466c0caacff2c",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R2-backend-architect.md": "d59272d16cbd3e2b181f6e4f237a64f387982ac915e90581873b8134b4bf64b4",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R2-brief.md": "f15a4a666ec68267e18718d9bbce17f53a7b2ad8c5256fb21d1cca8a6f7f0b24",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R2-data-engineer.md": "f1db46b853494945b60c4e9e38455990cfd2824b0b6e1b5c8e0a656f4d0a8b24",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R2-domain-expert.md": "cf8e8ad518aa03fd2f75aaa67a3c1356a1b5c3ea9e794be762c20499d40e66c3",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R2-frontend-lead.md": "6af3135e474687fe236a39a38928eb9f142a69f17a033858a1f77c854155f285",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R2-test-engineer.md": "85f37b5118502082a85e9cf2ad9b69835a69dd0159f2f831b6a3d3bcea7e2116",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R3-ai-specialist.md": "2d2bf0c9e52f307ec48257df4bb887fc2afe7598160ed24305349efe3416973c",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R3-backend-architect.md": "31068fdb9331633de578ed2195f048953214f089ef41e13eade71baf7d0abef1",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R3-brief.md": "5db60f6abb852e894c387fe495347ba02f112a94f4617b10138dfd570a86cd75",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R3-data-engineer.md": "bdc3882c2f199bd13e401e7974946fa1dfc0fe46ec017a86f674a3d063226fbf",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R3-domain-expert.md": "2255c8fcfbdea9eaeaf57e1774a13e850ad22d291e3c0e836e1e3420e80db137",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R3-frontend-lead.md": "b967c22687cdcf4dc50a15fcf42a13b0abd6c3349b4e087f2bdaacdc03d1db85",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R3-test-engineer.md": "9ced4f7ff47946bd92d44a022ebfc7db5b312740b36a00242e9d9526d7a95be8",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R4-ai-specialist.md": "86284f5e783d27f280b639c75095a008edde87f35f308edcc6e61ef134272ea5",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R4-backend-architect.md": "0c57421aca2c0a2974fb87c30c1e6aebfcf95902a4598ab2a983f5f16614dd65",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R4-data-engineer.md": "84de2055c91db9664f34e33471db77a0a447e3dfd862a36ec1439935d79a5b1d",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R4-domain-expert.md": "8cce31115b1811585027b6f7ccd75e17a5413b00c2901fdf9de9d235a4571e3a",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R4-frontend-lead.md": "943b7b69115f7f5aeffcce07f92fe4feca6fe6753f550c8147c2b23da1151a87",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R4-resolutions.md": "922e2725c337de818530a827da3bf25ab84a861454ee1006223c8f3cf02ac006",
+    ".specify/sprints/sprint-18/context/PG-199/rounds/R4-test-engineer.md": "5b7b6a72fed001baae050743e45f072fe24c13cc1d1198560daa5aa27fcc8cd9",
+    ".specify/sprints/sprint-18/planning/PG-199-plan.md": "c551da78bd646be9854c0cb326d5b90da597ca17f35653e42a5a2480b5a8bea1",
+    ".specify/sprints/sprint-18/specifications/PG-199-discussion.md": "1807533c117292fb1bf57e480ddf9478cb57aa8b4d42e74d3a93635f5d77a0e3",
+    ".specify/sprints/sprint-18/specifications/PG-199-spec.md": "142cf8854fe1574434d4872cfe0da80894b6a67c7d6842c4da4e052b49f3c195",
+    "apps/ai-worker/src/__tests__/ai-worker.tenant-ai-spend-wiring.test.ts": "9a23ac9a137c7945d334e4d6e6a09a6476c2720601a8908e0e4cbdaabb13fdce",
+    "apps/ai-worker/src/agents/__tests__/next-best-action.agent.b11.test.ts": "3f3eea4beac93eaa4c8ce4a87f9efd0c3c5e5ba0cfdb3c54868fc70d6c7d6842",
+    "apps/ai-worker/src/agents/base.agent.plan-reflect.test.ts": "7483036ab8f0cd8f4c9f3cc27ddd71ad124431a641fd21525bdc6e4670cbdfd6",
+    "apps/ai-worker/src/agents/base.agent.test.ts": "edb9432241858086ca114eda975d182d3787446aaca586d31b17675b332408e1",
+    "apps/ai-worker/src/agents/base.agent.ts": "2ee4cfd08b0aaf7f05390cf718f98f53ed85a473d5ac44cfc1b5a95488633e4b",
+    "apps/ai-worker/src/agents/email-writer.agent.additional.test.ts": "61f2f54a48c082080c7180d3350f37bc6ad6e0cd8653c722a5e30df045aabed6",
+    "apps/ai-worker/src/agents/email-writer.agent.test.ts": "60761da3be8e5568abdc9ad38bf337fbc991db365d5b488897b0c6abbb90ff3b",
+    "apps/ai-worker/src/agents/email-writer.agent.ts": "daf30f62fb8d9ae0000bac5a041a8ac662adda54802d5d388d832704979db885",
+    "apps/ai-worker/src/agents/followup.agent.additional.test.ts": "83a02a6a3615edb191f547e6ac05c46c3830fa7571d84a1c41c1941db7378bc5",
+    "apps/ai-worker/src/agents/followup.agent.test.ts": "026f1989e123ef3460b712214c0addbbade023cd8ce71b442608d58bd0c93ee7",
+    "apps/ai-worker/src/agents/followup.agent.ts": "ae8b8aee16e38fb3e5b4a27e63db1e7e1f5415a522561461aa317f9c51c8b1dc",
+    "apps/ai-worker/src/agents/next-best-action.agent.test.ts": "acca65c71c5effb138879f4971d3500b737d9c0098e6fe128870438d310ca59f",
+    "apps/ai-worker/src/agents/qualification.agent.test.ts": "8521fa9c3cc2b67812b98d6b54e28cd21886c0682d0ba687da7cab787cebbe32",
+    "apps/ai-worker/src/agents/qualification.agent.ts": "6ff651b75f53d1f4b9ca543cfd06f768039073c4c8021ece5778528e0b45dfbd",
+    "apps/ai-worker/src/ai-worker.ts": "283d5a8881c5451d66547ff0acf7090cf1201f86892004dfef351b152f328682",
+    "apps/ai-worker/src/chains/__tests__/insight-generation.chain.test.ts": "af1f6fc0ce0e30bf29a83862d8a2191b0d7e0caf838955c95c264f7640437b08",
+    "apps/ai-worker/src/chains/auto-response.chain.test.ts": "f109e6be99f6b93e97ade30064bb140de45996d26dfdc25aa9fd96e08dbae0fb",
+    "apps/ai-worker/src/chains/embedding.chain.methods.test.ts": "20223f332f5041711433a64a05f971def18e833802cd8780744548e92f190fd0",
+    "apps/ai-worker/src/chains/insight-generation.chain.ts": "a9708feebacc51f445103145b1d98af6de152338de344404fe0e82390063fccd",
+    "apps/ai-worker/src/chains/rag-context.chain.test.ts": "3bb34551a3972e33ed3d92629f9918263cd5a48c1f02e077db15b16fc15bf380",
+    "apps/ai-worker/src/chains/rag-context.chain.ts": "23c82a07a709308a2f3a0e5771c06eff5047cdf6e8280c77372aaecf6bcf87bf",
+    "apps/ai-worker/src/config/ai.config.ts": "6cc2fc3cf0c198dd4c2ff4921d244b0a20a5c20379cc82b55a74abfa17095014",
+    "apps/ai-worker/src/jobs/__tests__/summarize-conversation.job.test.ts": "c6004a7fb0d960a674769d025c5701d7f239c5df9044b606c28b98d94bc80f8d",
+    "apps/ai-worker/src/jobs/summarize-conversation.job.ts": "db0cf822040c6988f68f5f8e82394bbe0491db91bc1e5545d3b2f76a90165e47",
+    "apps/ai-worker/src/lib/__tests__/createLLMForTenant.test.ts": "bee4a170f33865b3902575583d74150f0354ea7fd5c4e5dc621f334da125e87e",
+    "apps/ai-worker/src/lib/__tests__/model-config-parity.test.ts": "7af2e0fe73da8f49e02a6ac2d7ff047f44fb514092d33e7683b75e2367099bde",
+    "apps/ai-worker/src/lib/__tests__/purpose-ceiling.test.ts": "340d01406118831f0f570b4557ce625a092fa361db1e33dcc60f5de6374dcde9",
+    "apps/ai-worker/src/lib/__tests__/purpose-fallbacks.test.ts": "4ca2980c12239045813cac0c5b422fe94ea3a8e63c4443e0bf83ec22c8fd2c0e",
+    "apps/ai-worker/src/lib/__tests__/tenant-ai-config.test.ts": "0ee5f88e0467f8ef79ad4800c449abf3c44b32a1d48dc4bb8d0f99bd07cf55c0",
+    "apps/ai-worker/src/lib/__tests__/usage-metering.test.ts": "452c1a124329c723d4bced8aebe9d886819ad646f5a8503d1c3bdd47d1719da5",
+    "apps/ai-worker/src/lib/llm-factory.ts": "db114e4ad0f75fd28bc4af0f14e551bbb7e5cd69b56ab9b73b9e65bd13fac65a",
+    "apps/ai-worker/src/lib/purpose-ceiling.ts": "05e5e7122b46fb5cabd3abbb611199dff7d665a9d59731807947c894aa523e26",
+    "apps/ai-worker/src/lib/tenant-ai-config.ts": "3e188a81f24181eecab453cf4e43574c8e5e229ff977d19a79df08c48c55e72a",
+    "apps/ai-worker/src/lib/usage-metering.ts": "39272ac6569ed57f8f6b172ae8bb9f0c1eb3aef23f270d0912a94fa8d241caaf",
+    "apps/ai-worker/src/tracing/llm-tracer.ts": "0233e734e14db4ba4fba6f137abc24aee7968fa666667cc59546f7e0c012a406",
+    "apps/ai-worker/src/utils/tenant-ai-spend.test.ts": "182abff6a97746a398546a3e57f7778c6e422fa0111531a3b8472fba58afefc0",
+    "apps/ai-worker/src/utils/tenant-ai-spend.ts": "2675e8aa3dd0c0df3bf1a4c6e111a63a10b90c2dba939d5b50fa194914b9ac26",
+    "apps/ai-worker/src/workers/__tests__/contact-embed-worker.test.ts": "157b07e9aefebd3d5961f6e370b5696bd6a2a31d109d72cb57fb674e553afcfd",
+    "apps/ai-worker/src/workers/__tests__/ingestion-workers.test.ts": "16a763184aaa19b044ef801fa26f523163397b7e6aa1e317aabac0064c217e81",
+    "apps/ai-worker/src/workers/contact-embed-worker.ts": "f26e46427123a0b4fa5bfdc04249bb335980a2a1493769b8a0dc2971ca4460b3",
+    "apps/ai-worker/src/workers/ingestion-workers.ts": "9fa1c914c8098e0ebde5179b8d7b9fd8a66f1c1c3d0c54401dca59eb4eb745d6",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "219711880afb9ca088769380d53fd43f117ff36fb6e69b35abbc023be0c114bb",
+    "apps/api/src/modules/agent/__tests__/model-config.router.test.ts": "1b53a106e213dbad2a5b3d13564c8d31971cef883253a06f32f43da626fa87b9",
+    "apps/api/src/modules/agent/model-config.router.ts": "fcbe13d4f7596b79c1ab0b8855e11bb1ed25a9d41515f919e5896204b3af9b9c",
+    "apps/api/src/router.ts": "b032407f8b621fbcc808779b92e59ec36e5e81447b0613391d4c8dc923b666df",
+    "apps/api/src/security/rbac.ts": "63f6b1d632b3b0cd42ca1a5a4d58348a0c0000713ca33212d7fefa0ac7ae401b",
+    "apps/api/src/security/types.ts": "e987181f4ca1e99b7f1ed944a6f121bff95c606728c14cc637e850df7ff5cde1",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "485e16a1b53b638cfaab7ecc025251a003fb821a65093fb98e06be79cc71409e",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv": "ca7ead28a6a10689fe95e84bfde55071c0d081c3affae59f6832ddf8257ba2fb",
+    "apps/web/src/app/agent-approvals/model-config/ModelConfigContent.tsx": "acce0d73a2bd20793b369b453e08b251ed821df02ad99686e2f9cc32a6b3bbe0",
+    "apps/web/src/app/agent-approvals/model-config/ModelConfigLoading.tsx": "386f4e7f36ab25952aff52324d13ab32bf74e61725254963de9aedb049256aa9",
+    "apps/web/src/app/agent-approvals/model-config/__tests__/ModelConfigContent.test.tsx": "a86b52b804a9bdd46eea364eb1dd098d209c1375c347813f5d8c4f2aa4b73a9d",
+    "apps/web/src/app/agent-approvals/model-config/__tests__/model-config-fixtures.ts": "0454059d0836aa3cf9fe0d97f0cc5bcdb06c6919ec47719faa4c27ef6ea19908",
+    "apps/web/src/app/agent-approvals/model-config/__tests__/page.test.tsx": "bee35e388728afc868a46cb6ae3edece38508d8068a2150230bc3a9833a5de3e",
+    "apps/web/src/app/agent-approvals/model-config/components/FallbackList.tsx": "0d99723e080091071e04cc8c1ad9261d7c1f2e142ae479e9d4e714e6ac69ff06",
+    "apps/web/src/app/agent-approvals/model-config/components/PurposeCard.tsx": "851b64aab0654733be16bf9ec73a2e2f1e5f5a2c8a22cc78155eb615bb99612e",
+    "apps/web/src/app/agent-approvals/model-config/components/__tests__/FallbackList.test.tsx": "bd51136924da31a6ade9281e74867ec64e703541fee9e2a9a61bedd23a8950eb",
+    "apps/web/src/app/agent-approvals/model-config/components/__tests__/PurposeCard.test.tsx": "c6ddc7c44f09dd983c734a2751cb87ead471819e099584b9ad033df16d49a7bb",
+    "apps/web/src/app/agent-approvals/model-config/components/__tests__/model-config-model.test.ts": "b3c2999ce89864b4424029f7398f822670b9da46bfc0737966bc4db297b988eb",
+    "apps/web/src/app/agent-approvals/model-config/components/model-config-model.ts": "3a1d2ffc5a0cde6885e034ea6cc040a931917ba00d603556da2c1dfdef099f78",
+    "apps/web/src/app/agent-approvals/model-config/page.tsx": "b12c02930046289f87d83dfbe1397baabf16c9c12804a6b3a62d009bdca4c165",
+    "apps/web/src/app/calendar/availability/AvailabilityContent.tsx": "9764c370fa18cd6d48e71a33fb3c5f7675195e56ef79f6955f71bc18affef855",
+    "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx": "abe615129041d28b1efbc4895b28a34b408ec0f373d5698fe7861bad4a6db37f",
+    "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx": "f30a8e6bc53fc27c74beeaf54951884389351c582aa2719bbd6c24e76e7deacb",
+    "apps/web/src/lib/__tests__/trpc-errors.test.ts": "397b130405855dba4efd815de279569d49f23276fc834bb707e5e3d70cafe195",
+    "apps/web/src/lib/shared/__tests__/settings-search.test.ts": "05a5c310094368f0ad907e3153add0a3c3b33e82601176cb3773f122a092f752",
+    "apps/web/src/lib/shared/settings-search.ts": "bcc7616dea4cfe6151194a794e0eb273fcd9e4a8ae4a70ad78f455d0a463c304",
+    "apps/web/src/lib/trpc-errors.ts": "bedc4a3aabc1ab4c436ffaf62353fc095ea6cd5b78f6675b577bc1af66b8e52c",
+    "apps/web/src/test/mocks/native-select.tsx": "cda782e88913adb712f9dc7f1974b190565e62197021fa13c0eb07c908517cde",
+    "artifacts/benchmarks/baseline.json": "2453a09be21eea5847b828b41b877f739cb9d32a6d7fdf98a6e1bcbc8c4a3cd7",
+    "artifacts/metrics/debt-ledger.yaml": "e4f059b696cb9a95b83837e5598b348749a5658667a632d0290073423c877d27",
+    "docs/architecture/adr/ADR-048-hybrid-ai-inference.md": "22c3b6171e2ddc28c0da5dbe6f76327d48ac5cc8d634ad87c825d19e092b99f3",
+    "docs/architecture/adr/ADR-082-tenant-model-config.md": "bd8929be2301447cf31e8c5826fce184cec3926fa24145b4caad10425c27118d",
+    "docs/architecture/adr/README.md": "8cb26db404122a9e7f43fb3cb9fd436ae6d5f0fc54e3917a3aafa3b5e1800b10",
+    "docs/architecture/diagrams/ai-output-review-dependency-chain.md": "cdc41b181fc43ab890c1e6af58ae6b38cc830fd5d0eca5b869712899a8e6e893",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "fb3768ce9f8a85bc12d9eb8bbdf6c58d52175e275fa3a4f8b103f3788777f0c9",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "a41e09c38958ad633ca848b93422dc857d92e44ee018b55f11e7500c04469024",
+    "docs/design/information-architecture.md": "f2ff7d3727ea95d8d358a5567ac655b6e15a48291f0510c815e3c2155584df4e",
+    "docs/design/navigation-reachability-audit.md": "86eaf11b1273857424abae62e04c0df75ff15f179780f66668fd3bd992caa2f3",
+    "docs/design/page-registry.md": "51c974fd3ea6346ddfb1a76199f0c1ff12cb45f0146275b8e0debe96321dbd04",
+    "docs/design/sitemap.md": "164e35d6f442390164f9688d0705ffc612fea12ab4c1c83b99bcdbf4df67030e",
+    "docs/design/ui-flow-mapping.md": "fdc1e79552fc2702fc65cb6300df44c00c85484711a0d118dd8f82dc1c78faf6",
+    "docs/planning/prd-module-settings.md": "78f6ec379c664b3b763e3d4841e83ab869f2d515a1e4009ba776ddd974edf706",
+    "infra/litellm/config.yaml": "bfbd8176ada0f502946d56152e4c5ad8dce7cd2695a0e6e4099e99409eca2fa2",
+    "packages/adapters/src/repositories/PrismaPurposeSpendRepository.ts": "9702817ff073daf9bbe7d84c2f1a6fa6ebbe7773c01a56454cee739982c96e2f",
+    "packages/adapters/src/repositories/__tests__/PrismaPurposeSpendRepository.test.ts": "e71d20c5801d48e82efb642dfe172c6163b1f606c0d676fd561d47d4db41a52c",
+    "packages/adapters/src/repositories/index.ts": "aa2096242d919ff10c54e36a320dd2360deea8489d755dcff902b7736dab7081",
+    "packages/application/src/ports/repositories/PurposeSpendPort.ts": "b9c4e39cebe9efa7695e46ff8008d5de9ddd4289ccb4f0c8397c636f4c5d581e",
+    "packages/application/src/ports/repositories/index.ts": "7171b60ac7d01cd7417adbf55781ee95ef723b53891e94ba63668244d988c5ac",
+    "packages/db/prisma/migrations/20261019120000_tenant_model_config/migration.sql": "7b874d6c33c9837eba9484dc462d6bd20fc0dc47aefe7f94e0ffae3633a9d77e",
+    "packages/db/prisma/migrations/20261019120100_tenant_ai_config_rls/migration.sql": "120b240344390e62a14f7ec5673f027f53bdf1b50b93f825e99104534507e3e1",
+    "packages/db/prisma/schema.prisma": "5229f9aa137479a2a4fef3952fba49ada047131d446aa93a018586044678c31f",
+    "packages/domain/src/ai/model-config/__tests__/catalog.test.ts": "fb26405c0707a5a54b46621a8734e8e73ceed889ec434c83ffc188c5056a6a8d",
+    "packages/domain/src/ai/model-config/__tests__/rules.test.ts": "eadf1067c965490738889b3c22850ded979df37d5e32fdbfdd1829b7d664a6c7",
+    "packages/domain/src/ai/model-config/catalog.ts": "c15317720ed565917490a916620044596a668122bb728b5121dcccf6411d488f",
+    "packages/domain/src/ai/model-config/defaults.ts": "b9e4c2870728347cef5953d89b40be83454dc06c47498728763346f31e46e43e",
+    "packages/domain/src/ai/model-config/index.ts": "7efd7cfdfa76501e82c9344ab0cdaea3afa3482d17b8d422e8a5506d175316f2",
+    "packages/domain/src/ai/model-config/rules.ts": "bcdfb7fa5f0b86c63d40bd4aa236b5e53f482f18966a152c94faf140c356be6d",
+    "packages/domain/src/index.ts": "4c5aa043908f92a6a597b1b52b62c5f1a8ee37f3ae1aa1380295fd47e71bc0a2",
+    "packages/validators/src/__tests__/model-config.test.ts": "1b127ab9e45ab4477bea92b9135bc08ea7161e5f8c3b28415f485562c4698c33",
+    "packages/validators/src/index.ts": "65eee1485f0633d10d59bc9fa10f4e628bba8b330f9f7185dc5c14d18ec08652",
+    "packages/validators/src/model-config.ts": "1757837bd9a60825bcde68f167241866d7216cd08902307d056f44de4cdff612",
+    "tests/integration/model-config.test.ts": "fcf7999d1ca4ce2bc3eee6b089b4db5b9c498ea1106f11751615fbeced2488e1",
+    ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/PG-199-delivery.md": "db5d6054b00738969aa357f44343f0dfac28f9c1a4ffa6763cc69f5bfe5198c1",
+    ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/a11y-review.md": "1329b7cb1e858c6f7098d1ee8745d9acd5b77d43f80076aebc392c9f27f7ce2e",
+    "artifacts/lighthouse/PG-199/model-config-path-a.report.json": "f6c85f51dfa03f23eed0966fe2994773d12fc592e342b49d7a15ff56a283a8b0",
+    "artifacts/lighthouse/PG-199/README.md": "3254871b7da05a082fd656b9f26f25382a0179a9b6247b924a1dc3bd29d984d4",
+    "artifacts/coverage/PG-199-before.json": "3a80226cbfd05ff806ec20f5c73ff46649453392fbf2f70678a5063bab31b558",
+    "artifacts/coverage/PG-199-after.json": "aa553f682d1ced4ff0b31d2d59f9812aef9819be397ff4e719c70bebd06d2afe",
+    "docs/compliance-and-governance/compliance/wcag-conformance-statement.md": "9fb19ebfe970bc79aa31382629d7d0fb18a4e437eb0032424907145ad2816557",
+    "docs/compliance-and-governance/compliance/vpat-2.5.md": "a243d2e0af40c3a4f1ad6c4907bdea2447e9baff4db62cb6fe33aab0a3a3e1ea"
+  },
+  "environment": {
+    "os": "win32 (Windows 11 Pro 10.0.26200)",
+    "node_version": "v22.14.0",
+    "git_commit": "421640491",
+    "branch": "feat/pg-199-model-config"
+  },
+  "notes": "Verdict NEEDS_HUMAN, not COMPLETE. Open items:\n(1) Lighthouse authenticated run. There are no LHCI_TEST_* credentials for a non-production Supabase, and logging in to production is not allowed. Unauthenticated Path A scored performance 0.93 and accessibility 0.90. ADR-082 stays Proposed until this passes (plan Step 32).\n(2) Gate 4b. The runner runs pre-ship, pushes and opens the PR, so this attestation is written before the push. That is acceptable only because the verdict is not COMPLETE (PG-198 precedent).\nFinal matrix, 14:18-14:33Z, one process at a time via the slot wrapper: domain 3152, validators 2817, application 1494, adapters 2989, api 7942 (+2 skipped), ai-worker 2365 (+10 skipped), web 13191, integration 15/15 (local :5433 only), root route totals 15. Typecheck, lint and build exit 0; format:check 0; lint:artifacts 0; architecture 40/40. Diff coverage 95.1%.\nDisclosure: one small test file ran during an earlier background matrix, which broke the one-process rule. The matrix was then rerun cleanly in full.\nReviews: codex ran 5 rounds and found 9 real defects, all fixed with RED/GREEN logs; round 5 PASS. a11y-expert returned FAIL; all fixed (a11y-review.md). /code-review quick: 0 errors. /sonarqube-fix local checks: clean.\nSTOAs (matop/stoa-verdicts/): Foundation PASS, Domain PASS, Intelligence PASS. Security WARN for a pre-existing moderate sprintf-js advisory (debt ledger DEP-CVE-SPRINTFJS-PRECISION-001). Quality WARN for Lighthouse.\nProduction: the Class A migrations 20261019120000_tenant_model_config and 20261019120100_tenant_ai_config_rls must be applied with prisma migrate deploy before the API is promoted. The production RLS state is unknown; projects-64 verifies it at rehearsal.\nFollow-ups: #924 #925 #926 #927 #928 #929, existing #905.",
+  "nav_wiring_confirmed": true,
+  "spec_session_consensus": "APPROVED 6/6 in /spec-consensus round 2 after amendments A1-A8 (round 1 was 5/6: backend-architect REJECTED a single BASELINE_TIER). Agents: ai-specialist, backend-architect, data-engineer, domain-expert, frontend-lead, test-engineer. Evidence: context/PG-199/rounds/R4-*.md and specifications/PG-199-discussion.md",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer subagent pg199-plan-reviewer (iteration 3 APPROVE after iterations 1-2 REVISE; context/PG-199/PG-199-plan-review-iter1..3.md)",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-199-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-199-plan.md"
 }

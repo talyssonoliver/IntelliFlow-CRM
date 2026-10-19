@@ -1,0 +1,21 @@
+{
+  "stoa": "Domain",
+  "task_id": "PG-199",
+  "run_id": "20261019115522-8efea6fc",
+  "verdict": "PASS",
+  "gates": [
+    {"name": "domain tests", "result": "PASS", "evidence": "logs/32-01-domain.txt: 109 files, 3152 tests passed"},
+    {"name": "validators tests", "result": "PASS", "evidence": "logs/32-02-validators.txt: 60 files, 2817 tests passed"},
+    {"name": "adapters tests", "result": "PASS", "evidence": "logs/32-04-adapters.txt: 111 files, 2989 tests passed"},
+    {"name": "api tests", "result": "PASS", "evidence": "logs/32-05-api.txt: 312 files, 7942 passed, 2 skipped"},
+    {"name": "integration (model-config)", "result": "PASS", "evidence": "logs/32-09-integration.txt: 15/15 passed"},
+    {"name": "boundary check (depcruise domain+application)", "result": "PASS", "evidence": "0 errors; 2 pre-existing no-circular warnings in unrelated files (notifications, contact); no model-config files involved"},
+    {"name": "hexagonal / zero-infra review", "result": "PASS", "evidence": "domain model-config imports only QuotaRegistry (domain); no adapters/db/prisma imports; PurposeSpendPort in application, Prisma impl in adapters"},
+    {"name": "schema + migrations", "result": "PASS", "evidence": "tier nullable; CHECKs for purpose/tier/temperature/ceiling 0..2000000/fallback<=3 and modelId not in fallbacks match domain; RLS migration separate, Class A"},
+    {"name": "owner rulings (R1,R2,Q1-Q8)", "result": "PASS", "evidence": "rules.ts price=input+output, isDowngrade strict <, equal lateral; validators superRefine rejects duplicate purposes and locks rag except ceiling; router counts stored tier override via modelPick and acknowledges downgrade incl. fallbacks and reset; ceiling 0 blocks"}
+  ],
+  "findings": [
+    {"severity": "info", "note": "DB CHECK on maxTokens is > 0 only; upper bound 32768 enforced by validator (packages/validators/src/model-config.ts) not DB. Spec line 116 states the CHECK as maxTokens > 0, so this matches spec."}
+  ],
+  "reviewed_at": "2026-10-19T15:05:23Z"
+}

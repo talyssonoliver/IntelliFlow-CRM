@@ -1,0 +1,16 @@
+{
+  "task_id": "PG-199",
+  "run_id": "20261019115522-8efea6fc",
+  "selected_at": "2026-10-19T14:19:06Z",
+  "rule_source": ".claude/skills/exec/references/phase3-matop-validation.md (STOA Selection table)",
+  "stoas": [
+    { "stoa": "Foundation", "reason": "PG-* page task (always included): typecheck, build, lint, artifact validation" },
+    { "stoa": "Security", "reason": "admin-only mutations (RBAC), tenant isolation, RLS migration, audit of the actor" },
+    { "stoa": "Quality", "reason": "tests, diff coverage, a11y of the new page" },
+    { "stoa": "Domain", "reason": "Never-Downgrade business rule, price ranking, ceilings (domain model-config)" },
+    { "stoa": "Intelligence", "reason": "AI model selection, fallback chains, metering and ceilings in ai-worker" }
+  ],
+  "not_selected": [
+    { "stoa": "Automation", "reason": "no CI/CD, pipeline or docker change; migrations are Class A SQL only" }
+  ]
+}
