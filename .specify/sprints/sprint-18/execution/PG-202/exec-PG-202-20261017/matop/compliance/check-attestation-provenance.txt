@@ -1,0 +1,5 @@
+[preflight] Provenance check PG-202 (sprint 18)
+[preflight] OK — provenance affirmative and cross-validated against plan/spec on disk.
+           ✓ plan_reviewer_verdict: APPROVED
+           ✓ plan_path carries the plan-reviewer subagent marker
+           ✓ spec_path + plan_path exist (repo-relative)

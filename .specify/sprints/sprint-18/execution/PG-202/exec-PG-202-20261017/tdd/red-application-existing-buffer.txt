@@ -1,0 +1,107 @@
+date: 2026-10-17T20:29:11Z
+head: 6a8aec3038cbf11cfbe5fc8032d0869761d8a31b (+ codex fixes)
+cmd: pnpm --dir packages/application exec vitest run src/usecases/scheduling/__tests__/CheckConflicts.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/application
+
+ ❯ |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts (21 tests | 3 failed) 28ms
+       × returns the first candidate that has no conflict, with one repository read 9ms
+       × widens the read window and the conflict check by the buffers 1ms
+       × treats a slot as busy when an existing appointment's own buffer runs into it 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > returns the first candidate that has no conflict, with one repository read
+AssertionError: expected "vi.fn()" to be called with arguments: [ [ 'user-123' ], { …(2) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    [
+      "user-123",
+    ],
+    {
+-     "endTime": 2025-01-02T16:00:00.000Z,
+-     "startTime": 2025-01-02T05:00:00.000Z,
++     "endTime": 2025-01-02T12:00:00.000Z,
++     "startTime": 2025-01-02T09:00:00.000Z,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:379:21
+    377|       expect(result.value).toEqual(slot(10));
+    378|       expect(reads).toHaveBeenCalledTimes(1);
+    379|       expect(reads).toHaveBeenCalledWith(['user-123'], { startTime: at…
+       |                     ^
+    380|     });
+    381|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > widens the read window and the conflict check by the buffers
+AssertionError: expected "vi.fn()" to be called with arguments: [ [ 'user-123' ], { …(2) } ]
+
+Received:
+
+  1st vi.fn() call:
+
+  [
+    [
+      "user-123",
+    ],
+    {
+-     "endTime": 2025-01-02T16:15:00.000Z,
+-     "startTime": 2025-01-02T05:45:00.000Z,
++     "endTime": 2025-01-02T12:15:00.000Z,
++     "startTime": 2025-01-02T09:45:00.000Z,
+    },
+  ]
+
+
+Number of calls: 1
+
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:395:21
+    393|
+    394|       expect(result.value).toEqual(slot(11));
+    395|       expect(reads).toHaveBeenCalledWith(['user-123'], {
+       |                     ^
+    396|         startTime: at(5, 45),
+    397|         endTime: at(16, 15),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > treats a slot as busy when an existing appointment's own buffer runs into it
+AssertionError: expected { …(2) } to deeply equal { …(2) }
+
+- Expected
++ Received
+
+  {
+-   "end": 2025-01-02T11:00:00.000Z,
+-   "start": 2025-01-02T10:00:00.000Z,
++   "end": 2025-01-02T10:00:00.000Z,
++   "start": 2025-01-02T09:00:00.000Z,
+  }
+
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:411:28
+    409|       });
+    410|
+    411|       expect(result.value).toEqual(slot(10));
+       |                            ^
+    412|     });
+    413|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 18 passed (21)
+   Start at  21:29:12
+   Duration  566ms (transform 242ms, setup 0ms, import 357ms, tests 28ms, environment 0ms)
+
+exit: 1

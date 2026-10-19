@@ -1,0 +1,12 @@
+# 2026-10-17T21:51:59Z HEAD e929eb220 tools route-total + docs-integrity
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: pnpm exec vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/docs-integrity-audit.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205
+
+
+ Test Files  2 passed (2)
+      Tests  33 passed (33)
+   Start at  22:52:01
+   Duration  1.08s (transform 698ms, setup 1.05s, import 193ms, tests 336ms, environment 0ms)
+
+# exit: 0

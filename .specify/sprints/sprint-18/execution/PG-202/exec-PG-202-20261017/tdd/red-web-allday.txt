@@ -1,0 +1,67 @@
+date: 2026-10-17T20:24:08Z
+head: 6a8aec3038cbf11cfbe5fc8032d0869761d8a31b
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar/availability/__tests__/availability-draft.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+ ❯ |web| src/app/calendar/availability/__tests__/availability-draft.test.ts (22 tests | 2 failed) 36ms
+     × treats 00:00-00:00 as the whole day 5ms
+     × round-trips a saved all-day range (0-1440) without a validation error 1ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/app/calendar/availability/__tests__/availability-draft.test.ts > validateDraft > treats 00:00-00:00 as the whole day
+AssertionError: expected [ { fieldId: 'avail-2-0-end', …(1) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "fieldId": "avail-2-0-end",
++     "message": "Tuesday range 1 must end after it starts",
++   },
++ ]
+
+ ❯ src/app/calendar/availability/__tests__/availability-draft.test.ts:197:30
+    195|     const d = draft();
+    196|     d.days[2] = { ...d.days[2], open: true, ranges: [{ key: 'z', start…
+    197|     expect(validateDraft(d)).toEqual([]);
+       |                              ^
+    198|     expect(toUpdateInput(d).days[2].ranges).toEqual([{ startMinute: 0,…
+    199|     expect(formatDaySummary(d.days[2])).toBe('00:00 to midnight (end o…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |web| src/app/calendar/availability/__tests__/availability-draft.test.ts > validateDraft > round-trips a saved all-day range (0-1440) without a validation error
+AssertionError: expected [ { fieldId: 'avail-3-0-end', …(1) } ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   {
++     "fieldId": "avail-3-0-end",
++     "message": "Wednesday range 1 must end after it starts",
++   },
++ ]
+
+ ❯ src/app/calendar/availability/__tests__/availability-draft.test.ts:211:30
+    209|     const d = toDraft(allDay as never);
+    210|     expect(d.days[3].ranges.map((r) => [r.start, r.end])).toEqual([['0…
+    211|     expect(validateDraft(d)).toEqual([]);
+       |                              ^
+    212|     expect(toUpdateInput(d).days[3].ranges).toEqual([{ startMinute: 0,…
+    213|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed | 20 passed (22)
+   Start at  21:24:09
+   Duration  1.40s (transform 341ms, setup 304ms, import 499ms, tests 36ms, environment 342ms)
+
+exit: 1

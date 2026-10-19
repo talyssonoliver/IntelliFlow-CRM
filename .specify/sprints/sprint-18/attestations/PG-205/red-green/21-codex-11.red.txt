@@ -1,0 +1,15 @@
+# 2026-10-17T21:04:17Z HEAD dbb06a8db RED for codex-review-11 findings 068bafef (unlink ordering) and 0dc7d185 (stale segment filter)
+## api
+     × unlinking saves the other fields first, so a failed unlink never leaves a type without its required account (codex 068bafef) 14ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected [ 'unlink', 'info' ] to deeply equal [ 'info', 'unlink' ]
+ Test Files  1 failed (1)
+      Tests  1 failed | 37 passed (38)
+## web
+     × navigating from a segment link to plain /contacts drops the segment filter (codex 0dc7d185) 13ms
+     × leaving the VIP link by navigation drops the VIP segment 10ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected 'vendor' to be undefined
+AssertionError: expected 'vip' to be undefined
+ Test Files  1 failed (1)
+      Tests  2 failed | 9 passed (11)

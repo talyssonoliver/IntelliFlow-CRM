@@ -1,0 +1,3571 @@
+# 2026-10-17T17:37:43Z HEAD dbb06a8db (uncommitted web RED tests and stubs (rerun after fixing a vi.mock hoisting error in the new edit-page test))
+# cmd: pnpm --filter ./apps/web exec vitest run "src/app/contacts/(list)/contact-types" "src/components/contacts/__tests__/ContactTypeSelect.test.tsx" "src/components/contacts/__tests__/ContactTypeBadge.test.tsx" "src/components/contacts/__tests__/contact-type-colors.test.ts" "src/app/contacts/[id]/edit" "src/components/sidebar/__tests__/contacts-config.test.ts" "src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx" "src/app/contacts/(list)/__tests__/page.test.tsx" "src/components/contacts/__tests__/ContactList.contact-types.test.tsx" "src/components/contacts/__tests__/ContactList.test.tsx" "src/app/contacts/(list)/new/__tests__/page.test.tsx" "src/components/contacts/__tests__/ContactForm.test.tsx" "src/lib/contacts/__tests__/contact-search.test.ts"
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/web
+
+ ❯ |web| src/app/contacts/(list)/new/__tests__/page.test.tsx (16 tests | 4 failed) 904ms
+     × offers "No type" plus the tenant contact types, and no "please specify" field 50ms
+     × submits a correctly mapped payload (tags split, "other" department mapped) 89ms
+     × submits a tenant-defined type key as chosen (PG-205) 59ms
+     × preselects the tenant default type and sends no type when "No type" is chosen 45ms
+ ❯ |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx (16 tests | 15 failed) 173ms
+     × shows the skeleton while loading 31ms
+     × shows an error with Retry 82ms
+     × renders the playbook layout: breadcrumbs, one h1, h2 sections, 12-col bento, no "coming soon" (A11Y-11) 4ms
+     × opens the create dialog through the list ref from the section header CTA 5ms
+     × passes the active tenant tags to the list for the default-tag picker 4ms
+     × read-only users see a note and a disabled CTA described by it 2ms
+     × creates a type, announces it and invalidates the contactTypes router (NF-002) 1ms
+     × updates an existing type by id 1ms
+     × returns a CONFLICT to the dialog instead of a toast 2ms
+     × toasts other save errors 1ms
+     × deletes through the dialog and keeps a refusal inside it 1ms
+     × after a delete, focus moves to the New Contact Type button 1ms
+     × sets the default type from the radio group; inactive types cannot be chosen 3ms
+     × the live region is silent on mount 1ms
+     × errorCode reads the tRPC code 1ms
+ ❯ |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx (10 tests | 10 failed) 160ms
+     × starts clean: Save disabled until something changes 98ms
+     × offers 18 labelled colour radios in a fieldset; arrow keys move through them in order 5ms
+     × marks the checked swatch with a glyph, not colour alone (A11Y-3) 7ms
+     × loads an existing type, shows its key read-only and builds the save input 4ms
+     × rejects an empty or duplicate name with an inline alert (aria-invalid + describedby) 4ms
+     × a server CONFLICT keeps the dialog open and moves focus to the invalid name (A11Y-9) 1ms
+     × keeps the default type active (switch locked, reason linked) 3ms
+     × Cancel closes without saving 3ms
+     × draft helpers round-trip a type and narrow an unknown colour 3ms
+     × has no axe violations 4ms
+ ❯ |web| src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx (7 tests | 6 failed) 104ms
+     × builds the Type filter from the tenant types, inactive ones labelled 33ms
+     × filters the query by the chosen type and passes the types to the list badges 24ms
+     × ?segment=partners seeds the Type filter; changing it clears the segment from the URL 9ms
+     × ?segment=vendors filters by the vendor type 5ms
+     × keeps a type filter whose type is not active (not reset when its option is missing) 6ms
+     × ?segment=vip shows a removable chip; removing it clears the filter, the URL, moves focus and announces (A11Y-8) 5ms
+ ❯ |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx (10 tests | 9 failed) 192ms
+     × shows the canonical passive EmptyState with no extra tab stop beyond it 30ms
+     × states every row fact in text: badges, contact count, defaults summary 72ms
+     × blocks deleting a built-in type with aria-disabled and a visible reason (A11Y-7) 5ms
+     × blocks deleting the default type with aria-disabled and a visible reason (A11Y-7) 3ms
+     × blocks deleting a type in use with aria-disabled and a visible reason (A11Y-7) 4ms
+     × deletes an unused custom type 3ms
+     × read-only users get natively disabled actions described by the page note 2ms
+     × opens the create dialog through the ref and returns focus to the trigger on close 13ms
+     × opens the edit dialog for a row 6ms
+ ❯ |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx (11 tests | 9 failed) 184ms
+     × queries all types (incl. inactive) with a 5 minute staleTime (NF-002) 22ms
+     × has a visible label and offers "No type" plus the active types only 14ms
+     × reports the chosen key 3ms
+     × keeps a stored inactive type selectable as "Name (inactive)" with a linked hint (A11Y-5) 3ms
+     × keeps a stored key whose type was deleted as "<key> (inactive)" 79ms
+     × preselects the default type once loaded when asked and untouched 2ms
+     × does not preselect after the user touched the field 2ms
+     × a fetch failure shows one alert with Retry and never blocks the field 5ms
+     × shows a loading option while the types load 4ms
+ ❯ |web| src/components/contacts/__tests__/contact-type-colors.test.ts (40 tests | 40 failed) 44ms
+     × covers all 18 tokens with a label, a swatch and a badge 5ms
+     × narrows unknown or malicious tokens to slate (classes come from the fixed map only) 2ms
+     × the swatch outline keeps at least 3:1 against the light card 1ms
+     × the swatch outline keeps at least 3:1 against the dark card 0ms
+     × badge text on fill is at least 4.5:1 for slate (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for slate (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for red (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for red (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for orange (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for orange (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for amber (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for amber (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for yellow (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for yellow (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for lime (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for lime (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for green (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for green (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for emerald (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for emerald (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for teal (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for teal (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for cyan (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for cyan (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for sky (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for sky (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for blue (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for blue (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for indigo (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for indigo (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for violet (dark=false) 3ms
+     × badge text on fill is at least 4.5:1 for violet (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for purple (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for purple (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for fuchsia (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for fuchsia (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for pink (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for pink (dark=true) 0ms
+     × badge text on fill is at least 4.5:1 for rose (dark=false) 0ms
+     × badge text on fill is at least 4.5:1 for rose (dark=true) 0ms
+ ❯ |web| src/lib/contacts/__tests__/contact-search.test.ts (25 tests | 8 failed) 27ms
+     × passes the type filter and the vip segment to the query 4ms
+     × isDefaultContactQuery is false with a type filter (no stale prefetch) 1ms
+     × isDefaultContactQuery is false with the vip segment (no stale prefetch) 0ms
+     × segmentToFilter("partners") 2ms
+     × segmentToFilter("vendors") 1ms
+     × segmentToFilter("vip") 1ms
+     × segmentToFilter("unknown") 0ms
+     × segmentToFilter(null) 0ms
+ ❯ |web| src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx (6 tests | 5 failed) 146ms
+     × renders real checkboxes in a fieldset with a legend, active tags only 97ms
+     × toggles a tag on and off 5ms
+     × at the cap of 10, the rest stay focusable but aria-disabled, with a linked hint and a live message 3ms
+     × explains when there are no tags yet 3ms
+     × disables everything when read-only 4ms
+ ❯ |web| src/app/contacts/[id]/edit/__tests__/page.test.tsx (3 tests | 2 failed) 313ms
+     × shows the stored inactive type as selected "(inactive)" 189ms
+     × submits a newly chosen type 34ms
+ ❯ |web| src/components/contacts/__tests__/ContactForm.test.tsx (35 tests | 1 failed) 7392ms
+       × renders the type picker on the last step and submits the chosen key 106ms
+ ❯ |web| src/components/contacts/__tests__/ContactList.contact-types.test.tsx (4 tests | 3 failed) 403ms
+     × adds a Type column 303ms
+     × shows the type name from the tenant types 22ms
+     × shows a key with no type row as a neutral label 26ms
+ ❯ |web| src/components/sidebar/__tests__/contacts-config.test.ts (2 tests | 1 failed) 21ms
+     × keeps the segment links, and each one maps to a real list filter 9ms
+ ❯ |web| src/components/contacts/__tests__/ContactTypeBadge.test.tsx (6 tests | 4 failed) 135ms
+     × renders the type name as text with an aria-hidden colour dot 28ms
+     × marks an inactive type in text 3ms
+     × shows an unknown key as a neutral slate label (deleted type, ADR-080) 2ms
+     × shows the key while the types are still loading 2ms
+ ❯ |web| src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx (5 tests | 4 failed) 132ms
+     × asks to confirm and focuses Cancel (A11Y-10) 83ms
+     × keeps the server refusal inside the dialog as an alert 5ms
+     × disables both buttons while deleting 3ms
+     × has no axe violations, with and without an error 3ms
+ ❯ |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesLoading.test.tsx (2 tests | 1 failed) 123ms
+     × is a busy status mirroring the bento grid 88ms
+ ❯ |web| src/app/contacts/(list)/contact-types/__tests__/page.test.tsx (1 test | 1 failed) 37ms
+     × is no longer the "coming soon" stub: it streams the bento skeleton first 22ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 123 ⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour maps > covers all 18 tokens with a label, a swatch and a badge
+TypeError: .toMatch() expects to receive a string, but got undefined
+ ❯ src/components/contacts/__tests__/contact-type-colors.test.ts:83:48
+     81|     expect(CONTACT_TYPE_COLOR_TOKENS).toHaveLength(18);
+     82|     for (const token of CONTACT_TYPE_COLOR_TOKENS) {
+     83|       expect(CONTACT_TYPE_COLOR_LABELS[token]).toMatch(/^[A-Z][a-z]+$/…
+       |                                                ^
+     84|       expect(contactTypeSwatchClass(token)).toContain(`bg-${token}-500…
+     85|       expect(contactTypeSwatchClass(token)).toContain(CONTACT_TYPE_SWA…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour maps > narrows unknown or malicious tokens to slate (classes come from the fixed map only)
+AssertionError: expected '' to be 'teal' // Object.is equality
+
+- Expected
++ Received
+
+- teal
+
+ ❯ src/components/contacts/__tests__/contact-type-colors.test.ts:91:45
+     89|
+     90|   it('narrows unknown or malicious tokens to slate (classes come from …
+     91|     expect(toContactTypeColorToken('teal')).toBe('teal');
+       |                                             ^
+     92|     expect(toContactTypeColorToken('magenta')).toBe('slate');
+     93|     expect(toContactTypeColorToken('red; background:url(x)')).toBe('sl…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > the swatch outline keeps at least 3:1 against the light card
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > the swatch outline keeps at least 3:1 against the dark card
+AssertionError: expected '' to contain 'ring-slate-500'
+
+- Expected
++ Received
+
+- ring-slate-500
+
+ ❯ src/components/contacts/__tests__/contact-type-colors.test.ts:106:41
+    104|     ['dark', CARD_DARK],
+    105|   ])('the swatch outline keeps at least 3:1 against the %s card', (_th…
+    106|     expect(CONTACT_TYPE_SWATCH_OUTLINE).toContain('ring-slate-500');
+       |                                         ^
+    107|     expect(contrast(ring, card)).toBeGreaterThanOrEqual(3);
+    108|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for slate (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for slate (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for red (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for red (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for orange (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for orange (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for amber (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for amber (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for yellow (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for yellow (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for lime (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for lime (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for green (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for green (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for emerald (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for emerald (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for teal (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for teal (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for cyan (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for cyan (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for sky (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for sky (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for blue (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for blue (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for indigo (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for indigo (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for violet (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for violet (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for purple (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for purple (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for fuchsia (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for fuchsia (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for pink (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for pink (dark=true)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for rose (dark=false)
+ FAIL  |web| src/components/contacts/__tests__/contact-type-colors.test.ts > contact type colour contrast (A11Y-2) > badge text on fill is at least 4.5:1 for rose (dark=true)
+TypeError: Cannot read properties of undefined (reading 'split')
+ ❯ pick src/components/contacts/__tests__/contact-type-colors.test.ts:71:25
+     69|
+     70| function pick(classes: string, prefix: 'bg' | 'text', dark: boolean): …
+     71|   const parts = classes.split(/\s+/);
+       |                         ^
+     72|   const themed = parts.find((p) => p.startsWith(`dark:${prefix}-`));
+     73|   if (dark && themed) return themed;
+ ❯ src/components/contacts/__tests__/contact-type-colors.test.ts:114:30
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactForm.test.tsx > ContactForm > Contact type (PG-205) > renders the type picker on the last step and submits the chosen key
+TestingLibraryElementError: Unable to find a label with the text of: Contact type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"[39m
+    [36m>[39m
+      [36m<nav[39m
+        [33maria-label[39m=[32m"Form progress"[39m
+        [33mclass[39m=[32m"px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700"[39m
+      [36m>[39m
+        [36m<progress[39m
+          [33maria-label[39m=[32m"Step 3 of 3"[39m
+          [33mclass[39m=[32m"sr-only"[39m
+          [33mmax[39m=[32m"3"[39m
+          [33mvalue[39m=[32m"3"[39m
+        [36m/>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"relative flex items-center justify-between w-full max-w-2xl mx-auto"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33maria-hidden[39m=[32m"true"[39m
+            [33mclass[39m=[32m"absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10"[39m
+          [36m/>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white hover:bg-blue-600"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"material-symbols-outlined text-lg"[39m
+              [36m>[39m
+                [0mcheck[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+            [36m>[39m
+              [0mPersonal Details[0m
+            [36m</span>[39m
+          [36m</button>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white hover:bg-blue-600"[39m
+            [36m>[39m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"material-symbols-outlined text-lg"[39m
+              [36m>[39m
+                [0mcheck[0m
+              [36m</span>[39m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+            [36m>[39m
+              [0mCompany & Role[0m
+            [36m</span>[39m
+          [36m</button>[39m
+          [36m<button[39m
+            [33maria-current[39m=[32m"step"[39m
+            [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white"[39m
+            [36m>[39m
+              [0m3[0m
+            [36m</div>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+            [36m>[39m
+              [0mAdditional Info[0m
+            [36m</span>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</nav>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"p-8"[39m
+      [36m>[39m
+        [36m<form[39m
+          [33mclass[39m=[32m"flex flex-col gap-8"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex flex-col gap-6"[39m
+          [36m>[39m
+            [36m<h3[39m
+              [33mclass[39m=[32m"text-lg font-bold text-slate-900 dark:text-white"[39m
+            [36m>[39m
+              [0mAdditional Information[0m
+            [36m</h3>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"grid grid-cols-1 md:grid-cols-2 gap-6"[39m
+            [36m>[39m
+              [36m<fieldset>[39m
+                [36m<legend[39m
+                  [33mclass[39m=[32m"block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2"[39m
+                [36m>[39m
+                  [0mStatus[0m
+                [36m</legend>[39m
+                [36m<div[39m
+                  [33maria-label[39m=[32m"Contact status"[39m
+                  [33mclass[39m=[32m"space-y-2"[39m
+                  [33mrole[39m=[32m"radiogroup"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33maria-label[39m=[32m"Active"[39m
+                    [33mclass[39m=[32m"flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"[39m
+                    [33mfor[39m=[32m"status-ACTIVE"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33maria-checked[39m=[32m"true"[39m
+                      [33mchecked[39m=[32m""[39m
+                      [33mclass[39m=[32m"mt-1 text-primary focus:ring-primary"[39m
+                      [33mid[39m=[32m"status-ACTIVE"[39m
+                      [33mname[39m=[32m"status"[39m
+                      [33mtype[39m=[32m"radio"[39m
+                      [33mvalue[39m=[32m"ACTIVE"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"text-sm font-medium text-slate-900 dark:text-white"[39m
+                      [36m>[39m
+                        [0mActive[0m
+                      [36m</span>[39m
+                      [36m<p[39m
+                        [33mclass[39m=[32m"text-xs text-slate-500"[39m
+                      [36m>[39m
+                        [0mCurrently engaged contact[0m
+                      [36m</p>[39m
+                    [36m</div>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33maria-label[39m=[32m"Inactive"[39m
+                    [33mclass[39m=[32m"flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"[39m
+                    [33mfor[39m=[32m"status-INACTIVE"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33maria-checked[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"mt-1 text-primary focus:ring-primary"[39m
+                      [33mid[39m=[32m"status-INACTIVE"[39m
+                      [33mname[39m=[32m"status"[39m
+                      [33mtype[39m=[32m"radio"[39m
+                      [33mvalue[39m=[32m"INACTIVE"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"text-sm font-medium text-slate-900 dark:text-white"[39m
+                      [36m>[39m
+                        [0mInactive[0m
+                      [36m</span>[39m
+                      [36m<p[39m
+                        [33mclass[39m=[32m"text-xs text-slate-500"[39m
+                      [36m>[39m
+                        [0mTemporarily not engaged[0m
+                      [36m</p>[39m
+                    [36m</div>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33maria-label[39m=[32m"Prospect"[39m
+                    [33mclass[39m=[32m"flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"[39m
+                    [33mfor[39m=[32m"status-PROSPECT"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33maria-checked[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"mt-1 text-primary focus:ring-primary"[39m
+                      [33mid[39m=[32m"status-PROSPECT"[39m
+                      [33mname[39m=[32m"status"[39m
+                      [33mtype[39m=[32m"radio"[39m
+                      [33mvalue[39m=[32m"PROSPECT"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"text-sm font-medium text-slate-900 dark:text-white"[39m
+                      [36m>[39m
+                        [0mProspect[0m
+                      [36m</span>[39m
+                      [36m<p[39m
+                        [33mclass[39m=[32m"text-xs text-slate-500"[39m
+                      [36m>[39m
+                        [0mPotential customer[0m
+                      [36m</p>[39m
+                    [36m</div>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33maria-label[39m=[32m"Customer"[39m
+                    [33mclass[39m=[32m"flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"[39m
+                    [33mfor[39m=[32m"status-CUSTOMER"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33maria-checked[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"mt-1 text-primary focus:ring-primary"[39m
+                      [33mid[39m=[32m"status-CUSTOMER"[39m
+                      [33mname[39m=[32m"status"[39m
+                      [33mtype[39m=[32m"radio"[39m
+                      [33mvalue[39m=[32m"CUSTOMER"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"text-sm font-medium text-slate-900 dark:text-white"[39m
+                      [36m>[39m
+                        [0mCustomer[0m
+                      [36m</span>[39m
+                      [36m<p[39m
+                        [33mclass[39m=[32m"text-xs text-slate-500"[39m
+                      [36m>[39m
+                        [0mCurrent customer[0m
+                      [36m</p>[39m
+                    [36m</div>[39m
+                  [36m</label>[39m
+                  [36m<label[39m
+                    [33maria-label[39m=[32m"Former Customer"[39m
+                    [33mclass[39m=[32m"flex items-start gap-3 p-2 rounded hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer"[39m
+                    [33mfor[39m=[32m"status-FORMER_CUSTOMER"[39m
+                  [36m>[39m
+                    [36m<input[39m
+                      [33maria-checked[39m=[32m"false"[39m
+                      [33mclass[39m=[32m"mt-1 text-primary focus:ring-primary"[39m
+                      [33mid[39m=[32m"status-FORMER_CUSTOMER"[39m
+                      [33mname[39m=[32m"status"[39m
+                      [33mtype[39m=[32m"radio"[39m
+                      [33mvalue[39m=[32m"FORMER_CUSTOMER"[39m
+                    [36m/>[39m
+                    [36m<div[39m
+                      [33maria-hidden[39m=[32m"true"[39m
+                    [36m>[39m
+                      [36m<span[39m
+                        [33mclass[39m=[32m"text-sm font-medium text-slate-900 dark:text-white"[39m
+                      [36m>[39m
+                        [0mFormer Customer[0m
+                      [36m</span>[39m
+                      [36m<p[39m
+                        [33mclass[39m=[32m"text-xs text-slate-500"[39m
+                      [36m>[39m
+                        [0mNo longer a customer[0m
+                      [36m</p>[39m
+                    [36m</div>[39m
+                  [36m</label>[39m
+                [36m</div>[39m
+              [36m</fieldset>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"space-y-6"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"space-y-1.5"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"block text-sm font-semibold text-slate-700 dark:text-slate-300"[39m
+                    [33mfor[39m=[32m"tags"[39m
+                  [36m>[39m
+                    [0mTags[0m
+                    [0m [0m
+                  [36m</label>[39m
+                  [36m<input[39m
+                    [33mclass[39m=[32m"w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder-slate-400 transition-shadow border-slate-200 dark:border-slate-700"[39m
+                    [33mid[39m=[32m"tags"[39m
+                    [33mplaceholder[39m=[32m"e.g. VIP, Decision Maker"[39m
+                    [33mtype[39m=[32m"text"[39m
+                    [33mvalue[39m=[32m"VIP, Decision Maker"[39m
+                  [36m/>[39m
+                [36m</div>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"space-y-1.5"[39m
+                [36m>[39m
+                  [36m<label[39m
+                    [33mclass[39m=[32m"block text-sm font-semibold text-slate-700 dark:text-slate-300"[39m
+                    [33mfor[39m=[32m"notes"[39m
+                  [36m>[39m
+                    [0mNotes[0m
+                    [0m [0m
+                  [36m</label>[39m
+                  [36m<textarea[39m
+                    [33mclass[39m=[32m"w-full rounded-lg border bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary placeholder-slate-400 transition-shadow border-slate-200 dark:border-slate-700 resize-none"[39m
+                    [33mid[39m=[32m"notes"[39m
+                    [33mplaceholder[39m=[32m"Add any notes..."[39m
+                    [33mrows[39m=[32m"4"[39m
+                  [36m>[39m
+                    [0mMet at conference, interested in enterprise plan[0m
+                  [36m</textarea>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center justify-between pt-6 border-t border-slate-200 dark:border-slate-700"[39m
+          [36m>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"px-5 py-2.5 rounded-lg text-sm font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mPrevious[0m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-busy[39m=[32m"false"[39m
+              [33mclass[39m=[32m"flex items-center gap-2 bg-primary hover:bg-blue-600 text-white font-bold py-2.5 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [0mSave Changes[0m
+              [36m<span[39m
+                [33maria-hidden[39m=[32m"true"[39m
+                [33mclass[39m=[32m"material-symbols-outlined text-lg"[39m
+              [36m>[39m
+                [0mcheck[0m
+              [36m</span>[39m
+            [36m</button>[39m
+          [36m</div>[39m
+        [36m</form>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactForm.test.tsx:722:39
+    720|       await user.click(screen.getByRole('button', { name: /Next Step/i…
+    721|       await user.click(screen.getByRole('button', { name: /Next Step/i…
+    722|       await user.selectOptions(screen.getByLabelText('Contact type'), …
+       |                                       ^
+    723|       await user.click(screen.getByRole('button', { name: /Save Change…
+    724|       await waitFor(() => expect(handlers.onSubmit).toHaveBeenCalled()…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactList.contact-types.test.tsx > ContactList contact type column (PG-205) > adds a Type column
+TestingLibraryElementError: Unable to find an accessible element with the role "columnheader" and name "Type"
+
+Here are the accessible roles:
+
+  table:
+
+  Name "":
+  [36m<table />[39m
+
+  --------------------------------------------------
+  rowgroup:
+
+  Name "":
+  [36m<thead />[39m
+
+  Name "":
+  [36m<tbody />[39m
+
+  --------------------------------------------------
+  row:
+
+  Name "Contact Name Account Email Phone Added Activity":
+  [36m<tr />[39m
+
+  Name "Ann c1 - Send email to Ann c1 - 1 Jan 2026 No activity Row actions":
+  [36m<tr[39m
+    [33mdata-testid[39m=[32m"row-c1"[39m
+  [36m/>[39m
+
+  Name "Ann c2 - Send email to Ann c2 - 1 Jan 2026 No activity Row actions":
+  [36m<tr[39m
+    [33mdata-testid[39m=[32m"row-c2"[39m
+  [36m/>[39m
+
+  Name "Ann c3 - Send email to Ann c3 - 1 Jan 2026 No activity Row actions":
+  [36m<tr[39m
+    [33mdata-testid[39m=[32m"row-c3"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  columnheader:
+
+  Name "Contact Name":
+  [36m<th />[39m
+
+  Name "Account":
+  [36m<th />[39m
+
+  Name "Email":
+  [36m<th />[39m
+
+  Name "Phone":
+  [36m<th />[39m
+
+  Name "Added":
+  [36m<th />[39m
+
+  Name "Activity":
+  [36m<th />[39m
+
+  Name "":
+  [36m<th />[39m
+
+  --------------------------------------------------
+  cell:
+
+  Name "Ann c1":
+  [36m<td />[39m
+
+  Name "-":
+  [36m<td />[39m
+
+  Name "Send email to Ann c1":
+  [36m<td />[39m
+
+  Name "-":
+  [36m<td />[39m
+
+  Name "1 Jan 2026":
+  [36m<td />[39m
+
+  Name "No activity":
+  [36m<td />[39m
+
+  Name "Row actions":
+  [36m<td />[39m
+
+  Name "Ann c2":
+  [36m<td />[39m
+
+  Name "-":
+  [36m<td />[39m
+
+  Name "Send email to Ann c2":
+  [36m<td />[39m
+
+  Name "-":
+  [36m<td />[39m
+
+  Name "1 Jan 2026":
+  [36m<td />[39m
+
+  Name "No activity":
+  [36m<td />[39m
+
+  Name "Row actions":
+  [36m<td />[39m
+
+  Name "Ann c3":
+  [36m<td />[39m
+
+  Name "-":
+  [36m<td />[39m
+
+  Name "Send email to Ann c3":
+  [36m<td />[39m
+
+  Name "-":
+  [36m<td />[39m
+
+  Name "1 Jan 2026":
+  [36m<td />[39m
+
+  Name "No activity":
+  [36m<td />[39m
+
+  Name "Row actions":
+  [36m<td />[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "Send email to Ann c1":
+  [36m<a[39m
+    [33maria-label[39m=[32m"Send email to Ann c1"[39m
+    [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mhref[39m=[32m"/email/compose?to=c1%40example.invalid"[39m
+  [36m/>[39m
+
+  Name "Send email to Ann c2":
+  [36m<a[39m
+    [33maria-label[39m=[32m"Send email to Ann c2"[39m
+    [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mhref[39m=[32m"/email/compose?to=c2%40example.invalid"[39m
+  [36m/>[39m
+
+  Name "Send email to Ann c3":
+  [36m<a[39m
+    [33maria-label[39m=[32m"Send email to Ann c3"[39m
+    [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mhref[39m=[32m"/email/compose?to=c3%40example.invalid"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  toolbar:
+
+  Name "Row actions":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Row actions"[39m
+    [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+    [33mrole[39m=[32m"toolbar"[39m
+  [36m/>[39m
+
+  Name "Row actions":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Row actions"[39m
+    [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+    [33mrole[39m=[32m"toolbar"[39m
+  [36m/>[39m
+
+  Name "Row actions":
+  [36m<div[39m
+    [33maria-label[39m=[32m"Row actions"[39m
+    [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+    [33mrole[39m=[32m"toolbar"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Call":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Call"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+  [36m/>[39m
+
+  Name "Send Email":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Send Email"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+  [36m/>[39m
+
+  Name "More actions":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"menu"[39m
+    [33maria-label[39m=[32m"More actions"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"radix-_r_3_"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Call":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Call"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+  [36m/>[39m
+
+  Name "Send Email":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Send Email"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+  [36m/>[39m
+
+  Name "More actions":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"menu"[39m
+    [33maria-label[39m=[32m"More actions"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"radix-_r_8_"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  Name "Call":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Call"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+  [36m/>[39m
+
+  Name "Send Email":
+  [36m<button[39m
+    [33maria-label[39m=[32m"Send Email"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+  [36m/>[39m
+
+  Name "More actions":
+  [36m<button[39m
+    [33maria-expanded[39m=[32m"false"[39m
+    [33maria-haspopup[39m=[32m"menu"[39m
+    [33maria-label[39m=[32m"More actions"[39m
+    [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+    [33mdata-state[39m=[32m"closed"[39m
+    [33mid[39m=[32m"radix-_r_d_"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  status:
+
+  Name "":
+  [36m<output[39m
+    [33maria-live[39m=[32m"polite"[39m
+    [33mclass[39m=[32m"mt-2 text-sm text-slate-500"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div>[39m
+      [36m<table>[39m
+        [36m<thead>[39m
+          [36m<tr>[39m
+            [36m<th>[39m
+              [0mContact Name[0m
+            [36m</th>[39m
+            [36m<th>[39m
+              [0mAccount[0m
+            [36m</th>[39m
+            [36m<th>[39m
+              [0mEmail[0m
+            [36m</th>[39m
+            [36m<th>[39m
+              [0mPhone[0m
+            [36m</th>[39m
+            [36m<th>[39m
+              [0mAdded[0m
+            [36m</th>[39m
+            [36m<th>[39m
+              [0mActivity[0m
+            [36m</th>[39m
+            [36m<th />[39m
+          [36m</tr>[39m
+        [36m</thead>[39m
+        [36m<tbody>[39m
+          [36m<tr[39m
+            [33mdata-testid[39m=[32m"row-c1"[39m
+          [36m>[39m
+            [36m<td>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-3"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border bg-rose-100 text-rose-700 border-rose-200"[39m
+                [36m>[39m
+                  [0mAC[0m
+                [36m</span>[39m
+                [36m<div>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+                  [36m>[39m
+                    [0mAnn[0m
+                    [0m [0m
+                    [0mc1[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<div>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+                [36m>[39m
+                  [0m-[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<a[39m
+                [33maria-label[39m=[32m"Send email to Ann c1"[39m
+                [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+                [33mdata-state[39m=[32m"closed"[39m
+                [33mhref[39m=[32m"/email/compose?to=c1%40example.invalid"[39m
+              [36m>[39m
+                [0mc1@example.invalid[0m
+              [36m</a>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-slate-500 dark:text-slate-400"[39m
+              [36m>[39m
+                [0m-[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-slate-600 dark:text-slate-400"[39m
+              [36m>[39m
+                [0m1 Jan 2026[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-muted-foreground italic"[39m
+              [36m>[39m
+                [0mNo activity[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<div[39m
+                [33maria-label[39m=[32m"Row actions"[39m
+                [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+                [33mrole[39m=[32m"toolbar"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Call"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mphone[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Send Email"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mmail[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-haspopup[39m=[32m"menu"[39m
+                  [33maria-label[39m=[32m"More actions"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                  [33mdata-state[39m=[32m"closed"[39m
+                  [33mid[39m=[32m"radix-_r_3_"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mmore_vert[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+          [36m</tr>[39m
+          [36m<tr[39m
+            [33mdata-testid[39m=[32m"row-c2"[39m
+          [36m>[39m
+            [36m<td>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-3"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border bg-sky-100 text-sky-700 border-sky-200"[39m
+                [36m>[39m
+                  [0mAC[0m
+                [36m</span>[39m
+                [36m<div>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+                  [36m>[39m
+                    [0mAnn[0m
+                    [0m [0m
+                    [0mc2[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<div>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+                [36m>[39m
+                  [0m-[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<a[39m
+                [33maria-label[39m=[32m"Send email to Ann c2"[39m
+                [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+                [33mdata-state[39m=[32m"closed"[39m
+                [33mhref[39m=[32m"/email/compose?to=c2%40example.invalid"[39m
+              [36m>[39m
+                [0mc2@example.invalid[0m
+              [36m</a>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-slate-500 dark:text-slate-400"[39m
+              [36m>[39m
+                [0m-[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-slate-600 dark:text-slate-400"[39m
+              [36m>[39m
+                [0m1 Jan 2026[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-muted-foreground italic"[39m
+              [36m>[39m
+                [0mNo activity[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<div[39m
+                [33maria-label[39m=[32m"Row actions"[39m
+                [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+                [33mrole[39m=[32m"toolbar"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Call"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mphone[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Send Email"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mmail[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-haspopup[39m=[32m"menu"[39m
+                  [33maria-label[39m=[32m"More actions"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                  [33mdata-state[39m=[32m"closed"[39m
+                  [33mid[39m=[32m"radix-_r_8_"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mmore_vert[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+          [36m</tr>[39m
+          [36m<tr[39m
+            [33mdata-testid[39m=[32m"row-c3"[39m
+          [36m>[39m
+            [36m<td>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex items-center gap-3"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border bg-amber-200 text-amber-800 border-amber-300"[39m
+                [36m>[39m
+                  [0mAC[0m
+                [36m</span>[39m
+                [36m<div>[39m
+                  [36m<p[39m
+                    [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+                  [36m>[39m
+                    [0mAnn[0m
+                    [0m [0m
+                    [0mc3[0m
+                  [36m</p>[39m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<div>[39m
+                [36m<p[39m
+                  [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+                [36m>[39m
+                  [0m-[0m
+                [36m</p>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<a[39m
+                [33maria-label[39m=[32m"Send email to Ann c3"[39m
+                [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+                [33mdata-state[39m=[32m"closed"[39m
+                [33mhref[39m=[32m"/email/compose?to=c3%40example.invalid"[39m
+              [36m>[39m
+                [0mc3@example.invalid[0m
+              [36m</a>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-slate-500 dark:text-slate-400"[39m
+              [36m>[39m
+                [0m-[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-slate-600 dark:text-slate-400"[39m
+              [36m>[39m
+                [0m1 Jan 2026[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm text-muted-foreground italic"[39m
+              [36m>[39m
+                [0mNo activity[0m
+              [36m</span>[39m
+            [36m</td>[39m
+            [36m<td>[39m
+              [36m<div[39m
+                [33maria-label[39m=[32m"Row actions"[39m
+                [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+                [33mrole[39m=[32m"toolbar"[39m
+              [36m>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Call"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mphone[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33maria-label[39m=[32m"Send Email"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mmail[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+                [36m<button[39m
+                  [33maria-expanded[39m=[32m"false"[39m
+                  [33maria-haspopup[39m=[32m"menu"[39m
+                  [33maria-label[39m=[32m"More actions"[39m
+                  [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+                  [33mdata-state[39m=[32m"closed"[39m
+                  [33mid[39m=[32m"radix-_r_d_"[39m
+                  [33mtype[39m=[32m"button"[39m
+                [36m>[39m
+                  [36m<span[39m
+                    [33maria-hidden[39m=[32m"true"[39m
+                    [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+                  [36m>[39m
+                    [0mmore_vert[0m
+                  [36m</span>[39m
+                [36m</button>[39m
+              [36m</div>[39m
+            [36m</td>[39m
+          [36m</tr>[39m
+        [36m</tbody>[39m
+      [36m</table>[39m
+      [36m<output[39m
+        [33maria-live[39m=[32m"polite"[39m
+        [33mclass[39m=[32m"mt-2 text-sm text-slate-500"[39m
+      [36m>[39m
+        [0mShowing [0m
+        [0m3[0m
+        [0m of [0m
+        [0m3[0m
+      [36m</output>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactList.contact-types.test.tsx:89:19
+     87|   it('adds a Type column', () => {
+     88|     renderList();
+     89|     expect(screen.getByRole('columnheader', { name: 'Type' })).toBeInT…
+       |                   ^
+     90|   });
+     91|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactList.contact-types.test.tsx > ContactList contact type column (PG-205) > shows the type name from the tenant types
+TestingLibraryElementError: Unable to find an element by: [data-testid="contact-type-badge"]
+
+Ignored nodes: comments, script, style
+[36m<tr[39m
+  [33mdata-testid[39m=[32m"row-c1"[39m
+[36m>[39m
+  [36m<td>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex items-center gap-3"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33maria-hidden[39m=[32m"true"[39m
+        [33mclass[39m=[32m"size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border bg-rose-100 text-rose-700 border-rose-200"[39m
+      [36m>[39m
+        [0mAC[0m
+      [36m</span>[39m
+      [36m<div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+        [36m>[39m
+          [0mAnn[0m
+          [0m [0m
+          [0mc1[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+      [36m>[39m
+        [0m-[0m
+      [36m</p>[39m
+    [36m</div>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<a[39m
+      [33maria-label[39m=[32m"Send email to Ann c1"[39m
+      [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+      [33mdata-state[39m=[32m"closed"[39m
+      [33mhref[39m=[32m"/email/compose?to=c1%40example.invalid"[39m
+    [36m>[39m
+      [0mc1@example.invalid[0m
+    [36m</a>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m"text-sm text-slate-500 dark:text-slate-400"[39m
+    [36m>[39m
+      [0m-[0m
+    [36m</span>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m"text-sm text-slate-600 dark:text-slate-400"[39m
+    [36m>[39m
+      [0m1 Jan 2026[0m
+    [36m</span>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m"text-sm text-muted-foreground italic"[39m
+    [36m>[39m
+      [0mNo activity[0m
+    [36m</span>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<div[39m
+      [33maria-label[39m=[32m"Row actions"[39m
+      [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+      [33mrole[39m=[32m"toolbar"[39m
+    [36m>[39m
+      [36m<button[39m
+        [33maria-label[39m=[32m"Call"[39m
+        [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+        [36m>[39m
+          [0mphone[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-label[39m=[32m"Send Email"[39m
+        [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+        [36m>[39m
+          [0mmail[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-expanded[39m=[32m"false"[39m
+        [33maria-haspopup[39m=[32m"menu"[39m
+        [33maria-label[39m=[32m"More actions"[39m
+        [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+        [33mdata-state[39m=[32m"closed"[39m
+        [33mid[39m=[32m"radix-_r_i_"[39m
+        [33mtype[39m=[32m"button"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+        [36m>[39m
+          [0mmore_vert[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</div>[39m
+  [36m</td>[39m
+[36m</tr>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactList.contact-types.test.tsx:94:49
+     92|   it('shows the type name from the tenant types', () => {
+     93|     renderList();
+     94|     expect(within(screen.getByTestId('row-c1')).getByTestId('contact-t…
+       |                                                 ^
+     95|       'Partner'
+     96|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactList.contact-types.test.tsx > ContactList contact type column (PG-205) > shows a key with no type row as a neutral label
+TestingLibraryElementError: Unable to find an element by: [data-testid="contact-type-badge"]
+
+Ignored nodes: comments, script, style
+[36m<tr[39m
+  [33mdata-testid[39m=[32m"row-c2"[39m
+[36m>[39m
+  [36m<td>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex items-center gap-3"[39m
+    [36m>[39m
+      [36m<span[39m
+        [33maria-hidden[39m=[32m"true"[39m
+        [33mclass[39m=[32m"size-10 rounded-full shrink-0 flex items-center justify-center font-bold text-sm border bg-sky-100 text-sky-700 border-sky-200"[39m
+      [36m>[39m
+        [0mAC[0m
+      [36m</span>[39m
+      [36m<div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+        [36m>[39m
+          [0mAnn[0m
+          [0m [0m
+          [0mc2[0m
+        [36m</p>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<div>[39m
+      [36m<p[39m
+        [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+      [36m>[39m
+        [0m-[0m
+      [36m</p>[39m
+    [36m</div>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<a[39m
+      [33maria-label[39m=[32m"Send email to Ann c2"[39m
+      [33mclass[39m=[32m"text-primary hover:underline text-sm"[39m
+      [33mdata-state[39m=[32m"closed"[39m
+      [33mhref[39m=[32m"/email/compose?to=c2%40example.invalid"[39m
+    [36m>[39m
+      [0mc2@example.invalid[0m
+    [36m</a>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m"text-sm text-slate-500 dark:text-slate-400"[39m
+    [36m>[39m
+      [0m-[0m
+    [36m</span>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m"text-sm text-slate-600 dark:text-slate-400"[39m
+    [36m>[39m
+      [0m1 Jan 2026[0m
+    [36m</span>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<span[39m
+      [33mclass[39m=[32m"text-sm text-muted-foreground italic"[39m
+    [36m>[39m
+      [0mNo activity[0m
+    [36m</span>[39m
+  [36m</td>[39m
+  [36m<td>[39m
+    [36m<div[39m
+      [33maria-label[39m=[32m"Row actions"[39m
+      [33mclass[39m=[32m"flex items-center justify-end gap-1"[39m
+      [33mrole[39m=[32m"toolbar"[39m
+    [36m>[39m
+      [36m<button[39m
+        [33maria-label[39m=[32m"Call"[39m
+        [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+        [36m>[39m
+          [0mphone[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-label[39m=[32m"Send Email"[39m
+        [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+        [36m>[39m
+          [0mmail[0m
+        [36m</span>[39m
+      [36m</button>[39m
+      [36m<button[39m
+        [33maria-expanded[39m=[32m"false"[39m
+        [33maria-haspopup[39m=[32m"menu"[39m
+        [33maria-label[39m=[32m"More actions"[39m
+        [33mclass[39m=[32m"p-1.5 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-200 dark:hover:bg-slate-800 transition-colors"[39m
+        [33mdata-state[39m=[32m"closed"[39m
+        [33mid[39m=[32m"radix-_r_16_"[39m
+        [33mtype[39m=[32m"button"[39m
+      [36m>[39m
+        [36m<span[39m
+          [33maria-hidden[39m=[32m"true"[39m
+          [33mclass[39m=[32m"material-symbols-outlined text-[18px]"[39m
+        [36m>[39m
+          [0mmore_vert[0m
+        [36m</span>[39m
+      [36m</button>[39m
+    [36m</div>[39m
+  [36m</td>[39m
+[36m</tr>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactList.contact-types.test.tsx:101:56
+     99|   it('shows a key with no type row as a neutral label', () => {
+    100|     renderList();
+    101|     const badge = within(screen.getByTestId('row-c2')).getByTestId('co…
+       |                                                        ^
+    102|     expect(badge).toHaveTextContent('legacy_key');
+    103|     expect(badge.className).toContain('bg-slate-200');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeBadge.test.tsx > ContactTypeBadge (A11Y-6) > renders the type name as text with an aria-hidden colour dot
+TestingLibraryElementError: Unable to find an element by: [data-testid="contact-type-badge"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeBadge.test.tsx:37:26
+     35|   it('renders the type name as text with an aria-hidden colour dot', (…
+     36|     render(<ContactTypeBadge typeKey="vendor" types={TYPES} />);
+     37|     const badge = screen.getByTestId('contact-type-badge');
+       |                          ^
+     38|     expect(badge).toHaveTextContent('Supplier');
+     39|     expect(badge.className).toContain('bg-amber-200');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeBadge.test.tsx > ContactTypeBadge (A11Y-6) > marks an inactive type in text
+TestingLibraryElementError: Unable to find an element by: [data-testid="contact-type-badge"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeBadge.test.tsx:46:19
+     44|   it('marks an inactive type in text', () => {
+     45|     render(<ContactTypeBadge typeKey="investor" types={TYPES} />);
+     46|     expect(screen.getByTestId('contact-type-badge')).toHaveTextContent…
+       |                   ^
+     47|   });
+     48|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeBadge.test.tsx > ContactTypeBadge (A11Y-6) > shows an unknown key as a neutral slate label (deleted type, ADR-080)
+TestingLibraryElementError: Unable to find an element by: [data-testid="contact-type-badge"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeBadge.test.tsx:51:26
+     49|   it('shows an unknown key as a neutral slate label (deleted type, ADR…
+     50|     render(<ContactTypeBadge typeKey="legacy_key" types={TYPES} />);
+     51|     const badge = screen.getByTestId('contact-type-badge');
+       |                          ^
+     52|     expect(badge).toHaveTextContent('legacy_key');
+     53|     expect(badge.className).toContain('bg-slate-200');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeBadge.test.tsx > ContactTypeBadge (A11Y-6) > shows the key while the types are still loading
+TestingLibraryElementError: Unable to find an element by: [data-testid="contact-type-badge"]
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeBadge.test.tsx:58:19
+     56|   it('shows the key while the types are still loading', () => {
+     57|     render(<ContactTypeBadge typeKey="vendor" types={undefined} />);
+     58|     expect(screen.getByTestId('contact-type-badge')).toHaveTextContent…
+       |                   ^
+     59|   });
+     60|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > queries all types (incl. inactive) with a 5 minute staleTime (NF-002)
+AssertionError: expected +0 to be 300000 // Object.is equality
+
+- Expected
++ Received
+
+- 300000
++ 0
+
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:71:41
+     69|   it('queries all types (incl. inactive) with a 5 minute staleTime (NF…
+     70|     renderSelect();
+     71|     expect(CONTACT_TYPES_STALE_TIME_MS).toBe(5 * 60 * 1000);
+       |                                         ^
+     72|     expect(h.useQuery).toHaveBeenCalledWith(
+     73|       { includeInactive: true },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > has a visible label and offers "No type" plus the active types only
+TestingLibraryElementError: Unable to find a label with the text of: Contact type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:80:27
+     78|   it('has a visible label and offers "No type" plus the active types o…
+     79|     renderSelect();
+     80|     const select = screen.getByLabelText('Contact type');
+       |                           ^
+     81|     const labels = Array.from((select as HTMLSelectElement).options).m…
+     82|     expect(labels).toEqual(['No type', 'Customer', 'Vendor']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > reports the chosen key
+TestingLibraryElementError: Unable to find a label with the text of: Contact type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:87:29
+     85|   it('reports the chosen key', () => {
+     86|     const { onChange } = renderSelect();
+     87|     fireEvent.change(screen.getByLabelText('Contact type'), { target: …
+       |                             ^
+     88|     expect(onChange).toHaveBeenCalledWith('vendor');
+     89|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > keeps a stored inactive type selectable as "Name (inactive)" with a linked hint (A11Y-5)
+TestingLibraryElementError: Unable to find a label with the text of: Contact type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:93:27
+     91|   it('keeps a stored inactive type selectable as "Name (inactive)" wit…
+     92|     renderSelect({ value: 'investor' });
+     93|     const select = screen.getByLabelText('Contact type') as HTMLSelect…
+       |                           ^
+     94|     expect(select.value).toBe('investor');
+     95|     expect(screen.getByRole('option', { name: 'Investor (inactive)' })…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > keeps a stored key whose type was deleted as "<key> (inactive)"
+TestingLibraryElementError: Unable to find an accessible element with the role "option" and name "legacy_key (inactive)"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:103:19
+    101|   it('keeps a stored key whose type was deleted as "<key> (inactive)"'…
+    102|     renderSelect({ value: 'legacy_key' });
+    103|     expect(screen.getByRole('option', { name: 'legacy_key (inactive)' …
+       |                   ^
+    104|   });
+    105|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > preselects the default type once loaded when asked and untouched
+AssertionError: expected "vi.fn()" to be called with arguments: [ 'vendor' ]
+
+Number of calls: 0
+
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:108:22
+    106|   it('preselects the default type once loaded when asked and untouched…
+    107|     const { onChange } = renderSelect({ preselectDefault: true });
+    108|     expect(onChange).toHaveBeenCalledWith('vendor');
+       |                      ^
+    109|   });
+    110|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > does not preselect after the user touched the field
+TestingLibraryElementError: Unable to find a label with the text of: Contact type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:122:29
+    120|       <ContactTypeSelect id="contactType" value="" onChange={onChange}…
+    121|     );
+    122|     fireEvent.change(screen.getByLabelText('Contact type'), { target: …
+       |                             ^
+    123|     h.query = { ...h.query, data: [option({ key: 'vendor', isDefault: …
+    124|     rerender(<ContactTypeSelect id="contactType" value="" onChange={on…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > a fetch failure shows one alert with Retry and never blocks the field
+TestingLibraryElementError: Unable to find an accessible element with the role "alert"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:109:15
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:131:19
+    129|     h.query = { ...h.query, data: undefined, isError: true };
+    130|     renderSelect();
+    131|     expect(screen.getAllByRole('alert')).toHaveLength(1);
+       |                   ^
+    132|     expect(screen.getByLabelText('Contact type')).not.toBeDisabled();
+    133|     fireEvent.click(screen.getByRole('button', { name: 'Retry loading …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/123]⎯
+
+ FAIL  |web| src/components/contacts/__tests__/ContactTypeSelect.test.tsx > ContactTypeSelect > shows a loading option while the types load
+TestingLibraryElementError: Unable to find an accessible element with the role "option" and name "Loading types…"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/components/contacts/__tests__/ContactTypeSelect.test.tsx:140:19
+    138|     h.query = { ...h.query, data: undefined, isLoading: true };
+    139|     renderSelect();
+    140|     expect(screen.getByRole('option', { name: 'Loading types…' })).toB…
+       |                   ^
+    141|   });
+    142|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/123]⎯
+
+ FAIL  |web| src/components/sidebar/__tests__/contacts-config.test.ts > contacts sidebar config (PG-205) > keeps the segment links, and each one maps to a real list filter
+AssertionError: expected [ { typeFilter: 'stub', …(1) }, …(2) ] to deeply equal [ { typeFilter: '', …(1) }, …(2) ]
+
+- Expected
++ Received
+
+  [
+    {
+-     "segmentFilter": "vip",
+-     "typeFilter": "",
++     "segmentFilter": "",
++     "typeFilter": "stub",
+    },
+    {
+      "segmentFilter": "",
+-     "typeFilter": "partner",
++     "typeFilter": "stub",
+    },
+    {
+      "segmentFilter": "",
+-     "typeFilter": "vendor",
++     "typeFilter": "stub",
+    },
+  ]
+
+ ❯ src/components/sidebar/__tests__/contacts-config.test.ts:29:20
+     27|       segmentToFilter(new URL(href, 'http://localhost').searchParams.g…
+     28|     );
+     29|     expect(mapped).toEqual([
+       |                    ^
+     30|       { typeFilter: '', segmentFilter: 'vip' },
+     31|       { typeFilter: 'partner', segmentFilter: '' },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/123]⎯
+
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > passes the type filter and the vip segment to the query
+AssertionError: expected undefined to be 'partner' // Object.is equality
+
+- Expected:
+"partner"
+
++ Received:
+undefined
+
+ ❯ src/lib/contacts/__tests__/contact-search.test.ts:115:85
+    113| describe('contact type filter and segments (PG-205)', () => {
+    114|   it('passes the type filter and the vip segment to the query', () => {
+    115|     expect(buildContactListQuery(baseState({ typeFilter: 'partner' }))…
+       |                                                                                     ^
+    116|     expect(buildContactListQuery(baseState({ segmentFilter: 'vip' })).…
+    117|     const plain = buildContactListQuery(baseState());
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/123]⎯
+
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > isDefaultContactQuery is false with a type filter (no stale prefetch)
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > isDefaultContactQuery is false with the vip segment (no stale prefetch)
+AssertionError: expected true to be false // Object.is equality
+
+- Expected
++ Received
+
+- false
++ true
+
+ ❯ src/lib/contacts/__tests__/contact-search.test.ts:126:42
+    124|     ['the vip segment', baseState({ segmentFilter: 'vip' })],
+    125|   ])('isDefaultContactQuery is false with %s (no stale prefetch)', (_l…
+    126|     expect(isDefaultContactQuery(state)).toBe(false);
+       |                                          ^
+    127|   });
+    128|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/123]⎯
+
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > segmentToFilter("partners")
+AssertionError: expected { typeFilter: 'stub', …(1) } to deeply equal { typeFilter: 'partner', …(1) }
+
+- Expected
++ Received
+
+  {
+    "segmentFilter": "",
+-   "typeFilter": "partner",
++   "typeFilter": "stub",
+  }
+
+ ❯ src/lib/contacts/__tests__/contact-search.test.ts:136:38
+    134|     [null, { typeFilter: '', segmentFilter: '' }],
+    135|   ] as const)('segmentToFilter(%j)', (segment, expected) => {
+    136|     expect(segmentToFilter(segment)).toEqual(expected);
+       |                                      ^
+    137|   });
+    138| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/123]⎯
+
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > segmentToFilter("vendors")
+AssertionError: expected { typeFilter: 'stub', …(1) } to deeply equal { typeFilter: 'vendor', …(1) }
+
+- Expected
++ Received
+
+  {
+    "segmentFilter": "",
+-   "typeFilter": "vendor",
++   "typeFilter": "stub",
+  }
+
+ ❯ src/lib/contacts/__tests__/contact-search.test.ts:136:38
+    134|     [null, { typeFilter: '', segmentFilter: '' }],
+    135|   ] as const)('segmentToFilter(%j)', (segment, expected) => {
+    136|     expect(segmentToFilter(segment)).toEqual(expected);
+       |                                      ^
+    137|   });
+    138| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/123]⎯
+
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > segmentToFilter("vip")
+AssertionError: expected { typeFilter: 'stub', …(1) } to deeply equal { Object (typeFilter, segmentFilter) }
+
+- Expected
++ Received
+
+  {
+-   "segmentFilter": "vip",
+-   "typeFilter": "",
++   "segmentFilter": "",
++   "typeFilter": "stub",
+  }
+
+ ❯ src/lib/contacts/__tests__/contact-search.test.ts:136:38
+    134|     [null, { typeFilter: '', segmentFilter: '' }],
+    135|   ] as const)('segmentToFilter(%j)', (segment, expected) => {
+    136|     expect(segmentToFilter(segment)).toEqual(expected);
+       |                                      ^
+    137|   });
+    138| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/123]⎯
+
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > segmentToFilter("unknown")
+ FAIL  |web| src/lib/contacts/__tests__/contact-search.test.ts > contact type filter and segments (PG-205) > segmentToFilter(null)
+AssertionError: expected { typeFilter: 'stub', …(1) } to deeply equal { typeFilter: '', segmentFilter: '' }
+
+- Expected
++ Received
+
+  {
+    "segmentFilter": "",
+-   "typeFilter": "",
++   "typeFilter": "stub",
+  }
+
+ ❯ src/lib/contacts/__tests__/contact-search.test.ts:136:38
+    134|     [null, { typeFilter: '', segmentFilter: '' }],
+    135|   ] as const)('segmentToFilter(%j)', (segment, expected) => {
+    136|     expect(segmentToFilter(segment)).toEqual(expected);
+       |                                      ^
+    137|   });
+    138| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx > contacts list Type filter (PG-205) > builds the Type filter from the tenant types, inactive ones labelled
+AssertionError: expected undefined to deeply equal { includeInactive: true }
+
+- Expected:
+{
+  "includeInactive": true,
+}
+
++ Received:
+undefined
+
+ ❯ src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx:114:33
+    112|   it('builds the Type filter from the tenant types, inactive ones labe…
+    113|     render(<ContactsPageClient />);
+    114|     expect(h.typesQueryArgs[0]).toEqual({ includeInactive: true });
+       |                                 ^
+    115|     const select = screen.getByLabelText('Type') as HTMLSelectElement;
+    116|     expect(Array.from(select.options).map((o) => o.textContent)).toEqu…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx > contacts list Type filter (PG-205) > filters the query by the chosen type and passes the types to the list badges
+TestingLibraryElementError: Unable to find a label with the text of: Type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"flex flex-col gap-6"[39m
+    [36m>[39m
+      [36m<h1>[39m
+        [0mContact List[0m
+      [36m</h1>[39m
+      [36m<div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mfor[39m=[32m"filter-status"[39m
+          [36m>[39m
+            [0mStatus[0m
+          [36m</label>[39m
+          [36m<select[39m
+            [33mid[39m=[32m"filter-status"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m""[39m
+            [36m>[39m
+              [0mAll[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mfor[39m=[32m"filter-company"[39m
+          [36m>[39m
+            [0mCompany[0m
+          [36m</label>[39m
+          [36m<select[39m
+            [33mid[39m=[32m"filter-company"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m""[39m
+            [36m>[39m
+              [0mAll[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</div>[39m
+        [36m<div>[39m
+          [36m<label[39m
+            [33mfor[39m=[32m"filter-department"[39m
+          [36m>[39m
+            [0mDepartment[0m
+          [36m</label>[39m
+          [36m<select[39m
+            [33mid[39m=[32m"filter-department"[39m
+          [36m>[39m
+            [36m<option[39m
+              [33mvalue[39m=[32m""[39m
+            [36m>[39m
+              [0mAll[0m
+            [36m</option>[39m
+          [36m</select>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mdata-testid[39m=[32m"contact-list"[39m
+      [36m/>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx:126:29
+    124|   it('filters the query by the chosen type and passes the types to the…
+    125|     render(<ContactsPageClient />);
+    126|     fireEvent.change(screen.getByLabelText('Type'), { target: { value:…
+       |                             ^
+    127|     expect(lastQuery()).toMatchObject({ contactType: 'vendor' });
+    128|     expect(h.lastContactListProps?.contactTypes).toEqual(h.types);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx > contacts list Type filter (PG-205) > ?segment=partners seeds the Type filter; changing it clears the segment from the URL
+AssertionError: expected { page: 1, limit: 10, …(6) } to match object { contactType: 'partner' }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "contactType": "partner",
++   "accountId": undefined,
++   "department": undefined,
++   "limit": 10,
++   "page": 1,
++   "search": undefined,
++   "sortBy": "createdAt",
++   "sortOrder": "desc",
++   "status": undefined,
+  }
+
+ ❯ src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx:134:25
+    132|     h.segment = 'partners';
+    133|     render(<ContactsPageClient />);
+    134|     expect(lastQuery()).toMatchObject({ contactType: 'partner' });
+       |                         ^
+    135|     expect((screen.getByLabelText('Type') as HTMLSelectElement).value)…
+    136|     expect(h.listQueryOpts[h.listQueryOpts.length - 1].initialData).to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx > contacts list Type filter (PG-205) > ?segment=vendors filters by the vendor type
+AssertionError: expected { page: 1, limit: 10, …(6) } to match object { contactType: 'vendor' }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "contactType": "vendor",
++   "accountId": undefined,
++   "department": undefined,
++   "limit": 10,
++   "page": 1,
++   "search": undefined,
++   "sortBy": "createdAt",
++   "sortOrder": "desc",
++   "status": undefined,
+  }
+
+ ❯ src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx:145:25
+    143|     h.segment = 'vendors';
+    144|     render(<ContactsPageClient />);
+    145|     expect(lastQuery()).toMatchObject({ contactType: 'vendor' });
+       |                         ^
+    146|   });
+    147|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx > contacts list Type filter (PG-205) > keeps a type filter whose type is not active (not reset when its option is missing)
+AssertionError: expected { page: 1, limit: 10, …(6) } to match object { contactType: 'partner' }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "contactType": "partner",
++   "accountId": undefined,
++   "department": undefined,
++   "limit": 10,
++   "page": 1,
++   "search": undefined,
++   "sortBy": "createdAt",
++   "sortOrder": "desc",
++   "status": undefined,
+  }
+
+ ❯ src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx:152:25
+    150|     h.types = [];
+    151|     render(<ContactsPageClient />);
+    152|     expect(lastQuery()).toMatchObject({ contactType: 'partner' });
+       |                         ^
+    153|   });
+    154|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx > contacts list Type filter (PG-205) > ?segment=vip shows a removable chip; removing it clears the filter, the URL, moves focus and announces (A11Y-8)
+AssertionError: expected { page: 1, limit: 10, …(6) } to match object { segment: 'vip' }
+(8 matching properties omitted from actual)
+
+- Expected
++ Received
+
+  {
+-   "segment": "vip",
++   "accountId": undefined,
++   "department": undefined,
++   "limit": 10,
++   "page": 1,
++   "search": undefined,
++   "sortBy": "createdAt",
++   "sortOrder": "desc",
++   "status": undefined,
+  }
+
+ ❯ src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx:158:25
+    156|     h.segment = 'vip';
+    157|     render(<ContactsPageClient />);
+    158|     expect(lastQuery()).toMatchObject({ segment: 'vip' });
+       |                         ^
+    159|     const remove = screen.getByRole('button', { name: 'Remove filter: …
+    160|     act(() => {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > shows the skeleton while loading
+TestingLibraryElementError: Unable to find an element with the text: Loading contact types. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:148:19
+    146|     h.list = { ...h.list, data: undefined, isLoading: true };
+    147|     render(<ContactTypesContent />);
+    148|     expect(screen.getByText('Loading contact types')).toBeInTheDocumen…
+       |                   ^
+    149|   });
+    150|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > shows an error with Retry
+TestingLibraryElementError: Unable to find an accessible element with the role "alert"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:154:19
+    152|     h.list = { data: undefined, isLoading: false, error: { message: 'b…
+    153|     render(<ContactTypesContent />);
+    154|     expect(screen.getByRole('alert')).toHaveTextContent('Failed to loa…
+       |                   ^
+    155|     fireEvent.click(screen.getByRole('button', { name: 'Retry' }));
+    156|     expect(h.refetch).toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > renders the playbook layout: breadcrumbs, one h1, h2 sections, 12-col bento, no "coming soon" (A11Y-11)
+TestingLibraryElementError: Unable to find an accessible element with the role "navigation" and name "Breadcrumb"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:161:19
+    159|   it('renders the playbook layout: breadcrumbs, one h1, h2 sections, 1…
+    160|     const { container } = render(<ContactTypesContent />);
+    161|     expect(screen.getByRole('navigation', { name: 'Breadcrumb' })).toH…
+       |                   ^
+    162|       'Dashboard / Contacts / Contact Types'
+    163|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > opens the create dialog through the list ref from the section header CTA
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "New Contact Type"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:173:28
+    171|   it('opens the create dialog through the list ref from the section he…
+    172|     render(<ContactTypesContent />);
+    173|     fireEvent.click(screen.getByRole('button', { name: 'New Contact Ty…
+       |                            ^
+    174|     expect(h.openCreate).toHaveBeenCalled();
+    175|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > passes the active tenant tags to the list for the default-tag picker
+AssertionError: expected undefined to deeply equal [ { id: 'tag-a', …(2) } ]
+
+- Expected:
+[
+  {
+    "id": "tag-a",
+    "isActive": true,
+    "name": "supplier",
+  },
+]
+
++ Received:
+undefined
+
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:179:31
+    177|   it('passes the active tenant tags to the list for the default-tag pi…
+    178|     render(<ContactTypesContent />);
+    179|     expect(h.listProps?.tags).toEqual([{ id: 'tag-a', name: 'supplier'…
+       |                               ^
+    180|   });
+    181|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > read-only users see a note and a disabled CTA described by it
+TestingLibraryElementError: Unable to find an element with the text: /Only administrators and managers can change contact types/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:185:25
+    183|     h.list = { ...h.list, data: { ...h.list.data, canEdit: false } };
+    184|     render(<ContactTypesContent />);
+    185|     const note = screen.getByText(/Only administrators and managers ca…
+       |                         ^
+    186|     const cta = screen.getByRole('button', { name: 'New Contact Type' …
+    187|     expect(cta).toBeDisabled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > creates a type, announces it and invalidates the contactTypes router (NF-002)
+TypeError: Cannot read properties of null (reading 'onSave')
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:196:35
+    194|     let result: unknown;
+    195|     await act(async () => {
+    196|       result = await h.listProps!.onSave(input, null);
+       |                                   ^
+    197|     });
+    198|     expect(result).toEqual({ ok: true });
+ ❯ ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../node_modules/.pnpm/react@19.2.7/node_modules/react/cjs/react.development.js:814:22
+ ❯ Proxy.<anonymous> ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:195:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > updates an existing type by id
+TypeError: Cannot read properties of null (reading 'onSave')
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:213:26
+    211|     render(<ContactTypesContent />);
+    212|     await act(async () => {
+    213|       await h.listProps!.onSave(input, 't1');
+       |                          ^
+    214|     });
+    215|     expect(h.mutations.update.mutateAsync).toHaveBeenCalledWith({ ...i…
+ ❯ ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../node_modules/.pnpm/react@19.2.7/node_modules/react/cjs/react.development.js:814:22
+ ❯ Proxy.<anonymous> ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:212:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > returns a CONFLICT to the dialog instead of a toast
+TypeError: Cannot read properties of null (reading 'onSave')
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:223:35
+    221|     let result: unknown;
+    222|     await act(async () => {
+    223|       result = await h.listProps!.onSave(input, null);
+       |                                   ^
+    224|     });
+    225|     expect(result).toEqual({ ok: false, error: 'Name taken' });
+ ❯ ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../node_modules/.pnpm/react@19.2.7/node_modules/react/cjs/react.development.js:814:22
+ ❯ Proxy.<anonymous> ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:222:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[43/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > toasts other save errors
+TypeError: Cannot read properties of null (reading 'onSave')
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:233:26
+    231|     render(<ContactTypesContent />);
+    232|     await act(async () => {
+    233|       await h.listProps!.onSave(input, null);
+       |                          ^
+    234|     });
+    235|     expect(h.toast).toHaveBeenCalledWith(expect.objectContaining({ var…
+ ❯ ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../node_modules/.pnpm/react@19.2.7/node_modules/react/cjs/react.development.js:814:22
+ ❯ Proxy.<anonymous> ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:232:11
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[44/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > deletes through the dialog and keeps a refusal inside it
+TypeError: Cannot read properties of null (reading 'onDelete')
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:241:28
+    239|     h.mutations.delete.mutateAsync.mockRejectedValueOnce(new Error('2 …
+    240|     render(<ContactTypesContent />);
+    241|     act(() => h.listProps!.onDelete(h.list.data.types[1]));
+       |                            ^
+    242|     await act(async () => {
+    243|       await h.deleteProps!.onConfirm();
+ ❯ ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../node_modules/.pnpm/react@19.2.7/node_modules/react/cjs/react.development.js:814:22
+ ❯ Proxy.<anonymous> ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:241:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[45/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > after a delete, focus moves to the New Contact Type button
+TypeError: Cannot read properties of null (reading 'onDelete')
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:258:28
+    256|     h.mutations.delete.mutateAsync.mockResolvedValueOnce({ success: tr…
+    257|     render(<ContactTypesContent />);
+    258|     act(() => h.listProps!.onDelete(h.list.data.types[1]));
+       |                            ^
+    259|     await act(async () => {
+    260|       await h.deleteProps!.onConfirm();
+ ❯ ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:47:24
+ ❯ process.env.NODE_ENV.exports.act ../../node_modules/.pnpm/react@19.2.7/node_modules/react/cjs/react.development.js:814:22
+ ❯ Proxy.<anonymous> ../../node_modules/.pnpm/@testing-library+react@16.3_2687ba82b6a5cccb3382e6a4eda3df31/node_modules/@testing-library/react/dist/act-compat.js:46:25
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:258:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[46/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > sets the default type from the radio group; inactive types cannot be chosen
+TestingLibraryElementError: Unable to find an accessible element with the role "radio" and name "Old (inactive)"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:270:19
+    268|   it('sets the default type from the radio group; inactive types canno…
+    269|     render(<ContactTypesContent />);
+    270|     expect(screen.getByRole('radio', { name: 'Old (inactive)' })).toBe…
+       |                   ^
+    271|     fireEvent.click(screen.getByRole('radio', { name: 'No default' }));
+    272|     expect(h.mutations.setDefault.mutate).toHaveBeenCalledWith({ id: n…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[47/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > the live region is silent on mount
+AssertionError: expected undefined to be '' // Object.is equality
+
+- Expected:
+""
+
++ Received:
+undefined
+
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:277:80
+    275|   it('the live region is silent on mount', () => {
+    276|     const { container } = render(<ContactTypesContent />);
+    277|     expect(container.querySelector('output[aria-live="polite"]')?.text…
+       |                                                                                ^
+    278|   });
+    279|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[48/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx > ContactTypesContent > errorCode reads the tRPC code
+AssertionError: expected 'stub' to be 'CONFLICT' // Object.is equality
+
+Expected: "CONFLICT"
+Received: "stub"
+
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx:281:51
+    279|
+    280|   it('errorCode reads the tRPC code', () => {
+    281|     expect(errorCode(trpcError('CONFLICT', 'x'))).toBe('CONFLICT');
+       |                                                   ^
+    282|     expect(errorCode(new Error('x'))).toBeUndefined();
+    283|     expect(errorCode(null)).toBeUndefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[49/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/ContactTypesLoading.test.tsx > ContactTypesLoading > is a busy status mirroring the bento grid
+TestingLibraryElementError: Unable to find an accessible element with the role "status"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/__tests__/ContactTypesLoading.test.tsx:13:19
+     11|   it('is a busy status mirroring the bento grid', () => {
+     12|     const { container } = render(<ContactTypesLoading />);
+     13|     expect(screen.getByRole('status')).toHaveTextContent('Loading cont…
+       |                   ^
+     14|     expect(container.querySelector('[aria-busy="true"]')).not.toBeNull…
+     15|     expect(container.querySelector('.lg\\:grid-cols-12')).not.toBeNull…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[50/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/__tests__/page.test.tsx > Contact Types page (PG-205) > is no longer the "coming soon" stub: it streams the bento skeleton first
+AssertionError: expected 'Contact TypesManage contact categorie…' not to match /coming soon/i
+
+- Expected:
+/coming soon/i
+
++ Received:
+"Contact TypesManage contact categories and classifications.categoryContact types configuration coming soon."
+
+ ❯ src/app/contacts/(list)/contact-types/__tests__/page.test.tsx:20:39
+     18|   it('is no longer the "coming soon" stub: it streams the bento skelet…
+     19|     const { container } = render(<ContactTypesPage />);
+     20|     expect(container.textContent).not.toMatch(/coming soon/i);
+       |                                       ^
+     21|     expect(screen.getByRole('status')).toHaveTextContent('Loading cont…
+     22|     expect(container.querySelector('.lg\\:grid-cols-12')).not.toBeNull…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[51/123]⎯
+
+ FAIL  |web| src/app/contacts/[id]/edit/__tests__/page.test.tsx > Edit Contact page — contact type (PG-205) > shows the stored inactive type as selected "(inactive)"
+TestingLibraryElementError: Unable to find a label with the text of: Contact type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mx-auto max-w-3xl px-4 pt-8 pb-16"[39m
+    [36m>[39m
+      [36m<nav[39m
+        [33maria-label[39m=[32m"Breadcrumb"[39m
+        [33mclass[39m=[32m"flex mb-6"[39m
+      [36m>[39m
+        [36m<ol[39m
+          [33mclass[39m=[32m"flex items-center space-x-2 text-sm"[39m
+        [36m>[39m
+          [36m<li>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"[39m
+              [33mhref[39m=[32m"/contacts"[39m
+            [36m>[39m
+              [0mContacts[0m
+            [36m</a>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-slate-300 dark:text-slate-600"[39m
+            [36m>[39m
+              [0m/[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"[39m
+              [33mhref[39m=[32m"/contacts/c1"[39m
+            [36m>[39m
+              [0mAnn Lee[0m
+            [36m</a>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-slate-300 dark:text-slate-600"[39m
+            [36m>[39m
+              [0m/[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+            [36m>[39m
+              [0mEdit[0m
+            [36m</span>[39m
+          [36m</li>[39m
+        [36m</ol>[39m
+      [36m</nav>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-2xl font-bold text-slate-900 dark:text-white mb-6"[39m
+      [36m>[39m
+        [0mEdit Contact[0m
+      [36m</h1>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm p-6 mb-6"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1"[39m
+          [36m>[39m
+            [0mEmail[0m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2 px-3 h-10 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 max-w-sm"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"material-symbols-outlined !text-[16px] text-slate-400"[39m
+            [36m>[39m
+              [0mlock[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"truncate"[39m
+            [36m>[39m
+              [0mann@example.invalid[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"text-card-foreground bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"[39m
+      [36m>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Form progress"[39m
+          [33mclass[39m=[32m"px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700"[39m
+        [36m>[39m
+          [36m<progress[39m
+            [33maria-label[39m=[32m"Step 3 of 3"[39m
+            [33mclass[39m=[32m"sr-only"[39m
+            [33mmax[39m=[32m"3"[39m
+            [33mvalue[39m=[32m"3"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"relative flex items-center justify-between w-full max-w-2xl mx-auto"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10"[39m
+            [36m/>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white hover:bg-blue-600"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-lg"[39m
+                [36m>[39m
+                  [0mcheck[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+              [36m>[39m
+                [0mPersonal Details[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white hover:bg-blue-600"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-lg"[39m
+                [36m>[39m
+                  [0mcheck[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+              [36m>[39m
+                [0mCompany & Role[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-current[39m=[32m"step"[39m
+              [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white"[39m
+              [36m>[39m
+                [0m3[0m
+              [36m</div>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+              [36m>[39m
+                [0mAdditional Info[0m
+              [36m</span>[39m
+            [36m</button>[39m
+    ...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/[id]/edit/__tests__/page.test.tsx:101:27
+     99|     render(<EditContactPage />);
+    100|     goToLastStep();
+    101|     const select = screen.getByLabelText('Contact type') as HTMLSelect…
+       |                           ^
+    102|     expect(select.value).toBe('investor');
+    103|     expect(screen.getByRole('option', { name: 'Investor (inactive)' })…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[52/123]⎯
+
+ FAIL  |web| src/app/contacts/[id]/edit/__tests__/page.test.tsx > Edit Contact page — contact type (PG-205) > submits a newly chosen type
+TestingLibraryElementError: Unable to find a label with the text of: Contact type
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"mx-auto max-w-3xl px-4 pt-8 pb-16"[39m
+    [36m>[39m
+      [36m<nav[39m
+        [33maria-label[39m=[32m"Breadcrumb"[39m
+        [33mclass[39m=[32m"flex mb-6"[39m
+      [36m>[39m
+        [36m<ol[39m
+          [33mclass[39m=[32m"flex items-center space-x-2 text-sm"[39m
+        [36m>[39m
+          [36m<li>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"[39m
+              [33mhref[39m=[32m"/contacts"[39m
+            [36m>[39m
+              [0mContacts[0m
+            [36m</a>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-slate-300 dark:text-slate-600"[39m
+            [36m>[39m
+              [0m/[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"text-slate-500 dark:text-slate-400 hover:text-[#2a78f6] font-medium transition-colors"[39m
+              [33mhref[39m=[32m"/contacts/c1"[39m
+            [36m>[39m
+              [0mAnn Lee[0m
+            [36m</a>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"text-slate-300 dark:text-slate-600"[39m
+            [36m>[39m
+              [0m/[0m
+            [36m</span>[39m
+          [36m</li>[39m
+          [36m<li>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"font-medium text-slate-900 dark:text-white"[39m
+            [36m>[39m
+              [0mEdit[0m
+            [36m</span>[39m
+          [36m</li>[39m
+        [36m</ol>[39m
+      [36m</nav>[39m
+      [36m<h1[39m
+        [33mclass[39m=[32m"text-2xl font-bold text-slate-900 dark:text-white mb-6"[39m
+      [36m>[39m
+        [0mEdit Contact[0m
+      [36m</h1>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm p-6 mb-6"[39m
+      [36m>[39m
+        [36m<div>[39m
+          [36m<span[39m
+            [33mclass[39m=[32m"block text-sm font-medium text-slate-500 dark:text-slate-400 mb-1"[39m
+          [36m>[39m
+            [0mEmail[0m
+          [36m</span>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"flex items-center gap-2 px-3 h-10 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-300 max-w-sm"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"material-symbols-outlined !text-[16px] text-slate-400"[39m
+            [36m>[39m
+              [0mlock[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m"truncate"[39m
+            [36m>[39m
+              [0mann@example.invalid[0m
+            [36m</span>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"text-card-foreground bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden"[39m
+      [36m>[39m
+        [36m<nav[39m
+          [33maria-label[39m=[32m"Form progress"[39m
+          [33mclass[39m=[32m"px-8 pt-8 pb-6 border-b border-slate-200 dark:border-slate-700"[39m
+        [36m>[39m
+          [36m<progress[39m
+            [33maria-label[39m=[32m"Step 3 of 3"[39m
+            [33mclass[39m=[32m"sr-only"[39m
+            [33mmax[39m=[32m"3"[39m
+            [33mvalue[39m=[32m"3"[39m
+          [36m/>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"relative flex items-center justify-between w-full max-w-2xl mx-auto"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"absolute left-0 top-5 w-full h-0.5 bg-slate-100 dark:bg-slate-700 -z-10"[39m
+            [36m/>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white hover:bg-blue-600"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-lg"[39m
+                [36m>[39m
+                  [0mcheck[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+              [36m>[39m
+                [0mPersonal Details[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<button[39m
+              [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white hover:bg-blue-600"[39m
+              [36m>[39m
+                [36m<span[39m
+                  [33maria-hidden[39m=[32m"true"[39m
+                  [33mclass[39m=[32m"material-symbols-outlined text-lg"[39m
+                [36m>[39m
+                  [0mcheck[0m
+                [36m</span>[39m
+              [36m</div>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+              [36m>[39m
+                [0mCompany & Role[0m
+              [36m</span>[39m
+            [36m</button>[39m
+            [36m<button[39m
+              [33maria-current[39m=[32m"step"[39m
+              [33mclass[39m=[32m"flex flex-col items-center gap-2 cursor-pointer"[39m
+              [33mtype[39m=[32m"button"[39m
+            [36m>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ring-white dark:ring-slate-900 shadow-sm transition-all bg-primary text-white"[39m
+              [36m>[39m
+                [0m3[0m
+              [36m</div>[39m
+              [36m<span[39m
+                [33mclass[39m=[32m"text-sm font-medium font-bold text-slate-900 dark:text-white"[39m
+              [36m>[39m
+                [0mAdditional Info[0m
+              [36m</span>[39m
+            [36m</button>[39m
+    ...
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/[id]/edit/__tests__/page.test.tsx:117:29
+    115|     render(<EditContactPage />);
+    116|     goToLastStep();
+    117|     fireEvent.change(screen.getByLabelText('Contact type'), { target: …
+       |                             ^
+    118|     fireEvent.click(screen.getByRole('button', { name: /Save Changes/i…
+    119|     await waitFor(() => expect(h.mutateAsync).toHaveBeenCalledTimes(1)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[53/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/new/__tests__/page.test.tsx > CreateNewContactPage - Wizard Navigation (T-03) > offers "No type" plus the tenant contact types, and no "please specify" field
+AssertionError: expected [ Array(7) ] to deeply equal [ 'No type', 'Customer', 'Reseller' ]
+
+- Expected
++ Received
+
+  [
+-   "No type",
++   "Select a type...",
+    "Customer",
+-   "Reseller",
++   "Prospect",
++   "Partner",
++   "Vendor",
++   "Investor",
++   "Other",
+  ]
+
+ ❯ src/app/contacts/(list)/new/__tests__/page.test.tsx:243:66
+    241|     clickNext();
+    242|     const select = screen.getByLabelText('Contact Type') as HTMLSelect…
+    243|     expect(Array.from(select.options).map((o) => o.textContent)).toEqu…
+       |                                                                  ^
+    244|       'No type',
+    245|       'Customer',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[54/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/new/__tests__/page.test.tsx > CreateNewContactPage - Submit (T-03) > submits a correctly mapped payload (tags split, "other" department mapped)
+AssertionError: expected 'ACTIVE' to be undefined
+
+- Expected:
+undefined
+
++ Received:
+"ACTIVE"
+
+ ❯ src/app/contacts/(list)/new/__tests__/page.test.tsx:292:28
+    290|     // PG-205: an untouched status is not sent, so a contact type's de…
+    291|     // apply (the domain default is still ACTIVE when there is no type…
+    292|     expect(payload.status).toBeUndefined();
+       |                            ^
+    293|     expect(payload.tags).toEqual(['vip', 'lead']);
+    294|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[55/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/new/__tests__/page.test.tsx > CreateNewContactPage - Submit (T-03) > submits a tenant-defined type key as chosen (PG-205)
+AssertionError: expected undefined to be 'reseller' // Object.is equality
+
+- Expected:
+"reseller"
+
++ Received:
+undefined
+
+ ❯ src/app/contacts/(list)/new/__tests__/page.test.tsx:315:64
+    313|     fireEvent.click(screen.getByRole('button', { name: /Create Contact…
+    314|     await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalled…
+    315|     expect(mockCreateMutateAsync.mock.calls[0][0].contactType).toBe('r…
+       |                                                                ^
+    316|   });
+    317|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[56/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/new/__tests__/page.test.tsx > CreateNewContactPage - Submit (T-03) > preselects the tenant default type and sends no type when "No type" is chosen
+AssertionError: expected '' to be 'reseller' // Object.is equality
+
+- Expected
++ Received
+
+- reseller
+
+ ❯ src/app/contacts/(list)/new/__tests__/page.test.tsx:326:28
+    324|       clickNext();
+    325|       const select = screen.getByLabelText('Contact Type') as HTMLSele…
+    326|       expect(select.value).toBe('reseller');
+       |                            ^
+    327|       fireEvent.change(select, { target: { value: '' } });
+    328|       fireEvent.click(screen.getByRole('button', { name: /Create Conta…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[57/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > starts clean: Save disabled until something changes
+TestingLibraryElementError: Unable to find an accessible element with the role "dialog" and name "New Contact Type"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:56:19
+     54|   it('starts clean: Save disabled until something changes', () => {
+     55|     renderDialog();
+     56|     expect(screen.getByRole('dialog', { name: 'New Contact Type' })).t…
+       |                   ^
+     57|     expect(save()).toBeDisabled();
+     58|     fireEvent.change(screen.getByLabelText('Name'), { target: { value:…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[58/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > offers 18 labelled colour radios in a fieldset; arrow keys move through them in order
+TestingLibraryElementError: Unable to find an accessible element with the role "group" and name "Colour"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:64:26
+     62|   it('offers 18 labelled colour radios in a fieldset; arrow keys move …
+     63|     renderDialog();
+     64|     const group = screen.getByRole('group', { name: 'Colour' });
+       |                          ^
+     65|     const radios = screen.getAllByRole('radio', { name: /^(Slate|Red|O…
+     66|     expect(group).toBeInTheDocument();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[59/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > marks the checked swatch with a glyph, not colour alone (A11Y-3)
+TestingLibraryElementError: Unable to find an accessible element with the role "radio" and name "Teal"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:77:25
+     75|   it('marks the checked swatch with a glyph, not colour alone (A11Y-3)…
+     76|     renderDialog({ contactType: RESELLER });
+     77|     const teal = screen.getByRole('radio', { name: 'Teal' });
+       |                         ^
+     78|     const label = teal.closest('label')!;
+     79|     expect(label.querySelector('[data-testid="swatch-check"]')).not.to…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[60/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > loads an existing type, shows its key read-only and builds the save input
+TestingLibraryElementError: Unable to find an accessible element with the role "dialog" and name "Edit Reseller"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:86:19
+     84|   it('loads an existing type, shows its key read-only and builds the s…
+     85|     const { onSave, onClose } = renderDialog({ contactType: RESELLER }…
+     86|     expect(screen.getByRole('dialog', { name: 'Edit Reseller' })).toBe…
+       |                   ^
+     87|     expect(screen.getByText('reseller')).toBeInTheDocument();
+     88|     expect(screen.getByRole('checkbox', { name: 'Company' })).toHaveAt…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[61/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > rejects an empty or duplicate name with an inline alert (aria-invalid + describedby)
+TestingLibraryElementError: Unable to find a label with the text of: Name
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:113:25
+    111|   it('rejects an empty or duplicate name with an inline alert (aria-in…
+    112|     renderDialog();
+    113|     const name = screen.getByLabelText('Name');
+       |                         ^
+    114|     fireEvent.change(name, { target: { value: '  reseller ' } });
+    115|     expect(name).toHaveAttribute('aria-invalid', 'true');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[62/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > a server CONFLICT keeps the dialog open and moves focus to the invalid name (A11Y-9)
+TestingLibraryElementError: Unable to find a label with the text of: Name
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ getAllByLabelText ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/queries/label-text.js:111:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:127:29
+    125|     const onSave = vi.fn().mockResolvedValue({ ok: false, error: 'A co…
+    126|     const { onClose } = renderDialog({ onSave });
+    127|     fireEvent.change(screen.getByLabelText('Name'), { target: { value:…
+       |                             ^
+    128|     await act(async () => {
+    129|       fireEvent.click(save());
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[63/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > keeps the default type active (switch locked, reason linked)
+TestingLibraryElementError: Unable to find an accessible element with the role "switch" and name "Active"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:140:27
+    138|   it('keeps the default type active (switch locked, reason linked)', (…
+    139|     renderDialog({ contactType: { ...RESELLER, isDefault: true } });
+    140|     const active = screen.getByRole('switch', { name: 'Active' });
+       |                           ^
+    141|     expect(active).toBeDisabled();
+    142|     expect(document.getElementById(active.getAttribute('aria-described…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[64/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > Cancel closes without saving
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Cancel"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:149:28
+    147|   it('Cancel closes without saving', () => {
+    148|     const { onSave, onClose } = renderDialog({ contactType: RESELLER }…
+    149|     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+       |                            ^
+    150|     expect(onClose).toHaveBeenCalled();
+    151|     expect(onSave).not.toHaveBeenCalled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[65/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > draft helpers round-trip a type and narrow an unknown colour
+AssertionError: expected undefined to be 'slate' // Object.is equality
+
+- Expected:
+"slate"
+
++ Received:
+undefined
+
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:156:30
+    154|   it('draft helpers round-trip a type and narrow an unknown colour', (…
+    155|     const draft = draftFromContactType({ ...RESELLER, colorToken: 'mag…
+    156|     expect(draft.colorToken).toBe('slate');
+       |                              ^
+    157|     expect(toSaveInput({ ...draft, defaultDepartment: '   ', name: '  …
+    158|       name: 'X',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[66/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx > ContactTypeDialog > has no axe violations
+TestingLibraryElementError: Unable to find an accessible element with the role "dialog"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx:166:42
+    164|   it('has no axe violations', async () => {
+    165|     renderDialog({ contactType: RESELLER });
+    166|     const results = await axe.run(screen.getByRole('dialog'), {
+       |                                          ^
+    167|       rules: { 'color-contrast': { enabled: false } },
+    168|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[67/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > shows the canonical passive EmptyState with no extra tab stop beyond it
+TestingLibraryElementError: Unable to find an element with the text: No contact types yet. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx:54:19
+     52|   it('shows the canonical passive EmptyState with no extra tab stop be…
+     53|     renderList({ types: [] });
+     54|     expect(screen.getByText('No contact types yet')).toBeInTheDocument…
+       |                   ^
+     55|     expect(screen.queryByRole('button')).not.toBeInTheDocument();
+     56|     // A11Y-11: the passive region is named and kept out of the tab or…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[68/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > states every row fact in text: badges, contact count, defaults summary
+TestingLibraryElementError: Unable to find an accessible element with the role "list" and name "Contact types"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx:69:25
+     67|       ],
+     68|     });
+     69|     const list = screen.getByRole('list', { name: 'Contact types' });
+       |                         ^
+     70|     expect(list).toBeInTheDocument();
+     71|     const vendor = screen.getByTestId('contact-type-row-t2');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[69/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > blocks deleting a built-in type with aria-disabled and a visible reason (A11Y-7)
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > blocks deleting the default type with aria-disabled and a visible reason (A11Y-7)
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > blocks deleting a type in use with aria-disabled and a visible reason (A11Y-7)
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Delete Reseller"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx:88:27
+     86|   ] as const)('blocks deleting %s with aria-disabled and a visible rea…
+     87|     const { onDelete } = renderList({ types: [type(overrides)] });
+     88|     const button = screen.getByRole('button', { name: 'Delete Reseller…
+       |                           ^
+     89|     expect(button).toHaveAttribute('aria-disabled', 'true');
+     90|     expect(button).not.toBeDisabled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[70/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > deletes an unused custom type
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Delete Reseller"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx:101:28
+     99|   it('deletes an unused custom type', () => {
+    100|     const { onDelete } = renderList();
+    101|     fireEvent.click(screen.getByRole('button', { name: 'Delete Reselle…
+       |                            ^
+    102|     expect(onDelete).toHaveBeenCalledWith(expect.objectContaining({ id…
+    103|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[71/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > read-only users get natively disabled actions described by the page note
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Edit Reseller"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx:107:25
+    105|   it('read-only users get natively disabled actions described by the p…
+    106|     renderList({ canEdit: false, describedBy: 'read-only-note' });
+    107|     const edit = screen.getByRole('button', { name: 'Edit Reseller' });
+       |                         ^
+    108|     expect(edit).toBeDisabled();
+    109|     expect(edit).toHaveAttribute('aria-describedby', 'read-only-note');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[72/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > opens the create dialog through the ref and returns focus to the trigger on close
+TestingLibraryElementError: Unable to find an accessible element with the role "dialog" and name "New Contact Type"
+
+Here are the accessible roles:
+
+  button:
+
+  Name "New Contact Type":
+  [36m<button />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<button>[39m
+    [0mNew Contact Type[0m
+  [36m</button>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx:119:19
+    117|     const { ref } = renderList();
+    118|     act(() => ref.current?.openCreate());
+    119|     expect(screen.getByRole('dialog', { name: 'New Contact Type' })).t…
+       |                   ^
+    120|     await act(async () => {
+    121|       fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[73/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx > ContactTypeList > opens the edit dialog for a row
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Edit Reseller"
+
+Here are the accessible roles:
+
+  button:
+
+  Name "New Contact Type":
+  [36m<button />[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<button>[39m
+    [0mNew Contact Type[0m
+  [36m</button>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx:130:28
+    128|   it('opens the edit dialog for a row', () => {
+    129|     renderList();
+    130|     fireEvent.click(screen.getByRole('button', { name: 'Edit Reseller'…
+       |                            ^
+    131|     expect(screen.getByRole('dialog', { name: 'Edit Reseller' })).toBe…
+    132|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[74/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx > DefaultTagPicker (A11Y-4) > renders real checkboxes in a fieldset with a legend, active tags only
+TestingLibraryElementError: Unable to find an accessible element with the role "group" and name "Default tags"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx:28:19
+     26|       />
+     27|     );
+     28|     expect(screen.getByRole('group', { name: 'Default tags' })).toBeIn…
+       |                   ^
+     29|     expect(screen.getAllByRole('checkbox')).toHaveLength(2);
+     30|     expect(screen.queryByLabelText('Retired')).not.toBeInTheDocument();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[75/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx > DefaultTagPicker (A11Y-4) > toggles a tag on and off
+TestingLibraryElementError: Unable to find an accessible element with the role "checkbox" and name "Tag 1"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx:38:28
+     36|       <DefaultTagPicker tags={tags(2)} value={[]} onChange={onChange} …
+     37|     );
+     38|     fireEvent.click(screen.getByRole('checkbox', { name: 'Tag 1' }));
+       |                            ^
+     39|     expect(onChange).toHaveBeenLastCalledWith(['tag-1']);
+     40|     rerender(<DefaultTagPicker tags={tags(2)} value={['tag-1']} onChan…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[76/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx > DefaultTagPicker (A11Y-4) > at the cap of 10, the rest stay focusable but aria-disabled, with a linked hint and a live message
+TestingLibraryElementError: Unable to find an accessible element with the role "checkbox" and name "Tag 11"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx:51:26
+     49|     render(<DefaultTagPicker tags={all} value={selected} onChange={onC…
+     50|
+     51|     const extra = screen.getByRole('checkbox', { name: 'Tag 11' });
+       |                          ^
+     52|     expect(extra).toHaveAttribute('aria-disabled', 'true');
+     53|     expect(extra).not.toBeDisabled();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[77/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx > DefaultTagPicker (A11Y-4) > explains when there are no tags yet
+TestingLibraryElementError: Unable to find an element with the text: /No tags yet/. This could be because the text is broken up by multiple elements. In this case, you can provide a function for your text matcher to make your matcher more flexible.
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx:67:19
+     65|   it('explains when there are no tags yet', () => {
+     66|     render(<DefaultTagPicker tags={[]} value={[]} onChange={() => unde…
+     67|     expect(screen.getByText(/No tags yet/)).toBeInTheDocument();
+       |                   ^
+     68|   });
+     69|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[78/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx > DefaultTagPicker (A11Y-4) > disables everything when read-only
+TestingLibraryElementError: Unable to find an accessible element with the role "checkbox" and name "Tag 0"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx:72:19
+     70|   it('disables everything when read-only', () => {
+     71|     render(<DefaultTagPicker tags={tags(1)} value={[]} onChange={() =>…
+     72|     expect(screen.getByRole('checkbox', { name: 'Tag 0' })).toBeDisabl…
+       |                   ^
+     73|   });
+     74|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[79/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx > DeleteContactTypeDialog > asks to confirm and focuses Cancel (A11Y-10)
+TestingLibraryElementError: Unable to find an accessible element with the role "alertdialog" and name "Delete Reseller?"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx:42:27
+     40|   it('asks to confirm and focuses Cancel (A11Y-10)', () => {
+     41|     const { onConfirm } = renderDialog();
+     42|     const dialog = screen.getByRole('alertdialog', { name: 'Delete Res…
+       |                           ^
+     43|     expect(dialog).toBeInTheDocument();
+     44|     expect(screen.getByRole('button', { name: 'Cancel' })).toHaveFocus…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[80/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx > DeleteContactTypeDialog > keeps the server refusal inside the dialog as an alert
+TestingLibraryElementError: Unable to find an accessible element with the role "alert"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx:51:26
+     49|   it('keeps the server refusal inside the dialog as an alert', () => {
+     50|     renderDialog({ error: '2 contacts use this type. Deactivate it ins…
+     51|     const alert = screen.getByRole('alert');
+       |                          ^
+     52|     expect(alert).toHaveTextContent('2 contacts use this type');
+     53|     expect(alert.className).toContain('text-red-700');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[81/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx > DeleteContactTypeDialog > disables both buttons while deleting
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Cancel"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx:58:19
+     56|   it('disables both buttons while deleting', () => {
+     57|     renderDialog({ isDeleting: true });
+     58|     expect(screen.getByRole('button', { name: 'Cancel' })).toBeDisable…
+       |                   ^
+     59|     expect(screen.getByRole('button', { name: 'Delete' })).toBeDisable…
+     60|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[82/123]⎯
+
+ FAIL  |web| src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx > DeleteContactTypeDialog > has no axe violations, with and without an error
+TestingLibraryElementError: Unable to find an accessible element with the role "alertdialog"
+
+There are no accessible roles. But there might be some inaccessible roles. If you wish to access them, then set the `hidden` option to `true`. Learn more about this here: https://testing-library.com/docs/dom-testing-library/api-queries#byrole
+
+Ignored nodes: comments, script, style
+[36m<body>[39m
+  [36m<div />[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx:64:27
+     62|   it('has no axe violations, with and without an error', async () => {
+     63|     renderDialog({ error: 'Refused' });
+     64|     const dialog = screen.getByRole('alertdialog');
+       |                           ^
+     65|     const results = await axe.run(dialog, { rules: { 'color-contrast':…
+     66|     expect(results.violations.map((v) => v.id)).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[83/123]⎯
+
+
+ Test Files  17 failed | 2 passed (19)
+      Tests  123 failed | 131 passed (254)
+   Start at  18:37:44
+   Duration  11.88s (transform 1.77s, setup 5.56s, import 4.81s, tests 11.84s, environment 18.86s)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/app/contacts/(list)/contact-types src/components/contacts/__tests__/ContactTypeSelect.test.tsx src/components/contacts/__tests__/ContactTypeBadge.test.tsx src/components/contacts/__tests__/contact-type-colors.test.ts src/app/contacts/[id]/edit src/components/sidebar/__tests__/contacts-config.test.ts src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx src/app/contacts/(list)/__tests__/page.test.tsx src/components/contacts/__tests__/ContactList.contact-types.test.tsx src/components/contacts/__tests__/ContactList.test.tsx src/app/contacts/(list)/new/__tests__/page.test.tsx src/components/contacts/__tests__/ContactForm.test.tsx src/lib/contacts/__tests__/contact-search.test.ts
+# exit: 1

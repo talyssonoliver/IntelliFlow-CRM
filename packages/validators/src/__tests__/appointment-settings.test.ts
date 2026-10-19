@@ -212,9 +212,20 @@ describe('appointment-settings validators', () => {
 
     it('still validates provided fields', () => {
       const result = updateAppointmentSettingsSchema.safeParse({
-        defaultBufferBeforeMinutes: 999,
+        defaultReminderMinutes: 999,
       });
       expect(result.success).toBe(false);
+    });
+
+    it('strips buffers and timezone (edited only on Availability, PG-202 owner Q2)', () => {
+      const result = updateAppointmentSettingsSchema.safeParse({
+        defaultDurationMinutes: 45,
+        defaultBufferBeforeMinutes: 999,
+        defaultBufferAfterMinutes: 10,
+        defaultTimezone: 'Europe/London',
+      });
+      expect(result.success).toBe(true);
+      expect(result.data).toEqual({ defaultDurationMinutes: 45 });
     });
 
     it('partial update with ONLY defaultDurationMinutes does NOT fail cross-field check (AC-004)', () => {

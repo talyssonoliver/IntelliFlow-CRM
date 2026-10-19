@@ -1,0 +1,7 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\db
+> node -e "try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}" && tsc --noEmit && node scripts/fix-prisma-esm.mjs
+
+[fix-prisma-esm] Created 207 .js shim files in generated/prisma/

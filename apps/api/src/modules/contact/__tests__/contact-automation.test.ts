@@ -13,6 +13,7 @@ import {
   capitalizeName,
   normalizePhone,
   notifyContactReassignment,
+  toContactRequiredFieldPayload,
 } from '../contact-automation';
 
 const ON = { normalizePhoneNumbers: true } as const;
@@ -187,5 +188,58 @@ describe('notifyContactReassignment', () => {
       expect(call[0].entityType).toBe('contact');
       expect(call[0].entityId).toBe('contact-1');
     }
+  });
+});
+
+describe('toContactRequiredFieldPayload (PG-205 B14)', () => {
+  it('reads the title field for the jobTitle policy key', () => {
+    expect(
+      toContactRequiredFieldPayload({
+        email: 'a@example.com',
+        phone: '+1555',
+        company: 'Acme',
+        title: 'CTO',
+        ownerId: 'user-1',
+      })
+    ).toEqual({
+      email: 'a@example.com',
+      phone: '+1555',
+      company: 'Acme',
+      jobTitle: 'CTO',
+      ownerId: 'user-1',
+    });
+  });
+
+  it('only carries the fields that are present (update semantics)', () => {
+    const payload = toContactRequiredFieldPayload({ title: '' });
+    expect(payload).toEqual({ jobTitle: '' });
+    expect(Object.prototype.hasOwnProperty.call(payload, 'company')).toBe(false);
+  });
+
+  it('makes a cleared title fail an update when job title is required', () => {
+    expect(() =>
+      assertRequiredContactFields(
+        toContactRequiredFieldPayload({ title: '   ' }),
+        new Set(['jobTitle']),
+        'update'
+      )
+    ).toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
+  });
+
+  it('makes a missing title fail a create when job title is required', () => {
+    expect(() =>
+      assertRequiredContactFields(
+        toContactRequiredFieldPayload({ email: 'a@example.com', ownerId: 'u' }),
+        new Set(['jobTitle']),
+        'create'
+      )
+    ).toThrow(expect.objectContaining({ code: 'BAD_REQUEST' }));
+    expect(() =>
+      assertRequiredContactFields(
+        toContactRequiredFieldPayload({ email: 'a@example.com', ownerId: 'u', title: 'CTO' }),
+        new Set(['jobTitle']),
+        'create'
+      )
+    ).not.toThrow();
   });
 });

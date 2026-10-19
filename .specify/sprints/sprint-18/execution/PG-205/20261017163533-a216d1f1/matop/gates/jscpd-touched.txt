@@ -1,0 +1,10 @@
+26 lines: apps/web/src/app/contacts/(list)/contact-types/components/DeleteContactTypeDialog.tsx:45-70 <-> apps/web/src/app/cases/(list)/case-types/components/DeleteCaseTypeDialog.tsx:45-70
+20 lines: apps/web/src/app/contacts/(list)/contact-types/components/ContactTypeList.tsx:146-165 <-> apps/web/src/app/cases/(list)/case-types/components/CaseTypeList.tsx:111-130
+14 lines: apps/web/src/app/contacts/(list)/new/page.tsx:113-126 <-> apps/web/src/components/contacts/ContactForm.tsx:66-79
+23 lines: apps/web/src/app/contacts/(list)/contact-types/ContactTypesLoading.tsx:11-33 <-> apps/web/src/app/cases/(list)/case-types/CaseTypesLoading.tsx:10-32
+dup lines in apps/web/src/app/contacts/(list)/contact-types/components/DeleteContactTypeDialog.tsx 26
+dup lines in apps/web/src/app/contacts/(list)/contact-types/components/ContactTypeList.tsx 20
+dup lines in apps/web/src/app/contacts/(list)/new/page.tsx 14
+dup lines in apps/web/src/components/contacts/ContactForm.tsx 14
+dup lines in apps/web/src/app/contacts/(list)/contact-types/ContactTypesLoading.tsx 23
+TOTAL duplicated lines in touched files: 97

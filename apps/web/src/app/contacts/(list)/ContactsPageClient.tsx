@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useCallback, useRef, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ConfirmationDialog, toast, Pagination } from '@intelliflow/ui';
 import { PageHeader, SearchFilterBar, type FilterOption } from '@/components/shared';
 import { ContactList, type ContactListProps } from '@/components/contacts';
@@ -13,7 +13,9 @@ import {
   SORT_OPTIONS,
   buildContactListQuery,
   isDefaultContactQuery,
+  segmentToFilter,
 } from '@/lib/contacts/contact-search';
+import { CONTACT_TYPES_STALE_TIME_MS } from '@/components/contacts/ContactTypeSelect';
 import { invalidateContactsCache } from './actions';
 import { revalidateContactCaches } from '../actions';
 
@@ -55,6 +57,27 @@ export default function ContactsPageClient({
   initialData: serverData,
 }: ContactsPageClientProps = {}) {
   const router = useRouter();
+  // PG-205: sidebar segment links (`?segment=partners|vendors|vip`) seed the
+  // Type filter or the server-side VIP tag segment.
+  const segmentParam = useSearchParams()?.get('segment') ?? null;
+  const seeded = segmentToFilter(segmentParam);
+  const [typeFilter, setTypeFilter] = useState(seeded.typeFilter);
+  const [segmentFilter, setSegmentFilter] = useState(seeded.segmentFilter);
+  const [syncedSegment, setSyncedSegment] = useState(segmentParam);
+  const [clearingOwnSegment, setClearingOwnSegment] = useState(false);
+  // A URL change while the page is open re-seeds the filters (a new segment link, or
+  // navigating back to plain /contacts). Clearing the URL ourselves must not wipe the
+  // filter the user just chose.
+  if (segmentParam !== syncedSegment) {
+    setSyncedSegment(segmentParam);
+    setClearingOwnSegment(false);
+    if (segmentParam !== null || !clearingOwnSegment) {
+      setTypeFilter(seeded.typeFilter);
+      setSegmentFilter(seeded.segmentFilter);
+    }
+  }
+  const filtersRef = useRef<HTMLDivElement>(null);
+  const [filterAnnouncement, setFilterAnnouncement] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [departmentFilter, setDepartmentFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -78,6 +101,45 @@ export default function ContactsPageClient({
 
   // tRPC utils for query invalidation
   const utils = api.useUtils();
+
+  // Tenant contact types for the Type filter and the list badges (inactive ones
+  // stay listed so existing contacts keep a readable label).
+  const { data: contactTypesData } = api.contactTypes.listActive.useQuery(
+    { includeInactive: true },
+    { enabled: isAuthenticated && !authLoading, staleTime: CONTACT_TYPES_STALE_TIME_MS }
+  );
+  const contactTypes = useMemo(() => contactTypesData ?? [], [contactTypesData]);
+  const typeOptions: FilterOption[] = useMemo(
+    () =>
+      contactTypes.map((type) => ({
+        value: type.key,
+        label: type.isActive ? type.name : `${type.name} (inactive)`,
+      })),
+    [contactTypes]
+  );
+
+  // Leaving a segment link's view: drop `?segment=` so a reload shows what is on screen.
+  const clearSegmentFromUrl = () => {
+    if (segmentParam === null) return;
+    setClearingOwnSegment(true);
+    router.replace('/contacts');
+  };
+
+  const handleTypeChange = (value: string) => {
+    setTypeFilter(value);
+    clearSegmentFromUrl();
+  };
+
+  const removeVipSegment = () => {
+    setSegmentFilter('');
+    clearSegmentFromUrl();
+    setFilterAnnouncement('Filter removed: VIP');
+    // The chip is gone; move focus to the Type filter, found by its label.
+    const label = Array.from(filtersRef.current?.querySelectorAll('label') ?? []).find(
+      (el) => el.textContent?.trim() === 'Type'
+    );
+    if (label?.htmlFor) document.getElementById(label.htmlFor)?.focus();
+  };
 
   // Dynamic filter options - updates based on current filter state
   const { statusOptions, departmentOptions, accountOptions } = useContactFilterOptions({
@@ -128,6 +190,8 @@ export default function ContactsPageClient({
     statusFilter,
     companyFilter,
     sortOrder,
+    typeFilter,
+    segmentFilter,
   };
 
   // Use server-prefetched data for initial render (page 1, no filters, newest sort)
@@ -204,7 +268,15 @@ export default function ContactsPageClient({
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, departmentFilter, statusFilter, companyFilter, sortOrder]);
+  }, [
+    debouncedSearch,
+    departmentFilter,
+    statusFilter,
+    companyFilter,
+    sortOrder,
+    typeFilter,
+    segmentFilter,
+  ]);
 
   // Extract contacts from API response
   const contacts = data?.contacts ?? [];
@@ -338,43 +410,73 @@ export default function ContactsPageClient({
       />
 
       {/* Search and Filters */}
-      <SearchFilterBar
-        searchValue={searchQuery}
-        onSearchChange={handleSearch}
-        searchPlaceholder="Search contacts by name, email, or company..."
-        searchAriaLabel="Search contacts"
-        filters={[
-          {
-            id: 'status',
-            label: 'Status',
-            icon: 'toggle_on',
-            options: statusOptions,
-            value: statusFilter,
-            onChange: setStatusFilter,
-          },
-          {
-            id: 'company',
-            label: 'Company',
-            icon: 'domain',
-            options: accountOptions,
-            value: companyFilter,
-            onChange: setCompanyFilter,
-          },
-          {
-            id: 'department',
-            label: 'Department',
-            icon: 'work',
-            options: departmentOptions,
-            value: departmentFilter,
-            onChange: setDepartmentFilter,
-          },
-        ]}
-        sort={{
-          options: SORT_OPTIONS,
-          value: sortOrder,
-          onChange: setSortOrder,
-        }}
-      />
+      <div ref={filtersRef} className="flex flex-col gap-3">
+        <SearchFilterBar
+          searchValue={searchQuery}
+          onSearchChange={handleSearch}
+          searchPlaceholder="Search contacts by name, email, or company..."
+          searchAriaLabel="Search contacts"
+          filters={[
+            {
+              id: 'status',
+              label: 'Status',
+              icon: 'toggle_on',
+              options: statusOptions,
+              value: statusFilter,
+              onChange: setStatusFilter,
+            },
+            {
+              id: 'company',
+              label: 'Company',
+              icon: 'domain',
+              options: accountOptions,
+              value: companyFilter,
+              onChange: setCompanyFilter,
+            },
+            {
+              id: 'department',
+              label: 'Department',
+              icon: 'work',
+              options: departmentOptions,
+              value: departmentFilter,
+              onChange: setDepartmentFilter,
+            },
+            {
+              id: 'type',
+              label: 'Type',
+              icon: 'badge',
+              options: typeOptions,
+              value: typeFilter,
+              onChange: handleTypeChange,
+            },
+          ]}
+          sort={{
+            options: SORT_OPTIONS,
+            value: sortOrder,
+            onChange: setSortOrder,
+          }}
+        />
+        {segmentFilter === 'vip' && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 py-1 pl-3 pr-1 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200">
+              <span>Segment: VIP</span>
+              <button
+                type="button"
+                onClick={removeVipSegment}
+                aria-label="Remove filter: VIP"
+                className="inline-flex h-6 w-6 items-center justify-center rounded-full hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:hover:bg-slate-700"
+              >
+                <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                  close
+                </span>
+              </button>
+            </span>
+          </div>
+        )}
+        <output aria-live="polite" className="sr-only">
+          {filterAnnouncement}
+        </output>
+      </div>
 
       {/* Redirecting State for Auth Errors */}
       {error && isAuthError && !isLoading && (
@@ -420,6 +522,7 @@ export default function ContactsPageClient({
       {!error && (
         <ContactList
           contacts={contacts as ContactListProps['contacts']}
+          contactTypes={contactTypes}
           total={totalItems}
           isLoading={isLoading}
           onRowClick={(contact) => router.push(`/contacts/${contact.id}`)}

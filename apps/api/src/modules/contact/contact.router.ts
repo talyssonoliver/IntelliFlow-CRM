@@ -26,7 +26,14 @@ import {
   loadContactAutomation,
   loadRequiredContactFields,
   normalizePhone,
+  toContactRequiredFieldPayload,
 } from './contact-automation';
+import {
+  assertContactTypeOnUpdate,
+  assertTypeRequiredOnCreate,
+  resolveContactTypeForCreate,
+  resolveVipTagSpellings,
+} from './contact-type-resolver';
 import {
   createContactSchema,
   updateContactSchema,
@@ -109,7 +116,8 @@ type UpdateContactData = Record<string, unknown> & {
   zipCode?: string;
   company?: string;
   linkedInUrl?: string;
-  contactType?: string;
+  /** null removes the contact's type (PG-205). */
+  contactType?: string | null;
   tags?: string[];
   contactNotes?: string;
 };
@@ -155,8 +163,10 @@ function buildContactListWhere(filters: {
   ownerId?: string;
   department?: string;
   status?: string;
+  contactType?: string;
+  tagsAnyOf?: string[];
 }): Record<string, unknown> {
-  const { search, accountId, ownerId, department, status } = filters;
+  const { search, accountId, ownerId, department, status, contactType, tagsAnyOf } = filters;
   const baseWhere: Record<string, unknown> = {};
 
   if (search) {
@@ -173,6 +183,9 @@ function buildContactListWhere(filters: {
   if (ownerId) baseWhere.ownerId = ownerId;
   if (department) baseWhere.department = { contains: department, mode: 'insensitive' };
   if (status) baseWhere.status = status;
+  // PG-205: contact type filter and the VIP segment (tag spellings resolved by the caller).
+  if (contactType) baseWhere.contactType = contactType;
+  if (tagsAnyOf) baseWhere.tags = { hasSome: tagsAnyOf };
 
   return baseWhere;
 }
@@ -266,32 +279,35 @@ async function handleDisassociateAccount(
 ): Promise<void> {
   const result = await contactService.disassociateFromAccount(id, userId);
   if (result.isFailure && !result.error.message.includes('not associated')) {
-    const msg = result.error.message;
-    throw new TRPCError({
-      code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
-      message: msg,
-    });
+    throwAccountChangeError(result.error.message);
   }
 }
 
 /**
- * Handle account association (non-null accountId) in update
+ * Link an account in update, or replace the linked one (PG-205). A replace is one
+ * service call that checks the target in the tenant and saves once, so a failure
+ * never leaves the contact unlinked.
  */
-async function handleAssociateAccount(
+async function handleLinkOrReplaceAccount(
   contactService: ReturnType<typeof getContactService>,
   id: string,
   accountId: string,
+  storedAccountId: string | null | undefined,
   userId: string,
   tenantId: string
 ): Promise<void> {
-  const result = await contactService.associateWithAccount(id, accountId, userId, tenantId);
-  if (result.isFailure) {
-    const msg = result.error.message;
-    throw new TRPCError({
-      code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
-      message: msg,
-    });
-  }
+  if (accountId === storedAccountId) return;
+  const result = storedAccountId
+    ? await contactService.replaceAccount(id, accountId, userId, tenantId)
+    : await contactService.associateWithAccount(id, accountId, userId, tenantId);
+  if (result.isFailure) throwAccountChangeError(result.error.message);
+}
+
+function throwAccountChangeError(msg: string): never {
+  throw new TRPCError({
+    code: msg.includes('not found') ? 'NOT_FOUND' : 'BAD_REQUEST',
+    message: msg,
+  });
 }
 
 /**
@@ -398,21 +414,31 @@ function extractRawPhone(phone: { value: string } | null | undefined): string | 
   return phone.value;
 }
 
+/** The update's changed fields that a required-field rule can check (only those sent). */
 function buildContactCheckFields(
-  data: { company?: string | null; jobTitle?: string | null; ownerId?: string | null },
+  data: { company?: string | null; title?: string | null; department?: string | null },
   rawPhone: string | null | undefined
 ): {
   phone?: string | null;
   company?: string | null;
-  jobTitle?: string | null;
-  ownerId?: string | null;
+  title?: string | null;
+  department?: string | null;
 } {
   return {
     ...(rawPhone !== undefined ? { phone: rawPhone } : {}),
     ...(data.company !== undefined ? { company: data.company } : {}),
-    ...(data.jobTitle !== undefined ? { jobTitle: data.jobTitle } : {}),
-    ...(data.ownerId !== undefined ? { ownerId: data.ownerId } : {}),
+    ...(data.title !== undefined ? { title: data.title } : {}),
+    ...(data.department !== undefined ? { department: data.department } : {}),
   };
+}
+
+interface StoredContactTypeFields {
+  contactType?: string | null;
+  phone?: string | null;
+  company?: string | null;
+  title?: string | null;
+  department?: string | null;
+  accountId?: string | null;
 }
 
 function buildHygienedContactData(
@@ -467,22 +493,6 @@ async function applyContactInfoUpdates(
   }
 }
 
-/** Handle account association change (associate, disassociate, or no-op). */
-async function applyContactAccountChange(
-  contactService: ReturnType<typeof getContactService>,
-  id: string,
-  accountId: string | null | undefined,
-  userId: string,
-  tenantId: string
-): Promise<void> {
-  if (accountId === undefined) return;
-  if (accountId === null) {
-    await handleDisassociateAccount(contactService, id, userId);
-  } else {
-    await handleAssociateAccount(contactService, id, accountId, userId, tenantId);
-  }
-}
-
 // ─── Extracted procedure handlers ───────────────────────────────────────────
 
 async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
@@ -506,13 +516,28 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
   // Phone arrives as PhoneNumber VO; unwrap to plain string for the hygiene helpers.
   const rawPhone = extractRawPhone(data.phone as { value: string } | null | undefined);
 
-  assertRequiredContactFields(
-    buildContactCheckFields(
-      data as { company?: string | null; jobTitle?: string | null; ownerId?: string | null },
-      rawPhone
-    ),
-    requiredFields,
-    'update'
+  const checkFields = buildContactCheckFields(
+    data as { company?: string | null; title?: string | null; department?: string | null },
+    rawPhone
+  );
+  // PG-205 B14: the tenant `jobTitle` rule checks the `title` field.
+  assertRequiredContactFields(toContactRequiredFieldPayload(checkFields), requiredFields, 'update');
+
+  // PG-205: a changed type must be active in this tenant; the effective type's
+  // required fields are checked (defaults are never re-applied on update).
+  const stored = beforeContact as StoredContactTypeFields | null;
+  await assertContactTypeOnUpdate(
+    typedCtx,
+    stored?.contactType,
+    data.contactType,
+    {
+      phone: stored?.phone,
+      company: stored?.company,
+      title: stored?.title,
+      department: stored?.department,
+      accountId: stored?.accountId,
+    },
+    { ...checkFields, ...(accountId !== undefined ? { accountId } : {}) }
   );
 
   const hygienedData = buildHygienedContactData(data as UpdateContactData, rawPhone, flags);
@@ -538,19 +563,25 @@ async function handleContactUpdate(ctx: Context, input: UpdateContactInput) {
     }
   }
 
-  await applyContactInfoUpdates(
-    contactService,
-    id,
-    hygienedData as UpdateContactData,
-    typedCtx.tenant.userId
-  );
-  await applyContactAccountChange(
-    contactService,
-    id,
-    accountId,
-    typedCtx.tenant.userId,
-    typedCtx.tenant.tenantId
-  );
+  // The two saves are ordered so a failure between them never leaves a contact type
+  // without an account it requires: a link (or replace) runs before the other fields,
+  // an unlink after them (once a type that needs the account has been changed).
+  const { userId, tenantId } = typedCtx.tenant;
+  const storedAccountId = beforeContact?.accountId;
+  if (accountId) {
+    await handleLinkOrReplaceAccount(
+      contactService,
+      id,
+      accountId,
+      storedAccountId,
+      userId,
+      tenantId
+    );
+  }
+  await applyContactInfoUpdates(contactService, id, hygienedData as UpdateContactData, userId);
+  if (accountId === null && storedAccountId !== null) {
+    await handleDisassociateAccount(contactService, id, userId);
+  }
 
   // Fetch updated contact
   const updatedResult = await contactService.getContactById(id);
@@ -598,6 +629,17 @@ export const contactRouter = createTRPCRouter({
     const typedCtx = getTenantContext(ctx);
     const contactService = getContactService(ctx);
 
+    // PG-205: an unknown/inactive type is rejected before any quota side effect; the
+    // type's defaults (explicit input first) are resolved here (ADR-080).
+    const typeResolution = await resolveContactTypeForCreate(typedCtx, {
+      contactType: input.contactType,
+      status: input.status,
+      department: input.department,
+      tags: input.tags,
+      accountId: input.accountId,
+    });
+    const typeDefaults = typeResolution.defaults;
+
     // Per-tenant metering: reject before any hygiene/duplicate work when the plan is full.
     await assertQuota(ctx, typedCtx.tenant.tenantId, 'contacts');
 
@@ -613,17 +655,26 @@ export const contactRouter = createTRPCRouter({
     // and the required-fields check both see the raw value.
     const rawPhone: string | null = input.phone ? input.phone.value : null;
 
+    // PG-205 B14: the tenant `jobTitle` rule checks the `title` field.
     assertRequiredContactFields(
-      {
+      toContactRequiredFieldPayload({
         email: input.email,
         phone: rawPhone,
-        company: (input as { company?: string | null }).company,
-        jobTitle: (input as { jobTitle?: string | null }).jobTitle,
-        ownerId: typedCtx.tenant.userId, // always satisfied for create — owner is caller
-      },
+        company: input.company,
+        title: input.title,
+        ownerId: typeDefaults.ownerId,
+      }),
       requiredFields,
       'create'
     );
+    // PG-205: the type's own required fields, after its defaults are applied.
+    assertTypeRequiredOnCreate(typeResolution.type, {
+      phone: rawPhone,
+      company: input.company,
+      title: input.title,
+      department: typeDefaults.department,
+      accountId: input.accountId,
+    });
 
     const normalizedPhone = normalizePhone(rawPhone, flags);
 
@@ -635,6 +686,14 @@ export const contactRouter = createTRPCRouter({
       // Pass the normalized string (service will re-wrap via PhoneNumber.create)
       // or omit the key entirely when we normalized to "no phone".
       phone: normalizedPhone ?? undefined,
+      // PG-205: a chosen type fills blank status/department and adds its default tags.
+      ...(typeResolution.type
+        ? {
+            status: typeDefaults.status,
+            department: typeDefaults.department,
+            tags: typeDefaults.tags,
+          }
+        : {}),
     };
 
     // IFC-310: Duplicate-detection runtime — reads ContactDuplicateRule rows,
@@ -671,7 +730,8 @@ export const contactRouter = createTRPCRouter({
     const result = await withQuotaLock(ctx, typedCtx.tenant.tenantId, 'contacts', 1, () =>
       contactService.createContact({
         ...hygieneInput,
-        ownerId: typedCtx.tenant.userId,
+        // Creator, or the account owner when the type says so (never client input).
+        ownerId: typeDefaults.ownerId,
         tenantId: typedCtx.tenant.tenantId,
       })
     );
@@ -740,6 +800,10 @@ export const contactRouter = createTRPCRouter({
             email: result.value.email.value,
             status: result.value.status,
             company: (result.value as unknown as Record<string, unknown>).company ?? null,
+            // PG-205: the type and which fields it filled (names only, never values).
+            contactType: input.contactType ?? null,
+            appliedDefaults: typeDefaults.appliedDefaults,
+            ownerFallback: typeDefaults.ownerFallback,
           },
         })
         .catch(logContactAuditFailure);
@@ -1012,16 +1076,29 @@ export const contactRouter = createTRPCRouter({
       ownerId,
       department,
       status,
+      contactType,
+      segment,
       sortBy = 'createdAt',
       sortOrder = 'desc',
     } = input;
 
     const skip = (page - 1) * limit;
 
+    // PG-205: the sidebar VIP segment = contacts tagged "vip" (any tenant spelling).
+    const tagsAnyOf = segment === 'vip' ? await resolveVipTagSpellings(typedCtx) : undefined;
+
     // Apply tenant filtering
     const where = createTenantWhereClause(
       typedCtx.tenant,
-      buildContactListWhere({ search, accountId, ownerId, department, status })
+      buildContactListWhere({
+        search,
+        accountId,
+        ownerId,
+        department,
+        status,
+        contactType,
+        tagsAnyOf,
+      })
     );
 
     // Execute queries in parallel using tenant-scoped Prisma

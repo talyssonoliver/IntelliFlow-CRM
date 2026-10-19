@@ -1,0 +1,25 @@
+{
+  "duration": {
+    "architecture": 2.7487092,
+    "typecheck": 157.1113236,
+    "coverage": 1337.1262588,
+    "complexity": 607.4478732,
+    "lint": 137.6170168,
+    "circular": 5.026539,
+    "dependencies": 11.9163517,
+    "deadcode": 29.7401598
+  },
+  "taskId": "PG-202",
+  "scope": "Full monorepo",
+  "timestamp": "2026-10-17T22:42:16.3808365+01:00",
+  "mode": "code-review",
+  "sprint": 18,
+  "reportPath": ".specify/sprints/sprint-18/reports/code-review/20261017-220406-dea610e3",
+  "completedAt": "2026-10-17T22:42:16.3807854+01:00",
+  "analysisType": "Full",
+  "linkedToGates": true,
+  "runId": "20261017-220406-dea610e3",
+  "startedAt": "2026-10-17T22:04:06.9345650+01:00",
+  "gatesDir": ".specify/sprints/sprint-18/execution/PG-202/20261017-220406-dea610e3/matop/gates",
+  "totalPackages": 26
+}

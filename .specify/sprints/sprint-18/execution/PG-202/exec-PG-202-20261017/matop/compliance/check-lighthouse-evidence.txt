@@ -1,0 +1,19 @@
+[lighthouse-evidence] Found 1 Lighthouse KPI(s). Verifying evidence…
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  BLOCK: Lighthouse evidence artifact check (Guard 9)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Task: PG-202  Sprint: sprint-18
+  Attestation: .specify/sprints/sprint-18/attestations/PG-202/attestation.json
+
+    - KPI "Lighthouse >= 90 on /calendar/availability (GATE:lighthouse-gte-90, AC-025)" is met:false but attestation has no lighthouse_waiver_approved_by with a real human identity. Either run Lighthouse and update met:true, or set lighthouse_waiver_approved_by to an email or @handle (not CI / bot / Claude / self).
+
+  Run the playbook recipe before waiving:
+    docs/claude-refs/lighthouse-playbook.md
+
+  Prior successful runs on THIS host (cite by name when challenging):
+    artifacts/lighthouse/pg-195-post-subset-404.json  (perf 0.96, 2026-04-15)
+    artifacts/lighthouse/PG-054/404-ctrl.json         (perf 0.96, 2026-04-19)
+    artifacts/lighthouse/pg-056-500-r{1,2,3}.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

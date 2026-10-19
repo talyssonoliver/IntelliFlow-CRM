@@ -9,6 +9,7 @@
  */
 
 import type { ContactAutomationSetting } from '@intelliflow/db';
+import { CONTACT_POLICY_FIELD_TO_COLUMN } from '@intelliflow/domain';
 import { TRPCError } from '@trpc/server';
 
 export interface ContactAutomationFlags {
@@ -243,6 +244,27 @@ export function assertRequiredContactFields(
     code: 'BAD_REQUEST',
     message: `Required field(s) missing per tenant policy: ${missing.join(', ')}. Update the contact, or relax the policy in Contact Settings → Required Fields.`,
   });
+}
+
+/**
+ * Contact field values → the required-field payload keyed by the tenant policy
+ * keys. The `jobTitle` policy key reads the `title` field: contacts have no
+ * `jobTitle` field, so a "job title required" rule used to block every create
+ * and never fire on update (PG-205 B14). Only fields present in `values` are
+ * carried, so update mode keeps its "untouched field is never flagged" rule.
+ */
+export function toContactRequiredFieldPayload(
+  values: Partial<
+    Record<(typeof CONTACT_POLICY_FIELD_TO_COLUMN)[ContactFieldKey], string | null | undefined>
+  >
+): ContactRequiredFieldPayload {
+  const payload: ContactRequiredFieldPayload = {};
+  for (const [policyKey, column] of Object.entries(CONTACT_POLICY_FIELD_TO_COLUMN) as Array<
+    [ContactFieldKey, (typeof CONTACT_POLICY_FIELD_TO_COLUMN)[ContactFieldKey]]
+  >) {
+    if (Object.prototype.hasOwnProperty.call(values, column)) payload[policyKey] = values[column];
+  }
+  return payload;
 }
 
 // ─── Admin-only tag creation ────────────────────────────────────────────────

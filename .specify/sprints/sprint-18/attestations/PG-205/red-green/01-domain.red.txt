@@ -1,0 +1,630 @@
+# 2026-10-17T16:39:21Z HEAD d8ae42d01 (+ uncommitted RED tests and stubs)
+# cmd: pnpm --filter ./packages/domain exec vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/packages/domain
+
+ ❯ |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts (35 tests | 29 failed) 20ms
+     × pins the admin role list (CA-3) 6ms
+     × isContactTypeAdminRole accepts only the admin roles 1ms
+     × type required fields are real contact columns (no jobTitle) 1ms
+     × maps the tenant policy key jobTitle to the real title column (B14) 0ms
+     × exposes the owner rules and limits 1ms
+     × treats the six seed keys as reserved 0ms
+     × accepts the six seed keys and suffixed keys 0ms
+     × slugifies a name 0ms
+     × never returns a reserved key 0ms
+     × adds a numeric suffix on collision 0ms
+     × falls back to "type" when the slug is empty or starts with a digit 0ms
+     × strips accents and keeps the key within 40 characters 0ms
+     × keeps suffixed keys within 40 characters 1ms
+     × uses nothing when no type is chosen 0ms
+     × fills blank status and department from the type 0ms
+     × keeps explicit input over the type defaults 0ms
+     × treats a blank department as not given 0ms
+     × ACCOUNT_OWNER uses a valid same-tenant account owner 0ms
+     × ACCOUNT_OWNER falls back to the creator: {"linked":false,"ownerId":null,"ownerValid":false} → no_account 0ms
+     × ACCOUNT_OWNER falls back to the creator: {"linked":true,"ownerId":null,"ownerValid":false} → no_account_owner 0ms
+     × ACCOUNT_OWNER falls back to the creator: {"linked":true,"ownerId":"user-gone","ownerValid":false} → account_owner_invalid 0ms
+     × CREATOR never consults the account 0ms
+     × merges default tags with input tags, case-insensitive, first spelling wins 0ms
+     × caps merged tags at 20 1ms
+     × does not report tags as applied when every default was already present 0ms
+     × returns only the allowlisted keys (no mass assignment) 0ms
+     × reports blank or absent required columns in key order 0ms
+     × ignores unknown keys stored on a type 0ms
+     × returns nothing when every required field is filled 0ms
+ ❯ |domain| src/crm/contact/__tests__/Contact.additional.test.ts (62 tests | 2 failed) 24ms
+       × rejects a malformed key on create 5ms
+       × rejects a malformed key on update and leaves the stored key untouched 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 31 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > contact type constants > pins the admin role list (CA-3)
+AssertionError: expected [] to deeply equal [ 'ADMIN', 'MANAGER', 'OWNER', …(1) ]
+
+- Expected
++ Received
+
+- [
+-   "ADMIN",
+-   "MANAGER",
+-   "OWNER",
+-   "SUPER_ADMIN",
+- ]
++ []
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:36:43
+     34| describe('contact type constants', () => {
+     35|   it('pins the admin role list (CA-3)', () => {
+     36|     expect([...CONTACT_TYPE_ADMIN_ROLES]).toEqual(['ADMIN', 'MANAGER',…
+       |                                           ^
+     37|   });
+     38|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > contact type constants > isContactTypeAdminRole accepts only the admin roles
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:40:45
+     38|
+     39|   it('isContactTypeAdminRole accepts only the admin roles', () => {
+     40|     expect(isContactTypeAdminRole('ADMIN')).toBe(true);
+       |                                             ^
+     41|     expect(isContactTypeAdminRole('MANAGER')).toBe(true);
+     42|     expect(isContactTypeAdminRole('OWNER')).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > contact type constants > type required fields are real contact columns (no jobTitle)
+AssertionError: expected [] to deeply equal [ 'phone', 'company', 'title', …(2) ]
+
+- Expected
++ Received
+
+- [
+-   "phone",
+-   "company",
+-   "title",
+-   "department",
+-   "accountId",
+- ]
++ []
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:50:51
+     48|
+     49|   it('type required fields are real contact columns (no jobTitle)', ()…
+     50|     expect([...CONTACT_TYPE_REQUIRED_FIELD_KEYS]).toEqual([
+       |                                                   ^
+     51|       'phone',
+     52|       'company',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > contact type constants > maps the tenant policy key jobTitle to the real title column (B14)
+AssertionError: expected undefined to be 'title' // Object.is equality
+
+- Expected:
+"title"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:60:53
+     58|
+     59|   it('maps the tenant policy key jobTitle to the real title column (B1…
+     60|     expect(CONTACT_POLICY_FIELD_TO_COLUMN.jobTitle).toBe('title');
+       |                                                     ^
+     61|     expect(CONTACT_POLICY_FIELD_TO_COLUMN.email).toBe('email');
+     62|     expect(CONTACT_POLICY_FIELD_TO_COLUMN.phone).toBe('phone');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > contact type constants > exposes the owner rules and limits
+AssertionError: expected [] to deeply equal [ 'CREATOR', 'ACCOUNT_OWNER' ]
+
+- Expected
++ Received
+
+- [
+-   "CREATOR",
+-   "ACCOUNT_OWNER",
+- ]
++ []
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:68:46
+     66|
+     67|   it('exposes the owner rules and limits', () => {
+     68|     expect([...CONTACT_TYPE_OWNER_DEFAULTS]).toEqual(['CREATOR', 'ACCO…
+       |                                              ^
+     69|     expect(CONTACT_TYPE_LIMITS).toEqual({
+     70|       maxTypesPerTenant: 50,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > contact type constants > treats the six seed keys as reserved
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:80:76
+     78|
+     79|   it('treats the six seed keys as reserved', () => {
+     80|     for (const key of CONTACT_TYPES) expect(isReservedContactTypeKey(k…
+       |                                                                            ^
+     81|     expect(isReservedContactTypeKey('customer_2')).toBe(false);
+     82|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > contact type key format > accepts the six seed keys and suffixed keys
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:87:73
+     85| describe('contact type key format', () => {
+     86|   it('accepts the six seed keys and suffixed keys', () => {
+     87|     for (const key of CONTACT_TYPES) expect(isValidContactTypeKey(key)…
+       |                                                                         ^
+     88|     expect(isValidContactTypeKey('customer_2')).toBe(true);
+     89|     expect(CONTACT_TYPE_KEY_PATTERN.test('a'.repeat(40))).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > generateContactTypeKey > slugifies a name
+AssertionError: expected '' to be 'channel_partner' // Object.is equality
+
+- Expected
++ Received
+
+- channel_partner
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:102:66
+    100| describe('generateContactTypeKey', () => {
+    101|   it('slugifies a name', () => {
+    102|     expect(generateContactTypeKey('Channel Partner', new Set())).toBe(…
+       |                                                                  ^
+    103|   });
+    104|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > generateContactTypeKey > never returns a reserved key
+AssertionError: expected '' to be 'customer_2' // Object.is equality
+
+- Expected
++ Received
+
+- customer_2
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:106:59
+    104|
+    105|   it('never returns a reserved key', () => {
+    106|     expect(generateContactTypeKey('Customer', new Set())).toBe('custom…
+       |                                                           ^
+    107|     expect(generateContactTypeKey('  OTHER ', new Set())).toBe('other_…
+    108|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > generateContactTypeKey > adds a numeric suffix on collision
+AssertionError: expected '' to be 'reseller_3' // Object.is equality
+
+- Expected
++ Received
+
+- reseller_3
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:112:55
+    110|   it('adds a numeric suffix on collision', () => {
+    111|     const taken = new Set(['reseller', 'reseller_2']);
+    112|     expect(generateContactTypeKey('Reseller', taken)).toBe('reseller_3…
+       |                                                       ^
+    113|   });
+    114|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > generateContactTypeKey > falls back to "type" when the slug is empty or starts with a digit
+AssertionError: expected '' to be 'type' // Object.is equality
+
+- Expected
++ Received
+
+- type
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:116:54
+    114|
+    115|   it('falls back to "type" when the slug is empty or starts with a dig…
+    116|     expect(generateContactTypeKey('!!!', new Set())).toBe('type');
+       |                                                      ^
+    117|     expect(generateContactTypeKey('2nd tier', new Set())).toBe('type_2…
+    118|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > generateContactTypeKey > strips accents and keeps the key within 40 characters
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:122:55
+    120|   it('strips accents and keeps the key within 40 characters', () => {
+    121|     const key = generateContactTypeKey('Fournisseur privilégié ' + 'x'…
+    122|     expect(key.startsWith('fournisseur_privilegie_')).toBe(true);
+       |                                                       ^
+    123|     expect(key.length).toBeLessThanOrEqual(40);
+    124|     expect(isValidContactTypeKey(key)).toBe(true);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > generateContactTypeKey > keeps suffixed keys within 40 characters
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:131:32
+    129|     const key = generateContactTypeKey(base, new Set([base]));
+    130|     expect(key.length).toBeLessThanOrEqual(40);
+    131|     expect(key.endsWith('_2')).toBe(true);
+       |                                ^
+    132|   });
+    133| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > uses nothing when no type is chosen
+AssertionError: expected undefined to be 'user-creator' // Object.is equality
+
+- Expected:
+"user-creator"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:140:23
+    138|     expect(r.status).toBeUndefined();
+    139|     expect(r.department).toBeUndefined();
+    140|     expect(r.ownerId).toBe('user-creator');
+       |                       ^
+    141|     expect(r.ownerSource).toBe('creator');
+    142|     expect(r.ownerFallback).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > fills blank status and department from the type
+AssertionError: expected undefined to be 'PROSPECT' // Object.is equality
+
+- Expected:
+"PROSPECT"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:149:22
+    147|   it('fills blank status and department from the type', () => {
+    148|     const r = resolveContactCreateDefaults(args({ type: vendorType }));
+    149|     expect(r.status).toBe('PROSPECT');
+       |                      ^
+    150|     expect(r.department).toBe('Procurement');
+    151|     expect(r.appliedDefaults).toEqual(['status', 'department']);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > keeps explicit input over the type defaults
+AssertionError: expected undefined to be 'CUSTOMER' // Object.is equality
+
+- Expected:
+"CUSTOMER"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:158:22
+    156|       args({ type: vendorType, input: { status: 'CUSTOMER', department…
+    157|     );
+    158|     expect(r.status).toBe('CUSTOMER');
+       |                      ^
+    159|     expect(r.department).toBe('Sales');
+    160|     expect(r.appliedDefaults).toEqual([]);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > treats a blank department as not given
+AssertionError: expected undefined to be 'Procurement' // Object.is equality
+
+- Expected:
+"Procurement"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:165:26
+    163|   it('treats a blank department as not given', () => {
+    164|     const r = resolveContactCreateDefaults(args({ type: vendorType, in…
+    165|     expect(r.department).toBe('Procurement');
+       |                          ^
+    166|   });
+    167|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > ACCOUNT_OWNER uses a valid same-tenant account owner
+AssertionError: expected undefined to be 'user-account-owner' // Object.is equality
+
+- Expected:
+"user-account-owner"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:175:23
+    173|       })
+    174|     );
+    175|     expect(r.ownerId).toBe('user-account-owner');
+       |                       ^
+    176|     expect(r.ownerSource).toBe('account_owner');
+    177|     expect(r.ownerFallback).toBeNull();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > ACCOUNT_OWNER falls back to the creator: {"linked":false,"ownerId":null,"ownerValid":false} → no_account
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > ACCOUNT_OWNER falls back to the creator: {"linked":true,"ownerId":null,"ownerValid":false} → no_account_owner
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > ACCOUNT_OWNER falls back to the creator: {"linked":true,"ownerId":"user-gone","ownerValid":false} → account_owner_invalid
+AssertionError: expected undefined to be 'user-creator' // Object.is equality
+
+- Expected:
+"user-creator"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:189:23
+    187|       args({ type: { ...vendorType, defaultOwner: 'ACCOUNT_OWNER' }, a…
+    188|     );
+    189|     expect(r.ownerId).toBe('user-creator');
+       |                       ^
+    190|     expect(r.ownerSource).toBe('creator');
+    191|     expect(r.ownerFallback).toBe(reason);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > CREATOR never consults the account
+AssertionError: expected undefined to be 'user-creator' // Object.is equality
+
+- Expected:
+"user-creator"
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:199:23
+    197|       args({ type: vendorType, account: { linked: true, ownerId: 'user…
+    198|     );
+    199|     expect(r.ownerId).toBe('user-creator');
+       |                       ^
+    200|     expect(r.ownerFallback).toBeNull();
+    201|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > merges default tags with input tags, case-insensitive, first spelling wins
+AssertionError: expected undefined to deeply equal [ 'VIP', 'west', 'supplier' ]
+
+- Expected:
+[
+  "VIP",
+  "west",
+  "supplier",
+]
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:207:20
+    205|       args({ type: vendorType, input: { tags: ['VIP', 'west'] }, defau…
+    206|     );
+    207|     expect(r.tags).toEqual(['VIP', 'west', 'supplier']);
+       |                    ^
+    208|     expect(r.appliedDefaults).toContain('tags');
+    209|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > caps merged tags at 20
+AssertionError: Target cannot be null or undefined.
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:217:20
+    215|       args({ type: vendorType, input: { tags: input }, defaultTagNames…
+    216|     );
+    217|     expect(r.tags).toHaveLength(20);
+       |                    ^
+    218|     expect(r.tags.slice(18)).toEqual(['d1', 'd2']);
+    219|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > does not report tags as applied when every default was already present
+AssertionError: expected undefined to deeply equal [ 'supplier' ]
+
+- Expected:
+[
+  "supplier",
+]
+
++ Received:
+undefined
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:225:20
+    223|       args({ type: vendorType, input: { tags: ['supplier'] }, defaultT…
+    224|     );
+    225|     expect(r.tags).toEqual(['supplier']);
+       |                    ^
+    226|     expect(r.appliedDefaults).not.toContain('tags');
+    227|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > resolveContactCreateDefaults > returns only the allowlisted keys (no mass assignment)
+AssertionError: expected [] to deeply equal [ 'appliedDefaults', …(6) ]
+
+- Expected
++ Received
+
+- [
+-   "appliedDefaults",
+-   "department",
+-   "ownerFallback",
+-   "ownerId",
+-   "ownerSource",
+-   "status",
+-   "tags",
+- ]
++ []
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:231:35
+    229|   it('returns only the allowlisted keys (no mass assignment)', () => {
+    230|     const r = resolveContactCreateDefaults(args({ type: vendorType }));
+    231|     expect(Object.keys(r).sort()).toEqual(
+       |                                   ^
+    232|       ['appliedDefaults', 'department', 'ownerFallback', 'ownerId', 'o…
+    233|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > missingTypeRequiredFields > reports blank or absent required columns in key order
+AssertionError: expected [ 'stub' ] to deeply equal [ 'phone', 'title' ]
+
+- Expected
++ Received
+
+  [
+-   "phone",
+-   "title",
++   "stub",
+  ]
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:245:7
+    243|         title: null,
+    244|       })
+    245|     ).toEqual(['phone', 'title']);
+       |       ^
+    246|   });
+    247|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > missingTypeRequiredFields > ignores unknown keys stored on a type
+AssertionError: expected [ 'stub' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "stub",
++ ]
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:249:66
+    247|
+    248|   it('ignores unknown keys stored on a type', () => {
+    249|     expect(missingTypeRequiredFields(['jobTitle', 'email'], {})).toEqu…
+       |                                                                  ^
+    250|   });
+    251|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/contact-type-defaults.test.ts > missingTypeRequiredFields > returns nothing when every required field is filled
+AssertionError: expected [ 'stub' ] to deeply equal []
+
+- Expected
++ Received
+
+- []
++ [
++   "stub",
++ ]
+
+ ❯ src/crm/contact/__tests__/contact-type-defaults.test.ts:258:7
+    256|         accountId: 'acc-1',
+    257|       })
+    258|     ).toEqual([]);
+       |       ^
+    259|   });
+    260| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/Contact.additional.test.ts > Contact Aggregate - Additional Coverage > contactType key invariant (PG-205) > rejects a malformed key on create
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/contact/__tests__/Contact.additional.test.ts:869:32
+    867|     it('rejects a malformed key on create', () => {
+    868|       const result = Contact.create({ ...base, contactType: 'Not A Key…
+    869|       expect(result.isFailure).toBe(true);
+       |                                ^
+    870|       expect(result.error).toBeInstanceOf(InvalidContactTypeKeyError);
+    871|       expect(result.error.code).toBe('INVALID_CONTACT_TYPE_KEY');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/31]⎯
+
+ FAIL  |domain| src/crm/contact/__tests__/Contact.additional.test.ts > Contact Aggregate - Additional Coverage > contactType key invariant (PG-205) > rejects a malformed key on update and leaves the stored key untouched
+AssertionError: expected false to be true // Object.is equality
+
+- Expected
++ Received
+
+- true
++ false
+
+ ❯ src/crm/contact/__tests__/Contact.additional.test.ts:877:32
+    875|       const contact = Contact.create({ ...base, contactType: 'vendor' …
+    876|       const result = contact.updateContactInfo({ contactType: 'BAD KEY…
+    877|       expect(result.isFailure).toBe(true);
+       |                                ^
+    878|       expect(result.error).toBeInstanceOf(InvalidContactTypeKeyError);
+    879|       expect(contact.contactType).toBe('vendor');
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/31]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  31 failed | 66 passed (97)
+   Start at  17:39:22
+   Duration  405ms (transform 195ms, setup 0ms, import 262ms, tests 44ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\domain:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/crm/contact/__tests__/contact-type-defaults.test.ts src/crm/contact/__tests__/Contact.additional.test.ts
+# exit: 1

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-17T14:35:58.201Z",
+  "generatedAt": "2026-10-18T15:34:36.853Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -547,10 +547,10 @@
     "totalNumberedSprintTasks": 613,
     "continuousTaskCount": 6,
     "completedTasks": 436,
-    "backlogTasks": 166,
+    "backlogTasks": 164,
     "blockedTasks": 0,
     "completionPercentage": 70.44,
-    "inProgressTasks": 17,
+    "inProgressTasks": 19,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -656,7 +656,7 @@
       },
       {
         "taskId": "PG-202",
-        "status": "Backlog",
+        "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/PG-202/attestation.json"
       },
@@ -668,7 +668,7 @@
       },
       {
         "taskId": "PG-205",
-        "status": "Backlog",
+        "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json"
       },
@@ -1041,39 +1041,6 @@
         }
       },
       {
-        "taskId": "PG-202",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Availability (/calendar/availability)",
-        "description": "Module Settings - Availability (/calendar/availability)",
-        "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /calendar/availability renders; Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented;...",
-        "definitionOfDone": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE: store UTC in DB, display via useTimezoneContext() (memory/project_timezone_refactor.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for overlapping time ranges per weekday; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Route /calendar/availability renders; Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented; UTC-in-DB / useTimezoneContext() display per the timezone refactor; PageHeader+bento grid;...",
-        "dependencies": [
-          "PG-178",
-          "PG-189"
-        ],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/PG-202/attestation.json",
-          "verdict": "INCOMPLETE",
-          "timestamp": "2026-07-25T17:18:29Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "PG-203",
         "sprint": 18,
         "status": "Backlog",
@@ -1090,39 +1057,6 @@
         "attestation": {
           "exists": true,
           "path": ".specify/sprints/sprint-18/attestations/PG-203/attestation.json",
-          "verdict": "INCOMPLETE",
-          "timestamp": "2026-07-25T17:18:29Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-205",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
-        "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
-        "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /contacts/(list)/contact-types renders; Taxonomy:...",
-        "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Route /contacts/(list)/contact-types renders; Taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
-        "dependencies": [
-          "PG-178",
-          "PG-182"
-        ],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json",
           "verdict": "INCOMPLETE",
           "timestamp": "2026-07-25T17:18:29Z",
           "sprintFolder": 18
@@ -1225,6 +1159,72 @@
           "verdict": "INCOMPLETE",
           "timestamp": "2026-07-25T17:18:29Z",
           "sprintFolder": 18
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "PG-209",
+        "sprint": 18,
+        "status": "Backlog",
+        "section": "Settings",
+        "title": "Module Settings - Task Types (/tasks/(list)/task-types)",
+        "description": "Module Settings - Task Types (/tasks/(list)/task-types)",
+        "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /tasks/(list)/task-types renders; Taxonomy: category, default duration, default priority, reminder defaults implemented; PageHeader+bento grid;...",
+        "definitionOfDone": "Task types at /tasks/(list)/task-types (taxonomy: category, default duration, default priority, reminder defaults). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in task automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+        "definitionOfDoneSnapshot": "Route /tasks/(list)/task-types renders; Taxonomy: category, default duration, default priority, reminder defaults implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names;...",
+        "dependencies": [
+          "PG-178",
+          "PG-191"
+        ],
+        "attestation": {
+          "exists": true,
+          "path": ".specify/sprints/sprint-18/attestations/PG-209/attestation.json",
+          "verdict": "INCOMPLETE",
+          "timestamp": "2026-07-25T17:18:29Z",
+          "sprintFolder": 18
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "ENG-OPS-002.R13",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "Engineering Operations",
+        "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+        "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+        "summary": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+        "definitionOfDone": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
+        "definitionOfDoneSnapshot": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+        "dependencies": [
+          "ENG-OPS-002.R02",
+          "ENG-OPS-002.R10"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
         },
         "validationSummary": {
           "total": 0,
@@ -18081,9 +18081,9 @@
       "summarySource": "specify",
       "totalTasks": 67,
       "completedTasks": 57,
-      "backlogTasks": 9,
+      "backlogTasks": 7,
       "blockedTasks": 0,
-      "inProgressTasks": 1,
+      "inProgressTasks": 3,
       "attestedCompletedTasks": 57,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
@@ -18254,6 +18254,72 @@
       ],
       "openTasks": [
         {
+          "taskId": "PG-202",
+          "sprint": 18,
+          "status": "In Progress",
+          "section": "Settings",
+          "title": "Module Settings - Availability (/calendar/availability)",
+          "description": "Module Settings - Availability (/calendar/availability)",
+          "summary": "PRISMA MIGRATION: packages/db/prisma/migrations/20261017130000_availability (Class A, additive; independent SQL review APPROVE; sha256 frozen). Merged, NOT applied:... Availability at /calendar/availability:...",
+          "definitionOfDone": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE: store UTC in DB, display via useTimezoneContext() (memory/project_timezone_refactor.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for overlapping time ranges per weekday; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Availability at /calendar/availability: working hours per weekday, timezone, buffers before/after, max daily bookings, unavailable date ranges; TIMEZONE-REFACTOR-AWARE: instants UTC, wall-clock rules in the firm zone (ADR-081);...",
+          "dependencies": [
+            "PG-178",
+            "PG-189"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-202/attestation.json",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-10-18T11:44:36Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 8,
+            "met": 6,
+            "missed": 2
+          }
+        },
+        {
+          "taskId": "PG-205",
+          "sprint": 18,
+          "status": "In Progress",
+          "section": "Settings",
+          "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+          "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
+          "summary": "PRISMA MIGRATIONS (L13, LOUD): packages/db/prisma/migrations/20261017120000_contact_types and 20261017120100_contacts_type_idx (CREATE INDEX CONCURRENTLY). Class A, additive.......",
+          "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: tenant contact types seeded from the six existing CONTACT_TYPES per owner ruling 2026-10-17 - organisations are Accounts; required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Contact types at /contacts/(list)/contact-types (tenant types seeded from the six CONTACT_TYPES, owner ruling 1; required fields per type, default fields, default labels); PageHeader + bento grid; canonical EmptyState passive; system CTAs;...",
+          "dependencies": [
+            "PG-178",
+            "PG-182"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-10-18T10:43:02Z",
+            "sprintFolder": 18
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 4,
+            "met": 3,
+            "missed": 1
+          }
+        },
+        {
           "taskId": "INFRA-TF-004",
           "sprint": 18,
           "status": "In Progress",
@@ -18333,72 +18399,6 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/PG-199/attestation.json",
-            "verdict": "INCOMPLETE",
-            "timestamp": "2026-07-25T17:18:29Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-202",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Settings",
-          "title": "Module Settings - Availability (/calendar/availability)",
-          "description": "Module Settings - Availability (/calendar/availability)",
-          "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /calendar/availability renders; Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented;...",
-          "definitionOfDone": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE: store UTC in DB, display via useTimezoneContext() (memory/project_timezone_refactor.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for overlapping time ranges per weekday; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Route /calendar/availability renders; Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented; UTC-in-DB / useTimezoneContext() display per the timezone refactor; PageHeader+bento grid;...",
-          "dependencies": [
-            "PG-178",
-            "PG-189"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/PG-202/attestation.json",
-            "verdict": "INCOMPLETE",
-            "timestamp": "2026-07-25T17:18:29Z",
-            "sprintFolder": 18
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "PG-203",
-          "sprint": 18,
-          "status": "Backlog",
-          "section": "Settings",
-          "title": "Module Settings - Event Types (/calendar/event-types)",
-          "description": "Module Settings - Event Types (/calendar/event-types)",
-          "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /calendar/event-types renders; Meeting type definitions:...",
-          "definitionOfDone": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate booking slugs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Route /calendar/event-types renders; Meeting type definitions: duration, color, default description, booking link slug, required form fields, location type implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
-          "dependencies": [
-            "PG-178",
-            "PG-189"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-18/attestations/PG-203/attestation.json",
             "verdict": "INCOMPLETE",
             "timestamp": "2026-07-25T17:18:29Z",
             "sprintFolder": 18
@@ -20155,13 +20155,13 @@
         {
           "taskId": "PG-202",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Settings",
           "title": "Module Settings - Availability (/calendar/availability)",
           "description": "Module Settings - Availability (/calendar/availability)",
-          "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /calendar/availability renders; Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented;...",
+          "summary": "PRISMA MIGRATION: packages/db/prisma/migrations/20261017130000_availability (Class A, additive; independent SQL review APPROVE; sha256 frozen). Merged, NOT applied:... Availability at /calendar/availability:...",
           "definitionOfDone": "Availability at /calendar/availability (working hours per weekday, timezones, buffers before/after, max daily bookings, unavailable date ranges). TIMEZONE-REFACTOR-AWARE: store UTC in DB, display via useTimezoneContext() (memory/project_timezone_refactor.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for overlapping time ranges per weekday; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Route /calendar/availability renders; Working hours per weekday, timezones, buffers, max daily bookings, unavailable ranges implemented; UTC-in-DB / useTimezoneContext() display per the timezone refactor; PageHeader+bento grid;...",
+          "definitionOfDoneSnapshot": "Availability at /calendar/availability: working hours per weekday, timezone, buffers before/after, max daily bookings, unavailable date ranges; TIMEZONE-REFACTOR-AWARE: instants UTC, wall-clock rules in the firm zone (ADR-081);...",
           "dependencies": [
             "PG-178",
             "PG-189"
@@ -20169,20 +20169,20 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/PG-202/attestation.json",
-            "verdict": "INCOMPLETE",
-            "timestamp": "2026-07-25T17:18:29Z",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-10-18T11:44:36Z",
             "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 8,
+            "met": 6,
+            "missed": 2
           }
         },
         {
@@ -20254,13 +20254,13 @@
         {
           "taskId": "PG-205",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Settings",
           "title": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
           "description": "Module Settings - Contact Types (/contacts/(list)/contact-types)",
-          "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /contacts/(list)/contact-types renders; Taxonomy:...",
-          "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Route /contacts/(list)/contact-types renders; Taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
+          "summary": "PRISMA MIGRATIONS (L13, LOUD): packages/db/prisma/migrations/20261017120000_contact_types and 20261017120100_contacts_type_idx (CREATE INDEX CONCURRENTLY). Class A, additive.......",
+          "definitionOfDone": "Contact types at /contacts/(list)/contact-types (taxonomy: tenant contact types seeded from the six existing CONTACT_TYPES per owner ruling 2026-10-17 - organisations are Accounts; required fields per type, default fields, default labels). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate type names; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in contact-automation.ts OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Contact types at /contacts/(list)/contact-types (tenant types seeded from the six CONTACT_TYPES, owner ruling 1; required fields per type, default fields, default labels); PageHeader + bento grid; canonical EmptyState passive; system CTAs;...",
           "dependencies": [
             "PG-178",
             "PG-182"
@@ -20268,20 +20268,20 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/PG-205/attestation.json",
-            "verdict": "INCOMPLETE",
-            "timestamp": "2026-07-25T17:18:29Z",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-10-18T10:43:02Z",
             "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 4,
+            "met": 3,
+            "missed": 1
           }
         },
         {

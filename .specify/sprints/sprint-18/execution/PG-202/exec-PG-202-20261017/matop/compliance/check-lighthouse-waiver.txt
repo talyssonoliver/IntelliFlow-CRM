@@ -1,0 +1,30 @@
+[lighthouse-waiver] Current task has a Lighthouse met:false KPI. Prior waivers in sprint-18: 2
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  BLOCK: Lighthouse waiver cap exceeded
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Task: PG-202  Sprint: sprint-18
+  Attestation: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\.specify\sprints\sprint-18\attestations\PG-202\attestation.json
+
+  This sprint already has 2 COMPLETE attestation(s) with a
+  Lighthouse KPI marked met:false:
+    - PG-180
+    - PG-189
+
+  Sprints 17 and 18 chained six such waivers (PG-047, 053, 054, 056,
+  180, 189) — each citing the previous as precedent, each lowering the
+  bar. The cap applies per-sprint to break that chain.
+
+  Fix options:
+    (a) Run Lighthouse locally for this route. Commit the result to
+        artifacts/lighthouse/PG-202/ and update the KPI to met:true.
+    (b) Get a human approval. Add to attestation.notes:
+          lighthouse_waiver_approved_by: <name-or-email>
+        and explain in the same notes WHY a local run was not possible
+        (e.g., no Chrome binary on the exec host). The named human is
+        accepting the risk that CI-only enforcement may drift.
+
+  Source: .claude/skills/exec/references/phase4-completion-gates.md Gate 13
+  Memory: feedback_ui_reachability_waiver_loophole.md (2026-04-20)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

@@ -245,6 +245,50 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
                     └─────────────────────────────────────────┘
 ```
 
+## Firm Availability Chain (PG-202, ADR-081)
+
+```
+    ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+    ║  FIRM AVAILABILITY (weekly hours, closures, buffers, daily limit)        ✅ IMPLEMENTED   ║
+    ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
+
+    PG-178 (module settings layout) ✅ + PG-189 (appointment settings) ✅
+                                   │
+                                   ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │ Domain: AvailabilityPolicy.ts                                         │
+    │   evaluateAvailability (hours in the firm zone, closures, daily cap)  │
+    │   generateCandidates · localToUtc (DST) · LEGACY_BOOKING_HOURS        │
+    │ availability-roles.ts: AVAILABILITY_ADMIN_ROLES (admins, managers)    │
+    │ Application: CheckConflictsUseCase.findFirstFreeCandidate             │
+    └───────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │ Validators: availability.ts (updateAvailabilitySchema, AvailabilityDto) │
+    │ DB: availability_hours · availability_closures (RLS, tenant FKs)      │
+    │     appointment_settings + maxDailyBookings, availabilityConfiguredAt │
+    │ Migration 20261017130000_availability (Class A, manual prod apply)    │
+    └───────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │ API: calendar.availability.get / update / resetToDefaults             │
+    │      availability-enforcement.ts                                      │
+    │        appointments.create      → assertAppointmentWithinAvailability │
+    │        appointments.reschedule  → assertAppointmentWithinAvailability │
+    │        appointments.findNextSlot → findNextSlotWithinAvailability     │
+    │      Unsaved availability (configuredAt NULL) keeps the legacy rules  │
+    └───────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │ Web: /calendar/availability (AvailabilityContent)                     │
+    │      /calendar/calendar-settings → links to Availability              │
+    │      /appointments/new → firm default buffers, server errors shown    │
+    └───────────────────────────────────────────────────────────────────────┘
+```
+
 ---
 
 ## Missing Tasks Summary (To Create)

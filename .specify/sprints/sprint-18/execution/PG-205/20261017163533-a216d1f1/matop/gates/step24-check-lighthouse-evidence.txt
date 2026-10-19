@@ -1,0 +1,21 @@
+# 2026-10-18T09:13:57Z node tools/scripts/exec-preflight/check-lighthouse-evidence.mjs PG-205 18
+[lighthouse-evidence] Found 1 Lighthouse KPI(s). Verifying evidence…
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  BLOCK: Lighthouse evidence artifact check (Guard 9)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  Task: PG-205  Sprint: sprint-18
+  Attestation: .specify/sprints/sprint-18/attestations/PG-205/attestation.json
+
+    - KPI "Lighthouse (performance/accessibility) on /contacts/contact-types and /contacts/new" is met:false but attestation has no lighthouse_waiver_approved_by with a real human identity. Either run Lighthouse and update met:true, or set lighthouse_waiver_approved_by to an email or @handle (not CI / bot / Claude / self).
+
+  Run the playbook recipe before waiving:
+    docs/claude-refs/lighthouse-playbook.md
+
+  Prior successful runs on THIS host (cite by name when challenging):
+    artifacts/lighthouse/pg-195-post-subset-404.json  (perf 0.96, 2026-04-15)
+    artifacts/lighthouse/PG-054/404-ctrl.json         (perf 0.96, 2026-04-19)
+    artifacts/lighthouse/pg-056-500-r{1,2,3}.json
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# exit: 1

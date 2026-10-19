@@ -4,7 +4,7 @@ import {
   Contact,
   ContactId,
   ContactStatus,
-  ContactType,
+  ContactTypeKey,
   Email,
   ContactRepository,
   AccountRepository,
@@ -131,7 +131,7 @@ export class ContactService {
       zipCode?: string;
       company?: string;
       linkedInUrl?: string;
-      contactType?: ContactType;
+      contactType?: ContactTypeKey | null;
       tags?: string[];
       contactNotes?: string;
     },
@@ -222,6 +222,32 @@ export class ContactService {
     associatedBy: string,
     tenantId: string
   ): Promise<Result<Contact, DomainError>> {
+    return this.changeAccount(contactId, accountId, tenantId, (contact) =>
+      contact.associateWithAccount(accountId, associatedBy)
+    );
+  }
+
+  /**
+   * Replace a linked contact's account with another account in the tenant, in one save (PG-205)
+   */
+  async replaceAccount(
+    contactId: string,
+    accountId: string,
+    replacedBy: string,
+    tenantId: string
+  ): Promise<Result<Contact, DomainError>> {
+    return this.changeAccount(contactId, accountId, tenantId, (contact) =>
+      contact.replaceAccount(accountId, replacedBy)
+    );
+  }
+
+  /** Load the contact and the tenant's target account, apply `change`, save once. */
+  private async changeAccount(
+    contactId: string,
+    accountId: string,
+    tenantId: string,
+    change: (contact: Contact) => Result<void, DomainError>
+  ): Promise<Result<Contact, DomainError>> {
     const contactIdResult = ContactId.create(contactId);
     if (contactIdResult.isFailure) {
       return Result.fail(contactIdResult.error);
@@ -245,9 +271,9 @@ export class ContactService {
       return Result.fail(new ValidationError(`Account not found: ${accountId}`));
     }
 
-    const associateResult = contact.associateWithAccount(accountId, associatedBy);
-    if (associateResult.isFailure) {
-      return Result.fail(associateResult.error);
+    const changeResult = change(contact);
+    if (changeResult.isFailure) {
+      return Result.fail(changeResult.error);
     }
 
     try {

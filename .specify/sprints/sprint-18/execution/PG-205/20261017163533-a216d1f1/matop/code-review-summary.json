@@ -1,0 +1,16 @@
+{
+  "skill": "/code-review (pwsh scripts/code-review-analysis.ps1 -Sprint 18 -TaskId PG-205 -LinkToGates -Quick) + node scripts/prioritize-reviews.js --sprint=18",
+  "run_id": "20261018-094054-f0c501fc",
+  "head": "7319f0d2c",
+  "started_at": "2026-10-18T08:40:53Z",
+  "finished_at": "2026-10-18T08:43:39Z",
+  "exit_code": 0,
+  "mode": "Quick (TypeScript + ESLint). Full mode was not used: its coverage step runs the whole repo's tests outside the test-slot wrapper, which the shared-host rule forbids. Knip, coverage and complexity were measured separately (step19-knip, step19-diff-coverage, sonar-guard cognitive-complexity in the pre-commit hook).",
+  "report_path": ".specify/sprints/sprint-18/reports/code-review/20261018-094054-f0c501fc",
+  "results": {
+    "typecheck": "26 packages, 0 'error TS' lines in typecheck.txt",
+    "lint": "0 eslint problems in lint.txt",
+    "prioritization": "package-review/REVIEW-PRIORITY.md regenerated; priorities reflect package size and missing coverage data, not PG-205 findings"
+  },
+  "diff_level_reviews": "Correctness: codex-review rounds 10-12 (round 12 PASS, re-run at the final SHA). Quality: Step 15 /simplify (4 sub-agents). Accessibility: a11y-expert (PASS_WITH_FIXES, fixed in 7319f0d2c)."
+}

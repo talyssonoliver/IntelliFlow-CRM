@@ -1,0 +1,144 @@
+[36m🔍 IntelliFlow CRM - Artifact Path Linter[0m
+
+Found 6747 files to check
+
+
+================================================================================
+LINTING RESULTS
+================================================================================
+
+[33msonar-small-rules.json[0m
+  [33m⚠ [pii-detected]:27 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:184 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:476 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:515 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:555 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:595 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:634 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:674 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:714 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:753 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:793 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:832 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:869 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:906 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:943 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:980 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1017 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1054 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1091 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1128 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1165 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1202 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1241 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1280 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1319 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1358 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1397 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1436 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1475 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1514 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1553 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1592 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1631 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1670 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1709 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1748 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1788 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1828 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1868 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1908 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1948 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1988 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2027 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2067 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2106 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2145 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2184 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2223 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2262 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2301 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2340 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2379 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2418 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2457 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2496 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2535 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2574 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2613 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2652 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2691 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2730 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2769 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2808 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2847 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2886 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2926 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:2965 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3004 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3043 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3082 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3121 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3160 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3215 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3254 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3293 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3332 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3371 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3410 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3449 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3488 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3527 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3566 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3605 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3644 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3683 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3720 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3759 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3814 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3853 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3908 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:3947 Potential PII detected. Review and sanitize if needed.[0m
+
+[33mapps\api\openapi.json[0m
+  [33m⚠ [pii-detected]:9 Potential PII detected. Review and sanitize if needed.[0m
+
+[33martifacts\coverage\coverage-final.json[0m
+  [33m⚠ [file-size] File size (20.28MB) exceeds limit (20MB). Consider compressing or splitting.[0m
+
+[33martifacts\coverage-parts\root\vitest-result.json[0m
+  [33m⚠ [file-size] File size (20.27MB) exceeds limit (20MB). Consider compressing or splitting.[0m
+
+[33martifacts\coverage-parts\root\coverage-final.json[0m
+  [33m⚠ [file-size] File size (20.27MB) exceeds limit (20MB). Consider compressing or splitting.[0m
+
+[33mapps\web\src\data\security-features.json[0m
+  [33m⚠ [pii-detected]:194 Potential PII detected. Review and sanitize if needed.[0m
+
+[33mapps\web\src\data\pricing-data.json[0m
+  [33m⚠ [pii-detected]:326 Potential PII detected. Review and sanitize if needed.[0m
+
+[33mapps\web\src\data\press-releases.json[0m
+  [33m⚠ [pii-detected]:95 Potential PII detected. Review and sanitize if needed.[0m
+
+[33martifacts\codex-review\codex-prompt.txt[0m
+  [33m⚠ [pii-detected]:143 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:150 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:177 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:184 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1082 Potential PII detected. Review and sanitize if needed.[0m
+  [33m⚠ [pii-detected]:1102 Potential PII detected. Review and sanitize if needed.[0m
+
+[33mapps\ai-worker\STRUCTURE.txt[0m
+  [33m⚠ [pii-detected]:118 Potential PII detected. Review and sanitize if needed.[0m
+
+Statistics:
+  Total files checked: 6747
+  Files with violations: 10
+  Total violations: 105
+  Errors: [31m0[0m
+  Warnings: [33m105[0m
+
+[33m⚠ Linting passed with 105 warning(s)[0m
+
+# exit: 0

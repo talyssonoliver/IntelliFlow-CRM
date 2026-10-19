@@ -1,0 +1,6 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/domain@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\domain
+> tsc --noEmit
+

@@ -1,0 +1,969 @@
+# 2026-10-17T16:58:23Z HEAD bd628081a (+ staged validators, uncommitted RED tests and stubs)
+# cmd: pnpm --filter ./apps/api exec vitest run src/modules/contact/__tests__/contact-type-resolver.test.ts src/modules/contact/__tests__/contact-types.router.test.ts src/__tests__/app-router.smoke.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/api
+
+ ❯ |api| src/modules/contact/__tests__/contact-type-resolver.test.ts (12 tests | 9 failed) 39ms
+     × covers the six seed keys in order with names, colours and sort order 9ms
+     × takes the fast path (no lock, no write) when all six system rows exist 2ms
+     × locks the tenant and creates only the missing system rows, without skipDuplicates 1ms
+     × propagates any other seed failure so the caller aborts 2ms
+     × scopes by tenant and filters inactive types when asked 2ms
+     × can resolve an inactive stored key 1ms
+     × returns the current names of active same-tenant default tags 2ms
+     × rejects other roles with FORBIDDEN and audits the denial 4ms
+     × fails closed when the role is missing 2ms
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > create is FORBIDDEN for a USER and writes nothing
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":2,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > update is FORBIDDEN for a USER and writes nothing
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > delete is FORBIDDEN for a USER and writes nothing
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"delete","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > setDefault is FORBIDDEN for a USER and writes nothing
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > lets a MANAGER write (not ADMIN-only)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > list > returns tenant types in sort order with default tags, contact counts, limits and canEdit
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"list","method":"query","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > list > seeds the system types on first use and reports canEdit for admins
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"list","method":"query","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > listActive > returns active tenant types in picker shape
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"listActive","method":"query","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > listActive > includes inactive types when asked (badges and stored-key labels)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"listActive","method":"query","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > enforces the 50-type cap inside the tenant lock
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > creates the type with a server-generated key and its default tags in one transaction
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > rejects a smuggled tenantId (strict input)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > rejects default tags that are foreign or inactive with one message
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > maps a duplicate name (P2002) to CONFLICT without echoing raw input
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > rethrows other write errors
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > skips the default-tag writes when there are none
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > returns NOT_FOUND for a type of another tenant
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > keeps the default type active
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > updates fields field by field and replaces the default tags in one transaction
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > guards deactivation in the write (concurrent setDefault)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > reports NOT_FOUND when the type vanished during the write
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > maps a duplicate name to CONFLICT
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > returns NOT_FOUND for a type of another tenant
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"delete","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > refuses a system type (deactivate instead)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"delete","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > refuses the default type
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"delete","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > refuses a type that contacts use (count in the same transaction)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"delete","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > deletes an unused custom type and audits it
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"delete","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > reports a concurrent change when nothing was deleted
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"delete","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > returns NOT_FOUND for a type of another tenant
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > refuses an inactive type
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > clears then sets in one transaction
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > clears the default with id null
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > rolls back when the target changed during the write
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > maps a concurrent default change (P2002) to CONFLICT
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"setDefault","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > uses plain tenantProcedure: a tenant with every module denied can still list (CORE_CRM)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"list","method":"query","durationMs":0,"status":"success"}
+
+ ❯ |api| src/modules/contact/__tests__/contact-types.router.test.ts (36 tests | 35 failed) 132ms
+       × create is FORBIDDEN for a USER and writes nothing 17ms
+       × update is FORBIDDEN for a USER and writes nothing 4ms
+       × delete is FORBIDDEN for a USER and writes nothing 2ms
+       × setDefault is FORBIDDEN for a USER and writes nothing 3ms
+       × lets a MANAGER write (not ADMIN-only) 3ms
+       × returns tenant types in sort order with default tags, contact counts, limits and canEdit 3ms
+       × seeds the system types on first use and reports canEdit for admins 2ms
+       × returns active tenant types in picker shape 3ms
+       × includes inactive types when asked (badges and stored-key labels) 3ms
+       × enforces the 50-type cap inside the tenant lock 3ms
+       × creates the type with a server-generated key and its default tags in one transaction 2ms
+       × rejects a smuggled tenantId (strict input) 3ms
+       × rejects default tags that are foreign or inactive with one message 2ms
+       × maps a duplicate name (P2002) to CONFLICT without echoing raw input 2ms
+       × rethrows other write errors 3ms
+       × skips the default-tag writes when there are none 2ms
+       × returns NOT_FOUND for a type of another tenant 2ms
+       × keeps the default type active 2ms
+       × updates fields field by field and replaces the default tags in one transaction 2ms
+       × guards deactivation in the write (concurrent setDefault) 4ms
+       × reports NOT_FOUND when the type vanished during the write 3ms
+       × maps a duplicate name to CONFLICT 3ms
+       × returns NOT_FOUND for a type of another tenant 2ms
+       × refuses a system type (deactivate instead) 2ms
+       × refuses the default type 2ms
+       × refuses a type that contacts use (count in the same transaction) 2ms
+       × deletes an unused custom type and audits it 4ms
+       × reports a concurrent change when nothing was deleted 2ms
+       × returns NOT_FOUND for a type of another tenant 2ms
+       × refuses an inactive type 3ms
+       × clears then sets in one transaction 2ms
+       × clears the default with id null 2ms
+       × rolls back when the target changed during the write 2ms
+       × maps a concurrent default change (P2002) to CONFLICT 3ms
+     × uses plain tenantProcedure: a tenant with every module denied can still list (CORE_CRM) 3ms
+ ❯ |api| src/__tests__/app-router.smoke.test.ts (12 tests | 1 failed) 8655ms
+     × registers the contactTypes router with every procedure (PG-205) 4ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 45 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/__tests__/app-router.smoke.test.ts > appRouter smoke — PG-190 module-settings registration > registers the contactTypes router with every procedure (PG-205)
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/app-router.smoke.test.ts:193:26
+    191|     const contactTypes = record.contactTypes as Record<string, unknown…
+    192|
+    193|     expect(contactTypes).toBeDefined();
+       |                          ^
+    194|     for (const procedure of ['list', 'listActive', 'create', 'update',…
+    195|       expect(contactTypes?.[procedure]).toBeDefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > SYSTEM_CONTACT_TYPE_SEED > covers the six seed keys in order with names, colours and sort order
+AssertionError: expected [] to deeply equal [ 'customer', 'prospect', …(4) ]
+
+- Expected
++ Received
+
+- [
+-   "customer",
+-   "prospect",
+-   "partner",
+-   "vendor",
+-   "investor",
+-   "other",
+- ]
++ []
+
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:44:56
+     42| describe('SYSTEM_CONTACT_TYPE_SEED', () => {
+     43|   it('covers the six seed keys in order with names, colours and sort o…
+     44|     expect(SYSTEM_CONTACT_TYPE_SEED.map((s) => s.key)).toEqual([...CON…
+       |                                                        ^
+     45|     expect(SYSTEM_CONTACT_TYPE_SEED.map((s) => s.name)).toEqual([
+     46|       'Customer',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > ensureSystemContactTypes > takes the fast path (no lock, no write) when all six system rows exist
+AssertionError: expected "vi.fn()" to be called with arguments: [ { where: { …(2) } } ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:66:42
+     64|     (prismaMock.contactType.count as any).mockResolvedValueOnce(6);
+     65|     await ensureSystemContactTypes(ctxFor());
+     66|     expect(prismaMock.contactType.count).toHaveBeenCalledWith({
+       |                                          ^
+     67|       where: { tenantId, isSystem: true },
+     68|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > ensureSystemContactTypes > locks the tenant and creates only the missing system rows, without skipDuplicates
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:84:12
+     82|
+     83|     const lockCall = (prismaMock.$executeRaw as any).mock.calls[0];
+     84|     expect(lockCall[0].join('?')).toContain('pg_advisory_xact_lock(has…
+       |            ^
+     85|     expect(lockCall[1]).toBe(`contact_types:${tenantId}`);
+     86|     expect(prismaMock.contactType.findMany).toHaveBeenCalledWith({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > ensureSystemContactTypes > propagates any other seed failure so the caller aborts
+AssertionError: promise resolved "undefined" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+undefined
+
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:123:52
+    121|     (prismaMock.contactType.findMany as any).mockResolvedValueOnce([]);
+    122|     (prismaMock.contactType.createMany as any).mockRejectedValueOnce(n…
+    123|     await expect(ensureSystemContactTypes(ctxFor())).rejects.toThrow('…
+       |                                                    ^
+    124|   });
+    125| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > loadContactTypeByKey > scopes by tenant and filters inactive types when asked
+AssertionError: expected undefined to match object { id: 't1' }
+
+- Expected:
+{
+  "id": "t1",
+}
+
++ Received:
+undefined
+
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:131:19
+    129|     (prismaMock.contactType.findFirst as any).mockResolvedValueOnce({ …
+    130|     const found = await loadContactTypeByKey(ctxFor(), 'vendor', { act…
+    131|     expect(found).toMatchObject({ id: 't1' });
+       |                   ^
+    132|     expect(prismaMock.contactType.findFirst).toHaveBeenCalledWith(
+    133|       expect.objectContaining({ where: { tenantId, key: 'vendor', isAc…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > loadContactTypeByKey > can resolve an inactive stored key
+AssertionError: expected undefined to be null
+
+- Expected:
+null
+
++ Received:
+undefined
+
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:140:19
+    138|     (prismaMock.contactType.findFirst as any).mockResolvedValueOnce(nu…
+    139|     const found = await loadContactTypeByKey(ctxFor(), 'vendor', { act…
+    140|     expect(found).toBeNull();
+       |                   ^
+    141|     expect(prismaMock.contactType.findFirst).toHaveBeenCalledWith(
+    142|       expect.objectContaining({ where: { tenantId, key: 'vendor' } })
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > resolveDefaultTagNames > returns the current names of active same-tenant default tags
+AssertionError: expected [] to deeply equal [ 'supplier', 'emea' ]
+
+- Expected
++ Received
+
+- [
+-   "supplier",
+-   "emea",
+- ]
++ []
+
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:154:19
+    152|     ]);
+    153|     const names = await resolveDefaultTagNames(ctxFor(), 'type-1');
+    154|     expect(names).toEqual(['supplier', 'emea']);
+       |                   ^
+    155|     expect(prismaMock.contactTypeDefaultTag.findMany).toHaveBeenCalled…
+    156|       expect.objectContaining({
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > assertContactTypeAdmin > rejects other roles with FORBIDDEN and audits the denial
+AssertionError: expected function to throw an error, but it didn't
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:173:83
+    171|
+    172|   it('rejects other roles with FORBIDDEN and audits the denial', () =>…
+    173|     expect(() => assertContactTypeAdmin(createTestContext(), 'delete',…
+       |                                                                                   ^
+    174|       expect.objectContaining({ code: 'FORBIDDEN' })
+    175|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-type-resolver.test.ts > assertContactTypeAdmin > fails closed when the role is missing
+AssertionError: expected function to throw an error, but it didn't
+ ❯ src/modules/contact/__tests__/contact-type-resolver.test.ts:188:57
+    186|     const ctx = createTestContext();
+    187|     (ctx.user as { role?: string }).role = undefined;
+    188|     expect(() => assertContactTypeAdmin(ctx, 'update')).toThrow(
+       |                                                         ^
+    189|       expect.objectContaining({ code: 'FORBIDDEN' })
+    190|     );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > create is FORBIDDEN for a USER and writes nothing
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > update is FORBIDDEN for a USER and writes nothing
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > delete is FORBIDDEN for a USER and writes nothing
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > setDefault is FORBIDDEN for a USER and writes nothing
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:108:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > write access (SEC-1) > lets a MANAGER write (not ADMIN-only)
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:120:49
+    118|       (prismaMock.contactType.findFirst as any).mockResolvedValueOnce(…
+    119|       await manager.setDefault({ id: T1 });
+    120|       expect(prismaMock.contactType.updateMany).toHaveBeenCalled();
+       |                                                 ^
+    121|     });
+    122|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > list > returns tenant types in sort order with default tags, contact counts, limits and canEdit
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:138:47
+    136|       const result = await user.list();
+    137|
+    138|       expect(prismaMock.contactType.findMany).toHaveBeenCalledWith(
+       |                                               ^
+    139|         expect.objectContaining({
+    140|           where: { tenantId },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > list > seeds the system types on first use and reports canEdit for admins
+AssertionError: expected "vi.fn()" to be called at least once
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:169:49
+    167|         .mockResolvedValueOnce([]); // list
+    168|       const result = await admin.list();
+    169|       expect(prismaMock.contactType.createMany).toHaveBeenCalled();
+       |                                                 ^
+    170|       expect(prismaMock.contact.groupBy).not.toHaveBeenCalled();
+    171|       expect(result).toMatchObject({ types: [], canEdit: true });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > listActive > returns active tenant types in picker shape
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:180:47
+    178|       (prismaMock.contactType.findMany as any).mockResolvedValueOnce([…
+    179|       const result = await user.listActive();
+    180|       expect(prismaMock.contactType.findMany).toHaveBeenCalledWith(
+       |                                               ^
+    181|         expect.objectContaining({ where: { tenantId, isActive: true } …
+    182|       );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > listActive > includes inactive types when asked (badges and stored-key labels)
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:201:47
+    199|       (prismaMock.contactType.findMany as any).mockResolvedValueOnce([…
+    200|       const result = await user.listActive({ includeInactive: true });
+    201|       expect(prismaMock.contactType.findMany).toHaveBeenCalledWith(
+       |                                               ^
+    202|         expect.objectContaining({ where: { tenantId } })
+    203|       );
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > enforces the 50-type cap inside the tenant lock
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:212:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > creates the type with a server-generated key and its default tags in one transaction
+AssertionError: expected "vi.fn()" to be called with arguments: [ { where: { …(3) } } ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:232:43
+    230|       const result = await admin.create(input);
+    231|
+    232|       expect(prismaMock.contactTag.count).toHaveBeenCalledWith({
+       |                                           ^
+    233|         where: { tenantId, id: { in: [TAG_A] }, isActive: true },
+    234|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > rejects a smuggled tenantId (strict input)
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:265:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > rejects default tags that are foreign or inactive with one message
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:277:77
+    275|       (prismaMock.contactType.findMany as any).mockResolvedValueOnce([…
+    276|       (prismaMock.contactTag.count as any).mockResolvedValueOnce(1);
+    277|       await expect(admin.create({ ...input, defaultTagIds: [TAG_A, TAG…
+       |                                                                             ^
+    278|         code: 'BAD_REQUEST',
+    279|         message: 'One or more default tags are not available in this w…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > maps a duplicate name (P2002) to CONFLICT without echoing raw input
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:291:39
+    289|       (prismaMock.contactType.aggregate as any).mockResolvedValueOnce(…
+    290|       (prismaMock.contactType.create as any).mockRejectedValueOnce(pri…
+    291|       await expect(admin.create(input)).rejects.toMatchObject({
+       |                                       ^
+    292|         code: 'CONFLICT',
+    293|         message: 'A contact type with this name already exists. Choose…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > rethrows other write errors
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:304:39
+    302|       (prismaMock.contactType.aggregate as any).mockResolvedValueOnce(…
+    303|       (prismaMock.contactType.create as any).mockRejectedValueOnce(new…
+    304|       await expect(admin.create(input)).rejects.toThrow('connection lo…
+       |                                       ^
+    305|     });
+    306|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > create > skips the default-tag writes when there are none
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:317:65
+    315|       expect(prismaMock.contactTag.count).not.toHaveBeenCalled();
+    316|       expect(prismaMock.contactTypeDefaultTag.createMany).not.toHaveBe…
+    317|       expect((prismaMock.contactType.create as any).mock.calls[0][0].d…
+       |                                                                 ^
+    318|     });
+    319|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > returns NOT_FOUND for a type of another tenant
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:325:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > keeps the default type active
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:335:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[25/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > updates fields field by field and replaces the default tags in one transaction
+AssertionError: expected "vi.fn()" to be called with arguments: [ { where: { …(2) }, data: { …(7) } } ]
+
+Number of calls: 0
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:354:49
+    352|       });
+    353|
+    354|       expect(prismaMock.contactType.updateMany).toHaveBeenCalledWith({
+       |                                                 ^
+    355|         where: { id: T1, tenantId },
+    356|         data: {
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[26/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > guards deactivation in the write (concurrent setDefault)
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:391:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[27/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > reports NOT_FOUND when the type vanished during the write
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:402:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[28/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > update > maps a duplicate name to CONFLICT
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:410:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > returns NOT_FOUND for a type of another tenant
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:417:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > refuses a system type (deactivate instead)
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:428:44
+    426|         row({ isSystem: true, key: 'vendor' })
+    427|       );
+    428|       await expect(admin.delete({ id: T1 })).rejects.toMatchObject({
+       |                                            ^
+    429|         code: 'PRECONDITION_FAILED',
+    430|         message: 'Built-in contact types cannot be deleted. Deactivate…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > refuses the default type
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:437:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[32/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > refuses a type that contacts use (count in the same transaction)
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:443:44
+    441|       (prismaMock.contactType.findFirst as any).mockResolvedValueOnce(…
+    442|       (prismaMock.contact.count as any).mockResolvedValueOnce(2);
+    443|       await expect(admin.delete({ id: T1 })).rejects.toMatchObject({
+       |                                            ^
+    444|         code: 'CONFLICT',
+    445|         message: '2 contacts use this type. Deactivate it instead.',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[33/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > deletes an unused custom type and audits it
+AssertionError: expected {} to deeply equal { success: true }
+
+- Expected
++ Received
+
+- {
+-   "success": true,
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:457:44
+    455|       (prismaMock.contact.count as any).mockResolvedValueOnce(0);
+    456|       (prismaMock.contactType.deleteMany as any).mockResolvedValueOnce…
+    457|       await expect(admin.delete({ id: T1 })).resolves.toEqual({ succes…
+       |                                            ^
+    458|       expect(prismaMock.contactType.deleteMany).toHaveBeenCalledWith({
+    459|         where: { id: T1, tenantId, isDefault: false, isSystem: false },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[34/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > delete > reports a concurrent change when nothing was deleted
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:474:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[35/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > returns NOT_FOUND for a type of another tenant
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:482:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[36/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > refuses an inactive type
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:491:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[37/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > clears then sets in one transaction
+AssertionError: expected {} to deeply equal { success: true }
+
+- Expected
++ Received
+
+- {
+-   "success": true,
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:501:48
+    499|         .mockResolvedValueOnce({ count: 1 })
+    500|         .mockResolvedValueOnce({ count: 1 });
+    501|       await expect(admin.setDefault({ id: T1 })).resolves.toEqual({ su…
+       |                                                ^
+    502|       expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+    503|       expect((prismaMock.contactType.updateMany as any).mock.calls[0][…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[38/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > clears the default with id null
+AssertionError: expected "vi.fn()" to be called 1 times, but got 0 times
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:516:49
+    514|       seeded();
+    515|       await admin.setDefault({ id: null });
+    516|       expect(prismaMock.contactType.updateMany).toHaveBeenCalledTimes(…
+       |                                                 ^
+    517|     });
+    518|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[39/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > rolls back when the target changed during the write
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:525:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[40/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > setDefault > maps a concurrent default change (P2002) to CONFLICT
+AssertionError: promise resolved "{}" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
+- }
++ {}
+
+ ❯ expectCode src/modules/contact/__tests__/contact-types.router.test.ts:75:23
+     73|
+     74| async function expectCode(promise: Promise<unknown>, code: TRPCError['…
+     75|   await expect(promise).rejects.toMatchObject({ code });
+       |                       ^
+     76| }
+     77|
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:534:13
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[41/45]⎯
+
+ FAIL  |api| src/modules/contact/__tests__/contact-types.router.test.ts > contactTypesRouter (PG-205) > uses plain tenantProcedure: a tenant with every module denied can still list (CORE_CRM)
+AssertionError: expected {} to match object { types: [] }
+
+- Expected
++ Received
+
+- {
+-   "types": [],
+- }
++ {}
+
+ ❯ src/modules/contact/__tests__/contact-types.router.test.ts:551:61
+    549|     seeded();
+    550|     (prismaMock.contactType.findMany as any).mockResolvedValueOnce([]);
+    551|     await expect(contactTypesRouter.createCaller(ctx).list()).resolves…
+       |                                                             ^
+    552|   });
+    553| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[42/45]⎯
+
+
+ Test Files  3 failed (3)
+      Tests  45 failed | 15 passed (60)
+   Start at  17:58:24
+   Duration  9.57s (transform 4.40s, setup 1.78s, import 5.97s, tests 8.83s, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/contact/__tests__/contact-type-resolver.test.ts src/modules/contact/__tests__/contact-types.router.test.ts src/__tests__/app-router.smoke.test.ts
+# exit: 1

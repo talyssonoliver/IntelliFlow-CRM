@@ -1,0 +1,202 @@
+{
+  "stoa": "Quality",
+  "task_id": "PG-205",
+  "run_id": "20261017163533-a216d1f1",
+  "verdict": "WARN",
+  "produced_by": "stoa-quality sub-agent (re-check)",
+  "produced_at": "2026-10-18T09:08:12Z",
+  "head": "24a91a9f6f360a5db6ce588ad7b2f2983ed68c51",
+  "initial_verdict": {
+    "stoa": "Quality",
+    "task_id": "PG-205",
+    "run_id": "20261017163533-a216d1f1",
+    "verdict": "WARN",
+    "produced_by": "stoa-quality sub-agent",
+    "produced_at": "2026-10-18T09:02:56Z",
+    "head": "3ae41b2dfe79773cb7c6f0f4600044901ba5cc0f",
+    "gates": [
+      {
+        "gate": "full-suite-tests",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-test-*.txt",
+        "notes": "Read from logs, not re-run. At e929eb220: adapters 2982, api 7801 (+18 skipped), application 1486, db 224 (+14 skipped), domain 3060, validators 2741, web 12990 passed; integration 440 passed (+50 skipped), contact-types integration 24/24, tools 33. 0 failed in every log."
+      },
+      {
+        "gate": "diff-coverage (Sonar new_coverage mirror)",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-diff-coverage.txt",
+        "notes": "95.4% (960/1006) vs 80% floor, run at 7319f0d2c. One file below floor: DeleteContactTypeDialog.tsx 25.0% (1/4)."
+      },
+      {
+        "gate": "domain-coverage",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-coverage-domain.txt",
+        "notes": "S 95.2 / B 92.16 / F 93.3 / L 95.25 against the domain >95% line target; lines pass narrowly."
+      },
+      {
+        "gate": "scoped-coverage-13-created-files",
+        "result": "WARN",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-3b-scoped-coverage.txt",
+        "notes": "Aggregate S 96.46 / B 90.91 / F 92.40 / L 97.21 passes 90%. Per-file: DeleteContactTypeDialog 50/75/50/50; ContactTypesContent B 80.88 F 80.95; ContactTypeList B 81.25; ContactTypeDialog B 84.74 F 82.14. The gate log itself uses a branch floor of 80, not 90."
+      },
+      {
+        "gate": "duplication",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/jscpd-touched.txt",
+        "notes": "97 duplicated lines in touched files, consistent with the reported ~2.0% vs the 3% Sonar gate. I did not recompute the percentage."
+      },
+      {
+        "gate": "sonar-guard",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-guard-branch.txt",
+        "notes": "exit 0, 62 changed TS/TSX files checked."
+      },
+      {
+        "gate": "tdd-red-green",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/attestations/PG-205/red-green/red-green-index.md",
+        "notes": "14 RED logs, each shows failing tests; each is followed by a GREEN log of the same area. Logs 15, 18 and 22 show failures as testing-library lookup errors and failing test names, not AssertionError text. The index was compiled at the end (it says so); its HEAD column is '?' for 5 logs, and several GREEN logs carry the dbb06a8db HEAD of the preceding RED."
+      },
+      {
+        "gate": "post-full-run commits re-verified",
+        "result": "PASS",
+        "evidence_log": ".specify/sprints/sprint-18/attestations/PG-205/red-green/22-a11y-review.green.txt, .specify/sprints/sprint-18/attestations/PG-205/red-green/23-tag-length.green.txt",
+        "notes": "7319f0d2c (web a11y) covered by 22-green (142 passed) plus scoped coverage and diff-coverage at 7319f0d2c. a6b5ad8d8 (validators tag length) covered by 23-green: validators 2743, api 398 passed, a third suite 521 passed. The full web/api/validators suites were not re-run on the final tree."
+      },
+      {
+        "gate": "pre-ship at final SHA",
+        "result": "NOT_RUN",
+        "evidence_log": null,
+        "notes": "Runner-owned and not yet run. It is the remaining full-suite check at 3ae41b2df."
+      },
+      {
+        "gate": "vitest thresholdAutoUpdate",
+        "result": "PASS",
+        "evidence_log": null,
+        "notes": "grep of vitest*.ts/mts found no thresholdAutoUpdate setting, so it is not true."
+      },
+      {
+        "gate": "e2e",
+        "result": "NOT_RUN",
+        "evidence_log": null,
+        "notes": "No e2e log among the gate evidence; not covered by this verdict."
+      }
+    ],
+    "findings": [
+      {
+        "severity": "medium",
+        "file": "apps/web/src/app/contacts/(list)/contact-types/components/DeleteContactTypeDialog.tsx",
+        "line": null,
+        "issue": "Coverage records 50% scoped and 25% diff-coverage (1/4), yet its test file DeleteContactTypeDialog.test.tsx (5 tests: closed, confirm + Cancel focus, server error alert, disabled while deleting, axe) is committed and passes 5/5 when I ran it under the slot. The 50% is most likely a coverage artifact (stale or partial merge), but I could not reproduce it. My own targeted coverage run printed no table row for the file, so it is not a confirmation either way.",
+        "recommendation": "Re-run scoped web coverage at the final SHA and confirm this file reaches ~100%; if it stays low, find why the tests do not register against it."
+      },
+      {
+        "severity": "low",
+        "file": "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx",
+        "line": null,
+        "issue": "Branch 80.88% and function 80.95% are below 90% per file; only the 13-file aggregate (B 90.91) clears the bar. ContactTypeList and ContactTypeDialog are also in the low 80s on branches or functions.",
+        "recommendation": "Add tests for the uncovered error and branch paths, or record the aggregate-only rationale."
+      },
+      {
+        "severity": "low",
+        "file": "packages/domain/src/crm/contact/",
+        "line": null,
+        "issue": "Domain lines 95.25% is a thin margin over the >95% target; it is a package-wide figure, not PG-205 files only.",
+        "recommendation": "None required."
+      },
+      {
+        "severity": "info",
+        "file": "apps/api/src/modules/contact/__tests__/contact.router.contact-types.test.ts",
+        "line": 430,
+        "issue": "Test quality spot-check is positive. Account ordering is asserted on call order (replace then info; info then unlink). Segment tests assert query args and URL replace. 'Save default' asserts no mutate on radio move, then a mutate with {id:null}. Fixed-date fixtures use literal dates only as data, with no wall-clock comparison found in the PG-205 tests I grepped. I did not read every test.",
+        "recommendation": "None."
+      },
+      {
+        "severity": "info",
+        "file": ".specify/sprints/sprint-18/attestations/PG-205/red-green/red-green-index.md",
+        "line": null,
+        "issue": "Index compiled after the fact. Some RED logs predate the commit that fixed them (HEAD in the log header is the parent), which is normal TDD.",
+        "recommendation": "None."
+      }
+    ],
+    "summary": "Tests and coverage are acceptable: 0 failures across the 7 touched-package suites, integration and tools; diff-coverage 95.4% vs the 80% floor; scoped aggregate S 96.46 / B 90.91 / F 92.40 / L 97.21; domain lines 95.25%. TDD RED/GREEN pairs are consistent and the spot-checked tests have real assertions. Verdict is WARN, not PASS, for three reasons. (1) DeleteContactTypeDialog.tsx shows 25-50% coverage that contradicts its passing 5-test file and is unresolved. (2) Several web files sit below 90% per file, passing only in aggregate. (3) The full web/api/validators suites ran at e929eb220, not the final tree. The two later commits were re-verified by targeted logs only, and pre-ship at 3ae41b2df is still the outstanding full-suite check. I read logs and ran only one targeted web test under the slot; I did not re-run the suites."
+  },
+  "recheck": {
+    "head": "24a91a9f6f360a5db6ce588ad7b2f2983ed68c51",
+    "produced_at": "2026-10-18T09:08:12Z",
+    "commands": [
+      "export PATH=/c/Users/talys/AppData/Roaming/nvm/v22.14.0:$PATH (node v22.14.0)",
+      "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-205-stoa -- pnpm --filter @intelliflow/web exec vitest run \"src/app/contacts/(list)/contact-types\" --coverage --coverage.reporter=text --coverage.reportsDirectory=../../artifacts/coverage-vitest/pg-205-stoa-recheck \"--coverage.include=**/contact-types/**/*.tsx\""
+    ],
+    "log": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/stoa-quality-recheck-coverage.txt",
+    "results": {
+      "exit_code": 0,
+      "test_files": "7 passed (7)",
+      "tests": "60 passed, 0 failed, 0 skipped reported",
+      "coverage_all_files": {
+        "statements": 97.24,
+        "branches": 85.07,
+        "functions": 96.05,
+        "lines": 98.46
+      },
+      "per_file": {
+        "DeleteContactTypeDialog": {
+          "statements": 100,
+          "branches": 87.5,
+          "functions": 100,
+          "lines": 100
+        },
+        "ContactTypesContent": {
+          "statements": 96.51,
+          "branches": 82.35,
+          "functions": 100,
+          "lines": 100
+        },
+        "ContactTypeDialog": {
+          "statements": 97.01,
+          "branches": 86.44,
+          "functions": 92.85,
+          "lines": 96.82
+        },
+        "ContactTypeList": {
+          "statements": 97.22,
+          "branches": 81.25,
+          "functions": 93.33,
+          "lines": 96.55
+        }
+      },
+      "matches_lead_figures": true
+    },
+    "points": {
+      "1_DeleteContactTypeDialog": "RESOLVED. Re-run shows 100/87.5/100/100 (was 50% scoped, 25% diff). The only remaining uncovered branch is line 39, the open=true arm of the onOpenChange ternary; the close arm is now covered by the Escape test.",
+      "2_per_file_shortfalls": "PARTLY RESOLVED. Statements, functions and lines are at or above 90 in all four files. Branches are still under 90 in all four (81.25 to 87.5) and 85.07 over the four files, below the 90 floor. Functions: ContactTypeDialog 92.85 and ContactTypeList 93.33 now pass. I did not re-run the earlier 13-file scoped aggregate (B 90.91), so I make no claim about it at this HEAD.",
+      "3_pre_ship_final_sha": "NOT_RUN by design. Runner owns pre-ship at the final SHA. Recorded as an open item, not a code defect."
+    },
+    "new_test_quality": "Read the diff of 24a91a9f6 (4 files; 3 test files changed). All new tests make real assertions: Escape test asserts onCancel called once and onConfirm not called; Save-default test invokes the captured onSuccess/onError callbacks and asserts the live-region text and the toast title and description; delete-cancel asserts name and error reset to null; dialog edit test asserts onSave called with defaultStatus ACTIVE, defaultOwner CREATOR, isActive false. No empty or tautological tests seen. Callbacks come from mutate mock call args, so the tests exercise the real default callbacks.",
+    "thresholdAutoUpdate": "Not re-checked beyond the original verdict (no setting found by the earlier grep).",
+    "not_run": [
+      {
+        "item": "pre-ship at final SHA",
+        "status": "NOT_RUN",
+        "owner": "runner",
+        "note": "open by design, not a defect"
+      },
+      {
+        "item": "full web/api/validators suites at final tree",
+        "status": "NOT_RUN",
+        "note": "only the 7 contact-types test files were run"
+      },
+      {
+        "item": "e2e",
+        "status": "NOT_RUN"
+      },
+      {
+        "item": "13-file scoped coverage aggregate",
+        "status": "NOT_RUN",
+        "note": "only the 4 contact-types .tsx files were included"
+      }
+    ],
+    "worktree_note": "After the run, git status also shows docs/compliance-and-governance/compliance/vpat-2.5.md modified, which was not in the starting snapshot. I did not edit it; likely a side effect of the test run or another process. Left as is."
+  },
+  "summary": "Re-check at 24a91a9f6: the scoped run reproduces the lead figures exactly (7 files, 60 tests passed; All files S 97.24 / B 85.07 / F 96.05 / L 98.46). The DeleteContactTypeDialog gap is closed (100/87.5/100/100). New tests assert real behavior. Verdict stays WARN, not PASS, because branch coverage is still below 90 in all four files (81.25 to 87.5; 85.07 combined) and the pre-ship at the final SHA is NOT_RUN (runner-owned). Not FAIL: statements, functions and lines are above 90, nothing failed, and the earlier 13-file aggregate branches were 90.91."
+}

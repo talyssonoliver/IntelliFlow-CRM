@@ -1,0 +1,16 @@
+# 2026-10-17T17:50:28Z pnpm --filter ./apps/web typecheck
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/web@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\web
+> pnpm run typegen && tsc --noEmit
+
+../..                                    |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+../ai-worker                             |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/web@0.1.0 typegen C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\web
+> next typegen
+
+Generating route types...
+✓ Types generated successfully
+# exit: 0

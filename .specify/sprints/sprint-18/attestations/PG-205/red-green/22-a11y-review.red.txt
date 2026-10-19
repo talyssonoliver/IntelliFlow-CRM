@@ -1,0 +1,11 @@
+# 2026-10-17T21:53:06Z HEAD e929eb220 RED for a11y-expert review findings #1 (default saved on each arrow), #2 (blank-name reason + focus), #3 (key label), #6 (h1 in error/loading)
+     × sets the default type only on Save default, not on each radio move (a11y review #1) 103ms
+     × the error state still has the page h1 (a11y review #6) 6ms
+     × a blank name says why on Save and moves focus to the name (A11Y-9, a11y review #2) 280ms
+     × shows the read-only key as a labelled field (a11y review #3) 235ms
+     × keeps the page h1 while loading (a11y review #6) 33ms
+TestingLibraryElementError: Unable to find an accessible element with the role "button" and name "Save default"
+TestingLibraryElementError: Unable to find an accessible element with the role "heading" and name "Contact Types"
+TestingLibraryElementError: Unable to find an accessible element with the role "heading" and name "Contact Types"
+ Test Files  3 failed | 4 passed (7)
+      Tests  5 failed | 51 passed (56)

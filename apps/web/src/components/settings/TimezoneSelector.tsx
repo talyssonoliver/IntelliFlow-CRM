@@ -30,6 +30,8 @@ interface TimezoneSelectorProps {
   invalid?: boolean;
   /** id of an element describing the trigger, e.g. a field error. */
   describedBy?: string;
+  /** Show the "Detect from browser" button (default true). Hidden for a firm-wide zone (PG-202). */
+  showDetect?: boolean;
 }
 
 /** Curated fallback list when Intl.supportedValuesOf is unavailable */
@@ -121,6 +123,7 @@ export function TimezoneSelector({
   id,
   invalid,
   describedBy,
+  showDetect = true,
 }: Readonly<TimezoneSelectorProps>) {
   const grouped = useMemo(() => {
     const tzList = getTimezones();
@@ -174,15 +177,17 @@ export function TimezoneSelector({
           ))}
         </SelectContent>
       </Select>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={detectBrowserTimezone}
-        disabled={disabled}
-      >
-        Detect from browser
-      </Button>
+      {showDetect && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={detectBrowserTimezone}
+          disabled={disabled}
+        >
+          Detect from browser
+        </Button>
+      )}
     </div>
   );
 }

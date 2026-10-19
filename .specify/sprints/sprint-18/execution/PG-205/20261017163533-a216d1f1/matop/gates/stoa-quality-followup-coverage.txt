@@ -1,0 +1,8 @@
+# 2026-10-18T09:05:38Z HEAD 3ae41b2df + new coverage tests (STOA-Quality WARN follow-up): contact-types web tests with coverage restricted to contact-types/**/*.tsx
+[test-slot] slot2 taken for PG-205@feat/pg-205-contact-types: pnpm --filter @intelliflow/web exec vitest run src/app/contacts/(list)/contact-types --coverage --coverage.reporter=text --coverage.reportsDirectory=../../artifacts/coverage-vitest/pg-205-dialog --coverage.include=**/contact-types/**/*.tsx
+      Tests  60 passed (60)
+All files          |   97.24 |    85.07 |   96.05 |   98.46 |                   
+  ...esContent.tsx |   96.51 |    82.35 |     100 |     100 | ...51,169,262,280 
+  ...ypeDialog.tsx |   97.01 |    86.44 |   92.85 |   96.82 | 208,230           
+  ...tTypeList.tsx |   97.22 |    81.25 |   93.33 |   96.55 | 201               
+  ...ypeDialog.tsx |     100 |     87.5 |     100 |     100 | 39                

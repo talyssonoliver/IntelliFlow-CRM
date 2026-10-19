@@ -1,0 +1,5 @@
+# 2026-10-18T10:33:22Z HEAD 4c1df7cac GREEN for Aurora P2(a): ContactTypeDialog validates names through contactTypeNameSchema (superRefine); schema message uses the UI's curly quotes
+C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-205/ffa3728c-65a3-4817-af33-f16f5452b82b/scratchpad/g26.log: Test Files  7 passed (7)
+C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-205/ffa3728c-65a3-4817-af33-f16f5452b82b/scratchpad/g26.log:      Tests  61 passed (61)
+C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-205/ffa3728c-65a3-4817-af33-f16f5452b82b/scratchpad/g26v.log: Test Files  1 passed (1)
+C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-205/ffa3728c-65a3-4817-af33-f16f5452b82b/scratchpad/g26v.log:      Tests  44 passed (44)

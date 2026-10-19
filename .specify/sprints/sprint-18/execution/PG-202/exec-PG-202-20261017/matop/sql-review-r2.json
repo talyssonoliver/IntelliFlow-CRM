@@ -1,0 +1,24 @@
+{
+  "round": 2,
+  "reviewer": "pg202-sql-reviewer (data-engineer sub-agent)",
+  "migration": "packages/db/prisma/migrations/20261017130000_availability/migration.sql",
+  "verdict": "APPROVE",
+  "class": "A",
+  "statements": [
+    {"sql": "ALTER TABLE appointment_settings ADD COLUMN x2 + CHECK NOT VALID + VALIDATE", "lock": "unchanged from round 1", "risk": "low"},
+    {"sql": "CREATE TABLE availability_hours with CHECKs weekday 0..6, startMinute BETWEEN 0 AND 1439, endMinute BETWEEN 1 AND 1440, start < end", "lock": "none on existing objects; inline CHECKs on a brand-new empty table", "risk": "none"},
+    {"sql": "CREATE TABLE availability_closures, 4 indexes, 2 FKs to tenants, RLS + 2 policies", "lock": "unchanged from round 1 (SHARE ROW EXCLUSIVE on tenants, brief)", "risk": "low"}
+  ],
+  "drift_check": "The diff (git diff HEAD) touches only two CHECK constraint definitions inside CREATE TABLE availability_hours. Prisma does not model CHECK constraints, so the renamed and retightened constraints cannot produce migrate diff drift. Columns, types, index names, FK names and RLS are unchanged from round 1. Nothing in schema.prisma needs to change; its doc comment (0 <= start < end <= 1440, SQL-only) remains accurate for the effective semantics.",
+  "findings": [
+    {"severity": "INFO", "detail": "Correctness: the new bounds are logically implied by the unchanged range check combined with the old bounds. start < end <= 1440 gives start <= 1439; end > start >= 0 gives end >= 1. So the accepted row set is identical to before; no valid row is newly rejected and none newly admitted. The change makes each column's own domain explicit, which gives clearer constraint names and error messages (a failing insert names the violated column bound) and keeps each column valid in isolation. Redundant with the range check by design, harmless, no cost on an empty new table.", "fix": "None required."},
+    {"severity": "INFO", "detail": "Lock and Class A impact: none. The constraints are inline in CREATE TABLE on a new, empty table, so there is no scan and no lock on any populated table. Class A classification and the forward-only recovery plan in the header comment are unaffected (the comment does not mention these constraints, so it needs no edit). Down-migration (DROP TABLE) remains Class C.", "fix": "None."},
+    {"severity": "INFO", "detail": "Constraint names are now availability_hours_startMinute_bounds_check and availability_hours_endMinute_bounds_check. Any code, test or doc that referenced the old names (availability_hours_startMinute_check, availability_hours_endMinute_check), for example error-message mapping in the router or repository, must use the new names. The lead reports the integration test already asserts the new definitions via pg_get_constraintdef (21/21 green).", "fix": "Grep the repo once for the two old names to confirm none remain (I did not run it; read-only review of the migration only)."},
+    {"severity": "INFO", "detail": "Carried over from round 1: overlapping ranges with different start minutes on the same weekday are only prevented at application level (unique key is (tenantId, weekday, startMinute)); NOT VALID plus VALIDATE on the appointment_settings CHECK gives no extra lock benefit inside the single migration transaction but is harmless. No new issues found anywhere else in the file.", "fix": "None."}
+  ],
+  "reviewed_files": [
+    "packages/db/prisma/migrations/20261017130000_availability/migration.sql (git diff HEAD)",
+    "packages/db/prisma/migrations/20261013120000_case_types/migration.sql (precedent, from round 1)",
+    "packages/db/prisma/schema.prisma (AvailabilityHour, from round 1)"
+  ]
+}

@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 132 files total
+[codex-review] in scope : 67 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T20:31:35.623Z
+Base ref  : origin/main
+Files in scope : 67
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/app/calendar/availability/AvailabilityContent.tsx:188 — save-response-discards-new-edits
+    Issue    : A successful save silently discards edits made while the request is pending.
+    Evidence : `await updateMutation.mutateAsync(toUpdateInput(draft))` captures the submitted draft, then `adopt(saved)` unconditionally replaces the current draft and baseline. The hours, timezone, closures and buffer controls remain editable because their readOnly prop depends only on permissions. Changing a buffer after clicking Save therefore loses that newer change when the earlier response arrives, leaving the page clean with an 'Availability saved' toast.
+    Fix      : Disable editing and reset while saving, or preserve edits made after submission and update only the saved baseline when the response arrives.
+    Fingerprint: 0d0d8c3d8d60cca3055ab2755cb35780f729247784c60305e5a83cde2c0abe5b
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

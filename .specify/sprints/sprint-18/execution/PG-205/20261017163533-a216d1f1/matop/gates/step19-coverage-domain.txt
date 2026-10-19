@@ -1,0 +1,23 @@
+# 2026-10-18T08:40:08Z HEAD 7319f0d2c domain package coverage (vitest run --coverage --coverage.reporter=text-summary)
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: pnpm --filter @intelliflow/domain exec vitest run --coverage --coverage.reporter=text-summary --coverage.reportsDirectory=../../artifacts/coverage-vitest/pg-205-domain
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/packages/domain
+      Coverage enabled with v8
+
+
+ Test Files  105 passed (105)
+      Tests  3060 passed (3060)
+   Start at  09:40:09
+   Duration  11.36s (transform 3.38s, setup 0ms, import 7.37s, tests 1.74s, environment 13ms)
+
+ % Coverage report from v8
+
+=============================== Coverage summary ===============================
+Statements   : 95.2% ( 5064/5319 )
+Branches     : 92.16% ( 2048/2222 )
+Functions    : 93.3% ( 1504/1612 )
+Lines        : 95.25% ( 4875/5118 )
+================================================================================
+# exit: 0

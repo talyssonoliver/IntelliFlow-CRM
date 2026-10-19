@@ -1,0 +1,7 @@
+# 2026-10-18T09:13:56Z node tools/scripts/exec-preflight/check-attestation-provenance.mjs PG-205
+[preflight] Provenance check PG-205 (sprint 18)
+[preflight] OK — provenance affirmative and cross-validated against plan/spec on disk.
+           ✓ plan_reviewer_verdict: APPROVED_WITH_CHANGES
+           ✓ plan_path carries the plan-reviewer subagent marker
+           ✓ spec_path + plan_path exist (repo-relative)
+# exit: 0

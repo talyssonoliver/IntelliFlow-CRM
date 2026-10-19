@@ -1,0 +1,98 @@
+{
+  "stoa": "Quality",
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "verdict": "PASS",
+  "produced_by": "stoa-quality sub-agent (final)",
+  "produced_at": "2026-10-18T11:42:48Z",
+  "head": "72051d1931b0e4830b573349395eba1a4ca3c405",
+  "supersedes_note": "Final re-assessment at 72051d193 for PR 916. Earlier verdicts Quality.json (WARN) and Quality.recheck.json (PASS at 2ac93b60f) are unchanged. Basis: matrix at 72051d193, summary.tsv ends with done, all 20 headers show 72051d193, every row exit 0. Evidence logs are now .txt (see matop/EVIDENCE-RENAMES.md); I read the .txt files.",
+  "gates": [
+    {
+      "gate": "Validation matrix on final code",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/summary.tsv + 20 row .txt logs",
+      "notes": "20 rows exit 0 plus 05b; all headers 72051d193. domain 3072, application 1488, validators 2722, db 224 + 14 skipped, api 7798 + 18 skipped, web 12957, integration 21 passed + 5 skipped (the 5 are the pre-existing rls-tenant-isolation tests, so the PG-202 availability suite ran 21/21). Typecheck, lint, build, preflights exit 0."
+    },
+    {
+      "gate": "Coverage targets",
+      "result": "PASS",
+      "evidence_log": "validation-matrix 12..15, 17",
+      "notes": "domain 99.55 / 97.41 / 100 / 100; validators 100 / 97.36 / 100 / 100; calendar API module 97.4 / 92.59 / 100 / 99.29; application CheckConflicts file-wide 91.8 / 70 / 100 / 91.07 with the PG-202 additions 25/25 changed lines (legacy gap not attributable)."
+    },
+    {
+      "gate": "Web coverage vs apps/web/CLAUDE.md",
+      "result": "PASS",
+      "evidence_log": "validation-matrix 16",
+      "notes": "Scoped aggregate 90.89 / 85.21 / 84.23 / 91.66. Branches on new files all >= 80 (ClosuresList 81.25, WeeklyHoursCard 81.81, AvailabilityContent ~84, availability-draft 91.96). Aggregate functions under 90 come from modified pre-existing files, not new code."
+    },
+    {
+      "gate": "Diff coverage >= 80%",
+      "result": "PASS",
+      "evidence_log": "validation-matrix 18-diff-coverage.txt",
+      "notes": "96.3% (1138/1182), exit 0."
+    },
+    {
+      "gate": "New RED/GREEN since 2ac93b60f",
+      "result": "PASS",
+      "evidence_log": "tdd/red|green-api-reschedule-authorise.txt, red|green-web-deploy-skew.txt, red|green-integration-bounds.txt, note-lint-promises-fix.txt, green-web-lint-promises.txt",
+      "notes": "Reschedule authorise-first RED fails on a real assertion (got the closed-day error where NOT_FOUND was expected; 1 failed, 63 passed), GREEN 159 passed. Deploy-skew RED fails on the notice assertion (1 failed, 15 passed), GREEN 94 passed. Migration bounds RED: 2 real failures (named-CHECK list and explicit constraint definitions), GREEN 21/21. The cache-refresh rejection handler (6ba9061f1) has no separate RED: it was lint-driven (no-floating-promises at two call sites), the note says so honestly and the behavioural test was added with the fix; GREEN 93 passed. I accept this as a disclosed exception because the change is a .catch on a previously void promise and the full matrix covers it."
+    },
+    {
+      "gate": "Edits to existing tests not weakening them",
+      "result": "PASS",
+      "evidence_log": "git diff 2ac93b60f..HEAD on the characterization and caller tests",
+      "notes": "The legacy characterization test gained 2 lines (a findFirst mock so the new load-and-authorise step finds the target); no assertion was removed. The caller test gained 26 lines for the new NOT_FOUND path. The characterization row 01 still passes."
+    },
+    {
+      "gate": "Migration change after earlier verification",
+      "result": "PASS",
+      "evidence_log": "tests/integration/availability.test.ts diff, green-integration-bounds.txt",
+      "notes": "The two hour CHECKs were renamed to *_bounds_check with tight ranges (start 0..1439, end 1..1440) and the integration test now asserts the exact constraint definitions, with the existing 0..1440 boundary and invalid-row tests still in place. The migration is still unreleased, so renaming is safe, but any local DB bootstrapped from the earlier SQL would hold the old names; the final integration run passed on a fresh bootstrap."
+    },
+    {
+      "gate": "Skips, clock, helpers, regression, negative paths",
+      "result": "PASS",
+      "evidence_log": "as in earlier verdicts",
+      "notes": "No it.skip / .only / todo added in the new commits; clock pinning unchanged in the PG-202 blocks; helpers excluded; full api/web/db/integration suites green at the final head; new negative path added (NOT_FOUND for an unknown or foreign appointment before any availability answer, tenant-scoped lookup)."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "low",
+      "file": "apps/api/src/modules/calendar/availability-enforcement.ts",
+      "line": 267,
+      "issue": "Batched next-slot search: total reads grow with the horizon; AC-016 states a bound of <= 5 queries. One multi-batch test; no assertion on the upper bound of reads for a full-horizon empty search. Carried over from the earlier recheck.",
+      "fix": "Confirm the worst-case batch count is acceptable or add a total-read-count assertion."
+    },
+    {
+      "severity": "low",
+      "file": "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+      "line": 84,
+      "issue": "Lines 84-90 and 275 uncovered (branches ~84%, meets the web 80% rule). The new skew-notice and cache-refresh paths are covered by the added tests.",
+      "fix": "Optional follow-up."
+    },
+    {
+      "severity": "low",
+      "file": "packages/application/src/usecases/scheduling/CheckConflicts.ts",
+      "line": 103,
+      "issue": "File-wide branches 70% from pre-existing code.",
+      "fix": "No action for PG-202."
+    },
+    {
+      "severity": "info",
+      "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/EVIDENCE-RENAMES.md",
+      "line": 1,
+      "issue": "90 evidence files were renamed .log to .txt, and the earlier sub-agent verdicts still cite .log names. I checked that the current matrix and tdd files exist as .txt with the cited content; I did not diff all 90 renames for content changes, relying on the note that git mv kept contents unchanged.",
+      "fix": "None, or spot-check with git diff -M --stat if desired."
+    },
+    {
+      "severity": "info",
+      "file": ".specify/sprints/sprint-18/specifications/PG-202-spec.md",
+      "line": 375,
+      "issue": "AC-025 (Lighthouse >= 90) still has no log in the matrix; spec classes it NEEDS_HUMAN when authenticated Lighthouse cannot run.",
+      "fix": "Record the result or NEEDS_HUMAN reason in the PR."
+    }
+  ],
+  "limitations": "Judged from logs and tests; nothing was run. Counts quoted from logs. All 20 headers show 72051d193 and summary.tsv ends with done. The statement that the PG-202 RLS session test passes rather than skips is inferred from the integration count (21 passed + 5 skipped). The 90 file renames were not individually diffed. PASS depends on the documented web thresholds (branches >=80) and on judging legacy-file gaps by the diff; under a flat 90% rule the new web files' 81-88% branches and CheckConflicts legacy branches (70%) would not pass. The lint-driven cache-refresh change has no RED by design."
+}

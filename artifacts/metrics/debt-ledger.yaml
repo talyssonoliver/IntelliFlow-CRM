@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-13
+last_updated: 2026-10-17
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -4750,15 +4750,176 @@ items:
       Resolve clientId and assignedTo tenant-scoped before the write (NOT_FOUND/BAD_REQUEST), add cross-tenant negatives; verify appointments.create attendeeIds/linkedCaseIds the same way.
     status: open
     notes: 'Pre-existing in cases.router.ts:347-364; found by the PG-198 AI-governance review (G5) and Codex. Cases part fixed on main by PG-204 (loadCaseCreateContext tenant-checks the client and an explicit assignee; the default assignee is ctx.tenant.userId), so the PG-198 duplicate fix was dropped when main 9ddaa23d3 was merged. Appointments part still to verify. gh #890.'
+  PG-205-CONTACT-SETTINGS-NO-ROLE-GATE-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/contact/contact-settings.router.ts builds every
+      procedure on plain tenantProcedure (lines 63-278), so any tenant user can
+      change the required-field and automation policy, reset it, and create,
+      rename or delete contact tags. PG-205 contact types (ADMIN/MANAGER only)
+      reference those tags as default tags.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Gate the write procedures with isContactTypeAdminRole and
+      logPermissionDenied; keep reads open; add USER-role negative tests.
+    status: open
+    notes: 'gh issue #908 (item 1). Out of PG-205 scope.'
+  PG-205-CONTACT-TAG-UPDATE-SPREAD-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: low
+    description: >-
+      contact-settings.router.ts:224-230 tags.update passes the whole validated
+      input (minus id) as Prisma data, so a field added to updateContactTagSchema
+      later becomes writable without reviewing this call.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Name the writable columns explicitly (name, colorToken, isActive, sortOrder).
+    status: open
+    notes: 'gh issue #908 (item 2).'
+  PG-205-LEAD-BULK-CONVERT-SKIP-DUPLICATES-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/lead/lead.router.ts:1584 (and :1589) bulk conversion
+      calls createMany({ data: contactData as any, skipDuplicates: true }); a
+      conflicting contact is dropped without a report, and the cast hides the
+      payload type, including contactType.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Type the payload and return or log the skipped rows.
+    status: open
+    notes: 'gh issue #908 (item 3).'
+  PG-205-CONTACT-SERVICE-ACCOUNT-ID-ECHO-001:
+    origin_task: PG-205
+    owner: Backend Lead
+    severity: low
+    description: >-
+      packages/application/src/services/ContactService.ts:92 echoes the
+      caller-supplied accountId in the client-facing ValidationError message.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Use a fixed message ("Account not found") and keep the id in the server log.
+    status: open
+    notes: 'gh issue #908 (item 4).'
+  PG-202-LEGACY-HOURS-CROSS-MIDNIGHT-001:
+    origin_task: PG-202
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/calendar/availability-enforcement.ts:127-150
+      (assertLegacyBusinessHours, moved verbatim from appointments.router.ts)
+      checks start and end hours separately, so 18:00 to 08:00 the next day
+      passes the 07:00-19:00 rule for firms that never saved availability.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 19
+    remediation_plan: >-
+      Reject an end on a later local date (except exactly 00:00) after an owner
+      decision, updating appointments.legacy-hours.characterization.test.ts.
+    status: open
+    notes: 'gh issue #909. Kept unchanged on purpose in PG-202 (legacy preserved; configured firms are protected by SPANS_MIDNIGHT).'
+  PG-202-APPOINTMENT-SETTINGS-RLS-WITH-CHECK-001:
+    origin_task: PG-202
+    owner: Data Engineer
+    severity: high
+    description: >-
+      packages/db/prisma/migrations/20260419200100_appointment_settings/migration.sql:30-31
+      defines the tenant policy with USING only, so an RLS-subject role can
+      write a row carrying another tenant's tenantId. The table now also holds
+      maxDailyBookings and availabilityConfiguredAt (PG-202).
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 19
+    remediation_plan: >-
+      Class A migration: ALTER POLICY ... WITH CHECK (same expression), plus an
+      integration test on the authenticated role.
+    status: open
+    notes: 'gh issue #910. Pre-existing; the PG-202 tables use USING and WITH CHECK.'
+  PG-202-DEFAULT-TIMEZONE-UTC-001:
+    origin_task: PG-202
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      packages/db/prisma/schema.prisma:2397 defaults
+      AppointmentSettings.defaultTimezone to UTC while ADR-044 (:14, :127-128)
+      names Europe/London; firm hours are now read in this zone.
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 19
+    remediation_plan: >-
+      Decide the default, then ALTER COLUMN ... SET DEFAULT (Class A) and keep
+      appointment-settings.defaults.ts in step.
+    status: open
+    notes: 'gh issue #911. The Availability page asks admins to confirm the zone before the first save.'
+  PG-202-STALE-CALENDAR-REGISTRY-ROWS-001:
+    origin_task: PG-202
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      docs/design/page-registry.md:1152,1167, information-architecture.md:315-316
+      and ui-flow-mapping.md:332-333 list /calendar/new and /calendar/[id];
+      neither exists (appointments live under /appointments/*).
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 19
+    remediation_plan: >-
+      Repoint or remove the rows, fix section counts, re-run the reconciliation tests.
+    status: open
+    notes: 'gh issue #912. Pre-existing.'
+  PG-202-AVAILABILITY-KNOWN-LIMITS-001:
+    origin_task: PG-202
+    owner: Backend Architect
+    severity: medium
+    description: >-
+      Accepted in ADR-081: recurring series are checked on the first occurrence
+      only (appointments.router.ts:495); appointments.findNextSlot has no UI
+      caller (appointments.router.ts:1107); the daily cap is count-then-insert
+      without a lock (availability-enforcement.ts:186-193).
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 20
+    remediation_plan: >-
+      Evaluate each occurrence over a bounded horizon; wire or retire
+      findNextSlot; per-tenant advisory lock around count and insert with a
+      race test.
+    status: open
+    notes: 'gh issue #913.'
+  PG-202-FINDNEXTSLOT-INPUT-BOUNDS-001:
+    origin_task: PG-202
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/legal/appointments.router.ts:163-170 findNextSlotSchema
+      accepts an unbounded attendeeId string and a durationMinutes with no maximum
+      (and not an integer).
+    created_at: 2026-10-17
+    expiry_date: 2027-01-17
+    remediation_sprint: 19
+    remediation_plan: >-
+      attendeeId min(1).max(64); durationMinutes int().min(5).max(1440); router test.
+    status: open
+    notes: 'gh issue #914. Found by the PG-202 STOA-Security review; pre-existing.'
 summary:
-  total_items: 426
+  total_items: 432
   by_severity:
     critical: 241
-    high: 12
-    medium: 156
-    low: 17
+    high: 13
+    medium: 159
+    low: 19
   by_status:
-    open: 410
+    open: 416
     in_progress: 0
     resolved: 16
     wont_fix: 0
