@@ -23,6 +23,11 @@
       "description": "To close: (1) Run the k6 scenario against a deployed, non-production environment (or production, with the owner's approval), and record the target URL and the run output. (2) Take the load-test dashboard from the hosted backend that production reports to (IFC-032), not from a local stack.",
       "raised_at": "2026-10-05T23:30:00Z",
       "resolved_at": null
+    },
+    {
+      "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Stays in its sprint, which is not gated yet. Needs a k6 run against a deployed environment, run with the owner approval; the nightly k6 job from #887 has produced no report in the repo yet. Verified 2026-10-16: Railway production api and ai-worker have OTEL_ENABLED=true and export to the Grafana Cloud gb-south-1 gateway; ws, events-worker and ingestion-worker do not (events-worker and ingestion-worker OTEL_ENABLED=false, ws has no OTel variables). Grafana holds span metrics for api and ai-worker and ai-worker pino log lines carrying trace_id/span_id; no api pino log line has reached Loki yet.",
+      "raised_at": "2026-10-16T14:00:00Z",
+      "resolved_at": null
     }
   ],
   "percent_complete": 50,
