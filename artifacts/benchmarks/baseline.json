@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-19T12:04:58.294Z",
+  "timestamp": "2026-10-19T12:12:31.108Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1456,7 +1456,7 @@
   },
   "database_inventory": {
     "total_tables": 201,
-    "total_fields": 2889,
+    "total_fields": 2892,
     "total_indexes": 906,
     "total_relations": 284,
     "tables_with_embeddings": 4,
@@ -1988,6 +1988,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantAIConfig",
+        "fields": 13,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "LeadActivity",
         "fields": 13,
         "indexes": 4,
@@ -2293,13 +2300,6 @@
         "fields": 11,
         "indexes": 4,
         "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TenantAIConfig",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
