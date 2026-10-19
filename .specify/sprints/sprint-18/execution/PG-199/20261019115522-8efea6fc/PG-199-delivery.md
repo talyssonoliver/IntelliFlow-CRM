@@ -186,6 +186,17 @@ These are from the final matrix, 2026-10-19 14:18–14:33Z, run one at a time wi
    - Details are in `artifacts/lighthouse/PG-199/README.md`. ADR-082 stays Proposed until this passes.
 2. **Production migrations (Class A).** `20261019120000_tenant_model_config` and `20261019120100_tenant_ai_config_rls` must be applied with `prisma migrate deploy` before the API is promoted. The production RLS state is unknown; projects-64 verifies it at rehearsal.
 
+## Ship phase (2026-10-19, after Aurora's SHIP instruction)
+
+- Merged origin/main (#920, #922, #923, #930) without conflicts. The integration test adopts the #930 schema lock. api 7962, ai-worker and adapters 2993 re-run green after the merge.
+- Pre-ship run 1 failed at lint-promises (`void` not accepted), which is fixed. Run 2 and later failed only at codex-review, whose new findings were all real and all fixed with RED/GREEN logs:
+  - Ollama calls billed at alias prices
+  - the spend cache: concurrent reads, a stale overwrite, then a double count (fixed as a monotonic max of read, cached and persisted totals)
+  - LiteLLM gateway fallbacks metered at the free price: owner ruling **Q9 = B, fix now**; priced from the served model, parity-tested against infra/litellm/config.yaml
+  - getNextBestActions without the tenant
+  - edits lost while a save was pending
+- Codex round 11: PASS, 0 findings. The final pre-ship result and the PR are in the READY message to Aurora.
+
 ## Follow-up issues
 
 - #924 ChainVersion.model unused
