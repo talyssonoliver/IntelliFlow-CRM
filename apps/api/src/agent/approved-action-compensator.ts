@@ -6,9 +6,11 @@
  * so the target module's tenant guards, transition rules and notifications all
  * apply. Nothing is hard-deleted:
  *
- * - create_case        → the case is moved to CANCELLED
- * - create_appointment → the appointment is cancelled
- * - draft_message      → an unsent email draft is moved to the trash
+ * - create_case        → the case is moved to CANCELLED (cases.changeStatus)
+ * - create_appointment → the appointment is cancelled (appointments.cancel)
+ * - draft_message      → an unsent email draft is moved to the trash, with the flags
+ *                        processEmail('delete') sets, as one tenant-scoped
+ *                        compare-and-set so an email that changed is left alone
  *
  * Updates and notes have no safe compensation yet (they need the before-state and
  * a delete-note procedure); they are not offered a rollback at all. Per-tool
@@ -93,13 +95,17 @@ const trashEmailDraft: Compensator = {
   },
   async undo(id, ctx) {
     // Archived, sent on or otherwise moved: it is no longer the draft the agent made.
-    if ((await emailMetadata(id, ctx)).isDraft !== true) {
-      throw new Error('The email is no longer a draft.');
-    }
-    const { inboundEmailRouter } = await import('../modules/email/inbound.router.js');
-    await inboundEmailRouter
-      .createCaller(ctx as CallerCtx)
-      .processEmail({ emailId: id, action: 'delete' } as never);
+    const meta = await emailMetadata(id, ctx);
+    if (meta.isDraft !== true) throw new Error('The email is no longer a draft.');
+    // The same flags inbound processEmail('delete') sets, as one compare-and-set on the
+    // metadata just read: an email archived or edited in between is left untouched.
+    const { count } = await ctx.prisma.emailRecord.updateMany({
+      where: { id, tenantId: tenantOf(ctx), metadata: { equals: meta as never } },
+      data: {
+        metadata: { ...meta, isTrashed: true, isArchived: false, isSpam: false, isDraft: false },
+      },
+    });
+    if (count !== 1) throw new Error('The email changed while rolling back; nothing was trashed.');
   },
   restoredState: (id) => ({ trashedDraftId: id }),
 };

@@ -8,11 +8,10 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 const calls = vi.hoisted(() => ({
   cases: { changeStatus: vi.fn() },
   appointments: { cancel: vi.fn() },
-  email: { processEmail: vi.fn() },
   ctxSeen: [] as unknown[],
 }));
 
-function routerMock(name: 'cases' | 'appointments' | 'email', exportName: string) {
+function routerMock(name: 'cases' | 'appointments', exportName: string) {
   return {
     [exportName]: {
       createCaller: (ctx: unknown) => {
@@ -27,7 +26,6 @@ vi.mock('../../modules/legal/cases.router', () => routerMock('cases', 'casesRout
 vi.mock('../../modules/legal/appointments.router', () =>
   routerMock('appointments', 'appointmentsRouter')
 );
-vi.mock('../../modules/email/inbound.router', () => routerMock('email', 'inboundEmailRouter'));
 
 import { canCompensate, compensateApprovedAction } from '../approved-action-compensator';
 
@@ -61,6 +59,7 @@ function ctx(state: TargetState = {}) {
         findFirst: row(state.draft === undefined ? { isDraft: true } : state.draft, (metadata) => ({
           metadata,
         })),
+        updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       },
     },
   } as any;
@@ -68,7 +67,7 @@ function ctx(state: TargetState = {}) {
 
 beforeEach(() => {
   calls.ctxSeen.length = 0;
-  for (const group of [calls.cases, calls.appointments, calls.email]) {
+  for (const group of [calls.cases, calls.appointments]) {
     for (const fn of Object.values(group)) (fn as ReturnType<typeof vi.fn>).mockReset();
   }
 });
@@ -153,8 +152,7 @@ describe('compensateApprovedAction', () => {
   });
 
   it('draft_message moves a still-unsent email draft to the trash, in the tenant', async () => {
-    calls.email.processEmail.mockResolvedValue({ success: true });
-    const requester = ctx({ draft: { isDraft: true } });
+    const requester = ctx({ draft: { isDraft: true, textBody: 'Hi' } });
 
     const outcome = await compensateApprovedAction(
       'draft_message',
@@ -167,32 +165,64 @@ describe('compensateApprovedAction', () => {
       where: { id: 'email-1', tenantId: TENANT },
       select: { metadata: true },
     });
-    expect(calls.email.processEmail).toHaveBeenCalledWith({
-      emailId: 'email-1',
-      action: 'delete',
+    // One compare-and-set on the metadata just read, with processEmail('delete')'s flags.
+    expect(requester.prisma.emailRecord.updateMany).toHaveBeenCalledWith({
+      where: {
+        id: 'email-1',
+        tenantId: TENANT,
+        metadata: { equals: { isDraft: true, textBody: 'Hi' } },
+      },
+      data: {
+        metadata: {
+          isDraft: false,
+          textBody: 'Hi',
+          isTrashed: true,
+          isArchived: false,
+          isSpam: false,
+        },
+      },
+    });
+  });
+
+  it('draft_message trashes nothing when the email changes during the rollback', async () => {
+    const requester = ctx({ draft: { isDraft: true } });
+    // Archived between the read and the update: the compare-and-set matches no row.
+    requester.prisma.emailRecord.updateMany.mockResolvedValue({ count: 0 });
+
+    const outcome = await compensateApprovedAction(
+      'draft_message',
+      { entityType: 'MESSAGE', entityId: 'email-1' },
+      requester
+    );
+
+    expect(outcome).toEqual({
+      success: false,
+      error: 'The email changed while rolling back; nothing was trashed.',
     });
   });
 
   it('draft_message leaves an email that is no longer a draft alone', async () => {
+    const archived = ctx({ draft: { isDraft: false, isArchived: true } });
     const outcome = await compensateApprovedAction(
       'draft_message',
       { entityType: 'MESSAGE', entityId: 'email-1' },
-      ctx({ draft: { isDraft: false, isArchived: true } })
+      archived
     );
 
     expect(outcome).toEqual({ success: false, error: 'The email is no longer a draft.' });
-    expect(calls.email.processEmail).not.toHaveBeenCalled();
+    expect(archived.prisma.emailRecord.updateMany).not.toHaveBeenCalled();
   });
 
   it('draft_message fails when the draft is not in the tenant', async () => {
+    const missing = ctx({ draft: null });
     const outcome = await compensateApprovedAction(
       'draft_message',
       { entityType: 'MESSAGE', entityId: 'email-1' },
-      ctx({ draft: null })
+      missing
     );
 
     expect(outcome).toEqual({ success: false, error: 'The email draft was not found.' });
-    expect(calls.email.processEmail).not.toHaveBeenCalled();
+    expect(missing.prisma.emailRecord.updateMany).not.toHaveBeenCalled();
   });
 
   it('create_case reads the case in the requester tenant', async () => {
@@ -234,16 +264,17 @@ describe('compensateApprovedAction', () => {
   ])(
     '%s already undone (a retry after an interrupted rollback) succeeds without a second call',
     async (tool, entityType, state, restoredState) => {
+      const requester = ctx(state as TargetState);
       const outcome = await compensateApprovedAction(
         tool,
         { entityType, entityId: 'x-1' },
-        ctx(state as TargetState)
+        requester
       );
 
       expect(outcome).toEqual({ success: true, restoredState });
       expect(calls.cases.changeStatus).not.toHaveBeenCalled();
       expect(calls.appointments.cancel).not.toHaveBeenCalled();
-      expect(calls.email.processEmail).not.toHaveBeenCalled();
+      expect(requester.prisma.emailRecord.updateMany).not.toHaveBeenCalled();
     }
   );
 
