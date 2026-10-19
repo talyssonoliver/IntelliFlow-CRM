@@ -43,6 +43,20 @@ export function chatPricingKey(meta: ModelUsageMeta): string {
   return pinned?.pricingKey ?? `${meta.purpose}-${meta.tier}`;
 }
 
+/**
+ * Metering runs after a successful (possibly paid) call: a metering failure, such as the
+ * daily cost limit check throwing, is logged and never turns that answer into an error.
+ */
+function recordSafely(record: () => void): void {
+  try {
+    record();
+  } catch (error) {
+    console.warn(
+      `[usage-metering] usage_not_metered: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
+}
+
 function costTrackingEnabled(): boolean {
   return aiConfig.costTracking?.enabled === true;
 }
@@ -80,13 +94,15 @@ export function recordModelUsage(meta: ModelUsageMeta, input: unknown, result: u
   // The gateway may serve another (e.g. a paid fallback) model than the one asked for:
   // price what ran when the response names a known deployment (owner Q9).
   const model = servedPricingKey(message?.response_metadata?.model_name) ?? chatPricingKey(meta);
-  costTracker.recordUsage({
-    model,
-    inputTokens: usage?.input_tokens ?? countTokens(textOf(input), model),
-    outputTokens: usage?.output_tokens ?? countTokens(textOf(result), model),
-    operationType: `llm:${meta.purpose}`,
-    metadata: { purpose: meta.purpose, tier: meta.tier, modelId: meta.modelId ?? null },
-  });
+  recordSafely(() =>
+    costTracker.recordUsage({
+      model,
+      inputTokens: usage?.input_tokens ?? countTokens(textOf(input), model),
+      outputTokens: usage?.output_tokens ?? countTokens(textOf(result), model),
+      operationType: `llm:${meta.purpose}`,
+      metadata: { purpose: meta.purpose, tier: meta.tier, modelId: meta.modelId ?? null },
+    })
+  );
 }
 
 /** Block an embedding call when the tenant's rag purpose has reached its monthly ceiling. */
@@ -107,11 +123,13 @@ export function recordEmbeddingUsage(
 ): void {
   if (!isBillableTenant(tenantId) || !costTrackingEnabled()) return;
   const model = meta.pricingKey ?? `rag-${meta.tier}`;
-  costTracker.recordUsage({
-    model,
-    inputTokens: texts.reduce((sum, text) => sum + countTokens(text, model), 0),
-    outputTokens: 0,
-    operationType: 'llm:rag',
-    metadata: { purpose: 'rag', tier: meta.tier },
-  });
+  recordSafely(() =>
+    costTracker.recordUsage({
+      model,
+      inputTokens: texts.reduce((sum, text) => sum + countTokens(text, model), 0),
+      outputTokens: 0,
+      operationType: 'llm:rag',
+      metadata: { purpose: 'rag', tier: meta.tier },
+    })
+  );
 }

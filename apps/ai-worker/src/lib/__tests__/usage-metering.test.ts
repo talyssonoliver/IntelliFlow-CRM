@@ -162,6 +162,22 @@ describe('PG-199 metering in the tracing wrappers', () => {
     }
   });
 
+  it('returns the answer even when metering throws (e.g. the daily cost limit)', async () => {
+    const { wrapModelWithTracing } = await load();
+    recordUsage.mockImplementationOnce(() => {
+      throw new Error('Daily AI cost limit exceeded: $51.00 / $50.00');
+    });
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const model = wrapModelWithTracing(
+      chatModel({ content: 'paid answer', usage_metadata: { input_tokens: 1, output_tokens: 1 } }),
+      { purpose: 'email', tier: 'free' }
+    );
+
+    await expect(model.invoke('x')).resolves.toMatchObject({ content: 'paid answer' });
+    expect(warn.mock.calls.some((c) => String(c[0]).includes('usage_not_metered'))).toBe(true);
+    warn.mockRestore();
+  });
+
   it('records nothing when cost tracking is disabled', async () => {
     const { wrapModelWithTracing } = await load(false);
     const model = wrapModelWithTracing(chatModel({ content: 'ok' }), {
