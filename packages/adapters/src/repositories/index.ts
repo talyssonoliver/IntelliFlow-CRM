@@ -34,6 +34,7 @@ export * from './PrismaActivityFeedRepository';
 export * from './PrismaTenantModuleRepository';
 export * from './PrismaTenantUsageAdapter';
 export * from './PrismaQuotaRepository';
+export * from './PrismaPurposeSpendRepository'; // PG-199
 
 // Outbox pattern (domain events)
 export * from './PrismaOutboxRepository';
