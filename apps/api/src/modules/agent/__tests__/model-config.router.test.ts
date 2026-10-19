@@ -559,5 +559,42 @@ describe('modelConfigRouter (PG-199)', () => {
       });
       expect(tx2.tenantAIConfig.deleteMany).toHaveBeenCalled();
     });
+
+    it('counts an existing tier override: resetting a premium tier is a downgrade', async () => {
+      const tx = useTx([configRow('qualification', { tier: 'premium' })]);
+      await expect(
+        admin.resetToDefaults({ expected: { qualification: SAVED.toISOString() } })
+      ).rejects.toMatchObject({
+        code: 'PRECONDITION_FAILED',
+        message: expect.stringMatching(
+          /^DOWNGRADE_UNCONFIRMED: qualification primary gpt-4o → default/
+        ),
+      });
+      expect(tx.tenantAIConfig.deleteMany).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('existing tier overrides on update', () => {
+    it('does not report a downgrade when an unpinned row keeps its tier', async () => {
+      const tx = useTx([configRow('qualification', { tier: 'premium' })]);
+      await admin.update({
+        purposes: [edit('qualification', { temperature: 0.3 })],
+        expected: { qualification: SAVED.toISOString() },
+      });
+      expect(tx.tenantAIConfig.upsert).toHaveBeenCalledTimes(1);
+    });
+
+    it('compares a new pin with the tier default the tenant runs on today', async () => {
+      useTx([configRow('qualification', { tier: 'premium' })]);
+      await expect(
+        admin.update({
+          purposes: [edit('qualification', { modelId: 'mistral-medium' })],
+          expected: { qualification: SAVED.toISOString() },
+        })
+      ).rejects.toMatchObject({
+        code: 'PRECONDITION_FAILED',
+        message: expect.stringMatching(/qualification primary gpt-4o → mistral-medium/),
+      });
+    });
   });
 });

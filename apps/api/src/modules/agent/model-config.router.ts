@@ -21,12 +21,14 @@ import {
   MODEL_CONFIG_LIMITS,
   currentPrimaryPrice,
   defaultModelsFor,
+  effectiveModel,
   findDowngrades,
   getCatalogEntry,
   priceOf,
   purposeSpendKey,
   purposeSpendPeriod,
   type LLMPurpose,
+  type LLMTier,
   type ModelCatalogEntry,
   type ModelDowngrade,
   type PurposeModelPick,
@@ -112,8 +114,20 @@ function sameConfig(a: EditableConfig, b: EditableConfig): boolean {
   return EDITABLE_FIELDS.every((field) => JSON.stringify(a[field]) === JSON.stringify(b[field]));
 }
 
-function modelPick(config: EditableConfig): PurposeModelPick {
-  return { modelId: config.modelId, fallbackModelIds: config.fallbackModelIds };
+/**
+ * The model a purpose runs on for the downgrade check: its pin, else the default of a
+ * tier override already stored on the row (rows written before PG-199 may carry one),
+ * else unpinned (the caller defaults).
+ */
+function modelPick(
+  purpose: LLMPurpose,
+  tier: string | null,
+  config: EditableConfig
+): PurposeModelPick {
+  return {
+    modelId: effectiveModel(purpose, tier as LLMTier | null, config.modelId),
+    fallbackModelIds: config.fallbackModelIds,
+  };
 }
 
 /** Serialise every model-config write of one tenant (released at commit/rollback). */
@@ -156,11 +170,13 @@ function assertAcknowledged(downgrades: ModelDowngrade[], acknowledged: boolean)
 /** Primary model changed to one priced exactly like the current one (owner Q7: lateral). */
 function isLateralChange(
   purpose: LLMPurpose,
+  tier: string | null,
   before: EditableConfig,
   after: EditableConfig
 ): boolean {
   if (before.modelId === after.modelId || after.modelId === null) return false;
-  return priceOf(after.modelId) === currentPrimaryPrice(purpose, before.modelId);
+  const current = modelPick(purpose, tier, before).modelId;
+  return priceOf(after.modelId) === currentPrimaryPrice(purpose, current);
 }
 
 function logModelConfigAudit(
@@ -293,17 +309,18 @@ export const modelConfigRouter = createTRPCRouter({
             assertExpected(item.purpose, row, input.expected);
             const before = editableOf(row);
             const after = editableOf(item);
-            return { purpose: item.purpose, before, after };
+            // An update never writes `tier`, so an existing override stays on both sides.
+            return { purpose: item.purpose, tier: row?.tier ?? null, before, after };
           })
           .filter(({ before, after }) => !sameConfig(before, after));
 
-        const downgrades = pending.flatMap(({ purpose, before, after }) =>
-          findDowngrades(purpose, modelPick(before), modelPick(after))
+        const downgrades = pending.flatMap(({ purpose, tier, before, after }) =>
+          findDowngrades(purpose, modelPick(purpose, tier, before), modelPick(purpose, tier, after))
         );
         assertAcknowledged(downgrades, input.acknowledgeDowngrade === true);
 
         const written = [];
-        for (const { purpose, before, after } of pending) {
+        for (const { purpose, tier, before, after } of pending) {
           const row = (await tx.tenantAIConfig.upsert({
             where: { tenantId_purpose: { tenantId, purpose } },
             create: { tenantId, purpose, tier: null, ...after },
@@ -315,7 +332,7 @@ export const modelConfigRouter = createTRPCRouter({
             after,
             row,
             downgrades: downgrades.filter((d) => d.purpose === purpose),
-            lateral: isLateralChange(purpose, before, after),
+            lateral: isLateralChange(purpose, tier, before, after),
           });
         }
         return written;
@@ -366,8 +383,9 @@ export const modelConfigRouter = createTRPCRouter({
         const downgrades = [...existing.values()].flatMap((row) =>
           findDowngrades(
             row.purpose as LLMPurpose,
-            modelPick(editableOf(row)),
-            modelPick(NO_OVERRIDES)
+            modelPick(row.purpose as LLMPurpose, row.tier, editableOf(row)),
+            // Reset clears the tier too.
+            modelPick(row.purpose as LLMPurpose, null, NO_OVERRIDES)
           )
         );
         assertAcknowledged(downgrades, input.acknowledgeDowngrade === true);
