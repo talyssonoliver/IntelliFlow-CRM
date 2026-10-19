@@ -108,6 +108,64 @@ describe('purpose ceiling (PG-199)', () => {
     );
   });
 
+  describe('concurrent cache misses', () => {
+    function deferredReader() {
+      const pending: ((spend: Record<string, number>) => void)[] = [];
+      const getSpend = vi.fn(
+        () =>
+          new Promise<Record<string, number>>((resolve) => {
+            pending.push(resolve);
+          })
+      );
+      return { getSpend, pending };
+    }
+
+    it('shares one spend read, so a stale read cannot overwrite newer local spend', async () => {
+      const r = deferredReader();
+      setPurposeSpendReader(r);
+      const first = assertWithinCeiling('t1', 'qualification', 100, OCT);
+      const second = assertWithinCeiling('t1', 'qualification', 100, OCT);
+      expect(r.getSpend).toHaveBeenCalledTimes(1);
+
+      r.pending[0]({ qualification: 9_000 });
+      await first;
+      await second;
+      notePurposeSpend('t1', 'qualification', 1_500, OCT); // 10 500 >= 10 000
+
+      await expect(assertWithinCeiling('t1', 'qualification', 100, OCT)).rejects.toBeInstanceOf(
+        PurposeCeilingReachedError
+      );
+    });
+
+    it('keeps spend noted while the read is in flight', async () => {
+      const r = deferredReader();
+      setPurposeSpendReader(r);
+      const pendingCheck = assertWithinCeiling('t1', 'email', 100, OCT);
+      notePurposeSpend('t1', 'email', 1_500, OCT); // recorded before the read returns
+      r.pending[0]({ email: 9_000 });
+      // The read itself already counts the noted spend: 9 000 + 1 500 >= 10 000.
+      await expect(pendingCheck).rejects.toBeInstanceOf(PurposeCeilingReachedError);
+
+      await expect(assertWithinCeiling('t1', 'email', 100, OCT)).rejects.toBeInstanceOf(
+        PurposeCeilingReachedError
+      );
+    });
+
+    it('lets a later miss read again after a failed shared read', async () => {
+      const getSpend = vi
+        .fn()
+        .mockRejectedValueOnce(new Error('db down'))
+        .mockResolvedValueOnce({ email: 20_000 });
+      setPurposeSpendReader({ getSpend });
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await assertWithinCeiling('t1', 'email', 100, OCT); // fail-open
+      await expect(assertWithinCeiling('t1', 'email', 100, OCT)).rejects.toBeInstanceOf(
+        PurposeCeilingReachedError
+      );
+      expect(getSpend).toHaveBeenCalledTimes(2);
+    });
+  });
+
   it('notes spend only into an existing cache entry for the same period', () => {
     notePurposeSpend('t1', 'email', 500, OCT);
     expect(_spendCache.size).toBe(0);

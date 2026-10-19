@@ -77,6 +77,13 @@ const SPEND_CACHE_TTL_MS = 30_000;
 /** Exported so tests can clear it. Key: `${tenantId}:${purpose}:${period}`. */
 export const _spendCache = new Map<string, SpendCacheEntry>();
 
+/**
+ * One spend read per key at a time, and the spend noted while it is in flight, so a
+ * concurrent miss never replaces a newer local balance with an older read.
+ */
+const inflightReads = new Map<string, Promise<number | null>>();
+const notedDuringRead = new Map<string, number>();
+
 function spendKey(tenantId: string, purpose: LLMPurpose, period: string): string {
   return `${tenantId}:${purpose}:${period}`;
 }
@@ -101,8 +108,12 @@ export function notePurposeSpend(
   centiCents: number,
   now: Date = new Date()
 ): void {
-  const entry = _spendCache.get(spendKey(tenantId, purpose, purposeSpendPeriod(now)));
-  if (entry && centiCents > 0) entry.centiCents += centiCents;
+  if (!(centiCents > 0)) return;
+  const key = spendKey(tenantId, purpose, purposeSpendPeriod(now));
+  const entry = _spendCache.get(key);
+  if (entry) entry.centiCents += centiCents;
+  if (inflightReads.has(key))
+    notedDuringRead.set(key, (notedDuringRead.get(key) ?? 0) + centiCents);
 }
 
 async function readSpend(tenantId: string, purpose: LLMPurpose, now: Date): Promise<number | null> {
@@ -115,9 +126,29 @@ async function readSpend(tenantId: string, purpose: LLMPurpose, now: Date): Prom
     warnOnce('spend_reader_missing', 'no PurposeSpendReader registered');
     return null;
   }
+  const inflight = inflightReads.get(key);
+  if (inflight) return inflight;
+  const read = fetchSpend(spendReader, tenantId, purpose, period, key, now);
+  inflightReads.set(key, read);
   try {
-    const spend = await spendReader.getSpend(tenantId, period, [purpose]);
-    const centiCents = spend[purpose] ?? 0;
+    return await read;
+  } finally {
+    inflightReads.delete(key);
+    notedDuringRead.delete(key);
+  }
+}
+
+async function fetchSpend(
+  reader: PurposeSpendReader,
+  tenantId: string,
+  purpose: LLMPurpose,
+  period: string,
+  key: string,
+  now: Date
+): Promise<number | null> {
+  try {
+    const spend = await reader.getSpend(tenantId, period, [purpose]);
+    const centiCents = (spend[purpose] ?? 0) + (notedDuringRead.get(key) ?? 0);
     _spendCache.set(key, { centiCents, expiresAt: now.getTime() + SPEND_CACHE_TTL_MS });
     return centiCents;
   } catch (err) {
