@@ -188,6 +188,11 @@ export default function ModelConfigContent() {
     announce('Could not save model settings', true);
   };
 
+  // The write handlers catch their own errors; this only surfaces anything unexpected.
+  const runAction = (action: Promise<void>): void => {
+    action.catch((error: unknown) => setServerError(errorMessage(error)));
+  };
+
   const submit = async (acknowledge: boolean) => {
     if (!snapshot) return;
     const payload = buildUpdatePayload(snapshot, drafts, acknowledge);
@@ -225,7 +230,7 @@ export default function ModelConfigContent() {
       setConfirm({ kind: 'save', lines: downgrades.map(describeDowngrade) });
       return;
     }
-    void submit(false);
+    runAction(submit(false));
   };
 
   const handleReset = async (acknowledge: boolean) => {
@@ -255,8 +260,7 @@ export default function ModelConfigContent() {
     const pending = confirm;
     confirmed.current = true;
     setConfirm(null);
-    if (pending?.kind === 'reset') void handleReset(pending.lines.length > 0);
-    else void submit(true);
+    runAction(pending?.kind === 'reset' ? handleReset(pending.lines.length > 0) : submit(true));
   };
 
   const hasOverrides = snapshot?.some((row) => row.updatedAt !== null) ?? false;
@@ -372,7 +376,7 @@ export default function ModelConfigContent() {
         <div className="mb-4 flex flex-col gap-2 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200 sm:flex-row sm:items-center sm:justify-between">
           <p role="alert">{serverError}</p>
           {hasConflict && (
-            <Button type="button" variant="outline" onClick={() => void handleReload()}>
+            <Button type="button" variant="outline" onClick={() => runAction(handleReload())}>
               Reload latest
             </Button>
           )}
