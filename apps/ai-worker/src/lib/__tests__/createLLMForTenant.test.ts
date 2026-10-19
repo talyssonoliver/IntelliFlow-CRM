@@ -254,6 +254,8 @@ describe('createLLMForTenant()', () => {
       model: 'mistral',
     });
     expect((await lastTraceMeta()).modelId).toBeUndefined();
+    // Local Ollama costs nothing: priced with the zero-cost 'ollama' entry, not the paid alias.
+    expect((await lastTraceMeta()).pricingKey).toBe('ollama');
     warn.mockRestore();
   });
 

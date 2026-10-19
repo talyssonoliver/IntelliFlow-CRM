@@ -508,11 +508,24 @@ export function createLLM(
     purpose,
     tier,
     modelId: pinApplies ? pinned?.id : undefined,
-    // Unpinned (or unmapped) on OpenRouter: price the OpenRouter model, not the alias.
-    pricingKey: openRouterModel && !pinApplies ? openRouterModel : undefined,
+    pricingKey: runningPricingKey(provider, openRouterModel, pinApplies),
   });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;
+}
+
+/**
+ * PG-199: the MODEL_PRICING key of the model that actually runs when it is not the purpose
+ * alias: local Ollama is free ('ollama'), and an unpinned (or unmapped) OpenRouter call is
+ * priced as its OpenRouter model.
+ */
+function runningPricingKey(
+  provider: string,
+  openRouterModel: string | undefined,
+  pinApplies: boolean
+): string | undefined {
+  if (provider === 'ollama') return 'ollama';
+  return openRouterModel && !pinApplies ? openRouterModel : undefined;
 }
 
 /**
