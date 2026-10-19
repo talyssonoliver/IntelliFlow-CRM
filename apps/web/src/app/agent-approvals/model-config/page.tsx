@@ -1,16 +1,19 @@
-'use client';
+/**
+ * Model Configuration Page - PG-199
+ *
+ * Server Component shell: streams the skeleton immediately, then hydrates
+ * ModelConfigContent (client component) via Suspense. Same pattern as the
+ * PG-198 approval-policies page.
+ */
+
+import { Suspense } from 'react';
+import ModelConfigContent from './ModelConfigContent';
+import { ModelConfigLoading } from './ModelConfigLoading';
 
 export default function ModelConfigPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Model Configuration</h1>
-        <p className="text-muted-foreground mt-1">Manage LLM providers, models, and parameters.</p>
-      </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        <span className="material-symbols-outlined text-4xl mb-2 block">psychology</span>
-        <p>Model configuration coming soon.</p>
-      </div>
-    </div>
+    <Suspense fallback={<ModelConfigLoading />}>
+      <ModelConfigContent />
+    </Suspense>
   );
 }

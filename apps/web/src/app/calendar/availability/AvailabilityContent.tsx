@@ -57,8 +57,6 @@ interface Snapshot {
   canEdit: boolean;
 }
 
-/** The tRPC error code of a failed mutation, if any. */
-
 function errorMessage(error: unknown): string {
   return error instanceof Error && error.message ? error.message : 'Please try again.';
 }
