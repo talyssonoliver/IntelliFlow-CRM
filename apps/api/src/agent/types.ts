@@ -136,6 +136,8 @@ export interface ExecutedAction extends PendingAction {
   approval?: ApprovalDecision;
   rollbackAvailable: boolean;
   rollbackToken?: string;
+  /** Epoch ms of an unfinished rollback claim (#856); set only while one is held. */
+  rollbackClaimedAt?: number;
 }
 
 /**

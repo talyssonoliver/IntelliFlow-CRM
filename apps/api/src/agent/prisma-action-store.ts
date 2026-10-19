@@ -30,6 +30,19 @@ const AGENT_CONFIDENCE = 'agent';
 /** An approved action still EXECUTING after this long was interrupted (crash/restart). */
 const INTERRUPTED_AFTER_MS = 5 * 60 * 1000;
 
+/**
+ * A rollback claimed longer ago than this, and neither recorded nor released, was
+ * interrupted (#856). It may be claimed again: the compensations are idempotent.
+ */
+const ROLLBACK_CLAIM_STALE_MS = 5 * 60 * 1000;
+
+/** Claimable: never claimed (or released), or a claim that has gone stale. */
+function rollbackClaimable(proposed: Record<string, unknown> | null, now: number): boolean {
+  if (proposed?.rollbackAvailable === true) return true;
+  const claimedAt = proposed?.rollbackClaimedAt;
+  return typeof claimedAt === 'number' && claimedAt < now - ROLLBACK_CLAIM_STALE_MS;
+}
+
 // Infer the AgentAction row type from Prisma's findUnique return
 type AgentAction = NonNullable<Awaited<ReturnType<PrismaClient['agentAction']['findUnique']>>>;
 
@@ -344,9 +357,10 @@ export class PrismaAgentActionStore {
       take: 500,
     });
 
+    const now = Date.now();
     for (const row of rows) {
       const proposed = row.proposedState as Record<string, unknown> | null;
-      if (proposed?.rollbackToken === token && proposed?.rollbackAvailable) {
+      if (proposed?.rollbackToken === token && rollbackClaimable(proposed, now)) {
         return this.toExecutedAction(row);
       }
     }
@@ -359,6 +373,7 @@ export class PrismaAgentActionStore {
 
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     proposed.rollbackAvailable = false;
+    proposed.rollbackClaimedAt = null;
     await this.prisma.agentAction.updateMany({
       where: { id, tenantId },
       data: { proposedState: proposed as any },
@@ -366,10 +381,16 @@ export class PrismaAgentActionStore {
   }
 
   /**
-   * Take the rollback for one caller (#856): flips rollbackAvailable off only while it is
-   * still on, so of two concurrent requests exactly one runs the compensation.
+   * Take the rollback for one caller (#856). The update matches only while the rollback is
+   * available or its previous claim is stale, so of two concurrent requests exactly one
+   * runs the compensation. The claim time lets an interrupted request's claim be retaken.
    */
-  async claimRollback(id: string, tenantId: string, token: string): Promise<boolean> {
+  async claimRollback(
+    id: string,
+    tenantId: string,
+    token: string,
+    now: number = Date.now()
+  ): Promise<boolean> {
     const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return false;
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
@@ -378,12 +399,15 @@ export class PrismaAgentActionStore {
         id,
         tenantId,
         status: 'APPROVED' as any,
-        AND: [
-          { proposedState: { path: ['rollbackToken'], equals: token } },
+        proposedState: { path: ['rollbackToken'], equals: token },
+        OR: [
           { proposedState: { path: ['rollbackAvailable'], equals: true } },
+          { proposedState: { path: ['rollbackClaimedAt'], lt: now - ROLLBACK_CLAIM_STALE_MS } },
         ],
       },
-      data: { proposedState: { ...proposed, rollbackAvailable: false } as any },
+      data: {
+        proposedState: { ...proposed, rollbackAvailable: false, rollbackClaimedAt: now } as any,
+      },
     });
     return result.count === 1;
   }
@@ -395,7 +419,9 @@ export class PrismaAgentActionStore {
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     await this.prisma.agentAction.updateMany({
       where: { id, tenantId, status: 'APPROVED' as any },
-      data: { proposedState: { ...proposed, rollbackAvailable: true } as any },
+      data: {
+        proposedState: { ...proposed, rollbackAvailable: true, rollbackClaimedAt: null } as any,
+      },
     });
   }
 
@@ -511,6 +537,8 @@ export class PrismaAgentActionStore {
         : undefined,
       rollbackAvailable: (proposed.rollbackAvailable as boolean) ?? false,
       rollbackToken: proposed.rollbackToken as string | undefined,
+      rollbackClaimedAt:
+        typeof proposed.rollbackClaimedAt === 'number' ? proposed.rollbackClaimedAt : undefined,
     };
   }
 

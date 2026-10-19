@@ -52,12 +52,16 @@ function resolveJsonPath(value: any, path: string[]): any {
 // proposedState->>"rollbackToken").
 function matchesCondition(row: any, key: string, value: any): boolean {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
-    if ('gt' in value) return row[key] > value.gt;
-    if ('lt' in value) return row[key] < value.lt;
-    if ('not' in value) return row[key] !== value.not;
     if ('path' in value && 'equals' in value) {
       return resolveJsonPath(row[key], value.path as string[]) === value.equals;
     }
+    if ('path' in value && 'lt' in value) {
+      const nested = resolveJsonPath(row[key], value.path as string[]);
+      return typeof nested === 'number' && nested < value.lt;
+    }
+    if ('gt' in value) return row[key] > value.gt;
+    if ('lt' in value) return row[key] < value.lt;
+    if ('not' in value) return row[key] !== value.not;
   }
   return row[key] === value;
 }
@@ -65,11 +69,12 @@ function matchesCondition(row: any, key: string, value: any): boolean {
 function matchesWhere(row: any, where: Record<string, any> | undefined): boolean {
   if (!where) return true;
 
-  return Object.entries(where).every(([key, value]) =>
-    key === 'AND'
-      ? (value as Record<string, any>[]).every((clause) => matchesWhere(row, clause))
-      : matchesCondition(row, key, value)
-  );
+  return Object.entries(where).every(([key, value]) => {
+    const clauses = value as Record<string, any>[];
+    if (key === 'AND') return clauses.every((clause) => matchesWhere(row, clause));
+    if (key === 'OR') return clauses.some((clause) => matchesWhere(row, clause));
+    return matchesCondition(row, key, value);
+  });
 }
 
 vi.mock('@intelliflow/db', () => ({
@@ -605,6 +610,7 @@ describe('Approval Workflow (supplementary)', () => {
       const row = agentActionRows.find((r) => r.id === 'rb-fail');
       expect(row.status).toBe('APPROVED');
       expect(row.proposedState.rollbackAvailable).toBe(true);
+      expect(row.proposedState.rollbackClaimedAt).toBeNull();
       expect((await rollback('rb-fail')).success).toBe(true);
     });
 
@@ -647,6 +653,40 @@ describe('Approval Workflow (supplementary)', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Rollback window has expired');
+      expect(compensateSpy).not.toHaveBeenCalled();
+    });
+
+    it('lets an interrupted claim be retaken once stale, even past the window', async () => {
+      await storeRollbackable('rb-stale', {
+        executedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      });
+      const row = agentActionRows.find((r) => r.id === 'rb-stale');
+      // The request that claimed it died between the claim and the compensation.
+      row.proposedState = {
+        ...row.proposedState,
+        rollbackAvailable: false,
+        rollbackClaimedAt: Date.now() - 10 * 60 * 1000,
+      };
+
+      const result = await rollback('rb-stale');
+
+      expect(result.success).toBe(true);
+      expect(compensateSpy).toHaveBeenCalledTimes(1);
+      expect(row.status).toBe('ROLLED_BACK');
+    });
+
+    it('does not let a fresh claim be taken by a second request', async () => {
+      await storeRollbackable('rb-fresh');
+      const row = agentActionRows.find((r) => r.id === 'rb-fresh');
+      row.proposedState = {
+        ...row.proposedState,
+        rollbackAvailable: false,
+        rollbackClaimedAt: Date.now() - 30 * 1000,
+      };
+
+      const result = await rollback('rb-fresh');
+
+      expect(result.success).toBe(false);
       expect(compensateSpy).not.toHaveBeenCalled();
     });
 

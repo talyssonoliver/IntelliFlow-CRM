@@ -392,8 +392,10 @@ export class ApprovalWorkflowService {
    *
    * The token is looked up in the caller's tenant only, the rollback is claimed
    * atomically (two concurrent requests cannot both run it), and the undo itself runs
-   * through the target module's own procedure on the requester's request context. A
-   * compensation that fails changes nothing, so the claim is given back for a retry.
+   * through the target module's own procedure on the requester's request context.
+   * Compensations are idempotent and reconcile from the target's state, so a reported
+   * failure means the target is not undone and the claim is given back for a retry. A
+   * claim left by an interrupted request goes stale and can be taken again.
    */
   async rollbackAction(
     request: RollbackRequest,
@@ -415,9 +417,14 @@ export class ApprovalWorkflowService {
       return fail('Invalid rollback token or action not found');
     }
 
-    // Check rollback window
+    // Check rollback window. A stale claim was requested inside it and was interrupted; it
+    // may finish late, since its compensation may already have been applied.
     const executedAt = executedAction.executedAt;
-    if (executedAt && Date.now() - executedAt.getTime() > this.rollbackWindowMs) {
+    if (
+      executedAction.rollbackClaimedAt === undefined &&
+      executedAt &&
+      Date.now() - executedAt.getTime() > this.rollbackWindowMs
+    ) {
       await executedActionsStore.disableRollback(executedAction.id, tenantId);
       return fail('Rollback window has expired (1 hour limit)');
     }
