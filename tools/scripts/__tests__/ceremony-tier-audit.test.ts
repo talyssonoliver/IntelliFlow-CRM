@@ -9,8 +9,8 @@
  */
 import { describe, it, expect, afterAll, vi } from 'vitest';
 import * as fs from 'node:fs';
-import * as os from 'node:os';
 import * as path from 'node:path';
+import { findRepoRoot } from '../lib/validation-utils';
 
 const HEADER = 'Task ID,Status,Description,Target Sprint,Owner,Dependencies,Estimate (O/M/P)';
 const ROWS = [
@@ -22,13 +22,16 @@ const ROWS = [
   'PG-950,Backlog,A brand new architectural change,18,Frontend Dev (STOA-Foundation),PG-178,1200/2400/4800',
 ];
 
+// Scratch repos live inside the repo: the CLI refuses a --repo-root outside it.
+const TMP_BASE = path.join(findRepoRoot(process.cwd()), 'artifacts', 'tmp');
+fs.mkdirSync(TMP_BASE, { recursive: true });
 const tmpDirs: string[] = [];
 afterAll(() => {
   for (const d of tmpDirs) fs.rmSync(d, { recursive: true, force: true });
 });
 
 function makeRepo(opts: { csv?: string | null; tiers?: string } = {}): string {
-  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'tier-audit-'));
+  const root = fs.mkdtempSync(path.join(TMP_BASE, 'tier-audit-'));
   tmpDirs.push(root);
   if (opts.csv !== null) {
     const dir = path.join(root, 'apps', 'project-tracker', 'docs', 'metrics', '_global');
@@ -174,14 +177,12 @@ describe('ceremony-tier-audit CLI', () => {
 
   it('resolveConfinedRepoRoot accepts nested paths and rejects ../ escapes and prefix siblings', async () => {
     const { resolveConfinedRepoRoot } = await import('../lib/ceremony-tier-config');
-    const base = path.join(os.tmpdir(), 'confine-base');
-    expect(resolveConfinedRepoRoot(base, [base])).toBe(path.resolve(base));
-    expect(resolveConfinedRepoRoot(path.join(base, 'a', 'b'), [base])).toBe(
-      path.resolve(base, 'a', 'b')
-    );
-    expect(() => resolveConfinedRepoRoot(path.join(base, '..', '..', 'etc'), [base])).toThrow(
+    const base = findRepoRoot(process.cwd());
+    expect(resolveConfinedRepoRoot(base)).toBe(path.resolve(base));
+    expect(resolveConfinedRepoRoot(path.join(base, 'a', 'b'))).toBe(path.resolve(base, 'a', 'b'));
+    expect(() => resolveConfinedRepoRoot(path.join(base, '..', '..', 'etc'))).toThrow(
       /outside the repository/
     );
-    expect(() => resolveConfinedRepoRoot(base + '-evil', [base])).toThrow(/outside the repository/);
+    expect(() => resolveConfinedRepoRoot(base + '-evil')).toThrow(/outside the repository/);
   });
 });
