@@ -19,6 +19,7 @@
  * @task IFC-139
  */
 
+import { randomUUID } from 'node:crypto';
 import type { PrismaClient } from '@intelliflow/db';
 import { confidenceToPercent } from '@intelliflow/domain';
 import type { PendingAction, ExecutedAction, ApprovalStatus, ExecutionStatus } from './types';
@@ -29,6 +30,19 @@ const AGENT_CONFIDENCE = 'agent';
 
 /** An approved action still EXECUTING after this long was interrupted (crash/restart). */
 const INTERRUPTED_AFTER_MS = 5 * 60 * 1000;
+
+/**
+ * A rollback claimed longer ago than this, and neither recorded nor released, was
+ * interrupted (#856). It may be claimed again: the compensations are idempotent.
+ */
+const ROLLBACK_CLAIM_STALE_MS = 5 * 60 * 1000;
+
+/** Claimable: never claimed (or released), or a claim that has gone stale. */
+function rollbackClaimable(proposed: Record<string, unknown> | null, now: number): boolean {
+  if (proposed?.rollbackAvailable === true) return true;
+  const claimedAt = proposed?.rollbackClaimedAt;
+  return typeof claimedAt === 'number' && claimedAt < now - ROLLBACK_CLAIM_STALE_MS;
+}
 
 // Infer the AgentAction row type from Prisma's findUnique return
 type AgentAction = NonNullable<Awaited<ReturnType<PrismaClient['agentAction']['findUnique']>>>;
@@ -92,8 +106,13 @@ export class PrismaAgentActionStore {
     });
   }
 
-  async get(id: string): Promise<PendingAction | undefined> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  /**
+   * #883: every by-id access is scoped by tenant. `tenantId` defaults to the store's
+   * default tenant (background callers); request paths pass the caller's tenant. A row
+   * of another tenant is indistinguishable from a missing one, and is never written.
+   */
+  async get(id: string, tenantId: string = this.tenantId): Promise<PendingAction | undefined> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return undefined;
 
     const action = this.toPendingAction(row);
@@ -101,15 +120,18 @@ export class PrismaAgentActionStore {
     // Check expiry
     if (action.status === 'PENDING' && action.expiresAt < new Date()) {
       action.status = 'EXPIRED';
-      await this.update(action);
+      await this.update(action, tenantId);
     }
 
     return action;
   }
 
-  async update(action: PendingAction): Promise<void> {
-    await this.prisma.agentAction.update({
-      where: { id: action.id },
+  async update(
+    action: PendingAction,
+    tenantId: string = action.tenantId ?? this.tenantId
+  ): Promise<void> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: { id: action.id, tenantId },
       data: {
         status: STATUS_TO_DB[action.status] as any,
         previousState: action.input as any,
@@ -118,12 +140,15 @@ export class PrismaAgentActionStore {
           action.status === 'APPROVED' || action.status === 'REJECTED' ? new Date() : undefined,
       },
     });
+    if (result.count === 0) {
+      throw new Error(`Agent action not found in tenant: ${action.id}`);
+    }
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, tenantId: string = this.tenantId): Promise<boolean> {
     try {
-      await this.prisma.agentAction.delete({ where: { id } });
-      return true;
+      const result = await this.prisma.agentAction.deleteMany({ where: { id, tenantId } });
+      return result.count > 0;
     } catch {
       return false;
     }
@@ -276,8 +301,8 @@ export class PrismaAgentActionStore {
   // ---------------------------------------------------------------------------
 
   async addExecuted(action: ExecutedAction): Promise<void> {
-    await this.prisma.agentAction.update({
-      where: { id: action.id },
+    const result = await this.prisma.agentAction.updateMany({
+      where: { id: action.id, tenantId: action.tenantId ?? this.tenantId },
       data: {
         status: 'APPROVED' as any,
         reviewedAt: action.executedAt ?? new Date(),
@@ -296,15 +321,24 @@ export class PrismaAgentActionStore {
         } as any,
       },
     });
+    if (result.count === 0) {
+      throw new Error(`Agent action not found in tenant: ${action.id}`);
+    }
   }
 
-  async getExecuted(id: string): Promise<ExecutedAction | undefined> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  async getExecuted(
+    id: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction | undefined> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row || row.status !== ('APPROVED' as any)) return undefined;
     return this.toExecutedAction(row);
   }
 
-  async findByRollbackToken(token: string): Promise<ExecutedAction | undefined> {
+  async findByRollbackToken(
+    token: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction | undefined> {
     // Rollback token is stored inside proposedState JSON (no generated column yet).
     // Filter on the JSON path directly (proposedState->>"rollbackToken") so the DB
     // returns only the matching row(s) — this is correctness-critical: without it,
@@ -317,31 +351,129 @@ export class PrismaAgentActionStore {
     const rows = await this.prisma.agentAction.findMany({
       where: {
         status: 'APPROVED' as any,
-        tenantId: this.tenantId,
+        tenantId,
         proposedState: { path: ['rollbackToken'], equals: token },
       },
       orderBy: { createdAt: 'desc' },
       take: 500,
     });
 
+    const now = Date.now();
     for (const row of rows) {
       const proposed = row.proposedState as Record<string, unknown> | null;
-      if (proposed?.rollbackToken === token && proposed?.rollbackAvailable) {
+      if (proposed?.rollbackToken === token && rollbackClaimable(proposed, now)) {
         return this.toExecutedAction(row);
       }
     }
     return undefined;
   }
 
-  async disableRollback(id: string): Promise<void> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  async disableRollback(id: string, tenantId: string = this.tenantId): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return;
 
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     proposed.rollbackAvailable = false;
-    await this.prisma.agentAction.update({
-      where: { id },
+    proposed.rollbackClaimedAt = null;
+    await this.prisma.agentAction.updateMany({
+      where: { id, tenantId },
       data: { proposedState: proposed as any },
+    });
+  }
+
+  /**
+   * Take the rollback for one caller (#856). The update matches only while the rollback is
+   * available or its previous claim is stale, so of two concurrent requests exactly one
+   * runs the compensation. The claim time lets an interrupted request's claim be retaken.
+   *
+   * Returns the claim id, or null when not claimed. Release and record are fenced on it, so
+   * a request whose stale claim was retaken cannot release or overwrite the newer claim.
+   */
+  async claimRollback(
+    id: string,
+    tenantId: string,
+    token: string,
+    now: number = Date.now()
+  ): Promise<string | null> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row) return null;
+    const claimId = randomUUID();
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id,
+        tenantId,
+        status: 'APPROVED' as any,
+        proposedState: { path: ['rollbackToken'], equals: token },
+        OR: [
+          { proposedState: { path: ['rollbackAvailable'], equals: true } },
+          { proposedState: { path: ['rollbackClaimedAt'], lt: now - ROLLBACK_CLAIM_STALE_MS } },
+        ],
+      },
+      data: {
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: false,
+          rollbackClaimedAt: now,
+          rollbackClaimId: claimId,
+        } as any,
+      },
+    });
+    return result.count === 1 ? claimId : null;
+  }
+
+  /** Give a claimed rollback back after a compensation that left the target as it was. */
+  async releaseRollback(id: string, tenantId: string, claimId: string): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row || row.status !== ('APPROVED' as any)) return;
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    await this.prisma.agentAction.updateMany({
+      where: {
+        id,
+        tenantId,
+        status: 'APPROVED' as any,
+        proposedState: { path: ['rollbackClaimId'], equals: claimId },
+      },
+      data: {
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: true,
+          rollbackClaimedAt: null,
+          rollbackClaimId: null,
+        } as any,
+      },
+    });
+  }
+
+  /** Record that the action's effect was undone: by whom, why, and what was restored. */
+  async markRolledBack(
+    id: string,
+    tenantId: string,
+    claimId: string,
+    rollback: {
+      rolledBackBy: string;
+      rolledBackAt: Date;
+      reason?: string;
+      restoredState?: Record<string, unknown>;
+    }
+  ): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row) return;
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    // Fenced like release: a superseded claim's holder leaves the newer claim to record it.
+    await this.prisma.agentAction.updateMany({
+      where: { id, tenantId, proposedState: { path: ['rollbackClaimId'], equals: claimId } },
+      data: {
+        status: 'ROLLED_BACK' as any,
+        rolledBackAt: rollback.rolledBackAt,
+        rolledBackBy: rollback.rolledBackBy,
+        rollbackReason: rollback.reason ?? null,
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: false,
+          rollbackRestoredState: rollback.restoredState,
+        } as any,
+      },
     });
   }
 
@@ -427,6 +559,8 @@ export class PrismaAgentActionStore {
         : undefined,
       rollbackAvailable: (proposed.rollbackAvailable as boolean) ?? false,
       rollbackToken: proposed.rollbackToken as string | undefined,
+      rollbackClaimedAt:
+        typeof proposed.rollbackClaimedAt === 'number' ? proposed.rollbackClaimedAt : undefined,
     };
   }
 

@@ -17,6 +17,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterAll } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { ACCOUNT_TIER_COLOR_TOKENS } from '../../packages/validators/src/account-tiers';
+import { applySchemaSql } from './schema-lock';
 
 const DB_URL = process.env.DATABASE_URL;
 const describeDb = DB_URL ? describe : describe.skip;
@@ -38,7 +39,8 @@ const MIGRATION_PATH = join(
  * so the CHECK constraints and RLS policies this suite asserts would be
  * missing there. When they are absent, apply exactly the migration's own
  * constraint and policy statements (everything from the first CHECK onward),
- * so the assertions exercise the shipped SQL rather than skipping.
+ * so the assertions exercise the shipped SQL rather than skipping. The DDL runs under
+ * the shared schema lock (see ./schema-lock).
  */
 async function ensureMigrationConstraints(client: any): Promise<void> {
   const present = await client.$queryRawUnsafe(
@@ -57,9 +59,7 @@ async function ensureMigrationConstraints(client: any): Promise<void> {
     .split(';')
     .map((stmt) => stmt.trim())
     .filter(Boolean);
-  for (const stmt of statements) {
-    await client.$executeRawUnsafe(stmt);
-  }
+  await applySchemaSql(DB_URL!, statements);
 }
 
 describeDb('Account tiers schema (PG-196)', () => {

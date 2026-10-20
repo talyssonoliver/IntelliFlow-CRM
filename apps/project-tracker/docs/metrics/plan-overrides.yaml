@@ -418,6 +418,7 @@ IFC-157:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
+    - IFC-151 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
     - IFC-098 # Sprint 9 dependency removed from Sprint 7 task
   evidence_required:
     - apps/ai-worker/src/*
@@ -433,6 +434,7 @@ IFC-163:
   debt_allowed: yes
   waiver_expiry: '2026-03-31'
   override_deps_remove:
+    - IFC-151 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
     - IFC-153 # Sprint 7 dependency removed from Sprint 6 task
     - IFC-157 # Sprint 7 dependency removed from Sprint 6 task
   evidence_required:
@@ -919,6 +921,8 @@ IFC-139:
   notes: 'Dashboard domain logic.'
 
 IFC-144:
+  override_deps_remove:
+    - IFC-151 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
   tier: A
   gate_profile:
     - build
@@ -945,6 +949,8 @@ IFC-151:
   notes: 'Application layer patterns.'
 
 IFC-153:
+  override_deps_remove:
+    - IFC-151 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
   tier: A
   gate_profile:
     - build
@@ -1826,6 +1832,8 @@ ENV-018-AI:
   notes: 'Sprint planning. Depends on ENV-017-AI completing.'
 
 AUTOMATION-001:
+  override_deps_remove:
+    - ENV-008-AI # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
   tier: B
   gate_profile:
     - build
@@ -2182,6 +2190,8 @@ IFC-189:
 # Section: AI Intelligence | Owner: Backend Dev
 # Validation: VALIDATE:pnpm test;GATE:coverage-gte-90
 IFC-197:
+  override_deps_remove:
+    - IFC-117 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
   tier: A
   gate_profile:
     - build
@@ -3541,6 +3551,26 @@ ENG-OPS-002:
     DDD/hexagonal/security/perf/quality/docs findings + real local Sonar
     Community baseline). Override added to supply required Tier-A governance
     fields that were missing.
+
+SALES-002:
+  override_deps_remove:
+    - SALES-001 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
+
+IFC-141:
+  override_deps_remove:
+    - IFC-151 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
+
+TRACK-004:
+  override_deps_remove:
+    - IFC-117 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
+
+PG-146:
+  override_deps_remove:
+    - IFC-117 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
+
+PG-153:
+  override_deps_remove:
+    - IFC-117 # Re-planned to Sprint 18 (owner ruling "Fix the 15 tasks", #795); done work must not depend on a not-yet-redone task
 
 _meta:
   description: 'Plan overrides for Sprint plan validation and governance'

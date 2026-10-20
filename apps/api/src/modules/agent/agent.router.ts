@@ -60,8 +60,11 @@ const protectedProcedure = baseProtectedProcedure.use(requireModule('AI_INTELLIG
  */
 async function requireTenantOwnedAction(ctx: Context, actionId: string): Promise<PendingAction> {
   const callerTenant = ctx.user?.tenantId;
-  const action = await approvalWorkflowService.getPendingAction(actionId);
-  if (!action || !callerTenant || action.tenantId !== callerTenant) {
+  if (!callerTenant) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
+  }
+  const action = await approvalWorkflowService.getPendingAction(actionId, callerTenant);
+  if (!action || action.tenantId !== callerTenant) {
     throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
   }
   return action;
@@ -614,7 +617,7 @@ export const agentRouter = createTRPCRouter({
       // PG-198 (AC-010): the policy's minimum reviewer role, on top of the permission.
       await assertPolicyReviewer(ctx, action);
 
-      const agentContext = buildAgentContext(ctx);
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
 
       const decision = {
         actionId: input.actionId,
@@ -632,6 +635,47 @@ export const agentRouter = createTRPCRouter({
         status: rejectedAction.status,
         rejectedAt: new Date(),
       };
+    }),
+
+  /**
+   * Roll back an executed action (#856)
+   *
+   * Undoes the action through the target module's own procedure: a created case is
+   * cancelled, a created appointment is cancelled, an unsent email draft is trashed.
+   * Only actions approved with a rollback token, within an hour, can be rolled back.
+   */
+  rollbackAction: protectedProcedure
+    .input(
+      z.object({
+        actionId: z.string(),
+        rollbackToken: z.string(),
+        reason: z.string().min(1).max(500),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Undoing an approval takes the same permission and reviewer role as granting it.
+      if (!(await hasPermission(ctx, 'agent:tool-approval', 'approve'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to roll back agent actions.',
+        });
+      }
+
+      const action = await requireTenantOwnedAction(ctx, input.actionId);
+      await assertPolicyReviewer(ctx, action);
+
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
+
+      return approvalWorkflowService.rollbackAction(
+        {
+          actionId: input.actionId,
+          rollbackToken: input.rollbackToken,
+          requestedBy: agentContext.userId,
+          reason: input.reason,
+        },
+        agentContext,
+        ctx
+      );
     }),
 
   /**

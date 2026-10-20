@@ -12,6 +12,7 @@
  * - Diff preview generation
  */
 
+import { randomUUID } from 'node:crypto';
 import {
   PendingAction,
   ApprovalDecision,
@@ -25,6 +26,7 @@ import { agentLogger } from './logger';
 import { getAgentTool, getForTenant, ToolDisabledError } from './tools';
 import { PrismaAgentActionStore } from './prisma-action-store';
 import { executeApprovedAction, prepareExecutionInput } from './approved-action-executor';
+import { canCompensate, compensateApprovedAction } from './approved-action-compensator';
 import type { Context } from '../context';
 import { prisma as sharedPrisma } from '@intelliflow/db';
 
@@ -58,9 +60,9 @@ export const actionStore = new PrismaAgentActionStore(sharedPrisma as never, DEF
 // Legacy aliases for callers that import these directly
 export const pendingActionsStore = {
   add: (a: PendingAction) => actionStore.add(a),
-  get: (id: string) => actionStore.get(id),
-  update: (a: PendingAction) => actionStore.update(a),
-  delete: (id: string) => actionStore.delete(id),
+  get: (id: string, tenantId?: string) => actionStore.get(id, tenantId),
+  update: (a: PendingAction, tenantId?: string) => actionStore.update(a, tenantId),
+  delete: (id: string, tenantId?: string) => actionStore.delete(id, tenantId),
   findByUser: (userId: string, tenantId?: string) => actionStore.findByUser(userId, tenantId),
   findBySession: (sessionId: string) => actionStore.findBySession(sessionId),
   findPending: () => actionStore.findPending(),
@@ -69,9 +71,10 @@ export const pendingActionsStore = {
 
 export const executedActionsStore = {
   add: (a: ExecutedAction) => actionStore.addExecuted(a),
-  get: (id: string) => actionStore.getExecuted(id),
-  findByRollbackToken: (token: string) => actionStore.findByRollbackToken(token),
-  disableRollback: (id: string) => actionStore.disableRollback(id),
+  get: (id: string, tenantId?: string) => actionStore.getExecuted(id, tenantId),
+  findByRollbackToken: (token: string, tenantId?: string) =>
+    actionStore.findByRollbackToken(token, tenantId),
+  disableRollback: (id: string, tenantId?: string) => actionStore.disableRollback(id, tenantId),
   findAll: () => actionStore.findAllExecuted(),
 };
 
@@ -208,8 +211,8 @@ export class ApprovalWorkflowService {
   /**
    * Get a specific pending action by ID
    */
-  async getPendingAction(actionId: string): Promise<PendingAction | undefined> {
-    return pendingActionsStore.get(actionId);
+  async getPendingAction(actionId: string, tenantId?: string): Promise<PendingAction | undefined> {
+    return pendingActionsStore.get(actionId, tenantId);
   }
 
   /**
@@ -221,7 +224,7 @@ export class ApprovalWorkflowService {
     decision: ApprovalDecision,
     context: AgentAuthContext
   ): Promise<{ action: PendingAction; inputToExecute: Record<string, unknown> }> {
-    const action = await pendingActionsStore.get(decision.actionId);
+    const action = await pendingActionsStore.get(decision.actionId, context.tenantId);
 
     if (!action) {
       throw new Error(`Pending action not found: ${decision.actionId}`);
@@ -267,8 +270,9 @@ export class ApprovalWorkflowService {
    * The action is claimed atomically (only one approver can win), the input that
    * will run is re-validated with the tool's schema, and the real mutation runs
    * through the target module's tRPC procedure on the approver's request
-   * context. A failure is stored as FAILED with its reason — never as success —
-   * and no rollback token is issued while tool rollbacks are simulated (#856).
+   * context. A failure is stored as FAILED with its reason — never as success.
+   * A rollback token is issued only when the action succeeded and a real
+   * compensation exists for it (#856): see approved-action-compensator.ts.
    */
   async approveAction(
     decision: ApprovalDecision,
@@ -294,6 +298,8 @@ export class ApprovalWorkflowService {
       requesterId: action.createdBy,
     });
     const durationMs = Date.now() - claimedAt.getTime();
+    const rollbackAvailable =
+      outcome.status === 'SUCCEEDED' && canCompensate(action.toolName, outcome.result);
 
     const executedAction: ExecutedAction = {
       ...action,
@@ -304,8 +310,8 @@ export class ApprovalWorkflowService {
       executionResult: outcome.result,
       executionError: outcome.error,
       approval: decision,
-      rollbackAvailable: false,
-      rollbackToken: undefined,
+      rollbackAvailable,
+      rollbackToken: rollbackAvailable ? randomUUID() : undefined,
     };
 
     await executedActionsStore.add(executedAction);
@@ -328,7 +334,7 @@ export class ApprovalWorkflowService {
         originalActionId: action.id,
         modifiedInput: !!decision.modifiedInput,
         executionStatus: outcome.status,
-        rollbackAvailable: false,
+        rollbackAvailable,
       },
     });
 
@@ -342,7 +348,7 @@ export class ApprovalWorkflowService {
     decision: ApprovalDecision,
     context: AgentAuthContext
   ): Promise<PendingAction> {
-    const action = await pendingActionsStore.get(decision.actionId);
+    const action = await pendingActionsStore.get(decision.actionId, context.tenantId);
 
     if (!action) {
       throw new Error(`Pending action not found: ${decision.actionId}`);
@@ -382,96 +388,106 @@ export class ApprovalWorkflowService {
   }
 
   /**
-   * Request rollback of an executed action
+   * Roll back an executed action (#856).
+   *
+   * The token is looked up in the caller's tenant only, the rollback is claimed
+   * atomically (two concurrent requests cannot both run it), and the undo itself runs
+   * through the target module's own procedure on the requester's request context.
+   * Compensations are idempotent and reconcile from the target's state, so a reported
+   * failure means the target is not undone and the claim is given back for a retry. A
+   * claim left by an interrupted request goes stale and can be taken again.
    */
   async rollbackAction(
     request: RollbackRequest,
-    context: AgentAuthContext
+    context: AgentAuthContext,
+    requestCtx?: Context
   ): Promise<RollbackResult> {
-    // Find executed action by rollback token
-    const executedAction = await executedActionsStore.findByRollbackToken(request.rollbackToken);
+    const fail = (error: string): RollbackResult => ({
+      success: false,
+      actionId: request.actionId,
+      error,
+    });
+    const tenantId = context.tenantId ?? DEFAULT_TENANT_ID;
+    const executedAction = await executedActionsStore.findByRollbackToken(
+      request.rollbackToken,
+      tenantId
+    );
 
-    if (!executedAction) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Invalid rollback token or action not found',
-      };
+    if (!executedAction || executedAction.id !== request.actionId) {
+      return fail('Invalid rollback token or action not found');
     }
 
-    if (!executedAction.rollbackAvailable) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Rollback is no longer available for this action',
-      };
-    }
-
-    // Check rollback window
+    // Check rollback window. A stale claim was requested inside it and was interrupted; it
+    // may finish late, since its compensation may already have been applied.
     const executedAt = executedAction.executedAt;
-    if (executedAt && Date.now() - executedAt.getTime() > this.rollbackWindowMs) {
-      await executedActionsStore.disableRollback(executedAction.id);
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Rollback window has expired (1 hour limit)',
-      };
+    if (
+      executedAction.rollbackClaimedAt === undefined &&
+      executedAt &&
+      Date.now() - executedAt.getTime() > this.rollbackWindowMs
+    ) {
+      await executedActionsStore.disableRollback(executedAction.id, tenantId);
+      return fail('Rollback window has expired (1 hour limit)');
     }
 
-    // Bypass rationale: rollback is an infrastructure/admin operation that undoes
-    // an already-approved action. Tenant-level tool enablement should NOT block a
-    // rollback — an admin could disable a tool AFTER approval, and we still need
-    // to undo the executed action. Intentionally uses getAgentTool() without
-    // tenant-gating to ensure rollbacks are always executable.
-    const tool = getAgentTool(executedAction.toolName);
-    if (!tool?.rollback) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Tool does not support rollback',
-      };
+    // Tenant tool enablement is deliberately not re-checked: an admin may disable a tool
+    // after approval, and its executed actions must still be undoable.
+    if (!canCompensate(executedAction.toolName, executedAction.executionResult)) {
+      return fail('Tool does not support rollback');
     }
 
-    try {
-      // Execute rollback
-      const result = await tool.rollback(
-        executedAction.id,
-        executedAction.executionResult,
-        context
-      );
+    const claimId = await actionStore.claimRollback(
+      executedAction.id,
+      tenantId,
+      request.rollbackToken
+    );
+    if (!claimId) {
+      return fail('Rollback is no longer available for this action');
+    }
 
-      if (result.success) {
-        // Disable further rollbacks
-        await executedActionsStore.disableRollback(executedAction.id);
-      }
+    const outcome = await compensateApprovedAction(
+      executedAction.toolName,
+      executedAction.executionResult,
+      requestCtx
+    );
+    const rolledBackAt = new Date();
 
-      // Log the rollback
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: executedAction.toolName,
-        actionType: 'DELETE', // Rollback is effectively a delete/undo
-        entityType: executedAction.entityType,
-        input: { action: 'rollback', reason: request.reason },
-        output: result,
-        success: result.success,
-        error: result.error,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: {
-          originalActionId: executedAction.id,
-          rollbackReason: request.reason,
-        },
+    if (outcome.success) {
+      await actionStore.markRolledBack(executedAction.id, tenantId, claimId, {
+        rolledBackBy: request.requestedBy,
+        rolledBackAt,
+        reason: request.reason,
+        restoredState: outcome.restoredState,
       });
-
-      return result;
-    } catch (error) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
+    } else {
+      await actionStore.releaseRollback(executedAction.id, tenantId, claimId);
     }
+
+    await agentLogger.log({
+      userId: context.userId,
+      agentSessionId: context.agentSessionId,
+      toolName: executedAction.toolName,
+      actionType: 'DELETE', // Rollback is effectively a delete/undo
+      entityType: executedAction.entityType,
+      input: { action: 'rollback', reason: request.reason },
+      output: outcome,
+      success: outcome.success,
+      error: outcome.error,
+      durationMs: 0,
+      approvalRequired: false,
+      metadata: {
+        originalActionId: executedAction.id,
+        rollbackReason: request.reason,
+      },
+    });
+
+    return outcome.success
+      ? {
+          success: true,
+          actionId: executedAction.id,
+          rolledBackAt,
+          restoredState: outcome.restoredState,
+        }
+      : fail(outcome.error ?? 'Rollback failed');
   }
 
   /**
