@@ -20,9 +20,9 @@ import {
   MODEL_CATALOG,
   MODEL_CONFIG_LIMITS,
   currentPrimaryPrice,
-  defaultModelsFor,
   effectiveModel,
   findDowngrades,
+  primaryModelsFor,
   getCatalogEntry,
   priceOf,
   purposeSpendKey,
@@ -155,6 +155,24 @@ function assertExpected(
   if (seen !== current) throw conflict(purpose);
 }
 
+/**
+ * A fallback equal to the model the purpose already runs would retry the same model. The schema
+ * checks a pin; an unpinned row runs its stored tier's default, known only here.
+ */
+function assertFallbacksDistinct(
+  purpose: LLMPurpose,
+  tier: string | null,
+  after: EditableConfig
+): void {
+  const primaries = primaryModelsFor(purpose, tier as LLMTier | null, after.modelId);
+  const index = after.fallbackModelIds.findIndex((id) => primaries.includes(id));
+  if (index === -1) return;
+  throw new TRPCError({
+    code: 'BAD_REQUEST',
+    message: `${purpose} fallback ${index + 1}: a fallback cannot be the primary model`,
+  });
+}
+
 function describeDowngrade(d: ModelDowngrade): string {
   const slot = d.slot === 'primary' ? 'primary' : `fallback ${d.slot + 1}`;
   return `${d.purpose} ${slot} ${d.from ?? 'default'} → ${d.to ?? 'default'}`;
@@ -236,7 +254,8 @@ function toPurposeRow(
     purpose,
     ...config,
     updatedAt: row ? row.updatedAt.toISOString() : null,
-    defaultModelIds: defaultModelsFor(purpose),
+    // The stored tier's default when the row carries one, so the page checks the same primary.
+    defaultModelIds: primaryModelsFor(purpose, (row?.tier ?? null) as LLMTier | null, null),
     spentCents: spentCentiCents === null ? null : spentCentiCents / 100,
     blocked: ceiling !== null && spentCentiCents !== null && spentCentiCents >= ceiling * 100,
     retired: isRetired(row),
@@ -320,6 +339,8 @@ export const modelConfigRouter = createTRPCRouter({
             return { purpose: item.purpose, tier: row?.tier ?? null, before, after };
           })
           .filter(({ before, after }) => !sameConfig(before, after));
+        for (const { purpose, tier, after } of pending)
+          assertFallbacksDistinct(purpose, tier, after);
 
         const downgrades = pending.flatMap(({ purpose, tier, before, after }) =>
           findDowngrades(purpose, modelPick(purpose, tier, before), modelPick(purpose, tier, after))

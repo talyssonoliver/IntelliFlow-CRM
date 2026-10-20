@@ -249,6 +249,56 @@ describe('modelConfigRouter (PG-199)', () => {
 
   // ─── update ────────────────────────────────────────────────────────────────
   describe('update', () => {
+    // Codex round 15: an unpinned row runs its stored tier's default, not the caller defaults.
+    describe('fallbacks versus the effective primary (stored tier override)', () => {
+      const premium = () => configRow('qualification', { tier: 'premium', updatedAt: SAVED });
+      const expected = { qualification: SAVED.toISOString() };
+
+      it('accepts a caller default as a fallback when the stored tier runs another model', async () => {
+        const tx = useTx([premium()]);
+        await admin.update({
+          purposes: [edit('qualification', { fallbackModelIds: ['llama-3.3-70b-versatile'] })],
+          expected,
+          acknowledgeDowngrade: true,
+        });
+        expect(tx.tenantAIConfig.upsert).toHaveBeenCalledTimes(1);
+      });
+
+      it('rejects the stored tier default as a fallback (it is the primary)', async () => {
+        const tx = useTx([premium()]);
+        await expectCode(
+          admin.update({
+            purposes: [edit('qualification', { fallbackModelIds: ['gpt-4o'] })],
+            expected,
+            acknowledgeDowngrade: true,
+          }),
+          'BAD_REQUEST'
+        );
+        expect(tx.tenantAIConfig.upsert).not.toHaveBeenCalled();
+      });
+
+      it('still rejects a caller default as a fallback with no stored tier', async () => {
+        const tx = useTx();
+        await expectCode(
+          admin.update({
+            purposes: [edit('reasoning', { fallbackModelIds: ['claude-sonnet-4-5'] })],
+            expected: { reasoning: null },
+            acknowledgeDowngrade: true,
+          }),
+          'BAD_REQUEST'
+        );
+        expect(tx.tenantAIConfig.upsert).not.toHaveBeenCalled();
+      });
+
+      it('reports the stored tier default as the default model on get', async () => {
+        (prismaMock.tenantAIConfig.findMany as any).mockResolvedValue([premium()]);
+        const result = await user.get();
+        expect(result.purposes.find((p) => p.purpose === 'qualification')?.defaultModelIds).toEqual(
+          ['gpt-4o']
+        );
+      });
+    });
+
     it('takes the tenant advisory lock before reading', async () => {
       const tx = useTx();
       await admin.update({

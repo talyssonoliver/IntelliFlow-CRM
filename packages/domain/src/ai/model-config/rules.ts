@@ -55,6 +55,19 @@ export function defaultModelsFor(purpose: LLMPurpose): string[] {
   return ids;
 }
 
+/**
+ * The models a purpose's fallbacks must differ from: its pin, else the default of a stored tier
+ * override (rows written before PG-199 may carry one), else every caller default.
+ */
+export function primaryModelsFor(
+  purpose: LLMPurpose,
+  tier: LLMTier | null,
+  modelId: string | null
+): string[] {
+  const effective = effectiveModel(purpose, tier, modelId);
+  return effective ? [effective] : defaultModelsFor(purpose);
+}
+
 function defaultPrices(purpose: LLMPurpose): number[] {
   return defaultModelsFor(purpose).map((id) => priceOf(id) ?? 0);
 }

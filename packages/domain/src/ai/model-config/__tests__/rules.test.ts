@@ -3,6 +3,7 @@ import {
   priceOf,
   effectiveModel,
   defaultModelsFor,
+  primaryModelsFor,
   currentPrimaryPrice,
   isDowngrade,
   findDowngrades,
@@ -40,6 +41,25 @@ describe('effectiveModel', () => {
 
   it('is null for a missing alias (rag-standard)', () => {
     expect(effectiveModel('rag', 'standard', null)).toBeNull();
+  });
+});
+
+describe('primaryModelsFor (the models fallbacks must differ from)', () => {
+  it('is the pin when one is set', () => {
+    expect(primaryModelsFor('qualification', 'premium', 'claude-sonnet-4-5')).toEqual([
+      'claude-sonnet-4-5',
+    ]);
+  });
+
+  it('is the default of a stored tier override (rows written before PG-199)', () => {
+    expect(primaryModelsFor('qualification', 'premium', null)).toEqual(['gpt-4o']);
+  });
+
+  it('is every caller default when unpinned with no tier, or the tier has no alias', () => {
+    expect(primaryModelsFor('qualification', null, null)).toEqual(
+      defaultModelsFor('qualification')
+    );
+    expect(primaryModelsFor('rag', 'standard', null)).toEqual(defaultModelsFor('rag'));
   });
 });
 

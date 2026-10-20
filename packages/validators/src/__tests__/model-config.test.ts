@@ -88,13 +88,13 @@ describe('purposeConfigInputSchema', () => {
     expect(r.error?.issues[0]?.message).toMatch(/primary/i);
   });
 
-  it('rejects a default primary inside the fallbacks when unpinned (effective primary)', () => {
-    // reasoning defaults: gpt-oss-20b-free (free callers) and claude-sonnet-4-5 (premium callers)
+  it('leaves the unpinned primary check to the server, where the stored tier is known', () => {
+    // An unpinned row runs its stored tier's default, which the schema cannot see; the router
+    // rejects a fallback equal to that effective primary inside the update transaction.
     const r = purposeConfigInputSchema.safeParse(
       row({ modelId: null, fallbackModelIds: ['claude-sonnet-4-5'] })
     );
-    expect(r.success).toBe(false);
-    expect(r.error?.issues[0]?.path).toEqual(['fallbackModelIds', 0]);
+    expect(r.success).toBe(true);
   });
 
   it('rejects duplicate fallbacks at the second one', () => {

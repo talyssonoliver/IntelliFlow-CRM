@@ -4,7 +4,8 @@
  * One row per AI purpose (owner Q1). Purposes, the model catalog and the limits
  * derive from the domain (DRY rule). The superRefine rejects duplicate purposes
  * ("items N and M", reported at the second offender — playbook §6), models not
- * routed for the purpose, the effective primary inside its own fallbacks,
+ * routed for the purpose, a pinned primary inside its own fallbacks (the router checks an
+ * unpinned row against its stored tier),
  * duplicate fallbacks, and any change to the locked rag row other than its
  * ceiling (owner Q5). Objects are not strict: unknown keys (including `tier`,
  * which the page never edits) are stripped so an older or newer client cannot
@@ -14,7 +15,6 @@ import { z } from 'zod';
 import {
   LLM_PURPOSES,
   MODEL_CONFIG_LIMITS,
-  defaultModelsFor,
   isModelAllowedForPurpose,
   type LLMPurpose,
 } from '@intelliflow/domain';
@@ -68,7 +68,9 @@ function refineModels(row: PurposeConfigFields, ctx: z.RefinementCtx, base: Issu
       path: [...base, 'modelId'],
     });
   }
-  const primaries = row.modelId === null ? defaultModelsFor(purpose) : [row.modelId];
+  // Only a pin is checked here: an unpinned row runs its stored tier's default, which the
+  // schema cannot see, so the router checks that case inside the update transaction.
+  const primaries = row.modelId === null ? [] : [row.modelId];
   const seen = new Map<string, number>();
   row.fallbackModelIds.forEach((id, index) => {
     const path = [...base, 'fallbackModelIds', index];
