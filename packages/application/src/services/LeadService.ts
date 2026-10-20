@@ -137,15 +137,40 @@ export class LeadService {
     // transaction, so a crash can never leave a persisted lead with no
     // LeadCreated event (ADR-011 zero-lost-events).
     try {
-      await this.transactionManager.run(async (tx) => {
-        await this.leadRepository.save(lead, opts, tx);
-        await this.publishEvents(lead, tx);
-      });
+      await this.transactionManager.run((tx) => this.persistNewLead(lead, tx, opts));
     } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 
     return Result.ok(lead);
+  }
+
+  /**
+   * PG-203: create a lead on the CALLER's transaction (public booking, ADR-083).
+   * The aggregate save and the LeadCreated outbox write share `tx`; there is no
+   * duplicate pre-check (the caller resolves existing records itself, under its
+   * own lock) and persistence errors propagate so the caller's transaction
+   * rolls back.
+   */
+  async createLeadInTransaction(
+    props: CreateLeadProps,
+    tx: RepositoryTransaction
+  ): Promise<Result<Lead, DomainError>> {
+    const leadResult = Lead.create(props);
+    if (leadResult.isFailure) {
+      return Result.fail(leadResult.error);
+    }
+    await this.persistNewLead(leadResult.value, tx);
+    return Result.ok(leadResult.value);
+  }
+
+  private async persistNewLead(
+    lead: Lead,
+    tx: RepositoryTransaction,
+    opts?: { note?: { content: string; author: string } }
+  ): Promise<void> {
+    await this.leadRepository.save(lead, opts, tx);
+    await this.publishEvents(lead, tx);
   }
 
   /**

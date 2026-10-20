@@ -21,6 +21,11 @@ model Tenant {
   id        String       @id @default(cuid())
   name      String
   slug      String       @unique
+  /// PG-203 — public booking handle (/book/<handle>/<slug>). NULL = public booking off. Never the slug, which
+  /// embeds the admin's auth id. CHECK + CONCURRENTLY unique index are in migrations 20261021120100/120200.
+  bookingHandle     String?      @unique @db.VarChar(40)
+  /// PG-203 — the firm's privacy notice for the booking form (https only); NULL falls back to /privacy.
+  bookingPrivacyUrl String?      @db.VarChar(500)
   status    TenantStatus @default(ACTIVE)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -191,6 +196,8 @@ model Tenant {
   appointmentSettings       AppointmentSettings[]     @ignore
   availabilityHours              AvailabilityHour[]               @ignore // PG-202
   availabilityClosures           AvailabilityClosure[]            @ignore // PG-202
+  eventTypes                EventType[]               @ignore // PG-203
+  bookingAttempts           BookingAttempt[]          @ignore // PG-203
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
   reportScheduleTags        ReportScheduleTag[]       @ignore
@@ -671,6 +678,9 @@ model Lead {
   @@index([tenantId, ownerId, isStarred]) // PG-059: fast "?view=starred" for current user
   @@index([tenantId, utmCampaign]) // ADR-070: campaign attribution reports
   @@index([accountId])
+  // PG-203: composite target for appointments ("tenantId","leadId") (DBA-012); built CONCURRENTLY in
+  // migrations/20261021120300_leads_tenant_id_key.
+  @@unique([tenantId, id])
   @@map("leads")
 }
 
@@ -759,6 +769,7 @@ enum LeadSource {
   COLD_CALL
   EVENT
   OTHER
+  BOOKING // PG-203: created by the public booking page
 }
 
 enum LeadStatus {
@@ -2132,6 +2143,20 @@ model Appointment {
   attendees           AppointmentAttendee[]
   linkedCases         AppointmentCase[]
 
+  // PG-203 — event type + public booking (ADR-083). All nullable; NULL for in-app bookings without a type.
+  /// FK ("tenantId","eventTypeId") -> event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId") is SQL-only (see EventType).
+  eventTypeId           String?
+  /// FK ("tenantId","leadId") -> leads("tenantId","id") ON DELETE SET NULL ("leadId") is SQL-only (see EventType).
+  leadId                String?
+  bookerName            String?   @db.VarChar(200)
+  bookerEmail           String?   @db.VarChar(320)
+  /// Allowlisted keys only (phone, company, notes, phoneRejected); size CHECK in SQL.
+  bookingAnswers        Json?
+  /// 'PUBLIC_LINK' for public bookings (CHECK in SQL); NULL otherwise.
+  bookedVia             String?   @db.VarChar(20)
+  bookingConsentAt      DateTime?
+  bookingConsentVersion String?   @db.VarChar(40)
+
   @@index([tenantId])
   @@index([organizerId])
   @@index([status])
@@ -2441,6 +2466,75 @@ model AvailabilityClosure {
   @@unique([tenantId, startDate, endDate])
   @@index([tenantId, startDate])
   @@map("availability_closures")
+}
+
+// ─── PG-203: Event Types + public booking (ADR-083) ─────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261021120100_event_types and 20261021120400_appointments_lead_fk,
+// asserted by tests/integration/event-types.test.ts — do not drop in a diff):
+//   - event_types_tenant_lower_name_key    UNIQUE ("tenantId", lower("name"))
+//   - event_types_hostUserId_fkey          FOREIGN KEY ("hostUserId") REFERENCES users("id") ON DELETE NO ACTION
+//   - appointments_tenantId_eventTypeId_fkey  FOREIGN KEY ("tenantId","eventTypeId")
+//                                         REFERENCES event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId")
+//   - appointments_tenantId_leadId_fkey    FOREIGN KEY ("tenantId","leadId")
+//                                         REFERENCES leads("tenantId","id") ON DELETE SET NULL ("leadId")
+//   - booking_attempts_tenantId_eventTypeId_fkey  (column-list SET NULL, same reason)
+//     (Prisma cannot model optional relations over the required tenantId, nor SET NULL column lists)
+//   - CHECKs on event_types name/slug/description/duration/colorToken/locationDetails/requiredFields/leadSource,
+//     booking_attempts hashes, tenants bookingHandle/bookingPrivacyUrl, appointments bookedVia/bookingAnswers
+//   - RLS tenant policies on event_types and booking_attempts
+
+/// A tenant-defined meeting type: applied in the New Appointment form and bookable at /book/<handle>/<slug>.
+model EventType {
+  id              String            @id @default(cuid())
+  tenantId        String
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String            @db.VarChar(100)
+  slug            String            @db.VarChar(60)
+  description     String?
+  durationMinutes Int               @default(30)
+  colorToken      String            @default("blue")
+  locationType    EventLocationType @default(VIDEO)
+  locationDetails String?           @db.VarChar(500)
+  appointmentType AppointmentType   @default(MEETING)
+  /// Host user (organizer of public bookings). FK to users is SQL-only (see block above).
+  hostUserId      String
+  requiredFields  String[]          @default([])
+  leadSource      LeadSource        @default(BOOKING)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([tenantId, slug])
+  // DBA-012: composite target for tenant-consistent child FKs
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive])
+  @@index([hostUserId])
+  @@map("event_types")
+}
+
+enum EventLocationType {
+  IN_PERSON
+  PHONE
+  VIDEO
+  CUSTOM
+}
+
+/// Public booking attempts, counted for the abuse caps (salted HMAC hashes only; pruned after 48 h).
+model BookingAttempt {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// FK ("tenantId","eventTypeId") -> event_types ON DELETE SET NULL ("eventTypeId") is SQL-only.
+  eventTypeId String?
+  emailHash   String   @db.Char(64)
+  ipHash      String   @db.Char(64)
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, emailHash, createdAt])
+  @@index([tenantId, ipHash, createdAt])
+  @@index([eventTypeId, createdAt])
+  @@map("booking_attempts")
 }
 
 /// PG-187 — per-tenant report defaults. Landed alongside PG-190 to unblock
