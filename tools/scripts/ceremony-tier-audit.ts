@@ -36,7 +36,7 @@
  * @module tools/scripts/ceremony-tier-audit
  */
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, join } from 'node:path';
 import { parseArgs } from 'node:util';
 import {
   findRepoRoot,
@@ -49,7 +49,7 @@ import {
   isCompletedStatus,
   type CeremonyTierResult,
 } from './lib/ceremony-tier';
-import { loadTierOverrides } from './lib/ceremony-tier-config';
+import { loadTierOverrides, resolveConfinedRepoRoot } from './lib/ceremony-tier-config';
 
 const REPORT_PATH = 'artifacts/reports/ceremony-tier-audit.json';
 
@@ -100,7 +100,7 @@ function parseCliArgs(): CliOptions {
     task: values.task?.trim().toUpperCase(),
     includeCompleted: values['include-completed'] ?? false,
     json: values.json ?? false,
-    repoRoot: resolve(values['repo-root'] || findRepoRoot(process.cwd())),
+    repoRoot: resolveConfinedRepoRoot(values['repo-root'] || findRepoRoot(process.cwd())),
     help: false,
   };
 }
@@ -120,7 +120,7 @@ function loadTasks(repoRoot: string): SprintTask[] {
     console.error('[ceremony-tier-audit] Could not find Sprint_plan.csv under ' + repoRoot);
     process.exit(2);
   }
-  const csvContent = readFileSync(csvPath, 'utf8');
+  const csvContent = readFileSync(resolveConfinedRepoRoot(csvPath), 'utf8');
   const { tasks, errors } = parseSprintCsv(csvContent);
   if (errors.length > 0) {
     console.error('[ceremony-tier-audit] Failed to parse ' + csvPath + ':');
@@ -184,7 +184,7 @@ function printTable(entries: AuditEntry[]): void {
 }
 
 function writeReport(repoRoot: string, entries: AuditEntry[]): string {
-  const outPath = join(repoRoot, REPORT_PATH);
+  const outPath = join(resolveConfinedRepoRoot(repoRoot), REPORT_PATH);
   mkdirSync(dirname(outPath), { recursive: true });
   const report = {
     generated_at: new Date().toISOString(),

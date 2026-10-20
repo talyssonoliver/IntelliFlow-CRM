@@ -22,11 +22,35 @@
  */
 
 import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import type { TierOverride } from './ceremony-tier';
 
 export const TASK_TIERS_CONFIG_PATH = '.specify/memory/task-tiers.yaml';
+
+/**
+ * Resolve a CLI-supplied repo root and refuse it unless it stays inside an
+ * allowed root: the repository the process runs in (`cwd`) or the OS temp
+ * dir (scratch repos for tests). Uses `path.relative` rather than a string
+ * prefix so a sibling such as `<root>-evil` is rejected, and so a crafted
+ * `--repo-root ../../..` cannot make the audit read or write outside the repo
+ * (tssecurity:S8707, path traversal via CLI arguments).
+ */
+export function resolveConfinedRepoRoot(
+  candidate: string,
+  allowedRoots: readonly string[] = [process.cwd(), tmpdir()]
+): string {
+  const resolved = resolve(candidate);
+  const inside = allowedRoots.some((allowed) => {
+    const rel = relative(resolve(allowed), resolved);
+    return rel === '' || (!rel.startsWith('..') && !isAbsolute(rel));
+  });
+  if (!inside) {
+    throw new Error(`[ceremony-tier] refusing repo root outside the repository: ${candidate}`);
+  }
+  return resolved;
+}
 
 const VALID_OVERRIDES: ReadonlySet<string> = new Set(['light', 'full', 'auto']);
 
@@ -46,7 +70,7 @@ interface TaskTiersFile {
  */
 export function loadTierOverrides(repoRoot: string): Map<string, TierOverride> {
   const overrides = new Map<string, TierOverride>();
-  const path = join(repoRoot, TASK_TIERS_CONFIG_PATH);
+  const path = join(resolveConfinedRepoRoot(repoRoot), TASK_TIERS_CONFIG_PATH);
   if (!existsSync(path)) return overrides;
 
   const raw = readFileSync(path, 'utf8');

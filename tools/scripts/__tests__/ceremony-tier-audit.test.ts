@@ -161,4 +161,27 @@ describe('ceremony-tier-audit CLI', () => {
     expect(r.code).toBe(0);
     expect(r.out).toContain('Ceremony Tier Audit CLI');
   });
+
+  it('rejects a --repo-root outside the repository and the temp dir (path traversal)', async () => {
+    const outside = path.parse(process.cwd()).root;
+    await expect(runCli(['--json', '--repo-root', outside])).rejects.toThrow(
+      /outside the repository/
+    );
+    expect(
+      fs.existsSync(path.join(outside, 'artifacts', 'reports', 'ceremony-tier-audit.json'))
+    ).toBe(false);
+  });
+
+  it('resolveConfinedRepoRoot accepts nested paths and rejects ../ escapes and prefix siblings', async () => {
+    const { resolveConfinedRepoRoot } = await import('../lib/ceremony-tier-config');
+    const base = path.join(os.tmpdir(), 'confine-base');
+    expect(resolveConfinedRepoRoot(base, [base])).toBe(path.resolve(base));
+    expect(resolveConfinedRepoRoot(path.join(base, 'a', 'b'), [base])).toBe(
+      path.resolve(base, 'a', 'b')
+    );
+    expect(() => resolveConfinedRepoRoot(path.join(base, '..', '..', 'etc'), [base])).toThrow(
+      /outside the repository/
+    );
+    expect(() => resolveConfinedRepoRoot(base + '-evil', [base])).toThrow(/outside the repository/);
+  });
 });
