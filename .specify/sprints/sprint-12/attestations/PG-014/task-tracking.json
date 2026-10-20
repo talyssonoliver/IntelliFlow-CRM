@@ -1,65 +1,70 @@
 {
-  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": 60,
-  "artifacts": {
-    "created": [
-      "apps/web/src/app/(public)/status/page.tsx"
-    ],
-    "expected": [
-      "apps/web/src/app/(public)/status/page.tsx"
-    ],
-    "missing": []
-  },
-  "blockers": [
-    {
-      "description": "Reopen evidence: The public `/status` page shows fixed data, not real-time status: every service is hard-coded `operational` (`apps/web/src/app/(public)/status/page.tsx`), the incident list is hard-coded, and the 90-day uptime bars come from `deterministicRatio()` pseudo-randomness in `status-monitor.tsx`. The DoD/KPI \"real-time updates\" fails, and the page breaks the repo rule \"Never Mock or Simulate Data\".",
-      "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
+    "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+    "actual_duration_minutes": 60,
+    "artifacts": {
+        "created": [
+            "apps/web/src/app/(public)/status/page.tsx"
+        ],
+        "expected": [
+            "apps/web/src/app/(public)/status/page.tsx"
+        ],
+        "missing": []
     },
-    {
-      "description": "To close: (1) Drive the page from real checks (e.g. the availability checks from IFC-032's hosted backend, or a server-side health probe), and show \"pending\" where no data exists.",
-      "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
-    }
-  ],
-  "completed_at": "2025-12-31T07:00:00Z",
-  "dependencies_meta": {
-    "verified_at": "2026-04-29T21:54:51.935Z"
-  },
-  "kpis": {
-    "real_time_updates": {
-      "actual": 30,
-      "met": true,
-      "target": 30,
-      "unit": "seconds"
-    }
-  },
-  "started_at": "2025-12-31T06:00:00Z",
-  "status_history": [
-    {
-      "at": "2025-12-31T07:00:00Z",
-      "note": "Status page completed",
-      "status": "DONE"
+    "blockers": [
+        {
+            "description": "Reopen evidence: The public `/status` page shows fixed data, not real-time status: every service is hard-coded `operational` (`apps/web/src/app/(public)/status/page.tsx`), the incident list is hard-coded, and the 90-day uptime bars come from `deterministicRatio()` pseudo-randomness in `status-monitor.tsx`. The DoD/KPI \"real-time updates\" fails, and the page breaks the repo rule \"Never Mock or Simulate Data\".",
+            "raised_at": "2026-10-05T23:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "To close: (1) Drive the page from real checks (e.g. the availability checks from IFC-032's hosted backend, or a server-side health probe), and show \"pending\" where no data exists.",
+            "raised_at": "2026-10-05T23:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Target Sprint moved to 18 in Sprint_plan.csv so the strict sprint gates stay honest. The public status page still has to be driven by real health checks (/health/detailed from #793) and its pseudo-random uptime bars removed. Verified 2026-10-16: Railway production api and ai-worker have OTEL_ENABLED=true and export to the Grafana Cloud gb-south-1 gateway; ws, events-worker and ingestion-worker do not (events-worker and ingestion-worker OTEL_ENABLED=false, ws has no OTel variables). Grafana holds span metrics for api and ai-worker and ai-worker pino log lines carrying trace_id/span_id; no api pino log line has reached Loki yet.",
+            "raised_at": "2026-10-16T14:00:00Z",
+            "resolved_at": null
+        }
+    ],
+    "completed_at": "2025-12-31T07:00:00Z",
+    "dependencies_meta": {
+        "verified_at": "2026-04-29T21:54:51.935Z"
     },
-    {
-      "status": "IN_PROGRESS",
-      "at": "2026-10-05T23:30:00Z",
-      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
-    }
-  ],
-  "task_id": "PG-014",
-  "validations": [
-    {
-      "command": "pnpm --filter web build",
-      "executed_at": "2025-12-31T06:55:00Z",
-      "exit_code": 0,
-      "name": "Web Build",
-      "passed": true,
-      "required": true,
-      "timestamp": "2025-12-31T07:00:00Z",
-      "type": "auto"
-    }
-  ],
-  "percent_complete": 50,
-  "updated_at": "2026-10-05T23:30:00Z"
+    "kpis": {
+        "real_time_updates": {
+            "actual": 30,
+            "met": true,
+            "target": 30,
+            "unit": "seconds"
+        }
+    },
+    "started_at": "2025-12-31T06:00:00Z",
+    "status_history": [
+        {
+            "at": "2025-12-31T07:00:00Z",
+            "note": "Status page completed",
+            "status": "DONE"
+        },
+        {
+            "status": "IN_PROGRESS",
+            "at": "2026-10-05T23:30:00Z",
+            "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+        }
+    ],
+    "task_id": "PG-014",
+    "validations": [
+        {
+            "command": "pnpm --filter web build",
+            "executed_at": "2025-12-31T06:55:00Z",
+            "exit_code": 0,
+            "name": "Web Build",
+            "passed": true,
+            "required": true,
+            "timestamp": "2025-12-31T07:00:00Z",
+            "type": "auto"
+        }
+    ],
+    "percent_complete": 50,
+    "updated_at": "2026-10-05T23:30:00Z"
 }

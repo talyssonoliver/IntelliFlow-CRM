@@ -1,45 +1,50 @@
 {
-  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": 15,
-  "artifacts": {
-    "expected": [],
-    "missing": []
-  },
-  "completed_at": "2026-03-08T21:59:04.595Z",
-  "dependencies_meta": {
-    "verified_at": "2026-04-29T21:54:51.970Z"
-  },
-  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
-  "started_at": "2026-03-08T21:44:04.595Z",
-  "task_id": "IFC-056",
-  "validations": [
-    {
-      "command": "# Task marked Completed in Sprint_plan.csv",
-      "executed_at": "2026-03-08T00:00:00Z",
-      "exit_code": 0,
-      "name": "completion-evidence",
-      "passed": true
-    }
-  ],
-  "status_history": [
-    {
-      "status": "BACKLOG",
-      "at": "2026-10-05T23:30:00Z",
-      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
-    }
-  ],
-  "blockers": [
-    {
-      "description": "Reopen evidence: The evidence described an 8-person team with named developers, skill scores and training records. The project is run by one person and none of these people exist. The fabricated artifacts (`artifacts/reports/skill-assessment-results.csv`, `docs/training/training-completion.csv`) and the attestation's claims were removed. No skills assessment or training programme has run.",
-      "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
+    "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+    "actual_duration_minutes": 15,
+    "artifacts": {
+        "expected": [],
+        "missing": []
     },
-    {
-      "description": "To close: (1) Re-scope with the owner: either a real individual learning log, or retire the task.",
-      "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
-    }
-  ],
-  "percent_complete": 0,
-  "updated_at": "2026-10-05T23:30:00Z"
+    "completed_at": "2026-03-08T21:59:04.595Z",
+    "dependencies_meta": {
+        "verified_at": "2026-04-29T21:54:51.970Z"
+    },
+    "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
+    "started_at": "2026-03-08T21:44:04.595Z",
+    "task_id": "IFC-056",
+    "validations": [
+        {
+            "command": "# Task marked Completed in Sprint_plan.csv",
+            "executed_at": "2026-03-08T00:00:00Z",
+            "exit_code": 0,
+            "name": "completion-evidence",
+            "passed": true
+        }
+    ],
+    "status_history": [
+        {
+            "status": "BACKLOG",
+            "at": "2026-10-05T23:30:00Z",
+            "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+        }
+    ],
+    "blockers": [
+        {
+            "description": "Reopen evidence: The evidence described an 8-person team with named developers, skill scores and training records. The project is run by one person and none of these people exist. The fabricated artifacts (`artifacts/reports/skill-assessment-results.csv`, `docs/training/training-completion.csv`) and the attestation's claims were removed. No skills assessment or training programme has run.",
+            "raised_at": "2026-10-05T23:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "To close: (1) Re-scope with the owner: either a real individual learning log, or retire the task.",
+            "raised_at": "2026-10-05T23:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Target Sprint moved to 18 in Sprint_plan.csv so the strict sprint gates stay honest. Owner decision pending: re-scope or retire. The original evidence described people who do not exist. No assessment or training data exists to prove completion.",
+            "raised_at": "2026-10-16T14:00:00Z",
+            "resolved_at": null
+        }
+    ],
+    "percent_complete": 0,
+    "updated_at": "2026-10-05T23:30:00Z"
 }

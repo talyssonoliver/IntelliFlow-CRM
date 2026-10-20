@@ -17,7 +17,6 @@ import {
   AgentAuthContext,
   ActionPreview,
   PendingAction,
-  RollbackResult,
   CreateCaseInput,
   CreateCaseInputSchema,
   CreateAppointmentInput,
@@ -257,43 +256,6 @@ export const createCaseTool: AgentToolDefinition<CreateCaseInput, CreatedCaseRes
       warnings: warnings.length > 0 ? warnings : undefined,
       estimatedImpact: input.priority === 'URGENT' || input.priority === 'HIGH' ? 'HIGH' : 'MEDIUM',
     };
-  },
-
-  async rollback(
-    actionId: string,
-    executionResult: CreatedCaseResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      // In a real implementation, this would soft-delete or mark the case as cancelled
-      // For now, we simulate the rollback
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'create_case',
-        actionType: 'DELETE',
-        entityType: 'CASE',
-        input: { caseId: executionResult.id, action: 'rollback' },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: { deletedCaseId: executionResult.id },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
   },
 };
 
@@ -560,43 +522,6 @@ export const createAppointmentTool: AgentToolDefinition<
           ? 'HIGH'
           : 'MEDIUM',
     };
-  },
-
-  async rollback(
-    actionId: string,
-    executionResult: CreatedAppointmentResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      // In a real implementation, this would cancel the appointment
-      // For now, we simulate the rollback
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'create_appointment',
-        actionType: 'DELETE',
-        entityType: 'APPOINTMENT',
-        input: { appointmentId: executionResult.id, action: 'rollback' },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: { cancelledAppointmentId: executionResult.id },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
   },
 };
 

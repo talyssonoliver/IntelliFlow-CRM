@@ -17,7 +17,6 @@ import {
   AgentAuthContext,
   ActionPreview,
   PendingAction,
-  RollbackResult,
   UpdateCaseInput,
   UpdateCaseInputSchema,
   UpdateAppointmentInput,
@@ -25,7 +24,7 @@ import {
 } from '../types';
 import { agentLogger } from '../logger';
 import { resolveAgentToolExpiry } from '../approval-policy-loader';
-import { pendingActionsStore, rollbackStore } from '../approval-workflow';
+import { pendingActionsStore } from '../approval-workflow';
 
 // ── Preview-building helpers (reduce cognitive complexity in generatePreview) ──
 
@@ -225,7 +224,6 @@ function validateUpdateGuards(
  *
  * Updates an existing legal case in the system.
  * This operation REQUIRES human approval before execution.
- * Stores previous state for rollback capability.
  */
 export const updateCaseTool: AgentToolDefinition<UpdateCaseInput, UpdatedCaseResult> = {
   name: 'update_case',
@@ -353,52 +351,6 @@ export const updateCaseTool: AgentToolDefinition<UpdateCaseInput, UpdatedCaseRes
       estimatedImpact,
     };
   },
-
-  async rollback(
-    actionId: string,
-    executionResult: UpdatedCaseResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      const previousState = executionResult.previousState;
-
-      // Store rollback info
-      await rollbackStore.add({
-        actionId,
-        entityType: 'CASE',
-        entityId: executionResult.id,
-        previousState,
-        rolledBackBy: context.userId,
-        rolledBackAt: new Date(),
-      });
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'update_case',
-        actionType: 'UPDATE',
-        entityType: 'CASE',
-        input: { caseId: executionResult.id, action: 'rollback', previousState },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: previousState,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
-  },
 };
 
 /**
@@ -406,7 +358,6 @@ export const updateCaseTool: AgentToolDefinition<UpdateCaseInput, UpdatedCaseRes
  *
  * Updates an existing appointment in the system.
  * This operation REQUIRES human approval before execution.
- * Stores previous state for rollback capability.
  */
 export const updateAppointmentTool: AgentToolDefinition<
   UpdateAppointmentInput,
@@ -538,52 +489,6 @@ export const updateAppointmentTool: AgentToolDefinition<
       warnings: warnings.length > 0 ? warnings : undefined,
       estimatedImpact,
     };
-  },
-
-  async rollback(
-    actionId: string,
-    executionResult: UpdatedAppointmentResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      const previousState = executionResult.previousState;
-
-      // Store rollback info
-      await rollbackStore.add({
-        actionId,
-        entityType: 'APPOINTMENT',
-        entityId: executionResult.id,
-        previousState,
-        rolledBackBy: context.userId,
-        rolledBackAt: new Date(),
-      });
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'update_appointment',
-        actionType: 'UPDATE',
-        entityType: 'APPOINTMENT',
-        input: { appointmentId: executionResult.id, action: 'rollback', previousState },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: previousState,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
   },
 };
 
