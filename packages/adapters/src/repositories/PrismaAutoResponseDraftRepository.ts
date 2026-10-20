@@ -119,12 +119,23 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
     return record ? this.toDomain(record) : null;
   }
 
-  async findPendingForApprover(_: string, tenantId: string): Promise<AutoResponseDraft[]> {
+  /**
+   * #857: the pending queue of one approver. A draft belongs to the approver named when
+   * it was submitted (the latest PENDING_APPROVAL entry of its status history); a draft
+   * that names nobody stays visible to every approver of the tenant, so it cannot get
+   * stuck. Drafts assigned to someone else are not returned.
+   */
+  async findPendingForApprover(approverId: string, tenantId: string): Promise<AutoResponseDraft[]> {
     const records = await this.prisma.autoResponseDraft.findMany({
       where: { tenantId, status: 'PENDING_APPROVAL' },
       orderBy: { createdAt: 'asc' },
     });
-    return records.map((record) => this.toDomain(record));
+    return records
+      .map((record) => this.toDomain(record))
+      .filter((draft) => {
+        const assigned = assignedApprover(draft);
+        return assigned === undefined || assigned === approverId;
+      });
   }
 
   async saveEscalation(draft: AutoResponseDraft): Promise<boolean> {
@@ -427,4 +438,14 @@ function safeParseJSON(value: string): unknown {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The approver recorded at submission: the actor of the FIRST PENDING_APPROVAL entry.
+ * Later PENDING_APPROVAL entries are escalation resolutions, whose actor is the
+ * resolver and must not reassign the draft.
+ */
+function assignedApprover(draft: AutoResponseDraft): string | undefined {
+  const submitted = draft.statusHistory.find((entry) => entry.status === 'PENDING_APPROVAL');
+  return submitted?.changedBy || undefined;
 }

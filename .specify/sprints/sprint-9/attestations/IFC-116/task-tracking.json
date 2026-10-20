@@ -1,50 +1,55 @@
 {
-  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": 15,
-  "artifacts": {
-    "expected": [],
-    "missing": []
-  },
-  "completed_at": "2026-03-08T21:59:04.599Z",
-  "dependencies_meta": {
-    "verified_at": "2026-04-29T21:54:51.972Z"
-  },
-  "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
-  "started_at": "2026-03-08T21:44:04.599Z",
-  "task_id": "IFC-116",
-  "validations": [
-    {
-      "command": "# Task marked Completed in Sprint_plan.csv",
-      "executed_at": "2026-03-08T00:00:00Z",
-      "exit_code": 0,
-      "name": "completion-evidence",
-      "passed": true
-    }
-  ],
-  "status_history": [
-    {
-      "status": "IN_PROGRESS",
-      "at": "2026-10-05T22:30:00Z",
-      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
-    }
-  ],
-  "blockers": [
-    {
-      "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
-      "raised_at": "2026-10-05T22:30:00Z",
-      "resolved_at": null
+    "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+    "actual_duration_minutes": 15,
+    "artifacts": {
+        "expected": [],
+        "missing": []
     },
-    {
-      "description": "Reopen evidence: DoD \"dashboards and alerts created\" / KPI \"MTTD actual 1.2min\": `infra/monitoring/alert-rules.yml` (25 rules) was never loaded by an alerting system connected to production, and no alert has reached the owner.",
-      "raised_at": "2026-10-05T22:30:00Z",
-      "resolved_at": null
+    "completed_at": "2026-03-08T21:59:04.599Z",
+    "dependencies_meta": {
+        "verified_at": "2026-04-29T21:54:51.972Z"
     },
-    {
-      "description": "To close: (1) Services emit to the hosted backend (IFC-032). Alert rules are loaded there and deliver to the owner. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
-      "raised_at": "2026-10-05T22:30:00Z",
-      "resolved_at": null
-    }
-  ],
-  "percent_complete": 50,
-  "updated_at": "2026-10-05T22:30:00Z"
+    "notes": "Evidence stub. Task marked Completed in Sprint_plan.csv. Full evidence may be recorded in sprint attestations or audit reports.",
+    "started_at": "2026-03-08T21:44:04.599Z",
+    "task_id": "IFC-116",
+    "validations": [
+        {
+            "command": "# Task marked Completed in Sprint_plan.csv",
+            "executed_at": "2026-03-08T00:00:00Z",
+            "exit_code": 0,
+            "name": "completion-evidence",
+            "passed": true
+        }
+    ],
+    "status_history": [
+        {
+            "status": "IN_PROGRESS",
+            "at": "2026-10-05T22:30:00Z",
+            "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+        }
+    ],
+    "blockers": [
+        {
+            "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "Reopen evidence: DoD \"dashboards and alerts created\" / KPI \"MTTD actual 1.2min\": `infra/monitoring/alert-rules.yml` (25 rules) was never loaded by an alerting system connected to production, and no alert has reached the owner.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "To close: (1) Services emit to the hosted backend (IFC-032). Alert rules are loaded there and deliver to the owner. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Target Sprint moved to 18 in Sprint_plan.csv so the strict sprint gates stay honest. Five alert rules are loaded in Grafana (group intelliflow-prod) but none has fired from real traffic; dashboards.json is not loaded; three services are not instrumented. Verified 2026-10-16: Railway production api and ai-worker have OTEL_ENABLED=true and export to the Grafana Cloud gb-south-1 gateway; ws, events-worker and ingestion-worker do not (events-worker and ingestion-worker OTEL_ENABLED=false, ws has no OTel variables). Grafana holds span metrics for api and ai-worker and ai-worker pino log lines carrying trace_id/span_id; no api pino log line has reached Loki yet.",
+            "raised_at": "2026-10-16T14:00:00Z",
+            "resolved_at": null
+        }
+    ],
+    "percent_complete": 50,
+    "updated_at": "2026-10-05T22:30:00Z"
 }

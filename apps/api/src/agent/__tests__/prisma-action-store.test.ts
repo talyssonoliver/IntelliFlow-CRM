@@ -276,7 +276,7 @@ describe('add()', () => {
 
 describe('get()', () => {
   it('B1: returns undefined when row not found', async () => {
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(null);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(null);
 
     const result = await store.get('nonexistent');
     expect(result).toBeUndefined();
@@ -284,7 +284,7 @@ describe('get()', () => {
 
   it('B2: maps AgentAction row to PendingAction correctly', async () => {
     const row = makeAgentActionRow();
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
 
@@ -308,7 +308,7 @@ describe('get()', () => {
         executedInput: { title: 'Ran' },
       },
     });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result: any = await store.get(ACTION_ID);
 
@@ -326,7 +326,7 @@ describe('get()', () => {
         executionResult: { attempted: true },
       },
     });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result: any = await store.get(ACTION_ID);
 
@@ -339,7 +339,7 @@ describe('get()', () => {
 
   it('B3: maps preview fields from proposedState', async () => {
     const row = makeAgentActionRow();
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
 
@@ -352,7 +352,7 @@ describe('get()', () => {
 
   it('B4: maps input from previousState', async () => {
     const row = makeAgentActionRow();
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
 
@@ -366,7 +366,7 @@ describe('get()', () => {
 
   it('B5: parses aiReasoning JSON into metadata', async () => {
     const row = makeAgentActionRow({ aiReasoning: JSON.stringify({ foo: 'bar' }) });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
 
@@ -375,7 +375,7 @@ describe('get()', () => {
 
   it('B6: returns metadata as { raw: str } when aiReasoning is invalid JSON', async () => {
     const row = makeAgentActionRow({ aiReasoning: 'not-valid-json' });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
 
@@ -385,38 +385,38 @@ describe('get()', () => {
   it('B7: auto-expires PENDING action when expiresAt is in the past', async () => {
     const past = new Date(Date.now() - 5000);
     const row = makeAgentActionRow({ expiresAt: past });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const result = await store.get(ACTION_ID);
 
     expect(result!.status).toBe('EXPIRED');
     // update should have been called to persist the EXPIRED status
-    expect(prismaMock.agentAction.update).toHaveBeenCalledOnce();
-    const updateArgs = (prismaMock.agentAction.update as any).mock.calls[0][0];
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledOnce();
+    const updateArgs = (prismaMock.agentAction.updateMany as any).mock.calls[0][0];
     expect(updateArgs.data.status).toBe('EXPIRED');
   });
 
   it('B8: does not auto-expire non-PENDING status even if past expiresAt', async () => {
     const past = new Date(Date.now() - 5000);
     const row = makeAgentActionRow({ status: 'APPROVED', expiresAt: past });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     await store.get(ACTION_ID);
 
     // update should NOT have been called because status is APPROVED, not PENDING
-    expect(prismaMock.agentAction.update).not.toHaveBeenCalled();
+    expect(prismaMock.agentAction.updateMany).not.toHaveBeenCalled();
   });
 
   it('B9: does not auto-expire when expiresAt is in the future', async () => {
     const future = new Date(Date.now() + 60_000);
     const row = makeAgentActionRow({ expiresAt: future });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
 
     expect(result!.status).toBe('PENDING');
-    expect(prismaMock.agentAction.update).not.toHaveBeenCalled();
+    expect(prismaMock.agentAction.updateMany).not.toHaveBeenCalled();
   });
 });
 
@@ -426,54 +426,54 @@ describe('get()', () => {
 
 describe('update()', () => {
   it('C1: calls prisma.agentAction.update with correct where and data', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const action = makePendingAction({ status: 'APPROVED' });
     await store.update(action);
 
-    expect(prismaMock.agentAction.update).toHaveBeenCalledOnce();
-    const args = (prismaMock.agentAction.update as any).mock.calls[0][0];
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledOnce();
+    const args = (prismaMock.agentAction.updateMany as any).mock.calls[0][0];
     expect(args.where.id).toBe(ACTION_ID);
     expect(args.data.status).toBe('APPROVED');
   });
 
   it('C2: sets reviewedAt when status is APPROVED', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const action = makePendingAction({ status: 'APPROVED' });
     await store.update(action);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.reviewedAt).toBeInstanceOf(Date);
   });
 
   it('C3: sets reviewedAt when status is REJECTED', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const action = makePendingAction({ status: 'REJECTED' });
     await store.update(action);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.reviewedAt).toBeInstanceOf(Date);
   });
 
   it('C4: does not set reviewedAt when status is PENDING', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const action = makePendingAction({ status: 'PENDING' });
     await store.update(action);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.reviewedAt).toBeUndefined();
   });
 
   it('C5: does not set reviewedAt when status is EXPIRED', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const action = makePendingAction({ status: 'EXPIRED' });
     await store.update(action);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.reviewedAt).toBeUndefined();
   });
 });
@@ -484,18 +484,31 @@ describe('update()', () => {
 
 describe('delete()', () => {
   it('D1: returns true when delete succeeds', async () => {
-    (prismaMock.agentAction.delete as any).mockResolvedValue({ id: ACTION_ID });
+    (prismaMock.agentAction.deleteMany as any).mockResolvedValue({ count: 1 });
 
     const result = await store.delete(ACTION_ID);
     expect(result).toBe(true);
-    expect(prismaMock.agentAction.delete).toHaveBeenCalledWith({ where: { id: ACTION_ID } });
+    expect(prismaMock.agentAction.deleteMany).toHaveBeenCalledWith({
+      where: { id: ACTION_ID, tenantId: TENANT_ID },
+    });
   });
 
   it('D2: returns false when delete throws (record not found)', async () => {
-    (prismaMock.agentAction.delete as any).mockRejectedValue(new Error('Record not found'));
+    (prismaMock.agentAction.deleteMany as any).mockRejectedValue(new Error('Record not found'));
 
     const result = await store.delete('nonexistent');
     expect(result).toBe(false);
+  });
+
+  it('D3 (#883): returns false and deletes nothing for an action of another tenant', async () => {
+    (prismaMock.agentAction.deleteMany as any).mockResolvedValue({ count: 0 });
+
+    const result = await store.delete(ACTION_ID, 'tenant-other');
+
+    expect(result).toBe(false);
+    expect(prismaMock.agentAction.deleteMany).toHaveBeenCalledWith({
+      where: { id: ACTION_ID, tenantId: 'tenant-other' },
+    });
   });
 });
 
@@ -632,7 +645,7 @@ describe('expireOld()', () => {
 
 describe('addExecuted()', () => {
   it('G1: calls prisma.agentAction.update with APPROVED status', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const executed: ExecutedAction = {
       ...makePendingAction({ status: 'APPROVED' }),
@@ -652,14 +665,14 @@ describe('addExecuted()', () => {
 
     await store.addExecuted(executed);
 
-    expect(prismaMock.agentAction.update).toHaveBeenCalledOnce();
-    const args = (prismaMock.agentAction.update as any).mock.calls[0][0];
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledOnce();
+    const args = (prismaMock.agentAction.updateMany as any).mock.calls[0][0];
     expect(args.where.id).toBe(ACTION_ID);
     expect(args.data.status).toBe('APPROVED');
   });
 
   it('G2: stores reviewedBy from approval.decidedBy', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const executed: ExecutedAction = {
       ...makePendingAction({ status: 'APPROVED' }),
@@ -676,13 +689,13 @@ describe('addExecuted()', () => {
 
     await store.addExecuted(executed);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.reviewedBy).toBe('manager-001');
     expect(data.feedback).toBe(undefined);
   });
 
   it('G3: stores feedback from approval.reason', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const executed: ExecutedAction = {
       ...makePendingAction({ status: 'APPROVED' }),
@@ -700,12 +713,12 @@ describe('addExecuted()', () => {
 
     await store.addExecuted(executed);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.feedback).toBe('Approved after review');
   });
 
   it('G4: embeds rollbackToken and rollbackAvailable in proposedState', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const executed: ExecutedAction = {
       ...makePendingAction({ status: 'APPROVED' }),
@@ -717,14 +730,14 @@ describe('addExecuted()', () => {
 
     await store.addExecuted(executed);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     const proposedState = data.proposedState as Record<string, unknown>;
     expect(proposedState.rollbackToken).toBe('rb-token-xyz');
     expect(proposedState.rollbackAvailable).toBe(true);
   });
 
   it('G4b: persists the execution status and error with the preview (RF-1)', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     await store.addExecuted({
       ...makePendingAction({ status: 'APPROVED' }),
@@ -733,7 +746,7 @@ describe('addExecuted()', () => {
       rollbackAvailable: false,
     });
 
-    const proposedState = (prismaMock.agentAction.update as any).mock.calls[0][0].data
+    const proposedState = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data
       .proposedState as Record<string, unknown>;
     expect(proposedState.executionStatus).toBe('FAILED');
     expect(proposedState.executionError).toBe('Lead not found');
@@ -743,7 +756,7 @@ describe('addExecuted()', () => {
   it('G4c: an executed record reads back the input that actually ran', async () => {
     const row = makeAgentActionRow({ status: 'APPROVED', reviewedBy: 'approver-1' });
     (row.proposedState as Record<string, unknown>).executedInput = { title: 'Modified' };
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const executed = await store.getExecuted(ACTION_ID);
 
@@ -751,7 +764,7 @@ describe('addExecuted()', () => {
   });
 
   it('G5: uses new Date() as reviewedAt when executedAt is missing', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const executed: ExecutedAction = {
       ...makePendingAction({ status: 'APPROVED' }),
@@ -764,7 +777,7 @@ describe('addExecuted()', () => {
     await store.addExecuted(executed);
     const after = new Date();
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.reviewedAt).toBeInstanceOf(Date);
     expect((data.reviewedAt as Date).getTime()).toBeGreaterThanOrEqual(before.getTime());
     expect((data.reviewedAt as Date).getTime()).toBeLessThanOrEqual(after.getTime());
@@ -777,7 +790,7 @@ describe('addExecuted()', () => {
 
 describe('getExecuted()', () => {
   it('H1: returns undefined when row not found', async () => {
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(null);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(null);
 
     const result = await store.getExecuted('nonexistent');
     expect(result).toBeUndefined();
@@ -785,7 +798,7 @@ describe('getExecuted()', () => {
 
   it('H2: returns undefined when row status is not APPROVED', async () => {
     const row = makeAgentActionRow({ status: 'PENDING_APPROVAL' });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.getExecuted(ACTION_ID);
     expect(result).toBeUndefined();
@@ -808,7 +821,7 @@ describe('getExecuted()', () => {
         rollbackToken: 'rb-token-123',
       },
     });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.getExecuted(ACTION_ID);
 
@@ -831,7 +844,7 @@ describe('getExecuted()', () => {
       feedback: null,
       proposedState: { summary: 'test', changes: [], affectedEntities: [] },
     });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.getExecuted(ACTION_ID);
 
@@ -960,32 +973,32 @@ describe('disableRollback()', () => {
         rollbackAvailable: true,
       },
     });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     await store.disableRollback(ACTION_ID);
 
-    expect(prismaMock.agentAction.update).toHaveBeenCalledOnce();
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledOnce();
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect((data.proposedState as Record<string, unknown>).rollbackAvailable).toBe(false);
   });
 
   it('J2: does nothing when row does not exist', async () => {
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(null);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(null);
 
     await store.disableRollback('nonexistent');
 
-    expect(prismaMock.agentAction.update).not.toHaveBeenCalled();
+    expect(prismaMock.agentAction.updateMany).not.toHaveBeenCalled();
   });
 
   it('J3: handles null proposedState gracefully', async () => {
     const row = makeAgentActionRow({ status: 'APPROVED', proposedState: null });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     await store.disableRollback(ACTION_ID);
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect((data.proposedState as Record<string, unknown>).rollbackAvailable).toBe(false);
   });
 });
@@ -1049,38 +1062,38 @@ describe('Status mapping', () => {
   });
 
   it('L2: APPROVED status stored as APPROVED', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     await store.update(makePendingAction({ status: 'APPROVED' }));
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.status).toBe('APPROVED');
   });
 
   it('L3: REJECTED status stored as REJECTED', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     await store.update(makePendingAction({ status: 'REJECTED' }));
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.status).toBe('REJECTED');
   });
 
   it('L4: EXPIRED status stored as EXPIRED', async () => {
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     await store.update(makePendingAction({ status: 'EXPIRED' }));
 
-    const data = (prismaMock.agentAction.update as any).mock.calls[0][0].data;
+    const data = (prismaMock.agentAction.updateMany as any).mock.calls[0][0].data;
     expect(data.status).toBe('EXPIRED');
   });
 
   it('L5: PENDING_APPROVAL row status maps back to PENDING', async () => {
     const row = makeAgentActionRow({ status: 'PENDING_APPROVAL' });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
     // Prevent auto-expire from triggering by setting future expiresAt
     (row as any).expiresAt = new Date(Date.now() + 60_000);
-    (prismaMock.agentAction.update as any).mockResolvedValue({});
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
 
     const result = await store.get(ACTION_ID);
     expect(result!.status).toBe('PENDING');
@@ -1091,7 +1104,7 @@ describe('Status mapping', () => {
       status: 'APPROVED',
       proposedState: { summary: 'test', changes: [], affectedEntities: [] },
     });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
     expect(result!.status).toBe('APPROVED');
@@ -1099,7 +1112,7 @@ describe('Status mapping', () => {
 
   it('L7: REJECTED row status maps back to REJECTED', async () => {
     const row = makeAgentActionRow({ status: 'REJECTED' });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
     expect(result!.status).toBe('REJECTED');
@@ -1107,7 +1120,7 @@ describe('Status mapping', () => {
 
   it('L8: EXPIRED row status maps back to EXPIRED', async () => {
     const row = makeAgentActionRow({ status: 'EXPIRED' });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
     expect(result!.status).toBe('EXPIRED');
@@ -1115,7 +1128,7 @@ describe('Status mapping', () => {
 
   it('L9: ROLLED_BACK row status maps to REJECTED (closest match)', async () => {
     const row = makeAgentActionRow({ status: 'ROLLED_BACK' });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
     expect(result!.status).toBe('REJECTED');
@@ -1123,7 +1136,7 @@ describe('Status mapping', () => {
 
   it('L10: unknown row status defaults to PENDING', async () => {
     const row = makeAgentActionRow({ status: 'UNKNOWN_STATUS' });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
     // Give future expiresAt to avoid auto-expire path
     (row as any).expiresAt = new Date(Date.now() + 60_000);
 
@@ -1138,7 +1151,7 @@ describe('Status mapping', () => {
 
 describe('confidence and impact are independent (RF-2)', () => {
   it('M1: impact is read from the stored preview, not from the confidence', async () => {
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(
       makeAgentActionRow({
         confidenceScore: 95,
         aiReasoning: JSON.stringify({ confidenceSource: 'agent' }),
@@ -1152,7 +1165,7 @@ describe('confidence and impact are independent (RF-2)', () => {
   });
 
   it('M1b: a legacy (pre-PG-198) impact-derived score is not exposed as confidence', async () => {
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(
       makeAgentActionRow({ confidenceScore: 90, expiresAt: new Date(Date.now() + 60_000) })
     );
 
@@ -1161,7 +1174,7 @@ describe('confidence and impact are independent (RF-2)', () => {
   });
 
   it('M2: a NULL confidence reads back as undefined', async () => {
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(
       makeAgentActionRow({ confidenceScore: null, expiresAt: new Date(Date.now() + 60_000) })
     );
 
@@ -1172,7 +1185,7 @@ describe('confidence and impact are independent (RF-2)', () => {
   it('M3: an unknown stored impact reads back as undefined', async () => {
     const row = makeAgentActionRow({ expiresAt: new Date(Date.now() + 60_000) });
     (row.proposedState as Record<string, unknown>).estimatedImpact = 'EXTREME';
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
 
     const result = await store.get(ACTION_ID);
     expect(result!.preview.estimatedImpact).toBeUndefined();
@@ -1180,7 +1193,7 @@ describe('confidence and impact are independent (RF-2)', () => {
 
   it('M4: escalation columns are mapped', async () => {
     const escalatedAt = new Date('2026-10-13T09:00:00Z');
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(
       makeAgentActionRow({
         escalatedAt,
         escalatedTo: 'manager-1',
@@ -1292,7 +1305,7 @@ describe('inferActionType from toolName', () => {
       status: 'PENDING_APPROVAL',
       expiresAt: new Date(Date.now() + 60_000),
     });
-    (prismaMock.agentAction.findUnique as any).mockResolvedValue(row);
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(row);
     const result = await store.get(ACTION_ID);
     return result!.actionType;
   }
@@ -1377,5 +1390,91 @@ describe('Tenant isolation', () => {
 
     const args = (prismaMock.agentAction.findMany as any).mock.calls[0][0];
     expect(args.where.tenantId).toBe('tenant-ghi');
+  });
+});
+
+// ════════════════════════════════════════════════════════════
+// Section X: #883 — by-id access is scoped by tenant
+// ════════════════════════════════════════════════════════════
+
+describe('tenant scoping of by-id access (#883)', () => {
+  it('X1: get() looks the row up by id AND tenant', async () => {
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(null);
+
+    await store.get(ACTION_ID, 'tenant-other');
+
+    expect(prismaMock.agentAction.findFirst).toHaveBeenCalledWith({
+      where: { id: ACTION_ID, tenantId: 'tenant-other' },
+    });
+  });
+
+  it('X2: get() defaults to the store tenant, never an unscoped lookup', async () => {
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(null);
+
+    await store.get(ACTION_ID);
+
+    expect(prismaMock.agentAction.findFirst).toHaveBeenCalledWith({
+      where: { id: ACTION_ID, tenantId: TENANT_ID },
+    });
+  });
+
+  it('X3: get() on an expired action of a foreign tenant does not flip it to EXPIRED', async () => {
+    // The tenant-scoped lookup finds nothing, so the expiry write must not happen.
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(null);
+
+    const result = await store.get(ACTION_ID, 'tenant-attacker');
+
+    expect(result).toBeUndefined();
+    expect(prismaMock.agentAction.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('X4: update() is tenant-scoped and throws when no row in the tenant matched', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 0 });
+
+    await expect(store.update(makePendingAction({ tenantId: 'tenant-other' }))).rejects.toThrow(
+      /not found in tenant/
+    );
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ACTION_ID, tenantId: 'tenant-other' } })
+    );
+  });
+
+  it('X5: update() with an explicit tenant overrides the action own tenant', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 1 });
+
+    await store.update(makePendingAction(), 'tenant-explicit');
+
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ACTION_ID, tenantId: 'tenant-explicit' } })
+    );
+  });
+
+  it('X6: getExecuted() and disableRollback() are tenant-scoped', async () => {
+    (prismaMock.agentAction.findFirst as any).mockResolvedValue(null);
+
+    await store.getExecuted(ACTION_ID, 'tenant-other');
+    await store.disableRollback(ACTION_ID, 'tenant-other');
+
+    expect(prismaMock.agentAction.findFirst).toHaveBeenNthCalledWith(1, {
+      where: { id: ACTION_ID, tenantId: 'tenant-other' },
+    });
+    expect(prismaMock.agentAction.findFirst).toHaveBeenNthCalledWith(2, {
+      where: { id: ACTION_ID, tenantId: 'tenant-other' },
+    });
+    expect(prismaMock.agentAction.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('X7: addExecuted() writes only inside the action tenant', async () => {
+    (prismaMock.agentAction.updateMany as any).mockResolvedValue({ count: 0 });
+    const executed: ExecutedAction = {
+      ...makePendingAction({ status: 'APPROVED', tenantId: 'tenant-other' }),
+      executionResult: {},
+      rollbackAvailable: false,
+    };
+
+    await expect(store.addExecuted(executed)).rejects.toThrow(/not found in tenant/);
+    expect(prismaMock.agentAction.updateMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { id: ACTION_ID, tenantId: 'tenant-other' } })
+    );
   });
 });

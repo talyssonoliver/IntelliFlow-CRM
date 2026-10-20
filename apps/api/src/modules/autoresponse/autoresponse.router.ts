@@ -722,10 +722,20 @@ export const autoResponseRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const repository = await getRepository(ctx);
 
-      const drafts = await repository.findPendingForApprover(
-        input.approverId,
+      // #857: the queue is the signed-in user's own; naming another approver is refused.
+      const approverId = sessionActor(ctx, input.approverId, 'approverId');
+      const assigned = await repository.findPendingForApprover(
+        approverId,
         typedCtx.tenant.tenantId
       );
+
+      // Only drafts this user's role may decide (the policy's minimum reviewer role).
+      const allowedByTrigger = new Map<string, boolean>();
+      for (const trigger of new Set(assigned.map((d) => d.triggerType))) {
+        const resolved = await draftPolicy(ctx, typedCtx.tenant.tenantId, trigger, { fresh: true });
+        allowedByTrigger.set(trigger, canReview(ctx.user?.role, resolved.rule));
+      }
+      const drafts = assigned.filter((d) => allowedByTrigger.get(d.triggerType));
 
       return {
         drafts: drafts.map((d) => ({

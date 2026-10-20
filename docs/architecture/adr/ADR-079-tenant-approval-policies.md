@@ -89,8 +89,11 @@ Chosen option 3.
   - Approve and reject require the policy's minimum role in addition to the
     permission. They read fresh, so a read error fails closed.
   - Approval claims the action atomically and runs the real mutation through the
-    target module's tRPC procedure. Failures are stored as `executionError`. No
-    rollback token is issued while rollbacks are simulated (#856).
+    target module's tRPC procedure. Failures are stored as `executionError`. A
+    rollback token is issued only when a real compensation exists (#856):
+    `approved-action-compensator.ts` cancels a created case or appointment and
+    trashes an unsent email draft, through `agent.rollbackAction`. Updates and
+    notes get no token yet (#931).
 - **Auto-approve** (`evaluateAutoApproval`). It runs only when all of these
   hold:
   - the policy enables it;
@@ -124,7 +127,8 @@ Chosen option 3.
   - Draft confidence is client-supplied. This is bounded by BR-6: the requester
     must already be allowed to approve.
 - Follow-ups:
-  - #856 real compensating rollbacks;
+  - #931 compensating rollbacks for updates and notes (#856 covered creates and
+    email drafts);
   - #857 approver filtering;
   - #883 a tenant-scoped action store.
 
