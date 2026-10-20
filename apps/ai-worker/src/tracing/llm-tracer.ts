@@ -26,6 +26,7 @@ import { aiConfig } from '../config/ai.config.js';
 import { tenantContextStore } from './tenant-context.js';
 import { GeminiEmbeddings } from '../lib/gemini-embeddings.js';
 import {
+  assertWithinDailyLimit,
   chatPricingKey,
   guardEmbeddingCall,
   recordEmbeddingUsage,
@@ -71,6 +72,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
     options?: InvokeParams[1]
   ) => {
     const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
+    assertWithinDailyLimit();
 
     return tracer.startActiveSpan(
       'llm.invoke',

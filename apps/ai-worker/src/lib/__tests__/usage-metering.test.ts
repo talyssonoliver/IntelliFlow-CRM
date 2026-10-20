@@ -12,12 +12,15 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 describe('PG-199 metering in the tracing wrappers', () => {
   const recordUsage = vi.fn();
+  const assertWithinDailyLimit = vi.fn();
   const assertWithinCeiling = vi.fn();
   const resolveEffectiveTier = vi.fn();
 
   async function load(costTrackingEnabled = true) {
     vi.resetModules();
-    vi.doMock('../../utils/cost-tracker', () => ({ costTracker: { recordUsage } }));
+    vi.doMock('../../utils/cost-tracker', () => ({
+      costTracker: { recordUsage, assertWithinDailyLimit },
+    }));
     vi.doMock('../purpose-ceiling.js', () => ({ assertWithinCeiling }));
     vi.doMock('../tenant-ai-config.js', () => ({ resolveEffectiveTier }));
     vi.doMock('../../config/ai.config.js', async () => ({
@@ -35,6 +38,7 @@ describe('PG-199 metering in the tracing wrappers', () => {
 
   beforeEach(() => {
     recordUsage.mockReset();
+    assertWithinDailyLimit.mockReset();
     assertWithinCeiling.mockReset().mockResolvedValue(undefined);
     resolveEffectiveTier.mockReset().mockResolvedValue({ tier: 'free', ceilingCents: 100 });
   });
@@ -176,6 +180,34 @@ describe('PG-199 metering in the tracing wrappers', () => {
     await expect(model.invoke('x')).resolves.toMatchObject({ content: 'paid answer' });
     expect(warn.mock.calls.some((c) => String(c[0]).includes('usage_not_metered'))).toBe(true);
     warn.mockRestore();
+  });
+
+  // The answer above was paid for, so it is returned; the limit then holds by refusing the
+  // next call before it reaches the provider.
+  it('refuses a chat call before the provider once the daily cost limit is reached', async () => {
+    const { wrapModelWithTracing } = await load();
+    assertWithinDailyLimit.mockImplementation(() => {
+      throw new Error('Daily AI cost limit exceeded: $51.00 / $50.00');
+    });
+    const provider = chatModel({ content: 'never sent' }) as { invoke: ReturnType<typeof vi.fn> };
+    const original = provider.invoke;
+    const model = wrapModelWithTracing(provider as never, { purpose: 'email', tier: 'free' });
+
+    await expect(model.invoke('x')).rejects.toThrow('Daily AI cost limit exceeded');
+    expect(original).not.toHaveBeenCalled();
+    expect(recordUsage).not.toHaveBeenCalled();
+  });
+
+  it('does not check the daily limit when cost tracking is disabled', async () => {
+    const { wrapModelWithTracing } = await load(false);
+    assertWithinDailyLimit.mockImplementation(() => {
+      throw new Error('Daily AI cost limit exceeded');
+    });
+    const model = wrapModelWithTracing(chatModel({ content: 'ok' }), {
+      purpose: 'email',
+      tier: 'free',
+    });
+    await expect(model.invoke('x')).resolves.toMatchObject({ content: 'ok' });
   });
 
   it('records nothing when cost tracking is disabled', async () => {
@@ -350,6 +382,21 @@ describe('PG-199 metering in the tracing wrappers', () => {
       ).rejects.toMatchObject({ code: 'PURPOSE_CEILING_REACHED' });
       expect(original).not.toHaveBeenCalled();
       expect(recordUsage).not.toHaveBeenCalled();
+    });
+
+    it('refuses an embedding call before the provider once the daily cost limit is reached', async () => {
+      const { wrapEmbeddingsWithTracing, tenantContextStore } = await load();
+      const stub = embeddings() as { embedDocuments: ReturnType<typeof vi.fn> };
+      const original = stub.embedDocuments;
+      assertWithinDailyLimit.mockImplementation(() => {
+        throw new Error('Daily AI cost limit exceeded: $51.00 / $50.00');
+      });
+      const wrapped = wrapEmbeddingsWithTracing(stub as never, { tier: 'free' });
+
+      await expect(
+        tenantContextStore.run({ tenantId: 't9' } as never, () => wrapped.embedDocuments(['x']))
+      ).rejects.toThrow('Daily AI cost limit exceeded');
+      expect(original).not.toHaveBeenCalled();
     });
 
     it('neither meters nor checks a ceiling without a tenant (shared boot-time chain)', async () => {

@@ -172,6 +172,26 @@ describe('CostTracker', () => {
       }).toThrow('Daily AI cost limit exceeded');
     });
 
+    it('refuses the next call once the daily limit is reached (checked before the call)', () => {
+      const strictTracker = new CostTracker(5, 0.05);
+      expect(() => strictTracker.assertWithinDailyLimit()).not.toThrow();
+
+      expect(() =>
+        strictTracker.recordUsage({
+          model: 'gpt-4',
+          inputTokens: 10000,
+          outputTokens: 10000,
+          operationType: 'expensive',
+        })
+      ).toThrow('Daily AI cost limit exceeded');
+
+      expect(() => strictTracker.assertWithinDailyLimit()).toThrow('Daily AI cost limit exceeded');
+    });
+
+    it('never refuses a call when no daily limit is configured', () => {
+      expect(() => new CostTracker(5).assertWithinDailyLimit()).not.toThrow();
+    });
+
     it('should log warning when threshold exceeded but under limit', () => {
       const warningTracker = new CostTracker(0.01, 1.0);
 

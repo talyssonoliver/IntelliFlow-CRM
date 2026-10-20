@@ -178,6 +178,18 @@ export class CostTracker {
   }
 
   /**
+   * Refuse a call before it is made once the daily limit is reached. The call that crossed
+   * the limit was already paid for and keeps its answer; this stops the ones after it.
+   */
+  assertWithinDailyLimit(): void {
+    if (this.dailyLimit && this.getDailyCost() >= this.dailyLimit) {
+      throw new Error(
+        `Daily AI cost limit exceeded: $${this.dailyCost.toFixed(2)} / $${this.dailyLimit.toFixed(2)}`
+      );
+    }
+  }
+
+  /**
    * Check if we're approaching or exceeding limits
    */
   private checkThresholds(): void {

@@ -83,6 +83,14 @@ function textOf(value: unknown): string {
   return String(value);
 }
 
+/**
+ * Refuse a metered call before it reaches the provider once the daily cost limit is reached.
+ * recordSafely never fails the paid call that crosses the limit, so the limit holds here.
+ */
+export function assertWithinDailyLimit(): void {
+  if (costTrackingEnabled()) costTracker.assertWithinDailyLimit();
+}
+
 /** Record one successful chat call. */
 export function recordModelUsage(meta: ModelUsageMeta, input: unknown, result: unknown): void {
   if (!costTrackingEnabled()) return;
@@ -111,6 +119,7 @@ export async function guardEmbeddingCall(
   tier: LLMTier
 ): Promise<void> {
   if (!isBillableTenant(tenantId)) return;
+  assertWithinDailyLimit();
   const config = await resolveEffectiveTier(tenantId, 'rag', tier);
   await assertWithinCeiling(tenantId, 'rag', config.ceilingCents);
 }
