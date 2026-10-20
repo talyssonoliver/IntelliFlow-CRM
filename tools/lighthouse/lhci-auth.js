@@ -26,8 +26,12 @@ module.exports = async (browser, context) => {
     );
   }
 
-  // 1. Navigate to the target origin so localStorage is scoped correctly
-  await page.goto(context.url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  // 1. Open a static file on the target origin so localStorage is scoped correctly.
+  //    Not the audited page itself: its auth code would boot without a session, redirect
+  //    to /login and could clear the tokens written below, so roughly half the runs
+  //    audited the login page instead (PG-198).
+  const origin = new URL(context.url).origin;
+  await page.goto(`${origin}/robots.txt`, { waitUntil: 'domcontentloaded', timeout: 30000 });
 
   // 2. Authenticate via Supabase REST API (runs in browser context)
   const authResponse = await page.evaluate(

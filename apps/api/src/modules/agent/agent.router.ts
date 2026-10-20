@@ -638,6 +638,47 @@ export const agentRouter = createTRPCRouter({
     }),
 
   /**
+   * Roll back an executed action (#856)
+   *
+   * Undoes the action through the target module's own procedure: a created case is
+   * cancelled, a created appointment is cancelled, an unsent email draft is trashed.
+   * Only actions approved with a rollback token, within an hour, can be rolled back.
+   */
+  rollbackAction: protectedProcedure
+    .input(
+      z.object({
+        actionId: z.string(),
+        rollbackToken: z.string(),
+        reason: z.string().min(1).max(500),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Undoing an approval takes the same permission and reviewer role as granting it.
+      if (!(await hasPermission(ctx, 'agent:tool-approval', 'approve'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to roll back agent actions.',
+        });
+      }
+
+      const action = await requireTenantOwnedAction(ctx, input.actionId);
+      await assertPolicyReviewer(ctx, action);
+
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
+
+      return approvalWorkflowService.rollbackAction(
+        {
+          actionId: input.actionId,
+          rollbackToken: input.rollbackToken,
+          requestedBy: agentContext.userId,
+          reason: input.reason,
+        },
+        agentContext,
+        ctx
+      );
+    }),
+
+  /**
    * Get pending actions count
    *
    * Returns the count of pending actions for the authenticated user.
