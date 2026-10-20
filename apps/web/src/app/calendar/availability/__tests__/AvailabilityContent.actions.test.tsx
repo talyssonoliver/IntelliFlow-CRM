@@ -210,7 +210,8 @@ describe('Save', () => {
     fireEvent.click(save());
     const alert = await screen.findByText('Something went wrong');
     expect(alert.closest('[role="alert"]')).not.toBeNull();
-    expect(document.activeElement).toBe(alert.closest('[role="alert"]'));
+    // Focus moves in an effect after the alert renders, so wait for it (it raced under load).
+    await waitFor(() => expect(document.activeElement).toBe(alert.closest('[role="alert"]')));
     expect(h.toast).not.toHaveBeenCalled();
   });
 
