@@ -34,12 +34,12 @@
       },
       {
         "path": "apps/api/src/modules/agent/model-config.router.ts",
-        "sha256": "c952761cebb30db1b1c520fe2b242982fb833e1571002ce28ea400e8c274f22a",
+        "sha256": "2d4e5a49d64c72f5bb8906e7e38fc0aab784baff74254f884090b11287fd4589",
         "created_at": "2026-10-19T15:16:39Z"
       },
       {
         "path": "packages/validators/src/model-config.ts",
-        "sha256": "1757837bd9a60825bcde68f167241866d7216cd08902307d056f44de4cdff612",
+        "sha256": "aa87ae8f2c3a4b588d374b16201e88516abd4753745d5296350df6c6fe64fad7",
         "created_at": "2026-10-19T15:16:39Z"
       },
       {
@@ -49,7 +49,7 @@
       },
       {
         "path": "packages/domain/src/ai/model-config/rules.ts",
-        "sha256": "bcdfb7fa5f0b86c63d40bd4aa236b5e53f482f18966a152c94faf140c356be6d",
+        "sha256": "5b7c8c77b31a54255698060dc6f89246ca5a1670e9c41190fa4354345dfc6fc7",
         "created_at": "2026-10-19T15:16:39Z"
       },
       {
@@ -74,7 +74,7 @@
       },
       {
         "path": ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/PG-199-delivery.md",
-        "sha256": "f8d791f06830cba384a5347bff17cd295b45b0c2aa8783bbd3c4850a8f359dab",
+        "sha256": "8792fbbf56e2f02cbe7e2683cb86d226df7bfbb7e0835d0038f7131b5c6ec3f8",
         "created_at": "2026-10-19T15:16:39Z"
       },
       {
