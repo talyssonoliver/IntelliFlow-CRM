@@ -152,6 +152,30 @@ describe('modelConfigRouter (PG-199)', () => {
       expect(result.canManage).toBe(false);
     });
 
+    // PG-199 (owner Q10): the locked rag card shows the model the worker reports running.
+    it('carries the embedding model the worker publishes on the rag row only', async () => {
+      const ctx = createTestContext() as any;
+      ctx.services = {
+        ...ctx.services,
+        activeEmbeddingModel: vi
+          .fn()
+          .mockResolvedValue({ id: 'gemini-embedding-001', dimensions: 1536 }),
+      };
+      const result = await modelConfigRouter.createCaller(ctx).get();
+      const rag = result.purposes.find((p) => p.purpose === 'rag');
+      expect(rag?.activeModel).toEqual({ id: 'gemini-embedding-001', dimensions: 1536 });
+      expect(result.purposes.filter((p) => p.activeModel !== null).map((p) => p.purpose)).toEqual([
+        'rag',
+      ]);
+    });
+
+    it('reports no active embedding model when the worker has not published one', async () => {
+      const ctx = createTestContext() as any;
+      ctx.services = { ...ctx.services, activeEmbeddingModel: vi.fn().mockResolvedValue(null) };
+      const result = await modelConfigRouter.createCaller(ctx).get();
+      expect(result.purposes.find((p) => p.purpose === 'rag')?.activeModel).toBeNull();
+    });
+
     it('reports canManage for admins and managers', async () => {
       await expect(admin.get()).resolves.toMatchObject({ canManage: true });
       const manager = modelConfigRouter.createCaller(createManagerContext());

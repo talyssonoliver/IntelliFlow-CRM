@@ -48,6 +48,8 @@ export interface PurposeRow {
   blocked: boolean;
   retired: boolean;
   locked: boolean;
+  /** rag only: the embedding model the worker reports running; null when not reported. */
+  activeModel: { id: string; dimensions: number | null } | null;
 }
 
 export type ModelConfigLimits = typeof MODEL_CONFIG_LIMITS;

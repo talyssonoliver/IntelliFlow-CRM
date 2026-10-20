@@ -42,6 +42,7 @@ import {
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import type { TenantAwareContext } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
+import type { ActiveEmbeddingModel } from './active-embedding-model';
 import { assertAgentSettingsAdmin, isAgentSettingsAdmin, rethrowConflict } from './settings-shared';
 
 // ─── Types & constants ──────────────────────────────────────────────────────
@@ -225,7 +226,8 @@ function isRetired(row: ConfigRow | undefined): boolean {
 function toPurposeRow(
   purpose: LLMPurpose,
   row: ConfigRow | undefined,
-  spend: Map<string, number> | null
+  spend: Map<string, number> | null,
+  embeddingModel: ActiveEmbeddingModel | null
 ) {
   const config = editableOf(row);
   const spentCentiCents = spend ? (spend.get(purposeSpendKey(purpose)) ?? 0) : null;
@@ -239,6 +241,8 @@ function toPurposeRow(
     blocked: ceiling !== null && spentCentiCents !== null && spentCentiCents >= ceiling * 100,
     retired: isRetired(row),
     locked: purpose === 'rag',
+    // The model the worker reports running (owner Q10); null = not reported, shown as unavailable.
+    activeModel: purpose === 'rag' ? embeddingModel : null,
   };
 }
 
@@ -273,8 +277,11 @@ export const modelConfigRouter = createTRPCRouter({
     })) as ConfigRow[];
     const byPurpose = new Map(rows.map((row) => [row.purpose, row]));
     const spend = await readSpend(ctx, tenantId, period);
+    const embeddingModel = (await ctx.services?.activeEmbeddingModel?.()) ?? null;
     return {
-      purposes: LLM_PURPOSES.map((purpose) => toPurposeRow(purpose, byPurpose.get(purpose), spend)),
+      purposes: LLM_PURPOSES.map((purpose) =>
+        toPurposeRow(purpose, byPurpose.get(purpose), spend, embeddingModel)
+      ),
       catalog: MODEL_CATALOG.map(toCatalogModel),
       limits: MODEL_CONFIG_LIMITS,
       period,

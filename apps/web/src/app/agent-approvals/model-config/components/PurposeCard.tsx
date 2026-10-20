@@ -145,7 +145,7 @@ export function PurposeCard({
         )}
 
         {row.locked ? (
-          <LockedModel row={row} catalog={catalog} />
+          <LockedModel row={row} />
         ) : (
           <ModelFields
             row={row}
@@ -188,9 +188,9 @@ export function PurposeCard({
   );
 }
 
-function LockedModel({ row, catalog }: Readonly<{ row: PurposeRow; catalog: CatalogModel[] }>) {
-  const id = row.defaultModelIds[0] ?? 'unknown';
-  const dimensions = catalog.find((model) => model.id === id)?.dimensions;
+function LockedModel({ row }: Readonly<{ row: PurposeRow }>) {
+  // The model the worker reports running (owner Q10), never a catalog default.
+  const active = row.activeModel;
   return (
     <div className="space-y-1 rounded-md border border-border px-3 py-2">
       <p className="flex items-center gap-2 text-sm text-foreground">
@@ -199,12 +199,18 @@ function LockedModel({ row, catalog }: Readonly<{ row: PurposeRow; catalog: Cata
         </span>
         <span>Platform-managed embedding model</span>
       </p>
-      <p className="text-sm">
-        <span className="font-mono">{id}</span>
-        {dimensions ? (
-          <span className="ml-2 text-xs text-muted-foreground">{`${dimensions} dimensions`}</span>
-        ) : null}
-      </p>
+      {active ? (
+        <p className="text-sm">
+          <span className="font-mono">{active.id}</span>
+          {active.dimensions ? (
+            <span className="ml-2 text-xs text-muted-foreground">{`${active.dimensions} dimensions`}</span>
+          ) : null}
+        </p>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          Embedding model unavailable: the AI worker has not reported it yet.
+        </p>
+      )}
       <p className="text-xs text-muted-foreground">
         Changing it would invalidate stored vectors, so only the ceiling can change. Embedding spend
         is estimated from input length.

@@ -196,16 +196,29 @@ describe('PurposeCard — ceiling and spend', () => {
 
 describe('PurposeCard — rag and view-only', () => {
   it('locks the rag model and leaves only its ceiling editable', () => {
-    render(<Harness row={purposeRow('rag')} />);
+    render(
+      <Harness
+        row={purposeRow('rag', { activeModel: { id: 'gemini-embedding-001', dimensions: 1536 } })}
+      />
+    );
     expect(screen.queryByLabelText('Rag model')).toBeNull();
     expect(screen.queryByLabelText('Rag temperature')).toBeNull();
     expect(screen.queryByLabelText('Max tokens')).toBeNull();
     expect(screen.getByText(/platform-managed embedding model/i)).toBeInTheDocument();
-    expect(screen.getByText('nomic-embed-text')).toBeInTheDocument();
-    expect(screen.getByText(/768 dimensions/)).toBeInTheDocument();
+    // PG-199 (owner Q10): the model the worker reports running, not a catalog default.
+    expect(screen.getByText('gemini-embedding-001')).toBeInTheDocument();
+    expect(screen.getByText(/1536 dimensions/)).toBeInTheDocument();
+    expect(screen.queryByText('nomic-embed-text')).toBeNull();
     expect(screen.getByText(/embedding spend is estimated/i)).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText('Monthly ceiling (USD)'), { target: { value: '5' } });
     expect(draft().ceilingUsd).toBe('5');
+  });
+
+  it('says the embedding model is unavailable when the worker has not reported it', () => {
+    render(<Harness row={purposeRow('rag')} />);
+    expect(screen.getByText(/embedding model unavailable/i)).toBeInTheDocument();
+    expect(screen.queryByText('nomic-embed-text')).toBeNull();
+    expect(screen.queryByText(/dimensions/)).toBeNull();
   });
 
   it('ties model and temperature errors to their controls and voices the default value', () => {

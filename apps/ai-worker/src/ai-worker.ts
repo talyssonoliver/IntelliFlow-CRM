@@ -82,6 +82,7 @@ import {
   type AgentStatusContext,
 } from './services/agent-status';
 import { hallucinationChecker, RedisMonitoringPublisher } from './monitoring';
+import { EmbeddingModelPublisher } from './lib/embedding-model-publisher';
 import type { MonitoringRedisLike } from './monitoring';
 import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
 import { setAuditLogAdapter } from './utils/audit-log';
@@ -135,6 +136,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private monitoringFlushService?: MonitoringFlushService;
   // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
   private redisMonitoringPublisher?: RedisMonitoringPublisher;
+  private embeddingModelPublisher?: EmbeddingModelPublisher;
   private prisma?: import('@intelliflow/db').PrismaClient;
   /** Unsubscribes the per-tenant AI-spend recorder from the cost tracker. */
   private stopTenantAiSpend?: () => void;
@@ -265,6 +267,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
         this.redisMonitoringPublisher.start();
         this.logger.info('RedisMonitoringPublisher started — publishing snapshots every 5s');
+        // PG-199 (owner Q10): the Model Configuration page shows the embedding model this
+        // worker runs; only the worker's environment says which one it is.
+        this.embeddingModelPublisher = new EmbeddingModelPublisher(client);
+        this.embeddingModelPublisher.start();
       } catch (innerErr) {
         this.logger.warn(
           { err: innerErr instanceof Error ? innerErr.message : String(innerErr) },
@@ -981,6 +987,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // IFC-214: Stop Redis snapshot publisher cleanly (final tick + redis.quit).
     await this.tryStop(this.redisMonitoringPublisher, 'RedisMonitoringPublisher');
+    await this.tryStop(this.embeddingModelPublisher, 'EmbeddingModelPublisher');
 
     // IFC-310: Stop the contact embedding worker cleanly.
     await this.tryStop(this.contactEmbedWorker, 'ContactEmbedWorker');

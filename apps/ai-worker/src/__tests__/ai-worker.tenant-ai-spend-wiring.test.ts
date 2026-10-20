@@ -9,6 +9,15 @@ const h = vi.hoisted(() => ({
   record: vi.fn(),
   recordPurpose: vi.fn(),
   setReader: vi.fn(),
+  publisherStart: vi.fn(),
+  publisherClient: [] as unknown[],
+}));
+
+vi.mock('../lib/embedding-model-publisher', () => ({
+  EmbeddingModelPublisher: vi.fn(function EmbeddingModelPublisher(client: unknown) {
+    h.publisherClient.push(client);
+    return { start: h.publisherStart, stop: vi.fn() };
+  }),
 }));
 
 vi.mock('@intelliflow/worker-shared', () => ({
@@ -109,11 +118,15 @@ vi.mock('../monitoring', () => ({
       .fn()
       .mockResolvedValue({ hallucinated: false, score: 0, hallucinationTypes: [] }),
   },
-  RedisMonitoringPublisher: vi.fn().mockImplementation(() => ({ start: vi.fn(), stop: vi.fn() })),
+  RedisMonitoringPublisher: vi.fn(function RedisMonitoringPublisher() {
+    return { start: vi.fn(), stop: vi.fn() };
+  }),
 }));
 
 vi.mock('../monitoring/monitoring-flush.service', () => ({
-  MonitoringFlushService: vi.fn().mockImplementation(() => ({ start: vi.fn(), stop: vi.fn() })),
+  MonitoringFlushService: vi.fn(function MonitoringFlushService() {
+    return { start: vi.fn(), stop: vi.fn() };
+  }),
 }));
 
 vi.mock('@intelliflow/adapters', () => ({
@@ -229,6 +242,15 @@ describe('AIWorker.wireTenantAiSpend listener', () => {
 
     expect(h.record).toHaveBeenCalledWith({ cost: 0.02 });
     expect(logger.warn).not.toHaveBeenCalled();
+  });
+
+  // PG-199 (owner Q10): the worker publishes the embedding model it runs for the API to show.
+  it('starts the active embedding model publisher on the monitoring Redis client', async () => {
+    const worker = new AIWorker();
+    await (worker as any).initPrismaAndMonitoring();
+    expect(h.publisherStart).toHaveBeenCalledTimes(1);
+    expect(h.publisherClient[0]).toBeDefined();
+    await (worker as any).redisMonitoringPublisher?.stop?.();
   });
 
   // PG-199: the same listener feeds the per-purpose counter, and the repository is the

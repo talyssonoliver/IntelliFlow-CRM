@@ -38,6 +38,7 @@ export function purposeRow(purpose: LLMPurpose, overrides: Partial<PurposeRow> =
     blocked: false,
     retired: false,
     locked: purpose === 'rag',
+    activeModel: null,
     ...overrides,
   };
 }

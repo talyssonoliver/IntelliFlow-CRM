@@ -68,3 +68,9 @@ against embedding models (rag model stays locked per Q5, so this only matters fo
 | # | Question | Answer |
 |---|----------|--------|
 | Q9 | Codex (pre-ship) found LiteLLM gateway fallbacks (reasoning-free -> reasoning-standard, structured-free -> structured-standard) are metered at the free alias price, so purpose ceilings undercount. Waive + issue, fix now, or remove the gateway fallbacks? | **B. Fix now** - price each chat call from the model the gateway reports serving (response_metadata.model_name mapped to MODEL_PRICING via a table parity-tested against infra/litellm/config.yaml); construction metadata only when the response names no known model. |
+
+## Ship-time ruling 2 (2026-10-20, AskUserQuestion during SHIP)
+
+| # | Question | Answer |
+|---|----------|--------|
+| Q10 | Codex (pre-ship) found the locked rag card shows the LiteLLM default (nomic-embed-text, 768) while production embeddings run on Gemini (gemini-embedding-001, 1536); the API cannot see the worker's EMBEDDING_PROVIDER. Worker publishes it, API env var, no model name, or waive? | **Worker publishes it** - the ai-worker writes the embedding model and dimensions it runs to Redis (`ai-config:v1:embedding-model`, TTL 30 min, republished every 5 min); the API reads it and the card shows it, or "unavailable" when it is missing. |

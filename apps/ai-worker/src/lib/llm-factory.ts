@@ -594,7 +594,7 @@ export async function createLLMForTenant(
 }
 
 /** PG-199: MODEL_PRICING key of the embeddings provider createEmbeddings builds. */
-function embeddingsPricingKey(tier: LLMTier): string {
+export function embeddingsPricingKey(tier: LLMTier): string {
   if (aiConfig.provider !== 'mock' && process.env['EMBEDDING_PROVIDER'] === 'gemini') {
     return process.env['GEMINI_EMBEDDING_MODEL'] || 'gemini-embedding-001';
   }

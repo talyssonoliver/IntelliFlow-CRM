@@ -196,6 +196,8 @@ export const mockServices = {
   // at call time so existing tests can keep overriding aiMonitoringService.getX
   // without also overriding the store. (See `bindAiMonitoringStoreToService` below.)
   aiMonitoringStore: {} as any,
+  // PG-199: no embedding model published unless a test sets one (the page shows unavailable).
+  activeEmbeddingModel: async () => null,
   // IFC-196: homeCache undefined so router tests fall back to direct compute.
   homeCache: undefined as any,
   // IFC-310: Duplicate-detection runtime services — leave undefined so router
