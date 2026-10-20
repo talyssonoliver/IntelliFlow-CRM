@@ -4,10 +4,10 @@
   "task_id": "PG-199",
   "run_id": "20261019115522-8efea6fc",
   "attestor": "Claude Code",
-  "attestation_timestamp": "2026-10-20T22:01:43Z",
+  "attestation_timestamp": "2026-10-20T22:37:48Z",
   "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 170,
+    "artifacts_verified": 171,
     "validations_passed": 4,
     "validations_failed": 0,
     "gates_passed": 13,
@@ -320,7 +320,7 @@
     ".specify/sprints/sprint-18/context/PG-199/rounds/R4-frontend-lead.md": "943b7b69115f7f5aeffcce07f92fe4feca6fe6753f550c8147c2b23da1151a87",
     ".specify/sprints/sprint-18/context/PG-199/rounds/R4-resolutions.md": "922e2725c337de818530a827da3bf25ab84a861454ee1006223c8f3cf02ac006",
     ".specify/sprints/sprint-18/context/PG-199/rounds/R4-test-engineer.md": "5b7b6a72fed001baae050743e45f072fe24c13cc1d1198560daa5aa27fcc8cd9",
-    ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/PG-199-delivery.md": "64b9219a508840d81184b20b7ee46555a2c2543c1a04c1f8fd5392e2575d50d2",
+    ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/PG-199-delivery.md": "f8d791f06830cba384a5347bff17cd295b45b0c2aa8783bbd3c4850a8f359dab",
     ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/a11y-review.md": "1329b7cb1e858c6f7098d1ee8745d9acd5b77d43f80076aebc392c9f27f7ce2e",
     ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/findings.md": "2bce2f0d96cc981c6d28f169e65a90c6bec92ad97e1230be14b1439c379bf989",
     ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/matop/gate-selection.json": "28e6155adbaffce5796ed3789bcfd9b4a82af3d4e68d2550647a7e4d246dbc1f",
@@ -405,6 +405,7 @@
     "apps/web/src/app/agent-approvals/model-config/components/model-config-model.ts": "09fc16307b5f2ac26f60028740a455048bb4ac025dae825709a7240ea11f6024",
     "apps/web/src/app/agent-approvals/model-config/page.tsx": "b12c02930046289f87d83dfbe1397baabf16c9c12804a6b3a62d009bdca4c165",
     "apps/web/src/app/calendar/availability/AvailabilityContent.tsx": "9764c370fa18cd6d48e71a33fb3c5f7675195e56ef79f6955f71bc18affef855",
+    "apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.actions.test.tsx": "407fa201f6687da53db3dd5b23756d0c32f0cc45226f9ceefad5fd0046d6bd15",
     "apps/web/src/app/cases/(list)/case-types/CaseTypesContent.tsx": "abe615129041d28b1efbc4895b28a34b408ec0f373d5698fe7861bad4a6db37f",
     "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx": "f30a8e6bc53fc27c74beeaf54951884389351c582aa2719bbd6c24e76e7deacb",
     "apps/web/src/lib/__tests__/trpc-errors.test.ts": "397b130405855dba4efd815de279569d49f23276fc834bb707e5e3d70cafe195",
@@ -456,7 +457,7 @@
   "environment": {
     "os": "win32 (Windows 11 Pro 10.0.26200)",
     "node_version": "v22.14.0",
-    "git_commit": "d743c8682",
+    "git_commit": "a0125bd48",
     "branch": "feat/pg-199-model-config"
   },
   "notes": "Verdict NEEDS_HUMAN, not COMPLETE. Open items:\n(1) Lighthouse authenticated run. There are no LHCI_TEST_* credentials for a non-production Supabase, and logging in to production is not allowed. Unauthenticated Path A scored performance 0.93 and accessibility 0.90. ADR-082 stays Proposed until this passes (plan Step 32).\n(2) Gate 4b. The runner runs pre-ship, pushes and opens the PR, so this attestation is written before the push. That is acceptable only because the verdict is not COMPLETE (PG-198 precedent).\nFinal matrix, 14:18-14:33Z, one process at a time via the slot wrapper: domain 3152, validators 2817, application 1494, adapters 2989, api 7942 (+2 skipped), ai-worker 2365 (+10 skipped), web 13191, integration 15/15 (local :5433 only), root route totals 15. Typecheck, lint and build exit 0; format:check 0; lint:artifacts 0; architecture 40/40. Diff coverage 95.1%.\nDisclosure: one small test file ran during an earlier background matrix, which broke the one-process rule. The matrix was then rerun cleanly in full.\nReviews: codex ran 5 rounds and found 9 real defects, all fixed with RED/GREEN logs; round 5 PASS. a11y-expert returned FAIL; all fixed (a11y-review.md). /code-review quick: 0 errors. /sonarqube-fix local checks: clean.\nSTOAs (matop/stoa-verdicts/): Foundation PASS, Domain PASS, Intelligence PASS. Security WARN for a pre-existing moderate sprintf-js advisory (debt ledger DEP-CVE-SPRINTFJS-PRECISION-001). Quality WARN for Lighthouse.\nProduction: the Class A migrations 20261019120000_tenant_model_config and 20261019120100_tenant_ai_config_rls must be applied with prisma migrate deploy before the API is promoted. The production RLS state is unknown; projects-64 verifies it at rehearsal.\nCompliance check (/compliance-check PG-199): sections 2-12 PASS, including the accessibility doc gate (WCAG statement 1.11.0, VPAT 1.12.0), attestation phrases OK and nav wiring OK. Section 13 (Lighthouse evidence, Guard 9) is BLOCK, which is the NEEDS_HUMAN item. Details in the delivery report.\nShip phase: origin/main merged (no conflicts), and the integration test uses the #930 schema lock. Pre-ship codex rounds 6-10 found 8 more real defects, all fixed with RED/GREEN logs: Ollama pricing, spend cache concurrency (monotonic max), gateway fallback pricing (owner Q9 = fix now), NBA tenant, and edits during a pending save. Codex round 11: PASS.\nReview round 1 (Aurora): bounded usage history (P1, OOM risk), metering never fails a successful call, NBA rethrows ceiling errors. RED/GREEN logs 40-aurora-r1-*.txt.\nCodex round 12 (pre-ship at 94c3541de): one real finding, a partial embedding batch lost its billed spend. Each embedding request is now metered (2da1c0c62). RED/GREEN logs 42-codex-r-*.txt; ai-worker 2385 passed.\nCodex round 13 (pre-ship at 7f6c31ea2): the daily cost limit was no longer enforced once metering failures were logged. It is now checked before each metered call (230f120c6). RED/GREEN logs 44-codex-dl-*.txt; ai-worker 2390 passed.\nCodex round 14 (pre-ship at 9c2e4d9ff): tool-call output tokens were not estimated (00d676633); the rag card showed a catalog default, not the running embedding model (owner Q10: worker publishes it, b0f4a65be). origin/main (#934) merged; api 7968, ai-worker 2397, web 159 passed.\nFollow-ups: #924 #925 #926 #927 #928 #929, existing #905.",
