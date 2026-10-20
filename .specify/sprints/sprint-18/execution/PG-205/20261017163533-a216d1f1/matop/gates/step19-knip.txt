@@ -1,0 +1,4 @@
+# 2026-10-18T08:34:18Z HEAD 7319f0d2c knip --reporter json --exclude unlisted,unresolved
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: pnpm exec knip --reporter json --exclude unlisted,unresolved --no-exit-code
+# exit: 0
+# result: 110 repo-wide issues (pre-existing), 0 in the 37 non-test source files changed by PG-205 (git diff origin/main...HEAD -- apps packages)

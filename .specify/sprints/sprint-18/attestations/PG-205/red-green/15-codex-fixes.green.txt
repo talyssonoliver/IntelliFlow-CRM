@@ -1,0 +1,13 @@
+# 2026-10-17T18:08:42Z HEAD dbb06a8db GREEN for codex-review-04 findings
+## domain
+ Test Files  1 passed (1)
+      Tests  64 passed (64)
+## validators
+ Test Files  1 passed (1)
+      Tests  58 passed (58)
+## api
+ Test Files  3 passed (3)
+      Tests  82 passed (82)
+## web
+ Test Files  8 passed (8)
+      Tests  56 passed (56)

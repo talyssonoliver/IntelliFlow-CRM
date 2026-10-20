@@ -1,0 +1,3 @@
+# 2026-10-17T20:50:08Z recovery session ffa3728c: re-verified GREEN for codex 18941caa on uncommitted tree (base dbb06a8db), Node v22.14.0. RED log 19-account-replace.red.log was captured by the prior lane at 20:01:38Z; the fix was already on disk, so RED was not re-run (re-running would need reverting the fix).
+ Test Files  1 passed (1)
+      Tests  36 passed (36)

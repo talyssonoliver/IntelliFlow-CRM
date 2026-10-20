@@ -1,0 +1,37 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 132 files total
+[codex-review] in scope : 67 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T20:28:08.406Z
+Base ref  : origin/main
+Files in scope : 67
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] apps/api/src/modules/calendar/availability-enforcement.ts:184-194 — non-atomic-daily-cap
+    Issue    : Concurrent bookings can exceed the firm's daily booking limit because the count and appointment write are separate operations.
+    Evidence : `await prisma.appointment.count(...)` followed by `evaluateAvailability(...sameDayCount)` only checks a snapshot; appointments.create and appointments.reschedule subsequently execute their persistence use cases without a shared transaction or lock. With cap 1 and count 0, two requests for different times can both pass this check and save, leaving two counted appointments.
+    Fix      : Serialize bookings for each tenant and firm-local day, and perform the cap count and appointment write within the same transaction under that lock; apply the same discipline to reschedules.
+    Fingerprint: 1a5ce81b9e098cca8625ccee5e210cf8ce672f62143c36f504158b6947f6c4aa
+
+  [MEDIUM] packages/application/src/usecases/scheduling/CheckConflicts.ts:274-276 — existing-buffer-query-gap
+    Issue    : The candidate search can return an occupied slot because its repository query omits appointments whose existing buffers overlap the candidate window.
+    Evidence : `startTime: buffer.adjustStartTime(new Date(windowStart))` expands the query only by the proposed booking's buffer. PrismaAppointmentRepository.findForConflictCheck filters raw appointment startTime/endTime, whereas ConflictDetector.checkTimeSlotConflicts compares existing.effectiveTimeSlot, including existing buffers. For a first candidate at 09:00 with zero proposed buffer, an existing 08:00–08:55 appointment with a 15-minute after-buffer is excluded by the query, so 09:00 is incorrectly returned as free despite being occupied until 09:10. The new buffer test only gives buffers to the proposed appointment.
+    Fix      : Fetch appointments whose effective buffered intervals intersect the search window, or widen the raw query by the maximum supported existing buffers before checking actual effective intervals.
+    Fingerprint: 064b84441820271d2dd45f269c20b644ea11eeaf9b422bfa172ddf0f9ba6ae00
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

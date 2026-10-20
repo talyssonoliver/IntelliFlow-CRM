@@ -1,0 +1,45 @@
+# 2026-10-17T18:11:28Z codex-review web layer + codex-04 fixes (staged)
+[codex-review] base ref : origin/main
+[codex-review] changed  : 82 files total
+[codex-review] in scope : 58 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T18:12:28.574Z
+Base ref  : origin/main
+Files in scope : 58
+Total findings : 3
+  Waived       : 0
+  Unwaived     : 3
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:449-459 — type-delete-assignment-race
+    Issue    : Deleting a type can race with contact creation or reassignment and leave contacts referencing a deleted type.
+    Evidence : The transaction checks `tx.contact.count({ where: { tenantId, contactType: existing.key } })` before `deleteMany`, but contacts have no foreign key to contact types. A contact request can pass `loadContactTypeByKey`, the delete can observe zero contacts and commit, and the contact request can then persist the deleted key. The mocked sequential count/delete tests cannot detect this interleaving.
+    Fix      : Serialize deletion and contact assignment using the same lock, held from type validation through contact persistence, or enforce the relationship with a database foreign key.
+    Fingerprint: 0f290e25353ca62952bf64106e850b33aa19086e3ba2075cb0a63815a579da92
+
+  [MEDIUM] apps/web/src/components/contacts/ContactTypeSelect.tsx:45-50 — default-overwrites-explicit-no-type
+    Issue    : Returning to the additional-information step silently replaces an explicit No type selection with the tenant default.
+    Evidence : `touched` is component-local (`useRef(false)`), and the effect selects `defaultKey` whenever `value === ''` and the ref is false. The new-contact page mounts this picker only while `currentStep === 'additional'`. Choosing No type, clicking Previous, and returning remounts the picker, resets the ref, and overwrites the user's choice. Existing tests preserve the same component instance when checking touched behavior.
+    Fix      : Keep the selection-touched state in the parent form across step changes, or apply the initial default once in the parent.
+    Fingerprint: 35dbcd236faf68cfb84407ffe290ae1959c4621e4366b15f7714a333998209bc
+
+  [MEDIUM] apps/web/src/app/contacts/(list)/new/page.tsx:255-257 — displayed-status-differs-from-submission
+    Issue    : Creating a contact can silently save a different status from the status displayed in the form.
+    Evidence : The status selector displays `formData.status`, initially `ACTIVE`, but submission sends `undefined` until `statusTouched` is true. Selecting a type whose defaultStatus is CUSTOMER leaves the selector displaying Active while the API applies CUSTOMER. The test explicitly asserts omission of untouched status without checking that the displayed status reflects the applied default.
+    Fix      : Display the effective type default in the status selector until explicitly overridden, or provide an explicit Use type default option so the submitted behavior matches the visible selection.
+    Fingerprint: 5d433a8c676c5451115e17d590204a531a0f3662b337b9006876124504c2cf20
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 3 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

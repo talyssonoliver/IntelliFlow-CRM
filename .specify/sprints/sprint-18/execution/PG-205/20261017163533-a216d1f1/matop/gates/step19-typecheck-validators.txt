@@ -1,0 +1,9 @@
+# 2026-10-17T21:28:39Z HEAD 7045bbfb1 pnpm --filter @intelliflow/validators typecheck
+[test-slot] slot2 taken for PG-205@feat/pg-205-contact-types: pnpm --filter @intelliflow/validators typecheck
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/validators@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\validators
+> tsc --noEmit
+
+# exit: 0

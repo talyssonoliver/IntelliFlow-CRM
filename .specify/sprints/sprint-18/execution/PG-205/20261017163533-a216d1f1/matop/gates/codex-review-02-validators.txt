@@ -1,0 +1,39 @@
+2026-10-17T16:54:28Z
+[codex-review] base ref : origin/main
+[codex-review] changed  : 28 files total
+[codex-review] in scope : 11 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T16:55:04.826Z
+Base ref  : origin/main
+Files in scope : 11
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] packages/validators/src/contact.ts:62 — unverified-contact-type-key
+    Issue    : Create and update now accept nonexistent tenant contact types without enforcing the promised active-type membership check.
+    Evidence : `contactType: contactTypeKeySchema.optional()` replaces the six-value enum with format-only validation. The create router forwards input through `hygieneInput` to ContactService.createContact, which calls Contact.create and saves it without looking up the type; update likewise has no type lookup. Consequently, `contactType: 'nonexistent_type'` passes validation and is persisted into the free String column, contrary to ADR-080's active tenant-type requirement.
+    Fix      : Before persisting create or update input, resolve the supplied key within the caller's tenant and reject nonexistent or inactive types; retain the existing value when an unrelated update leaves an inactive type unchanged.
+    Fingerprint: 04504608fede74d751ee250d1118c25f5a732e80fab181528478a3f55f156778
+
+  [MEDIUM] packages/validators/src/contact.ts:111-112 — accepted-filters-not-applied
+    Issue    : The newly accepted contactType and segment filters silently return unfiltered contacts.
+    Evidence : `contactType: contactTypeKeySchema.optional()` and `segment: z.enum(CONTACT_LIST_SEGMENTS).optional()` expose filters through contactQuerySchema, but contact.router.ts:1005-1031 only extracts and forwards search, accountId, ownerId, department and status into buildContactListWhere. Neither new field reaches the findMany or count predicates, so a request for vendor contacts or the VIP segment returns all otherwise matching contacts.
+    Fix      : Apply contactType and segment predicates to the shared tenant-scoped where clause used by both findMany and count, including the documented VIP tag matching behavior.
+    Fingerprint: 17cf33ffeb2f4fe6ac69789abc55a9aefa9d4e6717c344970a78d3d949776b8d
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

@@ -1,0 +1,244 @@
+{
+  "reviewer": "pg202-a11y-reviewer (a11y-expert sub-agent)",
+  "standard": "WCAG 2.1 AA",
+  "verdict": "FAIL",
+  "verdict_note": "No blockers. Three major findings (F1 link contrast, F2 focus lost to body after Reload, F3 nameless modal dialog now exposed to AT). Each is a small, local fix; with F1-F3 fixed the verdict becomes PASS WITH MINOR.",
+  "reviewed_files": [
+    "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+    "apps/web/src/app/calendar/availability/AvailabilityLoading.tsx",
+    "apps/web/src/app/calendar/availability/components/WeeklyHoursCard.tsx",
+    "apps/web/src/app/calendar/availability/components/TimezoneCard.tsx",
+    "apps/web/src/app/calendar/availability/components/ClosuresList.tsx",
+    "apps/web/src/app/calendar/availability/components/BuffersCapCard.tsx",
+    "apps/web/src/app/calendar/availability/components/AvailabilityBanners.tsx",
+    "apps/web/src/app/calendar/calendar-settings/components/AvailabilityPointer.tsx",
+    "apps/web/src/app/calendar/calendar-settings/components/BufferRemindersTab.tsx (diff)",
+    "apps/web/src/app/calendar/calendar-settings/components/CalendarIntegrationTab.tsx (diff)",
+    "apps/web/src/app/calendar/calendar-settings/CalendarSettingsContent.tsx (diff)",
+    "apps/web/src/components/appointments/AppointmentForm.tsx (diff)",
+    "apps/web/src/components/appointments/AppointmentDetail.tsx (diff and dialog region)",
+    "apps/web/src/components/settings/TimezoneSelector.tsx",
+    "apps/web/src/components/settings/ModuleSettingsLayout.tsx (diff)",
+    "apps/web/src/components/shared/page-header.tsx",
+    "apps/web/src/components/shared/section-header.tsx",
+    "apps/web/src/hooks/useFocusTrap.ts",
+    "apps/web/src/app/globals.css (tokens)",
+    "packages/ui/src/components/confirmation-dialog.tsx",
+    "packages/ui/src/components/empty-state.tsx",
+    "packages/ui/src/components/input.tsx",
+    "packages/ui/src/components/switch.tsx",
+    "packages/ui/src/components/button.tsx",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/green-web-availability.log",
+    ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/design-check-availability.md",
+    ".specify/sprints/sprint-18/specifications/PG-202-spec.md"
+  ],
+  "checks": [
+    {
+      "id": "C1",
+      "criterion": "1.3.1 / 2.4.6 Landmarks and headings",
+      "result": "PASS",
+      "evidence": "One h1 from PageHeader (page-header.tsx:~196, AvailabilityContent.tsx:220-242). Each card is <section aria-labelledby> with an h2 via SectionHeader headingLevel=2 (WeeklyHoursCard.tsx:92-100, TimezoneCard.tsx:36-44, AvailabilityContent.tsx:270-277, BuffersCapCard.tsx:48-56; section-header.tsx:38,47-53). EmptyState title is an h3 (empty-state.tsx:425), correctly under the Closures h2. Minor: EmptyState also renders role=region tabIndex=0 (empty-state.tsx:400-403), see F10."
+    },
+    {
+      "id": "C2",
+      "criterion": "1.3.1 / 3.3.2 / 4.1.2 Form labelling and unique names",
+      "result": "PASS",
+      "evidence": "Switches: aria-label '<Day> open' (WeeklyHoursCard.tsx:134), cap switch has <Label htmlFor='cap-enabled'> (BuffersCapCard.tsx:108-114). Time inputs 'Monday range N start/end' (WeeklyHoursCard.tsx:160,175), closure inputs 'Closure N start date / end date / reason (optional)' (ClosuresList.tsx:140,155,166), each unique by day/index. Remove buttons named per row (WeeklyHoursCard.tsx:186, ClosuresList.tsx:28-32,175). Timezone trigger named by Label htmlFor (TimezoneCard.tsx:52-55, TimezoneSelector.tsx:159-162). Number inputs have Labels (BuffersCapCard.tsx:89,118). aria-invalid + aria-describedby to error id on every field (WeeklyHoursCard.tsx:161-162,176-177; ClosuresList.tsx:123-127; BuffersCapCard.tsx:100-101,129-130; TimezoneCard.tsx:31-33,60-61). Label-in-name (2.5.3) holds: visible 'Monday' is inside 'Monday open'; 'Reason (optional)' is inside the aria-label. Advisory: time/date inputs have no visible label (F9)."
+    },
+    {
+      "id": "C3",
+      "criterion": "3.3.1 / 3.3.3 / 4.1.3 Error handling",
+      "result": "PASS",
+      "evidence": "ErrorSummary is role=alert with in-page links that preventDefault and focus the field (AvailabilityBanners.tsx:41-65). handleSave focuses the first invalid field via focusTarget effect (AvailabilityContent.tsx:128-132,178-185). ServerErrorBanner is role=alert tabIndex=-1 and focused on mount (AvailabilityBanners.tsx:74-97). CONFLICT shows a Reload button (AvailabilityBanners.tsx:92-96) and disables Save (AvailabilityContent.tsx:163-165). Errors are recomputed from the draft on every change (AvailabilityContent.tsx:135-138) so field errors clear when fixed. Caveats: F2 (Reload focus) and F7 (summary re-announces while typing)."
+    },
+    {
+      "id": "C4",
+      "criterion": "4.1.3 Live announcements, no duplicates",
+      "result": "PASS",
+      "evidence": "Single always-mounted <output aria-live=polite> (AvailabilityContent.tsx:244-246; output already has implicit role=status). Messages are unique per action: add/remove range (WeeklyHoursCard.tsx:62,68,76-78), add/remove closure (ClosuresList.tsx:62,67,81-83), timezone (TimezoneCard.tsx:58), reset (AvailabilityContent.tsx:43-44,208). Save success is toast only (AvailabilityContent.tsx:189), not also announced via <output>. Reset: announcement plus focus move to the heading are different content, not a duplicate. Info: identical consecutive strings (e.g. a second Reset) set the same state and are not re-announced (F11)."
+    },
+    {
+      "id": "C5",
+      "criterion": "2.4.3 Focus management (nothing lands on body)",
+      "result": "FAIL",
+      "evidence": "OK: add range -> new start input (WeeklyHoursCard.tsx:69), remove range -> same index start, else previous, else Add range (79-82), add closure -> new start date (ClosuresList.tsx:68), remove closure -> same index/previous/Add Closure button (84-85), Save success -> Weekly hours title (AvailabilityContent.tsx:191; title has tabIndex=-1 via focusableTitle, WeeklyHoursCard.tsx:101, section-header.tsx:49), Reset -> title via onCloseAutoFocus (AvailabilityContent.tsx:320-325; flag is set before onOpenChange(false) in confirmation-dialog.tsx:79-81, so it is set in time). FAIL: handleReload (AvailabilityContent.tsx:197-201) never sets a focus target, so when the focused ServerErrorBanner unmounts focus falls to body; the spec requires Weekly hours title after Reload (PG-202-spec.md:370) and no test asserts it (AvailabilityContent.actions.test.tsx:178-193). See F2. Also F4."
+    },
+    {
+      "id": "C6",
+      "criterion": "2.1.2 No keyboard trap / 2.1.1 Keyboard (AppointmentDetail modal)",
+      "result": "MINOR",
+      "evidence": "Removing aria-hidden from the backdrop is correct: aria-hidden=true on an ancestor of the open <dialog> hid the dialog and its focusable children from AT (4.1.2). The Escape handler is now a document keydown listener registered only while a dialog is active, cleaned up on change (AppointmentDetail.tsx:93-101); it works wherever focus is, and Tab is wrapped by useFocusTrap (useFocusTrap.ts:30-47) which also restores focus on close (49-52). No trap. Nothing else aria-hides content: the page behind is neither aria-hidden nor inert, relying on aria-modal=true (AppointmentDetail.tsx:582, element is a non-modal <dialog open>), which current AT honour. Open items: dialog has no accessible name (F3); Escape also closes while an action is in flight (F8)."
+    },
+    {
+      "id": "C7",
+      "criterion": "1.4.3 / 1.4.11 Contrast",
+      "result": "FAIL",
+      "evidence": "Computed from globals.css:152-199 tokens and Tailwind default palette (see contrast[]). Error text, muted text, 'Unsaved changes' and slate-700 note text pass. AvailabilityPointer link text-primary on slate-50 is 3.97:1 (light) and 3.52:1 (dark): FAIL 1.4.3 (AvailabilityPointer.tsx:9, F1). Non-text contrast of input borders and the unchecked switch track is about 1.2:1 (F5, pre-existing shared tokens). White on primary (Save Changes, default Button) is 4.15:1 (F6, pre-existing shared token). jsdom axe had color-contrast disabled (AvailabilityContent.test.tsx:69), so none of this was machine-checked."
+    },
+    {
+      "id": "C8",
+      "criterion": "2.5.8 target size (24px, advisory 2.5.5) and 1.4.10 reflow",
+      "result": "PASS",
+      "evidence": "Remove buttons h-11 w-11 (WeeklyHoursCard.tsx:185, ClosuresList.tsx:174), Add range min-h-11 (WeeklyHoursCard.tsx:223), inputs h-10 (input.tsx:11), Switch h-6 w-11 = 24px, meets the 24px minimum exactly (switch.tsx:8), Button sm h-9 (button.tsx:20). Reflow at 320px: rows use flex-wrap with flex-1 and min-w 7.5rem (WeeklyHoursCard.tsx:152,163,178) and 9rem/12rem (ClosuresList.tsx:130,141,156,168), grid is grid-cols-1 below lg (AvailabilityContent.tsx:252), PageHeader actions wrap (page-header.tsx:~203), fieldset has min-w-0 (WeeklyHoursCard.tsx:124). Widest unbreakable item is 192px vs about 256px content width. Not browser-verified: the native date input at min 144px (9rem, px-3) may clip its picker icon."
+    },
+    {
+      "id": "C9",
+      "criterion": "1.3.1 / 4.1.2 Read-only mode",
+      "result": "PASS",
+      "evidence": "No form controls render when readOnly: weekly hours as <ul aria-label='Weekly hours'> with day and summary text (WeeklyHoursCard.tsx:105-113), timezone as text (TimezoneCard.tsx:48-49), closures as list text (ClosuresList.tsx:102-111), buffers/limit as <dl> (BuffersCapCard.tsx:60-76). Add Closure and header actions are omitted when !canEdit (AvailabilityContent.tsx:229-239,281-290). Read-only note is a plain paragraph (AvailabilityBanners.tsx:23-27); it is not referenced by any control because no controls exist."
+    },
+    {
+      "id": "C10",
+      "criterion": "1.3.5 / 3.3.2 Time and date inputs",
+      "result": "PASS",
+      "evidence": "type='time' (WeeklyHoursCard.tsx:155,170); type='date' with min/max from AVAILABILITY_LIMITS, and end min follows the start date (ClosuresList.tsx:133-135,148-150). Native pickers give keyboard operation. Empty values are handled by validation. Advisory F9 on missing visible labels."
+    },
+    {
+      "id": "C11",
+      "criterion": "AppointmentForm submit error and help text",
+      "result": "PASS",
+      "evidence": "Submit error is role=alert (AppointmentForm.tsx diff, id form-submit-error) and is cleared via form onChange and re-created on each submit, so identical repeat errors re-announce. Timezone help linked with describedBy to the select trigger (AppointmentForm.tsx:~304-310, TimezoneSelector.tsx:162). Buffer selects keep the current non-preset value as an option (bufferOptions). text-gray-500 on white is 4.83:1."
+    },
+    {
+      "id": "C12",
+      "criterion": "Calendar settings pointers and TimezoneSelector showDetect",
+      "result": "MINOR",
+      "evidence": "AvailabilityPointer is a real link with underline and descriptive text (AvailabilityPointer.tsx:9-11) but fails contrast (F1). TimezoneSelector with showDetect=false removes the Detect button without leaving an orphaned control (TimezoneSelector.tsx:180-190). Removed buffer/timezone inputs in BufferRemindersTab/CalendarIntegrationTab leave no dangling label or describedby references; the new defaultReminderMinutes-help id resolves."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "major",
+      "criterion": "1.4.3 Contrast (Minimum)",
+      "file": "apps/web/src/app/calendar/calendar-settings/components/AvailabilityPointer.tsx",
+      "line": 9,
+      "problem": "Link uses text-primary (#2877f6, globals.css:158) at 14px on slate-50 (#f8fafc): 3.97:1 in light mode. In dark mode the box is slate-800/50 over the dark card: 3.52:1. Both are under 4.5:1 for normal text. The underline helps with 1.4.1 only, not contrast. Newly added by this PR, in two places (BufferRemindersTab and CalendarIntegrationTab).",
+      "fix": "Use a darker token for the link in light mode (for example text-blue-700, #1d4ed8, about 6.7:1 on slate-50) and a lighter one in dark mode (dark:text-blue-300, about 8:1+). Do not change the global --primary in this PR."
+    },
+    {
+      "id": "F2",
+      "severity": "major",
+      "criterion": "2.4.3 Focus Order (focus lost to body)",
+      "file": "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+      "line": 197,
+      "problem": "handleReload refetches, adopts the data and clears serverError, which unmounts the ServerErrorBanner (AvailabilityBanners.tsx:83) while it holds focus (it was focused on mount, line 79-81). Focus falls to document.body. The Reload button the user just pressed is also removed. The spec says focus goes to the Weekly hours title after Reload (PG-202-spec.md:370) and the test does not assert focus (AvailabilityContent.actions.test.tsx:178-193).",
+      "fix": "In handleReload, after adopt(result.data), call setFocusTarget(WEEKLY_HOURS_TITLE_ID). Also set focus when result.data is missing (keep the banner mounted, or focus the Retry/Save). Add an assertion that document.activeElement is the Weekly hours heading."
+    },
+    {
+      "id": "F3",
+      "severity": "major",
+      "criterion": "4.1.2 Name, Role, Value",
+      "file": "apps/web/src/components/appointments/AppointmentDetail.tsx",
+      "line": 579,
+      "problem": "The modal <dialog open aria-modal> has no accessible name (no aria-label or aria-labelledby, and its h3 headings at 588,625,662,742,775 have no ids). Previously the whole wrapper was aria-hidden so this was masked; removing aria-hidden (correctly) now exposes a role=dialog with no name (axe aria-dialog-name, serious). Not caught by tests because the detail dialog is not under axe.",
+      "fix": "Give each dialog heading an id (or one shared id since only one renders) and set aria-labelledby on the <dialog>. Add an axe or getByRole('dialog', { name }) assertion to AppointmentDetail.test.tsx."
+    },
+    {
+      "id": "F4",
+      "severity": "minor",
+      "criterion": "2.4.3 Focus Order",
+      "file": "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+      "line": 203,
+      "problem": "On a failed Reset, confirmReset catches the error and sets serverError (212) instead of throwing, so ConfirmationDialog still runs onOpenChange(false) (confirmation-dialog.tsx:80). The banner takes focus on mount, then Radix restores focus to the Reset trigger on close, so the banner focus is likely lost. The role=alert still announces, so the message is not lost, but sighted keyboard users get focus on Reset rather than the error. Based on code reading only; not reproduced.",
+      "fix": "Rethrow in confirmReset so the dialog stays open (the dialog logs and keeps open on throw), or set focusTitleOnCloseRef-style flag to focus the banner in onCloseAutoFocus on failure."
+    },
+    {
+      "id": "F5",
+      "severity": "minor",
+      "criterion": "1.4.11 Non-text Contrast",
+      "file": "packages/ui/src/components/switch.tsx",
+      "line": 8,
+      "problem": "Unchecked Switch track is bg-input (#e2e8f0) with a bg-background thumb: track vs white card is 1.24:1 and the thumb is near-identical to the track, so off-state and boundary are nearly invisible. Same token gives text input borders (input.tsx:11, border-input) 1.23:1 on white, 1.43:1 in dark. Pre-existing shared tokens, not introduced by PG-202, but this page is dominated by seven switches and many inputs.",
+      "fix": "Out of scope to change here: file a follow-up to use a border/track token of at least 3:1 (for example slate-400 #94a3b8 is 2.56:1, slate-500 #64748b is 4.76:1). Consider noting it in the VPAT row as a known gap."
+    },
+    {
+      "id": "F6",
+      "severity": "info",
+      "criterion": "1.4.3 Contrast (Minimum)",
+      "file": "apps/web/src/components/shared/page-header.tsx",
+      "line": 118,
+      "problem": "Primary action (Save Changes) is white bold 14px on #2877f6: 4.15:1; default Button (Add Closure) is the same pair. Under 4.5:1 and 14px bold is not 'large text'. Pre-existing shared token and component; disabled state is exempt.",
+      "fix": "Follow-up: darken --primary or the button background token (for example hsl 217 92% 50% gives about 4.9:1 with white). Not a PG-202 change."
+    },
+    {
+      "id": "F7",
+      "severity": "minor",
+      "criterion": "4.1.3 Status Messages",
+      "file": "apps/web/src/app/calendar/availability/components/AvailabilityBanners.tsx",
+      "line": 44,
+      "problem": "ErrorSummary is role=alert and is recomputed on every keystroke once submitted (AvailabilityContent.tsx:135-138), so its count text ('3 problems need fixing' -> '2 problems...') is re-announced assertively while the user is typing in a field. When the last error clears the alert unmounts silently. The first error is also read twice on submit (alert plus focused field's describedby).",
+      "fix": "Keep role=alert for the first display but freeze the summary until the next Save, or make the count text aria-live=off after first render (the links and per-field errors already update). Optional."
+    },
+    {
+      "id": "F8",
+      "severity": "minor",
+      "criterion": "2.1.1 Keyboard / 3.2.2",
+      "file": "apps/web/src/components/appointments/AppointmentDetail.tsx",
+      "line": 95,
+      "problem": "The document-level Escape handler closes the dialog even while isActionLoading is true, and it also fires if an open Radix popover inside the dialog is dismissed with Escape. The in-flight action's result then lands on a closed dialog.",
+      "fix": "Ignore Escape when isActionLoading, and check event.defaultPrevented before closing."
+    },
+    {
+      "id": "F9",
+      "severity": "info",
+      "criterion": "3.3.2 Labels or Instructions (advisory)",
+      "file": "apps/web/src/app/calendar/availability/components/WeeklyHoursCard.tsx",
+      "line": 153,
+      "problem": "Start/end time inputs and start/end date inputs (ClosuresList.tsx:131-157) are named only by aria-label; sighted users see just 'to' between them and a placeholder on the reason input. The accessible names are correct, so this passes 1.3.1/4.1.2; it is a usability note.",
+      "fix": "Optional: add visually visible 'From'/'Until' text or a column header."
+    },
+    {
+      "id": "F10",
+      "severity": "info",
+      "criterion": "1.3.1 Info and Relationships",
+      "file": "packages/ui/src/components/empty-state.tsx",
+      "line": 400,
+      "problem": "EmptyState entity mode renders role=region with tabIndex=0, nested inside the Closures <section aria-labelledby>, producing a second landmark (named 'No closures' via the aria-label override in props, spread at line 411) and an extra tab stop on non-interactive content. Pre-existing component behaviour.",
+      "fix": "No action for PG-202."
+    },
+    {
+      "id": "F11",
+      "severity": "info",
+      "criterion": "4.1.3 Status Messages",
+      "file": "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+      "line": 123,
+      "problem": "The announcement state is never cleared, so an identical message set twice in a row (for example Reset twice) does not re-render and is not re-announced; stale text stays in the sr-only output. The 'Unsaved changes' text appearing (AvailabilityBanners.tsx:33-35) is visual only.",
+      "fix": "Optional: clear the message after a timeout or append a zero-width toggle."
+    },
+    {
+      "id": "F12",
+      "severity": "info",
+      "criterion": "Evidence quality",
+      "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/green-web-availability.log",
+      "line": 8,
+      "problem": "The log is 474 bytes: it records '10 test files, 104 tests passed' only. The axe assertions exist at AvailabilityContent.test.tsx:68-70 and 197-227 (color-contrast disabled), but the log itself carries no axe output and the detail dialog and AvailabilityPointer are not covered by axe at all.",
+      "fix": "Do not cite the log as axe evidence beyond 'tests passed'; the contrast numbers below are the only contrast evidence."
+    }
+  ],
+  "contrast": [
+    { "pair": "text-red-700 (#b91c1c) on red-50 (#fef2f2), light error boxes", "ratio": "5.91:1", "result": "PASS" },
+    { "pair": "text-red-300 (#fca5a5) on red-950/40 over dark card (#1d2a39)", "ratio": "8.40:1", "result": "PASS" },
+    { "pair": "text-red-300 on red-950/40 over dark background (#0f1a29)", "ratio": "9.28:1", "result": "PASS" },
+    { "pair": "text-red-700 on white card (field errors, text-xs)", "ratio": "6.47:1", "result": "PASS" },
+    { "pair": "text-red-300 on dark card (field errors)", "ratio": "7.67:1", "result": "PASS" },
+    { "pair": "muted-foreground light (hsl 215 16% 43%) on white card", "ratio": "5.43:1", "result": "PASS" },
+    { "pair": "muted-foreground light on page background #f6f7f8", "ratio": "5.07:1", "result": "PASS" },
+    { "pair": "muted-foreground light on slate-50 note box", "ratio": "5.19:1", "result": "PASS" },
+    { "pair": "muted-foreground dark (hsl 215 20% 65%) on dark card", "ratio": "5.68:1", "result": "PASS" },
+    { "pair": "muted-foreground dark on dark background", "ratio": "6.82:1", "result": "PASS" },
+    { "pair": "'Unsaved changes' text-foreground (hsl 215 28% 17%) on white card/background", "ratio": "14.68:1 on white", "result": "PASS" },
+    { "pair": "slate-700 on slate-50 (unconfigured note, AvailabilityPointer children)", "ratio": "9.90:1", "result": "PASS" },
+    { "pair": "slate-200 on slate-800/50 over dark card (dark note text)", "ratio": "11.84:1", "result": "PASS" },
+    { "pair": "AvailabilityPointer link text-primary (#2877f6) on slate-50, light", "ratio": "3.97:1", "result": "FAIL (needs 4.5:1)" },
+    { "pair": "AvailabilityPointer link text-primary on slate-800/50 over dark card, dark", "ratio": "3.52:1", "result": "FAIL (needs 4.5:1)" },
+    { "pair": "text-primary on white (reference)", "ratio": "4.15:1", "result": "FAIL (pre-existing token)" },
+    { "pair": "White on bg-primary: Save Changes, default Button (14px bold, not large text)", "ratio": "4.15:1", "result": "FAIL (pre-existing, info)" },
+    { "pair": "text-gray-500 (#6b7280) on white, AppointmentForm timezone help", "ratio": "4.83:1", "result": "PASS" },
+    { "pair": "Input border (--input #e2e8f0) on white card, 1.4.11", "ratio": "1.23:1", "result": "FAIL (pre-existing shared token)" },
+    { "pair": "Input border dark (hsl 215 25% 27%) on dark card", "ratio": "1.43:1", "result": "FAIL (pre-existing shared token)" },
+    { "pair": "Switch unchecked track (bg-input) on white card, 1.4.11", "ratio": "1.24:1", "result": "FAIL (pre-existing shared token)" },
+    { "pair": "Switch checked track (bg-primary) on white card, 1.4.11", "ratio": "4.15:1", "result": "PASS (3:1 for non-text)" }
+  ],
+  "limitations": "Review is by code reading and arithmetic only; no browser, no screen reader, no axe run. Contrast ratios are computed from the HSL tokens in globals.css (lines 152-199) and the default Tailwind v4 palette, using the WCAG relative-luminance formula; semi-transparent fills (red-950/40, slate-800/50) were composited over the card colour. Not verified without a running browser: real focus order and where Radix restores focus after a failed Reset (F4); whether the focused disabled Save/Confirm buttons keep focus in each browser; native time/date widget width and picker-icon clipping at 320px; how NVDA/JAWS/VoiceOver announce role=alert inserted while focus moves in the same tick (summary plus focused field); whether the toast component exposes a live region for 'Availability saved' (not read); aria-modal support when the page behind a non-modal <dialog open> is not inert. The axe evidence in the TDD log is a pass count only and had color-contrast disabled."
+}

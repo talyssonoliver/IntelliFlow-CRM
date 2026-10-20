@@ -18,6 +18,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { presetToCron } from '../../packages/validators/src/scheduled-reports';
+import { applySchemaSql } from './schema-lock';
 
 const MIGRATION_PATH = join(
   __dirname,
@@ -87,24 +88,21 @@ function pgCode(error: unknown): string | undefined {
  * expression unique indexes, the NOT VALID FK and the RLS policy are absent there.
  * When they are missing, re-apply the migration's DDL (not the copy block), skipping
  * statements whose objects db push already created. The tag table holds only this
- * suite's rows, so it is rebuilt to pick up its CHECK.
+ * suite's rows, so it is rebuilt to pick up its CHECK. The DDL runs under the shared
+ * schema lock (see ./schema-lock).
  */
 async function ensureMigrationSql(client: any): Promise<void> {
   const present = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'report_schedules_reference_check'`
   );
   if (present.length > 0) return;
-  await client.$executeRawUnsafe('DROP TABLE IF EXISTS "report_schedule_tags" CASCADE');
   const ddl = stripComments(MIGRATION_SQL.slice(0, MIGRATION_SQL.indexOf(COPY_BEGIN)));
   const ALREADY_THERE = ['42701', '42P07', '42710'];
-  for (const stmt of splitStatements(ddl)) {
-    try {
-      await client.$executeRawUnsafe(stmt);
-    } catch (error) {
-      const code = pgCode(error);
-      if (!code || !ALREADY_THERE.includes(code)) throw error;
-    }
-  }
+  await applySchemaSql(
+    DB_URL!,
+    ['DROP TABLE IF EXISTS "report_schedule_tags" CASCADE', ...splitStatements(ddl)],
+    { tolerate: ALREADY_THERE }
+  );
 }
 
 async function expectRejected(promise: Promise<unknown>, codes: string[]): Promise<void> {

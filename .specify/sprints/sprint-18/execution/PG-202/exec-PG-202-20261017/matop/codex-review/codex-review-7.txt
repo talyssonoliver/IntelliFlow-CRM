@@ -1,0 +1,37 @@
+date: 2026-10-18T08:54:12Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21 (+ uncommitted test-only BuffersCapCard case and docs)
+[codex-review] base ref : origin/main
+[codex-review] changed  : 191 files total
+[codex-review] in scope : 68 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-18T08:55:04.411Z
+Base ref  : origin/main
+Files in scope : 68
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/availability-enforcement.ts:230-235 — premature-search-truncation
+    Issue    : Next-slot searches can return null while valid slots remain within the requested horizon because candidates are truncated before full days and conflicts are filtered.
+    Evidence : `generateCandidates` receives `limit: AVAILABILITY_LIMITS.maxFindNextSlotCandidates` (2000), and only afterward are capped days removed and conflicts checked. The router permits `maxDaysAhead: 365`; with daily 00:00–24:00 availability and a 60-minute duration, 2000 candidates cover only about 84 days. If those days are full, the function returns null even when day 85 has availability within the requested year.
+    Fix      : Generate and evaluate candidates in bounded batches, continuing through the requested horizon when a batch contains no usable slot.
+    Fingerprint: 3f7ce98056609aeb6703a03c0842ac1fc4d467bc950d7ff3e1be57e2f4f38ead
+
+WAIVED FINDINGS (suppressed):
+  [HIGH] apps/api/src/modules/calendar/availability-enforcement.ts:187-195 — non-atomic-daily-cap (fp: 25c5826ce3b9...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+exit: 1

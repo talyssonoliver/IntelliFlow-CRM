@@ -1,0 +1,26 @@
+# 2026-10-17T18:06:04Z HEAD dbb06a8db RED for codex-review-04 findings (1f2a3c92, 0f290e25, 3a11a307)
+## domain
+       × null removes a stored type and records the change 6ms
+       × null on a contact without a type changes nothing 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  2 failed | 62 skipped (64)
+## validators
+       × updateContactSchema accepts null to clear the type; create does not 8ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  1 failed (1)
+      Tests  1 failed | 57 skipped (58)
+## api
+       × never re-issues a key that contacts still carry (no FK, ADR-080; codex 0f290e25) 11ms
+       × keeps a linked default tag that is now inactive; new tags must be active (codex 3a11a307) 6ms
+     × null clears the stored type without looking up any type (codex 1f2a3c92) 9ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  2 failed (2)
+      Tests  3 failed | 67 skipped (70)
+## web
+     × keeps a linked tag that was deactivated: shown "(inactive)", removable and re-addable (codex 3a11a307) 189ms
+     × "No type" clears the stored type: sends null, not undefined (codex 1f2a3c92) 279ms
+     × shows a linked default tag that was deactivated so it can be removed (codex 3a11a307) 481ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+ Test Files  3 failed (3)
+      Tests  3 failed | 19 skipped (22)

@@ -1,0 +1,23 @@
+# 2026-10-17T17:59:34Z
+[preflight] Checking PG-205 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\.specify\sprints\sprint-18\planning\PG-205-plan.md
+[preflight] OK — plan does not create any page.tsx; § 3.2 gate does not apply.
+# exit: 0
+[nav-wiring] Checking PG-205 (sprint 18) — C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\.specify\sprints\sprint-18\planning\PG-205-plan.md
+[nav-wiring] OK — plan does not create any page.tsx under apps/web/src/app/.
+# exit: 0
+# manual reachability evidence (nav-wiring is a known false-green on (list) route groups, #877):
+  {
+    id: 'contact-types',
+    label: 'Contact Types',
+    icon: 'category',
+    href: '/contacts/contact-types',
+  },
+  {
+    id: 'contact-types',
+    label: 'Contact Types',
+    description: 'Categories & classifications',
+    icon: 'category',
+    href: '/contacts/contact-types',
+  },
+258:| `/contacts/contact-types`    | --  | --  | SB  | IP  |    YES     | Contacts sidebar; Contact Settings panel (PG-205) |
+522:- Contacts: `contact-types`, `contact-settings`, `import-export`

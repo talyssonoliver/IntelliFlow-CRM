@@ -1,0 +1,7 @@
+date: 2026-10-17T18:07:03Z
+frozen after sql-review APPROVE
+124720c5723b62f8b9ce540212f9bbfb5f2131e22fa3652dac4490823ae0f85b *packages/db/prisma/migrations/20261017130000_availability/migration.sql
+
+date: 2026-10-18T11:24:18Z
+re-frozen after sql-review round 2 APPROVE (CHECK bounds startMinute 0..1439, endMinute 1..1440); old constraint names appear only in the historical spec discussion
+8f8294db87f30f36f0da5adb6fa2045cae23c655fd5edc3d46bd032fe646cebe *packages/db/prisma/migrations/20261017130000_availability/migration.sql

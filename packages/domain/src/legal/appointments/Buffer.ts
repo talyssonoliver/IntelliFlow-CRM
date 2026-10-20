@@ -20,6 +20,9 @@ interface BufferProps {
  * Useful for travel time, preparation, or debrief
  */
 export class Buffer extends ValueObject<BufferProps> {
+  /** Largest buffer, in minutes, on either side of an appointment. */
+  static readonly MAX_MINUTES = 240;
+
   private constructor(props: BufferProps) {
     super(props);
   }
@@ -48,8 +51,7 @@ export class Buffer extends ValueObject<BufferProps> {
       return Result.fail(new InvalidBufferError('After buffer cannot be negative'));
     }
 
-    // Maximum buffer of 4 hours
-    const maxBuffer = 240; // 4 hours in minutes
+    const maxBuffer = Buffer.MAX_MINUTES;
     if (beforeMinutes > maxBuffer) {
       return Result.fail(
         new InvalidBufferError(`Before buffer cannot exceed ${maxBuffer} minutes`)

@@ -1,0 +1,467 @@
+date: 2026-10-18T11:30:24Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
+cmd: node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 -- pnpm --dir apps/web exec vitest run
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability: pnpm --dir apps/web exec vitest run
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+Not implemented: navigation to another Document
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+Error: getaddrinfo ENOTFOUND storage.example.com
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'storage.example.com'
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": getaddrinfo ENOTFOUND storage.example.com
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[disconnectedFromNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:822:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+Error: getaddrinfo ENOTFOUND storage.example.com
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'storage.example.com'
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": getaddrinfo ENOTFOUND storage.example.com
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+Error: getaddrinfo ENOTFOUND storage.example.com
+    at GetAddrInfoReqWrap.onlookupall [as oncomplete] (node:dns:120:26) {
+  errno: -3008,
+  code: 'ENOTFOUND',
+  syscall: 'getaddrinfo',
+  hostname: 'storage.example.com'
+}
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": getaddrinfo ENOTFOUND storage.example.com
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at TLSSocket.socketErrorListener (node:_http_client:518:5)
+    at TLSSocket.emit (node:events:518:28)
+    at emitErrorNT (node:internal/streams/destroy:170:8)
+    at emitErrorCloseNT (node:internal/streams/destroy:129:3)
+    at processTicksAndRejections (node:internal/process/task_queues:90:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [AbortError]: The operation was aborted.
+    at Fetch.onAsyncTaskManagerAbort (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:546:23)
+    at Object.<anonymous> (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:416:101)
+    at AsyncTaskManager.abortAll (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:292:30)
+    at AsyncTaskManager.destroy (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/async-task-manager/AsyncTaskManager.js:64:21)
+    at file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:43:22
+    at new Promise (<anonymous>)
+    at Function.destroyFrame (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/browser/utilities/BrowserFrameFactory.js:30:16)
+    at HTMLIFrameElement.#unloadPage (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:363:33)
+    at HTMLIFrameElement.[disconnectedFromDocument] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/html-iframe-element/HTMLIFrameElement.js:238:25)
+    at HTMLIFrameElement.[connectedToNode] (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/nodes/node/Node.js:797:58)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/doc-1.pdf": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+DOMException [NetworkError]: Failed to execute "fetch()" on "Window" with URL "https://storage.example.com/page.html": The operation was aborted.
+    at Fetch.onError (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/happy-dom@20.10.2/node_modules/happy-dom/lib/fetch/Fetch.js:540:21)
+    at ClientRequest.emit (node:events:518:28)
+    at emitErrorEvent (node:_http_client:104:11)
+    at _destroy (node:_http_client:898:9)
+    at onSocketNT (node:_http_client:918:5)
+    at processTicksAndRejections (node:internal/process/task_queues:91:21)
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+Not implemented: navigation to another Document
+
+ Test Files  820 passed (820)
+      Tests  12957 passed (12957)
+   Start at  12:30:25
+   Duration  361.64s (transform 18.67s, setup 225.82s, import 227.89s, tests 325.43s, environment 508.04s)
+
+exit: 0

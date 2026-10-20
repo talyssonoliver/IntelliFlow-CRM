@@ -31,6 +31,18 @@ export interface AppointmentFormProps {
   isSubmitting: boolean;
   conflicts?: ConflictInfo;
   onConflictCheck: (params: ConflictCheckParams) => void;
+  /** Firm default buffers (PG-202 owner Q7); used for new appointments only. */
+  defaultBuffers?: { before: number; after: number };
+}
+
+const SUBMIT_ERROR_ID = 'form-submit-error';
+const GENERIC_SUBMIT_ERROR = 'The appointment could not be saved. Please try again.';
+const TIMEZONE_HELP_ID = 'appt-timezone-help';
+
+/** The buffer presets, plus the current value when it is not one of them (e.g. a firm default of 10). */
+function bufferOptions(current: number): number[] {
+  const presets: readonly number[] = BUFFER_PRESETS;
+  return presets.includes(current) ? [...presets] : [...presets, current].sort((a, b) => a - b);
 }
 
 export function AppointmentForm({
@@ -42,6 +54,7 @@ export function AppointmentForm({
   isSubmitting,
   conflicts,
   onConflictCheck,
+  defaultBuffers,
 }: Readonly<AppointmentFormProps>) {
   const isEdit = !!appointment;
   const router = useRouter();
@@ -71,10 +84,10 @@ export function AppointmentForm({
   const [attendeeIds] = useState<string[]>(appointment?.attendees?.map((a) => a.userId) || []);
   const [linkedCaseIds] = useState<string[]>(appointment?.linkedCases?.map((c) => c.caseId) || []);
   const [bufferMinutesBefore, setBufferMinutesBefore] = useState(
-    appointment?.bufferMinutesBefore ?? 0
+    appointment?.bufferMinutesBefore ?? defaultBuffers?.before ?? 0
   );
   const [bufferMinutesAfter, setBufferMinutesAfter] = useState(
-    appointment?.bufferMinutesAfter ?? 0
+    appointment?.bufferMinutesAfter ?? defaultBuffers?.after ?? 0
   );
   const [recurrence, setRecurrence] = useState<RecurrencePattern | null>(
     appointment?.recurrence ?? null
@@ -84,6 +97,8 @@ export function AppointmentForm({
   const [calendarId, setCalendarId] = useState(appointment?.calendarId || '');
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  // A rejection from the server (e.g. outside firm hours, a closure, the daily limit).
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Debounced conflict check on time/attendee changes
   const scheduleConflictCheck = useCallback(() => {
@@ -115,27 +130,8 @@ export function AppointmentForm({
     if (startTime && endTime && new Date(endTime) <= new Date(startTime)) {
       newErrors.endTime = 'End time must be after start time';
     }
-    // Business-hours check: 07:00 – 19:00 (matches calendar dayBoundaries and
-    // the server-side assertWithinBusinessHours check). Parsing the local
-    // datetime-local string directly avoids timezone ambiguity.
-    const BUSINESS_HOURS_START = 7;
-    const BUSINESS_HOURS_END = 19;
-    const isOutsideBusinessHours = (dtLocal: string): boolean => {
-      const match = /T(\d{2}):(\d{2})/.exec(dtLocal);
-      if (!match) return false;
-      const hour = parseInt(match[1], 10);
-      const minute = parseInt(match[2], 10);
-      if (hour < BUSINESS_HOURS_START) return true;
-      if (hour > BUSINESS_HOURS_END) return true;
-      if (hour === BUSINESS_HOURS_END && minute > 0) return true;
-      return false;
-    };
-    if (startTime && isOutsideBusinessHours(startTime)) {
-      newErrors.startTime = `Start must be between ${String(BUSINESS_HOURS_START).padStart(2, '0')}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`;
-    }
-    if (endTime && isOutsideBusinessHours(endTime)) {
-      newErrors.endTime = `End must be between ${String(BUSINESS_HOURS_START).padStart(2, '0')}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`;
-    }
+    // Firm hours, closures and the daily limit are checked by the server in the
+    // firm timezone (PG-202); a rejection is shown in the submit error below.
     if (!appointmentType) newErrors.appointmentType = 'Type is required';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -143,29 +139,41 @@ export function AppointmentForm({
 
   const handleSubmit = async (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setSubmitError(null);
     if (!validate()) return;
 
-    await onSubmit({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      startTime: new Date(startTime),
-      endTime: new Date(endTime),
-      timezone: eventTimezone || undefined,
-      appointmentType,
-      location: location.trim() || undefined,
-      attendeeIds,
-      linkedCaseIds,
-      bufferMinutesBefore,
-      bufferMinutesAfter,
-      recurrence,
-      reminderMinutes,
-      forceOverrideConflicts,
-      calendarId: calendarId || null,
-    });
+    try {
+      await onSubmit({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        timezone: eventTimezone || undefined,
+        appointmentType,
+        location: location.trim() || undefined,
+        attendeeIds,
+        linkedCaseIds,
+        bufferMinutesBefore,
+        bufferMinutesAfter,
+        recurrence,
+        reminderMinutes,
+        forceOverrideConflicts,
+        calendarId: calendarId || null,
+      });
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error && error.message ? error.message : GENERIC_SUBMIT_ERROR
+      );
+    }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+    <form
+      onSubmit={handleSubmit}
+      onChange={() => setSubmitError(null)}
+      className="space-y-4"
+      noValidate
+    >
       {/* Title */}
       <div>
         <label htmlFor="appt-title" className="block text-sm font-medium text-gray-700 mb-1">
@@ -296,7 +304,11 @@ export function AppointmentForm({
           value={eventTimezone}
           onChange={setEventTimezone}
           disabled={isSubmitting}
+          describedBy={TIMEZONE_HELP_ID}
         />
+        <p id={TIMEZONE_HELP_ID} className="text-xs text-gray-500 mt-1">
+          Firm hours are checked in the firm timezone, set in Availability.
+        </p>
       </fieldset>
 
       {/* Calendar */}
@@ -336,7 +348,7 @@ export function AppointmentForm({
             disabled={isSubmitting}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
           >
-            {BUFFER_PRESETS.map((v) => (
+            {bufferOptions(bufferMinutesBefore).map((v) => (
               <option key={v} value={v}>
                 {v === 0 ? 'None' : `${v} min`}
               </option>
@@ -357,7 +369,7 @@ export function AppointmentForm({
             disabled={isSubmitting}
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
           >
-            {BUFFER_PRESETS.map((v) => (
+            {bufferOptions(bufferMinutesAfter).map((v) => (
               <option key={v} value={v}>
                 {v === 0 ? 'None' : `${v} min`}
               </option>
@@ -396,6 +408,16 @@ export function AppointmentForm({
           onViewConflict={(appointmentId) => router.push(`/appointments/${appointmentId}`)}
           onOverride={() => setForceOverrideConflicts(!forceOverrideConflicts)}
         />
+      )}
+
+      {submitError && (
+        <div
+          id={SUBMIT_ERROR_ID}
+          role="alert"
+          className="rounded-md border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300"
+        >
+          {submitError}
+        </div>
       )}
 
       {/* Actions */}

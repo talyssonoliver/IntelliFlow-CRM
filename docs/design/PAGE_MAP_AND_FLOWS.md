@@ -161,15 +161,15 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 5. CRM Core — Contacts (7 pages)
 
-| Route                        | Page             | Description                                     |
-| ---------------------------- | ---------------- | ----------------------------------------------- |
-| `/contacts`                  | Contacts List    | All contacts with filters                       |
-| `/contacts/new`              | New Contact      | Create contact form                             |
-| `/contacts/[id]`             | Contact Detail   | Contact profile and history                     |
-| `/contacts/[id]/edit`        | Edit Contact     | Edit contact fields                             |
-| `/contacts/contact-types`    | Contact Types    | Configure contact type labels and custom fields |
-| `/contacts/contact-settings` | Contact Settings | Tenant-level contact defaults and dedup rules   |
-| `/contacts/import-export`    | Import / Export  | Bulk CSV import and export with field mapping   |
+| Route                        | Page             | Description                                                                                |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------ |
+| `/contacts`                  | Contacts List    | All contacts with filters                                                                  |
+| `/contacts/new`              | New Contact      | Create contact form                                                                        |
+| `/contacts/[id]`             | Contact Detail   | Contact profile and history                                                                |
+| `/contacts/[id]/edit`        | Edit Contact     | Edit contact fields                                                                        |
+| `/contacts/contact-types`    | Contact Types    | Contact types: status, department, owner, required fields, tags applied on create (PG-205) |
+| `/contacts/contact-settings` | Contact Settings | Tenant-level contact defaults and dedup rules                                              |
+| `/contacts/import-export`    | Import / Export  | Bulk CSV import and export with field mapping                                              |
 
 ---
 
@@ -220,12 +220,12 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 **Calendar** — month/week/day view with merged tasks:
 
-| Route                         | Page              | Description                                        |
-| ----------------------------- | ----------------- | -------------------------------------------------- |
-| `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)        |
-| `/calendar/availability`      | Availability      | Set working hours, time zones, and booking windows |
-| `/calendar/event-types`       | Event Types       | Configure reusable event type templates            |
-| `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations    |
+| Route                         | Page              | Description                                                                 |
+| ----------------------------- | ----------------- | --------------------------------------------------------------------------- |
+| `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)                                 |
+| `/calendar/availability`      | Availability      | Firm hours, closures, buffers and daily limit, enforced at booking (PG-202) |
+| `/calendar/event-types`       | Event Types       | Configure reusable event type templates                                     |
+| `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations                             |
 
 **Appointments** — dedicated table view (separate from /calendar):
 

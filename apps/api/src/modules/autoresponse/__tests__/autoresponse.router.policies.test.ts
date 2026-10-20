@@ -15,6 +15,7 @@ import {
 
 const repo = vi.hoisted(() => ({
   findById: vi.fn(),
+  findPendingForApprover: vi.fn(),
   findActiveByLeadAndTrigger: vi.fn(),
   save: vi.fn(),
 }));
@@ -414,5 +415,40 @@ describe('submitForApproval — auto-approval (AC-013)', () => {
       '[AutoResponse] approval policy unavailable; draft left for review: gone'
     );
     warn.mockRestore();
+  });
+});
+
+describe('getPendingForApprover (#857)', () => {
+  it('refuses to list the queue of another approver', async () => {
+    await expect(
+      autoResponseRouter.createCaller(ctx()).getPendingForApprover({ approverId: OTHER_USER })
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(repo.findPendingForApprover).not.toHaveBeenCalled();
+  });
+
+  it('asks the repository for the signed-in approver only', async () => {
+    repo.findPendingForApprover.mockResolvedValue([pendingDraft()]);
+
+    const result = await autoResponseRouter
+      .createCaller(ctx())
+      .getPendingForApprover({ approverId: USER });
+
+    expect(repo.findPendingForApprover).toHaveBeenCalledWith(USER, TENANT);
+    expect(result.total).toBe(1);
+  });
+
+  it('hides drafts the role may not decide (policy minimum reviewer role)', async () => {
+    repo.findPendingForApprover.mockResolvedValue([pendingDraft()]);
+    loadApprovalPolicy.mockResolvedValue(policy({ minReviewerRole: 'MANAGER' }));
+
+    const asRep = await autoResponseRouter
+      .createCaller(ctx('SALES_REP'))
+      .getPendingForApprover({ approverId: USER });
+    const asManager = await autoResponseRouter
+      .createCaller(ctx('MANAGER'))
+      .getPendingForApprover({ approverId: USER });
+
+    expect(asRep.drafts).toHaveLength(0);
+    expect(asManager.drafts).toHaveLength(1);
   });
 });

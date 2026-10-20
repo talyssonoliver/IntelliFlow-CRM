@@ -1,0 +1,36 @@
+# 2026-10-17T19:49:56Z codex-review after codex-05 fixes + owner-ruled waiver (staged)
+[codex-review] base ref : origin/main
+[codex-review] changed  : 83 files total
+[codex-review] in scope : 58 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T19:50:46.033Z
+Base ref  : origin/main
+Files in scope : 58
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/contact/contact.router.ts:540-553 — required-account-partial-update
+    Issue    : Changing to a type that requires an account can persist that type even when the requested account association subsequently fails.
+    Evidence : `assertContactTypeOnUpdate` validates `{ ...checkFields, ...(accountId !== undefined ? { accountId } : {}) }`, so a nonexistent or foreign account UUID satisfies the required account field. The handler then commits `applyContactInfoUpdates`, including the new contactType, before calling `applyContactAccountChange`, where the account is validated. If association fails, the request errors but the contact retains its new type without the required account.
+    Fix      : Validate the requested account before persisting changes and commit the contact information and account association atomically so association failure rolls back the type change.
+    Fingerprint: 068bafefb39a2bdb1464a3e9fd1c66f6e97132f44975f45598db2dd3d8ac0150
+
+WAIVED FINDINGS (suppressed):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:451-458 — contact-type-delete-race (fp: 0f290e25353c...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

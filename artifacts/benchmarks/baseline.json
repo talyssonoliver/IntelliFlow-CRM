@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-16T17:11:38.445Z",
+  "timestamp": "2026-10-19T16:56:02.409Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 70,
-    "total_endpoints": 563,
-    "total_queries": 242,
-    "total_mutations": 321,
+    "total_routers": 72,
+    "total_endpoints": 573,
+    "total_queries": 245,
+    "total_mutations": 328,
     "routers": [
       {
         "name": "contact",
@@ -1129,6 +1129,12 @@
         "mutations": 3
       },
       {
+        "name": "agent",
+        "endpoints": 9,
+        "queries": 5,
+        "mutations": 4
+      },
+      {
         "name": "aiMonitoring",
         "endpoints": 9,
         "queries": 8,
@@ -1157,12 +1163,6 @@
         "endpoints": 8,
         "queries": 2,
         "mutations": 6
-      },
-      {
-        "name": "agent",
-        "endpoints": 8,
-        "queries": 5,
-        "mutations": 3
       },
       {
         "name": "aiReview",
@@ -1255,6 +1255,12 @@
         "mutations": 4
       },
       {
+        "name": "contactTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "feedback",
         "endpoints": 6,
         "queries": 3,
@@ -1334,6 +1340,12 @@
       },
       {
         "name": "reportSettings",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
+        "name": "availability",
         "endpoints": 3,
         "queries": 1,
         "mutations": 2
@@ -1443,16 +1455,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 197,
-    "total_fields": 2846,
-    "total_indexes": 892,
-    "total_relations": 279,
+    "total_tables": 201,
+    "total_fields": 2889,
+    "total_indexes": 906,
+    "total_relations": 284,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 173,
+        "fields": 176,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1474,7 +1486,7 @@
       {
         "name": "Contact",
         "fields": 37,
-        "indexes": 14,
+        "indexes": 15,
         "relations": 4,
         "hasEmbedding": true
       },
@@ -1710,6 +1722,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "AppointmentSettings",
+        "fields": 17,
+        "indexes": 3,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketActivity",
         "fields": 17,
         "indexes": 6,
@@ -1739,6 +1758,13 @@
       },
       {
         "name": "NotificationDLQ",
+        "fields": 17,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactType",
         "fields": 17,
         "indexes": 4,
         "relations": 1,
@@ -1819,13 +1845,6 @@
         "fields": 15,
         "indexes": 8,
         "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "AppointmentSettings",
-        "fields": 15,
-        "indexes": 3,
-        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2256,6 +2275,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "ContactTag",
+        "fields": 11,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "DocumentGeneralConfig",
         "fields": 11,
         "indexes": 2,
@@ -2411,13 +2437,6 @@
       },
       {
         "name": "ContactDuplicateRule",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "ContactTag",
         "fields": 10,
         "indexes": 3,
         "relations": 1,
@@ -2704,6 +2723,20 @@
         "hasEmbedding": false
       },
       {
+        "name": "AvailabilityHour",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "AvailabilityClosure",
+        "fields": 7,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketRequiredField",
         "fields": 7,
         "indexes": 3,
@@ -2792,6 +2825,13 @@
         "fields": 6,
         "indexes": 4,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "ContactTypeDefaultTag",
+        "fields": 6,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -3188,11 +3228,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 57,
-    "total_schemas": 634,
+    "total_validators": 59,
+    "total_schemas": 639,
     "by_complexity": {
       "complex": 35,
-      "moderate": 18,
+      "moderate": 20,
       "simple": 4
     },
     "validators": [
@@ -3443,6 +3483,12 @@
         "complexity": "moderate"
       },
       {
+        "name": "contact-types",
+        "file": "contact-types.ts",
+        "schemas": 4,
+        "complexity": "moderate"
+      },
+      {
         "name": "public-onboarding",
         "file": "public-onboarding.ts",
         "schemas": 4,
@@ -3523,6 +3569,12 @@
       {
         "name": "appointment-settings",
         "file": "appointment-settings.ts",
+        "schemas": 1,
+        "complexity": "moderate"
+      },
+      {
+        "name": "availability",
+        "file": "availability.ts",
         "schemas": 1,
         "complexity": "moderate"
       },
@@ -3873,6 +3925,11 @@
         "name": "agent.rejectAction",
         "method": "POST",
         "description": "Reject action"
+      },
+      {
+        "name": "agent.rollbackAction",
+        "method": "POST",
+        "description": "Rollback action"
       },
       {
         "name": "agent.getPendingCount",
@@ -4380,6 +4437,23 @@
         "description": "Get plan state"
       }
     ],
+    "availability": [
+      {
+        "name": "availability.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "availability.update",
+        "method": "POST",
+        "description": "Update availability"
+      },
+      {
+        "name": "availability.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      }
+    ],
     "calendarWebhook": [
       {
         "name": "calendarWebhook.getSyncStatus",
@@ -4536,6 +4610,38 @@
         "name": "contactSettings.get",
         "method": "GET",
         "description": "Get"
+      }
+    ],
+    "contactTypes": [
+      {
+        "name": "contactTypes.list",
+        "method": "GET",
+        "description": "List contactTypess with pagination"
+      },
+      {
+        "name": "contactTypes.listActive",
+        "method": "GET",
+        "description": "List active"
+      },
+      {
+        "name": "contactTypes.create",
+        "method": "POST",
+        "description": "Create new contactTypes"
+      },
+      {
+        "name": "contactTypes.update",
+        "method": "POST",
+        "description": "Update contactTypes"
+      },
+      {
+        "name": "contactTypes.delete",
+        "method": "POST",
+        "description": "Delete contactTypes"
+      },
+      {
+        "name": "contactTypes.setDefault",
+        "method": "POST",
+        "description": "Set default"
       }
     ],
     "contact": [

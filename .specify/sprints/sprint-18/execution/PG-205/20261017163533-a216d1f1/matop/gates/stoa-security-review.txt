@@ -1,0 +1,10 @@
+Manual OWASP review (read-only) of contact-types.router.ts, contact-type-resolver.ts, contact.router.ts diff, ContactService.changeAccount/replaceAccount, migration RLS, validators.
+- A01 RBAC: assertContactTypeAdmin on create/update/delete/setDefault (fail-closed, denial audited); reads tenantProcedure.
+- Tenant scoping: every contactType/contactTag/contact/account query has tenantId; writes use updateMany/deleteMany with tenantId in WHERE.
+- Mass assignment: create/update schemas .strict(); data built field by field; key server-generated; isSystem false literal; ownerId from typeDefaults (creator or same-tenant account owner via tenantUserWhere).
+- A03 injection: only raw SQL is tagged-template $executeRaw with bound lockKey param (hashtextextended($1,0)). No $queryRawUnsafe.
+- P2002 mapped to fixed message, no input echo. Audit payloads: ids/field names/key only.
+- replaceAccount/associate: accountRepository.findById(id, tenantId) in Promise.all; dropUnusableAccount tenant-checks.
+- RLS: ENABLE RLS + tenant_isolation policy USING/WITH CHECK on both new tables; FK ON DELETE CASCADE to tenants only. (RLS not FORCEd - noted in code, pre-existing project convention, explicit tenantId everywhere.)
+- Web: grep for dangerouslySetInnerHTML in added lines: none.
+- Info: deleteContactTypeSchema/setDefaultContactTypeSchema are non-strict z.object; unknown keys are stripped, handlers read only id. No impact.

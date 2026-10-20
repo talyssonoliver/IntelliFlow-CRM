@@ -1,0 +1,85 @@
+{
+  "stoa": "Quality",
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "verdict": "PASS",
+  "produced_by": "stoa-quality sub-agent (recheck)",
+  "produced_at": "2026-10-18T09:17:22Z",
+  "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+  "supersedes_note": "Final re-assessment, replaces the earlier Quality.recheck.json content (PASS at d65141274). Quality.json (WARN at f3115da9b) is unchanged. Basis: matrix rerun at 2ac93b60f; summary.tsv ends with done, all 20 log headers show head 2ac93b60f, every row exit 0. Source changed since 4c6ac696e only in: availability-enforcement.ts (batched next-slot search, Number.parseInt), appointment-settings.router.ts (async dropped), BufferRemindersTab.tsx (parseInt), plus tests (availability-enforcement, BuffersCapCard).",
+  "gates": [
+    {
+      "gate": "Validation matrix on final code",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/summary.tsv and 21 row logs",
+      "notes": "20 rows plus 05b exit 0, all headers 2ac93b60f. domain 3072, application 1488, validators 2722, api 7797 passed + 18 skipped, web 12955, db 224 + 14 skipped, integration 20 passed + 5 skipped (the 5 are the pre-existing rls-tenant-isolation tests; the PG-202 availability suite ran 20/20). Typecheck, lint, build, preflights exit 0."
+    },
+    {
+      "gate": "Coverage targets (domain >95, application/validators/API >90 on new code)",
+      "result": "PASS",
+      "evidence_log": "validation-matrix 12..15",
+      "notes": "domain 99.55 / 97.41 / 100 / 100; validators 100 / 97.36 / 100 / 100; calendar API module 97.4 / 92.59 / 100 / 99.29 (includes the new batching code). Application CheckConflicts.ts file-wide 91.8 / 70 / 100 / 91.07: uncovered lines are pre-existing; PG-202 additions are 25/25 changed lines."
+    },
+    {
+      "gate": "Web coverage vs apps/web/CLAUDE.md (stmts>=90, branches>=80, funcs>=90, lines>=90)",
+      "result": "PASS",
+      "evidence_log": "validation-matrix 16",
+      "notes": "Scoped aggregate 90.71 / 85.02 / 84.16 / 91.61. New files: BuffersCapCard now 100% on diff (14/14) and its functions gap is closed (components folder funcs 98.07); branches ClosuresList 81.25, WeeklyHoursCard 81.81, AvailabilityContent 84, availability-draft 91.96, all >= 80. Functions aggregate below 90 comes from modified pre-existing files (AppointmentDetail 41.3, AppointmentForm 78.1, new/page.tsx 57.1), not new code; AvailabilityContent funcs 93.33, ClosuresList 94.44."
+    },
+    {
+      "gate": "Diff coverage >= 80%",
+      "result": "PASS",
+      "evidence_log": "validation-matrix 18-diff-coverage.log",
+      "notes": "96.2% (1131/1176), exit 0, no red cross files. Lowest CalendarSettingsContent 80.0 (4/5)."
+    },
+    {
+      "gate": "New RED/GREEN pairs since last review",
+      "result": "PASS",
+      "evidence_log": "tdd/red-api-nextslot-batches.log, green-api-nextslot-batches.log; earlier nextslot-timezone and db-schema-text pairs",
+      "notes": "Batches RED fails on a real assertion ('expected vi.fn() to be called 2 times, but got 1 times'); GREEN 158 passed. The test 'keeps searching in batches until the horizon when the first batch has no free slot' exists in availability-enforcement.test.ts:330. The sonarqube-fix commit was behaviour-neutral with green characterization and api logs, and the final full matrix covers it. Overlaps with code-review runs noted by the lead did not affect the final matrix, which ran alone."
+    },
+    {
+      "gate": "Skipped/focused tests, clock pinning, helpers, negative paths, ACs",
+      "result": "PASS",
+      "evidence_log": "as in Quality.json",
+      "notes": "No it.skip/.only/todo added (only the env-guard describe.skip in the DB integration file; CI sets DATABASE_URL for the integration job per the lead, ci.yml:360, which I did not independently open). Clock pinned in PG-202 blocks. Helpers under __tests__ excluded. All negative paths and the AC spot-checks from the first review still hold; only the enforcement test file grew (+33 lines)."
+    },
+    {
+      "gate": "Regression suites for touched existing code",
+      "result": "PASS",
+      "evidence_log": "full api/web/db/integration rows at 2ac93b60f",
+      "notes": "Green, incl. characterization row 01 (legacy 07:00-19:00 pinned), caller/boundary/tenant-isolation, appointment-settings router (async dropped, still green), smoke, entitlement, calendar-settings, AppointmentForm/Detail."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "low",
+      "file": "apps/api/src/modules/calendar/availability-enforcement.ts",
+      "line": 267,
+      "issue": "Next-slot search now loops in batches until the horizon (2000 candidates per batch, up to 2 reads per batch). The spec AC-016 states a bounded query count (<= 5 queries); with batching the read count grows with the horizon. One test covers the multi-batch path (test file line 330); I did not see a test asserting an upper bound on total reads for a long horizon.",
+      "fix": "Confirm the worst-case batch count for the maximum horizon is acceptable and, if AC-016's bound still matters, add an assertion on total read count for a full-horizon empty search."
+    },
+    {
+      "severity": "low",
+      "file": "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+      "line": 84,
+      "issue": "Uncovered lines 84-90 and 275 (branches 84%). Meets the documented web 80% branch rule.",
+      "fix": "Optional follow-up."
+    },
+    {
+      "severity": "low",
+      "file": "packages/application/src/usecases/scheduling/CheckConflicts.ts",
+      "line": 103,
+      "issue": "File-wide branches 70% from pre-existing code; the new code is 100% on changed lines.",
+      "fix": "No action for PG-202."
+    },
+    {
+      "severity": "info",
+      "file": ".specify/sprints/sprint-18/specifications/PG-202-spec.md",
+      "line": 375,
+      "issue": "AC-025 (Lighthouse >= 90) has no log in the matrix; spec classes it NEEDS_HUMAN when authenticated Lighthouse cannot run.",
+      "fix": "Record the result or NEEDS_HUMAN reason in the PR."
+    }
+  ],
+  "limitations": "Judged from logs and tests; nothing was run. Counts quoted from the logs. All 20 headers show 2ac93b60f and summary.tsv ends with done (checked after my earlier wait loop falsely tripped on the previous fdd76e690 run's done line). PG-202 RLS session test passing (not skipped) is still inferred from 20 passed + 5 skipped. I did not re-read every edited existing test for weakened assertions, and did not open ci.yml to confirm DATABASE_URL. PASS depends on the documented web thresholds (branches >=80) and on judging legacy-file gaps by the diff; under a flat 90% rule the web branch figures of 81-88% on new files and CheckConflicts legacy branches (70%) would not pass."
+}

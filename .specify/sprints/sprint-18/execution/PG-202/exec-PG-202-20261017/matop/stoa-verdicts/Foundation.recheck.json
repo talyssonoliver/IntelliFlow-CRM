@@ -1,0 +1,30 @@
+{
+  "stoa": "Foundation",
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "verdict": "PASS",
+  "produced_by": "stoa-foundation sub-agent",
+  "produced_at": "2026-10-18T09:17:17Z",
+  "head": "2ac93b60f9b6bfc59f97de00c74bc7606a5ab49d",
+  "supersedes": "Foundation.json (WARN at 053c6874c) and the earlier Foundation.recheck.json (PASS at d65141274)",
+  "gates": [
+    {"gate": "matrix completeness and head", "result": "PASS", "evidence_log": "matop/validation-matrix/summary.tsv: 20 rows all exit 0, last line 'done'; all 20 row log headers show head 2ac93b60f", "notes": "Code commits after 4c6ac696e are fdd76e690 and 9620f4cce; every row reran at the final HEAD."},
+    {"gate": "typecheck (domain, application, validators, api, web, ui)", "result": "PASS", "evidence_log": "matop/validation-matrix/09-typecheck.log (exit 0)", "notes": ""},
+    {"gate": "lint + CI=1 sonar guard", "result": "PASS", "evidence_log": "matop/validation-matrix/10-lint.log (exit 0)", "notes": ""},
+    {"gate": "build (domain, application, validators, db, api, web next build)", "result": "PASS", "evidence_log": "matop/validation-matrix/11-build.log (exit 0); line 373 lists '/calendar/availability' in the route table", "notes": ""},
+    {"gate": "tests", "result": "PASS", "evidence_log": "summary.tsv rows 01-08 and 05b exit 0; 06-api-full.log: 7797 passed, 18 skipped; 08-web-full.log: 12955 passed", "notes": "Domain, application, validators, db and integration counts come from the lead's message and the summary exit codes; I read only the api and web counts from the logs."},
+    {"gate": "diff coverage", "result": "PASS", "evidence_log": "matop/validation-matrix/18-diff-coverage.log (exit 0, TOTAL new_coverage 96.2%, 1131/1176)", "notes": ""},
+    {"gate": "preflights", "result": "PASS", "evidence_log": "summary.tsv row 19 exit 0", "notes": ""},
+    {"gate": "codex review at final code", "result": "PASS", "evidence_log": "matop/codex-review/codex-review-8.log: 'Verdict: PASS', 'no unwaived findings'", "notes": "Run 8 postdates the last code change 9620f4cce. The daily-cap waiver is owner-approved per the waiver text (not independently verified)."},
+    {"gate": "dependency hygiene", "result": "PASS", "evidence_log": "git diff origin/main...HEAD --name-only: no package.json or pnpm-lock.yaml", "notes": ""},
+    {"gate": "forbidden constructs in non-test code", "result": "PASS", "evidence_log": "grep of added non-test .ts/.tsx lines for any, ts-ignore, ts-expect-error, istanbul ignore, console.log: no matches", "notes": ""},
+    {"gate": "diff hygiene", "result": "PASS", "evidence_log": "git diff --numstat origin/main...HEAD: schema.prisma 58/21, codex-review-waivers.yaml 30/0", "notes": "No line-ending churn."},
+    {"gate": "secret-shaped strings", "result": "PASS", "evidence_log": "no secret-shaped strings in the earlier full-diff scan; commits since then change source, tests, a Lighthouse report and docs only", "notes": "Run gitleaks on this file as requested."},
+    {"gate": "call site verification", "result": "PASS", "evidence_log": "apps/api/src/modules/legal/appointments.router.ts still has 2 calls to assertAppointmentWithinAvailability (create and reschedule); the availability page still uses calendar.availability", "notes": "Not re-read line by line after the latest commits."}
+  ],
+  "findings": [
+    {"severity": "low", "file": "artifacts/coverage/*, artifacts/reports/a11y-route-reconcile.json", "line": 0, "issue": "Tracked generated files showed as modified in the worktree at the last check.", "fix": "Keep them out of the PR."},
+    {"severity": "low", "file": "tools/audit/codex-review-waivers.yaml", "line": 0, "issue": "Three waiver entries for one finding.", "fix": "Optional; each fingerprint is a distinct anchor."}
+  ],
+  "limitations": "Read-only review: nothing was run. Verdict rests on the summary and the headers and tails of the logs; only the api and web test counts were read from row logs. Commits after 4c6ac696e were reviewed by file list, not line by line. Owner approval of the waiver is taken from the waiver text."
+}

@@ -1,0 +1,13 @@
+2026-10-18T15:46:02Z
+SonarCloud PR #915 (api/measures/component + component_tree + duplications/show), before the dedup:
+{"component":{"id":"AaFOc4h5NzAV2ucNz5_k","key":"talyssonoliver_IntelliFlow-CRM","name":"IntelliFlow CRM","qualifier":"TRK","measures":[{"metric":"new_lines","periods":[{"index":1,"value":"3634"}]},{"metric":"new_duplicated_blocks","periods":[{"index":1,"value":"8","bestValue":false}]},{"metric":"new_duplicated_lines_density","periods":[{"index":1,"value":"3.6323610346725372","bestValue":false}]},{"metric":"new_duplicated_lines","periods":[{"index":1,"value":"132","bestValue":false}]}],"pullRequest":"915"}}
+Per file (new_duplicated_lines):
+  63 apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx
+  25 apps/web/src/app/contacts/(list)/contact-types/components/DeleteContactTypeDialog.tsx
+  22 apps/web/src/app/contacts/(list)/contact-types/ContactTypesLoading.tsx
+  19 apps/web/src/app/contacts/(list)/contact-types/components/ContactTypeList.tsx
+  3 packages/adapters/src/repositories/PrismaContactRepository.ts
+Blocks (duplications/show): ContactTypesContent 1-36 and 80-106 <-> CaseTypesContent 1-35 and 70-96;
+  DeleteContactTypeDialog 46-70 <-> DeleteCaseTypeDialog 46-70; ContactTypesLoading 12-33 <-> CaseTypesLoading 11-32;
+  ContactTypeList 147-165 <-> CaseTypeList 112-130; PrismaContactRepository internal (3 lines new).
+Removed by extracting apps/web/src/components/settings/{TypeSettingsLoading,DeleteTypeDialog}.tsx (shared with PG-204 case types): ContactTypesLoading 12-33 (22), DeleteContactTypeDialog 46-70 (25). Expected 132-47=85 duplicated new lines (~2.3%); confirm on the next SonarCloud scan.

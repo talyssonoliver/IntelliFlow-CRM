@@ -1,64 +1,40 @@
 'use client';
 
 import { Card, Input, Label } from '@intelliflow/ui';
+import { AvailabilityPointer } from './AvailabilityPointer';
 
-export interface BufferSettings {
-  defaultBufferBeforeMinutes: number;
-  defaultBufferAfterMinutes: number;
+export interface ReminderSettings {
   defaultReminderMinutes: number | null;
 }
 
+/** The firm's default buffers, shown read-only here; they are edited on the Availability page (PG-202). */
+export interface FirmBuffers {
+  before: number;
+  after: number;
+}
+
 interface BufferRemindersTabProps {
-  settings: BufferSettings;
-  onSettingsChange: (settings: BufferSettings) => void;
+  settings: ReminderSettings;
+  onSettingsChange: (settings: ReminderSettings) => void;
+  /** `null` while the settings are loading. */
+  firmBuffers: FirmBuffers | null;
 }
 
 export function BufferRemindersTab({
   settings,
   onSettingsChange,
+  firmBuffers,
 }: Readonly<BufferRemindersTabProps>) {
-  const handleBufferChange = (key: keyof BufferSettings, value: string) => {
-    onSettingsChange({ ...settings, [key]: value === '' ? null : parseInt(value, 10) });
-  };
-
   return (
     <Card className="p-6">
       <div className="mb-4">
-        <h3 className="text-lg font-semibold">Buffer & Reminders</h3>
+        <h3 className="text-lg font-semibold">Reminders</h3>
         <p className="text-sm text-muted-foreground">
-          Configure buffer time before/after appointments and default reminder timing.
+          Default reminder timing for new appointments.
         </p>
       </div>
 
       <div className="space-y-4">
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="defaultBufferBeforeMinutes">Buffer Before (minutes)</Label>
-          <Input
-            id="defaultBufferBeforeMinutes"
-            type="number"
-            value={settings.defaultBufferBeforeMinutes}
-            min={0}
-            max={240}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleBufferChange('defaultBufferBeforeMinutes', e.target.value)
-            }
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <Label htmlFor="defaultBufferAfterMinutes">Buffer After (minutes)</Label>
-          <Input
-            id="defaultBufferAfterMinutes"
-            type="number"
-            value={settings.defaultBufferAfterMinutes}
-            min={0}
-            max={240}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleBufferChange('defaultBufferAfterMinutes', e.target.value)
-            }
-          />
-        </div>
-
         <div className="flex flex-col gap-1.5">
           <Label htmlFor="defaultReminderMinutes">Default Reminder (minutes)</Label>
           <Input
@@ -67,11 +43,23 @@ export function BufferRemindersTab({
             value={settings.defaultReminderMinutes ?? ''}
             min={0}
             max={60}
+            aria-describedby="defaultReminderMinutes-help"
             onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-              handleBufferChange('defaultReminderMinutes', e.target.value)
+              onSettingsChange({
+                defaultReminderMinutes:
+                  e.target.value === '' ? null : Number.parseInt(e.target.value, 10),
+              })
             }
           />
+          <p id="defaultReminderMinutes-help" className="text-xs text-muted-foreground">
+            0 to 60 minutes before the start. Leave empty for no reminder.
+          </p>
         </div>
+
+        <AvailabilityPointer>
+          {firmBuffers &&
+            `Buffers: ${firmBuffers.before} min before and ${firmBuffers.after} min after each appointment.`}
+        </AvailabilityPointer>
       </div>
     </Card>
   );

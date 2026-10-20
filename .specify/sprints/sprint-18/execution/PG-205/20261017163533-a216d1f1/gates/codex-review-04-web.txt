@@ -1,0 +1,45 @@
+# 2026-10-17T18:00:50Z codex-review web layer (staged)
+[codex-review] base ref : origin/main
+[codex-review] changed  : 81 files total
+[codex-review] in scope : 57 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T18:01:57.995Z
+Base ref  : origin/main
+Files in scope : 57
+Total findings : 3
+  Waived       : 0
+  Unwaived     : 3
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/components/contacts/ContactTypeSelect.tsx:76 — cannot-clear-contact-type
+    Issue    : Selecting “No type” while editing silently preserves the contact’s existing type.
+    Evidence : The option uses value="", but EditContactPage converts data.contactType through toOptional(), producing undefined; updateContactSchema only accepts optional nonempty keys, and undefined means no update. Saving therefore succeeds without removing the stored type.
+    Fix      : Support null as an explicit clear operation throughout the update validator, resolver, domain and persistence path, and send null when an existing contact’s type is cleared.
+    Fingerprint: 1f2a3c9212b0d761a0481278e11e513edf173895c030011009d14837a5385336
+
+  [HIGH] apps/api/src/modules/contact/contact-types.router.ts:425 — racy-type-deletion
+    Issue    : The usage count does not prevent deleting a custom type while another request assigns it to a contact.
+    Evidence : The transaction checks `tx.contact.count({ where: { tenantId, contactType: existing.key } })` before deleteMany, but contacts store a text key without a foreign key. resolveContactTypeForCreate validates the type before the separate contact insert, so deletion can commit after validation and before insertion, leaving an orphaned key; recreating the same name can then reuse that key and reinterpret existing contacts.
+    Fix      : Serialize deletion and contact type assignment through a shared lock held across validation and persistence, or enforce the relationship with a database foreign key.
+    Fingerprint: 0f290e25353ca62952bf64106e850b33aa19086e3ba2075cb0a63815a579da92
+
+  [MEDIUM] apps/web/src/app/contacts/(list)/contact-types/components/DefaultTagPicker.tsx:37 — hidden-inactive-default-tags
+    Issue    : Deactivating a selected default tag makes its contact type impossible to save through the settings form.
+    Evidence : `const options = tags.filter((t) => t.isActive)` hides inactive selected tags, while draftFromContactType retains every existing defaultTagId. The update endpoint rejects those retained IDs because assertTagsAvailable requires isActive: true, and the hidden checkbox prevents removing the offending selection.
+    Fix      : Display selected inactive tags with an inactive label and allow deselection, while preventing new selection of inactive tags.
+    Fingerprint: 3a11a30729bb3adbd3a6ab07e5e3481f44f7c796cce3d6e0db6f787324e271f8
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 3 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

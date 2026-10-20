@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-05-02 **Total Pages**: 214 | **Total Flows**: 48 | **API Routers**: 69
+> 2026-05-02 **Total Pages**: 214 | **Total Flows**: 48 | **API Routers**: 70
 > (369 procedures) | **Ghost Links**: 0
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
@@ -304,16 +304,17 @@ in `settings.ts:85`. Uses `developerSidebarConfig` from `configs/developer.ts`.
 | `/tasks`      | `tasks/(list)/page.tsx` | —       | FLOW-020 | `task.*`   | H SB       | Implemented | --     |
 | `/tasks/[id]` | `tasks/[id]/page.tsx`   | —       | FLOW-020 | `task.*`   | IP         | Implemented | --     |
 
-### 3.9 Calendar (3 routes)
+### 3.9 Calendar (4 routes)
 
 **CR-02 resolved**: Primary flow is FLOW-019 ("Agendamento de Reunioes"), not
 FLOW-020.
 
-| Route            | File Path                | Task ID | Flow ID  | API Router       | Nav Layers | Status      | Ghost? |
-| ---------------- | ------------------------ | ------- | -------- | ---------------- | ---------- | ----------- | ------ |
-| `/calendar`      | `calendar/page.tsx`      | —       | FLOW-019 | `appointments.*` | H SB       | Implemented | --     |
-| `/calendar/new`  | `calendar/new/page.tsx`  | —       | FLOW-019 | `appointments.*` | IP         | Implemented | --     |
-| `/calendar/[id]` | `calendar/[id]/page.tsx` | —       | FLOW-019 | `appointments.*` | IP         | Implemented | --     |
+| Route                    | File Path                        | Task ID | Flow ID  | API Router                | Nav Layers | Status      | Ghost? |
+| ------------------------ | -------------------------------- | ------- | -------- | ------------------------- | ---------- | ----------- | ------ |
+| `/calendar`              | `calendar/page.tsx`              | —       | FLOW-019 | `appointments.*`          | H SB       | Implemented | --     |
+| `/calendar/new`          | `calendar/new/page.tsx`          | —       | FLOW-019 | `appointments.*`          | IP         | Implemented | --     |
+| `/calendar/[id]`         | `calendar/[id]/page.tsx`         | —       | FLOW-019 | `appointments.*`          | IP         | Implemented | --     |
+| `/calendar/availability` | `calendar/availability/page.tsx` | PG-202  | FLOW-019 | `calendar.availability.*` | SB IP      | Implemented | --     |
 
 ### 3.10 Email (2 routes)
 

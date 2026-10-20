@@ -67,8 +67,9 @@ vi.mock('@intelliflow/ui', () => ({
 }));
 
 vi.mock('@/components/settings/ModuleSettingsLayout', () => ({
-  ModuleSettingsLayout: ({ tabs, onSave, onReset, isSaving, isDirty }: any) => (
+  ModuleSettingsLayout: ({ tabs, onSave, onReset, isSaving, isDirty, resetDescription }: any) => (
     <div data-testid="module-settings-layout">
+      <p data-testid="reset-description">{resetDescription}</p>
       {tabs.map((tab: any) => (
         <div key={tab.value} data-testid={`tab-${tab.value}`}>
           <div data-testid={`tab-label-${tab.value}`}>{tab.label}</div>
@@ -146,7 +147,8 @@ describe('CalendarSettingsContent', () => {
   it('tab labels match spec', () => {
     render(<CalendarSettingsContent />);
     expect(screen.getByTestId('tab-label-duration')).toHaveTextContent('Duration Defaults');
-    expect(screen.getByTestId('tab-label-buffer')).toHaveTextContent('Buffer & Reminders');
+    expect(screen.getByTestId('tab-label-buffer')).toHaveTextContent('Reminders');
+    expect(screen.getByTestId('tab-label-buffer')).not.toHaveTextContent('Buffer');
     expect(screen.getByTestId('tab-label-calendar')).toHaveTextContent('Calendar Integration');
   });
 
@@ -249,16 +251,66 @@ describe('CalendarSettingsContent', () => {
     });
   });
 
-  it('changing buffer field updates local settings via onSettingsChange', async () => {
+  it('changing the reminder field updates local settings', async () => {
     render(<CalendarSettingsContent />);
+    const input = await screen.findByLabelText('Default Reminder (minutes)');
+    fireEvent.change(input, { target: { value: '30' } });
     await waitFor(() => {
-      expect(screen.getByLabelText('Buffer Before (minutes)')).toBeInTheDocument();
+      expect(input).toHaveValue(30);
     });
-    const input = screen.getByLabelText('Buffer Before (minutes)');
-    fireEvent.change(input, { target: { value: '10' } });
-    await waitFor(() => {
-      expect(input).toHaveValue(10);
+  });
+
+  // ── Buffers + timezone moved to Availability (PG-202, owner Q2) ──
+
+  it('shows the firm buffers and timezone read-only with links to Availability', async () => {
+    mockGetQuery.mockReturnValue({
+      data: {
+        ...mockSettings,
+        defaultBufferBeforeMinutes: 10,
+        defaultBufferAfterMinutes: 5,
+        defaultTimezone: 'Europe/London',
+      },
+      isLoading: false,
+      error: null,
+      refetch: vi.fn(),
     });
+    render(<CalendarSettingsContent />);
+    expect(
+      await screen.findByText(/10 min before and 5 min after each appointment/)
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Firm timezone: Europe\/London/)).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('link', {
+        name: 'Manage working hours, buffers and timezone in Availability',
+      })
+    ).toHaveLength(2);
+    expect(screen.queryByLabelText('Buffer Before (minutes)')).not.toBeInTheDocument();
+  });
+
+  it('never sends buffers or timezone in the save payload', async () => {
+    render(<CalendarSettingsContent />);
+    fireEvent.change(await screen.findByLabelText('Default Duration (minutes)'), {
+      target: { value: '45' },
+    });
+    await waitFor(() => expect(screen.getByTestId('save-btn')).not.toBeDisabled());
+    fireEvent.click(screen.getByTestId('save-btn'));
+    await waitFor(() => expect(mockMutateAsync).toHaveBeenCalled());
+    const payload = mockMutateAsync.mock.calls[0][0];
+    expect(payload).toMatchObject({ defaultDurationMinutes: 45 });
+    for (const key of [
+      'defaultBufferBeforeMinutes',
+      'defaultBufferAfterMinutes',
+      'defaultTimezone',
+    ]) {
+      expect(payload).not.toHaveProperty(key);
+    }
+  });
+
+  it('tells the user that reset leaves buffers and timezone alone', () => {
+    render(<CalendarSettingsContent />);
+    expect(screen.getByTestId('reset-description')).toHaveTextContent(
+      'Resets durations, reminder and primary calendar. Buffers and timezone are managed in Availability and are not changed.'
+    );
   });
 
   it('passes calendars to CalendarIntegrationTab content', async () => {

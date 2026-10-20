@@ -1,0 +1,34 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 132 files total
+[codex-review] in scope : 67 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T20:25:57.626Z
+Base ref  : origin/main
+Files in scope : 67
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] packages/domain/src/legal/appointments/AvailabilityPolicy.ts:469-472 — dst-slot-search-omission
+    Issue    : Slot generation omits valid bookings during the repeated autumn DST hour.
+    Evidence : `minute + durationMinutes <= range.endMinute` measures available duration using wall-clock minutes, and `yield localToUtc(...)` resolves ambiguous starts only to their earlier occurrence. Reproduced with Europe/London Sunday hours 01:00-02:00 on 2026-10-25: evaluateAvailability accepts 00:00Z-01:30Z, but generateCandidates returns no 90-minute candidates. Starting the search at 00:30Z also returns no 60-minute candidates, although 01:00Z-02:00Z is accepted by evaluateAvailability.
+    Fix      : Enumerate both occurrences of ambiguous local grid times, sort candidates by UTC instant, and determine duration eligibility using elapsed UTC time and evaluateAvailability rather than wall-clock range length.
+    Fingerprint: 09c9fcefa2330e76f4cc8994a180ec62a8551fbf7a5b7111c514d1f37aa8df10
+
+WAIVED FINDINGS (suppressed):
+  [HIGH] apps/api/src/modules/calendar/availability-enforcement.ts:186-194 — non-atomic-daily-cap (fp: 25c5826ce3b9...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

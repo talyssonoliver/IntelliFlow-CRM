@@ -1,0 +1,6 @@
+source: .specify/sprints/sprint-18/reports/code-review/latest/coverage.txt (/code-review full, run 20261017-220406-dea610e3, coverage step at HEAD 053c6874c)
+RED: packages/db field-encryption.test.ts pins schema.prisma text; prisma format had re-aligned every model
+8606:AssertionError: expected '// IntelliFlow CRM - Prisma Schema\n/…' to contain '/// @encrypted\n  prompt          Str…'
+15118:AssertionError: expected '// IntelliFlow CRM - Prisma Schema\n/…' to contain '/// @encrypted\n  systemPrompt    Str…'
+21630:AssertionError: expected '// IntelliFlow CRM - Prisma Schema\n/…' to contain 'promptHash      String   // SHA256'
+28170:  ✗ db exit 1 — 5 test failure(s)

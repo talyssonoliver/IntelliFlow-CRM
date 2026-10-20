@@ -50,6 +50,8 @@ export type {
   ContactRequiredField,
   ContactTag,
   ContactAutomationSetting,
+  ContactType,
+  ContactTypeDefaultTag,
   ContactReplyDraft,
   AccountAIInsight,
   AccountHierarchyConfig,
@@ -97,6 +99,8 @@ export type {
   CaseType,
   CaseTypeChecklistItem,
   AppointmentSettings,
+  AvailabilityHour, // PG-202
+  AvailabilityClosure,
   PublicFeedback,
   LeadCustomField,
 } from '../generated/prisma/client';

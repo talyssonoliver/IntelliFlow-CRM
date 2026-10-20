@@ -1,0 +1,32 @@
+[test-slot] slot3 taken for PG-205-stoa@feat/pg-205-contact-types: pnpm --filter @intelliflow/web exec vitest run src/app/contacts/(list)/contact-types --coverage --coverage.reporter=text --coverage.reportsDirectory=../../artifacts/coverage-vitest/pg-205-stoa-recheck --coverage.include=**/contact-types/**/*.tsx
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/web
+      Coverage enabled with istanbul
+
+
+ Test Files  7 passed (7)
+      Tests  60 passed (60)
+   Start at  10:07:16
+   Duration  34.30s (transform 77.89s, setup 7.65s, import 90.83s, tests 11.59s, environment 17.63s)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   97.24 |    85.07 |   96.05 |   98.46 |                   
+ contact-types     |   96.73 |    82.35 |     100 |     100 |                   
+  ...esContent.tsx |   96.51 |    82.35 |     100 |     100 | ...51,169,262,280 
+ ...pes/components |   97.61 |    86.46 |   94.11 |   97.34 |                   
+  ...ypeDialog.tsx |   97.01 |    86.44 |   92.85 |   96.82 | 208,230           
+  ...tTypeList.tsx |   97.22 |    81.25 |   93.33 |   96.55 | 201               
+  ...ypeDialog.tsx |     100 |     87.5 |     100 |     100 | 39                
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 97.24% ( 212/218 )
+Branches     : 85.07% ( 171/201 )
+Functions    : 96.05% ( 73/76 )
+Lines        : 98.46% ( 192/195 )
+================================================================================

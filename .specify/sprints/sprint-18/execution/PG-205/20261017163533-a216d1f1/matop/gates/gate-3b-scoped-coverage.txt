@@ -1,0 +1,16 @@
+# 2026-10-18T08:59:41Z Gate 3b scoped coverage of the 13 created source files, from artifacts/coverage/coverage-summary.json (scoped test:coverage at 7319f0d2c, 2026-10-18T08:35-08:39Z)
+packages/domain/src/crm/contact/contact-type-defaults.ts: S 100 B 98.14 F 100 L 100
+packages/validators/src/contact-types.ts: S 100 B 100 F 100 L 100
+apps/api/src/modules/contact/contact-types.router.ts: S 99.34 B 95.38 F 96.96 L 99.28
+apps/api/src/modules/contact/contact-type-resolver.ts: S 96.36 B 95.31 F 96.29 L 98.8
+apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx: S 88.37 B 80.88 F 80.95 L 92.1
+apps/web/src/app/contacts/(list)/contact-types/ContactTypesLoading.tsx: S 100 B 100 F 100 L 100
+apps/web/src/app/contacts/(list)/contact-types/components/ContactTypeList.tsx: S 97.22 B 81.25 F 93.33 L 96.55
+apps/web/src/app/contacts/(list)/contact-types/components/ContactTypeDialog.tsx: S 92.53 B 84.74 F 82.14 L 92.06
+apps/web/src/app/contacts/(list)/contact-types/components/DefaultTagPicker.tsx: S 100 B 100 F 100 L 100
+apps/web/src/app/contacts/(list)/contact-types/components/DeleteContactTypeDialog.tsx: S 50 B 75 F 50 L 50
+apps/web/src/components/contacts/contact-type-colors.ts: S 100 B 100 F 100 L 100
+apps/web/src/components/contacts/ContactTypeSelect.tsx: S 100 B 100 F 100 L 100
+apps/web/src/components/contacts/ContactTypeBadge.tsx: S 100 B 100 F 100 L 100
+SCOPED: Statements 96.46%, Branches 90.91%, Functions 92.40%, Lines 97.21%
+# thresholds S>=90 B>=80 F>=90 L>=90 (aggregate): PASS

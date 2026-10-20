@@ -33,6 +33,7 @@ export * from './crm/contact/ContactId';
 export * from './crm/contact/ContactEvents';
 export * from './crm/contact/ContactRepository';
 export * from './crm/contact/CrossTenantOrNotFoundError';
+export * from './crm/contact/contact-type-defaults';
 
 // CRM Domain - Accounts
 export * from './crm/account/Account';
@@ -78,6 +79,8 @@ export * from './legal/appointments/TimeSlot';
 export * from './legal/appointments/Recurrence';
 export * from './legal/appointments/Buffer';
 export * from './legal/appointments/ConflictDetector';
+export * from './legal/appointments/AvailabilityPolicy'; // PG-202
+export * from './legal/appointments/availability-roles'; // PG-202
 
 // Legal Domain - Terms Acceptance (IFC-309)
 export * from './legal/TermsAcceptance';

@@ -1,0 +1,12 @@
+date: 2026-10-18T08:34:50Z
+cmd: pnpm --dir apps/web exec vitest run src/app/calendar/calendar-settings
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+
+ Test Files  5 passed (5)
+      Tests  53 passed (53)
+   Start at  09:34:51
+   Duration  3.03s (transform 583ms, setup 4.09s, import 401ms, tests 673ms, environment 3.59s)
+
+exit: 0

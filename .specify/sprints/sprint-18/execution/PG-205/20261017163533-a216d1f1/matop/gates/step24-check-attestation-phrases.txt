@@ -1,0 +1,3 @@
+# 2026-10-18T09:13:56Z node tools/scripts/exec-preflight/check-attestation-phrases.mjs PG-205 18
+[phrases] OK — no suspicious phrases in PG-205 attestation.
+# exit: 0

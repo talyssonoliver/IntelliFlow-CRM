@@ -136,6 +136,8 @@ export interface ExecutedAction extends PendingAction {
   approval?: ApprovalDecision;
   rollbackAvailable: boolean;
   rollbackToken?: string;
+  /** Epoch ms of an unfinished rollback claim (#856); set only while one is held. */
+  rollbackClaimedAt?: number;
 }
 
 /**
@@ -212,11 +214,8 @@ export interface AgentToolDefinition<TInput = unknown, TOutput = unknown> {
   inputSchema: z.ZodType<TInput>;
   execute: (input: TInput, context: AgentAuthContext) => Promise<AgentToolResult<TOutput>>;
   generatePreview: (input: TInput, context: AgentAuthContext) => Promise<ActionPreview>;
-  rollback?: (
-    actionId: string,
-    executionResult: TOutput,
-    context: AgentAuthContext
-  ) => Promise<RollbackResult>;
+  // Rollback is not a tool hook: approved actions are undone by
+  // approved-action-compensator.ts, through the target module's procedures (#856).
 }
 
 /**

@@ -1,16 +1,19 @@
-'use client';
+/**
+ * Contact Types Page — PG-205 (served at /contacts/contact-types by the (list) route group).
+ *
+ * Server Component shell — streams the skeleton immediately, then hydrates
+ * ContactTypesContent (client component) via Suspense. Matches the PG-204
+ * case-types pattern.
+ */
+
+import { Suspense } from 'react';
+import ContactTypesContent from './ContactTypesContent';
+import { ContactTypesLoading } from './ContactTypesLoading';
 
 export default function ContactTypesPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Contact Types</h1>
-        <p className="text-muted-foreground mt-1">Manage contact categories and classifications.</p>
-      </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        <span className="material-symbols-outlined text-4xl mb-2 block">category</span>
-        <p>Contact types configuration coming soon.</p>
-      </div>
-    </div>
+    <Suspense fallback={<ContactTypesLoading />}>
+      <ContactTypesContent />
+    </Suspense>
   );
 }

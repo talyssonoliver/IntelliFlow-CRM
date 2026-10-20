@@ -1,0 +1,16 @@
+{
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "selected_at": "2026-10-17T21:04:35Z",
+  "source": ".claude/skills/exec/references/phase3-matop-validation.md (STOA Selection table)",
+  "selection": [
+    { "stoa": "Foundation", "role": "lead", "why": "always included; task STOA is STOA-Foundation; PG-* page task (component, page, UI)" },
+    { "stoa": "Domain", "role": "supporting", "why": "business logic and contracts: AvailabilityPolicy, calendar.availability router, booking enforcement at create/reschedule/findNextSlot, Prisma models + migration" },
+    { "stoa": "Security", "role": "supporting", "why": "keyword permission/tenant: ADMIN+MANAGER writes, tenant-scoped queries, migration with RLS, cross-tenant negatives" },
+    { "stoa": "Quality", "role": "supporting", "why": "keywords test / coverage / a11y: TDD suites, diff coverage, characterization of legacy rules, axe + WCAG review" }
+  ],
+  "not_selected": [
+    { "stoa": "Intelligence", "why": "no LLM/AI path touched" },
+    { "stoa": "Automation", "why": "no factory/registry mechanics changed beyond doc registries checked by reconciliation tests" }
+  ]
+}

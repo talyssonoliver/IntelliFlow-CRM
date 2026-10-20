@@ -1,0 +1,44 @@
+date: 2026-10-18T11:06:50Z
+head: 6ba9061f118c7ed174a6d63bd59f0169479d49bd (+ aurora round 1)
+cmd: pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > returns NOT_FOUND for an unknown or foreign appointment before any availability check
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"reschedule","method":"mutation","durationMs":0,"status":"success"}
+
+ ❯ |api| src/modules/legal/__tests__/appointments.router.caller.test.ts (64 tests | 1 failed) 390ms
+       × returns NOT_FOUND for an unknown or foreign appointment before any availability check 8ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > returns NOT_FOUND for an unknown or foreign appointment before any availability check
+AssertionError: expected TRPCError: The firm is closed on 2026-04-… { code: '…' } to match object { code: 'NOT_FOUND' }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
+-   "code": "NOT_FOUND",
++ TRPCError {
++   "code": "BAD_REQUEST",
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1101:7
+    1099|       await expect(
+    1100|         reschedule('2026-04-15T09:00:00Z', '2026-04-15T10:00:00Z')
+    1101|       ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+       |       ^
+    1102|       expect(prismaMock.appointment.findFirst).toHaveBeenCalledWith(
+    1103|         expect.objectContaining({ where: { id: APPT, tenantId: TENANT …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 63 passed (64)
+   Start at  12:06:52
+   Duration  5.08s (transform 2.00s, setup 804ms, import 3.58s, tests 390ms, environment 0ms)
+
+exit: 1

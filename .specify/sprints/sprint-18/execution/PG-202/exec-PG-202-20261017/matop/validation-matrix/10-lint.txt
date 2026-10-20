@@ -1,0 +1,47 @@
+date: 2026-10-18T11:37:14Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
+cmd: pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/application lint && pnpm --filter @intelliflow/validators lint && pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint && CI=1 pnpm run lint:sonar:guard
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/domain@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\domain
+> eslint "src/**/*.ts"
+
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/application@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\application
+> eslint "src/**/*.ts"
+
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/validators@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\packages\validators
+> eslint "src/**/*.ts"
+
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/api@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\apps\api
+> eslint "src/**/*.ts"
+
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/web@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202\apps\web
+> eslint "src/**/*.{ts,tsx}"
+
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 lint:sonar:guard C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-202
+> tsx tools/scripts/lint-sonar-guard.ts
+
+sonar-guard: checking 70 changed TS/TSX files.
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+sonar-guard: running web accessibility guard on 34 file(s).
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+exit: 0

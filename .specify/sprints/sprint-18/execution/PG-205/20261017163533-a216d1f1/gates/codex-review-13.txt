@@ -1,0 +1,36 @@
+# 2026-10-18T08:48:24Z codex-review round 13 (final, after simplify + a11y fixes), HEAD ab5c70b0f, nothing staged
+[codex-review] base ref : origin/main
+[codex-review] changed  : 128 files total
+[codex-review] in scope : 59 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-18T08:49:46.204Z
+Base ref  : origin/main
+Files in scope : 59
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] packages/domain/src/crm/contact/contact-type-defaults.ts:169 — default-tag-length-contract-mismatch
+    Issue    : Default tags can create contacts whose tags fail the contact update validator.
+    Evidence : `merged.push(tag)` accepts default tag names unchanged. Contact Settings permits names up to 60 characters, while `baseContactFieldsSchema.tags` in packages/validators/src/contact.ts permits only 50 characters per tag. Defaults are merged after input validation and persisted without another validation pass. A valid 51-character default tag therefore creates successfully, but editing that contact fails because the edit page resubmits its existing tags.
+    Fix      : Align the ContactTag and contact tags length contracts, and validate resolved default tags against that shared contract before persistence without truncating names.
+    Fingerprint: 2f19f195dd439a1b314051275e72db3c41e76c9e138708982cd89925b57f58ff
+
+WAIVED FINDINGS (suppressed):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:447-456 — non-atomic-type-usage-guard (fp: 0f290e25353c...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

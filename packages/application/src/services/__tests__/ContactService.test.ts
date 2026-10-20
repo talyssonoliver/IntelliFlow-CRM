@@ -8,7 +8,7 @@
  * Coverage target: >90% for application layer
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { ContactService } from '../ContactService';
 import { InMemoryContactRepository } from '../../../../adapters/src/repositories/InMemoryContactRepository';
 import { InMemoryAccountRepository } from '../../../../adapters/src/repositories/InMemoryAccountRepository';
@@ -350,6 +350,119 @@ describe('ContactService', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('Account not found');
+    });
+  });
+
+  describe('replaceAccount() (PG-205, codex a3d0b852)', () => {
+    async function linkedContact() {
+      const oldAccount = Account.create({
+        name: 'Old Co',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+      }).value;
+      const newAccount = Account.create({
+        name: 'New Co',
+        ownerId: 'owner-1',
+        tenantId: 'tenant-1',
+      }).value;
+      await accountRepository.save(oldAccount);
+      await accountRepository.save(newAccount);
+      const contact = Contact.create({
+        email: 'replace@example.com',
+        firstName: 'John',
+        lastName: 'Doe',
+        accountId: oldAccount.id.value,
+        ownerId: 'owner-1',
+      }).value;
+      await contactRepository.save(contact);
+      return { contact, oldAccount, newAccount };
+    }
+
+    it('moves the contact to the new account with a single save', async () => {
+      const { contact, newAccount } = await linkedContact();
+      const saveSpy = vi.spyOn(contactRepository, 'save');
+
+      const result = await service.replaceAccount(
+        contact.id.value,
+        newAccount.id.value,
+        'user',
+        'tenant-1'
+      );
+
+      expect(result.isSuccess).toBe(true);
+      expect(result.value.accountId).toBe(newAccount.id.value);
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('keeps the old account when the new one does not exist', async () => {
+      const { contact, oldAccount } = await linkedContact();
+      const fakeAccountId = '00000000-0000-4000-8000-000000000000';
+
+      const result = await service.replaceAccount(
+        contact.id.value,
+        fakeAccountId,
+        'user',
+        'tenant-1'
+      );
+
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Account not found');
+      const stored = await contactRepository.findById(contact.id);
+      expect(stored?.accountId).toBe(oldAccount.id.value);
+    });
+
+    it('fails when the contact does not exist', async () => {
+      const { newAccount } = await linkedContact();
+      const fakeContactId = '00000000-0000-4000-8000-000000000000';
+      const result = await service.replaceAccount(
+        fakeContactId,
+        newAccount.id.value,
+        'user',
+        'tenant-1'
+      );
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Contact not found');
+    });
+
+    it('fails on malformed ids', async () => {
+      const { contact, newAccount } = await linkedContact();
+      expect(
+        (await service.replaceAccount('bad', newAccount.id.value, 'user', 'tenant-1')).isFailure
+      ).toBe(true);
+      expect(
+        (await service.replaceAccount(contact.id.value, 'bad', 'user', 'tenant-1')).isFailure
+      ).toBe(true);
+    });
+
+    it('fails when the contact has no account to replace', async () => {
+      const { newAccount } = await linkedContact();
+      const loose = Contact.create({
+        email: 'loose@example.com',
+        firstName: 'L',
+        lastName: 'O',
+        ownerId: 'owner-1',
+      }).value;
+      await contactRepository.save(loose);
+      const result = await service.replaceAccount(
+        loose.id.value,
+        newAccount.id.value,
+        'user',
+        'tenant-1'
+      );
+      expect(result.isFailure).toBe(true);
+    });
+
+    it('reports a failed save', async () => {
+      const { contact, newAccount } = await linkedContact();
+      vi.spyOn(contactRepository, 'save').mockRejectedValueOnce(new Error('db down'));
+      const result = await service.replaceAccount(
+        contact.id.value,
+        newAccount.id.value,
+        'user',
+        'tenant-1'
+      );
+      expect(result.isFailure).toBe(true);
+      expect(result.error.message).toContain('Failed to save contact');
     });
   });
 

@@ -1,0 +1,71 @@
+{
+  "source": "sonarcloud.io api/issues/search, branch=main, resolved=false",
+  "files_queried": 19,
+  "issues_by_file": {
+    "apps/api/src/modules/legal/appointment-settings.router.ts": [
+      {
+        "rule": "typescript:S7503",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 42,
+        "message": "Async arrow function has no 'await' expression."
+      },
+      {
+        "rule": "typescript:S7503",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 52,
+        "message": "Async arrow function has no 'await' expression."
+      }
+    ],
+    "apps/api/src/modules/legal/appointments.router.ts": [
+      {
+        "rule": "typescript:S7760",
+        "severity": "MAJOR",
+        "type": "CODE_SMELL",
+        "line": 317,
+        "message": "Prefer default parameters over reassignment."
+      },
+      {
+        "rule": "typescript:S7773",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 325,
+        "message": "Prefer `Number.parseInt` over `parseInt`."
+      },
+      {
+        "rule": "typescript:S7773",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 338,
+        "message": "Prefer `Number.parseInt` over `parseInt`."
+      }
+    ],
+    "apps/web/src/app/calendar/calendar-settings/components/BufferRemindersTab.tsx": [
+      {
+        "rule": "typescript:S7773",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 21,
+        "message": "Prefer `Number.parseInt` over `parseInt`."
+      }
+    ],
+    "apps/web/src/components/appointments/AppointmentForm.tsx": [
+      {
+        "rule": "typescript:S7773",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 126,
+        "message": "Prefer `Number.parseInt` over `parseInt`."
+      },
+      {
+        "rule": "typescript:S7773",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 127,
+        "message": "Prefer `Number.parseInt` over `parseInt`."
+      }
+    ]
+  },
+  "total": 8
+}

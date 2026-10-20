@@ -1,70 +1,75 @@
 {
-  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
-  "actual_duration_minutes": null,
-  "artifacts": {
-    "created": [],
-    "expected": [
-      "infra/terraform/environments",
-      "infra/terraform/modules/monitoring/main.tf"
+    "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+    "actual_duration_minutes": null,
+    "artifacts": {
+        "created": [],
+        "expected": [
+            "infra/terraform/environments",
+            "infra/terraform/modules/monitoring/main.tf"
+        ],
+        "missing": []
+    },
+    "blockers": [
+        {
+            "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "Reopen evidence: KPI `ai_worker_otel=emitting` fails (ai-worker has `OTEL_ENABLED=false`). DoD \"monitoring module provisions the stack\": `infra/terraform/modules/monitoring/main.tf` only computes env vars and writes a local manifest file. It provisions no backend.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "To close: (1) Set `otel_exporter_endpoint` for production (the IFC-032 PR), so the module emits `OTEL_ENABLED=true` + endpoint and ai-worker traces reach the backend. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
+            "raised_at": "2026-10-05T22:30:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Target Sprint moved to 18 in Sprint_plan.csv so the strict sprint gates stay honest. ai-worker now emits traces (met). Still open: the monitoring module only writes a local manifest and provisions no backend, the root outputs expose no OTel endpoint, and the HCP Terraform remote state is not bootstrapped (owner account and token). Verified 2026-10-16: Railway production api and ai-worker have OTEL_ENABLED=true and export to the Grafana Cloud gb-south-1 gateway; ws, events-worker and ingestion-worker do not (events-worker and ingestion-worker OTEL_ENABLED=false, ws has no OTel variables). Grafana holds span metrics for api and ai-worker and ai-worker pino log lines carrying trace_id/span_id; no api pino log line has reached Loki yet.",
+            "raised_at": "2026-10-16T14:00:00Z",
+            "resolved_at": null
+        }
     ],
-    "missing": []
-  },
-  "blockers": [
-    {
-      "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
-      "raised_at": "2026-10-05T22:30:00Z",
-      "resolved_at": null
+    "completed_at": null,
+    "dependencies_meta": {
+        "verified_at": "2026-06-05T12:00:00.000Z"
     },
-    {
-      "description": "Reopen evidence: KPI `ai_worker_otel=emitting` fails (ai-worker has `OTEL_ENABLED=false`). DoD \"monitoring module provisions the stack\": `infra/terraform/modules/monitoring/main.tf` only computes env vars and writes a local manifest file. It provisions no backend.",
-      "raised_at": "2026-10-05T22:30:00Z",
-      "resolved_at": null
+    "kpis": {
+        "ai_worker_otel": {
+            "actual": "",
+            "met": false,
+            "target": "emitting"
+        },
+        "env_tfvars": {
+            "actual": "",
+            "met": false,
+            "target": "3"
+        },
+        "remote_state": {
+            "actual": "",
+            "met": false,
+            "target": "active"
+        }
     },
-    {
-      "description": "To close: (1) Set `otel_exporter_endpoint` for production (the IFC-032 PR), so the module emits `OTEL_ENABLED=true` + endpoint and ai-worker traces reach the backend. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
-      "raised_at": "2026-10-05T22:30:00Z",
-      "resolved_at": null
-    }
-  ],
-  "completed_at": null,
-  "dependencies_meta": {
-    "verified_at": "2026-06-05T12:00:00.000Z"
-  },
-  "kpis": {
-    "ai_worker_otel": {
-      "actual": "",
-      "met": false,
-      "target": "emitting"
-    },
-    "env_tfvars": {
-      "actual": "",
-      "met": false,
-      "target": "3"
-    },
-    "remote_state": {
-      "actual": "",
-      "met": false,
-      "target": "active"
-    }
-  },
-  "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md.",
-  "phase": "phase-0-context",
-  "started_at": null,
-  "status_history": [
-    {
-      "at": "2026-06-05T12:00:00.000Z",
-      "status": "Backlog"
-    },
-    {
-      "status": "IN_PROGRESS",
-      "at": "2026-10-05T22:30:00Z",
-      "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
-    }
-  ],
-  "stream": null,
-  "target_duration_minutes": 600,
-  "task_id": "INFRA-TF-004",
-  "validations": [],
-  "percent_complete": 50,
-  "updated_at": "2026-10-05T22:30:00Z"
+    "notes": "Governed by ADR-064 (Terraform = single source of truth). Phase 2/3 of docs/planning/infra-terraform-iac-plan.md.",
+    "phase": "phase-0-context",
+    "started_at": null,
+    "status_history": [
+        {
+            "at": "2026-06-05T12:00:00.000Z",
+            "status": "Backlog"
+        },
+        {
+            "status": "IN_PROGRESS",
+            "at": "2026-10-05T22:30:00Z",
+            "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+        }
+    ],
+    "stream": null,
+    "target_duration_minutes": 600,
+    "task_id": "INFRA-TF-004",
+    "validations": [],
+    "percent_complete": 50,
+    "updated_at": "2026-10-05T22:30:00Z"
 }

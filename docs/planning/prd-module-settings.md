@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                                  |
-| ------------- | ------------------------------------------------------ |
-| Feature Name  | Module Settings Pages                                  |
-| Status        | Active                                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-204 |
-| Created       | 2026-03-11                                             |
-| Last Updated  | 2026-10-13                                             |
-| Author        | Spec Session (PG-178)                                  |
+| Field         | Value                                                          |
+| ------------- | -------------------------------------------------------------- |
+| Feature Name  | Module Settings Pages                                          |
+| Status        | Active                                                         |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-202, PG-204 |
+| Created       | 2026-03-11                                                     |
+| Last Updated  | 2026-10-17                                                     |
+| Author        | Spec Session (PG-178)                                          |
 
 ## Problem Statement
 
@@ -803,6 +803,78 @@ findings: #864–#867 (see
 `20261013120000_case_types` (Class A) must be applied to production before this
 ships.
 
+## PG-205 Addendum: Contact Types (2026-10-17)
+
+Owner ruling (2026-10-17): types start as the current six (customer, prospect,
+partner, vendor, investor, other) and are tenant-editable, with no data
+migration of existing contacts; a type is applied at contact creation; "default
+labels" means default tags from the ContactTag list; "default fields" means
+default values. Spec:
+`.specify/sprints/sprint-18/specifications/PG-205-spec.md`. ADR-080. The row's
+person/organization wording is superseded (organisations are Accounts).
+
+### Additional User Stories
+
+- **US-CTY1 (Taxonomy)**: As a CRM Admin, I want to rename, recolour, add and
+  deactivate contact types, so that contacts are classified in our own terms.
+- **US-CTY2 (Defaults)**: As a CRM Admin, I want each contact type to carry
+  default values, extra required fields and default tags, so that new contacts
+  start correctly.
+- **US-CTY3 (Picker)**: As a sales rep, I want to pick a contact type when I
+  create or edit a contact, so that the type is recorded and its defaults apply.
+- **US-CTY4 (Find by type)**: As a sales rep, I want to filter the contacts list
+  by type and see the type in the list, so that the Partners/Vendors segments in
+  the sidebar actually work.
+
+### Additional Acceptance Criteria
+
+Defined as AC-CTY-001..018 in the spec (finalised at spec consensus). In
+summary:
+
+- AC-CTY-001: the page follows the module-settings playbook.
+- AC-CTY-002: each tenant gets the six system types on first use, seeded for
+  that tenant only.
+- AC-CTY-003: admins and managers create (up to 50), rename, recolour,
+  deactivate and set the default type; others read only.
+- AC-CTY-004 to 006: names unique per tenant (case-insensitive), an 18-token
+  colour, server-generated keys that are immutable and never reserved.
+- AC-CTY-007 / 008: at most one default type, which must be active. System types
+  cannot be deleted; custom types only when unused and not the default.
+- AC-CTY-009 / 010: each type stores a default status, department, owner rule,
+  required fields and default tags. On create, explicit input wins over the
+  type's defaults.
+- AC-CTY-011: an unknown, foreign or inactive key is rejected with one message;
+  an unchanged stored key is kept.
+- AC-CTY-012: the "job title required" rule checks the real `title` field.
+- AC-CTY-013 / 014: type picker on New and Edit ("Other" free text removed);
+  type badge, Type filter and working sidebar segments on the list.
+- AC-CTY-015 / 016: everything tenant-scoped; changes and denials audit-logged
+  without PII.
+- AC-CTY-017 / 018: WCAG 2.1 AA, Lighthouse ≥ 90 (or NEEDS_HUMAN), registries
+  updated.
+
+### Boolean toggles (playbook §8)
+
+| Toggle                  | Category | Runtime consumer                                             |
+| ----------------------- | -------- | ------------------------------------------------------------ |
+| `ContactType.isActive`  | 1, wired | `listActive`; contact create/update reject new inactive keys |
+| `ContactType.isDefault` | 1, wired | New Contact picker preselection                              |
+| `ContactType.isSystem`  | 1, wired | delete refused; reserved-key CHECK                           |
+
+No AI toggles were added. The 12 existing `ContactAutomationSetting` flags were
+already wired.
+
+### Delivery status
+
+| Item                                               | Status      |
+| -------------------------------------------------- | ----------- |
+| Domain, validators, DB (2 Class A migrations), API | Implemented |
+| Settings page, picker, list filter/badge, segments | Implemented |
+| Validations (typecheck, tests, lint, build, knip)  | Done        |
+| Reviews (simplify, a11y WCAG 2.1 AA, codex)        | Done        |
+| Lighthouse (authenticated routes)                  | NEEDS_HUMAN |
+| Code review, STOA, attestation                     | In Progress |
+
 ## PG-198 Addendum: Approval Policies (2026-10-13)
 
 Owner rulings R1–R3 (2026-10-13):
@@ -878,24 +950,24 @@ AC-P1..AC-P22 are spec AC-001..AC-022, in order.
 
 ### Delivery Status (2026-10-13, branch `feat/pg-198-approval-policies`)
 
-| AC             | Status    | Evidence                                                                                                                                       |
-| -------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| AC-P1          | Delivered | `ApprovalPoliciesContent.tsx` (PageHeader, 12-column bento, EmptyState `rules`/`passive`), `PolicyDialog` Save rule, `ApprovalPoliciesLoading` |
-| AC-P2, AC-P19  | Delivered | `assertAgentSettingsAdmin` on every `approvalPolicies` mutation; `list.canManage` hides controls                                               |
-| AC-P3, AC-P15  | Delivered | `approval-policies.ts` validators + migration `20261013120000` CHECKs (colour, timeout, threshold, delay < timeout)                            |
-| AC-P4          | Delivered | `superRefine` "rows N and M"; unique `(tenantId, scope, agentKey, actionType)` → CONFLICT; `AssignmentsEditor` client check                    |
-| AC-P5, AC-P6   | Delivered | `$transaction` on all multi-row writes; explicit `tenantId`; composite FK `(tenantId, policyId, scope)`; RLS                                   |
-| AC-P7          | Delivered | `APPROVAL_POLICY_DEFAULTS` (30 min / 24 h, permission-only, no auto-approve, no escalation)                                                    |
-| AC-P8, AC-P9   | Delivered | `resolveAgentToolExpiry` in the five approval tools; `draftPolicy` in `autoResponse.create/regenerate`                                         |
-| AC-P10         | Delivered | `assertPolicyReviewer` (agent), `assertDraftReviewer` + `sessionActor` (auto-response)                                                         |
-| AC-P11         | Delivered | `claimForExecution` + `approved-action-executor` (tRPC caller of the target module); `executionError`; no rollback token (#856)                |
-| AC-P12, AC-P22 | Delivered | Store keeps caller confidence or NULL; chain no 0.7 fallback; preview shows "—" for none and 0% for a reported 0                               |
-| AC-P13         | Delivered | `evaluateAutoApproval`; `system:approval-policy` actor; audit with policy id, threshold, confidence                                            |
-| AC-P14         | Delivered | `approval-escalation-sweep.ts` (advisory xact lock, once-only, post-commit notify + audit)                                                     |
-| AC-P16         | **Open**  | Authenticated Lighthouse needs `LHCI_TEST_*` credentials; the only Supabase is production (NEEDS_HUMAN, same as PG-196/197)                    |
-| AC-P17         | N/A       | Policies carry no tags                                                                                                                         |
-| AC-P18         | Delivered | `hasFormerTarget` → card note + dialog "(former user)" option and warning                                                                      |
-| AC-P20, AC-P21 | Delivered | `ConfirmationDialog` before enabling; `PolicyChip` renders the name next to the swatch                                                         |
+| AC             | Status    | Evidence                                                                                                                                                                 |
+| -------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| AC-P1          | Delivered | `ApprovalPoliciesContent.tsx` (PageHeader, 12-column bento, EmptyState `rules`/`passive`), `PolicyDialog` Save rule, `ApprovalPoliciesLoading`                           |
+| AC-P2, AC-P19  | Delivered | `assertAgentSettingsAdmin` on every `approvalPolicies` mutation; `list.canManage` hides controls                                                                         |
+| AC-P3, AC-P15  | Delivered | `approval-policies.ts` validators + migration `20261013120000` CHECKs (colour, timeout, threshold, delay < timeout)                                                      |
+| AC-P4          | Delivered | `superRefine` "rows N and M"; unique `(tenantId, scope, agentKey, actionType)` → CONFLICT; `AssignmentsEditor` client check                                              |
+| AC-P5, AC-P6   | Delivered | `$transaction` on all multi-row writes; explicit `tenantId`; composite FK `(tenantId, policyId, scope)`; RLS                                                             |
+| AC-P7          | Delivered | `APPROVAL_POLICY_DEFAULTS` (30 min / 24 h, permission-only, no auto-approve, no escalation)                                                                              |
+| AC-P8, AC-P9   | Delivered | `resolveAgentToolExpiry` in the five approval tools; `draftPolicy` in `autoResponse.create/regenerate`                                                                   |
+| AC-P10         | Delivered | `assertPolicyReviewer` (agent), `assertDraftReviewer` + `sessionActor` (auto-response)                                                                                   |
+| AC-P11         | Delivered | `claimForExecution` + `approved-action-executor` (tRPC caller of the target module); `executionError`; rollback token only where a real compensation exists (#856, #931) |
+| AC-P12, AC-P22 | Delivered | Store keeps caller confidence or NULL; chain no 0.7 fallback; preview shows "—" for none and 0% for a reported 0                                                         |
+| AC-P13         | Delivered | `evaluateAutoApproval`; `system:approval-policy` actor; audit with policy id, threshold, confidence                                                                      |
+| AC-P14         | Delivered | `approval-escalation-sweep.ts` (advisory xact lock, once-only, post-commit notify + audit)                                                                               |
+| AC-P16         | **Open**  | Authenticated Lighthouse needs `LHCI_TEST_*` credentials; the only Supabase is production (NEEDS_HUMAN, same as PG-196/197)                                              |
+| AC-P17         | N/A       | Policies carry no tags                                                                                                                                                   |
+| AC-P18         | Delivered | `hasFormerTarget` → card note + dialog "(former user)" option and warning                                                                                                |
+| AC-P20, AC-P21 | Delivered | `ConfirmationDialog` before enabling; `PolicyChip` renders the name next to the swatch                                                                                   |
 
 #### Playbook §8 — Boolean toggle categories (PG-198)
 
@@ -914,3 +986,64 @@ Red flags tracked:
 - fixed on main by PG-204: #872 (the `cases.create` assignee default; the issue
   is still open on GitHub);
 - open: #856, #857, #883.
+
+## PG-202 Addendum: Availability (2026-10-17)
+
+Owner ruling (2026-10-17,
+`.specify/sprints/sprint-18/context/PG-202/PG-202-owner-ruling.md`): Q1 =
+firm-wide; Q2 = reuse the `AppointmentSettings` buffers and timezone, editing
+moves to Availability; Q3 = enforce at appointment create, reschedule and
+findNextSlot (coordinator cleared the overlap with the appointments lane); Q4 =
+all-day closures; Q5 = ADMIN + MANAGER edit; Q6 = an appointment fits one day;
+Q7 = the New Appointment form starts from the firm buffers. Spec:
+`.specify/sprints/sprint-18/specifications/PG-202-spec.md`. ADR-081.
+
+### Additional User Stories
+
+- **US-AV1 (Hours)**: As a firm admin or manager, I want to set our weekly
+  working hours per weekday (one or more ranges, in the firm timezone), so that
+  appointments are only booked when we are open.
+- **US-AV2 (Closures)**: As a firm admin or manager, I want to record all-day
+  closure date ranges with an optional reason, so that nobody books us on
+  holidays or office closures.
+- **US-AV3 (Limits)**: As a firm admin or manager, I want an optional maximum
+  number of bookings per day and default buffers, so that the calendar is not
+  overloaded and new appointments start with our usual buffer times.
+- **US-AV4 (Enforcement)**: As a user booking or rescheduling an appointment, I
+  want a clear message when the time is outside the firm's availability, so that
+  I can pick a valid time.
+
+### Additional Acceptance Criteria
+
+AC-001 to AC-027 are defined in the spec. In summary:
+
+- `/calendar/availability` follows the playbook (PageHeader, 12-column bento,
+  canonical EmptyState, playbook buttons, closures list `openCreate` via
+  `forwardRef`); read-only for non-admins.
+- Weekly hours stored as local minutes per weekday in the firm timezone (1..6
+  ranges, no overlaps); closures as inclusive `DATE` ranges (≤ 200, ≤ 366 days);
+  optional daily cap 1..500; buffers 0..240; named DB CHECKs, RLS.
+- Configured firms: create and reschedule reject bookings outside the start
+  day's hours, on closures, past local midnight or over the daily cap;
+  findNextSlot only offers valid slots. Firms that never saved availability keep
+  the legacy rules unchanged.
+- `/calendar/calendar-settings` stops editing buffers and timezone and links to
+  Availability.
+- Cross-tenant negative tests; WCAG 2.1 AA (axe in component tests); Lighthouse
+  ≥ 90 (NEEDS_HUMAN without credentials).
+
+### Boolean toggles (playbook §8)
+
+No persisted Boolean toggles. The weekday open switch and the "Limit bookings
+per day" switch are draft-only controls mapped to hour rows and
+`maxDailyBookings`, both enforced at booking (category 1). No AI toggles; no
+colour tokens.
+
+**Prisma migration** `20261017130000_availability` (Class A) must be applied to
+production before this ships.
+
+**Delivery (2026-10-17):** implemented on `feat/pg-202-availability`: page,
+`calendar.availability` router, booking enforcement at create, reschedule and
+findNextSlot, Calendar Settings pointer and New Appointment buffer prefill. The
+migration was approved by an independent SQL review and is not applied to
+production.

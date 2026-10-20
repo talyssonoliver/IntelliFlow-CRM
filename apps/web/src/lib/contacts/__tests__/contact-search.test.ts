@@ -4,6 +4,7 @@ import {
   getContactSortParams,
   buildContactListQuery,
   isDefaultContactQuery,
+  segmentToFilter,
   type ContactListFilterState,
 } from '../contact-search';
 
@@ -106,5 +107,32 @@ describe('isDefaultContactQuery', () => {
     ['a non-newest sort', baseState({ sortOrder: 'oldest' })],
   ])('is false when %s is present', (_label, state) => {
     expect(isDefaultContactQuery(state)).toBe(false);
+  });
+});
+
+describe('contact type filter and segments (PG-205)', () => {
+  it('passes the type filter and the vip segment to the query', () => {
+    expect(buildContactListQuery(baseState({ typeFilter: 'partner' })).contactType).toBe('partner');
+    expect(buildContactListQuery(baseState({ segmentFilter: 'vip' })).segment).toBe('vip');
+    const plain = buildContactListQuery(baseState());
+    expect(plain.contactType).toBeUndefined();
+    expect(plain.segment).toBeUndefined();
+  });
+
+  it.each([
+    ['a type filter', baseState({ typeFilter: 'vendor' })],
+    ['the vip segment', baseState({ segmentFilter: 'vip' })],
+  ])('isDefaultContactQuery is false with %s (no stale prefetch)', (_label, state) => {
+    expect(isDefaultContactQuery(state)).toBe(false);
+  });
+
+  it.each([
+    ['partners', { typeFilter: 'partner', segmentFilter: '' }],
+    ['vendors', { typeFilter: 'vendor', segmentFilter: '' }],
+    ['vip', { typeFilter: '', segmentFilter: 'vip' }],
+    ['unknown', { typeFilter: '', segmentFilter: '' }],
+    [null, { typeFilter: '', segmentFilter: '' }],
+  ] as const)('segmentToFilter(%j)', (segment, expected) => {
+    expect(segmentToFilter(segment)).toEqual(expected);
   });
 });

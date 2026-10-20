@@ -10,6 +10,7 @@ import { leadRouter } from './modules/lead/lead.router';
 import { leadSettingsRouter } from './modules/lead/lead-settings.router';
 import { contactRouter } from './modules/contact/contact.router';
 import { contactSettingsRouter } from './modules/contact/contact-settings.router';
+import { contactTypesRouter } from './modules/contact/contact-types.router';
 import { accountRouter } from './modules/account/account.router';
 import { accountSettingsRouter } from './modules/account/account-settings.router';
 import { accountTiersRouter } from './modules/account/account-tiers.router';
@@ -144,6 +145,7 @@ export const appRouter = createTRPCRouter({
   ticketConfig: ticketConfigRouter, // PG-173: Ticket Configuration Pages
   leadSettings: leadSettingsRouter, // PG-178: Lead Settings Configuration
   contactSettings: contactSettingsRouter, // PG-182: Contact Settings Configuration
+  contactTypes: contactTypesRouter, // PG-205: Contact Types (applied at contact creation, ADR-080)
   accountSettings: accountSettingsRouter, // PG-183: Account Settings Configuration
   accountTiers: accountTiersRouter, // PG-196: tenant-configurable account revenue tiers
   accountTerritories: accountTerritoriesRouter, // PG-197: Territory Mapping

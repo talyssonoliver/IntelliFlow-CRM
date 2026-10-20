@@ -17,7 +17,6 @@ import {
   AgentAuthContext,
   ActionPreview,
   PendingAction,
-  RollbackResult,
   DraftMessageInput,
   DraftMessageInputSchema,
 } from '../types';
@@ -317,51 +316,6 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
       warnings: warnings.length > 0 ? warnings : undefined,
       estimatedImpact,
     };
-  },
-
-  async rollback(
-    actionId: string,
-    executionResult: DraftedMessageResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      // For drafts, rollback means marking the message as cancelled/deleted
-      // If the message was already sent, rollback is not possible
-
-      if (executionResult.status === 'SENT') {
-        return {
-          success: false,
-          actionId,
-          error: 'Cannot rollback a message that has already been sent',
-        };
-      }
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'draft_message',
-        actionType: 'DELETE',
-        entityType: 'MESSAGE',
-        input: { messageId: executionResult.id, action: 'rollback' },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: { cancelledMessageId: executionResult.id },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
   },
 };
 

@@ -1,0 +1,488 @@
+🔍 Running pre-commit checks...
+📦 Syncing inventories...
+============================================================
+API Inventory Sync
+============================================================
+
+Scanning routers in: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\api\src\modules
+  Found 70 routers
+
+Building API inventory...
+  Total endpoints: 563
+  Queries (GET): 242
+  Mutations (POST): 321
+
+Building endpoint catalog...
+Router breakdown:
+  contact              28 endpoints (8 GET, 20 POST)
+  account              24 endpoints (10 GET, 14 POST)
+  lead                 21 endpoints (6 GET, 15 POST)
+  opportunity          20 endpoints (10 GET, 10 POST)
+  appointments         19 endpoints (7 GET, 12 POST)
+  auth                 18 endpoints (3 GET, 15 POST)
+  documents            18 endpoints (4 GET, 14 POST)
+  ticket               16 endpoints (5 GET, 11 POST)
+  chainVersion         15 endpoints (9 GET, 6 POST)
+  experiment           15 endpoints (5 GET, 10 POST)
+  autoresponse         14 endpoints (4 GET, 10 POST)
+  helpArticle          14 endpoints (6 GET, 8 POST)
+  home                 14 endpoints (7 GET, 7 POST)
+  task                 14 endpoints (5 GET, 9 POST)
+  conversation         13 endpoints (5 GET, 8 POST)
+  routing              13 endpoints (6 GET, 7 POST)
+  cases                12 endpoints (5 GET, 7 POST)
+  intelligence         10 endpoints (7 GET, 3 POST)
+  aiMonitoring         9 endpoints (8 GET, 1 POST)
+  billing              9 endpoints (5 GET, 4 POST)
+  webhooks             9 endpoints (3 GET, 6 POST)
+  accountSettings      8 endpoints (3 GET, 5 POST)
+  accountTerritories   8 endpoints (2 GET, 6 POST)
+  agent                8 endpoints (5 GET, 3 POST)
+  aiReview             8 endpoints (3 GET, 5 POST)
+  contactSettings      8 endpoints (3 GET, 5 POST)
+  leadSettings         8 endpoints (3 GET, 5 POST)
+  documentSettings     8 endpoints (3 GET, 5 POST)
+  activityFeed         8 endpoints (6 GET, 2 POST)
+  timeline             8 endpoints (8 GET, 0 POST)
+  notifications        8 endpoints (3 GET, 5 POST)
+  dealSettings         8 endpoints (3 GET, 5 POST)
+  ticketSettings       8 endpoints (3 GET, 5 POST)
+  workflow             8 endpoints (4 GET, 4 POST)
+  approvalPolicies     7 endpoints (2 GET, 5 POST)
+  ticketConfig         7 endpoints (2 GET, 5 POST)
+  ticketRouting        7 endpoints (2 GET, 5 POST)
+  queues               6 endpoints (2 GET, 4 POST)
+  scheduledReports     6 endpoints (2 GET, 4 POST)
+  feedback             6 endpoints (3 GET, 3 POST)
+  integrations         6 endpoints (4 GET, 2 POST)
+  caseSettings         6 endpoints (2 GET, 4 POST)
+  caseTypes            6 endpoints (2 GET, 4 POST)
+  system               6 endpoints (6 GET, 0 POST)
+  reportTemplates      5 endpoints (2 GET, 3 POST)
+  health               5 endpoints (5 GET, 0 POST)
+  pipelineConfig       5 endpoints (2 GET, 3 POST)
+  audit                5 endpoints (5 GET, 0 POST)
+  calendar             4 endpoints (1 GET, 3 POST)
+  inbound              4 endpoints (0 GET, 4 POST)
+  feedbackSurvey       4 endpoints (4 GET, 0 POST)
+  user                 4 endpoints (2 GET, 2 POST)
+  reportSettings       3 endpoints (1 GET, 2 POST)
+  calendarWebhook      3 endpoints (2 GET, 1 POST)
+  appointmentSettings  3 endpoints (1 GET, 2 POST)
+  subscription         3 endpoints (2 GET, 1 POST)
+  taskSettings         3 endpoints (1 GET, 2 POST)
+  zepBudget            3 endpoints (2 GET, 1 POST)
+  analytics            2 endpoints (2 GET, 0 POST)
+  upload               2 endpoints (1 GET, 1 POST)
+  termsAcceptance      2 endpoints (1 GET, 1 POST)
+  onboarding           2 endpoints (1 GET, 1 POST)
+  dsar                 2 endpoints (1 GET, 1 POST)
+  accountTiers         1 endpoints (0 GET, 1 POST)
+  customActionHandler  1 endpoints (0 GET, 1 POST)
+  customNodeType       1 endpoints (0 GET, 1 POST)
+  emailInbound         1 endpoints (0 GET, 1 POST)
+  globalSearch         1 endpoints (1 GET, 0 POST)
+  publicFeedback       1 endpoints (0 GET, 1 POST)
+  team                 1 endpoints (1 GET, 0 POST)
+
+Updating: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\artifacts\benchmarks\baseline.json
+  Done!
+
+============================================================
+API Inventory synced successfully!
+============================================================
+
+Next steps:
+  1. Run: npx tsx artifacts/benchmarks/generate-performance-report.ts
+  2. Open: artifacts/benchmarks/performance-report.html
+============================================================
+Codebase Inventory Sync
+============================================================
+
+1. Extracting Database Schema Inventory...
+   Tables: 197, Fields: 2846, Indexes: 892
+2. Extracting Middleware Stack...
+   Middleware: 14
+3. Extracting Background Workers...
+   Workers: 2, Jobs: 3
+4. Extracting External Integrations...
+   Integrations: 12
+5. Extracting Domain Events...
+   Events: 23
+6. Extracting Validation Schemas...
+   Validators: 57, Schemas: 634
+7. Extracting Cache Configuration...
+   Cache enabled: true, Provider: Redis (Upstash)
+
+Updating: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\artifacts\benchmarks\baseline.json
+  Done!
+
+============================================================
+Codebase Inventory synced successfully!
+============================================================
+
+Summary:
+  Database:     197 tables, 2846 fields, 78 enums
+  Middleware:   14 (14 enabled)
+  Workers:      2 workers, 3 jobs
+  Integrations: 12 external services
+  Events:       23 domain events
+  Validators:   57 files, 634 schemas
+  Cache:        Enabled (Redis (Upstash))
+✅ Inventories synced and staged
+🔐 Scanning for secrets...
+✅ No secrets detected
+💅 Auto-formatting staged files...
+✅ Formatting applied and re-staged
+📋 Auto-fixing + linting staged .ts/.tsx files...
+✅ Staged files lint-fixed and re-staged
+🔧 Type checking...
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205
+> turbo run typecheck && pnpm run lint:sonar:guard
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running typecheck in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/partner-sdk:build: cache hit, suppressing logs 870aa97e5c2ffa27
+@intelliflow/observability:build: cache hit, suppressing logs d5a92c117c110a5d
+@intelliflow/webhooks:build: cache hit, suppressing logs a4c7df6d097a0c2b
+@intelliflow/domain:build: cache hit, suppressing logs c74fa61b24a8ab25
+@intelliflow/db:build: cache miss, executing e3ae82be76b3b02f
+@intelliflow/validators:build: cache hit, suppressing logs 57111e9839c49f21
+@intelliflow/platform:build: cache miss, executing 84e5b6ae2e9253e4
+@intelliflow/application:build: cache miss, executing 0cff18f0c6fe52b6
+@intelliflow/db:build: 
+@intelliflow/db:build: > @intelliflow/db@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\db
+@intelliflow/db:build: > node -e "try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}" && tsup && node scripts/postbuild-esm.mjs
+@intelliflow/db:build: 
+@intelliflow/platform:build: 
+@intelliflow/platform:build: > @intelliflow/platform@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\platform
+@intelliflow/platform:build: > tsup src/index.ts src/feature-flags/index.ts src/resilience/index.ts src/workflow/index.ts src/realtime/index.ts src/queues/index.ts src/queues/types.ts src/queues/connection.ts --format cjs,esm --experimental-dts
+@intelliflow/platform:build: 
+@intelliflow/application:build: 
+@intelliflow/application:build: > @intelliflow/application@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\application
+@intelliflow/application:build: > tsup src/index.ts --format cjs,esm --experimental-dts
+@intelliflow/application:build: 
+@intelliflow/db:build: [34mCLI[39m Building entry: src/client.ts, src/index.ts, src/seed-ids.ts
+@intelliflow/db:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/db:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/db:build: [34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\db\tsup.config.ts
+@intelliflow/db:build: [34mCLI[39m Target: es2022
+@intelliflow/db:build: [34mCJS[39m Build start
+@intelliflow/db:build: [34mESM[39m Build start
+@intelliflow/db:build: [32mCJS[39m [1mdist\client.js   [22m[32m15.41 KB[39m
+@intelliflow/db:build: [32mCJS[39m [1mdist\index.js    [22m[32m26.97 KB[39m
+@intelliflow/db:build: [32mCJS[39m [1mdist\seed-ids.js [22m[32m30.89 KB[39m
+@intelliflow/db:build: [32mCJS[39m ⚡️ Build success in 35ms
+@intelliflow/db:build: [32mESM[39m [1mdist\chunk-M6A45O7W.mjs [22m[32m16.30 KB[39m
+@intelliflow/db:build: [32mESM[39m [1mdist\client.mjs         [22m[32m556.00 B[39m
+@intelliflow/db:build: [32mESM[39m [1mdist\index.mjs          [22m[32m8.44 KB[39m
+@intelliflow/db:build: [32mESM[39m [1mdist\seed-ids.mjs       [22m[32m29.85 KB[39m
+@intelliflow/db:build: [32mESM[39m ⚡️ Build success in 35ms
+@intelliflow/db:build: [prisma-esm] Patched 2 .mjs files with .js extensions
+@intelliflow/platform:build: [34mCLI[39m Building entry: src/index.ts, src/feature-flags/index.ts, src/queues/connection.ts, src/queues/index.ts, src/queues/types.ts, src/resilience/index.ts, src/workflow/index.ts, src/realtime/index.ts
+@intelliflow/platform:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/platform:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/platform:build: [34mTSC[39m Build start
+@intelliflow/application:build: [34mCLI[39m Building entry: src/index.ts
+@intelliflow/application:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/application:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/application:build: [34mTSC[39m Build start
+@intelliflow/db:build: [34mDTS[39m Build start
+@intelliflow/platform:build: [32mTSC[39m ⚡️ Build success in 2570ms
+@intelliflow/platform:build: [34mDTS[39m Build start
+@intelliflow/platform:build: [34mCLI[39m Target: es2022
+@intelliflow/platform:build: [34mCJS[39m Build start
+@intelliflow/platform:build: [34mESM[39m Build start
+@intelliflow/application:build: [32mTSC[39m ⚡️ Build success in 2712ms
+@intelliflow/application:build: [34mDTS[39m Build start
+@intelliflow/application:build: [34mCLI[39m Target: es2022
+@intelliflow/application:build: [34mCJS[39m Build start
+@intelliflow/application:build: [34mESM[39m Build start
+@intelliflow/platform:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/platform:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/application:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/application:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/platform:build: [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\platform\dist\_tsup-dts-rollup.d.ts[39m
+@intelliflow/application:build: [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\application\dist\_tsup-dts-rollup.d.ts[39m
+@intelliflow/platform:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/platform:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/platform:build: [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\platform\dist\_tsup-dts-rollup.d.mts[39m
+@intelliflow/platform:build: [32mDTS[39m ⚡️ Build success in 3681ms
+@intelliflow/platform:build: [32mESM[39m [1mdist\queues\connection.mjs   [22m[32m375.00 B[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\chunk-FXI73Q72.mjs      [22m[32m3.32 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\feature-flags\index.mjs [22m[32m281.00 B[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\index.mjs               [22m[32m4.20 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\chunk-DPQC2P6I.mjs      [22m[32m3.21 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\queues\index.mjs        [22m[32m1.73 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\queues\types.mjs        [22m[32m365.00 B[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\chunk-XXKOVYFN.mjs      [22m[32m20.34 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\chunk-6YGDC4OQ.mjs      [22m[32m5.28 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\resilience\index.mjs    [22m[32m1.04 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\chunk-H65OCZIB.mjs      [22m[32m23.89 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\chunk-DHQPO6UC.mjs      [22m[32m18.67 KB[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\workflow\index.mjs      [22m[32m903.00 B[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\realtime\index.mjs      [22m[32m331.00 B[39m
+@intelliflow/platform:build: [32mESM[39m [1mdist\chunk-NLJGDUO3.mjs      [22m[32m1.10 KB[39m
+@intelliflow/platform:build: [32mESM[39m ⚡️ Build success in 3718ms
+@intelliflow/platform:build: [32mCJS[39m [1mdist\feature-flags\index.js [22m[32m4.80 KB[39m
+@intelliflow/platform:build: [32mCJS[39m [1mdist\queues\connection.js   [22m[32m4.54 KB[39m
+@intelliflow/platform:build: [32mCJS[39m [1mdist\index.js               [22m[32m82.98 KB[39m
+@intelliflow/platform:build: [32mCJS[39m [1mdist\queues\index.js        [22m[32m32.39 KB[39m
+@intelliflow/platform:build: [32mCJS[39m [1mdist\queues\types.js        [22m[32m6.96 KB[39m
+@intelliflow/platform:build: [32mCJS[39m [1mdist\resilience\index.js    [22m[32m20.96 KB[39m
+@intelliflow/platform:build: [32mCJS[39m [1mdist\workflow\index.js      [22m[32m26.37 KB[39m
+@intelliflow/platform:build: [32mCJS[39m [1mdist\realtime\index.js      [22m[32m2.41 KB[39m
+@intelliflow/platform:build: [32mCJS[39m ⚡️ Build success in 3720ms
+@intelliflow/worker-shared:build: cache miss, executing e866f8361f0937e7
+@intelliflow/application:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/application:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/worker-shared:build: 
+@intelliflow/worker-shared:build: > @intelliflow/worker-shared@0.0.1 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\workers\shared
+@intelliflow/worker-shared:build: > tsup src/index.ts --format cjs,esm && tsc -p tsconfig.json --emitDeclarationOnly
+@intelliflow/worker-shared:build: 
+@intelliflow/application:build: [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\application\dist\_tsup-dts-rollup.d.mts[39m
+@intelliflow/application:build: [32mDTS[39m ⚡️ Build success in 4364ms
+@intelliflow/application:build: [32mCJS[39m [1mdist\index.js [22m[32m335.04 KB[39m
+@intelliflow/application:build: [32mCJS[39m ⚡️ Build success in 4419ms
+@intelliflow/application:build: [32mESM[39m [1mdist\index.mjs [22m[32m319.62 KB[39m
+@intelliflow/application:build: [32mESM[39m ⚡️ Build success in 4419ms
+@intelliflow/worker-shared:build: [34mCLI[39m Building entry: src/index.ts
+@intelliflow/worker-shared:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/worker-shared:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/worker-shared:build: [34mCLI[39m Target: es2022
+@intelliflow/worker-shared:build: [34mCJS[39m Build start
+@intelliflow/worker-shared:build: [34mESM[39m Build start
+@intelliflow/worker-shared:build: [32mESM[39m [1mdist\index.mjs [22m[32m37.79 KB[39m
+@intelliflow/worker-shared:build: [32mESM[39m ⚡️ Build success in 44ms
+@intelliflow/worker-shared:build: [32mCJS[39m [1mdist\index.js [22m[32m41.04 KB[39m
+@intelliflow/worker-shared:build: [32mCJS[39m ⚡️ Build success in 45ms
+@intelliflow/db:build: [32mDTS[39m ⚡️ Build success in 25081ms
+@intelliflow/db:build: [32mDTS[39m [1mdist\index.d.ts     [22m[32m18.79 KB[39m
+@intelliflow/db:build: [32mDTS[39m [1mdist\client.d.ts    [22m[32m3.59 KB[39m
+@intelliflow/db:build: [32mDTS[39m [1mdist\seed-ids.d.ts  [22m[32m25.64 KB[39m
+@intelliflow/db:build: [32mDTS[39m [1mdist\index.d.mts    [22m[32m18.79 KB[39m
+@intelliflow/db:build: [32mDTS[39m [1mdist\client.d.mts   [22m[32m3.59 KB[39m
+@intelliflow/db:build: [32mDTS[39m [1mdist\seed-ids.d.mts [22m[32m25.64 KB[39m
+@intelliflow/db:build: [postbuild-esm] Created generated/prisma/package.json (type: module)
+@intelliflow/adapters:build: cache miss, executing b9ca969cf1cdb432
+@intelliflow/adapters:build: 
+@intelliflow/adapters:build: > @intelliflow/adapters@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\adapters
+@intelliflow/adapters:build: > tsup src/index.ts src/external/OllamaAIService.ts src/external/LiteLLMAIService.ts --format cjs,esm --experimental-dts
+@intelliflow/adapters:build: 
+@intelliflow/adapters:build: [34mCLI[39m Building entry: src/index.ts, src/external/LiteLLMAIService.ts, src/external/OllamaAIService.ts
+@intelliflow/adapters:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/adapters:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/adapters:build: [34mTSC[39m Build start
+@intelliflow/adapters:build: [32mTSC[39m ⚡️ Build success in 7363ms
+@intelliflow/adapters:build: [34mDTS[39m Build start
+@intelliflow/adapters:build: [34mCLI[39m Target: es2022
+@intelliflow/adapters:build: [34mCJS[39m Build start
+@intelliflow/adapters:build: [34mESM[39m Build start
+@intelliflow/adapters:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/adapters:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/adapters:build: [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\adapters\dist\_tsup-dts-rollup.d.ts[39m
+@intelliflow/adapters:build: Analysis will use the bundled TypeScript version 5.8.2
+@intelliflow/adapters:build: *** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+@intelliflow/adapters:build: [36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\adapters\dist\_tsup-dts-rollup.d.mts[39m
+@intelliflow/adapters:build: [32mDTS[39m ⚡️ Build success in 8206ms
+@intelliflow/adapters:build: [32mCJS[39m [1mdist\external\LiteLLMAIService.js [22m[32m7.85 KB[39m
+@intelliflow/adapters:build: [32mCJS[39m [1mdist\external\OllamaAIService.js  [22m[32m6.55 KB[39m
+@intelliflow/adapters:build: [32mCJS[39m [1mdist\index.js                     [22m[32m706.76 KB[39m
+@intelliflow/adapters:build: [32mCJS[39m ⚡️ Build success in 8273ms
+@intelliflow/adapters:build: [32mESM[39m [1mdist\external\LiteLLMAIService.mjs [22m[32m6.55 KB[39m
+@intelliflow/adapters:build: [32mESM[39m [1mdist\bias-detector-X67DABQE.mjs    [22m[32m119.00 B[39m
+@intelliflow/adapters:build: [32mESM[39m [1mdist\external\OllamaAIService.mjs  [22m[32m5.45 KB[39m
+@intelliflow/adapters:build: [32mESM[39m [1mdist\chunk-Y6FXYEAI.mjs            [22m[32m390.00 B[39m
+@intelliflow/adapters:build: [32mESM[39m [1mdist\chunk-7AXQV473.mjs            [22m[32m2.85 KB[39m
+@intelliflow/adapters:build: [32mESM[39m [1mdist\index.mjs                     [22m[32m677.02 KB[39m
+@intelliflow/adapters:build: [32mESM[39m ⚡️ Build success in 8273ms
+@intelliflow/ai-worker:build: cache miss, executing 21a29661a7883f8e
+@intelliflow/events-worker:build: cache miss, executing 7d91c22615bda3f6
+@intelliflow/ai-worker:build:  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+@intelliflow/ai-worker:build: 
+@intelliflow/ai-worker:build: > @intelliflow/ai-worker@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\ai-worker
+@intelliflow/ai-worker:build: > tsup src/index.ts --format cjs,esm && tsc -p tsconfig.json --emitDeclarationOnly
+@intelliflow/ai-worker:build: 
+@intelliflow/events-worker:build: 
+@intelliflow/events-worker:build: > @intelliflow/events-worker@0.0.1 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\workers\events-worker
+@intelliflow/events-worker:build: > tsup src/main.ts --format cjs,esm --dts
+@intelliflow/events-worker:build: 
+@intelliflow/ai-worker:build: [34mCLI[39m Building entry: src/index.ts
+@intelliflow/ai-worker:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/ai-worker:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/ai-worker:build: [34mCLI[39m Target: es2022
+@intelliflow/ai-worker:build: [34mCJS[39m Build start
+@intelliflow/ai-worker:build: [34mESM[39m Build start
+@intelliflow/ai-worker:build: [32mCJS[39m [1mdist\index.js [22m[32m1021.43 KB[39m
+@intelliflow/ai-worker:build: [32mCJS[39m ⚡️ Build success in 260ms
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\rag-context.chain-IDEYINFF.mjs         [22m[32m553.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\ingestion-workers-KMZNURGU.mjs         [22m[32m7.51 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\notification-email-worker-UZH7XZ5Y.mjs [22m[32m6.73 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\retrieval-service-EZHTIMR5.mjs         [22m[32m34.57 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\ai-worker-JGUTMOGO.mjs                 [22m[32m451.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-GYZ5JDU2.mjs                     [22m[32m7.50 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\index.mjs                              [22m[32m89.22 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-VFF326N6.mjs                     [22m[32m7.82 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-JMUZ3SIZ.mjs                     [22m[32m10.45 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\ai.config-TSUREFNU.mjs                 [22m[32m281.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\scoring.chain-ZD62XOCU.mjs             [22m[32m427.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\cost-tracker-UO4DJF6B.mjs              [22m[32m172.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-OLLVAK6C.mjs                     [22m[32m1.29 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\embedding.chain-ZA6WT3JJ.mjs           [22m[32m319.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-43YIJMKA.mjs                     [22m[32m71.64 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-QBVB7FAK.mjs                     [22m[32m7.51 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\qualification.agent-JTVIJIHI.mjs       [22m[32m519.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-3QPHCNSB.mjs                     [22m[32m19.30 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-CDVSIDZ6.mjs                     [22m[32m45.82 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-LNEETQ6M.mjs                     [22m[32m6.08 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-AUO7534U.mjs                     [22m[32m18.30 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-OMS32KMR.mjs                     [22m[32m3.75 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\audit-log-ARFV6TGO.mjs                 [22m[32m209.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-KKTUSRLH.mjs                     [22m[32m7.91 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-76HNXZWQ.mjs                     [22m[32m1.95 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\contact-embed-worker-PWD2EBTS.mjs      [22m[32m349.00 B[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-YYOKLJEE.mjs                     [22m[32m1.60 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m [1mdist\chunk-JJF4IYLE.mjs                     [22m[32m597.13 KB[39m
+@intelliflow/ai-worker:build: [32mESM[39m ⚡️ Build success in 260ms
+@intelliflow/events-worker:build: [34mCLI[39m Building entry: src/main.ts
+@intelliflow/events-worker:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/events-worker:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/events-worker:build: [34mCLI[39m Target: es2022
+@intelliflow/events-worker:build: [34mCJS[39m Build start
+@intelliflow/events-worker:build: [34mESM[39m Build start
+@intelliflow/events-worker:build: [32mCJS[39m [1mdist\main.js [22m[32m68.94 KB[39m
+@intelliflow/events-worker:build: [32mCJS[39m ⚡️ Build success in 66ms
+@intelliflow/events-worker:build: [32mESM[39m [1mdist\main.mjs [22m[32m67.22 KB[39m
+@intelliflow/events-worker:build: [32mESM[39m ⚡️ Build success in 66ms
+@intelliflow/events-worker:build: [34mDTS[39m Build start
+@intelliflow/events-worker:build: [32mDTS[39m ⚡️ Build success in 3887ms
+@intelliflow/events-worker:build: [32mDTS[39m [1mdist\main.d.ts  [22m[32m10.34 KB[39m
+@intelliflow/events-worker:build: [32mDTS[39m [1mdist\main.d.mts [22m[32m10.34 KB[39m
+@intelliflow/api:build: cache miss, executing 6388c0c570d8a8cd
+@intelliflow/ingestion-worker:build: cache miss, executing 3b4972cd866c3100
+@intelliflow/api:build: 
+@intelliflow/api:build: > @intelliflow/api@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\api
+@intelliflow/api:build: > tsup
+@intelliflow/api:build: 
+@intelliflow/ingestion-worker:build: 
+@intelliflow/ingestion-worker:build: > @intelliflow/ingestion-worker@0.0.1 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\workers\ingestion-worker
+@intelliflow/ingestion-worker:build: > tsup src/main.ts --format cjs,esm --dts
+@intelliflow/ingestion-worker:build: 
+@intelliflow/api:build: [34mCLI[39m Building entry: src/index.ts, src/main.ts, src/ws-server.ts
+@intelliflow/api:build: [34mCLI[39m Using tsconfig: tsconfig.build.json
+@intelliflow/api:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/api:build: [34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\api\tsup.config.ts
+@intelliflow/api:build: [34mCLI[39m Target: es2022
+@intelliflow/api:build: [34mCLI[39m Cleaning output folder
+@intelliflow/api:build: [34mCJS[39m Build start
+@intelliflow/api:build: [34mESM[39m Build start
+@intelliflow/ingestion-worker:build: [34mCLI[39m Building entry: src/main.ts
+@intelliflow/ingestion-worker:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/ingestion-worker:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/ingestion-worker:build: [34mCLI[39m Target: es2022
+@intelliflow/ingestion-worker:build: [34mCJS[39m Build start
+@intelliflow/ingestion-worker:build: [34mESM[39m Build start
+@intelliflow/ingestion-worker:build: [32mCJS[39m [1mdist\main.js [22m[32m16.26 KB[39m
+@intelliflow/ingestion-worker:build: [32mCJS[39m ⚡️ Build success in 159ms
+@intelliflow/ingestion-worker:build: [32mESM[39m [1mdist\main.mjs [22m[32m14.67 KB[39m
+@intelliflow/ingestion-worker:build: [32mESM[39m ⚡️ Build success in 159ms
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-FH72RMLK.mjs                [22m[32m0 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\escalation-target-H4QBBF4Z.mjs    [22m[32m131.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\inbound.router-DMZF5DSS.mjs       [22m[32m350.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\cases.router-NG5KDFAW.mjs         [22m[32m204.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\index.mjs                         [22m[32m22.54 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\ws-server.mjs                     [22m[32m4.83 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-5DX23VSP.mjs                [22m[32m4.23 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-R3T22MVH.mjs                [22m[32m23.62 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\main.mjs                          [22m[32m49.52 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\notifications.router-EJWAI2JF.mjs [22m[32m306.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-JFF6C52X.mjs                [22m[32m3.12 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-GPRFMDF3.mjs                [22m[32m35.94 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\audit-XXEDSSNO.mjs                [22m[32m865.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\lead.router-TDFPTE2U.mjs          [22m[32m264.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-EDMTEE2A.mjs                [22m[32m54.79 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\contact.router-4MDK4T56.mjs       [22m[32m270.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\appointments.router-A7WHN32V.mjs  [22m[32m280.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-VKUQDHCZ.mjs                [22m[32m80.91 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-RCWQWZB6.mjs                [22m[32m5.07 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-TFVEIYEU.mjs                [22m[32m3.36 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-Q3TMUWFZ.mjs                [22m[32m20.79 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-V6CHYBZI.mjs                [22m[32m247.32 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-Y6FXYEAI.mjs                [22m[32m390.00 B[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-J6R2QKEE.mjs                [22m[32m23.02 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-CXLTNHON.mjs                [22m[32m49.23 KB[39m
+@intelliflow/api:build: [32mESM[39m [1mdist\chunk-6ULBOJSV.mjs                [22m[32m1.13 MB[39m
+@intelliflow/api:build: [32mESM[39m ⚡️ Build success in 345ms
+@intelliflow/api:build: [32mCJS[39m [1mdist\index.js     [22m[32m1.78 MB[39m
+@intelliflow/api:build: [32mCJS[39m [1mdist\main.js      [22m[32m1.78 MB[39m
+@intelliflow/api:build: [32mCJS[39m [1mdist\ws-server.js [22m[32m1.72 MB[39m
+@intelliflow/api:build: [32mCJS[39m ⚡️ Build success in 346ms
+@intelliflow/api:build: [34mDTS[39m Build start
+@intelliflow/ingestion-worker:build: [34mDTS[39m Build start
+@intelliflow/ingestion-worker:build: [32mDTS[39m ⚡️ Build success in 3894ms
+@intelliflow/ingestion-worker:build: [32mDTS[39m [1mdist\main.d.ts  [22m[32m3.71 KB[39m
+@intelliflow/ingestion-worker:build: [32mDTS[39m [1mdist\main.d.mts [22m[32m3.71 KB[39m
+@intelliflow/api:build: "isLiveMembership", "liveMembershipWhere", "seatUserWhere" and "MembershipLiveness" are imported from external module "@intelliflow/db" but never used in "src/security/membership.ts".
+@intelliflow/api:build: "NODE_TYPE_IDS" is imported from external module "@intelliflow/domain" but never used in "src/modules/workflow/workflow.router.ts".
+@intelliflow/api:build: "ACTIVE_TENANT_HEADER" is imported from external module "@intelliflow/partner-sdk" but never used in "src/security/membership.ts".
+@intelliflow/api:build: [32mDTS[39m ⚡️ Build success in 49509ms
+@intelliflow/api:build: [32mDTS[39m [1mdist\main.d.ts       [22m[32m13.00 B[39m
+@intelliflow/api:build: [32mDTS[39m [1mdist\ws-server.d.ts  [22m[32m1.70 KB[39m
+@intelliflow/api:build: [32mDTS[39m [1mdist\index.d.ts      [22m[32m898.30 KB[39m
+@intelliflow/api:build: [32mDTS[39m [1mdist\main.d.mts      [22m[32m13.00 B[39m
+@intelliflow/api:build: [32mDTS[39m [1mdist\ws-server.d.mts [22m[32m1.70 KB[39m
+@intelliflow/api:build: [32mDTS[39m [1mdist\index.d.mts     [22m[32m898.30 KB[39m
+@intelliflow/api-client:build: cache miss, executing 7bfa6b11c3a84cbd
+@intelliflow/api-client:build: 
+@intelliflow/api-client:build: > @intelliflow/api-client@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\api-client
+@intelliflow/api-client:build: > tsup src/index.ts --format cjs,esm
+@intelliflow/api-client:build: 
+@intelliflow/api-client:build: [34mCLI[39m Building entry: src/index.ts
+@intelliflow/api-client:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/api-client:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/api-client:build: [34mCLI[39m Target: es2020
+@intelliflow/api-client:build: [34mCJS[39m Build start
+@intelliflow/api-client:build: [34mESM[39m Build start
+@intelliflow/api-client:build: [32mCJS[39m [1mdist\index.js [22m[32m2.77 KB[39m
+@intelliflow/api-client:build: [32mCJS[39m ⚡️ Build success in 32ms
+@intelliflow/api-client:build: [32mESM[39m [1mdist\index.mjs [22m[32m1.53 KB[39m
+@intelliflow/api-client:build: [32mESM[39m ⚡️ Build success in 32ms
+
+ Tasks:    38 successful, 38 total
+Cached:    14 cached, 38 total
+  Time:    2m54.085s 
+
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 lint:sonar:guard C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205
+> tsx tools/scripts/lint-sonar-guard.ts
+
+sonar-guard: checking 7 changed TS/TSX files.
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+🛡️  Running preship guards (staged-only)...
+
+preship guards (staged-only)
+
+  SKIP  vitest-clean-exit          slow guard skipped in --staged-only mode (runs in `pnpm preship:guards`)
+  PASS  unhandled-event-emitters   0 ioredis/BullMQ instantiation(s) all have error handlers
+  SKIP  migration-role-bootstrap   no migration.yml / migration.sql changes staged
+
+  1 passed, 2 skipped, 0 failed (of 3 guards)
+
+✅ All pre-commit checks passed! (Full tests run in CI)
+📝 Validating commit message...
+[commitlint] PASS  feat(contacts): contact type defaults and key invariant in domain (pg-20
+✅ Commit message validated!
+[feat/pg-205-contact-types bd628081a] feat(contacts): contact type defaults and key invariant in domain (pg-205)
+ 7 files changed, 571 insertions(+), 11 deletions(-)
+ create mode 100644 packages/domain/src/crm/contact/__tests__/contact-type-defaults.test.ts
+ create mode 100644 packages/domain/src/crm/contact/contact-type-defaults.ts

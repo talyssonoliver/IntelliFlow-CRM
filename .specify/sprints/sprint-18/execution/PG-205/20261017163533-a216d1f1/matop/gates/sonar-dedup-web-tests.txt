@@ -1,0 +1,10 @@
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: bash -c cd apps/web && npx vitest run "src/app/contacts/(list)/contact-types" "src/app/cases/(list)/case-types" src/components/settings 2>&1
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/web
+
+
+ Test Files  16 passed (16)
+      Tests  165 passed (165)
+   Start at  16:43:57
+   Duration  15.68s (transform 2.73s, setup 5.24s, import 14.82s, tests 11.60s, environment 22.31s)
+

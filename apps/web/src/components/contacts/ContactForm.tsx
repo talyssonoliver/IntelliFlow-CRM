@@ -2,6 +2,8 @@
 
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { Card } from '@intelliflow/ui';
+import { EntitySearchField } from '@/components/tasks/EntitySearchField';
+import { ContactTypeSelect } from './ContactTypeSelect';
 
 // ─── Types ──────────────────────────────────────────────────────────────────────
 
@@ -16,6 +18,9 @@ export interface ContactFormData {
   city: string;
   zipCode: string;
   company: string;
+  /** Linked tenant account (PG-205 ruling 9); '' = none. */
+  accountId: string;
+  accountName: string;
   jobTitle: string;
   department: string;
   linkedIn: string;
@@ -80,6 +85,8 @@ const initialFormData: ContactFormData = {
   city: '',
   zipCode: '',
   company: '',
+  accountId: '',
+  accountName: '',
   jobTitle: '',
   department: '',
   linkedIn: '',
@@ -117,6 +124,15 @@ export function ContactForm({
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   }, []);
+
+  const handleAccountChange = useCallback((id: string, name: string) => {
+    setFormData((prev) => ({ ...prev, accountId: id, accountName: name }));
+  }, []);
+
+  const handleContactTypeChange = useCallback(
+    (key: string) => updateField('contactType', key),
+    [updateField]
+  );
 
   const validateStep = useCallback((): boolean => {
     const newErrors: Partial<Record<keyof ContactFormData, string>> = {};
@@ -342,6 +358,14 @@ export function ContactForm({
                     className={fieldClassName()}
                   />
                 </FormField>
+                <div>
+                  <EntitySearchField
+                    entityType="account"
+                    value={formData.accountId}
+                    valueName={formData.accountName}
+                    onChange={handleAccountChange}
+                  />
+                </div>
                 <FormField label="Job Title" id="jobTitle">
                   <input
                     type="text"
@@ -420,6 +444,13 @@ export function ContactForm({
                   </div>
                 </fieldset>
                 <div className="space-y-6">
+                  {/* PG-205: tenant contact type; a stored inactive key stays selectable. */}
+                  <ContactTypeSelect
+                    id="contactType"
+                    value={formData.contactType}
+                    onChange={handleContactTypeChange}
+                    selectClassName={fieldClassName()}
+                  />
                   <FormField label="Tags" id="tags">
                     <input
                       type="text"

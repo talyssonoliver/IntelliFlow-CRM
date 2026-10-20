@@ -1,0 +1,35 @@
+# 2026-10-17T20:53:18Z HEAD dbb06a8db RED for codex-review-10 finding a3d0b852 (non-atomic account replacement) — domain, application, api
+## dom
+       × moves a linked contact to another account in one change 6ms
+       × fails on a contact with no account and changes nothing 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+TypeError: contact.replaceAccount is not a function
+TypeError: contact.replaceAccount is not a function
+ Test Files  1 failed (1)
+      Tests  2 failed | 64 skipped (66)
+## app
+       × moves the contact to the new account with a single save 9ms
+       × keeps the old account when the new one does not exist 1ms
+       × fails when the contact does not exist 1ms
+       × fails on malformed ids 1ms
+       × fails when the contact has no account to replace 1ms
+       × reports a failed save 1ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+TypeError: service.replaceAccount is not a function
+TypeError: service.replaceAccount is not a function
+TypeError: service.replaceAccount is not a function
+TypeError: service.replaceAccount is not a function
+TypeError: service.replaceAccount is not a function
+TypeError: service.replaceAccount is not a function
+ Test Files  1 failed (1)
+      Tests  6 failed | 36 skipped (42)
+## api
+     × replaces a linked account in one service call, before the other fields (codex 18941caa, a3d0b852) 11ms
+     × a replace that fails for another reason is a bad request 9ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+TRPCError: Account not found
+    515|     if (!target) throw new TRPCError({ code: 'NOT_FOUND', message: 'Ac…
+AssertionError: expected TRPCError: Account not found { …(1) } to match object { code: 'BAD_REQUEST' }
++ TRPCError {
+ Test Files  1 failed (1)
+      Tests  2 failed | 35 passed (37)

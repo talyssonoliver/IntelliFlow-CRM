@@ -7,7 +7,7 @@
  * appears in source.
  */
 import { EventEmitter } from 'node:events';
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 
 import { main } from '../test-db.mjs';
 
@@ -169,5 +169,41 @@ describe('test-db up / down', () => {
   it('rejects an unknown command', async () => {
     const h = harness();
     await expect(main(['frobnicate'], h.io)).rejects.toThrow(/usage: test-db/);
+  });
+});
+
+describe('test-db default output sinks (#905)', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  /** Only connect/pnpm are faked: stdout and stderr stay the real defaults. */
+  function realSinks() {
+    const h = harness();
+    const { stderr: _stderr, stdout: _stdout, ...io } = h.io;
+    const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    return { h, io, err, out };
+  }
+
+  it('up writes the hint to stderr and the URL to stdout instead of overflowing the stack', async () => {
+    const { io, err, out } = realSinks();
+
+    const code = await main(['up'], io);
+
+    expect(code).toBe(0);
+    expect(out.mock.calls.map((c) => String(c[0])).join('')).toMatch(/^TEST_DATABASE_URL=/);
+    expect(err.mock.calls.map((c) => String(c[0])).join('')).toMatch(
+      /drop it with: pnpm test:db:down/
+    );
+  });
+
+  it('down exits 0 and reports the drop on stderr', async () => {
+    const { io, err } = realSinks();
+
+    const code = await main(['down', 'intelliflow_test_run_abc123'], io);
+
+    expect(code).toBe(0);
+    expect(err.mock.calls.map((c) => String(c[0])).join('')).toMatch(
+      /dropped intelliflow_test_run_abc123/
+    );
   });
 });
