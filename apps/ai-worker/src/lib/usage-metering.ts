@@ -65,22 +65,55 @@ function isBillableTenant(tenantId: string | undefined): tenantId is string {
   return !!tenantId && tenantId !== 'unknown' && !tenantId.startsWith('__');
 }
 
+interface ToolCallingMessage {
+  tool_calls?: Array<{ name?: string; args?: unknown }>;
+  additional_kwargs?: {
+    tool_calls?: Array<{ function?: { name?: string; arguments?: string } }>;
+    function_call?: { name?: string; arguments?: string };
+  };
+}
+
+/**
+ * The tool calls a message generated, as text. Uses the normalized `tool_calls` when present,
+ * else the legacy provider representation, so the same call is never counted twice.
+ */
+function toolCallText(message: ToolCallingMessage): string {
+  if (message.tool_calls?.length) {
+    return message.tool_calls
+      .map((c) => `${c.name ?? ''} ${JSON.stringify(c.args ?? {})}`)
+      .join('\n');
+  }
+  const legacy = message.additional_kwargs;
+  const calls = legacy?.tool_calls?.map((c) => c.function) ?? [legacy?.function_call];
+  return calls
+    .filter((c) => c !== undefined)
+    .map((c) => `${c.name ?? ''} ${c.arguments ?? ''}`)
+    .join('\n');
+}
+
 /** Flatten a prompt / message list / model output into text for token estimation. */
 function textOf(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
   if (Array.isArray(value)) return value.map(textOf).join('\n');
-  if (typeof value === 'object') {
-    const record = value as { content?: unknown; text?: unknown; value?: unknown };
-    if (record.content !== undefined) return textOf(record.content);
-    if (record.text !== undefined) return textOf(record.text);
-    if (typeof (value as { toString?: unknown }).toString === 'function') {
-      const s = String(value);
-      if (s !== '[object Object]') return s;
-    }
-    return JSON.stringify(value);
-  }
+  if (typeof value === 'object') return objectText(value);
   return String(value);
+}
+
+function objectText(value: object): string {
+  const record = value as { content?: unknown; text?: unknown };
+  if (record.content !== undefined) {
+    // A message: its content plus any tool calls it generated (a tool call has empty content).
+    return [textOf(record.content), toolCallText(value as ToolCallingMessage)]
+      .filter(Boolean)
+      .join('\n');
+  }
+  if (record.text !== undefined) return textOf(record.text);
+  if (typeof (value as { toString?: unknown }).toString === 'function') {
+    const s = String(value);
+    if (s !== '[object Object]') return s;
+  }
+  return JSON.stringify(value);
 }
 
 /**

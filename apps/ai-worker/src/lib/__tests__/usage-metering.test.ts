@@ -166,6 +166,46 @@ describe('PG-199 metering in the tracing wrappers', () => {
     }
   });
 
+  it('estimates output tokens from generated tool calls when the provider returns no usage', async () => {
+    const { wrapModelWithTracing } = await load();
+    const { AIMessage } = await import('@langchain/core/messages');
+    const args = { company: 'Example Ltd', score: 87, reasons: ['budget confirmed', 'champion'] };
+    const toolCall = new AIMessage({
+      content: '',
+      tool_calls: [{ id: 'call_1', name: 'qualify_lead', args, type: 'tool_call' }],
+      additional_kwargs: {
+        // The legacy representation of the same call must not be counted twice.
+        tool_calls: [
+          {
+            id: 'call_1',
+            type: 'function',
+            function: { name: 'qualify_lead', arguments: JSON.stringify(args) },
+          },
+        ],
+      },
+    });
+    const legacyOnly = new AIMessage({
+      content: '',
+      additional_kwargs: {
+        function_call: { name: 'qualify_lead', arguments: JSON.stringify(args) },
+      },
+    });
+
+    await wrapModelWithTracing(chatModel(toolCall), {
+      purpose: 'qualification',
+      tier: 'free',
+    }).invoke('x');
+    await wrapModelWithTracing(chatModel(legacyOnly), {
+      purpose: 'qualification',
+      tier: 'free',
+    }).invoke('x');
+
+    const [normalized, legacy] = recordUsage.mock.calls.map((call) => call[0].outputTokens);
+    expect(normalized).toBeGreaterThan(10);
+    expect(legacy).toBeGreaterThan(10);
+    expect(normalized).toBeLessThan(legacy * 1.5);
+  });
+
   it('returns the answer even when metering throws (e.g. the daily cost limit)', async () => {
     const { wrapModelWithTracing } = await load();
     recordUsage.mockImplementationOnce(() => {
