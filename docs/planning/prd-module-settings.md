@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                                          |
-| ------------- | -------------------------------------------------------------- |
-| Feature Name  | Module Settings Pages                                          |
-| Status        | Active                                                         |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-202, PG-204 |
-| Created       | 2026-03-11                                                     |
-| Last Updated  | 2026-10-17                                                     |
-| Author        | Spec Session (PG-178)                                          |
+| Field         | Value                                                                  |
+| ------------- | ---------------------------------------------------------------------- |
+| Feature Name  | Module Settings Pages                                                  |
+| Status        | Active                                                                 |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-201, PG-202, PG-204, PG-207 |
+| Created       | 2026-03-11                                                             |
+| Last Updated  | 2026-10-21                                                             |
+| Author        | Spec Session (PG-178)                                                  |
 
 ## Problem Statement
 
@@ -1047,3 +1047,80 @@ production before this ships.
 findNextSlot, Calendar Settings pointer and New Appointment buffer prefill. The
 migration was approved by an independent SQL review and is not applied to
 production.
+
+## PG-207 Addendum: Email Settings and User Mailboxes (2026-10-21)
+
+Owner rulings Q1-Q10 (2026-10-20/21,
+`.specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md`): user mail
+leaves from the user's own mailbox (Google, Microsoft or SMTP), never from
+IntelliFlow's domain; an admin-enabled company mailbox is the fallback for users
+without one; bounces are read back from the sending mailbox and enforced through
+a suppression list (suppressed recipients are skipped, the rest sent);
+signatures live on `/email/signatures` and are prefilled in new messages. The
+fake production send (mock provider recording SENT) is fixed here. Spec:
+`.specify/sprints/sprint-18/specifications/PG-207-spec.md`. ADR-085.
+
+### Additional User Stories
+
+- **US-EM1 (My mailbox)**: As a user, I want to connect my own Google, Microsoft
+  or SMTP mailbox, so that my emails are sent from my own address.
+- **US-EM2 (Company mailbox)**: As an admin, I want to connect a company mailbox
+  and decide whether members without their own mailbox may send through it.
+- **US-EM3 (Honest sending)**: As a user, I want an email to show SENT only when
+  it actually left, and a clear prompt when I have no mailbox connected.
+- **US-EM4 (Reply-to)**: As an admin, I want to set a tenant-wide reply-to
+  address.
+- **US-EM5 (Bounces)**: As an admin, I want bounced addresses detected
+  automatically and suppressed according to our rules, so that we stop mailing
+  dead addresses.
+- **US-EM6 (Suppression list)**: As an admin, I want to see, add and remove
+  suppressed addresses.
+- **US-EM7 (Signatures)**: As a user, I want personal signatures, and as an
+  admin, organisation signatures, with a default that is prefilled in new
+  messages.
+- **US-EM8 (Tracking)**: As an admin, I want to choose whether opens and clicks
+  are tracked once tracking ships (IFC-221).
+
+### Additional Acceptance Criteria
+
+Defined as AC-EM-001..040 in the spec (finalised at spec consensus). In summary:
+
+- AC-EM-001 to 009: personal and company mailboxes; SMTP presets; encrypted,
+  write-only secrets (refused without the key); SSRF-safe test connection; OAuth
+  with PKCE and single-use state; disconnect revokes; unconfigured providers
+  shown disabled; revoked tokens move the mailbox to ERROR.
+- AC-EM-010 to 019: one send path for user mail; mailbox resolution (own, then
+  company if allowed, else refuse; no fallback from a broken own mailbox); From
+  is the mailbox address; failures are FAILED with no fallback; SENT only when
+  accepted; suppressed recipients skipped before quota; attachments really sent;
+  coded errors shown in compose.
+- AC-EM-020 to 023: admin-edited tenant settings with documented defaults; reset
+  keeps mailboxes, signatures and suppressions; tracking labelled as pending
+  IFC-221.
+- AC-EM-024 to 031: lease-based bounce reader; only delivery-status reports,
+  matched to our own sent records; hard/soft rules; per-recipient bounces;
+  idempotent; optional sender notification; audited suppression management.
+- AC-EM-032 to 036: user and org signatures, sanitised, unique names
+  (superRefine + index), one default per scope, prefill on new messages only.
+- AC-EM-037 to 040: tenant and user isolation with negative tests; playbook
+  layout; WCAG 2.1 AA and Lighthouse ≥ 90 (or NEEDS_HUMAN); registries.
+
+### Boolean toggles (playbook §8)
+
+| Toggle                       | Category | Runtime consumer                             |
+| ---------------------------- | -------- | -------------------------------------------- |
+| `allowTenantMailboxFallback` | 1        | mailbox resolution in the user-mail sender   |
+| `notifySenderOnBounce`       | 1        | bounce reader → `email_bounced` notification |
+| `trackOpens`                 | 2        | IFC-221 (broadened to every mailbox kind)    |
+| `trackClicks`                | 2        | IFC-221 (broadened to every mailbox kind)    |
+| `EmailSignature.isDefault`   | 1        | compose prefill                              |
+
+No AI toggles; no colour tokens; no tags (TagsTab N/A).
+
+### Delivery status
+
+| Item                                          | Status  |
+| --------------------------------------------- | ------- |
+| Spec (owner rulings Q1-Q10, ADR-085)          | Drafted |
+| DB, domain, validators, adapters, API, web    | Planned |
+| Validations, reviews, Lighthouse, attestation | Planned |

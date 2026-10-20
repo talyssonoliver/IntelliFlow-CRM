@@ -30,12 +30,22 @@
   "kpis": {},
   "notes": "Email settings at /email/email-settings: SMTP/IMAP config per tenant, signatures per user/org, tracking pixel on/off, reply-to override, bounce handling rules. MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in email automation OR declare as category-2 follow-up under IFC-310/311/312. Secrets (SMTP password) MUST go through server-side tRPC, never in client bundle.",
   "phase": "",
-  "started_at": null,
+  "started_at": "2026-10-20T12:00:00Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-10-20T12:00:00Z",
+      "note": "/spec-session started (PG-207 lane, Frontend-Lead lead; 5 agents)"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-10-20T23:12:45Z",
+      "note": "/spec-consensus 5/5 approved; owner rulings Q1-Q10; spec .specify/sprints/sprint-18/specifications/PG-207-spec.md; ADR-085"
     }
   ],
   "stream": null,
