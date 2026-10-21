@@ -10,6 +10,7 @@ describe('parseDsn', () => {
       authenticated: true,
       authservId: 'mx.example.invalid',
       reporterDomains: ['mta.example.invalid'],
+      exchangeSender: false,
       recordId: 'crec123',
       originalMessageId: '<crec123.1@mail.example.invalid>',
       recipients: [

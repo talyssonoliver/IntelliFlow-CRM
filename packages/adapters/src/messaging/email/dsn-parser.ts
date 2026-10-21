@@ -12,7 +12,7 @@
  * throws.
  */
 import { EMAIL_LIMITS } from '@intelliflow/domain';
-import { isBounceSenderLocalPart } from './bounce-senders';
+import { isBounceSenderLocalPart, isExchangeSenderLocalPart } from './bounce-senders';
 import { parseHeaders, parseMimeBoundary, parseMimeParts } from './inbound';
 
 export interface DsnRecipient {
@@ -42,6 +42,8 @@ export interface ParsedDsn {
    * recipient: a domain someone controls proves nothing about others.
    */
   reporterDomains: string[];
+  /** The report's sender is Exchange's NDR address (no provider-domain entitlement). */
+  exchangeSender: boolean;
   recordId: string | null;
   originalMessageId: string | null;
   recipients: DsnRecipient[];
@@ -153,8 +155,12 @@ function passingDomain(clause: string, fromDomain: string): string | null {
  * one From header. Whether that receiver is trusted, and whether a passing
  * domain may speak for a recipient, is the caller's decision.
  */
-function reportAuthentication(head: string): { authservId: string | null; domains: string[] } {
-  const none = { authservId: null, domains: [] };
+function reportAuthentication(head: string): {
+  authservId: string | null;
+  domains: string[];
+  exchangeSender: boolean;
+} {
+  const none = { authservId: null, domains: [], exchangeSender: false };
   const fromHeaders = head.split(/\r?\n/).filter((line) => line.toLowerCase().startsWith('from:'));
   if (fromHeaders.length !== 1) return none;
   const [local, fromDomain] = fromAddress(parseHeaders(head)['from'] ?? '').split('@');
@@ -171,7 +177,11 @@ function reportAuthentication(head: string): { authservId: string | null; domain
   const domains = (hasAuthservId ? clauses.slice(1) : clauses)
     .map((clause) => passingDomain(clause, fromDomain))
     .filter((domain): domain is string => domain !== null);
-  return { authservId: hasAuthservId ? first : null, domains: [...new Set(domains)] };
+  return {
+    authservId: hasAuthservId ? first : null,
+    domains: [...new Set(domains)],
+    exchangeSender: isExchangeSenderLocalPart(local),
+  };
 }
 
 function splitHeadBody(raw: string): [string, string] {
@@ -252,6 +262,7 @@ export function parseDsn(raw: string): ParsedDsn | null {
       authenticated: auth.domains.length > 0,
       authservId: auth.authservId,
       reporterDomains: auth.domains,
+      exchangeSender: auth.exchangeSender,
       recordId: originalHeaders['x-intelliflow-record']?.trim() || null,
       originalMessageId: originalHeaders['message-id']?.trim() || null,
       recipients,

@@ -158,7 +158,8 @@ export interface TrustedReceiver {
 function mayReportOn(
   reporters: readonly string[],
   recipient: string,
-  mailbox: ScanMailbox
+  mailbox: ScanMailbox,
+  exchangeSender = false
 ): boolean {
   const recipientDomain = recipient.slice(recipient.lastIndexOf('@') + 1).toLowerCase();
   // The sending side is matched exactly: the mailbox's address domain and hosts.
@@ -171,7 +172,9 @@ function mayReportOn(
   ]
     .filter((d): d is string => Boolean(d))
     .map((d) => d.toLowerCase());
-  const providers = PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? [];
+  // An Exchange-sender report never speaks through a provider domain: a
+  // consumer account there could take that name (N-4).
+  const providers = exchangeSender ? [] : (PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? []);
   return reporters.some(
     (reporter) =>
       speaksFor(reporter, recipientDomain) ||
@@ -555,7 +558,8 @@ function entitledFor(
   recordRecipients: string[]
 ): boolean {
   return (
-    recordRecipients.includes(recipient) && mayReportOn(report.reporterDomains, recipient, mailbox)
+    recordRecipients.includes(recipient) &&
+    mayReportOn(report.reporterDomains, recipient, mailbox, report.exchangeSender)
   );
 }
 

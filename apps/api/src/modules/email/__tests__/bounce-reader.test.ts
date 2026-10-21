@@ -311,6 +311,47 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     expectNoEffect(other);
   });
 
+  it('on a Microsoft mailbox an Exchange-sender report signed by a provider domain cannot act on others (N-4)', async () => {
+    const microsoft = (from: string) => async () => {
+      const fake = fakeDb({ mailbox: smtpMailbox({ kind: 'MICROSOFT', refreshToken: secret }) });
+      const raw = makeDsn({
+        from,
+        authenticationResults: [
+          'spf=pass (sender IP is 192.0.2.1) smtp.mailfrom=outlook.com; dkim=pass header.d=outlook.com',
+        ],
+      });
+      const listDsnSince = vi.fn(async () => ({
+        messages: [{ key: 'm1', raw, receivedAt: NOW }],
+        resumeFrom: null,
+      }));
+      const { d } = deps(fake, [], {
+        transports: {
+          smtp: { send: vi.fn(), verify: vi.fn() },
+          imap: { read: vi.fn(), verify: vi.fn() },
+          oauth: () =>
+            ({
+              refresh: vi.fn(async () => ({
+                accessToken: 'at',
+                refreshToken: secret,
+                expiresAt: new Date(NOW.getTime() + 3_600_000),
+              })),
+              listDsnSince,
+            }) as never,
+          oauthConfigured: { GMAIL: false, MICROSOFT: true },
+        } as never,
+      });
+      await runBounceScan(d);
+      return fake;
+    };
+    // A consumer address shaped like the Exchange sender: provider entitlement does not apply.
+    expectNoEffect(
+      await microsoft('MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e@outlook.com')()
+    );
+    // The provider's reserved system sender still speaks for any recipient.
+    const genuine = await microsoft('postmaster@outlook.com')();
+    expect(genuine.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
+  });
+
   it('reads trusted receivers per IMAP host from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS (empty by default)', () => {
     expect(trustedReceiversFromEnv({})).toEqual([]);
     expect(

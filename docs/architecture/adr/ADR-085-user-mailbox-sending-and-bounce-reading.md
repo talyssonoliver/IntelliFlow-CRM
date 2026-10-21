@@ -118,11 +118,13 @@ Chosen option 4.
        default, so those mailboxes fail closed, because a server that stamps
        nothing would leave a sender-written header on top.
   2. **Authenticated.** The report is from `mailer-daemon@`, `postmaster@` or
-     Exchange's `MicrosoftExchange<hex>@` NDR sender (#970), with exactly one
-     From header. That header shows `dkim=pass` (`header.d`/`header.i`) or
-     `spf=pass` (`smtp.mailfrom`/`smtp.helo`) for a domain related to the From
-     domain (one within the other). The domain that passed, not the From domain
-     the sender chose, is the reporter's identity. Comments are ignored.
+     Exchange's NDR sender `MicrosoftExchange` + exactly 32 hex characters
+     (#970; such a report is never entitled through a provider domain, N-4),
+     with exactly one From header. That header shows `dkim=pass`
+     (`header.d`/`header.i`) or `spf=pass` (`smtp.mailfrom`/`smtp.helo`) for a
+     domain related to the From domain (one within the other). The domain that
+     passed, not the From domain the sender chose, is the reporter's identity.
+     Comments are ignored.
   3. **Entitled, directionally.** A passing domain may speak for that recipient
      in one of three ways:
      - It is the recipient's domain or a parent of it. `example.com` may report
