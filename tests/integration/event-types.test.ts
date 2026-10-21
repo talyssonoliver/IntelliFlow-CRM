@@ -688,6 +688,30 @@ describeDb('PG-203 event types and public booking (real DB)', () => {
       );
     });
 
+    it('NF-001: listSlots for 14 days answers with p95 under 300 ms', async () => {
+      await eventType(TENANT_A, HOST_A, { slug: 'timed' });
+      // Some busy time for the host across the window, so the busy query has rows to read.
+      for (let day = 1; day <= 10; day++) {
+        await appointment(TENANT_A, HOST_A);
+      }
+      const fromDate = new Date().toISOString().slice(0, 10);
+      const timings: number[] = [];
+      for (let run = 0; run < 10; run++) {
+        const started = performance.now();
+        const result = await publicBookingRouter
+          .createCaller(context())
+          .listSlots({ handle: HANDLE_A, slug: 'timed', fromDate, days: 14 });
+        timings.push(performance.now() - started);
+        expect(result.days).toHaveLength(14);
+      }
+      timings.sort((a, b) => a - b);
+      const p95 = timings[Math.ceil(0.95 * timings.length) - 1];
+      console.log(
+        `NF-001: listSlots 14 days, 10 runs: p95 ${p95.toFixed(1)} ms, median ${timings[4].toFixed(1)} ms`
+      );
+      expect(p95).toBeLessThan(300);
+    });
+
     it('NF-004: a lock held past lock_timeout fails fast with "Please try again." and writes nothing', async () => {
       await eventType(TENANT_A, HOST_A, { slug: 'busy' });
       const start = futureMonday(12);
