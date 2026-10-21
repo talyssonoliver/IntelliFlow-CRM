@@ -71,9 +71,9 @@ export interface RawDsnMessage {
 /**
  * One scan's worth of bounce-report candidates. `resumeFrom` is set when the
  * listing stopped before reaching the newest mail (the candidate limit or the
- * page cap): it is the receive time of the last message read, and the caller
- * must not move its cursor past it, or the unread reports would be skipped
- * for good. Null means everything since `since` was read.
+ * page cap): the receive time from which nothing has been read yet, and the
+ * caller must not move its cursor past it, or the unread reports would be
+ * skipped for good. Null means everything since `since` was read.
  */
 export interface DsnListing {
   messages: RawDsnMessage[];
@@ -83,6 +83,8 @@ export interface DsnListing {
 /** Provider list pages read per scan; the rest is picked up by the next scan via `resumeFrom`. */
 const MAX_LIST_PAGES = 20;
 const LIST_PAGE_SIZE = 100;
+/** Times a Gmail window past the page cap is halved before the scan gives up moving on. */
+const MAX_GMAIL_WINDOW_SPLITS = 8;
 
 interface TokenResponse {
   access_token?: string;
@@ -276,31 +278,24 @@ export class OAuthMailboxClient {
 
   /**
    * Gmail searches bounce senders server-side but lists newest first, so the
-   * ids are paged in full (they are cheap) and read oldest first.
+   * ids are paged in full (they are cheap) and read oldest first. When the ids
+   * since the cursor pass the page cap the oldest are out of reach, so the
+   * window is halved until it fits; the next scan resumes where it ended.
    */
   private async listGmailDsns(
     headers: Record<string, string>,
     since: Date,
     limit: number
   ): Promise<DsnListing> {
-    const ids: string[] = [];
-    let pageToken: string | undefined;
-    let pages = 0;
-    do {
-      const params = new URLSearchParams({
-        q: `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)}`,
-        maxResults: String(LIST_PAGE_SIZE),
-      });
-      if (pageToken) params.set('pageToken', pageToken);
-      const list = await call(`${GMAIL_API}/messages?${params.toString()}`, { headers });
-      if (!list.ok) throw httpError(list.status);
-      const page = await json<{ messages?: Array<{ id: string }>; nextPageToken?: string }>(list);
-      ids.push(...(page.messages ?? []).map((m) => m.id));
-      pageToken = page.nextPageToken;
-      pages += 1;
-    } while (pageToken && pages < MAX_LIST_PAGES);
+    let windowEnd: number | null = null;
+    let listing = await listGmailIds(headers, since, windowEnd);
+    for (let split = 0; listing.capped && split < MAX_GMAIL_WINDOW_SPLITS; split++) {
+      const end: number = windowEnd ?? Math.floor(Date.now() / 1000);
+      windowEnd = Math.floor((Math.floor(since.getTime() / 1000) + end) / 2);
+      listing = await listGmailIds(headers, since, windowEnd);
+    }
 
-    const oldestFirst = ids.reverse();
+    const oldestFirst = listing.ids.reverse();
     const out: RawDsnMessage[] = [];
     for (const id of oldestFirst.slice(0, limit)) {
       const response = await call(`${GMAIL_API}/messages/${encodeURIComponent(id)}?format=raw`, {
@@ -315,8 +310,14 @@ export class OAuthMailboxClient {
         receivedAt: new Date(Number(data.internalDate ?? 0)),
       });
     }
-    const truncated = pageToken !== undefined || oldestFirst.length > limit;
-    return { messages: out, resumeFrom: truncated ? lastReceivedAt(out, since) : null };
+    const resumeFrom = gmailResumeFrom({
+      capped: listing.capped,
+      overLimit: oldestFirst.length > limit,
+      out,
+      since,
+      windowEnd,
+    });
+    return { messages: out, resumeFrom };
   }
 
   /**
@@ -343,14 +344,58 @@ export class OAuthMailboxClient {
         receivedAt: new Date(message.receivedDateTime),
       });
     }
-    return { messages: out, resumeFrom: scan.truncated ? (scan.lastSeen ?? since) : null };
+    const resumeFrom = scan.resumeAt ?? scan.lastSeen ?? since;
+    return { messages: out, resumeFrom: scan.truncated ? resumeFrom : null };
   }
+}
+
+/**
+ * Where a Gmail scan resumes, never past an unread report: still capped, the
+ * oldest are unknown (stay); over the limit, after the last one read; a
+ * narrowed window read in full, just inside its end (`before:` is by the second).
+ */
+function gmailResumeFrom(scan: {
+  capped: boolean;
+  overLimit: boolean;
+  out: RawDsnMessage[];
+  since: Date;
+  windowEnd: number | null;
+}): Date | null {
+  if (scan.capped) return scan.since;
+  if (scan.overLimit) return lastReceivedAt(scan.out, scan.since);
+  return scan.windowEnd === null ? null : new Date((scan.windowEnd - 1) * 1000);
+}
+
+/** Bounce-sender message ids since `since` (and before `windowEnd`, epoch seconds), newest first. */
+async function listGmailIds(
+  headers: Record<string, string>,
+  since: Date,
+  windowEnd: number | null
+): Promise<{ ids: string[]; capped: boolean }> {
+  let q = `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)}`;
+  if (windowEnd !== null) q += ` before:${windowEnd}`;
+  const ids: string[] = [];
+  let pageToken: string | undefined;
+  let pages = 0;
+  do {
+    const params = new URLSearchParams({ q, maxResults: String(LIST_PAGE_SIZE) });
+    if (pageToken) params.set('pageToken', pageToken);
+    const list = await call(`${GMAIL_API}/messages?${params.toString()}`, { headers });
+    if (!list.ok) throw httpError(list.status);
+    const page = await json<{ messages?: Array<{ id: string }>; nextPageToken?: string }>(list);
+    ids.push(...(page.messages ?? []).map((m) => m.id));
+    pageToken = page.nextPageToken;
+    pages += 1;
+  } while (pageToken && pages < MAX_LIST_PAGES);
+  return { ids, capped: pageToken !== undefined };
 }
 
 interface GraphScan {
   candidates: GraphMessage[];
   /** Receive time of the last message examined. */
   lastSeen: Date | null;
+  /** Receive time of the first message the candidate limit left unexamined. */
+  resumeAt: Date | null;
   /** True when messages since `since` were left unexamined. */
   truncated: boolean;
 }
@@ -372,7 +417,7 @@ async function scanGraphCandidates(
     $top: String(LIST_PAGE_SIZE),
   });
   let url: string | undefined = `${GRAPH_API}/messages?${params.toString()}`;
-  const scan: GraphScan = { candidates: [], lastSeen: null, truncated: false };
+  const scan: GraphScan = { candidates: [], lastSeen: null, resumeAt: null, truncated: false };
   for (let pages = 0; url && pages < MAX_LIST_PAGES && !scan.truncated; pages++) {
     const list = await call(url, { headers });
     if (!list.ok) throw httpError(list.status);
@@ -386,11 +431,20 @@ async function scanGraphCandidates(
   return scan;
 }
 
-/** Adds bounce candidates from one page; true when the limit cut the page short. */
+/**
+ * Adds bounce candidates from one page; true when the limit cut the page short.
+ * It only cuts between receive times: the next scan resumes at the first
+ * unexamined one (`ge`), so a group sharing one time is never split, or a full
+ * batch of them would be listed again forever.
+ */
 function collectCandidates(messages: GraphMessage[], scan: GraphScan, limit: number): boolean {
   for (const message of messages) {
-    if (scan.candidates.length === limit) return true;
-    scan.lastSeen = new Date(message.receivedDateTime);
+    const at = new Date(message.receivedDateTime);
+    if (scan.candidates.length >= limit && at.getTime() !== scan.lastSeen?.getTime()) {
+      scan.resumeAt = at;
+      return true;
+    }
+    scan.lastSeen = at;
     if (isBounceCandidate(message)) scan.candidates.push(message);
   }
   return false;

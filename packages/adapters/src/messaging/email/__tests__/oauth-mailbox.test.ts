@@ -309,6 +309,43 @@ describe('listDsnSince', () => {
     expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 2)));
   });
 
+  it('Gmail: past the page cap, narrows the window so the oldest reports are read and none is skipped', async () => {
+    // 2 days after the cursor; the first narrowed window ends 1 day after it.
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(since.getTime() + 2 * 86_400_000));
+    try {
+      const windowEnd = Math.floor((since.getTime() + 86_400_000) / 1000);
+      fetchMock.mockImplementation((url: string) => {
+        const q = new URL(url).searchParams.get('q') ?? '';
+        if (url.includes('format=raw')) return gmailRaw('old', 1);
+        // The whole interval never ends within the page cap; the narrowed window does.
+        return q.includes('before:')
+          ? respond(200, { messages: [{ id: 'old' }] })
+          : respond(200, { messages: [{ id: 'new' }], nextPageToken: 'more' });
+      });
+      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
+      const narrowed = calls().find(([url]) => url.includes('before%3A'));
+      expect(new URL(narrowed![0]).searchParams.get('q')).toBe(
+        `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)} before:${windowEnd}`
+      );
+      expect(result.messages.map((m) => m.key)).toEqual(['old']);
+      // Resumes just inside the window's end: everything before it was read.
+      expect(result.resumeFrom).toEqual(new Date((windowEnd - 1) * 1000));
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('Gmail: never moves past the cursor when even the narrowest window passes the page cap', async () => {
+    fetchMock.mockImplementation((url: string) =>
+      url.includes('format=raw')
+        ? gmailRaw('new', 1)
+        : respond(200, { messages: [{ id: 'new' }], nextPageToken: 'more' })
+    );
+    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
+    expect(result.resumeFrom).toEqual(since);
+  });
+
   it('Microsoft: filters by receivedDateTime, keeps bounce-looking messages and fetches their MIME', async () => {
     fetchMock
       .mockReturnValueOnce(
@@ -342,7 +379,7 @@ describe('listDsnSince', () => {
     });
   });
 
-  it('Microsoft: stops at the limit and resumes from the last message it examined', async () => {
+  it('Microsoft: stops at the limit and resumes at the first message it did not examine', async () => {
     fetchMock
       .mockReturnValueOnce(
         respond(200, { value: [graphMessage('a', 1, true), graphMessage('c', 2, true)] })
@@ -350,7 +387,19 @@ describe('listDsnSince', () => {
       .mockReturnValueOnce(respond(200, 'MIME-A'));
     const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 1);
     expect(result.messages.map((m) => m.key)).toEqual(['a']);
-    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 1)));
+    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 2)));
+  });
+
+  it('Microsoft: never splits reports sharing one receive time, so a full batch of them cannot repeat forever', async () => {
+    const sameTime = Array.from({ length: 3 }, (_, i) => graphMessage(`s${i}`, 1, true));
+    fetchMock.mockImplementation((url: string) =>
+      url.endsWith('/$value')
+        ? respond(200, 'MIME')
+        : respond(200, { value: [...sameTime, graphMessage('later', 2, true)] })
+    );
+    const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 2);
+    expect(result.messages.map((m) => m.key)).toEqual(['s0', 's1', 's2']);
+    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 2)));
   });
 
   it('Microsoft: never sends the token to a continuation link on another host', async () => {
