@@ -446,7 +446,10 @@ async function processReport(
   const report = parseDsn(message.raw);
   if (!report) return;
 
-  let record = await findMatchedRecord(deps, mailbox, report, now);
+  // Only a report the receiving provider vouches for may act (owner ruling on
+  // #961): anything else - e.g. a recipient forging a report about a co-recipient
+  // with the ids they received - is kept as an UNMATCHED, LOW receipt only.
+  let record = report.authenticated ? await findMatchedRecord(deps, mailbox, report, now) : null;
   const recordRecipients = record ? recipientsOf(record) : [];
 
   for (const entry of report.recipients) {

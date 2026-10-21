@@ -5,7 +5,7 @@ proposed in the PG-207 spec session)
 
 **Date:** 2026-10-21
 
-**Deciders:** Talysson Oliveira (owner rulings Q1-Q11, 2026-10-20/21,
+**Deciders:** Talysson Oliveira (owner rulings Q1-Q12, 2026-10-20/21,
 `.specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md`); PG-207 spec
 session
 
@@ -103,6 +103,20 @@ Chosen option 4.
 - **Attachments (Q11).** Compose uploads attachments to the private
   `email-attachments` bucket before sending; the send re-checks the blocked
   extensions and the 25 MB total.
+
+- **Authenticated reports only (#961, owner ruling Q12, 2026-10-21).** A matched
+  report acts (bounce status, suppression, notification) only when it is from
+  `mailer-daemon@` or `postmaster@`, and the receiving provider's topmost
+  `Authentication-Results` shows `dkim=pass` (`header.d`/`header.i`) or
+  `spf=pass` (`smtp.mailfrom`/`smtp.helo`) for that sender's own domain or a
+  subdomain. Only the topmost header counts, because the sender can add headers
+  below it. Every other report is stored as an UNMATCHED, LOW receipt with no
+  effect. This closes the case of a recipient forging a report about a
+  co-recipient with the ids they received. Some genuine bounces will be recorded
+  without acting: provider-internal bounces without `Authentication-Results`,
+  and some self-hosted servers. #965 (the D5 live header spike) relaxes the rule
+  on provider evidence. Residual risk, raised to the owner: an insider who
+  controls a domain can still send a passing `mailer-daemon@` report.
 
 ### Consequences
 

@@ -12,7 +12,17 @@ export interface MakeDsnOptions {
   topContentType?: string;
   extraParts?: number;
   crlf?: boolean;
+  /** The report's From (default: the reporting MTA's mailer-daemon). */
+  from?: string;
+  /**
+   * Authentication-Results headers, topmost first, as the receiving provider
+   * prepends them (default: DKIM and SPF pass for the reporting MTA). null: none.
+   */
+  authenticationResults?: string[] | null;
 }
+
+export const PASSING_AUTH =
+  'mx.example.invalid; dkim=pass header.d=mta.example.invalid; spf=pass smtp.helo=mta.example.invalid';
 
 export function makeDsn(options: MakeDsnOptions = {}): string {
   const {
@@ -24,6 +34,8 @@ export function makeDsn(options: MakeDsnOptions = {}): string {
     topContentType,
     extraParts = 0,
     crlf = false,
+    from = 'Mail Delivery Subsystem <mailer-daemon@mta.example.invalid>',
+    authenticationResults = [PASSING_AUTH],
   } = options;
   const b = 'BOUNDARY_PG207';
   const originalHeaders = [
@@ -57,7 +69,8 @@ export function makeDsn(options: MakeDsnOptions = {}): string {
   }
   const top = topContentType ?? `multipart/report; report-type=${reportType}; boundary="${b}"`;
   const raw = [
-    'From: Mail Delivery Subsystem <mailer-daemon@mta.example.invalid>',
+    ...(authenticationResults ?? []).map((value) => `Authentication-Results: ${value}`),
+    `From: ${from}`,
     'To: me@mail.example.invalid',
     'Subject: Delivery Status Notification (Failure)',
     `Content-Type: ${top}`,

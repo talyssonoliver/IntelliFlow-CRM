@@ -170,6 +170,58 @@ beforeEach(() => {
   __resetAccessTokenCache();
 });
 
+describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2026-10-21)', () => {
+  const expectNoEffect = (fake: Fake) => {
+    // Stored as an audit trail only: UNMATCHED, LOW, no record or suppression change.
+    expect(fake.receipts).toHaveLength(1);
+    expect(fake.receipts[0]).toMatchObject({
+      kind: 'UNMATCHED',
+      matchConfidence: 'LOW',
+      emailRecordId: null,
+    });
+    expect(fake.recordUpdates).toHaveLength(0);
+    expect(fake.suppressions).toHaveLength(0);
+  };
+
+  it('a forged report from a recipient (right ids, no authentication) is stored and has no effect', async () => {
+    const fake = fakeDb({ settings: { notifySenderOnBounce: true } });
+    const forged = makeDsn({
+      from: 'Colleague <ok@example.invalid>',
+      authenticationResults: [
+        'mx.example.invalid; dkim=none; spf=none smtp.mailfrom=example.invalid',
+      ],
+    });
+    const { d, notify } = deps(fake, [{ key: '7:11', raw: forged }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
+    expect(notify).not.toHaveBeenCalled();
+    // The record is never even looked up for an unauthenticated report.
+    expect(fake.db.emailRecord.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('a report with no Authentication-Results header is stored and has no effect', async () => {
+    const fake = fakeDb();
+    const { d } = deps(fake, [{ key: '7:11', raw: makeDsn({ authenticationResults: null }) }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
+  it('a genuine report (mailer-daemon, DKIM/SPF pass for its domain) acts: bounce recorded and suppressed', async () => {
+    const fake = fakeDb();
+    const { d } = deps(fake, [{ key: '7:11', raw: makeDsn() }]);
+    await runBounceScan(d);
+    expect(fake.receipts[0]).toMatchObject({
+      kind: 'HARD',
+      matchConfidence: 'HIGH',
+      emailRecordId: 'crec123',
+    });
+    expect(fake.recordUpdates.at(-1).data.metadata.hardBouncedRecipients).toEqual([
+      'gone@example.invalid',
+    ]);
+    expect(fake.suppressions).toHaveLength(1);
+  });
+});
+
 describe('runBounceScan', () => {
   it('a worker that lost its lease writes no receipt, suppression or record change, and leaves the mailbox alone', async () => {
     const fake = fakeDb({ settings: { notifySenderOnBounce: true } });

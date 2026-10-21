@@ -23,6 +23,12 @@ export interface DsnRecipient {
 
 export interface ParsedDsn {
   reportingMta: string | null;
+  /**
+   * The receiving provider vouches for the report (owner ruling on #961): it is
+   * from mailer-daemon or postmaster, and the topmost Authentication-Results
+   * shows DKIM or SPF passing for that sender's domain. Only then may it act.
+   */
+  authenticated: boolean;
   recordId: string | null;
   originalMessageId: string | null;
   recipients: DsnRecipient[];
@@ -52,6 +58,69 @@ function stripControlCharacters(value: string): string {
     out += code < 32 || code === 127 ? ' ' : ch;
   }
   return out;
+}
+
+const REPORT_SENDERS = new Set(['mailer-daemon', 'postmaster']);
+
+/**
+ * The first (topmost) occurrence of a header with its continuation lines. The
+ * receiving provider prepends its Authentication-Results above everything the
+ * sender wrote, so only the topmost one can be trusted.
+ */
+function topmostHeader(head: string, name: string): string | null {
+  const lines = head.split(/\r?\n/);
+  const prefix = `${name}:`;
+  const start = lines.findIndex((line) => line.toLowerCase().startsWith(prefix));
+  if (start === -1) return null;
+  let value = (lines[start] ?? '').slice(prefix.length);
+  for (let i = start + 1; i < lines.length && /^[ \t]/.test(lines[i] ?? ''); i++) {
+    value += ` ${(lines[i] ?? '').trim()}`;
+  }
+  return value.trim();
+}
+
+/** The address in a From value (`Name <a@b>` or `a@b`), lower-cased. */
+function fromAddress(value: string): string {
+  const open = value.lastIndexOf('<');
+  const close = value.lastIndexOf('>');
+  const address = open !== -1 && close > open ? value.slice(open + 1, close) : value;
+  return address.trim().toLowerCase();
+}
+
+/** `host` is `domain` or one of its subdomains (a look-alike suffix is not). */
+function withinDomain(host: string, domain: string): boolean {
+  const h = host.toLowerCase().replace(/^@/, '').replace(/\.$/, '');
+  return h === domain || h.endsWith(`.${domain}`);
+}
+
+/** The domain a `key=value` token names (`smtp.mailfrom=a@b.c` -> `b.c`). */
+function tokenDomain(token: string): string {
+  const value = token.slice(token.indexOf('=') + 1);
+  return value.slice(value.lastIndexOf('@') + 1);
+}
+
+/** Whether one Authentication-Results clause is a DKIM or SPF pass for `domain`. */
+function clausePasses(clause: string, domain: string): boolean {
+  const tokens = clause.trim().toLowerCase().split(/\s+/);
+  const method = tokens[0] ?? '';
+  if (method !== 'dkim=pass' && method !== 'spf=pass') return false;
+  const keys =
+    method === 'dkim=pass' ? ['header.d=', 'header.i='] : ['smtp.mailfrom=', 'smtp.helo='];
+  return tokens.some(
+    (token) => keys.some((key) => token.startsWith(key)) && withinDomain(tokenDomain(token), domain)
+  );
+}
+
+function isAuthenticatedReport(head: string): boolean {
+  const [local, domain] = fromAddress(parseHeaders(head)['from'] ?? '').split('@');
+  if (!local || !domain || !REPORT_SENDERS.has(local)) return false;
+  const results = topmostHeader(head, 'authentication-results');
+  if (!results) return false;
+  // "authserv-id; method=result props; ..." - the first part names the provider.
+  return results
+    .split(';')
+    .slice(1)
+    .some((clause) => clausePasses(clause, domain));
 }
 
 function splitHeadBody(raw: string): [string, string] {
@@ -128,6 +197,7 @@ export function parseDsn(raw: string): ParsedDsn | null {
 
     return {
       reportingMta: perMessage['reporting-mta']?.replace(/^[a-z0-9-]+;\s*/i, '').trim() || null,
+      authenticated: isAuthenticatedReport(head),
       recordId: originalHeaders['x-intelliflow-record']?.trim() || null,
       originalMessageId: originalHeaders['message-id']?.trim() || null,
       recipients,

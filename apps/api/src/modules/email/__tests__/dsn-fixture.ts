@@ -10,8 +10,20 @@ export interface DsnRecipient {
   status: string;
 }
 
+/** What a receiving provider stamps on a genuine bounce from mta.example.invalid. */
+export const PASSING_AUTH =
+  'mx.example.invalid; dkim=pass header.d=mta.example.invalid; spf=pass smtp.helo=mta.example.invalid';
+
 export function makeDsn(
-  options: { recipients?: DsnRecipient[]; recordId?: string | null; messageId?: string | null } = {}
+  options: {
+    recipients?: DsnRecipient[];
+    recordId?: string | null;
+    messageId?: string | null;
+    /** The report's From (default: the reporting MTA's mailer-daemon). */
+    from?: string;
+    /** Authentication-Results headers, topmost first (default: passing). null: none. */
+    authenticationResults?: string[] | null;
+  } = {}
 ): string {
   const recipients = options.recipients ?? [
     { address: 'gone@example.invalid', action: 'failed', status: '5.1.1' },
@@ -33,8 +45,11 @@ export function makeDsn(
     `Action: ${r.action}`,
     `Status: ${r.status}`,
   ]);
+  const authenticationResults =
+    options.authenticationResults === undefined ? [PASSING_AUTH] : options.authenticationResults;
   return [
-    'From: Mail Delivery Subsystem <mailer-daemon@mta.example.invalid>',
+    ...(authenticationResults ?? []).map((value) => `Authentication-Results: ${value}`),
+    `From: ${options.from ?? 'Mail Delivery Subsystem <mailer-daemon@mta.example.invalid>'}`,
     'To: me@mail.example.invalid',
     'Subject: Undelivered Mail Returned to Sender',
     'MIME-Version: 1.0',

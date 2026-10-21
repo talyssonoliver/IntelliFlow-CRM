@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import { parseDsn } from '../dsn-parser';
 import { parseMimeBoundary } from '../inbound';
-import { makeDsn } from './dsn-fixtures';
+import { PASSING_AUTH, makeDsn } from './dsn-fixtures';
 
 describe('parseDsn', () => {
   it('parses an RFC 3464 report with the original headers', () => {
     expect(parseDsn(makeDsn())).toEqual({
       reportingMta: 'mta.example.invalid',
+      authenticated: true,
       recordId: 'crec123',
       originalMessageId: '<crec123.1@mail.example.invalid>',
       recipients: [
@@ -106,6 +107,71 @@ describe('parseDsn', () => {
     expect(parseMimeBoundary(`multipart/report; boundary="${'b'.repeat(70)}"`)).toBe(
       'b'.repeat(70)
     );
+  });
+
+  describe('authenticated (#961: only a provider-verified mailer-daemon/postmaster report may act)', () => {
+    const authOf = (options: Parameters<typeof makeDsn>[0]) =>
+      parseDsn(makeDsn(options))?.authenticated;
+
+    it('accepts mailer-daemon or postmaster with DKIM or SPF passing for its own domain', () => {
+      expect(authOf({})).toBe(true);
+      expect(
+        authOf({
+          from: 'postmaster@mta.example.invalid',
+          authenticationResults: ['mx.example.invalid; spf=pass smtp.helo=out.mta.example.invalid'],
+        })
+      ).toBe(true);
+      expect(
+        authOf({
+          authenticationResults: ['mx.example.invalid; dkim=pass header.i=@mta.example.invalid'],
+        })
+      ).toBe(true);
+    });
+
+    it('refuses a report with no Authentication-Results', () => {
+      expect(authOf({ authenticationResults: null })).toBe(false);
+    });
+
+    it('refuses a report from anyone but mailer-daemon or postmaster (a forging recipient)', () => {
+      expect(authOf({ from: 'Colleague <colleague@mta.example.invalid>' })).toBe(false);
+    });
+
+    it('refuses a pass for some other domain than the report’s sender', () => {
+      expect(
+        authOf({
+          authenticationResults: [
+            'mx.example.invalid; dkim=pass header.d=attacker.example.invalid; spf=pass smtp.mailfrom=attacker.example.invalid',
+          ],
+        })
+      ).toBe(false);
+      // A look-alike suffix is not a subdomain.
+      expect(
+        authOf({
+          authenticationResults: ['mx.example.invalid; dkim=pass header.d=evilmta.example.invalid'],
+        })
+      ).toBe(false);
+    });
+
+    it('refuses fail, softfail and none', () => {
+      expect(
+        authOf({
+          authenticationResults: [
+            'mx.example.invalid; dkim=fail header.d=mta.example.invalid; spf=softfail smtp.helo=mta.example.invalid',
+          ],
+        })
+      ).toBe(false);
+    });
+
+    it('reads only the topmost header (the receiving provider’s): a pass added lower down by the sender does not count', () => {
+      expect(
+        authOf({
+          authenticationResults: [
+            'mx.example.invalid; dkim=none; spf=fail smtp.helo=mta.example.invalid',
+            PASSING_AUTH,
+          ],
+        })
+      ).toBe(false);
+    });
   });
 
   it('keeps every recipient a send can have, and no more than that', () => {

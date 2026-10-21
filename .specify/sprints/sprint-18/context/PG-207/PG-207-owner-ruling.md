@@ -151,3 +151,18 @@ the attach button with a visible note, reject server-side, follow-up task.
 
 **Ruling: A.** Attachments are uploaded to tenant storage and sent with the
 email; an unfetchable attachment fails the send visibly.
+
+## Q12. Forged bounce reports (#961, Security STOA, 2026-10-21)
+
+Finding (security review and Security STOA): every recipient of a sent email holds both match keys (`X-IntelliFlow-Record` and the Message-ID). A recipient could therefore forge a delivery report that hard-bounces a co-recipient and gets that address suppressed tenant-wide; the bounce reader did not authenticate the reporter.
+
+Options:
+- **A:** act only on a report from mailer-daemon/postmaster with a provider Authentication-Results DKIM/SPF pass; store everything else with no effect.
+- **B:** the owner accepts the risk in an ADR, and #961 stays open.
+- **C:** A now, with the D5 live-header spike as the follow-up that relaxes the rule.
+
+**Ruling: C** ("fix now, relax later"; owner modal, relayed by runner projects-8c, 2026-10-21 ~09:5x UTC).
+- A report acts only when it is from `mailer-daemon@`/`postmaster@` and the receiving provider's topmost `Authentication-Results` shows `dkim=pass` or `spf=pass` for that sender's domain.
+- Anything else is stored as an UNMATCHED/LOW receipt with no effect.
+- Follow-up: #965 (D5 spike), linked from #961.
+- Residual risk raised to the owner: an insider who controls their own domain can still send a passing `mailer-daemon@` report.
