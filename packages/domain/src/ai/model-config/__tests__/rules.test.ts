@@ -205,7 +205,7 @@ describe('isModelAllowedForPurpose', () => {
 
 describe('purpose spend key and period', () => {
   it('builds one counter key per purpose', () => {
-    expect(LLM_PURPOSES.map(purposeSpendKey)).toEqual([
+    expect(LLM_PURPOSES.map((purpose) => purposeSpendKey(purpose))).toEqual([
       'aiSpendCentiCents:scoring',
       'aiSpendCentiCents:qualification',
       'aiSpendCentiCents:email',

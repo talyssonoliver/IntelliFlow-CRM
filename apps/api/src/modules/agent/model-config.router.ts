@@ -182,7 +182,7 @@ function assertAcknowledged(downgrades: ModelDowngrade[], acknowledged: boolean)
   if (downgrades.length === 0 || acknowledged) return;
   throw new TRPCError({
     code: 'PRECONDITION_FAILED',
-    message: `DOWNGRADE_UNCONFIRMED: ${downgrades.map(describeDowngrade).join('; ')}`,
+    message: `DOWNGRADE_UNCONFIRMED: ${downgrades.map((d) => describeDowngrade(d)).join('; ')}`,
   });
 }
 
@@ -225,7 +225,11 @@ async function readSpend(
 ): Promise<Map<string, number> | null> {
   try {
     const rows = await ctx.prismaWithTenant.tenantUsageCounter.findMany({
-      where: { tenantId, period, key: { in: LLM_PURPOSES.map(purposeSpendKey) } },
+      where: {
+        tenantId,
+        period,
+        key: { in: LLM_PURPOSES.map((purpose) => purposeSpendKey(purpose)) },
+      },
       select: { key: true, value: true },
     });
     return new Map(rows.map((row) => [row.key, row.value]));
@@ -301,7 +305,7 @@ export const modelConfigRouter = createTRPCRouter({
       purposes: LLM_PURPOSES.map((purpose) =>
         toPurposeRow(purpose, byPurpose.get(purpose), spend, embeddingModel)
       ),
-      catalog: MODEL_CATALOG.map(toCatalogModel),
+      catalog: MODEL_CATALOG.map((entry) => toCatalogModel(entry)),
       limits: MODEL_CONFIG_LIMITS,
       period,
       canManage: isAgentSettingsAdmin(ctx.user?.role),

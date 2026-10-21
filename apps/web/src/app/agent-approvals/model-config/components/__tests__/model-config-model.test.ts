@@ -138,7 +138,7 @@ describe('draft', () => {
 
 describe('save payload', () => {
   const data = modelConfigDto({ scoring: { modelId: 'gpt-4o-mini', updatedAt: T0 } });
-  const drafts = data.purposes.map(toDraft);
+  const drafts = data.purposes.map((row) => toDraft(row));
 
   it('sends only changed purposes, with `expected` for exactly those', () => {
     const edited = drafts.map((d) => (d.purpose === 'email' ? { ...d, maxTokens: '900' } : d));

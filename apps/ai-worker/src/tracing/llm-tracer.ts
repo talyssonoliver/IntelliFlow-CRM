@@ -140,7 +140,7 @@ function meterEmbeddingRequests(embeddings: Embeddings, meta: EmbeddingsTracingM
     method = 'embeddingWithRetry';
     textsOf = (request) => {
       const input = (request as { input?: unknown } | undefined)?.input;
-      return Array.isArray(input) ? input.map(String) : [String(input ?? '')];
+      return Array.isArray(input) ? input.map((item) => String(item)) : [String(input ?? '')];
     };
   } else {
     return false;

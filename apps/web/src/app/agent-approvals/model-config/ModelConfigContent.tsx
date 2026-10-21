@@ -142,7 +142,7 @@ export default function ModelConfigContent() {
     if (!resync.current && dirtyRef.current) return;
     resync.current = false;
     setSnapshot(data.purposes);
-    setDrafts(data.purposes.map(toDraft));
+    setDrafts(data.purposes.map((row) => toDraft(row)));
   }, [data]);
 
   // While the dialog is open everything outside it is aria-hidden, so results are
@@ -233,7 +233,7 @@ export default function ModelConfigContent() {
     }
     const downgrades = draftDowngrades(snapshot, drafts);
     if (downgrades.length > 0) {
-      setConfirm({ kind: 'save', lines: downgrades.map(describeDowngrade) });
+      setConfirm({ kind: 'save', lines: downgrades.map((d) => describeDowngrade(d)) });
       return;
     }
     runAction(submit(false));
@@ -281,7 +281,7 @@ export default function ModelConfigContent() {
           onClick: () =>
             setConfirm({
               kind: 'reset',
-              lines: snapshot ? resetDowngrades(snapshot).map(describeDowngrade) : [],
+              lines: snapshot ? resetDowngrades(snapshot).map((d) => describeDowngrade(d)) : [],
             }),
           variant: 'secondary',
           icon: 'restart_alt',

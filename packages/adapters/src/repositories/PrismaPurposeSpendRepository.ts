@@ -45,7 +45,7 @@ export class PrismaPurposeSpendRepository implements PurposeSpendPort {
     purposes: readonly LLMPurpose[]
   ): Promise<Partial<Record<LLMPurpose, number>>> {
     if (purposes.length === 0) return {};
-    const keys = purposes.map(purposeSpendKey);
+    const keys = purposes.map((purpose) => purposeSpendKey(purpose));
     const rows = await this.prisma.tenantUsageCounter.findMany({
       where: { tenantId, period, key: { in: keys } },
       select: { key: true, value: true },

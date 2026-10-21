@@ -95,7 +95,7 @@ function toolCallText(message: ToolCallingMessage): string {
 function textOf(value: unknown): string {
   if (value === null || value === undefined) return '';
   if (typeof value === 'string') return value;
-  if (Array.isArray(value)) return value.map(textOf).join('\n');
+  if (Array.isArray(value)) return value.map((item) => textOf(item)).join('\n');
   if (typeof value === 'object') return objectText(value);
   return String(value);
 }

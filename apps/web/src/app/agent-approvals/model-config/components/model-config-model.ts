@@ -249,7 +249,7 @@ export function buildUpdatePayload(
   for (const draft of changed)
     expected[draft.purpose] = byPurpose.get(draft.purpose)?.updatedAt ?? null;
   return {
-    purposes: changed.map(draftToInput),
+    purposes: changed.map((draft) => draftToInput(draft)),
     expected,
     ...(acknowledgeDowngrade ? { acknowledgeDowngrade: true as const } : {}),
   };
@@ -324,7 +324,7 @@ export function mapServerIssues(message: string, sent: LLMPurpose[]): PurposeErr
   }
   if (!Array.isArray(parsed)) return {};
   const errors: PurposeErrors = {};
-  for (const issue of parsed.filter(isIssue)) {
+  for (const issue of parsed.filter((value): value is ServerIssue => isIssue(value))) {
     const [root, index, ...field] = issue.path;
     const purpose = typeof index === 'number' ? sent[index] : undefined;
     if (root !== 'purposes' || !purpose || field.length === 0) continue;
