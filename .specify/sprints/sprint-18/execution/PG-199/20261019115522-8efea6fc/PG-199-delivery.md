@@ -210,6 +210,7 @@ These are from the final matrix, 2026-10-19 14:18–14:33Z, run one at a time wi
 - Merged origin/main (#934) with one generated-file conflict (artifacts/benchmarks/baseline.json, main taken); migrations 20261019120000/120100 kept. After the merge: typecheck passes, api 7968, ai-worker 2397, web agent-approvals 159 (`logs/47-merge-*.txt`).
 - Pre-ship at 125f9eccf failed the coverage step on one web test outside PG-199 (calendar availability: focus assertion raced the focus effect under full-run load; 5/5 isolated runs passed). The test now waits for the focus.
 - Pre-ship at a421465c7 failed codex-review with one real finding: fallback validation compared against the caller defaults, so an unpinned row with a stored tier override (qualification premium runs gpt-4o) had valid fallbacks rejected and its real primary accepted as a fallback. The schema now checks a pin only, the router checks the unpinned case against the stored tier, and get returns the tier default. RED/GREEN `logs/50-codex-tier-*.txt`; domain 3155, validators 2817, api 7972, web 159.
+- Pre-ship at a7e8930b2 failed codex-review with one real finding: the 1000-record history cap made the daily report and health statistics drop evicted calls. The daily statistics now come from running totals; a ranged query past the retained history is flagged truncated. RED/GREEN `logs/52-codex-stats-*.txt`; ai-worker 2400 passed.
 
 ## Follow-up issues
 
