@@ -311,6 +311,23 @@ describeDb('PG-207 email tables (real DB)', () => {
       await prisma.emailMailbox.delete({ where: { id: row.id } });
     });
 
+    it('serialises soft-bounce counting with a transaction advisory lock', async () => {
+      const key = 'email-soft-bounce:tenant:someone@example.invalid';
+      const order: string[] = [];
+      const hold = (name: string, ms: number) =>
+        prisma.$transaction(async (tx) => {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${key}::text, 0))`;
+          order.push(`${name}:in`);
+          await new Promise((resolve) => setTimeout(resolve, ms));
+          order.push(`${name}:out`);
+        });
+      const first = hold('first', 300);
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      await Promise.all([first, hold('second', 0)]);
+      // The second waits for the first to commit.
+      expect(order).toEqual(['first:in', 'first:out', 'second:in', 'second:out']);
+    });
+
     it('fences a scan write by its lease: a worker whose lease was taken over writes nothing', async () => {
       const row = await prisma.emailMailbox.create({
         data: smtpMailbox({ userId: USER_A2, fromAddress: 'fence@mail.example.invalid' }),

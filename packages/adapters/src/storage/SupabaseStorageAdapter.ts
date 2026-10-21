@@ -1,6 +1,7 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { randomUUID } from 'node:crypto';
 import type { EmailAttachmentStoragePort, StorageServicePort } from '@intelliflow/application';
+import { isAttachmentPathInTenant } from '@intelliflow/domain';
 
 /**
  * Supabase Storage Adapter
@@ -152,10 +153,12 @@ export class SupabaseStorageAdapter implements StorageServicePort, EmailAttachme
     return data.signedUrl;
   }
 
-  /** Refuses any attachment path not under `<tenantId>/` (or with dot segments). */
+  /**
+   * Refuses any attachment path not under `<tenantId>/`, including encoded or
+   * backslash traversal: the storage URL built from it is normalised later.
+   */
   private assertTenantPath(tenantId: string, storagePath: string): void {
-    const segments = storagePath.split('/');
-    if (segments[0] !== tenantId || segments.some((s) => s === '..' || s === '.' || s === '')) {
+    if (!isAttachmentPathInTenant(storagePath, tenantId)) {
       throw new Error('Refusing an attachment path outside the tenant');
     }
   }

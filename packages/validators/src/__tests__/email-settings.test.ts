@@ -150,6 +150,13 @@ describe('sendUserEmailInputSchema', () => {
         attachments: [{ ...attachment, storagePath: '../other-tenant/x.pdf' }],
       }).success
     ).toBe(false);
+    // Encoded dot segments survive a literal check, then storage normalises them.
+    expect(
+      sendUserEmailInputSchema.safeParse({
+        ...base,
+        attachments: [{ ...attachment, storagePath: 'tenant-1/%2e%2e/other-tenant/x.pdf' }],
+      }).success
+    ).toBe(false);
   });
 
   it('rejects the old fileUrl attachment shape', () => {

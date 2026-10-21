@@ -8,6 +8,7 @@ import {
   HARD_BOUNCE_ACTIONS,
   SUPPRESSION_REASONS,
   hasHeaderInjection,
+  isAttachmentPathInTenant,
 } from '@intelliflow/domain';
 import { idSchema } from './common';
 import { mailboxAddressSchema } from './email-mailbox';
@@ -54,12 +55,8 @@ const storagePathSchema = z
   .string()
   .min(3)
   .max(512)
-  .refine(
-    (v) => !v.startsWith('/') && !v.split('/').some((s) => s === '..' || s === '.' || s === ''),
-    {
-      message: 'Invalid attachment path',
-    }
-  );
+  // Encoded traversal included: storage normalises the URL built from it.
+  .refine((v) => isAttachmentPathInTenant(v), { message: 'Invalid attachment path' });
 
 /** Executable / script types that are never accepted as email attachments. */
 export const BLOCKED_ATTACHMENT_EXTENSIONS = [

@@ -252,6 +252,17 @@ interface MatchedBounce {
 /** Thrown (rolling the receipt back) when a scan has used its suppression budget. */
 class SuppressionCapReached extends Error {}
 
+/**
+ * Serialises soft-bounce receipts per tenant and recipient until the
+ * transaction ends. The threshold counts receipts across all the tenant's
+ * mailboxes: without this, two scans could each count before the other
+ * committed and both miss the threshold.
+ */
+async function lockSoftBounceCount(tx: any, tenantId: string, recipient: string): Promise<void> {
+  const key = `email-soft-bounce:${tenantId}:${recipient}`;
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${key}::text, 0))`;
+}
+
 /** Thrown (rolling the receipt back) when this scan's lease was taken over. */
 class LeaseLost extends Error {}
 
@@ -369,6 +380,8 @@ async function recordReceiptOnce(
   try {
     return await deps.prisma.$transaction(async (tx: any) => {
       await assertLeaseHeld(tx, r.state.claim);
+      if (matched && kind === 'SOFT')
+        await lockSoftBounceCount(tx, mailbox.tenantId, entry.recipient);
       await tx.emailBounceReceipt.create({
         data: {
           tenantId: mailbox.tenantId,

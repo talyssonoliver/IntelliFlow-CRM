@@ -80,6 +80,16 @@ describe('SupabaseStorageAdapter — email attachments (PG-207)', () => {
     await expect(
       adapter.downloadEmailAttachment('tenant-a', 'tenant-a/../tenant-b/x.pdf')
     ).rejects.toThrow(/outside the tenant/);
+    // The storage URL is normalised after it is built: encoded traversal must not pass.
+    for (const path of ['tenant-a/%2e%2e/tenant-b/x.pdf', 'tenant-a/..\\tenant-b\\x.pdf']) {
+      await expect(adapter.downloadEmailAttachment('tenant-a', path)).rejects.toThrow(
+        /outside the tenant/
+      );
+      await expect(adapter.emailAttachmentDownloadUrl('tenant-a', path, 300)).rejects.toThrow(
+        /outside the tenant/
+      );
+    }
+    expect(storageMock.bucketApi.download).toHaveBeenCalledTimes(1);
   });
 
   it('signs short-lived download links only for paths under the caller tenant', async () => {

@@ -70,6 +70,7 @@ function fakeDb(
   let leased = false;
   let nextScanAt: Date | null = null;
   const db: any = {
+    $executeRaw: vi.fn(async () => 1),
     $queryRaw: vi.fn(async (_sql: unknown, _leaseUntil: Date, now: Date) => {
       if (leased || (nextScanAt && nextScanAt > now)) return [];
       leased = true;
@@ -335,6 +336,32 @@ describe('runBounceScan', () => {
     fake = fakeDb({ softCount: 3 });
     await runBounceScan(deps(fake, [{ key: '7:11', raw: soft }]).d);
     expect(fake.suppressions[0]).toMatchObject({ reason: 'SOFT_BOUNCE_LIMIT' });
+  });
+
+  it('serialises soft-bounce counting per tenant and recipient, before the receipt is stored', async () => {
+    const soft = makeDsn({
+      recipients: [{ address: 'gone@example.invalid', action: 'failed', status: '4.2.2' }],
+    });
+    const fake = fakeDb({ softCount: 1 });
+    const order: string[] = [];
+    fake.db.$executeRaw.mockImplementation(async () => {
+      order.push('lock');
+      return 1;
+    });
+    const create = fake.db.emailBounceReceipt.create.getMockImplementation();
+    fake.db.emailBounceReceipt.create.mockImplementation(async (args: any) => {
+      order.push('receipt');
+      return create(args);
+    });
+    await runBounceScan(deps(fake, [{ key: '7:11', raw: soft }]).d);
+    // Without it, two scans of different mailboxes could each count before the
+    // other committed and both miss the threshold.
+    expect(order).toEqual(['lock', 'receipt']);
+    const sql = String((fake.db.$executeRaw.mock.calls[0] as any)[0].join('?'));
+    expect(sql).toContain('pg_advisory_xact_lock');
+    expect((fake.db.$executeRaw.mock.calls[0] as any).slice(1)).toEqual([
+      'email-soft-bounce:tenant-1:gone@example.invalid',
+    ]);
   });
 
   it('a delayed notice is recorded but never bounces or suppresses', async () => {

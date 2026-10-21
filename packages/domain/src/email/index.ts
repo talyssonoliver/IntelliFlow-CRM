@@ -1,5 +1,6 @@
 export * from './email-constants';
 export * from './email-address';
+export * from './attachment-path';
 export * from './resolve-sending-mailbox';
 export * from './partition-recipients';
 export * from './dsn-classification';
