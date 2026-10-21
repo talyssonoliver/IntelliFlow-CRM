@@ -10,9 +10,9 @@ export interface DsnRecipient {
   status: string;
 }
 
-/** What a receiving provider stamps on a genuine bounce from mta.example.invalid. */
+/** What a receiving provider stamps on a genuine bounce from the recipient's domain. */
 export const PASSING_AUTH =
-  'mx.example.invalid; dkim=pass header.d=mta.example.invalid; spf=pass smtp.helo=mta.example.invalid';
+  'mx.example.invalid; dkim=pass header.d=example.invalid; spf=pass smtp.helo=example.invalid';
 
 export function makeDsn(
   options: {
@@ -49,7 +49,7 @@ export function makeDsn(
     options.authenticationResults === undefined ? [PASSING_AUTH] : options.authenticationResults;
   return [
     ...(authenticationResults ?? []).map((value) => `Authentication-Results: ${value}`),
-    `From: ${options.from ?? 'Mail Delivery Subsystem <mailer-daemon@mta.example.invalid>'}`,
+    `From: ${options.from ?? 'Mail Delivery Subsystem <mailer-daemon@example.invalid>'}`,
     'To: me@mail.example.invalid',
     'Subject: Undelivered Mail Returned to Sender',
     'MIME-Version: 1.0',

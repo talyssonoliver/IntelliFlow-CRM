@@ -100,16 +100,19 @@ const PROVIDER_REPORT_DOMAINS: Record<string, readonly string[]> = {
   MICROSOFT: ['microsoft.com', 'outlook.com', 'hotmail.com', 'office365.com'],
 };
 
-/** `reporter` is `host` or one of its subdomains. */
-function withinHost(reporter: string, host: string): boolean {
-  return reporter === host || reporter.endsWith(`.${host}`);
+/**
+ * `reporter` may speak for `domain`: it is that domain or a PARENT of it
+ * (example.com for sub.example.com), never a child - a child (evil.example.com)
+ * gets no authority over its parent - and never a bare TLD.
+ */
+function speaksFor(reporter: string, domain: string): boolean {
+  if (!reporter.includes('.')) return false;
+  return domain === reporter || domain.endsWith(`.${reporter}`);
 }
 
-/** One domain is the other or a subdomain of it, and the shorter is not a bare TLD. */
-function aligned(a: string, b: string): boolean {
-  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
-  if (!shorter.includes('.')) return false;
-  return longer === shorter || longer.endsWith(`.${shorter}`);
+/** `reporter` is the provider domain or one of its subdomains (the provider owns them all). */
+function withinProvider(reporter: string, provider: string): boolean {
+  return reporter === provider || reporter.endsWith(`.${provider}`);
 }
 
 /**
@@ -147,27 +150,33 @@ export interface TrustedReceiver {
  * recipient's own domain (its MTA reports on its users), or the sending side -
  * the mailbox's address domain, its SMTP/IMAP hosts, or its provider. A report
  * signed by any other domain - e.g. one an insider recipient controls - cannot
- * bounce or suppress someone else. Hosts count as themselves, never their
- * parent, so a shared platform domain is not entitled as a whole.
+ * bounce or suppress someone else. Directional, never symmetric: for the
+ * recipient, the reporter is its domain or a parent of it; the sending side
+ * (address domain, SMTP/IMAP hosts) must match exactly; a provider covers its
+ * own subdomains.
  */
 function mayReportOn(
   reporters: readonly string[],
   recipient: string,
   mailbox: ScanMailbox
 ): boolean {
-  const domains = [
-    recipient.slice(recipient.lastIndexOf('@') + 1),
+  const recipientDomain = recipient.slice(recipient.lastIndexOf('@') + 1).toLowerCase();
+  // The sending side is matched exactly: the mailbox's address domain and hosts.
+  const sendingSide = [
     mailbox.fromAddress
       ? mailbox.fromAddress.slice(mailbox.fromAddress.lastIndexOf('@') + 1)
       : null,
-    ...(PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? []),
-  ];
-  // A host is entitled as itself (or its subdomains), never its parent domain.
-  const hosts = [mailbox.smtpHost, mailbox.imapHost];
+    mailbox.smtpHost,
+    mailbox.imapHost,
+  ]
+    .filter((d): d is string => Boolean(d))
+    .map((d) => d.toLowerCase());
+  const providers = PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? [];
   return reporters.some(
     (reporter) =>
-      domains.some((d) => Boolean(d) && aligned(reporter, String(d).toLowerCase())) ||
-      hosts.some((h) => Boolean(h) && withinHost(reporter, String(h).toLowerCase()))
+      speaksFor(reporter, recipientDomain) ||
+      sendingSide.includes(reporter) ||
+      providers.some((provider) => withinProvider(reporter, provider))
   );
 }
 

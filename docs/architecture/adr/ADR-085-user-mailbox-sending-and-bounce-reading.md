@@ -123,10 +123,17 @@ Chosen option 4.
      domain related to the From domain (one within the other). The domain that
      passed, not the From domain the sender chose, is the reporter's identity.
      Comments are ignored.
-  3. **Entitled.** A passing domain may speak for that recipient. It must be the
-     recipient's own domain, or the sending side: the mailbox address domain,
-     its SMTP/IMAP hosts as themselves (never their parent), or the provider
-     (Google, Microsoft). A bare TLD never qualifies.
+  3. **Entitled, directionally.** A passing domain may speak for that recipient
+     in one of three ways:
+     - It is the recipient's domain or a parent of it. `example.com` may report
+       on `sub.example.com`, never the reverse: a child such as
+       `evil.example.com` gets no authority over its parent.
+     - It exactly matches the sending side: the mailbox address domain or its
+       SMTP/IMAP hosts.
+     - It is a provider domain (Google, Microsoft) or one of its subdomains.
+
+     A bare TLD never qualifies. This closes the codex pre-ship HIGH
+     (2026-10-21).
 
   Every other report is stored as an UNMATCHED, LOW receipt with no effect. That
   covers a recipient forging a report with the ids they received, even when it

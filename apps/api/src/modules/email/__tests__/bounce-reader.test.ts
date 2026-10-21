@@ -256,11 +256,11 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     expectNoEffect(fake);
   });
 
-  it('the sending mailbox’s own provider may report on any recipient', async () => {
+  it('the sending mailbox’s own domain (exactly) may report on any recipient', async () => {
     const fake = fakeDb({ mailbox: smtpMailbox({ fromAddress: 'me@mail.example.org' }) });
     const fromSendersMta = makeDsn({
-      from: 'mailer-daemon@out.mail.example.org',
-      authenticationResults: ['mx.example.invalid; spf=pass smtp.helo=out.mail.example.org'],
+      from: 'mailer-daemon@mail.example.org',
+      authenticationResults: ['mx.example.invalid; spf=pass smtp.helo=mail.example.org'],
     });
     const { d } = deps(fake, [{ key: '7:11', raw: fromSendersMta }]);
     await runBounceScan(d);
@@ -305,9 +305,9 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
       await runBounceScan(d);
       return fake;
     };
-    const trusted = await gmail(['mx.google.com; dkim=pass header.d=mta.example.invalid'])();
+    const trusted = await gmail(['mx.google.com; dkim=pass header.d=example.invalid'])();
     expect(trusted.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
-    const other = await gmail(['mx.example.invalid; dkim=pass header.d=mta.example.invalid'])();
+    const other = await gmail(['mx.example.invalid; dkim=pass header.d=example.invalid'])();
     expectNoEffect(other);
   });
 
@@ -346,6 +346,65 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     const { d } = deps(fake, [{ key: '7:11', raw }]);
     await runBounceScan(d);
     expectNoEffect(fake);
+  });
+
+  describe('entitlement is directional: a parent may speak for its subdomains, never a child for its parent (codex pre-ship HIGH)', () => {
+    const onSub = () => fakeDb({ record: record({ toEmail: 'gone@sub.example.invalid' }) });
+    const bounce = (reporter: string, recipient: string) =>
+      makeDsn({
+        from: `mailer-daemon@${reporter}`,
+        authenticationResults: [`mx.example.invalid; dkim=pass header.d=${reporter}`],
+        recipients: [{ address: recipient, action: 'failed', status: '5.1.1' }],
+      });
+
+    it('a child domain cannot report on its parent (evil.example.invalid -> example.invalid)', async () => {
+      const fake = fakeDb();
+      const { d } = deps(fake, [
+        { key: '7:11', raw: bounce('evil.example.invalid', 'gone@example.invalid') },
+      ]);
+      await runBounceScan(d);
+      expectNoEffect(fake);
+    });
+
+    it('a parent domain may report on its subdomain (example.invalid -> sub.example.invalid)', async () => {
+      const fake = onSub();
+      const { d } = deps(fake, [
+        { key: '7:11', raw: bounce('example.invalid', 'gone@sub.example.invalid') },
+      ]);
+      await runBounceScan(d);
+      expect(fake.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
+    });
+
+    it('the recipient’s exact domain may report', async () => {
+      const fake = onSub();
+      const { d } = deps(fake, [
+        { key: '7:11', raw: bounce('sub.example.invalid', 'gone@sub.example.invalid') },
+      ]);
+      await runBounceScan(d);
+      expect(fake.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
+    });
+
+    it('a sibling subdomain cannot report (other.example.invalid -> sub.example.invalid)', async () => {
+      const fake = onSub();
+      const { d } = deps(fake, [
+        { key: '7:11', raw: bounce('other.example.invalid', 'gone@sub.example.invalid') },
+      ]);
+      await runBounceScan(d);
+      expectNoEffect(fake);
+    });
+
+    it('the sending side is matched exactly: a subdomain of the mailbox domain or host is not entitled', async () => {
+      const fake = fakeDb({
+        mailbox: smtpMailbox({ fromAddress: 'me@mail.example.org', smtpHost: 'smtp.example.net' }),
+      });
+      const { d } = deps(fake, [
+        { key: '7:11', raw: bounce('x.mail.example.org', 'gone@example.invalid') },
+        { key: '7:12', raw: bounce('x.smtp.example.net', 'gone@example.invalid') },
+      ]);
+      await runBounceScan(d);
+      expect(fake.receipts.every((r: any) => r.kind === 'UNMATCHED')).toBe(true);
+      expect(fake.suppressions).toHaveLength(0);
+    });
   });
 
   it('a report with no Authentication-Results header is stored and has no effect', async () => {
@@ -750,7 +809,7 @@ describe('runBounceScan', () => {
         {
           key: 'gm1',
           raw: makeDsn({
-            authenticationResults: ['mx.google.com; dkim=pass header.d=mta.example.invalid'],
+            authenticationResults: ['mx.google.com; dkim=pass header.d=example.invalid'],
           }),
           receivedAt: NOW,
         },
