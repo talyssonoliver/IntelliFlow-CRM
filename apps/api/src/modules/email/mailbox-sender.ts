@@ -143,7 +143,14 @@ function rejectedMetadata(
 /** FAILED with its code; an authentication failure also marks the mailbox ERROR. */
 async function recordFailure(
   db: any,
-  ids: { recordId: string; tenantId: string; mailboxId: string; code: MailboxErrorCode },
+  ids: {
+    recordId: string;
+    tenantId: string;
+    mailboxId: string;
+    /** The credential version this send used. */
+    tokenVersion: number;
+    code: MailboxErrorCode;
+  },
   metadata: Record<string, unknown>
 ): Promise<void> {
   await db.emailRecord.update({
@@ -151,8 +158,9 @@ async function recordFailure(
     data: { status: 'FAILED', metadata },
   });
   if (ids.code === 'AUTH_FAILED') {
+    // Only these credentials: if new ones were saved meanwhile, they stand.
     await db.emailMailbox.updateMany({
-      where: { id: ids.mailboxId, tenantId: ids.tenantId },
+      where: { id: ids.mailboxId, tenantId: ids.tenantId, tokenVersion: ids.tokenVersion },
       data: { status: 'ERROR', lastErrorCode: ids.code },
     });
   }
@@ -303,7 +311,7 @@ export async function dispatchUserMail(
     console.error('[email] user mail send failed', { recordId, code });
     await recordFailure(
       db,
-      { recordId, tenantId, mailboxId: mailbox.id, code },
+      { recordId, tenantId, mailboxId: mailbox.id, tokenVersion: mailbox.tokenVersion, code },
       {
         ...recordMetadata(input, recipients.skipped, options),
         sendErrorCode: code,

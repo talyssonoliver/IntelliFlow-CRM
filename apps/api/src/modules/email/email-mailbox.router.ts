@@ -122,10 +122,11 @@ async function writeMailbox(
   const data = written.status === 'ACTIVE' ? { ...written, ...freshScanState() } : written;
   try {
     if (existing) {
-      // New credentials: cached access tokens of the old ones stop being valid.
+      // New credentials: cached access tokens of the old ones stop being valid,
+      // and an in-flight bounce scan loses its lease (its writes are refused).
       return await ctx.prismaWithTenant.emailMailbox.update({
         where: { id: existing.id },
-        data: { ...data, tokenVersion: { increment: 1 } },
+        data: { ...data, tokenVersion: { increment: 1 }, lockedUntil: null },
       });
     }
     return await ctx.prismaWithTenant.emailMailbox.create({
@@ -489,6 +490,8 @@ export const emailMailboxRouter = createTRPCRouter({
           imapLastUid: null,
           scanCursorAt: null,
           tokenVersion: { increment: 1 },
+          // An in-flight bounce scan loses its lease and writes nothing back.
+          lockedUntil: null,
         },
       });
       auditEmail(c, 'UPDATE', RESOURCE, row.id, { scope: input.scope, disconnected: true });

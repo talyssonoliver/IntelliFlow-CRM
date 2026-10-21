@@ -246,8 +246,9 @@ describe('dispatchUserMail', () => {
   it('marks the mailbox ERROR on an authentication failure', async () => {
     transport.send.mockRejectedValue(new MailboxTransportError('AUTH_FAILED'));
     await errorOf(dispatchUserMail(createTestContext() as never, input, deps()));
+    // Only the credentials that failed: a save meanwhile moved tokenVersion on.
     expect(prismaMock.emailMailbox.updateMany).toHaveBeenCalledWith({
-      where: { id: 'mb-own', tenantId },
+      where: { id: 'mb-own', tenantId, tokenVersion: 0 },
       data: { status: 'ERROR', lastErrorCode: 'AUTH_FAILED' },
     });
   });

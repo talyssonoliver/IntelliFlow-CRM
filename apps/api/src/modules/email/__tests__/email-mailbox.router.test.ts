@@ -174,6 +174,13 @@ describe('emailMailbox.saveSmtp', () => {
     expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].where).toEqual({ id: 'mb1' });
   });
 
+  it('new credentials end any in-flight bounce scan lease (its stale writes are refused)', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
+    await member().saveSmtp(saveInput);
+    const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
+    expect(data.lockedUntil).toBeNull();
+  });
+
   it('saving working credentials clears the bounce-scan failure streak', async () => {
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow({ failureCount: 5 }));
     await member().saveSmtp(saveInput);
@@ -632,6 +639,8 @@ describe('emailMailbox.disconnect', () => {
         imapLastUid: null,
         scanCursorAt: null,
         tokenVersion: { increment: 1 },
+        // An in-flight bounce scan loses its lease and writes nothing back.
+        lockedUntil: null,
       },
     });
   });
