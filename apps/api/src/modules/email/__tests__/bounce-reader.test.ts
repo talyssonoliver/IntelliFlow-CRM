@@ -25,7 +25,8 @@ const smtpMailbox = (over: Record<string, unknown> = {}) => ({
   refreshToken: null,
   tokenVersion: 0,
   imapUidValidity: 7n,
-  imapLastUid: 10,
+  // BigInt, as Prisma returns the column.
+  imapLastUid: 10n,
   scanCursorAt: null,
   createdAt: new Date(NOW.getTime() - 5 * DAY),
   failureCount: 0,

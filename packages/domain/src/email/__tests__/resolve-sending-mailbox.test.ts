@@ -55,19 +55,36 @@ describe('resolveSendingMailbox', () => {
     ).toEqual({ refusal: 'NO_MAILBOX' });
   });
 
-  it.each(['ERROR', 'DISCONNECTED'] as const)(
-    'refuses with MAILBOX_ERROR when the user’s own mailbox is %s (never falls back)',
-    (status) => {
-      expect(
-        resolveSendingMailbox({
-          userMailbox: own(status),
-          tenantMailbox: tenant('ACTIVE'),
-          allowFallback: true,
-          isAdmin: true,
-        })
-      ).toEqual({ refusal: 'MAILBOX_ERROR' });
-    }
-  );
+  it('refuses with MAILBOX_ERROR when the user’s own mailbox is in ERROR (never falls back)', () => {
+    expect(
+      resolveSendingMailbox({
+        userMailbox: own('ERROR'),
+        tenantMailbox: tenant('ACTIVE'),
+        allowFallback: true,
+        isAdmin: true,
+      })
+    ).toEqual({ refusal: 'MAILBOX_ERROR' });
+  });
+
+  it('treats a disconnected own mailbox as none: the company fallback rules apply', () => {
+    const company = tenant('ACTIVE');
+    expect(
+      resolveSendingMailbox({
+        userMailbox: own('DISCONNECTED'),
+        tenantMailbox: company,
+        allowFallback: true,
+        isAdmin: false,
+      })
+    ).toEqual({ mailbox: company });
+    expect(
+      resolveSendingMailbox({
+        userMailbox: own('DISCONNECTED'),
+        tenantMailbox: company,
+        allowFallback: false,
+        isAdmin: false,
+      })
+    ).toEqual({ refusal: 'NO_MAILBOX' });
+  });
 
   it('refuses with NO_MAILBOX when nothing is connected', () => {
     expect(

@@ -79,7 +79,8 @@ interface ScanMailbox {
   refreshToken: string | null;
   tokenVersion: number;
   imapUidValidity: bigint | null;
-  imapLastUid: number | null;
+  /** BigInt in the database (Prisma returns a bigint). */
+  imapLastUid: bigint | number | null;
   scanCursorAt: Date | null;
   createdAt: Date;
   failureCount: number;
@@ -179,7 +180,8 @@ async function listReports(
       },
       {
         uidValidity: mailbox.imapUidValidity,
-        lastUid: mailbox.imapLastUid,
+        // IMAP UIDs are 32-bit, so the stored BigInt converts exactly.
+        lastUid: mailbox.imapLastUid === null ? null : Number(mailbox.imapLastUid),
         since: mailbox.scanCursorAt ?? mailbox.createdAt,
       },
       {

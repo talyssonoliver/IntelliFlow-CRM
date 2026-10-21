@@ -110,6 +110,20 @@ describe('ImapBounceReader', () => {
     expect(result).toEqual({ messages: [], cursor: { uidValidity: 9n, lastUid: 49 } });
   });
 
+  it('resumes from a stored BigInt UID (the column type) without mixing BigInt and number', async () => {
+    const { client } = fakeClient({ searchResult: [10], messages: [msg(10)], uidValidity: 7n });
+    const result = await new ImapBounceReader({ createClient: () => client, lookup }).read(
+      config,
+      { uidValidity: 7n, lastUid: 9n as unknown as number, since: SINCE },
+      { limit: 50, maxBytes: 1024 }
+    );
+    expect(client.search).toHaveBeenCalledWith(
+      { uid: '10:*', header: { 'content-type': 'multipart/report' } },
+      { uid: true }
+    );
+    expect(result.cursor).toEqual({ uidValidity: 7n, lastUid: 10 });
+  });
+
   it('next scan: resumes after the last UID, fetches matches oldest first and skips oversize ones', async () => {
     const { client } = fakeClient({
       searchResult: [12, 11, 10, 9],

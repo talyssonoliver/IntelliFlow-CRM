@@ -141,7 +141,8 @@ export class ImapBounceReader {
         const mailbox = client.mailbox;
         if (!mailbox) throw new MailboxTransportError('CONNECT_FAILED');
         const resume = cursor.uidValidity === mailbox.uidValidity && cursor.lastUid !== null;
-        const after = resume ? (cursor.lastUid as number) : 0;
+        // Number() also accepts a stored BigInt UID (32-bit, so exact).
+        const after = resume ? Number(cursor.lastUid) : 0;
         const query = resume
           ? { uid: `${after + 1}:*`, header: REPORT_HEADER }
           : { since: cursor.since, header: REPORT_HEADER };
