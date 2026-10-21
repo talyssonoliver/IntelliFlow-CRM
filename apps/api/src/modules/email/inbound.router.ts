@@ -33,7 +33,7 @@ import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/
 import { sendUserEmailInputSchema, type SendUserEmailResultDto } from '@intelliflow/validators';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
-import { emailRuntimeDeps, type EmailRouterCtx } from './email-access';
+import { emailAttachmentStorage, emailRuntimeDeps, type EmailRouterCtx } from './email-access';
 import { dispatchUserMail } from './mailbox-sender';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
 
@@ -44,6 +44,8 @@ const InboundEmailParser = (adapters as any).InboundEmailParser;
  * SENT for mail that never left — is gone.
  */
 const SENT_FOLDER_STATUSES = ['SENT', 'DELIVERED', 'OPENED', 'CLICKED', 'BOUNCED', 'FAILED'];
+/** Lifetime of a signed attachment download link. */
+const ATTACHMENT_LINK_SECONDS = 300;
 
 // ============================================================================
 // Input Schemas
@@ -620,13 +622,19 @@ export const inboundEmailRouter = createTRPCRouter({
         });
         if (!attachment) return null;
 
-        // Requires OAuth email provider integration (PG-084). Will generate a signed URL from
-        // S3/Supabase Storage once the storage provider is wired. Returns the stored URL in the interim.
+        // Attachments sent from compose (PG-207) are private storage keys under the
+        // tenant: they are served through a short-lived signed link.
+        const storage = emailAttachmentStorage(ctx as unknown as EmailRouterCtx);
+        const fileUrl: string | null = attachment.fileUrl;
+        const downloadUrl =
+          storage && fileUrl?.startsWith(`${tenantId}/`)
+            ? await storage.emailAttachmentDownloadUrl(tenantId, fileUrl, ATTACHMENT_LINK_SECONDS)
+            : fileUrl || `/api/email/attachments/${attachment.id}`;
         return {
           filename: attachment.fileName,
           contentType: attachment.fileType,
           size: attachment.fileSize,
-          downloadUrl: attachment.fileUrl || `/api/email/attachments/${attachment.id}`,
+          downloadUrl,
         };
       }
     ),

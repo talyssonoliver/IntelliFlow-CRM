@@ -50,10 +50,12 @@ vi.mock('@intelliflow/adapters', async (importOriginal) => {
 // PG-207: forwards go through the single send path; stub it and the runtime deps here
 // (dispatchUserMail itself is covered by mailbox-sender.test.ts).
 const dispatch = vi.hoisted(() => vi.fn());
+const attachmentStorage = vi.hoisted(() => ({ emailAttachmentDownloadUrl: vi.fn() }));
 vi.mock('../mailbox-sender', () => ({ dispatchUserMail: dispatch }));
 vi.mock('../email-access', async (importOriginal) => ({
   ...((await importOriginal()) as object),
   emailRuntimeDeps: () => ({ transports: {}, storage: {} }),
+  emailAttachmentStorage: () => attachmentStorage,
 }));
 
 // Import after mock is set up
@@ -428,6 +430,31 @@ Hello World`;
 
       expect(result).not.toBeNull();
       expect(result?.filename).toBe('file.pdf');
+    });
+
+    it('serves an attachment sent from compose through a short-lived signed link (PG-207)', async () => {
+      const storagePath = `${TEST_UUIDS.tenant}/u-report.pdf`;
+      (prismaMock.emailAttachment.findFirst as any).mockResolvedValue({
+        id: 'att-2',
+        emailId: 'test-email-123',
+        fileName: 'report.pdf',
+        fileType: 'application/pdf',
+        fileSize: 10,
+        fileUrl: storagePath,
+      });
+      attachmentStorage.emailAttachmentDownloadUrl.mockResolvedValue(
+        'https://storage.example.invalid/signed/report.pdf'
+      );
+      const result = await protectedCaller.getAttachment({
+        emailId: 'test-email-123',
+        attachmentId: 'att-2',
+      });
+      expect(attachmentStorage.emailAttachmentDownloadUrl).toHaveBeenCalledWith(
+        TEST_UUIDS.tenant,
+        storagePath,
+        300
+      );
+      expect(result?.downloadUrl).toBe('https://storage.example.invalid/signed/report.pdf');
     });
   });
 });

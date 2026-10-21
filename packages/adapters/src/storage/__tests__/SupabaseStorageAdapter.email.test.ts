@@ -4,6 +4,7 @@ const storageMock = vi.hoisted(() => {
   const bucketApi = {
     upload: vi.fn(),
     download: vi.fn(),
+    createSignedUrl: vi.fn(),
   };
   return {
     bucketApi,
@@ -79,6 +80,29 @@ describe('SupabaseStorageAdapter — email attachments (PG-207)', () => {
     await expect(
       adapter.downloadEmailAttachment('tenant-a', 'tenant-a/../tenant-b/x.pdf')
     ).rejects.toThrow(/outside the tenant/);
+  });
+
+  it('signs short-lived download links only for paths under the caller tenant', async () => {
+    storageMock.bucketApi.createSignedUrl.mockResolvedValue({
+      data: { signedUrl: 'https://storage.example.invalid/signed' },
+      error: null,
+    });
+    const adapter = new SupabaseStorageAdapter('http://localhost:54321', 'k');
+    await expect(
+      adapter.emailAttachmentDownloadUrl('tenant-a', 'tenant-a/abc-a.pdf', 300)
+    ).resolves.toBe('https://storage.example.invalid/signed');
+    expect(storageMock.from).toHaveBeenCalledWith('email-attachments');
+    expect(storageMock.bucketApi.createSignedUrl).toHaveBeenCalledWith('tenant-a/abc-a.pdf', 300);
+    await expect(
+      adapter.emailAttachmentDownloadUrl('tenant-a', 'tenant-b/abc-a.pdf', 300)
+    ).rejects.toThrow(/outside the tenant/);
+    storageMock.bucketApi.createSignedUrl.mockResolvedValueOnce({
+      data: null,
+      error: { message: 'detail' },
+    });
+    await expect(
+      adapter.emailAttachmentDownloadUrl('tenant-a', 'tenant-a/abc-a.pdf', 300)
+    ).rejects.toThrow('Email attachment link failed');
   });
 
   it('surfaces storage failures without the provider message', async () => {

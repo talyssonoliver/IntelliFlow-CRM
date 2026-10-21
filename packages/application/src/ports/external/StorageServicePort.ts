@@ -61,4 +61,11 @@ export interface EmailAttachmentStoragePort {
 
   /** Reads a stored attachment; refuses any path not under `<tenantId>/`. */
   downloadEmailAttachment(tenantId: string, storagePath: string): Promise<Buffer>;
+
+  /** A signed download link valid for `expiresInSeconds`; same tenant rule as download. */
+  emailAttachmentDownloadUrl(
+    tenantId: string,
+    storagePath: string,
+    expiresInSeconds: number
+  ): Promise<string>;
 }

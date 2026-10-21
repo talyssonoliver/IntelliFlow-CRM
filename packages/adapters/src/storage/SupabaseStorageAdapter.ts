@@ -131,15 +131,33 @@ export class SupabaseStorageAdapter implements StorageServicePort, EmailAttachme
   }
 
   async downloadEmailAttachment(tenantId: string, storagePath: string): Promise<Buffer> {
-    const segments = storagePath.split('/');
-    if (segments[0] !== tenantId || segments.some((s) => s === '..' || s === '.' || s === '')) {
-      throw new Error('Refusing an attachment path outside the tenant');
-    }
+    this.assertTenantPath(tenantId, storagePath);
     const { data, error } = await this.client.storage
       .from(this.emailAttachmentsBucket)
       .download(storagePath);
     if (error || !data) throw new Error('Email attachment download failed');
     return Buffer.from(await data.arrayBuffer());
+  }
+
+  async emailAttachmentDownloadUrl(
+    tenantId: string,
+    storagePath: string,
+    expiresInSeconds: number
+  ): Promise<string> {
+    this.assertTenantPath(tenantId, storagePath);
+    const { data, error } = await this.client.storage
+      .from(this.emailAttachmentsBucket)
+      .createSignedUrl(storagePath, expiresInSeconds);
+    if (error || !data) throw new Error('Email attachment link failed');
+    return data.signedUrl;
+  }
+
+  /** Refuses any attachment path not under `<tenantId>/` (or with dot segments). */
+  private assertTenantPath(tenantId: string, storagePath: string): void {
+    const segments = storagePath.split('/');
+    if (segments[0] !== tenantId || segments.some((s) => s === '..' || s === '.' || s === '')) {
+      throw new Error('Refusing an attachment path outside the tenant');
+    }
   }
 
   /**

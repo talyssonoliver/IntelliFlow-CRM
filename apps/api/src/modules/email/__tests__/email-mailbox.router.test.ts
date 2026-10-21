@@ -174,6 +174,14 @@ describe('emailMailbox.saveSmtp', () => {
     expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].where).toEqual({ id: 'mb1' });
   });
 
+  it('saving working credentials clears the bounce-scan failure streak', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow({ failureCount: 5 }));
+    await member().saveSmtp(saveInput);
+    const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
+    expect(data).toMatchObject({ status: 'ACTIVE', failureCount: 0 });
+    expect(data.nextScanAt).toBeInstanceOf(Date);
+  });
+
   it('never reuses a stored password for a different server or username', async () => {
     (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
       smtpRow({
@@ -370,7 +378,13 @@ describe('emailMailbox.testConnection', () => {
     });
     expect(prismaMock.emailMailbox.updateMany).toHaveBeenCalledWith({
       where: { id: 'mb1', tenantId },
-      data: { status: 'ACTIVE', lastErrorCode: null },
+      // A repaired mailbox starts bounce reading afresh, not on its old failure streak.
+      data: {
+        status: 'ACTIVE',
+        lastErrorCode: null,
+        failureCount: 0,
+        nextScanAt: expect.any(Date),
+      },
     });
   });
 
@@ -562,9 +576,9 @@ describe('emailMailbox OAuth connect', () => {
       code: 'c'.repeat(20),
       state: 's'.repeat(43),
     });
-    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].data.tokenVersion).toEqual({
-      increment: 1,
-    });
+    const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
+    expect(data.tokenVersion).toEqual({ increment: 1 });
+    expect(data).toMatchObject({ status: 'ACTIVE', failureCount: 0 });
   });
 
   it('maps a provider failure during completion to a coded BAD_REQUEST', async () => {

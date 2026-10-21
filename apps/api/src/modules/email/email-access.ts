@@ -93,6 +93,13 @@ export function emailRuntimeDeps(ctx: EmailRouterCtx): EmailRuntimeDeps {
   return { transports, storage };
 }
 
+/** The email-attachments storage, for attachment download links. */
+export function emailAttachmentStorage(
+  ctx: EmailRouterCtx
+): Pick<EmailAttachmentStoragePort, 'emailAttachmentDownloadUrl'> | null {
+  return (ctx.adapters?.storageService as EmailAttachmentStoragePort | undefined) ?? null;
+}
+
 /** The Prisma error code of `err` (e.g. `P2002`), if any. */
 export function prismaErrorCode(err: unknown): string | undefined {
   return err && typeof err === 'object' ? (err as { code?: string }).code : undefined;

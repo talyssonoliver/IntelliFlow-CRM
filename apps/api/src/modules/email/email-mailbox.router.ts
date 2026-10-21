@@ -104,12 +104,22 @@ function stateHash(state: string): string {
 }
 
 /** Creates or updates the scope's mailbox. A racing duplicate is CONFLICT. */
+/**
+ * A mailbox made ACTIVE again (new credentials or a passing test) starts bounce
+ * reading afresh: an old failure streak would otherwise turn the next single
+ * scan failure back into ERROR.
+ */
+function freshScanState(): { failureCount: number; nextScanAt: Date } {
+  return { failureCount: 0, nextScanAt: new Date() };
+}
+
 async function writeMailbox(
   ctx: EmailRouterCtx,
   existing: MailboxRow | null,
   owner: ReturnType<typeof ownerFor>,
-  data: Record<string, unknown>
+  written: Record<string, unknown>
 ): Promise<MailboxRow> {
+  const data = written.status === 'ACTIVE' ? { ...written, ...freshScanState() } : written;
   try {
     if (existing) {
       // New credentials: cached access tokens of the old ones stop being valid.
@@ -330,7 +340,7 @@ export const emailMailboxRouter = createTRPCRouter({
           where: { id: row.id, tenantId: c.tenant.tenantId },
           data:
             code === null
-              ? { status: 'ACTIVE', lastErrorCode: null }
+              ? { status: 'ACTIVE', lastErrorCode: null, ...freshScanState() }
               : { status: 'ERROR', lastErrorCode: code },
         });
       }
