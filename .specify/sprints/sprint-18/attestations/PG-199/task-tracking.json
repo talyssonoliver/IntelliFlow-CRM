@@ -2,21 +2,95 @@
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "artifacts": {
     "created": [
-      "apps/web/src/app/agent-approvals/model-config/page.tsx"
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-199-spec.md",
+        "sha256": "142cf8854fe1574434d4872cfe0da80894b6a67c7d6842c4da4e052b49f3c195",
+        "created_at": "2026-10-19T11:39:05Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-199-discussion.md",
+        "sha256": "1807533c117292fb1bf57e480ddf9478cb57aa8b4d42e74d3a93635f5d77a0e3",
+        "created_at": "2026-10-19T11:39:05Z"
+      },
+      {
+        "path": "docs/architecture/adr/ADR-082-tenant-model-config.md",
+        "sha256": "bd8929be2301447cf31e8c5826fce184cec3926fa24145b4caad10425c27118d",
+        "created_at": "2026-10-19T11:39:05Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/PG-199-plan.md",
+        "sha256": "c551da78bd646be9854c0cb326d5b90da597ca17f35653e42a5a2480b5a8bea1",
+        "created_at": "2026-10-19T11:53:14Z"
+      },
+      {
+        "path": "apps/web/src/app/agent-approvals/model-config/page.tsx",
+        "sha256": "b12c02930046289f87d83dfbe1397baabf16c9c12804a6b3a62d009bdca4c165",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "apps/web/src/app/agent-approvals/model-config/ModelConfigContent.tsx",
+        "sha256": "d07c6c7b883444927d5ff2605a50a65b439c3fd261fdd4311f6d9b60f6a2a911",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "apps/api/src/modules/agent/model-config.router.ts",
+        "sha256": "90ac08a60fe29cef72fef302ecfc2c9ada64421fe3bebb3a85c58fb71333f040",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "packages/validators/src/model-config.ts",
+        "sha256": "aa87ae8f2c3a4b588d374b16201e88516abd4753745d5296350df6c6fe64fad7",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/attestations/PG-199/context_ack.json",
+        "sha256": "4e8b0bc8d8ba7935de9dda6dbb6f8c63197cf144893e39956015c238d130d828",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "packages/domain/src/ai/model-config/rules.ts",
+        "sha256": "5b7c8c77b31a54255698060dc6f89246ca5a1670e9c41190fa4354345dfc6fc7",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "packages/db/prisma/migrations/20261019120000_tenant_model_config/migration.sql",
+        "sha256": "7b874d6c33c9837eba9484dc462d6bd20fc0dc47aefe7f94e0ffae3633a9d77e",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "packages/db/prisma/migrations/20261019120100_tenant_ai_config_rls/migration.sql",
+        "sha256": "120b240344390e62a14f7ec5673f027f53bdf1b50b93f825e99104534507e3e1",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "apps/ai-worker/src/lib/purpose-ceiling.ts",
+        "sha256": "e3e127bc733a688d663345f107619674fb5762ea58cabcb196554cde678d695c",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "apps/ai-worker/src/lib/usage-metering.ts",
+        "sha256": "05337b2a4f7ce0826386500c25361eed72fa2024167a17137cb3c16d2f1d3ac2",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/PG-199-delivery.md",
+        "sha256": "38e01b81dc8d719931818ab865094f8ff97d62d3523366205622960a0305afb1",
+        "created_at": "2026-10-19T15:16:39Z"
+      },
+      {
+        "path": "artifacts/lighthouse/PG-199/model-config-path-a.report.json",
+        "sha256": "f6c85f51dfa03f23eed0966fe2994773d12fc592e342b49d7a15ff56a283a8b0",
+        "created_at": "2026-10-19T15:16:39Z"
+      }
     ],
     "expected": [
       "apps/web/src/app/agent-approvals/model-config/page.tsx",
       "apps/web/src/app/agent-approvals/model-config/ModelConfigContent.tsx",
-      "apps/api/src/modules/agent-approval/model-config.router.ts",
+      "apps/api/src/modules/agent/model-config.router.ts",
       "packages/validators/src/model-config.ts",
       ".specify/sprints/sprint-18/attestations/PG-199/context_ack.json"
     ],
-    "missing": [
-      "apps/web/src/app/agent-approvals/model-config/ModelConfigContent.tsx",
-      "apps/api/src/modules/agent-approval/model-config.router.ts",
-      "packages/validators/src/model-config.ts",
-      ".specify/sprints/sprint-18/attestations/PG-199/context_ack.json"
-    ]
+    "missing": []
   },
   "blockers": [],
   "completed_at": null,
@@ -24,21 +98,104 @@
     "verified_at": "2026-04-29T21:54:51.881Z"
   },
   "execution": {
-    "last_error": null,
-    "retry_count": 0
+    "last_error": "NEEDS_HUMAN: Lighthouse >= 90 needs an authenticated run (no LHCI_TEST_* credentials for a non-production Supabase); see artifacts/lighthouse/PG-199/README.md",
+    "retry_count": 0,
+    "started_at": "2026-10-19T11:55:22Z",
+    "executor": "Claude Code /exec (claude-opus-5-5, batch-3 lane PG-199)",
+    "agents": [
+      "stoa-foundation",
+      "stoa-security",
+      "stoa-quality",
+      "stoa-domain",
+      "stoa-intelligence",
+      "a11y-expert",
+      "plan-reviewer"
+    ],
+    "log_path": ".specify/sprints/sprint-18/execution/PG-199/20261019115522-8efea6fc/PG-199-delivery.md"
   },
-  "kpis": {},
+  "kpis": {
+    "diff_coverage": {
+      "target": ">= 80%",
+      "actual": "95.1% (1304/1371)",
+      "met": true
+    },
+    "new_code_duplication": {
+      "target": "< 3%",
+      "actual": "1.03%",
+      "met": true
+    },
+    "lighthouse": {
+      "target": ">= 90 authenticated",
+      "actual": "NEEDS_HUMAN (unauthenticated shell: perf 93, a11y 90)",
+      "met": false
+    }
+  },
   "notes": "Model config at /agent-approvals/model-config: per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings. MUST follow docs/planning/module-settings-playbook.md. Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md). Wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312.",
   "phase": "",
-  "started_at": null,
+  "started_at": "2026-10-19T10:39:24Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "status": "Specifying",
+      "at": "2026-10-19T10:39:24Z",
+      "note": "/spec-session started (batch-3 lane, worktree pg-199 at origin/main 797904a36)"
+    },
+    {
+      "status": "Spec Complete",
+      "at": "2026-10-19T11:39:05Z",
+      "note": "/spec-session complete: 6 Explore + R1-R3 (6 agents) + /spec-consensus round 1 5/6 (backend REJECTED single BASELINE_TIER) -> amendments A1-A8 -> round 2 6/6 APPROVED; owner rulings Q1-Q8"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-10-19T11:42:15Z",
+      "note": "/plan-session started"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-10-19T11:53:14Z",
+      "note": "/plan-session complete: plan-reviewer sub-agent iteration 1 REVISE (7E/10W/5I), iteration 2 REVISE (3E/3W/2I), iteration 3 APPROVE (0E/0W/1I)"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-19T11:55:22Z",
+      "note": "/exec started, run 20261019115522-8efea6fc"
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-19T15:16:39Z",
+      "note": "/exec Phase 5: all implementation, matrix, reviews and STOAs done; verdict NEEDS_HUMAN (Lighthouse authenticated run); MATOP WARN (Foundation/Domain/Intelligence PASS, Security WARN pre-existing advisory, Quality WARN Lighthouse); 90%"
     }
   ],
   "stream": null,
   "task_id": "PG-199",
-  "validations": []
+  "validations": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter (7 packages) typecheck",
+      "passed": true,
+      "at": "2026-10-19T14:29:22Z"
+    },
+    {
+      "name": "Tests",
+      "command": "full suites of 7 packages + integration via with-slot (matrix 14:18-14:28Z)",
+      "passed": true,
+      "at": "2026-10-19T14:28:16Z"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter (7 packages) lint",
+      "passed": true,
+      "at": "2026-10-19T14:30:13Z"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm turbo build packages+api+ai-worker+web",
+      "passed": true,
+      "at": "2026-10-19T14:33:11Z"
+    }
+  ]
 }

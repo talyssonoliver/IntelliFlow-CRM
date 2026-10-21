@@ -235,19 +235,29 @@ model TenantToolEnablement {
 // M8/M9 — Per-tenant LLM tier override for createLLM(purpose, tier)
 // P2.8 — rateLimitPerMinute added: per-tenant rate-limit override; null falls back to the
 //        global AI_RATE_LIMIT_PER_MINUTE env var (see apps/ai-worker/src/config/ai.config.ts).
+// PG-199 (ADR-082) — model pin, ordered fallbacks and monthly cost ceiling per purpose;
+//        tier is nullable (NULL = each caller keeps its own default tier).
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261019120000_tenant_model_config and
+// migrations/20261019120100_tenant_ai_config_rls — do not drop in a diff):
+//   - CHECKs on purpose, tier, temperature, maxTokens, monthlyCostCeilingCents, fallbackModelIds
+//   - RLS policy tenant_ai_config_tenant_isolation
 model TenantAIConfig {
-  id                 String   @id @default(cuid())
-  tenantId           String
-  purpose            String   // "scoring" | "qualification" | "email" | "reasoning" | "structured" | "rag"
-  tier               String   // "free" | "standard" | "premium"
-  temperature        Float?
-  maxTokens          Int?
-  rateLimitPerMinute Int?     // P2.8: null = use global env default
+  id                      String   @id @default(cuid())
+  tenantId                String
+  purpose                 String   // "scoring" | "qualification" | "email" | "reasoning" | "structured" | "rag"
+  tier                    String?  // "free" | "standard" | "premium"; NULL = caller default tier (PG-199)
+  temperature             Float?
+  maxTokens               Int?
+  rateLimitPerMinute      Int?     // P2.8: null = use global env default
+  modelId                 String?  // PG-199: catalog model pin (@intelliflow/domain MODEL_CATALOG); NULL = tier default
+  fallbackModelIds        String[] @default([]) // PG-199: ordered fallback catalog ids (<= 3)
+  monthlyCostCeilingCents Int?     // PG-199: per-purpose monthly ceiling in cents; NULL = none, 0 = blocked
   // Absent row = use factory default. A row overrides the default tier for that purpose.
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
-  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant                  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, purpose])
   @@index([tenantId])

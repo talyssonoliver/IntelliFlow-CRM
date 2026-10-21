@@ -103,6 +103,7 @@ import {
   RedisAIMonitoringStore,
   type RedisLike as MonitoringRedisLike,
 } from './modules/ai-monitoring/ai-monitoring.redis-store';
+import { createActiveEmbeddingModelReader } from './modules/agent/active-embedding-model';
 import { HomeCacheService } from './modules/home/home.cache';
 import { PublicFeedbackService } from './modules/public-feedback/public-feedback.service';
 import type { CachePort } from '@intelliflow/application';
@@ -695,10 +696,13 @@ const createServices = async (prismaClient: PrismaClient) => {
   // Reads from Redis (populated by ai-worker's RedisMonitoringPublisher) and
   // falls through to AIMonitoringService.* on cache miss / outage / poison.
   // See ADR-052.
+  const monitoringRedis = createMonitoringRedisClient();
   const aiMonitoringStore = new RedisAIMonitoringStore({
-    redis: createMonitoringRedisClient(),
+    redis: monitoringRedis,
     service: aiMonitoringService,
   });
+  // PG-199 (owner Q10): the embedding model the ai-worker publishes to the same Redis.
+  const activeEmbeddingModel = createActiveEmbeddingModelReader(monitoringRedis);
 
   // IFC-148: Conversation Search Service — wired with real Prisma repository
   const conversationSearchRepository = new PrismaConversationSearchRepository(prismaClient);
@@ -836,6 +840,8 @@ const createServices = async (prismaClient: PrismaClient) => {
     aiMonitoringService,
     // IFC-214: Redis-backed live snapshot store
     aiMonitoringStore,
+    // PG-199: embedding model the ai-worker publishes (null = unavailable)
+    activeEmbeddingModel,
     // IFC-148: Conversation Search Service
     conversationSearchService,
     // IFC-196: Home Page Response Caching

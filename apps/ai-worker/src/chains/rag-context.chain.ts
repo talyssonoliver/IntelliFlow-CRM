@@ -16,6 +16,7 @@
  */
 
 import { z } from 'zod';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { EmbeddingChain, getEmbeddingChain } from './embedding.chain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import pino from 'pino';
@@ -92,6 +93,8 @@ export const ragContextResultSchema = z.object({
   executionTimeMs: z.number(),
   success: z.boolean(),
   error: z.string().optional(),
+  /** PG-199: the tenant's rag purpose reached its monthly AI ceiling. */
+  ceilingReached: z.boolean().optional(),
 });
 
 export type RAGContextResult = z.infer<typeof ragContextResultSchema>;
@@ -285,7 +288,9 @@ export class RAGContextChain {
         searchType: input.searchType || 'hybrid',
         executionTimeMs: Date.now() - startTime,
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        ...(isPurposeCeilingReached(error)
+          ? { error: 'monthly AI ceiling reached for rag', ceilingReached: true }
+          : { error: error instanceof Error ? error.message : 'Unknown error' }),
       };
     }
   }

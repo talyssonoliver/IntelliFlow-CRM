@@ -32,6 +32,31 @@ export interface CostStatistics {
   averageCostPerOperation: number;
   startTime: Date;
   endTime: Date;
+  /**
+   * A ranged query reached past the retained history (older records were evicted), so its
+   * totals cover only the records kept. The unranged daily statistics are always exact.
+   */
+  truncated: boolean;
+}
+
+interface DailyTotals {
+  cost: number;
+  operations: number;
+  inputTokens: number;
+  outputTokens: number;
+  costByModel: Record<string, number>;
+  costByOperation: Record<string, number>;
+}
+
+function emptyTotals(): DailyTotals {
+  return {
+    cost: 0,
+    operations: 0,
+    inputTokens: 0,
+    outputTokens: 0,
+    costByModel: {},
+    costByOperation: {},
+  };
 }
 
 /**
@@ -40,10 +65,19 @@ export interface CostStatistics {
  */
 export type UsageListener = (usage: UsageMetrics) => void;
 
+/**
+ * Most recent usage records kept in memory. Every model and embedding call is metered
+ * (PG-199), so an unbounded history would grow the long-lived worker's heap until it is
+ * killed. The daily statistics come from running totals, so eviction never changes them.
+ */
+export const USAGE_HISTORY_LIMIT = 1000;
+
 export class CostTracker {
   private usageHistory: UsageMetrics[] = [];
   private readonly listeners = new Set<UsageListener>();
   private dailyCost: number = 0;
+  private dailyTotals: DailyTotals = emptyTotals();
+  private evictedRecords = 0;
   private lastResetDate: Date = new Date();
 
   constructor(
@@ -89,7 +123,13 @@ export class CostTracker {
     };
 
     this.usageHistory.push(usage);
+    if (this.usageHistory.length > USAGE_HISTORY_LIMIT) {
+      const excess = this.usageHistory.length - USAGE_HISTORY_LIMIT;
+      this.usageHistory.splice(0, excess);
+      this.evictedRecords += excess;
+    }
     this.dailyCost += cost;
+    this.addToDailyTotals(usage);
 
     // Notify before the threshold check: that check can throw, and the spend already happened.
     for (const listener of this.listeners) {
@@ -123,6 +163,7 @@ export class CostTracker {
    * Get cost statistics for a time period
    */
   getStatistics(startTime?: Date, endTime?: Date): CostStatistics {
+    if (!startTime && !endTime) return this.dailyStatistics();
     const start = startTime || this.lastResetDate;
     const end = endTime || new Date();
 
@@ -156,7 +197,37 @@ export class CostTracker {
       averageCostPerOperation: filteredUsage.length > 0 ? totalCost / filteredUsage.length : 0,
       startTime: start,
       endTime: end,
+      truncated: this.evictedRecords > 0 && start < (this.usageHistory[0]?.timestamp ?? end),
     };
+  }
+
+  /** Today's statistics from the running totals: exact however many records were evicted. */
+  private dailyStatistics(): CostStatistics {
+    this.resetDailyCountersIfNeeded();
+    const t = this.dailyTotals;
+    return {
+      totalCost: t.cost,
+      totalOperations: t.operations,
+      totalInputTokens: t.inputTokens,
+      totalOutputTokens: t.outputTokens,
+      costByModel: { ...t.costByModel },
+      costByOperation: { ...t.costByOperation },
+      averageCostPerOperation: t.operations > 0 ? t.cost / t.operations : 0,
+      startTime: this.lastResetDate,
+      endTime: new Date(),
+      truncated: false,
+    };
+  }
+
+  private addToDailyTotals(usage: UsageMetrics): void {
+    const t = this.dailyTotals;
+    t.cost += usage.cost;
+    t.operations += 1;
+    t.inputTokens += usage.inputTokens;
+    t.outputTokens += usage.outputTokens;
+    t.costByModel[usage.model] = (t.costByModel[usage.model] || 0) + usage.cost;
+    t.costByOperation[usage.operationType] =
+      (t.costByOperation[usage.operationType] || 0) + usage.cost;
   }
 
   /**
@@ -165,6 +236,18 @@ export class CostTracker {
   getDailyCost(): number {
     this.resetDailyCountersIfNeeded();
     return this.dailyCost;
+  }
+
+  /**
+   * Refuse a call before it is made once the daily limit is reached. The call that crossed
+   * the limit was already paid for and keeps its answer; this stops the ones after it.
+   */
+  assertWithinDailyLimit(): void {
+    if (this.dailyLimit && this.getDailyCost() >= this.dailyLimit) {
+      throw new Error(
+        `Daily AI cost limit exceeded: $${this.dailyCost.toFixed(2)} / $${this.dailyLimit.toFixed(2)}`
+      );
+    }
   }
 
   /**
@@ -228,6 +311,7 @@ export class CostTracker {
     }
 
     this.dailyCost = 0;
+    this.dailyTotals = emptyTotals();
     this.lastResetDate = new Date();
   }
 
@@ -245,6 +329,8 @@ export class CostTracker {
     logger.warn('Clearing usage history');
     this.usageHistory = [];
     this.dailyCost = 0;
+    this.dailyTotals = emptyTotals();
+    this.evictedRecords = 0;
   }
 
   /**

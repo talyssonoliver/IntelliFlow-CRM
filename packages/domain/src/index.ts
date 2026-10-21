@@ -121,6 +121,9 @@ export * from './ai/conversation-record';
 // AI Domain - Approval Policies (PG-198)
 export * from './ai/approval-policy';
 
+// AI Domain - Model Config (PG-199)
+export * from './ai/model-config';
+
 // Auth Domain - Constants
 export * from './auth/AuthConstants';
 

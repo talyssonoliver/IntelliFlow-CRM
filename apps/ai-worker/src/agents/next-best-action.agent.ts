@@ -36,6 +36,7 @@ import {
   type NBAActionType,
   type NBAActionPriority,
 } from '@intelliflow/domain';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
 
 // Re-export with original names for backward compatibility
 export const ACTION_TYPES = NBA_ACTION_TYPES;
@@ -425,6 +426,8 @@ export class NextBestActionAgent extends BaseAgent<NBAContext, NBAResult> {
       const response = await this.invokeLLM(budgeted.messages);
       return this.parseRecommendations(response, context);
     } catch (error) {
+      // PG-199: a budget refusal is not an LLM failure; never answer it with heuristics.
+      if (isPurposeCeilingReached(error)) throw error;
       logger.error(
         { error: error instanceof Error ? error.message : String(error) },
         'LLM recommendation generation failed'
@@ -720,5 +723,7 @@ export async function getNextBestActions(context: NBAContext): Promise<AgentResu
     description: `Generate NBA for ${context.entityType} ${context.entityId}`,
     input: context,
     expectedOutput: nbaResultSchema,
+    // PG-199: the tenant's model settings and ceiling apply even outside a job context.
+    context: { metadata: { tenantId: context.tenantId } },
   });
 }

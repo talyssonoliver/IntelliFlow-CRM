@@ -8,7 +8,7 @@
  * 4. Empty input (no flagged items) → "all clear" achievement insight
  * 5. Validate Zod constraints (confidence bounds, priority enum, entityType enum)
  * 6. Production guard throws when AI_PROVIDER=mock in NODE_ENV=production
- * 7. Cost tracker recordUsage called with correct operationType
+ * 7. The chain records no usage itself (PG-199: metered once by the tracing wrapper)
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
@@ -295,7 +295,9 @@ describe('InsightGenerationChain', () => {
   });
 
   describe('cost tracking', () => {
-    it('should call recordUsage with insight_generation operationType', async () => {
+    // PG-199: cost is metered once by the tracing wrapper on the model call; the chain used
+    // to add a second 0/0-token record under the wrong purpose (structured-free).
+    it('does not record usage itself (the tracing wrapper meters the model call)', async () => {
       const chain = new InsightGenerationChain();
       const input = createInput({
         dealsAtRisk: [{ id: 'deal-1', name: 'Test Deal', daysSinceUpdate: 15 }],
@@ -303,11 +305,7 @@ describe('InsightGenerationChain', () => {
 
       await chain.generateInsights(input);
 
-      expect(mockRecordUsage).toHaveBeenCalledWith(
-        expect.objectContaining({
-          operationType: 'insight_generation',
-        })
-      );
+      expect(mockRecordUsage).not.toHaveBeenCalled();
     });
   });
 

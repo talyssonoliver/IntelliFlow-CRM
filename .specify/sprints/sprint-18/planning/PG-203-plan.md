@@ -809,32 +809,32 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 - `docs/architecture/adr/README.md`
 
 **Changes:**
-- [ ] Page total 214 → 215 in every doc header listed.
-- [ ] `/book` is a **new route prefix**:
+- [x] Page total 214 → 215 in every doc header listed. *Verified 2026-10-21 (ff814273d): 215 pages (only /book is new; /calendar/event-types replaced a counted stub); new 'Public Booking' section; /book an external entry; routers 70->71, procedures +9; content audit regenerated; ADR README row; dependency chains (PG-203 in progress; PG-211/212/213)*
+- [x] `/book` is a **new route prefix**:
   - add a **new "Public Booking" section** to `PAGE_MAP_AND_FLOWS.md` (a section, not a row inside an existing one)
     and update its Summary Statistics;
   - add the route to `sitemap.md`, `page-registry.md`, the IA route table and the `ui-flow-mapping.md` route + router
     rows;
   - add it to `navigation-reachability-audit.md` as "external entry (PG-203)", which is not a waiver.
-- [ ] Reachability, Category Y (85b evidence):
+- [x] Reachability, Category Y (85b evidence):
   - `/calendar/event-types` is in `apps/web/src/components/sidebar/configs/calendar.ts:12` (verified), and the
     `CalendarSettingsPanel.tsx:19` copy is updated in Step 15.
   - `/book/[handle]/[slug]` is reached from the BookingLinkCard URL. Assert this manually with a grep that
     `BookingLinkCard.tsx` builds `/book/${handle}/${slug}`, and record it in the findings doc. `check-nav-wiring` is
     not trusted for `(public)` / route-group pages (false-green history).
-- [ ] Router and procedure counts change only by our additions (`publicBooking` +3; `calendar.eventTypes` +6).
-- [ ] Regenerate content audit: `npx tsx tools/scripts/content-audit.ts`.
-- [ ] PRD addendum status → In Progress, then the delivery note. ADR-083 gets the delivery note and the DB-role
+- [x] Router and procedure counts change only by our additions (`publicBooking` +3; `calendar.eventTypes` +6).
+- [x] Regenerate content audit: `npx tsx tools/scripts/content-audit.ts`.
+- [x] PRD addendum status → In Progress, then the delivery note. ADR-083 gets the delivery note and the DB-role
   citation. Add the ADR README row.
 - [ ] Dependency chain: PG-203 ⏳ → ✅ at close.
-- [ ] Design mockup check: no mockup for event types exists in `docs/design/` (`grep -ri "event type" docs/design`).
+- [x] Design mockup check: no mockup for event types exists in `docs/design/` (`grep -ri "event type" docs/design`).
   Record that, and compare against the PG-205 contact-types page as the visual reference.
 
 **Validation:**
-- [ ] `pnpm --dir apps/web exec vitest run src/app/__tests__/sitemap-reconciliation.test.ts src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/ui-flow-mapping-reconciliation.test.ts`
-- [ ] `pnpm exec vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/content-audit.test.ts`
-- [ ] `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-203`
-- [ ] `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-203`
+- [x] `pnpm --dir apps/web exec vitest run src/app/__tests__/sitemap-reconciliation.test.ts src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/ui-flow-mapping-reconciliation.test.ts`
+- [x] `pnpm exec vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/content-audit.test.ts`
+- [x] `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-203` *Verified 2026-10-21: exit 0, but a known false green on route-group pages (gh #877); docs co-change done by hand in ff814273d*
+- [x] `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-203` *Verified 2026-10-21: exit 0 (false green per #877); reachability checked by hand: calendar.ts:12 sidebar entry; BookingLinkCard.tsx builds `/book/<handle>/<slug>`; navigation-reachability-audit.md marks /book as an external entry*
 
 ### Phase 4 — VALIDATION
 
@@ -855,7 +855,7 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
   findings doc. Target < 300 ms.
 - [ ] NF-004: the lock-timeout cases from Steps 6 and 8 are green. Record the typical lock hold time from the
   integration run.
-- [ ] NF-002: a grep of `apps/api/src/modules/calendar/*.ts` shows no logger call with an email, IP or answers.
+- [x] NF-002: a grep of `apps/api/src/modules/calendar/*.ts` shows no logger call with an email, IP or answers. *Verified 2026-10-21: the calendar module's console calls log kinds, step names, codes and error classes only (booking-abuse.ts:69,157; booking-email.ts:199,202; public-booking.router.ts:425,446)*
 
 **Gates:**
 - [ ] `pnpm run typecheck`
@@ -868,8 +868,8 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 
 **Reviews:**
 - [ ] `/code-review` on the diff and `/sonarqube-fix` for any new Sonar finding.
-- [ ] `a11y-expert` subagent WCAG 2.1 AA review of the three UI surfaces. Fix the findings.
-- [ ] `security-lead` subagent adversarial review of `public-booking.router.ts`, `booking-abuse.ts` and `booking-email.ts`
+- [x] `a11y-expert` subagent WCAG 2.1 AA review of the three UI surfaces. Fix the findings. *Verified 2026-10-21: FAIL/REJECTED then fixed in ff814273d; details in PG-203-findings.md "Step 19 reviews"*
+- [x] `security-lead` subagent adversarial review of `public-booking.router.ts`, `booking-abuse.ts` and `booking-email.ts` *Verified 2026-10-21: FAIL/REJECTED then fixed in ff814273d; details in PG-203-findings.md "Step 19 reviews"*
   (runner request). Fix the findings.
 
 **Lighthouse ≥ 90:**
@@ -879,9 +879,9 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 - [ ] Evidence JSON goes under the execution folder. If it cannot be measured → NEEDS_HUMAN with the exact reason.
 
 **Final check:**
-- [ ] Icons: run the Material Symbols subset verify (`node scripts/subset-material-symbols.mjs --verify`; find the
+- [x] Icons: run the Material Symbols subset verify (`node scripts/subset-material-symbols.mjs --verify`; find the *Verified 2026-10-21: `node tools/scripts/subset-material-symbols.mjs --verify` -> audit OK, 371 icons (check_circle already in the subset)*
   exact path with `ls scripts | grep -i symbol`). Regenerate the subset if new icon names were added.
-- [ ] `git ls-files | grep -cE '\.(log|coverage|tsbuildinfo)$'` prints `0`.
+- [x] `git ls-files | grep -cE '\.(log|coverage|tsbuildinfo)$'` prints `0`. *Verified 2026-10-21: prints 0*
 
 #### Step 20: Attestation, tracking, close
 **Type:** validation

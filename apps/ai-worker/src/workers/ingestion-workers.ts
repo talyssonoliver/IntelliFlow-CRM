@@ -21,6 +21,8 @@
  */
 
 import { Job, Worker, Queue } from 'bullmq';
+import { tenantContextStore } from '../tracing/tenant-context';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import pino from 'pino';
 import { z } from 'zod';
@@ -163,6 +165,36 @@ function buildFailedResult(
 }
 
 // ============================================================================
+// Embedding (non-fatal; PG-199: metered and capped as rag for the job tenant)
+// ============================================================================
+
+async function embedForTenant(
+  generateEmbeddingFn: (text: string) => Promise<number[] | null>,
+  normalized: string,
+  tenantId: string,
+  jobLogger: pino.Logger,
+  kind: 'text' | 'OCR'
+): Promise<void> {
+  try {
+    await tenantContextStore.run({ tenantId }, () =>
+      generateEmbeddingFn(normalized.slice(0, 8000))
+    );
+  } catch (embedErr) {
+    if (isPurposeCeilingReached(embedErr)) {
+      jobLogger.warn(
+        { tenantId },
+        `Embedding skipped: monthly AI ceiling reached for rag — ${kind} extraction succeeded`
+      );
+      return;
+    }
+    jobLogger.warn(
+      { err: embedErr instanceof Error ? embedErr.message : String(embedErr) },
+      `Embedding generation failed (non-fatal) — ${kind} extraction succeeded`
+    );
+  }
+}
+
+// ============================================================================
 // Text-extraction processor
 // ============================================================================
 
@@ -191,14 +223,7 @@ async function processTextExtractionJob(
     // If embeddings are requested, delegate to the existing embedding chain
     // (ai-worker already owns this path; OCR worker re-uses it too).
     if (input.options?.generateEmbeddings && generateEmbeddingFn) {
-      try {
-        await generateEmbeddingFn(normalized.slice(0, 8000));
-      } catch (embedErr) {
-        jobLogger.warn(
-          { err: embedErr instanceof Error ? embedErr.message : String(embedErr) },
-          'Embedding generation failed (non-fatal) — text extraction succeeded'
-        );
-      }
+      await embedForTenant(generateEmbeddingFn, normalized, input.tenantId, jobLogger, 'text');
     }
 
     const processingTimeMs = Date.now() - startTime;
@@ -263,14 +288,7 @@ async function processOCRJob(
     const chunks = ocrWorker.createSearchableChunks(normalized);
 
     if (input.options?.generateEmbeddings && generateEmbeddingFn) {
-      try {
-        await generateEmbeddingFn(normalized.slice(0, 8000));
-      } catch (embedErr) {
-        jobLogger.warn(
-          { err: embedErr instanceof Error ? embedErr.message : String(embedErr) },
-          'Embedding generation failed (non-fatal) — OCR extraction succeeded'
-        );
-      }
+      await embedForTenant(generateEmbeddingFn, normalized, input.tenantId, jobLogger, 'OCR');
     }
 
     const processingTimeMs = Date.now() - startTime;

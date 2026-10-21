@@ -1,0 +1,27 @@
+# Ceremony Tier manual overrides — issue #579.
+#
+# Most tasks need no entry here: /full-pipeline's Phase 0.3 Tier Detection
+# runs the deterministic heuristic in tools/scripts/lib/ceremony-tier.ts
+# (via `npx tsx tools/scripts/ceremony-tier-audit.ts --task <ID>`) against
+# Sprint_plan.csv and gets `light` or `full` automatically.
+#
+# Add an entry here ONLY when the heuristic gets a specific task wrong and
+# a human has decided the correct tier — not as a way to skip ceremony on
+# a task that happens to be annoying. Record WHY in a comment.
+#
+# Decision boundary + rationale: .agents/skills/full-pipeline/references/ceremony-tier.md
+#
+# This file lives under .specify/memory/ (not .specify/ directly) because
+# .gitignore blocks `.specify/*` except for the `.specify/memory/**` and
+# `.specify/sprints/**` carve-outs documented there.
+#
+# Schema:
+#   overrides:
+#     <TASK_ID>: light | full | auto   # "auto" (or omitting the task) uses the heuristic
+#
+# Example (remove before relying on this file; kept here so the schema is
+# never ambiguous from an empty file alone):
+#   overrides:
+#     PG-999: light   # heuristic said full only because Estimate was left blank; owner confirmed <=2h, template-following
+
+overrides: {}

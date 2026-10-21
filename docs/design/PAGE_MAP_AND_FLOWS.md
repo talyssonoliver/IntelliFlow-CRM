@@ -317,7 +317,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/agent-approvals/lead-scoring`      | Lead Scoring        | PG-148          |
 | `/agent-approvals/logs`              | Agent Logs          | PG-152          |
 | `/agent-approvals/logs/[id]`         | Agent Log Detail    | PG-152          |
-| `/agent-approvals/model-config`      | Model Configuration | —               |
+| `/agent-approvals/model-config`      | Model Configuration | PG-199          |
 | `/agent-approvals/preview`           | Preview Mode        | —               |
 | `/agent-approvals/sentiment`         | Sentiment Analysis  | PG-142          |
 | `/agent-approvals/tools`             | Agent Tools         | IFC-191         |

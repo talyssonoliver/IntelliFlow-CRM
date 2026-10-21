@@ -184,7 +184,7 @@ Legend:
 | `/agent-approvals/lead-scoring`      | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
 | `/agent-approvals/logs`              | --  | --  |   SB   | --  |     YES     | Sidebar: Monitoring                         |
 | `/agent-approvals/logs/[id]`         | --  | --  |   --   | IP  |     OK      | From logs list rows                         |
-| `/agent-approvals/model-config`      | --  | --  |   SB   | --  |     YES     | Sidebar: Configuration                      |
+| `/agent-approvals/model-config`      | --  | --  |   SB   | IP  |     YES     | Sidebar + AI settings panel (PG-199)        |
 | `/agent-approvals/preview`           | --  | --  | **NO** | IP  | **PARTIAL** | Only via "Preview Mode" button on main page |
 | `/agent-approvals/sentiment`         | --  | --  |   SB   | --  |     YES     | Sidebar: Intelligence                       |
 | `/agent-approvals/tools`             | --  | --  |   SB   | --  |     YES     | Sidebar: AI Tools (IFC-191)                 |

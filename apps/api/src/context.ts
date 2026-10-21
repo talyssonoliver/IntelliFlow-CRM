@@ -107,6 +107,8 @@ export type Services = {
   aiMonitoringService: Container['aiMonitoringService'];
   // IFC-214: Redis-backed live snapshot store (DB-tier fall-through built in)
   aiMonitoringStore: Container['aiMonitoringStore'];
+  // PG-199: embedding model the ai-worker publishes (null = unavailable)
+  activeEmbeddingModel: Container['activeEmbeddingModel'];
   // IFC-196: Home Page Response Caching (Redis read-through + event-driven invalidation)
   homeCache: Container['homeCacheService'];
   // IFC-310: Duplicate-detection runtime (contact + account)
@@ -255,6 +257,7 @@ function buildServicesFromContainer(): Services {
     quota: container.quotaService,
     aiMonitoringService: container.aiMonitoringService,
     aiMonitoringStore: container.aiMonitoringStore,
+    activeEmbeddingModel: container.activeEmbeddingModel,
     homeCache: container.homeCacheService,
     // IFC-310: Duplicate-detection runtime services
     contactDuplicateDetection: container.contactDuplicateDetectionService,

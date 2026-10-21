@@ -73,8 +73,16 @@ function SelectContent({ children }: Readonly<{ children: React.ReactNode }>) {
   );
 }
 
-function SelectItem({ value, children }: Readonly<{ value: string; children: React.ReactNode }>) {
-  return <option value={value}>{children}</option>;
+function SelectItem({
+  value,
+  disabled,
+  children,
+}: Readonly<{ value: string; disabled?: boolean; children: React.ReactNode }>) {
+  return (
+    <option value={value} disabled={disabled}>
+      {children}
+    </option>
+  );
 }
 
 export const nativeSelectMock = { Select, SelectTrigger, SelectValue, SelectContent, SelectItem };

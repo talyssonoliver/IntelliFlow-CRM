@@ -42,6 +42,10 @@ vi.mock('../../lib/llm-factory.js', () => ({
   createLLM: vi.fn(() => ({
     invoke: mockLLMInvoke,
   })),
+  // PG-199 (owner Q3): the job uses the tenant's reasoning model settings.
+  createLLMForTenant: vi.fn(async () => ({
+    invoke: mockLLMInvoke,
+  })),
 }));
 
 // ---------------------------------------------------------------------------
@@ -247,6 +251,37 @@ describe('processSummarizeJob', () => {
     expect(mockConversationRecordUpdate).toHaveBeenCalledOnce();
     const updateCall = mockConversationRecordUpdate.mock.calls[0][0];
     expect(updateCall.data.summary).toContain('[Digest');
+  });
+
+  it('6b. uses the tenant-aware reasoning model for the job tenant (PG-199)', async () => {
+    mockConversationRecordFindFirst.mockResolvedValueOnce({ id: CONV_ID });
+    mockMessageRecordFindMany.mockResolvedValueOnce(makeMessages(5, 'Turn'));
+    mockLLMInvoke.mockResolvedValueOnce({ content: 'A summary. Key facts: [x]' });
+    const { createLLMForTenant } = await import('../../lib/llm-factory.js');
+    vi.mocked(createLLMForTenant).mockClear();
+
+    const job = makeMockJob({ tenantId: TENANT_A, sessionId: SESSION_ID, conversationId: CONV_ID });
+    await processSummarizeJob(job);
+
+    expect(createLLMForTenant).toHaveBeenCalledWith('reasoning', 'free', { tenantId: TENANT_A });
+  });
+
+  it('6c. reasoning ceiling reached → fallback digest, no model call (PG-199)', async () => {
+    mockConversationRecordFindFirst.mockResolvedValueOnce({ id: CONV_ID });
+    mockMessageRecordFindMany.mockResolvedValueOnce(makeMessages(5, 'Turn'));
+    const { createLLMForTenant } = await import('../../lib/llm-factory.js');
+    vi.mocked(createLLMForTenant).mockRejectedValueOnce(
+      Object.assign(new Error('monthly AI ceiling reached for reasoning'), {
+        code: 'PURPOSE_CEILING_REACHED',
+      })
+    );
+    mockLLMInvoke.mockClear();
+
+    const job = makeMockJob({ tenantId: TENANT_A, sessionId: SESSION_ID, conversationId: CONV_ID });
+    const result = await processSummarizeJob(job);
+
+    expect(result.usedFallback).toBe(true);
+    expect(mockLLMInvoke).not.toHaveBeenCalled();
   });
 
   it('7. tenant isolation — conversation for different tenant is not loaded', async () => {

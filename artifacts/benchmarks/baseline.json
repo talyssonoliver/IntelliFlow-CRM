@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-21T08:03:00.245Z",
+  "timestamp": "2026-10-21T20:01:46.439Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 74,
-    "total_endpoints": 582,
-    "total_queries": 249,
-    "total_mutations": 333,
+    "total_routers": 75,
+    "total_endpoints": 585,
+    "total_queries": 250,
+    "total_mutations": 335,
     "routers": [
       {
         "name": "contact",
@@ -1345,6 +1345,12 @@
         "mutations": 2
       },
       {
+        "name": "modelConfig",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
         "name": "reportSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1468,7 +1474,7 @@
   },
   "database_inventory": {
     "total_tables": 203,
-    "total_fields": 2925,
+    "total_fields": 2928,
     "total_indexes": 917,
     "total_relations": 286,
     "tables_with_embeddings": 4,
@@ -2007,6 +2013,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantAIConfig",
+        "fields": 13,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "LeadActivity",
         "fields": 13,
         "indexes": 4,
@@ -2312,13 +2325,6 @@
         "fields": 11,
         "indexes": 4,
         "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TenantAIConfig",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -3254,11 +3260,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 60,
-    "total_schemas": 648,
+    "total_validators": 61,
+    "total_schemas": 653,
     "by_complexity": {
       "complex": 36,
-      "moderate": 20,
+      "moderate": 21,
       "simple": 4
     },
     "validators": [
@@ -3493,6 +3499,12 @@
       {
         "name": "case-types",
         "file": "case-types.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "model-config",
+        "file": "model-config.ts",
         "schemas": 5,
         "complexity": "moderate"
       },
@@ -4074,6 +4086,23 @@
         "name": "conversation.archiveOld",
         "method": "POST",
         "description": "Archive old"
+      }
+    ],
+    "modelConfig": [
+      {
+        "name": "modelConfig.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "modelConfig.update",
+        "method": "POST",
+        "description": "Update modelConfig"
+      },
+      {
+        "name": "modelConfig.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "aiMonitoring": [

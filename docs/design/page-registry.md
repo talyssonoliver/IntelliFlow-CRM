@@ -1487,6 +1487,21 @@ Each route entry uses this standard table format:
 | **RACI**       | R: AI Team / A: Product / C: Frontend / I: QA                |
 | **Components** | AgentLogDetail, Skeleton, Suspense, useRequireAuth           |
 
+### Model Configuration (`/agent-approvals/model-config`)
+
+| Field          | Value                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-199                                                                                  |
+| **File Path**  | `apps/web/src/app/agent-approvals/model-config/page.tsx`                                |
+| **Layout**     | `apps/web/src/app/agent-approvals/layout.tsx`                                           |
+| **API Router** | `apps/api/src/modules/agent/model-config.router.ts` (`modelConfig.*`)                   |
+| **E2E Test**   | None                                                                                    |
+| **Unit Tests** | `apps/web/src/app/agent-approvals/model-config/__tests__/`, `.../components/__tests__/` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                         |
+| **Status**     | Implemented                                                                             |
+| **RACI**       | R: Frontend / A: Product / C: AI Team, Backend / I: QA                                  |
+| **Components** | Route shell, ModelConfigContent, PurposeCard, FallbackList, ConfirmationDialog          |
+
 ### AI Preview (`/agent-approvals/preview`)
 
 | Field          | Value                                                                                  |

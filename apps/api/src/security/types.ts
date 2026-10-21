@@ -103,7 +103,8 @@ export type ResourceType =
   | 'goal'
   | 'report_schedule' // PG-201 audit trail
   | 'contact_type' // PG-205 audit trail
-  | 'event_type'; // PG-203 audit trail (event types + booking link)
+  | 'event_type' // PG-203 audit trail (event types + booking link)
+  | 'model_config'; // PG-199 audit trail
 
 /**
  * Permission actions

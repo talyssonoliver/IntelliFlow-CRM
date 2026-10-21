@@ -267,6 +267,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-079](./ADR-079-tenant-approval-policies.md)                             | Tenant approval policies for AI work (timeout, minimum reviewer, opt-in auto-approve, escalation) | Accepted    | 2026-10-13 | PG-198                      |
 | [ADR-080](./ADR-080-tenant-contact-types.md)                                 | Tenant-defined contact types keyed by the existing `contactType` column (no contacts backfill)    | ✅ Accepted | 2026-10-17 | PG-205                      |
 | [ADR-081](./ADR-081-tenant-availability.md)                                  | Tenant availability (weekly hours, closures, daily cap) enforced at booking                       | Accepted    | 2026-10-17 | PG-202                      |
+| [ADR-082](./ADR-082-tenant-model-config.md)                                  | Tenant model configuration per AI purpose (catalog pins, price-ranked never-downgrade, ceilings)  | 📝 Proposed | 2026-10-19 | PG-199                      |
 | [ADR-083](./ADR-083-event-types-public-booking.md)                           | Tenant event types and an unauthenticated public booking endpoint                                 | Accepted    | 2026-10-21 | PG-203                      |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,

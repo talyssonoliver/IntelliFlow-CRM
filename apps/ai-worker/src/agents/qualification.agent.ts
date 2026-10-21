@@ -3,6 +3,7 @@ import { BaseAgent, AgentTask, BaseAgentConfig } from './base.agent';
 import { ensurePromptBudget } from '../utils/prompt-budget.js';
 import { replayConversation } from '../utils/conversation-replay.js';
 import pino from 'pino';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
 
 const logger = pino({
   name: 'qualification-agent',
@@ -64,8 +65,6 @@ export type QualificationOutput = z.infer<typeof qualificationOutputSchema>;
  * Provides detailed reasoning and recommended next steps
  */
 export class LeadQualificationAgent extends BaseAgent<QualificationInput, QualificationOutput> {
-  private readonly structuredModel: { invoke(input: unknown): Promise<unknown> };
-
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
       name: 'Lead Qualification Specialist',
@@ -84,8 +83,6 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
       usesReflection: true,
       ...config,
     });
-
-    this.structuredModel = (this.model as any).withStructuredOutput(qualificationOutputSchema);
   }
 
   /**
@@ -155,7 +152,9 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
 
     // Parse structured output
     try {
-      const result = (await this.structuredModel.invoke(response)) as QualificationOutput;
+      const result = (await this.structuredFor(qualificationOutputSchema).invoke(
+        response
+      )) as QualificationOutput;
 
       logger.info(
         {
@@ -169,6 +168,8 @@ Your recommendations are data-driven, actionable, and focused on conversion opti
 
       return result;
     } catch (parseError) {
+      // PG-199: a budget refusal is not a parse failure; never turn it into a fallback answer.
+      if (isPurposeCeilingReached(parseError)) throw parseError;
       logger.error(
         {
           leadId: lead.leadId,
