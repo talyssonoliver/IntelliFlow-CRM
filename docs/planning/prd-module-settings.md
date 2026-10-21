@@ -1113,13 +1113,13 @@ There is one persisted Boolean, `isActive`, and it is wired (category 1): it
 hides a type from the picker and the public page. There are no AI toggles.
 **Deviation from playbook §7 "AI defaults false"**: the owner overrode it
 (Q8/Q9), so booking leads are always scored. The playbook rule itself is tracked
-as an issue.
+as gh #972.
 
 ### Follow-ups
 
-- Self-service cancel and reschedule for bookers (signed token).
-- Notice and horizon settings per event type.
-- A purge rule for booker PII under the PG-206 retention policies.
+- PG-211: self-service cancel and reschedule for bookers (signed token).
+- PG-212: notice and horizon settings per event type.
+- PG-213: a purge rule for booker PII under the PG-206 retention policies.
 
 **Prisma migrations** `20261021120000` to `20261021120500` (six, all Class A)
 must be applied to production before this ships.

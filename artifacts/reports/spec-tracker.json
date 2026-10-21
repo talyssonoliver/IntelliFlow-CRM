@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-20T23:19:58.846Z",
+  "generated_at": "2026-10-21T17:02:53.877Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 527,
@@ -8583,8 +8583,8 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Plan Complete",
-      "metric_status": "PLANNED",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
