@@ -105,7 +105,18 @@ function fakeDb(
       }),
     },
   };
-  db.$transaction = vi.fn(async (fn: any) => fn(db));
+  // Like Postgres: a throwing transaction leaves nothing behind.
+  db.$transaction = vi.fn(async (fn: any) => {
+    const marks = [receipts.length, suppressions.length, recordUpdates.length];
+    try {
+      return await fn(db);
+    } catch (error) {
+      receipts.length = marks[0]!;
+      suppressions.length = marks[1]!;
+      recordUpdates.length = marks[2]!;
+      throw error;
+    }
+  });
   return { db, receipts, suppressions, recordUpdates, mailboxUpdates };
 }
 
@@ -334,6 +345,33 @@ describe('runBounceScan', () => {
     const report = await runBounceScan(deps(fake, raws).d);
     expect(fake.suppressions).toHaveLength(25);
     expect(report.suppressions).toBe(25);
+    // The scan stopped at the 26th report (rolled back) and resumes there next time.
+    expect(fake.receipts).toHaveLength(25);
+    expect(fake.mailboxUpdates[0].data).toMatchObject({ imapUidValidity: 7n, imapLastUid: 124 });
+
+    await runBounceScan(deps(fake, raws.slice(25)).d);
+    expect(fake.suppressions).toHaveLength(30);
+  });
+
+  it('marks a record BOUNCED only when every recipient HARD-bounced (a soft bounce is not enough)', async () => {
+    const fake = fakeDb();
+    await runBounceScan(
+      deps(fake, [
+        {
+          key: '7:11',
+          raw: makeDsn({
+            recipients: [
+              { address: 'gone@example.invalid', action: 'failed', status: '4.2.2' },
+              { address: 'ok@example.invalid', action: 'failed', status: '5.1.1' },
+            ],
+          }),
+        },
+      ]).d
+    );
+    const last = fake.recordUpdates.at(-1).data;
+    expect(last.status).toBeUndefined();
+    expect(last.metadata.bouncedRecipients).toEqual(['gone@example.invalid', 'ok@example.invalid']);
+    expect(last.metadata.hardBouncedRecipients).toEqual(['ok@example.invalid']);
   });
 
   it('notifies the sender only when notifySenderOnBounce is on', async () => {

@@ -209,6 +209,51 @@ describe('emailMailbox.saveSmtp', () => {
     expect(prismaMock.emailMailbox.update).not.toHaveBeenCalled();
   });
 
+  it('starts bounce reading afresh when the IMAP account changes', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({
+        imapHost: 'imap.mail.example.com',
+        imapPort: 993,
+        imapUsername: 'old',
+        imapPassword: secret,
+      })
+    );
+    await member().saveSmtp({
+      ...saveInput,
+      smtpPassword: undefined,
+      imapHost: 'imap.mail.example.com',
+      imapPort: 993,
+      imapUsername: 'new',
+      imapPassword: secret,
+    });
+    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].data).toMatchObject({
+      imapUidValidity: null,
+      imapLastUid: null,
+      scanCursorAt: null,
+    });
+  });
+
+  it('keeps the bounce cursor when the IMAP account is unchanged', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({
+        imapHost: 'imap.mail.example.com',
+        imapPort: 993,
+        imapUsername: 'u',
+        imapPassword: secret,
+      })
+    );
+    await member().saveSmtp({
+      ...saveInput,
+      smtpPassword: undefined,
+      imapHost: 'imap.mail.example.com',
+      imapPort: 993,
+      imapUsername: 'u',
+    });
+    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].data).not.toHaveProperty(
+      'imapLastUid'
+    );
+  });
+
   it('requires a password for a new mailbox', async () => {
     await expect(
       member().saveSmtp({ ...saveInput, smtpPassword: undefined })

@@ -133,4 +133,30 @@ describe('EmailCompose attachments', () => {
     await waitFor(() => expect(onSent).toHaveBeenCalled());
     expect(send.mock.calls[0][0].attachments).toBeUndefined();
   });
+
+  it('sends once even when Send is pressed again while attachments upload', async () => {
+    let finishUpload: (value: unknown) => void = () => undefined;
+    upload.mockImplementation(
+      (input: { fileName: string; contentType: string }) =>
+        new Promise((resolve) => {
+          finishUpload = () =>
+            resolve({
+              storagePath: `tenant/u-${input.fileName}`,
+              fileName: input.fileName,
+              contentType: input.contentType,
+              size: 7,
+            });
+        })
+    );
+    const { onSent } = renderCompose();
+    attach([new File(['content'], 'report.pdf', { type: 'application/pdf' })]);
+    await screen.findByText('report.pdf');
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(upload).toHaveBeenCalled());
+    finishUpload(undefined);
+    await waitFor(() => expect(onSent).toHaveBeenCalled());
+    expect(upload).toHaveBeenCalledTimes(1);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
 });

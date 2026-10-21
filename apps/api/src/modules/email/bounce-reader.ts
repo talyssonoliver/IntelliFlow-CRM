@@ -215,17 +215,31 @@ interface MatchedBounce {
  * (BOUNCED once every recipient hard-bounced) and suppresses per the tenant's
  * rules. Returns the record's new metadata and whether a suppression was written.
  */
+/** Thrown (rolling the receipt back) when a scan has used its suppression budget. */
+class SuppressionCapReached extends Error {}
+
+function listOf(value: unknown): string[] {
+  return Array.isArray(value) ? (value as string[]) : [];
+}
+
+function addRecipient(list: unknown, recipient: string): string[] {
+  return [...new Set([...listOf(list), recipient])];
+}
+
 async function applyMatchedBounce(
   tx: any,
   b: MatchedBounce
 ): Promise<{ metadata: Record<string, unknown>; suppressed: boolean }> {
   const metadata = b.record.metadata ?? {};
-  const previous = Array.isArray(metadata.bouncedRecipients)
-    ? (metadata.bouncedRecipients as string[])
-    : [];
-  const bounced = [...new Set([...previous, b.recipient])];
-  const allBounced = b.kind === 'HARD' && b.recordRecipients.every((r) => bounced.includes(r));
-  const nextMetadata = { ...metadata, bouncedRecipients: bounced };
+  // Every bounced recipient (shown as "Partly bounced"); BOUNCED needs every
+  // recipient to have HARD-bounced, so hard bounces are tracked on their own.
+  const bounced = addRecipient(metadata.bouncedRecipients, b.recipient);
+  const hard =
+    b.kind === 'HARD'
+      ? addRecipient(metadata.hardBouncedRecipients, b.recipient)
+      : listOf(metadata.hardBouncedRecipients);
+  const allBounced = b.kind === 'HARD' && b.recordRecipients.every((r) => hard.includes(r));
+  const nextMetadata = { ...metadata, bouncedRecipients: bounced, hardBouncedRecipients: hard };
   await tx.emailRecord.update({
     where: { id: b.record.id },
     data: {
@@ -249,8 +263,11 @@ async function applyMatchedBounce(
         })
       : 0;
   const decision = evaluateBounce(b.kind, b.state.settings, softCount);
-  if (!decision.suppress || b.state.suppressions >= EMAIL_LIMITS.bounceScanMaxSuppressions) {
-    return { metadata: nextMetadata, suppressed: false };
+  if (!decision.suppress) return { metadata: nextMetadata, suppressed: false };
+  // Past the per-scan cap the whole receipt rolls back and the scan stops here,
+  // so the next scan applies this suppression instead of it being lost.
+  if (b.state.suppressions >= EMAIL_LIMITS.bounceScanMaxSuppressions) {
+    throw new SuppressionCapReached();
   }
   await tx.emailSuppression.upsert({
     where: { tenantId_email: { tenantId: b.mailbox.tenantId, email: b.recipient } },
@@ -378,6 +395,56 @@ async function processReport(
   }
 }
 
+/**
+ * Processes the reports in order. Stops at the first one whose suppression
+ * would pass the per-scan cap (its receipt rolled back); `lastDone` is the last
+ * report fully applied.
+ */
+async function processReports(
+  deps: BounceReaderDeps,
+  mailbox: ScanMailbox,
+  messages: RawDsnMessage[],
+  state: ScanState,
+  now: Date
+): Promise<{ stopped: boolean; lastDone: RawDsnMessage | null }> {
+  let lastDone: RawDsnMessage | null = null;
+  for (const message of messages) {
+    try {
+      await processReport(deps, mailbox, message, state, now);
+    } catch (error) {
+      if (error instanceof SuppressionCapReached) return { stopped: true, lastDone };
+      throw error;
+    }
+    lastDone = message;
+  }
+  return { stopped: false, lastDone };
+}
+
+/**
+ * The cursor after a scan stopped early: through the last report applied, or
+ * unchanged when none was, so the rest is read again next time (receipts
+ * dedupe what was already applied).
+ */
+function cursorThrough(
+  mailbox: ScanMailbox,
+  lastDone: RawDsnMessage | null,
+  now: Date
+): Record<string, unknown> {
+  if (mailbox.kind !== 'SMTP') {
+    return {
+      scanCursorAt: lastDone
+        ? oauthCursorAfter({ resumeFrom: lastDone.receivedAt }, now)
+        : mailbox.scanCursorAt,
+    };
+  }
+  if (!lastDone) {
+    return { imapUidValidity: mailbox.imapUidValidity, imapLastUid: mailbox.imapLastUid };
+  }
+  // IMAP report keys are "<uidValidity>:<uid>".
+  const [uidValidity, uid] = lastDone.key.split(':');
+  return { imapUidValidity: BigInt(uidValidity), imapLastUid: Number(uid), scanCursorAt: now };
+}
+
 async function scanMailbox(
   deps: BounceReaderDeps,
   id: string,
@@ -400,9 +467,8 @@ async function scanMailbox(
     );
     const { messages, cursor } = await listReports(deps, mailbox, now);
     const state: ScanState = { settings, suppressions: 0, receipts: 0, unmatched: 0 };
-    for (const message of messages) {
-      await processReport(deps, mailbox, message, state, now);
-    }
+    const run = await processReports(deps, mailbox, messages, state, now);
+    const nextCursor = run.stopped ? cursorThrough(mailbox, run.lastDone, now) : cursor;
     report.receipts += state.receipts;
     report.suppressions += state.suppressions;
     report.mailboxesScanned += 1;
@@ -412,7 +478,7 @@ async function scanMailbox(
         lockedUntil: null,
         nextScanAt: new Date(now.getTime() + SCAN_INTERVAL_MS),
         failureCount: 0,
-        ...cursor,
+        ...nextCursor,
       },
     });
   } catch (error) {

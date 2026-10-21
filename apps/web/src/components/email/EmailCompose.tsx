@@ -259,7 +259,7 @@ export function EmailCompose({
     return refs;
   }, [attachments, uploadMutation]);
 
-  const handleSend = useCallback(async () => {
+  const sendNow = useCallback(async () => {
     if (!validate()) return;
     setSendError(null);
     setAttachmentError(null);
@@ -300,6 +300,22 @@ export function EmailCompose({
     originalEmail,
     onSent,
   ]);
+
+  // One send at a time: attachments upload before the mutation is pending, so
+  // the mutation's own pending flag cannot stop a second click.
+  const sendingRef = useRef(false);
+  const [sending, setSending] = useState(false);
+  const handleSend = useCallback(async () => {
+    if (sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
+    try {
+      await sendNow();
+    } finally {
+      sendingRef.current = false;
+      setSending(false);
+    }
+  }, [sendNow]);
 
   const handleSaveDraft = useCallback(async () => {
     try {
@@ -673,7 +689,7 @@ export function EmailCompose({
           <button
             type="submit"
             aria-label="Send"
-            disabled={sendMutation.isPending}
+            disabled={sending || sendMutation.isPending}
             className={cn(
               'inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground',
               'hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',

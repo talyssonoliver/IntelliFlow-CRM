@@ -225,7 +225,20 @@ function smtpMailboxData(
     data.smtpPassword ??= null;
     data.imapPassword ??= null;
   }
+  if (existing && imapAccountChanged(existing, input)) {
+    // The bounce cursor belongs to the old account: UIDVALIDITY is not an
+    // account identity, so a kept cursor could skip the new account's reports.
+    Object.assign(data, { imapUidValidity: null, imapLastUid: null, scanCursorAt: null });
+  }
   return data;
+}
+
+function imapAccountChanged(existing: MailboxRow, input: SaveSmtpMailboxInput): boolean {
+  return (
+    existing.kind !== 'SMTP' ||
+    existing.imapHost !== input.imapHost ||
+    existing.imapUsername !== (input.imapHost ? input.imapUsername : null)
+  );
 }
 
 // ─── Router ─────────────────────────────────────────────────────────────────
