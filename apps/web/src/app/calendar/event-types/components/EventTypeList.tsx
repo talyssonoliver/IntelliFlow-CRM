@@ -84,12 +84,15 @@ function EventTypeRow({
             type="button"
             size="sm"
             variant="outline"
-            aria-label={`Copy link for ${item.name}`}
+            aria-label={`${copied ? 'Copied link for' : 'Copy link for'} ${item.name}`}
             onClick={copy}
           >
             {copied ? 'Copied' : 'Copy link'}
           </Button>
         )}
+        <span aria-live="polite" className="sr-only">
+          {copied ? `Link for ${item.name} copied` : ''}
+        </span>
         <Button
           type="button"
           size="sm"

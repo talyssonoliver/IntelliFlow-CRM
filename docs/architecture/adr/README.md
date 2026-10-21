@@ -267,6 +267,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-079](./ADR-079-tenant-approval-policies.md)                             | Tenant approval policies for AI work (timeout, minimum reviewer, opt-in auto-approve, escalation) | Accepted    | 2026-10-13 | PG-198                      |
 | [ADR-080](./ADR-080-tenant-contact-types.md)                                 | Tenant-defined contact types keyed by the existing `contactType` column (no contacts backfill)    | ✅ Accepted | 2026-10-17 | PG-205                      |
 | [ADR-081](./ADR-081-tenant-availability.md)                                  | Tenant availability (weekly hours, closures, daily cap) enforced at booking                       | Accepted    | 2026-10-17 | PG-202                      |
+| [ADR-083](./ADR-083-event-types-public-booking.md)                           | Tenant event types and an unauthenticated public booking endpoint                                 | Accepted    | 2026-10-21 | PG-203                      |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**
@@ -292,7 +293,7 @@ Previously missing from the index — added 2026-06-05:
 
 ## Next Steps
 
-Future ADRs use IDs **081+** (ADR-080 was the last one taken, 2026-10-17 — check
+Future ADRs use IDs **084+** (ADR-083 was the last one taken, 2026-10-21 — check
 the actual files in this directory before trusting this number, since this index
 has previously drifted behind them).
 

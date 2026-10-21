@@ -65,12 +65,14 @@ import {
 } from '@intelliflow/validators';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
 import type { Context } from '../../context';
-import { extractClientIp } from '../public-feedback/public-feedback.router';
 import { loadTenantAvailability, type AvailabilityPrisma } from './availability-enforcement';
 import {
   assertBookingCaps,
   assertEventTypeBookingCap,
+  bookingClientIp,
+  bookingLookupLimiter,
   bookingSlotsLimiter,
+  bookingSubmitLimiter,
   getBookingSalt,
   hashBookingValue,
   normalizeEmailForCap,
@@ -85,7 +87,6 @@ const NOT_AVAILABLE = 'This booking page is not available.';
 const SLOT_TAKEN = 'That time is no longer available. Please pick another.';
 const TRY_AGAIN = 'Please try again.';
 const REQUIRED_MISSING = 'Please complete all required fields.';
-const CHECK_DETAILS = 'Please check your details and try again.';
 const OUT_OF_WINDOW = 'Choose a date within the booking window.';
 const FAILED = 'We could not complete your booking. Please try again.';
 
@@ -261,7 +262,7 @@ function assertRequiredAnswers(eventType: Bookable['eventType'], answers: Public
 }
 
 function ipHashOf(ctx: Context, salt: string): string {
-  return hashBookingValue(extractClientIp(ctx.req as Request | undefined), salt);
+  return hashBookingValue(bookingClientIp(ctx.req as Request | undefined), salt);
 }
 
 function bookingAnswers(answers: PublicBookAnswers): PublicBookAnswers | null {
@@ -282,67 +283,113 @@ function isRetryable(err: unknown): boolean {
   );
 }
 
+interface CreatedLead {
+  id: { value: string };
+  email: { value: string };
+  source: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  company?: string | null;
+  title?: string | null;
+  phone?: { value: string } | null;
+}
+
+/** How the booker relates to the CRM, decided from the same three reads in every case. */
+type BookerMatch = { kind: 'linked'; leadId: string } | { kind: 'matched' } | { kind: 'new' };
+
 interface LeadOutcome {
   leadId: string | null;
   matchedExistingRecord: boolean;
-  created: {
-    id: { value: string };
-    email: { value: string };
-    source: string;
-    firstName?: string | null;
-    lastName?: string | null;
-    company?: string | null;
-    title?: string | null;
-    phone?: { value: string } | null;
-  } | null;
+  /** The appointment was linked to a lead an earlier public booking created (unverified email). */
+  linkedEarlierBookingLead: boolean;
+  /** A new booker's lead could not be created after the booking; the host adds it by hand. */
+  leadNotCreated: boolean;
+  created: CreatedLead | null;
 }
 
 /**
  * Owner Q11 / R7: the same three reads in every branch; an existing record is
  * never linked or modified unless it is a lead an earlier booking created.
  */
-async function resolveLead(
-  ctx: Context,
-  tx: Tx,
-  bookable: Bookable,
-  booker: { name: string; email: string; answers: PublicBookAnswers }
-): Promise<LeadOutcome> {
-  const { tenantId, hostUserId, leadSource } = bookable.eventType;
-  const byEmail = { tenantId, email: { equals: booker.email, mode: 'insensitive' as const } };
+async function classifyBooker(tx: Tx, tenantId: string, email: string): Promise<BookerMatch> {
+  const byEmail = { tenantId, email: { equals: email, mode: 'insensitive' as const } };
   const lead = await tx.lead.findFirst({ where: byEmail, select: { id: true } });
   const contact = await tx.contact.findFirst({ where: byEmail, select: { id: true } });
   const priorBookings = await tx.appointment.count({
     where: { tenantId, leadId: lead?.id ?? NONE, bookedVia: 'PUBLIC_LINK' },
   });
-  if (lead) {
-    return priorBookings > 0
-      ? { leadId: lead.id, matchedExistingRecord: false, created: null }
-      : { leadId: null, matchedExistingRecord: true, created: null };
-  }
-  if (contact) return { leadId: null, matchedExistingRecord: true, created: null };
+  if (lead) return priorBookings > 0 ? { kind: 'linked', leadId: lead.id } : { kind: 'matched' };
+  return contact ? { kind: 'matched' } : { kind: 'new' };
+}
 
-  const { firstName, lastName } = splitBookerName(booker.name);
-  const phone =
-    booker.answers.phone && PhoneNumber.create(booker.answers.phone).isSuccess
-      ? booker.answers.phone
-      : undefined;
+function outcomeFor(match: BookerMatch): LeadOutcome {
+  return {
+    leadId: match.kind === 'linked' ? match.leadId : null,
+    matchedExistingRecord: match.kind === 'matched',
+    linkedEarlierBookingLead: match.kind === 'linked',
+    leadNotCreated: false,
+    created: null,
+  };
+}
+
+/**
+ * Owner Q20: a new booker's lead is created AFTER the visitor has their answer, so the
+ * response time never reveals whether the email was already in the CRM. It runs under the
+ * same booking lock and re-classifies first (another booking may have created the lead
+ * meanwhile), then links the appointment within its tenant.
+ */
+async function createBookingLead(
+  ctx: Context,
+  bookable: Bookable,
+  appointmentId: string,
+  booker: { name: string; email: string; answers: PublicBookAnswers }
+): Promise<LeadOutcome> {
+  const { tenantId, hostUserId, leadSource } = bookable.eventType;
   const leadService = ctx.services?.lead;
-  if (!leadService) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: FAILED });
-  const result = await leadService.createLeadInTransaction(
-    {
-      email: booker.email,
-      firstName,
-      lastName,
-      company: booker.answers.company,
-      phone,
-      source: leadSource as 'WEBSITE' | 'BOOKING',
-      ownerId: hostUserId,
-      tenantId,
-    },
-    tx as unknown as RepositoryTransaction
-  );
-  if (result.isFailure) throw new TRPCError({ code: 'BAD_REQUEST', message: CHECK_DETAILS });
-  return { leadId: result.value.id.value, matchedExistingRecord: false, created: result.value };
+  if (!leadService) throw new Error('lead service unavailable');
+  return ctx.prisma.$transaction(async (tx) => {
+    await lockTenant(tx, tenantId, 'booking');
+    const match = await classifyBooker(tx, tenantId, booker.email);
+    if (match.kind !== 'new') {
+      if (match.kind === 'linked')
+        await linkAppointmentLead(tx, tenantId, appointmentId, match.leadId);
+      return outcomeFor(match);
+    }
+    const { firstName, lastName } = splitBookerName(booker.name);
+    const phone =
+      booker.answers.phone && PhoneNumber.create(booker.answers.phone).isSuccess
+        ? booker.answers.phone
+        : undefined;
+    const result = await leadService.createLeadInTransaction(
+      {
+        email: booker.email,
+        firstName,
+        lastName,
+        company: booker.answers.company,
+        phone,
+        source: leadSource as 'WEBSITE' | 'BOOKING',
+        ownerId: hostUserId,
+        tenantId,
+      },
+      tx as unknown as RepositoryTransaction
+    );
+    if (result.isFailure) throw new Error('lead rejected by the domain');
+    await linkAppointmentLead(tx, tenantId, appointmentId, result.value.id.value);
+    return {
+      ...outcomeFor({ kind: 'new' }),
+      leadId: result.value.id.value,
+      created: result.value,
+    };
+  });
+}
+
+async function linkAppointmentLead(
+  tx: Tx,
+  tenantId: string,
+  appointmentId: string,
+  leadId: string
+): Promise<void> {
+  await tx.appointment.updateMany({ where: { id: appointmentId, tenantId }, data: { leadId } });
 }
 
 /** Transaction-local tenant config, a bounded lock wait, then the given per-tenant advisory lock. */
@@ -386,21 +433,32 @@ async function afterBooking(
   ctx: Context,
   bookable: Bookable,
   appointment: { id: string; startTime: Date; endTime: Date } & Record<string, unknown>,
-  lead: LeadOutcome,
+  match: BookerMatch,
   booker: { name: string; email: string; answers: PublicBookAnswers }
 ): Promise<void> {
   const { eventType, settings } = bookable;
-  const step = async (label: string, work: () => Promise<unknown>) => {
+  // Error class only: driver and SMTP messages can carry the booker's email (no PII in logs).
+  const step = async (label: string, work: () => Promise<unknown>): Promise<boolean> => {
     try {
       await work();
+      return true;
     } catch (error) {
       console.error('[public-booking] post-booking step failed', {
         step: label,
         appointmentId: appointment.id,
-        error: error instanceof Error ? error.message : 'unknown',
+        error: error instanceof Error ? error.name : 'unknown',
       });
+      return false;
     }
   };
+
+  let lead = outcomeFor(match);
+  if (match.kind === 'new') {
+    const created = await step('lead', async () => {
+      lead = await createBookingLead(ctx, bookable, appointment.id, booker);
+    });
+    if (!created) lead = { ...lead, leadNotCreated: true };
+  }
 
   if (lead.created) {
     const created = lead.created;
@@ -462,6 +520,8 @@ async function afterBooking(
       answers: booker.answers,
       hostEmail: host.email,
       matchedExistingRecord: lead.matchedExistingRecord,
+      linkedEarlierBookingLead: lead.linkedEarlierBookingLead,
+      leadNotCreated: lead.leadNotCreated,
     });
   });
 }
@@ -470,6 +530,8 @@ export const publicBookingRouter = createTRPCRouter({
   getEventType: publicProcedure
     .input(publicBookingLookupSchema)
     .query(async ({ ctx, input }): Promise<PublicEventTypeDto> => {
+      // Throttled per IP before the first read, so handles cannot be enumerated at speed.
+      bookingLookupLimiter.check(ipHashOf(ctx, getBookingSalt()));
       const { eventType, settings } = await resolveBookable(ctx.prisma, input.handle, input.slug);
       return {
         firmName: eventType.tenant.name,
@@ -514,6 +576,8 @@ export const publicBookingRouter = createTRPCRouter({
         return { startsAt: start.toISOString(), endsAt: start.toISOString(), timezone: 'UTC' };
       }
       const salt = getBookingSalt();
+      // Throttled per IP before any read or lock, so a flood cannot queue on the tenant lock.
+      bookingSubmitLimiter.check(ipHashOf(ctx, salt));
       const bookable = await resolveBookable(ctx.prisma, input.handle, input.slug);
       const { eventType, settings } = bookable;
       const tenantId = eventType.tenantId;
@@ -527,6 +591,8 @@ export const publicBookingRouter = createTRPCRouter({
         emailHash: hashBookingValue(normalizeEmailForCap(input.email), salt),
         ipHash: ipHashOf(ctx, salt),
       };
+      // Lock-free pre-check: an over-cap caller is refused before it can wait on the lock.
+      await assertBookingCaps(ctx.prisma, keys, now);
       await pruneBookingAttempts(ctx.prisma, tenantId, now);
       try {
         // Count + insert atomically per tenant; committed before the booking so a failed booking still counts.
@@ -543,7 +609,7 @@ export const publicBookingRouter = createTRPCRouter({
       const booker = { name: input.name, email: input.email, answers: input.answers };
       let outcome: {
         appointment: Awaited<ReturnType<Tx['appointment']['create']>>;
-        lead: LeadOutcome;
+        match: BookerMatch;
         bookable: Bookable;
       };
       try {
@@ -567,7 +633,8 @@ export const publicBookingRouter = createTRPCRouter({
             throw new TRPCError({ code: 'CONFLICT', message: SLOT_TAKEN });
           }
 
-          const lead = await resolveLead(ctx, tx, current, booker);
+          // Classification only: a new booker's lead is created after the reply (owner Q20).
+          const match = await classifyBooker(tx, tenantId, input.email);
           const fresh = current.eventType;
           const freshSettings = current.settings;
           const appointment = await tx.appointment.create({
@@ -586,7 +653,7 @@ export const publicBookingRouter = createTRPCRouter({
               bufferMinutesAfter: freshSettings.defaultBufferAfterMinutes,
               reminderMinutes: freshSettings.defaultReminderMinutes,
               eventTypeId: fresh.id,
-              leadId: lead.leadId,
+              leadId: match.kind === 'linked' ? match.leadId : null,
               bookerName: input.name,
               bookerEmail: input.email,
               bookingAnswers: bookingAnswers(input.answers) ?? undefined,
@@ -596,13 +663,13 @@ export const publicBookingRouter = createTRPCRouter({
             },
             include: { attendees: true, linkedCases: true },
           });
-          return { appointment, lead, bookable: current };
+          return { appointment, match, bookable: current };
         });
       } catch (err) {
         rethrowBookingError(err);
       }
 
-      void afterBooking(ctx, outcome.bookable, outcome.appointment, outcome.lead, booker);
+      void afterBooking(ctx, outcome.bookable, outcome.appointment, outcome.match, booker);
       // The timezone the appointment was committed with (config is re-read under the lock).
       return {
         startsAt: start.toISOString(),

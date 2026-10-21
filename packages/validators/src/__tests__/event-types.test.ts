@@ -265,6 +265,10 @@ describe('bookingHandleSchema / bookingLinkSchema', () => {
       // Parse as https but fail the DB CHECK LIKE 'https://%' (codex finding 14dc88a3).
       'HTTPS://firm.example.invalid/privacy',
       'https:firm.example.invalid/privacy',
+      // Embedded credentials and control characters (security review F7). Built from parts so
+      // no credential-shaped literal lives in the repo.
+      ['https://', 'u', ':', 'p', '@', 'firm.example.invalid/privacy'].join(''),
+      `https://firm.example.invalid/pri${String.fromCodePoint(9)}vacy`,
     ]) {
       expect(bookingLinkSchema.safeParse({ handle: 'smith-law', privacyUrl }).success).toBe(false);
     }

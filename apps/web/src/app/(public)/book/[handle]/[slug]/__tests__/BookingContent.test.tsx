@@ -40,7 +40,11 @@ vi.mock('@/lib/trpc', () => ({
   },
 }));
 
-import BookingContent, { bookingErrorMessage, looksLikeEmail } from '../BookingContent';
+import BookingContent, {
+  bookingErrorMessage,
+  firstErrorTarget,
+  looksLikeEmail,
+} from '../BookingContent';
 
 const EVENT = {
   firmName: 'Smith Law',
@@ -84,7 +88,7 @@ function renderFlow() {
 function pickFirstSlotAndFill() {
   fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
   fireEvent.click(
-    within(screen.getByRole('radiogroup', { name: 'Available times' })).getAllByRole('radio')[0]
+    within(screen.getByRole('radiogroup', { name: /^Available times on/ })).getAllByRole('radio')[0]
   );
   fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Ada Lovelace' } });
   fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ada@example.invalid' } });
@@ -112,7 +116,7 @@ describe('BookingContent', () => {
     expect(within(dates).getAllByRole('radio')).toHaveLength(3);
     expect(within(dates).getByRole('radio', { name: /Tue.*3 Nov.*no times/i })).toBeInTheDocument();
     fireEvent.click(within(dates).getByRole('radio', { name: /Mon.*2 Nov/ }));
-    const times = screen.getByRole('radiogroup', { name: 'Available times' });
+    const times = screen.getByRole('radiogroup', { name: /^Available times on/ });
     expect(within(times).getAllByRole('radio')).toHaveLength(2);
     expect(screen.getByText(/Times shown in your time zone/)).toBeInTheDocument();
     expect(screen.getByText(/2 times available/)).toBeInTheDocument();
@@ -147,7 +151,7 @@ describe('BookingContent', () => {
     })
       .format(new Date('2026-11-02T10:00:00.000Z'))
       .replace(',', '');
-    const slot = within(screen.getByRole('radiogroup', { name: 'Available times' })).getByRole(
+    const slot = within(screen.getByRole('radiogroup', { name: /^Available times on/ })).getByRole(
       'radio'
     );
     expect(slot).toHaveAccessibleName(expect.stringContaining(visitorDate));
@@ -169,7 +173,7 @@ describe('BookingContent', () => {
     fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
     expect(screen.getByLabelText('Phone')).toBeRequired();
     expect(screen.queryByLabelText('Company')).toBeNull();
-    expect(screen.getByRole('link', { name: 'privacy notice' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /privacy notice/ })).toHaveAttribute(
       'href',
       '/privacy'
     );
@@ -183,7 +187,7 @@ describe('BookingContent', () => {
     };
     renderFlow();
     fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
-    expect(screen.getByRole('link', { name: 'privacy notice' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /privacy notice/ })).toHaveAttribute(
       'href',
       'https://firm.example.invalid/privacy'
     );
@@ -195,6 +199,8 @@ describe('BookingContent', () => {
     const trap = screen.getByLabelText('Leave this field empty');
     expect(trap).toHaveAttribute('tabindex', '-1');
     expect(trap).toHaveAttribute('autocomplete', 'off');
+    // Hidden from assistive tech on the wrapper; the field itself stays in the DOM for bots.
+    expect(trap.parentElement).toHaveAttribute('aria-hidden', 'true');
     expect(trap).not.toHaveAttribute('aria-hidden');
   });
 
@@ -235,6 +241,24 @@ describe('BookingContent', () => {
     expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument();
     expect(screen.getByText('Please agree to continue.')).toBeInTheDocument();
     expect(h.book.mutateAsync).not.toHaveBeenCalled();
+    // The time group is tied to its error, and focus moves to the first problem (WCAG 3.3.1 / 2.4.3).
+    const times = screen.getByRole('radiogroup', { name: /^Available times on/ });
+    expect(times).toHaveAttribute('aria-describedby', 'booking-slot-error');
+    expect(times).toHaveAttribute('aria-invalid', 'true');
+    await waitFor(() => expect(within(times).getAllByRole('radio')[0]).toHaveFocus());
+  });
+
+  it('marks the selected time with a non-colour cue and submits from the keyboard (Enter)', async () => {
+    renderFlow();
+    fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
+    const times = screen.getByRole('radiogroup', { name: /^Available times on/ });
+    fireEvent.click(within(times).getAllByRole('radio')[0]);
+    const selected = within(times).getAllByRole('radio')[0].closest('label')!;
+    expect(selected.querySelector('.material-symbols-outlined')).toHaveTextContent('check_circle');
+    expect(selected.className).toContain('border-2');
+    fireEvent.submit(screen.getByRole('button', { name: 'Book' }).closest('form')!);
+    expect(await screen.findByText('Enter your name.')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByLabelText('Your name')).toHaveFocus());
   });
 
   it('a taken slot refetches the times and keeps what was typed', async () => {
@@ -345,5 +369,19 @@ describe('helpers', () => {
       'Something went wrong. Please try again.'
     );
     expect(bookingErrorMessage(null)).toBe('Something went wrong. Please try again.');
+  });
+});
+
+describe('firstErrorTarget', () => {
+  it('follows form order: time, name, email, answers, consent', () => {
+    expect(firstErrorTarget({ slot: 'x', name: 'x' }, [])).toBe(
+      '#booking-time-group input:not([disabled])'
+    );
+    expect(firstErrorTarget({ email: 'x', consent: 'x' }, [])).toBe('#booking-email');
+    expect(
+      firstErrorTarget({ answers: { company: 'x' }, consent: 'x' }, ['phone', 'company'])
+    ).toBe('#booking-company');
+    expect(firstErrorTarget({ consent: 'x' }, [])).toBe('#booking-consent');
+    expect(firstErrorTarget({ form: 'x' }, [])).toBeNull();
   });
 });

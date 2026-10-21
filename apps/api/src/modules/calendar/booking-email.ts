@@ -27,6 +27,10 @@ export interface BookingEmailDetails {
   answers: PublicBookAnswers;
   hostEmail: string;
   matchedExistingRecord: boolean;
+  /** Linked to a lead an earlier public booking created with the same unverified email. */
+  linkedEarlierBookingLead?: boolean;
+  /** The new booker's lead could not be created after the booking (owner Q20). */
+  leadNotCreated?: boolean;
 }
 
 interface EmailMessage {
@@ -140,6 +144,15 @@ export function buildHostNotification(d: BookingEmailDetails): EmailMessage {
   const unverified = 'This email address has not been verified.';
   const matched =
     'This email matches an existing record in your CRM, so it was not linked automatically. Review and link it in the CRM.';
+  const linkedEarlier =
+    'This booking was linked to the lead an earlier public booking created with the same email. The email is unverified, so check the details belong to the same person.';
+  const notCreated =
+    'A lead could not be created for this booker automatically. Add them in the CRM if you want to follow up.';
+  const notices = [
+    ...(d.matchedExistingRecord ? [matched] : []),
+    ...(d.linkedEarlierBookingLead ? [linkedEarlier] : []),
+    ...(d.leadNotCreated ? [notCreated] : []),
+  ];
   return {
     to: [d.hostEmail],
     subject: `New booking: ${eventName}`,
@@ -148,10 +161,10 @@ export function buildHostNotification(d: BookingEmailDetails): EmailMessage {
       '',
       `Event: ${eventName}`,
       `When: ${when}`,
-      `Name: ${d.bookerName}`,
+      `Name: ${stripLineBreaks(d.bookerName)}`,
       `Email: ${d.bookerEmail} (${unverified})`,
-      ...answers.map(([label, value]) => `${label}: ${value}`),
-      ...(d.matchedExistingRecord ? ['', matched] : []),
+      ...answers.map(([label, value]) => plainAnswerLine(label, value)),
+      ...notices.flatMap((notice) => ['', notice]),
     ].join('\n'),
     htmlBody: paragraphs([
       'New booking from your public booking page.',
@@ -160,9 +173,23 @@ export function buildHostNotification(d: BookingEmailDetails): EmailMessage {
       `<strong>Name:</strong> ${escapeHtml(d.bookerName)}`,
       `<strong>Email:</strong> ${escapeHtml(d.bookerEmail)} (${unverified})`,
       ...answers.map(([label, value]) => `<strong>${label}:</strong> ${escapeHtml(value)}`),
-      ...(d.matchedExistingRecord ? [escapeHtml(matched)] : []),
+      ...notices.map((notice) => escapeHtml(notice)),
     ]),
   };
+}
+
+/**
+ * A visitor's answer in the plain-text host email. Single-line answers lose line breaks, and
+ * multi-line notes are quoted line by line, so typed text can never pass for a field of the
+ * notification itself (e.g. a fake "Email: ... (verified)" line).
+ */
+function plainAnswerLine(label: string, value: string): string {
+  if (label !== 'Notes') return `${label}: ${stripLineBreaks(value)}`;
+  const quoted = value
+    .split('\n')
+    .map((line) => `> ${line.replace('\r', '')}`)
+    .join('\n');
+  return `${label}:\n${quoted}`;
 }
 
 async function sendOne(sender: EmailSender, message: EmailMessage, kind: string): Promise<void> {
@@ -174,7 +201,7 @@ async function sendOne(sender: EmailSender, message: EmailMessage, kind: string)
   } catch (error) {
     console.warn('[public-booking] Booking email failed', {
       kind,
-      error: error instanceof Error ? error.message : 'unknown',
+      error: error instanceof Error ? error.name : 'unknown',
     });
   }
 }

@@ -146,13 +146,27 @@ describe('validation (AC-004)', () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it('requires an address for in-person meetings', async () => {
+  it('requires an address for in-person meetings, and focuses that field', async () => {
     const { dialog, onSave } = renderDialog();
     fireEvent.change(within(dialog).getByLabelText('Name'), { target: { value: 'Visit' } });
     fireEvent.change(within(dialog).getByLabelText('Location'), { target: { value: 'IN_PERSON' } });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
     expect(await within(dialog).findByText('Enter the meeting address')).toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
+    expect(dialog.querySelector('#event-type-location-details')).toHaveFocus();
+  });
+
+  it('groups the host picker under its label and ties the host error to it', async () => {
+    const { dialog } = renderDialog({ defaultHost: null });
+    const group = within(dialog).getByRole('group', { name: 'Host' });
+    expect(group).toHaveAttribute('aria-describedby', 'event-type-host-help');
+    fireEvent.change(within(dialog).getByLabelText('Name'), { target: { value: 'Call' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+    expect(await within(dialog).findByText('Choose a host.')).toBeInTheDocument();
+    expect(group).toHaveAttribute(
+      'aria-describedby',
+      'event-type-host-help event-type-hostUserId-error'
+    );
   });
 
   it('flags a slug or name already used by another type before saving', async () => {

@@ -130,6 +130,15 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
   (`schema.prisma:2147`). Booker identity lives in `bookerName`, `bookerEmail`
   and `bookingAnswers`, plus `leadId` when the booking created the lead.
 - **Leads.**
+  - Inside the booking transaction the booker is only _classified_, using the
+    same three reads on every path: linked to an earlier booking lead, matched
+    to an existing record, or new. Owner ruling Q20 (2026-10-21), after the
+    security review: a new booker's lead is created **after the reply**, in its
+    own transaction under the same `booking:<tenant>` lock. That transaction
+    re-classifies, then links the appointment within its tenant. The visitor's
+    response time therefore never shows whether the email was already in the
+    CRM. If the step fails, the booking stands and the host email says to add
+    the lead by hand.
   - No match: a new Lead is created through the domain factory and
     `leadRepository.save(lead, opts, tx)`, and LeadCreated is published through
     the container's event bus. That bus is `InMemoryEventBus` today
@@ -151,13 +160,23 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
     (`appointments.bookedVia = 'PUBLIC_LINK'`). Owner ruling 2026-10-21: if
     failed attempts counted toward the shared event-type cap, junk could lock
     real visitors out for the hour.
-  - `listSlots` has a rightmost-XFF per-IP limiter.
+  - Booking caps key the client IP on the edge-set rightmost XFF hop only. The
+    client-settable `x-real-ip` is ignored, and IPv6 is reduced to its /64.
+    Traffic without the edge header shares one stricter `unknown` bucket.
+  - Per-IP limiters run before any database read: `listSlots` (500 ms),
+    `getEventType` (250 ms) and `book` (2 s). A lock-free cap pre-check refuses
+    over-cap callers before they can queue on the tenant lock.
+  - Logs carry error classes only, never driver or SMTP messages, which can
+    contain an email address.
   - A filled honeypot gets a fake success.
   - `BOOKING_IP_SALT` is required in production.
 - **Email.** Fixed templates with a shared `escapeHtml`. Subjects contain only
   the admin-authored event name, with CR/LF stripped. Free text is never echoed
-  to the booker. The host email marks the booker's email as unverified. An email
-  failure never undoes a booking.
+  to the booker. The host email marks the booker's email as unverified. In the
+  host's plain-text email, single-line answers lose line breaks and notes are
+  quoted, so typed text cannot pass for a field of the notification. It also
+  says when the booking was linked to an earlier booking lead, or when no lead
+  could be created. An email failure never undoes a booking.
 - **Data.** Six Class A migrations:
   1. enum `ADD VALUE`, alone;
   2. tables, columns, CHECKs, FKs and RLS;

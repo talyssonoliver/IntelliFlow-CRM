@@ -8,7 +8,7 @@
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { publicBookingRouter } from '../public-booking.router';
-import { bookingSlotsLimiter } from '../booking-abuse';
+import { bookingLookupLimiter, bookingSlotsLimiter, bookingSubmitLimiter } from '../booking-abuse';
 import { prismaMock, createPublicContext } from '../../../test/setup';
 import { h, prismaError, weekdayRanges, dateOnly } from './availability.test-utils';
 
@@ -143,6 +143,8 @@ beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(NOW);
   bookingSlotsLimiter.reset();
+  bookingLookupLimiter.reset();
+  bookingSubmitLimiter.reset();
   leadService = { createLeadInTransaction: vi.fn() };
   sendEmail = vi.fn().mockResolvedValue({ isSuccess: true, isFailure: false });
   ctx = createPublicContext({
@@ -340,11 +342,12 @@ describe('book — gates before the transaction (AC-015, AC-017)', () => {
     expect(prismaMock.$transaction).not.toHaveBeenCalled();
   });
 
-  it('records a hashed attempt, prunes after the lookup and stops at a cap', async () => {
+  it('refuses an over-cap caller with the lock-free pre-check, before the prune or any lock', async () => {
     prismaMock.bookingAttempt.count.mockResolvedValueOnce(3 as never);
     await expect(caller().book(bookInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
-    expect(prismaMock.bookingAttempt.deleteMany).toHaveBeenCalledTimes(1);
-    expect(prismaMock.$transaction).toHaveBeenCalledTimes(1); // the attempts transaction only
+    expect(prismaMock.bookingAttempt.deleteMany).not.toHaveBeenCalled();
+    expect(prismaMock.$transaction).not.toHaveBeenCalled(); // never queues on the tenant lock
+    expect(prismaMock.$executeRaw).not.toHaveBeenCalled();
     expect(prismaMock.bookingAttempt.create).not.toHaveBeenCalled();
     expect(prismaMock.appointment.create).not.toHaveBeenCalled();
     const counted = JSON.stringify(prismaMock.bookingAttempt.count.mock.calls);
@@ -383,7 +386,9 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
     expect(raw[2][0]).toContain('pg_advisory_xact_lock(hashtextextended(');
     expect(raw[2][1]).toEqual([`booking-attempts:${TENANT}`]);
     const attemptsLock = prismaMock.$executeRaw.mock.invocationCallOrder[2];
-    expect(attemptsLock).toBeLessThan(prismaMock.bookingAttempt.count.mock.invocationCallOrder[0]);
+    // Counts 0-1 are the lock-free pre-check; 2-3 are the atomic re-count under the lock.
+    expect(prismaMock.bookingAttempt.count.mock.invocationCallOrder[1]).toBeLessThan(attemptsLock);
+    expect(attemptsLock).toBeLessThan(prismaMock.bookingAttempt.count.mock.invocationCallOrder[2]);
     expect(prismaMock.bookingAttempt.create.mock.invocationCallOrder[0]).toBeLessThan(
       prismaMock.$executeRaw.mock.invocationCallOrder[3]
     );
@@ -393,7 +398,8 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
     const bookingLock = prismaMock.$executeRaw.mock.invocationCallOrder[5];
     const busyOrder = prismaMock.appointment.findMany.mock.invocationCallOrder.at(-1)!;
     expect(bookingLock).toBeLessThan(busyOrder);
-    expect(prismaMock.$transaction).toHaveBeenCalledTimes(2);
+    // Attempts, booking, then the new booker's lead after the reply (owner Q20).
+    await vi.waitFor(() => expect(prismaMock.$transaction).toHaveBeenCalledTimes(3));
   });
 
   it('re-resolves the event type under the lock: a type disabled mid-booking is not booked', async () => {
@@ -459,7 +465,7 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
       bufferMinutesAfter: 0,
       reminderMinutes: 15,
       eventTypeId: EVENT_TYPE_ID,
-      leadId: 'clhlead000000000000',
+      leadId: null, // a new booker's lead is created and linked after the reply (owner Q20)
       bookerName: 'Ada Lovelace',
       bookerEmail: 'ada@example.invalid',
       bookingAnswers: { phone: '+44 20 7946 0000' },
@@ -468,6 +474,12 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
       bookingConsentVersion: '2026-10-20',
     });
     expectTenantScoped('appointment', 'create');
+    await vi.waitFor(() =>
+      expect(prismaMock.appointment.updateMany).toHaveBeenCalledWith({
+        where: { id: 'clhappt000000000000', tenantId: TENANT },
+        data: { leadId: 'clhlead000000000000' },
+      })
+    );
     expectTenantScoped('lead', 'findFirst');
     expectTenantScoped('contact', 'findFirst');
     expectTenantScoped('appointment', 'count');
@@ -493,6 +505,7 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
       code: 'CONFLICT',
       message: 'That time is no longer available. Please pick another.',
     });
+    bookingSubmitLimiter.reset(); // the clock is frozen, so the per-IP submit window has not passed
     await expect(
       caller().book({ ...bookInput, start: '2026-11-02T10:07:00.000Z' })
     ).rejects.toMatchObject({ code: 'CONFLICT' });
@@ -575,19 +588,39 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
         email: { equals: 'ada@example.invalid', mode: 'insensitive' },
       });
     }
-    // One prior-bookings read for the lead decision (the other count is the event-type cap).
+    // Inside the request: exactly one of each read before the appointment is written, whatever the
+    // branch (the after-reply lead step re-classifies separately, outside the visitor's latency).
+    const createdAt = prismaMock.appointment.create.mock.invocationCallOrder[0];
+    const before = (fn: { mock: { invocationCallOrder: number[] } }) =>
+      fn.mock.invocationCallOrder.filter((order) => order < createdAt).length;
+    expect(before(prismaMock.lead.findFirst)).toBe(1);
+    expect(before(prismaMock.contact.findFirst)).toBe(1);
     const leadReads = prismaMock.appointment.count.mock.calls.filter(
-      ([arg]) => (arg as any).where.leadId !== undefined
+      ([arg], i) =>
+        (arg as any).where.leadId !== undefined &&
+        prismaMock.appointment.count.mock.invocationCallOrder[i] < createdAt
     );
     expect(leadReads).toHaveLength(1);
+    expect(
+      leadService.createLeadInTransaction.mock.invocationCallOrder[0] ?? Infinity
+    ).toBeGreaterThan(createdAt);
   });
 
-  it('maps a lead unique race or a lock timeout to CONFLICT "Please try again."', async () => {
-    leadService.createLeadInTransaction.mockRejectedValueOnce(prismaError('P2002'));
-    await expect(caller().book(bookInput)).rejects.toMatchObject({
-      code: 'CONFLICT',
-      message: 'Please try again.',
+  it('throttles the lookup and the submit per IP before any database read (security review F2)', async () => {
+    await caller().getEventType(lookup);
+    const reads = prismaMock.tenant.findUnique.mock.calls.length;
+    await expect(caller().getEventType(lookup)).rejects.toMatchObject({
+      code: 'TOO_MANY_REQUESTS',
     });
+    expect(prismaMock.tenant.findUnique.mock.calls.length).toBe(reads);
+
+    await caller().book(bookInput);
+    const bookReads = prismaMock.tenant.findUnique.mock.calls.length;
+    await expect(caller().book(bookInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    expect(prismaMock.tenant.findUnique.mock.calls.length).toBe(bookReads);
+  });
+
+  it('maps a lock timeout to CONFLICT "Please try again."', async () => {
     prismaMock.$executeRaw
       .mockReset()
       .mockResolvedValueOnce(1 as never)
@@ -641,17 +674,34 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
     });
   });
 
-  it('fails a booking whose lead the domain rejects, without leaking the reason', async () => {
-    leadService.createLeadInTransaction.mockResolvedValueOnce({
-      isSuccess: false,
-      isFailure: true,
-      error: new Error('Invalid email format'),
-    });
-    await expect(caller().book(bookInput)).rejects.toMatchObject({
-      code: 'BAD_REQUEST',
-      message: 'Please check your details and try again.',
-    });
-  });
+  it.each([
+    ['the domain rejects it', 'domain'],
+    ['a unique race fails it', 'race'],
+  ])(
+    'keeps the booking when the after-reply lead step fails (%s) and tells the host (owner Q20)',
+    async (_label, failure) => {
+      if (failure === 'domain') {
+        leadService.createLeadInTransaction.mockResolvedValueOnce({
+          isSuccess: false,
+          isFailure: true,
+          error: new Error('Invalid email format'),
+        });
+      } else {
+        leadService.createLeadInTransaction.mockRejectedValueOnce(prismaError('P2002'));
+      }
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      await expect(caller().book(bookInput)).resolves.toMatchObject({ startsAt: SLOT });
+      await vi.waitFor(() => expect(sendEmail).toHaveBeenCalledTimes(2));
+      const host = sendEmail.mock.calls.find(([m]) => m.to[0] === 'host@firm.example.invalid')![0];
+      expect(host.textBody).toContain('A lead could not be created for this booker automatically');
+      expect(prismaMock.appointment.updateMany).not.toHaveBeenCalled();
+      expect(enqueueLeadScoring).not.toHaveBeenCalled();
+      const logged = JSON.stringify(error.mock.calls);
+      expect(logged).not.toContain('Invalid email format');
+      expect(logged).not.toContain('ada@example.invalid');
+      error.mockRestore();
+    }
+  );
 
   it('never returns a database error message', async () => {
     prismaMock.appointment.create.mockRejectedValueOnce(

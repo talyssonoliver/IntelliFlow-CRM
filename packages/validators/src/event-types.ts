@@ -54,10 +54,12 @@ export const eventTypeSlugSchema = z
  * exactly what `tenants_bookingPrivacyUrl_check` (`LIKE 'https://%'`) accepts; `HTTPS://x`
  * and `https:x` parse as https but would fail that CHECK.
  */
+/** An https URL with no embedded credentials and no control characters (tabs, line breaks). */
 function isHttpsUrl(value: string): boolean {
-  if (!value.startsWith('https://')) return false;
+  if (!value.startsWith('https://') || stripControlChars(value) !== value) return false;
   try {
-    return new URL(value).protocol === 'https:';
+    const url = new URL(value);
+    return url.protocol === 'https:' && !url.username && !url.password;
   } catch {
     return false;
   }

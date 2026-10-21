@@ -770,8 +770,8 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - no new source files; the refactor touches only the files created or modified in Steps 10-16
 
 **Refactor:**
-- [ ] Remove duplication between `listSlots` and the `book` re-check (one function).
-- [ ] Check: no `any` in new code, no `istanbul ignore`, no TODO/stub, no skipDuplicates.
+- [x] Remove duplication between `listSlots` and the `book` re-check (one function). *Verified 2026-10-21: listSlots and the book re-check share computeSlots; new code has no istanbul ignore/TODO/skipDuplicates; the only any-typed params are the side-effects helper moved verbatim from main and two appointments.router helpers (ctx.prismaWithTenant is untyped upstream)*
+- [x] Check: no `any` in new code, no `istanbul ignore`, no TODO/stub, no skipDuplicates.
 
 **Red flags:** each gets a gh issue (file:line + proposed fix), a debt-ledger entry, and a findings-doc entry in
 `.specify/sprints/sprint-18/execution/PG-203/PG-203-findings.md`:

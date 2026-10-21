@@ -17,6 +17,7 @@ import { TRPCError } from '@trpc/server';
 import type { PrismaClient } from '@intelliflow/db';
 import { BOOKING_CAPS } from '@intelliflow/domain';
 import { PublicRateLimiter } from '../../security/public-rate-limiter';
+import { pickTrustedForwardedIp } from '../../security/client-ip';
 
 type AttemptPrisma = Pick<PrismaClient, 'bookingAttempt'>;
 type BookedPrisma = Pick<PrismaClient, 'appointment'>;
@@ -30,6 +31,36 @@ const MS_PER_HOUR = 3_600_000;
 
 /** About two slot lookups per second per client IP: date clicks are never throttled. */
 export const bookingSlotsLimiter = new PublicRateLimiter({ windowMs: 500 });
+/** Per-IP throttle on the event lookup, before any database read (handle enumeration). */
+export const bookingLookupLimiter = new PublicRateLimiter({ windowMs: 250 });
+/** Per-IP throttle on submits, before any database read or lock (lock-queue flooding). */
+export const bookingSubmitLimiter = new PublicRateLimiter({ windowMs: 2000 });
+
+/** Reduce an IPv6 address to its /64, so one host cannot rotate addresses inside its prefix. */
+export function ipv6Prefix64(ip: string): string {
+  const address = ip.split('%')[0].toLowerCase();
+  if (address.includes('.')) return address; // IPv4-mapped: the IPv4 part identifies the client
+  const [head, tail = ''] = address.split('::');
+  const headParts = head ? head.split(':') : [];
+  const tailParts = address.includes('::') && tail ? tail.split(':') : [];
+  const missing = 8 - headParts.length - tailParts.length;
+  const groups = [...headParts, ...new Array<string>(Math.max(missing, 0)).fill('0'), ...tailParts];
+  return `${groups
+    .slice(0, 4)
+    .map((g) => g.replace(/^0+(?=.)/, ''))
+    .join(':')}::/64`;
+}
+
+/**
+ * The client IP for booking caps: only the edge-set (rightmost) x-forwarded-for hop. The
+ * client-settable x-real-ip is never trusted here. Without the header every caller shares the
+ * 'unknown' bucket, which is the stricter global bucket for traffic that bypassed the edge.
+ */
+export function bookingClientIp(req: Request | undefined): string {
+  const ip = pickTrustedForwardedIp(req?.headers.get('x-forwarded-for'));
+  if (!ip) return 'unknown';
+  return ip.includes(':') ? ipv6Prefix64(ip) : ip;
+}
 
 export function getBookingSalt(env: Record<string, string | undefined> = process.env): string {
   const salt = env.BOOKING_IP_SALT?.trim();
@@ -124,7 +155,7 @@ export async function pruneBookingAttempts(
     });
   } catch (error) {
     console.warn('[public-booking] Failed to prune booking attempts', {
-      error: error instanceof Error ? error.message : String(error),
+      error: error instanceof Error ? error.name : 'unknown',
     });
   }
 }

@@ -178,6 +178,15 @@ type FieldErrors = Partial<
   Record<'name' | 'slug' | 'durationMinutes' | 'locationDetails' | 'hostUserId', string>
 >;
 
+/** Where focus goes for each field error, in form order (WCAG 2.4.3 / 3.3.1). */
+const ERROR_FOCUS_TARGETS: Array<[keyof FieldErrors, string]> = [
+  ['name', '#event-type-name'],
+  ['slug', '#event-type-slug'],
+  ['durationMinutes', '#event-type-duration'],
+  ['locationDetails', '#event-type-location-details'],
+  ['hostUserId', '#event-type-host-group input'],
+];
+
 const FIELD_ERROR_KEYS = new Set<string>([
   'name',
   'slug',
@@ -259,7 +268,9 @@ export function EventTypeDialog({
     const { data, errors: next } = validateDraft(draft, existing, eventType?.id);
     setErrors(next);
     if (!data) {
-      nameRef.current?.focus();
+      const target = ERROR_FOCUS_TARGETS.find(([field]) => next[field])?.[1];
+      const element = target ? document.querySelector<HTMLElement>(target) : null;
+      (element ?? nameRef.current)?.focus();
       return;
     }
     const result = await onSave(data);
@@ -406,11 +417,19 @@ export function EventTypeDialog({
             />
           </div>
 
-          <div className="space-y-1.5">
-            <span id="event-type-host-label" className="text-sm font-medium text-foreground">
+          <fieldset
+            id="event-type-host-group"
+            aria-describedby={
+              errors.hostUserId
+                ? 'event-type-host-help event-type-hostUserId-error'
+                : 'event-type-host-help'
+            }
+            className="space-y-1.5"
+          >
+            <legend id="event-type-host-label" className="text-sm font-medium text-foreground">
               Host
-            </span>
-            <p className="text-xs text-muted-foreground">
+            </legend>
+            <p id="event-type-host-help" className="text-xs text-muted-foreground">
               Public bookings are scheduled with this person.
             </p>
             <EntitySearchField
@@ -423,7 +442,7 @@ export function EventTypeDialog({
               }}
             />
             <ErrorText id="event-type-hostUserId-error" message={errors.hostUserId} />
-          </div>
+          </fieldset>
 
           <fieldset className="space-y-2">
             <legend id="event-type-colour-legend" className="text-sm font-medium text-foreground">

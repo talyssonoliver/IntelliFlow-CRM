@@ -193,6 +193,10 @@ describe('the list (AC-005, AC-008, AC-009)', () => {
     await waitFor(() =>
       expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/book/smith-law/bookable`)
     );
+    // The result is announced, and the button's name matches its visible "Copied" (WCAG 4.1.3).
+    const row = within(screen.getByTestId('event-type-row-a'));
+    expect(await row.findByText('Link for Bookable copied')).toBeInTheDocument();
+    expect(row.getByRole('button', { name: 'Copied link for Bookable' })).toBeInTheDocument();
   });
 
   it('hides Copy link when the firm has no handle or no availability', () => {

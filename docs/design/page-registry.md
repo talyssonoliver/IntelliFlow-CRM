@@ -3,7 +3,7 @@
 > **Location**: `docs/design/page-registry.md` **Purpose**: Central registry of
 > all UI pages with task IDs, KPIs, file paths, components, API routers, test
 > paths, and RACI assignments **Last Updated**: 2026-04-16 (as of Sprint 17)
-> **Total Pages**: 214
+> **Total Pages**: 215
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -61,7 +61,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 1: Public Pages (27 routes)
+## Section 1: Public Pages (28 routes)
 
 ### Home Page (`/`)
 
@@ -510,6 +510,21 @@ Each route entry uses this standard table format:
 | **KPI**        | Lighthouse >=90; Server <200ms                                            |
 | **Status**     | Implemented                                                               |
 | **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                            |
+
+### Public Booking (`/book/[handle]/[slug]`)
+
+| Field          | Value                                                                                                                                                         |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-203                                                                                                                                                        |
+| **File Path**  | `apps/web/src/app/(public)/book/[handle]/[slug]/page.tsx`                                                                                                     |
+| **Layout**     | `apps/web/src/app/(public)/layout.tsx` (chrome-free: `/book/` is excluded from the public header and footer in `PublicLayoutShell.tsx`)                       |
+| **API Router** | `apps/api/src/modules/calendar/public-booking.router.ts` (`publicBooking.getEventType`, `publicBooking.listSlots`, `publicBooking.book`, all public)          |
+| **E2E Test**   | None                                                                                                                                                          |
+| **Unit Tests** | `apps/web/src/app/(public)/book/[handle]/[slug]/__tests__/`                                                                                                   |
+| **KPI**        | Lighthouse >=90; Server <200ms                                                                                                                                |
+| **Status**     | Implemented. External entry (booking link from `BookingLinkCard.tsx`); `noindex`, disallowed in `robots.ts`, not in `sitemap.xml`, no sidebar entry (ADR-083) |
+| **RACI**       | R: Frontend / A: Security / C: Backend / I: QA                                                                                                                |
+| **Components** | Route shell, BookingContent, loading.tsx                                                                                                                      |
 
 ---
 
@@ -1147,7 +1162,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 12: Calendar (4 routes)
+## Section 12: Calendar (5 routes)
 
 ### Calendar (`/calendar`)
 
@@ -1208,6 +1223,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented (enforced at booking once the migration is applied, ADR-081)                                                 |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                            |
 | **Components** | AvailabilityContent, WeeklyHoursCard, TimezoneCard, ClosuresList (forwardRef), BuffersCapCard, PageHeader, EmptyState    |
+
+### Event Types (`/calendar/event-types`)
+
+| Field          | Value                                                                                                                      |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-203                                                                                                                     |
+| **File Path**  | `apps/web/src/app/calendar/event-types/page.tsx`                                                                           |
+| **Layout**     | `apps/web/src/app/calendar/layout.tsx`                                                                                     |
+| **API Router** | `apps/api/src/modules/calendar/event-types.router.ts` (`calendar.eventTypes.*`), `appointments.create` (event type picker) |
+| **E2E Test**   | None                                                                                                                       |
+| **Unit Tests** | `apps/web/src/app/calendar/event-types/__tests__/`, `apps/web/src/app/calendar/event-types/components/__tests__/`          |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                            |
+| **Status**     | Implemented (replaces the coming-soon stub; already counted in the page total)                                             |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                              |
+| **Components** | EventTypesContent, EventTypeList, EventTypeDialog, BookingLinkCard, EventTypesLoading                                      |
 
 ---
 

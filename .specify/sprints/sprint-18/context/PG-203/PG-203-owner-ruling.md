@@ -125,3 +125,9 @@ Answer: **Restriction flag now.** A per-firm restriction keyed on the person's e
 ## Q19 — DSAR erasure scope (same modal)
 
 Answer: **CRM core auto, comms checklist.** Auto-erase the lead/contact profile, notes, activities, AI scores/insights, embeddings and search vectors, and the booking fields. The export includes the communications too. Emails, tickets, chats, feedback, notifications and drafts show as a counted checklist for the admin, plus a follow-up task to automate them.
+
+## Q20 — lead creation timing (2026-10-21, AskUserQuestion, after the security-lead review of public booking, finding F1)
+
+Finding: a new booker's lead was created inside the booking request, so a booking for an email NOT in the CRM took measurably longer; timing bookings could reveal who is already a client.
+
+Answer: **Create lead after reply.** The visitor gets the confirmation first; the lead is created and linked a moment after (same lock, same rules). If that step fails, the booking still stands and the host email says to add the lead by hand.

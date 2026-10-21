@@ -127,22 +127,33 @@ interface Choice {
  * is shown.
  */
 function ChoiceGroup({
+  id,
   name,
   label,
   choices,
   value,
   onChange,
   className,
+  describedBy,
 }: Readonly<{
+  id?: string;
   name: string;
   label: string;
   choices: Choice[];
   value: string;
   onChange: (v: string) => void;
   className?: string;
+  describedBy?: string;
 }>) {
   return (
-    <div role="radiogroup" aria-label={label} className={className}>
+    <div
+      id={id}
+      role="radiogroup"
+      aria-label={label}
+      aria-describedby={describedBy}
+      aria-invalid={describedBy ? true : undefined}
+      className={className}
+    >
       {choices.map((choice) => {
         const id = `${name}-${choice.value}`;
         const checked = choice.value === value;
@@ -150,10 +161,12 @@ function ChoiceGroup({
           <label
             key={choice.value}
             htmlFor={id}
-            className={`min-h-11 rounded-lg border px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-ring ${
+            // Selected = thick primary border + tint + a check mark, so colour is never the only cue
+            // and the text stays foreground-on-light for contrast (WCAG 1.4.1 / 1.4.3).
+            className={`relative min-h-11 rounded-lg px-3 py-2 text-sm text-foreground focus-within:ring-2 focus-within:ring-ring ${
               checked
-                ? 'border-primary bg-primary text-primary-foreground'
-                : 'border-border bg-background'
+                ? 'border-2 border-primary bg-primary/10'
+                : 'border border-border bg-background'
             } ${choice.disabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
           >
             <input
@@ -166,8 +179,18 @@ function ChoiceGroup({
               onChange={() => onChange(choice.value)}
               className="sr-only"
             />
-            <span className="block font-medium">{choice.label}</span>
-            {choice.detail && <span className="block text-xs opacity-80">{choice.detail}</span>}
+            {checked && (
+              <span
+                className="material-symbols-outlined absolute right-1 top-1 text-base text-primary"
+                aria-hidden="true"
+              >
+                check_circle
+              </span>
+            )}
+            <span className="block pr-4 font-medium">{choice.label}</span>
+            {choice.detail && (
+              <span className="block text-xs text-muted-foreground">{choice.detail}</span>
+            )}
           </label>
         );
       })}
@@ -209,6 +232,17 @@ export function validateBooking(draft: Draft, requiredFields: readonly string[])
   return errors;
 }
 
+/** The selector of the first control with an error, in form order. */
+export function firstErrorTarget(errors: Errors, requiredFields: readonly string[]): string | null {
+  if (errors.slot) return '#booking-time-group input:not([disabled])';
+  if (errors.name) return '#booking-name';
+  if (errors.email) return '#booking-email';
+  const answer = requiredFields.find((f) => errors.answers?.[f]);
+  if (answer) return `#booking-${answer}`;
+  if (errors.consent) return '#booking-consent';
+  return null;
+}
+
 function FieldError({ id, message }: Readonly<{ id: string; message?: string }>) {
   if (!message) return null;
   return (
@@ -239,7 +273,10 @@ function Confirmation({
   firmName: string;
 }>) {
   const headingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => headingRef.current?.focus(), []);
+  useEffect(() => {
+    headingRef.current?.focus();
+    document.title = `Booked: ${eventName}`;
+  }, [eventName]);
   return (
     <main className="mx-auto min-h-screen max-w-3xl px-4 py-16">
       <h1
@@ -293,6 +330,7 @@ export default function BookingContent({
   if (eventQuery.isLoading) {
     return (
       <main className="mx-auto min-h-screen max-w-3xl px-4 py-10">
+        <h1 className="sr-only">Book an appointment</h1>
         <output>Loading booking page</output>
       </main>
     );
@@ -311,7 +349,12 @@ export default function BookingContent({
   const submit = async () => {
     const next = validateBooking(draft, requiredFields);
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      // Move focus to the first problem, in form order (WCAG 2.4.3 / 3.3.1).
+      const target = firstErrorTarget(next, requiredFields);
+      if (target) setTimeout(() => document.querySelector<HTMLElement>(target)?.focus(), 0);
+      return;
+    }
     const answers = Object.fromEntries(requiredFields.map((f) => [f, draft.answers[f].trim()]));
     try {
       const result = await bookMutation.mutateAsync({
@@ -390,6 +433,10 @@ export default function BookingContent({
             No open times in the next 14 days. Please contact the firm.
           </p>
         )}
+        {/* Always mounted, so changes to the count are announced (WCAG 4.1.3). */}
+        <p aria-live="polite" className="text-sm text-muted-foreground">
+          {firstOpenDay ? `${daySlots.length} times available on ${dayLabel(selectedDate)}.` : ''}
+        </p>
         {firstOpenDay && (
           <>
             <ChoiceGroup
@@ -408,39 +455,47 @@ export default function BookingContent({
                 disabled: d.slots.length === 0,
               }))}
             />
-            <p aria-live="polite" className="text-sm text-muted-foreground">
-              {`${daySlots.length} times available on ${dayLabel(selectedDate)}.`}
-            </p>
             <p className="text-xs text-muted-foreground">
               {`Days follow ${event.firmName}'s calendar (${event.timezone}). Times shown in your time zone${
                 visitorZone ? ` (${visitorZone})` : ''
               }, with your date when it differs.`}
             </p>
             <ChoiceGroup
+              id="booking-time-group"
               name="booking-time"
-              label="Available times"
+              label={`Available times on ${dayLabel(selectedDate)}`}
               className="grid grid-cols-3 gap-2 sm:grid-cols-4"
               value={draft.start}
               onChange={(value) => update('start', value)}
+              describedBy={errors.slot ? 'booking-slot-error' : undefined}
               choices={daySlots.map((s) => ({
                 value: s.start,
                 label: slotLabel(s.start, event.timezone),
-                detail: `${timeLabel(s.start, event.timezone)} ${event.timezone}`,
+                // The firm's time only when it differs from what the visitor already sees.
+                detail:
+                  visitorZone === event.timezone
+                    ? undefined
+                    : `${timeLabel(s.start, event.timezone)} ${event.timezone}`,
               }))}
             />
-            {errors.slot && (
-              <p role="alert" className="text-sm text-red-700 dark:text-red-300">
-                {errors.slot}
-              </p>
-            )}
+            <FieldError id="booking-slot-error" message={errors.slot} />
           </>
         )}
       </section>
 
-      <section aria-labelledby="booking-details" className="mt-8 space-y-4">
+      <form
+        aria-labelledby="booking-details"
+        className="mt-8 space-y-4"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          void submit();
+        }}
+      >
         <h2 id="booking-details" className="text-lg font-semibold text-foreground">
           Your details
         </h2>
+        <p className="text-xs text-muted-foreground">All fields are required.</p>
         <div className="space-y-1.5">
           <Label htmlFor="booking-name">Your name</Label>
           <Input
@@ -478,8 +533,9 @@ export default function BookingContent({
           </div>
         ))}
 
-        {/* Honeypot: visually off-screen, out of the tab order; people never see or fill it. */}
+        {/* Honeypot: off-screen, out of the tab order and hidden from assistive tech; bots still see it. */}
         <div
+          aria-hidden="true"
           style={{
             position: 'absolute',
             left: '-10000px',
@@ -515,7 +571,7 @@ export default function BookingContent({
               target="_blank"
               rel="noopener noreferrer"
             >
-              privacy notice
+              privacy notice<span className="sr-only"> (opens in a new tab)</span>
             </a>
             {'.'}
           </Label>
@@ -528,10 +584,10 @@ export default function BookingContent({
           </p>
         )}
 
-        <Button type="button" onClick={submit} disabled={bookMutation.isPending}>
+        <Button type="submit" disabled={bookMutation.isPending}>
           {bookMutation.isPending ? 'Booking…' : 'Book'}
         </Button>
-      </section>
+      </form>
 
       <footer className="mt-12 text-xs text-muted-foreground">
         {'Powered by '}

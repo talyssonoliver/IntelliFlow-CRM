@@ -336,7 +336,7 @@ describeDb('PG-203 event types and public booking (real DB)', () => {
     return {
       prisma,
       req: new Request('http://booking.example.invalid/', {
-        headers: { 'x-real-ip': `198.51.100.${ipCounter}` },
+        headers: { 'x-forwarded-for': `198.51.100.${ipCounter}` },
       }),
       services: { lead: leadService },
       adapters: { notificationService: { sendEmail: vi.fn(async () => ({ success: true })) } },
@@ -566,11 +566,23 @@ describeDb('PG-203 event types and public booking (real DB)', () => {
         }),
       ]);
       expect(rows[0].eventTypeId).not.toBe(typeA.id);
-      const lead = await prisma.lead.findUnique({ where: { id: rows[0].leadId } });
+      // Owner Q20: the lead is created and linked after the reply, under the same lock.
+      const leadId = await vi.waitFor(
+        async () => {
+          const linked = await prisma.appointment.findFirst({
+            where: { bookerEmail: email },
+            select: { leadId: true },
+          });
+          expect(linked?.leadId).toBeTruthy();
+          return linked!.leadId as string;
+        },
+        { timeout: 5_000, interval: 50 }
+      );
+      const lead = await prisma.lead.findUnique({ where: { id: leadId } });
       expect(lead).toMatchObject({ tenantId: TENANT_B, email, source: 'BOOKING', ownerId: HOST_B });
       expect(await prisma.lead.count({ where: { tenantId: TENANT_A, email } })).toBe(0);
       // The container wires an InMemoryEventBus (no outbox table is written): the
-      // LeadCreated event is published through the bus with the booking's transaction.
+      // LeadCreated event is published through the bus with the lead's transaction.
       expect(eventBus.getPublishedEvents().map((e) => e.eventType)).toContain('lead.created');
     });
 

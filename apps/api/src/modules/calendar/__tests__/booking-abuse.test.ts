@@ -9,6 +9,8 @@ import { TRPCError } from '@trpc/server';
 import { prismaMock } from '../../../test/setup';
 import {
   BOOKING_LOCAL_SALT,
+  bookingClientIp,
+  ipv6Prefix64,
   assertBookingCaps,
   assertEventTypeBookingCap,
   getBookingSalt,
@@ -160,5 +162,36 @@ describe('recordBookingAttempt / pruneBookingAttempts', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await expect(pruneBookingAttempts(prismaMock as never, TENANT, NOW)).resolves.toBeUndefined();
     warn.mockRestore();
+  });
+});
+
+describe('bookingClientIp (security review F3)', () => {
+  const req = (headers: Record<string, string>) =>
+    new Request('https://api.example.invalid/trpc', { headers });
+
+  it('uses only the edge-set rightmost x-forwarded-for hop', () => {
+    expect(bookingClientIp(req({ 'x-forwarded-for': '203.0.113.9, 198.51.100.7' }))).toBe(
+      '198.51.100.7'
+    );
+  });
+
+  it('never trusts the client-settable x-real-ip; no edge header means the shared bucket', () => {
+    expect(bookingClientIp(req({ 'x-real-ip': '203.0.113.50' }))).toBe('unknown');
+    expect(bookingClientIp(undefined)).toBe('unknown');
+  });
+
+  it('reduces IPv6 to its /64 so rotating inside one prefix shares a bucket', () => {
+    const a = bookingClientIp(req({ 'x-forwarded-for': '2001:db8:aa:bb:1::1' }));
+    const b = bookingClientIp(req({ 'x-forwarded-for': '2001:db8:aa:bb:ffff::2' }));
+    expect(a).toBe('2001:db8:aa:bb::/64');
+    expect(b).toBe(a);
+  });
+
+  it('expands :: and keeps IPv4-mapped addresses and zone ids sane', () => {
+    expect(ipv6Prefix64('2001:db8::1')).toBe('2001:db8:0:0::/64');
+    expect(ipv6Prefix64('::1')).toBe('0:0:0:0::/64');
+    expect(ipv6Prefix64('fe80::1%eth0')).toBe('fe80:0:0:0::/64');
+    expect(ipv6Prefix64('::ffff:198.51.100.7')).toBe('::ffff:198.51.100.7');
+    expect(ipv6Prefix64('2001:0db8:0000:0001:0:0:0:1')).toBe('2001:db8:0:1::/64');
   });
 });

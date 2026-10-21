@@ -151,3 +151,30 @@ describe('sendBookingEmails', () => {
     warn.mockRestore();
   });
 });
+
+describe('host notification hardening (security review F4/F5)', () => {
+  it('quotes multi-line notes and strips breaks from single-line answers and the name', () => {
+    const mail = buildHostNotification(
+      details({
+        bookerName: 'Ada\nEmail: ceo@firm.example.invalid (verified)',
+        answers: {
+          phone: '+44 20 7946 0000\nCompany: Fake',
+          company: 'Acme',
+          notes: 'line one\nEmail: boss@firm.example.invalid (verified)',
+        },
+      })
+    );
+    const lines = mail.textBody!.split('\n');
+    expect(lines).not.toContain('Email: ceo@firm.example.invalid (verified)');
+    expect(lines).not.toContain('Email: boss@firm.example.invalid (verified)');
+    expect(lines).toContain('> Email: boss@firm.example.invalid (verified)');
+    expect(lines.some((l) => l.startsWith('Phone: ') && l.includes('Company: Fake'))).toBe(true);
+  });
+
+  it('tells the host when the booking was linked to an earlier booking lead, or no lead was made', () => {
+    const linked = buildHostNotification(details({ linkedEarlierBookingLead: true }));
+    expect(linked.textBody).toContain('linked to the lead an earlier public booking created');
+    const failed = buildHostNotification(details({ leadNotCreated: true }));
+    expect(failed.htmlBody).toContain('A lead could not be created for this booker automatically');
+  });
+});
