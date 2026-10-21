@@ -48,7 +48,14 @@ vi.mock('bullmq', () => {
       constructorCalls.closed.events++;
     }
   }
-  return { Queue: MockQueue, Worker: MockWorker, QueueEvents: MockQueueEvents };
+  // PG-199: ceiling-blocked jobs are moved to delayed with BullMQ's DelayedError.
+  class DelayedError extends Error {
+    constructor(message = 'bullmq:movedToDelayed') {
+      super(message);
+      this.name = 'DelayedError';
+    }
+  }
+  return { Queue: MockQueue, Worker: MockWorker, QueueEvents: MockQueueEvents, DelayedError };
 });
 
 import {
@@ -324,5 +331,85 @@ describe('ContactEmbedWorker — lifecycle (start/stop/listeners)', () => {
     )) as { embedded: boolean };
     expect(result.embedded).toBe(true);
     expect(updateEmbed).toHaveBeenCalled();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PG-199 (owner Q8): embeddings are metered for the job tenant and a reached rag
+// ceiling delays the job instead of dead-lettering it.
+// ---------------------------------------------------------------------------
+
+describe('ContactEmbedWorker.process — tenant scope and rag ceiling (PG-199)', () => {
+  it('runs the embedding inside the job tenant context (so it is metered and capped)', async () => {
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    let seenTenant: string | undefined;
+    const worker = new ContactEmbedWorker(
+      buildPrisma(),
+      { host: 'localhost', port: 6379 },
+      {
+        generateEmbedding: vi.fn(async () => {
+          seenTenant = tenantContextStore.getStore()?.tenantId;
+          return [0.1];
+        }),
+      },
+      vi.fn(async () => {})
+    );
+
+    await worker.process(buildJob({ contactId: 'c-1', tenantId: 't-42', reason: 'create' }));
+
+    expect(seenTenant).toBe('t-42');
+  });
+
+  it('moves the job to delayed (15 min) when the rag ceiling is reached, never failing it', async () => {
+    const ceiling = Object.assign(new Error('monthly AI ceiling reached for rag'), {
+      code: 'PURPOSE_CEILING_REACHED',
+    });
+    const updateEmbed = vi.fn(async () => {});
+    const worker = new ContactEmbedWorker(
+      buildPrisma(),
+      { host: 'localhost', port: 6379 },
+      {
+        generateEmbedding: vi.fn(async () => {
+          throw new Error('Failed to generate embedding: monthly AI ceiling reached for rag', {
+            cause: ceiling,
+          });
+        }),
+      },
+      updateEmbed
+    );
+    const job = buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'update' }) as unknown as {
+      moveToDelayed: ReturnType<typeof vi.fn>;
+    };
+    job.moveToDelayed = vi.fn(async () => {});
+    const before = Date.now();
+
+    const err = await worker.process(job as never, 'lock-token').catch((e: unknown) => e);
+
+    expect((err as Error).name).toBe('DelayedError');
+    expect(job.moveToDelayed).toHaveBeenCalledTimes(1);
+    const [until, token] = job.moveToDelayed.mock.calls[0] as [number, string];
+    expect(token).toBe('lock-token');
+    expect(until).toBeGreaterThanOrEqual(before + 15 * 60_000);
+    expect(updateEmbed).not.toHaveBeenCalled();
+  });
+
+  it('rethrows other embedding errors unchanged (normal BullMQ retries)', async () => {
+    const worker = new ContactEmbedWorker(
+      buildPrisma(),
+      { host: 'localhost', port: 6379 },
+      {
+        generateEmbedding: vi.fn(async () => {
+          throw new Error('provider 503');
+        }),
+      },
+      vi.fn(async () => {})
+    );
+    const job = buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'update' }) as unknown as {
+      moveToDelayed: ReturnType<typeof vi.fn>;
+    };
+    job.moveToDelayed = vi.fn();
+
+    await expect(worker.process(job as never, 'lock-token')).rejects.toThrow('provider 503');
+    expect(job.moveToDelayed).not.toHaveBeenCalled();
   });
 });

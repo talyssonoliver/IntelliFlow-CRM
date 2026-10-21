@@ -1,0 +1,22 @@
+{
+  "stoa": "Security",
+  "task_id": "PG-199",
+  "run_id": "20261019115522-8efea6fc",
+  "verdict": "WARN",
+  "gates": [
+    {"name": "gitleaks (branch range merge-base..HEAD, 27 commits)", "result": "PASS", "evidence": "exit 0, no leaks found; supplemental regex grep of the diff for secret shapes found nothing"},
+    {"name": "pnpm audit --audit-level=high", "result": "PASS", "evidence": "exit 0; 3 high are pre-existing configured ignores, 1 moderate remains: sprintf-js GHSA-hp3w-g68c-fv3c via ai-worker>tsup>api-extractor>argparse (dev toolchain, no patched version exists). Branch changes no package.json or lockfile."},
+    {"name": "semgrep p/security-audit (PG-199 changed source files)", "result": "PASS", "evidence": "exit 0, no findings"},
+    {"name": "snyk", "result": "UNAVAILABLE", "evidence": "SNYK_TOKEN not set"},
+    {"name": "manual review: router authz/tenancy", "result": "PASS", "evidence": "model-config.router.ts: assertAgentSettingsAdmin on update and resetToDefaults; explicit tenantId on every read/write and deleteMany/updateMany; per-tenant pg_advisory_xact_lock; per-purpose expected-updatedAt CONFLICT and P2002 rethrowConflict; audit with actorId; tier never written on create/update. Tests: cross-tenant negative (router.test.ts:161), FORBIDDEN (:220), CONFLICT (:284-315)."},
+    {"name": "manual review: migrations", "result": "PASS", "evidence": "120000: additive nullable/defaulted columns, tier DROP NOT NULL, CHECKs NOT VALID then VALIDATE (Class A). 120100: ENABLE (not FORCE) RLS, policy on app.current_tenant_id with USING and WITH CHECK, DO block with duplicate_object guard."},
+    {"name": "manual review: validators and rbac", "result": "PASS", "evidence": "model-config.ts bounds: modelId max 64, fallbacks max 3, temperature/maxTokens/ceiling ranges, catalog allow-list, rag locked, purposes max 6; rbac model_config read-only below MANAGER; ResourceType extended"},
+    {"name": "manual review: ai-worker tenant attribution", "result": "PASS", "evidence": "base.agent.ts execute() resolves model per task and runs under tenantContextStore for the task's tenant; unknown/__ tenants not billable (tenant-ai-spend.ts isBillableTenant); ceiling failure fails task visibly. Web never sends tier."},
+    {"name": "prior logs", "result": "PASS", "evidence": "codex review gate PASS 0 findings; api and integration logs reviewed by caller"}
+  ],
+  "findings": [
+    {"severity": "MEDIUM", "pre_existing": true, "introduced_by_branch": false, "description": "sprintf-js <=1.1.3 DoS (GHSA-hp3w-g68c-fv3c), transitive dev/build-only dependency of apps/ai-worker tsup; no patched release available. Not in scope of PG-199 diff.", "action": "Track or accept via ADR; not fixable on this branch."}
+  ],
+  "unavailable_tools": ["snyk (SNYK_TOKEN missing)", "trivy (not run)"],
+  "reviewed_at": "2026-10-19T15:05:37Z"
+}

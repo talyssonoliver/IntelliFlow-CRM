@@ -20,6 +20,7 @@ export * from './ActivityFeedRepositoryPort';
 export * from './BillingRepositoryPort';
 export * from './ModuleAccessPort';
 export * from './QuotaRepositoryPort';
+export * from './PurposeSpendPort'; // PG-199
 
 // Feedback Survey Repository Port (IFC-068)
 export * from './FeedbackSurveyRepositoryPort';

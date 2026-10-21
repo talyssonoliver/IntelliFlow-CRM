@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
 import { updateAvailabilitySchema, type AvailabilityDto } from '@intelliflow/validators';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
+import { errorCode } from '@/lib/trpc-errors';
 import { trpc } from '@/lib/trpc';
 import { PageHeader } from '@/components/shared/page-header';
 import { SectionHeader } from '@/components/shared/section-header';
@@ -54,13 +55,6 @@ interface Snapshot {
   baseline: string;
   isConfigured: boolean;
   canEdit: boolean;
-}
-
-/** The tRPC error code of a failed mutation, if any. */
-function errorCode(error: unknown): string | undefined {
-  if (!error || typeof error !== 'object' || !('data' in error)) return undefined;
-  const data = (error as { data?: { code?: unknown } }).data;
-  return typeof data?.code === 'string' ? data.code : undefined;
 }
 
 function errorMessage(error: unknown): string {

@@ -1,10 +1,11 @@
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { BaseMessage, HumanMessage, SystemMessage } from '@langchain/core/messages';
 import { z } from 'zod';
 import { aiConfig } from '../config/ai.config';
-import { costTracker } from '../utils/cost-tracker';
-import { countMessagesTokens, countTokens } from '../utils/token-counter';
+import { countTokens } from '../utils/token-counter';
 import { ConversationRecordCallbackHandler } from '../callbacks/conversation-record.handler';
-import { createLLM, type LLMPurpose } from '../lib/llm-factory';
+import { createLLM, createLLMForTenant, type LLMPurpose } from '../lib/llm-factory';
+import { tenantContextStore } from '../tracing/tenant-context.js';
 import { hallucinationChecker } from '../monitoring/hallucination-checker';
 import pino from 'pino';
 
@@ -22,6 +23,18 @@ const DEFAULT_CONFIDENCE_THRESHOLD = 0.3;
 interface LLMModel {
   invoke(input: BaseMessage[] | string): Promise<{ content: string | unknown[] }>;
 }
+
+/** A structured-output runnable (`model.withStructuredOutput(schema)`). */
+interface StructuredRunnable {
+  invoke(input: unknown): Promise<unknown>;
+}
+
+/**
+ * PG-199 (owner Q3): the model a task runs on. `execute()` resolves the tenant's model
+ * settings once per task and runs the task inside this store, so one agent instance can
+ * serve concurrent tasks of different tenants without sharing a model.
+ */
+const taskModelStore = new AsyncLocalStorage<LLMModel>();
 
 const logger = pino({
   name: 'base-agent',
@@ -141,6 +154,9 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
   protected readonly purpose: LLMPurpose;
   protected config: BaseAgentConfig;
   protected executionCount: number = 0;
+
+  /** Structured-output runnables per model and schema (PG-199). */
+  private readonly structuredCache = new WeakMap<object, Map<unknown, StructuredRunnable>>();
 
   /** Optional callback handler for recording LLM calls to the database. */
   private conversationCallback?: ConversationRecordCallbackHandler;
@@ -355,6 +371,77 @@ export abstract class BaseAgent<TInput = unknown, TOutput = unknown> {
    * to the pre-ADR-049 implementation — zero regression for existing subclasses.
    */
   async execute(task: AgentTask<TInput, TOutput>, attempt = 0): Promise<AgentResult<TOutput>> {
+    // Retries run inside the scope opened by the first attempt.
+    if (taskModelStore.getStore()) return this.executeWithModel(task, attempt);
+
+    const tenantId = this.taskTenant(task);
+    let model: LLMModel;
+    try {
+      model = await this.resolveTaskModel(tenantId);
+    } catch (error) {
+      // e.g. the purpose reached its monthly AI ceiling: agents have no non-AI fallback,
+      // so the task fails visibly (PG-199, AC-015).
+      return this.buildExecutionErrorResult(error, task, Date.now()).result;
+    }
+    const run = () => taskModelStore.run(model, () => this.executeWithModel(task, attempt));
+    // The calls are billed to the tenant whose model and ceiling were chosen: both spend
+    // recorders read the tenant from tenantContextStore.
+    const current = tenantContextStore.getStore();
+    if (!tenantId || current?.tenantId === tenantId) return run();
+    return tenantContextStore.run({ ...current, tenantId }, run);
+  }
+
+  /** The task's own tenant, else the billable tenant of the job running it. */
+  private taskTenant(task: AgentTask<TInput, TOutput>): string | undefined {
+    const jobTenant = tenantContextStore.getStore()?.tenantId;
+    return (
+      (task.context?.metadata?.tenantId as string | undefined) ??
+      (jobTenant && jobTenant !== 'unknown' && !jobTenant.startsWith('__') ? jobTenant : undefined)
+    );
+  }
+
+  /**
+   * The tenant's model for this task (pin, fallbacks, temperature, max tokens, ceiling):
+   * the task's own tenant, else the tenant of the job running it (prediction jobs build
+   * tasks without one); the constructor default when neither is known.
+   */
+  private async resolveTaskModel(tenantId: string | undefined): Promise<LLMModel> {
+    if (!tenantId) return this.model;
+    return (await createLLMForTenant(this.purpose, 'free', {
+      tenantId,
+      temperature: aiConfig.openai.temperature,
+      maxTokens: aiConfig.openai.maxTokens,
+      timeout: aiConfig.openai.timeout,
+    })) as unknown as LLMModel;
+  }
+
+  /** The model of the task being executed, else the constructor default. */
+  protected currentModel(): LLMModel {
+    return taskModelStore.getStore() ?? this.model;
+  }
+
+  /** `withStructuredOutput(schema)` on the current task model, built once per model. */
+  protected structuredFor(schema: unknown): StructuredRunnable {
+    const model = this.currentModel() as unknown as {
+      withStructuredOutput: (s: unknown) => StructuredRunnable;
+    };
+    let bySchema = this.structuredCache.get(model);
+    if (!bySchema) {
+      bySchema = new Map();
+      this.structuredCache.set(model, bySchema);
+    }
+    let runnable = bySchema.get(schema);
+    if (!runnable) {
+      runnable = model.withStructuredOutput(schema);
+      bySchema.set(schema, runnable);
+    }
+    return runnable;
+  }
+
+  private async executeWithModel(
+    task: AgentTask<TInput, TOutput>,
+    attempt: number
+  ): Promise<AgentResult<TOutput>> {
     const startTime = Date.now();
     // Only increment executionCount on the first attempt (not on retries)
     if (attempt === 0) {
@@ -663,8 +750,6 @@ You MUST NOT:
    * Invoke the LLM with messages
    */
   protected async invokeLLM(messages: BaseMessage[]): Promise<string> {
-    const startTime = Date.now();
-
     // Notify callback handler of LLM start (input messages)
     if (this.conversationCallback) {
       const prompt = messages.map((m) => `[${m._getType()}] ${m.content}`).join('\n');
@@ -678,29 +763,12 @@ You MUST NOT:
     }
 
     try {
-      const response = await this.model.invoke(messages);
-      const duration = Date.now() - startTime;
+      const response = await this.currentModel().invoke(messages);
       const responseText = response.content as string;
 
-      // Track costs for all providers — LiteLLM returns OpenAI-compatible token counts
-      // regardless of the underlying provider (Groq, Anthropic, Mistral, etc.).
-      // ADR-048: provider is now 'litellm' by default; gate on provider===openai was wrong.
-      if (aiConfig.costTracking.enabled) {
-        // Logical model name: e.g. "reasoning-free" (resolved by LiteLLM proxy at runtime)
-        const modelName = `${this.purpose}-free`;
-        const inputTokens = countMessagesTokens(messages, modelName);
-        const outputTokens = countTokens(responseText, modelName);
-
-        costTracker.recordUsage({
-          model: modelName,
-          inputTokens,
-          outputTokens,
-          operationType: `agent:${this.config.name}`,
-          metadata: {
-            duration,
-          },
-        });
-      }
+      // Cost is metered once per model call by the tracing wrapper (PG-199,
+      // lib/usage-metering.ts) with the real purpose, tier and pinned model; recording it
+      // here too would count every agent call twice.
 
       // Notify callback handler of LLM end (response)
       if (this.conversationCallback) {

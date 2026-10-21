@@ -617,6 +617,22 @@ describe('AutoResponseChain', () => {
       expect(typeof result.body).toBe('string');
     });
 
+    // PG-199 (owner Q6): email has no non-AI fallback — a reached ceiling surfaces as
+    // 'monthly AI ceiling reached for email' with its code, before any model call.
+    it('surfaces the email ceiling error unchanged', async () => {
+      const { createLLMForTenant } = await import('../lib/llm-factory.js');
+      vi.mocked(createLLMForTenant).mockRejectedValueOnce(
+        Object.assign(new Error('monthly AI ceiling reached for email'), {
+          code: 'PURPOSE_CEILING_REACHED',
+        })
+      );
+      const tenantChain = new AutoResponseChain({ tenantId: 'tenant-capped' });
+      await expect(tenantChain.generateResponse(baseInput)).rejects.toMatchObject({
+        code: 'PURPOSE_CEILING_REACHED',
+        message: 'monthly AI ceiling reached for email',
+      });
+    });
+
     it('falls back to default instructions when VersionLoader throws', async () => {
       const tenantChain = new AutoResponseChain({ tenantId: 'tenant-throw' });
       await expect(tenantChain.generateResponse(baseInput)).resolves.toBeDefined();

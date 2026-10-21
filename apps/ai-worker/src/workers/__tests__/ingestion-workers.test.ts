@@ -340,6 +340,36 @@ describe('text-extraction processor', () => {
     expect(result.status).toBe('success');
   });
 
+  // PG-199 (owner Q8): embeddings are metered and capped for the job tenant.
+  it('runs the embedding inside the job tenant context', async () => {
+    const { tenantContextStore } = await import('../../tracing/tenant-context');
+    let seenTenant: string | undefined;
+    generateEmbedding.mockImplementationOnce(async () => {
+      seenTenant = tenantContextStore.getStore()?.tenantId;
+      return [0.1];
+    });
+    mockFetch('embed me for a tenant');
+    await textProcessor({
+      id: 'j-tenant',
+      data: jobData({ format: 'txt', tenantId: 'tenant-9', options: { generateEmbeddings: true } }),
+    });
+    expect(seenTenant).toBe('tenant-9');
+  });
+
+  it('a reached rag ceiling skips the embedding but never fails the extraction', async () => {
+    generateEmbedding.mockRejectedValueOnce(
+      Object.assign(new Error('monthly AI ceiling reached for rag'), {
+        code: 'PURPOSE_CEILING_REACHED',
+      })
+    );
+    mockFetch('embed me past the ceiling');
+    const result = await textProcessor({
+      id: 'j-ceiling',
+      data: jobData({ format: 'txt', options: { generateEmbeddings: true } }),
+    });
+    expect(result.status).toBe('success');
+  });
+
   it('returns status=failed when the document fetch fails', async () => {
     mockFetch('', false);
     const result = await textProcessor({ id: 'j9', data: jobData({ format: 'txt' }) });

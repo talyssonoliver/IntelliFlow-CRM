@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-17
+last_updated: 2026-10-19
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -4930,15 +4930,106 @@ items:
       attendeeId min(1).max(64); durationMinutes int().min(5).max(1440); router test.
     status: open
     notes: 'gh issue #914. Found by the PG-202 STOA-Security review; pre-existing.'
+  PG-199-F1-CHAINVERSION-MODEL-UNUSED:
+    origin_task: PG-199
+    owner: AI Team
+    severity: low
+    description: >-
+      ChainVersion.model is stored and editable in AI Settings but never read at runtime; chains use only config.prompt (apps/ai-worker/src/chains/scoring.chain.ts:147-166).
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      Remove the field from the chain-version editor or route it through the PG-199 model catalog.
+    status: open
+    notes: 'gh issue #924. Found during PG-199; pre-existing, out of scope.'
+  PG-199-F2-CHAINVERSIONEDITOR-RESETS-PARAMS:
+    origin_task: PG-199
+    owner: Frontend Lead
+    severity: medium
+    description: >-
+      ChainVersionEditor seeds temperature/maxTokens from hard-coded defaults, so editing a version silently overwrites them (apps/web/src/components/ai-agents/ai-settings/ChainVersionEditor.tsx:68-85).
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      Carry temperature/maxTokens in ChainVersionSummary and seed the form from them; edit-then-save test.
+    status: open
+    notes: 'gh issue #925. Found during PG-199; pre-existing, out of scope.'
+  PG-199-F3-APPROVAL-POLICIES-NOT-IN-SETTINGS-SEARCH:
+    origin_task: PG-199
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      The PG-198 Approval Policies page has no settings-search entry (apps/web/src/lib/shared/settings-search.ts).
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add the entry under AI & Automation and bump the count test.
+    status: open
+    notes: 'gh issue #926. Found during PG-199; pre-existing, out of scope.'
+  PG-199-F4-RLS-ENABLED-WITHOUT-POLICY:
+    origin_task: PG-199
+    owner: Backend Architect
+    severity: high
+    description: >-
+      tenant_tool_enablement and tenant_memory_policy have RLS enabled in their creation migrations but no policy; isolation relies on application code only.
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      Tenant isolation policies in the case_types shape, each in a separately removable Class A migration, with a cross-tenant test.
+    status: open
+    notes: 'gh issue #927. Found during PG-199; pre-existing, out of scope.'
+  PG-199-F5-SENTIMENT-RATE-LIMIT-PURPOSE:
+    origin_task: PG-199
+    owner: AI Team
+    severity: medium
+    description: >-
+      The sentiment chain runs its model as structured but resolves its rate limit as scoring (apps/ai-worker/src/chains/sentiment.chain.ts:341).
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      Resolve the rate limit with structured; test the purpose passed to resolveRateLimit.
+    status: open
+    notes: 'gh issue #928. Found during PG-199; pre-existing, out of scope.'
+  PG-199-F6-TEST-DB-SINK-RECURSION:
+    origin_task: PG-199
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      scripts/test-db.mjs:96-97 default stderr/stdout sinks call themselves, so up/down crash after provisioning and leak the ephemeral database.
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      stderr: (t) => process.stderr.write(t), stdout: (t) => process.stdout.write(t), plus a CLI test without overrides.
+    status: open
+    notes: 'gh issue #905. Found during PG-199; pre-existing, out of scope.'
+  PG-199-F7-SHARED-SLIDER-THUMB-UNLABELLED:
+    origin_task: PG-199
+    owner: Frontend Lead
+    severity: medium
+    description: >-
+      The shared Slider puts aria-label on the Radix root, not the role=slider thumb, so sliders have no accessible name (packages/ui/src/components/slider.tsx:5-20; ReviewQueue.tsx:305-312).
+    created_at: 2026-10-19
+    expiry_date: 2027-01-19
+    remediation_sprint: 19
+    remediation_plan: >-
+      Forward aria-label/aria-labelledby to SliderPrimitive.Thumb; axe test in packages/ui.
+    status: open
+    notes: 'gh issue #929. Found during PG-199; pre-existing, out of scope.'
 summary:
-  total_items: 432
+  total_items: 439
   by_severity:
     critical: 241
-    high: 13
-    medium: 159
-    low: 19
+    high: 14
+    medium: 162
+    low: 22
   by_status:
-    open: 416
+    open: 423
     in_progress: 0
     resolved: 16
     wont_fix: 0

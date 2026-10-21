@@ -11,12 +11,21 @@
  * Queue: intelliflow-contact-embed
  */
 
-import { Job, Worker, Queue, QueueEvents } from 'bullmq';
+import { DelayedError, Job, Worker, Queue, QueueEvents } from 'bullmq';
 import { getDrainDelaySeconds } from '@intelliflow/platform/queues/connection';
 import { PrismaClient } from '@intelliflow/db';
 import { z } from 'zod';
+import { tenantContextStore } from '../tracing/tenant-context';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 
 export const CONTACT_EMBED_QUEUE_NAME = 'intelliflow-contact-embed';
+
+/**
+ * PG-199 (owner Q8): when the tenant's rag purpose has reached its monthly ceiling the job
+ * is moved back to delayed and re-checked after this interval (raising the ceiling
+ * mid-month resumes it). Never failed, so it never burns retries or dead-letters.
+ */
+export const CEILING_RETRY_DELAY_MS = 15 * 60_000;
 
 export const ContactEmbedJobDataSchema = z.object({
   contactId: z.string().min(1),
@@ -83,7 +92,7 @@ export class ContactEmbedWorker {
 
     this.worker = new Worker<ContactEmbedJobData, ContactEmbedJobResult>(
       CONTACT_EMBED_QUEUE_NAME,
-      async (job) => this.process(job),
+      async (job, token) => this.process(job, token),
       {
         connection: this.redisConnection,
         concurrency: 5,
@@ -102,9 +111,20 @@ export class ContactEmbedWorker {
     await this.queue?.close();
   }
 
-  async process(job: Job<ContactEmbedJobData>): Promise<ContactEmbedJobResult> {
-    const start = Date.now();
+  async process(job: Job<ContactEmbedJobData>, token?: string): Promise<ContactEmbedJobResult> {
     const data = ContactEmbedJobDataSchema.parse(job.data);
+    // PG-199: the embedding is metered and capped for this job's tenant.
+    return tenantContextStore.run({ tenantId: data.tenantId }, () =>
+      this.processForTenant(job, data, token)
+    );
+  }
+
+  private async processForTenant(
+    job: Job<ContactEmbedJobData>,
+    data: ContactEmbedJobData,
+    token: string | undefined
+  ): Promise<ContactEmbedJobResult> {
+    const start = Date.now();
 
     const contact = await (
       this.prisma as unknown as {
@@ -153,7 +173,14 @@ export class ContactEmbedWorker {
       };
     }
 
-    const embedding = await this.embeddingChain.generateEmbedding(text);
+    let embedding: number[] | null;
+    try {
+      embedding = await this.embeddingChain.generateEmbedding(text);
+    } catch (error) {
+      if (!isPurposeCeilingReached(error) || !token) throw error;
+      await job.moveToDelayed(Date.now() + CEILING_RETRY_DELAY_MS, token);
+      throw new DelayedError();
+    }
     if (!embedding || embedding.length === 0) {
       return {
         contactId: data.contactId,

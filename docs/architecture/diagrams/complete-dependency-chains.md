@@ -1323,6 +1323,17 @@ PG-198 (Approval Policies, ADR-079) — extends IFC-149 and IFC-029:
     ──► api modules/agent/approval-policies.router.ts (approvalPolicies.*)
     ──► web /agent-approvals/approval-policies (ApprovalPoliciesContent)
           + /agent-approvals/preview (real confidence, Escalated badge)
+
+PG-199 (Model Configuration, ADR-082) — extends ADR-048 (createLLM factory) and IFC-312:
+  domain ai/model-config (catalog, caller default tiers, price-ranked Never-Downgrade rules)
+    ──► validators model-config.ts
+    ──► db migrations 20261019120000_tenant_model_config (tier nullable, modelId, fallbacks,
+          monthly ceiling, named CHECKs) + 20261019120100_tenant_ai_config_rls (separately removable)
+    ──► application PurposeSpendPort ──► adapters PrismaPurposeSpendRepository
+    ──► api modules/agent/model-config.router.ts (modelConfig.get/update/resetToDefaults)
+    ──► ai-worker tenant-ai-config + purpose-ceiling + llm-factory (pins, fallback chain)
+          + usage-metering (chat and embeddings, per purpose) ──► agents, summary job, embed workers
+    ──► web /agent-approvals/model-config (ModelConfigContent) + settings search entry
 ```
 
 ---

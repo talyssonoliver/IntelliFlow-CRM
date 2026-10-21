@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { PurposeCeilingReachedError } from '../lib/purpose-ceiling.js';
 
 // Pattern A: mock the factory — agent calls createLLM and uses invoke() with JSON parsing.
 // Use vi.hoisted so the constant is available inside the hoisted vi.mock() factory.
@@ -43,6 +44,15 @@ vi.mock('../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue(DEFAULT_EMAIL_PARSED),
     })),
   })),
+  // PG-199: agents resolve the tenant model at execute time.
+  createLLMForTenant: vi.fn(async () =>
+    (() => ({
+      invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(DEFAULT_EMAIL_PARSED) }),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(DEFAULT_EMAIL_PARSED),
+      })),
+    }))()
+  ),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
@@ -160,7 +170,7 @@ describe('EmailWriterAgent - Execution', () => {
 
   describe('checkForHumanReview - all branches', () => {
     it('should flag low confidence (<0.5) for human review', async () => {
-      // Pattern A (B2b): override structuredModel so invoke() returns the parsed object directly.
+      // Pattern A (B2b): stub structuredFor (PG-199) so invoke() returns the parsed object directly.
       // This bypasses the factory-level mock and injects per-test data into the execute() path.
       const parsedOutput = {
         subject: 'Follow up',
@@ -175,7 +185,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput();
       const task = createEmailWriterTask(input);
@@ -202,7 +214,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         context: { urgency: 'HIGH' },
@@ -231,7 +245,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({ purpose: 'RE_ENGAGEMENT' });
       const task = createEmailWriterTask(input);
@@ -258,7 +274,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         context: { qualificationLevel: 'UNQUALIFIED' },
@@ -287,7 +305,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         context: { urgency: 'LOW', qualificationLevel: 'HIGH' },
@@ -302,12 +322,25 @@ describe('EmailWriterAgent - Execution', () => {
   });
 
   describe('Parser failure - fallback path', () => {
+    it('fails the task when the purpose ceiling is reached mid-task, never a fallback answer (PG-199)', async () => {
+      (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'draft' }) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockRejectedValue(new PurposeCeilingReachedError('email', 100, 100)),
+      });
+
+      const result = await agent.execute(createEmailWriterTask(makeInput()));
+
+      expect(result.success).toBe(false);
+      expect(result.output).toBeUndefined();
+      expect(result.error).toContain('monthly AI ceiling reached');
+    });
+
     it('should return fallback output when parser fails', async () => {
-      // Override structuredModel to throw (simulates structured parse failure)
+      // Stub structuredFor (PG-199) to throw (simulates structured parse failure)
       (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'not valid json' }) };
-      (agent as any).structuredModel = {
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
         invoke: vi.fn().mockRejectedValue(new Error('ZodError: parse failure')),
-      };
+      });
 
       const input = makeInput();
       const task = createEmailWriterTask(input);
@@ -359,7 +392,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       // Minimal input: only recipientName is truthy among the 5 checked fields
       const input = makeInput({
@@ -393,7 +428,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         recipientCompany: 'Acme',
@@ -423,7 +460,9 @@ describe('EmailWriterAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         recipientCompany: 'Acme',

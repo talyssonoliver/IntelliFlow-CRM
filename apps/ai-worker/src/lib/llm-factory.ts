@@ -5,9 +5,16 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import { aiConfig, AIProviderSchema, type AIProvider } from '../config/ai.config.js';
 import { CircuitBreaker } from '../utils/circuit-breaker.js';
 import { resolveEffectiveTier } from './tenant-ai-config.js';
+import { assertWithinCeiling } from './purpose-ceiling.js';
 import { wrapModelWithTracing, wrapEmbeddingsWithTracing } from '../tracing/llm-tracer.js';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { GeminiEmbeddings } from './gemini-embeddings.js';
+import {
+  getCatalogEntry,
+  type LLMPurpose as DomainLLMPurpose,
+  type LLMTier as DomainLLMTier,
+  type ModelCatalogEntry,
+} from '@intelliflow/domain';
 
 // Local-dev LiteLLM proxy key. Assembled at runtime so no key-shaped literal sits in source.
 const DEV_LITELLM_KEY = ['sk', 'litellm', 'dev', 'change', 'me'].join('-');
@@ -33,7 +40,7 @@ function openRouterModelForTier(tier: LLMTier): string {
  * Logical purpose of the LLM call — maps to a model alias in LiteLLM's model_list.
  * LiteLLM resolves `${purpose}-${tier}` to a concrete provider + model at runtime.
  */
-export type LLMPurpose = 'scoring' | 'qualification' | 'email' | 'reasoning' | 'structured' | 'rag';
+export type LLMPurpose = DomainLLMPurpose; // PG-199: single source in @intelliflow/domain
 
 /**
  * Cost / capability tier.
@@ -41,7 +48,7 @@ export type LLMPurpose = 'scoring' | 'qualification' | 'email' | 'reasoning' | '
  * - standard → balanced cost/quality (e.g. Mistral Small, Llama 3.1 70B)
  * - premium  → highest capability (e.g. Claude 3 Opus, GPT-4o)
  */
-export type LLMTier = 'free' | 'standard' | 'premium';
+export type LLMTier = DomainLLMTier; // PG-199: single source in @intelliflow/domain
 
 export interface CreateLLMOptions {
   temperature?: number;
@@ -54,6 +61,12 @@ export interface CreateLLMOptions {
    * into the cache key so the fallback model is cached separately.
    */
   provider?: AIProvider;
+  /**
+   * PG-199: catalog model id (@intelliflow/domain MODEL_CATALOG) pinned by the tenant.
+   * Routed per provider: LiteLLM `catalog-<id>` alias, OpenRouter mapped id (else the
+   * tier default), ignored on Ollama. Part of the cache key.
+   */
+  model?: string;
 }
 
 // ============================================================================
@@ -148,9 +161,10 @@ function _getFactoryCacheKey(
   tier: LLMTier,
   temperature: number,
   maxTokens: number,
-  timeout: number
+  timeout: number,
+  model: string | undefined
 ): string {
-  return `${provider}:${purpose}:${tier}:${temperature}:${maxTokens}:${timeout}`;
+  return `${provider}:${purpose}:${tier}:${temperature}:${maxTokens}:${timeout}:${model ?? '-'}`;
 }
 
 /** Reset the LLM instance cache — called in test `beforeEach` to prevent state leaks. */
@@ -193,17 +207,21 @@ function _assertProdKey(): void {
  */
 const _breakerPool = new Map<string, CircuitBreaker>();
 
-function _getBreakerKey(purpose: LLMPurpose, tier: LLMTier): string {
+function _getBreakerKey(purpose: LLMPurpose, tier: LLMTier, model?: string): string {
   const provider = aiConfig.provider; // read at call time, not module-load time
-  return `${provider}:${purpose}-${tier}`;
+  return model ? `${provider}:${purpose}-${tier}:${model}` : `${provider}:${purpose}-${tier}`;
 }
 
 /**
  * Get (or create) the circuit breaker for a given provider/purpose/tier combination.
  * Failure threshold = 5 failures, reset timeout = 60 s.
  */
-export function getLLMBreaker(purpose: LLMPurpose, tier: LLMTier = 'free'): CircuitBreaker {
-  const key = _getBreakerKey(purpose, tier);
+export function getLLMBreaker(
+  purpose: LLMPurpose,
+  tier: LLMTier = 'free',
+  model?: string
+): CircuitBreaker {
+  const key = _getBreakerKey(purpose, tier, model);
   if (!_breakerPool.has(key)) {
     _breakerPool.set(key, new CircuitBreaker(5, 60_000));
   }
@@ -216,6 +234,127 @@ export function getLLMBreaker(purpose: LLMPurpose, tier: LLMTier = 'free'): Circ
  */
 export function __resetBreakers(): void {
   _breakerPool.clear();
+}
+
+// ============================================================================
+// Model pins (PG-199, ADR-082)
+// ============================================================================
+
+const PIN_WARN_INTERVAL_MS = 60_000;
+const _pinWarnedAt = new Map<string, number>();
+
+/** Rate-limited (once a minute per reason+model) warning for a pin that cannot apply. */
+function warnPin(reason: string, modelId: string): void {
+  const key = `${reason}:${modelId}`;
+  const now = Date.now();
+  if ((_pinWarnedAt.get(key) ?? 0) + PIN_WARN_INTERVAL_MS > now) return;
+  _pinWarnedAt.set(key, now);
+  console.warn(
+    `[llm-factory] ${reason}: pinned model "${modelId}" is not available on provider "${aiConfig.provider}" — using the tier default`
+  );
+}
+
+/** OpenRouter model for a tier, or the pin when it has an OpenRouter id. */
+function openRouterModelName(tier: LLMTier, pinned: ModelCatalogEntry | undefined): string {
+  if (pinned?.providers.openrouter) return pinned.providers.openrouter;
+  if (pinned) warnPin('pin_unavailable_for_provider', pinned.id);
+  return openRouterModelForTier(tier);
+}
+
+/** Errors a different model can fix: rate limits, server errors, timeouts, open breakers. */
+export function isRetryableModelError(err: unknown): boolean {
+  const e = err as {
+    status?: unknown;
+    response?: { status?: unknown };
+    name?: unknown;
+    message?: unknown;
+  };
+  const status = Number(e?.status ?? e?.response?.status);
+  if (status === 429 || status >= 500) return true;
+  const name = String(e?.name ?? '');
+  if (name === 'TimeoutError' || name === 'AbortError') return true;
+  return /timed? ?out|ETIMEDOUT|ECONNRESET|ECONNREFUSED|circuit/i.test(String(e?.message ?? ''));
+}
+
+interface Invokable {
+  invoke: (input: unknown, options?: unknown) => Promise<unknown>;
+}
+
+async function invokeInOrder(
+  runnables: Invokable[],
+  input: unknown,
+  options?: unknown
+): Promise<unknown> {
+  let lastError: unknown;
+  for (const [index, runnable] of runnables.entries()) {
+    try {
+      return await runnable.invoke(input, options);
+    } catch (err) {
+      lastError = err;
+      if (index === runnables.length - 1 || !isRetryableModelError(err)) throw err;
+    }
+  }
+  throw lastError;
+}
+
+/**
+ * The tenant's fallback chain (owner Q4): `invoke` and `withStructuredOutput` try the
+ * primary, then each fallback in order, moving on only for errors another model can
+ * fix. One attempt per model (cap = 1 + fallbacks); the chain never re-enters itself.
+ * Every other member is the primary model, so callers keep using it as a BaseChatModel.
+ */
+export function withModelFallbacks(
+  primary: BaseChatModel,
+  fallbacks: BaseChatModel[]
+): BaseChatModel {
+  if (fallbacks.length === 0) return primary;
+  const models = [primary, ...fallbacks];
+  return new Proxy(primary, {
+    get(target, prop, receiver) {
+      if (prop === 'invoke') {
+        return (input: unknown, options?: unknown) =>
+          invokeInOrder(models as unknown as Invokable[], input, options);
+      }
+      if (prop === 'withStructuredOutput') {
+        return (...args: unknown[]) => {
+          const structured = models.map((m) =>
+            (m.withStructuredOutput as (...a: unknown[]) => Invokable).apply(m, args)
+          );
+          return {
+            invoke: (input: unknown, options?: unknown) =>
+              invokeInOrder(structured, input, options),
+          };
+        };
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
+}
+
+/**
+ * PG-199: run `guard` (the purpose ceiling check) before every call on `model`, plain and
+ * structured, so a task that reaches the ceiling mid-way stops at its next call instead of
+ * only at model construction. A per-tenant view over the shared cached model.
+ */
+export function withCeilingGuard(model: BaseChatModel, guard: () => Promise<void>): BaseChatModel {
+  const guarded = (target: Invokable): Invokable => ({
+    invoke: async (input: unknown, options?: unknown) => {
+      await guard();
+      return target.invoke(input, options);
+    },
+  });
+  return new Proxy(model, {
+    get(target, prop, receiver) {
+      if (prop === 'invoke') return guarded(target as unknown as Invokable).invoke;
+      if (prop === 'withStructuredOutput') {
+        return (...args: unknown[]) =>
+          guarded(
+            (target.withStructuredOutput as (...a: unknown[]) => Invokable).apply(target, args)
+          );
+      }
+      return Reflect.get(target, prop, receiver);
+    },
+  });
 }
 
 // ============================================================================
@@ -269,16 +408,28 @@ export function createLLM(
   if (provider === 'litellm') _assertProdKey();
 
   // Check the instance cache before allocating a new model object.
-  const cacheKey = _getFactoryCacheKey(provider, purpose, tier, temperature, maxTokens, timeout);
+  const pinned = options.model ? getCatalogEntry(options.model) : undefined;
+  const cacheKey = _getFactoryCacheKey(
+    provider,
+    purpose,
+    tier,
+    temperature,
+    maxTokens,
+    timeout,
+    pinned?.id
+  );
   const cached = _factoryCache.get(cacheKey);
   if (cached !== undefined) {
     return cached;
   }
 
   let model: BaseChatModel;
+  // The OpenRouter model id that runs (OpenRouter does not use the LiteLLM aliases).
+  let openRouterModel: string | undefined;
 
   // Offline escape hatch — local Ollama only (no LiteLLM dependency).
   if (provider === 'ollama') {
+    if (pinned) warnPin('pin_ignored_on_ollama', pinned.id);
     model = new ChatOllama({
       baseUrl: aiConfig.ollama.baseUrl,
       model: aiConfig.ollama.model,
@@ -288,7 +439,7 @@ export function createLLM(
     // Test path — aiConfig is normally singleton but tests override it via vi.mock.
     model = new ChatOpenAI({
       apiKey: 'mock-key',
-      modelName: `${purpose}-${tier}`,
+      modelName: pinned?.providers.litellm ?? `${purpose}-${tier}`,
       temperature,
       maxTokens,
       timeout,
@@ -298,9 +449,10 @@ export function createLLM(
     // OpenRouter is OpenAI-compatible — real model ids (e.g. openai/gpt-oss-120b:free),
     // NOT the litellm logical `${purpose}-${tier}` aliases. Used for production chat
     // (free models); dev stays on Ollama. No proxy required.
+    openRouterModel = openRouterModelName(tier, pinned);
     model = new ChatOpenAI({
       apiKey: process.env['OPENROUTER_API_KEY'] || '',
-      modelName: openRouterModelForTier(tier),
+      modelName: openRouterModel,
       temperature,
       maxTokens,
       timeout,
@@ -322,7 +474,7 @@ export function createLLM(
     // LITELLM_BASE_URL is set by Phase B0 infra scaffolding; falls back to local dev default.
     model = new ChatOpenAI({
       apiKey: process.env['LITELLM_MASTER_KEY'] || DEV_LITELLM_KEY,
-      modelName: `${purpose}-${tier}`,
+      modelName: pinned?.providers.litellm ?? `${purpose}-${tier}`,
       temperature,
       maxTokens,
       timeout,
@@ -347,10 +499,33 @@ export function createLLM(
     });
   }
 
-  // Wrap with OTel tracing so every .invoke() call emits an llm.invoke span.
-  const instrumented = wrapModelWithTracing(model, { purpose, tier });
+  // Wrap with OTel tracing so every .invoke() call emits an llm.invoke span. Spend is
+  // priced as the model that actually runs: a pin the provider ignores (Ollama, or no
+  // OpenRouter mapping) is billed as the tier default, not as the pinned model.
+  const pinApplies =
+    provider !== 'ollama' && (provider !== 'openrouter' || !!pinned?.providers.openrouter);
+  const instrumented = wrapModelWithTracing(model, {
+    purpose,
+    tier,
+    modelId: pinApplies ? pinned?.id : undefined,
+    pricingKey: runningPricingKey(provider, openRouterModel, pinApplies),
+  });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;
+}
+
+/**
+ * PG-199: the MODEL_PRICING key of the model that actually runs when it is not the purpose
+ * alias: local Ollama is free ('ollama'), and an unpinned (or unmapped) OpenRouter call is
+ * priced as its OpenRouter model.
+ */
+function runningPricingKey(
+  provider: string,
+  openRouterModel: string | undefined,
+  pinApplies: boolean
+): string | undefined {
+  if (provider === 'ollama') return 'ollama';
+  return openRouterModel && !pinApplies ? openRouterModel : undefined;
 }
 
 /**
@@ -387,6 +562,9 @@ export async function createLLMForTenant(
   const resolved = await resolveEffectiveTier(tenantId, purpose, tier);
   const effectiveTier = resolved.tier;
 
+  // PG-199 (owner Q2): a purpose at its monthly ceiling is blocked before any model is built.
+  await assertWithinCeiling(tenantId, purpose, resolved.ceilingCents);
+
   // Per-tenant DB overrides take precedence over caller-supplied options.
   const effectiveOptions: CreateLLMOptions = {
     ...chatOptions,
@@ -394,7 +572,33 @@ export async function createLLMForTenant(
     ...(resolved.maxTokens != null ? { maxTokens: resolved.maxTokens } : {}),
   };
 
-  return createLLM(purpose, effectiveTier, effectiveOptions);
+  // PG-199: model pin + ordered fallbacks. An id no longer in the catalog is never
+  // silently swapped for a cheaper default: the tenant fallbacks take over first.
+  const fallbackIds = (resolved.fallbackModelIds ?? []).filter((id) => getCatalogEntry(id));
+  let primaryId: string | undefined = resolved.modelId ?? undefined;
+  if (primaryId && !getCatalogEntry(primaryId)) {
+    console.error(
+      `[llm-factory] pin_retired: tenant ${tenantId} ${purpose} pin "${primaryId}" is not in the model catalog`
+    );
+    primaryId = fallbackIds.shift();
+  }
+  const primary = createLLM(purpose, effectiveTier, { ...effectiveOptions, model: primaryId });
+  const fallbacks = fallbackIds.map((id) =>
+    createLLM(purpose, effectiveTier, { ...effectiveOptions, model: id })
+  );
+  const model = withModelFallbacks(primary, fallbacks);
+  if (resolved.ceilingCents === null || resolved.ceilingCents === undefined) return model;
+  return withCeilingGuard(model, () =>
+    assertWithinCeiling(tenantId, purpose, resolved.ceilingCents)
+  );
+}
+
+/** PG-199: MODEL_PRICING key of the embeddings provider createEmbeddings builds. */
+export function embeddingsPricingKey(tier: LLMTier): string {
+  if (aiConfig.provider !== 'mock' && process.env['EMBEDDING_PROVIDER'] === 'gemini') {
+    return process.env['GEMINI_EMBEDDING_MODEL'] || 'gemini-embedding-001';
+  }
+  return `rag-${tier}`;
 }
 
 /**
@@ -459,5 +663,5 @@ export function createEmbeddings(tier: LLMTier = 'free'): Embeddings {
   // Wrap with OTel tracing so every .embedQuery() / .embedDocuments() call
   // emits an llm.embed span. Guard inside wrapEmbeddingsWithTracing handles
   // mocks that don't implement the embeddings interface.
-  return wrapEmbeddingsWithTracing(embeddings, { tier });
+  return wrapEmbeddingsWithTracing(embeddings, { tier, pricingKey: embeddingsPricingKey(tier) });
 }
