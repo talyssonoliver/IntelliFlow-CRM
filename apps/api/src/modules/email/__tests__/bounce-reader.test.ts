@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MailboxTransportError } from '@intelliflow/adapters';
 import { makeDsn } from './dsn-fixture';
-import { runBounceScan, trustedAuthservIdsFromEnv, type BounceReaderDeps } from '../bounce-reader';
+import { runBounceScan, trustedReceiversFromEnv, type BounceReaderDeps } from '../bounce-reader';
 import { __resetAccessTokenCache } from '../mailbox-transport';
 
 const NOW = new Date(Date.UTC(2026, 9, 20, 12));
@@ -162,7 +162,7 @@ function deps(
     notify,
     now: () => NOW,
     // The test receiver is configured as trusted for custom (SMTP/IMAP) mailboxes.
-    trustedAuthservIds: ['mx.example.invalid'],
+    trustedReceivers: [{ imapHost: 'imap.mail.example.com', authservId: 'mx.example.invalid' }],
     ...extra,
   };
   return { d, read, notify };
@@ -274,7 +274,7 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
       from: 'mailer-daemon@example.invalid',
       authenticationResults: ['attacker.example.net; dkim=pass header.d=example.invalid'],
     });
-    const { d } = deps(fake, [{ key: '7:11', raw: forged }], { trustedAuthservIds: [] });
+    const { d } = deps(fake, [{ key: '7:11', raw: forged }], { trustedReceivers: [] });
     await runBounceScan(d);
     expectNoEffect(fake);
   });
@@ -311,13 +311,41 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     expectNoEffect(other);
   });
 
-  it('reads the trusted receivers from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS (empty by default)', () => {
-    expect(trustedAuthservIdsFromEnv({})).toEqual([]);
+  it('reads trusted receivers per IMAP host from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS (empty by default)', () => {
+    expect(trustedReceiversFromEnv({})).toEqual([]);
     expect(
-      trustedAuthservIdsFromEnv({
-        EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS: ' MX.Example.invalid, ,mail.example.org',
+      trustedReceiversFromEnv({
+        EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS:
+          ' IMAP.A.example.invalid=MX.A.example.invalid, mx.bare.example.invalid, =x, imap.b.example.invalid= ',
       })
-    ).toEqual(['mx.example.invalid', 'mail.example.org']);
+    ).toEqual([{ imapHost: 'imap.a.example.invalid', authservId: 'mx.a.example.invalid' }]);
+  });
+
+  it('a receiver trusted for one customer’s IMAP host is not trusted for another mailbox (N-3)', async () => {
+    const fake = fakeDb();
+    const { d } = deps(fake, [{ key: '7:11', raw: makeDsn() }], {
+      trustedReceivers: [
+        { imapHost: 'imap.other.example.invalid', authservId: 'mx.example.invalid' },
+      ],
+    });
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
+  it('the parent domain of an SMTP/IMAP host is not entitled (hosts count as themselves, N-2)', async () => {
+    const fake = fakeDb({
+      mailbox: smtpMailbox({
+        fromAddress: 'me@mail.example.org',
+        smtpHost: 'smtp.platform.example.net',
+      }),
+    });
+    const raw = makeDsn({
+      from: 'mailer-daemon@platform.example.net',
+      authenticationResults: ['mx.example.invalid; spf=pass smtp.helo=platform.example.net'],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
   });
 
   it('a report with no Authentication-Results header is stored and has no effect', async () => {

@@ -111,10 +111,12 @@ Chosen option 4.
      `Authentication-Results`. A sender can only add headers below it.
      - Gmail: `mx.google.com`.
      - Microsoft: its own form, which has no authserv-id.
-     - A custom SMTP/IMAP mailbox: only a receiver listed in
-       `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`. The list is empty by default, so
-       those mailboxes fail closed, because a server that stamps nothing would
-       leave a sender-written header on top.
+     - A custom SMTP/IMAP mailbox: only the receiver paired with that mailbox's
+       IMAP host in `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`
+       (`imap.host=authserv-id`). It is never global, so one customer's receiver
+       cannot be claimed for another tenant's server. The list is empty by
+       default, so those mailboxes fail closed, because a server that stamps
+       nothing would leave a sender-written header on top.
   2. **Authenticated.** The report is from `mailer-daemon@` or `postmaster@`,
      with exactly one From header. That header shows `dkim=pass`
      (`header.d`/`header.i`) or `spf=pass` (`smtp.mailfrom`/`smtp.helo`) for a

@@ -37,15 +37,15 @@ Both carry only the mailbox id and an error code.
 
 ## Configuration
 
-| Variable                                                                  | Default             | Purpose                                                                                                                                                                              |
-| ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `PRISMA_FIELD_ENCRYPTION_KEY`                                             | (required in prod)  | Encrypts SMTP/IMAP passwords and OAuth refresh tokens at rest. Saving a secret without it returns `PRECONDITION_FAILED`. The production API already refuses to boot without it (M4). |
-| `EMAIL_OAUTH_REDIRECT_URI`                                                | unset               | `https://<app>/email/oauth/callback`. Needed for either OAuth provider.                                                                                                              |
-| `EMAIL_OAUTH_GOOGLE_CLIENT_ID` / `EMAIL_OAUTH_GOOGLE_CLIENT_SECRET`       | unset               | Google OAuth app. Unset: "Connect Google" is disabled with the reason shown. `gmail.readonly` is a restricted scope and needs Google's security assessment before public launch.     |
-| `EMAIL_OAUTH_MICROSOFT_CLIENT_ID` / `EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET` | unset               | Microsoft (multi-tenant) app registration. Unset: "Connect Microsoft" is disabled.                                                                                                   |
-| `EMAIL_ATTACHMENTS_BUCKET`                                                | `email-attachments` | Private Supabase bucket for compose attachments. Created on first upload when it does not exist.                                                                                     |
-| `EMAIL_BOUNCE_SCAN_INTERVAL_MS`                                           | `60000`             | Bounce scanner interval. `0` disables it. It is always off under tests and on serverless runtimes.                                                                                   |
-| `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`                                       | empty               | Comma-separated receivers trusted to stamp `Authentication-Results` for custom SMTP/IMAP mailboxes. Empty means fail closed. See the procedure below.                                |
+| Variable                                                                  | Default             | Purpose                                                                                                                                                                                                       |
+| ------------------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PRISMA_FIELD_ENCRYPTION_KEY`                                             | (required in prod)  | Encrypts SMTP/IMAP passwords and OAuth refresh tokens at rest. Saving a secret without it returns `PRECONDITION_FAILED`. The production API already refuses to boot without it (M4).                          |
+| `EMAIL_OAUTH_REDIRECT_URI`                                                | unset               | `https://<app>/email/oauth/callback`. Needed for either OAuth provider.                                                                                                                                       |
+| `EMAIL_OAUTH_GOOGLE_CLIENT_ID` / `EMAIL_OAUTH_GOOGLE_CLIENT_SECRET`       | unset               | Google OAuth app. Unset: "Connect Google" is disabled with the reason shown. `gmail.readonly` is a restricted scope and needs Google's security assessment before public launch.                              |
+| `EMAIL_OAUTH_MICROSOFT_CLIENT_ID` / `EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET` | unset               | Microsoft (multi-tenant) app registration. Unset: "Connect Microsoft" is disabled.                                                                                                                            |
+| `EMAIL_ATTACHMENTS_BUCKET`                                                | `email-attachments` | Private Supabase bucket for compose attachments. Created on first upload when it does not exist.                                                                                                              |
+| `EMAIL_BOUNCE_SCAN_INTERVAL_MS`                                           | `60000`             | Bounce scanner interval. `0` disables it. It is always off under tests and on serverless runtimes.                                                                                                            |
+| `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`                                       | empty               | Comma-separated `imap.host=authserv-id` pairs: receivers trusted to stamp `Authentication-Results` for the custom SMTP/IMAP mailbox on that IMAP host only. Empty means fail closed. See the procedure below. |
 
 ## Bounce trust (#961, owner ruling Q12)
 
@@ -55,7 +55,7 @@ A delivery report changes nothing unless all three of these hold:
    `Authentication-Results`:
    - Gmail: `mx.google.com`.
    - Microsoft: its own form, which has no authserv-id.
-   - A custom SMTP/IMAP mailbox: an id listed in
+   - A custom SMTP/IMAP mailbox: the id paired with that mailbox's IMAP host in
      `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`.
 2. **Authenticated.** The report is from `mailer-daemon@` or `postmaster@` with
    a DKIM or SPF pass.
@@ -79,8 +79,12 @@ mailbox is connected. First verify that the server stamps
    - If the server adds no such header, do **not** trust it. A sender could then
      write that header themselves, and the mailbox's bounces must stay
      record-only.
-3. Add the authserv-id (the part before the first `;`, lower-cased) to
-   `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS` on the API service and redeploy.
+3. Add the pair `<imap host>=<authserv-id>` to
+   `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS` on the API service and redeploy, for
+   example `imap.customer.example=mx.customer.example`. The authserv-id is the
+   part before the first `;`, lower-cased. The trust applies only to mailboxes
+   on that IMAP host. It is never global, so one customer's receiver cannot be
+   claimed for another tenant's server.
 4. Check the next scan: genuine bounces for that mailbox now record a HARD or
    SOFT receipt with `matchConfidence: HIGH`.
 

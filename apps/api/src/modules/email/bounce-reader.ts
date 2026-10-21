@@ -55,11 +55,11 @@ export interface BounceReaderDeps {
   notify(notification: BounceNotification, db: unknown): Promise<void>;
   now(): Date;
   /**
-   * Receivers (authserv-ids) trusted to stamp Authentication-Results for custom
-   * SMTP/IMAP mailboxes, from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS. Empty (the
-   * default): their reports are recorded but never act (#961, ADR-085).
+   * Receivers trusted to stamp Authentication-Results for a custom SMTP/IMAP
+   * mailbox, each scoped to one IMAP host (from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS).
+   * Empty (the default): their reports are recorded but never act (#961, ADR-085).
    */
-  trustedAuthservIds?: readonly string[];
+  trustedReceivers?: readonly TrustedReceiver[];
 }
 
 export interface BounceScanReport {
@@ -100,6 +100,11 @@ const PROVIDER_REPORT_DOMAINS: Record<string, readonly string[]> = {
   MICROSOFT: ['microsoft.com', 'outlook.com', 'hotmail.com', 'office365.com'],
 };
 
+/** `reporter` is `host` or one of its subdomains. */
+function withinHost(reporter: string, host: string): boolean {
+  return reporter === host || reporter.endsWith(`.${host}`);
+}
+
 /** One domain is the other or a subdomain of it, and the shorter is not a bare TLD. */
 function aligned(a: string, b: string): boolean {
   const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
@@ -117,11 +122,24 @@ function aligned(a: string, b: string): boolean {
 function trustedReceiver(
   authservId: string | null,
   mailbox: ScanMailbox,
-  trusted: readonly string[]
+  trusted: readonly TrustedReceiver[]
 ): boolean {
   if (mailbox.kind === 'GMAIL') return authservId === 'mx.google.com';
   if (mailbox.kind === 'MICROSOFT') return authservId === null;
-  return authservId !== null && trusted.includes(authservId);
+  // Scoped to this mailbox's own server: trusting one customer's receiver must
+  // not trust that id for another tenant's server that stamps nothing.
+  const host = mailbox.imapHost?.toLowerCase() ?? null;
+  return (
+    authservId !== null &&
+    host !== null &&
+    trusted.some((t) => t.imapHost === host && t.authservId === authservId)
+  );
+}
+
+/** One configured receiver: `imapHost=authservId`. */
+export interface TrustedReceiver {
+  imapHost: string;
+  authservId: string;
 }
 
 /**
@@ -137,17 +155,19 @@ function mayReportOn(
   recipient: string,
   mailbox: ScanMailbox
 ): boolean {
-  const candidates = [
+  const domains = [
     recipient.slice(recipient.lastIndexOf('@') + 1),
     mailbox.fromAddress
       ? mailbox.fromAddress.slice(mailbox.fromAddress.lastIndexOf('@') + 1)
       : null,
-    mailbox.smtpHost,
-    mailbox.imapHost,
     ...(PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? []),
   ];
-  return reporters.some((reporter) =>
-    candidates.some((domain) => Boolean(domain) && aligned(reporter, String(domain).toLowerCase()))
+  // A host is entitled as itself (or its subdomains), never its parent domain.
+  const hosts = [mailbox.smtpHost, mailbox.imapHost];
+  return reporters.some(
+    (reporter) =>
+      domains.some((d) => Boolean(d) && aligned(reporter, String(d).toLowerCase())) ||
+      hosts.some((h) => Boolean(h) && withinHost(reporter, String(h).toLowerCase()))
   );
 }
 
@@ -514,7 +534,7 @@ async function vouchedRecord(
 ): Promise<MatchedRecord | null> {
   const vouched =
     report.authenticated &&
-    trustedReceiver(report.authservId, mailbox, deps.trustedAuthservIds ?? []);
+    trustedReceiver(report.authservId, mailbox, deps.trustedReceivers ?? []);
   return vouched ? findMatchedRecord(deps, mailbox, report, now) : null;
 }
 
@@ -687,12 +707,20 @@ export async function runBounceScan(deps: BounceReaderDeps): Promise<BounceScanR
   return report;
 }
 
-/** EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS: comma-separated, lower-cased; empty by default. */
-export function trustedAuthservIdsFromEnv(env: NodeJS.ProcessEnv): string[] {
+/**
+ * EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS: comma-separated `imapHost=authservId`
+ * pairs, lower-cased; empty by default. An entry without both parts is ignored
+ * (fails closed).
+ */
+export function trustedReceiversFromEnv(env: NodeJS.ProcessEnv): TrustedReceiver[] {
   return (env.EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS ?? '')
     .split(',')
-    .map((id) => id.trim().toLowerCase())
-    .filter(Boolean);
+    .map((entry) => entry.trim().toLowerCase().split('='))
+    .filter((parts) => parts.length === 2 && Boolean(parts[0]?.trim()) && Boolean(parts[1]?.trim()))
+    .map(([imapHost, authservId]) => ({
+      imapHost: String(imapHost).trim(),
+      authservId: String(authservId).trim(),
+    }));
 }
 
 /** Production wiring: the shared encrypted Prisma client, container transports, in-app notifications. */
@@ -710,7 +738,7 @@ export async function createBounceReaderDeps(): Promise<BounceReaderDeps> {
     prisma,
     transports,
     now: () => new Date(),
-    trustedAuthservIds: trustedAuthservIdsFromEnv(process.env),
+    trustedReceivers: trustedReceiversFromEnv(process.env),
     notify: (n, db) =>
       notifyEmailBounced(n, { notifySenderOnBounce: true }, (params) =>
         createNotification(db as never, params as never).then(() => undefined)
