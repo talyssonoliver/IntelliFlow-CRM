@@ -2,6 +2,8 @@
 
 **Status:** Accepted
 
+> Amended by ADR-082 (PG-199): catalog stanzas, tenant fallbacks and ceilings.
+
 **Date:** 2026-04-16
 
 **Deciders:** Architecture Team, AI Team, Platform Team

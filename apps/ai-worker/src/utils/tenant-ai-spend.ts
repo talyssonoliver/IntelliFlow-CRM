@@ -13,7 +13,9 @@
  * error delays the counter rather than losing the spend.
  */
 
-import type { QuotaService } from '@intelliflow/application';
+import type { PurposeSpendPort, QuotaService } from '@intelliflow/application';
+import { LLM_PURPOSES, purposeSpendPeriod, type LLMPurpose } from '@intelliflow/domain';
+import { notePurposeSpend, notePurposeSpendTotal } from '../lib/purpose-ceiling.js';
 import type { UsageMetrics } from './cost-tracker';
 
 export const AI_SPEND_KEY = 'aiSpendCentsPerMonth' as const;
@@ -61,5 +63,77 @@ export function createTenantAiSpendRecorder(options: TenantAiSpendRecorderOption
         'USAGE_NOT_RECORDED: failed to record AI spend; will retry with the next call'
       );
     });
+  };
+}
+
+// ---------------------------------------------------------------------------
+// PG-199 (ADR-082): per-purpose monthly spend for the purpose cost ceilings
+// ---------------------------------------------------------------------------
+
+const KNOWN_PURPOSES: ReadonlySet<string> = new Set<LLMPurpose>(LLM_PURPOSES);
+
+export interface PurposeSpendRecorderOptions {
+  spend: Pick<PurposeSpendPort, 'addSpend'>;
+  /** Tenant of the job currently being processed, if any. */
+  getTenantId: () => string | undefined;
+  logger: SpendLogger;
+  /** Clock, injectable for tests. */
+  now?: () => Date;
+  /** Upper bound on centicents held back after repeated failures. */
+  maxCarryCentiCents?: number;
+}
+
+/**
+ * Records each call's estimated cost against its AI purpose (from the usage metadata set by
+ * lib/usage-metering.ts) in hundredths of a cent for the UTC month, so embeddings' sub-cent
+ * costs still add up. The carry is keyed by (tenant, purpose, month): a new month never
+ * inherits last month's remainder. Spend written here is also added to the local ceiling
+ * cache (`notePurposeSpend`) so a burst inside the cache window counts immediately.
+ */
+export function createPurposeSpendRecorder(options: PurposeSpendRecorderOptions) {
+  const {
+    spend,
+    getTenantId,
+    logger,
+    now = () => new Date(),
+    maxCarryCentiCents = 10_000_000,
+  } = options;
+  // Sub-centicent remainder of new usage, and whole centicents whose write failed. Kept
+  // apart so a retried amount is written again but never counted twice in the local
+  // ceiling cache.
+  const fraction = new Map<string, number>();
+  const unwritten = new Map<string, number>();
+
+  return function recordPurposeSpend(
+    usage: Pick<UsageMetrics, 'cost' | 'metadata'>
+  ): Promise<void> {
+    const tenantId = getTenantId();
+    const purpose = usage.metadata?.['purpose'];
+    if (!isBillableTenant(tenantId) || !(usage.cost > 0)) return Promise.resolve();
+    if (typeof purpose !== 'string' || !KNOWN_PURPOSES.has(purpose)) return Promise.resolve();
+
+    const at = now();
+    const period = purposeSpendPeriod(at);
+    const key = `${tenantId}:${purpose}:${period}`;
+    const pending = (fraction.get(key) ?? 0) + usage.cost * 10_000;
+    const fresh = Math.floor(pending);
+    fraction.set(key, pending - fresh);
+    const whole = fresh + (unwritten.get(key) ?? 0);
+    unwritten.delete(key);
+    if (whole < 1) return Promise.resolve();
+
+    if (fresh > 0) notePurposeSpend(tenantId, purpose as LLMPurpose, fresh, at);
+    return spend
+      .addSpend(tenantId, purpose as LLMPurpose, period, whole)
+      .then((total) => {
+        notePurposeSpendTotal(tenantId, purpose as LLMPurpose, total, at);
+      })
+      .catch((error: unknown) => {
+        unwritten.set(key, Math.min((unwritten.get(key) ?? 0) + whole, maxCarryCentiCents));
+        logger.warn(
+          { tenantId, purpose, period, centiCents: whole, error: String(error) },
+          'USAGE_NOT_RECORDED: failed to record per-purpose AI spend; will retry with the next call'
+        );
+      });
   };
 }

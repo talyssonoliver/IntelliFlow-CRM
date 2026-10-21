@@ -70,7 +70,8 @@ import {
   type MemoryRetentionJobResult,
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
-import { createTenantAiSpendRecorder } from './utils/tenant-ai-spend';
+import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils/tenant-ai-spend';
+import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import {
   extractJobContext,
@@ -81,6 +82,7 @@ import {
   type AgentStatusContext,
 } from './services/agent-status';
 import { hallucinationChecker, RedisMonitoringPublisher } from './monitoring';
+import { EmbeddingModelPublisher } from './lib/embedding-model-publisher';
 import type { MonitoringRedisLike } from './monitoring';
 import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
 import { setAuditLogAdapter } from './utils/audit-log';
@@ -134,6 +136,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private monitoringFlushService?: MonitoringFlushService;
   // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
   private redisMonitoringPublisher?: RedisMonitoringPublisher;
+  private embeddingModelPublisher?: EmbeddingModelPublisher;
   private prisma?: import('@intelliflow/db').PrismaClient;
   /** Unsubscribes the per-tenant AI-spend recorder from the cost tracker. */
   private stopTenantAiSpend?: () => void;
@@ -264,6 +267,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
         this.redisMonitoringPublisher.start();
         this.logger.info('RedisMonitoringPublisher started — publishing snapshots every 5s');
+        // PG-199 (owner Q10): the Model Configuration page shows the embedding model this
+        // worker runs; only the worker's environment says which one it is.
+        this.embeddingModelPublisher = new EmbeddingModelPublisher(client);
+        this.embeddingModelPublisher.start();
       } catch (innerErr) {
         this.logger.warn(
           { err: innerErr instanceof Error ? innerErr.message : String(innerErr) },
@@ -300,16 +307,22 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   private async wireTenantAiSpend(): Promise<void> {
     try {
-      const { PrismaQuotaRepository, PrismaTenantModuleRepository } =
+      const { PrismaQuotaRepository, PrismaTenantModuleRepository, PrismaPurposeSpendRepository } =
         await import('@intelliflow/adapters');
       const { QuotaService } = await import('@intelliflow/application');
       const quota = new QuotaService(
         new PrismaQuotaRepository(this.prisma as never),
         new PrismaTenantModuleRepository(this.prisma as never)
       );
-      const record = createTenantAiSpendRecorder({
-        quota,
-        getTenantId: () => tenantContextStore.getStore()?.tenantId,
+      const getTenantId = () => tenantContextStore.getStore()?.tenantId;
+      const record = createTenantAiSpendRecorder({ quota, getTenantId, logger: this.logger });
+      // PG-199: per-purpose spend feeds the purpose cost ceilings, and the same repository
+      // is the spend reader of the pre-call ceiling check.
+      const purposeSpend = new PrismaPurposeSpendRepository(this.prisma as never);
+      setPurposeSpendReader(purposeSpend);
+      const recordPurpose = createPurposeSpendRecorder({
+        spend: purposeSpend,
+        getTenantId,
         logger: this.logger,
       });
       this.stopTenantAiSpend = costTracker.addListener((usage) => {
@@ -319,9 +332,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             'Tenant AI spend recorder failed unexpectedly — this usage was not attributed'
           );
         });
+        recordPurpose(usage).catch((error: unknown) => {
+          this.logger.warn(
+            { error: error instanceof Error ? error.message : String(error) },
+            'Per-purpose AI spend recorder failed unexpectedly — this usage was not attributed'
+          );
+        });
       });
       this.logger.info(
-        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth'
+        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings'
       );
     } catch (error) {
       this.logger.error(
@@ -968,6 +987,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // IFC-214: Stop Redis snapshot publisher cleanly (final tick + redis.quit).
     await this.tryStop(this.redisMonitoringPublisher, 'RedisMonitoringPublisher');
+    await this.tryStop(this.embeddingModelPublisher, 'EmbeddingModelPublisher');
 
     // IFC-310: Stop the contact embedding worker cleanly.
     await this.tryStop(this.contactEmbedWorker, 'ContactEmbedWorker');

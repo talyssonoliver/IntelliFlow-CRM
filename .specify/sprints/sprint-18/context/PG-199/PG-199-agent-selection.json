@@ -1,0 +1,21 @@
+{
+  "taskId": "PG-199",
+  "selectedAgents": [
+    "AI-Specialist",
+    "Backend-Architect",
+    "Frontend-Lead",
+    "Data-Engineer",
+    "Domain-Expert",
+    "Test-Engineer"
+  ],
+  "selectionRationale": {
+    "AI-Specialist": "Keyword match: model, temperature, max tokens, fallback chain; runtime consumer is apps/ai-worker/src/lib/llm-factory.ts + tenant-ai-config.ts",
+    "Backend-Architect": "Keyword match: router (apps/api/src/modules/agent/model-config.router.ts per owner ruling R1)",
+    "Frontend-Lead": "Keyword match: page (apps/web/src/app/agent-approvals/model-config/)",
+    "Data-Engineer": "Keyword match: CHECK constraint, $transaction; existing TenantAIConfig model in packages/db/prisma/schema.prisma",
+    "Domain-Expert": "Always included for all tasks",
+    "Test-Engineer": "Always included for all tasks; cross-tenant negative test in DoD"
+  },
+  "taskDomain": "ai-settings",
+  "selectedAt": "2026-10-19T10:40:51Z"
+}

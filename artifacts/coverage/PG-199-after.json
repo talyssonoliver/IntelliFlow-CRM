@@ -1,0 +1,209 @@
+{
+  "task_id": "PG-199",
+  "phase": "after",
+  "captured_at": "2026-10-19T14:39:39.641Z",
+  "source": "artifacts/coverage/coverage-summary.json from a scoped run (pnpm run test:coverage with COVERAGE_RELATED_FILES = the branch diff, as pre-ship does). Related-only, so package totals are NOT comparable with the committed full-run baseline in PG-199-before.json. The gate is diff coverage vs merge-base 797904a36: 95.1% (1304/1371) at HEAD 421640491, execution/PG-199/20261019115522-8efea6fc/logs/32-diff-coverage.txt",
+  "total": {
+    "lines": {
+      "total": 99741,
+      "covered": 13516,
+      "skipped": 0,
+      "pct": 13.55
+    },
+    "statements": {
+      "total": 108588,
+      "covered": 14404,
+      "skipped": 0,
+      "pct": 13.26
+    },
+    "functions": {
+      "total": 23622,
+      "covered": 3252,
+      "skipped": 0,
+      "pct": 13.76
+    },
+    "branches": {
+      "total": 69935,
+      "covered": 8727,
+      "skipped": 0,
+      "pct": 12.47
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "packages": {
+    "packages/domain/": {
+      "files": 124,
+      "lines": {
+        "total": 5358,
+        "covered": 53,
+        "pct": 0.99
+      },
+      "branches": {
+        "total": 2370,
+        "covered": 39,
+        "pct": 1.65
+      },
+      "functions": {
+        "total": 1673,
+        "covered": 17,
+        "pct": 1.02
+      },
+      "statements": {
+        "total": 5602,
+        "covered": 63,
+        "pct": 1.12
+      }
+    },
+    "packages/validators/": {
+      "files": 60,
+      "lines": {
+        "total": 1391,
+        "covered": 42,
+        "pct": 3.02
+      },
+      "branches": {
+        "total": 409,
+        "covered": 19,
+        "pct": 4.65
+      },
+      "functions": {
+        "total": 189,
+        "covered": 8,
+        "pct": 4.23
+      },
+      "statements": {
+        "total": 1444,
+        "covered": 43,
+        "pct": 2.98
+      }
+    },
+    "packages/application/": {
+      "files": 44,
+      "lines": {
+        "total": 3671,
+        "covered": 0,
+        "pct": 0
+      },
+      "branches": {
+        "total": 2287,
+        "covered": 0,
+        "pct": 0
+      },
+      "functions": {
+        "total": 583,
+        "covered": 0,
+        "pct": 0
+      },
+      "statements": {
+        "total": 3853,
+        "covered": 0,
+        "pct": 0
+      }
+    },
+    "packages/adapters/": {
+      "files": 96,
+      "lines": {
+        "total": 5300,
+        "covered": 14,
+        "pct": 0.26
+      },
+      "branches": {
+        "total": 5017,
+        "covered": 8,
+        "pct": 0.16
+      },
+      "functions": {
+        "total": 1602,
+        "covered": 4,
+        "pct": 0.25
+      },
+      "statements": {
+        "total": 5876,
+        "covered": 17,
+        "pct": 0.29
+      }
+    },
+    "apps/api/": {
+      "files": 191,
+      "lines": {
+        "total": 16143,
+        "covered": 3981,
+        "pct": 24.66
+      },
+      "branches": {
+        "total": 11651,
+        "covered": 2320,
+        "pct": 19.91
+      },
+      "functions": {
+        "total": 3426,
+        "covered": 723,
+        "pct": 21.1
+      },
+      "statements": {
+        "total": 17401,
+        "covered": 4161,
+        "pct": 23.91
+      }
+    },
+    "apps/ai-worker/": {
+      "files": 112,
+      "lines": {
+        "total": 6801,
+        "covered": 4177,
+        "pct": 61.42
+      },
+      "branches": {
+        "total": 4183,
+        "covered": 2273,
+        "pct": 54.34
+      },
+      "functions": {
+        "total": 1314,
+        "covered": 769,
+        "pct": 58.52
+      },
+      "statements": {
+        "total": 7339,
+        "covered": 4428,
+        "pct": 60.34
+      }
+    },
+    "apps/web/": {
+      "files": 961,
+      "lines": {
+        "total": 28613,
+        "covered": 5249,
+        "pct": 18.34
+      },
+      "branches": {
+        "total": 23286,
+        "covered": 4068,
+        "pct": 17.47
+      },
+      "functions": {
+        "total": 9356,
+        "covered": 1731,
+        "pct": 18.5
+      },
+      "statements": {
+        "total": 31534,
+        "covered": 5692,
+        "pct": 18.05
+      }
+    }
+  },
+  "diff_coverage": {
+    "base": "797904a36e8aa553904e2cb899fe786e829e4f83",
+    "head": "421640491",
+    "pct": 95.1,
+    "covered": 1304,
+    "total": 1371,
+    "floor": 80
+  }
+}

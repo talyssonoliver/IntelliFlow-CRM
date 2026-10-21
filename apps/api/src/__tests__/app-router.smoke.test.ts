@@ -158,6 +158,17 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     }
   });
 
+  it('registers the modelConfig router with every procedure (PG-199)', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, unknown>;
+    const modelConfig = record.modelConfig as Record<string, unknown> | undefined;
+
+    expect(modelConfig).toBeDefined();
+    for (const procedure of ['get', 'update', 'resetToDefaults']) {
+      expect(modelConfig?.[procedure]).toBeDefined();
+    }
+  });
+
   it('registers analytics.scheduledReports with every procedure and the tags router (PG-201)', async () => {
     const { appRouter } = await import('../router.js');
     const record = appRouter._def.record as Record<string, unknown>;

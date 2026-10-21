@@ -1,0 +1,16 @@
+{
+  "stoa": "Intelligence",
+  "task_id": "PG-199",
+  "run_id": "20261019115522-8efea6fc",
+  "verdict": "PASS",
+  "gates": [
+    {"name": "ai-worker unit tests", "result": "PASS", "evidence": "logs/32-06-ai-worker.txt: 133 files passed, 2365 tests passed, 10 skipped (not re-run by this validator)"},
+    {"name": "codex semantic review", "result": "PASS", "evidence": "logs/32-codex-review-5.txt: 81 files, 0 findings, PASS; rounds 1-4 real findings fixed with RED/GREEN logs"},
+    {"name": "ceiling guard and fail-closed callers", "result": "PASS", "evidence": "llm-factory.ts:339 withCeilingGuard wraps invoke and withStructuredOutput; llm-factory.ts:578 applied when ceiling set; qualification.agent.ts:172, email-writer.agent.ts:168, followup.agent.ts:185 rethrow; contact-embed-worker.ts:180, ingestion-workers.ts:183 delay on ceiling; rag-context.chain.ts:291"},
+    {"name": "pins, fallbacks and pricing", "result": "PASS", "evidence": "llm-factory.ts:560-580 retired pin falls to tenant fallbacks, never a silent cheaper default; infra/litellm/config.yaml:128-173 catalog-* stanzas; ai.config.ts:286 ':free' variants priced 0; unknown pricing reported once"},
+    {"name": "metering single site", "result": "PASS", "evidence": "tracing/llm-tracer.ts:104-111 withConfig clones wrapped so structured output is metered once"},
+    {"name": "prompt lint / ollama", "result": "NOT_APPLICABLE", "evidence": "no prompts dir change in scope; no model call made per constraints"}
+  ],
+  "findings": [],
+  "reviewed_at": "2026-10-19T15:05:25Z"
+}
