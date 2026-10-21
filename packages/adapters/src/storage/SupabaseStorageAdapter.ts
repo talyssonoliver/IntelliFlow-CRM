@@ -1,5 +1,6 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { StorageServicePort } from '@intelliflow/application';
+import { randomUUID } from 'node:crypto';
+import type { EmailAttachmentStoragePort, StorageServicePort } from '@intelliflow/application';
 
 /**
  * Supabase Storage Adapter
@@ -7,10 +8,14 @@ import { StorageServicePort } from '@intelliflow/application';
  * Implements file storage using Supabase Storage (S3-compatible).
  * Follows the quarantine-then-promote pattern for antivirus scanning.
  */
-export class SupabaseStorageAdapter implements StorageServicePort {
+export class SupabaseStorageAdapter implements StorageServicePort, EmailAttachmentStoragePort {
   private readonly client: SupabaseClient;
   private readonly quarantineBucket = 'case-documents-quarantine';
   private readonly primaryBucket = 'case-documents';
+  /** PG-207: private bucket for compose attachments, never the legal case-documents bucket. */
+  private readonly emailAttachmentsBucket =
+    process.env.EMAIL_ATTACHMENTS_BUCKET || 'email-attachments';
+  private emailBucketReady: Promise<void> | null = null;
 
   constructor(supabaseUrl: string, supabaseKey: string) {
     this.client = createClient(supabaseUrl, supabaseKey);
@@ -92,6 +97,49 @@ export class SupabaseStorageAdapter implements StorageServicePort {
     }
 
     return data.signedUrl;
+  }
+
+  /** Creates the private email-attachments bucket on first use (idempotent, once per process). */
+  private ensureEmailBucket(): Promise<void> {
+    this.emailBucketReady ??= (async () => {
+      const { data } = await this.client.storage.getBucket(this.emailAttachmentsBucket);
+      if (data) return;
+      const { error } = await this.client.storage.createBucket(this.emailAttachmentsBucket, {
+        public: false,
+      });
+      if (error) {
+        this.emailBucketReady = null;
+        throw new Error('Email attachment storage is unavailable');
+      }
+    })();
+    return this.emailBucketReady;
+  }
+
+  async uploadEmailAttachment(
+    tenantId: string,
+    file: Buffer,
+    fileName: string,
+    contentType: string
+  ): Promise<string> {
+    await this.ensureEmailBucket();
+    const path = `${tenantId}/${randomUUID()}-${this.sanitizeFilename(fileName)}`;
+    const { data, error } = await this.client.storage
+      .from(this.emailAttachmentsBucket)
+      .upload(path, file, { contentType, upsert: false });
+    if (error || !data) throw new Error('Email attachment upload failed');
+    return data.path;
+  }
+
+  async downloadEmailAttachment(tenantId: string, storagePath: string): Promise<Buffer> {
+    const segments = storagePath.split('/');
+    if (segments[0] !== tenantId || segments.some((s) => s === '..' || s === '.' || s === '')) {
+      throw new Error('Refusing an attachment path outside the tenant');
+    }
+    const { data, error } = await this.client.storage
+      .from(this.emailAttachmentsBucket)
+      .download(storagePath);
+    if (error || !data) throw new Error('Email attachment download failed');
+    return Buffer.from(await data.arrayBuffer());
   }
 
   /**
