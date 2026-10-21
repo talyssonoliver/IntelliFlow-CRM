@@ -30,11 +30,17 @@ export interface ParsedDsn {
    */
   authenticated: boolean;
   /**
-   * The authenticated reporter's domain (null when not authenticated). The
-   * caller must still check the reporter may speak for each recipient: a
-   * report signed by a domain someone controls proves nothing about others.
+   * The receiver that stamped the topmost Authentication-Results (null in
+   * Microsoft's form, which has no authserv-id). The caller decides whether
+   * that receiver is trusted for the mailbox (#961, ADR-085).
    */
-  reporterDomain: string | null;
+  authservId: string | null;
+  /**
+   * Domains that passed DKIM/SPF for the reporter (empty when not
+   * authenticated). The caller must still check one may speak for each
+   * recipient: a domain someone controls proves nothing about others.
+   */
+  reporterDomains: string[];
   recordId: string | null;
   originalMessageId: string | null;
   recipients: DsnRecipient[];
@@ -117,37 +123,56 @@ function stripComments(value: string): string {
   return out;
 }
 
-/** Whether one Authentication-Results clause is a DKIM or SPF pass for `domain`. */
-function clausePasses(clause: string, domain: string): boolean {
+/**
+ * The domain a DKIM or SPF pass in one Authentication-Results clause
+ * authenticates, when it relates to the From domain (one within the other);
+ * otherwise null. The passing domain - not the From the sender chose - is the
+ * reporter's identity: only its owner can make it pass.
+ */
+function passingDomain(clause: string, fromDomain: string): string | null {
   const tokens = stripComments(clause).trim().toLowerCase().split(/\s+/);
   const method = tokens[0] ?? '';
-  if (method !== 'dkim=pass' && method !== 'spf=pass') return false;
+  if (method !== 'dkim=pass' && method !== 'spf=pass') return null;
   const keys =
     method === 'dkim=pass' ? ['header.d=', 'header.i='] : ['smtp.mailfrom=', 'smtp.helo='];
-  return tokens.some(
-    (token) => keys.some((key) => token.startsWith(key)) && withinDomain(tokenDomain(token), domain)
-  );
+  for (const token of tokens) {
+    if (!keys.some((key) => token.startsWith(key))) continue;
+    const domain = tokenDomain(token).replace(/^@/, '').replace(/\.$/, '');
+    if (
+      domain.includes('.') &&
+      (withinDomain(domain, fromDomain) || withinDomain(fromDomain, domain))
+    )
+      return domain;
+  }
+  return null;
 }
 
 /**
- * The authenticated reporter's domain, or null: the report is from
- * mailer-daemon/postmaster (exactly one From header) and the topmost
- * Authentication-Results shows DKIM or SPF passing for that domain. Whether
- * that reporter may speak for a given recipient is the caller's decision.
+ * Who vouches for the report: the topmost Authentication-Results' authserv-id
+ * (null in Microsoft's form, which has none) and the domains that passed DKIM
+ * or SPF. Empty unless the report is from mailer-daemon/postmaster with exactly
+ * one From header. Whether that receiver is trusted, and whether a passing
+ * domain may speak for a recipient, is the caller's decision.
  */
-function authenticatedReporterDomain(head: string): string | null {
+function reportAuthentication(head: string): { authservId: string | null; domains: string[] } {
+  const none = { authservId: null, domains: [] };
   const fromHeaders = head.split(/\r?\n/).filter((line) => line.toLowerCase().startsWith('from:'));
-  if (fromHeaders.length !== 1) return null;
-  const [local, domain] = fromAddress(parseHeaders(head)['from'] ?? '').split('@');
-  if (!local || !domain || !REPORT_SENDERS.has(local)) return null;
+  if (fromHeaders.length !== 1) return none;
+  const [local, fromDomain] = fromAddress(parseHeaders(head)['from'] ?? '').split('@');
+  if (!local || !fromDomain || !REPORT_SENDERS.has(local)) return none;
   const results = topmostHeader(head, 'authentication-results');
-  if (!results) return null;
-  // "authserv-id; method=result props; ..." - the authserv-id names the provider.
+  if (!results) return none;
+  // "authserv-id; method=result props; ..." - the authserv-id names the receiver.
   // Microsoft writes no authserv-id: the first part is already a result.
   const clauses = results.split(';');
-  const first = clauses[0] ?? '';
-  const candidates = stripComments(first).includes('=') ? clauses : clauses.slice(1);
-  return candidates.some((clause) => clausePasses(clause, domain)) ? domain : null;
+  const first = stripComments(clauses[0] ?? '')
+    .trim()
+    .toLowerCase();
+  const hasAuthservId = !first.includes('=');
+  const domains = (hasAuthservId ? clauses.slice(1) : clauses)
+    .map((clause) => passingDomain(clause, fromDomain))
+    .filter((domain): domain is string => domain !== null);
+  return { authservId: hasAuthservId ? first : null, domains: [...new Set(domains)] };
 }
 
 function splitHeadBody(raw: string): [string, string] {
@@ -221,12 +246,13 @@ export function parseDsn(raw: string): ParsedDsn | null {
       /^(message\/rfc822|text\/rfc822-headers)\b/i.test(p.contentType)
     );
     const originalHeaders = original ? parseHeaders(splitHeadBody(bodyText(original.body))[0]) : {};
-    const reporterDomain = authenticatedReporterDomain(head);
+    const auth = reportAuthentication(head);
 
     return {
       reportingMta: perMessage['reporting-mta']?.replace(/^[a-z0-9-]+;\s*/i, '').trim() || null,
-      authenticated: reporterDomain !== null,
-      reporterDomain,
+      authenticated: auth.domains.length > 0,
+      authservId: auth.authservId,
+      reporterDomains: auth.domains,
       recordId: originalHeaders['x-intelliflow-record']?.trim() || null,
       originalMessageId: originalHeaders['message-id']?.trim() || null,
       recipients,

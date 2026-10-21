@@ -8,7 +8,8 @@ describe('parseDsn', () => {
     expect(parseDsn(makeDsn())).toEqual({
       reportingMta: 'mta.example.invalid',
       authenticated: true,
-      reporterDomain: 'mta.example.invalid',
+      authservId: 'mx.example.invalid',
+      reporterDomains: ['mta.example.invalid'],
       recordId: 'crec123',
       originalMessageId: '<crec123.1@mail.example.invalid>',
       recipients: [
@@ -163,6 +164,19 @@ describe('parseDsn', () => {
       ).toBe(true);
     });
 
+    it('names the receiver that stamped the topmost header (none in Microsoft’s form)', () => {
+      expect(parseDsn(makeDsn())?.authservId).toBe('mx.example.invalid');
+      expect(
+        parseDsn(
+          makeDsn({
+            authenticationResults: [
+              'spf=pass (sender IP is 192.0.2.1) smtp.mailfrom=mta.example.invalid',
+            ],
+          })
+        )?.authservId
+      ).toBeNull();
+    });
+
     it('ignores comments: a domain inside parentheses is not what passed', () => {
       expect(
         authOf({
@@ -182,8 +196,19 @@ describe('parseDsn', () => {
     });
 
     it('names the authenticated reporter domain, and none when unauthenticated', () => {
-      expect(parseDsn(makeDsn())?.reporterDomain).toBe('mta.example.invalid');
-      expect(parseDsn(makeDsn({ authenticationResults: null }))?.reporterDomain).toBeNull();
+      expect(parseDsn(makeDsn())?.reporterDomains).toEqual(['mta.example.invalid']);
+      expect(parseDsn(makeDsn({ authenticationResults: null }))?.reporterDomains).toEqual([]);
+    });
+
+    it('names the domain that passed, not the From domain the sender chose (public suffix trick)', () => {
+      // An attacker owning evil.example.co.uk claims From mailer-daemon@co.uk.
+      const parsed = parseDsn(
+        makeDsn({
+          from: 'mailer-daemon@co.uk',
+          authenticationResults: ['mx.example.invalid; dkim=pass header.d=evil.co.uk'],
+        })
+      );
+      expect(parsed?.reporterDomains).toEqual(['evil.co.uk']);
     });
 
     it('refuses fail, softfail and none', () => {

@@ -104,31 +104,35 @@ Chosen option 4.
   `email-attachments` bucket before sending; the send re-checks the blocked
   extensions and the 25 MB total.
 
-- **Authenticated, entitled reports only (#961, owner ruling Q12, 2026-10-21).**
-  A matched report acts (bounce status, suppression, notification) only when
-  both of these hold:
-  1. **Authenticated.** It is from `mailer-daemon@` or `postmaster@` (exactly
-     one From header). The receiving provider's topmost `Authentication-Results`
-     shows `dkim=pass` (`header.d`/`header.i`) or `spf=pass`
-     (`smtp.mailfrom`/`smtp.helo`) for that sender's domain. Only the topmost
-     header counts, because the sender can add headers below it. Comments are
-     ignored. Microsoft's form, with no authserv-id, is read.
-  2. **Entitled.** The authenticated domain may speak for that recipient. It
-     must be the recipient's own domain (its MTA reports on its users) or the
-     sending side: the mailbox address domain, its SMTP/IMAP host domains, or
-     the provider (Google, Microsoft). A bare TLD never qualifies.
+- **Vouched, authenticated, entitled reports only (#961, owner ruling Q12,
+  2026-10-21).** A matched report acts (bounce status, suppression,
+  notification) only when all three of these hold:
+  1. **Vouched.** A receiver this mailbox trusts stamped the topmost
+     `Authentication-Results`. A sender can only add headers below it.
+     - Gmail: `mx.google.com`.
+     - Microsoft: its own form, which has no authserv-id.
+     - A custom SMTP/IMAP mailbox: only a receiver listed in
+       `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`. The list is empty by default, so
+       those mailboxes fail closed, because a server that stamps nothing would
+       leave a sender-written header on top.
+  2. **Authenticated.** The report is from `mailer-daemon@` or `postmaster@`,
+     with exactly one From header. That header shows `dkim=pass`
+     (`header.d`/`header.i`) or `spf=pass` (`smtp.mailfrom`/`smtp.helo`) for a
+     domain related to the From domain (one within the other). The domain that
+     passed, not the From domain the sender chose, is the reporter's identity.
+     Comments are ignored.
+  3. **Entitled.** A passing domain may speak for that recipient. It must be the
+     recipient's own domain, or the sending side: the mailbox address domain,
+     its SMTP/IMAP hosts as themselves (never their parent), or the provider
+     (Google, Microsoft). A bare TLD never qualifies.
 
   Every other report is stored as an UNMATCHED, LOW receipt with no effect. That
-  covers a recipient forging a report with the ids they received, even one
-  signed by a domain they control. Some genuine bounces will be recorded without
-  acting: provider-internal bounces without `Authentication-Results`, and
-  unusual reporters. #965 (the D5 live header spike) relaxes the rule on
-  provider evidence.
-
-  Residual risk, raised to the owner: a self-hosted IMAP server that stamps no
-  `Authentication-Results` of its own leaves the sender's header topmost, so a
-  report forged for the recipient's domain would pass. Gmail and Microsoft
-  always stamp theirs.
+  covers a recipient forging a report with the ids they received, even when it
+  is signed by a domain they control (public-suffix tricks included). Some
+  genuine bounces will be recorded without acting: provider-internal bounces
+  without `Authentication-Results`, custom IMAP mailboxes until their receiver
+  is configured, and unusual reporters. #965 (the D5 live header spike) relaxes
+  the rule on provider evidence.
 
 ### Consequences
 

@@ -54,6 +54,12 @@ export interface BounceReaderDeps {
   /** Creates the in-app notification through `db` (the receipt's transaction). */
   notify(notification: BounceNotification, db: unknown): Promise<void>;
   now(): Date;
+  /**
+   * Receivers (authserv-ids) trusted to stamp Authentication-Results for custom
+   * SMTP/IMAP mailboxes, from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS. Empty (the
+   * default): their reports are recorded but never act (#961, ADR-085).
+   */
+  trustedAuthservIds?: readonly string[];
 }
 
 export interface BounceScanReport {
@@ -101,11 +107,21 @@ function aligned(a: string, b: string): boolean {
   return longer === shorter || longer.endsWith(`.${shorter}`);
 }
 
-/** A host's parent domain (`smtp.example.com` -> `example.com`), or the host itself. */
-function hostDomain(host: string | null): string | null {
-  if (!host) return null;
-  const labels = host.toLowerCase().split('.');
-  return labels.length > 2 ? labels.slice(1).join('.') : labels.join('.');
+/**
+ * Whether the receiver that stamped the topmost Authentication-Results is one
+ * this mailbox can trust. Gmail and Microsoft always stamp their own above
+ * anything a sender wrote (Gmail as mx.google.com; Microsoft in its form with
+ * no authserv-id). A custom IMAP server may not stamp at all, leaving a
+ * sender-written header on top, so it is trusted only when configured.
+ */
+function trustedReceiver(
+  authservId: string | null,
+  mailbox: ScanMailbox,
+  trusted: readonly string[]
+): boolean {
+  if (mailbox.kind === 'GMAIL') return authservId === 'mx.google.com';
+  if (mailbox.kind === 'MICROSOFT') return authservId === null;
+  return authservId !== null && trusted.includes(authservId);
 }
 
 /**
@@ -113,20 +129,26 @@ function hostDomain(host: string | null): string | null {
  * recipient's own domain (its MTA reports on its users), or the sending side -
  * the mailbox's address domain, its SMTP/IMAP hosts, or its provider. A report
  * signed by any other domain - e.g. one an insider recipient controls - cannot
- * bounce or suppress someone else.
+ * bounce or suppress someone else. Hosts count as themselves, never their
+ * parent, so a shared platform domain is not entitled as a whole.
  */
-function mayReportOn(reporter: string | null, recipient: string, mailbox: ScanMailbox): boolean {
-  if (!reporter) return false;
+function mayReportOn(
+  reporters: readonly string[],
+  recipient: string,
+  mailbox: ScanMailbox
+): boolean {
   const candidates = [
     recipient.slice(recipient.lastIndexOf('@') + 1),
     mailbox.fromAddress
       ? mailbox.fromAddress.slice(mailbox.fromAddress.lastIndexOf('@') + 1)
       : null,
-    hostDomain(mailbox.smtpHost),
-    hostDomain(mailbox.imapHost),
+    mailbox.smtpHost,
+    mailbox.imapHost,
     ...(PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? []),
   ];
-  return candidates.some((domain) => domain !== null && aligned(reporter, domain.toLowerCase()));
+  return reporters.some((reporter) =>
+    candidates.some((domain) => Boolean(domain) && aligned(reporter, String(domain).toLowerCase()))
+  );
 }
 
 interface MatchedRecord {
@@ -479,6 +501,35 @@ function shouldNotifySender(
   return Boolean(matched?.userId) && kind !== 'DELAYED' && settings.notifySenderOnBounce;
 }
 
+/**
+ * The record a report refers to, only when its receiver vouches for it (owner
+ * ruling on #961): anything else - e.g. a recipient forging a report with the
+ * ids they received - is kept as an UNMATCHED, LOW receipt only.
+ */
+async function vouchedRecord(
+  deps: BounceReaderDeps,
+  mailbox: ScanMailbox,
+  report: DsnReport,
+  now: Date
+): Promise<MatchedRecord | null> {
+  const vouched =
+    report.authenticated &&
+    trustedReceiver(report.authservId, mailbox, deps.trustedAuthservIds ?? []);
+  return vouched ? findMatchedRecord(deps, mailbox, report, now) : null;
+}
+
+/** The recipient is one of the record's, and the reporter may speak for it. */
+function entitledFor(
+  report: DsnReport,
+  recipient: string,
+  mailbox: ScanMailbox,
+  recordRecipients: string[]
+): boolean {
+  return (
+    recordRecipients.includes(recipient) && mayReportOn(report.reporterDomains, recipient, mailbox)
+  );
+}
+
 async function processReport(
   deps: BounceReaderDeps,
   mailbox: ScanMailbox,
@@ -489,20 +540,13 @@ async function processReport(
   const report = parseDsn(message.raw);
   if (!report) return;
 
-  // Only a report the receiving provider vouches for may act (owner ruling on
-  // #961): anything else - e.g. a recipient forging a report about a co-recipient
-  // with the ids they received - is kept as an UNMATCHED, LOW receipt only.
-  let record = report.authenticated ? await findMatchedRecord(deps, mailbox, report, now) : null;
+  let record = await vouchedRecord(deps, mailbox, report, now);
   const recordRecipients = record ? recipientsOf(record) : [];
 
   for (const entry of report.recipients) {
     const kind = classifyDsnStatus(entry.action, entry.status);
     if (!kind) continue;
-    const matched =
-      recordRecipients.includes(entry.recipient) &&
-      mayReportOn(report.reporterDomain, entry.recipient, mailbox)
-        ? record
-        : null;
+    const matched = entitledFor(report, entry.recipient, mailbox, recordRecipients) ? record : null;
 
     const outcome = await recordReceiptOnce(deps, {
       mailbox,
@@ -643,6 +687,14 @@ export async function runBounceScan(deps: BounceReaderDeps): Promise<BounceScanR
   return report;
 }
 
+/** EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS: comma-separated, lower-cased; empty by default. */
+export function trustedAuthservIdsFromEnv(env: NodeJS.ProcessEnv): string[] {
+  return (env.EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS ?? '')
+    .split(',')
+    .map((id) => id.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 /** Production wiring: the shared encrypted Prisma client, container transports, in-app notifications. */
 export async function createBounceReaderDeps(): Promise<BounceReaderDeps> {
   const [{ prisma }, { container }, { createNotification }, { notifyEmailBounced }] =
@@ -658,6 +710,7 @@ export async function createBounceReaderDeps(): Promise<BounceReaderDeps> {
     prisma,
     transports,
     now: () => new Date(),
+    trustedAuthservIds: trustedAuthservIdsFromEnv(process.env),
     notify: (n, db) =>
       notifyEmailBounced(n, { notifySenderOnBounce: true }, (params) =>
         createNotification(db as never, params as never).then(() => undefined)

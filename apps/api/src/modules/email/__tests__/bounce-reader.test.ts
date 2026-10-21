@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { MailboxTransportError } from '@intelliflow/adapters';
 import { makeDsn } from './dsn-fixture';
-import { runBounceScan, type BounceReaderDeps } from '../bounce-reader';
+import { runBounceScan, trustedAuthservIdsFromEnv, type BounceReaderDeps } from '../bounce-reader';
 import { __resetAccessTokenCache } from '../mailbox-transport';
 
 const NOW = new Date(Date.UTC(2026, 9, 20, 12));
@@ -161,6 +161,8 @@ function deps(
     } as never,
     notify,
     now: () => NOW,
+    // The test receiver is configured as trusted for custom (SMTP/IMAP) mailboxes.
+    trustedAuthservIds: ['mx.example.invalid'],
     ...extra,
   };
   return { d, read, notify };
@@ -213,11 +215,41 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     expectNoEffect(fake);
   });
 
+  it('a public-suffix From (mailer-daemon@co.uk) signed by a domain under it cannot act on others there', async () => {
+    const fake = fakeDb({ mailbox: smtpMailbox({ fromAddress: 'sales@acme.co.uk' }) });
+    const raw = makeDsn({
+      from: 'mailer-daemon@co.uk',
+      authenticationResults: ['mx.example.invalid; dkim=pass header.d=evil.co.uk'],
+      recipients: [{ address: 'gone@example.invalid', action: 'failed', status: '5.1.1' }],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
+  it('a host on a shared platform domain does not entitle the whole platform', async () => {
+    const fake = fakeDb({
+      mailbox: smtpMailbox({
+        fromAddress: 'me@mail.example.org',
+        smtpHost: 'acme.shared-host.example.net',
+      }),
+    });
+    const raw = makeDsn({
+      from: 'mailer-daemon@other.shared-host.example.net',
+      authenticationResults: [
+        'mx.example.invalid; dkim=pass header.d=other.shared-host.example.net',
+      ],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
   it('a report signed for a bare top-level domain is never entitled to report', async () => {
     const fake = fakeDb();
     const tld = makeDsn({
       from: 'mailer-daemon@invalid',
-      authenticationResults: ['mx.example.invalid; dkim=pass header.d=example.invalid'],
+      authenticationResults: ['mx.example.invalid; dkim=pass header.d=invalid'],
     });
     const { d } = deps(fake, [{ key: '7:11', raw: tld }]);
     await runBounceScan(d);
@@ -233,6 +265,59 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     const { d } = deps(fake, [{ key: '7:11', raw: fromSendersMta }]);
     await runBounceScan(d);
     expect(fake.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
+  });
+
+  it('a custom IMAP mailbox trusts no receiver by default: a header the sender wrote cannot act (codex r17)', async () => {
+    // The custom server stamps nothing, so the forger's own header is topmost.
+    const fake = fakeDb();
+    const forged = makeDsn({
+      from: 'mailer-daemon@example.invalid',
+      authenticationResults: ['attacker.example.net; dkim=pass header.d=example.invalid'],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: forged }], { trustedAuthservIds: [] });
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
+  it('a Gmail mailbox trusts only mx.google.com; a Microsoft mailbox only Microsoft’s own form', async () => {
+    const gmail = (authenticationResults: string[]) => async () => {
+      const fake = fakeDb({ mailbox: smtpMailbox({ kind: 'GMAIL', refreshToken: secret }) });
+      const listDsnSince = vi.fn(async () => ({
+        messages: [{ key: 'g1', raw: makeDsn({ authenticationResults }), receivedAt: NOW }],
+        resumeFrom: null,
+      }));
+      const { d } = deps(fake, [], {
+        transports: {
+          smtp: { send: vi.fn(), verify: vi.fn() },
+          imap: { read: vi.fn(), verify: vi.fn() },
+          oauth: () =>
+            ({
+              refresh: vi.fn(async () => ({
+                accessToken: 'at',
+                refreshToken: secret,
+                expiresAt: new Date(NOW.getTime() + 3_600_000),
+              })),
+              listDsnSince,
+            }) as never,
+          oauthConfigured: { GMAIL: true, MICROSOFT: false },
+        } as never,
+      });
+      await runBounceScan(d);
+      return fake;
+    };
+    const trusted = await gmail(['mx.google.com; dkim=pass header.d=mta.example.invalid'])();
+    expect(trusted.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
+    const other = await gmail(['mx.example.invalid; dkim=pass header.d=mta.example.invalid'])();
+    expectNoEffect(other);
+  });
+
+  it('reads the trusted receivers from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS (empty by default)', () => {
+    expect(trustedAuthservIdsFromEnv({})).toEqual([]);
+    expect(
+      trustedAuthservIdsFromEnv({
+        EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS: ' MX.Example.invalid, ,mail.example.org',
+      })
+    ).toEqual(['mx.example.invalid', 'mail.example.org']);
   });
 
   it('a report with no Authentication-Results header is stored and has no effect', async () => {
@@ -632,7 +717,16 @@ describe('runBounceScan', () => {
 
   it('scans an OAuth mailbox through the provider list with an overlap window', async () => {
     const listDsnSince = vi.fn(async () => ({
-      messages: [{ key: 'gm1', raw: makeDsn(), receivedAt: NOW }],
+      // Gmail stamps its own Authentication-Results as mx.google.com.
+      messages: [
+        {
+          key: 'gm1',
+          raw: makeDsn({
+            authenticationResults: ['mx.google.com; dkim=pass header.d=mta.example.invalid'],
+          }),
+          receivedAt: NOW,
+        },
+      ],
       resumeFrom: null,
     }));
     const client = {

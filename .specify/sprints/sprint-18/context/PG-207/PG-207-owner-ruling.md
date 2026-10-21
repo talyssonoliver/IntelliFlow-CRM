@@ -168,4 +168,9 @@ Options:
 - Hardened at exec, on the codex r16 HIGH and the Security STOA re-run.
   - The authenticated reporter must also be entitled to speak for the recipient: the recipient's domain, or the sending side (mailbox address domain, SMTP/IMAP hosts, provider). A domain an insider controls no longer qualifies.
   - Comments are ignored, a report with several From headers is refused, and Microsoft's Authentication-Results form is read.
-- Residual risk raised to the owner: a self-hosted IMAP server that stamps no Authentication-Results of its own leaves the sender's header topmost. #965 will confirm per provider.
+- Second hardening, on the codex r17 HIGH and the Security STOA re-run 2:
+  - The reporter's identity is now the domain that passed, not the From domain (this closes the public-suffix trick).
+  - Hosts count as themselves, never their parent.
+  - The topmost header must be stamped by a trusted receiver: Gmail `mx.google.com`; Microsoft its own form; a custom SMTP/IMAP mailbox only an id listed in `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`.
+  - That list is empty by default, so custom mailboxes fail closed: their bounces are recorded and do not act until the owner configures the receiver or #965 relaxes the rule.
+- Owner decision needed: whether to set `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS` for custom IMAP servers known to stamp their own Authentication-Results.
