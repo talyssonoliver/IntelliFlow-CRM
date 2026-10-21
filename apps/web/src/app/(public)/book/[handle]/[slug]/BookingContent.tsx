@@ -371,7 +371,8 @@ export default function BookingContent({
     } catch (error) {
       if (errorCode(error) === 'CONFLICT') {
         update('start', '');
-        void slotsQuery.refetch();
+        // A failed refetch shows through slotsQuery.isError (with its own retry button).
+        slotsQuery.refetch().catch(() => undefined);
       }
       setErrors({ form: bookingErrorMessage(error) });
     }
@@ -489,7 +490,7 @@ export default function BookingContent({
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
-          void submit();
+          submit().catch(() => setErrors({ form: GENERIC_ERROR }));
         }}
       >
         <h2 id="booking-details" className="text-lg font-semibold text-foreground">

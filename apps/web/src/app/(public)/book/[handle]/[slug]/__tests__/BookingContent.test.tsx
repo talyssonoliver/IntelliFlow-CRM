@@ -21,7 +21,7 @@ const h = vi.hoisted(() => ({
     error: null as unknown,
   },
   slotsArgs: [] as unknown[],
-  refetchSlots: vi.fn(),
+  refetchSlots: vi.fn(() => Promise.resolve()), // tRPC refetch returns a promise
   book: { mutateAsync: vi.fn(), isPending: false },
 }));
 

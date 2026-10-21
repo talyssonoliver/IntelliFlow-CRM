@@ -530,8 +530,9 @@ export const leadRouter = createTRPCRouter({
       userName: ctx.user?.email ?? 'System',
     });
 
-    // Fire-and-forget: enqueue AI lead scoring (best-effort; shared with public booking, PG-203)
-    void enqueueLeadScoring({
+    // Fire-and-forget: enqueue AI lead scoring (best-effort; shared with public booking, PG-203).
+    // enqueueLeadScoring logs its own failures; this handler only covers an unexpected rejection.
+    enqueueLeadScoring({
       leadId: result.value.id.value,
       tenantId: typedCtx.tenant.tenantId,
       lead: {
@@ -544,6 +545,10 @@ export const leadRouter = createTRPCRouter({
         phone: input.phone?.value,
       },
       correlationId: `lead-create-${result.value.id.value}`,
+    }).catch((error: unknown) => {
+      console.warn('[lead.router] AI scoring enqueue failed', {
+        error: error instanceof Error ? error.name : 'unknown',
+      });
     });
 
     // IFC-240: fire-and-forget audit logging

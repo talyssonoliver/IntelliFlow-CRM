@@ -428,6 +428,13 @@ function rethrowBookingError(err: unknown): never {
   throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: FAILED });
 }
 
+/** Handler for detached post-commit work: error class only (driver/SMTP text can carry PII). */
+function logDetachedFailure(error: unknown): void {
+  console.error('[public-booking] detached post-booking work failed', {
+    error: error instanceof Error ? error.name : 'unknown',
+  });
+}
+
 /** After commit; every step is isolated and nothing here can fail the booking or log PII. */
 async function afterBooking(
   ctx: Context,
@@ -463,7 +470,7 @@ async function afterBooking(
   if (lead.created) {
     const created = lead.created;
     // Not awaited: scoring waits on Redis readiness and must never hold up the emails below.
-    void step('ai-scoring', () =>
+    step('ai-scoring', () =>
       enqueueLeadScoring({
         leadId: created.id.value,
         tenantId: eventType.tenantId,
@@ -478,7 +485,7 @@ async function afterBooking(
         },
         correlationId: `lead-create-${created.id.value}`,
       })
-    );
+    ).catch(logDetachedFailure);
     await step('lead-activity', () =>
       ctx.prisma.leadActivity.create({
         data: {
@@ -669,7 +676,9 @@ export const publicBookingRouter = createTRPCRouter({
         rethrowBookingError(err);
       }
 
-      void afterBooking(ctx, outcome.bookable, outcome.appointment, outcome.match, booker);
+      afterBooking(ctx, outcome.bookable, outcome.appointment, outcome.match, booker).catch(
+        logDetachedFailure
+      );
       // The timezone the appointment was committed with (config is re-read under the lock).
       return {
         startsAt: start.toISOString(),
