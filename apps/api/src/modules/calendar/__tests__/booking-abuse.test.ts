@@ -165,18 +165,26 @@ describe('recordBookingAttempt / pruneBookingAttempts', () => {
   });
 });
 
-describe('bookingClientIp (security review F3)', () => {
+describe('bookingClientIp (security review F3; codex fp 07766f8e)', () => {
   const req = (headers: Record<string, string>) =>
     new Request('https://api.example.invalid/trpc', { headers });
 
-  it('uses only the edge-set rightmost x-forwarded-for hop', () => {
+  it('prefers the edge-written x-real-ip over any forwarded chain', () => {
+    expect(
+      bookingClientIp(
+        req({ 'x-real-ip': '203.0.113.50', 'x-forwarded-for': '198.51.100.1, 192.0.2.10' })
+      )
+    ).toBe('203.0.113.50');
+  });
+
+  it('falls back to the rightmost x-forwarded-for hop, never the client-written leftmost', () => {
     expect(bookingClientIp(req({ 'x-forwarded-for': '203.0.113.9, 198.51.100.7' }))).toBe(
       '198.51.100.7'
     );
   });
 
-  it('never trusts the client-settable x-real-ip; no edge header means the shared bucket', () => {
-    expect(bookingClientIp(req({ 'x-real-ip': '203.0.113.50' }))).toBe('unknown');
+  it('puts callers with neither header in the shared unknown bucket', () => {
+    expect(bookingClientIp(req({ 'x-real-ip': '   ' }))).toBe('unknown');
     expect(bookingClientIp(undefined)).toBe('unknown');
   });
 

@@ -1207,3 +1207,25 @@ waivers:
       deliberate fix in gh #967 (recipient contract, user-id to email resolution, booker decision).
     author: PG-203 lane
     date: '2026-10-21'
+  - fingerprint: 1bc2a213fd9dc1107209362f2b7e9dd2494f7fa7d869e61c77dea644096eb126
+    reason: >-
+      Real but pre-existing class, same root cause as waivers 283b28bc/5a87a475: the in-app
+      appointments.create path takes no booking lock (gh #913). New angle: the
+      appointments_no_overlap_per_organizer constraint covers the organizer only, so a staff
+      appointment that lists the public host as an ATTENDEE can race a public booking. The same
+      gap exists today between two staff appointments (organizer in one, attendee in the other).
+      Public bookings re-check the host's attendee busy time under the lock (computeSlots ORs
+      organizer and attendee), so only a concurrent staff create can slip through. The fix
+      belongs to the locked in-app path in #913, extended to attendees; the attendee case was
+      added to #913 on 2026-10-21.
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 0f18f6791d6d7d80b209314d453aef5d7709971c7a22c08569095a435801c018
+    reason: >-
+      Same finding as waivers 13153910 and 58003f60 (gh #967), re-anchored on
+      appointment-side-effects.ts:63 after line shifts. Pre-existing and app-wide: the conversion
+      drops reminderMinutes and the scheduler uses attendee ids as recipients, for every
+      appointment. Fixing only the conversion would switch broken-recipient reminders on for all
+      appointments (L1). Tracked as one deliberate fix in gh #967.
+    author: PG-203 lane
+    date: '2026-10-21'

@@ -160,9 +160,20 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
     (`appointments.bookedVia = 'PUBLIC_LINK'`). Owner ruling 2026-10-21: if
     failed attempts counted toward the shared event-type cap, junk could lock
     real visitors out for the hour.
-  - Booking caps key the client IP on the edge-set rightmost XFF hop only. The
-    client-settable `x-real-ip` is ignored, and IPv6 is reduced to its /64.
-    Traffic without the edge header shares one stricter `unknown` bucket.
+  - Client IP for the caps:
+    - The browser calls the API directly on Railway (`NEXT_PUBLIC_API_URL`).
+      Railway's edge writes `X-Real-IP` and overwrites `X-Forwarded-For` on
+      every public request.
+    - So `X-Real-IP` is used first, as in the general rate limiter
+      (`middleware/rate-limit.ts`), and the rightmost XFF hop is the fallback.
+      The rightmost hop alone would be the CDN's address if one sat in front,
+      which would make every visitor share one bucket (codex review).
+    - IPv6 is reduced to its /64. Without either header, callers share one
+      stricter `unknown` bucket.
+    - Railway publishes no formal contract for these headers. The evidence is
+      Railway staff answers plus a measured spoof test on station.railway.com.
+      Verification step before relying on it: send a spoofed `X-Real-IP` to the
+      deployed API and confirm the edge replaces it (NEEDS_HUMAN, production).
   - Per-IP limiters run before any database read: `listSlots` (500 ms),
     `getEventType` (250 ms) and `book` (2 s). A lock-free cap pre-check refuses
     over-cap callers before they can queue on the tenant lock.

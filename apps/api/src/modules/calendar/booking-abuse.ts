@@ -52,12 +52,18 @@ export function ipv6Prefix64(ip: string): string {
 }
 
 /**
- * The client IP for booking caps: only the edge-set (rightmost) x-forwarded-for hop. The
- * client-settable x-real-ip is never trusted here. Without the header every caller shares the
- * 'unknown' bucket, which is the stricter global bucket for traffic that bypassed the edge.
+ * The client IP for booking caps. The browser calls the API directly on Railway, whose edge
+ * writes X-Real-IP (and overwrites X-Forwarded-For) for every public request, so X-Real-IP is
+ * the client address; the rightmost X-Forwarded-For hop is only a fallback, because a CDN in
+ * front would put its own address there and make every visitor share one bucket. This is the
+ * same source the general rate limiter uses (middleware/rate-limit.ts). Railway publishes no
+ * formal contract for these headers: see ADR-083 for the evidence and the verification step.
+ * IPv6 is reduced to its /64; with neither header, callers share the stricter 'unknown' bucket.
  */
 export function bookingClientIp(req: Request | undefined): string {
-  const ip = pickTrustedForwardedIp(req?.headers.get('x-forwarded-for'));
+  const ip =
+    req?.headers.get('x-real-ip')?.trim() ||
+    pickTrustedForwardedIp(req?.headers.get('x-forwarded-for'));
   if (!ip) return 'unknown';
   return ip.includes(':') ? ipv6Prefix64(ip) : ip;
 }
