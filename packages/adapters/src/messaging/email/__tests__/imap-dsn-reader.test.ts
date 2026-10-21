@@ -42,15 +42,17 @@ function fakeClient(opts: {
     getMailboxLock: vi.fn(async () => ({ release })),
     mailbox: { uidValidity: opts.uidValidity ?? 7n, uidNext: opts.uidNext ?? 100 },
     search: vi.fn(async () => opts.searchResult ?? []),
-    fetch: vi.fn(async function* (range: string) {
+    // Like IMAP: only the requested items come back (no source unless asked for).
+    fetch: vi.fn(async function* (range: string, query: { source?: boolean }) {
       const wanted = new Set(range.split(',').map(Number));
       for (const m of opts.messages ?? []) {
         if (wanted.has(m.uid))
           yield {
             uid: m.uid,
             size: m.size,
-            source: Buffer.from(m.source),
-            internalDate: m.internalDate,
+            ...(query.source
+              ? { source: Buffer.from(m.source), internalDate: m.internalDate }
+              : {}),
           };
       }
     }),
@@ -126,6 +128,19 @@ describe('ImapBounceReader', () => {
     expect(result.messages.map((m) => m.key)).toEqual(['7:10', '7:11']);
     expect(result.messages[0]?.raw).toBe('RAW-10');
     expect(result.cursor).toEqual({ uidValidity: 7n, lastUid: 12 });
+    // Sizes first; the oversize message's body is never downloaded.
+    expect(client.fetch).toHaveBeenNthCalledWith(
+      1,
+      '10,11,12',
+      { uid: true, size: true },
+      { uid: true }
+    );
+    expect(client.fetch).toHaveBeenNthCalledWith(
+      2,
+      '10,11',
+      { uid: true, size: true, source: true, internalDate: true },
+      { uid: true }
+    );
   });
 
   it('caps a scan at the limit and resumes from the last taken UID', async () => {

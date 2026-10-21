@@ -6,6 +6,7 @@ import { __resetAccessTokenCache } from '../mailbox-transport';
 
 const NOW = new Date(Date.UTC(2026, 9, 20, 12));
 const DAY = 86_400_000;
+const LEASE_UNTIL = new Date(NOW.getTime() + 5 * 60_000);
 const T = 'tenant-1';
 const secret = 'x'.repeat(20);
 
@@ -61,13 +62,22 @@ function fakeDb(
   const suppressions: any[] = [];
   const recordUpdates: any[] = [];
   const mailboxUpdates: any[] = [];
+  // One mailbox, claimable (like the SQL) when not leased and due at `now`.
+  let leased = false;
+  let nextScanAt: Date | null = null;
   const db: any = {
-    $queryRaw: vi.fn(async () => [{ id: 'mb1' }]),
+    $queryRaw: vi.fn(async (_sql: unknown, _leaseUntil: Date, now: Date) => {
+      if (leased || (nextScanAt && nextScanAt > now)) return [];
+      leased = true;
+      return [{ id: 'mb1', lockedUntil: LEASE_UNTIL }];
+    }),
     emailOAuthState: { deleteMany: vi.fn(async () => ({ count: 0 })) },
     emailMailbox: {
       findFirst: vi.fn(async () => opts.mailbox ?? smtpMailbox()),
       update: vi.fn(async (args: any) => {
         mailboxUpdates.push(args);
+        if (args.data.lockedUntil === null) leased = false;
+        if (args.data.nextScanAt) nextScanAt = args.data.nextScanAt;
         return {};
       }),
       updateMany: vi.fn(async () => ({ count: 1 })),
@@ -150,12 +160,30 @@ beforeEach(() => {
 });
 
 describe('runBounceScan', () => {
+  it('a scan whose lease was taken over by another worker writes nothing back', async () => {
+    const fake = fakeDb();
+    fake.db.emailMailbox.update.mockImplementationOnce(async () => {
+      throw Object.assign(new Error('not found'), { code: 'P2025' });
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: makeDsn() }]);
+    const report = await runBounceScan(d);
+    expect(fake.db.emailMailbox.update.mock.calls[0][0].where).toEqual({
+      id: 'mb1',
+      lockedUntil: LEASE_UNTIL,
+    });
+    // Not counted as a failure, and no failure write over the other worker's state.
+    expect(report.failures).toBe(0);
+    expect(fake.db.emailMailbox.update).toHaveBeenCalledTimes(1);
+  });
+
   it('claims due mailboxes with a lease that returns ids only, and purges expired state and old receipts', async () => {
     const fake = fakeDb();
     const { d } = deps(fake, []);
     await runBounceScan(d);
     const sql = String((fake.db.$queryRaw.mock.calls[0] as any)[0].join('?'));
     expect(sql).toContain('RETURNING id');
+    // One at a time, leased just before its scan (a batch lease could expire mid-tick).
+    expect(sql).toContain('LIMIT 1');
     expect(sql).not.toMatch(/RETURNING[^;]*(Password|refreshToken)/i);
     expect(fake.db.emailOAuthState.deleteMany).toHaveBeenCalledWith({
       where: { expiresAt: { lt: NOW } },
@@ -175,7 +203,7 @@ describe('runBounceScan', () => {
       { limit: 50, maxBytes: 256 * 1024 }
     );
     expect(fake.mailboxUpdates[0]).toEqual({
-      where: { id: 'mb1' },
+      where: { id: 'mb1', lockedUntil: LEASE_UNTIL },
       data: {
         lockedUntil: null,
         nextScanAt: new Date(NOW.getTime() + 10 * 60_000),
@@ -349,7 +377,10 @@ describe('runBounceScan', () => {
     expect(fake.receipts).toHaveLength(25);
     expect(fake.mailboxUpdates[0].data).toMatchObject({ imapUidValidity: 7n, imapLastUid: 124 });
 
-    await runBounceScan(deps(fake, raws.slice(25)).d);
+    // The next scan (10 minutes later) applies the rest.
+    await runBounceScan(
+      deps(fake, raws.slice(25), { now: () => new Date(NOW.getTime() + 10 * 60_000) }).d
+    );
     expect(fake.suppressions).toHaveLength(30);
   });
 
@@ -401,7 +432,8 @@ describe('runBounceScan', () => {
     expect(first.failures).toBe(1);
     expect(fake.receipts).toHaveLength(0);
 
-    await runBounceScan(ctx.d);
+    // The next scan, once the back-off has passed.
+    await runBounceScan({ ...ctx.d, now: () => new Date(NOW.getTime() + DAY) });
     expect(ctx.notify).toHaveBeenCalledTimes(2);
     expect(fake.receipts).toHaveLength(1);
   });

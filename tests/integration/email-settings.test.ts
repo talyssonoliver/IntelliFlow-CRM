@@ -310,6 +310,34 @@ describeDb('PG-207 email tables (real DB)', () => {
       expect(first.length + second.length).toBe(1);
       await prisma.emailMailbox.delete({ where: { id: row.id } });
     });
+
+    it('fences a scan write by its lease: a worker whose lease was taken over writes nothing', async () => {
+      const row = await prisma.emailMailbox.create({
+        data: smtpMailbox({ userId: USER_A2, fromAddress: 'fence@mail.example.invalid' }),
+      });
+      const lease = (until: Date) =>
+        prisma.$queryRaw<Array<{ id: string; lockedUntil: Date }>>`
+          UPDATE email_mailboxes SET "lockedUntil" = ${until}
+          WHERE id = ${row.id} RETURNING id, "lockedUntil"`;
+      const [mine] = await lease(new Date(Date.now() + 1_000));
+      // The lease end read back is the one stored, so it can fence the write.
+      await prisma.emailMailbox.update({
+        where: { id: row.id, lockedUntil: mine!.lockedUntil },
+        data: { lockedUntil: null, failureCount: 0 },
+      });
+      // Another worker re-claimed it: the first worker's stale write is refused.
+      await lease(new Date(Date.now() + 300_000));
+      await expect(
+        prisma.emailMailbox.update({
+          where: { id: row.id, lockedUntil: mine!.lockedUntil },
+          data: { lockedUntil: null, failureCount: 3 },
+        })
+      ).rejects.toMatchObject({ code: 'P2025' });
+      const after = await prisma.emailMailbox.findUniqueOrThrow({ where: { id: row.id } });
+      expect(after.lockedUntil).not.toBeNull();
+      expect(after.failureCount).toBe(0);
+      await prisma.emailMailbox.delete({ where: { id: row.id } });
+    });
   });
 
   describe('email_oauth_states', () => {

@@ -28,6 +28,7 @@ import {
   type OAuthMailboxProvider,
 } from '@intelliflow/domain';
 import { canReadBounces, settingsValues, type EmailSettingsValues } from './email-dto';
+import { prismaErrorCode } from './email-access';
 import { getOAuthAccessToken, type MailboxTransports } from './mailbox-transport';
 
 const DAY_MS = 86_400_000;
@@ -100,20 +101,53 @@ function recipientsOf(record: MatchedRecord): string[] {
     .filter(Boolean);
 }
 
-async function claimDueMailboxes(deps: BounceReaderDeps, now: Date): Promise<string[]> {
+/** A mailbox this worker holds: its lease end doubles as the fence for writes. */
+interface MailboxClaim {
+  id: string;
+  leaseUntil: Date;
+}
+
+/**
+ * Claims the next due mailbox, just before it is scanned (a lease taken for a
+ * whole batch could expire while earlier mailboxes are still being scanned).
+ */
+async function claimNextMailbox(deps: BounceReaderDeps, now: Date): Promise<MailboxClaim | null> {
   const leaseUntil = new Date(now.getTime() + LEASE_MS);
-  const rows: Array<{ id: string }> = await deps.prisma.$queryRaw`
+  const rows: Array<{ id: string; lockedUntil: Date }> = await deps.prisma.$queryRaw`
     UPDATE email_mailboxes SET "lockedUntil" = ${leaseUntil}
     WHERE id IN (
       SELECT id FROM email_mailboxes
       WHERE status = 'ACTIVE' AND "nextScanAt" <= ${now}
         AND ("lockedUntil" IS NULL OR "lockedUntil" < ${now})
       ORDER BY "nextScanAt" ASC
-      LIMIT ${MAILBOXES_PER_TICK}
+      LIMIT 1
       FOR UPDATE SKIP LOCKED
     )
-    RETURNING id`;
-  return rows.map((r) => r.id);
+    RETURNING id, "lockedUntil"`;
+  const row = rows[0];
+  return row ? { id: row.id, leaseUntil: row.lockedUntil } : null;
+}
+
+/**
+ * Writes a scan's outcome only while this worker still holds the lease: if it
+ * expired and another worker claimed the mailbox, that worker's state stands.
+ * False when the lease was lost.
+ */
+async function releaseMailbox(
+  deps: BounceReaderDeps,
+  claim: MailboxClaim,
+  data: Record<string, unknown>
+): Promise<boolean> {
+  try {
+    await deps.prisma.emailMailbox.update({
+      where: { id: claim.id, lockedUntil: claim.leaseUntil },
+      data: { lockedUntil: null, ...data },
+    });
+    return true;
+  } catch (error) {
+    if (prismaErrorCode(error) === 'P2025') return false;
+    throw error;
+  }
 }
 
 /**
@@ -453,17 +487,15 @@ function cursorThrough(
 
 async function scanMailbox(
   deps: BounceReaderDeps,
-  id: string,
+  claim: MailboxClaim,
   now: Date,
   report: BounceScanReport
 ): Promise<void> {
+  const { id } = claim;
   const mailbox: ScanMailbox | null = await deps.prisma.emailMailbox.findFirst({ where: { id } });
   if (!mailbox) return;
   if (!canReadBounces(mailbox)) {
-    await deps.prisma.emailMailbox.update({
-      where: { id },
-      data: { lockedUntil: null, nextScanAt: new Date(now.getTime() + SCAN_INTERVAL_MS) },
-    });
+    await releaseMailbox(deps, claim, { nextScanAt: new Date(now.getTime() + SCAN_INTERVAL_MS) });
     return;
   }
 
@@ -478,14 +510,10 @@ async function scanMailbox(
     report.receipts += state.receipts;
     report.suppressions += state.suppressions;
     report.mailboxesScanned += 1;
-    await deps.prisma.emailMailbox.update({
-      where: { id },
-      data: {
-        lockedUntil: null,
-        nextScanAt: new Date(now.getTime() + SCAN_INTERVAL_MS),
-        failureCount: 0,
-        ...nextCursor,
-      },
+    await releaseMailbox(deps, claim, {
+      nextScanAt: new Date(now.getTime() + SCAN_INTERVAL_MS),
+      failureCount: 0,
+      ...nextCursor,
     });
   } catch (error) {
     report.failures += 1;
@@ -493,14 +521,10 @@ async function scanMailbox(
       error instanceof MailboxTransportError ? error.code : 'CONNECT_FAILED';
     const failureCount = mailbox.failureCount + 1;
     const backoff = Math.min(SCAN_INTERVAL_MS * 2 ** failureCount, MAX_BACKOFF_MS);
-    await deps.prisma.emailMailbox.update({
-      where: { id },
-      data: {
-        lockedUntil: null,
-        failureCount,
-        nextScanAt: new Date(now.getTime() + backoff),
-        ...(failureCount >= MAX_FAILURES ? { status: 'ERROR', lastErrorCode: code } : {}),
-      },
+    await releaseMailbox(deps, claim, {
+      failureCount,
+      nextScanAt: new Date(now.getTime() + backoff),
+      ...(failureCount >= MAX_FAILURES ? { status: 'ERROR', lastErrorCode: code } : {}),
     });
     console.error('[email] bounce scan failed', { mailboxId: id, code });
   }
@@ -521,8 +545,11 @@ export async function runBounceScan(deps: BounceReaderDeps): Promise<BounceScanR
     where: { receivedAt: { lt: new Date(now.getTime() - RECEIPT_RETENTION_DAYS * DAY_MS) } },
   });
 
-  for (const id of await claimDueMailboxes(deps, now)) {
-    await scanMailbox(deps, id, now, report);
+  for (let i = 0; i < MAILBOXES_PER_TICK; i++) {
+    const claimedAt = deps.now();
+    const claim = await claimNextMailbox(deps, claimedAt);
+    if (!claim) break;
+    await scanMailbox(deps, claim, claimedAt, report);
   }
   return report;
 }

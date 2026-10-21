@@ -61,6 +61,24 @@ type CreateImapClient = (options: Record<string, unknown>) => ImapClientLike;
 
 const REPORT_HEADER = { 'content-type': 'multipart/report' };
 
+/** The UIDs (ascending) whose size is within `maxBytes`, read without their bodies. */
+async function uidsWithin(
+  client: ImapClientLike,
+  uids: number[],
+  maxBytes: number
+): Promise<number[]> {
+  if (uids.length === 0) return [];
+  const fitting: number[] = [];
+  for await (const message of client.fetch(
+    uids.join(','),
+    { uid: true, size: true },
+    { uid: true }
+  )) {
+    if (message.size !== undefined && message.size <= maxBytes) fitting.push(message.uid);
+  }
+  return fitting.sort((a, b) => a - b);
+}
+
 function mapImapError(error: unknown): MailboxTransportError {
   if (error instanceof MailboxTransportError) return error;
   const e = (error ?? {}) as { authenticationFailed?: boolean; code?: string };
@@ -136,10 +154,12 @@ export class ImapBounceReader {
           .slice(0, options.limit);
 
         const messages: RawDsnMessage[] = [];
-        if (uids.length > 0) {
+        // Sizes first: an oversize message's body is never downloaded.
+        const fitting = await uidsWithin(client, uids, options.maxBytes);
+        if (fitting.length > 0) {
           const fetched: FetchedMessage[] = [];
           for await (const message of client.fetch(
-            uids.join(','),
+            fitting.join(','),
             { uid: true, size: true, source: true, internalDate: true },
             { uid: true }
           )) {
