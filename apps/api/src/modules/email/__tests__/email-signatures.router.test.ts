@@ -119,6 +119,26 @@ describe('emailSignatures.create', () => {
     ).rejects.toMatchObject({
       code: 'BAD_REQUEST',
     });
+    expect(prismaMock.emailSignature.create).not.toHaveBeenCalled();
+  });
+
+  it('counts against the cap inside the create transaction, serialised per owner', async () => {
+    const order: string[] = [];
+    (prismaMock as any).$executeRaw = vi.fn(async () => {
+      order.push('lock');
+      return 1;
+    });
+    (prismaMock.emailSignature.count as any).mockImplementation(async () => {
+      order.push('count');
+      return 3;
+    });
+    (prismaMock.emailSignature.create as any).mockImplementation(async ({ data }: any) => {
+      order.push('create');
+      return { id: 'sig-9', ...data, createdAt: updatedAt, updatedAt };
+    });
+    await member().create({ scope: 'USER', name: 'Racing', html: '<p>x</p>' });
+    // Two concurrent creations each counting 19 can no longer both insert.
+    expect(order).toEqual(['lock', 'count', 'create']);
   });
 
   it('lets only admins create org signatures', async () => {

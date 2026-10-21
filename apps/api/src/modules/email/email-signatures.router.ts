@@ -120,16 +120,19 @@ export const emailSignaturesRouter = createTRPCRouter({
       const c = ctx as unknown as EmailRouterCtx;
       if (input.scope === 'ORG') assertEmailAdmin(c, RESOURCE, 'create');
       const owner = ownerWhere(c, input.scope);
-      const count: number = await c.prismaWithTenant.emailSignature.count({ where: owner });
-      if (count >= EMAIL_LIMITS.maxSignaturesPerScope) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: `You can keep at most ${EMAIL_LIMITS.maxSignaturesPerScope} signatures here.`,
-        });
-      }
       await assertNameFree(c, input.scope, input.name);
       try {
         const row: SignatureRow = await c.prismaWithTenant.$transaction(async (tx: any) => {
+          // Serialised per owner, so two creations cannot both pass the cap.
+          const key = `email-signatures:${owner.tenantId}:${owner.scope}:${owner.userId ?? ''}`;
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${key}::text, 0))`;
+          const count: number = await tx.emailSignature.count({ where: owner });
+          if (count >= EMAIL_LIMITS.maxSignaturesPerScope) {
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: `You can keep at most ${EMAIL_LIMITS.maxSignaturesPerScope} signatures here.`,
+            });
+          }
           if (input.isDefault) {
             await tx.emailSignature.updateMany({
               where: { ...owner, isDefault: true },

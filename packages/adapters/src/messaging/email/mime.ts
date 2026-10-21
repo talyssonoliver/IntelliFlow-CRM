@@ -46,6 +46,24 @@ function assertHeaderSafe(values: ReadonlyArray<string | null | undefined>): voi
   }
 }
 
+/** EmailRecord.messageIdHeader is VarChar(255). */
+const MAX_MESSAGE_ID_LENGTH = 255;
+
+/**
+ * The sender's domain, or its rightmost whole labels when the whole would not
+ * fit in `max` characters (a still-valid domain of the sender).
+ */
+function fitDomain(domain: string, max: number): string {
+  const labels = domain.split('.');
+  let fitted = labels.at(-1) ?? domain;
+  for (let i = labels.length - 2; i >= 0; i--) {
+    const next = `${labels[i]}.${fitted}`;
+    if (next.length > max) break;
+    fitted = next;
+  }
+  return fitted;
+}
+
 export async function buildMime(input: BuildMimeInput): Promise<BuiltMime> {
   assertHeaderSafe([
     input.recordId,
@@ -60,7 +78,9 @@ export async function buildMime(input: BuildMimeInput): Promise<BuiltMime> {
   ]);
 
   const domain = input.from.address.split('@')[1] ?? 'localhost';
-  const messageId = `<${input.recordId}.${randomBytes(8).toString('hex')}@${domain}>`;
+  const local = `${input.recordId}.${randomBytes(8).toString('hex')}`;
+  // `<local@domain>` fits the stored column (EmailRecord.messageIdHeader).
+  const messageId = `<${local}@${fitDomain(domain, MAX_MESSAGE_ID_LENGTH - local.length - 3)}>`;
 
   const composer = new MailComposer({
     from: input.from.name

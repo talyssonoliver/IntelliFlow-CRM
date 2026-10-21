@@ -10,6 +10,21 @@ const base: BuildMimeInput = {
 };
 
 describe('buildMime', () => {
+  it('keeps the Message-ID within 255 characters (the stored column) for a very long domain', async () => {
+    const label = (n: number) => 'd'.repeat(n);
+    const domain = `${label(60)}.${label(60)}.${label(60)}.${label(40)}.example`;
+    const { messageId } = await buildMime({
+      ...base,
+      recordId: 'c'.repeat(25),
+      from: { address: `me@${domain}`, name: 'Me' },
+    });
+    expect(messageId.length).toBeLessThanOrEqual(255);
+    // Still a domain of the sender: its rightmost labels, whole.
+    const right = messageId.slice(messageId.indexOf('@') + 1, -1);
+    expect(domain.endsWith(right)).toBe(true);
+    expect(right.startsWith('.')).toBe(false);
+  });
+
   it('sets From, To, Subject, a Message-ID on the sender domain and the record header', async () => {
     const { raw, messageId } = await buildMime(base);
     const text = raw.toString('utf8');
