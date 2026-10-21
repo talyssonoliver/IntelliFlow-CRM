@@ -362,6 +362,11 @@
     "plan_path": {
       "description": "Ceremony provenance (AUTOMATION-003): repo-relative path to the plan file.",
       "type": "string"
+    },
+    "ceremony_tier": {
+      "description": "Informational (issue #579): the ceremony tier the run followed. NOT trusted by check-attestation-provenance.mjs, which re-derives the tier from Sprint_plan.csv + .specify/memory/task-tiers.yaml. A light run omits plan_reviewer_verdict.",
+      "type": "string",
+      "enum": ["light", "full"]
     }
   },
   "required": [

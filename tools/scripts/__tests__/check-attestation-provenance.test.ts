@@ -209,3 +209,140 @@ describe('check-attestation-provenance', () => {
     expect(res.status).toBe(2);
   });
 });
+
+describe('check-attestation-provenance: light ceremony tier (issue #579)', () => {
+  const CSV_HEADER =
+    'Task ID,Section,Description,Owner,Dependencies,Pre-requisites,Definition of Done,Status,KPIs,Target Sprint,Artifacts To Track,Validation Method,Estimate (O/M/P),Planned Start,Planned Finish,Percent Complete,Dependency Types,Cadence';
+
+  /** Row that the classifier puts on the light tier: Foundation lane, no deps,
+   * cites a pattern, 4h estimate. */
+  function csvRow(taskId: string, opts: { dependencies?: string; description?: string } = {}) {
+    const cells = [
+      taskId,
+      'Settings',
+      opts.description ?? 'Module settings page that follows the playbook pattern',
+      'Frontend Dev (STOA-Foundation)',
+      opts.dependencies ?? '',
+      '',
+      'Matches the existing pattern',
+      'Completed',
+      '',
+      '1',
+      '',
+      '',
+      '120/240/480',
+      '',
+      '',
+      '100',
+      '',
+      '',
+    ];
+    return cells.map((c) => (c.includes(',') ? `"${c}"` : c)).join(',');
+  }
+
+  interface LightOpts {
+    taskId: string;
+    csvRowText?: string | null;
+    planBody?: string;
+    overridesYaml?: string;
+    provenance?: Record<string, unknown>;
+  }
+
+  function runLight(opts: LightOpts): { status: number; stderr: string } {
+    const { taskId } = opts;
+    // The tier audit refuses a --repo-root outside the repository, so the scratch
+    // repo for light-tier cases lives under the repo's artifacts/ dir.
+    const scratchBase = path.join(process.cwd(), 'artifacts', 'tmp');
+    fs.mkdirSync(scratchBase, { recursive: true });
+    const root = fs.mkdtempSync(path.join(scratchBase, 'prov-light-'));
+    tmpDirs.push(root);
+    const base = path.join(root, '.specify', 'sprints', 'sprint-1');
+    fs.mkdirSync(path.join(base, 'attestations', taskId), { recursive: true });
+    fs.mkdirSync(path.join(base, 'planning'), { recursive: true });
+    fs.mkdirSync(path.join(base, 'specifications'), { recursive: true });
+    const csvDir = path.join(root, 'apps', 'project-tracker', 'docs', 'metrics', '_global');
+    fs.mkdirSync(csvDir, { recursive: true });
+    const rowText = opts.csvRowText === undefined ? csvRow(taskId) : opts.csvRowText;
+    fs.writeFileSync(
+      path.join(csvDir, 'Sprint_plan.csv'),
+      [CSV_HEADER, ...(rowText ? [rowText] : [])].join('\n') + '\n'
+    );
+    if (opts.overridesYaml) {
+      fs.mkdirSync(path.join(root, '.specify', 'memory'), { recursive: true });
+      fs.writeFileSync(
+        path.join(root, '.specify', 'memory', 'task-tiers.yaml'),
+        opts.overridesYaml
+      );
+    }
+    fs.writeFileSync(
+      path.join(base, 'planning', `${taskId}-plan.md`),
+      opts.planBody ??
+        `# Plan ${taskId}\n\n## Plan-Reviewer Sign-off\nceremony_tier: light (skipped — no page.tsx created)\n`
+    );
+    fs.writeFileSync(path.join(base, 'specifications', `${taskId}-spec.md`), `# Spec ${taskId}\n`);
+    const att = {
+      schema_version: '1.0.0',
+      task_id: taskId,
+      attestor: 'Claude Code',
+      attestation_timestamp: '2026-06-30T14:00:00Z',
+      verdict: 'COMPLETE',
+      ceremony_tier: 'light',
+      spec_session_consensus: 'SINGLE-PERSONA — Frontend-Lead, template-following',
+      spec_path: `.specify/sprints/sprint-1/specifications/${taskId}-spec.md`,
+      plan_path: `.specify/sprints/sprint-1/planning/${taskId}-plan.md`,
+      ...(opts.provenance ?? {}),
+    };
+    fs.writeFileSync(
+      path.join(base, 'attestations', taskId, 'attestation.json'),
+      JSON.stringify(att, null, 2)
+    );
+    const res = spawnSync('node', [GATE, taskId, '1'], { encoding: 'utf8', cwd: root });
+    return { status: res.status ?? -1, stderr: res.stderr };
+  }
+
+  it('light-tier PG- task with no reviewer verdict/marker and no page.tsx → exit 0', () => {
+    expect(runLight({ taskId: 'PG-950' }).status).toBe(0);
+  });
+
+  it('same attestation but the CSV classifies the task as full (3 dependencies) → BLOCK', () => {
+    const res = runLight({
+      taskId: 'PG-951',
+      csvRowText: csvRow('PG-951', { dependencies: 'PG-1,PG-2,PG-3' }),
+    });
+    expect(res.status).toBe(1);
+    expect(res.stderr).toContain('classify PG-951 as full');
+  });
+
+  it('a manual `full` override beats a light-looking row → BLOCK', () => {
+    expect(
+      runLight({ taskId: 'PG-952', overridesYaml: 'overrides:\n  PG-952: full\n' }).status
+    ).toBe(1);
+  });
+
+  it('task missing from the CSV cannot be derived → fails closed (BLOCK)', () => {
+    expect(runLight({ taskId: 'PG-953', csvRowText: null }).status).toBe(1);
+  });
+
+  it('light task whose plan creates a page.tsx still needs the Plan-Reviewer → BLOCK', () => {
+    const res = runLight({
+      taskId: 'PG-954',
+      planBody:
+        '# Plan\n\nCreate apps/web/src/app/accounts/tiers/page.tsx\n\n## Plan-Reviewer Sign-off\nceremony_tier: light (skipped)\n',
+    });
+    expect(res.status).toBe(1);
+    expect(res.stderr).toContain('page.tsx');
+  });
+
+  it('plan that does not record ceremony_tier: light gets no waiver → BLOCK', () => {
+    expect(
+      runLight({ taskId: 'PG-955', planBody: '# Plan\n\n## Plan-Reviewer Sign-off\nself-review\n' })
+        .status
+    ).toBe(1);
+  });
+
+  it('a REJECTED verdict is never waived, even on a light task → BLOCK', () => {
+    expect(
+      runLight({ taskId: 'PG-956', provenance: { plan_reviewer_verdict: 'REJECTED' } }).status
+    ).toBe(1);
+  });
+});
