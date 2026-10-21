@@ -12,7 +12,7 @@
  * text and tokens are never carried.
  */
 import { createHash, randomBytes } from 'node:crypto';
-import type { OAuthMailboxProvider } from '@intelliflow/domain';
+import type { MailboxErrorCode, OAuthMailboxProvider } from '@intelliflow/domain';
 import { MailboxTransportError } from './mailbox-errors';
 
 export const GMAIL_MAILBOX_SCOPES = [
@@ -124,6 +124,16 @@ async function json<T>(response: Response): Promise<T> {
   }
 }
 
+/**
+ * A failed token request's code. Throttling and provider outages are temporary
+ * (the mailbox stays usable); only real credential errors mark it broken.
+ */
+function tokenErrorCode(status: number, error: string | undefined): MailboxErrorCode {
+  if (status === 429) return 'RATE_LIMITED';
+  if (status >= 500) return 'CONNECT_FAILED';
+  return error === 'invalid_grant' ? 'TOKEN_REVOKED' : 'AUTH_FAILED';
+}
+
 export class OAuthMailboxClient {
   constructor(
     private readonly provider: OAuthMailboxProvider,
@@ -169,11 +179,7 @@ export class OAuthMailboxClient {
       }).toString(),
     });
     const data = await json<TokenResponse>(response).catch(() => ({}) as TokenResponse);
-    if (!response.ok) {
-      throw new MailboxTransportError(
-        data.error === 'invalid_grant' ? 'TOKEN_REVOKED' : 'AUTH_FAILED'
-      );
-    }
+    if (!response.ok) throw new MailboxTransportError(tokenErrorCode(response.status, data.error));
     if (!data.access_token) throw new MailboxTransportError('AUTH_FAILED');
     return data;
   }

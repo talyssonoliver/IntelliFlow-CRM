@@ -157,6 +157,17 @@ describe('refresh', () => {
     });
   });
 
+  it('keeps a throttled or failing token endpoint apart from bad credentials', async () => {
+    fetchMock.mockReturnValueOnce(respond(429, { error: 'rate_limited' }));
+    await expect(
+      new OAuthMailboxClient('GMAIL', config).refresh('rt1', new Date())
+    ).rejects.toMatchObject({ code: 'RATE_LIMITED' });
+    fetchMock.mockReturnValueOnce(respond(503, { error: 'temporarily_unavailable' }));
+    await expect(
+      new OAuthMailboxClient('GMAIL', config).refresh('rt1', new Date())
+    ).rejects.toMatchObject({ code: 'CONNECT_FAILED' });
+  });
+
   it('maps a network failure to CONNECT_FAILED', async () => {
     fetchMock.mockRejectedValueOnce(new Error('socket hang up'));
     await expect(

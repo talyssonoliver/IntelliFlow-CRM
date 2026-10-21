@@ -235,6 +235,11 @@ describe('MyMailboxCard', () => {
     }
   });
 
+  it('offers SMTP setup again after an SMTP mailbox was disconnected', () => {
+    renderCard({ mailbox: mailbox({ kind: 'SMTP', status: 'DISCONNECTED' }) });
+    expect(screen.getByRole('button', { name: 'Set Up SMTP' })).toBeInTheDocument();
+  });
+
   it('returns focus to "Set Up SMTP" when the form is cancelled', async () => {
     renderCard();
     fireEvent.click(screen.getByRole('button', { name: 'Set Up SMTP' }));

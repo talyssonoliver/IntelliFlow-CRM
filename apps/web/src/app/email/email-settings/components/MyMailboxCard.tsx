@@ -174,7 +174,8 @@ export function MailboxConnection({
         <div className="flex flex-wrap items-start gap-2">
           {providerButton('GMAIL')}
           {providerButton('MICROSOFT')}
-          {!editing && mailbox?.kind !== 'SMTP' && (
+          {/* A broken SMTP mailbox is edited below; a disconnected one is set up again here. */}
+          {!editing && (!connected || mailbox?.kind !== 'SMTP') && (
             <Button
               id={setupId}
               type="button"
