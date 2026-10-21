@@ -148,8 +148,9 @@ export async function getOAuthAccessToken(
     refreshed = await client.refresh(mailbox.refreshToken, now);
   } catch (error) {
     if (error instanceof MailboxTransportError && error.code === 'TOKEN_REVOKED') {
+      // Only these credentials: a reconnect meanwhile moved tokenVersion on.
       await prisma.emailMailbox.updateMany({
-        where: { id: mailbox.id, tenantId: mailbox.tenantId },
+        where: { id: mailbox.id, tenantId: mailbox.tenantId, tokenVersion: mailbox.tokenVersion },
         data: { status: 'ERROR', lastErrorCode: 'TOKEN_REVOKED' },
       });
     }

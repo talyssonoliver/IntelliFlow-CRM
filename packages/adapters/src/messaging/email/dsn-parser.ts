@@ -29,8 +29,11 @@ export interface ParsedDsn {
 }
 
 const MAX_PARTS = 20;
-/** Real reports name a handful of recipients; the cap bounds what one forged report can store. */
-const MAX_RECIPIENTS = 50;
+/**
+ * Every recipient a send can have (a report about a full send must not lose
+ * any), and no more: the cap bounds what one forged report can store.
+ */
+const MAX_RECIPIENTS = EMAIL_LIMITS.maxRecipients;
 const ADDRESS = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,255}$/;
 
 /** Replaces every whitespace-separated token containing "@" (linear, no backtracking). */

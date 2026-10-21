@@ -108,12 +108,15 @@ describe('parseDsn', () => {
     );
   });
 
-  it('keeps at most 50 recipients from one report', () => {
-    const recipients = Array.from({ length: 80 }, (_, i) => ({
-      address: `r${i}@example.invalid`,
-      action: 'failed',
-      status: '5.1.1',
-    }));
-    expect(parseDsn(makeDsn({ recipients }))?.recipients).toHaveLength(50);
+  it('keeps every recipient a send can have, and no more than that', () => {
+    const recipients = (n: number) =>
+      Array.from({ length: n }, (_, i) => ({
+        address: `r${i}@example.invalid`,
+        action: 'failed',
+        status: '5.1.1',
+      }));
+    // A send may have up to EMAIL_LIMITS.maxRecipients (100) recipients.
+    expect(parseDsn(makeDsn({ recipients: recipients(80) }))?.recipients).toHaveLength(80);
+    expect(parseDsn(makeDsn({ recipients: recipients(120) }))?.recipients).toHaveLength(100);
   });
 });

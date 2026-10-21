@@ -209,8 +209,9 @@ describe('getOAuthAccessToken', () => {
     ).rejects.toMatchObject({
       code: 'TOKEN_REVOKED',
     });
+    // Only the credentials that failed: a reconnect meanwhile moved the version on.
     expect(prisma.emailMailbox.updateMany).toHaveBeenCalledWith({
-      where: { id: 'mb2', tenantId: 't1' },
+      where: { id: 'mb2', tenantId: 't1', tokenVersion: 0 },
       data: { status: 'ERROR', lastErrorCode: 'TOKEN_REVOKED' },
     });
   });

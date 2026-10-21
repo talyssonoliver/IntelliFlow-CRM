@@ -79,6 +79,17 @@ beforeEach(() => {
 });
 
 describe('dispatchUserMail', () => {
+  it('reads settings, mailboxes and suppressions with one query each (NF-001)', async () => {
+    await dispatchUserMail(
+      createTestContext() as never,
+      { ...input, cc: ['c@example.invalid'], bcc: ['d@example.invalid'] },
+      deps()
+    );
+    expect(prismaMock.tenantEmailSettings.findUnique).toHaveBeenCalledTimes(1);
+    expect(prismaMock.emailMailbox.findMany).toHaveBeenCalledTimes(1);
+    expect(prismaMock.emailSuppression.findMany).toHaveBeenCalledTimes(1);
+  });
+
   it('sends through the sender’s own mailbox and records SENT with the message ids', async () => {
     const ctx = createTestContext();
     await expect(dispatchUserMail(ctx as never, input, deps())).resolves.toEqual({
