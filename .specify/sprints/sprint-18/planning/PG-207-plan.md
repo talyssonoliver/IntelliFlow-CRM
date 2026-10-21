@@ -979,7 +979,7 @@ documentation, not a fake link.
 - `.specify/sprints/sprint-18/execution/PG-207/run-<ISO>Z/PG-207-delivery.md`
 - [x] `/exec-gates`, `/compliance-check`, `/exec-attestation`;
       `npx tsx apps/project-tracker/scripts/generate-context.ts`.
-- [ ] SendMessage runner `projects-8c`: status, last SHA, attestation path, four
+- [x] SendMessage runner `projects-8c`: status, last SHA, attestation path, four
       migrations, NEEDS_HUMAN list.
 
 ## Validation Matrix
