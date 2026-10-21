@@ -53,6 +53,8 @@ interface Fake {
   suppressions: any[];
   recordUpdates: any[];
   mailboxUpdates: any[];
+  /** Simulates another writer changing the record. */
+  setStored(next: any): void;
 }
 
 function fakeDb(
@@ -62,6 +64,7 @@ function fakeDb(
   const suppressions: any[] = [];
   const recordUpdates: any[] = [];
   const mailboxUpdates: any[] = [];
+  let stored: any = opts.record === undefined ? record() : opts.record;
   // One mailbox, claimable (like the SQL) when not leased and due at `now`.
   let leased = false;
   let nextScanAt: Date | null = null;
@@ -84,9 +87,10 @@ function fakeDb(
     },
     tenantEmailSettings: { findUnique: vi.fn(async () => opts.settings ?? null) },
     emailRecord: {
-      findFirst: vi.fn(async () => (opts.record === undefined ? record() : opts.record)),
+      findFirst: vi.fn(async () => (stored ? { ...stored } : null)),
       update: vi.fn(async (args: any) => {
         recordUpdates.push(args);
+        if (stored) stored = { ...stored, ...args.data };
         return {};
       }),
     },
@@ -118,16 +122,21 @@ function fakeDb(
   // Like Postgres: a throwing transaction leaves nothing behind.
   db.$transaction = vi.fn(async (fn: any) => {
     const marks = [receipts.length, suppressions.length, recordUpdates.length];
+    const storedBefore = stored;
     try {
       return await fn(db);
     } catch (error) {
       receipts.length = marks[0]!;
       suppressions.length = marks[1]!;
       recordUpdates.length = marks[2]!;
+      stored = storedBefore;
       throw error;
     }
   });
-  return { db, receipts, suppressions, recordUpdates, mailboxUpdates };
+  const setStored = (next: any) => {
+    stored = next;
+  };
+  return { db, receipts, suppressions, recordUpdates, mailboxUpdates, setStored };
 }
 
 function deps(
@@ -160,6 +169,42 @@ beforeEach(() => {
 });
 
 describe('runBounceScan', () => {
+  it('a worker that lost its lease writes no receipt, suppression or record change, and leaves the mailbox alone', async () => {
+    const fake = fakeDb({ settings: { notifySenderOnBounce: true } });
+    // Each receipt transaction first re-asserts the lease (an UPDATE that locks the row).
+    fake.db.emailMailbox.updateMany.mockResolvedValue({ count: 0 });
+    const { d, notify } = deps(fake, [{ key: '7:11', raw: makeDsn() }]);
+    const report = await runBounceScan(d);
+    expect(fake.db.emailMailbox.updateMany).toHaveBeenCalledWith({
+      where: { id: 'mb1', lockedUntil: LEASE_UNTIL },
+      data: { lockedUntil: LEASE_UNTIL },
+    });
+    expect(fake.receipts).toHaveLength(0);
+    expect(fake.suppressions).toHaveLength(0);
+    expect(fake.recordUpdates).toHaveLength(0);
+    expect(notify).not.toHaveBeenCalled();
+    expect(fake.mailboxUpdates).toHaveLength(0);
+    expect(report.failures).toBe(0);
+  });
+
+  it('merges a bounce into the record as stored now, not as it was when the scan matched it', async () => {
+    const fake = fakeDb();
+    const create = fake.db.emailBounceReceipt.create.getMockImplementation();
+    fake.db.emailBounceReceipt.create.mockImplementationOnce(async (args: any) => {
+      // Another writer marked a different recipient bounced after the match.
+      fake.setStored(
+        record({ metadata: { isHtml: true, bouncedRecipients: ['ok@example.invalid'] } })
+      );
+      return create(args);
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: makeDsn() }]);
+    await runBounceScan(d);
+    expect(fake.recordUpdates.at(-1).data.metadata.bouncedRecipients).toEqual([
+      'ok@example.invalid',
+      'gone@example.invalid',
+    ]);
+  });
+
   it('a scan whose lease was taken over by another worker writes nothing back', async () => {
     const fake = fakeDb();
     fake.db.emailMailbox.update.mockImplementationOnce(async () => {

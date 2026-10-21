@@ -205,6 +205,8 @@ async function listReports(
 }
 
 interface ScanState {
+  /** The lease this scan holds; every receipt transaction re-asserts it. */
+  claim: MailboxClaim;
   settings: EmailSettingsValues;
   suppressions: number;
   receipts: number;
@@ -245,13 +247,24 @@ interface MatchedBounce {
   now: Date;
 }
 
-/**
- * Inside the receipt transaction: marks the recipient bounced on the record
- * (BOUNCED once every recipient hard-bounced) and suppresses per the tenant's
- * rules. Returns the record's new metadata and whether a suppression was written.
- */
 /** Thrown (rolling the receipt back) when a scan has used its suppression budget. */
 class SuppressionCapReached extends Error {}
+
+/** Thrown (rolling the receipt back) when this scan's lease was taken over. */
+class LeaseLost extends Error {}
+
+/**
+ * Re-asserts the lease inside a receipt transaction. The UPDATE locks the
+ * mailbox row until the transaction ends, so a worker that took the mailbox
+ * over waits for it, and a worker whose lease expired writes nothing.
+ */
+async function assertLeaseHeld(tx: any, claim: MailboxClaim): Promise<void> {
+  const { count } = await tx.emailMailbox.updateMany({
+    where: { id: claim.id, lockedUntil: claim.leaseUntil },
+    data: { lockedUntil: claim.leaseUntil },
+  });
+  if (count === 0) throw new LeaseLost();
+}
 
 function listOf(value: unknown): string[] {
   return Array.isArray(value) ? (value as string[]) : [];
@@ -261,11 +274,19 @@ function addRecipient(list: unknown, recipient: string): string[] {
   return [...new Set([...listOf(list), recipient])];
 }
 
+/**
+ * Inside the receipt transaction: marks the recipient bounced on the record
+ * (BOUNCED once every recipient hard-bounced) and suppresses per the tenant's
+ * rules. Returns the record's new metadata and whether a suppression was written.
+ */
 async function applyMatchedBounce(
   tx: any,
   b: MatchedBounce
 ): Promise<{ metadata: Record<string, unknown>; suppressed: boolean }> {
-  const metadata = b.record.metadata ?? {};
+  // As stored now (under the mailbox lock), not as read when the report was matched.
+  const current: { metadata: Record<string, unknown> | null } | null =
+    await tx.emailRecord.findFirst({ where: { id: b.record.id }, select: { metadata: true } });
+  const metadata = current?.metadata ?? b.record.metadata ?? {};
   // Every bounced recipient (shown as "Partly bounced"); BOUNCED needs every
   // recipient to have HARD-bounced, so hard bounces are tracked on their own.
   const bounced = addRecipient(metadata.bouncedRecipients, b.recipient);
@@ -345,6 +366,7 @@ async function recordReceiptOnce(
   if (!matched) r.state.unmatched += 1;
   try {
     return await deps.prisma.$transaction(async (tx: any) => {
+      await assertLeaseHeld(tx, r.state.claim);
       await tx.emailBounceReceipt.create({
         data: {
           tenantId: mailbox.tenantId,
@@ -386,7 +408,7 @@ async function recordReceiptOnce(
     });
   } catch (error) {
     // Already processed (unique receipt): idempotent no-op.
-    if ((error as { code?: string })?.code === 'P2002') return null;
+    if (prismaErrorCode(error) === 'P2002') return null;
     throw error;
   }
 }
@@ -504,7 +526,7 @@ async function scanMailbox(
       await deps.prisma.tenantEmailSettings.findUnique({ where: { tenantId: mailbox.tenantId } })
     );
     const { messages, cursor } = await listReports(deps, mailbox, now);
-    const state: ScanState = { settings, suppressions: 0, receipts: 0, unmatched: 0 };
+    const state: ScanState = { claim, settings, suppressions: 0, receipts: 0, unmatched: 0 };
     const run = await processReports(deps, mailbox, messages, state, now);
     const nextCursor = run.stopped ? cursorThrough(mailbox, run.lastDone, now) : cursor;
     report.receipts += state.receipts;
@@ -516,6 +538,8 @@ async function scanMailbox(
       ...nextCursor,
     });
   } catch (error) {
+    // Another worker owns the mailbox now: its state stands, nothing is written.
+    if (error instanceof LeaseLost) return;
     report.failures += 1;
     const code: MailboxErrorCode =
       error instanceof MailboxTransportError ? error.code : 'CONNECT_FAILED';
