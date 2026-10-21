@@ -211,6 +211,7 @@ These are from the final matrix, 2026-10-19 14:18–14:33Z, run one at a time wi
 - Pre-ship at 125f9eccf failed the coverage step on one web test outside PG-199 (calendar availability: focus assertion raced the focus effect under full-run load; 5/5 isolated runs passed). The test now waits for the focus.
 - Pre-ship at a421465c7 failed codex-review with one real finding: fallback validation compared against the caller defaults, so an unpinned row with a stored tier override (qualification premium runs gpt-4o) had valid fallbacks rejected and its real primary accepted as a fallback. The schema now checks a pin only, the router checks the unpinned case against the stored tier, and get returns the tier default. RED/GREEN `logs/50-codex-tier-*.txt`; domain 3155, validators 2817, api 7972, web 159.
 - Pre-ship at a7e8930b2 failed codex-review with one real finding: the 1000-record history cap made the daily report and health statistics drop evicted calls. The daily statistics now come from running totals; a ranged query past the retained history is flagged truncated. RED/GREEN `logs/52-codex-stats-*.txt`; ai-worker 2400 passed.
+- After the runner merged main (f2f7a8bb9), SonarCloud failed new_reliability_rating on typescript:S7727 (purposes.map(purposeSpendKey) in PrismaPurposeSpendRepository). That one and the 12 other bare array-callback references this PR adds are now arrows. Typecheck passes; adapters 2993, domain 40, usage-metering 24, router 39, web model-config 74; lint clean.
 
 ## Follow-up issues
 
