@@ -114,7 +114,8 @@ Two existing tests back the boot side:
 | integration `tests/integration/email-settings.test.ts` (local DB, at `6f7a81f4e`; nothing it covers changed after) | 36 passed | `integration-final.txt` |
 | tools (route totals, content audit, docs integrity) | 78 passed | `tools-final.txt` |
 | Secret scan (`.gitleaks/scan.sh staged`) | clean before every commit | — |
-| `pnpm audit --prod` / OSV for nodemailer, imapflow, sanitize-html | no advisories in the new deps | `osv-new-deps.txt` |
+| `pnpm audit --prod` / OSV for nodemailer, imapflow, sanitize-html | no advisories in the new deps at the time | `osv-new-deps.txt` |
+| `pnpm audit --prod` after merging #975 (2026-10-22) | no high or critical; 2 moderate left, both outside PG-207 (sprintf-js via ai-worker > mammoth, hono via @prisma/dev); `--audit-level=high` exits 0 | `audit-prod-final.txt` |
 | Icon subset verify | OK, 370 icons | `material-symbols-verify.txt` |
 | Tracked `*.log`/`*.coverage`/`*.tsbuildinfo` | 0 | — |
 
@@ -157,7 +158,9 @@ The reports are in `artifacts/lighthouse/PG-207/`.
   - No round has run on `bd7b4b1c1`. The runner's pre-ship review at push runs the final one.
 - **Security STOA**, re-run 4 times:
   - The open findings (#961, #962, N-1, N-2, N-3) were each fixed.
-  - The verdict file holds the latest result. The agent's no-waiver rule counts the `pnpm audit` highs that already exist on main (follow-redirects, vite, markdown-it); none comes from a PG-207 dependency.
+  - The verdict file holds the last Security STOA result. Its only FAIL was the `pnpm audit` highs then on main (follow-redirects, vite, markdown-it); none came from a PG-207 dependency.
+  - After merging #975, those highs are cleared.
+  - The same audit then showed a new moderate advisory in `sanitize-html` 2.18.0 (GHSA-c9rx-x947-fp3h, unbounded recursion). The pin was bumped to the patched 2.18.1, published 2026-10-14 by the same maintainer; OSV shows no advisories for it.
 
 ## Gates
 

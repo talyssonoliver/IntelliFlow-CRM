@@ -4,7 +4,7 @@
   "task_id": "PG-207",
   "run_id": "20261021-090734-fb30029c",
   "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-207 exec lane (session 990e1fa9), branch feat/pg-207-email-settings",
-  "attestation_timestamp": "2026-10-21T21:18:33Z",
+  "attestation_timestamp": "2026-10-21T23:20:00Z",
   "verdict": "NEEDS_HUMAN",
   "context_acknowledgment": {
     "files_read": [
@@ -63,7 +63,7 @@
     "acknowledged_at": "2026-10-21T00:02:07.496Z"
   },
   "evidence_summary": {
-    "artifacts_verified": 293,
+    "artifacts_verified": 297,
     "validations_passed": 4,
     "validations_failed": 0,
     "gates_passed": 9,
@@ -75,7 +75,7 @@
   "artifact_hashes": {
     ".env.example": "681aa56c01e0476665794fba57e1a849c2ead92db76c8bce1d6d073ff4869cd8",
     ".gitleaks.toml": "241a019f841a2cd87b65e6d4b9730535550b586c967449fbfca6603cd7d9aa9e",
-    ".specify/sprints/sprint-18/attestations/PG-207/attestation.json": "6a8bbeb2dbe5cbeacf7cfec513cacb9248714e4e361c90cf6554cac2e5b599de",
+    ".specify/sprints/sprint-18/attestations/PG-207/attestation.json": "ed1c9aa9ab5258250134611cf153bde3ad461e57892abca2b1e5f9620713ec63",
     ".specify/sprints/sprint-18/attestations/PG-207/context_ack.json": "03d0fc6c26fa78ec0860d55d7fcc42ed6a0696ed15bc84c98b1a02456d7bbf1b",
     ".specify/sprints/sprint-18/attestations/PG-207/context_pack.manifest.json": "b0f5bce952035fad84c4009cc134c2f7a8a67e271d199d2e255e43e86b93de7a",
     ".specify/sprints/sprint-18/attestations/PG-207/context_pack.md": "05a4ce42c5620f5765d8cfdb05b596b795814bc68615503f5bc21fdfb1fae27c",
@@ -88,7 +88,7 @@
     ".specify/sprints/sprint-18/context/PG-207/PG-207-spec-exploration.md": "564757079df8e92ff1cd5ff9548869c5fde27ad30e7d07ae9f5f99274f4fc010",
     ".specify/sprints/sprint-18/context/PG-207/hydrated-context.json": "6aa0e10319b3b8a5eabaf1bec88e6165b9d78f4861cca593f2e57cc8a8ef345f",
     ".specify/sprints/sprint-18/context/PG-207/hydrated-context.md": "ed0c052458740bd700ddea388054bb74dfe3e4687c11cc11bbb5e881a044b487",
-    ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/PG-207-delivery.md": "5d04bb8a43592fd8092c8d3686cd378af896b3bd15750b983bf617ca41ca8986",
+    ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/PG-207-delivery.md": "3d6d94d8aca659e9ef2642a1c2d00ff6f6b7647e8321f40b4627bcfe8e520870",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/adapters-changed-cov.txt": "23f3c9af1daee51835a70592d625f4cb32a93b842dca9921dfb5f9185c86e407",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/api-changed-cov.txt": "3d73785387d465fd1ef965066335c75e9eaf2d742222e42adf46c724c202bee0",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/build-final.txt": "bd91aaf04f2d01aeefb2a5dc097d64cd7832e46132810fc4ba7dabef7ed2ab71",
@@ -104,6 +104,8 @@
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/dir-green.txt": "56b772892cbdac6a3e2f0202bbc5b2f5699f5a8f9ef7d2d2632d3985dc09a245",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/docs-integrity.txt": "1d3c5084e1e7cfd4f0d66aeb4ea580fcab44f0135e163ccea94f65181dd31fe6",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/domain-changed-cov.txt": "326f3f3790f3fd638bd821e8b9d25948d4a5cd5801965387db15a272a0af1365",
+    ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/exchange-adapters.txt": "8dc13e930f86ca4a00daf20647670c906f663e5df330948b3056a0599445b144",
+    ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/exchange-api.txt": "63c742ea07209a1d03cd6db11fd29b8b2c44a86715f7718ec97b29d4601d3409",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/full-adapters.txt": "936bb7a793941abe98c923309ca7ecb5b4a83122d2f1dfa116ae754a1306265e",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/full-api.txt": "1d4f2f80c6073d3414dcb53f7d126a8cef71e60e6a9d2b2fa4e63dbe6124bc39",
     ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/full-application.txt": "64a20313171a23e40ed6045a7fbb8348b4edb8a52ca55dd3125f5f595c4006d4",
@@ -162,7 +164,7 @@
     ".specify/sprints/sprint-18/planning/PG-207-plan.md": "738b185dfacf8702bfee4ce06859fd407fa150f7e94caabfb55822aabe78b6f1",
     ".specify/sprints/sprint-18/specifications/PG-207-discussion.md": "32d424a6f4c3bb15040dc244ecd15307ae4e0580296afb4cf676b3f2df02338c",
     ".specify/sprints/sprint-18/specifications/PG-207-spec.md": "02d02a0bfb55fc4c626844096715efcb685db025daa17c8196ab6a50b69fed6d",
-    "apps/api/package.json": "1cf3701eaa272a1e53f0c19c5fed7026129d846f46ffc223a9ffd3fdb1592856",
+    "apps/api/package.json": "7e861a5f89a62e4072aac8791f4e064d763a82a700b280db9266c8856e082b43",
     "apps/api/src/__tests__/app-router.smoke.test.ts": "774de0da01ea89784f5fcdbec133ea7c41fc12696e6ac33a5db66ac1f0cf1476",
     "apps/api/src/__tests__/container.ai-provider-baseurl.lazy.test.ts": "481eae860ca3e35f2ee6e3aaf369ea04ae8f7a93dfe40fee2de8acde791b6b12",
     "apps/api/src/__tests__/container.test.ts": "ea07ffb055400b77b43c613c2f6945d856b41b3edd7afa3ec9e6a47b07684169",
@@ -300,9 +302,10 @@
     "docs/operations/runbooks/user-mailboxes.md": "f6c9d75d04728f7c5f19c224ff51a9e0ae20a16042a1fc1223bae7f8711958ee",
     "docs/planning/prd-module-settings.md": "7bf37f7ab6faf8361adda8e55a263f356354dbce8bf584c538f8fe344063618e",
     "lighthouserc.js": "f7a22010dc5ae169c4b2d0910ba227dbe1ed0526a6d26df077725835e6f61b88",
-    "package.json": "e3abdc04379357de0ae525c4a4f3c9932971240305a3ea2bcb700e2c3f8264b6",
+    "package.json": "849c0321aa1219cb6eeab0259784e5ac1c8bdf6c9def5226b949b93a5747eea4",
     "packages/adapters/package.json": "6c4ca8bdaa3507fdf06d9607f1d2ad61182efb05338c1c6372eba3acac595789",
     "packages/adapters/src/index.ts": "d18e922b21aa3fde7eb1e98b5ac997dee46e578c448c1a4671c018a6c70dcadb",
+    "packages/adapters/src/messaging/email/__tests__/bounce-senders.test.ts": "5747df4a832b49dc2459961099f62ec2e14818eee3280ae3a18060e49620659a",
     "packages/adapters/src/messaging/email/__tests__/dsn-fixtures.ts": "860c3302f51b969f98f84d0e4b9c71b0f278cd7d3a38bfa33263e7f98018ac43",
     "packages/adapters/src/messaging/email/__tests__/dsn-parser.test.ts": "62b8e89009f0cb18b657b83937eb7585193c5e9f4ee9dc754fc2470b7948c8ef",
     "packages/adapters/src/messaging/email/__tests__/imap-dsn-reader.test.ts": "921b9b8aec925ca6fbd778d1f27b5a518b3856bfa41fa7086f83eef8d51d946b",
@@ -310,6 +313,7 @@
     "packages/adapters/src/messaging/email/__tests__/oauth-mailbox.test.ts": "0a4dcf8f830e730fea761f09293bf022f12b47e991d7a96c13778a55d73fdca1",
     "packages/adapters/src/messaging/email/__tests__/public-host.test.ts": "e3085a8ce8a882485c8dfbe68dee50d2263f73581d87529bf758359e12b31029",
     "packages/adapters/src/messaging/email/__tests__/smtp-provider.test.ts": "6897eb3101aa0c843579358aca348a05c3f0cee9ba811b79dcf9af33b1087bfe",
+    "packages/adapters/src/messaging/email/bounce-senders.ts": "ce9ab3afd08604e86e51af75e9153a248384d6c840ed4fcb1cb0d21a5ab8ad38",
     "packages/adapters/src/messaging/email/dsn-parser.ts": "967c95c8773542bb896dfd0125aa42da107db0e4be5c2440b77d40ffa2ea53ea",
     "packages/adapters/src/messaging/email/imap-dsn-reader.ts": "185969dd43c3f7ccb676bf09eb63983b72cdd158f894cf01e6d67ef7a9d1ff71",
     "packages/adapters/src/messaging/email/inbound.ts": "d2af1e1709e54de4ce394d6246ecb523f5c90b07721031177b95aa0875515264",
@@ -364,7 +368,7 @@
     "packages/validators/src/email-signatures.ts": "e313600904ada975ef202d0bfef8a4aa067638ea8b91c2ae3ce57e00d231cf74",
     "packages/validators/src/index.ts": "2ac5d300d5e7a27c4b454be2bbce4160abe368715fa95e53e85fad00da18c33d",
     "packages/validators/src/notifications.ts": "16ba55b0056bcb3fdc2dcf6c9c61d6f0aa630a6905d41d0e4941fc6c7cd112e0",
-    "pnpm-lock.yaml": "f15b0387b0be4460e8288a2f1197906b381e3bd295114f73b6d2dda509622085",
+    "pnpm-lock.yaml": "11d75e1df57c04f50a88c64affa5591c6a8727ee772c5c927b5c439d490bd442",
     "tests/integration/email-settings.test.ts": "2a75484ec79afbe46258322dfedf8594da044cbf438e4f5faef9d9580bdf6cec"
   },
   "validation_results": [
@@ -580,7 +584,7 @@
   "environment": {
     "os": "Windows 11 Pro 10.0.26200",
     "node_version": "v22.14.0 (nvm) for every test/build/typecheck/lint run; host default v25.2.1 not used",
-    "git_commit": "19c80a1ec9141788b4ffb12d3b98a67923d7070e",
+    "git_commit": "3c0cf2216a4d5175c8674d4480cbb3d57e7c4a58",
     "branch": "feat/pg-207-email-settings"
   },
   "notes": "PRISMA MIGRATIONS (LOUD, Class A, manual production apply with prisma migrate deploy BEFORE the API ships): 20261020120000_email_mailboxes, 20261020120100_email_settings_signatures, 20261020120200_email_suppression_receipts, 20261020120300_email_record_message_ids, 20261020120310_email_records_provider_check_validate, 20261020120320_email_records_mailbox_fk_validate, 20261020120400_email_records_message_id_idx, 20261020120500_email_records_mailbox_id_idx (CONCURRENTLY: confirm pg_index.indisvalid after deploy).\nVERDICT NEEDS_HUMAN because: (1) Gate 4b: the branch is not pushed (the lane note leaves push and PR to the runner); (2) the codex semantic review has not run on the final SHA (round 19 findings fixed after it; the runner's pre-ship codex at push is the final round); (3) Google/Microsoft OAuth app registration and the gmail.readonly restricted-scope assessment; (4) live D5 header-survival spike on real Gmail/Microsoft DSNs (matcher is fail-safe: needs both record id and Message-ID); (5) PRISMA_FIELD_ENCRYPTION_KEY in production and the private email-attachments bucket; (6) Lighthouse with a session (LHCI_TEST_EMAIL/LHCI_TEST_PASSWORD). The unauthenticated run met >= 90 on both pages.\nBounce trust (#961, owner ruling Q12, hardened after codex r16/r17 and Security STOA re-runs): vouched receiver + authenticated + entitled reporter; custom IMAP mailboxes fail closed (EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS empty, runner ruling). #962 fixed (closes). Security STOA verdict file: see matop/stoa-verdicts/Security.json (the agent's no-waiver rule counts pre-existing pnpm audit highs on origin/main).\nOpen issues: #955 #956 #957 #958 #961 (fixed; follow-up #965) #963 #964 #965 #970 #971 (#877 preflight blind spot). Delivery report and findings list every review round and every place RED was not observed first."
