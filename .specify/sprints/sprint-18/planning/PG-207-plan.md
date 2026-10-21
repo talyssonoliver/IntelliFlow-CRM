@@ -164,11 +164,11 @@ build, audits, Lighthouse, reviews, attestation).
 
 - [ ] Build one MIME with `X-IntelliFlow-Record` + our `Message-ID` via
       `MailComposer` (local, no network) and record the exact header bytes.
-- [ ] If live Gmail/Microsoft test credentials exist in `.env.local`
+- [x] If live Gmail/Microsoft test credentials exist in `.env.local`
       (`GMAIL_*`/`OUTLOOK_*` + a test refresh token), send one message to an
       `*.example.invalid` recipient and read the returned DSN; record survival
       per kind.
-- [ ] If no credentials exist: record **NEEDS_HUMAN (live spike)**. Matcher
+- [x] If no credentials exist: record **NEEDS_HUMAN (live spike)**. Matcher
       stays in its fail-safe form (CA-18: both record header **and** original
       Message-ID must match; otherwise UNMATCHED, never suppress), so an
       unproven kind degrades to "bounce reading finds nothing" rather than false
@@ -199,33 +199,33 @@ build, audits, Lighthouse, reviews, attestation).
 
 Test cases (each a checkbox in the test file, written first, run RED and saved):
 
-- [ ] resolve: own ACTIVE → own; no own + tenant ACTIVE + fallback on → tenant;
+- [x] resolve: own ACTIVE → own; no own + tenant ACTIVE + fallback on → tenant;
       no own + fallback off + admin → tenant; no own + fallback off + member →
       `NO_MAILBOX`; own ERROR/DISCONNECTED → `MAILBOX_ERROR` (never tenant); no
       mailboxes → `NO_MAILBOX`; tenant mailbox ERROR → `NO_MAILBOX` (AC-EM-011,
       D1/D2).
-- [ ] partition: empty lists; duplicates across to/cc/bcc de-duplicated;
+- [x] partition: empty lists; duplicates across to/cc/bcc de-duplicated;
       case-insensitive match; order preserved; all suppressed → all skipped
       (AC-EM-015).
-- [ ] classify: `failed`+`5.x.x` → HARD; `failed`+`4.x.x` → SOFT; `delayed` →
+- [x] classify: `failed`+`5.x.x` → HARD; `failed`+`4.x.x` → SOFT; `delayed` →
       DELAYED; `delivered`/`relayed`/ `expanded`/garbage → null.
-- [ ] evaluateBounce: HARD + SUPPRESS → suppress HARD_BOUNCE; HARD + NONE → no
+- [x] evaluateBounce: HARD + SUPPRESS → suppress HARD_BOUNCE; HARD + NONE → no
       suppress; SOFT count (incl. current) 2 of threshold 3 → no; 3 of 3 →
       suppress SOFT_BOUNCE_LIMIT; thresholds 1 and 10 boundaries; DELAYED →
       never (AC-EM-027, CA-15).
-- [ ] default signature: user default > org default > null; non-default ignored.
-- [ ] email-address: `normalizeEmail` trims + lower-cases; `hasHeaderInjection`
+- [x] default signature: user default > org default > null; non-default ignored.
+- [x] email-address: `normalizeEmail` trims + lower-cases; `hasHeaderInjection`
       true for `\r`, `\n`, `\0`.
-- [ ] constants: `EMAIL_SETTINGS_ADMIN_ROLES` `toBe(ACCOUNT_OWNER_ADMIN_ROLES)`
+- [x] constants: `EMAIL_SETTINGS_ADMIN_ROLES` `toBe(ACCOUNT_OWNER_ADMIN_ROLES)`
       (CA-14); `SMTP_PORTS` = `[465,587,2525]`; `IMAP_PORT` = 993; defaults
       table equals AC-EM-021; presets (Gmail/Outlook) hosts/ports.
 
 **Validation:**
 
-- [ ] RED log `artifacts/logs/pg-207/02-domain-red.txt` (module-not-found /
+- [x] RED log `artifacts/logs/pg-207/02-domain-red.txt` (module-not-found /
       assertion failures).
-- [ ] `pnpm --dir packages/domain exec vitest run src/email` → green.
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./packages/domain build`.
+- [x] `pnpm --dir packages/domain exec vitest run src/email` → green.
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./packages/domain build`.
 
 #### Step 3: SSRF predicate rewrite (RED → GREEN)
 
@@ -237,13 +237,13 @@ Test cases (each a checkbox in the test file, written first, run RED and saved):
   `isPrivateIpv4`, `isPrivateIpv6` → canonical byte parse + CIDR table +
   mapped/NAT64/6to4 unwrap; signature unchanged)
 
-- [ ] Table-driven cases, one per range and form: 10/8, 127/8, 169.254/16,
+- [x] Table-driven cases, one per range and form: 10/8, 127/8, 169.254/16,
       172.16/12, 192.168/16, 100.64/10, 0/8, 224/4, 240/4, 192.0.0/24,
       192.0.2/24, 198.18/15, 198.51.100/24, 203.0.113/24; `::`, `::1`,
       `0:0:0:0:0:0:0:1`, `fc00::/7`, `fe80::/10`, `ff00::/8`, `2001:db8::/32`;
       `::ffff:127.0.0.1`, `::ffff:7f00:1`, `64:ff9b::7f00:1`, `2002:7f00:1::`;
       public controls (`8.8.8.8`, `2606:4700::1111`).
-- [ ] Existing regression:
+- [x] Existing regression:
       `pnpm --dir packages/domain exec vitest run src/workflow` (incl.
       `custom-node-types.test.ts`).
 
@@ -261,23 +261,23 @@ Test cases (each a checkbox in the test file, written first, run RED and saved):
 - `packages/validators/src/email-signatures.ts` **Files to Modify:**
 - `packages/validators/src/index.ts`
 
-- [ ] Hosts: reject scheme/path/port, every IP literal, numeric forms (`0x7f.1`,
+- [x] Hosts: reject scheme/path/port, every IP literal, numeric forms (`0x7f.1`,
       `2130706433`), non-ASCII (IDN), `localhost`, `*.local`, `*.internal`,
       single-label (CA-4); accept `smtp.gmail.com`.
-- [ ] Ports: SMTP 465/587/2525 only; IMAP 993 only.
-- [ ] Addresses: `z.email()`, CR/LF rejected; `fromName` rejects CR/LF and
+- [x] Ports: SMTP 465/587/2525 only; IMAP 993 only.
+- [x] Addresses: `z.email()`, CR/LF rejected; `fromName` rejects CR/LF and
       `<>"`, ≤ 100.
-- [ ] Password semantics: absent = keep, `null` = clear, string 1..512.
-- [ ] Settings update strict; `softBounceThreshold` 1..10; `hardBounceAction`
+- [x] Password semantics: absent = keep, `null` = clear, string 1..512.
+- [x] Settings update strict; `softBounceThreshold` 1..10; `hardBounceAction`
       enum; unknown keys rejected.
-- [ ] Signatures: name trimmed 1..100; html ≤ 20 000; `superRefine` rejects
+- [x] Signatures: name trimmed 1..100; html ≤ 20 000; `superRefine` rejects
       duplicate names (case-insensitive, trimmed) per scope with path "rows N
       and M" pointing at the second (AC-EM-034).
-- [ ] `sendEmail` input schema (exported for the router): subject ≤ 998 no
+- [x] `sendEmail` input schema (exported for the router): subject ≤ 998 no
       CR/LF; ≤ 100 recipients; html ≤ 2 MB; attachments as
       `{ storagePath, fileName ≤ 255 no CR/LF/quote, contentType, size }`
       (C-SEC6).
-- [ ] `pnpm --dir packages/validators exec vitest run src/__tests__/email-settings.test.ts src/__tests__/email-mailbox.test.ts src/__tests__/email-signatures.test.ts`.
+- [x] `pnpm --dir packages/validators exec vitest run src/__tests__/email-settings.test.ts src/__tests__/email-mailbox.test.ts src/__tests__/email-signatures.test.ts`.
 
 #### Step 5: `email_bounced` notification type
 
@@ -289,8 +289,8 @@ Test cases (each a checkbox in the test file, written first, run RED and saved):
 (The web side of `email_bounced` — `notification-utils.ts`, notifications
 settings page — is in Step 24.)
 
-- [ ] `pnpm --dir packages/validators exec vitest run src/__tests__/notifications.test.ts`.
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./packages/validators build`.
+- [x] `pnpm --dir packages/validators exec vitest run src/__tests__/notifications.test.ts`.
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./packages/validators build`.
 
 ### Phase 3: RED + GREEN — Database (`packages/db`)
 
@@ -319,10 +319,10 @@ settings page — is in Step 24.)
 - `packages/db/prisma/migrations/20261020120200_email_suppression_receipts/migration.sql`
 - `packages/db/prisma/migrations/20261020120300_email_record_message_ids/migration.sql`
 
-- [ ] Re-check newest folder on `origin/main`
+- [x] Re-check newest folder on `origin/main`
       (`git ls-tree --name-only origin/main packages/db/prisma/migrations/`);
       bump timestamps if another lane landed later.
-- [ ] Each table: `tenantId` FK cascade; RLS `ENABLE` + policy block (pattern
+- [x] Each table: `tenantId` FK cascade; RLS `ENABLE` + policy block (pattern
       `20261017120000_contact_types/migration.sql:97-115`); named CHECKs
       (scope/user, ports 465/587/2525 & 993, per-kind required columns when
       ACTIVE, `email = lower(btrim(email))`, threshold 1..10, html ≤ 20000, name
@@ -331,18 +331,18 @@ settings page — is in Step 24.)
       unique `(mailboxId, dsnKey, recipient)` + index
       `(tenantId, recipient, receivedAt)` (CA-21); `email_records` index
       `(tenantId, messageIdHeader)`.
-- [ ] No enum migration: `EmailStatus` already has BOUNCED/FAILED (CA-13).
-- [ ] `pnpm --filter ./packages/db exec prisma validate` and `prisma generate`;
+- [x] No enum migration: `EmailStatus` already has BOUNCED/FAILED (CA-13).
+- [x] `pnpm --filter ./packages/db exec prisma validate` and `prisma generate`;
       generate migration SQL with
       `prisma migrate diff --from-schema-datasource … --to-schema-datamodel …`
       against the **local test DB only**, then hand-add CHECKs/partial
       indexes/RLS.
-- [ ] Apply locally: `pnpm --filter ./packages/db exec prisma migrate deploy`
+- [x] Apply locally: `pnpm --filter ./packages/db exec prisma migrate deploy`
       with `DATABASE_URL` from `.env.test` (guard
       `tools/scripts/guard-db-target.mjs` must report local).
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 --exclusive intelliflow-db -- pnpm --filter ./packages/db test`
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 --exclusive intelliflow-db -- pnpm --filter ./packages/db test`
       → field-encryption test GREEN.
-- [ ] `pnpm --filter ./packages/db build`.
+- [x] `pnpm --filter ./packages/db build`.
 
 #### Step 8: Integration test (RED → GREEN)
 
@@ -352,14 +352,14 @@ settings page — is in Step 24.)
   `tests/integration/contact-types.test.ts:15-110`; applies the four migration
   SQL files itself because CI uses `db push`)
 
-- [ ] CHECKs and partial uniques reject bad rows; RLS on all six new tables
+- [x] CHECKs and partial uniques reject bad rows; RLS on all six new tables
       hides tenant B rows from tenant A (`SET LOCAL ROLE authenticated`, pattern
       `contact-types.test.ts:370-394`); encryption round trip (raw select
       `^v1:`, `findFirst` plaintext) with a runtime `randomBytes(32)` key;
       receipt replay → P2002; concurrent lease claim — two
       `UPDATE … RETURNING id` race, exactly one wins; cross-tenant `userId`
       mismatch rejected by the router path (D15).
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 --exclusive intelliflow-db -- pnpm vitest run tests/integration/email-settings.test.ts`.
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 --exclusive intelliflow-db -- pnpm vitest run tests/integration/email-settings.test.ts`.
 
 ### Phase 4: RED + GREEN — Adapters (`packages/adapters`)
 
@@ -374,7 +374,7 @@ settings page — is in Step 24.)
 - `package.json` (override `"nodemailer": "10.0.15"`)
 - `pnpm-lock.yaml`
 
-- [ ] `pnpm install --frozen-lockfile=false` then
+- [x] `pnpm install --frozen-lockfile=false` then
       `pnpm install --frozen-lockfile` clean; licence check
       (`pnpm licenses list --filter ./packages/adapters`).
 
@@ -387,10 +387,10 @@ settings page — is in Step 24.)
 - `packages/adapters/src/messaging/email/mime.ts`
 - `packages/adapters/src/messaging/email/public-host.ts`
 
-- [ ] MIME: From/To/Cc/Bcc/Reply-To, RFC 2047 non-ASCII subject, `Message-ID`
+- [x] MIME: From/To/Cc/Bcc/Reply-To, RFC 2047 non-ASCII subject, `Message-ID`
       and `X-IntelliFlow-Record` always present, attachments base64-wrapped,
       header injection impossible (CR/LF input throws before build).
-- [ ] `resolvePublicHost(host, port, { lookup })`: one lookup, every address
+- [x] `resolvePublicHost(host, port, { lookup })`: one lookup, every address
       public, returns `{ address, servername }`; rejects mixed answers, private
       answers, disallowed ports; `node:dns` never called in tests (injected
       `lookup`).
@@ -402,17 +402,17 @@ settings page — is in Step 24.)
 - `packages/adapters/src/messaging/email/__tests__/smtp-provider.test.ts`
 - `packages/adapters/src/messaging/email/smtp-provider.ts`
 
-- [ ] Injected `createTransport`: options carry pinned `host` = checked address,
+- [x] Injected `createTransport`: options carry pinned `host` = checked address,
       `tls.servername` = original host; TLS mode keyed on `smtpSecurity` (W6):
       `SSL` → `secure: true`, `STARTTLS` → `secure: false, requireTLS: true`;
       tested for 465/SSL, 587/STARTTLS, 2525/SSL and 2525/STARTTLS; timeouts
       10/10/20 s; never `rejectUnauthorized:false`.
-- [ ] `send(mime)` success → `{ messageId }`; `verify()` for test connection.
-- [ ] Error mapping to
+- [x] `send(mime)` success → `{ messageId }`; `verify()` for test connection.
+- [x] Error mapping to
       `AUTH_FAILED`/`CONNECT_FAILED`/`TLS_FAILED`/`TIMEOUT`/`REJECTED`/`RATE_LIMITED`;
       the mapped error never contains the fixture password, username or server
       text (SEC-03).
-- [ ] One test asserting the default factory wiring passes options to
+- [x] One test asserting the default factory wiring passes options to
       `nodemailer.createTransport` (no ignore).
 
 #### Step 12: DSN parser + IMAP DSN reader
@@ -430,13 +430,13 @@ settings page — is in Step 24.)
 - `packages/adapters/src/messaging/email/inbound.ts` (export
   `parseMimeParts`/`parseHeaders` if not exported)
 
-- [ ] Parser: RFC 3464 multipart/report → per-recipient
+- [x] Parser: RFC 3464 multipart/report → per-recipient
       `{recipient, action, status, diagnostic}` + record header + original
       Message-ID from `message/rfc822` or `text/rfc822-headers`; Gmail-style and
       Exchange-style variants; `delayed`; non-report mail → null; oversize/too
       many parts/too deep → null; never throws; diagnostic ≤ 200 chars, control
       chars stripped, email-shaped substrings redacted (CA-19).
-- [ ] IMAP reader with injected `createImapClient`: connects to pinned address
+- [x] IMAP reader with injected `createImapClient`: connects to pinned address
       on 993 with SNI, `EXAMINE` (read-only), UID > cursor, UIDVALIDITY change
       resets cursor, ≤ 50 messages, ≤ 256 KB each, no flag writes, logout in
       `finally`; auth failure → `AUTH_FAILED` without secrets.
@@ -459,13 +459,13 @@ settings page — is in Step 24.)
   when `/send` fails, `listDsnSince` via `receivedDateTime` filter + `/$value`,
   `/me` address)
 
-- [ ] `fetch` stubbed (pattern `gmail/__tests__/client.test.ts:26`); exact scope
+- [x] `fetch` stubbed (pattern `gmail/__tests__/client.test.ts:26`); exact scope
       strings asserted (ADR-085 lists); fixed hosts only (`accounts.google.com`,
       `oauth2.googleapis.com`, `gmail.googleapis.com`,
       `login.microsoftonline.com`, `graph.microsoft.com`); revoke body not
       query; refresh with empty refresh token → error; Graph rotated refresh
       token returned.
-- [ ] Existing regression:
+- [x] Existing regression:
       `pnpm --dir packages/adapters exec vitest run src/email`.
 
 #### Step 14: Email attachment storage
@@ -494,9 +494,9 @@ Port first (additive, application layer), then adapter (W9).
   `smtp-provider`, `dsn-parser`, `imap-dsn-reader`) **Files to Create:**
 - `packages/adapters/src/storage/__tests__/SupabaseStorageAdapter.email.test.ts`
 
-- [ ] Cross-tenant path refused; bucket created once (idempotent, private);
+- [x] Cross-tenant path refused; bucket created once (idempotent, private);
       storage client stubbed.
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./packages/adapters test`
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./packages/adapters test`
       (full suite) then `pnpm --filter ./packages/adapters build`.
 
 ### Phase 5: RED + GREEN — API (`apps/api`)
@@ -522,15 +522,15 @@ Port first (additive, application layer), then adapter (W9).
 - `apps/api/src/context.ts` (map `emailAttachmentStorage` + `mailboxTransports`
   into ctx services — not optional)
 
-- [ ] Wiring (E3): `dispatchUserMail` and `emailAttachments.upload` read
+- [x] Wiring (E3): `dispatchUserMail` and `emailAttachments.upload` read
       `ctx.services.emailAttachmentStorage` / `ctx.services.mailboxTransports`;
       `createBounceReaderDeps()` imports the same factories from `container.ts`;
       `container.email-wiring.test.ts` asserts both are instantiated and exposed
       through context.
-- [ ] NF-001: query-count assertion — before the transport call exactly 1
+- [x] NF-001: query-count assertion — before the transport call exactly 1
       settings read, 1 mailbox read, 1 suppression query (prisma mock call
       counts).
-- [ ] Order: verified → resolve mailbox → suppression lookup → partition → all
+- [x] Order: verified → resolve mailbox → suppression lookup → partition → all
       suppressed → ALL_SUPPRESSED (no reserve, no record) → reserve quota for
       sent recipients → record PENDING (`mailboxId`, `userId` = sender) → fetch
       attachments (tenant path only) → MIME (From from mailbox row, Reply-To
@@ -538,13 +538,13 @@ Port first (additive, application layer), then adapter (W9).
       `messageIdHeader`/`provider`/`providerMessageId`, or FAILED +
       `metadata.sendErrorCode`; quota released on every failure after reserve
       (record create, attachment fetch, transport) (CA-20); `skipped` returned.
-- [ ] NO_MAILBOX / MAILBOX_ERROR / ALL_SUPPRESSED / SEND_FAILED carried in
+- [x] NO_MAILBOX / MAILBOX_ERROR / ALL_SUPPRESSED / SEND_FAILED carried in
       `TRPCError` `cause.code`.
-- [ ] Never another mailbox or provider after a failure (AC-EM-013); per-mailbox
+- [x] Never another mailbox or provider after a failure (AC-EM-013); per-mailbox
       hourly cap → RATE_LIMITED.
-- [ ] Token refresh: CAS success, CAS lost → re-read, `invalid_grant` → ERROR;
+- [x] Token refresh: CAS success, CAS lost → re-read, `invalid_grant` → ERROR;
       access token never persisted.
-- [ ] Key unset → `requireEncryptionKey` throws PRECONDITION_FAILED (CA-2).
+- [x] Key unset → `requireEncryptionKey` throws PRECONDITION_FAILED (CA-2).
 
 #### Step 16: Routers (RED → GREEN)
 
@@ -571,7 +571,7 @@ Port first (additive, application layer), then adapter (W9).
 Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 `$transaction` mock (`mockImplementation(async fn => fn(prismaMock))`).
 
-- [ ] Mailbox: `getMine`, `getTenant` (admin), `saveSmtp` (own / tenant[admin];
+- [x] Mailbox: `getMine`, `getTenant` (admin), `saveSmtp` (own / tenant[admin];
       key guard; SSRF validation; password keep/clear/set), `testConnection`
       (rate limit 5/min/user, resettable), `oauthStart` (state hash row + PKCE
       verifier, explicit scopes, env redirect URI; provider not configured →
@@ -580,36 +580,36 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
       error; id_token `aud`/`nonce`/`email_verified`; stores `accountAddress` +
       encrypted refresh token), `disconnect` (revoke best-effort, nulls secrets,
       DISCONNECTED), `providersAvailable`.
-- [ ] Settings: `get` (members: secret-free DTO, `canEdit`,
+- [x] Settings: `get` (members: secret-free DTO, `canEdit`,
       `companyMailboxAvailable`), `update` (admin), `resetToDefaults` (admin,
       `$transaction`, tenant settings only), `suppression.list/add/remove`
       (admin; remove `$transaction`; audit counts only).
-- [ ] Signatures: `list` (own USER + ORG, `canManageOrg`),
+- [x] Signatures: `list` (own USER + ORG, `canManageOrg`),
       `create/update/delete` (owner or admin for ORG; max 20; P2002 → CONFLICT;
       sanitised), `setDefault` (`$transaction` clear + set), `resolveDefault`
       (sanitised).
-- [ ] Attachments: `upload` (verified; ≤ 10 MB each via
+- [x] Attachments: `upload` (verified; ≤ 10 MB each via
       `assertSizeAllowed`/`assertMimeAllowed` from
       `apps/api/src/modules/legal/document-policies.ts`; returns `storagePath`).
-- [ ] Every mutation: cross-tenant FOREIGN id → NOT_FOUND, no write; user B
+- [x] Every mutation: cross-tenant FOREIGN id → NOT_FOUND, no write; user B
       cannot touch user A's mailbox/signature (AC-EM-037); denied calls assert
       `$transaction` not called.
-- [ ] no-secret-leak: serialised output of every procedure (incl. create/update
+- [x] no-secret-leak: serialised output of every procedure (incl. create/update
       returns) never contains the fixture secret/token; logger + audit spies
       never receive them across save/test/send/refresh/error paths (SEC-02/03);
       `expectTypeOf` on every router output type proves no
       `smtpPassword`/`imapPassword`/`refreshToken`/ `codeVerifier` key (SEC-02).
-- [ ] arch-guards: no `createOutboundEmailService`, `useMock`,
+- [x] arch-guards: no `createOutboundEmailService`, `useMock`,
       `MockEmailProvider`, `rejectUnauthorized: false`, `adminTenantProcedure`
       (W2), `{ set:` on secret fields, or raw SQL naming secret columns under
       `apps/api/src/modules/email`; and no `rejectUnauthorized: false` under
       `packages/adapters/src/messaging/email` or `packages/adapters/src/email`
       (SEC-05, CA-3, CA-12).
-- [ ] Procedure types (W2): reads on `tenantProcedure`, mutations on
+- [x] Procedure types (W2): reads on `tenantProcedure`, mutations on
       `verifiedTenantProcedure` (mailbox, attachments) or `tenantProcedure`
       (settings, signatures) with in-handler `EMAIL_SETTINGS_ADMIN_ROLES`
       checks; never `adminTenantProcedure`.
-- [ ] Sanitizer XSS corpus (`<script>`, `onerror`, `javascript:`, `data:`, SVG,
+- [x] Sanitizer XSS corpus (`<script>`, `onerror`, `javascript:`, `data:`, SVG,
       CSS `expression`/`url()`).
 
 #### Step 17: Bounce reader + automation (RED → GREEN)
@@ -622,7 +622,7 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 - `apps/api/src/modules/email/__tests__/bounce-reader.test.ts`
 - `apps/api/src/modules/email/__tests__/email-automation.test.ts`
 
-- [ ] Lease claim returns `id` only; per mailbox: list DSNs since cursor
+- [x] Lease claim returns `id` only; per mailbox: list DSNs since cursor
       (kind-specific, injected), parse, match (record header **and** original
       Message-ID, same mailbox + tenant, `sentAt` within 30 days, recipient in
       the record) else UNMATCHED receipt; per DSN one `$transaction`: receipt,
@@ -631,11 +631,11 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
       from receipts after the latest removal), ≤ 25 suppressions per scan;
       cursor advanced; failures → back-off, ERROR after 5; expired OAuth states
       and receipts > 90 days purged.
-- [ ] Replay after MANUAL removal is a no-op; LOW-confidence never suppresses;
+- [x] Replay after MANUAL removal is a no-op; LOW-confidence never suppresses;
       `hardBounceAction=NONE` still records + BOUNCED (CA-15/18).
-- [ ] `notifyEmailBounced` only when `notifySenderOnBounce`; recipient =
+- [x] `notifyEmailBounced` only when `notifySenderOnBounce`; recipient =
       `EmailRecord.userId`; diagnostic never in the notification body (CA-19).
-- [ ] Injected clock (`now`) everywhere; no wall-clock dates in fixtures.
+- [x] Injected clock (`now`) everywhere; no wall-clock dates in fixtures.
 
 #### Step 18: Scheduler wiring
 
@@ -650,7 +650,7 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 - `apps/api/src/http-server.ts` (start next to the approval sweep, `run` awaits
   `containerReady` then `runBounceScan(await createBounceReaderDeps())`)
 
-- [ ] Off in test/serverless; start/stop; overlapping run skipped (fake timers).
+- [x] Off in test/serverless; start/stop; overlapping run skipped (fake timers).
 
 #### Step 19: Rewire `sendEmail` and `forward`; retire the singleton
 
@@ -670,17 +670,17 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
   dispatcher call + NO_MAILBOX path) **Files to Create:**
 - `apps/api/src/modules/email/__tests__/inbound.send-dispatch.test.ts`
 
-- [ ] List DTO (E4): `status` plus `bouncedRecipientCount` (count only, from
+- [x] List DTO (E4): `status` plus `bouncedRecipientCount` (count only, from
       `metadata.bouncedRecipients`); Sent filter test includes BOUNCED and
       FAILED.
-- [ ] AC-EM-036 (W3): `inbound.send-dispatch.test.ts` asserts the MIME html
+- [x] AC-EM-036 (W3): `inbound.send-dispatch.test.ts` asserts the MIME html
       equals the caller's `htmlBody` exactly (nothing appended).
-- [ ] No assertion removed from the three existing files; each gets a companion
+- [x] No assertion removed from the three existing files; each gets a companion
       case for the new path.
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./apps/api test`
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./apps/api test`
       (full suite; L5 flake `apps/workers/shared/health-server.test.ts` not in
       this package) → log saved.
-- [ ] `pnpm --filter ./apps/api typecheck`.
+- [x] `pnpm --filter ./apps/api typecheck`.
 
 ### Phase 6: RED + GREEN — Web (`apps/web`)
 
@@ -695,7 +695,7 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 - `apps/web/src/components/email/send-errors.ts`
 - `apps/web/src/components/email/__tests__/send-errors.test.ts`
 
-- [ ] Rerun every ModuleSettingsShell consumer suite:
+- [x] Rerun every ModuleSettingsShell consumer suite:
       `pnpm --dir apps/web exec vitest run src/app/tasks src/app/cases src/app/deals src/app/contacts src/app/accounts src/app/reports src/components/shared`.
 
 #### Step 21: `/email/email-settings`
@@ -725,39 +725,39 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 - `apps/web/src/app/email/email-settings/components/__tests__/SuppressionListCard.test.tsx`
 - `apps/web/src/app/email/email-settings/components/__tests__/OAuthReturnNotice.test.tsx`
 
-- [ ] Layout per Round 3 card table (C-FE1): own `h-full overflow-y-auto`
+- [x] Layout per Round 3 card table (C-FE1): own `h-full overflow-y-auto`
       wrapper (CA-11); My mailbox outside the shell fieldset (CA-1); Company
       mailbox / Reply-to / Tracking (IFC-221 note) / Bounce rules on the shell
       Save; Signatures link card; Suppression list lazy (`next/dynamic`), admin
       only.
-- [ ] `isDirty` from a normalised snapshot (`''`/`undefined` → `null`),
+- [x] `isDirty` from a normalised snapshot (`''`/`undefined` → `null`),
       refreshed from mutation `onSuccess(data)`; Save disabled when
       `!isDirty || isSaving || hasClientError`; non-admin: read-only cards +
       "Managed by your admin", `hideActions`.
-- [ ] SecretField keep/replace/remove; `autoComplete="new-password"`; no stored
+- [x] SecretField keep/replace/remove; `autoComplete="new-password"`; no stored
       value in the DOM.
-- [ ] Presets Select (Gmail/Outlook/Custom) with app-password note; Test
+- [x] Presets Select (Gmail/Outlook/Custom) with app-password note; Test
       connection disabled while dirty; one `aria-live` region; disconnect
       ConfirmationDialog names the fallback.
-- [ ] OAuth return: whitelisted `connected`/`error`, static messages,
+- [x] OAuth return: whitelisted `connected`/`error`, static messages,
       `role="status"`/`role="alert"`, dismiss, `router.replace` clears the
       query; unconfigured provider → disabled button with visible reason
       (AC-EM-008).
-- [ ] A11Y-01: exactly one h1; each card `<section aria-labelledby>` with an h2
+- [x] A11Y-01: exactly one h1; each card `<section aria-labelledby>` with an h2
       (asserted by role queries).
-- [ ] A11Y-02: invalid fields get `aria-invalid` + `aria-describedby` to the
+- [x] A11Y-02: invalid fields get `aria-invalid` + `aria-describedby` to the
       error; a failed save moves focus to the first invalid field (asserted with
       `document.activeElement`).
-- [ ] A11Y-05: read-only note linked by `aria-describedby` on each disabled
+- [x] A11Y-05: read-only note linked by `aria-describedby` on each disabled
       control; disabled Connect reason is visible text.
-- [ ] A11Y-06: disconnect/remove/reset dialogs trap focus and restore it to the
+- [x] A11Y-06: disconnect/remove/reset dialogs trap focus and restore it to the
       trigger on close.
-- [ ] AC-EM-022 (W3): reset dialog copy asserts it lists what resets (tenant
+- [x] AC-EM-022 (W3): reset dialog copy asserts it lists what resets (tenant
       settings) and what is preserved (mailboxes, signatures, suppression list).
-- [ ] NF-005 (W4): `SuppressionListCard` is imported through `next/dynamic`
+- [x] NF-005 (W4): `SuppressionListCard` is imported through `next/dynamic`
       (test asserts the module is not in the initial render tree for non-admins
       and loads for admins).
-- [ ] axe-core zero violations: loading, error, admin, member, empty suppression
+- [x] axe-core zero violations: loading, error, admin, member, empty suppression
       list (`EmptyState entity="emails"     phase="passive" size="sm"`, no
       action button; `emails` chosen because suppressions are email addresses
       and the `rules` entity reads as automation — I3).
@@ -770,11 +770,11 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 - `apps/web/src/app/email/oauth/callback/OAuthCallbackContent.tsx`
 - `apps/web/src/app/email/oauth/callback/__tests__/OAuthCallbackContent.test.tsx`
 
-- [ ] Suspense + `useSearchParams` (pattern
+- [x] Suspense + `useSearchParams` (pattern
       `apps/web/src/app/settings/account/page.tsx:1-9`); ref guard → one
       `oauthComplete` under StrictMode; loading; error with link back; success →
       `router.replace('/email/email-settings?connected=google|microsoft')`.
-- [ ] A11Y-01/04: one h1; status region `role="status"`, error `role="alert"`
+- [x] A11Y-01/04: one h1; status region `role="status"`, error `role="alert"`
       with focus moved to it.
 
 #### Step 23: `/email/signatures`
@@ -793,7 +793,7 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 - `apps/web/src/app/email/signatures/__tests__/page.test.tsx`
 - `apps/web/src/app/email/signatures/components/__tests__/SignatureDialog.test.tsx`
 
-- [ ] PageHeader "New Signature" `size="sm"`; My / Organisation cards; Default
+- [x] PageHeader "New Signature" `size="sm"`; My / Organisation cards; Default
       badges as text; `canManageOrg` gating; EmptyState `entity="signatures"`
       with custom title/description and no action; delete ConfirmationDialog;
       CONFLICT shown on the name field (`aria-invalid` + `aria-describedby`,
@@ -828,22 +828,22 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 - `apps/web/src/components/email/__tests__/EmailCompose.send-errors.test.tsx`
 - `apps/web/src/components/email/__tests__/EmailListItem.status.test.tsx`
 
-- [ ] Prefill: user > org > none; replies/forwards/reopened drafts not
+- [x] Prefill: user > org > none; replies/forwards/reopened drafts not
       prefilled; untouched prefill not auto-saved.
-- [ ] List (E4): `EmailItemData` gains `status` + `bouncedRecipientCount`;
+- [x] List (E4): `EmailItemData` gains `status` + `bouncedRecipientCount`;
       badges "Bounced", "Partly bounced", "Failed" (text + icon) tested in
       `EmailListItem.status.test.tsx`; icons limited to glyphs already in the
       subset (`error`, `report`, `warning`) or the subset regenerated (Step 29).
-- [ ] Attachments: upload failure blocks send with a visible error; paths
+- [x] Attachments: upload failure blocks send with a visible error; paths
       passed; nothing dropped silently.
-- [ ] Existing suites:
+- [x] Existing suites:
       `pnpm --dir apps/web exec vitest run src/components/email src/app/email src/components/contacts`.
 
 #### Step 25: Web full suite + typecheck
 
 **Type:** validation
 
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./apps/web exec vitest run`
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm --filter ./apps/web exec vitest run`
       → log saved; `pnpm --filter ./apps/web typecheck`;
       `pnpm --filter ./apps/web lint`.
 
@@ -856,7 +856,7 @@ Per router: role contexts (pattern `contact-types.router.test.ts:91-97`),
 No new files; touches only files already listed in Steps 2-24 (duplication,
 naming, dead branches deleted).
 
-- [ ] `/simplify` on the diff; rerun Steps 2-25 scoped commands; lint per
+- [x] `/simplify` on the diff; rerun Steps 2-25 scoped commands; lint per
       package.
 
 ### Phase 8: VALIDATION + DOCS
@@ -887,11 +887,11 @@ it, the callback is referenced from `oauthStart`'s redirect URI constant in
 `apps/web/src/app/email/email-settings/components/MyMailboxCard.tsx`
 documentation, not a fake link.
 
-- [ ] Reconciliation suites:
+- [x] Reconciliation suites:
       `pnpm --dir apps/web exec vitest run src/app/__tests__/sitemap.test.ts src/app/__tests__/sitemap-reconciliation.test.ts src/app/__tests__/sitemap-fixes.test.ts src/app/__tests__/ia-reconciliation.test.ts src/app/__tests__/ui-flow-mapping-reconciliation.test.ts`
       and
       `pnpm vitest run tools/scripts/route-total-consistency.test.ts tools/scripts/__tests__/content-audit.test.ts tools/scripts/__tests__/docs-integrity-audit.test.ts`.
-- [ ] Preflights:
+- [x] Preflights:
       `node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-207`,
       `node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-207`.
 
@@ -902,7 +902,7 @@ documentation, not a fake link.
 - [ ] `node scripts/codex-review.mjs` iterated until clean (L3: verify cited
       lines with `git show HEAD:<file>`; false positives waived in
       `tools/audit/codex-review-waivers.yaml` with evidence).
-- [ ] `/code-review` on the diff; `/sonarqube-fix` for new findings; a11y-expert
+- [x] `/code-review` on the diff; `/sonarqube-fix` for new findings; a11y-expert
       WCAG 2.1 AA review of both pages, the callback page and compose changes;
       security-lead review of the secret/OAuth/SSRF/DSN paths; independent SQL
       review of the four migrations (ADR-069 Class A gate).
@@ -914,27 +914,27 @@ documentation, not a fake link.
 - `lighthouserc.authenticated.js` (add `/email/email-settings` and
   `/email/signatures`)
 
-- [ ] Full suites of every touched package (Validation Matrix) green; typecheck,
+- [x] Full suites of every touched package (Validation Matrix) green; typecheck,
       lint, build for each.
-- [ ] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm build`
+- [x] `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-207 -- pnpm build`
       (Next build included).
-- [ ] `pnpm audit --prod` and OSV scan clean for the three new deps; licence
+- [x] `pnpm audit --prod` and OSV scan clean for the three new deps; licence
       list recorded.
-- [ ] Lighthouse ≥ 90 on `/email/email-settings` and `/email/signatures` via
+- [x] Lighthouse ≥ 90 on `/email/email-settings` and `/email/signatures` via
       `lighthouserc.authenticated.js` (add both URLs); without
       `LHCI_TEST_EMAIL`/`LHCI_TEST_PASSWORD` → NEEDS_HUMAN with the reason.
-- [ ] `git ls-files | grep -cE '\.(log|coverage|tsbuildinfo)$'` = 0 (L14);
+- [x] `git ls-files | grep -cE '\.(log|coverage|tsbuildinfo)$'` = 0 (L14);
       `gitleaks protect --staged` clean.
-- [ ] Diff coverage ≥ 80 % on changed lines (pre-ship diff-coverage step is run
+- [x] Diff coverage ≥ 80 % on changed lines (pre-ship diff-coverage step is run
       by the runner at the final SHA).
-- [ ] Per-package targets (E6, CA-23): domain `src/email` +
+- [x] Per-package targets (E6, CA-23): domain `src/email` +
       `isPublicIpAddress` > 95 % lines/branches
       (`pnpm --dir packages/domain exec vitest run src/email src/workflow/__tests__/public-ip-address.test.ts --coverage --coverage.include="src/email/**" --coverage.include="src/workflow/node-catalog.ts"`);
       API application code (`apps/api/src/modules/email/**` new files) > 90 %
       (`pnpm --dir apps/api exec vitest run src/modules/email --coverage --coverage.include="src/modules/email/**"`);
       the application package changes only an additive port interface (no
       executable lines).
-- [ ] Icons (W10): `node tools/scripts/subset-material-symbols.mjs --verify`
+- [x] Icons (W10): `node tools/scripts/subset-material-symbols.mjs --verify`
       passes.
 
 #### Step 30: Dependency chain, PRD, ADR, findings, debt
@@ -953,12 +953,12 @@ documentation, not a fake link.
   gap; Lighthouse/OAuth NEEDS_HUMAN) **Files to Create:**
 - `.specify/sprints/sprint-18/execution/PG-207/PG-207-findings.md`
 
-- [ ] Q11 (attachments) recorded in the PRD addendum, ADR-085 and the findings
+- [x] Q11 (attachments) recorded in the PRD addendum, ADR-085 and the findings
       doc (W7); the findings doc also records the attachment design
       (`emailAttachments.upload`, `EmailAttachmentStoragePort`, private
       `email-attachments` bucket) as the plan-time elaboration of AC-EM-016 /
       Q11 (N6).
-- [ ] gh issues filed (IFC-144 false-completion fake send — fixed here, issue
+- [x] gh issues filed (IFC-144 false-completion fake send — fixed here, issue
       documents it; DSAR email coverage) with file:line + proposed fix.
 
 #### Step 31: CSV, attestation, context
@@ -977,7 +977,7 @@ documentation, not a fake link.
   PASS or NEEDS_HUMAN with reason; artifact hashes incl. the four migrations;
   spike result)
 - `.specify/sprints/sprint-18/execution/PG-207/run-<ISO>Z/PG-207-delivery.md`
-- [ ] `/exec-gates`, `/compliance-check`, `/exec-attestation`;
+- [x] `/exec-gates`, `/compliance-check`, `/exec-attestation`;
       `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 - [ ] SendMessage runner `projects-8c`: status, last SHA, attestation path, four
       migrations, NEEDS_HUMAN list.

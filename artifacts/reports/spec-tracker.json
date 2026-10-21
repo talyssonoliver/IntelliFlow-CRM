@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-19T10:01:16.998Z",
+  "generated_at": "2026-10-21T15:27:39.005Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 527,
@@ -272,12 +272,6 @@
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-206 when ready for implementation."
-    },
-    {
-      "task_id": "PG-207",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-207 when ready for implementation."
     },
     {
       "task_id": "PG-208",
@@ -1022,7 +1016,7 @@
     {
       "task_id": "ENV-008-AI",
       "title": "Automated Observability with Predictive Monitoring",
-      "sprint": 0,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -1206,7 +1200,7 @@
     {
       "task_id": "EP-001-AI",
       "title": "EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline)",
-      "sprint": 0,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -2169,7 +2163,7 @@
     {
       "task_id": "IFC-056",
       "title": "Team Upskilling Program",
-      "sprint": 9,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -2440,7 +2434,7 @@
     {
       "task_id": "IFC-074",
       "title": "Full Stack Observability",
-      "sprint": 1,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -2805,7 +2799,7 @@
     {
       "task_id": "IFC-097",
       "title": "Distributed Tracing & Logging",
-      "sprint": 9,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -3105,7 +3099,7 @@
     {
       "task_id": "IFC-116",
       "title": "Instrument application with OpenTelemetry, unify logs, metrics and traces",
-      "sprint": 9,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -3121,7 +3115,7 @@
     {
       "task_id": "IFC-117",
       "title": "Monitor AI models for drift, latency, hallucination and ROI",
-      "sprint": 6,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -3526,7 +3520,7 @@
     {
       "task_id": "IFC-142",
       "title": "Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search",
-      "sprint": 8,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -3683,7 +3677,7 @@
     {
       "task_id": "IFC-151",
       "title": "Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities",
-      "sprint": 6,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -4838,7 +4832,7 @@
     },
     {
       "task_id": "IFC-221",
-      "title": "Email Open Tracking Integration  -  Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1  -  infra-only). Resolves WIRE-IFC-099-001.",
+      "title": "Email Open Tracking Integration  -  Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1  -  infra-only). Resolves WIRE-IFC-099-001. Broadened 2026-10-21 (PG-207): the pixel and link wrapping apply to mail sent through every user mailbox kind (SMTP/Gmail/Microsoft via dispatchUserMail; ADR-085) and honour the PG-207 Email Settings trackOpens/trackClicks toggles (category 2 until this ships).",
       "sprint": 22,
       "spec_path": null,
       "has_spec": false,
@@ -6414,7 +6408,7 @@
     {
       "task_id": "PG-014",
       "title": "Status Page",
-      "sprint": 12,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,
@@ -8653,12 +8647,12 @@
       "task_id": "PG-207",
       "title": "Module Settings - Email (/email/email-settings)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-207-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
@@ -8750,7 +8744,7 @@
     {
       "task_id": "SALES-001",
       "title": "Commercial Narrative + Pitch Deck Outline + One-Pager",
-      "sprint": 1,
+      "sprint": 18,
       "spec_path": null,
       "has_spec": false,
       "has_plan": false,

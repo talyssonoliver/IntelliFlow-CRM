@@ -1,0 +1,84 @@
+{
+  "stoa": "Security",
+  "taskId": "PG-207",
+  "task_id": "PG-207",
+  "run_id": "20261021-090734-fb30029c",
+  "verdict": "FAIL",
+  "produced_by": "stoa-security sub-agent (re-run 4)",
+  "produced_at": "2026-10-21T16:30:00Z",
+  "head": "bd7b4b1c1ac010aa7a9afb49855d233161ca7670",
+  "rationale": "No PG-207 security finding remains open at any severity (N-2 and N-3 closed, no new issue from 66d4dd835 or bd7b4b1c1). The verdict is FAIL only because the pnpm audit --audit-level=high gate exits 1 on pre-existing advisories outside the PG-207 diff, and this agent's rules have no exception for pre-existing findings (see b). The PG-207-attributable verdict is PASS.",
+  "toolIdsExecuted": ["gitleaks-range", "pnpm-audit", "vitest-bounce-reader", "vitest-dsn-parser", "vitest-oauth-mailbox", "manual-bypass-probe"],
+  "unavailableTools": ["snyk (SNYK_TOKEN missing)", "semgrep (not run)", "trivy (not run)"],
+  "gates": [
+    {"gate": "gitleaks range origin/main..HEAD (sh .gitleaks/scan.sh range origin/main HEAD)", "result": "PASS", "exit_code": 0, "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/sec4-gitleaks.txt"},
+    {"gate": "vitest apps/api bounce-reader.test.ts (Node 22.14.0)", "result": "PASS", "exit_code": 0, "notes": "39/39 (was 37). Includes new tests for N-3 (receiver trusted for another IMAP host does not act) and N-2 (parent domain of an SMTP host does not act). Log: gates/sec4-bounce.txt"},
+    {"gate": "vitest packages/adapters dsn-parser.test.ts + oauth-mailbox.test.ts (Node 22.14.0)", "result": "PASS", "exit_code": 0, "notes": "64/64 across 2 files. Includes 429 -> RATE_LIMITED (oauth-mailbox.test.ts:161, :259). Log: gates/sec4-adapters.txt"},
+    {"gate": "pnpm audit --audit-level=high", "result": "FAIL (pre-existing)", "exit_code": 1, "notes": "12 vulnerabilities (1 low, 4 moderate, 7 high; 3 ignored). 0 mentions of nodemailer, imapflow or sanitize-html (the packages PG-207 adds). Same set as re-run 3. Log: gates/sec4-audit.txt"},
+    {"gate": "snyk / semgrep / trivy", "result": "UNAVAILABLE", "notes": "snyk: SNYK_TOKEN missing. semgrep/trivy not run (the two commits change two TS files, tests, a UI file and docs; no new file types). Documented, no waiver claimed."},
+    {"gate": "Manual bypass probe (scratchpad/probe4.mjs, tsx on dsn-parser.ts source; withinHost/aligned/mayReportOn/trustedReceiver/trustedReceiversFromEnv copied verbatim from the new bounce-reader.ts)", "result": "N-2 CLOSED, N-3 CLOSED, no new bypass", "notes": "11 routing cases + env-parser cases, see closed_since_previous_run"}
+  ],
+  "a_findings_introduced_by_pg207_still_open": [
+    {
+      "id": "H-1",
+      "severity": "LOW",
+      "file": "packages/adapters/src/messaging/email/dsn-parser.ts:132-146 (passingDomain) and apps/api/src/modules/email/bounce-reader.ts:107-111 (aligned)",
+      "title": "No public-suffix guard; safety rests on 'nobody can pass DKIM/SPF as a public suffix'",
+      "detail": "Unchanged since re-run 3 and not touched by the two commits. A genuine verifier never reports a pass for header.d=co.uk (no DKIM key or SPF record exists at a public suffix), so this is defence-in-depth hardening, not a bypass. Optional fix: reject a passing domain that is a public suffix (psl/tldts). Not blocking on its own.",
+      "status": "open (hardening, optional)"
+    },
+    {
+      "id": "I-1",
+      "severity": "INFO",
+      "file": "apps/api/src/modules/email/bounce-reader.ts:159-163 (From-address domain and recipient domain still use symmetric aligned())",
+      "title": "From-address domain is still two-directional (a reporter that is a parent of the mailbox's From domain is entitled)",
+      "detail": "This is documented design (the sending side's own domain) and only reachable when the From address sits on a subdomain of a shared platform whose parent domain passes SPF/DKIM for attacker-controlled mail, behind a trusted receiver. Not a regression, not the N-2 shape (hosts), and the ADR wording scopes 'no parent' to hosts. Recorded for completeness; no action required.",
+      "status": "informational"
+    }
+  ],
+  "closed_since_previous_run": [
+    {"id": "N-2", "status": "CLOSED", "notes": "bounce-reader.ts:104-107 withinHost() is one-directional and mayReportOn (:159-170) uses it for smtpHost/imapHost. Probes with trusted id and host smtp.sendgrid.net: reporter sendgrid.net via smtp.mailfrom (R) and via dkim header.d (R2): ACT=false; sibling other.sendgrid.net: false; lookalike notsmtp.sendgrid.net: false (dot-anchored suffix); host itself and a.smtp.sendgrid.net: true (intended). New test bounce-reader.test.ts parent-of-host case passes; the probe confirms it fails for the right reason (parser yields reporter platform.example.net, entitlement refuses it), not because the header is unparsed."},
+    {"id": "N-3", "status": "CLOSED", "notes": "bounce-reader.ts:122-139 trustedReceiver() now requires an exact (imapHost, authservId) pair for the mailbox's own lower-cased imapHost; imapHost null fails closed. Probes: id trusted for imap.acme.com is refused for a mailbox on imap.other.com (T1), accepted for imap.acme.com (T2); mx.google.com listed for imap.gmail.com is not honoured on mail.self.example.invalid (T5, the previous probe U shape); a mailbox host with upper case or trailing dot fails closed (T3). trustedReceiversFromEnv (:710-724): entries without exactly one '=' or with an empty side are dropped ('a=b=c', 'a=', '=b', bare id), so a malformed entry cannot widen trust; env value and report are lower-cased symmetrically. Runner ruling to keep the variable empty is consistent with the fail-closed default. Test 'a receiver trusted for one customer's IMAP host is not trusted for another mailbox (N-3)' passes."},
+    {"id": "bd7b4b1c1 OAuth token error mapping", "status": "NO FINDING", "notes": "oauth-mailbox.ts tokenErrorCode(): 429 -> RATE_LIMITED, 5xx -> CONNECT_FAILED, invalid_grant -> TOKEN_REVOKED, else AUTH_FAILED. Codes only, no provider body or token is carried into the error (unchanged). A transient provider outage no longer marks a mailbox broken (availability improvement). The residual that AUTH_FAILED after rotation leaves the mailbox ACTIVE is tracked as #971; it is a correctness/availability item, not a confidentiality or integrity hole."},
+    {"id": "bd7b4b1c1 UI fix (MyMailboxCard.tsx, SMTP re-setup after disconnect)", "status": "NO FINDING", "notes": "3-line component change plus test; no new input sink, no secret handling change."},
+    {"id": "Docs (.env.example, user-mailboxes.md, ADR-085)", "status": "NO FINDING", "notes": "Placeholder hosts only (example.invalid style); gitleaks range clean. Runbook now states the pair format and that trust is never global, matching the code."}
+  ],
+  "b_pre_existing_not_introduced_by_pg207": [
+    {
+      "item": "pnpm audit highs: follow-redirects x2 (apps/web > @scalar), vite via launch-editor (root), markdown-it (via markdownlint-cli); 12 total, 7 high",
+      "forces_fail": true,
+      "rule": "stoa-security agent 'Verdict Logic': 'Any gate exits non-zero -> FAIL' (pnpm audit --audit-level=high exits 1) and 'HIGH -> FAIL, requires fix before completion'. The rules make no exception for pre-existing findings.",
+      "notes": "Re-verified at bd7b4b1c1: the audit output has zero mentions of nodemailer, imapflow or sanitize-html, and the two commits since re-run 3 touch no package.json or lockfile. Resolution is a dependency bump on main or an ADR accepting the risk, outside the PG-207 diff, or an owner call to treat them as not blocking this task (OD-3)."
+    }
+  ],
+  "c_owner_decisions": [
+    {
+      "id": "OD-1",
+      "title": "Accept the provider-header trust assumptions or require the #965 live header spike first",
+      "notes": "Unchanged. The design trusts that Gmail always prepends mx.google.com and Microsoft always stamps its no-authserv-id Authentication-Results on top. Documented provider behaviour, not verified live (#965)."
+    },
+    {
+      "id": "OD-2",
+      "title": "Provider backscatter",
+      "notes": "Unchanged. A genuine DKIM-signed DSN from the provider about mail an attacker crafted with our record ids is authentic and entitled by design. Not fixable in code; accepted-risk class for the ADR."
+    },
+    {
+      "id": "OD-3",
+      "title": "Pre-existing pnpm audit highs: bump on main, ADR acceptance, or treat as non-blocking for PG-207",
+      "notes": "This is the only thing keeping the STOA at FAIL. The STOA cannot waive it by its own rules; the owner or the runner must record the decision."
+    },
+    {
+      "id": "OD-4",
+      "title": "Open issues #970 (Exchange NDR senders record-only) and #971 (AUTH_FAILED after OAuth rotation leaves mailbox ACTIVE)",
+      "notes": "Both are fail-safe or availability items, not security bypasses. #970 means some genuine bounces are recorded but do not act; #971 means a broken mailbox is not auto-flagged. No confidentiality or integrity impact found; accepting them as follow-ups is an owner decision."
+    }
+  ],
+  "findings": [
+    {"id": "H-1", "severity": "LOW", "status": "open (hardening, optional)", "scope": "PG-207"},
+    {"id": "I-1", "severity": "INFO", "status": "informational", "scope": "PG-207"},
+    {"id": "PRE-AUDIT-HIGH", "severity": "HIGH", "status": "open", "scope": "pre-existing, not PG-207"}
+  ],
+  "bypasses": "none",
+  "timestamp": "2026-10-21T16:30:00Z",
+  "summary": "FAIL on the pre-existing pnpm audit highs only. At HEAD bd7b4b1c1: gitleaks clean (exit 0); bounce-reader 39/39, adapters dsn-parser + oauth-mailbox 64/64. N-2 (LOW) and N-3 (MEDIUM) are closed by code and test and confirmed by a re-run probe; no new issue from the two commits. Remaining PG-207 items: H-1 optional hardening (LOW) and an informational note. Owner decisions: OD-1 provider-header assumptions (#965), OD-2 backscatter, OD-3 audit highs, OD-4 issues #970/#971."
+}

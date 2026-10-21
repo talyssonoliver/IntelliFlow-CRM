@@ -1,0 +1,38 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 205 files total
+[codex-review] in scope : 156 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T09:00:14.383Z
+Base ref  : origin/main
+Files in scope : 156
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] packages/adapters/src/messaging/email/mime.ts:63 — message-id-exceeds-storage-contract
+    Issue    : Valid sender addresses can produce Message-ID headers longer than the database column permits, causing successfully sent messages to remain PENDING.
+    Evidence : The expression `<${input.recordId}.${randomBytes(8).toString('hex')}@${domain}>` includes the entire sender domain. A locally verified address with domain labels of lengths 60, 60, 60 and 40 passes z.email(), but produces a 268-character Message-ID with a 25-character cuid. EmailRecord.messageIdHeader is VarChar(255). mailbox-sender.ts writes this value only after sending, so persistence fails after delivery, and bounce matching cannot find the missing messageIdHeader.
+    Fix      : Generate Message-IDs using a bounded application-controlled domain, or enlarge the storage column to accommodate every generated value.
+    Fingerprint: 08c25b7c8a309d30de097b5d9672a99175c9a867711a77b25a86baeac0cce303
+
+  [LOW] apps/api/src/modules/email/email-signatures.router.ts:123-124 — signature-limit-check-race
+    Issue    : Concurrent signature creations can exceed the enforced maximum of 20 signatures per owner scope.
+    Evidence : The owner-scoped count is read before the creation transaction. With 19 existing signatures, two concurrent requests using distinct names and isDefault=false both observe 19 and both insert, leaving 21. The database indexes enforce name and default uniqueness, but do not enforce this count limit.
+    Fix      : Serialize creations per tenant, scope and owner, then perform the count check and insertion within the same transaction.
+    Fingerprint: 17c833f734a11aacb772b6ab33e8014fd6d1b3067ae6fafddb7c18cb857a16f9
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+exit=1

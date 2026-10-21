@@ -1,72 +1,509 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-207",
-  "run_id": "eng-ops-002-r16-pg-207-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "20261021-090734-fb30029c",
+  "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-207 exec lane (session 990e1fa9), branch feat/pg-207-email-settings",
+  "attestation_timestamp": "2026-10-21T15:27:33Z",
+  "verdict": "NEEDS_HUMAN",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/web/src/components/sidebar/configs/email.ts",
+        "sha256": "ff6d3f6320fddf5db22ef177511592d15610455cfc9d448db3dda87401622177",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      },
+      {
+        "path": "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx",
+        "sha256": "0ea144e641da815e3e4f289c51839efdaad3bab1c84a503ca06d1c0a27a276a7",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      },
+      {
+        "path": "docs/planning/module-settings-playbook.md",
+        "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      },
+      {
+        "path": "docs/planning/prd-module-settings.md",
+        "sha256": "88cb35d86d77f2c46c9a84b2748ae3f36b4172ee6345be7f0e6103866bda0b37",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-207-spec.md",
+        "sha256": "02d02a0bfb55fc4c626844096715efcb685db025daa17c8196ab6a50b69fed6d",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/PG-207-plan.md",
+        "sha256": "f5a0d2f955974b0931d60f9dccb4a7517e18851cbef2d6386af63333efccf5a4",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md",
+        "sha256": "d3cc3b0abf76a2cc8d8909683da84ced08e750ff7a1d07e3876faa1d8f33b602",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      },
+      {
+        "path": "docs/architecture/adr/ADR-085-user-mailbox-sending-and-bounce-reading.md",
+        "sha256": "a436aa03d901b69ec9c5926c3520666e9da34656b46089c936fa76ae3ccd327a",
+        "read_at": "2026-10-21T00:02:07.496Z"
+      }
+    ],
+    "invariants_acknowledged": [
+      "User mail is sent only from the user mailbox or an admin-enabled tenant mailbox; never the platform provider and never the mock (owner Q6/Q7, ADR-085)",
+      "An email is recorded SENT only after the transport accepted it; a failed send is FAILED with a coded reason and is never retried through another mailbox or provider (Q4)",
+      "SMTP/IMAP passwords, OAuth refresh tokens and PKCE verifiers are written only through requireEncryptionKey + ENCRYPTED_FIELDS and are never returned, logged or audited (CA-2/CA-3)",
+      "Tenant-supplied SMTP/IMAP hosts connect only to the DNS-resolved public address that was checked, on ports 465/587/2525 (SMTP) or 993 (IMAP), with TLS required",
+      "A bounce report suppresses an address only if it matches a record sent from the same mailbox and tenant within 30 days by both the record header and the original Message-ID, and names one of its recipients (CA-18)",
+      "Suppressed recipients are dropped before quota is reserved; all suppressed sends nothing (Q9)",
+      "Every tenant-scoped mutation filters by tenantId and has a cross-tenant negative test; a user can never act on another user mailbox or signature",
+      "Module-settings playbook: PageHeader/ModuleSettingsShell, bento grid, canonical EmptyState phase=passive, $transaction on destructive writes, no skipDuplicates, superRefine on duplicate signature names; TagsTab and colorToken are N/A",
+      "No istanbul/v8 ignore pragmas; full package suites through the slot wrapper; Node 22 for DB writes; no secret-shaped fixtures"
+    ],
+    "acknowledged_at": "2026-10-21T00:02:07.496Z"
+  },
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 215,
+    "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
+    "gates_passed": 9,
+    "gates_failed": 3,
+    "kpis_met": 5,
     "kpis_missed": 0,
-    "placeholders_found": 1
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/email/email-settings/page.tsx": "4513f02205226ed3bb20b1e93742110cd1c2dab7219b1b38598b9c2143f96698"
+    ".env.example": "681aa56c01e0476665794fba57e1a849c2ead92db76c8bce1d6d073ff4869cd8",
+    ".specify/sprints/sprint-18/attestations/PG-207/context_ack.json": "03d0fc6c26fa78ec0860d55d7fcc42ed6a0696ed15bc84c98b1a02456d7bbf1b",
+    ".specify/sprints/sprint-18/attestations/PG-207/context_pack.manifest.json": "b0f5bce952035fad84c4009cc134c2f7a8a67e271d199d2e255e43e86b93de7a",
+    ".specify/sprints/sprint-18/attestations/PG-207/context_pack.md": "05a4ce42c5620f5765d8cfdb05b596b795814bc68615503f5bc21fdfb1fae27c",
+    ".specify/sprints/sprint-18/attestations/PG-207/task-tracking.json": "3238060969b1913d7f751253f904a09a853ff146f3fceecc32b45700885d6afa",
+    ".specify/sprints/sprint-18/context/PG-207/PG-207-agent-selection.json": "14166df0dd7d74225d1bca31cb4235d5692b9a9724b0375b9e85f217bdc4cb88",
+    ".specify/sprints/sprint-18/context/PG-207/PG-207-hydrated-context.json": "2a865b26a3a7913ce0f35adccbc52d999c1d921675b59e71286747936189fde8",
+    ".specify/sprints/sprint-18/context/PG-207/PG-207-hydrated-context.md": "00ce680eadd15b7e4f70bb26607f773bc6fb2d1236c6c71d23346dee2f8402aa",
+    ".specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md": "c2d7cfe26a5f564f1b3cb163ab76516ed598b73d5d98afb48577009d16295eaf",
+    ".specify/sprints/sprint-18/context/PG-207/PG-207-plan-session.json": "71dff7abf44dae123c4a0878e52441ad0a6a5a248c7c17510b38f03ea61b07e0",
+    ".specify/sprints/sprint-18/context/PG-207/PG-207-spec-exploration.md": "564757079df8e92ff1cd5ff9548869c5fde27ad30e7d07ae9f5f99274f4fc010",
+    ".specify/sprints/sprint-18/context/PG-207/hydrated-context.json": "6aa0e10319b3b8a5eabaf1bec88e6165b9d78f4861cca593f2e57cc8a8ef345f",
+    ".specify/sprints/sprint-18/context/PG-207/hydrated-context.md": "ed0c052458740bd700ddea388054bb74dfe3e4687c11cc11bbb5e881a044b487",
+    ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/PG-207-delivery.md": "5d04bb8a43592fd8092c8d3686cd378af896b3bd15750b983bf617ca41ca8986",
+    ".specify/sprints/sprint-18/execution/PG-207/PG-207-findings.md": "4d6f00b038117a191430f8bfb1638e10ec689c35c9974c8b47e5bd920247ddbc",
+    ".specify/sprints/sprint-18/planning/PG-207-plan.md": "8a2f9b4ba13fe6e6c62c729bcb75bd6e51f7481cb08239b3299bff8134c9a71b",
+    ".specify/sprints/sprint-18/specifications/PG-207-discussion.md": "32d424a6f4c3bb15040dc244ecd15307ae4e0580296afb4cf676b3f2df02338c",
+    ".specify/sprints/sprint-18/specifications/PG-207-spec.md": "02d02a0bfb55fc4c626844096715efcb685db025daa17c8196ab6a50b69fed6d",
+    "apps/api/package.json": "1cf3701eaa272a1e53f0c19c5fed7026129d846f46ffc223a9ffd3fdb1592856",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "829f2ec0956ac00fe228b66f70e917bbdc637d9731e48da9d04fb0c8853fcfbd",
+    "apps/api/src/__tests__/container.ai-provider-baseurl.lazy.test.ts": "481eae860ca3e35f2ee6e3aaf369ea04ae8f7a93dfe40fee2de8acde791b6b12",
+    "apps/api/src/__tests__/container.test.ts": "ea07ffb055400b77b43c613c2f6945d856b41b3edd7afa3ec9e6a47b07684169",
+    "apps/api/src/__tests__/http-server.bounce-scheduler.test.ts": "74e70dbd63a0233498c8049bcbb4bd9daf6ef005fc298e4dcc870be7addbb6cd",
+    "apps/api/src/container.ts": "cad1bc8db59e1b13e24e343c60922156ccbbcb6ff48988553df440e9eb2b323e",
+    "apps/api/src/http-server.ts": "c4d42e4d938b40478c293e5afd5ed422632a8317dd7fbcd26de6224fbb72a5ff",
+    "apps/api/src/main.ts": "d1b62db47dc7123e57076ecf573d6b03362e5c4083ddd7d87d2885aaf7c21eab",
+    "apps/api/src/modules/email/__tests__/arch-guards.test.ts": "88a1005316b881694e3b94a3a8084e75377048740b4a79defc32f7b2601d9f42",
+    "apps/api/src/modules/email/__tests__/bounce-reader.test.ts": "99893a4bc8591f78e58b84e67f475f962da1e8bf7ebb6e46770beea7a5f84154",
+    "apps/api/src/modules/email/__tests__/bounce-scheduler.test.ts": "f4fac6cf55755ef4597c00df68107d3a641141097fd959ecdca8096e85fd3c16",
+    "apps/api/src/modules/email/__tests__/dark-launch.test.ts": "f8b829445cc863203bbe28c5d4d5eb5c05cccf4c2a283df1a30a0821a1704287",
+    "apps/api/src/modules/email/__tests__/dsn-fixture.ts": "8a492a2eddf266e22dafd061232c6831961116cffc8432df0e8a541b53a7d82b",
+    "apps/api/src/modules/email/__tests__/email-attachments.router.test.ts": "c0d177303e6d58e13b8db62feb0e12b4837f796e87df3a32b6dcc86ea0a963e5",
+    "apps/api/src/modules/email/__tests__/email-automation.test.ts": "99422faf6a0c6abe137f5d40708837b42d89e841ed2c05aed61373217377d0a2",
+    "apps/api/src/modules/email/__tests__/email-dto.test.ts": "15efa4fb0fca6f7e0419253b25274e2f7cf5ee3aceb7756c8795e0caa89b776d",
+    "apps/api/src/modules/email/__tests__/email-mailbox.router.test.ts": "2f932749e30c84bd19b8cf2f3976e22cd51d118f4712430efbcd52ed7481b526",
+    "apps/api/src/modules/email/__tests__/email-send-error.test.ts": "e71a8243c29f8a70b680fadbb138c2f05499e10492c3ed757d6973d3d4ca6080",
+    "apps/api/src/modules/email/__tests__/email-settings.router.test.ts": "fde7e284b2dcb928c4f93d1de19b086586544c916576a8e938438a48708c3da9",
+    "apps/api/src/modules/email/__tests__/email-signatures.router.test.ts": "4b21dd7e3e2225e70fbcfdb8e6e6cb57688df0cf6257386f0eca79cf7fa298fd",
+    "apps/api/src/modules/email/__tests__/encryption-guard.test.ts": "1a59d11e293772574ad2ec683dbce10ec725fd23a8e5119a79e9259c7adb94eb",
+    "apps/api/src/modules/email/__tests__/inbound.quota-guard.test.ts": "262b190c9ec6aded346dfa8aee9178cd71a6523cb94c8c9d3c517b5bb8844552",
+    "apps/api/src/modules/email/__tests__/inbound.router.b11.test.ts": "eb48ef798034f5757d0d490c1aa8151888a38e8b7eec3663f74035b90fc9cbb9",
+    "apps/api/src/modules/email/__tests__/inbound.router.test.ts": "7d0034e6d6a762c4d7ad67f07183392bd7dabbaff02648b4a1247333562256b9",
+    "apps/api/src/modules/email/__tests__/inbound.send-dispatch.test.ts": "0a83096182b7c0f22fdd64d65616943761d1f3fc07281baacaa1d50a23abc540",
+    "apps/api/src/modules/email/__tests__/mailbox-sender.test.ts": "94d0eccd4a909d2a1c2c38219d7ed499e792190362ff4c24aac57263d2685e47",
+    "apps/api/src/modules/email/__tests__/mailbox-transport.test.ts": "85ec7ec78c5ffcfaeedc034720d36a65aaa7fbd219109835511309085114ca6b",
+    "apps/api/src/modules/email/__tests__/no-secret-leak.test.ts": "5276e935fe0764f2bd541d4c32c832d79bce58d3a72b36099a1b7b4dc268286f",
+    "apps/api/src/modules/email/__tests__/signature-sanitizer.test.ts": "ec10fb9c03203b649e836d530c35c30a0b21891f892ca5c0fedd99b69c3ad2e0",
+    "apps/api/src/modules/email/bounce-reader.ts": "2a21d125e75b3bc73e8a2c95703494a420816f65ad961bd113e92e8506e68840",
+    "apps/api/src/modules/email/bounce-scheduler.ts": "ec42dd928042908f5a790c2aa4607d722716b78bc00c801f2840e715af7fb8ea",
+    "apps/api/src/modules/email/email-access.ts": "d4ee53f2043155a24482bad2dde844e2623bee983b50362930daae3c9df003eb",
+    "apps/api/src/modules/email/email-attachments.router.ts": "c98bbe74a455c1a55154e39271e57795ce03b670a3b136f8b7ec5845c810f03f",
+    "apps/api/src/modules/email/email-automation.ts": "5060101f7e3722dba5706156af0b4de4c97fa06f36cf28e3ac9b09ae8d2a7345",
+    "apps/api/src/modules/email/email-dto.ts": "7d57b24e2dc865d9730ff9ebd0c54fd6903677a7b7459c8b43ab3f2b99803387",
+    "apps/api/src/modules/email/email-mailbox.router.ts": "887223c0cb0e1638bfdc033484119b1eedfc45cafe3339144fa7897d5be3abe4",
+    "apps/api/src/modules/email/email-send-error.ts": "4948af28669e9eea089ae680e4eead8dd1ccf7f3221d3d7e2e33185b5a64de0a",
+    "apps/api/src/modules/email/email-settings.router.ts": "a495a062b3ddc159da6bfa3201f115081fd449ab578ff5696d53579746457eb9",
+    "apps/api/src/modules/email/email-signatures.router.ts": "e0d3339abb09dffb30b5fed70c1f506e00f83fdabbfb564f38c43fc96ccb559e",
+    "apps/api/src/modules/email/encryption-guard.ts": "b02fd5e2904d39de114f58138b6b5d139a8b03c5a5113e3f7d9be61d40113fdb",
+    "apps/api/src/modules/email/inbound.router.ts": "84bac8d06dc32bb5c24c108c606e29971244844bd8f6c475a24dd0dd022e58fd",
+    "apps/api/src/modules/email/mailbox-sender.ts": "61f57ac287150c377a7938c1a96e9d8625d0d5dfa1a8fdc8f274b221f113be6c",
+    "apps/api/src/modules/email/mailbox-transport.ts": "ea7b7d780f1d0459bcc125acc059b374376452766d8da82e02c28f6ccb0d8f67",
+    "apps/api/src/modules/email/signature-sanitizer.ts": "643ad82d213402e84e68e9b3b4d0de32658eec3826dfadccddc1325247096b45",
+    "apps/api/src/router.ts": "2dd4c65bc1bce2ccf38f9ed873c5792c1636ec77f7cecc4b36a69740b1f418fa",
+    "apps/api/src/security/rbac.ts": "ef2c0b2728d17cf4584fb8a1d2b9a6ae3af591c2443351a724b2dd60337a118e",
+    "apps/api/src/security/types.ts": "017a06cb6afc3213f679d96f2a849463205335a81db508eb01cdb6c2938084d0",
+    "apps/api/src/shared/__tests__/quota-guard.test.ts": "b94cb35b47c7ed5e44f007717c4291f693502aadfb18ea510e684b928cf170f7",
+    "apps/api/src/shared/quota-guard.ts": "9f64ac693e7b8f9a9da6954bd2c8d1491cb88aac45634f595fdfe1dc902d594a",
+    "apps/api/src/test/setup.ts": "62dab31f5af54ad92fff4914ed2375b87d7f39ade27637bf0250c7c816ff4072",
+    "apps/api/src/trpc.ts": "6d81d620c49f69ed6957b28489061a11ab57da386cf584f7930fd4c3cddb67ba",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "039fb96e1afd62b2304aee4e0cb4e5eeebd66272b5cdddb85c8cf37d88dc0030",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv": "97f4ca361e76d3711f8c5ee0011a99518d3edd64aad9e0b0daec5e63aad19a6f",
+    "apps/web/src/app/__tests__/sitemap-reconciliation.test.ts": "688a204079bc57033f584af161f88df4080a2108397460c92fb33e1b212fd62b",
+    "apps/web/src/app/email/compose/__tests__/compose-client.prefill.test.tsx": "ac58ac5b91818c0d380e5277a9e19efbaa96ff4e6d9d2b78775f78222e0bc173",
+    "apps/web/src/app/email/compose/_compose-client.tsx": "f84826483b321f98f8a5a72231b22c391e13e83dcea13b6cae4c532e4e4086f4",
+    "apps/web/src/app/email/email-settings/EmailSettingsContent.tsx": "111733ed5c733bca98d1973afba4a273b0b853b76c95bdf0d890bff4987db637",
+    "apps/web/src/app/email/email-settings/EmailSettingsLoading.tsx": "6737483ebb587dfd49b2a76adda073d3741323f6734895756606cf1e42a50f60",
+    "apps/web/src/app/email/email-settings/__tests__/EmailSettingsContent.test.tsx": "22d32cd5ea95fefd653e643435c6303cb3ebb0c37f375ed5ef2b2959be5346f8",
+    "apps/web/src/app/email/email-settings/__tests__/EmailSettingsLoading.test.tsx": "ec9b5c3cae3f0306ed77901877ae921a23901da8aa1b6ed4796fe34763302536",
+    "apps/web/src/app/email/email-settings/__tests__/page.test.tsx": "77667af6379c018ef90e15570c8cba1c098b5c5befe5933fe6d920467af41bef",
+    "apps/web/src/app/email/email-settings/components/CompanyMailboxCard.tsx": "d3b9dcb9b6082b60ec7257a5633f042bf8822b6bccca8645da02a00c851f7640",
+    "apps/web/src/app/email/email-settings/components/MyMailboxCard.tsx": "419dc88e71b32aa93cae1f725940a0f2516e0661ea0dc22f43508b1fa6dca2c6",
+    "apps/web/src/app/email/email-settings/components/OAuthReturnNotice.tsx": "e3f3b6c7a36a3382a26855d340b6d8df360092fc570d5d6cb3e8cf1d2bba0a0c",
+    "apps/web/src/app/email/email-settings/components/SecretField.tsx": "aa97407bb30f1cff596e7b7693fcc068060d5980cfb9efc9f3e7986201fde1b4",
+    "apps/web/src/app/email/email-settings/components/SmtpMailboxForm.tsx": "62b67ad42782d339a05dfc2f03fd3cf3df92db3c384f4c195c93b7f909774361",
+    "apps/web/src/app/email/email-settings/components/SuppressionListCard.tsx": "50534b271fca9c228f14cd0a748fadaea95f253c5076e0c1b9050d721a3682ee",
+    "apps/web/src/app/email/email-settings/components/TenantSettingsCards.tsx": "2437cf98d2a5b3f4cd76ca3bc827f5b4e8225b6420011c6d9996124d2bbbba24",
+    "apps/web/src/app/email/email-settings/components/__tests__/CompanyMailboxCard.test.tsx": "b6650be27da6a0a72df0a303ad2882d8063e8026bbd5eb4c73420d02e06130ca",
+    "apps/web/src/app/email/email-settings/components/__tests__/MyMailboxCard.test.tsx": "8210722b7363dfa3bd04a5e4b336a0fe05c597f7302912491e5e14414f278231",
+    "apps/web/src/app/email/email-settings/components/__tests__/OAuthReturnNotice.test.tsx": "4b631bd2f4b0c6757e07677c34851328468ff22080c6fa48f8c09e0596bc2ff7",
+    "apps/web/src/app/email/email-settings/components/__tests__/SecretField.test.tsx": "03e8f962b8332b3af0a78c2a37abf7b6ee62cb01d192e37f32f453e562944d51",
+    "apps/web/src/app/email/email-settings/components/__tests__/SmtpMailboxForm.test.tsx": "28f930ae21ddd58997a388a5de60b0bb0d1b5c58a2d6d7cdf8f6f2cf046841c1",
+    "apps/web/src/app/email/email-settings/components/__tests__/SuppressionListCard.test.tsx": "f8021e21a6cb8875750baddbf502b6e62d15c3d6b73c59e302560542d6b8cba7",
+    "apps/web/src/app/email/email-settings/page.tsx": "17fcff71509bd3c25df5aa87251bb827304aa2a63e33d9aced297b5a5b07eec1",
+    "apps/web/src/app/email/oauth/callback/OAuthCallbackContent.tsx": "1276c40dcbb1f861fd0688299202f1142927839d9a030857000d4fb95d8f940f",
+    "apps/web/src/app/email/oauth/callback/__tests__/OAuthCallbackContent.test.tsx": "01954fbe2a82178022ac02f55b7234647c725376d2d30e340e9c1160216d4105",
+    "apps/web/src/app/email/oauth/callback/__tests__/page.test.tsx": "21022f1cbfffb4545707b3bc6f92152cf7edbaf816c6f0b2b215dc429a2d49fc",
+    "apps/web/src/app/email/oauth/callback/page.tsx": "33c9f85d7f9e7306c4d82e40c5f90576830eacb15fc989c3e21aff90b3de9ecf",
+    "apps/web/src/app/email/oauth/oauth-session.ts": "bea050e9ea4e9adec4042be4614dba25b973d6a559cc0184b65a41c1d109c0c6",
+    "apps/web/src/app/email/signatures/SignaturesContent.tsx": "850a13e358e128d04eeeeb6a4c76d18753ee5ed0512d3865ea14997b78688eb6",
+    "apps/web/src/app/email/signatures/SignaturesLoading.tsx": "15a3b6f76dcf99647fd92ba3c608a85a39af988c6ec17639e65e44b4361896fb",
+    "apps/web/src/app/email/signatures/__tests__/SignaturesContent.test.tsx": "dccbc8124a7c59c6f30af4a584b9527d19e23a2740fd28f606e222612d6a801e",
+    "apps/web/src/app/email/signatures/__tests__/SignaturesLoading.test.tsx": "a0386c0f7a69ad4d89a8603e264f41b2d811adb0abeb1fcdfebd35e356441a42",
+    "apps/web/src/app/email/signatures/__tests__/page.test.tsx": "c008196c7c5a8f1206691ff67d4e146910e24acca851c3cb6d20f3a746436e1c",
+    "apps/web/src/app/email/signatures/components/SignatureDialog.tsx": "f2d6d50945ad96b6c94a2d2589a846426476b64d0506bdff77361430fc312e70",
+    "apps/web/src/app/email/signatures/components/__tests__/SignatureDialog.test.tsx": "0961d6f31389a924318b82ec9b5df97158c909b1aa2eb9db62194c4d4b071fbb",
+    "apps/web/src/app/email/signatures/page.tsx": "36c7897ce29964b7045f369e4a69a1deda455867fb75d4b23d171941ca31f262",
+    "apps/web/src/app/notifications/settings/page.tsx": "ae77a6dd9b9481f615c89f55c51d9175c973b50422315b4294d9ea169357645c",
+    "apps/web/src/components/email/DeliveryStatusBadge.tsx": "6e471fc559ee3f9dce5a117683d4e124acabc72ade0d25277df6fee3a9d096f4",
+    "apps/web/src/components/email/EmailCompose.tsx": "6f41e6ba69929420cf17d215134809c4e7969b519999cc6a318ebf4409aa9be3",
+    "apps/web/src/components/email/EmailListItem.tsx": "3722ed1caf89c9484f0f2a0ffbf072f2c6e6ce7e4081f297a54f234001fcdbb8",
+    "apps/web/src/components/email/EmailMessage.tsx": "b538a1abd306673a7517471a8ec90a42ffa1e91838093be593bccd2b58652857",
+    "apps/web/src/components/email/EmailSettingsPanel.tsx": "111934cddc00b4d85baa90dd1f0f08d7e9cf02c4cd88426d3e2dc00249ce55f6",
+    "apps/web/src/components/email/InlineCompose.tsx": "2c0823626e9af6db3f60203cb1e7098e7cc5e3da227f3e088732afd2b7f7874c",
+    "apps/web/src/components/email/SendErrorAlert.tsx": "48cd8efad48debba9146ce80ac814ba00a366dc6ed3136cae022469873f72302",
+    "apps/web/src/components/email/__tests__/EmailCompose.attachments.test.tsx": "127ca8a5aca5aeae79dba8afc2738b8e6f5b1c18ad9336e3777dee485679bc43",
+    "apps/web/src/components/email/__tests__/EmailCompose.send-errors.test.tsx": "6376f15e4d5e72faf6c8fe3bcf43822eb21ab2fd328c791c3bd029aa03e5abf6",
+    "apps/web/src/components/email/__tests__/EmailCompose.test.tsx": "c8437f79cdde1d89ce11e1dc5eeb22da342ee5f9673768291b868261f1e0622f",
+    "apps/web/src/components/email/__tests__/EmailListItem.status.test.tsx": "864ed2c0951b8878fa9bc6d92fe419e08aa800f90ec7d30a82f209d3d17d8981",
+    "apps/web/src/components/email/__tests__/email-coverage.supplementary.test.tsx": "c5636200f00e5d6a077fc9bd6a8b43c5ef91cc64113386530b5fda261b48a620",
+    "apps/web/src/components/email/__tests__/email-test-utils.ts": "0e1cf0a71595f1de1a06a9e468b1a4d00c695838081e3beccccbeb9d740a1c6a",
+    "apps/web/src/components/email/__tests__/send-errors.test.ts": "b5d8f1a233d79e17b382b8d4490eee9876b5ed73741417157fb93b13fde4cca1",
+    "apps/web/src/components/email/send-errors.ts": "e298552a0ab96cbcb9160a7efac203218685d2257e89c5cbebee267ce216521e",
+    "apps/web/src/components/notifications/__tests__/notification-utils.supplementary.test.ts": "cc4ca5588ac96c86a0acdce8a6074eab883c356a995249ee116328accbfb34df",
+    "apps/web/src/components/notifications/notification-utils.ts": "281c5878154fffaed065043312639d54a8cd167474fdc56226b008d8a73f460f",
+    "apps/web/src/components/shared/__tests__/module-settings-shell.test.tsx": "d47803dc8df32a1b126ea0f28435a69a7ba9a6d5264d3ddc1ebd7ab0dc9701ed",
+    "apps/web/src/components/shared/module-settings-shell.tsx": "551da8726b805219ec45d3cd71e641701635db14ac91f72acbd7a1b3a946c2f1",
+    "artifacts/benchmarks/baseline.json": "a543e20e7f112cd2771c585be625eff3203e14271c01b853b086175903012f2a",
+    "artifacts/coverage/PG-207-before.json": "feb4bc48086dd81548ca60832fbffd3f49ca979c5b902e0966da359a9b12ed01",
+    "artifacts/lighthouse/PG-207/email-settings.report.json": "d89ed5ffa2506bd75ee00a45052dd5d7c0352f89305acd3e0d1a7c68cf0a1ed1",
+    "artifacts/lighthouse/PG-207/signatures.report.json": "8d4a1e9f4682d647a399396c4c9ef843ee48d707d4cbea378b71ff342a8baab8",
+    "artifacts/metrics/debt-ledger.yaml": "85e7811f3904b23cfd768c1ab969ae25196d1d1fbf4af155cd09ca8afe4a3ad6",
+    "artifacts/reports/content-audit-results.json": "65e56a44ba05c0604e711281a9f081d4c1909c09bf8b0833b0f6eb1f20cf5373",
+    "docs/architecture/adr/ADR-085-user-mailbox-sending-and-bounce-reading.md": "c46afc01def1563da5a823d264bc93d0fb97cc1e35dcf9d30c8689ce80200d39",
+    "docs/architecture/adr/README.md": "3631cb300ddf0b50a6d33b5d09d75fffd9a1c42ef6f1721d6d21a4056fcb35cd",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "c2c268719bacbdee8a272c566c3ee877599d3de1ba568465fe6f7bb14991f538",
+    "docs/architecture/diagrams/integrations-dependency-chain.md": "7c8da1f685af48f66a25b29095e91da10b8b44f832e1831e74b3ef3021f461d1",
+    "docs/compliance-and-governance/compliance/vpat-2.5.md": "b3aa884933a8feab87be436dc0108945c3dcef075844ab5e44f7e91e484a9ab5",
+    "docs/compliance-and-governance/compliance/wcag-conformance-statement.md": "72faa4f785c19d923b12154c89182a8f3a4971573677c7c58226149df5488bfd",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "e1c549aa54971e6f4d26576ad3a302f118546d8faf99c7fc94c73cf825be1053",
+    "docs/design/content-audit.md": "37393bd931b96d2ea2d2c0e4c4e56d2894dd496cfef267961a61a988a0fc1c8d",
+    "docs/design/information-architecture.md": "576fff5378de7357712097578805d32afa1a42185bac8077715d8a54366a38c2",
+    "docs/design/navigation-reachability-audit.md": "8970b9d04f5fd57a99d063262a3eff1c2974899e543884b0641f1e50d2b3307c",
+    "docs/design/page-registry.md": "f4519abe6b226cbc560038ff36fe0bde2cd235d984691a210f241380fb37f8eb",
+    "docs/design/sitemap.md": "b71d6815d60197a2373dad236abc527ba9c48de31363daa0e94ad2d09daea71b",
+    "docs/design/ui-flow-mapping.md": "4356fd4833a6b7855c3834775aba7961cae6c6ee4b996df4e0db0f6901b1e149",
+    "docs/operations/README.md": "e62da382f1ba993233abc4c884ea4ad5a2514a76480b4e3f086ecb3c7d832599",
+    "docs/operations/runbooks/user-mailboxes.md": "3057e6d63f1824eed6b6dd16fa9b31e5170a7ac9d1cc67cf1aff481b25e9f848",
+    "docs/planning/prd-module-settings.md": "bd775dbe6d93ba460db034336bf0f3871f6550394f4a1a66743cde7b44c31d43",
+    "lighthouserc.js": "f7a22010dc5ae169c4b2d0910ba227dbe1ed0526a6d26df077725835e6f61b88",
+    "package.json": "e3abdc04379357de0ae525c4a4f3c9932971240305a3ea2bcb700e2c3f8264b6",
+    "packages/adapters/package.json": "6c4ca8bdaa3507fdf06d9607f1d2ad61182efb05338c1c6372eba3acac595789",
+    "packages/adapters/src/index.ts": "d18e922b21aa3fde7eb1e98b5ac997dee46e578c448c1a4671c018a6c70dcadb",
+    "packages/adapters/src/messaging/email/__tests__/dsn-fixtures.ts": "860c3302f51b969f98f84d0e4b9c71b0f278cd7d3a38bfa33263e7f98018ac43",
+    "packages/adapters/src/messaging/email/__tests__/dsn-parser.test.ts": "5796d75e7561d04bcddb72e25768d069e5de3cd65aa806864299b8be9974b013",
+    "packages/adapters/src/messaging/email/__tests__/imap-dsn-reader.test.ts": "921b9b8aec925ca6fbd778d1f27b5a518b3856bfa41fa7086f83eef8d51d946b",
+    "packages/adapters/src/messaging/email/__tests__/mime.test.ts": "f18f6b720eb34c70a374a3058f66e1539d99637cbd5a0f1fa80d680dfbb25d25",
+    "packages/adapters/src/messaging/email/__tests__/oauth-mailbox.test.ts": "0a4dcf8f830e730fea761f09293bf022f12b47e991d7a96c13778a55d73fdca1",
+    "packages/adapters/src/messaging/email/__tests__/public-host.test.ts": "e3085a8ce8a882485c8dfbe68dee50d2263f73581d87529bf758359e12b31029",
+    "packages/adapters/src/messaging/email/__tests__/smtp-provider.test.ts": "6897eb3101aa0c843579358aca348a05c3f0cee9ba811b79dcf9af33b1087bfe",
+    "packages/adapters/src/messaging/email/dsn-parser.ts": "f45eba6c266af28fe835b093bdcba74e50e1164560574311af05d04f9477f5df",
+    "packages/adapters/src/messaging/email/imap-dsn-reader.ts": "185969dd43c3f7ccb676bf09eb63983b72cdd158f894cf01e6d67ef7a9d1ff71",
+    "packages/adapters/src/messaging/email/inbound.ts": "d2af1e1709e54de4ce394d6246ecb523f5c90b07721031177b95aa0875515264",
+    "packages/adapters/src/messaging/email/mailbox-errors.ts": "ac5c13e09eabb5f957554bd08254a1adbbc17baf415d9a84fb894a92fe41064f",
+    "packages/adapters/src/messaging/email/mime.ts": "a14cb37f3db47c563eda16fbc3354ecbbeea478ef311e069d5f7c3d12029b6e5",
+    "packages/adapters/src/messaging/email/oauth-mailbox.ts": "247b340ddd5f3207d51d559f2dda1c3679a3a2880f9a6b756a419d9714b51c3f",
+    "packages/adapters/src/messaging/email/public-host.ts": "d9da278a8ff930b4bc1a0d19c801145a8fe533da7d88271673f26e4057975586",
+    "packages/adapters/src/messaging/email/smtp-provider.ts": "c5b45d9fb445505c172ecbc509f0963eb65066b6357eaed93a378b190f1201a4",
+    "packages/adapters/src/storage/SupabaseStorageAdapter.ts": "48c3aaa8c81ecf533d9eaf18b91fbd4b599d0f49abe108cd1880b9b393e796e4",
+    "packages/adapters/src/storage/__tests__/SupabaseStorageAdapter.email.test.ts": "17ab2269fde030f85e3447ca777846d7982dd7f96ff8f388bdf2db25d9735df7",
+    "packages/application/src/ports/external/StorageServicePort.ts": "370676577f836464912456142158557fbe9ba56f675a55639b39ee383820cb2c",
+    "packages/db/prisma/migrations/20261020120000_email_mailboxes/migration.sql": "325a57678b843a120749ac5d7f78b2063d4086da65dc1818e9e79cc88adc8f9e",
+    "packages/db/prisma/migrations/20261020120100_email_settings_signatures/migration.sql": "18ab5029ef8be626509664f8b491febaac7f4c55fbe3203058fc319b85b6fde2",
+    "packages/db/prisma/migrations/20261020120200_email_suppression_receipts/migration.sql": "3dde639303656e3cea9512d7be91a46dc90f88672bd393cf9027fac707c9e7e0",
+    "packages/db/prisma/migrations/20261020120300_email_record_message_ids/migration.sql": "7dfdeeb0ef634180d706590f09f3c66c75a7cd2daf8007f80b9027368498e927",
+    "packages/db/prisma/migrations/20261020120310_email_records_provider_check_validate/migration.sql": "6bb74311e43796be7b2e4ed035a215c06d50c6a6e5b90986e606d3d91e22fb88",
+    "packages/db/prisma/migrations/20261020120320_email_records_mailbox_fk_validate/migration.sql": "21ba65fa5bc1ffd8aecfa92a95a33b9922f23ed68f8cb58b1b3115c91acf15ca",
+    "packages/db/prisma/migrations/20261020120400_email_records_message_id_idx/migration.sql": "ee321436bc3f338c2889dc86e4ba69ede0a6da7e09d0bfd1be49bf909793fefd",
+    "packages/db/prisma/migrations/20261020120500_email_records_mailbox_id_idx/migration.sql": "6968c7726ec55f530aa766c2d26daf5d5fd6c73a46abf9bc897715c2beb71fdd",
+    "packages/db/prisma/schema.prisma": "e14c05eca0a6ddadb50fae5051761e878e0872f30d655165a7336e3c26b0e5de",
+    "packages/db/src/__tests__/field-encryption.test.ts": "6665dbdb2f6fe67d105fb3efb02f68b8975b7f45ca313f4eef93fd6fa8fc3fec",
+    "packages/db/src/field-encryption.ts": "25015d493b3b600a6ed7478bfef7dfaa90799f3202bbf7cba925efef96ad8417",
+    "packages/db/src/index.ts": "a9c38fb2c126f3177a9f89446e94b331bd6e05f54866906f96e3616a82e59d6f",
+    "packages/domain/src/email/__tests__/attachment-path.test.ts": "078d5dd21f9556e4bb96d42d28bc77489901261a92267ebde2d583f07d65a9e1",
+    "packages/domain/src/email/__tests__/dsn-classification.test.ts": "08e859b80503a2ac0026da3fb86f501f305347fd00341b8b37eae8212a2b679c",
+    "packages/domain/src/email/__tests__/email-address.test.ts": "dd9188b6feaba6fba6ef1a6df03a792d5d7440d1c3048bcfe3b62f11e70574ed",
+    "packages/domain/src/email/__tests__/email-constants.test.ts": "7ce061da178c2d41d15e8920ec922ec6b185453e967299c10aeae08bca0a3986",
+    "packages/domain/src/email/__tests__/evaluate-bounce.test.ts": "5120e1eda86f48e7b21a805089e9061a78d63a89df09f7679a877df0d7cfce50",
+    "packages/domain/src/email/__tests__/partition-recipients.test.ts": "c398eeebc5dbcb5f5034cdc2c05c1933edd908b068c6df3e7a9418cd4c9c71c4",
+    "packages/domain/src/email/__tests__/resolve-default-signature.test.ts": "798958e0593f56163138e3602f57be7434a57bebabe457e53c99a8c7a7af7afb",
+    "packages/domain/src/email/__tests__/resolve-sending-mailbox.test.ts": "d5901b7975681e4304bc203df473288f9632d1f650e6e40098540e24c714bea8",
+    "packages/domain/src/email/attachment-path.ts": "c2737963b58ab73304a257c9d7426375350f512aab1aa365cecddfd6216b6b82",
+    "packages/domain/src/email/dsn-classification.ts": "b33e8770156b5c484e78c0961e1789cf3fd72955039221a380d1f410d66e3f78",
+    "packages/domain/src/email/email-address.ts": "246c95eac680680dc0252a3718f38f3f57b680660671d1d3d26b03dc02451053",
+    "packages/domain/src/email/email-constants.ts": "92de992d6dd25215ff42643792dd56f0bb5e4be758a90ae0e9dda1cc19b34527",
+    "packages/domain/src/email/evaluate-bounce.ts": "0d4a8678bf3563ccde456fb2ff609ce5c7415be758fb840bfa65fc5caf03b404",
+    "packages/domain/src/email/index.ts": "c02f9c17e4bfa58553da5df254632397462f6c179ca6aeb18b01092fbbddb9c1",
+    "packages/domain/src/email/partition-recipients.ts": "15ac494dfc2c2eff320607bc77771189f8269247ba0e4c4688578a2ef37b9e1a",
+    "packages/domain/src/email/resolve-default-signature.ts": "81b6fbc1c66b7e3f84cbb7f5a1665f621b2caff2ce8adb7d9e4054503bc5f50c",
+    "packages/domain/src/email/resolve-sending-mailbox.ts": "3c3a968b8ac0472c783cf3e2da906baaa2de4c6ae474af59a4abf6eb8f56ba03",
+    "packages/domain/src/index.ts": "c459221a95371974ba87832c2d962027647b08f67f2971291172a1f050beae88",
+    "packages/domain/src/workflow/__tests__/public-ip-address.test.ts": "13f9715a0fed2201044f3e41871fcd1f29b74386420108bfeb67bbcd2da1bae2",
+    "packages/domain/src/workflow/node-catalog.ts": "038d100a03c536d807b9a595d0c5508e3033f70e8c2986d3eaeec121301fc585",
+    "packages/ui/__tests__/rich-text-editor.test.tsx": "75b3f20255dcd5c3830bd009500014336a4bded47bd86df219e268b749de0dee",
+    "packages/ui/src/components/rich-text-editor.tsx": "2e8cd135011d6b6e8b64f7374a9b9df43684eadaf1c4f8fc3bceb70698c102d7",
+    "packages/validators/src/__tests__/email-mailbox.test.ts": "c9f41a8ad496fd5a2a7d0187a2071f2463b1a5e77485487cb226669a58eda27a",
+    "packages/validators/src/__tests__/email-settings.test.ts": "dc9f84673d5456d714c6d35bbea13e0327224828421d20b04afa02b02fbdd788",
+    "packages/validators/src/__tests__/email-signatures.test.ts": "bb83a391fae617809b914f4ecea2aa9367f2b5c0e9fae8c6bc06ab357d0a3926",
+    "packages/validators/src/__tests__/notifications.test.ts": "540c538267a3c47856ccac979e25e24e20da63f8c496e06211785643be62e418",
+    "packages/validators/src/email-mailbox.ts": "d718e4b095afc14da71bde4f72a48d19787fb1b759b5b337ada9ce79db7e7fdb",
+    "packages/validators/src/email-settings.ts": "0d4d70ae80fc6dd8b1ca5a1c4cc6cb271a85c7352413e35229fb203c5dc52aa8",
+    "packages/validators/src/email-signatures.ts": "e313600904ada975ef202d0bfef8a4aa067638ea8b91c2ae3ce57e00d231cf74",
+    "packages/validators/src/index.ts": "b4ef91595f213db049e0a964f8e5d754714fff53893a02359ef021632d7805a8",
+    "packages/validators/src/notifications.ts": "16ba55b0056bcb3fdc2dcf6c9c61d6f0aa630a6905d41d0e4941fc6c7cd112e0",
+    "pnpm-lock.yaml": "18ffe07fc05138bb7daa976e7f833f26080a0f8de2684d1f9382225686da9c45",
+    "tests/integration/email-settings.test.ts": "2a75484ec79afbe46258322dfedf8594da044cbf438e4f5faef9d9580bdf6cec"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck (monorepo, 38 turbo tasks)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-21T15:17:43Z",
+      "stdout_hash": "444cac22794f69b29f9299e138e5d884c4d4aeb27dc90f796417329e683fcdbb"
+    },
+    {
+      "name": "Tests",
+      "command": "with-slot vitest run per package: domain, validators, application, ui, adapters, db (local test DB), api, web; integration email-settings; tools",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-21T15:17:43Z",
+      "stdout_hash": "a1d1b4d07cc08ba1997c54d76b101a9e421aea8c11a54aa00bf2263ce360f473"
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint <touched files> each round + pwsh scripts/code-review-analysis.ps1 -Sprint 18 -TaskId PG-207 -Quick (26 packages, 0 errors) + pnpm lint:sonar:guard",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-21T15:17:43Z",
+      "stdout_hash": "fccd037c17f3b94149d6087aeb52f1c9cc5973e819d3f3251ee8e29f2c047dbe"
+    },
+    {
+      "name": "Build",
+      "command": "with-slot pnpm build (20 turbo tasks) at bd7b4b1c1",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-21T15:17:43Z",
+      "stdout_hash": "bd91aaf04f2d01aeefb2a5dc097d64cd7832e46132810fc4ba7dabef7ed2ab71"
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
+      "gate_id": "preflight page-doc-cochange - PASS (plan scanner sees no page.tsx: known blind spot #877; reachability checked by hand: sidebar configs/email.ts:10-11, EmailSettingsPanel.tsx)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-check-page-doc-cochange.txt"
+    },
+    {
+      "gate_id": "preflight plan-reviewer-subagent",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-check-plan-reviewer-subagent.txt"
+    },
+    {
+      "gate_id": "preflight exec-readiness",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-check-exec-readiness.txt"
+    },
+    {
+      "gate_id": "task-json schema sweep",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-task-json-schemas.txt"
+    },
+    {
+      "gate_id": "gate-12 nav wiring",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-check-nav-wiring.txt"
+    },
+    {
+      "gate_id": "gate-3c dead code (knip): 0 of 51 new files unused",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-knip.txt"
+    },
+    {
+      "gate_id": "gate-3 build validation (4/4)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T15:17:43Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/build-final.txt"
+    },
+    {
+      "gate_id": "gate-3b scoped coverage",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/web-changed-cov.txt"
+    },
+    {
+      "gate_id": "gate-4b worktree landed - BLOCK: not pushed (the runner pushes per the lane note); the agent/<id> branch-name check is a WAIVED PRECONDITION, not a pass (runner ruling 2026-10-21: lane branches are feat/<id>-<slug>, as PG-199 #935)",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-207 requires page.tsx (exists), EmailSettingsContent.tsx (MISSING), apps/api/src/modules/email/email-settings.router.ts (MISSING), packages/validators/src/email-settings.ts (MISSING), context_ack.json (MISSING). Broad grep for email-settings router/validator logic across apps/api and packages/validators returned zero hits."
+      "exit_code": 1,
+      "timestamp": "2026-10-21T09:33:11Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-check-worktree-landed.txt"
+    },
+    {
+      "gate_id": "dark launch: nothing configured ships dark",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-21T15:17:43Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/dark-launch.txt"
+    },
+    {
+      "gate_id": "MATOP STOA verdicts: Domain/Foundation/Quality PASS; Security FAIL only on pre-existing pnpm audit highs (origin/main; agent no-waiver rule) - all PG-207 security findings closed (re-run 4)",
+      "passed": false,
+      "exit_code": 1,
+      "timestamp": "2026-10-21T15:25:22Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/sec4-audit.txt"
+    },
+    {
+      "gate_id": "codex semantic review clean - rounds 1-19: HIGH/security/regression findings fixed (incl. #961 hardening r16-r17, round 19 fixes in bd7b4b1c1); r18 MEDIUMs filed #970 #971 per runner stop rule; no round run on bd7b4b1c1 itself: the runner pre-ship codex at push is the final round",
+      "passed": false,
+      "exit_code": 1,
+      "timestamp": "2026-10-21T15:17:43Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/codex-review-r19.txt"
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Lighthouse /email/email-settings (desktop, local next start, no session)",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 94, accessibility 90 (artifacts/lighthouse/PG-207/email-settings.report.json)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse /email/signatures (desktop, local next start, no session)",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 93, accessibility 90 (artifacts/lighthouse/PG-207/signatures.report.json)",
+      "met": true
+    },
+    {
+      "kpi": "Changed-line coverage (Sonar new_coverage mirror)",
+      "target": ">= 80%",
+      "actual": "api 96.7%/90.2%, web 95.4%/90.5%, adapters 93.4%/87.3%, domain 100%/100%, validators 100%/93.5% (statements/branches)",
+      "met": true
+    },
+    {
+      "kpi": "Full suites of touched packages",
+      "target": "all green",
+      "actual": "at bd7b4b1c1: adapters 3111, api 8153 (+18 skipped), web 13301; unchanged since a46aa9f7a: domain 3240, validators 2866, application 1494, ui 1253, db 235 (+5 skipped); integration email-settings 36 (6f7a81f4e), tools 78, docs-integrity 18, dark-launch 6",
+      "met": true
+    },
+    {
+      "kpi": "Cross-tenant negative tests",
+      "target": "present and passing",
+      "actual": "router NOT_FOUND tests, integration RLS/composite FK tests, attachment path tenant rule (encoded traversal refused)",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-182"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /email/email-settings renders",
+      "criterion": "Email settings at /email/email-settings (SMTP/IMAP per user + company fallback, Gmail/Microsoft OAuth, reply-to, tracking toggles, bounce rules, suppression list)",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "EmailSettingsContent.tsx + components; email-mailbox.router.ts, email-settings.router.ts"
     },
     {
-      "criterion": "SMTP/IMAP config per tenant, signatures, tracking pixel toggle, reply-to override, bounce handling implemented; secrets via server-side tRPC only",
-      "met": false,
-      "evidence": "page.tsx (18 lines) is a static placeholder ('Email settings configuration coming soon.'). No form, no data fetch, no SMTP/IMAP config model — the task's own security note ('secrets MUST go through server-side tRPC') has no code to check compliance against."
+      "criterion": "Signatures per user/org at /email/signatures; Zod duplicate-name refine; capped per owner",
+      "met": true,
+      "evidence": "SignaturesContent.tsx, email-signatures.router.ts"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate signature names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "Secrets only through server-side tRPC, encrypted, never returned or logged",
+      "met": true,
+      "evidence": "ENCRYPTED_FIELDS, no-secret-leak.test.ts, encryption-guard.ts"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "PageHeader + bento, canonical EmptyState, system CTAs (module-settings playbook)",
+      "met": true,
+      "evidence": "ModuleSettingsShell, SuppressionListCard EmptyState entity=emails"
+    },
+    {
+      "criterion": "$transaction on destructive writes; no skipDuplicates",
+      "met": true,
+      "evidence": "signatures/settings/mailbox routers"
+    },
+    {
+      "criterion": "Boolean toggles wired or category-2 (tracking -> IFC-221 broadened)",
+      "met": true,
+      "evidence": "Sprint_plan.csv IFC-221 row; PRD addendum"
+    },
+    {
+      "criterion": "Cross-tenant negative test",
+      "met": true,
+      "evidence": "router tests + tests/integration/email-settings.test.ts"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
+      "met": true,
+      "evidence": "unauthenticated local run 94/90 and 93/90; authenticated run NEEDS_HUMAN (LHCI creds)"
+    },
+    {
+      "criterion": "Branch landed on the remote (Gate 4b)",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "not pushed: the runner pushes per the lane note"
     }
   ],
-  "dependencies_verified": [],
+  "nav_wiring_confirmed": true,
+  "spec_session_consensus": "5/5 APPROVED (/spec-consensus, subagent mode, 2026-10-20); owner rulings Q1-Q11 in context/PG-207/PG-207-owner-ruling.md",
+  "plan_reviewer_verdict": "APPROVED_WITH_CHANGES",
+  "plan_reviewer_agent": "plan-reviewer (.claude/agents/plan-reviewer.md), 3 iterations",
+  "plan_reviewer_marker": "<!-- plan-reviewer: subagent -->",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-207-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-207-plan.md",
   "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v22.14.0 (nvm) for every test/build/typecheck/lint run; host default v25.2.1 not used",
+    "git_commit": "bd7b4b1c1ac010aa7a9afb49855d233161ca7670",
+    "branch": "feat/pg-207-email-settings"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 18-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit e18a18a92e061d48ffc57916b85cec7f5837c985 ('feat(web): add email, calendar, and notification settings pages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: EmailSettingsContent.tsx, email-settings.router.ts, email-settings validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-207/context_ack.json — absent"
-    ]
-  }
+  "notes": "PRISMA MIGRATIONS (LOUD, Class A, manual production apply with prisma migrate deploy BEFORE the API ships): 20261020120000_email_mailboxes, 20261020120100_email_settings_signatures, 20261020120200_email_suppression_receipts, 20261020120300_email_record_message_ids, 20261020120310_email_records_provider_check_validate, 20261020120320_email_records_mailbox_fk_validate, 20261020120400_email_records_message_id_idx, 20261020120500_email_records_mailbox_id_idx (CONCURRENTLY: confirm pg_index.indisvalid after deploy).\nVERDICT NEEDS_HUMAN because: (1) Gate 4b: the branch is not pushed (the lane note leaves push and PR to the runner); (2) the codex semantic review has not run on the final SHA (round 19 findings fixed after it; the runner's pre-ship codex at push is the final round); (3) Google/Microsoft OAuth app registration and the gmail.readonly restricted-scope assessment; (4) live D5 header-survival spike on real Gmail/Microsoft DSNs (matcher is fail-safe: needs both record id and Message-ID); (5) PRISMA_FIELD_ENCRYPTION_KEY in production and the private email-attachments bucket; (6) Lighthouse with a session (LHCI_TEST_EMAIL/LHCI_TEST_PASSWORD). The unauthenticated run met >= 90 on both pages.\nBounce trust (#961, owner ruling Q12, hardened after codex r16/r17 and Security STOA re-runs): vouched receiver + authenticated + entitled reporter; custom IMAP mailboxes fail closed (EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS empty, runner ruling). #962 fixed (closes). Security STOA verdict file: see matop/stoa-verdicts/Security.json (the agent's no-waiver rule counts pre-existing pnpm audit highs on origin/main).\nOpen issues: #955 #956 #957 #958 #961 (fixed; follow-up #965) #963 #964 #965 #970 #971 (#877 preflight blind spot). Delivery report and findings list every review round and every place RED was not observed first."
 }
