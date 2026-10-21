@@ -74,6 +74,11 @@ export interface ModuleSettingsShellProps {
   saveAction?: Partial<PageAction>;
   /** Class for the PageHeader; defaults to 'mb-6'. */
   headerClassName?: string;
+  /**
+   * Hides the Reset/Save header actions — for a viewer who may read but not
+   * change the settings (PG-207: members on the email settings page).
+   */
+  hideActions?: boolean;
   /** The module's section cards. */
   children: ReactNode;
 }
@@ -100,6 +105,7 @@ export function ModuleSettingsShell({
   resetAction,
   saveAction,
   headerClassName = 'mb-6',
+  hideActions = false,
   children,
 }: Readonly<ModuleSettingsShellProps>) {
   if (isLoading) {
@@ -160,7 +166,7 @@ export function ModuleSettingsShell({
         breadcrumbs={breadcrumbs}
         title={title}
         description={description}
-        actions={actions}
+        actions={hideActions ? undefined : actions}
         className={headerClassName}
       />
 

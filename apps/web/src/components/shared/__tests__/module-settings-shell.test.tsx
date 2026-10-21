@@ -167,4 +167,22 @@ describe('ModuleSettingsShell (PG-191)', () => {
       expect(container.querySelector('.mb-6')).toBeNull();
     });
   });
+
+  describe('hideActions (PG-207)', () => {
+    it('shows Reset and Save by default', () => {
+      setup();
+      expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Changes' })).toBeInTheDocument();
+    });
+
+    it('renders the header and sections with no Reset/Save for a read-only viewer', () => {
+      setup({ hideActions: true });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Widget Settings' })
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('section')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Reset to Defaults' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Save Changes' })).not.toBeInTheDocument();
+    });
+  });
 });
