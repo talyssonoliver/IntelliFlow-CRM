@@ -1150,3 +1150,12 @@ waivers:
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
     author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
     date: '2026-10-21'
+  - fingerprint: 03ea1eee86c5313c586aedb09ea94950226eb71e5309e829ff1df3795dcaa08b
+    reason: >-
+      Same finding as waivers 283b28bc and 349b41c3 above (public booking vs in-app create and the
+      best-effort daily cap), anchored by a later review run on another line of the locked re-check. Same
+      evidence and tracking: ADR-081 best-effort cap, public bookings serialised under 'booking:<tenant>'
+      (ADR-083), host overlap blocked by constraint, in-app locked fix tracked in gh #913 / debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'

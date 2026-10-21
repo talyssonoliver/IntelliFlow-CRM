@@ -1,0 +1,326 @@
+/**
+ * @vitest-environment jsdom
+ *
+ * PG-203 — public booking flow (AC-011, AC-015, AC-016, AC-021, AC-022, AC-026).
+ */
+import * as React from 'react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, within, waitFor } from '@testing-library/react';
+import axe from 'axe-core';
+
+const h = vi.hoisted(() => ({
+  eventType: {
+    data: undefined as unknown,
+    isLoading: false,
+    error: null as null | { message: string; data?: { code: string } },
+  },
+  slots: { data: undefined as unknown, isLoading: false, error: null as unknown },
+  slotsArgs: [] as unknown[],
+  refetchSlots: vi.fn(),
+  book: { mutateAsync: vi.fn(), isPending: false },
+}));
+
+vi.mock('@/lib/trpc', () => ({
+  trpc: {
+    publicBooking: {
+      getEventType: { useQuery: () => h.eventType },
+      listSlots: {
+        useQuery: (args: unknown) => {
+          h.slotsArgs.push(args);
+          return { ...h.slots, refetch: h.refetchSlots };
+        },
+      },
+      book: { useMutation: () => h.book },
+    },
+  },
+}));
+
+import BookingContent, { bookingErrorMessage, looksLikeEmail } from '../BookingContent';
+
+const EVENT = {
+  firmName: 'Smith Law',
+  eventName: 'Initial consultation',
+  durationMinutes: 30,
+  description: 'A first call.',
+  locationType: 'VIDEO',
+  requiredFields: ['phone'],
+  timezone: 'Europe/London',
+  colorToken: 'blue',
+  privacyUrl: null as string | null,
+};
+
+const SLOTS = {
+  timezone: 'Europe/London',
+  days: [
+    {
+      date: '2026-11-02',
+      slots: [
+        { start: '2026-11-02T10:00:00.000Z', end: '2026-11-02T10:30:00.000Z' },
+        { start: '2026-11-02T10:15:00.000Z', end: '2026-11-02T10:45:00.000Z' },
+      ],
+    },
+    { date: '2026-11-03', slots: [] },
+    {
+      date: '2026-11-04',
+      slots: [{ start: '2026-11-04T14:00:00.000Z', end: '2026-11-04T14:30:00.000Z' }],
+    },
+  ],
+};
+
+async function axeClean(container: HTMLElement) {
+  const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
+  expect(results.violations).toEqual([]);
+}
+
+function renderFlow() {
+  return render(<BookingContent handle="smith-law" slug="initial-consultation" />);
+}
+
+function pickFirstSlotAndFill() {
+  fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
+  fireEvent.click(
+    within(screen.getByRole('radiogroup', { name: 'Available times' })).getAllByRole('radio')[0]
+  );
+  fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Ada Lovelace' } });
+  fireEvent.change(screen.getByLabelText('Email'), { target: { value: 'ada@example.invalid' } });
+  fireEvent.change(screen.getByLabelText('Phone'), { target: { value: '+44 20 7946 0000' } });
+  fireEvent.click(screen.getByRole('checkbox', { name: /I agree/ }));
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  h.eventType = { data: EVENT, isLoading: false, error: null };
+  h.slots = { data: SLOTS, isLoading: false, error: null };
+  h.slotsArgs = [];
+  h.book = { mutateAsync: vi.fn(), isPending: false };
+});
+
+describe('BookingContent', () => {
+  it('shows the event summary, a date strip and the times of the selected day', async () => {
+    const { container } = renderFlow();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Initial consultation' })
+    ).toBeInTheDocument();
+    expect(screen.getByText('Smith Law')).toBeInTheDocument();
+    expect(screen.getByText(/30 min · Video call/)).toBeInTheDocument();
+    const dates = screen.getByRole('radiogroup', { name: 'Choose a day' });
+    expect(within(dates).getAllByRole('radio')).toHaveLength(3);
+    expect(within(dates).getByRole('radio', { name: /Tue.*3 Nov.*no times/i })).toBeInTheDocument();
+    fireEvent.click(within(dates).getByRole('radio', { name: /Mon.*2 Nov/ }));
+    const times = screen.getByRole('radiogroup', { name: 'Available times' });
+    expect(within(times).getAllByRole('radio')).toHaveLength(2);
+    expect(screen.getByText(/Times shown in your time zone/)).toBeInTheDocument();
+    expect(screen.getByText(/2 times available/)).toBeInTheDocument();
+    await axeClean(container);
+  });
+
+  it("adds the visitor's own date to a slot that falls on another day for them", () => {
+    h.slots = {
+      data: {
+        timezone: 'Pacific/Kiritimati',
+        days: [
+          {
+            date: '2026-11-03',
+            slots: [{ start: '2026-11-02T10:00:00.000Z', end: '2026-11-02T10:30:00.000Z' }],
+          },
+        ],
+      },
+      isLoading: false,
+      error: null,
+    };
+    h.eventType = {
+      data: { ...EVENT, timezone: 'Pacific/Kiritimati' },
+      isLoading: false,
+      error: null,
+    };
+    renderFlow();
+    const visitorDate = new Intl.DateTimeFormat('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+    })
+      .format(new Date('2026-11-02T10:00:00.000Z'))
+      .replace(',', '');
+    const slot = within(screen.getByRole('radiogroup', { name: 'Available times' })).getByRole(
+      'radio'
+    );
+    expect(slot).toHaveAccessibleName(expect.stringContaining(visitorDate));
+    expect(
+      screen.getByText(/Days follow Smith Law's calendar \(Pacific\/Kiritimati\)/)
+    ).toBeInTheDocument();
+  });
+
+  it('asks the firm-local window for 14 days from today', () => {
+    renderFlow();
+    expect(h.slotsArgs[0]).toEqual(
+      expect.objectContaining({ handle: 'smith-law', slug: 'initial-consultation', days: 14 })
+    );
+    expect((h.slotsArgs[0] as { fromDate: string }).fromDate).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('asks only for the required fields, with consent linked to the privacy notice', () => {
+    renderFlow();
+    fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
+    expect(screen.getByLabelText('Phone')).toBeRequired();
+    expect(screen.queryByLabelText('Company')).toBeNull();
+    expect(screen.getByRole('link', { name: 'privacy notice' })).toHaveAttribute(
+      'href',
+      '/privacy'
+    );
+  });
+
+  it("links the firm's own privacy policy when it has one (owner Q12)", () => {
+    h.eventType = {
+      data: { ...EVENT, privacyUrl: 'https://firm.example.invalid/privacy' },
+      isLoading: false,
+      error: null,
+    };
+    renderFlow();
+    fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
+    expect(screen.getByRole('link', { name: 'privacy notice' })).toHaveAttribute(
+      'href',
+      'https://firm.example.invalid/privacy'
+    );
+  });
+
+  it('keeps the honeypot out of the keyboard and the accessibility tree flow', () => {
+    renderFlow();
+    fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
+    const trap = screen.getByLabelText('Leave this field empty');
+    expect(trap).toHaveAttribute('tabindex', '-1');
+    expect(trap).toHaveAttribute('autocomplete', 'off');
+    expect(trap).not.toHaveAttribute('aria-hidden');
+  });
+
+  it('books the chosen time and moves focus to the confirmation', async () => {
+    h.book.mutateAsync.mockResolvedValueOnce({
+      startsAt: '2026-11-02T10:00:00.000Z',
+      endsAt: '2026-11-02T10:30:00.000Z',
+      timezone: 'Europe/London',
+    });
+    renderFlow();
+    pickFirstSlotAndFill();
+    fireEvent.click(screen.getByRole('button', { name: 'Book' }));
+    await waitFor(() =>
+      expect(h.book.mutateAsync).toHaveBeenCalledWith({
+        handle: 'smith-law',
+        slug: 'initial-consultation',
+        start: '2026-11-02T10:00:00.000Z',
+        name: 'Ada Lovelace',
+        email: 'ada@example.invalid',
+        answers: { phone: '+44 20 7946 0000' },
+        consent: true,
+        __honeypot: '',
+      })
+    );
+    const heading = await screen.findByRole('heading', { name: 'You are booked' });
+    expect(heading).toHaveFocus();
+    expect(
+      screen.getByText(/A confirmation is on its way to ada@example.invalid/)
+    ).toBeInTheDocument();
+  });
+
+  it('blocks booking until a time is chosen, the fields are filled and consent is given', async () => {
+    renderFlow();
+    fireEvent.click(screen.getByRole('radio', { name: /Mon.*2 Nov/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Book' }));
+    expect(await screen.findByText('Choose a time.')).toBeInTheDocument();
+    expect(screen.getByText('Enter your name.')).toBeInTheDocument();
+    expect(screen.getByText('Enter a valid email address.')).toBeInTheDocument();
+    expect(screen.getByText('Please agree to continue.')).toBeInTheDocument();
+    expect(h.book.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('a taken slot refetches the times and keeps what was typed', async () => {
+    h.book.mutateAsync.mockRejectedValueOnce(
+      Object.assign(new Error('That time is no longer available. Please pick another.'), {
+        data: { code: 'CONFLICT' },
+      })
+    );
+    renderFlow();
+    pickFirstSlotAndFill();
+    fireEvent.click(screen.getByRole('button', { name: 'Book' }));
+    expect(
+      await screen.findByText('That time is no longer available. Please pick another.')
+    ).toBeInTheDocument();
+    expect(h.refetchSlots).toHaveBeenCalled();
+    expect(screen.getByLabelText('Your name')).toHaveValue('Ada Lovelace');
+  });
+
+  it('explains a rate limit', async () => {
+    h.book.mutateAsync.mockRejectedValueOnce(
+      Object.assign(new Error('Too many booking attempts. Please try again later.'), {
+        data: { code: 'TOO_MANY_REQUESTS' },
+      })
+    );
+    renderFlow();
+    pickFirstSlotAndFill();
+    fireEvent.click(screen.getByRole('button', { name: 'Book' }));
+    expect(
+      await screen.findByText('Too many booking attempts. Please try again later.')
+    ).toBeInTheDocument();
+  });
+
+  it('shows a generic not-available page for an unknown or disabled link', () => {
+    h.eventType = {
+      data: undefined,
+      isLoading: false,
+      error: { message: 'x', data: { code: 'NOT_FOUND' } },
+    };
+    renderFlow();
+    expect(
+      screen.getByRole('heading', { name: 'This booking page is not available' })
+    ).toBeInTheDocument();
+  });
+
+  it('says so when there are no open times in the next 14 days', () => {
+    h.slots = {
+      data: { timezone: 'Europe/London', days: [{ date: '2026-11-02', slots: [] }] },
+      isLoading: false,
+      error: null,
+    };
+    renderFlow();
+    expect(screen.getByText(/No open times in the next 14 days/)).toBeInTheDocument();
+  });
+
+  it('shows a loading state while the event loads', () => {
+    h.eventType = { data: undefined, isLoading: true, error: null };
+    renderFlow();
+    expect(screen.getByText('Loading booking page')).toBeInTheDocument();
+  });
+});
+
+describe('helpers', () => {
+  it('accepts plausible emails and rejects obvious mistakes', () => {
+    expect(looksLikeEmail('ada@firm.example')).toBe(true);
+    for (const bad of [
+      '',
+      'ada',
+      '@firm.example',
+      'ada@firm',
+      'ada@firm.',
+      'a@b@c.d',
+      'a da@x.y',
+    ]) {
+      expect(looksLikeEmail(bad)).toBe(false);
+    }
+  });
+
+  it('shows only safe server messages', () => {
+    const err = (code: string, message: string) =>
+      Object.assign(new Error(message), { data: { code } });
+    expect(bookingErrorMessage(err('NOT_FOUND', 'x'))).toBe(
+      'This booking page is no longer available.'
+    );
+    expect(bookingErrorMessage(err('CONFLICT', 'That time was just taken.'))).toBe(
+      'That time was just taken.'
+    );
+    expect(bookingErrorMessage(err('INTERNAL_SERVER_ERROR', 'db down'))).toBe(
+      'Something went wrong. Please try again.'
+    );
+    expect(bookingErrorMessage({ data: { code: 'CONFLICT' } })).toBe(
+      'Something went wrong. Please try again.'
+    );
+    expect(bookingErrorMessage(null)).toBe('Something went wrong. Please try again.');
+  });
+});

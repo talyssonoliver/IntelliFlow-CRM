@@ -111,6 +111,11 @@ describe('robots()', () => {
   });
 
   // TC-21
+  it('disallows the public booking pages (per-firm links, never indexed — PG-203)', () => {
+    const disallowed = getAllDisallowed();
+    expect(disallowed).toContain('/book/');
+  });
+
   it('public marketing pages are not disallowed', () => {
     const publicPages = [
       '/',

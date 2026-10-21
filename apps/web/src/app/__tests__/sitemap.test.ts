@@ -124,6 +124,10 @@ describe('sitemap()', () => {
   });
 
   // TC-08
+  it('never lists a public booking page (PG-203, AC-021)', () => {
+    expect(sitemapEntries.some((e) => new URL(e.url).pathname.startsWith('/book'))).toBe(false);
+  });
+
   it('no duplicate URLs', () => {
     const urls = sitemapEntries.map((e) => e.url);
     const uniqueUrls = new Set(urls);
