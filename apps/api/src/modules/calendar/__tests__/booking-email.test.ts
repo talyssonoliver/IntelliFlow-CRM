@@ -50,12 +50,15 @@ describe('buildBookerConfirmation', () => {
     expect(mail.cc).toBeUndefined();
   });
 
-  it('escapes the booker name in HTML and never echoes the free-text answers', () => {
-    const mail = buildBookerConfirmation(details());
-    expect(mail.htmlBody).toContain('Ada &lt;script&gt;alert(1)&lt;/script&gt; Lovelace');
-    expect(mail.htmlBody).not.toContain('<script>');
+  it('carries no visitor-typed text: neither the name nor the free-text answers', () => {
+    const mail = buildBookerConfirmation(
+      details({ bookerName: 'Your account is locked, reset it at evil.example.invalid' })
+    );
+    expect(mail.textBody!.split('\n')[0]).toBe('Hello,');
+    expect(mail.htmlBody).toContain('<p>Hello,</p>');
     expect(mail.htmlBody).toContain('Smith &amp; Co Law');
     for (const body of [mail.htmlBody!, mail.textBody!]) {
+      expect(body).not.toContain('evil.example.invalid');
       expect(body).not.toContain('urgent');
       expect(body).not.toContain('Analytical');
       expect(body).not.toContain('7946');

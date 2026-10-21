@@ -12,8 +12,12 @@
  *     reads (no enumeration).
  *   - The booking re-checks the slot inside one transaction that sets
  *     app.current_tenant_id locally, bounds lock waits, and takes a per-tenant
- *     advisory lock, so two bookings of one slot (or the last slot under the
- *     daily cap) cannot both win.
+ *     advisory lock, so two PUBLIC bookings of one slot (or of the last slot
+ *     under the daily cap) cannot both win. In-app appointments.create does not
+ *     take this lock: the host is still never double-booked (the
+ *     appointments_no_overlap_per_organizer constraint), but a staff create racing
+ *     a public booking can exceed the daily cap by one (ADR-081 best-effort cap;
+ *     the locked in-app fix is gh #913).
  *   - Abuse caps are counted from booking_attempts (salted hashes only); the
  *     count and the insert of an attempt run under a per-tenant advisory lock in
  *     their own short transaction, so concurrent requests cannot all pass a cap,
@@ -22,8 +26,9 @@
  *     resolved again after the lock; event-type writes take the same lock, so a
  *     type disabled or re-hosted mid-booking is never booked with stale config.
  *   - An existing lead or contact is never linked or modified from anonymous input
- *     (owner Q11); a new lead is created through LeadService on the transaction so
- *     LeadCreated reaches the outbox, and it is always AI-scored (owner Q8/Q9).
+ *     (owner Q11); a new lead is created through LeadService on the booking
+ *     transaction, LeadCreated is published on the container's event bus, and the
+ *     lead is always AI-scored (owner Q8/Q9).
  *   - Emails and side effects run after commit and never fail the booking.
  *   - Errors are generic: no database message ever reaches the visitor.
  *
@@ -64,6 +69,7 @@ import { extractClientIp } from '../public-feedback/public-feedback.router';
 import { loadTenantAvailability, type AvailabilityPrisma } from './availability-enforcement';
 import {
   assertBookingCaps,
+  assertEventTypeBookingCap,
   bookingSlotsLimiter,
   getBookingSalt,
   hashBookingValue,
@@ -351,8 +357,23 @@ async function lockTenant(
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
 }
 
+const OVERLAP_CONSTRAINT = 'appointments_no_overlap_per_organizer';
+
+/**
+ * The host's slot was taken by a write that does not take the booking lock (an in-app
+ * appointment): the organizer-overlap exclusion constraint (SQLSTATE 23P01) rejected ours.
+ */
+export function isSlotTakenError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false;
+  const e = err as { code?: string; meta?: Record<string, unknown>; message?: string };
+  if (e.code === '23P01' || e.meta?.code === '23P01') return true;
+  const text = `${typeof e.message === 'string' ? e.message : ''} ${JSON.stringify(e.meta ?? {})}`;
+  return text.includes(OVERLAP_CONSTRAINT);
+}
+
 function rethrowBookingError(err: unknown): never {
   if (err instanceof TRPCError) throw err;
+  if (isSlotTakenError(err)) throw new TRPCError({ code: 'CONFLICT', message: SLOT_TAKEN });
   if (isRetryable(err)) throw new TRPCError({ code: 'CONFLICT', message: TRY_AGAIN });
   console.error('[public-booking] booking failed', {
     code: (err as { code?: string } | null)?.code ?? 'unknown',
@@ -537,6 +558,7 @@ export const publicBookingRouter = createTRPCRouter({
             throw new TRPCError({ code: 'CONFLICT', message: SLOT_TAKEN });
           }
           assertRequiredAnswers(current.eventType, input.answers);
+          await assertEventTypeBookingCap(tx, { tenantId, eventTypeId: eventType.id }, now);
 
           const rules = await loadRules(tx, tenantId);
           const date = toZonedParts(start, rules.timezone).date;

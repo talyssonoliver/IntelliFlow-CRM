@@ -4,9 +4,10 @@
  * Two fixed templates: a confirmation to the booker and a notification to the
  * host's stored email. Every interpolated value is HTML-escaped; subjects carry
  * only the admin-authored event name with line breaks stripped (no header
- * injection). The booker's address is unverified, so the booker mail never
- * echoes free-text answers and has no ICS attachment, and the host mail says the
- * address is unverified. A failed send is logged without PII and never undoes a
+ * injection). The booker's address is unverified, so the booker mail carries no
+ * visitor-typed text at all (not the name, not the answers: anyone could aim it at
+ * any inbox) and has no ICS attachment, and the host mail says the address is
+ * unverified. A failed send is logged without PII and never undoes a
  * booking.
  */
 import type { EventLocationType } from '@intelliflow/domain';
@@ -106,7 +107,7 @@ export function buildBookerConfirmation(d: BookingEmailDetails): EmailMessage {
     replyTo: d.hostEmail,
     subject: `Booking confirmed: ${eventName}`,
     textBody: [
-      `Hello ${d.bookerName},`,
+      'Hello,',
       '',
       `Your ${eventName} with ${d.firmName} is booked.`,
       `When: ${when}`,
@@ -115,7 +116,7 @@ export function buildBookerConfirmation(d: BookingEmailDetails): EmailMessage {
       `To change or cancel this booking, contact ${d.firmName} by replying to this email.`,
     ].join('\n'),
     htmlBody: paragraphs([
-      `Hello ${escapeHtml(d.bookerName)},`,
+      'Hello,',
       `Your ${escapeHtml(eventName)} with ${escapeHtml(d.firmName)} is booked.`,
       `<strong>When:</strong> ${escapeHtml(when)}`,
       `<strong>Where:</strong> ${locationHtml(d)}`,

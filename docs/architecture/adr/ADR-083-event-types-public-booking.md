@@ -79,6 +79,15 @@ Concurrency options:
 - (c) **A per-tenant `pg_advisory_xact_lock` and a re-check against the
   regenerated slot set.** Chosen. Precedent:
   `scheduled-reports.router.ts:106-110`.
+  - Scope of the guarantee: it serialises public bookings with each other and
+    with event-type writes. The in-app `appointments.create` path does not take
+    the lock. A host is still never double-booked, because
+    `appointments_no_overlap_per_organizer` (migration `20260530000000`)
+    excludes overlapping non-cancelled appointments per organizer at the
+    database. A staff create racing a public booking on the same day can still
+    exceed the daily cap by one. That is the accepted ADR-081 best-effort cap;
+    the locked in-app fix is gh #913, and it can reuse the `booking:<tenant>`
+    key.
 
 Abuse counters:
 
@@ -122,8 +131,12 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
   and `bookingAnswers`, plus `leadId` when the booking created the lead.
 - **Leads.**
   - No match: a new Lead is created through the domain factory and
-    `leadRepository.save(lead, opts, tx)`, keeping LeadCreated and the outbox.
-    It is always queued for AI scoring through the shared `enqueueLeadScoring`.
+    `leadRepository.save(lead, opts, tx)`, and LeadCreated is published through
+    the container's event bus. That bus is `InMemoryEventBus` today
+    (`container.ts`), which ignores `tx` and writes no outbox row, so the outbox
+    is not written for booking leads or any other lead. That is a pre-existing
+    gap, tracked as a red flag outside PG-203. It is always queued for AI
+    scoring through the shared `enqueueLeadScoring`.
   - An existing non-booking lead or contact is never linked or modified. Only
     the host email flags the match (Q11).
 - **Slots.** `listOpenSlots` is pure domain code composing the PG-202
@@ -133,7 +146,11 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
   saved availability are not bookable (Q10).
 - **Abuse.**
   - `booking_attempts` holds salted HMAC hashes of email and IP, never raw
-    values. Caps: email 3 per 24 h, IP 10 per hour, event type 30 per hour.
+    values. Caps: email 3 per 24 h and IP 10 per hour, counting every attempt;
+    event type 30 per hour, counting only public bookings that landed
+    (`appointments.bookedVia = 'PUBLIC_LINK'`). Owner ruling 2026-10-21: if
+    failed attempts counted toward the shared event-type cap, junk could lock
+    real visitors out for the hour.
   - `listSlots` has a rightmost-XFF per-IP limiter.
   - A filled honeypot gets a fake success.
   - `BOOKING_IP_SALT` is required in production.
@@ -141,7 +158,7 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
   the admin-authored event name, with CR/LF stripped. Free text is never echoed
   to the booker. The host email marks the booker's email as unverified. An email
   failure never undoes a booking.
-- **Data.** Five Class A migrations:
+- **Data.** Six Class A migrations:
   1. enum `ADD VALUE`, alone;
   2. tables, columns, CHECKs, FKs and RLS;
   3. `CONCURRENTLY` unique `tenants.bookingHandle`;

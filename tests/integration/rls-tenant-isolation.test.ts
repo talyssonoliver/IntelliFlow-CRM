@@ -106,10 +106,28 @@ describeDb('RLS tenant isolation (DB-enforced policies)', () => {
     acctA = aA.id;
     acctB = aB.id;
     expect(acctA && acctB).toBeTruthy();
+
+    // PG-203: one event type and one booking attempt per tenant.
+    for (const [tenantId, hostUserId] of [
+      [tenantA, uA.id],
+      [tenantB, uB.id],
+    ]) {
+      await prisma.eventType.create({
+        data: { tenantId, hostUserId, name: `${TAG}-type`, slug: `${TAG.replace('_', '-')}-type` },
+      });
+      await prisma.bookingAttempt.create({
+        data: { tenantId, emailHash: 'a'.repeat(64), ipHash: 'b'.repeat(64) },
+      });
+    }
   });
 
   afterAll(async () => {
     if (!prisma) return;
+    if (tenantA && tenantB) {
+      const tenants = { in: [tenantA, tenantB] };
+      await prisma.bookingAttempt.deleteMany({ where: { tenantId: tenants } });
+      await prisma.eventType.deleteMany({ where: { tenantId: tenants } });
+    }
     await prisma.account.deleteMany({ where: { name: { startsWith: TAG } } });
     await prisma.user.deleteMany({ where: { email: { startsWith: TAG } } });
     await prisma.tenant.deleteMany({ where: { name: { startsWith: TAG } } });
@@ -154,4 +172,18 @@ describeDb('RLS tenant isolation (DB-enforced policies)', () => {
     );
     expect(bSeesB).toHaveLength(1);
   });
+
+  it.each(['event_types', 'booking_attempts'])(
+    'PG-203 %s: a tenant-scoped query returns ONLY the active tenant rows',
+    async (table) => {
+      const rows = await asTenant<Array<{ tenantId: string }>>(tenantA, (tx) =>
+        tx.$queryRawUnsafe(
+          `SELECT "tenantId" FROM ${table} WHERE "tenantId" IN ($1, $2)`,
+          tenantA,
+          tenantB
+        )
+      );
+      expect(rows.map((r) => r.tenantId)).toEqual([tenantA]);
+    }
+  );
 });

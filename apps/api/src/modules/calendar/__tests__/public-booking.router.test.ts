@@ -575,7 +575,11 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
         email: { equals: 'ada@example.invalid', mode: 'insensitive' },
       });
     }
-    expect(prismaMock.appointment.count).toHaveBeenCalledTimes(1);
+    // One prior-bookings read for the lead decision (the other count is the event-type cap).
+    const leadReads = prismaMock.appointment.count.mock.calls.filter(
+      ([arg]) => (arg as any).where.leadId !== undefined
+    );
+    expect(leadReads).toHaveLength(1);
   });
 
   it('maps a lead unique race or a lock timeout to CONFLICT "Please try again."', async () => {
@@ -597,6 +601,43 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
     await expect(caller().book(bookInput)).rejects.toMatchObject({
       code: 'CONFLICT',
       message: 'Please try again.',
+    });
+  });
+
+  it('checks the event-type cap on landed bookings under the booking lock, before any write', async () => {
+    stubBookable();
+    stubBookingWrites();
+    prismaMock.appointment.count.mockImplementation(((args: any) =>
+      Promise.resolve(
+        args.where.bookedVia === 'PUBLIC_LINK' && args.where.eventTypeId ? 30 : 0
+      )) as never);
+    await expect(caller().book(bookInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+    const capCall = prismaMock.appointment.count.mock.calls.findIndex(
+      ([arg]) => (arg as any).where.eventTypeId === EVENT_TYPE_ID
+    );
+    const capOrder = prismaMock.appointment.count.mock.invocationCallOrder[capCall];
+    // The last advisory lock taken before the cap read is the booking lock (the third raw call).
+    expect(
+      prismaMock.$executeRaw.mock.invocationCallOrder.filter((o) => o < capOrder)
+    ).toHaveLength(6);
+    expect(prismaMock.appointment.create).not.toHaveBeenCalled();
+    expect(leadService.createLeadInTransaction).not.toHaveBeenCalled();
+  });
+
+  it('maps the organizer-overlap rejection (an in-app create won the slot) to CONFLICT "slot taken"', async () => {
+    stubBookable();
+    stubBookingWrites();
+    prismaMock.appointment.create.mockRejectedValueOnce(
+      Object.assign(
+        new Error(
+          'conflicting key value violates exclusion constraint "appointments_no_overlap_per_organizer"'
+        ),
+        { code: 'P2010', meta: { code: '23P01' } }
+      ) as never
+    );
+    await expect(caller().book(bookInput)).rejects.toMatchObject({
+      code: 'CONFLICT',
+      message: 'That time is no longer available. Please pick another.',
     });
   });
 

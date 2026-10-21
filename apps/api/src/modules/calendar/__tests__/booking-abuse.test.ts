@@ -10,6 +10,7 @@ import { prismaMock } from '../../../test/setup';
 import {
   BOOKING_LOCAL_SALT,
   assertBookingCaps,
+  assertEventTypeBookingCap,
   getBookingSalt,
   hashBookingValue,
   normalizeEmailForCap,
@@ -70,17 +71,17 @@ describe('normalizeEmailForCap', () => {
 describe('assertBookingCaps', () => {
   beforeEach(() => {
     prismaMock.bookingAttempt.count.mockReset();
+    prismaMock.appointment.count.mockReset();
   });
 
-  function counts(email: number, ip: number, eventType: number) {
+  function counts(email: number, ip: number) {
     prismaMock.bookingAttempt.count
       .mockResolvedValueOnce(email as never)
-      .mockResolvedValueOnce(ip as never)
-      .mockResolvedValueOnce(eventType as never);
+      .mockResolvedValueOnce(ip as never);
   }
 
   it('passes under every cap and counts each window for this tenant', async () => {
-    counts(2, 9, 29);
+    counts(2, 9);
     await expect(assertBookingCaps(prismaMock as never, HASHES, NOW)).resolves.toBeUndefined();
     const calls = prismaMock.bookingAttempt.count.mock.calls.map(([arg]) => arg!.where);
     expect(calls).toEqual([
@@ -94,24 +95,48 @@ describe('assertBookingCaps', () => {
         ipHash: HASHES.ipHash,
         createdAt: { gt: new Date('2026-11-02T09:00:00Z') },
       },
-      {
-        tenantId: TENANT,
-        eventTypeId: 'et-1',
-        createdAt: { gt: new Date('2026-11-02T09:00:00Z') },
-      },
     ]);
+    expect(prismaMock.appointment.count).not.toHaveBeenCalled();
   });
 
   it.each([
-    ['email (3 per 24 h)', 3, 0, 0],
-    ['ip (10 per hour)', 0, 10, 0],
-    ['event type (30 per hour)', 0, 0, 30],
-  ])('throws the same generic TOO_MANY_REQUESTS at the %s cap', async (_label, e, i, t) => {
-    counts(e, i, t);
+    ['email (3 per 24 h)', 3, 0],
+    ['ip (10 per hour)', 0, 10],
+  ])('throws the same generic TOO_MANY_REQUESTS at the %s cap', async (_label, e, i) => {
+    counts(e, i);
     await expect(assertBookingCaps(prismaMock as never, HASHES, NOW)).rejects.toMatchObject({
       code: 'TOO_MANY_REQUESTS',
       message: 'Too many booking attempts. Please try again later.',
     });
+  });
+});
+
+describe('assertEventTypeBookingCap (owner ruling 2026-10-21)', () => {
+  beforeEach(() => prismaMock.appointment.count.mockReset());
+
+  it('counts only public bookings of this event type that landed in the last hour', async () => {
+    prismaMock.appointment.count.mockResolvedValueOnce(29 as never);
+    await expect(
+      assertEventTypeBookingCap(prismaMock as never, HASHES, NOW)
+    ).resolves.toBeUndefined();
+    expect(prismaMock.appointment.count).toHaveBeenCalledWith({
+      where: {
+        tenantId: TENANT,
+        eventTypeId: 'et-1',
+        bookedVia: 'PUBLIC_LINK',
+        createdAt: { gt: new Date('2026-11-02T09:00:00Z') },
+      },
+    });
+  });
+
+  it('throws the same generic TOO_MANY_REQUESTS at 30', async () => {
+    prismaMock.appointment.count.mockResolvedValueOnce(30 as never);
+    await expect(assertEventTypeBookingCap(prismaMock as never, HASHES, NOW)).rejects.toMatchObject(
+      {
+        code: 'TOO_MANY_REQUESTS',
+        message: 'Too many booking attempts. Please try again later.',
+      }
+    );
   });
 });
 

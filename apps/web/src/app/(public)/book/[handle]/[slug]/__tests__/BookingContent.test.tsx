@@ -14,7 +14,12 @@ const h = vi.hoisted(() => ({
     isLoading: false,
     error: null as null | { message: string; data?: { code: string } },
   },
-  slots: { data: undefined as unknown, isLoading: false, error: null as unknown },
+  slots: {
+    data: undefined as unknown,
+    isLoading: false,
+    isError: false,
+    error: null as unknown,
+  },
   slotsArgs: [] as unknown[],
   refetchSlots: vi.fn(),
   book: { mutateAsync: vi.fn(), isPending: false },
@@ -90,7 +95,7 @@ function pickFirstSlotAndFill() {
 beforeEach(() => {
   vi.clearAllMocks();
   h.eventType = { data: EVENT, isLoading: false, error: null };
-  h.slots = { data: SLOTS, isLoading: false, error: null };
+  h.slots = { data: SLOTS, isLoading: false, isError: false, error: null };
   h.slotsArgs = [];
   h.book = { mutateAsync: vi.fn(), isPending: false };
 });
@@ -126,6 +131,7 @@ describe('BookingContent', () => {
         ],
       },
       isLoading: false,
+      isError: false,
       error: null,
     };
     h.eventType = {
@@ -277,10 +283,27 @@ describe('BookingContent', () => {
     h.slots = {
       data: { timezone: 'Europe/London', days: [{ date: '2026-11-02', slots: [] }] },
       isLoading: false,
+      isError: false,
       error: null,
     };
     renderFlow();
     expect(screen.getByText(/No open times in the next 14 days/)).toBeInTheDocument();
+  });
+
+  it('explains a failed slot lookup and retries on request', () => {
+    h.slots = {
+      data: undefined,
+      isLoading: false,
+      isError: true,
+      error: { message: 'slow down', data: { code: 'TOO_MANY_REQUESTS' } },
+    };
+    renderFlow();
+    expect(screen.getByRole('alert')).toHaveTextContent(/Too many requests just now/);
+    fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+    expect(h.refetchSlots).toHaveBeenCalled();
+    h.slots = { ...h.slots, error: { message: 'boom', data: { code: 'INTERNAL_SERVER_ERROR' } } };
+    renderFlow();
+    expect(screen.getByText('The available times could not be loaded.')).toBeInTheDocument();
   });
 
   it('shows a loading state while the event loads', () => {

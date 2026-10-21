@@ -373,6 +373,18 @@ export default function BookingContent({
           Choose a time
         </h2>
         {slotsQuery.isLoading && <output>Loading available times</output>}
+        {slotsQuery.isError && (
+          <div role="alert" className="space-y-2">
+            <p className="text-sm text-red-700 dark:text-red-300">
+              {errorCode(slotsQuery.error) === 'TOO_MANY_REQUESTS'
+                ? 'Too many requests just now. Please wait a moment and try again.'
+                : 'The available times could not be loaded.'}
+            </p>
+            <Button type="button" variant="outline" onClick={() => void slotsQuery.refetch()}>
+              Try again
+            </Button>
+          </div>
+        )}
         {!slotsQuery.isLoading && days.length > 0 && !firstOpenDay && (
           <p className="text-muted-foreground">
             No open times in the next 14 days. Please contact the firm.

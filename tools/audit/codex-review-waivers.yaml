@@ -1159,3 +1159,51 @@ waivers:
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
     author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
     date: '2026-10-21'
+  - fingerprint: 5a87a4758e290d1a1f51eb46ab0ffe9b7e02ddf3351f2dca1861e9a1ddc7e9a8
+    reason: >-
+      Same accepted risk as waivers 283b28bc, 349b41c3 and 03ea1eee, raised this time on the in-app
+      appointments.create side (appointments.router.ts). Same-slot double-booking of one host is not
+      possible: appointments_no_overlap_per_organizer (20260530000000) rejects it at the database, and
+      the PG-203 integration run hit that constraint (tests/integration/event-types.test.ts). What
+      remains is the ADR-081 best-effort daily cap (one over the cap when a staff create races a public
+      booking). The router header and ADR-083 now state the guarantee's exact scope (public bookings
+      only). The locked in-app fix is tracked in gh #913 and debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'
+  - fingerprint: 0841b6ae973e691edb51af15fd79547d704692dae82283534a9fe51a30f05c0a
+    reason: >-
+      Verified false positive (stale review of already-fixed code, codex run 25): it reports event-type quota counted from booking_attempts,
+      but the staged booking-abuse.ts counts the event-type cap from appointments (bookedVia PUBLIC_LINK) in assertEventTypeBookingCap, called inside the booking transaction under the booking lock (public-booking.router.ts); assertBookingCaps now reads bookingAttempt only for email and IP. Owner ruling Q15, 2026-10-21.
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 15a74f26a20bbdc1a0ca2ed69a6bc836f6f1c77b4361d86d3ac4c9dc14c8dc21
+    reason: >-
+      Verified false positive (stale review of already-fixed code, codex run 25): it reports booker name echoed in the booker confirmation,
+      but `git show :apps/api/src/modules/calendar/booking-email.ts` shows a fixed 'Hello,' at both greeting lines; booking-email.test.ts asserts a phishing-style name never appears in either body (fixed after codex run 20).
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 09b86fba05ce506c9b8d4e0ddf73ae47a82c67eec394ad5fde8f474277b8655d
+    reason: >-
+      Verified false positive (stale review of already-fixed code, codex run 25): it reports no slotsQuery error state,
+      but the staged BookingContent.tsx renders `slotsQuery.isError` with a role=alert message (rate-limit wording for TOO_MANY_REQUESTS) and a Try again button calling refetch(); BookingContent.test.tsx covers it (fixed after codex run 19).
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 131539101fe29aff695a295032a9faa5055a5df2b78079cd693476620f8c28bc
+    reason: >-
+      Real, but pre-existing and app-wide, not PG-203's: the Prisma-to-domain conversion drops reminderMinutes/timezone. The same conversion and scheduler
+      are used unchanged from main for every in-app appointment, so no appointment reminder is
+      scheduled today, and the recipients are user ids, not emails. Fixing only the conversion
+      would switch broken-recipient reminders on for every appointment (L1). Tracked as a single
+      deliberate fix in gh #967 (recipient contract, user-id to email resolution, booker decision).
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 58003f60e4bcf2ef83e71a37ce67db627cfb1879dc0b20d478b49848ded6cbf2
+    reason: >-
+      Real, but pre-existing and app-wide, not PG-203's: the reminder scheduler sends to attendeeIds, which is empty for public bookings. The same conversion and scheduler
+      are used unchanged from main for every in-app appointment, so no appointment reminder is
+      scheduled today, and the recipients are user ids, not emails. Fixing only the conversion
+      would switch broken-recipient reminders on for every appointment (L1). Tracked as a single
+      deliberate fix in gh #967 (recipient contract, user-id to email resolution, booker decision).
+    author: PG-203 lane
+    date: '2026-10-21'

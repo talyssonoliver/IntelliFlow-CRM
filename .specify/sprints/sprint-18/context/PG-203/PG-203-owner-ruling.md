@@ -77,3 +77,29 @@ Effective ruling:
   matches an existing record, and the host links it in-app. This supersedes the "link it" part of Q4.
 - Q12 Privacy notice: **the firm's URL is optional, with Aurora's /privacy as the fallback.** Store the consent
   time and the notice version on the booking.
+
+## Q13 - broken DSAR workflow (AskUserQuestion, during exec, 2026-10-21 local)
+Finding: apps/api/src/workflow/dsar-workflow.ts calls Prisma accessors that do not exist (db.leads, db.consents,
+db.data_subject_requests, db.legal_holds, db.audit_logs ...), so every DSAR request fails at runtime.
+Options: track it and leave the fix to a follow-up / fix DSAR in PG-203.
+Answer: **Fix DSAR in PG-203.** The workflow is rewritten to the real Prisma models, and the booker fields
+(appointments.bookerName/bookerEmail/bookingAnswers) are covered by its export and erasure.
+
+## Q14 - DSAR scope after scoping (AskUserQuestion, during exec)
+Scoping found DSAR broken end to end:
+- the DSAR tables and anonymize_record were never applied anywhere (absent from the prod schema snapshot and
+  from every Prisma migration);
+- the subject is keyed on a placeholder UUID;
+- a public GET can trigger an erasure;
+- there are no /dsar web pages and no SLA job.
+Options: backend fix in PG-203 / full end to end in PG-203 / own task.
+Answer: **Full end to end in PG-203.** This covers the backend fix (Prisma models + Class A migration, a workflow
+keyed on tenant + email, anonymise-in-place erasure, verify as a mutation, integration tests), the public /dsar
+request and verify pages, and the SLA alert job. The runner asks that DSAR be a separate commit with its own
+tests, and that it is told before any scope is cut.
+
+## Q15 — per-event-type booking cap (2026-10-21, AskUserQuestion in the PG-203 lane)
+
+Question: the 30/hour per-event-type cap counted every attempt, failed ones included, so 3 IPs of junk could block real bookers for the hour (codex fp 2d974acf). How should it count?
+
+Answer: **Count real bookings (Recommended)**: the 30/hour cap counts only bookings that actually landed; the email (3/day) and IP (10/hour) caps still count every attempt.

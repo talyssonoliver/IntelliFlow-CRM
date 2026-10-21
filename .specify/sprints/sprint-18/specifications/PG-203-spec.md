@@ -56,9 +56,10 @@ negative test, Lighthouse ≥ 90, verified by `pnpm test`.
 
 ## Technical Approach
 
-### Data: five migrations, all Class A, additive, forward-only
+### Data: six migrations, all Class A, additive, forward-only
 
-Splitting into five follows Postgres rules. `ADD VALUE` is unusable until it commits (55P04), and
+Splitting into six follows Postgres rules and the independent SQL review (every VALIDATE runs in its own
+migration, 20261021120500, so it never scans under an ADD COLUMN / ADD FOREIGN KEY lock). `ADD VALUE` is unusable until it commits (55P04), and
 `CONCURRENTLY` cannot run in a transaction. A single-statement file is not wrapped (precedent
 `20261017120100_contacts_type_idx`).
 
@@ -486,7 +487,9 @@ As defined above. The public DTOs are explicit `select` allowlists. Snapshot tes
   - The host email flags an unverified email and any match with an existing record.
   - A failed email does not undo the booking. Tests use the mock adapter only (R4).
 - AC-017: Abuse caps come from `booking_attempts`, counted with salted hashes: email 3 per 24 h, IP 10 per hour, event type
-  30 per hour. There is also a `listSlots` per-IP limiter. A production start without `BOOKING_IP_SALT` refuses (R1, R6).
+  30 per hour. *Exec adaptation (owner ruling 2026-10-21, Category A): the event-type cap counts landed public bookings
+  (`appointments.bookedVia = 'PUBLIC_LINK'`), not attempts, so junk cannot lock real visitors out; email and IP still
+  count every attempt.* There is also a `listSlots` per-IP limiter. A production start without `BOOKING_IP_SALT` refuses (R1, R6).
 - AC-018: Leads (Q11, R7):
   - No match: create a Lead with the event type's source and owner = host, via
     `LeadService.createLeadInTransaction`. LeadCreated lands in the outbox in the same transaction, which the
@@ -513,7 +516,7 @@ As defined above. The public DTOs are explicit `select` allowlists. Snapshot tes
     - B's handle books only into B.
     - The `book` transaction under the non-bypass role sees only its own tenant.
     - Tenant delete works with event types present.
-- AC-024: The five migrations are Class A, with named CHECKs, RLS, lock notes and a recovery plan. The integration suite
+- AC-024: The six migrations are Class A, with named CHECKs, RLS, lock notes and a recovery plan. The integration suite
   applies their SQL itself (L14) without replaying `ALTER TYPE`, and runs CONCURRENTLY statements alone.
 - AC-025: Registries are updated for the new page (count 214→215 in every surface listed in Test Requirements). The PRD
   addendum and ADR-083 exist. The follow-up tasks and issues listed in Risks exist.

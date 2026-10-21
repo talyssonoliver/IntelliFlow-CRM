@@ -8,7 +8,7 @@ validators → application → database → adapters (none new) → API → UI �
 `docs/architecture/diagrams/complete-dependency-chains.md` (calendar/legal scheduling chain;
 `docs/architecture/diagrams/legal-scheduling-dependency-chain.md`)
 
-> **PRISMA MIGRATIONS (L13):** five additive Class A migrations, `20261021120000`…`20261021120400`. They are merged
+> **PRISMA MIGRATIONS (L13):** six additive Class A migrations, `20261021120000`…`20261021120500`. They are merged
 > but NOT applied. The production apply is manual and must happen **before** the API ships. Class A gates 4 (staging)
 > and 10 (prod smoke) are NEEDS_HUMAN. This is called out in the PR body, the final report and the attestation.
 
@@ -37,15 +37,15 @@ validators → application → database → adapters (none new) → API → UI �
 
 ## Preflight Checks
 
-- [ ] `git branch --show-current` prints `feat/pg-203-event-types`, and `git status --short` shows only PG-203 files
+- [x] `git branch --show-current` prints `feat/pg-203-event-types`, and `git status --short` shows only PG-203 files *Verified 2026-10-20T23:2xZ: branch ok, postgres-test healthy, 5 dist dirs, main merged at 91c6477ac (+storybook lockfile, pnpm install OK), codex logged in, baselines exit 0 (tdd/characterization-*.txt)*
   plus generator churn (`artifacts/reports/plan-lint-report.json`).
-- [ ] `docker ps --filter name=postgres-test --format "{{.Status}}"` contains `healthy`.
-- [ ] `ls packages/{domain,validators,application,db,adapters}/dist` all exist. If not, rebuild via the slot wrapper:
+- [x] `docker ps --filter name=postgres-test --format "{{.Status}}"` contains `healthy`.
+- [x] `ls packages/{domain,validators,application,db,adapters}/dist` all exist. If not, rebuild via the slot wrapper:
   `pnpm turbo build --filter='./packages/*'`.
-- [ ] `git fetch origin main -q && git log --oneline HEAD..origin/main`. If main moved, merge it before Phase 2 (#890
+- [x] `git fetch origin main -q && git log --oneline HEAD..origin/main`. If main moved, merge it before Phase 2 (#890
   is an issue, not code; `appointments.router.ts` was last touched by #923).
-- [ ] `codex login status` (or Claude fallback available) for the review gate.
-- [ ] Baselines, recorded as `characterization-*.txt`:
+- [x] `codex login status` (or Claude fallback available) for the review gate.
+- [x] Baselines, recorded as `characterization-*.txt`:
   - `pnpm --filter @intelliflow/validators exec vitest run __tests__/enum-consistency.spec.ts`
   - `pnpm --filter @intelliflow/api exec vitest run src/modules/legal/__tests__/appointments.router.test.ts src/modules/lead`
   - `pnpm --dir apps/web exec vitest run src/components/appointments/__tests__/AppointmentForm.test.tsx src/app/__tests__/sitemap-reconciliation.test.ts src/app/appointments/new/__tests__/page.onsuccess.test.tsx`
@@ -79,14 +79,14 @@ validators → application → database → adapters (none new) → API → UI �
 | Phase | Estimate |
 |---|---|
 | RED tests (17 new + 14 modified test files) | 5–7 h |
-| GREEN implementation (24 created source files, 5 of them migrations, + 26 modified; 5 modify entries are conditional (2b, 19, 20, 21, 24), see Files Summary) | 10–14 h |
+| GREEN implementation (25 created source files, 6 of them migrations, + 26 modified; 5 modify entries are conditional (2b, 19, 20, 21, 24), see Files Summary) | 10–14 h |
 | REFACTOR + docs/registries | 2–3 h |
 | VALIDATION (suites, build, codex, a11y, Lighthouse, attestation) | 3–4 h |
 | **Total** | **20–28 h** (PERT from CSV 180/360/540 min was set for the original settings-only scope; the owner widened it) |
 
 ## Files Summary
 
-**Create (source, 24):**
+**Create (source, 25):**
 1. `packages/domain/src/legal/appointments/event-types.ts`
 2. `packages/domain/src/legal/appointments/listOpenSlots.ts`
 3. `packages/validators/src/event-types.ts`
@@ -95,6 +95,7 @@ validators → application → database → adapters (none new) → API → UI �
 6. `packages/db/prisma/migrations/20261021120200_tenants_booking_handle_idx/migration.sql`
 7. `packages/db/prisma/migrations/20261021120300_leads_tenant_id_key/migration.sql`
 8. `packages/db/prisma/migrations/20261021120400_appointments_lead_fk/migration.sql`
+8a. `packages/db/prisma/migrations/20261021120500_validate_booking_constraints/migration.sql` (added after the independent SQL review: VALIDATEs in their own transaction)
 9. `apps/api/src/modules/calendar/event-types.router.ts`
 10. `apps/api/src/modules/calendar/public-booking.router.ts`
 11. `apps/api/src/modules/calendar/booking-email.ts`
@@ -213,10 +214,10 @@ its own, add `components/__tests__/EventTypeList.test.tsx` and update this count
 - `.specify/sprints/sprint-18/attestations/PG-203/context_ack.json`
 
 **Validation:**
-- [ ] `context_ack.json` lists the spec, plan, ruling, ADR-083, ADR-081, playbook, PRD and the files actually read, each
+- [x] `context_ack.json` lists the spec, plan, ruling, ADR-083, ADR-081, playbook, PRD and the files actually read, each *Verified context_ack.json (19 files, sha256, 9 invariants) + context_pack built for run 20261020232057-32e38201; coverage-before artifacts/coverage/PG-203-before.json*
   with a sha256 hash.
-- [ ] Preflight baselines recorded as `characterization-*.txt` with exit 0.
-- [ ] Coverage-before captured via `/exec-coverage` (Phase 1.5 of /exec).
+- [x] Preflight baselines recorded as `characterization-*.txt` with exit 0.
+- [x] Coverage-before captured via `/exec-coverage` (Phase 1.5 of /exec).
 
 ### Phase 1 — RED: write failing tests (layer order)
 
@@ -228,21 +229,21 @@ its own, add `components/__tests__/EventTypeList.test.tsx` and update this count
 
 **Acceptance Criteria Addressed:** AC-011, AC-009 (constants)
 
-- [ ] `now` is injected, with no global fake timers. Fixtures are built relative to `now`, and fixed far-future dates
+- [x] `now` is injected, with no global fake timers. Fixtures are built relative to `now`, and fixed far-future dates *Verified tdd/red-domain.txt (missing modules) then tdd/green-domain.txt 30/30*
   are used only for DST.
-- [ ] Spring-forward and fall-back days in `Europe/London` and `America/New_York`.
-- [ ] Closures exclude whole days.
-- [ ] A slot must fit in one range on its local start day.
-- [ ] Buffers exclude overlaps. Parity cases are asserted against `ConflictDetector` on the same busy set.
-- [ ] Host busy time (organizer and attendee entries both passed in) excludes slots.
-- [ ] Notice: exactly 60 minutes is allowed and 59 is excluded. Horizon is 60 days.
-- [ ] A 15-minute grid. At most 48 slots per day. The daily cap hides a day once `bookedPerDay` ≥ `maxDaily`.
-- [ ] Composition: `generateCandidates` is called with `stepMinutes: 15` (spy, or equality with direct generation).
-- [ ] Constants: `EVENT_TYPE_REQUIRED_FIELDS`, `EVENT_TYPE_LEAD_SOURCES`, `BOOKING_RESERVED_HANDLES`,
+- [x] Spring-forward and fall-back days in `Europe/London` and `America/New_York`.
+- [x] Closures exclude whole days.
+- [x] A slot must fit in one range on its local start day.
+- [x] Buffers exclude overlaps. Parity cases are asserted against `ConflictDetector` on the same busy set.
+- [x] Host busy time (organizer and attendee entries both passed in) excludes slots.
+- [x] Notice: exactly 60 minutes is allowed and 59 is excluded. Horizon is 60 days.
+- [x] A 15-minute grid. At most 48 slots per day. The daily cap hides a day once `bookedPerDay` ≥ `maxDaily`.
+- [x] Composition: `generateCandidates` is called with `stepMinutes: 15` (spy, or equality with direct generation).
+- [x] Constants: `EVENT_TYPE_REQUIRED_FIELDS`, `EVENT_TYPE_LEAD_SOURCES`, `BOOKING_RESERVED_HANDLES`,
   `EVENT_LOCATION_TYPES` values. `LEAD_SOURCES` includes `BOOKING`.
 
 **Validation:**
-- [ ] RED: `pnpm --filter @intelliflow/domain exec vitest run src/legal/appointments/__tests__/listOpenSlots.test.ts src/legal/appointments/__tests__/event-types.test.ts`
+- [x] RED: `pnpm --filter @intelliflow/domain exec vitest run src/legal/appointments/__tests__/listOpenSlots.test.ts src/legal/appointments/__tests__/event-types.test.ts`
   fails on missing modules → `red-domain.txt`
 
 #### Step 3: Validator tests (AC-004, AC-007, AC-013, AC-015)
@@ -253,7 +254,7 @@ its own, add `components/__tests__/EventTypeList.test.tsx` and update this count
 **Files to Modify:**
 - `packages/validators/__tests__/enum-consistency.spec.ts` (LeadSource includes BOOKING in domain = validators = Prisma)
 
-- [ ] `eventTypeInputSchema`:
+- [x] `eventTypeInputSchema`: *Verified tdd/red-validators.txt (missing module) then green-validators.txt 28/28; enum-consistency PG-203 block RED until Step 13 (Prisma)*
   - name 1..100, trimmed;
   - slug kebab 1..60;
   - duration 5..480;
@@ -263,11 +264,11 @@ its own, add `components/__tests__/EventTypeList.test.tsx` and update this count
   - requiredFields come from the allowlist, with duplicates rejected;
   - leadSource is WEBSITE or BOOKING only;
   - there is no `aiScoringEnabled` key (strict).
-- [ ] `eventTypeCatalogSchema` superRefine:
+- [x] `eventTypeCatalogSchema` superRefine:
   - a duplicate slug is reported at `[i,'slug']` of the **second** item, case-insensitive;
   - a duplicate name is reported at `[i,'name']`.
-- [ ] `bookingLinkSchema`: handle format 3..40 and reserved words; privacyUrl must be https; `null` clears it.
-- [ ] Public schemas are strict:
+- [x] `bookingLinkSchema`: handle format 3..40 and reserved words; privacyUrl must be https; `null` clears it.
+- [x] Public schemas are strict:
   - an extra `tenantId`/`hostId`/`hostUserId`/`leadId` is rejected on lookup, slots and book;
   - `fromDate` format and `days` 1..14;
   - name control characters and CR/LF are stripped;
@@ -277,32 +278,32 @@ its own, add `components/__tests__/EventTypeList.test.tsx` and update this count
   - `__honeypot` accepts `''`.
 
 **Validation:**
-- [ ] RED: `pnpm --filter @intelliflow/validators exec vitest run src/__tests__/event-types.test.ts __tests__/enum-consistency.spec.ts` → `red-validators.txt`
+- [x] RED: `pnpm --filter @intelliflow/validators exec vitest run src/__tests__/event-types.test.ts __tests__/enum-consistency.spec.ts` → `red-validators.txt`
 
 #### Step 4: Application test: `LeadService.createLeadInTransaction` (AC-018)
 **Type:** test
 **Files to Create:**
 - `packages/application/src/services/__tests__/LeadService.createLeadInTransaction.test.ts`
 
-- [ ] It saves with the given `tx` and publishes LeadCreated through `eventBus.publishAll(events, tx)` with the same `tx`.
-- [ ] It runs no duplicate pre-check (`existsByEmailInTenant` is not called).
-- [ ] It opens no transaction (`transactionManager.run` is not called).
-- [ ] Domain validation failure (bad email) → `Result.fail`, with no save.
-- [ ] `createLead` still checks duplicates and still runs inside `transactionManager.run` (regression).
+- [x] It saves with the given `tx` and publishes LeadCreated through `eventBus.publishAll(events, tx)` with the same `tx`. *Verified tdd/red-application.txt (4 fail: method missing) then green-application.txt 7/7*
+- [x] It runs no duplicate pre-check (`existsByEmailInTenant` is not called).
+- [x] It opens no transaction (`transactionManager.run` is not called).
+- [x] Domain validation failure (bad email) → `Result.fail`, with no save.
+- [x] `createLead` still checks duplicates and still runs inside `transactionManager.run` (regression).
 
 **Validation:**
-- [ ] RED: `pnpm --filter @intelliflow/application exec vitest run src/services/__tests__/LeadService.createLeadInTransaction.test.ts` → `red-application.txt`
+- [x] RED: `pnpm --filter @intelliflow/application exec vitest run src/services/__tests__/LeadService.createLeadInTransaction.test.ts` → `red-application.txt`
 
 #### Step 5: API tests: event-types router (AC-003..AC-009, AC-023 unit)
 **Type:** test
 **Files to Create:**
 - `apps/api/src/modules/calendar/__tests__/event-types.router.test.ts`
 
-- [ ] `list` (member) returns `canEdit:false` for a MEMBER and `true` for ADMIN/MANAGER. It returns bookingLink
+- [x] `list` (member) returns `canEdit:false` for a MEMBER and `true` for ADMIN/MANAGER. It returns bookingLink *Verified tdd/red-api-event-types.txt (missing module) then 26→31 tests green; commit 880575912*
   `{handle, privacyUrl, availabilityConfigured}`, host display names and `hostAvailable`.
-- [ ] `listActive` returns only `isActive`.
-- [ ] `create`/`update`/`delete`/`setBookingLink` by a MEMBER → FORBIDDEN, with no `$transaction`.
-- [ ] `create`:
+- [x] `listActive` returns only `isActive`.
+- [x] `create`/`update`/`delete`/`setBookingLink` by a MEMBER → FORBIDDEN, with no `$transaction`.
+- [x] `create`:
   - `$transaction` callback form;
   - the 51st type → CONFLICT;
   - catalogue superRefine against existing rows → BAD_REQUEST with the field path;
@@ -310,19 +311,19 @@ its own, add `components/__tests__/EventTypeList.test.tsx` and update this count
   - a host not in `tenantUserWhere` → NOT_FOUND;
   - P2002 (slug) → CONFLICT "slug in use", P2002 (name) → "name in use";
   - the audit logger is called.
-- [ ] `update`/`delete` on a foreign id → NOT_FOUND. The `findFirst` is called with `{id, tenantId}`, and there is no write.
-- [ ] `delete` runs in `$transaction` and calls `deleteMany({id, tenantId})`. No skipDuplicates anywhere: grep assertion
+- [x] `update`/`delete` on a foreign id → NOT_FOUND. The `findFirst` is called with `{id, tenantId}`, and there is no write.
+- [x] `delete` runs in `$transaction` and calls `deleteMany({id, tenantId})`. No skipDuplicates anywhere: grep assertion
   on the module source.
-- [ ] `setBookingLink`:
+- [x] `setBookingLink`:
   - P2002 → CONFLICT "That booking handle is taken";
   - reserved word → BAD_REQUEST;
   - `null` clears both fields;
   - audited.
-- [ ] Every Prisma call carries `tenantId`. A recording-prisma helper asserts it for each `where`/`data`, and it is
+- [x] Every Prisma call carries `tenantId`. A recording-prisma helper asserts it for each `where`/`data`, and it is
   written inside this test file (or a sibling `__tests__/tenant-scope.test-utils.ts`, listed if created).
 
 **Validation:**
-- [ ] RED: `pnpm --filter @intelliflow/api exec vitest run src/modules/calendar/__tests__/event-types.router.test.ts` → `red-api-event-types.txt`
+- [x] RED: `pnpm --filter @intelliflow/api exec vitest run src/modules/calendar/__tests__/event-types.router.test.ts` → `red-api-event-types.txt`
 
 #### Step 6: API tests: public booking, abuse, email, escaping, scoring helper (AC-011..AC-020, AC-022 consent)
 **Type:** test
@@ -338,70 +339,70 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 `beforeEach`. `ctx.prisma` is the deep mock, and `$transaction` uses the callback form with `txMock`.
 
 **Lookup and enumeration:**
-- [ ] Five NOT_FOUND cases give a deep-equal error (code, message, data) with an identical DB call sequence: exactly one
+- [x] Five NOT_FOUND cases give a deep-equal error (code, message, data) with an identical DB call sequence: exactly one *Verified tdd/red-api-public.txt, red-api-abuse.txt, red-api-email.txt, red-api-enqueue.txt (missing modules; html-escape written with its test, no RED) then calendar suite 171+ green; codex runs 7-13 findings fixed (non-atomic caps, stale config, required fields under lock, scoring not blocking emails, committed timezone) + 2 waivers of the accepted ADR-081 best-effort cap (gh #913)*
   `eventType.findFirst`, and nothing else. The cases are unknown handle, unknown slug, inactive type,
   `availabilityConfiguredAt` null, and inactive host.
-- [ ] Strict bodies on all three procedures reject `tenantId`/`hostId`/`hostUserId`/`leadId`.
+- [x] Strict bodies on all three procedures reject `tenantId`/`hostId`/`hostUserId`/`leadId`.
 
 **`book` gates:**
-- [ ] A filled honeypot returns the fake-success shape and makes **zero** prisma calls.
-- [ ] A missing required answer → BAD_REQUEST.
-- [ ] Abuse caps: email ≥ 3 in 24 h, IP ≥ 10 per hour and event type ≥ 30 per hour each give the same
+- [x] A filled honeypot returns the fake-success shape and makes **zero** prisma calls.
+- [x] A missing required answer → BAD_REQUEST.
+- [x] Abuse caps: email ≥ 3 in 24 h, IP ≥ 10 per hour and event type ≥ 30 per hour each give the same
   TOO_MANY_REQUESTS. The attempt row is written. The prune (`deleteMany createdAt < now-48h`) runs only after the
   lookup passes.
-- [ ] A production start without `BOOKING_IP_SALT` refuses with INTERNAL_SERVER_ERROR and a generic message.
+- [x] A production start without `BOOKING_IP_SALT` refuses with INTERNAL_SERVER_ERROR and a generic message.
 
 **`book` transaction:**
-- [ ] Order: `set_config` → `lock_timeout` → `pg_advisory_xact_lock` (`$executeRaw`) → busy query. Asserted through
+- [x] Order: `set_config` → `lock_timeout` → `pg_advisory_xact_lock` (`$executeRaw`) → busy query. Asserted through
   the mock call order.
-- [ ] Re-check: a `start` not in the regenerated slot set → CONFLICT "That time is no longer available."
-- [ ] Lead branches, all with the same response object and the same lookup calls:
+- [x] Re-check: a `start` not in the regenerated slot set → CONFLICT "That time is no longer available."
+- [x] Lead branches, all with the same response object and the same lookup calls:
   - no match → `createLeadInTransaction` with `source = eventType.leadSource`, `ownerId = host`, and the name split.
     An invalid phone is dropped from the lead and kept in answers.
   - booking-created lead (same email, an appointment `bookedVia PUBLIC_LINK` with `leadId`) → linked, no create.
   - a staff WEBSITE lead with the same email → not linked, `matchedExistingRecord` true.
   - a contact match → not linked, flag true.
   - P2002 from a staff race → CONFLICT "try again".
-- [ ] Appointment create data:
+- [x] Appointment create data:
   - SCHEDULED; organizer = host; buffers snapshotted; reminder = settings default;
   - title capped at 200;
   - `eventTypeId`, `leadId`, booker fields, `bookedVia`, consent time and version;
   - `bookingAnswers` built from allowlisted keys only.
 
 **After commit:**
-- [ ] `enqueueLeadScoring` is called only for a newly created lead.
-- [ ] `onAppointmentCreated(…, {sendIcs:false})` is called.
-- [ ] Two emails. A rejected `sendEmail` still returns success. The log line carries no email or IP (spy assertion).
-- [ ] The DTO snapshot for `getEventType`/`listSlots`/`book` has no `organizerId`, `email`, `tenantId`, `title`,
+- [x] `enqueueLeadScoring` is called only for a newly created lead.
+- [x] `onAppointmentCreated(…, {sendIcs:false})` is called.
+- [x] Two emails. A rejected `sendEmail` still returns success. The log line carries no email or IP (spy assertion).
+- [x] The DTO snapshot for `getEventType`/`listSlots`/`book` has no `organizerId`, `email`, `tenantId`, `title`,
   `attendees`, `hostUserId` or ids.
-- [ ] `listSlots`:
+- [x] `listSlots`:
   - `fromDate` outside [today, today+60] → BAD_REQUEST;
   - the limiter throws TOO_MANY_REQUESTS on a burst inside 500 ms;
   - the busy query uses the organizer-or-attendee OR with a status filter and `tenantId`.
-- [ ] Errors never carry `error.message` from Prisma. A forced error gives a generic message.
-- [ ] NF-004: a lock-timeout error (Postgres 55P03 surfaced from `$executeRaw`) maps to CONFLICT "Please try again."
+- [x] Errors never carry `error.message` from Prisma. A forced error gives a generic message.
+- [x] NF-004: a lock-timeout error (Postgres 55P03 surfaced from `$executeRaw`) maps to CONFLICT "Please try again."
   with no partial writes.
 
 **Other suites:**
-- [ ] `booking-abuse.test.ts`:
+- [x] `booking-abuse.test.ts`:
   - HMAC hashing is deterministic per salt, and the raw value is never returned;
   - each cap threshold boundary is tested;
   - the salt check passes in prod with the env set, refuses without it, and uses the local fallback in dev/test.
-- [ ] `booking-email.test.ts`:
+- [x] `booking-email.test.ts`:
   - booker and host templates;
   - a `<script>`/`&`/quotes name is escaped in HTML and present as plain text;
   - CR/LF are stripped from the subject;
   - no free-text answers in the booker mail;
   - the host mail contains the answers (escaped), the "email not verified" note and the matched-record note;
   - `replyTo` is the host on the booker mail only.
-- [ ] `html-escape.test.ts`: `& < > " '` and non-string input.
-- [ ] `lead-scoring-enqueue.test.ts`:
+- [x] `html-escape.test.ts`: `& < > " '` and non-string input.
+- [x] `lead-scoring-enqueue.test.ts`:
   - the payload `{leadId, tenantId, …, correlationId: 'lead-create-<id>'}` and the OTel carrier;
   - errors are swallowed and logged without PII;
   - no Redis means a no-op.
 
 **Validation:**
-- [ ] RED: `pnpm --filter @intelliflow/api exec vitest run src/modules/calendar/__tests__/public-booking.router.test.ts src/modules/calendar/__tests__/booking-abuse.test.ts src/modules/calendar/__tests__/booking-email.test.ts src/security/__tests__/html-escape.test.ts src/modules/lead/__tests__/lead-scoring-enqueue.test.ts` → `red-api-public.txt`
+- [x] RED: `pnpm --filter @intelliflow/api exec vitest run src/modules/calendar/__tests__/public-booking.router.test.ts src/modules/calendar/__tests__/booking-abuse.test.ts src/modules/calendar/__tests__/booking-email.test.ts src/security/__tests__/html-escape.test.ts src/modules/lead/__tests__/lead-scoring-enqueue.test.ts` → `red-api-public.txt`
 
 #### Step 7: Regression tests for touched API paths (AC-010, AC-019, AC-022)
 **Type:** test
@@ -410,18 +411,18 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `apps/api/src/modules/lead/__tests__/lead.router.test.ts`
 - `apps/api/src/workflow/__tests__/dsar-workflow.test.ts`
 
-- [ ] `appointments.create` with `eventTypeId`:
+- [x] `appointments.create` with `eventTypeId`: *Verified tdd/red-api-regression.txt (2 eventTypeId cases fail) then appointments.router.caller 73/73; lead.router 61/61 (enqueue regression)*
   - the `{id, tenantId, isActive}` check comes next to `assertAppointmentRefsInTenant`;
   - a foreign or inactive id → NOT_FOUND before the use case;
   - success → `updateMany({where:{id, tenantId}, data:{eventTypeId}})`;
   - without `eventTypeId`, no extra calls (unchanged path).
-- [ ] `onAppointmentCreated` is still invoked on create and reschedule after extraction (ICS + reminder unchanged).
-- [ ] `lead.create` enqueues scoring through `enqueueLeadScoring` exactly as before (same payload).
+- [x] `onAppointmentCreated` is still invoked on create and reschedule after extraction (ICS + reminder unchanged).
+- [x] `lead.create` enqueues scoring through `enqueueLeadScoring` exactly as before (same payload).
 - [ ] DSAR export includes appointments where `bookerEmail = subjectEmail` (booker fields only). Erasure nulls
   `bookerName/bookerEmail/bookingAnswers` for those rows.
 
 **Validation:**
-- [ ] RED (new cases fail): `pnpm --filter @intelliflow/api exec vitest run src/modules/legal/__tests__/appointments.router.test.ts src/modules/lead src/workflow` → `red-api-regression.txt`
+- [x] RED (new cases fail): `pnpm --filter @intelliflow/api exec vitest run src/modules/legal/__tests__/appointments.router.test.ts src/modules/lead src/workflow` → `red-api-regression.txt`
 
 #### Step 8: DB integration test (AC-012, AC-023, AC-024)
 **Type:** test
@@ -432,37 +433,37 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `tests/integration/rls-tenant-isolation.test.ts`
 
 **Setup:**
-- [ ] `describeDb` gate, `pg203_` prefixed tenants, a sweep of rows older than a day, and `afterAll` cleanup.
-- [ ] `ensureMigrationSql`:
+- [x] `describeDb` gate, `pg203_` prefixed tenants, a sweep of rows older than a day, and `afterAll` cleanup. *Verified 2026-10-21: tdd/green-integration.txt 70/70 (fresh ephemeral DB); deviations (no RED capture, no outbox row, real 2s lock_timeout) in PG-203-findings.md*
+- [x] `ensureMigrationSql`:
   - gate on `pg_enum` (BOOKING) and on a missing `event_types_colorToken_check`;
   - **never replay `ALTER TYPE`**;
   - run the two CONCURRENTLY files alone (the `ensureContactsTypeIndex` pattern, `contact-types.test.ts:91`);
   - everything under `applySchemaSql` / the schema lock.
 
 **Assertions:**
-- [ ] CHECKs reject: a bad colorToken, slug, duration, requiredFields, leadSource EVENT, handle format, http privacy URL
+- [x] CHECKs reject: a bad colorToken, slug, duration, requiredFields, leadSource EVENT, handle format, http privacy URL
   and oversized bookingAnswers.
-- [ ] Unique constraints: `(tenantId, slug)`, `lower(name)` per tenant and `tenants.bookingHandle`.
-- [ ] Composite FKs:
+- [x] Unique constraints: `(tenantId, slug)`, `lower(name)` per tenant and `tenants.bookingHandle`.
+- [x] Composite FKs:
   - deleting an event type nulls only `eventTypeId`, and the appointment survives;
   - deleting a lead nulls only `leadId`;
   - a cross-tenant `leadId` or `eventTypeId` is rejected by the FK.
-- [ ] Tenant delete with event types and a host user present succeeds (NO ACTION).
-- [ ] RLS (SET LOCAL ROLE authenticated + `set_config`): A cannot see B's `event_types` or `booking_attempts`.
-- [ ] Booking runs against the real DB with the non-bypass role inside the tx:
+- [x] Tenant delete with event types and a host user present succeeds (NO ACTION).
+- [x] RLS (SET LOCAL ROLE authenticated + `set_config`): A cannot see B's `event_types` or `booking_attempts`.
+- [x] Booking runs against the real DB with the non-bypass role inside the tx:
   - B's handle books only into B;
   - the LeadCreated outbox row exists after a lead-creating booking.
-- [ ] Deterministic lock test:
+- [x] Deterministic lock test:
   - tx A takes `pg_advisory_xact_lock('booking:'||A)` and parks;
   - tx B's `book` waits, confirmed via `pg_locks WHERE locktype='advisory' AND NOT granted`;
   - release A → exactly one appointment for the slot, and B gets CONFLICT.
-- [ ] Lock-free control: two concurrent inserts without the lock both land, proving the test detects races.
-- [ ] NF-004: while A holds the lock, B runs with a short `lock_timeout` (`200ms`, a test-only helper parameter) and
+- [x] Lock-free control: two concurrent inserts without the lock both land, proving the test detects races.
+- [x] NF-004: while A holds the lock, B runs with a short `lock_timeout` (`200ms`, a test-only helper parameter) and
   fails with CONFLICT "Please try again.". No appointment is written for B.
-- [ ] `rls-tenant-isolation.test.ts`: add `event_types` and `booking_attempts` to its table list.
+- [x] `rls-tenant-isolation.test.ts`: add `event_types` and `booking_attempts` to its table list.
 
 **Validation:**
-- [ ] RED: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/event-types.test.ts` → `red-integration.txt`
+- [ ] RED: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/event-types.test.ts` → `red-integration.txt` *NOT CAPTURED (2026-10-21): the file was written after the migrations, so no failing run exists; recorded as a deviation in PG-203-findings.md (DB integration test section). The first real run had 4 failures, all in the test's own seeding.*
 
 #### Step 9: Web tests (AC-001..AC-010, AC-021, AC-025 count, AC-026)
 **Type:** test
@@ -486,8 +487,8 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `apps/web/src/components/aurora-landing/sections/__tests__/InboxCalendarSection.test.tsx`
 
 **Event types page:**
-- [ ] `page.test.tsx`: Suspense + content mocked; no "coming soon" text.
-- [ ] `EventTypesContent.test.tsx`, with the hoisted tRPC mock tree `trpc.calendar.eventTypes.*`:
+- [x] `page.test.tsx`: Suspense + content mocked; no "coming soon" text. *Verified 2026-10-21: 20 web files 355 tests green (tdd/green-web.txt); RED logs tdd/red-web-*.txt*
+- [x] `EventTypesContent.test.tsx`, with the hoisted tRPC mock tree `trpc.calendar.eventTypes.*`:
   - PageHeader and the 8+4 bento;
   - loading skeleton;
   - empty → `EmptyState` (entity appointments, phase passive, no action button);
@@ -500,7 +501,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   - NOT_FOUND fallback;
   - error/retry state;
   - axe clean.
-- [ ] `EventTypeDialog.test.tsx`:
+- [x] `EventTypeDialog.test.tsx`:
   - fields;
   - 18 swatch radios with labels;
   - legacy token narrowed to slate on edit;
@@ -513,7 +514,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   - inline CONFLICT on slug/name;
   - submit payload;
   - axe clean.
-- [ ] `BookingLinkCard.test.tsx`:
+- [x] `BookingLinkCard.test.tsx`:
   - handle/privacy inputs;
   - reserved-word message;
   - the "off: set a handle" and "off: set availability first" states with a link to `/calendar/availability`;
@@ -523,7 +524,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   - axe clean.
 
 **Appointment form:**
-- [ ] `AppointmentForm.test.tsx` (extend):
+- [x] `AppointmentForm.test.tsx` (extend):
   - "Event type" select appears in create mode only;
   - `getByLabelText(/Type/)` still matches one element;
   - select sets the type, end = start + duration when start is set, fills empty location/description, never the title;
@@ -534,9 +535,9 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   - existing cases stay green.
 
 **Public booking page:**
-- [ ] `(public)/book/.../page.test.tsx`: `generateMetadata` gives a generic title and `robots` index:false/follow:false.
+- [x] `(public)/book/.../page.test.tsx`: `generateMetadata` gives a generic title and `robots` index:false/follow:false.
   The shell renders BookingContent.
-- [ ] `BookingContent.test.tsx`:
+- [x] `BookingContent.test.tsx`:
   - date radiogroup with roving tabindex/arrow keys/`aria-checked` and an aria-live count;
   - slot radiogroup;
   - visitor-local times formatted on the client, with the firm timezone shown;
@@ -548,20 +549,20 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   - axe clean.
 
 **Shared surfaces:**
-- [ ] `sitemap-reconciliation.test.ts`: `toBe(214)` → `toBe(215)` with a PG-203 history comment.
-- [ ] `robots.test.ts`: `/book/` is disallowed (a separate assertion; it is not in the authenticated list).
-- [ ] `sitemap.test.ts`: no `/book` URL in the `app/sitemap.ts` output (AC-021).
-- [ ] `appointments/new/__tests__/page.onsuccess.test.tsx`:
+- [x] `sitemap-reconciliation.test.ts`: `toBe(214)` → `toBe(215)` with a PG-203 history comment.
+- [x] `robots.test.ts`: `/book/` is disallowed (a separate assertion; it is not in the authenticated list).
+- [x] `sitemap.test.ts`: no `/book` URL in the `app/sitemap.ts` output (AC-021).
+- [x] `appointments/new/__tests__/page.onsuccess.test.tsx`:
   - the form waits for `listActive` the same way it waits for `settingsQuery`, so the picker does not pop in;
   - active types are passed to the form;
   - the submit payload carries `eventTypeId` (AC-010).
-- [ ] `root-proxy.test.ts`: unauthenticated `/book/x/y` passes with no login redirect.
-- [ ] `PublicLayoutShell.test.tsx`: `/book/x/y` renders no AuroraSiteHeader/Footer/FeedbackFab.
-- [ ] Navigation test: no app bar on `/book/x/y` while authenticated.
-- [ ] `InboxCalendarSection.test.tsx:47`: correct the stale "stub" comment only (no behaviour change).
+- [x] `root-proxy.test.ts`: unauthenticated `/book/x/y` passes with no login redirect.
+- [x] `PublicLayoutShell.test.tsx`: `/book/x/y` renders no AuroraSiteHeader/Footer/FeedbackFab.
+- [x] Navigation test: no app bar on `/book/x/y` while authenticated.
+- [x] `InboxCalendarSection.test.tsx:47`: correct the stale "stub" comment only (no behaviour change).
 
 **Validation:**
-- [ ] RED: `pnpm --dir apps/web exec vitest run src/app/calendar/event-types "src/app/(public)/book" src/components/appointments/__tests__/AppointmentForm.test.tsx src/app/__tests__/sitemap-reconciliation.test.ts src/app/__tests__/robots.test.ts src/app/__tests__/sitemap.test.ts src/app/appointments/new src/__tests__/root-proxy.test.ts "src/app/(public)/_components/__tests__/PublicLayoutShell.test.tsx" src/components/__tests__/navigation.tenant.test.tsx` → `red-web.txt`
+- [x] RED: `pnpm --dir apps/web exec vitest run src/app/calendar/event-types "src/app/(public)/book" src/components/appointments/__tests__/AppointmentForm.test.tsx src/app/__tests__/sitemap-reconciliation.test.ts src/app/__tests__/robots.test.ts src/app/__tests__/sitemap.test.ts src/app/appointments/new src/__tests__/root-proxy.test.ts "src/app/(public)/_components/__tests__/PublicLayoutShell.test.tsx" src/components/__tests__/navigation.tenant.test.tsx` → `red-web.txt`
 
 ### Phase 2 — GREEN: make tests pass (domain → validators → application → db → api → web)
 
@@ -575,14 +576,14 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `packages/domain/src/crm/lead/Lead.ts`
 - `packages/domain/src/index.ts`
 
-- [ ] `listOpenSlots` composes `generateCandidates` (AvailabilityPolicy.ts:416) and uses the ConflictDetector overlap
+- [x] `listOpenSlots` composes `generateCandidates` (AvailabilityPolicy.ts:416) and uses the ConflictDetector overlap *Verified tdd/green-domain.txt, tsc-domain.txt, build-domain.txt exit 0*
   semantics. It imports nothing from infrastructure.
-- [ ] `LEAD_SOURCES` includes `'BOOKING'`.
+- [x] `LEAD_SOURCES` includes `'BOOKING'`.
 
 **Validation:**
-- [ ] GREEN: Step 2 command → `green-domain.txt`
-- [ ] `pnpm --filter @intelliflow/domain exec tsc --noEmit`
-- [ ] Rebuild: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 -- pnpm --filter @intelliflow/domain build`
+- [x] GREEN: Step 2 command → `green-domain.txt`
+- [x] `pnpm --filter @intelliflow/domain exec tsc --noEmit`
+- [x] Rebuild: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 -- pnpm --filter @intelliflow/domain build`
 
 #### Step 11: Validators
 **Type:** implementation
@@ -599,26 +600,26 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   `packages/adapters/src/repositories/PrismaLeadRepository.ts` are checked the same way.
 
 **Validation:**
-- [ ] GREEN: `pnpm --filter @intelliflow/validators exec vitest run src/__tests__/event-types.test.ts` → `green-validators.txt`
+- [x] GREEN: `pnpm --filter @intelliflow/validators exec vitest run src/__tests__/event-types.test.ts` → `green-validators.txt` *Verified green-validators.txt 28/28, tsc-validators.txt, build-validators.txt exit 0; lead.ts/lead.router.ts/PrismaLeadRepository.ts checked: no hardcoded LeadSource list, no change*
   The enum-consistency spec compares Prisma, domain and validators. It stays RED until Step 13 adds BOOKING to the
   Prisma enum, and its GREEN run is recorded in Step 13.
-- [ ] Build validators (slot wrapper).
+- [x] Build validators (slot wrapper).
 
 #### Step 12: Application: `createLeadInTransaction`
 **Type:** implementation
 **Files to Modify:**
 - `packages/application/src/services/LeadService.ts`
 
-- [ ] `createLeadInTransaction(props, tx)` is public. `createLead` keeps its duplicate check and calls it inside
+- [x] `createLeadInTransaction(props, tx)` is public. `createLead` keeps its duplicate check and calls it inside *Verified green-application.txt 7/7; full-application.txt 1501/1501; tsc-application.txt; build-application.txt exit 0*
   `transactionManager.run`. The Prisma tx is handed in as `tx as unknown as RepositoryTransaction`
   (PrismaTransactionManager.ts:14-16 precedent).
 
 **Validation:**
-- [ ] GREEN: Step 4 command → `green-application.txt`
-- [ ] Full suite: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 -- pnpm --filter @intelliflow/application test` (TDD regression).
-- [ ] Build application.
+- [x] GREEN: Step 4 command → `green-application.txt`
+- [x] Full suite: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 -- pnpm --filter @intelliflow/application test` (TDD regression).
+- [x] Build application.
 
-#### Step 13: Prisma schema + five migrations (Class A, L13)
+#### Step 13: Prisma schema + six migrations (Class A, L13)
 **Type:** implementation
 **Files to Create:**
 - `packages/db/prisma/migrations/20261021120000_lead_source_booking/migration.sql`
@@ -626,38 +627,39 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `packages/db/prisma/migrations/20261021120200_tenants_booking_handle_idx/migration.sql`
 - `packages/db/prisma/migrations/20261021120300_leads_tenant_id_key/migration.sql`
 - `packages/db/prisma/migrations/20261021120400_appointments_lead_fk/migration.sql`
+- `packages/db/prisma/migrations/20261021120500_validate_booking_constraints/migration.sql`
 
 **Files to Modify:**
 - `packages/db/prisma/schema.prisma`
 - `packages/db/src/index.ts`
 
 **`schema.prisma`:**
-- [ ] `EventLocationType` enum and the `EventType` + `BookingAttempt` models.
-- [ ] Tenant `bookingHandle @unique`, `bookingPrivacyUrl`, and `eventTypes EventType[] @ignore // PG-203` reverse
+- [x] `EventLocationType` enum and the `EventType` + `BookingAttempt` models. *Verified 2026-10-20T23:58Z: schema +94 lines (no reformat), 6 migrations; migrate deploy on the shared intelliflow_test refused (P3009: another lane's failed 20261008000000) so applied to a fresh ephemeral DB via pnpm test:db:up (migrate-deploy-ephemeral.txt, all 6 applied, constraints validated); drift = documented SQL-only FKs only (prisma-drift.sql.txt); SQL review APPROVED after D1 fix (findings F2); green-enum.txt 22/22; tsc-db/build-db exit 0; commit 7fd27d0a5*
+- [x] Tenant `bookingHandle @unique`, `bookingPrivacyUrl`, and `eventTypes EventType[] @ignore // PG-203` reverse
   relations.
-- [ ] Appointment's new nullable columns. Lead `@@unique([tenantId, id])`. `LeadSource` += BOOKING.
-- [ ] A SQL-only comment block (the CaseType :2336-2346 pattern).
+- [x] Appointment's new nullable columns. Lead `@@unique([tenantId, id])`. `LeadSource` += BOOKING.
+- [x] A SQL-only comment block (the CaseType :2336-2346 pattern).
 
 **Migrations:**
-- [ ] Each header carries Class A bullets, lock notes (gate 6) and a forward-only recovery plan.
-- [ ] Migrations 1, 3 and 4 are single-statement files.
+- [x] Each header carries Class A bullets, lock notes (gate 6) and a forward-only recovery plan.
+- [x] Migrations 1, 3 and 4 are single-statement files; every VALIDATE is in migration 6 (20261021120500).
 
 **Database:**
-- [ ] Generate the client: `pnpm --filter @intelliflow/db db:generate`.
-- [ ] Apply to the **local test DB only**:
+- [x] Generate the client: `pnpm --filter @intelliflow/db db:generate`.
+- [x] Apply to the **local test DB only**:
   `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 --exclusive intelliflow-db -- pnpm --filter @intelliflow/db exec prisma migrate deploy`
   with `.env.test`. Guarded by `tools/scripts/guard-db-target.mjs`. Never prod.
-- [ ] Prisma diff check: `pnpm --filter @intelliflow/db exec prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url <local shadow>`
+- [x] Prisma diff check: `pnpm --filter @intelliflow/db exec prisma migrate diff --from-migrations prisma/migrations --to-schema-datamodel prisma/schema.prisma --shadow-database-url <local shadow>`
   shows no drift beyond the SQL-only objects (documented). If no shadow DB is available, use `migrate status` plus a
   manual reconcile note.
-- [ ] Export `EventType` and `BookingAttempt` from `packages/db/src/index.ts`. Build db.
-- [ ] An independent SQL review (Class A gate 1) by a `data-engineer` subagent on the five files, recorded in the
+- [x] Export `EventType` and `BookingAttempt` from `packages/db/src/index.ts`. Build db.
+- [x] An independent SQL review (Class A gate 1) by a `data-engineer` subagent on the six files, recorded in the
   findings doc.
 
 **Validation:**
-- [ ] GREEN: `pnpm --filter @intelliflow/validators exec vitest run __tests__/enum-consistency.spec.ts` (BOOKING now in Prisma, domain and validators) → `green-enum.txt`
-- [ ] GREEN: Step 8 integration command (now passes) → `green-integration.txt`
-- [ ] `pnpm --filter @intelliflow/db exec tsc --noEmit`
+- [x] GREEN: `pnpm --filter @intelliflow/validators exec vitest run __tests__/enum-consistency.spec.ts` (BOOKING now in Prisma, domain and validators) → `green-enum.txt`
+- [x] GREEN: Step 8 integration command (now passes) → `green-integration.txt` *Verified 2026-10-21: 70/70 on a fresh ephemeral DB (`pnpm test:db:run`)*
+- [x] `pnpm --filter @intelliflow/db exec tsc --noEmit` *Verified 2026-10-21 via the package `typecheck` script (same tsc, plus its generated-client prep): tdd/tsc-db-final.txt exit 0*
 
 #### Step 14: API: helpers, event-types router, public booking, registration
 **Type:** implementation
@@ -681,20 +683,20 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `.env.example` (`BOOKING_IP_SALT`)
 
 **Requirements:**
-- [ ] Consumers: `public-booking.router.ts` imports `booking-abuse.ts`, `booking-email.ts`, `lead-scoring-enqueue.ts`
+- [x] Consumers: `public-booking.router.ts` imports `booking-abuse.ts`, `booking-email.ts`, `lead-scoring-enqueue.ts` *Verified tdd/green-api.txt 1983/1983 (calendar, lead, legal, security), tsc api clean, eslint clean, codex PASS (codex-13.txt), commit 880575912; ADR-083 DB-role citation pending (Step 18)*
   and `appointment-side-effects.ts`; `booking-email.ts` imports `security/html-escape.ts`.
-- [ ] The role check reuses `isAvailabilityAdminRole`.
-- [ ] Audit logger on create/update/delete/setBookingLink.
-- [ ] The public lookup is a single `findFirst` with the allowlist select and the gate fields.
-- [ ] The book transaction exactly follows spec step 5.
-- [ ] Post-commit work is detached with `void promise.catch(log)` and no PII in logs.
+- [x] The role check reuses `isAvailabilityAdminRole`.
+- [x] Audit logger on create/update/delete/setBookingLink.
+- [x] The public lookup is a single `findFirst` with the allowlist select and the gate fields.
+- [x] The book transaction exactly follows spec step 5.
+- [x] Post-commit work is detached with `void promise.catch(log)` and no PII in logs.
 - [ ] ADR-083 is updated with where the API DB role (BYPASSRLS) is configured: grep `DATABASE_URL` role/`postgres` in
   infra/Railway docs, or `docs/operations/*`, and cite the file.
 
 **Validation:**
-- [ ] GREEN: Steps 5, 6 and 7 commands → `green-api.txt`
-- [ ] `pnpm --filter @intelliflow/api exec tsc --noEmit`
-- [ ] Container/context check: no new container service. `adapters.notificationService` resolves to the mock in tests.
+- [x] GREEN: Steps 5, 6 and 7 commands → `green-api.txt`
+- [x] `pnpm --filter @intelliflow/api exec tsc --noEmit`
+- [x] Container/context check: no new container service. `adapters.notificationService` resolves to the mock in tests.
   Runtime check: `grep -n "publicBooking\|eventTypes" apps/api/src/router.ts apps/api/src/modules/calendar/calendar.router.ts`.
 
 #### Step 15: Web: event types page
@@ -712,7 +714,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `apps/web/src/components/calendar/CalendarSettingsPanel.tsx`
 
 **Requirements:**
-- [ ] Shared component reuse, at verified locations:
+- [x] Shared component reuse, at verified locations: *Verified 2026-10-21: tdd/green-web-settings.txt 34/34; DeleteTypeDialog + event-type-colors reused*
   - `PageHeader` → `@/components/shared/page-header`; `SectionHeader` → `@/components/shared/section-header`
     (ContactTypesContent.tsx:16-17).
   - `Button, Card, Label, RadioGroup, RadioGroupItem, toast, Checkbox, Dialog*, Input, Switch`, plus `EmptyState` →
@@ -723,11 +725,11 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   - Swatches → `lib/color-tokens.ts` via `event-type-colors.ts` (the `contact-type-colors.ts` pattern).
   - Before creating any component, grep `apps/web/src/components/shared` and `apps/web/src/components/settings` for
     "color", "swatch", "combobox", "user select" and record the result.
-- [ ] Material Symbols only. Tokens only, no raw hex.
-- [ ] Consumers: `EventTypeList.tsx` and `EventTypeDialog.tsx` import `components/calendar/event-type-colors.ts`.
+- [x] Material Symbols only. Tokens only, no raw hex.
+- [x] Consumers: `EventTypeList.tsx` and `EventTypeDialog.tsx` import `components/calendar/event-type-colors.ts`.
 
 **Validation:**
-- [ ] GREEN: `pnpm --dir apps/web exec vitest run src/app/calendar/event-types` → `green-web-settings.txt`
+- [x] GREEN: `pnpm --dir apps/web exec vitest run src/app/calendar/event-types` → `green-web-settings.txt`
 
 #### Step 16: Web: appointment picker + public booking page + shells
 **Type:** implementation
@@ -748,12 +750,12 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - `apps/web/src/components/shared/activity-feed/ActivityFeedFilters.tsx` (conditional, same)
 
 **Requirements:**
-- [ ] L11: `BookingContent` has no server-only imports. It imports schemas from `@intelliflow/validators/event-types`
+- [x] L11: `BookingContent` has no server-only imports. It imports schemas from `@intelliflow/validators/event-types` *Verified 2026-10-21: tdd/green-web.txt, tdd/tsc-web.txt exit 0; commit 978e12fae*
   (the subpath added in Step 11), never the root barrel.
 
 **Validation:**
-- [ ] GREEN: the Step 9 command → `green-web.txt`
-- [ ] `pnpm --filter @intelliflow/web exec tsc --noEmit` (slot wrapper)
+- [x] GREEN: the Step 9 command → `green-web.txt`
+- [x] `pnpm --filter @intelliflow/web exec tsc --noEmit` (slot wrapper)
 
 ### Phase 3 — REFACTOR, docs, registries, tracking
 
@@ -901,7 +903,7 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 
 **Close:**
 - [ ] Deliverable Verification: every Files Summary path exists; CSV ARTIFACT/EVIDENCE exist; attestation verdict.
-- [ ] SendMessage `projects-8c`: status, last SHA, attestation path, **5 Prisma migrations (L13)**, NEEDS_HUMAN list.
+- [ ] SendMessage `projects-8c`: status, last SHA, attestation path, **6 Prisma migrations (L13)**, NEEDS_HUMAN list.
 
 ## Validation Matrix
 
