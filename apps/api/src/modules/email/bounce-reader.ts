@@ -110,6 +110,9 @@ function speaksFor(reporter: string, domain: string): boolean {
   return domain === reporter || domain.endsWith(`.${reporter}`);
 }
 
+/** Every provider's domains (consumer accounts live there). */
+const ALL_PROVIDER_DOMAINS: readonly string[] = Object.values(PROVIDER_REPORT_DOMAINS).flat();
+
 /** `reporter` is the provider domain or one of its subdomains (the provider owns them all). */
 function withinProvider(reporter: string, provider: string): boolean {
   return reporter === provider || reporter.endsWith(`.${provider}`);
@@ -173,9 +176,13 @@ function mayReportOn(
     .filter((d): d is string => Boolean(d))
     .map((d) => d.toLowerCase());
   // An Exchange-sender report never speaks through a provider domain: a
-  // consumer account there could take that name (N-4).
+  // consumer account there could take that name (N-4, R-1). Such a reporter is
+  // refused on every path - provider, sending side and recipient.
   const providers = exchangeSender ? [] : (PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? []);
-  return reporters.some(
+  const eligible = exchangeSender
+    ? reporters.filter((reporter) => !ALL_PROVIDER_DOMAINS.some((p) => withinProvider(reporter, p)))
+    : reporters;
+  return eligible.some(
     (reporter) =>
       speaksFor(reporter, recipientDomain) ||
       sendingSide.includes(reporter) ||

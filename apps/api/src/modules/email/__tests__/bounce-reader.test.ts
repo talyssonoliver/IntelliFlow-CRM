@@ -352,6 +352,26 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     expect(genuine.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
   });
 
+  it('an Exchange-shaped sender on a consumer provider domain is never entitled, by any path (R-1)', async () => {
+    const exchangeAt = (domain: string) =>
+      makeDsn({
+        from: `MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e@${domain}`,
+        authenticationResults: [`mx.example.invalid; dkim=pass header.d=${domain}`],
+        recipients: [{ address: 'gone@hotmail.com', action: 'failed', status: '5.1.1' }],
+      });
+    // Sending side: the mailbox sends from hotmail.com.
+    let fake = fakeDb({
+      mailbox: smtpMailbox({ fromAddress: 'me@hotmail.com' }),
+      record: record({ toEmail: 'gone@hotmail.com' }),
+    });
+    await runBounceScan(deps(fake, [{ key: '7:11', raw: exchangeAt('hotmail.com') }]).d);
+    expectNoEffect(fake);
+    // Recipient side: the victim is at hotmail.com.
+    fake = fakeDb({ record: record({ toEmail: 'gone@hotmail.com' }) });
+    await runBounceScan(deps(fake, [{ key: '7:11', raw: exchangeAt('hotmail.com') }]).d);
+    expectNoEffect(fake);
+  });
+
   it('reads trusted receivers per IMAP host from EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS (empty by default)', () => {
     expect(trustedReceiversFromEnv({})).toEqual([]);
     expect(
