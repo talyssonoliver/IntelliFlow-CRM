@@ -103,7 +103,6 @@ function stateHash(state: string): string {
   return createHash('sha256').update(state).digest('hex');
 }
 
-/** Creates or updates the scope's mailbox. A racing duplicate is CONFLICT. */
 /**
  * A mailbox made ACTIVE again (new credentials or a passing test) starts bounce
  * reading afresh: an old failure streak would otherwise turn the next single
@@ -113,6 +112,7 @@ function freshScanState(): { failureCount: number; nextScanAt: Date } {
   return { failureCount: 0, nextScanAt: new Date() };
 }
 
+/** Creates or updates the scope's mailbox. A racing duplicate is CONFLICT. */
 async function writeMailbox(
   ctx: EmailRouterCtx,
   existing: MailboxRow | null,

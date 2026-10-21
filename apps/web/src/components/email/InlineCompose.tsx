@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
+import { useState, useRef, useCallback, useMemo } from 'react';
 
 import DOMPurify from 'isomorphic-dompurify';
-import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
 import { mailboxAddressSchema } from '@intelliflow/validators';
 import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
+import { SendErrorAlert } from './SendErrorAlert';
 
 const isEmailAddress = (value: string) => mailboxAddressSchema.safeParse(value).success;
 
@@ -63,14 +63,8 @@ export function InlineCompose({
   const [forwardTo, setForwardTo] = useState('');
   const [hasBody, setHasBody] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
-  const sendErrorRef = useRef<HTMLDivElement>(null);
   const [sendError, setSendError] = useState<EmailSendErrorView | null>(null);
   const sendMutation = trpc.email.sendEmail.useMutation();
-
-  // A refused send takes focus so it is announced and acted on (PG-207, CA-8).
-  useEffect(() => {
-    if (sendError) sendErrorRef.current?.focus();
-  }, [sendError]);
 
   const quotedBody =
     mode === 'forward' && originalMessage.htmlBody
@@ -210,22 +204,7 @@ export function InlineCompose({
       </div>
 
       {/* Coded send refusal (PG-207, AC-EM-018) */}
-      {sendError && (
-        <div
-          ref={sendErrorRef}
-          role="alert"
-          tabIndex={-1}
-          className="mx-3 my-1.5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900 focus:outline-none focus:ring-2 focus:ring-ring dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
-        >
-          <p className="font-medium">{sendError.title}</p>
-          <p>{sendError.message}</p>
-          {sendError.action && (
-            <Link href={sendError.action.href} className="font-medium underline underline-offset-4">
-              {sendError.action.label}
-            </Link>
-          )}
-        </div>
-      )}
+      {sendError && <SendErrorAlert error={sendError} className="mx-3 my-1.5 text-xs" />}
 
       {/* Validation hints */}
       {validationErrors.length > 0 && (

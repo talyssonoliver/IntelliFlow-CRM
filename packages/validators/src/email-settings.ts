@@ -94,22 +94,26 @@ export function isBlockedAttachmentName(fileName: string): boolean {
   return (BLOCKED_ATTACHMENT_EXTENSIONS as readonly string[]).includes(ext);
 }
 
+const attachmentFileNameSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(EMAIL_LIMITS.maxAttachmentFileNameLength)
+  .refine((v) => !hasHeaderInjection(v) && !v.includes('"'), { message: 'Invalid file name' })
+  .refine((v) => !isBlockedAttachmentName(v), { message: 'This file type cannot be attached' });
+
+const attachmentContentTypeSchema = z
+  .string()
+  .min(3)
+  .max(255)
+  .regex(/^[\w.+-]+\/[\w.+-]+$/);
+
 export const emailAttachmentRefSchema = z
   .object({
     storagePath: storagePathSchema,
-    fileName: z
-      .string()
-      .trim()
-      .min(1)
-      .max(EMAIL_LIMITS.maxAttachmentFileNameLength)
-      .refine((v) => !hasHeaderInjection(v) && !v.includes('"'), { message: 'Invalid file name' })
-      // Checked again at send: the name sent with the path is client input too.
-      .refine((v) => !isBlockedAttachmentName(v), { message: 'This file type cannot be attached' }),
-    contentType: z
-      .string()
-      .min(3)
-      .max(255)
-      .regex(/^[\w.+-]+\/[\w.+-]+$/),
+    // Checked again at send: the name sent with the path is client input too.
+    fileName: attachmentFileNameSchema,
+    contentType: attachmentContentTypeSchema,
     size: z.number().int().min(0).max(MAX_EMAIL_ATTACHMENT_BYTES),
   })
   .strict();
@@ -118,18 +122,8 @@ export type EmailAttachmentRef = z.infer<typeof emailAttachmentRefSchema>;
 /** Input of `emailAttachments.upload` (compose attachments, owner ruling Q11). */
 export const uploadEmailAttachmentInputSchema = z
   .object({
-    fileName: z
-      .string()
-      .trim()
-      .min(1)
-      .max(EMAIL_LIMITS.maxAttachmentFileNameLength)
-      .refine((v) => !hasHeaderInjection(v) && !v.includes('"'), { message: 'Invalid file name' })
-      .refine((v) => !isBlockedAttachmentName(v), { message: 'This file type cannot be attached' }),
-    contentType: z
-      .string()
-      .min(3)
-      .max(255)
-      .regex(/^[\w.+-]+\/[\w.+-]+$/),
+    fileName: attachmentFileNameSchema,
+    contentType: attachmentContentTypeSchema,
     contentBase64: z
       .string()
       .min(1)

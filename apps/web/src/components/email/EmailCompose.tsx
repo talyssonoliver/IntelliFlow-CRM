@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useRef, useEffect, type ComponentPropsWithRef } from 'react';
 import DOMPurify from 'isomorphic-dompurify';
-import Link from 'next/link';
 import { toast } from '@intelliflow/ui';
 import { MAX_EMAIL_ATTACHMENT_BYTES, type EmailAttachmentRef } from '@intelliflow/validators';
 import { trpc } from '@/lib/trpc';
@@ -13,6 +12,7 @@ import { FormatToolbar } from './FormatToolbar';
 import { AttachmentManager } from './AttachmentManager';
 import { TemplateSelector } from './TemplateSelector';
 import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
+import { SendErrorAlert } from './SendErrorAlert';
 
 type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward';
 
@@ -155,18 +155,12 @@ export function EmailCompose({
   const [skippedNotice, setSkippedNotice] = useState<string | null>(null);
 
   const bodyRef = useRef<HTMLDivElement>(null);
-  const sendErrorRef = useRef<HTMLDivElement>(null);
   /** Saved selection range for restoring after toolbar interactions */
   const savedSelectionRef = useRef<Range | null>(null);
 
   const sendMutation = trpc.email.sendEmail.useMutation();
   const draftMutation = trpc.email.saveDraft.useMutation();
   const uploadMutation = trpc.emailAttachments.upload.useMutation();
-
-  // A refused send takes focus so it is announced and acted on (CA-8).
-  useEffect(() => {
-    if (sendError) sendErrorRef.current?.focus();
-  }, [sendError]);
 
   // Track active formatting state on selection changes
   useEffect(() => {
@@ -645,22 +639,7 @@ export function EmailCompose({
       ) : null}
 
       {/* Coded send refusal (PG-207, AC-EM-018) */}
-      {sendError ? (
-        <div
-          ref={sendErrorRef}
-          role="alert"
-          tabIndex={-1}
-          className="mx-4 my-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-ring dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
-        >
-          <p className="font-medium">{sendError.title}</p>
-          <p>{sendError.message}</p>
-          {sendError.action ? (
-            <Link href={sendError.action.href} className="font-medium underline underline-offset-4">
-              {sendError.action.label}
-            </Link>
-          ) : null}
-        </div>
-      ) : null}
+      {sendError ? <SendErrorAlert error={sendError} className="mx-4 my-2 text-sm" /> : null}
 
       {attachmentError ? (
         <p role="alert" className="px-4 py-1 text-xs text-red-700 dark:text-red-300">

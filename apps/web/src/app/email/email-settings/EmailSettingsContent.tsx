@@ -66,6 +66,7 @@ const FIELD_ID: Record<FieldKey, string> = {
   replyToAddress: REPLY_TO_ID,
   softBounceThreshold: SOFT_THRESHOLD_ID,
 };
+const FIELD_KEYS = Object.keys(FIELD_ID) as FieldKey[];
 
 function toDraft(dto: EmailSettingsDto): Draft {
   return {
@@ -120,7 +121,7 @@ function serverFieldErrors(error: unknown): Partial<Record<FieldKey, string>> {
     error as { data?: { zodError?: { fieldErrors?: Record<string, string[]> } } }
   )?.data?.zodError?.fieldErrors;
   const out: Partial<Record<FieldKey, string>> = {};
-  for (const key of Object.keys(FIELD_ID) as FieldKey[]) {
+  for (const key of FIELD_KEYS) {
     const message = fieldErrors?.[key]?.[0];
     if (message) out[key] = message;
   }
@@ -206,7 +207,8 @@ export default function EmailSettingsContent() {
     setSaveError(null);
     // Save stays enabled while a field is invalid, so pressing it explains what to
     // fix: focus goes to the first invalid field (its message is linked to it).
-    const invalid = (Object.keys(FIELD_ID) as FieldKey[]).find((key) => clientErrors(draft)[key]);
+    const draftErrors = clientErrors(draft);
+    const invalid = FIELD_KEYS.find((key) => draftErrors[key]);
     if (invalid) {
       setFocusField(invalid);
       return;
@@ -220,7 +222,7 @@ export default function EmailSettingsContent() {
       });
     } catch (error) {
       const fields = serverFieldErrors(error);
-      const first = (Object.keys(FIELD_ID) as FieldKey[]).find((key) => fields[key]);
+      const first = FIELD_KEYS.find((key) => fields[key]);
       if (first) {
         setServerErrors(fields);
         setFocusField(first);
