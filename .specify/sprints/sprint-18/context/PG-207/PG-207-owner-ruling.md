@@ -137,3 +137,17 @@ Gmail/Outlook OAuth connect, sendEmail/forward fix, bounce reader, suppression)
 and the settings UI in one task/PR. PG-084 keeps only the entity-page compose
 wiring. Recorded as a Category B rebaseline at exec (CSV notes on PG-084;
 IFC-144 false-completion finding tracked).
+
+## Q11. Compose attachments (asked during /plan-session, 2026-10-21)
+
+Finding: `EmailCompose` collects attachments in local state
+(`apps/web/src/components/email/EmailCompose.tsx:113,591-605`) but never uploads
+them and never passes them to `sendEmail` (`:190-201`); the server input
+`attachments` has no caller and is never attached to outgoing mail.
+
+Options: A wire them now (upload via the existing documents upload path, attach
+to outgoing mail, fail the send when an attachment cannot be fetched); B disable
+the attach button with a visible note, reject server-side, follow-up task.
+
+**Ruling: A.** Attachments are uploaded to tenant storage and sent with the
+email; an unfetchable attachment fails the send visibly.

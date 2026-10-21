@@ -34,18 +34,19 @@ Pages: `/email/email-settings` (rewrites the stub) and `/email/signatures`
 
 `.specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md`:
 
-| #   | Ruling                                                                                                               |
-| --- | -------------------------------------------------------------------------------------------------------------------- |
-| Q1  | Store SMTP/IMAP config (password encrypted, never returned) and send through it.                                     |
-| Q2  | Signatures get their own page `/email/signatures`, linked from email settings.                                       |
-| Q3  | Bounce handling wired now (superseded in mechanism by Q6-Q8: read from the mailbox, not provider webhooks).          |
-| Q4  | A failed mailbox send is FAILED; never re-sent through the platform provider.                                        |
-| Q5  | Signature prefilled in compose (user default, else org default), editable; `sendEmail` appends nothing.              |
-| Q6  | Fix the fake send in PG-207. IntelliFlow's domain sends only IntelliFlow's own mail; user mail never leaves from it. |
-| Q7  | Per-user SMTP + tenant SMTP fallback + OAuth Gmail/Outlook (pulled in from PG-084).                                  |
-| Q8  | Bounce reader scans the connected mailboxes for DSNs only (no general sync).                                         |
-| Q9  | Suppressed recipients are dropped and the rest sent; all suppressed → nothing sent.                                  |
-| Q10 | Keep foundation + settings in one task/PR; PG-084 keeps entity-page compose wiring.                                  |
+| #   | Ruling                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Q1  | Store SMTP/IMAP config (password encrypted, never returned) and send through it.                                                |
+| Q2  | Signatures get their own page `/email/signatures`, linked from email settings.                                                  |
+| Q3  | Bounce handling wired now (superseded in mechanism by Q6-Q8: read from the mailbox, not provider webhooks).                     |
+| Q4  | A failed mailbox send is FAILED; never re-sent through the platform provider.                                                   |
+| Q5  | Signature prefilled in compose (user default, else org default), editable; `sendEmail` appends nothing.                         |
+| Q6  | Fix the fake send in PG-207. IntelliFlow's domain sends only IntelliFlow's own mail; user mail never leaves from it.            |
+| Q7  | Per-user SMTP + tenant SMTP fallback + OAuth Gmail/Outlook (pulled in from PG-084).                                             |
+| Q8  | Bounce reader scans the connected mailboxes for DSNs only (no general sync).                                                    |
+| Q9  | Suppressed recipients are dropped and the rest sent; all suppressed → nothing sent.                                             |
+| Q10 | Keep foundation + settings in one task/PR; PG-084 keeps entity-page compose wiring.                                             |
+| Q11 | (asked at /plan-session) Compose attachments are uploaded to tenant storage and sent; an unfetchable attachment fails the send. |
 
 Runner requirements R-1..R-8 (`PG-207-discussion.md`, "Runner requirements") are
 folded into SEC-_ and AC-_ below.

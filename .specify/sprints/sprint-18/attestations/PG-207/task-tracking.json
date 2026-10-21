@@ -1,9 +1,7 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "artifacts": {
-    "created": [
-      "apps/web/src/app/email/email-settings/page.tsx"
-    ],
+    "created": ["apps/web/src/app/email/email-settings/page.tsx"],
     "expected": [
       "apps/web/src/app/email/email-settings/page.tsx",
       "apps/web/src/app/email/email-settings/EmailSettingsContent.tsx",
@@ -46,6 +44,16 @@
       "status": "Spec Complete",
       "at": "2026-10-20T23:12:45Z",
       "note": "/spec-consensus 5/5 approved; owner rulings Q1-Q10; spec .specify/sprints/sprint-18/specifications/PG-207-spec.md; ADR-085"
+    },
+    {
+      "status": "Planning",
+      "at": "2026-10-21T00:20:00Z",
+      "note": "/plan-session started; owner ruling Q11 (attachments) recorded"
+    },
+    {
+      "status": "Plan Complete",
+      "at": "2026-10-20T23:59:12Z",
+      "note": "plan-reviewer subagent APPROVE at iteration 3; 31 steps, 108 create / 56 modify; Planned Finish 2026-10-28 (scope widened by Q6-Q11, ~40-52 h vs row PERT 6 h)"
     }
   ],
   "stream": null,
