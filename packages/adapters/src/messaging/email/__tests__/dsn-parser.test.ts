@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseDsn } from '../dsn-parser';
+import { parseMimeBoundary } from '../inbound';
 import { makeDsn } from './dsn-fixtures';
 
 describe('parseDsn', () => {
@@ -81,5 +82,38 @@ describe('parseDsn', () => {
       makeDsn({ recipients: [{ address: 'not-an-address', action: 'failed', status: '5.1.1' }] })
     );
     expect(parsed?.recipients).toEqual([]);
+  });
+
+  it('treats a hostile boundary as a literal (no catastrophic backtracking)', () => {
+    const boundary = '(a+)+$';
+    const raw = [
+      `Content-Type: multipart/report; report-type=delivery-status; boundary="${boundary}"`,
+      '',
+      `--${'a'.repeat(30_000)}!`,
+      `--${boundary}`,
+      'Content-Type: text/plain',
+      '',
+      'x',
+      `--${boundary}--`,
+    ].join('\n');
+    const started = performance.now();
+    expect(parseDsn(raw)).toBeNull(); // no delivery-status part
+    expect(performance.now() - started).toBeLessThan(1000);
+  });
+
+  it('refuses a boundary longer than RFC 2046 allows', () => {
+    expect(parseMimeBoundary(`multipart/report; boundary="${'b'.repeat(71)}"`)).toBeNull();
+    expect(parseMimeBoundary(`multipart/report; boundary="${'b'.repeat(70)}"`)).toBe(
+      'b'.repeat(70)
+    );
+  });
+
+  it('keeps at most 50 recipients from one report', () => {
+    const recipients = Array.from({ length: 80 }, (_, i) => ({
+      address: `r${i}@example.invalid`,
+      action: 'failed',
+      status: '5.1.1',
+    }));
+    expect(parseDsn(makeDsn({ recipients }))?.recipients).toHaveLength(50);
   });
 });

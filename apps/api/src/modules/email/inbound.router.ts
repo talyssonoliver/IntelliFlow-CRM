@@ -505,6 +505,11 @@ export const inboundEmailRouter = createTRPCRouter({
           // PG-207: a forward is user mail — verified sender, metered, sent from the
           // sender's own mailbox through the single send path (never the mock).
           assertEmailVerified(ctx as never);
+          // Only the shared inbox (inbound mail has no owner) or the caller's own mail
+          // may leave the tenant: another member's sent mail or drafts may not.
+          if (existing.userId && existing.userId !== (ctx as any).user.userId) {
+            throw new TRPCError({ code: 'NOT_FOUND', message: 'Email not found' });
+          }
           await dispatchUserMail(
             ctx as unknown as EmailRouterCtx,
             sendUserEmailInputSchema.parse({

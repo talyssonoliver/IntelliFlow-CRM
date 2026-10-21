@@ -68,6 +68,22 @@ export interface RawDsnMessage {
   receivedAt: Date;
 }
 
+/**
+ * One scan's worth of bounce-report candidates. `resumeFrom` is set when the
+ * listing stopped before reaching the newest mail (the candidate limit or the
+ * page cap): it is the receive time of the last message read, and the caller
+ * must not move its cursor past it, or the unread reports would be skipped
+ * for good. Null means everything since `since` was read.
+ */
+export interface DsnListing {
+  messages: RawDsnMessage[];
+  resumeFrom: Date | null;
+}
+
+/** Provider list pages read per scan; the rest is picked up by the next scan via `resumeFrom`. */
+const MAX_LIST_PAGES = 20;
+const LIST_PAGE_SIZE = 100;
+
 interface TokenResponse {
   access_token?: string;
   refresh_token?: string;
@@ -250,70 +266,75 @@ export class OAuthMailboxClient {
     return { providerMessageId: null };
   }
 
-  /** Raw bounce-report candidates received since `since` (the parser decides what is one). */
-  async listDsnSince(accessToken: string, since: Date, limit: number): Promise<RawDsnMessage[]> {
+  /** Bounce-report candidates received since `since`, oldest first (the parser decides what is one). */
+  async listDsnSince(accessToken: string, since: Date, limit: number): Promise<DsnListing> {
     const headers = { Authorization: `Bearer ${accessToken}` };
-    if (this.provider === 'GMAIL') {
+    return this.provider === 'GMAIL'
+      ? this.listGmailDsns(headers, since, limit)
+      : this.listGraphDsns(headers, since, limit);
+  }
+
+  /**
+   * Gmail searches bounce senders server-side but lists newest first, so the
+   * ids are paged in full (they are cheap) and read oldest first.
+   */
+  private async listGmailDsns(
+    headers: Record<string, string>,
+    since: Date,
+    limit: number
+  ): Promise<DsnListing> {
+    const ids: string[] = [];
+    let pageToken: string | undefined;
+    let pages = 0;
+    do {
       const params = new URLSearchParams({
         q: `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)}`,
-        maxResults: String(limit),
+        maxResults: String(LIST_PAGE_SIZE),
       });
+      if (pageToken) params.set('pageToken', pageToken);
       const list = await call(`${GMAIL_API}/messages?${params.toString()}`, { headers });
       if (!list.ok) throw httpError(list.status);
-      const ids = ((await json<{ messages?: Array<{ id: string }> }>(list)).messages ?? []).slice(
-        0,
-        limit
-      );
-      const out: RawDsnMessage[] = [];
-      for (const { id } of ids) {
-        const response = await call(`${GMAIL_API}/messages/${encodeURIComponent(id)}?format=raw`, {
-          headers,
-        });
-        if (!response.ok) throw httpError(response.status);
-        const data = await json<{ id: string; raw?: string; internalDate?: string }>(response);
-        if (!data.raw) continue;
-        out.push({
-          key: data.id,
-          raw: Buffer.from(data.raw, 'base64url').toString('utf8'),
-          receivedAt: new Date(Number(data.internalDate ?? 0)),
-        });
-      }
-      return out;
-    }
+      const page = await json<{ messages?: Array<{ id: string }>; nextPageToken?: string }>(list);
+      ids.push(...(page.messages ?? []).map((m) => m.id));
+      pageToken = page.nextPageToken;
+      pages += 1;
+    } while (pageToken && pages < MAX_LIST_PAGES);
 
-    const params = new URLSearchParams({
-      $filter: `receivedDateTime ge ${since.toISOString()}`,
-      $select: 'id,subject,from,receivedDateTime',
-      $orderby: 'receivedDateTime asc',
-      $top: String(Math.min(limit * 2, 100)),
-    });
-    const list = await call(`${GRAPH_API}/messages?${params.toString()}`, { headers });
-    if (!list.ok) throw httpError(list.status);
-    const candidates = (
-      (
-        await json<{
-          value?: Array<{
-            id: string;
-            subject?: string;
-            from?: { emailAddress?: { address?: string } };
-            receivedDateTime: string;
-          }>;
-        }>(list)
-      ).value ?? []
-    )
-      .filter(
-        (m) =>
-          BOUNCE_SENDER.test(m.from?.emailAddress?.address ?? '') ||
-          BOUNCE_SUBJECT.test(m.subject ?? '')
-      )
-      .slice(0, limit);
+    const oldestFirst = ids.reverse();
     const out: RawDsnMessage[] = [];
-    for (const message of candidates) {
+    for (const id of oldestFirst.slice(0, limit)) {
+      const response = await call(`${GMAIL_API}/messages/${encodeURIComponent(id)}?format=raw`, {
+        headers,
+      });
+      if (!response.ok) throw httpError(response.status);
+      const data = await json<{ id: string; raw?: string; internalDate?: string }>(response);
+      if (!data.raw) continue;
+      out.push({
+        key: data.id,
+        raw: Buffer.from(data.raw, 'base64url').toString('utf8'),
+        receivedAt: new Date(Number(data.internalDate ?? 0)),
+      });
+    }
+    const truncated = pageToken !== undefined || oldestFirst.length > limit;
+    return { messages: out, resumeFrom: truncated ? lastReceivedAt(out, since) : null };
+  }
+
+  /**
+   * Graph has no content-type filter, so every message since the cursor is
+   * listed oldest first and bounce-looking ones are kept; pages are followed
+   * (only on Graph's own host) until the limit, the page cap or the end.
+   */
+  private async listGraphDsns(
+    headers: Record<string, string>,
+    since: Date,
+    limit: number
+  ): Promise<DsnListing> {
+    const scan = await scanGraphCandidates(headers, since, limit);
+    const out: RawDsnMessage[] = [];
+    for (const message of scan.candidates) {
       const response = await call(
         `${GRAPH_API}/messages/${encodeURIComponent(message.id)}/$value`,
-        {
-          headers,
-        }
+        { headers }
       );
       if (!response.ok) throw httpError(response.status);
       out.push({
@@ -322,6 +343,83 @@ export class OAuthMailboxClient {
         receivedAt: new Date(message.receivedDateTime),
       });
     }
-    return out;
+    return { messages: out, resumeFrom: scan.truncated ? (scan.lastSeen ?? since) : null };
   }
+}
+
+interface GraphScan {
+  candidates: GraphMessage[];
+  /** Receive time of the last message examined. */
+  lastSeen: Date | null;
+  /** True when messages since `since` were left unexamined. */
+  truncated: boolean;
+}
+
+/**
+ * Walks Graph's message pages oldest first and keeps bounce-looking ones.
+ * Stops at the candidate limit, the page cap, the end, or a continuation link
+ * off Graph's own host (the access token never goes there).
+ */
+async function scanGraphCandidates(
+  headers: Record<string, string>,
+  since: Date,
+  limit: number
+): Promise<GraphScan> {
+  const params = new URLSearchParams({
+    $filter: `receivedDateTime ge ${since.toISOString()}`,
+    $select: 'id,subject,from,receivedDateTime',
+    $orderby: 'receivedDateTime asc',
+    $top: String(LIST_PAGE_SIZE),
+  });
+  let url: string | undefined = `${GRAPH_API}/messages?${params.toString()}`;
+  const scan: GraphScan = { candidates: [], lastSeen: null, truncated: false };
+  for (let pages = 0; url && pages < MAX_LIST_PAGES && !scan.truncated; pages++) {
+    const list = await call(url, { headers });
+    if (!list.ok) throw httpError(list.status);
+    const page = await json<GraphMessagePage>(list);
+    scan.truncated = collectCandidates(page.value ?? [], scan, limit);
+    const next = page['@odata.nextLink'];
+    url = next && isGraphLink(next) ? next : undefined;
+    if (next && !url) scan.truncated = true;
+  }
+  if (url) scan.truncated = true;
+  return scan;
+}
+
+/** Adds bounce candidates from one page; true when the limit cut the page short. */
+function collectCandidates(messages: GraphMessage[], scan: GraphScan, limit: number): boolean {
+  for (const message of messages) {
+    if (scan.candidates.length === limit) return true;
+    scan.lastSeen = new Date(message.receivedDateTime);
+    if (isBounceCandidate(message)) scan.candidates.push(message);
+  }
+  return false;
+}
+
+interface GraphMessage {
+  id: string;
+  subject?: string;
+  from?: { emailAddress?: { address?: string } };
+  receivedDateTime: string;
+}
+
+interface GraphMessagePage {
+  value?: GraphMessage[];
+  '@odata.nextLink'?: string;
+}
+
+function isBounceCandidate(message: GraphMessage): boolean {
+  return (
+    BOUNCE_SENDER.test(message.from?.emailAddress?.address ?? '') ||
+    BOUNCE_SUBJECT.test(message.subject ?? '')
+  );
+}
+
+function isGraphLink(link: string): boolean {
+  return link.startsWith(`${GRAPH_API}/`);
+}
+
+/** Where a truncated scan resumes: the newest message read, else where it started. */
+function lastReceivedAt(messages: RawDsnMessage[], since: Date): Date {
+  return messages.at(-1)?.receivedAt ?? since;
 }

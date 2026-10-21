@@ -54,7 +54,12 @@ function makeTransports() {
       accessToken: 'at',
       refreshToken: secret,
       expiresAt: new Date(Date.UTC(2030, 0, 1)),
-      scopes: ['openid', 'email'],
+      scopes: [
+        'openid',
+        'https://www.googleapis.com/auth/userinfo.email',
+        'https://www.googleapis.com/auth/gmail.send',
+        'https://www.googleapis.com/auth/gmail.readonly',
+      ],
     })),
     accountAddress: vi.fn(async () => 'me@gmail.example'),
     revoke: vi.fn(async () => undefined),
@@ -471,6 +476,52 @@ describe('emailMailbox OAuth connect', () => {
     expect(t.oauthClient.exchangeCode).not.toHaveBeenCalled();
   });
 
+  it('refuses (and revokes) a grant missing the send or read permission', async () => {
+    (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
+      id: 'st1',
+      scope: 'USER',
+      codeVerifier: 'v'.repeat(43),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    (prismaMock.emailOAuthState.deleteMany as any).mockResolvedValue({ count: 1 });
+    t.oauthClient.exchangeCode.mockResolvedValueOnce({
+      accessToken: 'at',
+      refreshToken: secret,
+      expiresAt: new Date(Date.UTC(2030, 0, 1)),
+      scopes: ['openid', 'https://www.googleapis.com/auth/gmail.send'],
+    });
+    await expect(
+      member().oauthComplete({ provider: 'GMAIL', code: 'c'.repeat(20), state: 's'.repeat(43) })
+    ).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: expect.stringMatching(/^MISSING_PERMISSIONS/),
+    });
+    expect(t.oauthClient.revoke).toHaveBeenCalledWith(secret);
+    expect(prismaMock.emailMailbox.create).not.toHaveBeenCalled();
+    expect(prismaMock.emailMailbox.update).not.toHaveBeenCalled();
+  });
+
+  it('reconnecting an existing mailbox moves its credential version on', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({ kind: 'GMAIL', smtpPassword: null, refreshToken: secret, tokenVersion: 4 })
+    );
+    (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
+      id: 'st1',
+      scope: 'USER',
+      codeVerifier: 'v'.repeat(43),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    (prismaMock.emailOAuthState.deleteMany as any).mockResolvedValue({ count: 1 });
+    await member().oauthComplete({
+      provider: 'GMAIL',
+      code: 'c'.repeat(20),
+      state: 's'.repeat(43),
+    });
+    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].data.tokenVersion).toEqual({
+      increment: 1,
+    });
+  });
+
   it('maps a provider failure during completion to a coded BAD_REQUEST', async () => {
     (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
       id: 'st1',
@@ -521,6 +572,7 @@ describe('emailMailbox.disconnect', () => {
         imapUidValidity: null,
         imapLastUid: null,
         scanCursorAt: null,
+        tokenVersion: { increment: 1 },
       },
     });
   });

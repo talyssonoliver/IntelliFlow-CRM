@@ -29,6 +29,8 @@ export interface ParsedDsn {
 }
 
 const MAX_PARTS = 20;
+/** Real reports name a handful of recipients; the cap bounds what one forged report can store. */
+const MAX_RECIPIENTS = 50;
 const ADDRESS = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,255}$/;
 
 /** Replaces every whitespace-separated token containing "@" (linear, no backtracking). */
@@ -105,7 +107,7 @@ export function parseDsn(raw: string): ParsedDsn | null {
     const [perMessage = {}, ...perRecipient] = blocks;
 
     const recipients: DsnRecipient[] = [];
-    for (const fields of perRecipient) {
+    for (const fields of perRecipient.slice(0, MAX_RECIPIENTS)) {
       const recipient = recipientAddress(fields);
       if (!recipient) continue;
       recipients.push({

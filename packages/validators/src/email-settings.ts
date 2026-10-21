@@ -61,25 +61,6 @@ const storagePathSchema = z
     }
   );
 
-export const emailAttachmentRefSchema = z
-  .object({
-    storagePath: storagePathSchema,
-    fileName: z
-      .string()
-      .trim()
-      .min(1)
-      .max(EMAIL_LIMITS.maxAttachmentFileNameLength)
-      .refine((v) => !hasHeaderInjection(v) && !v.includes('"'), { message: 'Invalid file name' }),
-    contentType: z
-      .string()
-      .min(3)
-      .max(255)
-      .regex(/^[\w.+-]+\/[\w.+-]+$/),
-    size: z.number().int().min(0),
-  })
-  .strict();
-export type EmailAttachmentRef = z.infer<typeof emailAttachmentRefSchema>;
-
 /** Executable / script types that are never accepted as email attachments. */
 export const BLOCKED_ATTACHMENT_EXTENSIONS = [
   'exe',
@@ -104,6 +85,36 @@ export const BLOCKED_ATTACHMENT_EXTENSIONS = [
 /** 10 MB per attachment (base64 is ~4/3 of the bytes). */
 export const MAX_EMAIL_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
+/** At most 25 MB of attachments per message (most mail servers refuse more). */
+export const MAX_EMAIL_TOTAL_ATTACHMENT_BYTES = 25 * 1024 * 1024;
+
+/** Whether a file name ends in an executable / script extension. */
+export function isBlockedAttachmentName(fileName: string): boolean {
+  const ext = fileName.includes('.') ? (fileName.split('.').pop() ?? '').toLowerCase() : '';
+  return (BLOCKED_ATTACHMENT_EXTENSIONS as readonly string[]).includes(ext);
+}
+
+export const emailAttachmentRefSchema = z
+  .object({
+    storagePath: storagePathSchema,
+    fileName: z
+      .string()
+      .trim()
+      .min(1)
+      .max(EMAIL_LIMITS.maxAttachmentFileNameLength)
+      .refine((v) => !hasHeaderInjection(v) && !v.includes('"'), { message: 'Invalid file name' })
+      // Checked again at send: the name sent with the path is client input too.
+      .refine((v) => !isBlockedAttachmentName(v), { message: 'This file type cannot be attached' }),
+    contentType: z
+      .string()
+      .min(3)
+      .max(255)
+      .regex(/^[\w.+-]+\/[\w.+-]+$/),
+    size: z.number().int().min(0).max(MAX_EMAIL_ATTACHMENT_BYTES),
+  })
+  .strict();
+export type EmailAttachmentRef = z.infer<typeof emailAttachmentRefSchema>;
+
 /** Input of `emailAttachments.upload` (compose attachments, owner ruling Q11). */
 export const uploadEmailAttachmentInputSchema = z
   .object({
@@ -113,13 +124,7 @@ export const uploadEmailAttachmentInputSchema = z
       .min(1)
       .max(EMAIL_LIMITS.maxAttachmentFileNameLength)
       .refine((v) => !hasHeaderInjection(v) && !v.includes('"'), { message: 'Invalid file name' })
-      .refine(
-        (v) => {
-          const ext = v.includes('.') ? (v.split('.').pop() ?? '').toLowerCase() : '';
-          return !(BLOCKED_ATTACHMENT_EXTENSIONS as readonly string[]).includes(ext);
-        },
-        { message: 'This file type cannot be attached' }
-      ),
+      .refine((v) => !isBlockedAttachmentName(v), { message: 'This file type cannot be attached' }),
     contentType: z
       .string()
       .min(3)
@@ -157,6 +162,14 @@ export const sendUserEmailInputSchema = z
         code: 'custom',
         message: `At most ${EMAIL_LIMITS.maxRecipients} recipients per message`,
         path: ['to'],
+      });
+    }
+    const bytes = (data.attachments ?? []).reduce((sum, a) => sum + a.size, 0);
+    if (bytes > MAX_EMAIL_TOTAL_ATTACHMENT_BYTES) {
+      ctx.addIssue({
+        code: 'custom',
+        message: 'Attachments may add up to at most 25 MB per message',
+        path: ['attachments'],
       });
     }
   });

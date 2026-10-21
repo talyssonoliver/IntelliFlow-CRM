@@ -123,6 +123,36 @@ describe('getOAuthAccessToken', () => {
     expect(prisma.emailMailbox.updateMany).not.toHaveBeenCalled();
   });
 
+  it('never reuses a cached token once the credentials changed (reconnect, disconnect)', async () => {
+    const t = transports();
+    const prisma = prismaStub();
+    await getOAuthAccessToken(prisma as never, gmailMailbox as never, t, NOW);
+    // Same mailbox id, reconnected to another account: the version moved on.
+    await getOAuthAccessToken(
+      prisma as never,
+      { ...gmailMailbox, tokenVersion: 1 } as never,
+      t,
+      NOW
+    );
+    expect((t.oauth('GMAIL') as any).refresh).toHaveBeenCalledTimes(2);
+  });
+
+  it('does not cache a token minted from credentials that changed meanwhile', async () => {
+    vi.stubEnv('PRISMA_FIELD_ENCRYPTION_KEY', 'k'.repeat(44));
+    const refresh = vi.fn(async () => ({
+      accessToken: 'at',
+      refreshToken: 'rt-2',
+      expiresAt: new Date(NOW.getTime() + 3600_000),
+    }));
+    const t = transports({ oauthClient: { refresh } });
+    const prisma = prismaStub();
+    prisma.emailMailbox.updateMany.mockResolvedValue({ count: 0 }); // the compare-and-set lost
+    const mailbox = { ...gmailMailbox, kind: 'MICROSOFT', tokenVersion: 4 };
+    await getOAuthAccessToken(prisma as never, mailbox as never, t, NOW);
+    await getOAuthAccessToken(prisma as never, mailbox as never, t, NOW);
+    expect(refresh).toHaveBeenCalledTimes(2);
+  });
+
   it('stores a rotated refresh token with a tokenVersion compare-and-set (key required)', async () => {
     vi.stubEnv('PRISMA_FIELD_ENCRYPTION_KEY', 'k'.repeat(44));
     const t = transports({

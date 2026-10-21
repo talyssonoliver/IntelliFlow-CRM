@@ -304,6 +304,26 @@ describe('dispatchUserMail', () => {
     expect(quota.release).toHaveBeenCalledTimes(1);
   });
 
+  it('refuses attachments whose stored bytes exceed 25 MB in total (declared sizes are client input)', async () => {
+    const small = (name: string) => ({
+      storagePath: `${tenantId}/u-${name}`,
+      fileName: name,
+      contentType: 'application/pdf',
+      size: 1,
+    });
+    storage.downloadEmailAttachment.mockResolvedValue(Buffer.alloc(13 * 1024 * 1024));
+    const error = await errorOf(
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...input, attachments: [small('a.pdf'), small('b.pdf')] },
+        deps()
+      )
+    );
+    expect(emailSendErrorFromCause(error.cause)?.mailboxErrorCode).toBe('ATTACHMENT_UNAVAILABLE');
+    expect(transport.send).not.toHaveBeenCalled();
+    expect(quota.release).toHaveBeenCalledTimes(1);
+  });
+
   it('keeps Bcc in the MIME for OAuth mailboxes and out of it for SMTP', async () => {
     await dispatchUserMail(
       createTestContext() as never,

@@ -101,7 +101,16 @@ interface MailboxWriter {
   };
 }
 
-const accessTokens = new Map<string, { accessToken: string; expiresAt: number }>();
+/**
+ * Access tokens live in memory only. An entry is valid for the credentials it
+ * was minted from: `tokenVersion` moves on every save, reconnect, disconnect
+ * and rotation, so a reconnect to another account (on any replica) never
+ * reuses the previous account's token.
+ */
+const accessTokens = new Map<
+  string,
+  { accessToken: string; expiresAt: number; tokenVersion: number; kind: string }
+>();
 const EXPIRY_MARGIN_MS = 60_000;
 
 /** Test-only: forget cached access tokens. */
@@ -121,7 +130,14 @@ export async function getOAuthAccessToken(
   now: Date
 ): Promise<string> {
   const cached = accessTokens.get(mailbox.id);
-  if (cached && cached.expiresAt - EXPIRY_MARGIN_MS > now.getTime()) return cached.accessToken;
+  if (
+    cached &&
+    cached.tokenVersion === mailbox.tokenVersion &&
+    cached.kind === mailbox.kind &&
+    cached.expiresAt - EXPIRY_MARGIN_MS > now.getTime()
+  ) {
+    return cached.accessToken;
+  }
 
   const client = transports.oauth(oauthProvider(mailbox.kind));
   if (!client) throw new MailboxTransportError('CONNECT_FAILED');
@@ -140,17 +156,23 @@ export async function getOAuthAccessToken(
     throw error;
   }
 
+  let tokenVersion = mailbox.tokenVersion;
   if (refreshed.refreshToken !== mailbox.refreshToken) {
-    // Rotated (Microsoft): store it only if nobody rotated it first.
+    // Rotated (Microsoft): store it only if the credentials did not change
+    // meanwhile (rotated elsewhere, reconnected or disconnected).
     requireEncryptionKey();
-    await prisma.emailMailbox.updateMany({
+    const stored = await prisma.emailMailbox.updateMany({
       where: { id: mailbox.id, tenantId: mailbox.tenantId, tokenVersion: mailbox.tokenVersion },
       data: { refreshToken: refreshed.refreshToken, tokenVersion: { increment: 1 } },
     });
+    if (stored.count !== 1) return refreshed.accessToken; // stale credentials: do not cache
+    tokenVersion += 1;
   }
   accessTokens.set(mailbox.id, {
     accessToken: refreshed.accessToken,
     expiresAt: refreshed.expiresAt.getTime(),
+    tokenVersion,
+    kind: mailbox.kind,
   });
   return refreshed.accessToken;
 }

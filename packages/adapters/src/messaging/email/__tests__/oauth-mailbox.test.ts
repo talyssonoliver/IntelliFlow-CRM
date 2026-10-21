@@ -258,65 +258,111 @@ describe('sendRaw', () => {
 
 describe('listDsnSince', () => {
   const since = new Date(Date.UTC(2026, 9, 19));
+  const gmailRaw = (id: string, hour: number) =>
+    respond(200, {
+      id,
+      internalDate: String(Date.UTC(2026, 9, 19, hour)),
+      raw: Buffer.from(`R-${id}`).toString('base64url'),
+    });
+  const graphMessage = (id: string, hour: number, bounce: boolean) => ({
+    id,
+    subject: bounce ? 'Undeliverable: Hello' : 'Lunch?',
+    from: {
+      emailAddress: { address: bounce ? 'postmaster@contoso.example' : 'friend@contoso.example' },
+    },
+    receivedDateTime: new Date(Date.UTC(2026, 9, 19, hour)).toISOString(),
+  });
 
-  it('Gmail: searches bounce senders after the cursor and fetches raw messages', async () => {
+  it('Gmail: searches bounce senders after the cursor and reads them oldest first', async () => {
     fetchMock
-      .mockReturnValueOnce(respond(200, { messages: [{ id: 'm1' }, { id: 'm2' }] }))
-      .mockReturnValueOnce(
-        respond(200, {
-          id: 'm1',
-          internalDate: String(Date.UTC(2026, 9, 19, 1)),
-          raw: Buffer.from('R1').toString('base64url'),
-        })
-      )
-      .mockReturnValueOnce(
-        respond(200, {
-          id: 'm2',
-          internalDate: String(Date.UTC(2026, 9, 19, 2)),
-          raw: Buffer.from('R2').toString('base64url'),
-        })
-      );
+      // Gmail lists newest first.
+      .mockReturnValueOnce(respond(200, { messages: [{ id: 'm2' }, { id: 'm1' }] }))
+      .mockReturnValueOnce(gmailRaw('m1', 1))
+      .mockReturnValueOnce(gmailRaw('m2', 2));
     const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
-    expect(result).toEqual([
-      { key: 'm1', raw: 'R1', receivedAt: new Date(Date.UTC(2026, 9, 19, 1)) },
-      { key: 'm2', raw: 'R2', receivedAt: new Date(Date.UTC(2026, 9, 19, 2)) },
-    ]);
+    expect(result).toEqual({
+      messages: [
+        { key: 'm1', raw: 'R-m1', receivedAt: new Date(Date.UTC(2026, 9, 19, 1)) },
+        { key: 'm2', raw: 'R-m2', receivedAt: new Date(Date.UTC(2026, 9, 19, 2)) },
+      ],
+      resumeFrom: null,
+    });
     const listUrl = new URL(calls()[0]![0]);
     expect(listUrl.searchParams.get('q')).toBe(
       `from:(mailer-daemon OR postmaster) after:${Math.floor(since.getTime() / 1000)}`
     );
-    expect(listUrl.searchParams.get('maxResults')).toBe('50');
+    expect(listUrl.searchParams.get('maxResults')).toBe('100');
     expect(new URL(calls()[1]![0]).searchParams.get('format')).toBe('raw');
+  });
+
+  it('Gmail: pages through the ids and resumes from the last report read when over the limit', async () => {
+    fetchMock
+      .mockReturnValueOnce(
+        respond(200, { messages: [{ id: 'm3' }, { id: 'm2' }], nextPageToken: 'p2' })
+      )
+      .mockReturnValueOnce(respond(200, { messages: [{ id: 'm1' }] }))
+      .mockReturnValueOnce(gmailRaw('m1', 1))
+      .mockReturnValueOnce(gmailRaw('m2', 2));
+    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 2);
+    expect(new URL(calls()[1]![0]).searchParams.get('pageToken')).toBe('p2');
+    expect(result.messages.map((m) => m.key)).toEqual(['m1', 'm2']);
+    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 2)));
   });
 
   it('Microsoft: filters by receivedDateTime, keeps bounce-looking messages and fetches their MIME', async () => {
     fetchMock
       .mockReturnValueOnce(
-        respond(200, {
-          value: [
-            {
-              id: 'a',
-              subject: 'Undeliverable: Hello',
-              from: { emailAddress: { address: 'postmaster@contoso.example' } },
-              receivedDateTime: '2026-10-19T01:00:00Z',
-            },
-            {
-              id: 'b',
-              subject: 'Lunch?',
-              from: { emailAddress: { address: 'friend@contoso.example' } },
-              receivedDateTime: '2026-10-19T02:00:00Z',
-            },
-          ],
-        })
+        respond(200, { value: [graphMessage('a', 1, true), graphMessage('b', 2, false)] })
       )
       .mockReturnValueOnce(respond(200, 'MIME-A'));
     const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 50);
-    expect(result).toEqual([
-      { key: 'a', raw: 'MIME-A', receivedAt: new Date('2026-10-19T01:00:00Z') },
-    ]);
+    expect(result).toEqual({
+      messages: [{ key: 'a', raw: 'MIME-A', receivedAt: new Date(Date.UTC(2026, 9, 19, 1)) }],
+      resumeFrom: null,
+    });
     const listUrl = new URL(calls()[0]![0]);
     expect(listUrl.searchParams.get('$filter')).toBe(`receivedDateTime ge ${since.toISOString()}`);
+    expect(listUrl.searchParams.get('$orderby')).toBe('receivedDateTime asc');
     expect(calls()[1]![0]).toBe('https://graph.microsoft.com/v1.0/me/messages/a/$value');
+  });
+
+  it('Microsoft: follows the next page so a bounce after a page of ordinary mail is not lost', async () => {
+    const next = 'https://graph.microsoft.com/v1.0/me/messages?$skiptoken=page2';
+    fetchMock
+      .mockReturnValueOnce(
+        respond(200, { value: [graphMessage('n1', 1, false)], '@odata.nextLink': next })
+      )
+      .mockReturnValueOnce(respond(200, { value: [graphMessage('c', 3, true)] }))
+      .mockReturnValueOnce(respond(200, 'MIME-C'));
+    const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 50);
+    expect(calls()[1]![0]).toBe(next);
+    expect(result).toEqual({
+      messages: [{ key: 'c', raw: 'MIME-C', receivedAt: new Date(Date.UTC(2026, 9, 19, 3)) }],
+      resumeFrom: null,
+    });
+  });
+
+  it('Microsoft: stops at the limit and resumes from the last message it examined', async () => {
+    fetchMock
+      .mockReturnValueOnce(
+        respond(200, { value: [graphMessage('a', 1, true), graphMessage('c', 2, true)] })
+      )
+      .mockReturnValueOnce(respond(200, 'MIME-A'));
+    const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 1);
+    expect(result.messages.map((m) => m.key)).toEqual(['a']);
+    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 1)));
+  });
+
+  it('Microsoft: never sends the token to a continuation link on another host', async () => {
+    fetchMock.mockReturnValueOnce(
+      respond(200, {
+        value: [graphMessage('n1', 1, false)],
+        '@odata.nextLink': 'https://graph.example.invalid/v1.0/me/messages?$skiptoken=x',
+      })
+    );
+    const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 50);
+    expect(calls()).toHaveLength(1);
+    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 1)));
   });
 
   it('only ever calls the fixed provider hosts', async () => {

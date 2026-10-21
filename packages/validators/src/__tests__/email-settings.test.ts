@@ -160,4 +160,28 @@ describe('sendUserEmailInputSchema', () => {
       }).success
     ).toBe(false);
   });
+
+  it('re-checks attachment names and sizes at send (they are client input)', () => {
+    const ref = (over: Record<string, unknown> = {}) => ({
+      storagePath: 'tenant/u-a.pdf',
+      fileName: 'a.pdf',
+      contentType: 'application/pdf',
+      size: 1024,
+      ...over,
+    });
+    const send = (attachments: unknown[]) =>
+      sendUserEmailInputSchema.safeParse({ ...base, attachments }).success;
+    expect(send([ref()])).toBe(true);
+    expect(send([ref({ fileName: 'a.exe' })])).toBe(false);
+    expect(send([ref({ size: 10 * 1024 * 1024 + 1 })])).toBe(false);
+    // Three 9 MB files: each allowed, together over the 25 MB message limit.
+    expect(
+      send([
+        ref({ size: 9 * 1024 * 1024 }),
+        ref({ size: 9 * 1024 * 1024 }),
+        ref({ size: 9 * 1024 * 1024 }),
+      ])
+    ).toBe(false);
+    expect(send([ref({ size: 9 * 1024 * 1024 }), ref({ size: 9 * 1024 * 1024 })])).toBe(true);
+  });
 });

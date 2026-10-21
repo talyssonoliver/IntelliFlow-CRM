@@ -112,7 +112,11 @@ async function writeMailbox(
 ): Promise<MailboxRow> {
   try {
     if (existing) {
-      return await ctx.prismaWithTenant.emailMailbox.update({ where: { id: existing.id }, data });
+      // New credentials: cached access tokens of the old ones stop being valid.
+      return await ctx.prismaWithTenant.emailMailbox.update({
+        where: { id: existing.id },
+        data: { ...data, tokenVersion: { increment: 1 } },
+      });
     }
     return await ctx.prismaWithTenant.emailMailbox.create({
       data: { tenantId: owner.tenantId, scope: owner.scope, userId: owner.userId, ...data },
@@ -126,6 +130,25 @@ async function writeMailbox(
     }
     throw err;
   }
+}
+
+/** Scopes without which a connected mailbox could not send or read its bounce reports. */
+const REQUIRED_SCOPES: Record<OAuthMailboxProvider, readonly string[]> = {
+  GMAIL: ['gmail.send', 'gmail.readonly'],
+  MICROSOFT: ['Mail.Send', 'Mail.Read'],
+};
+
+/**
+ * Whether the user granted what the mailbox needs (Google lets users untick
+ * scopes). Providers report scopes as bare names or full URIs, so a granted
+ * scope matches on its last path segment. An empty list (scope not reported)
+ * cannot be checked and is accepted; a missing scope then surfaces as a coded
+ * send or scan failure.
+ */
+function hasRequiredScopes(provider: OAuthMailboxProvider, granted: string[]): boolean {
+  if (granted.length === 0) return true;
+  const names = new Set(granted.map((scope) => scope.split('/').pop()?.toLowerCase()));
+  return REQUIRED_SCOPES[provider].every((scope) => names.has(scope.toLowerCase()));
 }
 
 function secretAudit(value: string | null | undefined): 'set' | 'cleared' | 'unchanged' {
@@ -378,6 +401,15 @@ export const emailMailboxRouter = createTRPCRouter({
         });
       }
 
+      if (!hasRequiredScopes(input.provider, tokens.scopes)) {
+        await client.revoke(tokens.refreshToken).catch(() => undefined);
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'MISSING_PERMISSIONS: Allow both sending email and reading bounce reports, then connect again.',
+        });
+      }
+
       requireEncryptionKey();
       const existing = await findMailbox(c, saved.scope);
       const row = await writeMailbox(c, existing, ownerFor(c, saved.scope), {
@@ -433,6 +465,7 @@ export const emailMailboxRouter = createTRPCRouter({
           imapUidValidity: null,
           imapLastUid: null,
           scanCursorAt: null,
+          tokenVersion: { increment: 1 },
         },
       });
       auditEmail(c, 'UPDATE', RESOURCE, row.id, { scope: input.scope, disconnected: true });

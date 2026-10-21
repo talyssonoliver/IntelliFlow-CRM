@@ -197,7 +197,8 @@ describe('emailSettings.suppression', () => {
     (prismaMock.emailSuppression.findMany as any).mockResolvedValue(rows);
     const page = await caller(createAdminContext()).suppression.list({ limit: 2, cursor: SUP });
     expect(page.items).toHaveLength(2);
-    expect(page.nextCursor).toBe(rows[2]!.id);
+    // The cursor is the last row shown: the next page (cursor + skip 1) starts at rows[2].
+    expect(page.nextCursor).toBe(rows[1]!.id);
     expect((prismaMock.emailSuppression.findMany as any).mock.calls[0][0]).toMatchObject({
       take: 3,
       cursor: { id: SUP },

@@ -115,6 +115,19 @@ async function claimDueMailboxes(deps: BounceReaderDeps, now: Date): Promise<str
   return rows.map((r) => r.id);
 }
 
+/**
+ * The cursor after an OAuth listing. A complete listing moves it to now (the
+ * next scan re-reads the last hour, OAUTH_OVERLAP_MS, for late-indexed mail).
+ * A truncated one stops at the last message read, offset by the overlap so the
+ * next scan starts exactly there: a busy mailbox keeps making progress instead
+ * of re-reading the same hour, and nothing unread is skipped (receipts dedupe
+ * what is read twice).
+ */
+function oauthCursorAfter(listing: { resumeFrom: Date | null }, now: Date): Date {
+  if (!listing.resumeFrom) return now;
+  return new Date(Math.min(now.getTime(), listing.resumeFrom.getTime() + OAUTH_OVERLAP_MS));
+}
+
 /** Lists new report candidates and the cursor to store after processing them. */
 async function listReports(
   deps: BounceReaderDeps,
@@ -152,15 +165,19 @@ async function listReports(
   if (!client) throw new MailboxTransportError('CONNECT_FAILED');
   const token = await getOAuthAccessToken(deps.prisma, mailbox, deps.transports, now);
   const since = new Date((mailbox.scanCursorAt ?? mailbox.createdAt).getTime() - OAUTH_OVERLAP_MS);
-  const messages = await client.listDsnSince(token, since, EMAIL_LIMITS.bounceScanMessageLimit);
-  return { messages, cursor: { scanCursorAt: now } };
+  const listing = await client.listDsnSince(token, since, EMAIL_LIMITS.bounceScanMessageLimit);
+  return { messages: listing.messages, cursor: { scanCursorAt: oauthCursorAfter(listing, now) } };
 }
 
 interface ScanState {
   settings: EmailSettingsValues;
   suppressions: number;
   receipts: number;
+  /** UNMATCHED receipts stored this scan (capped: forged reports can name many addresses). */
+  unmatched: number;
 }
+
+const MAX_UNMATCHED_RECEIPTS_PER_SCAN = 100;
 
 type DsnReport = NonNullable<ReturnType<typeof parseDsn>>;
 
@@ -271,6 +288,9 @@ async function recordReceiptOnce(
   r: ReceiptInput
 ): Promise<{ metadata: Record<string, unknown> | null; suppressed: boolean } | null> {
   const { mailbox, message, entry, kind, matched } = r;
+  // Unmatched receipts are only an audit trail; past the cap they are not stored.
+  if (!matched && r.state.unmatched >= MAX_UNMATCHED_RECEIPTS_PER_SCAN) return null;
+  if (!matched) r.state.unmatched += 1;
   try {
     return await deps.prisma.$transaction(async (tx: any) => {
       await tx.emailBounceReceipt.create({
@@ -379,7 +399,7 @@ async function scanMailbox(
       await deps.prisma.tenantEmailSettings.findUnique({ where: { tenantId: mailbox.tenantId } })
     );
     const { messages, cursor } = await listReports(deps, mailbox, now);
-    const state: ScanState = { settings, suppressions: 0, receipts: 0 };
+    const state: ScanState = { settings, suppressions: 0, receipts: 0, unmatched: 0 };
     for (const message of messages) {
       await processReport(deps, mailbox, message, state, now);
     }

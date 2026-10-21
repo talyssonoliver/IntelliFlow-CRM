@@ -5,7 +5,8 @@
 -- cannot run inside a transaction, so it is the only statement in this
 -- migration; Prisma runs single-statement migrations without wrapping them
 -- (precedent: 20261017120100_contacts_type_idx). IF NOT EXISTS makes a retry
--- safe once an operator has dropped an INVALID index left by a failed build.
+-- safe once an operator has dropped an INVALID index left by a failed build;
+-- after deploy, confirm pg_index.indisvalid for this index.
 --
 -- Recovery plan: forward-only; the index is read-only and can be dropped
 -- (DROP INDEX CONCURRENTLY) with no data effect.

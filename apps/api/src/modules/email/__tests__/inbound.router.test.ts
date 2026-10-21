@@ -337,6 +337,21 @@ Hello World`;
       expect(options).toEqual({ metadata: { isForward: true, originalEmailId: 'test-email-123' } });
     });
 
+    it("never forwards another member's own mail (sent mail, drafts)", async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue({
+        ...mockExistingEmail,
+        userId: TEST_UUIDS.user2,
+      });
+      await expect(
+        protectedCaller.processEmail({
+          emailId: 'test-email-123',
+          action: 'forward',
+          forwardTo: 'r@example.invalid',
+        })
+      ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(dispatch).not.toHaveBeenCalled();
+    });
+
     it('refuses a forward from an unverified sender before sending', async () => {
       (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
       const ctx = createTestContext();

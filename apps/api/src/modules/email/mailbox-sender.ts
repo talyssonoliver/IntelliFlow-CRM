@@ -25,7 +25,11 @@ import {
   type MailboxErrorCode,
   type MailboxStatus,
 } from '@intelliflow/domain';
-import type { SendUserEmailInput, SendUserEmailResultDto } from '@intelliflow/validators';
+import {
+  MAX_EMAIL_TOTAL_ATTACHMENT_BYTES,
+  type SendUserEmailInput,
+  type SendUserEmailResultDto,
+} from '@intelliflow/validators';
 import { reserveQuota } from '../../shared/quota-guard';
 import { settingsValues } from './email-dto';
 import { emailSendError } from './email-send-error';
@@ -84,8 +88,9 @@ async function loadAttachmentParts(
   tenantId: string,
   attachments: AttachmentRef[]
 ): Promise<MimeAttachment[]> {
+  let parts: MimeAttachment[];
   try {
-    return await Promise.all(
+    parts = await Promise.all(
       attachments.map(async (a) => ({
         filename: a.fileName,
         contentType: a.contentType,
@@ -95,6 +100,11 @@ async function loadAttachmentParts(
   } catch {
     throw new MailboxTransportError('ATTACHMENT_UNAVAILABLE');
   }
+  // The declared sizes are client input: the stored bytes are what is sent.
+  const bytes = parts.reduce((sum, part) => sum + part.content.length, 0);
+  if (bytes > MAX_EMAIL_TOTAL_ATTACHMENT_BYTES)
+    throw new MailboxTransportError('ATTACHMENT_UNAVAILABLE');
+  return parts;
 }
 
 function recordMetadata(

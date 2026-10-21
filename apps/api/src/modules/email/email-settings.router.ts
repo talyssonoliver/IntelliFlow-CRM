@@ -70,7 +70,10 @@ const suppressionRouter = createTRPCRouter({
           select: SUPPRESSION_SELECT,
         });
         const items = rows.slice(0, limit).map(toSuppressionDto);
-        return { items, nextCursor: rows.length > limit ? (rows[limit].id as string) : null };
+        // The next page reads after the last row shown (cursor + skip 1), so the
+        // cursor is that row — not the first unshown one, which would be skipped.
+        const more = rows.length > limit;
+        return { items, nextCursor: more ? (rows[limit - 1].id as string) : null };
       }
     ),
 

@@ -301,6 +301,24 @@ describe('runBounceScan', () => {
     expect(fake.suppressions).toHaveLength(1);
   });
 
+  it('stores at most 100 unmatched receipts per mailbox per scan (forged reports)', async () => {
+    const fake = fakeDb({ record: null });
+    const raws = Array.from({ length: 3 }, (_, i) => ({
+      key: `7:${200 + i}`,
+      raw: makeDsn({
+        recipients: Array.from({ length: 50 }, (__, j) => ({
+          address: `x${i}-${j}@example.invalid`,
+          action: 'failed',
+          status: '5.1.1',
+        })),
+      }),
+    }));
+    await runBounceScan(deps(fake, raws).d);
+    expect(fake.receipts).toHaveLength(100);
+    expect(fake.receipts.every((r: { kind: string }) => r.kind === 'UNMATCHED')).toBe(true);
+    expect(fake.suppressions).toHaveLength(0);
+  });
+
   it('caps suppressions at 25 per mailbox per scan', async () => {
     const fake = fakeDb({
       record: record({
@@ -366,7 +384,10 @@ describe('runBounceScan', () => {
   });
 
   it('scans an OAuth mailbox through the provider list with an overlap window', async () => {
-    const listDsnSince = vi.fn(async () => [{ key: 'gm1', raw: makeDsn(), receivedAt: NOW }]);
+    const listDsnSince = vi.fn(async () => ({
+      messages: [{ key: 'gm1', raw: makeDsn(), receivedAt: NOW }],
+      resumeFrom: null,
+    }));
     const client = {
       refresh: vi.fn(async () => ({
         accessToken: 'at',
@@ -396,5 +417,38 @@ describe('runBounceScan', () => {
     expect(listDsnSince).toHaveBeenCalledWith('at', new Date(cursor.getTime() - 3600_000), 50);
     expect(fake.receipts[0]).toMatchObject({ dsnKey: 'gm1', kind: 'HARD' });
     expect(fake.mailboxUpdates[0].data.scanCursorAt).toEqual(NOW);
+  });
+
+  it('advances the OAuth cursor only through what a truncated listing read', async () => {
+    const lastRead = new Date(NOW.getTime() - 3 * 3600_000);
+    const client = {
+      refresh: vi.fn(async () => ({
+        accessToken: 'at',
+        refreshToken: secret,
+        expiresAt: new Date(NOW.getTime() + 3600_000),
+      })),
+      listDsnSince: vi.fn(async () => ({ messages: [], resumeFrom: lastRead })),
+    };
+    const fake = fakeDb({
+      mailbox: smtpMailbox({
+        kind: 'MICROSOFT',
+        imapHost: null,
+        refreshToken: secret,
+        scanCursorAt: new Date(NOW.getTime() - 6 * 3600_000),
+      }),
+    });
+    const ctx = deps(fake, [], {
+      transports: {
+        smtp: {},
+        imap: { read: vi.fn() },
+        oauth: () => client,
+        oauthConfigured: { GMAIL: false, MICROSOFT: true },
+      } as never,
+    });
+    await runBounceScan(ctx.d);
+    // Stored one overlap ahead, so the next scan's window starts exactly at the last message read.
+    expect(fake.mailboxUpdates[0].data.scanCursorAt).toEqual(
+      new Date(lastRead.getTime() + 3600_000)
+    );
   });
 });

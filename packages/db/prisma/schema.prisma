@@ -4007,6 +4007,7 @@ model EmailRecord {
   @@index([tenantId, createdAt(sort: Desc)])
   @@index([tenantId, isRead])
   @@index([tenantId, messageIdHeader])
+  @@index([mailboxId])
   @@map("email_records")
 }
 
