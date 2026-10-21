@@ -250,7 +250,11 @@ describe('check-attestation-provenance: light ceremony tier (issue #579)', () =>
 
   function runLight(opts: LightOpts): { status: number; stderr: string } {
     const { taskId } = opts;
-    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'prov-light-'));
+    // The tier audit refuses a --repo-root outside the repository, so the scratch
+    // repo for light-tier cases lives under the repo's artifacts/ dir.
+    const scratchBase = path.join(process.cwd(), 'artifacts', 'tmp');
+    fs.mkdirSync(scratchBase, { recursive: true });
+    const root = fs.mkdtempSync(path.join(scratchBase, 'prov-light-'));
     tmpDirs.push(root);
     const base = path.join(root, '.specify', 'sprints', 'sprint-1');
     fs.mkdirSync(path.join(base, 'attestations', taskId), { recursive: true });
