@@ -239,6 +239,30 @@ describe('getOAuthAccessToken', () => {
 describe('sendThroughMailbox', () => {
   const envelope = { from: 'me@mail.example.com', to: ['a@example.invalid'] };
 
+  it('passes on which SMTP refusals were temporary (they are not hard bounces)', async () => {
+    const t = transports();
+    (t.smtp.send as any).mockResolvedValueOnce({
+      providerMessageId: '<srv@x>',
+      rejected: ['b@example.invalid'],
+      rejectedTemporarily: ['b@example.invalid'],
+    });
+    await expect(
+      sendThroughMailbox(
+        prismaStub() as never,
+        smtpMailbox as never,
+        t,
+        envelope,
+        Buffer.from('raw'),
+        NOW
+      )
+    ).resolves.toEqual({
+      provider: 'SMTP',
+      providerMessageId: '<srv@x>',
+      rejected: ['b@example.invalid'],
+      rejectedTemporarily: ['b@example.invalid'],
+    });
+  });
+
   it('sends SMTP mail with the stored credentials', async () => {
     const t = transports();
     await expect(

@@ -232,6 +232,7 @@ export async function sendThroughMailbox(
       provider: 'SMTP',
       providerMessageId: result.providerMessageId,
       rejected: result.rejected ?? [],
+      ...(result.rejectedTemporarily ? { rejectedTemporarily: result.rejectedTemporarily } : {}),
     };
   }
   const provider = oauthProvider(mailbox.kind);
