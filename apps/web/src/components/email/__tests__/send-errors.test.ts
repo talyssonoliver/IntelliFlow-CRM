@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { getEmailSendError, mailboxErrorMessage, skippedRecipientsNotice } from '../send-errors';
+import {
+  getEmailSendError,
+  mailboxErrorMessage,
+  partialSendNotice,
+  skippedRecipientsNotice,
+} from '../send-errors';
 
 const trpcError = (emailSendError: unknown) => ({
   message: 'x',
@@ -97,5 +102,27 @@ describe('mailboxErrorMessage', () => {
     expect(mailboxErrorMessage('AUTH_FAILED')).toMatch(/refused the sign-in/);
     expect(mailboxErrorMessage('TLS_FAILED')).toMatch(/secure connection/);
     expect(mailboxErrorMessage('CONNECT_FAILED')).toMatch(/could not be reached/);
+  });
+});
+
+describe('partialSendNotice', () => {
+  it('is null when everyone was sent the email', () => {
+    expect(partialSendNotice({ skipped: [], rejected: [] })).toBeNull();
+    expect(partialSendNotice(undefined)).toBeNull();
+  });
+
+  it('names refused recipients, and joins them with skipped ones', () => {
+    expect(partialSendNotice({ rejected: ['b@example.invalid'] })).toBe(
+      'Your mail server refused 1 recipient, so they did not get it: b@example.invalid.'
+    );
+    expect(
+      partialSendNotice({
+        skipped: ['s@example.invalid'],
+        rejected: ['b@example.invalid', 'c@example.invalid'],
+      })
+    ).toBe(
+      'Sent. 1 recipient was skipped because they are on the suppression list: s@example.invalid. ' +
+        'Your mail server refused 2 recipients, so they did not get it: b@example.invalid, c@example.invalid.'
+    );
   });
 });

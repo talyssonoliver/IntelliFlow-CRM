@@ -12,7 +12,7 @@ import { RecipientPicker, type Recipient } from './RecipientPicker';
 import { FormatToolbar } from './FormatToolbar';
 import { AttachmentManager } from './AttachmentManager';
 import { TemplateSelector } from './TemplateSelector';
-import { getEmailSendError, skippedRecipientsNotice, type EmailSendErrorView } from './send-errors';
+import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
 
 type ComposeMode = 'new' | 'reply' | 'replyAll' | 'forward';
 
@@ -278,7 +278,7 @@ export function EmailCompose({
         threadId: originalEmail?.id,
         attachments: uploaded.length > 0 ? uploaded : undefined,
       });
-      const notice = skippedRecipientsNotice(result?.skipped);
+      const notice = partialSendNotice(result);
       setSkippedNotice(notice);
       setStatusMessage(notice ?? 'Email sent successfully');
       if (notice) toast({ title: 'Email sent', description: notice });

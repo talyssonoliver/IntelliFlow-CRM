@@ -204,18 +204,23 @@ export async function sendThroughMailbox(
   envelope: SmtpEnvelope,
   raw: Buffer,
   now: Date
-): Promise<{ provider: MailboxKind; providerMessageId: string | null }> {
+): Promise<{ provider: MailboxKind; providerMessageId: string | null; rejected: string[] }> {
   if (mailbox.kind === 'SMTP') {
     const result = await transports.smtp.send(smtpConfig(mailbox), envelope, raw);
-    return { provider: 'SMTP', ...result };
+    return {
+      provider: 'SMTP',
+      providerMessageId: result.providerMessageId,
+      rejected: result.rejected ?? [],
+    };
   }
   const provider = oauthProvider(mailbox.kind);
   const client = transports.oauth(provider);
   if (!client) throw new MailboxTransportError('CONNECT_FAILED');
   const token = await getOAuthAccessToken(prisma, mailbox, transports, now);
   try {
+    // Gmail and Graph accept the whole message; refusals come back as bounce reports.
     const result = await client.sendRaw(token, raw);
-    return { provider, ...result };
+    return { provider, ...result, rejected: [] };
   } catch (error) {
     if (error instanceof MailboxTransportError && error.code === 'AUTH_FAILED') {
       accessTokens.delete(mailbox.id);

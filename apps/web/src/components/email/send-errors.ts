@@ -114,6 +114,27 @@ export function mailboxErrorMessage(code: MailboxErrorCode): string {
   return FAILURE_REASONS[code];
 }
 
+/**
+ * The notice after a send: suppressed recipients that were skipped and any the
+ * mail server refused (the rest were sent). Null when everyone was sent it.
+ */
+export function partialSendNotice(
+  result: { skipped?: readonly string[]; rejected?: readonly string[] } | null | undefined
+): string | null {
+  const parts = [
+    skippedRecipientsNotice(result?.skipped),
+    refusedRecipientsNotice(result?.rejected),
+  ];
+  const notice = parts.filter(Boolean).join(' ');
+  return notice || null;
+}
+
+function refusedRecipientsNotice(rejected: readonly string[] | undefined): string | null {
+  if (!rejected || rejected.length === 0) return null;
+  const who = rejected.length === 1 ? '1 recipient' : `${rejected.length} recipients`;
+  return `Your mail server refused ${who}, so they did not get it: ${rejected.join(', ')}.`;
+}
+
 /** The notice after a send that skipped suppressed recipients, or null. */
 export function skippedRecipientsNotice(skipped: readonly string[] | undefined): string | null {
   if (!skipped || skipped.length === 0) return null;

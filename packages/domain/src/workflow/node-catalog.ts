@@ -607,15 +607,16 @@ function parseIpv6(raw: string): number[] | null {
   if (lastPart.includes('.')) {
     const v4 = parseIpv4(lastPart);
     if (!v4) return null;
-    const [a = 0, b = 0, c = 0, d = 0] = v4;
+    const [a, b, c, d] = v4 as [number, number, number, number];
     host = `${host.slice(0, lastColon + 1)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
   }
 
   const halves = host.split('::');
   if (halves.length > 2) return null;
   const toGroups = (s: string): string[] => (s === '' ? [] : s.split(':'));
-  const head = toGroups(halves[0] ?? '');
-  const rest = halves.length === 2 ? toGroups(halves[1] ?? '') : [];
+  // split() always yields at least one element; halves[1] exists when length is 2.
+  const head = toGroups(halves[0] as string);
+  const rest = halves.length === 2 ? toGroups(halves[1] as string) : [];
   const explicit = head.length + rest.length;
   if (halves.length === 1 ? explicit !== 8 : explicit > 7) return null;
 
@@ -634,7 +635,8 @@ function inPrefix(bytes: readonly number[], prefix: readonly number[], bits: num
   for (let i = 0; i < bits; i++) {
     const byte = i >> 3;
     const mask = 0x80 >> (i & 7);
-    if (((bytes[byte] ?? 0) & mask) !== ((prefix[byte] ?? 0) & mask)) return false;
+    // Callers pass 16-byte (IPv6) or 4-byte (IPv4) arrays and bits within them.
+    if (((bytes[byte] as number) & mask) !== ((prefix[byte] as number) & mask)) return false;
   }
   return true;
 }

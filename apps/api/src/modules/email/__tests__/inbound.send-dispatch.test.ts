@@ -58,7 +58,7 @@ function htmlPart(raw: Buffer): string {
 beforeEach(() => {
   vi.clearAllMocks();
   transport.claim.mockResolvedValue(undefined);
-  transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'srv-1' });
+  transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'srv-1', rejected: [] });
   (prismaMock.tenantEmailSettings.findUnique as any).mockResolvedValue(null);
   (prismaMock.emailMailbox.findMany as any).mockResolvedValue([ownMailbox]);
   (prismaMock.emailSuppression.findMany as any).mockResolvedValue([]);
@@ -72,7 +72,7 @@ describe('email.sendEmail → dispatchUserMail', () => {
 
     const result = await caller().sendEmail({ to: ['a@example.invalid'], subject: 'Hi', htmlBody });
 
-    expect(result).toEqual({ id: 'rec-1', status: 'SENT', skipped: [] });
+    expect(result).toEqual({ id: 'rec-1', status: 'SENT', skipped: [], rejected: [] });
     expect(transport.send).toHaveBeenCalledTimes(1);
     const [, mailbox, , envelope, raw] = transport.send.mock.calls[0];
     expect(mailbox.id).toBe('mb-own');

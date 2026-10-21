@@ -69,6 +69,31 @@ describe('SmtpMailboxTransport', () => {
     expect(transport.close).toHaveBeenCalled();
   });
 
+  it('reports recipients the server refused while accepting the rest', async () => {
+    const transport = fakeTransport({
+      sendMail: vi.fn(async () => ({
+        messageId: '<m@x>',
+        rejected: ['B@example.invalid', { name: 'C', address: 'C@example.invalid' }],
+      })),
+    });
+    const smtp = new SmtpMailboxTransport({
+      createTransport: vi.fn(() => transport),
+      lookup: publicLookup,
+    });
+    const result = await smtp.send(
+      config(),
+      {
+        from: 'me@mail.example.com',
+        to: ['a@example.invalid', 'b@example.invalid', 'c@example.invalid'],
+      },
+      Buffer.from('raw')
+    );
+    expect(result).toEqual({
+      providerMessageId: '<m@x>',
+      rejected: ['b@example.invalid', 'c@example.invalid'],
+    });
+  });
+
   it.each([
     [465, 'SSL', { secure: true }],
     [587, 'STARTTLS', { secure: false, requireTLS: true }],
@@ -106,7 +131,7 @@ describe('SmtpMailboxTransport', () => {
         { from: 'me@mail.example.com', to: ['a@example.invalid'] },
         Buffer.from('x')
       )
-    ).resolves.toEqual({ providerMessageId: '<server-id@mail.example.com>' });
+    ).resolves.toEqual({ providerMessageId: '<server-id@mail.example.com>', rejected: [] });
   });
 
   it('maps a failure to a code and never carries the password, user or server text', async () => {

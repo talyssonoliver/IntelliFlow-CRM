@@ -121,6 +121,25 @@ function recordMetadata(
   };
 }
 
+/** Record metadata naming refused recipients, or nothing when all were accepted. */
+function rejectedMetadata(
+  input: SendUserEmailInput,
+  skipped: string[],
+  options: DispatchOptions,
+  rejected: string[]
+): { metadata?: Record<string, unknown> } {
+  if (rejected.length === 0) return {};
+  const lower = rejected.map((address) => address.toLowerCase());
+  return {
+    metadata: {
+      ...recordMetadata(input, skipped, options),
+      rejectedRecipients: lower,
+      bouncedRecipients: lower,
+      hardBouncedRecipients: lower,
+    },
+  };
+}
+
 /** FAILED with its code; an authentication failure also marks the mailbox ERROR. */
 async function recordFailure(
   db: any,
@@ -258,6 +277,10 @@ export async function dispatchUserMail(
     );
     delivered = true;
 
+    // Recipients the server refused were not sent: their quota comes back and
+    // they are recorded as bounced (the Sent list shows "Partly bounced").
+    const rejected = sendTo.filter((address) => sent.rejected.includes(address.toLowerCase()));
+    if (rejected.length > 0) await releaseQuota(rejected.length);
     await db.emailRecord.update({
       where: { id: recordId, tenantId },
       data: {
@@ -266,9 +289,10 @@ export async function dispatchUserMail(
         messageIdHeader: mime.messageId,
         provider: sent.provider,
         providerMessageId: sent.providerMessageId,
+        ...rejectedMetadata(input, recipients.skipped, options, rejected),
       },
     });
-    return { id: recordId, status: 'SENT', skipped: recipients.skipped };
+    return { id: recordId, status: 'SENT', skipped: recipients.skipped, rejected };
   } catch (error) {
     // The recipients got it: keep the charge and the SENT outcome; surface the error.
     if (delivered) throw error;

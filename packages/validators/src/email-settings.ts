@@ -204,4 +204,6 @@ export interface SendUserEmailResultDto {
   status: 'SENT' | 'FAILED';
   /** Suppressed recipients that were skipped (owner ruling Q9). */
   skipped: string[];
+  /** Recipients the mail server refused at send time (SMTP); the rest were sent. */
+  rejected?: string[];
 }

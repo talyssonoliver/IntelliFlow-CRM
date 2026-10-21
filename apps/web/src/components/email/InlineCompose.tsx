@@ -8,7 +8,7 @@ import { trpc } from '@/lib/trpc';
 import { toast } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
 import { mailboxAddressSchema } from '@intelliflow/validators';
-import { getEmailSendError, skippedRecipientsNotice, type EmailSendErrorView } from './send-errors';
+import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
 
 const isEmailAddress = (value: string) => mailboxAddressSchema.safeParse(value).success;
 
@@ -137,7 +137,7 @@ export function InlineCompose({
         htmlBody: body,
         threadId: originalMessage.id,
       });
-      const notice = skippedRecipientsNotice(result?.skipped);
+      const notice = partialSendNotice(result);
       toast({
         title: mode === 'forward' ? 'Email forwarded' : 'Reply sent',
         ...(notice ? { description: notice } : {}),

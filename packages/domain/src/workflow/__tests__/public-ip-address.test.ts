@@ -81,10 +81,17 @@ describe('isPublicIpAddress — IPv6 reserved ranges and forms', () => {
     expect(isPublicIpAddress(address)).toBe(true);
   });
 
-  it.each([':::', '1::2::3', 'gggg::1', '1:2:3:4:5:6:7:8:9', 'example.com', '12345::1'])(
-    'refuses malformed %j',
-    (address) => {
-      expect(isPublicIpAddress(address)).toBe(false);
-    }
-  );
+  it.each([
+    ':::',
+    '1::2::3',
+    'gggg::1',
+    '1:2:3:4:5:6:7:8:9',
+    'example.com',
+    '12345::1',
+    // A trailing dotted IPv4 that is not one.
+    '::ffff:1.2.3.999',
+    '::ffff:1.2.3',
+  ])('refuses malformed %j', (address) => {
+    expect(isPublicIpAddress(address)).toBe(false);
+  });
 });

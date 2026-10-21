@@ -60,7 +60,11 @@ beforeEach(() => {
   vi.clearAllMocks();
   quota.reserveQuota.mockResolvedValue(quota.release);
   transport.claim.mockResolvedValue(undefined);
-  transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: '<srv@x>' });
+  transport.send.mockResolvedValue({
+    provider: 'SMTP',
+    providerMessageId: '<srv@x>',
+    rejected: [],
+  });
   (prismaMock.tenantEmailSettings.findUnique as any).mockResolvedValue(null);
   (prismaMock.emailMailbox.findMany as any).mockResolvedValue([ownMailbox]);
   (prismaMock.emailSuppression.findMany as any).mockResolvedValue([]);
@@ -81,6 +85,7 @@ describe('dispatchUserMail', () => {
       id: 'rec-1',
       status: 'SENT',
       skipped: [],
+      rejected: [],
     });
     expect(prismaMock.emailMailbox.findMany).toHaveBeenCalledWith({
       where: { tenantId, OR: [{ scope: 'USER', userId: TEST_UUIDS.user1 }, { scope: 'TENANT' }] },
@@ -253,6 +258,28 @@ describe('dispatchUserMail', () => {
     expect(prismaMock.emailRecord.update).toHaveBeenCalledTimes(1);
   });
 
+  it('records recipients the server refused, gives back their quota and reports them', async () => {
+    transport.send.mockResolvedValue({
+      provider: 'SMTP',
+      providerMessageId: '<srv@x>',
+      rejected: ['b@example.invalid'],
+    });
+    const result = await dispatchUserMail(
+      createTestContext() as never,
+      { ...input, to: ['a@example.invalid', 'B@example.invalid'] },
+      deps()
+    );
+    expect(result).toMatchObject({ status: 'SENT', rejected: ['B@example.invalid'] });
+    expect(quota.release).toHaveBeenCalledWith(1);
+    const update = (prismaMock.emailRecord.update as any).mock.calls[0][0].data;
+    expect(update.status).toBe('SENT');
+    expect(update.metadata).toMatchObject({
+      rejectedRecipients: ['b@example.invalid'],
+      bouncedRecipients: ['b@example.invalid'],
+      hardBouncedRecipients: ['b@example.invalid'],
+    });
+  });
+
   it('releases quota if creating the record fails', async () => {
     (prismaMock.emailRecord.create as any).mockRejectedValue(new Error('db down'));
     await expect(dispatchUserMail(createTestContext() as never, input, deps())).rejects.toThrow(
@@ -337,7 +364,7 @@ describe('dispatchUserMail', () => {
     (prismaMock.emailMailbox.findMany as any).mockResolvedValue([
       { ...ownMailbox, kind: 'GMAIL', refreshToken: secret },
     ]);
-    transport.send.mockResolvedValue({ provider: 'GMAIL', providerMessageId: 'gm' });
+    transport.send.mockResolvedValue({ provider: 'GMAIL', providerMessageId: 'gm', rejected: [] });
     await dispatchUserMail(
       createTestContext() as never,
       { ...input, bcc: ['b@example.invalid'] },

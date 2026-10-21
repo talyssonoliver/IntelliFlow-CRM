@@ -77,7 +77,7 @@ describe('email.sendEmail quota guard', () => {
   });
 
   it('atomically reserves one unit per recipient before sending and keeps it after success', async () => {
-    transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'm1' });
+    transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'm1', rejected: [] });
     const quota = underQuota();
 
     const result = await inboundEmailRouter.createCaller(ctxWith(quota)).sendEmail(input);
@@ -118,7 +118,7 @@ describe('email.sendEmail quota guard', () => {
   });
 
   it('keeps the reservation and rethrows when the send succeeded but the record update fails', async () => {
-    transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'm1' });
+    transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'm1', rejected: [] });
     (prismaMock.emailRecord.update as any).mockRejectedValue(new Error('db blip'));
     const quota = underQuota();
 
@@ -158,7 +158,7 @@ describe('email.sendEmail quota guard', () => {
   });
 
   it('cannot send limit+1 emails when two requests race for the last unit', async () => {
-    transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'm1' });
+    transport.send.mockResolvedValue({ provider: 'SMTP', providerMessageId: 'm1', rejected: [] });
     // One unit left: the atomic reserve admits exactly one of the two concurrent requests.
     let remaining = RECIPIENTS;
     const quota = {

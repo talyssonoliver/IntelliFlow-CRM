@@ -34,7 +34,7 @@ function transports(overrides: Partial<Record<string, any>> = {}): MailboxTransp
   };
   return {
     smtp: {
-      send: vi.fn(async () => ({ providerMessageId: '<srv@x>' })),
+      send: vi.fn(async () => ({ providerMessageId: '<srv@x>', rejected: [] })),
       verify: vi.fn(),
       ...overrides.smtp,
     },
@@ -249,7 +249,7 @@ describe('sendThroughMailbox', () => {
         Buffer.from('raw'),
         NOW
       )
-    ).resolves.toEqual({ provider: 'SMTP', providerMessageId: '<srv@x>' });
+    ).resolves.toEqual({ provider: 'SMTP', providerMessageId: '<srv@x>', rejected: [] });
     expect(t.smtp.send).toHaveBeenCalledWith(
       {
         host: 'smtp.mail.example.com',
@@ -287,7 +287,7 @@ describe('sendThroughMailbox', () => {
         Buffer.from('raw'),
         NOW
       )
-    ).resolves.toEqual({ provider: 'GMAIL', providerMessageId: 'gm-1' });
+    ).resolves.toEqual({ provider: 'GMAIL', providerMessageId: 'gm-1', rejected: [] });
     expect((t.oauth('GMAIL') as any).sendRaw).toHaveBeenCalledWith('at-new', Buffer.from('raw'));
   });
 

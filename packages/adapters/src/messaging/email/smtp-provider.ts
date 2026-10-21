@@ -26,7 +26,11 @@ export interface SmtpEnvelope {
 }
 
 interface SmtpTransporter {
-  sendMail(message: { envelope: SmtpEnvelope; raw: Buffer }): Promise<{ messageId?: string }>;
+  sendMail(message: { envelope: SmtpEnvelope; raw: Buffer }): Promise<{
+    messageId?: string;
+    /** Recipients the server refused at RCPT TO (nodemailer: string or { address }). */
+    rejected?: Array<string | { address: string }>;
+  }>;
   verify(): Promise<unknown>;
   close(): void;
 }
@@ -107,11 +111,16 @@ export class SmtpMailboxTransport {
     config: SmtpConnectionConfig,
     envelope: SmtpEnvelope,
     raw: Buffer
-  ): Promise<{ providerMessageId: string | null }> {
+  ): Promise<{ providerMessageId: string | null; rejected: string[] }> {
     const transporter = await this.open(config);
     try {
       const info = await transporter.sendMail({ envelope, raw });
-      return { providerMessageId: info.messageId ?? null };
+      // A server may accept some recipients and refuse others at RCPT TO; the
+      // send then resolves, so the refused ones must be reported, not assumed sent.
+      const rejected = (info.rejected ?? []).map((r) =>
+        (typeof r === 'string' ? r : r.address).toLowerCase()
+      );
+      return { providerMessageId: info.messageId ?? null, rejected };
     } catch (error) {
       throw mapSmtpError(error);
     } finally {
