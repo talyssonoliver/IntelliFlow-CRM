@@ -255,6 +255,32 @@ Hello World`;
       updatedAt: new Date(),
     };
 
+    it.each(['archive', 'spam', 'delete', 'permanentDelete'] as const)(
+      'refuses to %s another member’s mail (NOT_FOUND, nothing changed) — #962',
+      async (action) => {
+        (prismaMock.emailRecord.findFirst as any).mockResolvedValue({
+          ...mockExistingEmail,
+          userId: 'someone-else',
+        });
+        await expect(
+          protectedCaller.processEmail({ emailId: 'test-email-123', action })
+        ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+        expect(prismaMock.emailRecord.update).not.toHaveBeenCalled();
+        expect(prismaMock.emailRecord.delete).not.toHaveBeenCalled();
+      }
+    );
+
+    it('still lets anyone in the tenant act on shared inbound mail (no owner)', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue({
+        ...mockExistingEmail,
+        userId: null,
+      });
+      (prismaMock.emailRecord.update as any).mockResolvedValue(mockExistingEmail);
+      await expect(
+        protectedCaller.processEmail({ emailId: 'test-email-123', action: 'archive' })
+      ).resolves.toEqual({ success: true });
+    });
+
     it('should handle archive action', async () => {
       (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
       (prismaMock.emailRecord.update as any).mockResolvedValue({
