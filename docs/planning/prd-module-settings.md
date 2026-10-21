@@ -1121,5 +1121,5 @@ as an issue.
 - Notice and horizon settings per event type.
 - A purge rule for booker PII under the PG-206 retention policies.
 
-**Prisma migrations** `20261021120000` to `20261021120400` (five, all Class A)
+**Prisma migrations** `20261021120000` to `20261021120500` (six, all Class A)
 must be applied to production before this ships.

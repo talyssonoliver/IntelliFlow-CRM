@@ -103,3 +103,25 @@ tests, and that it is told before any scope is cut.
 Question: the 30/hour per-event-type cap counted every attempt, failed ones included, so 3 IPs of junk could block real bookers for the hour (codex fp 2d974acf). How should it count?
 
 Answer: **Count real bookings (Recommended)**: the 30/hour cap counts only bookings that actually landed; the email (3/day) and IP (10/hour) caps still count every attempt.
+
+## Q16 — DSAR entry point (2026-10-21, AskUserQuestion in the PG-203 lane; same answer relayed by runner projects-8c from its modal ~15:00 UTC)
+
+Answer: **Firm booking handle.** Public page `/dsar/<handle>`, linked from the booking page and the booking confirmation email. Firms without a handle log requests in-app for the person (staff-verified). The internal tenant slug is never exposed (it embeds the admin's auth id).
+
+## Q17 — what runs automatically after email verification (same session and relay)
+
+Answer: **Export auto, erase on approval.** Access/portability exports download through the verified link. Erasure, rectification, restriction and objection wait for a firm admin on `/settings/privacy-requests`. An SLA job emails admins before the 30-day deadline.
+
+## Runner security conditions for DSAR (projects-8c, 2026-10-21)
+
+- Same abuse guards as the booking page: rate limits, the same 404 for an unknown handle, no enumeration of whether an email exists.
+- Verification links are single-use, short-lived and hashed at rest.
+- The export link expires.
+
+## Q18 — DSAR restriction / objection (2026-10-21, AskUserQuestion, after the compliance review)
+
+Answer: **Restriction flag now.** A per-firm restriction keyed on the person's email. It stops AI scoring/embedding and auto-reply drafts, and shows a banner on the lead/contact. An admin lifts it. Outreach/marketing suppression is a follow-up task.
+
+## Q19 — DSAR erasure scope (same modal)
+
+Answer: **CRM core auto, comms checklist.** Auto-erase the lead/contact profile, notes, activities, AI scores/insights, embeddings and search vectors, and the booking fields. The export includes the communications too. Emails, tickets, chats, feedback, notifications and drafts show as a counted checklist for the admin, plus a follow-up task to automate them.
