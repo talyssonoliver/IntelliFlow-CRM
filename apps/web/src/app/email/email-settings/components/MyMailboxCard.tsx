@@ -13,6 +13,7 @@ import type { MailboxDto, OAuthProvidersAvailableDto } from '@intelliflow/valida
 import { trpc } from '@/lib/trpc';
 import { SectionHeader } from '@/components/shared/section-header';
 import { mailboxErrorMessage } from '@/components/email/send-errors';
+import { oauthProviderKey } from '../../oauth/oauth-session';
 
 // Loaded on demand: most users connect with Google or Microsoft (C-FE5).
 const SmtpMailboxForm = dynamic(() => import('./SmtpMailboxForm').then((m) => m.SmtpMailboxForm), {
@@ -24,11 +25,6 @@ type Scope = 'USER' | 'TENANT';
 type Provider = 'GMAIL' | 'MICROSOFT';
 
 const PROVIDER_LABEL: Record<Provider, string> = { GMAIL: 'Google', MICROSOFT: 'Microsoft' };
-
-/** sessionStorage key the OAuth callback page reads to know which provider it returns from. */
-export function oauthProviderKey(state: string): string {
-  return `email-oauth-provider:${state}`;
-}
 
 function errorText(error: unknown, fallback: string): string {
   return error instanceof Error && error.message ? error.message : fallback;
