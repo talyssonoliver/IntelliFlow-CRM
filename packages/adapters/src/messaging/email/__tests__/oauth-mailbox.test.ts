@@ -295,18 +295,47 @@ describe('listDsnSince', () => {
     expect(new URL(calls()[1]![0]).searchParams.get('format')).toBe('raw');
   });
 
-  it('Gmail: pages through the ids and resumes from the last report read when over the limit', async () => {
+  it('Gmail: pages through the ids and resumes at the first report it did not take when over the limit', async () => {
     fetchMock
       .mockReturnValueOnce(
         respond(200, { messages: [{ id: 'm3' }, { id: 'm2' }], nextPageToken: 'p2' })
       )
       .mockReturnValueOnce(respond(200, { messages: [{ id: 'm1' }] }))
       .mockReturnValueOnce(gmailRaw('m1', 1))
-      .mockReturnValueOnce(gmailRaw('m2', 2));
+      .mockReturnValueOnce(gmailRaw('m2', 2))
+      .mockReturnValueOnce(gmailRaw('m3', 3));
     const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 2);
     expect(new URL(calls()[1]![0]).searchParams.get('pageToken')).toBe('p2');
     expect(result.messages.map((m) => m.key)).toEqual(['m1', 'm2']);
-    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 2)));
+    expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 3)));
+  });
+
+  it('Gmail: never splits reports received in the same second, so a full batch of them cannot repeat forever', async () => {
+    const at = (id: string, ms: number) =>
+      respond(200, {
+        id,
+        internalDate: String(ms),
+        raw: Buffer.from(`R-${id}`).toString('base64url'),
+      });
+    const second = Date.UTC(2026, 9, 19, 10);
+    const times: Record<string, number> = {
+      s0: second + 100,
+      s1: second + 500,
+      s2: second + 900,
+      later: second + 1000,
+    };
+    fetchMock.mockImplementation((url: string) => {
+      const id = /messages\/([^?]+)\?format=raw/.exec(url)?.[1];
+      if (id) return at(id, times[id]!);
+      // Newest first.
+      return respond(200, {
+        messages: [{ id: 'later' }, { id: 's2' }, { id: 's1' }, { id: 's0' }],
+      });
+    });
+    const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 2);
+    expect(result.messages.map((m) => m.key)).toEqual(['s0', 's1', 's2']);
+    // Resumes at the first second it did not finish (Gmail's after: is by the second).
+    expect(result.resumeFrom).toEqual(new Date(second + 1000));
   });
 
   it('Gmail: past the page cap, narrows the window so the oldest reports are read and none is skipped', async () => {

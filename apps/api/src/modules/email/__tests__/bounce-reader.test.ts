@@ -382,12 +382,28 @@ describe('runBounceScan', () => {
     fake = fakeDb({ settings: { notifySenderOnBounce: true } });
     ctx = deps(fake, [{ key: '7:11', raw: makeDsn() }]);
     await runBounceScan(ctx.d);
-    expect(ctx.notify).toHaveBeenCalledWith({
-      tenantId: T,
-      userId: 'u1',
-      emailRecordId: 'crec123',
-      recipient: 'gone@example.invalid',
-    });
+    expect(ctx.notify).toHaveBeenCalledWith(
+      {
+        tenantId: T,
+        userId: 'u1',
+        emailRecordId: 'crec123',
+        recipient: 'gone@example.invalid',
+      },
+      fake.db
+    );
+  });
+
+  it('a failed notification rolls its receipt back, so the next scan notifies instead of skipping', async () => {
+    const fake = fakeDb({ settings: { notifySenderOnBounce: true } });
+    const ctx = deps(fake, [{ key: '7:11', raw: makeDsn() }]);
+    (ctx.notify as any).mockRejectedValueOnce(new Error('notifications down'));
+    const first = await runBounceScan(ctx.d);
+    expect(first.failures).toBe(1);
+    expect(fake.receipts).toHaveLength(0);
+
+    await runBounceScan(ctx.d);
+    expect(ctx.notify).toHaveBeenCalledTimes(2);
+    expect(fake.receipts).toHaveLength(1);
   });
 
   it('backs off on failure and moves the mailbox to ERROR after 5 consecutive failures', async () => {

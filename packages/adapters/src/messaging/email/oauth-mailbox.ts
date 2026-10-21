@@ -295,28 +295,21 @@ export class OAuthMailboxClient {
       listing = await listGmailIds(headers, since, windowEnd);
     }
 
-    const oldestFirst = listing.ids.reverse();
     const out: RawDsnMessage[] = [];
-    for (const id of oldestFirst.slice(0, limit)) {
-      const response = await call(`${GMAIL_API}/messages/${encodeURIComponent(id)}?format=raw`, {
-        headers,
-      });
-      if (!response.ok) throw httpError(response.status);
-      const data = await json<{ id: string; raw?: string; internalDate?: string }>(response);
-      if (!data.raw) continue;
-      out.push({
-        key: data.id,
-        raw: Buffer.from(data.raw, 'base64url').toString('utf8'),
-        receivedAt: new Date(Number(data.internalDate ?? 0)),
-      });
+    let resumeAt: Date | null = null;
+    for (const id of listing.ids.reverse()) {
+      const message = await readGmailRaw(headers, id);
+      if (!message) continue;
+      // Past the limit, stop only at a new second: `after:` is by the second,
+      // so a cut inside one would list the same batch again next time.
+      const last = out.at(-1);
+      if (out.length >= limit && last && epochSecond(message) !== epochSecond(last)) {
+        resumeAt = new Date(epochSecond(message) * 1000);
+        break;
+      }
+      out.push(message);
     }
-    const resumeFrom = gmailResumeFrom({
-      capped: listing.capped,
-      overLimit: oldestFirst.length > limit,
-      out,
-      since,
-      windowEnd,
-    });
+    const resumeFrom = gmailResumeFrom({ capped: listing.capped, resumeAt, since, windowEnd });
     return { messages: out, resumeFrom };
   }
 
@@ -356,14 +349,35 @@ export class OAuthMailboxClient {
  */
 function gmailResumeFrom(scan: {
   capped: boolean;
-  overLimit: boolean;
-  out: RawDsnMessage[];
+  resumeAt: Date | null;
   since: Date;
   windowEnd: number | null;
 }): Date | null {
   if (scan.capped) return scan.since;
-  if (scan.overLimit) return lastReceivedAt(scan.out, scan.since);
+  if (scan.resumeAt) return scan.resumeAt;
   return scan.windowEnd === null ? null : new Date((scan.windowEnd - 1) * 1000);
+}
+
+function epochSecond(message: RawDsnMessage): number {
+  return Math.floor(message.receivedAt.getTime() / 1000);
+}
+
+/** One Gmail message as raw MIME, or null when it has none. */
+async function readGmailRaw(
+  headers: Record<string, string>,
+  id: string
+): Promise<RawDsnMessage | null> {
+  const response = await call(`${GMAIL_API}/messages/${encodeURIComponent(id)}?format=raw`, {
+    headers,
+  });
+  if (!response.ok) throw httpError(response.status);
+  const data = await json<{ id: string; raw?: string; internalDate?: string }>(response);
+  if (!data.raw) return null;
+  return {
+    key: data.id,
+    raw: Buffer.from(data.raw, 'base64url').toString('utf8'),
+    receivedAt: new Date(Number(data.internalDate ?? 0)),
+  };
 }
 
 /** Bounce-sender message ids since `since` (and before `windowEnd`, epoch seconds), newest first. */
@@ -471,9 +485,4 @@ function isBounceCandidate(message: GraphMessage): boolean {
 
 function isGraphLink(link: string): boolean {
   return link.startsWith(`${GRAPH_API}/`);
-}
-
-/** Where a truncated scan resumes: the newest message read, else where it started. */
-function lastReceivedAt(messages: RawDsnMessage[], since: Date): Date {
-  return messages.at(-1)?.receivedAt ?? since;
 }

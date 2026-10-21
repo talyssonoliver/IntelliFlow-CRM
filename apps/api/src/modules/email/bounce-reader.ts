@@ -50,7 +50,8 @@ export interface BounceReaderDeps {
   /** The field-encryption Prisma client (each write is scoped by the mailbox's tenant). */
   prisma: any;
   transports: MailboxTransports;
-  notify(notification: BounceNotification): Promise<void>;
+  /** Creates the in-app notification through `db` (the receipt's transaction). */
+  notify(notification: BounceNotification, db: unknown): Promise<void>;
   now(): Date;
 }
 
@@ -325,7 +326,7 @@ async function recordReceiptOnce(
         },
       });
       if (!matched || kind === 'DELAYED') return { metadata: null, suppressed: false };
-      return applyMatchedBounce(tx, {
+      const applied = await applyMatchedBounce(tx, {
         mailbox,
         record: matched,
         recordRecipients: r.recordRecipients,
@@ -334,6 +335,20 @@ async function recordReceiptOnce(
         state: r.state,
         now: r.now,
       });
+      // In the same transaction: a failed notification rolls the receipt back,
+      // so the next scan retries it instead of skipping it as already processed.
+      if (shouldNotifySender(matched, kind, r.state.settings)) {
+        await deps.notify(
+          {
+            tenantId: mailbox.tenantId,
+            userId: matched.userId,
+            emailRecordId: matched.id,
+            recipient: entry.recipient,
+          },
+          tx
+        );
+      }
+      return applied;
     });
   } catch (error) {
     // Already processed (unique receipt): idempotent no-op.
@@ -383,15 +398,6 @@ async function processReport(
     if (outcome.metadata) record = { ...matched!, metadata: outcome.metadata };
     state.receipts += 1;
     state.suppressions += outcome.suppressed ? 1 : 0;
-
-    if (shouldNotifySender(matched, kind, state.settings)) {
-      await deps.notify({
-        tenantId: mailbox.tenantId,
-        userId: matched.userId,
-        emailRecordId: matched.id,
-        recipient: entry.recipient,
-      });
-    }
   }
 }
 
@@ -536,9 +542,9 @@ export async function createBounceReaderDeps(): Promise<BounceReaderDeps> {
     prisma,
     transports,
     now: () => new Date(),
-    notify: (n) =>
+    notify: (n, db) =>
       notifyEmailBounced(n, { notifySenderOnBounce: true }, (params) =>
-        createNotification(prisma as never, params as never).then(() => undefined)
+        createNotification(db as never, params as never).then(() => undefined)
       ),
   };
 }

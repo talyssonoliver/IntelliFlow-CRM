@@ -331,6 +331,27 @@ describe('dispatchUserMail', () => {
     expect(quota.release).toHaveBeenCalledTimes(1);
   });
 
+  it('records each attachment at its stored size, not the size the client declared', async () => {
+    storage.downloadEmailAttachment.mockResolvedValue(Buffer.from('0123456789'));
+    await dispatchUserMail(
+      createTestContext() as never,
+      {
+        ...input,
+        attachments: [
+          {
+            storagePath: `${tenantId}/u-report.pdf`,
+            fileName: 'report.pdf',
+            contentType: 'application/pdf',
+            size: 0,
+          },
+        ],
+      },
+      deps()
+    );
+    const rows = (prismaMock.emailAttachment.createMany as any).mock.calls[0][0].data;
+    expect(rows[0].fileSize).toBe(10);
+  });
+
   it('refuses attachments whose stored bytes exceed 25 MB in total (declared sizes are client input)', async () => {
     const small = (name: string) => ({
       storagePath: `${tenantId}/u-${name}`,

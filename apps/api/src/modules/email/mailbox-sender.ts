@@ -239,20 +239,20 @@ export async function dispatchUserMail(
     recordId = record.id as string;
 
     const attachments = input.attachments ?? [];
+    const parts = await loadAttachmentParts(deps.storage, tenantId, attachments);
     if (attachments.length > 0) {
       await db.emailAttachment.createMany({
-        data: attachments.map((a) => ({
+        // The stored bytes, never the size the client declared.
+        data: attachments.map((a, i) => ({
           emailId: recordId,
           tenantId,
           fileName: a.fileName,
-          fileSize: a.size,
+          fileSize: parts[i]!.content.length,
           fileType: a.contentType,
           fileUrl: a.storagePath,
         })),
       });
     }
-
-    const parts = await loadAttachmentParts(deps.storage, tenantId, attachments);
 
     const mime = await buildMime({
       recordId,
