@@ -1128,3 +1128,25 @@ waivers:
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
     author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
     date: '2026-10-17'
+  - fingerprint: 283b28bc7d89203adc3672b6d0e2324890e7fe34338adb652ec098b0bef7f0a5
+    reason: >-
+      PG-203 public booking vs in-app create/reschedule and the firm daily cap. This is the same accepted
+      PG-202 best-effort cap (spec NF-004 / ADR-081 "Daily cap: best-effort (check-then-insert)"; waivers
+      25c5826c, 1a5ce81b and 846f69b2 above). In-app appointments.create/reschedule check the cap without a lock.
+      Public bookings ARE serialised among themselves under the per-tenant pg_advisory_xact_lock
+      ('booking:<tenant>', ADR-083), and host double-booking stays blocked by the organizer-overlap
+      constraint. Worst case: one booking over the cap when a staff create races a public booking on the
+      same day. No cross-tenant or data-corruption effect. A locked fix of the in-app path is
+      already tracked in gh #913 and debt-ledger PG-202-AVAILABILITY-KNOWN-LIMITS-001; PG-203 adds the
+      'booking:<tenant>' key for that fix to reuse.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'
+  - fingerprint: 349b41c39051aea89fbd73014b3d37ad75e7dcb603c1095dbf40a0071c462428
+    reason: >-
+      Same finding as waiver 283b28bc above (public booking vs in-app create and the best-effort daily
+      cap), anchored by a later review run on the computeSlots re-check line. Same evidence and tracking:
+      ADR-081 best-effort cap, public bookings serialised under 'booking:<tenant>' (ADR-083), host
+      overlap still blocked by constraint, in-app locked fix tracked in gh #913 / debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'

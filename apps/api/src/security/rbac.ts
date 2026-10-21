@@ -54,6 +54,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read', 'write', 'delete', 'manage', 'admin'],
     report_schedule: ['read', 'write', 'delete', 'manage', 'admin'],
     contact_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-205
+    event_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-203
     goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
   MANAGER: {
@@ -70,6 +71,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read', 'write', 'manage'],
     report_schedule: ['read', 'write', 'delete', 'manage'],
     contact_type: ['read', 'write', 'delete', 'manage'], // PG-205: managers edit types
+    event_type: ['read', 'write', 'delete', 'manage'], // PG-203: managers edit event types
     goal: ['read', 'write', 'manage'],
   },
   SALES_REP: {
@@ -86,6 +88,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    event_type: ['read'], // PG-203
     goal: ['read', 'write'],
   },
   USER: {
@@ -102,6 +105,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    event_type: ['read'], // PG-203
     goal: ['read', 'write'],
   },
   VIEWER: {
@@ -118,6 +122,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    event_type: ['read'], // PG-203
     goal: ['read'],
   },
 };

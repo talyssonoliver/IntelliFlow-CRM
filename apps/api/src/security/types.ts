@@ -102,7 +102,8 @@ export type ResourceType =
   | 'pipeline_config'
   | 'goal'
   | 'report_schedule' // PG-201 audit trail
-  | 'contact_type'; // PG-205 audit trail
+  | 'contact_type' // PG-205 audit trail
+  | 'event_type'; // PG-203 audit trail (event types + booking link)
 
 /**
  * Permission actions

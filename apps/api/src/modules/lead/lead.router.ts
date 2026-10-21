@@ -16,6 +16,7 @@ import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { loadBullMQ } from '../../lib/load-bullmq';
+import { enqueueLeadScoring } from './lead-scoring-enqueue';
 import {
   createLeadSchema,
   updateLeadSchema,
@@ -529,35 +530,21 @@ export const leadRouter = createTRPCRouter({
       userName: ctx.user?.email ?? 'System',
     });
 
-    // Fire-and-forget: enqueue AI lead scoring (best-effort)
-    (async () => {
-      const { Queue } = await loadBullMQ();
-      const { QUEUE_NAMES } = await import('@intelliflow/platform/queues/types');
-      const queue = new Queue(QUEUE_NAMES.AI_SCORING, {
-        connection: {
-          host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
-          port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
-        },
-      });
-      const _otelCarrierCreate: Record<string, string> = {};
-      propagation.inject(otelContext.active(), _otelCarrierCreate);
-      await queue.add('score-lead', {
-        leadId: result.value.id.value,
-        tenantId: typedCtx.tenant.tenantId,
-        lead: {
-          email: input.email,
-          source: input.source,
-          firstName: input.firstName,
-          lastName: input.lastName,
-          company: input.company,
-          title: input.title,
-          phone: input.phone?.value,
-        },
-        correlationId: `lead-create-${result.value.id.value}`,
-        _otelCarrier: _otelCarrierCreate,
-      });
-      await queue.close();
-    })().catch(() => {});
+    // Fire-and-forget: enqueue AI lead scoring (best-effort; shared with public booking, PG-203)
+    void enqueueLeadScoring({
+      leadId: result.value.id.value,
+      tenantId: typedCtx.tenant.tenantId,
+      lead: {
+        email: input.email,
+        source: input.source,
+        firstName: input.firstName,
+        lastName: input.lastName,
+        company: input.company,
+        title: input.title,
+        phone: input.phone?.value,
+      },
+      correlationId: `lead-create-${result.value.id.value}`,
+    });
 
     // IFC-240: fire-and-forget audit logging
     getAuditLogger(ctx.prisma)
