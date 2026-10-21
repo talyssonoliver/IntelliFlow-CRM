@@ -1050,15 +1050,16 @@ production.
 
 ## PG-207 Addendum: Email Settings and User Mailboxes (2026-10-21)
 
-Owner rulings Q1-Q10 (2026-10-20/21,
+Owner rulings Q1-Q11 (2026-10-20/21,
 `.specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md`): user mail
 leaves from the user's own mailbox (Google, Microsoft or SMTP), never from
 IntelliFlow's domain; an admin-enabled company mailbox is the fallback for users
 without one; bounces are read back from the sending mailbox and enforced through
 a suppression list (suppressed recipients are skipped, the rest sent);
-signatures live on `/email/signatures` and are prefilled in new messages. The
-fake production send (mock provider recording SENT) is fixed here. Spec:
-`.specify/sprints/sprint-18/specifications/PG-207-spec.md`. ADR-085.
+signatures live on `/email/signatures` and are prefilled in new messages;
+compose attachments are uploaded to private tenant storage and really sent
+(Q11). The fake production send (mock provider recording SENT) is fixed here.
+Spec: `.specify/sprints/sprint-18/specifications/PG-207-spec.md`. ADR-085.
 
 ### Additional User Stories
 
@@ -1119,8 +1120,18 @@ No AI toggles; no colour tokens; no tags (TagsTab N/A).
 
 ### Delivery status
 
-| Item                                          | Status  |
-| --------------------------------------------- | ------- |
-| Spec (owner rulings Q1-Q10, ADR-085)          | Drafted |
-| DB, domain, validators, adapters, API, web    | Planned |
-| Validations, reviews, Lighthouse, attestation | Planned |
+| Item                                                                      | Status      |
+| ------------------------------------------------------------------------- | ----------- |
+| Spec (owner rulings Q1-Q11, ADR-085)                                      | Done        |
+| Plan (plan-reviewer APPROVE)                                              | Done        |
+| DB (8 Class A migrations), domain, validators, adapters                   | Done        |
+| API (single send path, mailbox/settings/signature routers, bounce reader) | Done        |
+| Web (email settings, signatures, OAuth return, compose)                   | Done        |
+| Validations, reviews, attestation                                         | In Progress |
+| Lighthouse, OAuth app registration, live DSN header spike                 | NEEDS_HUMAN |
+
+Attachments (Q11): `emailAttachments.upload` stores each file (≤ 10 MB,
+executables refused) in the private `email-attachments` bucket through
+`EmailAttachmentStoragePort`; `sendEmail` takes the storage paths and fails the
+send if any attachment cannot be read. Findings and deviations:
+`.specify/sprints/sprint-18/execution/PG-207/PG-207-findings.md`.

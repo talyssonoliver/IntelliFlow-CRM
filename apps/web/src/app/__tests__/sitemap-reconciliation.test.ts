@@ -61,8 +61,9 @@ describe('Sitemap Reconciliation', () => {
     //   settings/help-center/articles/new/page.tsx and .../[id]/edit/page.tsx → 211.
     // Aurora rebrand: +1 for the unlinked, noindex design preview preview/aurora/page.tsx → 212.
     // PG-197: +2 for accounts/(list)/new/page.tsx and accounts/[id]/edit/page.tsx → 214.
+    // PG-207: +1 for the mailbox sign-in return page email/oauth/callback/page.tsx → 215.
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(214);
+    expect(pageFiles.length).toBe(215);
   });
 
   // TC-26
