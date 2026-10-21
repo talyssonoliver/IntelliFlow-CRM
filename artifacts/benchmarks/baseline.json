@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-21T00:33:02.817Z",
+  "timestamp": "2026-10-21T00:41:14.231Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1455,16 +1455,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 201,
-    "total_fields": 2889,
-    "total_indexes": 906,
-    "total_relations": 284,
+    "total_tables": 207,
+    "total_fields": 2993,
+    "total_indexes": 923,
+    "total_relations": 293,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 176,
+        "fields": 181,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1478,7 +1478,7 @@
       },
       {
         "name": "User",
-        "fields": 46,
+        "fields": 48,
         "indexes": 7,
         "relations": 8,
         "hasEmbedding": false
@@ -1494,6 +1494,13 @@
         "name": "ConversationRecord",
         "fields": 36,
         "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailMailbox",
+        "fields": 36,
+        "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1521,6 +1528,13 @@
       {
         "name": "AuditLogEntry",
         "fields": 32,
+        "indexes": 8,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailRecord",
+        "fields": 31,
         "indexes": 8,
         "relations": 2,
         "hasEmbedding": false
@@ -1564,13 +1578,6 @@
         "name": "Notification",
         "fields": 28,
         "indexes": 10,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailRecord",
-        "fields": 26,
-        "indexes": 7,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1960,6 +1967,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailBounceReceipt",
+        "fields": 14,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "ChatMessage",
         "fields": 14,
         "indexes": 4,
@@ -2121,6 +2135,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantEmailSettings",
+        "fields": 12,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "KPIDefinition",
         "fields": 12,
         "indexes": 3,
@@ -2216,6 +2237,13 @@
         "fields": 11,
         "indexes": 6,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSignature",
+        "fields": 11,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2408,6 +2436,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailOAuthState",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "PerformanceMetric",
         "fields": 10,
         "indexes": 6,
@@ -2509,6 +2544,13 @@
         "name": "PipelineSnapshot",
         "fields": 9,
         "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSuppression",
+        "fields": 9,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
