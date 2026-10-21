@@ -185,6 +185,17 @@ rulings Q1–Q11 to user-mailbox sending (ADR-085). Branch
 
   No further codex round was run: the runner's pre-ship review at push runs
   one at the final SHA.
+- **After pushing was handed to the runner** (2026-10-21/22):
+  - Codex pre-ship HIGH (a child domain spoke for its parent): entitlement made directional (`19c80a1ec`).
+  - Codex pre-ship MEDIUM #970 (Exchange NDR senders): fixed (`3c0cf2216`).
+  - Merged #975: the audit highs cleared; `sanitize-html` bumped to 2.18.1 for GHSA-c9rx-x947-fp3h (`7ddace341`).
+  - Security STOA re-run 5 found N-4 (MEDIUM), fixed in `14b24dc09`: Exchange sender exactly 32 hex characters, never entitled through a provider domain.
+  - Security STOA re-run 6 confirmed N-4 closed and found R-1 (LOW, conditional), fixed in `a1a741d98`: an Exchange-shaped sender within any provider domain is refused on every path.
+  - The re-run 6 verdict file predates the R-1 fix. Its remaining FAIL items are:
+    - R-1, now fixed;
+    - H-1 (optional public-suffix guard, LOW);
+    - two moderate advisories that predate PG-207 (sprintf-js, hono), which the agent's any-severity rule counts.
+  - RED was observed for every fix.
 - **Simplify review** (read-only subagent, then applied): one `SendErrorAlert`
   for both compose components, shared attachment name/content-type schemas,
   `FIELD_KEYS` in the settings page, misplaced doc comments, and

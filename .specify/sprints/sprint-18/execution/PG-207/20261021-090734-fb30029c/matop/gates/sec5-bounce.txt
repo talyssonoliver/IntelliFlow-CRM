@@ -1,0 +1,11 @@
+[test-slot] slot3 taken for PG-207@feat/pg-207-email-settings: pnpm --dir apps/api exec vitest run src/modules/email/__tests__/bounce-reader.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207/apps/api
+
+
+ Test Files  1 passed (1)
+      Tests  46 passed (46)
+   Start at  00:23:20
+   Duration  2.52s (transform 1.32s, setup 673ms, import 1.51s, tests 114ms, environment 0ms)
+
+exit=0
