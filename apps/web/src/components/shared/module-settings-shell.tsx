@@ -79,6 +79,12 @@ export interface ModuleSettingsShellProps {
    * change the settings (PG-207: members on the email settings page).
    */
   hideActions?: boolean;
+  /**
+   * Content between the header and the section grid, outside the fieldset
+   * that locks while saving — for controls with their own immediate actions
+   * (PG-207: the user's mailbox connection is not part of the settings save).
+   */
+  leading?: ReactNode;
   /** The module's section cards. */
   children: ReactNode;
 }
@@ -106,6 +112,7 @@ export function ModuleSettingsShell({
   saveAction,
   headerClassName = 'mb-6',
   hideActions = false,
+  leading,
   children,
 }: Readonly<ModuleSettingsShellProps>) {
   if (isLoading) {
@@ -169,6 +176,8 @@ export function ModuleSettingsShell({
         actions={hideActions ? undefined : actions}
         className={headerClassName}
       />
+
+      {leading && <div className="mb-4 sm:mb-5 space-y-4">{leading}</div>}
 
       {/* Lock every section input while a save/reset is in flight, so the
           post-save refetch cannot clobber a concurrent edit. */}

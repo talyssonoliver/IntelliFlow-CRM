@@ -109,6 +109,11 @@ export function getEmailSendError(error: unknown): EmailSendErrorView {
   }
 }
 
+/** What a coded mailbox failure means, for send errors and connection tests alike. */
+export function mailboxErrorMessage(code: MailboxErrorCode): string {
+  return FAILURE_REASONS[code];
+}
+
 /** The notice after a send that skipped suppressed recipients, or null. */
 export function skippedRecipientsNotice(skipped: readonly string[] | undefined): string | null {
   if (!skipped || skipped.length === 0) return null;

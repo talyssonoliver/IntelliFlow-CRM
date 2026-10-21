@@ -185,4 +185,17 @@ describe('ModuleSettingsShell (PG-191)', () => {
       expect(screen.queryByRole('button', { name: 'Save Changes' })).not.toBeInTheDocument();
     });
   });
+
+  describe('leading (PG-207)', () => {
+    it('renders leading content outside the fieldset that locks while saving', () => {
+      setup({
+        isSaving: true,
+        leading: <button type="button">Connect mailbox</button>,
+      });
+      const leading = screen.getByRole('button', { name: 'Connect mailbox' });
+      expect(leading).toBeEnabled();
+      expect(leading.closest('fieldset')).toBeNull();
+      expect(screen.getByTestId('section').closest('fieldset')).toBeDisabled();
+    });
+  });
 });

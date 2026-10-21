@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getEmailSendError, skippedRecipientsNotice } from '../send-errors';
+import { getEmailSendError, mailboxErrorMessage, skippedRecipientsNotice } from '../send-errors';
 
 const trpcError = (emailSendError: unknown) => ({
   message: 'x',
@@ -89,5 +89,13 @@ describe('skippedRecipientsNotice', () => {
     expect(skippedRecipientsNotice(['a@example.invalid', 'b@example.invalid'])).toBe(
       'Sent. 2 recipients were skipped because they are on the suppression list: a@example.invalid, b@example.invalid.'
     );
+  });
+});
+
+describe('mailboxErrorMessage', () => {
+  it('explains every mailbox error code in plain words', () => {
+    expect(mailboxErrorMessage('AUTH_FAILED')).toMatch(/refused the sign-in/);
+    expect(mailboxErrorMessage('TLS_FAILED')).toMatch(/secure connection/);
+    expect(mailboxErrorMessage('CONNECT_FAILED')).toMatch(/could not be reached/);
   });
 });
