@@ -292,6 +292,26 @@ describe('dispatchUserMail', () => {
     });
   });
 
+  it('records a temporary refusal as bounced but never as a hard bounce', async () => {
+    transport.send.mockResolvedValue({
+      provider: 'SMTP',
+      providerMessageId: '<srv@x>',
+      rejected: ['b@example.invalid'],
+      rejectedTemporarily: ['b@example.invalid'],
+    });
+    await dispatchUserMail(
+      createTestContext() as never,
+      { ...input, to: ['a@example.invalid', 'b@example.invalid'] },
+      deps()
+    );
+    const update = (prismaMock.emailRecord.update as any).mock.calls[0][0].data;
+    expect(update.metadata).toMatchObject({
+      rejectedRecipients: ['b@example.invalid'],
+      bouncedRecipients: ['b@example.invalid'],
+      hardBouncedRecipients: [],
+    });
+  });
+
   it('releases quota if creating the record fails', async () => {
     (prismaMock.emailRecord.create as any).mockRejectedValue(new Error('db down'));
     await expect(dispatchUserMail(createTestContext() as never, input, deps())).rejects.toThrow(

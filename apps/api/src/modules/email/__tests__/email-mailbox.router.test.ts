@@ -384,7 +384,8 @@ describe('emailMailbox.testConnection', () => {
       password: secret,
     });
     expect(prismaMock.emailMailbox.updateMany).toHaveBeenCalledWith({
-      where: { id: 'mb1', tenantId },
+      // Only the credentials tested: a save or disconnect meanwhile stands.
+      where: { id: 'mb1', tenantId, tokenVersion: 0 },
       // A repaired mailbox starts bounce reading afresh, not on its old failure streak.
       data: {
         status: 'ACTIVE',
@@ -403,9 +404,28 @@ describe('emailMailbox.testConnection', () => {
       code: 'AUTH_FAILED',
     });
     expect(prismaMock.emailMailbox.updateMany).toHaveBeenCalledWith({
-      where: { id: 'mb1', tenantId },
+      where: { id: 'mb1', tenantId, tokenVersion: 0 },
       data: { status: 'ERROR', lastErrorCode: 'AUTH_FAILED' },
     });
+  });
+
+  it('records an OAuth test against the version it rotated to, not the one it read', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({ kind: 'GMAIL', smtpHost: null, smtpPassword: null, refreshToken: secret })
+    );
+    // The provider rotates the refresh token; storing it moves the version to 1.
+    t.oauthClient.refresh.mockResolvedValueOnce({
+      accessToken: 'at-rotated',
+      refreshToken: 'r'.repeat(20),
+      expiresAt: new Date(Date.now() + 3_600_000),
+    });
+    (prismaMock.emailMailbox.updateMany as any).mockResolvedValue({ count: 1 });
+    await expect(member().testConnection({ scope: 'USER' })).resolves.toEqual({
+      ok: true,
+      code: null,
+    });
+    const writes = (prismaMock.emailMailbox.updateMany as any).mock.calls.map((c: any) => c[0]);
+    expect(writes.at(-1).where).toEqual({ id: 'mb1', tenantId, tokenVersion: 1 });
   });
 
   it('checks an OAuth mailbox by refreshing and reading the account address', async () => {

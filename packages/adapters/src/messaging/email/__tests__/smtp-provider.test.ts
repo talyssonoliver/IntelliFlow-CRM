@@ -69,6 +69,36 @@ describe('SmtpMailboxTransport', () => {
     expect(transport.close).toHaveBeenCalled();
   });
 
+  it('tells a temporary (4xx) refusal apart from a permanent one', async () => {
+    const transport = fakeTransport({
+      sendMail: vi.fn(async () => ({
+        messageId: '<m@x>',
+        rejected: ['b@example.invalid', 'c@example.invalid'],
+        rejectedErrors: [
+          Object.assign(new Error('busy'), { recipient: 'B@example.invalid', responseCode: 451 }),
+          Object.assign(new Error('unknown'), {
+            recipient: 'c@example.invalid',
+            responseCode: 550,
+          }),
+        ],
+      })),
+    });
+    const smtp = new SmtpMailboxTransport({
+      createTransport: vi.fn(() => transport),
+      lookup: publicLookup,
+    });
+    const result = await smtp.send(
+      config(),
+      { from: 'me@mail.example.com', to: ['b@example.invalid', 'c@example.invalid'] },
+      Buffer.from('raw')
+    );
+    expect(result).toEqual({
+      providerMessageId: '<m@x>',
+      rejected: ['b@example.invalid', 'c@example.invalid'],
+      rejectedTemporarily: ['b@example.invalid'],
+    });
+  });
+
   it('reports recipients the server refused while accepting the rest', async () => {
     const transport = fakeTransport({
       sendMail: vi.fn(async () => ({

@@ -44,7 +44,7 @@ import {
 } from './email-access';
 import { toMailboxDto, type MailboxRowLike } from './email-dto';
 import { requireEncryptionKey } from './encryption-guard';
-import { getOAuthAccessToken, type TransportMailbox } from './mailbox-transport';
+import { getOAuthAccess, type TransportMailbox } from './mailbox-transport';
 
 const RESOURCE: EmailAuditResource = 'email_mailbox';
 
@@ -309,6 +309,8 @@ export const emailMailboxRouter = createTRPCRouter({
       if (!row) throw mailboxNotFound();
 
       let code: MailboxErrorCode | null = null;
+      // The credential version tested (an OAuth refresh may rotate it on).
+      let testedVersion = row.tokenVersion;
       try {
         if (row.kind === 'SMTP') {
           await transports.smtp.verify({
@@ -329,16 +331,18 @@ export const emailMailboxRouter = createTRPCRouter({
         } else {
           const client = transports.oauth(row.kind as OAuthMailboxProvider);
           if (!client) throw new MailboxTransportError('CONNECT_FAILED');
-          const token = await getOAuthAccessToken(c.prismaWithTenant, row, transports, new Date());
-          await client.accountAddress(token);
+          const access = await getOAuthAccess(c.prismaWithTenant, row, transports, new Date());
+          testedVersion = access.tokenVersion;
+          await client.accountAddress(access.accessToken);
         }
       } catch (error) {
         code = error instanceof MailboxTransportError ? error.code : 'CONNECT_FAILED';
       }
 
       if (code === null || code === 'AUTH_FAILED' || code === 'TOKEN_REVOKED') {
+        // Only the credentials tested: a save, reconnect or disconnect meanwhile stands.
         await c.prismaWithTenant.emailMailbox.updateMany({
-          where: { id: row.id, tenantId: c.tenant.tenantId },
+          where: { id: row.id, tenantId: c.tenant.tenantId, tokenVersion: testedVersion },
           data:
             code === null
               ? { status: 'ACTIVE', lastErrorCode: null, ...freshScanState() }

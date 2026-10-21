@@ -129,6 +129,20 @@ export async function getOAuthAccessToken(
   transports: MailboxTransports,
   now: Date
 ): Promise<string> {
+  return (await getOAuthAccess(prisma, mailbox, transports, now)).accessToken;
+}
+
+/**
+ * The access token and the credential version it belongs to: a rotation moves
+ * the version on, and a stale rotation (credentials changed meanwhile) keeps
+ * the version read, which no longer matches the stored one.
+ */
+export async function getOAuthAccess(
+  prisma: MailboxWriter,
+  mailbox: TransportMailbox,
+  transports: MailboxTransports,
+  now: Date
+): Promise<{ accessToken: string; tokenVersion: number }> {
   const cached = accessTokens.get(mailbox.id);
   if (
     cached &&
@@ -136,7 +150,7 @@ export async function getOAuthAccessToken(
     cached.kind === mailbox.kind &&
     cached.expiresAt - EXPIRY_MARGIN_MS > now.getTime()
   ) {
-    return cached.accessToken;
+    return { accessToken: cached.accessToken, tokenVersion: cached.tokenVersion };
   }
 
   const client = transports.oauth(oauthProvider(mailbox.kind));
@@ -166,7 +180,8 @@ export async function getOAuthAccessToken(
       where: { id: mailbox.id, tenantId: mailbox.tenantId, tokenVersion: mailbox.tokenVersion },
       data: { refreshToken: refreshed.refreshToken, tokenVersion: { increment: 1 } },
     });
-    if (stored.count !== 1) return refreshed.accessToken; // stale credentials: do not cache
+    // Stale credentials: do not cache.
+    if (stored.count !== 1) return { accessToken: refreshed.accessToken, tokenVersion };
     tokenVersion += 1;
   }
   accessTokens.set(mailbox.id, {
@@ -175,7 +190,7 @@ export async function getOAuthAccessToken(
     tokenVersion,
     kind: mailbox.kind,
   });
-  return refreshed.accessToken;
+  return { accessToken: refreshed.accessToken, tokenVersion };
 }
 
 function smtpConfig(mailbox: TransportMailbox): SmtpConnectionConfig {
@@ -205,7 +220,12 @@ export async function sendThroughMailbox(
   envelope: SmtpEnvelope,
   raw: Buffer,
   now: Date
-): Promise<{ provider: MailboxKind; providerMessageId: string | null; rejected: string[] }> {
+): Promise<{
+  provider: MailboxKind;
+  providerMessageId: string | null;
+  rejected: string[];
+  rejectedTemporarily?: string[];
+}> {
   if (mailbox.kind === 'SMTP') {
     const result = await transports.smtp.send(smtpConfig(mailbox), envelope, raw);
     return {

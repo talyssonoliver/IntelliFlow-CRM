@@ -103,7 +103,8 @@ export function MailboxConnection({
         : mailboxErrorMessage(outcome.code ?? 'CONNECT_FAILED');
       setResult({ ok: outcome.ok, message });
       announce(message);
-      if (!outcome.ok) onChanged();
+      // Either way the server may have changed the status (ERROR <-> ACTIVE).
+      onChanged();
     } catch (e) {
       setError(errorText(e, 'The connection could not be tested.'));
     }

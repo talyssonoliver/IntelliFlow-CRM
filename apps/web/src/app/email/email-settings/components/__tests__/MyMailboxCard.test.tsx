@@ -167,13 +167,15 @@ describe('MyMailboxCard', () => {
     expect(screen.queryByRole('button', { name: 'Edit SMTP Settings' })).not.toBeInTheDocument();
   });
 
-  it('tests the connection and announces the result', async () => {
+  it('tests the connection, announces the result and refreshes the mailbox status', async () => {
     api.testConnection.mutateAsync.mockResolvedValue({ ok: true, code: null });
-    const { announce } = renderCard({ mailbox: mailbox() });
+    const { announce, onChanged } = renderCard({ mailbox: mailbox() });
     fireEvent.click(screen.getByRole('button', { name: 'Test Connection' }));
     expect(await screen.findByText('Connection works.')).toBeInTheDocument();
     expect(api.testConnection.mutateAsync).toHaveBeenCalledWith({ scope: 'USER' });
     expect(announce).toHaveBeenCalledWith('Connection works.');
+    // A passing test turns an ERROR mailbox ACTIVE on the server: show it.
+    expect(onChanged).toHaveBeenCalled();
   });
 
   it('reports a failed test with a specific reason', async () => {

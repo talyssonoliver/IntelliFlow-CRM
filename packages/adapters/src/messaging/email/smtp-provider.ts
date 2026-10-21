@@ -30,6 +30,8 @@ interface SmtpTransporter {
     messageId?: string;
     /** Recipients the server refused at RCPT TO (nodemailer: string or { address }). */
     rejected?: Array<string | { address: string }>;
+    /** One error per refused recipient, with the SMTP response code. */
+    rejectedErrors?: Array<{ recipient?: string; responseCode?: number }>;
   }>;
   verify(): Promise<unknown>;
   close(): void;
@@ -111,7 +113,12 @@ export class SmtpMailboxTransport {
     config: SmtpConnectionConfig,
     envelope: SmtpEnvelope,
     raw: Buffer
-  ): Promise<{ providerMessageId: string | null; rejected: string[] }> {
+  ): Promise<{
+    providerMessageId: string | null;
+    rejected: string[];
+    /** The refused recipients whose refusal was temporary (4xx): not hard bounces. */
+    rejectedTemporarily?: string[];
+  }> {
     const transporter = await this.open(config);
     try {
       const info = await transporter.sendMail({ envelope, raw });
@@ -120,7 +127,15 @@ export class SmtpMailboxTransport {
       const rejected = (info.rejected ?? []).map((r) =>
         (typeof r === 'string' ? r : r.address).toLowerCase()
       );
-      return { providerMessageId: info.messageId ?? null, rejected };
+      const temporary = (info.rejectedErrors ?? [])
+        .filter((e) => typeof e.responseCode === 'number' && e.responseCode < 500)
+        .map((e) => String(e.recipient ?? '').toLowerCase())
+        .filter(Boolean);
+      return {
+        providerMessageId: info.messageId ?? null,
+        rejected,
+        ...(temporary.length > 0 ? { rejectedTemporarily: temporary } : {}),
+      };
     } catch (error) {
       throw mapSmtpError(error);
     } finally {

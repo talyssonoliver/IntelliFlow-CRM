@@ -126,16 +126,18 @@ function rejectedMetadata(
   input: SendUserEmailInput,
   skipped: string[],
   options: DispatchOptions,
-  rejected: string[]
+  refused: { rejected: string[]; temporary: string[] }
 ): { metadata?: Record<string, unknown> } {
-  if (rejected.length === 0) return {};
-  const lower = rejected.map((address) => address.toLowerCase());
+  if (refused.rejected.length === 0) return {};
+  const lower = refused.rejected.map((address) => address.toLowerCase());
+  // A temporary (4xx) refusal is bounced for this send, never a hard bounce.
+  const temporary = new Set(refused.temporary.map((address) => address.toLowerCase()));
   return {
     metadata: {
       ...recordMetadata(input, skipped, options),
       rejectedRecipients: lower,
       bouncedRecipients: lower,
-      hardBouncedRecipients: lower,
+      hardBouncedRecipients: lower.filter((address) => !temporary.has(address)),
     },
   };
 }
@@ -297,7 +299,10 @@ export async function dispatchUserMail(
         messageIdHeader: mime.messageId,
         provider: sent.provider,
         providerMessageId: sent.providerMessageId,
-        ...rejectedMetadata(input, recipients.skipped, options, rejected),
+        ...rejectedMetadata(input, recipients.skipped, options, {
+          rejected,
+          temporary: sent.rejectedTemporarily ?? [],
+        }),
       },
     });
     return { id: recordId, status: 'SENT', skipped: recipients.skipped, rejected };
