@@ -57,8 +57,8 @@ A delivery report changes nothing unless all three of these hold:
    - Microsoft: its own form, which has no authserv-id.
    - A custom SMTP/IMAP mailbox: the id paired with that mailbox's IMAP host in
      `EMAIL_BOUNCE_TRUSTED_AUTHSERV_IDS`.
-2. **Authenticated.** The report is from `mailer-daemon@` or `postmaster@` with
-   a DKIM or SPF pass.
+2. **Authenticated.** The report is from `mailer-daemon@`, `postmaster@` or
+   Exchange's `MicrosoftExchange<hex>@` with a DKIM or SPF pass.
 3. **Entitled.** The domain that passed may speak for the recipient. It is the
    recipient's own domain, or the sending side: the mailbox address domain, its
    hosts, or the provider.

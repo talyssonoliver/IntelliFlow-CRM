@@ -13,6 +13,7 @@
  */
 import { createHash, randomBytes } from 'node:crypto';
 import type { MailboxErrorCode, OAuthMailboxProvider } from '@intelliflow/domain';
+import { isBounceSenderAddress } from './bounce-senders';
 import { MailboxTransportError } from './mailbox-errors';
 
 export const GMAIL_MAILBOX_SCOPES = [
@@ -38,7 +39,6 @@ const MS_AUTHORITY = 'https://login.microsoftonline.com/common/oauth2/v2.0';
 const GRAPH_API = 'https://graph.microsoft.com/v1.0/me';
 
 /** Bounce reports come from these senders or carry these subjects (Graph has no content-type filter). */
-const BOUNCE_SENDER = /^(postmaster|mailer-daemon|microsoftexchange[0-9a-f]*)@/i;
 const BOUNCE_SUBJECT =
   /undeliverable|delivery status notification|delivery has failed|returned mail|failure notice/i;
 
@@ -484,7 +484,7 @@ interface GraphMessagePage {
 
 function isBounceCandidate(message: GraphMessage): boolean {
   return (
-    BOUNCE_SENDER.test(message.from?.emailAddress?.address ?? '') ||
+    isBounceSenderAddress(message.from?.emailAddress?.address ?? '') ||
     BOUNCE_SUBJECT.test(message.subject ?? '')
   );
 }

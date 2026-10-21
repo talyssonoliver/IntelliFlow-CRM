@@ -407,6 +407,30 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     });
   });
 
+  it('an authenticated Microsoft Exchange NDR (MicrosoftExchange<hex>@) acts (#970)', async () => {
+    const fake = fakeDb();
+    const ndr = makeDsn({
+      from: 'MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e@example.invalid',
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: ndr }]);
+    await runBounceScan(d);
+    expect(fake.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
+    expect(fake.suppressions).toHaveLength(1);
+  });
+
+  it('a spoofed Exchange NDR sender without authentication has no effect (#970)', async () => {
+    const fake = fakeDb();
+    const spoof = makeDsn({
+      from: 'MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e@example.invalid',
+      authenticationResults: [
+        'mx.example.invalid; dkim=none; spf=none smtp.mailfrom=example.invalid',
+      ],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: spoof }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
   it('a report with no Authentication-Results header is stored and has no effect', async () => {
     const fake = fakeDb();
     const { d } = deps(fake, [{ key: '7:11', raw: makeDsn({ authenticationResults: null }) }]);

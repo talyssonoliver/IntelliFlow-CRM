@@ -130,6 +130,14 @@ describe('parseDsn', () => {
       ).toBe(true);
     });
 
+    it('accepts a Microsoft Exchange NDR sender (MicrosoftExchange<hex>@) under the same checks (#970)', () => {
+      const exchange = 'MicrosoftExchange329e71ec88ae4615bbc36ab6ce41109e@mta.example.invalid';
+      expect(authOf({ from: exchange })).toBe(true);
+      expect(authOf({ from: exchange, authenticationResults: null })).toBe(false);
+      // Only hex after the prefix: a look-alike local part is not a bounce sender.
+      expect(authOf({ from: 'MicrosoftExchangeSupport@mta.example.invalid' })).toBe(false);
+    });
+
     it('refuses a report with no Authentication-Results', () => {
       expect(authOf({ authenticationResults: null })).toBe(false);
     });

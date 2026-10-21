@@ -12,6 +12,7 @@
  * throws.
  */
 import { EMAIL_LIMITS } from '@intelliflow/domain';
+import { isBounceSenderLocalPart } from './bounce-senders';
 import { parseHeaders, parseMimeBoundary, parseMimeParts } from './inbound';
 
 export interface DsnRecipient {
@@ -71,8 +72,6 @@ function stripControlCharacters(value: string): string {
   }
   return out;
 }
-
-const REPORT_SENDERS = new Set(['mailer-daemon', 'postmaster']);
 
 /**
  * The first (topmost) occurrence of a header with its continuation lines. The
@@ -159,7 +158,7 @@ function reportAuthentication(head: string): { authservId: string | null; domain
   const fromHeaders = head.split(/\r?\n/).filter((line) => line.toLowerCase().startsWith('from:'));
   if (fromHeaders.length !== 1) return none;
   const [local, fromDomain] = fromAddress(parseHeaders(head)['from'] ?? '').split('@');
-  if (!local || !fromDomain || !REPORT_SENDERS.has(local)) return none;
+  if (!local || !fromDomain || !isBounceSenderLocalPart(local)) return none;
   const results = topmostHeader(head, 'authentication-results');
   if (!results) return none;
   // "authserv-id; method=result props; ..." - the authserv-id names the receiver.
