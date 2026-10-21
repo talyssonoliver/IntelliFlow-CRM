@@ -42,6 +42,7 @@ export function SuppressionListCard({ announce }: Readonly<SuppressionListCardPr
   const [inputError, setInputError] = useState<string | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
   const [pendingRemoval, setPendingRemoval] = useState<SuppressionDto | null>(null);
+  const removedRef = useRef(false);
 
   const rows = list.data?.pages.flatMap((page) => page.items) ?? [];
   const refresh = () => {
@@ -75,6 +76,7 @@ export function SuppressionListCard({ announce }: Readonly<SuppressionListCardPr
     setServerError(null);
     try {
       await remove.mutateAsync({ id: pendingRemoval.id });
+      removedRef.current = true;
       announce(`${pendingRemoval.email} removed from the suppression list.`);
       refresh();
     } catch (error) {
@@ -192,6 +194,13 @@ export function SuppressionListCard({ announce }: Readonly<SuppressionListCardPr
         variant="destructive"
         onConfirm={confirmRemove}
         isLoading={remove.isPending}
+        onCloseAutoFocus={(event) => {
+          if (!removedRef.current) return;
+          // The row (and its Remove button) is gone: land on the add field.
+          removedRef.current = false;
+          event.preventDefault();
+          inputRef.current?.focus();
+        }}
       />
     </section>
   );

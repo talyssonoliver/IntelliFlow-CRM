@@ -229,4 +229,28 @@ describe('SignaturesContent', () => {
     const results = await axe.run(container);
     expect(results.violations).toEqual([]);
   });
+
+  it('moves focus to the section heading after Make Default and after Delete', async () => {
+    setup();
+    const heading = screen.getByRole('heading', { level: 2, name: 'My signatures' });
+    fireEvent.click(screen.getByRole('button', { name: 'Make Default for Short' }));
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    fireEvent.click(screen.getByRole('button', { name: 'Delete Short' }));
+    fireEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: 'Delete Signature',
+      })
+    );
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
+
+  it('keeps the page heading when the list fails to load', () => {
+    setup({ error: { message: 'boom' } });
+    expect(screen.getByRole('heading', { level: 1, name: 'Signatures' })).toBeInTheDocument();
+  });
+
+  it('keeps links in a preview out of the tab order', () => {
+    const { container } = setup();
+    expect(container.querySelector('.prose')).toHaveAttribute('inert');
+  });
 });

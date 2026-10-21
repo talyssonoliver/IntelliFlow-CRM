@@ -61,4 +61,16 @@ describe('OAuthReturnNotice', () => {
     const results = await axe.run(container);
     expect(results.violations).toEqual([]);
   });
+
+  it('takes focus on arrival and hands it to My mailbox when dismissed', () => {
+    render(
+      <h2 id="email-settings-my-mailbox-title" tabIndex={-1}>
+        My mailbox
+      </h2>
+    );
+    renderWith('connected=google');
+    expect(document.activeElement).toBe(screen.getByRole('status'));
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'My mailbox' }));
+  });
 });

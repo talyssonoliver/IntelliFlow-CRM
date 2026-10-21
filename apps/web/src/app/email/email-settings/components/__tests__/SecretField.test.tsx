@@ -112,4 +112,30 @@ describe('secretInput', () => {
     render(<SecretField id="x" label="X" hasStored value={{ mode: 'keep' }} onChange={onChange} />);
     expect(onChange).not.toHaveBeenCalled();
   });
+
+  describe('SecretField focus', () => {
+    it('moves focus to the control that replaced the one clicked', () => {
+      render(<Harness hasStored allowRemove />);
+      fireEvent.click(screen.getByRole('button', { name: 'Replace password' }));
+      expect(document.activeElement).toBe(screen.getByLabelText('Password'));
+      fireEvent.click(screen.getByRole('button', { name: 'Keep saved password' }));
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Replace password' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Remove password' }));
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Undo' }));
+    });
+
+    it('marks a required password input', () => {
+      render(
+        <SecretField
+          id="p"
+          label="Password"
+          hasStored={false}
+          value={{ mode: 'replace', value: '' }}
+          onChange={vi.fn()}
+          required
+        />
+      );
+      expect(screen.getByLabelText('Password')).toHaveAttribute('aria-required', 'true');
+    });
+  });
 });

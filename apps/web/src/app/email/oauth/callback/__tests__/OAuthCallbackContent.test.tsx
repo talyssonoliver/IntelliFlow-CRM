@@ -101,6 +101,7 @@ describe('OAuthCallbackContent', () => {
     renderAt(`code=${CODE}&state=${STATE}`);
     const alert = await screen.findByRole('alert');
     expect(alert).toHaveTextContent('The mailbox could not be connected.');
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Mailbox not connected');
     await waitFor(() => expect(document.activeElement).toBe(alert));
     expect(nav.replace).not.toHaveBeenCalled();
   });

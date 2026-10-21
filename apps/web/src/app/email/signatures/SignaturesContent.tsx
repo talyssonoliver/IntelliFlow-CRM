@@ -7,7 +7,7 @@
  * never appends one. Organisation signatures are managed by admins and
  * managers; everyone can read them.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import DOMPurify from 'isomorphic-dompurify';
 import { Badge, Button, Card, ConfirmationDialog, EmptyState, toast } from '@intelliflow/ui';
@@ -31,6 +31,12 @@ const SignatureDialog = dynamic(
 
 type Scope = 'USER' | 'ORG';
 
+const BREADCRUMBS = [{ label: 'Email', href: '/email' }, { label: 'Signatures' }];
+const TITLE_IDS: Record<Scope, string> = {
+  USER: 'signatures-mine-title',
+  ORG: 'signatures-org-title',
+};
+
 function errorCode(error: unknown): string | undefined {
   const data = (error as { data?: { code?: unknown } } | null)?.data;
   return typeof data?.code === 'string' ? data.code : undefined;
@@ -45,6 +51,8 @@ function SignaturePreview({ html }: Readonly<{ html: string }>) {
   return (
     <div
       className="prose prose-sm max-w-none text-muted-foreground line-clamp-3 dark:prose-invert"
+      // A preview only: links in it must not be tabbable behind the clamp.
+      inert
       dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
     />
   );
@@ -141,6 +149,16 @@ export default function SignaturesContent() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<EmailSignatureDto | null>(null);
   const [announcement, setAnnouncement] = useState('');
+  // Delete and Make Default remove the button that had focus: focus moves to
+  // the section heading instead.
+  const [focusTarget, setFocusTarget] = useState<string | null>(null);
+  const deletedScopeRef = useRef<Scope | null>(null);
+
+  useEffect(() => {
+    if (!focusTarget) return;
+    document.getElementById(focusTarget)?.focus();
+    setFocusTarget(null);
+  }, [focusTarget]);
 
   const refresh = () => {
     utils.emailSignatures.invalidate().catch((error: unknown) => {
@@ -152,13 +170,18 @@ export default function SignaturesContent() {
 
   if (listQuery.error || !listQuery.data) {
     return (
-      <div className="w-full text-center py-12">
-        <p className="text-red-700 dark:text-red-300 mb-4" role="alert">
-          Failed to load signatures{listQuery.error ? `: ${listQuery.error.message}` : '.'}
-        </p>
-        <Button type="button" variant="outline" onClick={() => listQuery.refetch()}>
-          Retry
-        </Button>
+      <div className="h-full overflow-y-auto">
+        <div className="p-4 sm:p-6">
+          <PageHeader breadcrumbs={BREADCRUMBS} title="Signatures" className="mb-6" />
+          <div className="w-full text-center py-12">
+            <p className="text-red-700 dark:text-red-300 mb-4" role="alert">
+              Failed to load signatures{listQuery.error ? `: ${listQuery.error.message}` : '.'}
+            </p>
+            <Button type="button" variant="outline" onClick={() => listQuery.refetch()}>
+              Retry
+            </Button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -182,7 +205,6 @@ export default function SignaturesContent() {
               html: input.html,
             })
           : await createMutation.mutateAsync({ scope: dialog.scope, ...input });
-      setAnnouncement(`${saved.name} saved.`);
       toast({ title: 'Signature saved', description: saved.name });
       refresh();
       return { ok: true };
@@ -205,6 +227,7 @@ export default function SignaturesContent() {
           ? `${signature.name} is now the organisation's default signature.`
           : `${signature.name} is now your default signature.`
       );
+      setFocusTarget(TITLE_IDS[signature.scope]);
       refresh();
     } catch (error) {
       toast({
@@ -220,6 +243,7 @@ export default function SignaturesContent() {
     const deletedName = pendingDelete.name;
     try {
       await deleteMutation.mutateAsync({ id: pendingDelete.id });
+      deletedScopeRef.current = pendingDelete.scope;
       setAnnouncement(`${deletedName} deleted.`);
       refresh();
     } catch (error) {
@@ -241,25 +265,26 @@ export default function SignaturesContent() {
     <div className="h-full overflow-y-auto">
       <div className="p-4 sm:p-6">
         <PageHeader
-          breadcrumbs={[{ label: 'Email', href: '/email' }, { label: 'Signatures' }]}
+          breadcrumbs={BREADCRUMBS}
           title="Signatures"
           description="Added when you write a new email. Replies and forwards start without one."
           className="mb-6"
         />
 
-        <p aria-live="polite" className="mb-4 text-sm text-muted-foreground min-h-5">
+        <output aria-live="polite" className="sr-only">
           {announcement}
-        </p>
+        </output>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-          <section aria-labelledby="signatures-mine-title" className="lg:col-span-6">
+          <section aria-labelledby={TITLE_IDS.USER} className="lg:col-span-6">
             <Card className="h-full p-4 sm:p-5">
               <SectionHeader
                 icon="person"
                 iconBg="bg-sky-100 dark:bg-sky-900/30"
                 iconFg="text-sky-700 dark:text-sky-300"
                 title="My signatures"
-                titleId="signatures-mine-title"
+                titleId={TITLE_IDS.USER}
+                focusableTitle
                 headingLevel={2}
                 description="Only you can use these. Your default comes first."
                 action={
@@ -284,14 +309,15 @@ export default function SignaturesContent() {
             </Card>
           </section>
 
-          <section aria-labelledby="signatures-org-title" className="lg:col-span-6">
+          <section aria-labelledby={TITLE_IDS.ORG} className="lg:col-span-6">
             <Card className="h-full p-4 sm:p-5">
               <SectionHeader
                 icon="domain"
                 iconBg="bg-indigo-100 dark:bg-indigo-900/30"
                 iconFg="text-indigo-700 dark:text-indigo-300"
                 title="Organisation signatures"
-                titleId="signatures-org-title"
+                titleId={TITLE_IDS.ORG}
+                focusableTitle
                 headingLevel={2}
                 description="Shared with everyone. Used when someone has no default of their own."
                 action={
@@ -346,6 +372,13 @@ export default function SignaturesContent() {
           variant="destructive"
           onConfirm={confirmDelete}
           isLoading={deleteMutation.isPending}
+          onCloseAutoFocus={(event) => {
+            const scope = deletedScopeRef.current;
+            if (!scope) return;
+            deletedScopeRef.current = null;
+            event.preventDefault();
+            setFocusTarget(TITLE_IDS[scope]);
+          }}
         />
       </div>
     </div>

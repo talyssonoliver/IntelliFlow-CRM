@@ -72,7 +72,9 @@ export default function OAuthCallbackContent() {
   return (
     <div className="h-full overflow-y-auto">
       <div className="mx-auto max-w-lg p-6 space-y-4">
-        <h1 className="text-2xl font-bold text-foreground">Connecting your mailbox</h1>
+        <h1 className="text-2xl font-bold text-foreground">
+          {failure ? 'Mailbox not connected' : 'Connecting your mailbox'}
+        </h1>
         {failure ? (
           <div
             ref={alertRef}

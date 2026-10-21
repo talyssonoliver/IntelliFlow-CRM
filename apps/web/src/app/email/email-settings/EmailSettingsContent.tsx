@@ -189,7 +189,6 @@ export default function EmailSettingsContent() {
   };
 
   const errors = draft ? { ...clientErrors(draft), ...serverErrors } : {};
-  const hasClientError = draft ? Object.keys(clientErrors(draft)).length > 0 : false;
   const isDirty = draft !== null && baseline !== null && snapshot(draft) !== baseline;
   const isSaving = updateMutation.isPending || resetMutation.isPending;
 
@@ -205,10 +204,16 @@ export default function EmailSettingsContent() {
   const handleSave = async () => {
     if (!draft) return;
     setSaveError(null);
+    // Save stays enabled while a field is invalid, so pressing it explains what to
+    // fix: focus goes to the first invalid field (its message is linked to it).
+    const invalid = (Object.keys(FIELD_ID) as FieldKey[]).find((key) => clientErrors(draft)[key]);
+    if (invalid) {
+      setFocusField(invalid);
+      return;
+    }
     try {
       const saved = await updateMutation.mutateAsync(toInput(draft));
       adopt(saved);
-      setAnnouncement('Email settings saved.');
       toast({ title: 'Email settings saved' });
       utils.emailSettings.get.invalidate().catch((error: unknown) => {
         console.error('[email-settings] refresh failed:', error);
@@ -229,7 +234,6 @@ export default function EmailSettingsContent() {
     setSaveError(null);
     try {
       adopt(await resetMutation.mutateAsync());
-      setAnnouncement('Email settings reset to defaults.');
       toast({ title: 'Email settings reset to defaults' });
     } catch (error) {
       setSaveError(errorText(error, 'The settings could not be reset.'));
@@ -252,7 +256,7 @@ export default function EmailSettingsContent() {
           errorMessage={settingsQuery.error?.message ?? mineQuery.error?.message ?? null}
           loadingFallback={<EmailSettingsLoading />}
           isSaving={isSaving}
-          canSave={isDirty && !isSaving && !hasClientError}
+          canSave={isDirty && !isSaving}
           onSave={() => void handleSave()}
           hideActions={!canEdit}
           resetOpen={resetOpen}

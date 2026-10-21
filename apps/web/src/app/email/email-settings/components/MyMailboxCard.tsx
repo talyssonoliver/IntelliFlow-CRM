@@ -6,7 +6,7 @@
  * immediate (connect, test, disconnect), so the page renders it outside the
  * settings form. `MailboxConnection` is shared with the company mailbox card.
  */
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { Badge, Button, Card, ConfirmationDialog } from '@intelliflow/ui';
 import type { MailboxDto, OAuthProvidersAvailableDto } from '@intelliflow/validators';
@@ -41,6 +41,8 @@ export interface MailboxConnectionProps {
   providersAvailable: OAuthProvidersAvailableDto;
   /** Disconnect dialog copy: what sending falls back to afterwards. */
   disconnectConsequence: string;
+  /** The card heading's id: focus goes there when the control that had it disappears. */
+  headingId: string;
   onChanged: () => void;
   announce: (message: string) => void;
 }
@@ -51,6 +53,7 @@ export function MailboxConnection({
   mailbox,
   providersAvailable,
   disconnectConsequence,
+  headingId,
   onChanged,
   announce,
 }: Readonly<MailboxConnectionProps>) {
@@ -62,6 +65,19 @@ export function MailboxConnection({
   const [disconnectOpen, setDisconnectOpen] = useState(false);
   const [result, setResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Where focus goes after the SMTP form closes or the mailbox is disconnected
+  // (the control that had focus is gone by then).
+  const [focusTarget, setFocusTarget] = useState<string | null>(null);
+  const disconnectedRef = useRef(false);
+
+  useEffect(() => {
+    if (!focusTarget) return;
+    document.getElementById(focusTarget)?.focus();
+    setFocusTarget(null);
+  }, [focusTarget]);
+
+  const setupId = `${prefix}-setup-smtp`;
+  const editId = `${prefix}-edit-smtp`;
 
   const connected = mailbox !== null && mailbox.status !== 'DISCONNECTED';
   const broken = mailbox?.status === 'ERROR';
@@ -97,6 +113,7 @@ export function MailboxConnection({
     setError(null);
     try {
       await disconnect.mutateAsync({ scope });
+      disconnectedRef.current = true;
       setResult(null);
       announce('Mailbox disconnected.');
       onChanged();
@@ -157,7 +174,13 @@ export function MailboxConnection({
           {providerButton('GMAIL')}
           {providerButton('MICROSOFT')}
           {!editing && mailbox?.kind !== 'SMTP' && (
-            <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
+            <Button
+              id={setupId}
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setEditing(true)}
+            >
               Set Up SMTP
             </Button>
           )}
@@ -176,7 +199,13 @@ export function MailboxConnection({
             {testConnection.isPending ? 'Testing…' : 'Test Connection'}
           </Button>
           {mailbox?.kind === 'SMTP' && !editing && (
-            <Button type="button" size="sm" variant="outline" onClick={() => setEditing(true)}>
+            <Button
+              id={editId}
+              type="button"
+              size="sm"
+              variant="outline"
+              onClick={() => setEditing(true)}
+            >
               Edit SMTP Settings
             </Button>
           )}
@@ -209,9 +238,13 @@ export function MailboxConnection({
             setEditing(false);
             setResult(null);
             announce('Mailbox saved.');
+            setFocusTarget(headingId);
             onChanged();
           }}
-          onCancel={() => setEditing(false)}
+          onCancel={() => {
+            setEditing(false);
+            setFocusTarget(mailbox?.kind === 'SMTP' ? editId : setupId);
+          }}
         />
       )}
 
@@ -224,12 +257,21 @@ export function MailboxConnection({
         variant="destructive"
         onConfirm={confirmDisconnect}
         isLoading={disconnect.isPending}
+        onCloseAutoFocus={(event) => {
+          if (!disconnectedRef.current) return;
+          // The Disconnect button is gone: land on the card heading instead.
+          disconnectedRef.current = false;
+          event.preventDefault();
+          setFocusTarget(headingId);
+        }}
       />
     </div>
   );
 }
 
-const TITLE_ID = 'email-settings-my-mailbox-title';
+/** Exported so the OAuth return notice can hand focus to this card. */
+export const MY_MAILBOX_TITLE_ID = 'email-settings-my-mailbox-title';
+const TITLE_ID = MY_MAILBOX_TITLE_ID;
 
 export interface MyMailboxCardProps {
   mailbox: MailboxDto | null;
@@ -260,10 +302,12 @@ export function MyMailboxCard({
           title="My mailbox"
           titleId={TITLE_ID}
           headingLevel={2}
+          focusableTitle
           description="Email you send leaves from this mailbox, as you."
         />
         <MailboxConnection
           scope="USER"
+          headingId={TITLE_ID}
           mailbox={mailbox}
           providersAvailable={providersAvailable}
           disconnectConsequence={consequence}

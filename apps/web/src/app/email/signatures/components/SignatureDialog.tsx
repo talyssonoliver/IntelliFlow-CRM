@@ -46,7 +46,10 @@ export interface SignatureDialogProps {
 interface EditorHandle {
   getHTML: () => string;
   getText: () => string;
+  commands: { focus: () => unknown };
 }
+
+const CONTENT_ERROR_ID = 'signature-content-error';
 
 const NAME_ID = 'signature-name';
 const noImages = () => null;
@@ -90,7 +93,10 @@ export function SignatureDialog({
       setFocusName(true);
       return;
     }
-    if (text.trim() === '') return;
+    if (text.trim() === '') {
+      editorRef.current?.commands.focus();
+      return;
+    }
 
     setSaving(true);
     try {
@@ -145,13 +151,21 @@ export function SignatureDialog({
               key={editing?.id ?? 'new'}
               value={editing?.html ?? ''}
               ariaLabel="Signature"
+              ariaDescribedBy={contentError ? CONTENT_ERROR_ID : undefined}
+              ariaInvalid={Boolean(contentError)}
               promptForImage={noImages}
               onCreate={(editor: EditorHandle) => {
                 editorRef.current = editor;
               }}
             />
             {contentError && (
-              <p className="text-xs text-red-700 dark:text-red-300">{contentError}</p>
+              <p
+                id={CONTENT_ERROR_ID}
+                role="alert"
+                className="text-xs text-red-700 dark:text-red-300"
+              >
+                {contentError}
+              </p>
             )}
           </div>
 

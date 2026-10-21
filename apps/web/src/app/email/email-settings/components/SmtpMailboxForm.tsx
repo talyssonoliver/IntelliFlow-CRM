@@ -195,6 +195,11 @@ export function SmtpMailboxForm({
   const [focusField, setFocusField] = useState<Field | null>(null);
   const stored = mailbox?.kind === 'SMTP' ? mailbox : null;
 
+  // Opening the form moves focus into it (the button that opened it is gone).
+  useEffect(() => {
+    document.getElementById(`${prefix}-smtp-preset`)?.focus();
+  }, [prefix]);
+
   useEffect(() => {
     if (!focusField) return;
     document.getElementById(`${prefix}-${fieldSuffix(focusField)}`)?.focus();
@@ -286,6 +291,7 @@ export function SmtpMailboxForm({
             value={draft.smtpHost}
             autoComplete="off"
             placeholder="smtp.example.com"
+            aria-required="true"
             onChange={(e) => set('smtpHost', e.currentTarget.value)}
             {...errorProps('smtpHost')}
           />
@@ -332,6 +338,7 @@ export function SmtpMailboxForm({
             id={fieldId('smtpUsername')}
             value={draft.smtpUsername}
             autoComplete="off"
+            aria-required="true"
             onChange={(e) => set('smtpUsername', e.currentTarget.value)}
             {...errorProps('smtpUsername')}
           />
@@ -345,6 +352,7 @@ export function SmtpMailboxForm({
           value={draft.password}
           onChange={(v) => set('password', v)}
           error={errors.smtpPassword}
+          required
         />
 
         <div className="space-y-1.5">
@@ -354,6 +362,7 @@ export function SmtpMailboxForm({
             type="email"
             value={draft.fromAddress}
             autoComplete="off"
+            aria-required="true"
             onChange={(e) => set('fromAddress', e.currentTarget.value)}
             {...errorProps('fromAddress')}
           />
@@ -397,6 +406,7 @@ export function SmtpMailboxForm({
                 id={fieldId('imapHost')}
                 value={draft.imapHost}
                 autoComplete="off"
+                aria-required="true"
                 onChange={(e) => set('imapHost', e.currentTarget.value)}
                 {...errorProps('imapHost')}
               />
@@ -409,6 +419,7 @@ export function SmtpMailboxForm({
                 id={fieldId('imapUsername')}
                 value={draft.imapUsername}
                 autoComplete="off"
+                aria-required="true"
                 onChange={(e) => set('imapUsername', e.currentTarget.value)}
                 {...errorProps('imapUsername')}
               />
@@ -421,6 +432,7 @@ export function SmtpMailboxForm({
               value={draft.imapPassword}
               onChange={(v) => set('imapPassword', v)}
               error={errors.imapPassword}
+              required
             />
           </div>
         )}

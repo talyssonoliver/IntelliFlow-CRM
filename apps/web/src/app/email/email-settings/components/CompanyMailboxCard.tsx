@@ -55,6 +55,7 @@ export function CompanyMailboxCard({
           title="Company mailbox"
           titleId={TITLE_ID}
           headingLevel={2}
+          focusableTitle
           description="A shared mailbox for members who have not connected their own."
         />
 
@@ -77,6 +78,7 @@ export function CompanyMailboxCard({
         {canEdit ? (
           <MailboxConnection
             scope="TENANT"
+            headingId={TITLE_ID}
             mailbox={mailbox}
             providersAvailable={providersAvailable}
             disconnectConsequence={

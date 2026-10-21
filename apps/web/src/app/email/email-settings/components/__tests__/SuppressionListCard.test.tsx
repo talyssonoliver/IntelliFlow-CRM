@@ -167,4 +167,15 @@ describe('SuppressionListCard', () => {
       unmount();
     }
   });
+
+  it('moves focus to the add field after a row is removed', async () => {
+    listReturns([row()]);
+    api.remove.mutateAsync.mockResolvedValue({ removed: true });
+    render(<SuppressionListCard announce={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove gone@example.invalid' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove Address' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByLabelText('Email address'))
+    );
+  });
 });

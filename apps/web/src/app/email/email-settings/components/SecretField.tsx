@@ -7,6 +7,7 @@
  * turns that into the API's tri-state: absent = keep, null = clear,
  * string = replace.
  */
+import { useEffect, useRef } from 'react';
 import { Button, Input, Label } from '@intelliflow/ui';
 
 export type SecretChange =
@@ -30,6 +31,8 @@ export interface SecretFieldProps {
   error?: string;
   /** Offer "Remove password" (only where clearing it is meaningful). */
   allowRemove?: boolean;
+  /** Marks the password input as required. */
+  required?: boolean;
 }
 
 export function SecretField({
@@ -40,8 +43,17 @@ export function SecretField({
   onChange,
   error,
   allowRemove = false,
+  required = false,
 }: Readonly<SecretFieldProps>) {
   const errorId = `${id}-error`;
+  const undoId = `${id}-undo`;
+  // Each mode swaps the clicked button for another control: move focus to it.
+  const lastMode = useRef(value.mode);
+  useEffect(() => {
+    if (lastMode.current === value.mode) return;
+    lastMode.current = value.mode;
+    document.getElementById(value.mode === 'remove' ? undoId : id)?.focus();
+  }, [value.mode, id, undoId]);
   const statusId = `${id}-status`;
   const errorText = error ? (
     <p id={errorId} className="text-xs text-red-700 dark:text-red-300">
@@ -57,6 +69,7 @@ export function SecretField({
           The saved password will be removed when you save.
         </p>
         <Button
+          id={undoId}
           type="button"
           size="sm"
           variant="outline"
@@ -112,6 +125,7 @@ export function SecretField({
         value={value.mode === 'replace' ? value.value : ''}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
+        aria-required={required || undefined}
         onChange={(e) => onChange({ mode: 'replace', value: e.currentTarget.value })}
       />
       {errorText}

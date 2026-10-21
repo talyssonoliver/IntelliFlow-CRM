@@ -168,6 +168,16 @@ describe('ModuleSettingsShell (PG-191)', () => {
     });
   });
 
+  describe('error state keeps the page h1 (PG-207)', () => {
+    it('renders the page title as the h1 above the error card', () => {
+      setup({ errorMessage: 'boom' });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Widget Settings' })
+      ).toBeInTheDocument();
+      expect(screen.getByText('Failed to load widget settings')).toBeInTheDocument();
+    });
+  });
+
   describe('hideActions (PG-207)', () => {
     it('shows Reset and Save by default', () => {
       setup();

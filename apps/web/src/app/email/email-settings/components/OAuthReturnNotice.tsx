@@ -9,6 +9,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Button } from '@intelliflow/ui';
+import { MY_MAILBOX_TITLE_ID } from './MyMailboxCard';
 
 export const EMAIL_SETTINGS_PATH = '/email/email-settings';
 
@@ -43,10 +44,19 @@ export function OAuthReturnNotice() {
   );
   // The query is read once, on arrival; dismissing must not re-run the clean-up.
   const arrivedWithNotice = useRef(notice !== null);
+  const noticeRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (arrivedWithNotice.current) router.replace(EMAIL_SETTINGS_PATH, { scroll: false });
+    if (!arrivedWithNotice.current) return;
+    router.replace(EMAIL_SETTINGS_PATH, { scroll: false });
+    // A notice present at first paint is not reliably announced; focus reads it.
+    noticeRef.current?.focus();
   }, [router]);
+
+  const dismiss = () => {
+    setNotice(null);
+    document.getElementById(MY_MAILBOX_TITLE_ID)?.focus();
+  };
 
   if (!notice) return null;
   const tone =
@@ -56,11 +66,13 @@ export function OAuthReturnNotice() {
 
   return (
     <div
+      ref={noticeRef}
       role={notice.kind}
+      tabIndex={-1}
       className={`flex items-start justify-between gap-3 rounded-lg border p-3 text-sm ${tone}`}
     >
       <p>{notice.message}</p>
-      <Button type="button" size="sm" variant="ghost" onClick={() => setNotice(null)}>
+      <Button type="button" size="sm" variant="ghost" onClick={dismiss}>
         Dismiss
       </Button>
     </div>

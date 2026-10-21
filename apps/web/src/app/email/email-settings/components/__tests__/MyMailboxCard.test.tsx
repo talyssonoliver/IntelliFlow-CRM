@@ -232,4 +232,26 @@ describe('MyMailboxCard', () => {
       unmount();
     }
   });
+
+  it('returns focus to "Set Up SMTP" when the form is cancelled', async () => {
+    renderCard();
+    fireEvent.click(screen.getByRole('button', { name: 'Set Up SMTP' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'stub cancel' }));
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Set Up SMTP' }))
+    );
+  });
+
+  it('moves focus to the card heading after saving and after disconnecting', async () => {
+    api.disconnect.mutateAsync.mockResolvedValue({ disconnected: true });
+    renderCard({ mailbox: mailbox() });
+    const heading = screen.getByRole('heading', { level: 2, name: 'My mailbox' });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit SMTP Settings' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'stub save' }));
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Disconnect' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Disconnect Mailbox' }));
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
 });

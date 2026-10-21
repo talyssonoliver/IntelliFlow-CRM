@@ -7,8 +7,9 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
 import type { EmailSignatureDto } from '@intelliflow/validators';
 
-// Tiptap does not run in jsdom: a textarea stands in, exposing the same editor
-// surface the dialog uses (getHTML / getText via onCreate).
+// A textarea stands in for the Tiptap editor (RichTextEditor has its own suite
+// in packages/ui), exposing the surface the dialog uses through onCreate:
+// getHTML / getText / commands.focus.
 const editorProps = vi.hoisted(() => ({ last: null as null | Record<string, unknown> }));
 vi.mock('@intelliflow/ui', async (importOriginal) => {
   const actual: Record<string, unknown> = await importOriginal();
@@ -16,9 +17,12 @@ vi.mock('@intelliflow/ui', async (importOriginal) => {
     value?: string;
     onCreate?: (e: unknown) => void;
     ariaLabel?: string;
+    ariaDescribedBy?: string;
+    ariaInvalid?: boolean;
   }) {
     editorProps.last = props as Record<string, unknown>;
     const htmlRef = React.useRef(props.value ?? '');
+    const boxRef = React.useRef<HTMLTextAreaElement>(null);
     const onCreateRef = React.useRef(props.onCreate);
     const [html, setHtml] = React.useState(props.value ?? '');
     React.useEffect(() => {
@@ -26,11 +30,15 @@ vi.mock('@intelliflow/ui', async (importOriginal) => {
         getHTML: () => htmlRef.current,
         // Plain text is only checked for emptiness, so the raw value stands in.
         getText: () => htmlRef.current,
+        commands: { focus: () => boxRef.current?.focus() },
       });
     }, []);
     return (
       <textarea
+        ref={boxRef}
         aria-label={props.ariaLabel}
+        aria-describedby={props.ariaDescribedBy}
+        aria-invalid={props.ariaInvalid || undefined}
         value={html}
         onChange={(e) => {
           htmlRef.current = e.currentTarget.value;
@@ -144,6 +152,18 @@ describe('SignatureDialog', () => {
       expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true')
     );
     expect(screen.getByText('Add the signature text.')).toBeInTheDocument();
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it('announces missing text, links it to the editor and moves focus there', async () => {
+    const { onSave } = renderDialog();
+    fireEvent.change(screen.getByLabelText('Name'), { target: { value: 'Short' } });
+    save();
+    const editor = screen.getByLabelText('Signature');
+    await waitFor(() => expect(document.activeElement).toBe(editor));
+    expect(screen.getByRole('alert')).toHaveTextContent('Add the signature text.');
+    expect(editor).toHaveAttribute('aria-invalid', 'true');
+    expect(editor).toHaveAccessibleDescription('Add the signature text.');
     expect(onSave).not.toHaveBeenCalled();
   });
 

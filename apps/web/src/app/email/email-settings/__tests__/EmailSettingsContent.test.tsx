@@ -182,7 +182,7 @@ describe('EmailSettingsContent', () => {
     expect(saveButton()).toBeDisabled();
   });
 
-  it('flags invalid fields with linked messages and blocks Save', () => {
+  it('flags invalid fields with linked messages; Save moves focus to the first one', async () => {
     setup();
     const reply = screen.getByLabelText('Reply-to address');
     fireEvent.change(reply, { target: { value: 'not-an-address' } });
@@ -192,7 +192,10 @@ describe('EmailSettingsContent', () => {
     fireEvent.change(threshold, { target: { value: '40' } });
     expect(threshold).toHaveAttribute('aria-invalid', 'true');
     expect(threshold).toHaveAccessibleDescription(/between 1 and 10/);
-    expect(saveButton()).toBeDisabled();
+    expect(saveButton()).toBeEnabled();
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(document.activeElement).toBe(reply));
+    expect(api.update.mutateAsync).not.toHaveBeenCalled();
   });
 
   it('moves focus to the field the server rejected', async () => {

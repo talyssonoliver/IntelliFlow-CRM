@@ -284,14 +284,13 @@ export function EmailCompose({
       if (notice) toast({ title: 'Email sent', description: notice });
       onSent?.();
     } catch (error) {
-      // The draft stays as it is; the alert says what to do next.
+      // The draft stays as it is; the focused alert says what to do next (and is
+      // the only announcement: the live region is left alone).
       setSendError(getEmailSendError(error));
-      reportSendError();
     }
   }, [
     validate,
     uploadAttachments,
-    reportSendError,
     sendMutation,
     toRecipients,
     ccRecipients,
@@ -648,7 +647,7 @@ export function EmailCompose({
       ) : null}
 
       {attachmentError ? (
-        <p role="alert" className="px-4 py-1 text-xs text-destructive">
+        <p role="alert" className="px-4 py-1 text-xs text-red-700 dark:text-red-300">
           {attachmentError}
         </p>
       ) : null}
@@ -661,7 +660,7 @@ export function EmailCompose({
       {errors.length > 0 ? (
         <div className="px-4 py-1">
           {errors.map((err) => (
-            <p key={err} className="text-xs text-destructive">
+            <p key={err} className="text-xs text-red-700 dark:text-red-300">
               {err}
             </p>
           ))}

@@ -141,6 +141,13 @@ export function ModuleSettingsShell({
   if (errorMessage) {
     return (
       <div className="w-full">
+        {/* The page keeps its h1 when it fails to load (one h1 per page). */}
+        <PageHeader
+          breadcrumbs={breadcrumbs}
+          title={title}
+          description={description}
+          className={headerClassName}
+        />
         <Card className="p-6 text-center">
           <h2 className="text-lg font-semibold">{errorTitle}</h2>
           <p className="text-sm text-muted-foreground mt-2">{errorMessage}</p>

@@ -230,7 +230,7 @@ export function InlineCompose({
       {/* Validation hints */}
       {validationErrors.length > 0 && (
         <div
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-destructive"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-700 dark:text-red-300"
           role="alert"
         >
           <span className="material-symbols-outlined text-base shrink-0" aria-hidden="true">
