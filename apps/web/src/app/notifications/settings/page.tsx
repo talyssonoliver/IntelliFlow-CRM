@@ -90,6 +90,7 @@ const TYPE_LABELS: Record<string, string> = {
   email_received: 'Email Received',
   email_opened: 'Email Opened',
   email_replied: 'Email Replied',
+  email_bounced: 'Email Bounced',
 };
 
 function formatTypeName(type: string): string {
@@ -177,7 +178,7 @@ const CATEGORIES: CategoryDef[] = [
   {
     id: 'email',
     label: 'Email Activity',
-    description: 'Incoming emails, opens, and replies',
+    description: 'Incoming emails, opens, replies and bounces',
     icon: 'mail',
     iconBg: 'bg-sky-50 text-sky-600 dark:bg-sky-950 dark:text-sky-400',
     prefixes: ['email_'],

@@ -1,13 +1,16 @@
 'use client';
 
-import { useState, useRef, useCallback, useMemo } from 'react';
+import { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 
 import DOMPurify from 'isomorphic-dompurify';
+import Link from 'next/link';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
+import { mailboxAddressSchema } from '@intelliflow/validators';
+import { getEmailSendError, skippedRecipientsNotice, type EmailSendErrorView } from './send-errors';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isEmailAddress = (value: string) => mailboxAddressSchema.safeParse(value).success;
 
 type InlineMode = 'reply' | 'replyAll' | 'forward';
 
@@ -60,17 +63,29 @@ export function InlineCompose({
   const [forwardTo, setForwardTo] = useState('');
   const [hasBody, setHasBody] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const sendErrorRef = useRef<HTMLDivElement>(null);
+  const [sendError, setSendError] = useState<EmailSendErrorView | null>(null);
   const sendMutation = trpc.email.sendEmail.useMutation();
+
+  // A refused send takes focus so it is announced and acted on (PG-207, CA-8).
+  useEffect(() => {
+    if (sendError) sendErrorRef.current?.focus();
+  }, [sendError]);
 
   const quotedBody =
     mode === 'forward' && originalMessage.htmlBody
       ? `<br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666"><p><strong>Forwarded message:</strong></p>${DOMPurify.sanitize(originalMessage.htmlBody)}</div>`
       : '';
 
+  // One object for the editor's whole life: React 19 re-applies
+  // dangerouslySetInnerHTML whenever the object changes, which would wipe the
+  // typed reply on every re-render (PG-207).
+  const [quotedBodyProp] = useState(() => (quotedBody ? { __html: quotedBody } : undefined));
+
   // Track body content changes from contentEditable
   const handleBodyInput = useCallback(() => {
     const html = bodyRef.current?.innerHTML ?? '';
-    const text = html.replace(/<[^>]*>/g, '').trim();
+    const text = html.replaceAll(/<[^<>]*>/g, '').trim();
     setHasBody(text.length > 0);
   }, []);
 
@@ -81,7 +96,7 @@ export function InlineCompose({
       const trimmed = forwardTo.trim();
       if (!trimmed) {
         errors.push('Recipient email is required');
-      } else if (!EMAIL_REGEX.test(trimmed)) {
+      } else if (!isEmailAddress(trimmed)) {
         errors.push('Enter a valid email address');
       }
     }
@@ -96,7 +111,7 @@ export function InlineCompose({
   const handleSend = useCallback(async () => {
     // Re-check body from DOM in case state is stale
     const body = bodyRef.current?.innerHTML ?? '';
-    const plainText = body.replace(/<[^>]*>/g, '').trim();
+    const plainText = body.replaceAll(/<[^<>]*>/g, '').trim();
     if (!plainText) {
       toast({ title: 'Message body is required', variant: 'destructive' });
       return;
@@ -108,23 +123,29 @@ export function InlineCompose({
       return;
     }
 
-    if (mode === 'forward' && !EMAIL_REGEX.test(to[0])) {
+    if (mode === 'forward' && !isEmailAddress(to[0])) {
       toast({ title: 'Enter a valid email address', variant: 'destructive' });
       return;
     }
 
+    setSendError(null);
     try {
-      await sendMutation.mutateAsync({
+      const result = await sendMutation.mutateAsync({
         to,
         cc: recipients.cc.length > 0 ? recipients.cc : undefined,
         subject: getSubject(mode, originalMessage.subject),
         htmlBody: body,
         threadId: originalMessage.id,
       });
-      toast({ title: mode === 'forward' ? 'Email forwarded' : 'Reply sent' });
+      const notice = skippedRecipientsNotice(result?.skipped);
+      toast({
+        title: mode === 'forward' ? 'Email forwarded' : 'Reply sent',
+        ...(notice ? { description: notice } : {}),
+      });
       onSent();
-    } catch {
-      toast({ title: 'Failed to send', variant: 'destructive' });
+    } catch (error) {
+      // The reply stays as typed; the alert says what to do next.
+      setSendError(getEmailSendError(error));
     }
   }, [mode, forwardTo, recipients, originalMessage, sendMutation, onSent]);
 
@@ -184,9 +205,27 @@ export function InlineCompose({
           suppressContentEditableWarning
           onInput={handleBodyInput}
           className="min-h-[80px] max-h-[200px] overflow-y-auto text-sm focus:outline-none prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={quotedBody ? { __html: quotedBody } : undefined}
+          dangerouslySetInnerHTML={quotedBodyProp}
         />
       </div>
+
+      {/* Coded send refusal (PG-207, AC-EM-018) */}
+      {sendError && (
+        <div
+          ref={sendErrorRef}
+          role="alert"
+          tabIndex={-1}
+          className="mx-3 my-1.5 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-900 focus:outline-none focus:ring-2 focus:ring-ring dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
+        >
+          <p className="font-medium">{sendError.title}</p>
+          <p>{sendError.message}</p>
+          {sendError.action && (
+            <Link href={sendError.action.href} className="font-medium underline underline-offset-4">
+              {sendError.action.label}
+            </Link>
+          )}
+        </div>
+      )}
 
       {/* Validation hints */}
       {validationErrors.length > 0 && (
