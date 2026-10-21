@@ -3,12 +3,14 @@
  *
  * Handles email CRUD operations using Prisma persistence.
  * Inbound webhooks parse emails via InboundEmailParser from @intelliflow/adapters.
- * Outbound sending is stubbed pending OAuth account wiring (PG-084).
+ * Outbound mail (sendEmail, forward) leaves through the sender's own mailbox
+ * via dispatchUserMail (PG-207, ADR-085).
  *
  * @module api/modules/email
  * @task IFC-173 - Inbound email parsing endpoint
  * @task PG-141 - Email compose & history page (UI type contracts)
  * @task PG-084 - Full email client integration (OAuth, real send/receive)
+ * @task PG-207 - Email settings, user mailboxes and bounce handling
  * @artifact apps/api/src/modules/email/inbound.router.ts
  */
 
@@ -21,27 +23,27 @@ import {
   INBOUND_EMAIL_SIGNATURE_HEADER,
 } from './inbound-webhook-signature';
 import {
+  assertEmailVerified,
   createTRPCRouter,
   publicProcedure,
   tenantProcedure,
   verifiedTenantProcedure,
 } from '../../trpc';
 import { MarkAsReadInputSchema, GetUnreadCountsInputSchema } from '@intelliflow/validators';
-import { reserveQuota } from '../../shared/quota-guard';
+import { sendUserEmailInputSchema, type SendUserEmailResultDto } from '@intelliflow/validators';
 // Import from adapters - using any cast for module resolution compatibility
 import * as adapters from '@intelliflow/adapters';
+import { emailRuntimeDeps, type EmailRouterCtx } from './email-access';
+import { dispatchUserMail } from './mailbox-sender';
 const InboundEmailParser = (adapters as any).InboundEmailParser;
-const createOutboundEmailService = (adapters as any).createOutboundEmailService as (config?: {
-  sendgridApiKey?: string;
-  useMock?: boolean;
-}) => {
-  sendEmail(email: any): Promise<{ status: string; error?: string; messageId: string }>;
-};
-// Singleton outbound email service — picks up SendGrid key if configured, falls back to mock
-const outboundEmailService = createOutboundEmailService({
-  sendgridApiKey: process.env.SENDGRID_API_KEY,
-  useMock: !process.env.SENDGRID_API_KEY,
-});
+
+/**
+ * PG-207 (ADR-085): user mail (sendEmail, forward) leaves only through the
+ * user's own mailbox via dispatchUserMail. The old module-level outbound
+ * service — which fell back to the mock provider in production and recorded
+ * SENT for mail that never left — is gone.
+ */
+const SENT_FOLDER_STATUSES = ['SENT', 'DELIVERED', 'OPENED', 'CLICKED', 'BOUNCED', 'FAILED'];
 
 // ============================================================================
 // Input Schemas
@@ -128,6 +130,8 @@ export interface ParsedEmailResponse {
   isRead: boolean;
   readAt: string | null;
   labels: string[];
+  /** PG-207: how many recipients of a sent email bounced ("Partly bounced" when > 0 and not BOUNCED). */
+  bouncedRecipientCount: number;
 }
 
 // ============================================================================
@@ -162,6 +166,9 @@ function mapEmailRecord(record: any): ParsedEmailResponse {
     isRead: record.isRead ?? false,
     readAt: record.readAt ? record.readAt.toISOString() : null,
     labels: Array.isArray(metadata.labels) ? metadata.labels : [],
+    bouncedRecipientCount: Array.isArray(metadata.bouncedRecipients)
+      ? metadata.bouncedRecipients.length
+      : 0,
   };
 }
 
@@ -181,7 +188,8 @@ function applyFolderFilter(where: any, folder: string, userId: string): void {
   const folderLower = folder.toLowerCase();
   if (folderLower === 'sent') {
     where.userId = userId;
-    where.status = { in: ['SENT', 'DELIVERED', 'OPENED', 'CLICKED'] };
+    // PG-207: bounced and failed sends stay visible in Sent (with a status badge).
+    where.status = { in: SENT_FOLDER_STATUSES };
   } else if (folderLower === 'drafts') {
     where.metadata = { path: ['isDraft'], equals: true };
   } else if (folderLower === 'spam') {
@@ -494,53 +502,19 @@ export const inboundEmailRouter = createTRPCRouter({
           if (!forwardTo) {
             throw new TRPCError({ code: 'BAD_REQUEST', message: 'Forward address required' });
           }
-          const fromEmail = (ctx as any).user.email ?? existing.toEmail;
-
-          // Persist the forwarded email record
-          const forwardRecord = await (ctx as any).prisma.emailRecord.create({
-            data: {
-              subject: `Fwd: ${existing.subject}`,
-              body: existing.body,
-              fromEmail,
-              toEmail: forwardTo,
-              status: 'PENDING',
-              tenantId,
-              userId: (ctx as any).user.userId,
-              metadata: { isForward: true, originalEmailId: emailId },
-            },
-          });
-
-          // Send via the outbound email service
-          let forwardStatus: 'SENT' | 'FAILED' = 'SENT';
-          try {
-            const sendResult = await outboundEmailService.sendEmail({
-              from: { email: fromEmail, type: 'to' },
-              recipients: [{ email: forwardTo, type: 'to' as const }],
+          // PG-207: a forward is user mail — verified sender, metered, sent from the
+          // sender's own mailbox through the single send path (never the mock).
+          assertEmailVerified(ctx as never);
+          await dispatchUserMail(
+            ctx as unknown as EmailRouterCtx,
+            sendUserEmailInputSchema.parse({
+              to: [forwardTo],
               subject: `Fwd: ${existing.subject}`,
               htmlBody: existing.body,
-            });
-            if (sendResult.status === 'failed') {
-              forwardStatus = 'FAILED';
-              console.error('Email forward failed', {
-                recordId: forwardRecord.id,
-                error: sendResult.error,
-              });
-            }
-          } catch (error) {
-            forwardStatus = 'FAILED';
-            console.error('Email forward threw unexpectedly', {
-              recordId: forwardRecord.id,
-              error,
-            });
-          }
-
-          await (ctx as any).prisma.emailRecord.update({
-            where: { id: forwardRecord.id },
-            data: {
-              status: forwardStatus,
-              sentAt: forwardStatus === 'SENT' ? new Date() : null,
-            },
-          });
+            }),
+            emailRuntimeDeps(ctx as unknown as EmailRouterCtx),
+            { metadata: { isForward: true, originalEmailId: emailId } }
+          );
           break;
         }
       }
@@ -653,138 +627,18 @@ export const inboundEmailRouter = createTRPCRouter({
     ),
 
   /**
-   * Send an email
-   * Creates an EmailRecord with PENDING status.
-   * Requires OAuth email provider integration (PG-084). Will delegate to GmailAdapter.sendMessage()
-   * or OutlookAdapter once OAuth credentials are provisioned. Currently persists as PENDING record.
+   * Send an email from the sender's own mailbox (PG-207, ADR-085).
+   * Resolution, suppression, quota, attachments, MIME and the send itself are
+   * `dispatchUserMail`; refusals carry `data.emailSendError` for compose.
    */
   // SECURITY (2026-06-16): gated to email-verified users only — prevents
   // unverified accounts from using IntelliFlow as a spam relay.
   sendEmail: verifiedTenantProcedure
-    .input(
-      z.object({
-        to: z.array(z.email()),
-        cc: z.array(z.email()).optional(),
-        bcc: z.array(z.email()).optional(),
-        subject: z.string(),
-        htmlBody: z.string(),
-        textBody: z.string().optional(),
-        attachments: z
-          .array(
-            z.object({
-              fileName: z.string(),
-              fileSize: z.number(),
-              fileUrl: z.string(),
-            })
-          )
-          .optional(),
-        threadId: z.string().optional(),
-        templateId: z.string().optional(),
-      })
-    )
-    .mutation(
-      async ({ input, ctx }): Promise<{ id: string; status: 'PENDING' | 'SENT' | 'FAILED' }> => {
-        const tenantId = (ctx as any).tenant.tenantId;
-        const userId = (ctx as any).user.userId;
-        const fromEmail = (ctx as any).user.email ?? 'noreply@intelliflow.com';
-
-        // Per-tenant metering: every recipient is a billable message.
-        const recipientCount = input.to.length + (input.cc?.length ?? 0) + (input.bcc?.length ?? 0);
-        // Atomic reserve-then-compensate: the check and the increment are one statement, so two
-        // requests at limit-1 cannot both send. Released below if nothing was actually sent.
-        const releaseQuota = await reserveQuota(
-          ctx as any,
-          tenantId,
-          'emailsPerMonth',
-          recipientCount
-        );
-
-        // Set once the provider accepted the send: from then on the units are consumed.
-        let delivered = false;
-        try {
-          const record = await (ctx as any).prisma.emailRecord.create({
-            data: {
-              subject: input.subject,
-              body: input.htmlBody,
-              fromEmail,
-              toEmail: input.to.join(', '),
-              ccEmails: input.cc?.join(', ') ?? null,
-              bccEmails: input.bcc?.join(', ') ?? null,
-              status: 'PENDING',
-              tenantId,
-              userId,
-              templateId: input.templateId ?? null,
-              metadata: {
-                isHtml: true,
-                textBody: input.textBody,
-                threadId: input.threadId,
-              },
-            },
-          });
-
-          // Create attachment records if provided
-          if (input.attachments?.length) {
-            await (ctx as any).prisma.emailAttachment.createMany({
-              data: input.attachments.map((a) => ({
-                emailId: record.id,
-                tenantId,
-                fileName: a.fileName,
-                fileSize: a.fileSize,
-                fileType: 'application/octet-stream',
-                fileUrl: a.fileUrl,
-              })),
-            });
-          }
-
-          // Attempt to send via the outbound email service (SendGrid in production, mock in dev)
-          let finalStatus: 'SENT' | 'FAILED' = 'SENT';
-          try {
-            const sendResult = await outboundEmailService.sendEmail({
-              from: { email: fromEmail, type: 'to' },
-              recipients: [
-                ...input.to.map((email) => ({ email, type: 'to' as const })),
-                ...(input.cc ?? []).map((email) => ({ email, type: 'cc' as const })),
-                ...(input.bcc ?? []).map((email) => ({ email, type: 'bcc' as const })),
-              ],
-              subject: input.subject,
-              htmlBody: input.htmlBody,
-              textBody: input.textBody,
-            });
-
-            if (sendResult.status === 'failed') {
-              finalStatus = 'FAILED';
-              console.error('Email send failed', { recordId: record.id, error: sendResult.error });
-            } else {
-              delivered = true;
-            }
-          } catch (error) {
-            finalStatus = 'FAILED';
-            console.error('Email send threw unexpectedly', { recordId: record.id, error });
-          }
-
-          // Update the persisted record with the final delivery status
-          await (ctx as any).prisma.emailRecord.update({
-            where: { id: record.id },
-            data: {
-              status: finalStatus,
-              sentAt: finalStatus === 'SENT' ? new Date() : null,
-            },
-          });
-
-          if (finalStatus !== 'SENT') {
-            await releaseQuota();
-          }
-
-          return { id: record.id, status: finalStatus };
-        } catch (error) {
-          // Give the units back only when nothing was delivered. If the send succeeded and a
-          // later step (e.g. the record update) threw, the recipients got the email: keep the
-          // charge and propagate the error.
-          if (!delivered) await releaseQuota();
-          throw error;
-        }
-      }
-    ),
+    .input(sendUserEmailInputSchema)
+    .mutation(async ({ input, ctx }): Promise<SendUserEmailResultDto> => {
+      const c = ctx as unknown as EmailRouterCtx;
+      return dispatchUserMail(c, input, emailRuntimeDeps(c));
+    }),
 
   /**
    * Save email draft
@@ -1018,7 +872,7 @@ export const inboundEmailRouter = createTRPCRouter({
         const folderLower = folder.toLowerCase();
         if (folderLower === 'sent') {
           where.userId = (ctx as any).user?.userId;
-          where.status = { in: ['SENT', 'DELIVERED', 'OPENED', 'CLICKED'] };
+          where.status = { in: SENT_FOLDER_STATUSES };
         } else if (folderLower === 'drafts') {
           where.metadata = { path: ['isDraft'], equals: true };
         } else if (folderLower === 'spam') {

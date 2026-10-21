@@ -102,7 +102,12 @@ export type ResourceType =
   | 'pipeline_config'
   | 'goal'
   | 'report_schedule' // PG-201 audit trail
-  | 'contact_type'; // PG-205 audit trail
+  | 'contact_type' // PG-205 audit trail
+  // PG-207 audit trail (ids, field names and counts only — never addresses or secrets)
+  | 'email_mailbox'
+  | 'email_settings'
+  | 'email_signature'
+  | 'email_suppression';
 
 /**
  * Permission actions

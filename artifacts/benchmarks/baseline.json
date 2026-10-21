@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-21T00:41:14.231Z",
+  "timestamp": "2026-10-21T01:27:53.233Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 72,
-    "total_endpoints": 573,
-    "total_queries": 245,
-    "total_mutations": 328,
+    "total_routers": 75,
+    "total_endpoints": 587,
+    "total_queries": 250,
+    "total_mutations": 337,
     "routers": [
       {
         "name": "contact",
@@ -1261,6 +1261,18 @@
         "mutations": 4
       },
       {
+        "name": "emailSettings",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "emailSignatures",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "feedback",
         "endpoints": 6,
         "queries": 3,
@@ -1388,6 +1400,12 @@
       },
       {
         "name": "upload",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "emailMailbox",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -4881,6 +4899,82 @@
         "name": "upload.getUploadStatus",
         "method": "GET",
         "description": "Get upload status"
+      }
+    ],
+    "emailMailbox": [
+      {
+        "name": "emailMailbox.getMine",
+        "method": "GET",
+        "description": "Get mine"
+      },
+      {
+        "name": "emailMailbox.getTenant",
+        "method": "POST",
+        "description": "Get tenant"
+      }
+    ],
+    "emailSettings": [
+      {
+        "name": "emailSettings.list",
+        "method": "GET",
+        "description": "List emailSettingss with pagination"
+      },
+      {
+        "name": "emailSettings.add",
+        "method": "POST",
+        "description": "Add"
+      },
+      {
+        "name": "emailSettings.remove",
+        "method": "POST",
+        "description": "Remove"
+      },
+      {
+        "name": "emailSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "emailSettings.update",
+        "method": "POST",
+        "description": "Update emailSettings"
+      },
+      {
+        "name": "emailSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      }
+    ],
+    "emailSignatures": [
+      {
+        "name": "emailSignatures.list",
+        "method": "GET",
+        "description": "List emailSignaturess with pagination"
+      },
+      {
+        "name": "emailSignatures.create",
+        "method": "POST",
+        "description": "Create new emailSignatures"
+      },
+      {
+        "name": "emailSignatures.update",
+        "method": "POST",
+        "description": "Update emailSignatures"
+      },
+      {
+        "name": "emailSignatures.delete",
+        "method": "POST",
+        "description": "Delete emailSignatures"
+      },
+      {
+        "name": "emailSignatures.setDefault",
+        "method": "POST",
+        "description": "Set default"
+      },
+      {
+        "name": "emailSignatures.resolveDefault",
+        "method": "GET",
+        "description": "Resolve default"
       }
     ],
     "inbound": [

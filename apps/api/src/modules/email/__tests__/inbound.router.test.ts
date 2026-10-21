@@ -47,6 +47,15 @@ vi.mock('@intelliflow/adapters', async (importOriginal) => {
   };
 });
 
+// PG-207: forwards go through the single send path; stub it and the runtime deps here
+// (dispatchUserMail itself is covered by mailbox-sender.test.ts).
+const dispatch = vi.hoisted(() => vi.fn());
+vi.mock('../mailbox-sender', () => ({ dispatchUserMail: dispatch }));
+vi.mock('../email-access', async (importOriginal) => ({
+  ...((await importOriginal()) as object),
+  emailRuntimeDeps: () => ({ transports: {}, storage: {} }),
+}));
+
 // Import after mock is set up
 import { inboundEmailRouter, computeInboundEmailWebhookSignature } from '../inbound.router';
 
@@ -235,6 +244,7 @@ Hello World`;
       fromEmail: 'sender@example.com',
       toEmail: 'inbox@intelliflow.com',
       subject: 'Test',
+      body: '<p>original</p>',
       textBody: 'test',
       htmlBody: null,
       status: 'received',
@@ -308,6 +318,8 @@ Hello World`;
         metadata: { forwarded: true },
       });
 
+      dispatch.mockResolvedValue({ id: 'forward-record-id', status: 'SENT', skipped: [] });
+
       const result = await protectedCaller.processEmail({
         emailId: 'test-email-123',
         action: 'forward',
@@ -315,6 +327,32 @@ Hello World`;
       });
 
       expect(result.success).toBe(true);
+      expect(dispatch).toHaveBeenCalledTimes(1);
+      const [, sent, , options] = dispatch.mock.calls[0];
+      expect(sent).toMatchObject({
+        to: ['recipient@example.com'],
+        htmlBody: mockExistingEmail.body,
+      });
+      expect(sent.subject).toBe(`Fwd: ${mockExistingEmail.subject}`);
+      expect(options).toEqual({ metadata: { isForward: true, originalEmailId: 'test-email-123' } });
+    });
+
+    it('refuses a forward from an unverified sender before sending', async () => {
+      (prismaMock.emailRecord.findFirst as any).mockResolvedValue(mockExistingEmail);
+      const ctx = createTestContext();
+      const unverified = inboundEmailRouter.createCaller({
+        ...ctx,
+        user: { ...(ctx as any).user, emailVerified: false },
+      } as never);
+
+      await expect(
+        unverified.processEmail({
+          emailId: 'test-email-123',
+          action: 'forward',
+          forwardTo: 'r@example.invalid',
+        })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(dispatch).not.toHaveBeenCalled();
     });
   });
 

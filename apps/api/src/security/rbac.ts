@@ -54,6 +54,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read', 'write', 'delete', 'manage', 'admin'],
     report_schedule: ['read', 'write', 'delete', 'manage', 'admin'],
     contact_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-205
+    email_mailbox: ['read', 'write', 'delete', 'manage', 'admin'], // PG-207: own + company mailbox
+    email_settings: ['read', 'write', 'manage', 'admin'],
+    email_signature: ['read', 'write', 'delete', 'manage', 'admin'],
+    email_suppression: ['read', 'write', 'delete', 'manage', 'admin'],
     goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
   MANAGER: {
@@ -70,6 +74,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read', 'write', 'manage'],
     report_schedule: ['read', 'write', 'delete', 'manage'],
     contact_type: ['read', 'write', 'delete', 'manage'], // PG-205: managers edit types
+    email_mailbox: ['read', 'write', 'delete', 'manage'], // PG-207: EMAIL_SETTINGS_ADMIN_ROLES
+    email_settings: ['read', 'write', 'manage'],
+    email_signature: ['read', 'write', 'delete', 'manage'],
+    email_suppression: ['read', 'write', 'delete', 'manage'],
     goal: ['read', 'write', 'manage'],
   },
   SALES_REP: {
@@ -86,6 +94,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
+    email_settings: ['read'],
+    email_signature: ['read', 'write', 'delete'], // own signatures only
+    email_suppression: [],
     goal: ['read', 'write'],
   },
   USER: {
@@ -102,6 +114,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
+    email_settings: ['read'],
+    email_signature: ['read', 'write', 'delete'], // own signatures only
+    email_suppression: [],
     goal: ['read', 'write'],
   },
   VIEWER: {
@@ -118,6 +134,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
+    email_settings: ['read'],
+    email_signature: ['read', 'write', 'delete'], // own signatures only
+    email_suppression: [],
     goal: ['read'],
   },
 };

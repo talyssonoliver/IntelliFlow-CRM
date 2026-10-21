@@ -286,6 +286,7 @@ export const mockAdapters = {
   experimentRepository: mockDeep<any>(),
   appointmentRepository: mockDeep<any>(),
   quotaRepository: mockDeep<any>(),
+  mailboxTransports: mockDeep<any>(),
 };
 
 /**

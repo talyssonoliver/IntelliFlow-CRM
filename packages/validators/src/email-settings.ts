@@ -80,6 +80,60 @@ export const emailAttachmentRefSchema = z
   .strict();
 export type EmailAttachmentRef = z.infer<typeof emailAttachmentRefSchema>;
 
+/** Executable / script types that are never accepted as email attachments. */
+export const BLOCKED_ATTACHMENT_EXTENSIONS = [
+  'exe',
+  'bat',
+  'cmd',
+  'com',
+  'scr',
+  'pif',
+  'msi',
+  'js',
+  'jse',
+  'vbs',
+  'vbe',
+  'wsf',
+  'ps1',
+  'jar',
+  'hta',
+  'cpl',
+  'lnk',
+] as const;
+
+/** 10 MB per attachment (base64 is ~4/3 of the bytes). */
+export const MAX_EMAIL_ATTACHMENT_BYTES = 10 * 1024 * 1024;
+
+/** Input of `emailAttachments.upload` (compose attachments, owner ruling Q11). */
+export const uploadEmailAttachmentInputSchema = z
+  .object({
+    fileName: z
+      .string()
+      .trim()
+      .min(1)
+      .max(EMAIL_LIMITS.maxAttachmentFileNameLength)
+      .refine((v) => !hasHeaderInjection(v) && !v.includes('"'), { message: 'Invalid file name' })
+      .refine(
+        (v) => {
+          const ext = v.includes('.') ? (v.split('.').pop() ?? '').toLowerCase() : '';
+          return !(BLOCKED_ATTACHMENT_EXTENSIONS as readonly string[]).includes(ext);
+        },
+        { message: 'This file type cannot be attached' }
+      ),
+    contentType: z
+      .string()
+      .min(3)
+      .max(255)
+      .regex(/^[\w.+-]+\/[\w.+-]+$/),
+    contentBase64: z
+      .string()
+      .min(1)
+      .max(Math.ceil((MAX_EMAIL_ATTACHMENT_BYTES * 4) / 3) + 4)
+      .regex(/^[A-Za-z0-9+/]+=*$/, { message: 'Invalid file content' }),
+  })
+  .strict();
+export type UploadEmailAttachmentInput = z.infer<typeof uploadEmailAttachmentInputSchema>;
+
 /** Input of `email.sendEmail` (user mail). */
 export const sendUserEmailInputSchema = z
   .object({

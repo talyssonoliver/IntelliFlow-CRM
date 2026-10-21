@@ -116,6 +116,7 @@ import {
   type AccountDuplicateDetectionService,
 } from './modules/account/account-duplicate-detection.service';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { createMailboxTransports } from './modules/email/mailbox-transport';
 
 /**
  * IFC-310: Generate an embedding for the check-time query contact.
@@ -364,6 +365,11 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     ? new ClamAVScanner({ host: clamAvHost, port: clamAvPort })
     : new NoOpAVScanner();
 
+  // PG-207 (ADR-085): user-mail transports (SMTP, IMAP bounce reader, OAuth
+  // Gmail/Graph). Used by email.sendEmail/forward, the mailbox router and the
+  // bounce scanner; attachments use storageService (email-attachments bucket).
+  const mailboxTransports = createMailboxTransports(process.env);
+
   // Feature flags
   const featureFlagsConfig = loadFeatureFlagsConfig();
   const featureFlagProvider = InMemoryFeatureFlagProvider.fromConfig(featureFlagsConfig);
@@ -498,6 +504,7 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     featureFlagAdapter,
     storageService,
     avScanner,
+    mailboxTransports,
     notificationService,
     icsGenerationService,
   };

@@ -4,6 +4,7 @@ import {
   removeSuppressionInputSchema,
   sendUserEmailInputSchema,
   updateEmailSettingsInputSchema,
+  uploadEmailAttachmentInputSchema,
 } from '../email-settings';
 
 describe('updateEmailSettingsInputSchema', () => {
@@ -59,6 +60,43 @@ describe('suppression inputs', () => {
   it('requires an id on remove', () => {
     expect(removeSuppressionInputSchema.safeParse({ id: '' }).success).toBe(false);
     expect(removeSuppressionInputSchema.safeParse({ id: 'c' + 'x'.repeat(24) }).success).toBe(true);
+  });
+});
+
+describe('uploadEmailAttachmentInputSchema', () => {
+  const ok = { fileName: 'report.pdf', contentType: 'application/pdf', contentBase64: 'cGRm' };
+
+  it('accepts a document', () => {
+    expect(uploadEmailAttachmentInputSchema.safeParse(ok).success).toBe(true);
+  });
+
+  it.each(['run.exe', 'script.JS', 'x.ps1', 'a.bat'])('rejects executable type %s', (fileName) => {
+    expect(uploadEmailAttachmentInputSchema.safeParse({ ...ok, fileName }).success).toBe(false);
+  });
+
+  it('rejects bad names, content types and non-base64 content', () => {
+    expect(
+      uploadEmailAttachmentInputSchema.safeParse({ ...ok, fileName: 'a"\r\n.pdf' }).success
+    ).toBe(false);
+    expect(
+      uploadEmailAttachmentInputSchema.safeParse({ ...ok, contentType: 'bad type' }).success
+    ).toBe(false);
+    expect(
+      uploadEmailAttachmentInputSchema.safeParse({ ...ok, contentBase64: 'not base64!' }).success
+    ).toBe(false);
+  });
+
+  it('rejects content over 10 MB', () => {
+    expect(
+      uploadEmailAttachmentInputSchema.safeParse({ ...ok, contentBase64: 'A'.repeat(14_000_000) })
+        .success
+    ).toBe(false);
+  });
+
+  it('accepts a file name without an extension', () => {
+    expect(uploadEmailAttachmentInputSchema.safeParse({ ...ok, fileName: 'README' }).success).toBe(
+      true
+    );
   });
 });
 
