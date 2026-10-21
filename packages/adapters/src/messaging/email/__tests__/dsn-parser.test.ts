@@ -8,6 +8,7 @@ describe('parseDsn', () => {
     expect(parseDsn(makeDsn())).toEqual({
       reportingMta: 'mta.example.invalid',
       authenticated: true,
+      reporterDomain: 'mta.example.invalid',
       recordId: 'crec123',
       originalMessageId: '<crec123.1@mail.example.invalid>',
       recipients: [
@@ -150,6 +151,39 @@ describe('parseDsn', () => {
           authenticationResults: ['mx.example.invalid; dkim=pass header.d=evilmta.example.invalid'],
         })
       ).toBe(false);
+    });
+
+    it('reads the Microsoft form, which has no authserv-id before the first result', () => {
+      expect(
+        authOf({
+          authenticationResults: [
+            'spf=pass (sender IP is 192.0.2.1) smtp.mailfrom=mta.example.invalid; dkim=none (message not signed)',
+          ],
+        })
+      ).toBe(true);
+    });
+
+    it('ignores comments: a domain inside parentheses is not what passed', () => {
+      expect(
+        authOf({
+          authenticationResults: [
+            'mx.example.invalid; dkim=pass (x header.d=mta.example.invalid y) header.d=attacker.example.net',
+          ],
+        })
+      ).toBe(false);
+    });
+
+    it('refuses a report with more than one From header', () => {
+      const raw = makeDsn().replace(
+        'From: Mail Delivery Subsystem',
+        'From: Colleague <colleague@example.invalid>\nFrom: Mail Delivery Subsystem'
+      );
+      expect(parseDsn(raw)?.authenticated).toBe(false);
+    });
+
+    it('names the authenticated reporter domain, and none when unauthenticated', () => {
+      expect(parseDsn(makeDsn())?.reporterDomain).toBe('mta.example.invalid');
+      expect(parseDsn(makeDsn({ authenticationResults: null }))?.reporterDomain).toBeNull();
     });
 
     it('refuses fail, softfail and none', () => {

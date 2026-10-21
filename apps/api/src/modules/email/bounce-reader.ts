@@ -67,6 +67,8 @@ interface ScanMailbox {
   id: string;
   tenantId: string;
   kind: string;
+  /** The sending address (its domain may report on any recipient). */
+  fromAddress?: string | null;
   imapHost: string | null;
   imapPort: number | null;
   imapUsername: string | null;
@@ -84,6 +86,47 @@ interface ScanMailbox {
   scanCursorAt: Date | null;
   createdAt: Date;
   failureCount: number;
+}
+
+/** Domains a provider's own bounces come from, by mailbox kind. */
+const PROVIDER_REPORT_DOMAINS: Record<string, readonly string[]> = {
+  GMAIL: ['google.com', 'googlemail.com', 'gmail.com'],
+  MICROSOFT: ['microsoft.com', 'outlook.com', 'hotmail.com', 'office365.com'],
+};
+
+/** One domain is the other or a subdomain of it, and the shorter is not a bare TLD. */
+function aligned(a: string, b: string): boolean {
+  const [shorter, longer] = a.length <= b.length ? [a, b] : [b, a];
+  if (!shorter.includes('.')) return false;
+  return longer === shorter || longer.endsWith(`.${shorter}`);
+}
+
+/** A host's parent domain (`smtp.example.com` -> `example.com`), or the host itself. */
+function hostDomain(host: string | null): string | null {
+  if (!host) return null;
+  const labels = host.toLowerCase().split('.');
+  return labels.length > 2 ? labels.slice(1).join('.') : labels.join('.');
+}
+
+/**
+ * Whether an authenticated reporter may speak for this recipient (#961): the
+ * recipient's own domain (its MTA reports on its users), or the sending side -
+ * the mailbox's address domain, its SMTP/IMAP hosts, or its provider. A report
+ * signed by any other domain - e.g. one an insider recipient controls - cannot
+ * bounce or suppress someone else.
+ */
+function mayReportOn(reporter: string | null, recipient: string, mailbox: ScanMailbox): boolean {
+  if (!reporter) return false;
+  const candidates = [
+    recipient.slice(recipient.lastIndexOf('@') + 1),
+    mailbox.fromAddress
+      ? mailbox.fromAddress.slice(mailbox.fromAddress.lastIndexOf('@') + 1)
+      : null,
+    hostDomain(mailbox.smtpHost),
+    hostDomain(mailbox.imapHost),
+    ...(PROVIDER_REPORT_DOMAINS[mailbox.kind] ?? []),
+  ];
+  return candidates.some((domain) => domain !== null && aligned(reporter, domain.toLowerCase()));
 }
 
 interface MatchedRecord {
@@ -455,7 +498,11 @@ async function processReport(
   for (const entry of report.recipients) {
     const kind = classifyDsnStatus(entry.action, entry.status);
     if (!kind) continue;
-    const matched = recordRecipients.includes(entry.recipient) ? record : null;
+    const matched =
+      recordRecipients.includes(entry.recipient) &&
+      mayReportOn(report.reporterDomain, entry.recipient, mailbox)
+        ? record
+        : null;
 
     const outcome = await recordReceiptOnce(deps, {
       mailbox,

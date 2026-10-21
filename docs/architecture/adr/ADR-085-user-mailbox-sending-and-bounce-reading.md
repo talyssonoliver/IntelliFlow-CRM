@@ -104,19 +104,31 @@ Chosen option 4.
   `email-attachments` bucket before sending; the send re-checks the blocked
   extensions and the 25 MB total.
 
-- **Authenticated reports only (#961, owner ruling Q12, 2026-10-21).** A matched
-  report acts (bounce status, suppression, notification) only when it is from
-  `mailer-daemon@` or `postmaster@`, and the receiving provider's topmost
-  `Authentication-Results` shows `dkim=pass` (`header.d`/`header.i`) or
-  `spf=pass` (`smtp.mailfrom`/`smtp.helo`) for that sender's own domain or a
-  subdomain. Only the topmost header counts, because the sender can add headers
-  below it. Every other report is stored as an UNMATCHED, LOW receipt with no
-  effect. This closes the case of a recipient forging a report about a
-  co-recipient with the ids they received. Some genuine bounces will be recorded
-  without acting: provider-internal bounces without `Authentication-Results`,
-  and some self-hosted servers. #965 (the D5 live header spike) relaxes the rule
-  on provider evidence. Residual risk, raised to the owner: an insider who
-  controls a domain can still send a passing `mailer-daemon@` report.
+- **Authenticated, entitled reports only (#961, owner ruling Q12, 2026-10-21).**
+  A matched report acts (bounce status, suppression, notification) only when
+  both of these hold:
+  1. **Authenticated.** It is from `mailer-daemon@` or `postmaster@` (exactly
+     one From header). The receiving provider's topmost `Authentication-Results`
+     shows `dkim=pass` (`header.d`/`header.i`) or `spf=pass`
+     (`smtp.mailfrom`/`smtp.helo`) for that sender's domain. Only the topmost
+     header counts, because the sender can add headers below it. Comments are
+     ignored. Microsoft's form, with no authserv-id, is read.
+  2. **Entitled.** The authenticated domain may speak for that recipient. It
+     must be the recipient's own domain (its MTA reports on its users) or the
+     sending side: the mailbox address domain, its SMTP/IMAP host domains, or
+     the provider (Google, Microsoft). A bare TLD never qualifies.
+
+  Every other report is stored as an UNMATCHED, LOW receipt with no effect. That
+  covers a recipient forging a report with the ids they received, even one
+  signed by a domain they control. Some genuine bounces will be recorded without
+  acting: provider-internal bounces without `Authentication-Results`, and
+  unusual reporters. #965 (the D5 live header spike) relaxes the rule on
+  provider evidence.
+
+  Residual risk, raised to the owner: a self-hosted IMAP server that stamps no
+  `Authentication-Results` of its own leaves the sender's header topmost, so a
+  report forged for the recipient's domain would pass. Gmail and Microsoft
+  always stamp theirs.
 
 ### Consequences
 

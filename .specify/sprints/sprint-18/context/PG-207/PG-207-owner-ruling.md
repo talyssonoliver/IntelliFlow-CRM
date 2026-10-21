@@ -165,4 +165,7 @@ Options:
 - A report acts only when it is from `mailer-daemon@`/`postmaster@` and the receiving provider's topmost `Authentication-Results` shows `dkim=pass` or `spf=pass` for that sender's domain.
 - Anything else is stored as an UNMATCHED/LOW receipt with no effect.
 - Follow-up: #965 (D5 spike), linked from #961.
-- Residual risk raised to the owner: an insider who controls their own domain can still send a passing `mailer-daemon@` report.
+- Hardened at exec, on the codex r16 HIGH and the Security STOA re-run.
+  - The authenticated reporter must also be entitled to speak for the recipient: the recipient's domain, or the sending side (mailbox address domain, SMTP/IMAP hosts, provider). A domain an insider controls no longer qualifies.
+  - Comments are ignored, a report with several From headers is refused, and Microsoft's Authentication-Results form is read.
+- Residual risk raised to the owner: a self-hosted IMAP server that stamps no Authentication-Results of its own leaves the sender's header topmost. #965 will confirm per provider.

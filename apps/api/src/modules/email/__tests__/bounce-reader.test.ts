@@ -199,6 +199,42 @@ describe('runBounceScan: only an authenticated report acts (#961, owner ruling 2
     expect(fake.db.emailRecord.findFirst).not.toHaveBeenCalled();
   });
 
+  it('a properly signed report from a domain the recipient controls cannot act on a co-recipient elsewhere', async () => {
+    // The insider owns attacker.example.net and signs a real postmaster@ report
+    // naming gone@example.invalid: authenticated, but not entitled to report on
+    // that recipient (not its domain, not the sender's provider).
+    const fake = fakeDb();
+    const signed = makeDsn({
+      from: 'postmaster@attacker.example.net',
+      authenticationResults: ['mx.example.invalid; dkim=pass header.d=attacker.example.net'],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: signed }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
+  it('a report signed for a bare top-level domain is never entitled to report', async () => {
+    const fake = fakeDb();
+    const tld = makeDsn({
+      from: 'mailer-daemon@invalid',
+      authenticationResults: ['mx.example.invalid; dkim=pass header.d=example.invalid'],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: tld }]);
+    await runBounceScan(d);
+    expectNoEffect(fake);
+  });
+
+  it('the sending mailbox’s own provider may report on any recipient', async () => {
+    const fake = fakeDb({ mailbox: smtpMailbox({ fromAddress: 'me@mail.example.org' }) });
+    const fromSendersMta = makeDsn({
+      from: 'mailer-daemon@out.mail.example.org',
+      authenticationResults: ['mx.example.invalid; spf=pass smtp.helo=out.mail.example.org'],
+    });
+    const { d } = deps(fake, [{ key: '7:11', raw: fromSendersMta }]);
+    await runBounceScan(d);
+    expect(fake.receipts[0]).toMatchObject({ kind: 'HARD', emailRecordId: 'crec123' });
+  });
+
   it('a report with no Authentication-Results header is stored and has no effect', async () => {
     const fake = fakeDb();
     const { d } = deps(fake, [{ key: '7:11', raw: makeDsn({ authenticationResults: null }) }]);

@@ -29,6 +29,12 @@ export interface ParsedDsn {
    * shows DKIM or SPF passing for that sender's domain. Only then may it act.
    */
   authenticated: boolean;
+  /**
+   * The authenticated reporter's domain (null when not authenticated). The
+   * caller must still check the reporter may speak for each recipient: a
+   * report signed by a domain someone controls proves nothing about others.
+   */
+  reporterDomain: string | null;
   recordId: string | null;
   originalMessageId: string | null;
   recipients: DsnRecipient[];
@@ -99,9 +105,21 @@ function tokenDomain(token: string): string {
   return value.slice(value.lastIndexOf('@') + 1);
 }
 
+/** Drops RFC 5322 comments `( … )` (nested), so text inside one is never read as a result. */
+function stripComments(value: string): string {
+  let out = '';
+  let depth = 0;
+  for (const ch of value) {
+    if (ch === '(') depth += 1;
+    else if (ch === ')') depth = Math.max(0, depth - 1);
+    else if (depth === 0) out += ch;
+  }
+  return out;
+}
+
 /** Whether one Authentication-Results clause is a DKIM or SPF pass for `domain`. */
 function clausePasses(clause: string, domain: string): boolean {
-  const tokens = clause.trim().toLowerCase().split(/\s+/);
+  const tokens = stripComments(clause).trim().toLowerCase().split(/\s+/);
   const method = tokens[0] ?? '';
   if (method !== 'dkim=pass' && method !== 'spf=pass') return false;
   const keys =
@@ -111,16 +129,25 @@ function clausePasses(clause: string, domain: string): boolean {
   );
 }
 
-function isAuthenticatedReport(head: string): boolean {
+/**
+ * The authenticated reporter's domain, or null: the report is from
+ * mailer-daemon/postmaster (exactly one From header) and the topmost
+ * Authentication-Results shows DKIM or SPF passing for that domain. Whether
+ * that reporter may speak for a given recipient is the caller's decision.
+ */
+function authenticatedReporterDomain(head: string): string | null {
+  const fromHeaders = head.split(/\r?\n/).filter((line) => line.toLowerCase().startsWith('from:'));
+  if (fromHeaders.length !== 1) return null;
   const [local, domain] = fromAddress(parseHeaders(head)['from'] ?? '').split('@');
-  if (!local || !domain || !REPORT_SENDERS.has(local)) return false;
+  if (!local || !domain || !REPORT_SENDERS.has(local)) return null;
   const results = topmostHeader(head, 'authentication-results');
-  if (!results) return false;
-  // "authserv-id; method=result props; ..." - the first part names the provider.
-  return results
-    .split(';')
-    .slice(1)
-    .some((clause) => clausePasses(clause, domain));
+  if (!results) return null;
+  // "authserv-id; method=result props; ..." - the authserv-id names the provider.
+  // Microsoft writes no authserv-id: the first part is already a result.
+  const clauses = results.split(';');
+  const first = clauses[0] ?? '';
+  const candidates = stripComments(first).includes('=') ? clauses : clauses.slice(1);
+  return candidates.some((clause) => clausePasses(clause, domain)) ? domain : null;
 }
 
 function splitHeadBody(raw: string): [string, string] {
@@ -194,10 +221,12 @@ export function parseDsn(raw: string): ParsedDsn | null {
       /^(message\/rfc822|text\/rfc822-headers)\b/i.test(p.contentType)
     );
     const originalHeaders = original ? parseHeaders(splitHeadBody(bodyText(original.body))[0]) : {};
+    const reporterDomain = authenticatedReporterDomain(head);
 
     return {
       reportingMta: perMessage['reporting-mta']?.replace(/^[a-z0-9-]+;\s*/i, '').trim() || null,
-      authenticated: isAuthenticatedReport(head),
+      authenticated: reporterDomain !== null,
+      reporterDomain,
       recordId: originalHeaders['x-intelliflow-record']?.trim() || null,
       originalMessageId: originalHeaders['message-id']?.trim() || null,
       recipients,
