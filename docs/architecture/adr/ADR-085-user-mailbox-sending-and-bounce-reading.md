@@ -1,11 +1,11 @@
 # ADR-085: User Mail Leaves From the User's Own Mailbox; Bounces Are Read Back From It
 
-**Status:** Proposed (2026-10-21 — PG-207 spec session; becomes Accepted when
-the implementation lands)
+**Status:** Accepted (2026-10-21 — implemented on `feat/pg-207-email-settings`;
+proposed in the PG-207 spec session)
 
 **Date:** 2026-10-21
 
-**Deciders:** Talysson Oliveira (owner rulings Q1-Q10, 2026-10-20/21,
+**Deciders:** Talysson Oliveira (owner rulings Q1-Q11, 2026-10-20/21,
 `.specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md`); PG-207 spec
 session
 
@@ -73,8 +73,13 @@ Chosen option 4.
   used for user mail.
 - **Transports.** SMTP via nodemailer with DNS-pinned connects (public addresses
   only, ports 465/587/2525, TLS required); Gmail via `users.messages.send` with
-  raw MIME; Microsoft via Graph draft-then-send. MIME is built once with
-  nodemailer `MailComposer` and carries `X-IntelliFlow-Record: <recordId>`.
+  raw MIME; Microsoft via Graph `POST /me/sendMail` with the base64 MIME as
+  `text/plain`: one call, which accepts the MIME as is (this corrects the
+  draft-then-send first written here). MIME is built once with nodemailer
+  `MailComposer` and carries `X-IntelliFlow-Record: <recordId>`. An SMTP server
+  may refuse some recipients at RCPT TO and accept the rest; the refused ones
+  are returned to the sender, their quota is released and they are recorded as
+  bounced on the record, which stays SENT for the others.
 - **OAuth.** Authorization code + S256 PKCE; opaque state stored hashed in
   `EmailOAuthState` (single use, 10 minutes); the redirect lands on a web page
   that completes the exchange through an authenticated tRPC call; explicit
@@ -84,13 +89,20 @@ Chosen option 4.
 - **Bounce reading.** An env-gated scheduler in the API process claims mailboxes
   through per-row leases and lists DSNs since a cursor (IMAP 993 read-only for
   SMTP mailboxes, Gmail `q` + `format=raw`, Graph filter + `$value`). A DSN is
-  accepted only if it matches an `EmailRecord` sent from that mailbox in the
-  last 30 days (by `X-IntelliFlow-Record`, then Message-ID) and names one of
-  that record's recipients. Hard bounces suppress (if the rule says so); soft
-  bounces suppress after the tenant threshold within 30 days. Only the status
-  code and a truncated diagnostic are stored; no mail content.
+  accepted only if it carries both the `X-IntelliFlow-Record` id and the
+  original Message-ID, both match one `EmailRecord` of the same tenant sent from
+  that mailbox in the last 30 days, and it names one of that record's recipients
+  (either value alone is not enough: a forged report could name a guessed id).
+  Listing never moves the cursor past an unread report: Gmail windows past the
+  page cap are halved, and Graph scans stop only between receive times. Hard
+  bounces suppress (if the rule says so); soft bounces suppress after the tenant
+  threshold within 30 days. Only the status code and a truncated diagnostic are
+  stored; no mail content.
 - **Suppression.** Suppressed recipients are dropped before quota is reserved;
   the response lists them; all-suppressed sends nothing.
+- **Attachments (Q11).** Compose uploads attachments to the private
+  `email-attachments` bucket before sending; the send re-checks the blocked
+  extensions and the 25 MB total.
 
 ### Consequences
 
