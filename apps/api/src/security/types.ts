@@ -107,7 +107,8 @@ export type ResourceType =
   | 'email_mailbox'
   | 'email_settings'
   | 'email_signature'
-  | 'email_suppression';
+  | 'email_suppression'
+  | 'model_config'; // PG-199 audit trail
 
 /**
  * Permission actions

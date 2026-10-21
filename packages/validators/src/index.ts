@@ -109,6 +109,7 @@ export * from './account-settings';
 export * from './account-tiers';
 export * from './account-territories';
 export * from './approval-policies';
+export * from './model-config'; // PG-199
 
 // Deal Settings Schemas (PG-184)
 export * from './deal-settings';

@@ -1,4 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { PurposeCeilingReachedError } from '../lib/purpose-ceiling.js';
+import { createLLMForTenant } from '../lib/llm-factory.js';
 import {
   LeadQualificationAgent,
   QualificationInput,
@@ -35,6 +37,15 @@ vi.mock('../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue(QUALIFICATION_PARSED_RESPONSE),
     })),
   })),
+  // PG-199: agents resolve the tenant model at execute time.
+  createLLMForTenant: vi.fn(async () =>
+    (() => ({
+      invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(QUALIFICATION_PARSED_RESPONSE) }),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(QUALIFICATION_PARSED_RESPONSE),
+      })),
+    }))()
+  ),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
@@ -189,14 +200,35 @@ describe('LeadQualificationAgent', () => {
       expect(result.output).toBeDefined();
     });
 
+    it('fails the task when the purpose ceiling is reached mid-task, never a fallback answer (PG-199)', async () => {
+      const cappedAgent = new LeadQualificationAgent();
+      vi.spyOn(cappedAgent as any, 'structuredFor').mockReturnValue({
+        invoke: vi
+          .fn()
+          .mockRejectedValue(new PurposeCeilingReachedError('qualification', 100, 100)),
+      });
+
+      const result = await cappedAgent.execute(
+        createQualificationTask({
+          leadId: 'lead-cap',
+          email: 'cap@example.invalid',
+          source: 'WEBSITE',
+        })
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.output).toBeUndefined();
+      expect(result.error).toContain('monthly AI ceiling reached');
+    });
+
     it('should handle parsing errors gracefully', async () => {
       const failingAgent = new LeadQualificationAgent();
 
       // After B2b, the agent uses structuredModel.invoke instead of a StructuredOutputParser.
       // Simulate a parse/validation failure by making structuredModel.invoke throw.
-      (failingAgent as any).structuredModel = {
+      vi.spyOn(failingAgent as any, 'structuredFor').mockReturnValue({
         invoke: vi.fn().mockRejectedValue(new Error('Parse error')),
-      };
+      });
 
       const input: QualificationInput = {
         leadId: 'lead-005',
@@ -488,5 +520,35 @@ describe('LeadQualificationAgent', () => {
 
       expect(task.context).toEqual(context);
     });
+  });
+});
+
+// PG-199 (owner Q3): the agent runs on the tenant's model settings.
+describe('tenant model (PG-199)', () => {
+  it('resolves the tenant model for its purpose and uses it for the task', async () => {
+    const input: QualificationInput = {
+      leadId: 'lead-001',
+      email: 'john.doe@acme.com',
+      firstName: 'John',
+      lastName: 'Doe',
+      company: 'Acme Corp',
+      title: 'VP of Sales',
+      phone: '+1-555-0123',
+      source: 'WEBSITE',
+      score: 85,
+    };
+    const task = createQualificationTask(input);
+    task.context = { metadata: { tenantId: 'tenant-pg199' } };
+    const tenantAgent = new LeadQualificationAgent();
+    vi.mocked(createLLMForTenant).mockClear();
+
+    const result = await tenantAgent.execute(task as never);
+
+    expect(createLLMForTenant).toHaveBeenCalledWith(
+      'qualification',
+      'free',
+      expect.objectContaining({ tenantId: 'tenant-pg199' })
+    );
+    expect(result.success).toBe(true);
   });
 });

@@ -1,5 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { BaseAgent, AgentTask, BaseAgentConfig, AgentResult } from './base.agent';
+import { createLLM, createLLMForTenant } from '../lib/llm-factory.js';
+import { tenantContextStore } from '../tracing/tenant-context.js';
 import { z } from 'zod';
 
 // Mock hallucinationChecker so L4 confidence tests are deterministic
@@ -17,6 +19,13 @@ vi.mock('../lib/llm-factory.js', () => ({
     invoke: vi.fn().mockResolvedValue({ content: 'Mocked LLM response' }),
     withStructuredOutput: vi.fn(() => ({
       invoke: vi.fn().mockResolvedValue({ content: 'Mocked LLM response' }),
+    })),
+  })),
+  // PG-199: agents resolve the tenant's model at execute time.
+  createLLMForTenant: vi.fn(async () => ({
+    invoke: vi.fn().mockResolvedValue({ content: 'Tenant model response' }),
+    withStructuredOutput: vi.fn(() => ({
+      invoke: vi.fn().mockResolvedValue({ content: 'Tenant model response' }),
     })),
   })),
   createEmbeddings: vi.fn(() => ({
@@ -527,5 +536,135 @@ describe('BaseAgent', () => {
         expect((error as Error).message).toBe('LLM error');
       }
     });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PG-199 (owner Q3): agents honour the tenant's model settings
+// ---------------------------------------------------------------------------
+
+describe('BaseAgent tenant model (PG-199)', () => {
+  const tenantConfig: BaseAgentConfig = {
+    name: 'Tenant Agent',
+    role: 'r',
+    goal: 'g',
+    backstory: 'b',
+    purpose: 'qualification',
+  };
+
+  function task(metadata?: Record<string, unknown>) {
+    return {
+      id: 'task-1',
+      description: 'answer',
+      input: { message: 'hi' },
+      ...(metadata ? { context: { metadata } } : {}),
+    } as AgentTask<{ message: string }, { response: string }>;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('resolves the tenant model for the task tenant and answers with it', async () => {
+    const agent = new TestAgent(tenantConfig);
+    const result = await agent.execute(task({ tenantId: 'tenant-7' }));
+
+    expect(createLLMForTenant).toHaveBeenCalledTimes(1);
+    expect(createLLMForTenant).toHaveBeenCalledWith(
+      'qualification',
+      'free',
+      expect.objectContaining({ tenantId: 'tenant-7' })
+    );
+    expect(result.output).toEqual({ response: 'Tenant model response' });
+  });
+
+  it('keeps the constructor model when the task has no tenant', async () => {
+    const agent = new TestAgent(tenantConfig);
+    const result = await agent.execute(task());
+
+    expect(createLLMForTenant).not.toHaveBeenCalled();
+    expect(createLLM).toHaveBeenCalledWith('qualification', 'free', expect.any(Object));
+    expect(result.output).toEqual({ response: 'Mocked LLM response' });
+  });
+
+  it('falls back to the job tenant when the task carries none (prediction jobs)', async () => {
+    const agent = new TestAgent(tenantConfig);
+    await tenantContextStore.run({ tenantId: 'tenant-job' }, () => agent.execute(task()));
+
+    expect(createLLMForTenant).toHaveBeenCalledWith(
+      'qualification',
+      'free',
+      expect.objectContaining({ tenantId: 'tenant-job' })
+    );
+  });
+
+  it('prefers the task tenant over the job tenant, and ignores an unknown job tenant', async () => {
+    const agent = new TestAgent(tenantConfig);
+    await tenantContextStore.run({ tenantId: 'tenant-job' }, () =>
+      agent.execute(task({ tenantId: 'tenant-task' }))
+    );
+    expect(vi.mocked(createLLMForTenant).mock.calls[0][2]).toMatchObject({
+      tenantId: 'tenant-task',
+    });
+
+    vi.mocked(createLLMForTenant).mockClear();
+    await tenantContextStore.run({ tenantId: 'unknown' }, () => agent.execute(task()));
+    expect(createLLMForTenant).not.toHaveBeenCalled();
+  });
+
+  it('runs the model calls in the resolved tenant context, so spend is billed to it', async () => {
+    const seen: (string | undefined)[] = [];
+    vi.mocked(createLLMForTenant).mockImplementation(
+      async () =>
+        ({
+          invoke: vi.fn(async () => {
+            seen.push(tenantContextStore.getStore()?.tenantId);
+            return { content: 'ok' };
+          }),
+          withStructuredOutput: vi.fn(),
+        }) as never
+    );
+    const agent = new TestAgent(tenantConfig);
+
+    await agent.execute(task({ tenantId: 'tenant-meta' })); // no job context
+    await tenantContextStore.run({ tenantId: 'tenant-job' }, () =>
+      agent.execute(task({ tenantId: 'tenant-override' }))
+    );
+
+    expect(seen).toEqual(['tenant-meta', 'tenant-override']);
+  });
+
+  it('isolates concurrent tasks of different tenants', async () => {
+    vi.mocked(createLLMForTenant).mockImplementation(
+      async (_p, _t, opts) =>
+        ({
+          invoke: vi
+            .fn()
+            .mockResolvedValue({ content: `model of ${(opts as { tenantId: string }).tenantId}` }),
+          withStructuredOutput: vi.fn(),
+        }) as never
+    );
+    const agent = new TestAgent(tenantConfig);
+
+    const [a, b] = await Promise.all([
+      agent.execute(task({ tenantId: 'tenant-a' })),
+      agent.execute(task({ tenantId: 'tenant-b' })),
+    ]);
+
+    expect(a.output).toEqual({ response: 'model of tenant-a' });
+    expect(b.output).toEqual({ response: 'model of tenant-b' });
+  });
+
+  it('fails the task visibly when the purpose ceiling is reached (no non-AI fallback)', async () => {
+    vi.mocked(createLLMForTenant).mockRejectedValueOnce(
+      Object.assign(new Error('monthly AI ceiling reached for qualification'), {
+        code: 'PURPOSE_CEILING_REACHED',
+      })
+    );
+    const agent = new TestAgent(tenantConfig);
+    const result = await agent.execute(task({ tenantId: 'tenant-cap' }));
+
+    expect(result.success).toBe(false);
+    expect(result.error).toMatch(/monthly AI ceiling reached for qualification/);
   });
 });

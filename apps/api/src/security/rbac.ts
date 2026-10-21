@@ -58,6 +58,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read', 'write', 'manage', 'admin'],
     email_signature: ['read', 'write', 'delete', 'manage', 'admin'],
     email_suppression: ['read', 'write', 'delete', 'manage', 'admin'],
+    model_config: ['read', 'write', 'delete', 'manage', 'admin'], // PG-199
     goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
   MANAGER: {
@@ -78,6 +79,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read', 'write', 'manage'],
     email_signature: ['read', 'write', 'delete', 'manage'],
     email_suppression: ['read', 'write', 'delete', 'manage'],
+    model_config: ['read', 'write', 'delete', 'manage'], // PG-199: managers edit model settings
     goal: ['read', 'write', 'manage'],
   },
   SALES_REP: {
@@ -98,6 +100,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
     email_suppression: [],
+    model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
   USER: {
@@ -118,6 +121,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
     email_suppression: [],
+    model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
   VIEWER: {
@@ -138,6 +142,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
     email_suppression: [],
+    model_config: ['read'], // PG-199
     goal: ['read'],
   },
 };

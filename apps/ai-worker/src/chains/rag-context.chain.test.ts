@@ -471,6 +471,33 @@ describe('RAGContextChain', () => {
       expect(result.context).toEqual([]);
     });
 
+    // PG-199 (owner Q8): a reached rag ceiling is reported, never a silent empty context.
+    it('reports a reached rag ceiling visibly', async () => {
+      const capped: IRetrievalService = {
+        search: vi.fn().mockRejectedValue(
+          new Error('Failed to generate embedding: monthly AI ceiling reached for rag', {
+            cause: Object.assign(new Error('monthly AI ceiling reached for rag'), {
+              code: 'PURPOSE_CEILING_REACHED',
+            }),
+          })
+        ),
+      };
+      const result = await createRAGContextChain(capped).retrieveContext({
+        query: 'test query',
+        tenantId: '550e8400-e29b-41d4-a716-446655440000',
+        userId: '550e8400-e29b-41d4-a716-446655440001',
+        userRoles: [],
+        sources: ['documents'],
+        maxResults: 5,
+        minRelevance: 0.7,
+        contextWindow: '7d',
+        searchType: 'hybrid',
+      });
+      expect(result.success).toBe(false);
+      expect(result.ceilingReached).toBe(true);
+      expect(result.error).toBe('monthly AI ceiling reached for rag');
+    });
+
     it('should handle RetrievalService errors gracefully', async () => {
       const failingService: IRetrievalService = {
         search: vi.fn().mockRejectedValue(new Error('Database connection failed')),

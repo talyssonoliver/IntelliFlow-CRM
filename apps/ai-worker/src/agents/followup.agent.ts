@@ -10,6 +10,7 @@ import {
 } from '@intelliflow/validators';
 import { replayConversation } from '../utils/conversation-replay.js';
 import { ensurePromptBudget } from '../utils/prompt-budget.js';
+import { isPurposeCeilingReached } from '../lib/purpose-ceiling.js';
 
 const logger = pino({
   name: 'followup-agent',
@@ -54,8 +55,6 @@ export { followupOutputSchema, type FollowupOutput } from '@intelliflow/validato
  * Provides actionable recommendations with timing and communication approach
  */
 export class FollowupAgent extends BaseAgent<FollowupInput, FollowupOutput> {
-  private readonly structuredModel: { invoke(input: unknown): Promise<unknown> };
-
   constructor(config?: Partial<BaseAgentConfig>) {
     super({
       name: 'Follow-up Strategy Specialist',
@@ -74,8 +73,6 @@ the specific context of each lead. You excel at balancing persistence with profe
       usesReflection: true,
       ...config,
     });
-
-    this.structuredModel = (this.model as any).withStructuredOutput(followupOutputSchema);
   }
 
   /**
@@ -167,7 +164,9 @@ the specific context of each lead. You excel at balancing persistence with profe
 
     // Parse structured output
     try {
-      const result = (await this.structuredModel.invoke(response)) as FollowupOutput;
+      const result = (await this.structuredFor(followupOutputSchema).invoke(
+        response
+      )) as FollowupOutput;
 
       logger.info(
         {
@@ -182,6 +181,8 @@ the specific context of each lead. You excel at balancing persistence with profe
 
       return result;
     } catch (parseError) {
+      // PG-199: a budget refusal is not a parse failure; never turn it into a fallback answer.
+      if (isPurposeCeilingReached(parseError)) throw parseError;
       logger.error(
         {
           leadId: input.leadId,

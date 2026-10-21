@@ -11,6 +11,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { PurposeCeilingReachedError } from '../lib/purpose-ceiling.js';
 
 // Pattern A: mock the factory — agent calls createLLM and uses invoke() for string-based
 // response parsing (followup agent uses JSON.parse on invoke result content).
@@ -52,6 +53,15 @@ vi.mock('../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue(DEFAULT_FOLLOWUP_PARSED),
     })),
   })),
+  // PG-199: agents resolve the tenant model at execute time.
+  createLLMForTenant: vi.fn(async () =>
+    (() => ({
+      invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(DEFAULT_FOLLOWUP_PARSED) }),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(DEFAULT_FOLLOWUP_PARSED),
+      })),
+    }))()
+  ),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
@@ -152,6 +162,10 @@ describe('FollowupAgent - Execution', () => {
     // (with isolate:false, another file's @langchain/openai mock factory may win)
     (agent as any).model = {
       invoke: vi.fn().mockResolvedValue({ content: defaultFollowupResponse }),
+      // PG-199: structured output is built from the model the task runs on.
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(DEFAULT_FOLLOWUP_PARSED),
+      })),
     };
   });
 
@@ -206,15 +220,28 @@ describe('FollowupAgent - Execution', () => {
   });
 
   describe('Parser failure - fallback path', () => {
+    it('fails the task when the purpose ceiling is reached mid-task, never a fallback answer (PG-199)', async () => {
+      (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'analysis' }) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockRejectedValue(new PurposeCeilingReachedError('reasoning', 100, 100)),
+      });
+
+      const result = await agent.execute(createFollowupTask(makeInput()));
+
+      expect(result.success).toBe(false);
+      expect(result.output).toBeUndefined();
+      expect(result.error).toContain('monthly AI ceiling reached');
+    });
+
     it('should return conservative fallback when parser fails', async () => {
-      // Pattern A (B2b): override structuredModel to throw — this triggers the catch/fallback.
+      // Pattern A (B2b): stub structuredFor (PG-199) to throw — this triggers the catch/fallback.
       // Overriding only model.invoke is insufficient because structuredModel is separate.
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: 'Unparseable response from the LLM...' }),
       };
-      (agent as any).structuredModel = {
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
         invoke: vi.fn().mockRejectedValue(new Error('ZodError: parse failure')),
-      };
+      });
 
       const input = makeInput({ assignedSalesRep: 'Alice Johnson' });
       const task = createFollowupTask(input);
@@ -233,9 +260,9 @@ describe('FollowupAgent - Execution', () => {
 
     it('should use default owner when assignedSalesRep is not provided', async () => {
       (agent as any).model = { invoke: vi.fn().mockResolvedValue({ content: 'Bad response' }) };
-      (agent as any).structuredModel = {
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
         invoke: vi.fn().mockRejectedValue(new Error('ZodError: parse failure')),
-      };
+      });
 
       const input = makeInput({ assignedSalesRep: undefined });
       const task = createFollowupTask(input);
@@ -355,7 +382,9 @@ describe('FollowupAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         leadCompany: 'TechCo',
@@ -429,7 +458,9 @@ describe('FollowupAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         leadCompany: undefined,
@@ -701,7 +732,9 @@ describe('FollowupAgent - Execution', () => {
       (agent as any).model = {
         invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(parsedOutput) }),
       };
-      (agent as any).structuredModel = { invoke: vi.fn().mockResolvedValue(parsedOutput) };
+      vi.spyOn(agent as any, 'structuredFor').mockReturnValue({
+        invoke: vi.fn().mockResolvedValue(parsedOutput),
+      });
 
       const input = makeInput({
         currentStatus: 'LOST',

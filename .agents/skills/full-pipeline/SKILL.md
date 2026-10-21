@@ -25,6 +25,22 @@ independently.
 /ralph-wiggum:ralph-loop "/full-pipeline <TASK_ID>" --max-iterations 10 --completion-promise "PIPELINE COMPLETE"
 ```
 
+## Phase 0.3: Ceremony Tier Detection (issue #579)
+
+Before running any phase, detect `ceremony_tier` once for this invocation:
+
+```bash
+npx tsx tools/scripts/ceremony-tier-audit.ts --task <TASK_ID> --json
+```
+
+Read the `tier` field (`light` or `full`) and pass it to **both**
+`/spec-session` and `/plan-session` below as `--tier={tier}`. If the script
+fails for any reason (parse error, task not found), treat the task as `full` and
+proceed — a tooling failure must never silently grant the light path. This never
+changes `/exec` or MATOP/STOA validation, which stay full regardless of tier.
+Full rules, the four deterministic conditions, and what each session does
+differently per tier: **references/ceremony-tier.md**.
+
 ## Pipeline Flow
 
 On each invocation, detect the current state and run ALL remaining phases:
@@ -35,6 +51,7 @@ PLAN_PATH = .specify/sprints/sprint-{N}/planning/{TASK_ID}-plan.md
 DELIVERY_PATH = .specify/sprints/sprint-{N}/execution/{TASK_ID}/
 ATTESTATION_PATH = .specify/sprints/sprint-{N}/attestations/{TASK_ID}/attestation.json
 
+0. Run Phase 0.3 Ceremony Tier Detection (above) — get `tier`
 1. Check CSV status for TASK_ID
 2. Check which artifacts exist
 
@@ -43,9 +60,9 @@ IF status is "Completed" or "DONE":
 
 THEN run all remaining phases in sequence:
 
-IF SPEC_PATH does NOT exist            → PHASE 1: Run /spec-session
+IF SPEC_PATH does NOT exist            → PHASE 1: Run /spec-session --tier={tier}
                                          (continue to Phase 2 on success, STOP on failure)
-IF PLAN_PATH does NOT exist            → PHASE 2: Run /plan-session
+IF PLAN_PATH does NOT exist            → PHASE 2: Run /plan-session --tier={tier}
                                          (continue to Phase 3 on success, STOP on failure)
 IF status is NOT "Completed"           → PHASE 3: Run /exec
                                          (continue to verification on success, STOP on failure)
@@ -121,3 +138,11 @@ When spec, plan, or exec discovers issues outside the current task's scope:
 - `/plan-session` — Phase 2
 - `/exec` — Phase 3
 - `/ralph-wiggum:ralph-loop` — retry driver on failure
+
+## Related Reference Docs
+
+- `references/ceremony-tier.md` — Phase 0.3 ceremony tier decision boundary
+  (issue #579)
+- `references/pipeline-phases.md` — full phase instructions, deliverable
+  verification, error recovery
+- `references/follow-up-task-protocol.md` — out-of-scope issue handling

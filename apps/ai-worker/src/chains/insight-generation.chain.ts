@@ -18,7 +18,6 @@
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
 import { aiConfig, type AIProvider } from '../config/ai.config';
-import { costTracker } from '../utils/cost-tracker';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
 import { getVersionLoader, CHAIN_TYPE_MAP } from '../versioning/chain-version-loader';
@@ -356,16 +355,8 @@ Respond with a structured JSON object containing an insights array.`,
 
       const executionTimeMs = Date.now() - startTime;
 
-      // Record cost tracking — use logical LiteLLM model name (ADR-048).
-      // LiteLLM returns OpenAI-compatible token counts for all providers.
-      if (aiConfig.costTracking.enabled) {
-        costTracker.recordUsage({
-          model: 'structured-free',
-          inputTokens: 0,
-          outputTokens: 0,
-          operationType: 'insight_generation',
-        });
-      }
+      // Cost is metered by the tracing wrapper on the model call itself (PG-199,
+      // lib/usage-metering.ts); this used to record 0/0 tokens under the wrong purpose.
 
       logger.info(
         {

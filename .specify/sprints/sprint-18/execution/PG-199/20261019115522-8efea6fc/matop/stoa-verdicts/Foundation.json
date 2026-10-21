@@ -1,0 +1,80 @@
+{
+  "stoa": "Foundation",
+  "task_id": "PG-199",
+  "run_id": "20261019115522-8efea6fc",
+  "verdict": "PASS",
+  "gates": [
+    {
+      "name": "typecheck",
+      "result": "PASS",
+      "evidence": "32-matrix-summary.txt 10-typecheck exit=0 (logs/32-10-typecheck.txt)"
+    },
+    {
+      "name": "build",
+      "result": "PASS",
+      "evidence": "12-build exit=0; turbo 16/16 successful (logs/32-12-build.txt)"
+    },
+    {
+      "name": "lint (eslint, 7 packages)",
+      "result": "PASS",
+      "evidence": "11-lint exit=0 (logs/32-11-lint.txt)"
+    },
+    {
+      "name": "format:check",
+      "result": "PASS",
+      "evidence": "logs/32-15-format-check.txt: pnpm run format:check exit 0, all matched files Prettier-clean"
+    },
+    {
+      "name": "dependency architecture (depcruise)",
+      "result": "PASS",
+      "evidence": "Domain.json: depcruise domain+application 0 errors, 2 pre-existing no-circular warnings unrelated to PG-199; plus logs/32-17-architecture.txt tests/architecture 40/40 passed"
+    },
+    {
+      "name": "artifact path lint (tools/lint/artifact-paths.ts)",
+      "result": "PASS",
+      "evidence": "logs/32-16-lint-artifacts.txt exit 0: 0 errors, 102 warnings in 9 files; none name PG-199 / model-config files"
+    },
+    {
+      "name": "co-change preflight",
+      "result": "PASS",
+      "evidence": "13a exit=0"
+    },
+    {
+      "name": "nav-wiring",
+      "result": "PASS",
+      "evidence": "13b exit=0; plan creates no page.tsx"
+    },
+    {
+      "name": "plan deliverable verification / validate-artifacts",
+      "result": "PASS",
+      "evidence": "13c exit=1 is MISMATCH only; all 5 CSV artifacts are Both/On Disk YES/In Plan YES (page.tsx, ModelConfigContent.tsx, model-config.router.ts, validators model-config.ts, context_ack.json); plan-only rows sampled all On Disk YES; mismatch is plan 107 vs CSV 5, documented in plan Exec notes"
+    },
+    {
+      "name": "knip",
+      "result": "PASS",
+      "evidence": "31-knip.txt: no unused file/export entries naming PG-199 files (model-config, purpose-ceiling, PurposeSpend); listed items are pre-existing"
+    },
+    {
+      "name": "sonar guard",
+      "result": "PASS",
+      "evidence": "32-sonar-guard.txt: only engine WARNs, no failures"
+    },
+    {
+      "name": "new-code duplication",
+      "result": "PASS",
+      "evidence": "32-new-code-duplication.txt: 1.03% (35/3408) < 3%"
+    },
+    {
+      "name": "hygiene",
+      "result": "PASS",
+      "evidence": "14-hygiene count=0"
+    }
+  ],
+  "findings": [
+    "validate-artifacts reports MISMATCH (plan 107 vs CSV 5) - accepted: every CSV artifact is in plan and on disk.",
+    "Hook/test churn (Sprint_plan_I/J, plan-lint-report, spec-tracker, IFC-310-merge.json) must not be committed; coordinator states splits reset to merge-base except PG-199 row before ship.",
+    "Node 22.14.0 vs wanted 24.x engine warning on host (known).",
+    "depcruise evidence is from STOA-Domain scope (packages/domain, application) not the full packages+apps run."
+  ],
+  "reviewed_at": "2026-10-19T15:08:30Z"
+}

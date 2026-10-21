@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-21T02:46:03.663Z",
+  "timestamp": "2026-10-21T19:46:34.021Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 75,
-    "total_endpoints": 587,
-    "total_queries": 250,
-    "total_mutations": 337,
+    "total_routers": 76,
+    "total_endpoints": 590,
+    "total_queries": 251,
+    "total_mutations": 339,
     "routers": [
       {
         "name": "contact",
@@ -1351,6 +1351,12 @@
         "mutations": 2
       },
       {
+        "name": "modelConfig",
+        "endpoints": 3,
+        "queries": 1,
+        "mutations": 2
+      },
+      {
         "name": "reportSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1474,7 +1480,7 @@
   },
   "database_inventory": {
     "total_tables": 207,
-    "total_fields": 2993,
+    "total_fields": 2996,
     "total_indexes": 924,
     "total_relations": 293,
     "tables_with_embeddings": 4,
@@ -2020,6 +2026,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantAIConfig",
+        "fields": 13,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "LeadActivity",
         "fields": 13,
         "indexes": 4,
@@ -2339,13 +2352,6 @@
         "fields": 11,
         "indexes": 4,
         "relations": 0,
-        "hasEmbedding": false
-      },
-      {
-        "name": "TenantAIConfig",
-        "fields": 10,
-        "indexes": 3,
-        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -3288,11 +3294,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 62,
-    "total_schemas": 657,
+    "total_validators": 63,
+    "total_schemas": 662,
     "by_complexity": {
       "complex": 36,
-      "moderate": 22,
+      "moderate": 23,
       "simple": 4
     },
     "validators": [
@@ -3539,6 +3545,12 @@
       {
         "name": "email-signatures",
         "file": "email-signatures.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "model-config",
+        "file": "model-config.ts",
         "schemas": 5,
         "complexity": "moderate"
       },
@@ -4120,6 +4132,23 @@
         "name": "conversation.archiveOld",
         "method": "POST",
         "description": "Archive old"
+      }
+    ],
+    "modelConfig": [
+      {
+        "name": "modelConfig.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "modelConfig.update",
+        "method": "POST",
+        "description": "Update modelConfig"
+      },
+      {
+        "name": "modelConfig.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
       }
     ],
     "aiMonitoring": [

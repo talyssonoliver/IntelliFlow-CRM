@@ -237,7 +237,7 @@ intelliflow.com
 │   ├── /agent-approvals/lead-scoring     Lead scoring dashboard
 │   ├── /agent-approvals/logs             AI action logs
 │   │   └── /agent-approvals/logs/[id]    Log detail
-│   ├── /agent-approvals/model-config     Model configuration
+│   ├── /agent-approvals/model-config     Models, fallbacks and AI cost ceilings per purpose (PG-199)
 │   ├── /agent-approvals/preview          Preview AI actions
 │   ├── /agent-approvals/sentiment        Sentiment analysis
 │   └── /agent-approvals/tools            Agent tools (IFC-191)

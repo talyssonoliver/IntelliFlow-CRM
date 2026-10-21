@@ -16,7 +16,7 @@ import type { Job, Queue } from 'bullmq';
 import { z } from 'zod';
 import pino from 'pino';
 import { context as otelContext, propagation } from '@opentelemetry/api';
-import { createLLM } from '../lib/llm-factory.js';
+import { createLLMForTenant } from '../lib/llm-factory.js';
 
 const logger = pino({
   name: 'summarize-conversation-job',
@@ -218,9 +218,13 @@ function buildFallbackDigest(messages: MessageRow[]): string {
   return `[Digest — LLM unavailable] Recent context: ${digest}`;
 }
 
-/** Invoke the LLM to produce a 3–5 sentence summary with embedded key facts. */
-async function generateSummaryWithLLM(transcript: string): Promise<string> {
-  const llm = createLLM('reasoning', 'free');
+/**
+ * Invoke the LLM to produce a 3–5 sentence summary with embedded key facts.
+ * PG-199: runs on the tenant's reasoning settings (pin, fallbacks, ceiling); a reached
+ * ceiling throws before any model call and the caller writes the fallback digest.
+ */
+async function generateSummaryWithLLM(transcript: string, tenantId: string): Promise<string> {
+  const llm = await createLLMForTenant('reasoning', 'free', { tenantId });
 
   const prompt = [
     'You are an AI assistant that summarizes CRM conversation transcripts.',
@@ -315,7 +319,7 @@ export async function processSummarizeJob(
 
   try {
     summary = await Promise.race([
-      generateSummaryWithLLM(transcript),
+      generateSummaryWithLLM(transcript, tenantId),
       new Promise<never>((_, reject) =>
         setTimeout(
           () => reject(new Error(`LLM inference timed out after ${LLM_TIMEOUT_MS}ms`)),
