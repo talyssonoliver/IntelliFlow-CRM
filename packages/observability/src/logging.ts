@@ -73,6 +73,35 @@ export function createLogger(config: LoggerConfig): pino.Logger {
     // Timestamp configuration
     timestamp: pino.stdTimeFunctions.isoTime,
 
+    // Never export credentials or email addresses (IFC-074): records also leave
+    // the process over OTLP to Loki. `*.x` only matches one level down, so the
+    // bare top-level keys are listed too.
+    redact: {
+      paths: [
+        'email',
+        '*.email',
+        'userEmail',
+        'password',
+        '*.password',
+        'token',
+        '*.token',
+        'accessToken',
+        'refreshToken',
+        'apiKey',
+        '*.apiKey',
+        'api_key',
+        'secret',
+        '*.secret',
+        'authorization',
+        '*.authorization',
+        'cookie',
+        '*.cookie',
+        'req.headers.authorization',
+        'req.headers.cookie',
+      ],
+      censor: '[REDACTED]',
+    },
+
     // Serializers for common objects
     serializers: {
       err: pino.stdSerializers.err,

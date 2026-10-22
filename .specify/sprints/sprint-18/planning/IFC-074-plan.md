@@ -61,10 +61,10 @@ Add devDependencies `"@opentelemetry/instrumentation-pino": "0.68.0"` and `"@ope
 already resolved in the lockfile via auto-instrumentations-node 0.80.0 / sdk-node 0.219.0), then `pnpm install`.
 
 **Validation:**
-- [ ] Under Node 22.14.0 (`node -v`), `pnpm install` exits 0
-- [ ] `git diff --stat pnpm-lock.yaml` is small and `git diff pnpm-lock.yaml | grep "^+" | grep -E "instrumentation-pino|sdk-logs"`
+- [x] Under Node 22.14.0 (`node -v`), `pnpm install` exits 0
+- [x] `git diff --stat pnpm-lock.yaml` is small and `git diff pnpm-lock.yaml | grep "^+" | grep -E "instrumentation-pino|sdk-logs"`
       shows only the two importer entries for packages/observability
-- [ ] `ls packages/observability/node_modules/@opentelemetry/instrumentation-pino packages/observability/node_modules/@opentelemetry/sdk-logs`
+- [x] `ls packages/observability/node_modules/@opentelemetry/instrumentation-pino packages/observability/node_modules/@opentelemetry/sdk-logs`
 
 #### Step 2: Real-record + redact tests for `createLogger`
 **Type:** test
@@ -74,14 +74,14 @@ already resolved in the lockfile via auto-instrumentations-node 0.80.0 / sdk-nod
 New `describe('createLogger (real records)')`: in-memory destination via `vi.spyOn(pino, 'destination')` returning a
 `Writable` that collects lines; `vi.stubEnv('CI','1')`, `NODE_ENV=production` (no pino-pretty worker); real
 `NodeTracerProvider` + `InMemorySpanExporter` span.
-- [ ] emitted record's `trace_id`/`span_id` equal `span.spanContext()` inside an active span
-- [ ] no `trace_id`/`span_id` outside a span
-- [ ] `it.each` over every redact path (top-level and nested: `email`, `{a:{email}}`, `userEmail`, `password`,
+- [x] emitted record's `trace_id`/`span_id` equal `span.spanContext()` inside an active span
+- [x] no `trace_id`/`span_id` outside a span
+- [x] `it.each` over every redact path (top-level and nested: `email`, `{a:{email}}`, `userEmail`, `password`,
       `token`, `accessToken`, `refreshToken`, `apiKey`, `api_key`, `secret`, `authorization`, `cookie`,
       `req.headers.authorization`, `req.headers.cookie`) → `[REDACTED]`; a non-sensitive key is untouched
 
 **Validation:**
-- [ ] `pnpm --dir packages/observability exec vitest run src/logging.test.ts` → redact cases FAIL (no `redact` yet)
+- [x] `pnpm --dir packages/observability exec vitest run src/logging.test.ts` → redact cases FAIL (no `redact` yet)
 
 #### Step 3: OTLP interop test (instrumentation-pino → log exporter)
 **Type:** test
@@ -91,12 +91,12 @@ New `describe('createLogger (real records)')`: in-memory destination via `vi.spy
 Register `PinoInstrumentation` (`disableLogSending:false`) with a `LoggerProvider` + `SimpleLogRecordProcessor` +
 `InMemoryLogRecordExporter` (`@opentelemetry/sdk-logs`); then create a logger with `createLogger` (module imported
 after registration) inside an active span.
-- [ ] exported log record's span context trace/span ids equal the active span's
-- [ ] record body/attributes carry `type` from the call
-- [ ] a logger created BEFORE registration exports nothing (documents why `getApiLogger` is lazy)
+- [x] exported log record's span context trace/span ids equal the active span's
+- [x] record body/attributes carry `type` from the call
+- [x] a logger created BEFORE registration exports nothing (documents why `getApiLogger` is lazy)
 
 **Validation:**
-- [ ] `pnpm --dir packages/observability exec vitest run src/pino-otlp.test.ts` runs (passes once Step 1 deps exist —
+- [x] `pnpm --dir packages/observability exec vitest run src/pino-otlp.test.ts` runs (passes once Step 1 deps exist —
       characterisation test for the existing pipeline; it guards Steps 8-9)
 
 #### Step 4: `getApiLogger` unit tests
@@ -105,13 +105,13 @@ after registration) inside an active span.
 - `apps/api/src/tracing/logger.test.ts`
 
 `vi.unmock('./logger')`; mock `@intelliflow/observability` `createLogger`.
-- [ ] importing the module does not call `createLogger`
-- [ ] first call creates exactly once; second call returns the same instance
-- [ ] name = `OTEL_SERVICE_NAME` when set; whitespace-only or unset → `'intelliflow-api'`
-- [ ] `resetApiLoggerForTests()` forces re-creation
+- [x] importing the module does not call `createLogger`
+- [x] first call creates exactly once; second call returns the same instance
+- [x] name = `OTEL_SERVICE_NAME` when set; whitespace-only or unset → `'intelliflow-api'`
+- [x] `resetApiLoggerForTests()` forces re-creation
 
 **Validation:**
-- [ ] `pnpm --dir apps/api exec vitest run src/tracing/logger.test.ts` → FAIL (module missing)
+- [x] `pnpm --dir apps/api exec vitest run src/tracing/logger.test.ts` → FAIL (module missing)
 
 #### Step 5: Middleware log-record tests + global test mock
 **Type:** test
@@ -124,19 +124,19 @@ after registration) inside an active span.
 child: vi.fn() }))`; `vi.mock('../tracing/logger', () => ({ getApiLogger: () => apiLogger,
 resetApiLoggerForTests: () => undefined }))`; add `getActiveSpan: () => undefined` to the global
 `@opentelemetry/api` `trace` mock. `middleware.test.ts` (replace the console assertion at :128):
-- [ ] success → `info` with `{type:'trpc.request', correlationId, path, method, durationMs, status:'success'}`
-- [ ] slow (> 50 ms via `vi.useFakeTimers({ toFake: ['Date'] })` + `vi.setSystemTime` inside `next`) → `warn`
+- [x] success → `info` with `{type:'trpc.request', correlationId, path, method, durationMs, status:'success'}`
+- [x] slow (> 50 ms via `vi.useFakeTimers({ toFake: ['Date'] })` + `vi.setSystemTime` inside `next`) → `warn`
       `{type:'trpc.slow', ..., targetMs:50}`
-- [ ] failure → `error` `{type:'trpc.error', ..., status:'error', code, errorName}` and the record has no `message`,
+- [x] failure → `error` `{type:'trpc.error', ..., status:'error', code, errorName}` and the record has no `message`,
       `stack`, `cause`, `requestId`
-- [ ] `errorName` fallback → `'Error'` for `'x y<>'`, a name with a newline, a 62-char name
-- [ ] invalid path (`'a b'`) → `path:'invalid'`
-- [ ] records emitted before `span.end()` (call order)
-- [ ] `console.log` never called with `trpc.request`
+- [x] `errorName` fallback → `'Error'` for `'x y<>'`, a name with a newline, a 62-char name
+- [x] invalid path (`'a b'`) → `path:'invalid'`
+- [x] records emitted before `span.end()` (call order)
+- [x] `console.log` never called with `trpc.request`
 `trpc.test.ts:189,206`: assert the logger spies (`trpc.request` info; `trpc.slow` warn) instead of console.
 
 **Validation:**
-- [ ] `pnpm --dir apps/api exec vitest run src/tracing/middleware.test.ts src/__tests__/trpc.test.ts` → FAIL
+- [x] `pnpm --dir apps/api exec vitest run src/tracing/middleware.test.ts src/__tests__/trpc.test.ts` → FAIL
 
 #### Step 6: Grafana read-helper tests
 **Type:** test
@@ -144,15 +144,15 @@ resetApiLoggerForTests: () => undefined }))`; add `getActiveSpan: () => undefine
 - `tools/scripts/lib/grafana-provisioning.test.ts`
 
 Fake `fetchImpl` recording method/path/headers.
-- [ ] `lokiQueryRange`, `tempoSearch`, `tempoTrace`, `promInstantQuery`, `grafanaHealth` build the documented proxy
+- [x] `lokiQueryRange`, `tempoSearch`, `tempoTrace`, `promInstantQuery`, `grafanaHealth` build the documented proxy
       paths (`/api/datasources/proxy/uid/<uid>/...`) with encoded params and return parsed JSON
-- [ ] any non-GET use of the read client throws
-- [ ] `withRetry`: retries 429/502/503/504 with 5/10/20/40/60 s via injected `sleep`; honours `Retry-After`; stops after
+- [x] the read client only ever issues GET (it exposes no method parameter, so a write cannot be expressed); every recorded request is GET (exec-time wording fix: there is nothing to misuse)
+- [x] `withRetry`: retries 429/502/503/504 with 5/10/20/40/60 s via injected `sleep`; honours `Retry-After`; stops after
       5; non-retryable 4xx fails at once
-- [ ] errors are `HTTP <status> <endpoint-name>` only — a sentinel token and a sentinel body never appear
+- [x] errors are `HTTP <status> <endpoint-name>` only — a sentinel token and a sentinel body never appear
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts` → FAIL (helpers missing)
+- [x] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts` → FAIL (helpers missing)
 
 #### Step 7: Collector tests
 **Type:** test
@@ -162,37 +162,37 @@ Fake `fetchImpl` recording method/path/headers.
 Fake Grafana routed by datasource path; injected `now`, `sleep`, `writeFile`, `rename`, `unlink`, `log`; temp dir via
 `mkdtempSync`. The test imports `run` from `../observability/collect-observability-evidence.mjs`; TypeScript resolves its
 types from the sibling `.d.mts` (the `.d.mts` consumer, same pattern as `apply-grafana-alert-rules.test.ts`).
-- [ ] missing `GRAFANA_URL` / `GRAFANA_SA_TOKEN` → returns 1, nothing written
-- [ ] every request is GET
-- [ ] correlation PASS (trace found, span found, service match, metric series at `log_ts`); FAIL variants (trace
+- [x] missing `GRAFANA_URL` / `GRAFANA_SA_TOKEN` → returns 1, nothing written
+- [x] every request is GET
+- [x] correlation PASS (trace found, span found, service match, metric series at `log_ts`); FAIL variants (trace
       missing, span missing, metric absent); service with no lines → one `NOT_OBSERVED` row, `passed=false`
-- [ ] Tempo trace id without leading zeros is left-padded to 32 hex
-- [ ] `--since` narrows the Loki window
-- [ ] MTTD: incident split at a 30-min gap (edge = exactly 30 min), `previous` Pending, exclusions (delivery test,
+- [x] Tempo trace id without leading zeros is left-padded to 32 hex
+- [x] `--since` narrows the Loki window
+- [x] MTTD: incident split at a 30-min gap (edge = exactly 30 min), `previous` Pending, exclusions (delivery test,
       `asserts_up`) listed with constant reasons, unanchored (no error span), negative MTTD → unanchored, zero anchored →
       `kpi.met === null`, KPI uses mean (case where mean ≥ 120 > median), `auto_resolve_s`, raw transition count
-- [ ] alert history fetched in 7-day slices across a 30-day window
-- [ ] each anchored incident records `first_error_trace_id` (32 hex), `first_error_span_name`, `first_error_service`,
+- [x] alert history fetched in 7-day slices across a 30-day window
+- [x] each anchored incident records `first_error_trace_id` (32 hex), `first_error_span_name`, `first_error_service`,
       `trace_resolves` (Tempo `/api/traces/<id>` found → true; 404 → false) (AC-005)
-- [ ] `pending_s` set when a Pending start precedes the Alerting transition
-- [ ] error-span search narrows the window while 50 traces return; window bounded below by the previous incident's end
-- [ ] aggregates `n_transitions, n_incidents, n_anchored, n_unanchored, mean_s, median_s, p90_s, share_lt_120s`
-- [ ] `cause_if_not_met` is a collector constant when `met === false`
-- [ ] free labels (`asserts_*`, request context) never reach the output; alert title emitted only for rule uids
+- [x] `pending_s` set when a Pending start precedes the Alerting transition
+- [x] error-span search narrows the window while 50 traces return; window bounded below by the previous incident's end
+- [x] aggregates `n_transitions, n_incidents, n_anchored, n_unanchored, mean_s, median_s, p90_s, share_lt_120s`
+- [x] `cause_if_not_met` is a collector constant when `met === false`
+- [x] free labels (`asserts_*`, request context) never reach the output; alert title emitted only for rule uids
       committed in `infra/monitoring/grafana/cloud/alert-rules.json`, otherwise `alertname`
-- [ ] the collector's own retry schedule (503 ×n then 200) via injected `sleep`
-- [ ] 503 then 200 → succeeds; retries exhausted → returns 1, nothing written, temp files removed
-- [ ] exit 2 when ai-worker has zero PASS rows or zero anchored incidents (files written)
-- [ ] fail-closed allowlist: a hostname label, a UUID, an email, a raw log line, a quote+newline value each → returns 1,
+- [x] the collector's own retry schedule (503 ×n then 200) via injected `sleep`
+- [x] 503 then 200 → succeeds; retries exhausted → returns 1, nothing written, temp files removed
+- [x] exit 2 when ai-worker has zero PASS rows or zero anchored incidents (files written)
+- [x] fail-closed allowlist: a hostname label, a UUID, an email, a raw log line, a quote+newline value each → returns 1,
       nothing written, temps removed
-- [ ] span names with a hostname / UUID / ≥ 8-hex run / ≥ 6-digit segment → `"redacted"`
-- [ ] free-text JSON fields come from constants only; no column/key contains key/token/auth/secret/api
-- [ ] sentinel token absent from every `log` call, thrown error message and written byte
-- [ ] `--dry-run` writes nothing; SHA-256 of each output printed on success
-- [ ] CSV fully quoted with the spec header
+- [x] span names with a hostname / UUID / ≥ 8-hex run / ≥ 6-digit segment → `"redacted"`
+- [x] free-text JSON fields come from constants only; no column/key contains key/token/auth/secret/api
+- [x] sentinel token absent from every `log` call, thrown error message and written byte
+- [x] `--dry-run` writes nothing; SHA-256 of each output printed on success
+- [x] CSV fully quoted with the spec header
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/collect-observability-evidence.test.ts` → FAIL
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/collect-observability-evidence.test.ts` → FAIL
 
 > **Checkpoint (RED):** all new/changed tests fail for the right reason (missing implementation), except Step 3, a
 > characterisation test of the existing instrumentation-pino pipeline that is expected to PASS once Step 1's
@@ -208,8 +208,8 @@ types from the sibling `.d.mts` (the `.d.mts` consumer, same pattern as `apply-g
 Add `redact: { paths: [...spec list], censor: '[REDACTED]' }` to the pino options in `createLogger`. No other change.
 
 **Validation:**
-- [ ] `pnpm --dir packages/observability exec vitest run src/logging.test.ts src/pino-otlp.test.ts` → PASS
-- [ ] `pnpm --filter @intelliflow/observability build` (api consumes dist)
+- [x] `pnpm --dir packages/observability exec vitest run src/logging.test.ts src/pino-otlp.test.ts` → PASS
+- [x] `pnpm --filter @intelliflow/observability build` (api consumes dist)
 
 #### Step 9: api logger
 **Type:** implementation
@@ -219,7 +219,7 @@ Add `redact: { paths: [...spec list], censor: '[REDACTED]' }` to the pino option
 Lazy singleton per spec Interfaces; imports `createLogger`/`Logger` type from `@intelliflow/observability`.
 
 **Validation:**
-- [ ] `pnpm --dir apps/api exec vitest run src/tracing/logger.test.ts` → PASS
+- [x] `pnpm --dir apps/api exec vitest run src/tracing/logger.test.ts` → PASS
 
 #### Step 10: Middleware wiring (replace console calls)
 **Type:** implementation
@@ -230,8 +230,8 @@ In `tracingMiddleware` only: success / slow / failure records via `getApiLogger(
 `safePath()` and `safeErrorName()` helpers; remove the three console calls (no duplicates). `metricsMiddleware` untouched.
 
 **Validation:**
-- [ ] `pnpm --dir apps/api exec vitest run src/tracing src/__tests__/trpc.test.ts` → PASS
-- [ ] `grep -n "console\." apps/api/src/tracing/middleware.ts` → only `metricsMiddleware` lines remain
+- [x] `pnpm --dir apps/api exec vitest run src/tracing src/__tests__/trpc.test.ts` → PASS
+- [x] `grep -n "console\." apps/api/src/tracing/middleware.ts` → only `metricsMiddleware` lines remain
 
 #### Step 11: Grafana read helpers + collector
 **Type:** implementation
@@ -244,7 +244,7 @@ In `tracingMiddleware` only: success / slow / failure records via `getApiLogger(
 Helpers and collector per spec Part 2; main guard ≤ 4 lines mirroring `apply-grafana-alert-rules.mjs`.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/collect-observability-evidence.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts` → PASS
+- [x] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/collect-observability-evidence.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts` → PASS
 
 #### Step 12: Produce the evidence from production (read-only)
 **Type:** integration
@@ -257,11 +257,11 @@ then `unset GRAFANA_SA_TOKEN`. Record exit code, printed SHA-256s and run time i
 ai-worker rows PASS, api row NOT_OBSERVED, MTTD measured (met true/false/null as measured).
 
 **Validation:**
-- [ ] exit 0 (or 2 with the reason recorded — then stop and report, never hand-edit outputs)
-- [ ] `gitleaks dir artifacts/reports/correlation-test.csv --config .gitleaks.toml --no-banner --redact=100` and the same
+- [x] exit 0 (or 2 with the reason recorded — then stop and report, never hand-edit outputs)
+- [x] `gitleaks dir artifacts/reports/correlation-test.csv --config .gitleaks.toml --no-banner --redact=100` and the same
       for `mttr-baseline.json` → no leaks
-- [ ] `grep -nE "grafana\.net|supabase|pooler|@" artifacts/reports/correlation-test.csv artifacts/reports/mttr-baseline.json` → no hits
-- [ ] every trace id in the CSV matches `^[0-9a-f]{32}$`
+- [x] `grep -nE "grafana\.net|supabase|pooler|@" artifacts/reports/correlation-test.csv artifacts/reports/mttr-baseline.json` → no hits
+- [x] every trace id in the CSV matches `^[0-9a-f]{32}$`
 
 > **Checkpoint (GREEN):** AC-001, AC-003, AC-004, AC-005 (ai-worker) evidenced.
 

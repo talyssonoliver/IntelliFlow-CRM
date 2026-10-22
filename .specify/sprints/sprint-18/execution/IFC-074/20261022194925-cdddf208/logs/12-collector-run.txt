@@ -1,0 +1,5 @@
+# collector run (rerun after cause-of-miss fix) started 2026-10-22T20:08:25Z, Node v22.14.0
+wrote artifacts\reports\correlation-test.csv sha256 4f7e7360e093123ec682752fa1a4f69330a48169ba35b645a71935528c7f8038
+wrote artifacts\reports\mttr-baseline.json sha256 e15edd6833c2f335e65f36876acfe8b1f8071e838d952eee19f63154d895a7db
+correlation rows 11 (PASS 10); incidents 66, anchored 63, mean MTTD 268.739 s, KPI met false
+exit=0

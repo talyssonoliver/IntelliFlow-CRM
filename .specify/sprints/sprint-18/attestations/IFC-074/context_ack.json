@@ -1,0 +1,36 @@
+{
+  "task_id": "IFC-074",
+  "run_id": "20261022194925-cdddf208",
+  "files_read": [
+    {
+      "path": ".specify/memory/Framework.md",
+      "sha256": "62bfcd54fccbfcb5dcf3a67b4811d638371191fa1c51d11ddd8218be6f5e26ad",
+      "read_at": "2026-10-22T19:49:41Z"
+    },
+    {
+      "path": "audit-matrix.yml",
+      "sha256": "bff47a6dd151d7ee3b173d9f47367687237102f4640e49212dac9addf7e0a7ff",
+      "read_at": "2026-10-22T19:49:41Z"
+    },
+    {
+      "path": "docs/architecture/adr/ADR-001-modern-stack.md",
+      "sha256": "458b7acba09e5bfac4323c934b13c4d814885f02545271814fb01c40c33fe8a2",
+      "read_at": "2026-10-22T19:49:41Z"
+    },
+    {
+      "path": "apps/api/src/trpc.ts",
+      "sha256": "d751d6fa34e2ad639a9a2b19b4e5cbbfbb7cc82ffbd8904de4d76a5e2a92077c",
+      "read_at": "2026-10-22T19:49:41Z"
+    }
+  ],
+  "invariants_acknowledged": [
+    "Evidence comes only from production telemetry read by the collector; no hand-written, in-memory or simulated trace IDs or incidents (constitution, ADR-017, IFC-074 close rule).",
+    "The api request log goes through pino created lazily after the OTel SDK starts, so instrumentation-pino exports it over OTLP with trace_id/span_id.",
+    "The api log record never carries error.message, stack, cause, requestId, email or request input; path and errorName are allowlist-sanitised.",
+    "Committed evidence holds only allowlisted fields (hex ids, service, timestamps, numbers, rule uid/alertname, sanitised span names) and passes gitleaks with no new allowlist entry.",
+    "The collector is GET-only, reads GRAFANA_URL/GRAFANA_SA_TOKEN from env only, and never prints or writes the token, URL or response bodies.",
+    "MTTD KPI statistic is the mean of anchored incidents; met is reported as measured (true/false/null), never asserted.",
+    "The Sprint_plan row stays In Progress until a post-deploy collector run proves the api row (owner ruling 2026-10-22, option A)."
+  ],
+  "created_at": "2026-10-22T19:49:41Z"
+}

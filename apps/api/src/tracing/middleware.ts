@@ -19,6 +19,7 @@ import { trace, SpanStatusCode, type Span } from '@opentelemetry/api';
 import { captureException, setUser, setTag, setContext } from './sentry';
 import { runWithQueryBudget, budgetForRoute, getQueryBudgetSnapshot } from '@intelliflow/db';
 import type { Context } from '../context';
+import { getApiLogger } from './logger';
 
 // Initialize tRPC for middleware
 const t = initTRPC.context<Context>().create();
@@ -47,6 +48,17 @@ function applyQueryBudgetToSpan(
       snapshot.repeated.map((r) => `${r.fingerprint}x${r.count}`).join('; ')
     );
   }
+}
+
+/** tRPC procedure path as logged; anything outside the procedure-name pattern is not echoed. */
+function safePath(path: string): string {
+  return /^[A-Za-z0-9_.]{1,120}$/.test(path) ? path : 'invalid';
+}
+
+/** Error class name as logged; arbitrary `.name` text is not echoed. */
+function safeErrorName(error: unknown): string {
+  const name = error instanceof Error ? error.name : '';
+  return /^[A-Za-z][A-Za-z0-9_]{0,60}$/.test(name) ? name : 'Error';
 }
 
 /**
@@ -147,27 +159,35 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
           if (budgetSnapshot) {
             applyQueryBudgetToSpan(span, budgetSnapshot);
           }
-          span.end();
 
-          // Log slow requests
+          // IFC-074: structured records through pino, emitted while the span is
+          // still current so they carry its trace_id/span_id to Loki.
+          const logPath = safePath(path);
           if (duration > 50) {
-            console.warn(
-              `[Tracing] SLOW REQUEST: ${type} ${path} took ${duration}ms (target: <50ms)`,
-              { correlationId }
+            getApiLogger().warn(
+              {
+                type: 'trpc.slow',
+                correlationId,
+                path: logPath,
+                method: type,
+                durationMs: duration,
+                targetMs: 50,
+              },
+              'slow trpc request'
             );
           }
-
-          // Log successful request
-          console.log(
-            JSON.stringify({
+          getApiLogger().info(
+            {
               type: 'trpc.request',
               correlationId,
-              path,
+              path: logPath,
               method: type,
               durationMs: duration,
               status: 'success',
-            })
+            },
+            'trpc request'
           );
+          span.end();
 
           return result;
         } catch (error) {
@@ -181,6 +201,22 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
           });
           span.recordException(error as Error);
           span.setAttribute('duration.ms', duration);
+
+          // IFC-074: no error message, stack or cause on the record — free text
+          // can carry user input. Sentry and the span keep the message.
+          getApiLogger().error(
+            {
+              type: 'trpc.error',
+              correlationId,
+              path: safePath(path),
+              method: type,
+              durationMs: duration,
+              status: 'error',
+              ...(error instanceof TRPCError && { code: error.code }),
+              errorName: safeErrorName(error),
+            },
+            'trpc error'
+          );
           span.end();
 
           // Capture to Sentry
@@ -197,20 +233,6 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
               },
             });
           }
-
-          // Log error
-          console.error(
-            JSON.stringify({
-              type: 'trpc.error',
-              correlationId,
-              path,
-              method: type,
-              durationMs: duration,
-              status: 'error',
-              error: error instanceof Error ? error.message : 'Unknown error',
-              ...(error instanceof TRPCError && { code: error.code }),
-            })
-          );
 
           // Re-throw error
           throw error;

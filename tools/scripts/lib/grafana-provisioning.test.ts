@@ -6,11 +6,19 @@ import {
   buildAlertRulePayload,
   createApiClient,
   createGrafanaClient,
+  createReadOnlyClient,
+  getRuleGroup,
+  grafanaHealth,
+  listAlertRules,
   loadValidConfig,
+  lokiQueryRange,
+  promInstantQuery,
   querySeriesCount,
   redactBody,
   requireEnv,
   RETRY_DELAYS_MS,
+  tempoSearch,
+  tempoTrace,
 } from './grafana-provisioning.mjs';
 
 const TOKEN = 'z'.repeat(24);
@@ -337,5 +345,251 @@ describe('buildAlertRulePayload', () => {
     expect(a.labels.source).toBe('ifc-032');
     expect(b.labels.source).toBe('ifc-811');
     expect({ ...a, labels: undefined }).toEqual({ ...b, labels: undefined });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Read-only client + query helpers (IFC-074 evidence collector)
+// ---------------------------------------------------------------------------
+
+type FakeResponse = { status: number; body?: unknown; retryAfter?: string };
+type FakeInit = { method?: string; headers?: Record<string, string> };
+
+function fakeFetch(responses: FakeResponse[]) {
+  const calls: Array<{ url: string; init: FakeInit }> = [];
+  const fetchImpl = async (url: string, init: FakeInit) => {
+    calls.push({ url, init });
+    const next = responses.shift() ?? { status: 200, body: {} };
+    return {
+      status: next.status,
+      headers: {
+        get: (name: string) =>
+          name.toLowerCase() === 'retry-after' ? (next.retryAfter ?? null) : null,
+      },
+      text: async () => (next.body === undefined ? '' : JSON.stringify(next.body)),
+    };
+  };
+  return { calls, fetchImpl };
+}
+
+const noSleep = async () => {};
+
+describe('createReadOnlyClient', () => {
+  it('issues only GET requests with the bearer token and parses JSON', async () => {
+    const { calls, fetchImpl } = fakeFetch([{ status: 200, body: { ok: true } }]);
+    const get = createReadOnlyClient(`${BASE_URL}/`, TOKEN, { fetchImpl, sleep: noSleep });
+
+    const out = await get('thing', '/api/thing');
+
+    expect(out).toEqual({ ok: true });
+    expect(calls).toHaveLength(1);
+    expect(calls[0].url).toBe(`${BASE_URL}/api/thing`);
+    expect(calls[0].init.method).toBe('GET');
+    expect(calls[0].init.headers?.Authorization).toBe(`Bearer ${TOKEN}`);
+    expect(Object.keys(calls[0].init)).not.toContain('body');
+  });
+
+  it('returns undefined for an empty 2xx body', async () => {
+    const { fetchImpl } = fakeFetch([{ status: 204 }]);
+    const get = createReadOnlyClient(BASE_URL, TOKEN, { fetchImpl, sleep: noSleep });
+    expect(await get('thing', '/api/thing')).toBeUndefined();
+  });
+
+  it.each([429, 502, 503, 504])(
+    'retries HTTP %i on the 5/10/20/40/60 s schedule',
+    async (status) => {
+      const { calls, fetchImpl } = fakeFetch([
+        { status },
+        { status },
+        { status: 200, body: { ok: 1 } },
+      ]);
+      const waits: number[] = [];
+      const get = createReadOnlyClient(BASE_URL, TOKEN, {
+        fetchImpl,
+        sleep: async (ms: number) => {
+          waits.push(ms);
+        },
+      });
+
+      expect(await get('thing', '/api/thing')).toEqual({ ok: 1 });
+      expect(calls).toHaveLength(3);
+      expect(waits).toEqual([5000, 10000]);
+    }
+  );
+
+  it('honours Retry-After (seconds), capped at 60 s', async () => {
+    const { fetchImpl } = fakeFetch([
+      { status: 503, retryAfter: '3' },
+      { status: 429, retryAfter: '600' },
+      { status: 200, body: {} },
+    ]);
+    const waits: number[] = [];
+    const get = createReadOnlyClient(BASE_URL, TOKEN, {
+      fetchImpl,
+      sleep: async (ms: number) => {
+        waits.push(ms);
+      },
+    });
+
+    await get('thing', '/api/thing');
+    expect(waits).toEqual([3000, 60000]);
+  });
+
+  it('gives up after five retries with HTTP <status> <name>', async () => {
+    const { calls, fetchImpl } = fakeFetch(Array.from({ length: 6 }, () => ({ status: 503 })));
+    const waits: number[] = [];
+    const get = createReadOnlyClient(BASE_URL, TOKEN, {
+      fetchImpl,
+      sleep: async (ms: number) => {
+        waits.push(ms);
+      },
+    });
+
+    await expect(get('loki query_range', '/x')).rejects.toThrow(/^HTTP 503 loki query_range$/);
+    expect(calls).toHaveLength(6);
+    expect(waits).toEqual([5000, 10000, 20000, 40000, 60000]);
+  });
+
+  it('fails at once on a non-retryable status, without the body, URL or token', async () => {
+    const sentinelBody = { message: `leaked ${TOKEN} at ${BASE_URL}` };
+    const { calls, fetchImpl } = fakeFetch([{ status: 401, body: sentinelBody }]);
+    const get = createReadOnlyClient(BASE_URL, TOKEN, { fetchImpl, sleep: noSleep });
+
+    const err = await get('alert rules', '/api/v1/provisioning/alert-rules').catch((e: Error) => e);
+
+    expect(calls).toHaveLength(1);
+    expect((err as Error).message).toBe('HTTP 401 alert rules');
+    expect((err as Error).message).not.toContain(TOKEN);
+    expect((err as Error).message).not.toContain(BASE_URL);
+  });
+
+  it('returns null for 404 only when allowNotFound is set', async () => {
+    const a = fakeFetch([{ status: 404 }]);
+    const getA = createReadOnlyClient(BASE_URL, TOKEN, { fetchImpl: a.fetchImpl, sleep: noSleep });
+    expect(await getA('tempo trace', '/t', { allowNotFound: true })).toBeNull();
+
+    const b = fakeFetch([{ status: 404 }]);
+    const getB = createReadOnlyClient(BASE_URL, TOKEN, { fetchImpl: b.fetchImpl, sleep: noSleep });
+    await expect(getB('tempo trace', '/t')).rejects.toThrow('HTTP 404 tempo trace');
+  });
+
+  it('rejects a 2xx body that is not JSON, without echoing it', async () => {
+    const fetchImpl = async () => ({
+      status: 200,
+      headers: { get: () => null },
+      text: async () => `<html>${TOKEN}</html>`,
+    });
+    const get = createReadOnlyClient(BASE_URL, TOKEN, { fetchImpl, sleep: noSleep });
+
+    const err = await get('grafana health', '/api/health').catch((e: Error) => e);
+    expect((err as Error).message).toBe('invalid JSON from grafana health');
+  });
+
+  it('defaults to the global fetch and a real timer when not injected', () => {
+    expect(() => createReadOnlyClient(BASE_URL, TOKEN)).not.toThrow();
+  });
+});
+
+describe('Grafana read helpers', () => {
+  function recordingGet(result: unknown = { ok: true }) {
+    const calls: Array<{ name: string; path: string; opts?: unknown }> = [];
+    const get = async (name: string, path: string, opts?: unknown) => {
+      calls.push({ name, path, opts });
+      return result;
+    };
+    return { calls, get };
+  }
+
+  it('grafanaHealth GETs /api/health', async () => {
+    const { calls, get } = recordingGet();
+    await grafanaHealth(get);
+    expect(calls).toEqual([{ name: 'grafana health', path: '/api/health', opts: undefined }]);
+  });
+
+  it('lokiQueryRange builds the datasource-proxy query_range path', async () => {
+    const { calls, get } = recordingGet();
+    await lokiQueryRange(get, 'grafanacloud-logs', {
+      query: '{service_name="ai-worker"} | trace_id!=""',
+      start: '1',
+      end: '2',
+      limit: 10,
+      direction: 'backward',
+    });
+    const url = new URL(`https://x.example.invalid${calls[0].path}`);
+    expect(url.pathname).toBe(
+      '/api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/query_range'
+    );
+    expect(url.searchParams.get('query')).toBe('{service_name="ai-worker"} | trace_id!=""');
+    expect(url.searchParams.get('limit')).toBe('10');
+    expect(url.searchParams.get('direction')).toBe('backward');
+    expect(calls[0].name).toBe('loki query_range');
+  });
+
+  it('tempoSearch builds the search path and drops undefined params', async () => {
+    const { calls, get } = recordingGet();
+    await tempoSearch(get, 'grafanacloud-traces', {
+      q: '{status=error}',
+      start: 1,
+      end: 2,
+      limit: 50,
+      spss: undefined,
+    });
+    const url = new URL(`https://x.example.invalid${calls[0].path}`);
+    expect(url.pathname).toBe('/api/datasources/proxy/uid/grafanacloud-traces/api/search');
+    expect(url.searchParams.get('q')).toBe('{status=error}');
+    expect(url.searchParams.get('limit')).toBe('50');
+    expect(url.searchParams.has('spss')).toBe(false);
+  });
+
+  it('tempoTrace GETs the v2 trace by a validated 32-hex id and allows 404', async () => {
+    const { calls, get } = recordingGet(null);
+    const id = 'a'.repeat(32);
+    expect(await tempoTrace(get, 'grafanacloud-traces', id)).toBeNull();
+    expect(calls[0]).toEqual({
+      name: 'tempo trace',
+      path: `/api/datasources/proxy/uid/grafanacloud-traces/api/v2/traces/${id}`,
+      opts: { allowNotFound: true },
+    });
+  });
+
+  it('tempoTrace refuses a non-hex trace id before any request', async () => {
+    const { calls, get } = recordingGet();
+    await expect(tempoTrace(get, 'grafanacloud-traces', '../../api/admin')).rejects.toThrow(
+      'invalid trace id'
+    );
+    expect(calls).toHaveLength(0);
+  });
+
+  it('promInstantQuery passes query and time', async () => {
+    const { calls, get } = recordingGet();
+    await promInstantQuery(get, 'grafanacloud-prom', 'up', 1700000000);
+    const url = new URL(`https://x.example.invalid${calls[0].path}`);
+    expect(url.pathname).toBe('/api/datasources/proxy/uid/grafanacloud-prom/api/v1/query');
+    expect(url.searchParams.get('query')).toBe('up');
+    expect(url.searchParams.get('time')).toBe('1700000000');
+  });
+
+  it('listAlertRules GETs the provisioning API', async () => {
+    const { calls, get } = recordingGet([]);
+    expect(await listAlertRules(get)).toEqual([]);
+    expect(calls[0].path).toBe('/api/v1/provisioning/alert-rules');
+  });
+});
+
+describe('getRuleGroup', () => {
+  it('GETs the provisioning rule group for its evaluation interval', async () => {
+    const calls: string[] = [];
+    const get = async (_name: string, path: string) => {
+      calls.push(path);
+      return { interval: 60 };
+    };
+    expect(await getRuleGroup(get, 'kg-folder', 'asserts group')).toEqual({ interval: 60 });
+    expect(calls).toEqual(['/api/v1/provisioning/folder/kg-folder/rule-groups/asserts%20group']);
+  });
+
+  it('refuses a folder or group that could escape the path', async () => {
+    const get = async () => ({});
+    await expect(getRuleGroup(get, '../admin', 'g')).rejects.toThrow('invalid rule group');
+    await expect(getRuleGroup(get, 'f', 'a/b')).rejects.toThrow('invalid rule group');
   });
 });
