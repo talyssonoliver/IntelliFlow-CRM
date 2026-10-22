@@ -161,11 +161,17 @@ function fieldsData(input: CreateEventTypeInput) {
 }
 
 /** Write-time rules: catalogue uniqueness, Calendar-settings duration range, host in this tenant. */
+/**
+ * On update, `current` is the row read under the booking lock: the duration range and the host
+ * are only re-checked when they change, so a type created under older Calendar settings (or
+ * whose host left) can still be renamed or switched off.
+ */
 async function assertWritable(
   tx: Tx,
   tenantId: string,
   input: CreateEventTypeInput,
-  excludeId: string | null
+  excludeId: string | null,
+  current: { durationMinutes: number; hostUserId: string } | null = null
 ): Promise<void> {
   const existing = await tx.eventType.findMany({
     where: { tenantId },
@@ -182,19 +188,22 @@ async function assertWritable(
     });
   }
 
-  const settings = await tx.appointmentSettings.findUnique({
-    where: { tenantId },
-    select: { minDurationMinutes: true, maxDurationMinutes: true },
-  });
-  const min = settings?.minDurationMinutes ?? EVENT_TYPE_LIMITS.minDurationMinutes;
-  const max = settings?.maxDurationMinutes ?? EVENT_TYPE_LIMITS.maxDurationMinutes;
-  if (input.durationMinutes < min || input.durationMinutes > max) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `Duration must be between ${min} and ${max} minutes (Calendar settings).`,
+  if (current?.durationMinutes !== input.durationMinutes) {
+    const settings = await tx.appointmentSettings.findUnique({
+      where: { tenantId },
+      select: { minDurationMinutes: true, maxDurationMinutes: true },
     });
+    const min = settings?.minDurationMinutes ?? EVENT_TYPE_LIMITS.minDurationMinutes;
+    const max = settings?.maxDurationMinutes ?? EVENT_TYPE_LIMITS.maxDurationMinutes;
+    if (input.durationMinutes < min || input.durationMinutes > max) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Duration must be between ${min} and ${max} minutes (Calendar settings).`,
+      });
+    }
   }
 
+  if (current?.hostUserId === input.hostUserId) return;
   const hostCount = await tx.user.count({
     where: { id: input.hostUserId, ...tenantUserWhere(tenantId) },
   });
@@ -355,7 +364,12 @@ export const eventTypesRouter = createTRPCRouter({
       try {
         updated = await ctx.prismaWithTenant.$transaction(async (tx) => {
           await lockBookings(tx, tenantId);
-          await assertWritable(tx, tenantId, fields, id);
+          const current = await tx.eventType.findFirst({
+            where: { id, tenantId },
+            select: { durationMinutes: true, hostUserId: true },
+          });
+          if (!current) throw new TRPCError({ code: 'NOT_FOUND', message: NOT_FOUND });
+          await assertWritable(tx, tenantId, fields, id, current);
           const result = await tx.eventType.updateMany({
             where: { id, tenantId },
             data: fieldsData(fields),

@@ -9,7 +9,7 @@
  * everything; this component only explains. Imports stay light (types only from
  * the validators) so the public page does not pull server code into its bundle.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button, Checkbox, Input, Label, Textarea } from '@intelliflow/ui';
 import type { PublicBookResultDto } from '@intelliflow/validators/event-types';
@@ -302,11 +302,24 @@ export default function BookingContent({
 }: Readonly<{ handle: string; slug: string }>) {
   const eventQuery = trpc.publicBooking.getEventType.useQuery({ handle, slug }, { retry: false });
   const event = eventQuery.data;
-  const fromDate = useMemo(() => todayIn(event?.timezone ?? 'UTC'), [event?.timezone]);
+  const firmZone = event?.timezone ?? 'UTC';
+  // Recomputed on every render, so a page left open past the firm's midnight asks for the
+  // new day instead of one the server now rejects as outside the window.
+  const fromDate = todayIn(firmZone);
   const slotsQuery = trpc.publicBooking.listSlots.useQuery(
     { handle, slug, fromDate, days: DAYS_TO_SHOW },
     { enabled: Boolean(event), retry: false }
   );
+  const [, setDayCheck] = useState(0);
+  /** Reload the times; after midnight a re-render switches to the new day's query instead. */
+  const reloadSlots = () => {
+    if (todayIn(firmZone) !== fromDate) {
+      setDayCheck((n) => n + 1);
+      return;
+    }
+    // A failed refetch shows through slotsQuery.isError (with its own retry button).
+    slotsQuery.refetch().catch(() => undefined);
+  };
   const bookMutation = trpc.publicBooking.book.useMutation();
 
   const [visitorZone, setVisitorZone] = useState<string | null>(null);
@@ -371,8 +384,7 @@ export default function BookingContent({
     } catch (error) {
       if (errorCode(error) === 'CONFLICT') {
         update('start', '');
-        // A failed refetch shows through slotsQuery.isError (with its own retry button).
-        slotsQuery.refetch().catch(() => undefined);
+        reloadSlots();
       }
       setErrors({ form: bookingErrorMessage(error) });
     }
@@ -424,7 +436,7 @@ export default function BookingContent({
                 ? 'Too many requests just now. Please wait a moment and try again.'
                 : 'The available times could not be loaded.'}
             </p>
-            <Button type="button" variant="outline" onClick={() => void slotsQuery.refetch()}>
+            <Button type="button" variant="outline" onClick={reloadSlots}>
               Try again
             </Button>
           </div>

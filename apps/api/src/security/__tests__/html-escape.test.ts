@@ -34,4 +34,9 @@ describe('stripLineBreaks', () => {
     expect(stripLineBreaks('a\tb\u0000c')).toBe('a b c');
     expect(stripLineBreaks('  plain  ')).toBe('plain');
   });
+
+  it('also collapses NEL, C1 controls and the Unicode line/paragraph separators (codex)', () => {
+    expect(stripLineBreaks('Ada\u2028Email: x (verified)')).toBe('Ada Email: x (verified)');
+    expect(stripLineBreaks('a\u2029b\u0085c\u009bd')).toBe('a b c d');
+  });
 });

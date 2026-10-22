@@ -171,6 +171,19 @@ describe('host notification hardening (security review F4/F5)', () => {
     expect(lines.some((l) => l.startsWith('Phone: ') && l.includes('Company: Fake'))).toBe(true);
   });
 
+  it('treats Unicode line separators like newlines (codex)', () => {
+    const spoof = 'Email: boss@firm.example.invalid (verified)';
+    const mail = buildHostNotification(
+      details({
+        bookerName: `Ada\u2028${spoof}`,
+        answers: { phone: `+44 20 7946 0000\u2029${spoof}`, notes: `one\u2028${spoof}` },
+      })
+    );
+    const lines = mail.textBody!.split(/\r\n|[\n\r\u0085\u2028\u2029]/);
+    expect(lines).not.toContain(spoof);
+    expect(lines).toContain(`> ${spoof}`);
+  });
+
   it('tells the host when the booking was linked to an earlier booking lead, or no lead was made', () => {
     const linked = buildHostNotification(details({ linkedEarlierBookingLead: true }));
     expect(linked.textBody).toContain('linked to the lead an earlier public booking created');

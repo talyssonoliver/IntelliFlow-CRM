@@ -331,6 +331,10 @@ describe('public booking schemas (all strict: tenant scope comes only from the h
     const parsed = publicBookInputSchema.parse({ ...book, name: ' Ada\r\nLovelace\u0007 ' });
     expect(parsed.email).toBe('ada@example.invalid');
     expect(parsed.name).toBe('AdaLovelace');
+    // Unicode line terminators and C1 controls go too (codex).
+    expect(publicBookInputSchema.parse({ ...book, name: 'Ada\u2028\u0085Lovelace' }).name).toBe(
+      'AdaLovelace'
+    );
     expect(
       publicBookInputSchema.safeParse({ ...book, answers: { phone: '1', website: 'x' } }).success
     ).toBe(false);

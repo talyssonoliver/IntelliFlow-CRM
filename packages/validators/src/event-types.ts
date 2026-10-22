@@ -31,12 +31,16 @@ export const eventLocationTypeSchema = z.enum(EVENT_LOCATION_TYPES);
 export const eventTypeRequiredFieldSchema = z.enum(EVENT_TYPE_REQUIRED_FIELDS);
 export const eventTypeLeadSourceSchema = z.enum(EVENT_TYPE_LEAD_SOURCES);
 
-/** Strips C0 control characters and DEL (incl. CR/LF), which have no place in a name or subject. */
+/**
+ * Strips C0/C1 control characters, DEL and the Unicode line/paragraph separators (incl. CR/LF
+ * and NEL), which have no place in a name or subject.
+ */
 export function stripControlChars(value: string): string {
   let out = '';
   for (const ch of value) {
     const code = ch.codePointAt(0) ?? 0;
-    if (code >= 0x20 && code !== 0x7f) out += ch;
+    const lineBreak = code === 0x2028 || code === 0x2029;
+    if (code >= 0x20 && !(code >= 0x7f && code <= 0x9f) && !lineBreak) out += ch;
   }
   return out;
 }

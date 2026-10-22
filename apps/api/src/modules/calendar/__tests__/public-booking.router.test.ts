@@ -321,16 +321,20 @@ describe('book — gates before the transaction (AC-015, AC-017)', () => {
     stubBookingWrites();
   });
 
-  it('a filled honeypot gets a fake success with zero database calls', async () => {
+  it('a filled honeypot gets a success shaped like a real one, and nothing is written', async () => {
     const result = await caller().book({ ...bookInput, __honeypot: 'i-am-a-bot' });
-    expect(result).toMatchObject({ startsAt: SLOT });
     for (const fn of [
-      prismaMock.eventType.findFirst,
       prismaMock.bookingAttempt.create,
+      prismaMock.appointment.create,
       prismaMock.$transaction,
     ]) {
       expect(fn).not.toHaveBeenCalled();
     }
+    // The honeypot is throttled like any submit; clear it before the real booking.
+    bookingSubmitLimiter.reset();
+    const real = await caller().book(bookInput);
+    // Same duration and firm timezone as a real booking (codex): the bot cannot tell.
+    expect(result).toEqual(real);
   });
 
   it('a missing required answer is BAD_REQUEST and nothing is written', async () => {
@@ -712,6 +716,64 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
       .catch((e: unknown) => e)) as { code: string; message: string };
     expect(error.code).toBe('INTERNAL_SERVER_ERROR');
     expect(error.message).not.toContain('secret detail');
+  });
+});
+
+describe('public procedures never disclose a database error (codex)', () => {
+  // Prisma-shaped failures from reads that run outside any booking transaction.
+  const dbError = () =>
+    Object.assign(
+      new Error('Invalid `prisma.tenant.findUnique()`: relation internal_table_detail'),
+      {
+        code: 'P1001',
+      }
+    );
+
+  beforeEach(() => {
+    stubBookable();
+    stubBookingWrites();
+  });
+
+  async function failure(run: () => Promise<unknown>) {
+    return (await run().catch((e: unknown) => e)) as { code: string; message: string };
+  }
+
+  it('getEventType: a failed lookup read returns a fixed message', async () => {
+    prismaMock.tenant.findUnique.mockRejectedValueOnce(dbError());
+    const error = await failure(() => caller().getEventType(lookup));
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).toBe('This booking page could not be loaded. Please try again.');
+  });
+
+  it('listSlots: a failed availability read returns a fixed message', async () => {
+    prismaMock.availabilityHour.findMany.mockRejectedValueOnce(dbError());
+    const error = await failure(() =>
+      caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 1 })
+    );
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).not.toContain('internal_table_detail');
+    expect(error.message).not.toContain('prisma');
+  });
+
+  it('book: a failed read before the transaction returns a fixed message', async () => {
+    prismaMock.eventType.findFirst.mockRejectedValueOnce(dbError());
+    const error = await failure(() => caller().book(bookInput));
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).toBe('We could not complete your booking. Please try again.');
+  });
+
+  it('book: a failed lock-free cap check returns a fixed message', async () => {
+    prismaMock.bookingAttempt.count.mockRejectedValueOnce(dbError());
+    const error = await failure(() => caller().book(bookInput));
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).not.toContain('internal_table_detail');
+  });
+
+  it('keeps intentional errors: an unknown handle is still NOT_FOUND', async () => {
+    stubBookable({ tenant: null });
+    const error = await failure(() => caller().getEventType(lookup));
+    expect(error.code).toBe('NOT_FOUND');
+    expect(error.message).toBe('This booking page is not available.');
   });
 });
 

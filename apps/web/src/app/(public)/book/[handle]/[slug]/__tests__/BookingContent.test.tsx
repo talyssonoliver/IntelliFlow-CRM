@@ -330,6 +330,23 @@ describe('BookingContent', () => {
     expect(screen.getByText('The available times could not be loaded.')).toBeInTheDocument();
   });
 
+  it('asks for the new day after the firm passes midnight with the page open (codex)', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-11-01T23:59:00Z')); // 23:59 in London
+      h.slots = { data: undefined, isLoading: false, isError: true, error: { message: 'x' } };
+      renderFlow();
+      expect((h.slotsArgs.at(-1) as { fromDate: string }).fromDate).toBe('2026-11-01');
+      vi.setSystemTime(new Date('2026-11-02T00:01:00Z'));
+      fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
+      // The stale day is not refetched; the re-render queries the new day.
+      expect(h.refetchSlots).not.toHaveBeenCalled();
+      expect((h.slotsArgs.at(-1) as { fromDate: string }).fromDate).toBe('2026-11-02');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows a loading state while the event loads', () => {
     h.eventType = { data: undefined, isLoading: true, error: null };
     renderFlow();
