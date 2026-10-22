@@ -147,6 +147,8 @@ export default function SignaturesContent() {
 
   const [dialog, setDialog] = useState<SignatureDialogTarget | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  // Each opening is a fresh form: the dialog stays mounted while it closes.
+  const [dialogInstance, setDialogInstance] = useState(0);
   const [pendingDelete, setPendingDelete] = useState<EmailSignatureDto | null>(null);
   const [announcement, setAnnouncement] = useState('');
   // Delete and Make Default remove the button that had focus: focus moves to
@@ -191,6 +193,7 @@ export default function SignaturesContent() {
 
   const openDialog = (target: SignatureDialogTarget) => {
     setDialog(target);
+    setDialogInstance((n) => n + 1);
     setDialogOpen(true);
   };
 
@@ -352,7 +355,7 @@ export default function SignaturesContent() {
 
         {dialog && (
           <SignatureDialog
-            key={dialog.kind === 'edit' ? dialog.signature.id : `new-${dialog.scope}`}
+            key={dialogInstance}
             open={dialogOpen}
             onOpenChange={setDialogOpen}
             target={dialog}

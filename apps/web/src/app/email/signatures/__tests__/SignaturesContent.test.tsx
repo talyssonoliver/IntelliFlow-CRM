@@ -3,6 +3,7 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { useState } from 'react';
 import axe from 'axe-core';
 import type { EmailSignatureDto, EmailSignatureListDto } from '@intelliflow/validators';
 
@@ -14,6 +15,7 @@ const api = vi.hoisted(() => ({
   setDefault: { mutateAsync: vi.fn(), isPending: false },
   invalidate: vi.fn(),
   dialogRenders: 0,
+  dialogMounts: 0,
 }));
 
 vi.mock('@/lib/trpc', () => ({
@@ -36,6 +38,7 @@ vi.mock('@/lib/auth/AuthContext', () => ({
 vi.mock('../components/SignatureDialog', () => ({
   SignatureDialog: (p: {
     open: boolean;
+    onOpenChange: (open: boolean) => void;
     target: { kind: string; scope?: string; signature?: { name: string } };
     onSave: (input: {
       name: string;
@@ -44,10 +47,15 @@ vi.mock('../components/SignatureDialog', () => ({
     }) => Promise<{ ok: boolean; nameError?: string }>;
   }) => {
     api.dialogRenders += 1;
+    // Stands in for the form state the real dialog keeps in useState.
+    const [mount] = useState(() => (api.dialogMounts += 1));
     if (!p.open) return null;
     return (
-      <div data-testid="signature-dialog">
+      <div data-testid="signature-dialog" data-mount={mount}>
         {p.target.kind}:{p.target.scope ?? p.target.signature?.name}
+        <button type="button" onClick={() => p.onOpenChange(false)}>
+          stub close
+        </button>
         <button
           type="button"
           onClick={async () => {
@@ -102,6 +110,7 @@ function setup(
 beforeEach(() => {
   vi.clearAllMocks();
   api.dialogRenders = 0;
+  api.dialogMounts = 0;
   delete document.body.dataset.saveResult;
   api.invalidate.mockResolvedValue(undefined);
   api.create.mutateAsync.mockResolvedValue(sig({ id: 'sig-new' }));
@@ -176,6 +185,16 @@ describe('SignaturesContent', () => {
         '{"ok":false,"nameError":"A signature with this name already exists"}'
       )
     );
+  });
+
+  it('starts every opening with a fresh form, even for the same target (codex MEDIUM)', async () => {
+    setup();
+    fireEvent.click(screen.getByRole('button', { name: 'New Signature' }));
+    expect(await screen.findByTestId('signature-dialog')).toHaveAttribute('data-mount', '1');
+    fireEvent.click(screen.getByRole('button', { name: 'stub close' }));
+    expect(screen.queryByTestId('signature-dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'New Signature' }));
+    expect(await screen.findByTestId('signature-dialog')).toHaveAttribute('data-mount', '2');
   });
 
   it('creates an organisation signature from its own card', async () => {
