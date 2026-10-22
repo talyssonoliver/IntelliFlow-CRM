@@ -14,15 +14,12 @@
  *
  * The instrumentation patches pino through the CommonJS require hook, which is
  * how production loads it (`node dist/main.js`, tsup CJS output). Vitest's ESM
- * import of pino bypasses that hook, so the test bundles `src/logging.ts` to CJS
- * in memory (esbuild, reached through tsup's dependency tree) and loads it with
- * Node's CJS loader. `pino` and `@opentelemetry/*` stay external, so they are
- * required — and patched — exactly as in production.
+ * import of pino bypasses that hook, so logging.ts is loaded through Node's CJS
+ * loader (test-utils/load-logging-cjs). `pino` and `@opentelemetry/*` stay
+ * external, so they are required — and patched — exactly as in production.
  */
 
-import Module, { createRequire } from 'node:module';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
 import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { trace, context } from '@opentelemetry/api';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
@@ -33,6 +30,7 @@ import {
   InMemoryLogRecordExporter,
 } from '@opentelemetry/sdk-logs';
 import { PinoInstrumentation } from '@opentelemetry/instrumentation-pino';
+import { loadLoggingAsCommonJs } from './test-utils/load-logging-cjs';
 
 const require = createRequire(import.meta.url);
 const apiLogs = createRequire(require.resolve('@opentelemetry/instrumentation-pino'))(
@@ -40,31 +38,6 @@ const apiLogs = createRequire(require.resolve('@opentelemetry/instrumentation-pi
 ) as typeof import('@opentelemetry/api-logs');
 
 type CreateLogger = typeof import('./logging').createLogger;
-
-/** Bundle src/logging.ts to CommonJS and load it through Node's CJS loader. */
-function loadLoggingAsCommonJs(): { createLogger: CreateLogger } {
-  const esbuild = createRequire(require.resolve('tsup'))('esbuild') as typeof import('esbuild');
-  const srcDir = path.dirname(fileURLToPath(import.meta.url));
-  const entry = path.join(srcDir, 'logging.ts');
-  const out = esbuild.buildSync({
-    entryPoints: [entry],
-    bundle: true,
-    format: 'cjs',
-    platform: 'node',
-    write: false,
-    external: ['pino', 'pino-pretty', '@opentelemetry/*'],
-  });
-  const mod = new Module(entry) as Module & {
-    _compile(code: string, filename: string): void;
-    paths: string[];
-  };
-  mod.filename = entry;
-  mod.paths = (Module as unknown as { _nodeModulePaths(dir: string): string[] })._nodeModulePaths(
-    srcDir
-  );
-  mod._compile(out.outputFiles[0].text, entry);
-  return mod.exports as { createLogger: CreateLogger };
-}
 
 describe('pino records reach the OTel Logs SDK', () => {
   const logExporter = new InMemoryLogRecordExporter();

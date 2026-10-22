@@ -17,6 +17,7 @@ import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-tr
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { trace, SpanKind, context } from '@opentelemetry/api';
 import { runWithLogContext, getCurrentLogContext } from './log-context';
+import { loadLoggingAsCommonJs, requireFromSrc } from './test-utils/load-logging-cjs';
 
 // ---------------------------------------------------------------------------
 // Mixin behaviour under test
@@ -146,7 +147,10 @@ describe('pino mixin — trace correlation', () => {
 // The tests above exercise a copy of the mixin. These drive the real
 // createLogger through an in-memory destination (pino.destination is spied, so
 // no file handle is opened) and assert on the JSON pino actually writes.
-// CI=1 + NODE_ENV=production keep the pino-pretty worker transport out.
+// logging.ts is loaded as CommonJS (test-utils/load-logging-cjs) so the spy is
+// on the exact pino instance it requires under every runner (package config,
+// root workspace config, coverage). CI=1 + NODE_ENV=production keep the
+// pino-pretty worker transport out.
 // ---------------------------------------------------------------------------
 
 describe('createLogger — real records', () => {
@@ -155,18 +159,17 @@ describe('createLogger — real records', () => {
   let lines: string[];
 
   async function loadCreateLogger() {
-    const pinoModule = await import('pino');
-    vi.spyOn(pinoModule.default, 'destination').mockImplementation(
+    const pino = requireFromSrc('pino') as typeof import('pino').default;
+    vi.spyOn(pino, 'destination').mockImplementation(
       () =>
         new Writable({
           write(chunk, _encoding, callback) {
             lines.push(String(chunk));
             callback();
           },
-        }) as unknown as ReturnType<typeof pinoModule.default.destination>
+        }) as unknown as ReturnType<typeof pino.destination>
     );
-    const { createLogger } = await import('./logging');
-    return createLogger;
+    return loadLoggingAsCommonJs().createLogger;
   }
 
   function records(): Array<Record<string, unknown>> {
@@ -194,7 +197,7 @@ describe('createLogger — real records', () => {
 
   it("emits the active span's trace_id and span_id on the written record", async () => {
     const createLogger = await loadCreateLogger();
-    const logger = createLogger({ name: 'ifc074-test', destination: 'memory' });
+    const logger = createLogger({ name: 'ifc074-test', level: 'info', destination: 'memory' });
     const tracer = trace.getTracer('test-tracer');
 
     let expected: { traceId: string; spanId: string } | undefined;
@@ -212,7 +215,7 @@ describe('createLogger — real records', () => {
 
   it('writes no trace_id or span_id outside a span', async () => {
     const createLogger = await loadCreateLogger();
-    const logger = createLogger({ name: 'ifc074-test', destination: 'memory' });
+    const logger = createLogger({ name: 'ifc074-test', level: 'info', destination: 'memory' });
 
     logger.info({ type: 'trpc.request' }, 'outside span');
 
@@ -290,7 +293,7 @@ describe('createLogger — real records', () => {
     ],
   ])('redacts %s', async (_label, payload, pick) => {
     const createLogger = await loadCreateLogger();
-    const logger = createLogger({ name: 'ifc074-test', destination: 'memory' });
+    const logger = createLogger({ name: 'ifc074-test', level: 'info', destination: 'memory' });
 
     logger.info(payload, 'redaction');
 
@@ -300,7 +303,7 @@ describe('createLogger — real records', () => {
 
   it('redacts req.headers.authorization and req.headers.cookie through the req serializer', async () => {
     const createLogger = await loadCreateLogger();
-    const logger = createLogger({ name: 'ifc074-test', destination: 'memory' });
+    const logger = createLogger({ name: 'ifc074-test', level: 'info', destination: 'memory' });
 
     logger.info(
       {
@@ -322,7 +325,7 @@ describe('createLogger — real records', () => {
 
   it('leaves non-sensitive fields untouched', async () => {
     const createLogger = await loadCreateLogger();
-    const logger = createLogger({ name: 'ifc074-test', destination: 'memory' });
+    const logger = createLogger({ name: 'ifc074-test', level: 'info', destination: 'memory' });
 
     logger.info({ path: 'lead.list', durationMs: 12 }, 'plain');
 

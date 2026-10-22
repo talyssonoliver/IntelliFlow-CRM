@@ -183,7 +183,8 @@ export function parseArgs(argv) {
         i++;
         break;
       case '--since':
-        if (!RE.ts.test(String(value))) throw new Error('--since must be an ISO-8601 UTC timestamp');
+        if (!RE.ts.test(String(value)))
+          throw new Error('--since must be an ISO-8601 UTC timestamp');
         opts.since = new Date(value);
         i++;
         break;
@@ -218,7 +219,10 @@ function toHexId(value, bytes) {
 }
 
 /** Tempo search strips leading zeros from trace ids. */
-const padTraceId = (id) => String(id ?? '').toLowerCase().padStart(32, '0');
+const padTraceId = (id) =>
+  String(id ?? '')
+    .toLowerCase()
+    .padStart(32, '0');
 
 /** Span names may embed hosts or identifiers; replace those with "redacted". */
 export function sanitizeSpanName(name) {
@@ -374,7 +378,8 @@ function renderCsv(rows, collectedAt) {
       check('bool', full[b]);
     }
     check('status', full.status);
-    for (const t of ['query_window_start', 'query_window_end', 'collected_at']) check('ts', full[t]);
+    for (const t of ['query_window_start', 'query_window_end', 'collected_at'])
+      check('ts', full[t]);
     lines.push(CSV_COLUMNS.map((c) => `"${String(full[c])}"`).join(','));
   });
   return `${lines.join('\n')}\n`;
@@ -476,10 +481,16 @@ async function collectMttd(get, window, repo) {
   const considered = [];
   for (const t of intoAlerting) {
     const reason =
-      t.ruleUID === repo.deliveryUid ? EXCLUSION_REASONS.deliveryTest : EXCLUDED_ALERTNAMES[t.alertname];
+      t.ruleUID === repo.deliveryUid
+        ? EXCLUSION_REASONS.deliveryTest
+        : EXCLUDED_ALERTNAMES[t.alertname];
     if (reason) {
       const key = `${t.ruleUID}|${reason}`;
-      exclusions.set(key, { rule_uid: check('uid', t.ruleUID), reason, count: (exclusions.get(key)?.count ?? 0) + 1 });
+      exclusions.set(key, {
+        rule_uid: check('uid', t.ruleUID),
+        reason,
+        count: (exclusions.get(key)?.count ?? 0) + 1,
+      });
       continue;
     }
     check('uid', t.ruleUID);
@@ -676,7 +687,9 @@ export async function run({
     const repo = await loadRepoRules(readFile);
 
     const logWindow = {
-      start: opts.since ? Math.floor(opts.since.getTime() / 1000) : nowS - opts.logWindowDays * DAY_S,
+      start: opts.since
+        ? Math.floor(opts.since.getTime() / 1000)
+        : nowS - opts.logWindowDays * DAY_S,
       end: nowS,
     };
     const rows = [];
@@ -723,7 +736,8 @@ export async function run({
       log(`wrote ${file} sha256 ${createHash('sha256').update(data).digest('hex')}`);
     }
     log(summary);
-    if (code === 2) log(`incomplete evidence: ${REQUIRED_SERVICE} PASS row or anchored incident missing`);
+    if (code === 2)
+      log(`incomplete evidence: ${REQUIRED_SERVICE} PASS row or anchored incident missing`);
     return code;
   } catch (err) {
     log(`error: ${scrub(err?.message ?? err)}`);
