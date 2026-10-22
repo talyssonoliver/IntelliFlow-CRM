@@ -1140,3 +1140,15 @@ waivers:
     author: talyssonoliver (approved in the PG-207 runner modal, 2026-10-22)
     date: '2026-10-22'
     expires: '2026-11-21'
+  - fingerprint: 4e69cea586893aea249b551d7c592ce5b1eff4bb511f16fde88e762c2c252829
+    reason: >-
+      PG-207 gmail-excludes-exchange-bounces (oauth-mailbox.ts Gmail bounce query). Accepted
+      missed-feature gap, tracked for a fix in gh #985. Exchange NDRs (#970) delivered into a
+      Gmail-connected mailbox are not fetched, so those bounces are missed. This has no security,
+      privacy or data-integrity effect: the #961 trust rules still decide what a report may do. The
+      fix needs the live D5 header spike (#965) to show which Gmail search matches
+      MicrosoftExchange<hex> senders; an untested query could silently match nothing. The waiver
+      expires so the gate re-blocks if #985 slips.
+    author: talyssonoliver (approved in the PG-207 modal, 2026-10-22)
+    date: '2026-10-22'
+    expires: '2026-11-21'
