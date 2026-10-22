@@ -270,7 +270,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-082](./ADR-082-tenant-model-config.md)                                  | Tenant model configuration per AI purpose (catalog pins, price-ranked never-downgrade, ceilings)       | 📝 Proposed | 2026-10-19 | PG-199                      |
 | [ADR-083](./ADR-083-event-types-public-booking.md)                           | Tenant event types and an unauthenticated public booking endpoint                                      | Accepted    | 2026-10-21 | PG-203                      |
 | [ADR-085](./ADR-085-user-mailbox-sending-and-bounce-reading.md)              | User mail leaves from the user's own mailbox (SMTP / Gmail / Microsoft); bounces read back from it     | Accepted    | 2026-10-21 | PG-207                      |
-| [ADR-086](./ADR-086-observability-log-pipeline-and-evidence.md)              | Observability log pipeline (pino → OTLP → Loki) and production-only evidence via a read-only collector | 📝 Proposed | 2026-10-22 | IFC-074                     |
+| [ADR-086](./ADR-086-observability-log-pipeline-and-evidence.md)              | Observability log pipeline (pino → OTLP → Loki) and production-only evidence via a read-only collector | ✅ Accepted | 2026-10-22 | IFC-074                     |
 | [ADR-087](./ADR-087-production-slos-anomaly-detection-and-self-healing.md)   | Production SLOs, anomaly detection (Grafana Asserts) and self-healing (Railway restart policy)         | ✅ Accepted | 2026-10-23 | ENV-008-AI                  |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,

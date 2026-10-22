@@ -1,6 +1,7 @@
 # ADR-086: Observability log pipeline and production evidence
 
-**Status:** Proposed
+**Status:** Accepted (2026-10-22, validated by the IFC-074 implementation and
+its first production collector run)
 
 **Date:** 2026-10-22
 

@@ -15,17 +15,20 @@
         {
             "description": "Reopen evidence: Railway production, read 2026-10-05 via the Railway API: every service (api, ai-worker, events-worker, ingestion-worker, notifications-worker) has `OTEL_ENABLED=false` and no `OTEL_EXPORTER_OTLP_ENDPOINT`; `ws` has no OTel vars. `infra/terraform/environments/production/terraform.tfvars` keeps OTel off until `otel_exporter_endpoint` is set, and it is not set. Production exports no traces, metrics or logs.",
             "raised_at": "2026-10-05T22:30:00Z",
-            "resolved_at": null
+            "resolved_at": "2026-10-22T20:41:51Z",
+            "resolution": "Superseded: 2026-10-16 verification (blocker 5) found OTEL_ENABLED=true and export to the Grafana Cloud gateway on Railway api and ai-worker; 2026-10-22 read-only check shows Tempo services api and ai-worker. events-worker, ingestion-worker and ws remain without export (out of IFC-074 scope per owner ruling option A)."
         },
         {
             "description": "Reopen evidence: `artifacts/reports/correlation-test.csv` trace IDs are not valid W3C IDs (e.g. `a1b2c3d4e5f6g7h8...`, `abc123def456ghi789...` contain non-hex characters). They were hand-written, not observed.",
             "raised_at": "2026-10-05T22:30:00Z",
-            "resolved_at": null
+            "resolved_at": "2026-10-22T20:41:51Z",
+            "resolution": "Replaced by collector output (tools/scripts/observability/collect-observability-evidence.mjs), real 32-hex ids verified against Tempo/Loki; sha256 ae9a15d152aa51fba0ff1c7272762c81e0bb265bb15a393b492dd040ffeffe8e."
         },
         {
             "description": "Reopen evidence: `artifacts/reports/mttr-baseline.json` metadata says `measurement_method: Manual testing with simulated incidents`. KPI \"MTTD <2min\" cannot be measured with no production telemetry and no alert delivery.",
             "raised_at": "2026-10-05T22:30:00Z",
-            "resolved_at": null
+            "resolved_at": "2026-10-22T20:41:51Z",
+            "resolution": "Replaced by MTTD measured from real Grafana alert transitions (mean 268.739 s, KPI not met); sha256 3e33b48f327192362fb4fbb3691ad9eea2d0d55825418ff0c53ac85762572f88."
         },
         {
             "description": "To close: (1) Done when IFC-032 is done: production traces and logs correlate in the hosted backend, and an MTTD is measured from a real alert. Closing requires production evidence (configured endpoint, real trace ID, received alert); local, in-memory or template artifacts do not count.",
@@ -35,6 +38,11 @@
         {
             "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Target Sprint moved to 18 in Sprint_plan.csv so the strict sprint gates stay honest. Trace/log correlation is proven for ai-worker (Loki lines carry trace_id and span_id) but not yet for api. Still open: correlation-test.csv with real trace IDs, and an MTTD measured from a real alert delivery. No rule has fired to Alerting from real traffic. Verified 2026-10-16: Railway production api and ai-worker have OTEL_ENABLED=true and export to the Grafana Cloud gb-south-1 gateway; ws, events-worker and ingestion-worker do not (events-worker and ingestion-worker OTEL_ENABLED=false, ws has no OTel variables). Grafana holds span metrics for api and ai-worker and ai-worker pino log lines carrying trace_id/span_id; no api pino log line has reached Loki yet.",
             "raised_at": "2026-10-16T14:00:00Z",
+            "resolved_at": null
+        },
+        {
+            "description": "IFC-074 sprint-18 rebuild (owner ruling 2026-10-22, option A): the api pino change must be merged and deployed, at least one real tRPC call made, and the collector re-run with --since <deploy time>; the api correlation row must PASS before the task can close (AC-002). Separately, the MTTD KPI (<2 min) is measured NOT met (mean 268.7 s): owner decision on detection tuning vs target.",
+            "raised_at": "2026-10-22T20:41:51Z",
             "resolved_at": null
         }
     ],
@@ -59,19 +67,21 @@
     },
     "kpis": {
         "mttd_target": {
-            "actual": null,
-            "met": null,
             "target": 2,
-            "unit": "minutes"
+            "actual": 4.479,
+            "met": false,
+            "unit": "minutes",
+            "source": "artifacts/reports/mttr-baseline.json sha256 3e33b48f327192362fb4fbb3691ad9eea2d0d55825418ff0c53ac85762572f88: mean of 63 anchored real incidents (median 239.955 s), collector run 2026-10-22T20:40:32.000Z"
         },
         "traces_correlating": {
-            "actual": null,
-            "met": null,
             "target": true,
-            "unit": "boolean"
+            "actual": "ai-worker: 10/10 PASS; api: NOT_OBSERVED (pending deploy)",
+            "met": null,
+            "unit": "boolean",
+            "source": "artifacts/reports/correlation-test.csv sha256 ae9a15d152aa51fba0ff1c7272762c81e0bb265bb15a393b492dd040ffeffe8e"
         }
     },
-    "notes": "OpenTelemetry tracing configured with unified logs, metrics, and traces.",
+    "notes": "Sprint-18 rebuild: api request logs via pino to Loki (apps/api/src/tracing/logger.ts, middleware.ts); read-only evidence collector; evidence regenerated from production telemetry 2026-10-22. Previous notes claimed completion and are superseded.",
     "started_at": "2026-10-22T19:47:10Z",
     "status_history": [
         {
@@ -110,6 +120,11 @@
             "status": "In Progress",
             "at": "2026-10-22T19:47:10Z",
             "note": "/exec session start (sprint-18 rebuild). task-tracking.json moved from sprint-1 to sprint-18 (row Target Sprint 18). Fabricated kpis.actual/met (1.5 min, true) nulled until the collector measures them."
+        },
+        {
+            "status": "In Progress",
+            "at": "2026-10-22T20:41:51Z",
+            "note": "Evidence regenerated by the collector; fabricated kpis replaced with measured values; blockers 1-3 resolved with evidence; AC-002 (api row) open until deploy."
         }
     ],
     "task_id": "IFC-074",
@@ -124,5 +139,5 @@
         }
     ],
     "percent_complete": 50,
-    "updated_at": "2026-10-22T19:47:10Z"
+    "updated_at": "2026-10-22T20:41:51Z"
 }

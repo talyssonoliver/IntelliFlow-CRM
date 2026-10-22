@@ -1,0 +1,18 @@
+Semantic Review (claude) — 2026-10-22T20:30:00.650Z
+Base ref  : origin/main
+Files in scope : 10
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] packages/observability/src/logging.ts:83-92 — incomplete-redaction-paths
+    Issue    : Four sensitive keys (accessToken, refreshToken, userEmail, api_key) are redacted only at the top level of a record. Unlike email, password, token, apiKey, secret, authorization and cookie, they have no '*.' wildcard path, so when they sit one level down (for example inside a session object) they are written unredacted and exported over OTLP to Loki.
+    Evidence : The redact.paths list has 'email','*.email','password','*.password','token','*.token','apiKey','*.apiKey' etc., but 'userEmail' (83), 'accessToken' (88), 'refreshToken' (89) and 'api_key' (92) have no '*.x' counterpart. The comment just above says "`*.x` only matches one level down, so the bare top-level keys are listed too", which shows the author meant both forms for each key. With pino's fast-redact, logger.info({ session: { accessToken: t, refreshToken: r } }) or logger.info({ cfg: { api_key: k } }) prints those values in clear. A Supabase-style auth/session object is exactly the shape where this happens, and createLogger is the shared logger for every service, not only the api middleware. The new test table in logging.test.ts covers 'nested token', 'nested apiKey' and 'nested secret' but only the top-level accessToken, refreshToken, userEmail and api_key, so it repeats the same gap and passes.
+    Fix      : Add '*.userEmail', '*.accessToken', '*.refreshToken' and '*.api_key' to redact.paths. Add the matching 'nested …' cases to the 'redacts %s' test table in logging.test.ts.
+    Fingerprint: 14c320c8ce3cad0eafb5ee7811ea7553029ac729d6f717756e4435a72107d19e
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

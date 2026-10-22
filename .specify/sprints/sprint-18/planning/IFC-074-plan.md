@@ -275,9 +275,9 @@ ai-worker rows PASS, api row NOT_OBSERVED, MTTD measured (met true/false/null as
 Describe real wiring only (spec Part 3). No DSN value, hosts, `example.com`, `placeholder`, integrations or keys.
 
 **Validation:**
-- [ ] `node -e "JSON.parse(require('fs').readFileSync('infra/monitoring/sentry-project-config.json','utf8'))"`
-- [ ] `grep -nE "placeholder|example\.com|ingest\.sentry|https?://" infra/monitoring/sentry-project-config.json` → no hits
-- [ ] gitleaks dir on the file → clean
+- [x] `node -e "JSON.parse(require('fs').readFileSync('infra/monitoring/sentry-project-config.json','utf8'))"`
+- [x] `grep -nE "placeholder|example\.com|ingest\.sentry|https?://" infra/monitoring/sentry-project-config.json` → no hits
+- [x] gitleaks dir on the file → clean
 
 #### Step 14: Docs corrections + dependency chain
 **Type:** docs
@@ -294,8 +294,8 @@ proven (IFC-032), detection proven for ai-worker, post-deploy evidence step (one
 `integrations-dependency-chain.md` (:92).
 
 **Validation:**
-- [ ] `grep -c "IFC-074" docs/architecture/diagrams/complete-dependency-chains.md docs/architecture/diagrams/integrations-dependency-chain.md` ≥ 1 each
-- [ ] `pnpm exec prettier --check docs/observability/IFC-074-IMPLEMENTATION.md docs/operations/incident-runbook.md docs/architecture/diagrams/complete-dependency-chains.md docs/architecture/diagrams/integrations-dependency-chain.md`
+- [x] `grep -c "IFC-074" docs/architecture/diagrams/complete-dependency-chains.md docs/architecture/diagrams/integrations-dependency-chain.md` ≥ 1 each
+- [x] `pnpm exec prettier --check docs/observability/IFC-074-IMPLEMENTATION.md docs/operations/incident-runbook.md docs/architecture/diagrams/complete-dependency-chains.md docs/architecture/diagrams/integrations-dependency-chain.md`
 
 #### Step 15: Findings tracking (out of scope, not fixed)
 **Type:** governance
@@ -308,8 +308,8 @@ F1–F13 from the spec: one `gh issue create` each (file:line + proposed fix), o
 (`IFC074-F<n>-...`), findings doc table linking issue numbers.
 
 **Validation:**
-- [ ] `gh issue list --search "IFC-074 in:title" --state open` lists 13 issues
-- [ ] `node -e "require('js-yaml').load(require('fs').readFileSync('artifacts/metrics/debt-ledger.yaml','utf8'));console.log('ok')"`
+- [x] `gh issue list --search "IFC-074 in:title" --state open` lists 13 issues
+- [x] `node -e "require('js-yaml').load(require('fs').readFileSync('artifacts/metrics/debt-ledger.yaml','utf8'));console.log('ok')"`
       (js-yaml resolves from the repo root — verified 2026-10-22)
 
 #### Step 16: Rebuild task tracking (remove fabricated values)
@@ -323,8 +323,8 @@ collector output SHA-256s; close-rule blocker stays open (AC-002). Validate agai
 `apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json`.
 
 **Validation:**
-- [ ] exits 0 (verified working 2026-10-22 on the current file; the ajv store path is pinned to the current lockfile — if it moves, use `require(require.resolve("ajv",{paths:["."]}))`):
-      `node -e "const Ajv=require('./node_modules/.pnpm/ajv@8.20.0/node_modules/ajv');const a=new Ajv({strict:false,validateFormats:false,allErrors:true});const v=a.compile(require('./apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json'));const ok=v(require('./.specify/sprints/sprint-1/attestations/IFC-074/task-tracking.json'));console.log(ok,JSON.stringify(v.errors));process.exit(ok?0:1)"`
+- [x] exits 0 (verified working 2026-10-22 on the current file; the ajv store path is pinned to the current lockfile — if it moves, use `require(require.resolve("ajv",{paths:["."]}))`):
+      `node -e "const Ajv=require('./node_modules/.pnpm/ajv@8.20.0/node_modules/ajv');const a=new Ajv({strict:false,validateFormats:false,allErrors:true});const v=a.compile(require('./apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json'));const ok=v(require('./.specify/sprints/sprint-18/attestations/IFC-074/task-tracking.json'));console.log(ok,JSON.stringify(v.errors));process.exit(ok?0:1)"`
 
 #### Step 17: ADR-086 → Accepted
 **Type:** docs
@@ -336,7 +336,7 @@ After Steps 8-12 validate the decision. Also correct the stale "Future ADRs use 
 (`adr/README.md:297`) to the next free number after checking sibling claims.
 
 **Validation:**
-- [ ] status line reads Accepted in both files
+- [x] status line reads Accepted in both files
 
 > **Checkpoint (Phase 3):** Step 16 ajv command exits 0; Step 15 js-yaml command prints ok; prettier --check on the
 > Step 14 docs; `gitleaks dir infra/monitoring/sentry-project-config.json --config .gitleaks.toml --no-banner --redact=100`

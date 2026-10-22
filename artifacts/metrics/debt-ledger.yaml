@@ -5272,6 +5272,305 @@ items:
       git issue #1001. Owner ruling 2026-10-22: IFC-033 closes on throughput, and the p95
       gap is tracked here, in #1001 and in docs/shared/bottleneck-analysis.md (production
       section). Tracked per project Rule 8.
+  IFC074-F1:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      logContextMiddleware reads ctx.correlationId, which nothing sets.
+      logContextMiddleware binds `(ctx as Record<string,
+      unknown>).correlationId` into the pino log context, but
+      createContext never sets it, so correlationId in the
+      AsyncLocalStorage log context is always undefined. Only
+      tenantId/userId are bound. Where: apps/api/src/trpc.ts:107-116
+      (logContextMiddleware); apps/api/src/context.ts (no correlationId
+      field)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Bind the correlation id from the tracing correlation context
+      (apps/api/src/tracing/correlation.ts getCorrelationId) or set
+      ctx.correlationId in createContext; add a test that a protected
+      procedure's log context carries the request's correlationId.
+    notes: >-
+      git issue #987. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F2:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      redactSensitiveData never matches apiKey (case bug) and only checks
+      key names. The helper compares `key.toLowerCase()` against a list
+      containing 'apiKey' (upper-case K), so apiKey is never redacted. It
+      is opt-in, matches key names only and never looks at values. Where:
+      packages/observability/src/logging.ts:494-517 (redactSensitiveData)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Lower-case the sensitive list (or compare case-insensitively), add
+      tests; prefer the pino `redact` option added to createLogger in
+      IFC-074 for anything logged through pino.
+    notes: >-
+      git issue #988. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F3:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      pino bindings put the host name on every exported log line.
+      createLogger keeps `hostname` in every record. With IFC-074 the
+      api's records leave the process over OTLP to Grafana Cloud Loki, so
+      the container/host name is exported on every line; the OTel resource
+      already carries host attributes. Where:
+      packages/observability/src/logging.ts:89-94 (formatters.bindings)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Drop hostname from the bindings formatter (keep pid if useful), or
+      gate it behind an option; verify Loki queries do not rely on it.
+    notes: >-
+      git issue #989. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F4:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      metricsMiddleware in tracing/middleware.ts is dead code.
+      metricsMiddleware is not used by apps/api/src/trpc.ts; it logs with
+      console.* and only its own test calls it. Where:
+      apps/api/src/tracing/middleware.ts:229-264 (metricsMiddleware) and
+      its deprecated builders
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Remove metricsMiddleware and its deprecated builders after
+      confirming no consumer (grep apps/ packages/), update
+      middleware.test.ts.
+    notes: >-
+      git issue #990. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F5:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      OTEL_SERVICE_NAME drift: Railway hand-set 'api'/'ai-worker' vs
+      Terraform unset. Grafana Tempo/Loki show service names 'api' and
+      'ai-worker', which match neither the code defaults nor Terraform;
+      the alert rules and the IFC-074 collector depend on the hand-set
+      values, so a redeploy that drops them silently renames the services
+      and breaks the ifc032-api-error-rate rule (requireSeries:false).
+      Where: infra/terraform/modules/monitoring/main.tf:16-17
+      (OTEL_SERVICE_NAME deliberately unset);
+      apps/api/src/tracing/otel.ts:73 (default intelliflow-api); apps/ai-
+      worker/src/tracing/otel.ts:48
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Manage OTEL_SERVICE_NAME in Terraform
+      (railway_variable.observability) with the live values, or change the
+      code defaults to match; add a series-existence check for the api
+      rule.
+    notes: >-
+      git issue #991. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F6:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      alert-rules.json _comment points at a script path that does not
+      exist. The comment names tools/scripts/grafana/apply-alert-
+      rules.mjs; the script is tools/scripts/observability/apply-grafana-
+      alert-rules.mjs. Where: infra/monitoring/grafana/cloud/alert-
+      rules.json:2
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Correct the path in the comment.
+    notes: >-
+      git issue #992. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F7:
+    origin_task: IFC-074
+    owner: Owner (Grafana UI)
+    severity: medium
+    description: >-
+      Evidence collector runs with an Admin Grafana service-account token.
+      The read-only IFC-074 collector only needs Viewer access, but the
+      only local token is the Admin one used to apply alert rules, so an
+      operator shell holds a token that can change alerting. Where:
+      tools/scripts/observability/collect-observability-evidence.mjs
+      (reads GRAFANA_SA_TOKEN); .github/workflows/grafana-alert-rules.yml
+      (Admin token)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Create a Viewer-role Grafana service account for the collector (e.g.
+      GRAFANA_READ_TOKEN), document it in docs/operations/incident-
+      runbook.md 5.5, and keep the Admin token for the apply workflow
+      only. Owner action (Grafana UI).
+    notes: >-
+      git issue #993. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F8:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      pino base.environment reads unset ENVIRONMENT, so production logs
+      say 'development'. Railway does not set ENVIRONMENT, so every record
+      from createLogger (now including the api's request logs in Loki)
+      carries environment=development in production, which misleads
+      filtering during incidents. Where:
+      packages/observability/src/logging.ts:66-69 (base.environment =
+      process.env.ENVIRONMENT || 'development')
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Derive environment from SENTRY_ENVIRONMENT / NODE_ENV / the OTel
+      deployment.environment resource attribute; add a unit test for the
+      production case.
+    notes: >-
+      git issue #994. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F9:
+    origin_task: IFC-074
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      SIGTERM race: main.ts exits before the OTel SDK flushes. Two SIGTERM
+      handlers race; whichever calls process.exit first wins, so the last
+      batch of spans and (with IFC-074) logs before a deploy or restart
+      can be lost. Where: apps/api/src/main.ts:26-32 (process.exit(0)
+      after queues/Prisma) vs apps/api/src/tracing/otel.ts startTracing
+      SIGTERM handler (sdk.shutdown then exit)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Have a single shutdown sequence in main.ts that awaits
+      shutdownOpenTelemetry(getSDKInstance()) before process.exit, and
+      remove the exit from otel.ts's handler.
+    notes: >-
+      git issue #995. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F10:
+    origin_task: IFC-074
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      ai-worker has SENTRY_DSN provisioned but never initialises Sentry.
+      Terraform provisions SENTRY_DSN on the ai-worker service, but the
+      worker has no Sentry SDK, so its exceptions never reach Sentry (they
+      do reach Grafana as error spans). Where: apps/ai-worker/package.json
+      (no @sentry/* dependency); infra/terraform/main.tf:184-196
+      (SENTRY_DSN set on ai-worker)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Either initialise @sentry/node in apps/ai-worker (mirroring
+      apps/api/src/tracing/sentry.ts) or stop provisioning the DSN there
+      and document Grafana as the ai-worker error channel.
+    notes: >-
+      git issue #996. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F11:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      tRPC client errors are logged at error level. Every failed
+      procedure, including UNAUTHORIZED, NOT_FOUND, BAD_REQUEST and
+      TOO_MANY_REQUESTS, is logged at `error`, so expired sessions and
+      rate limits add noise to error-level views in Loki. Where:
+      apps/api/src/tracing/middleware.ts (trpc.error record)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Log client TRPC codes at warn and server codes
+      (INTERNAL_SERVER_ERROR, TIMEOUT, no code) at error; add an it.each
+      over the codes.
+    notes: >-
+      git issue #997. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F12:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      ai-worker pino logger has no redaction. ai-worker builds its own
+      pino logger, which already exports to Loki, without the
+      credential/email redaction that createLogger now has. Where:
+      apps/ai-worker/src/utils/logger.ts:24-47 (builds its own pino()
+      without redact)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 19
+    remediation_plan: >-
+      Use @intelliflow/observability createLogger in ai-worker or add the
+      same redact paths; add a test.
+    notes: >-
+      git issue #998. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
+  IFC074-F13:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      admin, partner and auth procedures skip logContextMiddleware. These
+      builders use tracingMiddleware but not logContextMiddleware, so
+      their log records carry no tenantId/userId context. Where:
+      apps/api/src/trpc.ts:312 (adminProcedure), :344 (partnerProcedure),
+      :567-571 (adminTenantProcedure), :594 (authProcedure)
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-20
+    remediation_sprint: 20
+    remediation_plan: >-
+      Apply logContextMiddleware to these builders (after auth so the user
+      is known) and add a test per builder.
+    notes: >-
+      git issue #999. Found by the IFC-074 spec session (2026-10-22); out
+      of scope under the minimal-change rule. Tracked per project Rule 8
+      (gh issue + debt ledger + findings doc).
 summary:
   total_items: 443
   by_severity:
