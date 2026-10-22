@@ -82,6 +82,16 @@
             "status": "IN_PROGRESS",
             "at": "2026-10-05T22:30:00Z",
             "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+        },
+        {
+            "status": "IN_PROGRESS",
+            "at": "2026-10-22T16:30:00Z",
+            "note": "Sprint-18 rebuild lane: /spec-session started (Specifying). Owner ruling 2026-10-22 option A: .specify/sprints/sprint-18/context/IFC-074/IFC-074-owner-ruling.md"
+        },
+        {
+            "status": "IN_PROGRESS",
+            "at": "2026-10-22T21:10:00Z",
+            "note": "/spec-session complete (Spec Complete): 5/5 APPROVED. Spec .specify/sprints/sprint-18/specifications/IFC-074-spec.md sha256 9d4620a94caebae3b273452c54c36871ce9b1739c511a6a791311c042ccbf109; ADR-086 proposed."
         }
     ],
     "task_id": "IFC-074",

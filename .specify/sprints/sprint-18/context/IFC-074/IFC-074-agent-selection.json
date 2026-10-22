@@ -1,0 +1,19 @@
+{
+  "task_id": "IFC-074",
+  "selected_at": "2026-10-22T19:30:00Z",
+  "mode": "subagent",
+  "agents": [
+    { "role": "DevOps-Lead", "file": ".claude/agents/devops-lead.md", "reason": "OTel/OTLP export, Grafana Cloud Tempo/Loki/alerting, Railway service config" },
+    { "role": "Backend-Architect", "file": ".claude/agents/backend-architect.md", "reason": "apps/api tRPC tracing middleware and pino logger wiring, instrumentation import order" },
+    { "role": "Security-Lead", "file": ".claude/agents/security-lead.md", "reason": "PII/redaction in exported logs, Grafana token handling, secret-shaped content in committed evidence" },
+    { "role": "Test-Engineer", "file": ".claude/agents/test-engineer.md", "reason": "Always included; TDD for middleware + collector, diff-coverage on changed lines" },
+    { "role": "Domain-Expert", "file": ".claude/agents/domain-expert.md", "reason": "Always included; IFC-074 close rule, MTTD definition, anti-fabrication governance" }
+  ],
+  "excluded": [
+    { "role": "Frontend-Lead", "reason": "No UI surface; backend/infra task" },
+    { "role": "A11y-Expert", "reason": "No UI surface" },
+    { "role": "Data-Engineer", "reason": "No schema or migration" },
+    { "role": "AI-Specialist", "reason": "ai-worker telemetry already proven; no LLM logic change" },
+    { "role": "Compliance", "reason": "Log-PII concerns covered by Security-Lead" }
+  ]
+}
