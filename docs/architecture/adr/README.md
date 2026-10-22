@@ -268,6 +268,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-080](./ADR-080-tenant-contact-types.md)                                 | Tenant-defined contact types keyed by the existing `contactType` column (no contacts backfill)    | ✅ Accepted | 2026-10-17 | PG-205                      |
 | [ADR-081](./ADR-081-tenant-availability.md)                                  | Tenant availability (weekly hours, closures, daily cap) enforced at booking                       | Accepted    | 2026-10-17 | PG-202                      |
 | [ADR-082](./ADR-082-tenant-model-config.md)                                  | Tenant model configuration per AI purpose (catalog pins, price-ranked never-downgrade, ceilings)  | 📝 Proposed | 2026-10-19 | PG-199                      |
+| [ADR-087](./ADR-087-production-slos-anomaly-detection-and-self-healing.md)   | Production SLOs, anomaly detection (Grafana Asserts) and self-healing (Railway restart policy)    | ✅ Accepted | 2026-10-23 | ENV-008-AI                  |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**
