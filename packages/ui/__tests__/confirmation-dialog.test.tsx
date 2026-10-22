@@ -85,4 +85,15 @@ describe('ConfirmationDialog', () => {
     const cancelButton = screen.getByText('Cancel');
     expect(cancelButton).toBeDisabled();
   });
+
+  it('passes onCloseAutoFocus so the caller can move focus when the dialog closes', async () => {
+    const onCloseAutoFocus = vi.fn((event: Event) => event.preventDefault());
+    const { rerender } = render(
+      <ConfirmationDialog {...defaultProps} onCloseAutoFocus={onCloseAutoFocus} />
+    );
+    rerender(
+      <ConfirmationDialog {...defaultProps} open={false} onCloseAutoFocus={onCloseAutoFocus} />
+    );
+    await waitFor(() => expect(onCloseAutoFocus).toHaveBeenCalledTimes(1));
+  });
 });

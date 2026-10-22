@@ -1,0 +1,315 @@
+{
+  "task_id": "PG-204",
+  "head": "731a83a999d6fadd1514f430b978f56d6c8467a3",
+  "steps": [
+    {
+      "id": "validation-matrix-01-domain-new",
+      "scope": "Domain new (resolver)",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --dir packages/domain exec vitest run src/legal/cases/__tests__/case-type-defaults.test.ts",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T06:39:53.362Z",
+          "finished": "2026-10-13T06:39:57.997Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-01-domain-new.log"
+    },
+    {
+      "id": "validation-matrix-02-domain-full",
+      "scope": "Domain full",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/domain test",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T06:39:58.304Z",
+          "finished": "2026-10-13T06:40:21.159Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-02-domain-full.log"
+    },
+    {
+      "id": "validation-matrix-03-validators-full",
+      "scope": "Validators full",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/validators test",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T13:53:04.574Z",
+          "finished": "2026-10-13T13:53:14.574Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-03-validators-full.log"
+    },
+    {
+      "id": "validation-matrix-04-adapters-full",
+      "scope": "Adapters full",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/adapters test",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T06:40:35.918Z",
+          "finished": "2026-10-13T06:41:00.234Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-04-adapters-full.log"
+    },
+    {
+      "id": "validation-matrix-05-db",
+      "scope": "DB build + typecheck",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm --filter @intelliflow/db build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm --filter @intelliflow/db typecheck",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T13:53:14.608Z",
+          "finished": "2026-10-13T13:54:01.302Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-05-db.log"
+    },
+    {
+      "id": "validation-matrix-06-api-full",
+      "scope": "API full",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm --filter @intelliflow/api test",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T13:54:01.345Z",
+          "finished": "2026-10-13T13:56:23.385Z",
+          "exit": 1
+        },
+        {
+          "started": "2026-10-13T13:56:23.385Z",
+          "finished": "2026-10-13T13:58:27.867Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-06-api-full.log"
+    },
+    {
+      "id": "validation-matrix-07-integration-db",
+      "scope": "Integration (DB) case-types",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/case-types.test.ts --reporter=verbose",
+      "node": "v22.14.0",
+      "attempts": [
+        {
+          "started": "2026-10-13T14:23:03.250Z",
+          "finished": "2026-10-13T14:23:07.223Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-07-integration-db.log"
+    },
+    {
+      "id": "validation-matrix-08-web-full",
+      "scope": "Web full",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/web exec vitest run",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T13:58:33.034Z",
+          "finished": "2026-10-13T14:08:03.626Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-08-web-full.log"
+    },
+    {
+      "id": "validation-matrix-09-typecheck",
+      "scope": "Typecheck touched packages",
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/adapters typecheck && pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T14:08:03.654Z",
+          "finished": "2026-10-13T14:09:15.510Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-09-typecheck.log"
+    },
+    {
+      "id": "validation-matrix-10-lint",
+      "scope": "Lint touched packages + sonar guard",
+      "command": "pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/validators lint && pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint && pnpm run lint:sonar:guard",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T14:09:15.546Z",
+          "finished": "2026-10-13T14:10:07.511Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-10-lint.log"
+    },
+    {
+      "id": "validation-matrix-11-build",
+      "scope": "Build touched packages + web",
+      "command": "pnpm --filter @intelliflow/domain build && pnpm --filter @intelliflow/validators build && pnpm --filter @intelliflow/db build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/api build && node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm --filter @intelliflow/web build",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T14:10:53.302Z",
+          "finished": "2026-10-13T14:16:52.852Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-11-build.log"
+    },
+    {
+      "id": "validation-matrix-12-coverage-related",
+      "scope": "Coverage over tests related to the changed files (feeds diff-coverage)",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-204 -- pnpm run test:coverage",
+      "node": "v22.14.0",
+      "attempts": [
+        {
+          "started": "2026-10-13T14:16:52.901Z",
+          "finished": "2026-10-13T14:22:36.197Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-12-coverage-related.log"
+    },
+    {
+      "id": "validation-matrix-13-diff-coverage",
+      "scope": "Diff coverage (Sonar new_coverage >= 80%)",
+      "command": "node scripts/check-diff-coverage.mjs",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T14:22:36.232Z",
+          "finished": "2026-10-13T14:22:36.959Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-13-diff-coverage.log"
+    },
+    {
+      "id": "turbo-typecheck",
+      "scope": "Baseline: root pnpm run typecheck (turbo, all packages, + sonar guard)",
+      "command": "pnpm run typecheck",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T07:03:27.667Z",
+          "finished": "2026-10-13T07:03:30.962Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/turbo-typecheck.log"
+    },
+    {
+      "id": "turbo-lint",
+      "scope": "Baseline: root pnpm run lint (turbo, all packages)",
+      "command": "pnpm run lint",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T07:03:30.991Z",
+          "finished": "2026-10-13T07:03:33.093Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/turbo-lint.log"
+    },
+    {
+      "id": "preflight-exec-readiness",
+      "scope": "Preflight",
+      "command": "node tools/scripts/exec-preflight/check-exec-readiness.mjs PG-204",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T07:03:33.296Z",
+          "finished": "2026-10-13T07:03:33.429Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-exec-readiness.log"
+    },
+    {
+      "id": "preflight-plan-reviewer",
+      "scope": "Preflight",
+      "command": "node tools/scripts/exec-preflight/check-plan-reviewer-subagent.mjs PG-204",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T07:03:33.465Z",
+          "finished": "2026-10-13T07:03:33.595Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-plan-reviewer.log"
+    },
+    {
+      "id": "preflight-nav-wiring",
+      "scope": "Preflight",
+      "command": "node tools/scripts/exec-preflight/check-nav-wiring.mjs PG-204",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T07:03:33.629Z",
+          "finished": "2026-10-13T07:03:33.734Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-nav-wiring.log"
+    },
+    {
+      "id": "preflight-page-doc-cochange",
+      "scope": "Preflight",
+      "command": "node tools/scripts/exec-preflight/check-page-doc-cochange.mjs PG-204",
+      "node": "v25.2.1",
+      "attempts": [
+        {
+          "started": "2026-10-13T07:03:33.774Z",
+          "finished": "2026-10-13T07:03:33.882Z",
+          "exit": 0
+        }
+      ],
+      "exit_code": 0,
+      "passed": true,
+      "log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-page-doc-cochange.log"
+    }
+  ]
+}

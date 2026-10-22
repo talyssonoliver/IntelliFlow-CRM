@@ -52,6 +52,9 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete', 'manage', 'admin'],
     system: ['read', 'write', 'admin'],
     pipeline_config: ['read', 'write', 'delete', 'manage', 'admin'],
+    report_schedule: ['read', 'write', 'delete', 'manage', 'admin'],
+    contact_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-205
+    model_config: ['read', 'write', 'delete', 'manage', 'admin'], // PG-199
     goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
   MANAGER: {
@@ -66,6 +69,9 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete', 'manage'],
     system: ['read'],
     pipeline_config: ['read', 'write', 'manage'],
+    report_schedule: ['read', 'write', 'delete', 'manage'],
+    contact_type: ['read', 'write', 'delete', 'manage'], // PG-205: managers edit types
+    model_config: ['read', 'write', 'delete', 'manage'], // PG-199: managers edit model settings
     goal: ['read', 'write', 'manage'],
   },
   SALES_REP: {
@@ -80,6 +86,9 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete'],
     system: [],
     pipeline_config: ['read'],
+    report_schedule: ['read'],
+    contact_type: ['read'], // PG-205
+    model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
   USER: {
@@ -94,6 +103,9 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read', 'write', 'delete'],
     system: [],
     pipeline_config: ['read'],
+    report_schedule: ['read'],
+    contact_type: ['read'], // PG-205
+    model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
   VIEWER: {
@@ -108,6 +120,9 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     session: ['read'],
     system: [],
     pipeline_config: ['read'],
+    report_schedule: ['read'],
+    contact_type: ['read'], // PG-205
+    model_config: ['read'], // PG-199
     goal: ['read'],
   },
 };

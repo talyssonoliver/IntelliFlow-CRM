@@ -76,6 +76,19 @@ const mockDraftInstance = {
   invalidate: vi.fn(),
 };
 
+// PG-198: no tenant policies -> built-in rules (policy behaviour: autoresponse.router.policies.test.ts)
+vi.mock('../../../agent/approval-policy-loader', async () => {
+  const { APPROVAL_POLICY_DEFAULTS } = await import('@intelliflow/domain');
+  return {
+    loadApprovalPolicy: async () => ({
+      rule: APPROVAL_POLICY_DEFAULTS.AUTO_RESPONSE,
+      policyId: null,
+      policyName: null,
+      source: 'BUILT_IN',
+    }),
+  };
+});
+
 import { autoResponseRouter } from '../autoresponse.router';
 
 const TEST_TENANT_ID = '00000000-0000-4000-8000-000000000001';
@@ -749,6 +762,19 @@ describe('autoResponseRouter (caller tests)', () => {
 
       await caller.getStatsByStatus({ tenantId: TEST_TENANT_ID });
 
+      expect(mockRepository.countByStatusAll).toHaveBeenCalledWith(TEST_TENANT_ID);
+    });
+
+    it('refuses another tenant id and never reads its counts', async () => {
+      await expect(
+        caller.getStatsByStatus({ tenantId: 'cmforeigntenant0000000001' })
+      ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(mockRepository.countByStatusAll).not.toHaveBeenCalled();
+    });
+
+    it('uses the session tenant when no tenant id is sent', async () => {
+      mockRepository.countByStatusAll.mockResolvedValue({});
+      await caller.getStatsByStatus();
       expect(mockRepository.countByStatusAll).toHaveBeenCalledWith(TEST_TENANT_ID);
     });
   });

@@ -600,7 +600,7 @@ describe('LoginPage', () => {
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
-      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/login');
+      expect(metadata.openGraph?.url).toBe('https://intelli-flow-crm-web.vercel.app/login');
       expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });

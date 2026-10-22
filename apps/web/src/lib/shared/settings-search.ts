@@ -54,6 +54,15 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     keywords: ['llm', 'model', 'chain', 'version', 'rollback', 'experiment', 'budget'],
   },
   {
+    id: 'model-config',
+    title: 'Model Configuration',
+    description: 'Choose the model, fallbacks and monthly cost ceiling for each AI feature',
+    href: '/agent-approvals/model-config',
+    icon: 'psychology',
+    color: 'bg-primary/90',
+    keywords: ['llm', 'model', 'fallback', 'temperature', 'tokens', 'ceiling', 'cost'],
+  },
+  {
     id: 'pipeline',
     title: 'Pipeline',
     description: 'Configure deal pipeline stages, automation rules, and workflows',
@@ -189,7 +198,17 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'ai-automation',
     title: 'AI & Automation',
-    itemIds: ['ai', 'pipeline', 'leads', 'accounts', 'deals', 'tickets', 'documents', 'tasks'],
+    itemIds: [
+      'ai',
+      'model-config',
+      'pipeline',
+      'leads',
+      'accounts',
+      'deals',
+      'tickets',
+      'documents',
+      'tasks',
+    ],
   },
   {
     id: 'integrations-comms',

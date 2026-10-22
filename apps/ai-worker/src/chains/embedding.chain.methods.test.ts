@@ -62,6 +62,20 @@ describe('EmbeddingChain embedder methods (mocked llm-factory)', () => {
     });
   });
 
+  // PG-199: the wrapper keeps the ceiling error reachable through `cause`, so the
+  // workers can tell "ceiling reached" (delay) from a provider failure (retry).
+  it('keeps a purpose-ceiling error identifiable through the wrap', async () => {
+    const { isPurposeCeilingReached } = await import('../lib/purpose-ceiling');
+    embedQuery.mockRejectedValueOnce(
+      Object.assign(new Error('monthly AI ceiling reached for rag'), {
+        code: 'PURPOSE_CEILING_REACHED',
+      })
+    );
+    const err = await chain.generateEmbedding({ text: 'capped' }).catch((e: unknown) => e);
+    expect((err as Error).message).toMatch(/monthly AI ceiling reached for rag/);
+    expect(isPurposeCeilingReached(err)).toBe(true);
+  });
+
   describe('generateBatchEmbeddings', () => {
     it('returns one EmbeddingResult per input with batch metadata', async () => {
       const result = await chain.generateBatchEmbeddings([{ text: 'a' }, { text: 'b' }]);

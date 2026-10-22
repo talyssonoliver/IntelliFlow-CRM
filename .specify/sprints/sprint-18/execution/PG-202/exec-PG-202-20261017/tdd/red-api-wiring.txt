@@ -1,0 +1,3665 @@
+# 2026-10-17T17:29:53Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts src/modules/legal/__tests__/appointments.availability-boundary.test.ts src/modules/legal/__tests__/appointment-settings.router.test.ts src/__tests__/app-router.smoke.test.ts src/agent/__tests__/approved-action-executor.test.ts src/modules/legal/__tests__/legal-module-entitlement.test.ts src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+stdout | src/modules/legal/__tests__/appointment-settings.router.test.ts > Appointment Settings Router > update > ignores buffers and timezone from an old client (edited on Availability, PG-202)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"update","method":"mutation","durationMs":1,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointment-settings.router.test.ts > Appointment Settings Router > resetToDefaults > upserts settings back to system defaults
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"resetToDefaults","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointment-settings.router.test.ts > Appointment Settings Router > resetToDefaults > leaves buffers, timezone and the availability columns untouched (PG-202)
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"resetToDefaults","method":"mutation","durationMs":0,"status":"success"}
+
+ ❯ |api| src/modules/legal/__tests__/appointment-settings.router.test.ts (15 tests | 3 failed) 90ms
+       × ignores buffers and timezone from an old client (edited on Availability, PG-202) 5ms
+       × upserts settings back to system defaults 8ms
+       × leaves buffers, timezone and the availability columns untouched (PG-202) 3ms
+ ❯ |api| src/modules/legal/__tests__/legal-module-entitlement.test.ts (0 test)
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > allows a booking inside the firm hours and calls the use case
+[appointments.create] Use-case scheduled in 0.43ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > allows a booking inside the firm hours and calls the use case
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > allows a booking inside the firm hours and calls the use case
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > allows a booking inside the firm hours and calls the use case
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects outside hours before the use case runs
+[appointments.create] Use-case scheduled in 0.47ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects outside hours before the use case runs
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects outside hours before the use case runs
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects outside hours before the use case runs
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closed weekday before the use case runs
+[appointments.create] Use-case scheduled in 0.46ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closed weekday before the use case runs
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closed weekday before the use case runs
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closed weekday before the use case runs
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closure date before the use case runs
+[appointments.create] Use-case scheduled in 0.36ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closure date before the use case runs
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closure date before the use case runs
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closure date before the use case runs
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects the daily cap before the use case runs
+[appointments.create] Use-case scheduled in 0.35ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects the daily cap before the use case runs
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects the daily cap before the use case runs
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects the daily cap before the use case runs
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects running past midnight before the use case runs
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > is not bypassed by forceOverrideConflicts
+[appointments.create] Use-case scheduled in 0.36ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > is not bypassed by forceOverrideConflicts
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > is not bypassed by forceOverrideConflicts
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > is not bypassed by forceOverrideConflicts
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > runs the availability check before the use case
+[appointments.create] Use-case scheduled in 0.36ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > runs the availability check before the use case
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > runs the availability check before the use case
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > runs the availability check before the use case
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move onto a closure date
+[appointments.reschedule] Use-case reschedule in 0.42ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move onto a closure date
+[appointments] onAppointmentRescheduled side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentRescheduled (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:429:36)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:851:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move onto a closure date
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move onto a closure date
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"reschedule","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > excludes the appointment itself from the daily cap
+[appointments.reschedule] Use-case reschedule in 0.44ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > excludes the appointment itself from the daily cap
+[appointments] onAppointmentRescheduled side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentRescheduled (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:429:36)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:851:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > excludes the appointment itself from the daily cap
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > excludes the appointment itself from the daily cap
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"reschedule","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move into a full day
+[appointments.reschedule] Use-case reschedule in 0.45ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move into a full day
+[appointments] onAppointmentRescheduled side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentRescheduled (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:429:36)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:851:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move into a full day
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move into a full day
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"reschedule","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+[appointments.reschedule] Use-case reschedule in 0.49ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+[appointments] onAppointmentRescheduled side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentRescheduled (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:429:36)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:851:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"reschedule","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+[appointments.reschedule] Use-case reschedule in 0.33ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+[appointments] onAppointmentRescheduled side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentRescheduled (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:429:36)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:851:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"reschedule","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > findNextSlot > offers only slots inside saved availability for a configured tenant
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"findNextSlot","method":"query","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+[appointments.create] Use-case scheduled in 0.52ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+[appointments.create] Use-case scheduled in 0.35ms
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+[appointments] onAppointmentCreated side-effect error: TypeError: Cannot read properties of undefined (reading 'getTime')
+    at Function.create (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain/src/legal/appointments/TimeSlot.ts:63:32)
+    at onAppointmentCreated (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:389:37)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:600:5
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at resolveMiddleware (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/appointments.router.ts:308:18
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+    at callRecursive (file:///C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18)
+
+stderr | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+[appointments.router] Side-effect failed: TypeError: Cannot read properties of undefined (reading 'id')
+    at createNotification (C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/notifications/notifications.router.ts:850:16)
+    at processTicksAndRejections (node:internal/process/task_queues:105:5)
+
+stdout | src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"create","method":"mutation","durationMs":0,"status":"success"}
+
+ ❯ |api| src/modules/legal/__tests__/appointments.router.caller.test.ts (63 tests | 14 failed) 342ms
+       × allows a booking inside the firm hours and calls the use case 21ms
+       × rejects outside hours before the use case runs 10ms
+       × rejects a closed weekday before the use case runs 6ms
+       × rejects a closure date before the use case runs 8ms
+       × rejects the daily cap before the use case runs 4ms
+       × rejects running past midnight before the use case runs 5ms
+       × is not bypassed by forceOverrideConflicts 5ms
+       × runs the availability check before the use case 4ms
+       × rejects a move onto a closure date 5ms
+       × excludes the appointment itself from the daily cap 8ms
+       × rejects a move into a full day 7ms
+       × uses the firm zone, not UTC 7ms
+       × offers only slots inside saved availability for a configured tenant 4ms
+       × the hours of tenant A never govern a booking of tenant B 14ms
+ ❯ |api| src/__tests__/app-router.smoke.test.ts (12 tests | 1 failed) 3494ms
+     × registers calendar.availability with every procedure (PG-202) 4ms
+ ❯ |api| src/modules/legal/__tests__/appointments.availability-boundary.test.ts (4 tests | 4 failed) 34ms
+     × no longer contains the hard-coded 07:00-19:00 helper 7ms
+     × calls the availability helper exactly twice (create and reschedule) 2ms
+     × routes findNextSlot through the tenant availability loader 1ms
+     × the real container exposes findFirstFreeCandidate on the conflicts use case 3ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/legal/__tests__/legal-module-entitlement.test.ts [ src/modules/legal/__tests__/legal-module-entitlement.test.ts ]
+Error: Cannot find module '../../calendar/availability.router' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api/src/modules/legal/__tests__/legal-module-entitlement.test.ts
+ ❯ src/modules/legal/__tests__/legal-module-entitlement.test.ts:33:1
+     31| import { documentSettingsRouter } from '../document-settings.router';
+     32| import { documentsRouter } from '../documents.router';
+     33| import { availabilityRouter } from '../../calendar/availability.router…
+       | ^
+     34|
+     35| // appointments + appointment-settings are deliberately NOT here: they…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/23]⎯
+
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 22 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/__tests__/app-router.smoke.test.ts > appRouter smoke — PG-190 module-settings registration > registers calendar.availability with every procedure (PG-202)
+AssertionError: expected undefined to be defined
+ ❯ src/__tests__/app-router.smoke.test.ts:193:26
+    191|     const availability = record.calendar?.availability as Record<strin…
+    192|
+    193|     expect(availability).toBeDefined();
+       |                          ^
+    194|     for (const procedure of ['get', 'update', 'resetToDefaults']) {
+    195|       expect(availability?.[procedure]).toBeDefined();
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointment-settings.router.test.ts > Appointment Settings Router > update > ignores buffers and timezone from an old client (edited on Availability, PG-202)
+TRPCError: [
+  {
+    "origin": "number",
+    "code": "too_big",
+    "maximum": 240,
+    "inclusive": true,
+    "path": [
+      "defaultBufferBeforeMinutes"
+    ],
+    "message": "Too big: expected number to be <=240"
+  }
+]
+ ❯ inputValidatorMiddleware ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/middleware.ts:195:14
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+ ❯ src/tracing/middleware.ts:130:25
+    128|             },
+    129|             async () => {
+    130|               const r = await next();
+       |                         ^
+    131|               // Snapshot WHILE the budget ALS context is still active.
+    132|               budgetSnapshot = getQueryBudgetSnapshot();
+ ❯ src/tracing/middleware.ts:121:26
+
+Caused by: ZodError: [
+  {
+    "origin": "number",
+    "code": "too_big",
+    "maximum": 240,
+    "inclusive": true,
+    "path": [
+      "defaultBufferBeforeMinutes"
+    ],
+    "message": "Too big: expected number to be <=240"
+  }
+]
+ ❯ inputValidatorMiddleware ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:42:24
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯
+Serialized Error: { _zod: { def: [ { origin: 'number', code: 'too_big', maximum: 240, inclusive: true, path: [ 'defaultBufferBeforeMinutes' ], message: 'Too big: expected number to be <=240' } ], constr: 'Function<ZodError>', traits: { constructor: 'Function<Set>', has: 'Function<has>', add: 'Function<add>', delete: 'Function<delete>', clear: 'Function<clear>', entries: 'Function<entries>', forEach: 'Function<forEach>', size: 2, values: 'Function<values>', keys: 'Function<values>', union: 'Function<union>', intersection: 'Function<intersection>', difference: 'Function<difference>', symmetricDifference: 'Function<symmetricDifference>', isSubsetOf: 'Function<isSubsetOf>', isSupersetOf: 'Function<isSupersetOf>', isDisjointFrom: 'Function<isDisjointFrom>' }, deferred: [] }, issues: [ { origin: 'number', code: 'too_big', maximum: 240, inclusive: true, path: [ 'defaultBufferBeforeMinutes' ], message: 'Too big: expected number to be <=240' } ], format: 'Function<value>', flatten: 'Function<value>', addIssue: 'Function<value>', addIssues: 'Function<value>', isEmpty: false }
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointment-settings.router.test.ts > Appointment Settings Router > resetToDefaults > upserts settings back to system defaults
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+
+Received:
+
+  1st vi.fn() call:
+
+@@ -1,14 +1,33 @@
+  [
+-   ObjectContaining {
+-     "create": ObjectContaining {
++   {
++     "create": {
++       "defaultBufferAfterMinutes": 0,
++       "defaultBufferBeforeMinutes": 0,
+        "defaultDurationMinutes": 30,
++       "defaultReminderMinutes": 15,
++       "defaultTimezone": "UTC",
++       "maxDurationMinutes": 480,
++       "minDurationMinutes": 5,
++       "primaryCalendarId": null,
++       "syncExternalCalendars": false,
+        "tenantId": "344b1756-0000-4000-8000-344b17560000",
+      },
++     "include": {
++       "primaryCalendar": {
++         "select": {
++           "id": true,
++           "name": true,
++         },
++       },
++     },
+      "update": {
++       "defaultBufferAfterMinutes": 0,
++       "defaultBufferBeforeMinutes": 0,
+        "defaultDurationMinutes": 30,
+        "defaultReminderMinutes": 15,
++       "defaultTimezone": "UTC",
+        "maxDurationMinutes": 480,
+        "minDurationMinutes": 5,
+        "primaryCalendarId": null,
+        "syncExternalCalendars": false,
+      },
+
+
+Number of calls: 1
+
+ ❯ src/modules/legal/__tests__/appointment-settings.router.test.ts:138:53
+    136|       const result = await caller.resetToDefaults();
+    137|
+    138|       expect(prismaMock.appointmentSettings.upsert).toHaveBeenCalledWi…
+       |                                                     ^
+    139|         expect.objectContaining({
+    140|           where: { tenantId },
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointment-settings.router.test.ts > Appointment Settings Router > resetToDefaults > leaves buffers, timezone and the availability columns untouched (PG-202)
+AssertionError: expected { defaultDurationMinutes: 30, …(8) } to not have property "defaultBufferBeforeMinutes"
+
+- Expected:
+undefined
+
++ Received:
+0
+
+ ❯ src/modules/legal/__tests__/appointment-settings.router.test.ts:166:28
+    164|         'availabilityConfiguredAt',
+    165|       ]) {
+    166|         expect(update).not.toHaveProperty(key);
+       |                            ^
+    167|       }
+    168|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.availability-boundary.test.ts > appointments router availability boundary (PG-202) > no longer contains the hard-coded 07:00-19:00 helper
+AssertionError: expected '/**\n * Appointments Router\n *\n * P…' not to match /BUSINESS_HOURS_/
+
+- Expected:
+/BUSINESS_HOURS_/
+
++ Received:
+"/**
+ * Appointments Router
+ *
+ * Provides type-safe tRPC endpoints for appointment management:
+ * - CRUD operations (create, read, update, delete)
+ * - Conflict detection and availability checking
+ * - Rescheduling and cancellation
+ * - Case linkage
+ * - Recurrence support
+ *
+ * Task: IFC-137 - Appointment Aggregate with conflict detection
+ * KPIs: Conflict detection accuracy >95%, scheduling latency <=100ms
+ *
+ * INTEGRATION: Uses AppointmentDomainService for domain logic
+ * - ConflictDetector for sophisticated conflict detection
+ * - Buffer time handling
+ * - Recurrence pattern generation
+ */
+
+import { z } from 'zod';
+import type {
+  Appointment as AppointmentRow,
+  AppointmentAttendee,
+  AppointmentCase,
+} from '@intelliflow/db';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, tenantProcedure as baseTenantProcedure } from '../../trpc';
+import { AppointmentDomainService } from '../../services';
+import {
+  AppointmentCreatedEvent,
+  AppointmentRescheduledEvent,
+  AppointmentCancelledEvent,
+  AppointmentId,
+  Appointment,
+  TimeSlot,
+} from '@intelliflow/domain';
+import { container } from '../../container';
+import { createNotification } from '../notifications/notifications.router';
+import { mapDomainErrorToTRPC } from './helpers';
+import { safeTimezone } from '../../lib/timezone-utils';
+
+// NOTE: appointments are NOT LEGAL-gated. This router is SHARED with the core
+// Calendar feature (CORE_CRM, all tiers): apps/web/.../calendar/(list)/page.tsx
+// calls `appointments.list`. Gating it behind the LEGAL add-on would break the
+// calendar for every non-Professional tenant. Legal case-appointments reuse the
+// same tenant-scoped endpoints.
+
+// Zod schemas for appointment operations
+const appointmentTypeSchema = z.enum([
+  'MEETING',
+  'CALL',
+  'HEARING',
+  'CONSULTATION',
+  'DEPOSITION',
+  'OTHER',
+]);
+
+const appointmentStatusSchema = z.enum([
+  'SCHEDULED',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+]);
+
+const dayOfWeekSchema = z.enum([
+  'SUNDAY',
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+]);
+
+const recurrenceSchema = z
+  .object({
+    frequency: z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']),
+    interval: z.number().min(1).optional().default(1),
+    daysOfWeek: z.array(dayOfWeekSchema).optional(),
+    dayOfMonth: z.number().min(1).max(31).optional(),
+    monthOfYear: z.number().min(1).max(12).optional(),
+    endDate: z.coerce.date().optional(),
+    occurrenceCount: z.number().min(1).optional(),
+  })
+  .optional();
+
+const ianaTimezoneSchema = z.string().refine(
+  (tz) => {
+    if (tz === 'UTC' || tz.includes('/')) {
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  },
+  { message: 'Must be a valid IANA timezone (e.g. America/New_York) or UTC' }
+);
+
+const createAppointmentSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  timezone: ianaTimezoneSchema.optional(),
+  appointmentType: appointmentTypeSchema,
+  location: z.string().max(500).optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
+  linkedCaseIds: z.array(z.string()).optional().default([]),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+  recurrence: recurrenceSchema,
+  reminderMinutes: z.number().min(0).optional(),
+  forceOverrideConflicts: z.boolean().optional().default(false),
+  calendarId: z.string().optional().nullable(),
+});
+
+const updateAppointmentSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).optional(),
+  location: z.string().max(500).optional(),
+  timezone: ianaTimezoneSchema.optional().nullable(),
+  appointmentType: appointmentTypeSchema.optional(),
+  notes: z.string().max(5000).optional(),
+  reminderMinutes: z.number().min(0).optional(),
+  calendarId: z.string().optional().nullable(),
+});
+
+const rescheduleSchema = z.object({
+  id: z.string(),
+  newStartTime: z.coerce.date(),
+  newEndTime: z.coerce.date(),
+  reason: z.string().max(500).optional(),
+  forceOverrideConflicts: z.boolean().optional().default(false),
+});
+
+const checkConflictsSchema = z.object({
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  attendeeIds: z.array(z.string()).min(1),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+  excludeAppointmentId: z.string().optional(),
+});
+
+const checkAvailabilitySchema = z.object({
+  attendeeId: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  minimumSlotMinutes: z.number().min(5).optional().default(30),
+});
+
+const findNextSlotSchema = z.object({
+  attendeeId: z.string(),
+  startFrom: z.coerce.date(),
+  durationMinutes: z.number().min(5),
+  maxDaysAhead: z.number().min(1).max(365).optional().default(30),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+});
+
+const listAppointmentsSchema = z.object({
+  page: z.number().min(1).optional().default(1),
+  limit: z.number().min(1).max(100).optional().default(20),
+  status: z.array(appointmentStatusSchema).optional(),
+  appointmentType: z.array(appointmentTypeSchema).optional(),
+  startTimeFrom: z.coerce.date().optional(),
+  startTimeTo: z.coerce.date().optional(),
+  caseId: z.string().optional(),
+  calendarId: z.string().optional(),
+  sortBy: z.enum(['startTime', 'createdAt', 'updatedAt']).optional().default('startTime'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+});
+
+/**
+ * Returns a Prisma WHERE clause scoping appointments to the current user,
+ * or an empty object for admins (who can see all appointments).
+ */
+function userScopeFilter(user: { userId: string; role: string }) {
+  if (user.role === 'ADMIN') return {};
+  return {
+    OR: [{ organizerId: user.userId }, { attendees: { some: { userId: user.userId } } }],
+  };
+}
+
+/**
+ * Business-hours window (inclusive start, exclusive end) in 24-hour clock,
+ * matching the calendar's day boundaries: 07:00 – 19:00.
+ * Update both sides in sync if the range changes.
+ */
+const BUSINESS_HOURS_START = 7;
+const BUSINESS_HOURS_END = 19;
+
+type ModuleAccessLike = {
+  isModuleEnabled: (tenantId: string, moduleId: string) => Promise<boolean> | boolean;
+};
+
+/**
+ * Assert the tenant's plan includes the LEGAL module.
+ *
+ * The appointments router is SHARED with the core calendar (so the router itself
+ * stays on plain `tenantProcedure`), but linking appointments to legal CASES is a
+ * LEGAL feature. A tenant downgraded out of LEGAL can still hold orphan cases, so
+ * the case-linking surface (linkToCase/unlinkFromCase, create-with-linkedCaseIds,
+ * list-by-caseId) must re-check entitlement. Mirrors trpc.ts `requireModule` and
+ * fails CLOSED (deny if the entitlement service is unavailable or errors).
+ */
+async function assertLegalEntitlement(ctx: {
+  user?: { tenantId?: string | null };
+  container?: { get: (name: string) => unknown };
+}): Promise<void> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
+  }
+  const moduleAccess = ctx.container?.get('moduleAccess') as ModuleAccessLike | undefined;
+  if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'The LEGAL module is unavailable.' });
+  }
+  let enabled: unknown;
+  try {
+    enabled = await moduleAccess.isModuleEnabled(tenantId, 'LEGAL');
+  } catch {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Could not verify entitlement for the LEGAL module.',
+    });
+  }
+  if (enabled === false) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Your plan does not include the LEGAL module.',
+    });
+  }
+}
+
+type EntitlementCtx = {
+  user?: { tenantId?: string | null };
+  container?: { get: (name: string) => unknown };
+};
+
+/** Non-throwing LEGAL entitlement check (fails CLOSED to `false`). */
+async function hasLegalEntitlement(ctx: EntitlementCtx): Promise<boolean> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) return false;
+  const moduleAccess = ctx.container?.get('moduleAccess') as ModuleAccessLike | undefined;
+  if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') return false;
+  try {
+    return (await moduleAccess.isModuleEnabled(tenantId, 'LEGAL')) !== false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Hide legal case-link data (`linkedCases`) from callers without the LEGAL
+ * module. Appointments are a shared calendar resource, but a tenant downgraded
+ * out of LEGAL can still hold orphan AppointmentCase rows; those must not surface
+ * in any appointment read/response. Mutates in place to `[]`. Only consults
+ * entitlement when there is actually link data to hide, so the core-calendar
+ * hot path (no links) pays nothing.
+ */
+async function cloakLinkedCases<T extends { linkedCases?: unknown }>(
+  ctx: EntitlementCtx,
+  appointments: T[]
+): Promise<void> {
+  const hasLinks = appointments.some(
+    (a) => Array.isArray(a.linkedCases) && a.linkedCases.length > 0
+  );
+  if (!hasLinks) return;
+  if (await hasLegalEntitlement(ctx)) return;
+  for (const a of appointments) {
+    if (Array.isArray(a.linkedCases)) {
+      (a as { linkedCases: unknown[] }).linkedCases = [];
+    }
+  }
+}
+
+/** Pull appointment-shaped objects (carrying `linkedCases`) out of any result. */
+function collectAppointmentLike(data: unknown): { linkedCases?: unknown }[] {
+  if (Array.isArray(data)) {
+    return data.filter((x) => x && typeof x === 'object') as { linkedCases?: unknown }[];
+  }
+  if (!data || typeof data !== 'object') return [];
+  const d = data as Record<string, unknown>;
+  if (Array.isArray(d.linkedCases)) return [d as { linkedCases?: unknown }];
+  if (Array.isArray(d.appointments)) return d.appointments as { linkedCases?: unknown }[];
+  // Nested single appointment, e.g. reschedule returns `{ appointment, previousTime }`.
+  if (d.appointment && typeof d.appointment === 'object') {
+    return [d.appointment as { linkedCases?: unknown }];
+  }
+  return [];
+}
+
+/**
+ * Router-local `tenantProcedure` = the core tenant procedure + a response cloak
+ * that strips legal `linkedCases` from any appointment read/response for callers
+ * without the LEGAL module. Applied once here so all 9 appointment endpoints are
+ * covered with no per-procedure plumbing; non-appointment results (e.g.
+ * `{ success }`) pass through untouched.
+ */
+const tenantProcedure = baseTenantProcedure.use(async ({ ctx, next }) => {
+  const result = await next();
+  if (result.ok) {
+    const appts = collectAppointmentLike(result.data);
+    if (appts.length) await cloakLinkedCases(ctx as EntitlementCtx, appts);
+  }
+  return result;
+});
+
+function getLocalHour(date: Date, timezone?: string): number {
+  const tz = timezone ?? 'UTC';
+  // Use en-GB to get 24-hour format reliably
+  const hourStr = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    hour12: false,
+    timeZone: tz,
+  }).format(date);
+  // en-GB can return \"24\" for midnight in some engines — normalise
+  const hour = parseInt(hourStr, 10);
+  return hour === 24 ? 0 : hour;
+}
+
+/**
+ * Validates that the appointment's start and end fall within business hours
+ * (07:00 – 19:00) in the provided timezone. Throws a BAD_REQUEST if outside.
+ */
+function assertWithinBusinessHours(startTime: Date, endTime: Date, timezone?: string): void {
+  const startHour = getLocalHour(startTime, timezone);
+  const endHour = getLocalHour(endTime, timezone);
+  const startWithinDay = startHour >= BUSINESS_HOURS_START && startHour < BUSINESS_HOURS_END;
+  // End boundary: end hour == 19 is OK when minutes are 00 (meeting ends at 19:00 sharp)
+  const endMinutes = parseInt(
+    new Intl.DateTimeFormat('en-GB', {
+      minute: '2-digit',
+      timeZone: timezone ?? 'UTC',
+    }).format(endTime),
+    10
+  );
+  const endWithinDay =
+    (endHour >= BUSINESS_HOURS_START && endHour < BUSINESS_HOURS_END) ||
+    (endHour === BUSINESS_HOURS_END && endMinutes === 0);
+
+  if (!startWithinDay || !endWithinDay) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Appointments must start and end between ${String(BUSINESS_HOURS_START).padStart(
+        2,
+        '0'
+      )}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`,
+    });
+  }
+}
+
+/**
+ * Convert a Prisma appointment record to a domain Appointment for ICS/reminder handlers.
+ * Uses AppointmentDomainService.toDomainAppointments (handles TimeSlot, Buffer, etc.)
+ * and returns the first result, or null if conversion fails.
+ */
+function toDomainAppointment(dbRecord: any): Appointment | null {
+  const results = AppointmentDomainService.toDomainAppointments([
+    {
+      ...dbRecord,
+      bufferMinutesBefore: dbRecord.bufferMinutesBefore ?? 0,
+      bufferMinutesAfter: dbRecord.bufferMinutesAfter ?? 0,
+      attendees: dbRecord.attendees?.map((a: any) => ({ userId: a.userId ?? a })) ?? [],
+    },
+  ]);
+  return results.length > 0 ? results[0] : null;
+}
+
+/**
+ * Fire-and-forget: dispatch ICS invitation, schedule reminder, and emit audit event
+ * after an appointment is created. Errors are logged but do not block the response.
+ */
+async function onAppointmentCreated(dbRecord: any, userId: string): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const timeSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (timeSlotResult.isFailure) return;
+
+    const event = new AppointmentCreatedEvent(
+      idResult.value,
+      dbRecord.title,
+      timeSlotResult.value,
+      dbRecord.appointmentType,
+      userId
+    );
+
+    // ICS invitation
+    await container.appointmentIcsHandler.handleAppointmentCreated(event, appointment);
+    // Schedule reminder
+    await container.reminderScheduler.handleAppointmentCreated(event, appointment);
+    // Audit trail via event bus
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCreated side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: regenerate ICS, reschedule reminders, emit audit event
+ */
+async function onAppointmentRescheduled(
+  dbRecord: any,
+  previousStartTime: Date,
+  previousEndTime: Date,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const prevSlotResult = TimeSlot.create(previousStartTime, previousEndTime);
+    const newSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (prevSlotResult.isFailure || newSlotResult.isFailure) return;
+
+    const event = new AppointmentRescheduledEvent(
+      idResult.value,
+      prevSlotResult.value,
+      newSlotResult.value,
+      userId,
+      reason
+    );
+
+    await container.appointmentIcsHandler.handleAppointmentRescheduled(event, appointment);
+    await container.reminderScheduler.handleAppointmentRescheduled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentRescheduled side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: cancel ICS, cancel reminders, emit audit event
+ */
+async function onAppointmentCancelled(
+  dbRecord: any,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const event = new AppointmentCancelledEvent(idResult.value, userId, reason);
+
+    await container.appointmentIcsHandler.handleAppointmentCancelled(event, appointment);
+    await container.reminderScheduler.handleAppointmentCancelled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCancelled side-effect error:', error);
+  }
+}
+
+/** A user as appointment lists show them. */
+interface AppointmentUserSummary {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+}
+
+/**
+ * One row of `appointments.list`: the Appointment columns (the `recurrence`
+ * Json column typed `unknown`), its attendees enriched with their user, its
+ * linked cases and its organizer. Spelled out instead of inferred from the
+ * Prisma include payload, whose depth overflowed TypeScript on the web client
+ * (TS2589) and made three consumers cast the list away.
+ */
+export type AppointmentListItem = Omit<AppointmentRow, 'recurrence'> & {
+  recurrence: unknown;
+  organizer: AppointmentUserSummary | null;
+  attendees: Array<AppointmentAttendee & { user: AppointmentUserSummary | null }>;
+  linkedCases: AppointmentCase[];
+};
+
+export interface AppointmentListPage {
+  appointments: AppointmentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export const appointmentsRouter = createTRPCRouter({
+  /**
+   * Create a new appointment
+   *
+   * Phase 2e: routed through ScheduleAppointmentUseCase (hexagonal migration).
+   * Use case handles domain validation, conflict detection, and persistence.
+   */
+  create: tenantProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    // Reject appointments outside business hours (07:00 – 19:00).
+    assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
+
+    // Linking the new appointment to legal cases is a LEGAL feature, even on this
+    // shared calendar router — require entitlement when caseIds are supplied.
+    if (input.linkedCaseIds?.length) {
+      await assertLegalEntitlement(ctx);
+    }
+
+    const result = await container.scheduleAppointmentUseCase.execute({
+      title: input.title,
+      description: input.description,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      timezone: input.timezone,
+      calendarId: input.calendarId || null,
+      appointmentType: input.appointmentType,
+      location: input.location,
+      organizerId: ctx.user.userId,
+      tenantId: ctx.user.tenantId,
+      attendeeIds: input.attendeeIds,
+      linkedCaseIds: input.linkedCaseIds,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      recurrence: input.recurrence,
+      reminderMinutes: input.reminderMinutes,
+      forceOverrideConflicts: input.forceOverrideConflicts,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    const { appointment: domainAppt, conflictWarnings } = result.value;
+
+    // Use case returns Ok with conflictWarnings when conflicts found and NOT overridden.
+    // Convert to the router's existing CONFLICT TRPCError shape.
+    if (conflictWarnings && conflictWarnings.length > 0 && !input.forceOverrideConflicts) {
+      const conflictDetails =
+        conflictWarnings.length > 0
+          ? await ctx.prismaWithTenant.appointment.findMany({
+              where: { id: { in: conflictWarnings.map((c) => c.appointmentId) } },
+              select: { id: true, title: true, startTime: true, endTime: true },
+            })
+          : [];
+
+      // Log conflict detection for audit/monitoring
+      console.warn('[appointments.create] Conflict detected:', {
+        attemptedTimeSlot: { start: input.startTime, end: input.endTime },
+        conflictCount: conflictWarnings.length,
+        attendeeIds: [ctx.user.userId, ...input.attendeeIds],
+      });
+
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `Scheduling conflict detected with ${conflictWarnings.length} appointment(s)`,
+        cause: {
+          conflicts: conflictWarnings.map((c) => {
+            const details = conflictDetails.find((d) => d.id === c.appointmentId);
+            return {
+              id: c.appointmentId,
+              title: details?.title ?? 'Unknown',
+              startTime: details?.startTime ?? new Date(),
+              endTime: details?.endTime ?? new Date(),
+              overlapMinutes: c.overlapMinutes,
+              conflictType: 'PARTIAL' as const,
+            };
+          }),
+        },
+      });
+    }
+
+    // Re-fetch via prismaWithTenant to preserve the current Prisma row response shape.
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: domainAppt.id.value },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment ${domainAppt.id.value} disappeared after create`,
+      });
+    }
+
+    const duration = performance.now() - startTime;
+    console.log(`[appointments.create] Use-case scheduled in ${duration.toFixed(2)}ms`);
+
+    // IFC-158: Fire-and-forget ICS, reminders, audit trail
+    onAppointmentCreated(appointment, ctx.user.userId).catch((err) =>
+      console.error('[appointments.router] Side-effect failed:', err)
+    );
+
+    // Notify organizer of scheduled appointment
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: ctx.user.userId,
+        tenantId: ctx.user.tenantId,
+        type: 'appointment_scheduled',
+        title: 'Appointment scheduled',
+        body: `Appointment \"${input.title}\" scheduled for ${input.startTime.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: input.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    return appointment;
+  }),
+
+  /**
+   * Get a single appointment by ID
+   */
+  getById: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    return appointment;
+  }),
+
+  /**
+   * List appointments with filtering
+   */
+  list: tenantProcedure
+    .input(listAppointmentsSchema)
+    .query(async ({ ctx, input }): Promise<AppointmentListPage> => {
+      const {
+        page,
+        limit,
+        status,
+        appointmentType,
+        startTimeFrom,
+        startTimeTo,
+        caseId,
+        calendarId,
+        sortBy,
+        sortOrder,
+      } = input;
+      const skip = (page - 1) * limit;
+
+      // Filtering appointments by a legal case is a LEGAL feature — require it.
+      if (caseId) {
+        await assertLegalEntitlement(ctx);
+      }
+
+      // Admins see all appointments; regular users only see their own
+      const where: any = { ...userScopeFilter(ctx.user) };
+
+      if (status && status.length > 0) {
+        where.status = { in: status };
+      }
+
+      if (appointmentType && appointmentType.length > 0) {
+        where.appointmentType = { in: appointmentType };
+      }
+
+      if (startTimeFrom || startTimeTo) {
+        where.startTime = {};
+        if (startTimeFrom) where.startTime.gte = startTimeFrom;
+        if (startTimeTo) where.startTime.lte = startTimeTo;
+      }
+
+      if (caseId) {
+        where.linkedCases = { some: { caseId } };
+      }
+
+      if (calendarId !== undefined) {
+        where.calendarId = calendarId;
+      }
+
+      const [appointments, total] = await Promise.all([
+        ctx.prismaWithTenant.appointment.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { [sortBy]: sortOrder },
+          include: {
+            attendees: true,
+            linkedCases: true,
+          },
+        }),
+        ctx.prismaWithTenant.appointment.count({ where }),
+      ]);
+
+      // Enrich attendees with user data for display
+      const allUserIds = [
+        ...new Set(
+          appointments.flatMap((a) => [a.organizerId, ...a.attendees.map((att) => att.userId)])
+        ),
+      ];
+      const users = await ctx.prismaWithTenant.user.findMany({
+        where: { id: { in: allUserIds } },
+        select: { id: true, name: true, avatarUrl: true },
+      });
+      const userMap = new Map(users.map((u) => [u.id, u]));
+
+      const enrichedAppointments = appointments.map((a) => ({
+        ...a,
+        organizer: userMap.get(a.organizerId) ?? null,
+        attendees: a.attendees.map((att) => ({
+          ...att,
+          user: userMap.get(att.userId) ?? null,
+        })),
+      }));
+
+      return {
+        appointments: enrichedAppointments,
+        total,
+        page,
+        limit,
+        hasMore: skip + appointments.length < total,
+      };
+    }),
+
+  /**
+   * Update appointment details
+   */
+  update: tenantProcedure.input(updateAppointmentSchema).mutation(async ({ ctx, input }) => {
+    const { id, ...data } = input;
+
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${id} not found`,
+      });
+    }
+
+    if (existing.status === 'CANCELLED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Cannot update a cancelled appointment',
+      });
+    }
+
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id },
+      data,
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    return appointment;
+  }),
+
+  /**
+   * Reschedule an appointment
+   *
+   * Phase 2d: routed through RescheduleAppointmentUseCase (hexagonal migration).
+   * Uses domain ConflictDetector for sophisticated conflict detection.
+   */
+  reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    // Reject rescheduling outside business hours (07:00 – 19:00).
+    assertWithinBusinessHours(input.newStartTime, input.newEndTime);
+
+    const result = await container.rescheduleAppointmentUseCase.execute({
+      appointmentId: input.id,
+      tenantId: ctx.user.tenantId,
+      newStartTime: input.newStartTime,
+      newEndTime: input.newEndTime,
+      rescheduledBy: ctx.user.userId,
+      reason: input.reason,
+      forceOverrideConflicts: input.forceOverrideConflicts,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    const { previousTimeSlot, conflictWarnings } = result.value;
+
+    // Use case returns Ok with conflictWarnings when conflicts found and NOT overridden.
+    // Convert to the router's existing CONFLICT TRPCError shape.
+    if (conflictWarnings && conflictWarnings.length > 0 && !input.forceOverrideConflicts) {
+      const conflictDetails =
+        conflictWarnings.length > 0
+          ? await ctx.prismaWithTenant.appointment.findMany({
+              where: { id: { in: conflictWarnings.map((c) => c.appointmentId) } },
+              select: { id: true, title: true, startTime: true, endTime: true },
+            })
+          : [];
+
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `Rescheduling conflict detected with ${conflictWarnings.length} appointment(s)`,
+        cause: {
+          conflicts: conflictWarnings.map((c) => {
+            const details = conflictDetails.find((d) => d.id === c.appointmentId);
+            return {
+              id: c.appointmentId,
+              title: details?.title ?? 'Unknown',
+              startTime: details?.startTime ?? new Date(),
+              endTime: details?.endTime ?? new Date(),
+              overlapMinutes: c.overlapMinutes,
+              conflictType: 'PARTIAL' as const,
+            };
+          }),
+        },
+      });
+    }
+
+    // Re-fetch via prismaWithTenant to preserve the current Prisma row response shape.
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment ${input.id} disappeared after reschedule`,
+      });
+    }
+
+    const duration = performance.now() - startTime;
+    console.log(`[appointments.reschedule] Use-case reschedule in ${duration.toFixed(2)}ms`);
+
+    // IFC-158: Fire-and-forget ICS regeneration, reminder rescheduling, audit trail
+    onAppointmentRescheduled(
+      appointment,
+      previousTimeSlot.startTime,
+      previousTimeSlot.endTime,
+      ctx.user.userId,
+      input.reason
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    // Notify organizer of rescheduled appointment
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: appointment.organizerId,
+        tenantId: ctx.user.tenantId,
+        type: 'appointment_rescheduled',
+        title: 'Appointment rescheduled',
+        body: `Appointment \"${appointment.title}\" has been rescheduled`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: appointment.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    return {
+      appointment,
+      previousTime: {
+        startTime: previousTimeSlot.startTime,
+        endTime: previousTimeSlot.endTime,
+      },
+    };
+  }),
+
+  /**
+   * Confirm an appointment
+   */
+  confirm: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    if (existing.status !== 'SCHEDULED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Cannot confirm appointment with status ${existing.status}`,
+      });
+    }
+
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id: input.id },
+      data: { status: 'CONFIRMED' },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    return appointment;
+  }),
+
+  /**
+   * Complete an appointment
+   * Phase 2b: routed through CompleteAppointmentUseCase (hexagonal migration)
+   */
+  complete: tenantProcedure
+    .input(z.object({ id: z.string(), notes: z.string().max(5000).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await container.completeAppointmentUseCase.execute({
+        appointmentId: input.id,
+        tenantId: ctx.user.tenantId,
+        completedBy: ctx.user.userId,
+        notes: input.notes,
+      });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+      const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+      if (!appointment) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment ${input.id} disappeared after complete`,
+        });
+      }
+
+      return appointment;
+    }),
+
+  /**
+   * Cancel an appointment
+   * Phase 2a: routed through CancelAppointmentUseCase (hexagonal migration)
+   */
+  cancel: tenantProcedure
+    .input(z.object({ id: z.string(), reason: z.string().max(500).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await container.cancelAppointmentUseCase.execute({
+        appointmentId: input.id,
+        tenantId: ctx.user.tenantId,
+        cancelledBy: ctx.user.userId,
+        reason: input.reason,
+      });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+      const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+      if (!appointment) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment ${input.id} disappeared after cancel`,
+        });
+      }
+
+      // IFC-158: Fire-and-forget ICS cancellation, cancel reminders, audit trail
+      onAppointmentCancelled(appointment, ctx.user.userId, input.reason).catch((err) =>
+        console.error('[appointments.router] Side-effect failed:', err)
+      );
+
+      return appointment;
+    }),
+
+  /**
+   * Mark appointment as no-show
+   */
+  markNoShow: tenantProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.id} not found`,
+        });
+      }
+
+      if (existing.status !== 'SCHEDULED' && existing.status !== 'CONFIRMED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot mark as no-show for status ${existing.status}`,
+        });
+      }
+
+      const appointment = await ctx.prismaWithTenant.appointment.update({
+        where: { id: input.id },
+        data: { status: 'NO_SHOW' },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      return appointment;
+    }),
+
+  /**
+   * Delete an appointment
+   */
+  delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    await ctx.prismaWithTenant.appointment.delete({
+      where: { id: input.id },
+    });
+
+    return { success: true, id: input.id };
+  }),
+
+  /**
+   * Check for scheduling conflicts
+   * Returns detailed conflict information
+   *
+   * Phase 2c: routed through CheckConflictsUseCase (hexagonal migration).
+   * Uses domain ConflictDetector for sophisticated conflict detection:
+   * - O(n) algorithm for performance
+   * - Proper buffer time handling
+   * - Conflict type classification (EXACT, PARTIAL, BUFFER)
+   */
+  checkConflicts: tenantProcedure.input(checkConflictsSchema).query(async ({ ctx, input }) => {
+    const checkStart = Date.now();
+
+    const result = await container.checkConflictsUseCase.checkConflicts({
+      tenantId: ctx.user.tenantId,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      attendeeIds: input.attendeeIds,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      excludeAppointmentId: input.excludeAppointmentId,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    // The use case enriches conflicts with title/startTime/endTime from domain entities,
+    // but does not include appointmentType (not part of CheckConflictsOutput interface).
+    // Post-fetch appointmentType from Prisma to preserve the current response shape.
+    const conflictIds = result.value.conflicts.map((c) => c.appointmentId);
+    const conflictDetails =
+      conflictIds.length > 0
+        ? await ctx.prismaWithTenant.appointment.findMany({
+            where: { id: { in: conflictIds } },
+            select: { id: true, appointmentType: true },
+          })
+        : [];
+    const typeMap = new Map(conflictDetails.map((c) => [c.id, c.appointmentType]));
+
+    const checkDurationMs = Date.now() - checkStart;
+    console.log(`[appointments.checkConflicts] Use-case check in ${checkDurationMs.toFixed(2)}ms`);
+
+    return {
+      hasConflicts: result.value.hasConflicts,
+      conflicts: result.value.conflicts.map((c) => ({
+        id: c.appointmentId,
+        title: c.title,
+        startTime: c.startTime,
+        endTime: c.endTime,
+        appointmentType: typeMap.get(c.appointmentId) ?? 'OTHER',
+        overlapMinutes: c.overlapMinutes,
+        conflictType: c.conflictType,
+      })),
+      checkDurationMs,
+    };
+  }),
+
+  /**
+   * Check availability for an attendee
+   * Returns available time slots
+   *
+   * Phase 2c: routed through CheckConflictsUseCase.checkAvailability (hexagonal migration).
+   */
+  checkAvailability: tenantProcedure
+    .input(checkAvailabilitySchema)
+    .query(async ({ ctx, input }) => {
+      const checkStart = Date.now();
+
+      const result = await container.checkConflictsUseCase.checkAvailability({
+        tenantId: ctx.user.tenantId,
+        attendeeId: input.attendeeId,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        minimumSlotMinutes: input.minimumSlotMinutes,
+        includeBuffer: true,
+      });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+      const checkDurationMs = Date.now() - checkStart;
+      console.log(
+        `[appointments.checkAvailability] Use-case check in ${checkDurationMs.toFixed(2)}ms`
+      );
+
+      return {
+        availableSlots: result.value.availableSlots,
+        totalAvailableMinutes: result.value.totalAvailableMinutes,
+        checkDurationMs,
+      };
+    }),
+
+  /**
+   * Find next available slot
+   *
+   * Phase 2c: routed through CheckConflictsUseCase.findNextSlot (hexagonal migration).
+   * Working hours awareness (9 AM - 5 PM, weekdays), buffer time handling, weekend exclusion.
+   */
+  findNextSlot: tenantProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
+    const searchStart = Date.now();
+
+    const result = await container.checkConflictsUseCase.findNextSlot({
+      tenantId: ctx.user.tenantId,
+      attendeeId: input.attendeeId,
+      startFrom: input.startFrom,
+      durationMinutes: input.durationMinutes,
+      maxDaysAhead: input.maxDaysAhead,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      workingHoursStart: 9,
+      workingHoursEnd: 17,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    const searchDurationMs = Date.now() - searchStart;
+    const slot = result.value.slot;
+
+    if (slot) {
+      console.log(`[appointments.findNextSlot] Use-case found in ${searchDurationMs.toFixed(2)}ms`);
+      return {
+        slot: {
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          durationMinutes: slot.durationMinutes,
+        },
+        searchDurationMs,
+      };
+    }
+
+    console.log(`[appointments.findNextSlot] No slot found in ${searchDurationMs.toFixed(2)}ms`);
+    return {
+      slot: null,
+      searchDurationMs,
+    };
+  }),
+
+  /**
+   * Link appointment to a case
+   */
+  linkToCase: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertLegalEntitlement(ctx); // case-linking requires the LEGAL module
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.appointmentId },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.appointmentId} not found`,
+        });
+      }
+
+      // Check if already linked
+      const existingLink = await ctx.prismaWithTenant.appointmentCase.findUnique({
+        where: {
+          appointmentId_caseId: {
+            appointmentId: input.appointmentId,
+            caseId: input.caseId,
+          },
+        },
+      });
+
+      if (existingLink) {
+        return { success: true, message: 'Already linked' };
+      }
+
+      await ctx.prismaWithTenant.appointmentCase.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          appointmentId: input.appointmentId,
+          caseId: input.caseId,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Unlink appointment from a case
+   */
+  unlinkFromCase: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertLegalEntitlement(ctx); // case-linking requires the LEGAL module
+      const existing = await ctx.prismaWithTenant.appointmentCase.findUnique({
+        where: {
+          appointmentId_caseId: {
+            appointmentId: input.appointmentId,
+            caseId: input.caseId,
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Link not found',
+        });
+      }
+
+      await ctx.prismaWithTenant.appointmentCase.delete({
+        where: { id: existing.id },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Add attendee to appointment
+   */
+  addAttendee: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.appointmentId },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.appointmentId} not found`,
+        });
+      }
+
+      // Check if already added
+      const existingAttendee = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
+        where: {
+          appointmentId_userId: {
+            appointmentId: input.appointmentId,
+            userId: input.userId,
+          },
+        },
+      });
+
+      if (existingAttendee) {
+        return { success: true, message: 'Already added' };
+      }
+
+      await ctx.prismaWithTenant.appointmentAttendee.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          appointmentId: input.appointmentId,
+          userId: input.userId,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Remove attendee from appointment
+   */
+  removeAttendee: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
+        where: {
+          appointmentId_userId: {
+            appointmentId: input.appointmentId,
+            userId: input.userId,
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Attendee not found',
+        });
+      }
+
+      await ctx.prismaWithTenant.appointmentAttendee.delete({
+        where: { id: existing.id },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Get upcoming appointments
+   */
+  upcoming: tenantProcedure
+    .input(z.object({ limit: z.number().min(1).max(50).optional().default(10) }))
+    .query(async ({ ctx, input }) => {
+      const now = new Date();
+
+      const scopeFilter = userScopeFilter(ctx.user);
+      const appointments = await ctx.prismaWithTenant.appointment.findMany({
+        where: {
+          ...scopeFilter,
+          startTime: { gte: now },
+          status: { notIn: ['CANCELLED', 'COMPLETED', 'NO_SHOW'] },
+        },
+        take: input.limit,
+        orderBy: { startTime: 'asc' },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      return appointments;
+    }),
+
+  /**
+   * Get appointment statistics
+   */
+  stats: tenantProcedure.query(async ({ ctx }) => {
+    const scopeFilter = userScopeFilter(ctx.user);
+    const [total, byStatus, byType, upcoming, overdue] = await Promise.all([
+      ctx.prismaWithTenant.appointment.count({ where: scopeFilter }),
+      ctx.prismaWithTenant.appointment.groupBy({
+        by: ['status'],
+        where: scopeFilter,
+        _count: true,
+      }),
+      ctx.prismaWithTenant.appointment.groupBy({
+        by: ['appointmentType'],
+        where: scopeFilter,
+        _count: true,
+      }),
+      ctx.prismaWithTenant.appointment.count({
+        where: {
+          ...scopeFilter,
+          startTime: { gte: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
+        },
+      }),
+      ctx.prismaWithTenant.appointment.count({
+        where: {
+          ...scopeFilter,
+          endTime: { lt: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      byStatus: byStatus.reduce(
+        (acc, item) => {
+          acc[item.status] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      byType: byType.reduce(
+        (acc, item) => {
+          acc[item.appointmentType] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      upcoming,
+      overdue,
+    };
+  }),
+});
+
+// Export type for use in merged router
+export type AppointmentsRouter = typeof appointmentsRouter;
+"
+
+ ❯ src/modules/legal/__tests__/appointments.availability-boundary.test.ts:19:30
+     17| describe('appointments router availability boundary (PG-202)', () => {
+     18|   it('no longer contains the hard-coded 07:00-19:00 helper', () => {
+     19|     expect(routerSource).not.toMatch(/BUSINESS_HOURS_/);
+       |                              ^
+     20|     expect(routerSource).not.toMatch(/assertWithinBusinessHours/);
+     21|     expect(routerSource).not.toMatch(/function getLocalHour/);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.availability-boundary.test.ts > appointments router availability boundary (PG-202) > calls the availability helper exactly twice (create and reschedule)
+AssertionError: Target cannot be null or undefined.
+ ❯ src/modules/legal/__tests__/appointments.availability-boundary.test.ts:25:74
+     23|
+     24|   it('calls the availability helper exactly twice (create and reschedu…
+     25|     expect(routerSource.match(/assertAppointmentWithinAvailability\(/g…
+       |                                                                          ^
+     26|   });
+     27|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.availability-boundary.test.ts > appointments router availability boundary (PG-202) > routes findNextSlot through the tenant availability loader
+AssertionError: expected '/**\n * Appointments Router\n *\n * P…' to match /loadTenantAvailability\(/
+
+- Expected:
+/loadTenantAvailability\(/
+
++ Received:
+"/**
+ * Appointments Router
+ *
+ * Provides type-safe tRPC endpoints for appointment management:
+ * - CRUD operations (create, read, update, delete)
+ * - Conflict detection and availability checking
+ * - Rescheduling and cancellation
+ * - Case linkage
+ * - Recurrence support
+ *
+ * Task: IFC-137 - Appointment Aggregate with conflict detection
+ * KPIs: Conflict detection accuracy >95%, scheduling latency <=100ms
+ *
+ * INTEGRATION: Uses AppointmentDomainService for domain logic
+ * - ConflictDetector for sophisticated conflict detection
+ * - Buffer time handling
+ * - Recurrence pattern generation
+ */
+
+import { z } from 'zod';
+import type {
+  Appointment as AppointmentRow,
+  AppointmentAttendee,
+  AppointmentCase,
+} from '@intelliflow/db';
+import { TRPCError } from '@trpc/server';
+import { createTRPCRouter, tenantProcedure as baseTenantProcedure } from '../../trpc';
+import { AppointmentDomainService } from '../../services';
+import {
+  AppointmentCreatedEvent,
+  AppointmentRescheduledEvent,
+  AppointmentCancelledEvent,
+  AppointmentId,
+  Appointment,
+  TimeSlot,
+} from '@intelliflow/domain';
+import { container } from '../../container';
+import { createNotification } from '../notifications/notifications.router';
+import { mapDomainErrorToTRPC } from './helpers';
+import { safeTimezone } from '../../lib/timezone-utils';
+
+// NOTE: appointments are NOT LEGAL-gated. This router is SHARED with the core
+// Calendar feature (CORE_CRM, all tiers): apps/web/.../calendar/(list)/page.tsx
+// calls `appointments.list`. Gating it behind the LEGAL add-on would break the
+// calendar for every non-Professional tenant. Legal case-appointments reuse the
+// same tenant-scoped endpoints.
+
+// Zod schemas for appointment operations
+const appointmentTypeSchema = z.enum([
+  'MEETING',
+  'CALL',
+  'HEARING',
+  'CONSULTATION',
+  'DEPOSITION',
+  'OTHER',
+]);
+
+const appointmentStatusSchema = z.enum([
+  'SCHEDULED',
+  'CONFIRMED',
+  'IN_PROGRESS',
+  'COMPLETED',
+  'CANCELLED',
+  'NO_SHOW',
+]);
+
+const dayOfWeekSchema = z.enum([
+  'SUNDAY',
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+]);
+
+const recurrenceSchema = z
+  .object({
+    frequency: z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']),
+    interval: z.number().min(1).optional().default(1),
+    daysOfWeek: z.array(dayOfWeekSchema).optional(),
+    dayOfMonth: z.number().min(1).max(31).optional(),
+    monthOfYear: z.number().min(1).max(12).optional(),
+    endDate: z.coerce.date().optional(),
+    occurrenceCount: z.number().min(1).optional(),
+  })
+  .optional();
+
+const ianaTimezoneSchema = z.string().refine(
+  (tz) => {
+    if (tz === 'UTC' || tz.includes('/')) {
+      try {
+        Intl.DateTimeFormat(undefined, { timeZone: tz });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+    return false;
+  },
+  { message: 'Must be a valid IANA timezone (e.g. America/New_York) or UTC' }
+);
+
+const createAppointmentSchema = z.object({
+  title: z.string().min(1).max(255),
+  description: z.string().max(2000).optional(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  timezone: ianaTimezoneSchema.optional(),
+  appointmentType: appointmentTypeSchema,
+  location: z.string().max(500).optional(),
+  attendeeIds: z.array(z.string()).optional().default([]),
+  linkedCaseIds: z.array(z.string()).optional().default([]),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+  recurrence: recurrenceSchema,
+  reminderMinutes: z.number().min(0).optional(),
+  forceOverrideConflicts: z.boolean().optional().default(false),
+  calendarId: z.string().optional().nullable(),
+});
+
+const updateAppointmentSchema = z.object({
+  id: z.string(),
+  title: z.string().min(1).max(255).optional(),
+  description: z.string().max(2000).optional(),
+  location: z.string().max(500).optional(),
+  timezone: ianaTimezoneSchema.optional().nullable(),
+  appointmentType: appointmentTypeSchema.optional(),
+  notes: z.string().max(5000).optional(),
+  reminderMinutes: z.number().min(0).optional(),
+  calendarId: z.string().optional().nullable(),
+});
+
+const rescheduleSchema = z.object({
+  id: z.string(),
+  newStartTime: z.coerce.date(),
+  newEndTime: z.coerce.date(),
+  reason: z.string().max(500).optional(),
+  forceOverrideConflicts: z.boolean().optional().default(false),
+});
+
+const checkConflictsSchema = z.object({
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  attendeeIds: z.array(z.string()).min(1),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+  excludeAppointmentId: z.string().optional(),
+});
+
+const checkAvailabilitySchema = z.object({
+  attendeeId: z.string(),
+  startTime: z.coerce.date(),
+  endTime: z.coerce.date(),
+  minimumSlotMinutes: z.number().min(5).optional().default(30),
+});
+
+const findNextSlotSchema = z.object({
+  attendeeId: z.string(),
+  startFrom: z.coerce.date(),
+  durationMinutes: z.number().min(5),
+  maxDaysAhead: z.number().min(1).max(365).optional().default(30),
+  bufferMinutesBefore: z.number().min(0).max(240).optional().default(0),
+  bufferMinutesAfter: z.number().min(0).max(240).optional().default(0),
+});
+
+const listAppointmentsSchema = z.object({
+  page: z.number().min(1).optional().default(1),
+  limit: z.number().min(1).max(100).optional().default(20),
+  status: z.array(appointmentStatusSchema).optional(),
+  appointmentType: z.array(appointmentTypeSchema).optional(),
+  startTimeFrom: z.coerce.date().optional(),
+  startTimeTo: z.coerce.date().optional(),
+  caseId: z.string().optional(),
+  calendarId: z.string().optional(),
+  sortBy: z.enum(['startTime', 'createdAt', 'updatedAt']).optional().default('startTime'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+});
+
+/**
+ * Returns a Prisma WHERE clause scoping appointments to the current user,
+ * or an empty object for admins (who can see all appointments).
+ */
+function userScopeFilter(user: { userId: string; role: string }) {
+  if (user.role === 'ADMIN') return {};
+  return {
+    OR: [{ organizerId: user.userId }, { attendees: { some: { userId: user.userId } } }],
+  };
+}
+
+/**
+ * Business-hours window (inclusive start, exclusive end) in 24-hour clock,
+ * matching the calendar's day boundaries: 07:00 – 19:00.
+ * Update both sides in sync if the range changes.
+ */
+const BUSINESS_HOURS_START = 7;
+const BUSINESS_HOURS_END = 19;
+
+type ModuleAccessLike = {
+  isModuleEnabled: (tenantId: string, moduleId: string) => Promise<boolean> | boolean;
+};
+
+/**
+ * Assert the tenant's plan includes the LEGAL module.
+ *
+ * The appointments router is SHARED with the core calendar (so the router itself
+ * stays on plain `tenantProcedure`), but linking appointments to legal CASES is a
+ * LEGAL feature. A tenant downgraded out of LEGAL can still hold orphan cases, so
+ * the case-linking surface (linkToCase/unlinkFromCase, create-with-linkedCaseIds,
+ * list-by-caseId) must re-check entitlement. Mirrors trpc.ts `requireModule` and
+ * fails CLOSED (deny if the entitlement service is unavailable or errors).
+ */
+async function assertLegalEntitlement(ctx: {
+  user?: { tenantId?: string | null };
+  container?: { get: (name: string) => unknown };
+}): Promise<void> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) {
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Tenant context required' });
+  }
+  const moduleAccess = ctx.container?.get('moduleAccess') as ModuleAccessLike | undefined;
+  if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'The LEGAL module is unavailable.' });
+  }
+  let enabled: unknown;
+  try {
+    enabled = await moduleAccess.isModuleEnabled(tenantId, 'LEGAL');
+  } catch {
+    throw new TRPCError({
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'Could not verify entitlement for the LEGAL module.',
+    });
+  }
+  if (enabled === false) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Your plan does not include the LEGAL module.',
+    });
+  }
+}
+
+type EntitlementCtx = {
+  user?: { tenantId?: string | null };
+  container?: { get: (name: string) => unknown };
+};
+
+/** Non-throwing LEGAL entitlement check (fails CLOSED to `false`). */
+async function hasLegalEntitlement(ctx: EntitlementCtx): Promise<boolean> {
+  const tenantId = ctx.user?.tenantId;
+  if (!tenantId) return false;
+  const moduleAccess = ctx.container?.get('moduleAccess') as ModuleAccessLike | undefined;
+  if (!moduleAccess || typeof moduleAccess.isModuleEnabled !== 'function') return false;
+  try {
+    return (await moduleAccess.isModuleEnabled(tenantId, 'LEGAL')) !== false;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Hide legal case-link data (`linkedCases`) from callers without the LEGAL
+ * module. Appointments are a shared calendar resource, but a tenant downgraded
+ * out of LEGAL can still hold orphan AppointmentCase rows; those must not surface
+ * in any appointment read/response. Mutates in place to `[]`. Only consults
+ * entitlement when there is actually link data to hide, so the core-calendar
+ * hot path (no links) pays nothing.
+ */
+async function cloakLinkedCases<T extends { linkedCases?: unknown }>(
+  ctx: EntitlementCtx,
+  appointments: T[]
+): Promise<void> {
+  const hasLinks = appointments.some(
+    (a) => Array.isArray(a.linkedCases) && a.linkedCases.length > 0
+  );
+  if (!hasLinks) return;
+  if (await hasLegalEntitlement(ctx)) return;
+  for (const a of appointments) {
+    if (Array.isArray(a.linkedCases)) {
+      (a as { linkedCases: unknown[] }).linkedCases = [];
+    }
+  }
+}
+
+/** Pull appointment-shaped objects (carrying `linkedCases`) out of any result. */
+function collectAppointmentLike(data: unknown): { linkedCases?: unknown }[] {
+  if (Array.isArray(data)) {
+    return data.filter((x) => x && typeof x === 'object') as { linkedCases?: unknown }[];
+  }
+  if (!data || typeof data !== 'object') return [];
+  const d = data as Record<string, unknown>;
+  if (Array.isArray(d.linkedCases)) return [d as { linkedCases?: unknown }];
+  if (Array.isArray(d.appointments)) return d.appointments as { linkedCases?: unknown }[];
+  // Nested single appointment, e.g. reschedule returns `{ appointment, previousTime }`.
+  if (d.appointment && typeof d.appointment === 'object') {
+    return [d.appointment as { linkedCases?: unknown }];
+  }
+  return [];
+}
+
+/**
+ * Router-local `tenantProcedure` = the core tenant procedure + a response cloak
+ * that strips legal `linkedCases` from any appointment read/response for callers
+ * without the LEGAL module. Applied once here so all 9 appointment endpoints are
+ * covered with no per-procedure plumbing; non-appointment results (e.g.
+ * `{ success }`) pass through untouched.
+ */
+const tenantProcedure = baseTenantProcedure.use(async ({ ctx, next }) => {
+  const result = await next();
+  if (result.ok) {
+    const appts = collectAppointmentLike(result.data);
+    if (appts.length) await cloakLinkedCases(ctx as EntitlementCtx, appts);
+  }
+  return result;
+});
+
+function getLocalHour(date: Date, timezone?: string): number {
+  const tz = timezone ?? 'UTC';
+  // Use en-GB to get 24-hour format reliably
+  const hourStr = new Intl.DateTimeFormat('en-GB', {
+    hour: '2-digit',
+    hour12: false,
+    timeZone: tz,
+  }).format(date);
+  // en-GB can return \"24\" for midnight in some engines — normalise
+  const hour = parseInt(hourStr, 10);
+  return hour === 24 ? 0 : hour;
+}
+
+/**
+ * Validates that the appointment's start and end fall within business hours
+ * (07:00 – 19:00) in the provided timezone. Throws a BAD_REQUEST if outside.
+ */
+function assertWithinBusinessHours(startTime: Date, endTime: Date, timezone?: string): void {
+  const startHour = getLocalHour(startTime, timezone);
+  const endHour = getLocalHour(endTime, timezone);
+  const startWithinDay = startHour >= BUSINESS_HOURS_START && startHour < BUSINESS_HOURS_END;
+  // End boundary: end hour == 19 is OK when minutes are 00 (meeting ends at 19:00 sharp)
+  const endMinutes = parseInt(
+    new Intl.DateTimeFormat('en-GB', {
+      minute: '2-digit',
+      timeZone: timezone ?? 'UTC',
+    }).format(endTime),
+    10
+  );
+  const endWithinDay =
+    (endHour >= BUSINESS_HOURS_START && endHour < BUSINESS_HOURS_END) ||
+    (endHour === BUSINESS_HOURS_END && endMinutes === 0);
+
+  if (!startWithinDay || !endWithinDay) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: `Appointments must start and end between ${String(BUSINESS_HOURS_START).padStart(
+        2,
+        '0'
+      )}:00 and ${String(BUSINESS_HOURS_END).padStart(2, '0')}:00.`,
+    });
+  }
+}
+
+/**
+ * Convert a Prisma appointment record to a domain Appointment for ICS/reminder handlers.
+ * Uses AppointmentDomainService.toDomainAppointments (handles TimeSlot, Buffer, etc.)
+ * and returns the first result, or null if conversion fails.
+ */
+function toDomainAppointment(dbRecord: any): Appointment | null {
+  const results = AppointmentDomainService.toDomainAppointments([
+    {
+      ...dbRecord,
+      bufferMinutesBefore: dbRecord.bufferMinutesBefore ?? 0,
+      bufferMinutesAfter: dbRecord.bufferMinutesAfter ?? 0,
+      attendees: dbRecord.attendees?.map((a: any) => ({ userId: a.userId ?? a })) ?? [],
+    },
+  ]);
+  return results.length > 0 ? results[0] : null;
+}
+
+/**
+ * Fire-and-forget: dispatch ICS invitation, schedule reminder, and emit audit event
+ * after an appointment is created. Errors are logged but do not block the response.
+ */
+async function onAppointmentCreated(dbRecord: any, userId: string): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const timeSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (timeSlotResult.isFailure) return;
+
+    const event = new AppointmentCreatedEvent(
+      idResult.value,
+      dbRecord.title,
+      timeSlotResult.value,
+      dbRecord.appointmentType,
+      userId
+    );
+
+    // ICS invitation
+    await container.appointmentIcsHandler.handleAppointmentCreated(event, appointment);
+    // Schedule reminder
+    await container.reminderScheduler.handleAppointmentCreated(event, appointment);
+    // Audit trail via event bus
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCreated side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: regenerate ICS, reschedule reminders, emit audit event
+ */
+async function onAppointmentRescheduled(
+  dbRecord: any,
+  previousStartTime: Date,
+  previousEndTime: Date,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const prevSlotResult = TimeSlot.create(previousStartTime, previousEndTime);
+    const newSlotResult = TimeSlot.create(dbRecord.startTime, dbRecord.endTime);
+    if (prevSlotResult.isFailure || newSlotResult.isFailure) return;
+
+    const event = new AppointmentRescheduledEvent(
+      idResult.value,
+      prevSlotResult.value,
+      newSlotResult.value,
+      userId,
+      reason
+    );
+
+    await container.appointmentIcsHandler.handleAppointmentRescheduled(event, appointment);
+    await container.reminderScheduler.handleAppointmentRescheduled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentRescheduled side-effect error:', error);
+  }
+}
+
+/**
+ * Fire-and-forget: cancel ICS, cancel reminders, emit audit event
+ */
+async function onAppointmentCancelled(
+  dbRecord: any,
+  userId: string,
+  reason?: string
+): Promise<void> {
+  try {
+    const appointment = toDomainAppointment(dbRecord);
+    if (!appointment) return;
+
+    const idResult = AppointmentId.create(dbRecord.id);
+    if (idResult.isFailure) return;
+
+    const event = new AppointmentCancelledEvent(idResult.value, userId, reason);
+
+    await container.appointmentIcsHandler.handleAppointmentCancelled(event, appointment);
+    await container.reminderScheduler.handleAppointmentCancelled(event, appointment);
+    await container.adapters.eventBus.publish(event);
+  } catch (error) {
+    console.error('[appointments] onAppointmentCancelled side-effect error:', error);
+  }
+}
+
+/** A user as appointment lists show them. */
+interface AppointmentUserSummary {
+  id: string;
+  name: string | null;
+  avatarUrl: string | null;
+}
+
+/**
+ * One row of `appointments.list`: the Appointment columns (the `recurrence`
+ * Json column typed `unknown`), its attendees enriched with their user, its
+ * linked cases and its organizer. Spelled out instead of inferred from the
+ * Prisma include payload, whose depth overflowed TypeScript on the web client
+ * (TS2589) and made three consumers cast the list away.
+ */
+export type AppointmentListItem = Omit<AppointmentRow, 'recurrence'> & {
+  recurrence: unknown;
+  organizer: AppointmentUserSummary | null;
+  attendees: Array<AppointmentAttendee & { user: AppointmentUserSummary | null }>;
+  linkedCases: AppointmentCase[];
+};
+
+export interface AppointmentListPage {
+  appointments: AppointmentListItem[];
+  total: number;
+  page: number;
+  limit: number;
+  hasMore: boolean;
+}
+
+export const appointmentsRouter = createTRPCRouter({
+  /**
+   * Create a new appointment
+   *
+   * Phase 2e: routed through ScheduleAppointmentUseCase (hexagonal migration).
+   * Use case handles domain validation, conflict detection, and persistence.
+   */
+  create: tenantProcedure.input(createAppointmentSchema).mutation(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    // Reject appointments outside business hours (07:00 – 19:00).
+    assertWithinBusinessHours(input.startTime, input.endTime, input.timezone);
+
+    // Linking the new appointment to legal cases is a LEGAL feature, even on this
+    // shared calendar router — require entitlement when caseIds are supplied.
+    if (input.linkedCaseIds?.length) {
+      await assertLegalEntitlement(ctx);
+    }
+
+    const result = await container.scheduleAppointmentUseCase.execute({
+      title: input.title,
+      description: input.description,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      timezone: input.timezone,
+      calendarId: input.calendarId || null,
+      appointmentType: input.appointmentType,
+      location: input.location,
+      organizerId: ctx.user.userId,
+      tenantId: ctx.user.tenantId,
+      attendeeIds: input.attendeeIds,
+      linkedCaseIds: input.linkedCaseIds,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      recurrence: input.recurrence,
+      reminderMinutes: input.reminderMinutes,
+      forceOverrideConflicts: input.forceOverrideConflicts,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    const { appointment: domainAppt, conflictWarnings } = result.value;
+
+    // Use case returns Ok with conflictWarnings when conflicts found and NOT overridden.
+    // Convert to the router's existing CONFLICT TRPCError shape.
+    if (conflictWarnings && conflictWarnings.length > 0 && !input.forceOverrideConflicts) {
+      const conflictDetails =
+        conflictWarnings.length > 0
+          ? await ctx.prismaWithTenant.appointment.findMany({
+              where: { id: { in: conflictWarnings.map((c) => c.appointmentId) } },
+              select: { id: true, title: true, startTime: true, endTime: true },
+            })
+          : [];
+
+      // Log conflict detection for audit/monitoring
+      console.warn('[appointments.create] Conflict detected:', {
+        attemptedTimeSlot: { start: input.startTime, end: input.endTime },
+        conflictCount: conflictWarnings.length,
+        attendeeIds: [ctx.user.userId, ...input.attendeeIds],
+      });
+
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `Scheduling conflict detected with ${conflictWarnings.length} appointment(s)`,
+        cause: {
+          conflicts: conflictWarnings.map((c) => {
+            const details = conflictDetails.find((d) => d.id === c.appointmentId);
+            return {
+              id: c.appointmentId,
+              title: details?.title ?? 'Unknown',
+              startTime: details?.startTime ?? new Date(),
+              endTime: details?.endTime ?? new Date(),
+              overlapMinutes: c.overlapMinutes,
+              conflictType: 'PARTIAL' as const,
+            };
+          }),
+        },
+      });
+    }
+
+    // Re-fetch via prismaWithTenant to preserve the current Prisma row response shape.
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: domainAppt.id.value },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment ${domainAppt.id.value} disappeared after create`,
+      });
+    }
+
+    const duration = performance.now() - startTime;
+    console.log(`[appointments.create] Use-case scheduled in ${duration.toFixed(2)}ms`);
+
+    // IFC-158: Fire-and-forget ICS, reminders, audit trail
+    onAppointmentCreated(appointment, ctx.user.userId).catch((err) =>
+      console.error('[appointments.router] Side-effect failed:', err)
+    );
+
+    // Notify organizer of scheduled appointment
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: ctx.user.userId,
+        tenantId: ctx.user.tenantId,
+        type: 'appointment_scheduled',
+        title: 'Appointment scheduled',
+        body: `Appointment \"${input.title}\" scheduled for ${input.startTime.toLocaleDateString('en-GB', { month: 'short', day: 'numeric', year: 'numeric', timeZone: safeTimezone(ctx.user?.timezone) })}`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: input.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    return appointment;
+  }),
+
+  /**
+   * Get a single appointment by ID
+   */
+  getById: tenantProcedure.input(z.object({ id: z.string() })).query(async ({ ctx, input }) => {
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    return appointment;
+  }),
+
+  /**
+   * List appointments with filtering
+   */
+  list: tenantProcedure
+    .input(listAppointmentsSchema)
+    .query(async ({ ctx, input }): Promise<AppointmentListPage> => {
+      const {
+        page,
+        limit,
+        status,
+        appointmentType,
+        startTimeFrom,
+        startTimeTo,
+        caseId,
+        calendarId,
+        sortBy,
+        sortOrder,
+      } = input;
+      const skip = (page - 1) * limit;
+
+      // Filtering appointments by a legal case is a LEGAL feature — require it.
+      if (caseId) {
+        await assertLegalEntitlement(ctx);
+      }
+
+      // Admins see all appointments; regular users only see their own
+      const where: any = { ...userScopeFilter(ctx.user) };
+
+      if (status && status.length > 0) {
+        where.status = { in: status };
+      }
+
+      if (appointmentType && appointmentType.length > 0) {
+        where.appointmentType = { in: appointmentType };
+      }
+
+      if (startTimeFrom || startTimeTo) {
+        where.startTime = {};
+        if (startTimeFrom) where.startTime.gte = startTimeFrom;
+        if (startTimeTo) where.startTime.lte = startTimeTo;
+      }
+
+      if (caseId) {
+        where.linkedCases = { some: { caseId } };
+      }
+
+      if (calendarId !== undefined) {
+        where.calendarId = calendarId;
+      }
+
+      const [appointments, total] = await Promise.all([
+        ctx.prismaWithTenant.appointment.findMany({
+          where,
+          skip,
+          take: limit,
+          orderBy: { [sortBy]: sortOrder },
+          include: {
+            attendees: true,
+            linkedCases: true,
+          },
+        }),
+        ctx.prismaWithTenant.appointment.count({ where }),
+      ]);
+
+      // Enrich attendees with user data for display
+      const allUserIds = [
+        ...new Set(
+          appointments.flatMap((a) => [a.organizerId, ...a.attendees.map((att) => att.userId)])
+        ),
+      ];
+      const users = await ctx.prismaWithTenant.user.findMany({
+        where: { id: { in: allUserIds } },
+        select: { id: true, name: true, avatarUrl: true },
+      });
+      const userMap = new Map(users.map((u) => [u.id, u]));
+
+      const enrichedAppointments = appointments.map((a) => ({
+        ...a,
+        organizer: userMap.get(a.organizerId) ?? null,
+        attendees: a.attendees.map((att) => ({
+          ...att,
+          user: userMap.get(att.userId) ?? null,
+        })),
+      }));
+
+      return {
+        appointments: enrichedAppointments,
+        total,
+        page,
+        limit,
+        hasMore: skip + appointments.length < total,
+      };
+    }),
+
+  /**
+   * Update appointment details
+   */
+  update: tenantProcedure.input(updateAppointmentSchema).mutation(async ({ ctx, input }) => {
+    const { id, ...data } = input;
+
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${id} not found`,
+      });
+    }
+
+    if (existing.status === 'CANCELLED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: 'Cannot update a cancelled appointment',
+      });
+    }
+
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id },
+      data,
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    return appointment;
+  }),
+
+  /**
+   * Reschedule an appointment
+   *
+   * Phase 2d: routed through RescheduleAppointmentUseCase (hexagonal migration).
+   * Uses domain ConflictDetector for sophisticated conflict detection.
+   */
+  reschedule: tenantProcedure.input(rescheduleSchema).mutation(async ({ ctx, input }) => {
+    const startTime = performance.now();
+
+    // Reject rescheduling outside business hours (07:00 – 19:00).
+    assertWithinBusinessHours(input.newStartTime, input.newEndTime);
+
+    const result = await container.rescheduleAppointmentUseCase.execute({
+      appointmentId: input.id,
+      tenantId: ctx.user.tenantId,
+      newStartTime: input.newStartTime,
+      newEndTime: input.newEndTime,
+      rescheduledBy: ctx.user.userId,
+      reason: input.reason,
+      forceOverrideConflicts: input.forceOverrideConflicts,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    const { previousTimeSlot, conflictWarnings } = result.value;
+
+    // Use case returns Ok with conflictWarnings when conflicts found and NOT overridden.
+    // Convert to the router's existing CONFLICT TRPCError shape.
+    if (conflictWarnings && conflictWarnings.length > 0 && !input.forceOverrideConflicts) {
+      const conflictDetails =
+        conflictWarnings.length > 0
+          ? await ctx.prismaWithTenant.appointment.findMany({
+              where: { id: { in: conflictWarnings.map((c) => c.appointmentId) } },
+              select: { id: true, title: true, startTime: true, endTime: true },
+            })
+          : [];
+
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: `Rescheduling conflict detected with ${conflictWarnings.length} appointment(s)`,
+        cause: {
+          conflicts: conflictWarnings.map((c) => {
+            const details = conflictDetails.find((d) => d.id === c.appointmentId);
+            return {
+              id: c.appointmentId,
+              title: details?.title ?? 'Unknown',
+              startTime: details?.startTime ?? new Date(),
+              endTime: details?.endTime ?? new Date(),
+              overlapMinutes: c.overlapMinutes,
+              conflictType: 'PARTIAL' as const,
+            };
+          }),
+        },
+      });
+    }
+
+    // Re-fetch via prismaWithTenant to preserve the current Prisma row response shape.
+    const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+    if (!appointment) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment ${input.id} disappeared after reschedule`,
+      });
+    }
+
+    const duration = performance.now() - startTime;
+    console.log(`[appointments.reschedule] Use-case reschedule in ${duration.toFixed(2)}ms`);
+
+    // IFC-158: Fire-and-forget ICS regeneration, reminder rescheduling, audit trail
+    onAppointmentRescheduled(
+      appointment,
+      previousTimeSlot.startTime,
+      previousTimeSlot.endTime,
+      ctx.user.userId,
+      input.reason
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    // Notify organizer of rescheduled appointment
+    createNotification(
+      ctx.prismaWithTenant,
+      {
+        userId: appointment.organizerId,
+        tenantId: ctx.user.tenantId,
+        type: 'appointment_rescheduled',
+        title: 'Appointment rescheduled',
+        body: `Appointment \"${appointment.title}\" has been rescheduled`,
+        priority: 'normal',
+        entityType: 'appointment',
+        entityId: appointment.id,
+        entityName: appointment.title,
+        actionUrl: `/calendar/${appointment.id}`,
+      },
+      ctx.services?.notificationOrchestrator
+    ).catch((err) => console.error('[appointments.router] Side-effect failed:', err));
+
+    return {
+      appointment,
+      previousTime: {
+        startTime: previousTimeSlot.startTime,
+        endTime: previousTimeSlot.endTime,
+      },
+    };
+  }),
+
+  /**
+   * Confirm an appointment
+   */
+  confirm: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    if (existing.status !== 'SCHEDULED') {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Cannot confirm appointment with status ${existing.status}`,
+      });
+    }
+
+    const appointment = await ctx.prismaWithTenant.appointment.update({
+      where: { id: input.id },
+      data: { status: 'CONFIRMED' },
+      include: {
+        attendees: true,
+        linkedCases: true,
+      },
+    });
+
+    return appointment;
+  }),
+
+  /**
+   * Complete an appointment
+   * Phase 2b: routed through CompleteAppointmentUseCase (hexagonal migration)
+   */
+  complete: tenantProcedure
+    .input(z.object({ id: z.string(), notes: z.string().max(5000).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await container.completeAppointmentUseCase.execute({
+        appointmentId: input.id,
+        tenantId: ctx.user.tenantId,
+        completedBy: ctx.user.userId,
+        notes: input.notes,
+      });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+      const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+      if (!appointment) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment ${input.id} disappeared after complete`,
+        });
+      }
+
+      return appointment;
+    }),
+
+  /**
+   * Cancel an appointment
+   * Phase 2a: routed through CancelAppointmentUseCase (hexagonal migration)
+   */
+  cancel: tenantProcedure
+    .input(z.object({ id: z.string(), reason: z.string().max(500).optional() }))
+    .mutation(async ({ ctx, input }) => {
+      const result = await container.cancelAppointmentUseCase.execute({
+        appointmentId: input.id,
+        tenantId: ctx.user.tenantId,
+        cancelledBy: ctx.user.userId,
+        reason: input.reason,
+      });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+      const appointment = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+      if (!appointment) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment ${input.id} disappeared after cancel`,
+        });
+      }
+
+      // IFC-158: Fire-and-forget ICS cancellation, cancel reminders, audit trail
+      onAppointmentCancelled(appointment, ctx.user.userId, input.reason).catch((err) =>
+        console.error('[appointments.router] Side-effect failed:', err)
+      );
+
+      return appointment;
+    }),
+
+  /**
+   * Mark appointment as no-show
+   */
+  markNoShow: tenantProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.id },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.id} not found`,
+        });
+      }
+
+      if (existing.status !== 'SCHEDULED' && existing.status !== 'CONFIRMED') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: `Cannot mark as no-show for status ${existing.status}`,
+        });
+      }
+
+      const appointment = await ctx.prismaWithTenant.appointment.update({
+        where: { id: input.id },
+        data: { status: 'NO_SHOW' },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      return appointment;
+    }),
+
+  /**
+   * Delete an appointment
+   */
+  delete: tenantProcedure.input(z.object({ id: z.string() })).mutation(async ({ ctx, input }) => {
+    const existing = await ctx.prismaWithTenant.appointment.findUnique({
+      where: { id: input.id },
+    });
+
+    if (!existing) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: `Appointment with ID ${input.id} not found`,
+      });
+    }
+
+    await ctx.prismaWithTenant.appointment.delete({
+      where: { id: input.id },
+    });
+
+    return { success: true, id: input.id };
+  }),
+
+  /**
+   * Check for scheduling conflicts
+   * Returns detailed conflict information
+   *
+   * Phase 2c: routed through CheckConflictsUseCase (hexagonal migration).
+   * Uses domain ConflictDetector for sophisticated conflict detection:
+   * - O(n) algorithm for performance
+   * - Proper buffer time handling
+   * - Conflict type classification (EXACT, PARTIAL, BUFFER)
+   */
+  checkConflicts: tenantProcedure.input(checkConflictsSchema).query(async ({ ctx, input }) => {
+    const checkStart = Date.now();
+
+    const result = await container.checkConflictsUseCase.checkConflicts({
+      tenantId: ctx.user.tenantId,
+      startTime: input.startTime,
+      endTime: input.endTime,
+      attendeeIds: input.attendeeIds,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      excludeAppointmentId: input.excludeAppointmentId,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    // The use case enriches conflicts with title/startTime/endTime from domain entities,
+    // but does not include appointmentType (not part of CheckConflictsOutput interface).
+    // Post-fetch appointmentType from Prisma to preserve the current response shape.
+    const conflictIds = result.value.conflicts.map((c) => c.appointmentId);
+    const conflictDetails =
+      conflictIds.length > 0
+        ? await ctx.prismaWithTenant.appointment.findMany({
+            where: { id: { in: conflictIds } },
+            select: { id: true, appointmentType: true },
+          })
+        : [];
+    const typeMap = new Map(conflictDetails.map((c) => [c.id, c.appointmentType]));
+
+    const checkDurationMs = Date.now() - checkStart;
+    console.log(`[appointments.checkConflicts] Use-case check in ${checkDurationMs.toFixed(2)}ms`);
+
+    return {
+      hasConflicts: result.value.hasConflicts,
+      conflicts: result.value.conflicts.map((c) => ({
+        id: c.appointmentId,
+        title: c.title,
+        startTime: c.startTime,
+        endTime: c.endTime,
+        appointmentType: typeMap.get(c.appointmentId) ?? 'OTHER',
+        overlapMinutes: c.overlapMinutes,
+        conflictType: c.conflictType,
+      })),
+      checkDurationMs,
+    };
+  }),
+
+  /**
+   * Check availability for an attendee
+   * Returns available time slots
+   *
+   * Phase 2c: routed through CheckConflictsUseCase.checkAvailability (hexagonal migration).
+   */
+  checkAvailability: tenantProcedure
+    .input(checkAvailabilitySchema)
+    .query(async ({ ctx, input }) => {
+      const checkStart = Date.now();
+
+      const result = await container.checkConflictsUseCase.checkAvailability({
+        tenantId: ctx.user.tenantId,
+        attendeeId: input.attendeeId,
+        startTime: input.startTime,
+        endTime: input.endTime,
+        minimumSlotMinutes: input.minimumSlotMinutes,
+        includeBuffer: true,
+      });
+      if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+      const checkDurationMs = Date.now() - checkStart;
+      console.log(
+        `[appointments.checkAvailability] Use-case check in ${checkDurationMs.toFixed(2)}ms`
+      );
+
+      return {
+        availableSlots: result.value.availableSlots,
+        totalAvailableMinutes: result.value.totalAvailableMinutes,
+        checkDurationMs,
+      };
+    }),
+
+  /**
+   * Find next available slot
+   *
+   * Phase 2c: routed through CheckConflictsUseCase.findNextSlot (hexagonal migration).
+   * Working hours awareness (9 AM - 5 PM, weekdays), buffer time handling, weekend exclusion.
+   */
+  findNextSlot: tenantProcedure.input(findNextSlotSchema).query(async ({ ctx, input }) => {
+    const searchStart = Date.now();
+
+    const result = await container.checkConflictsUseCase.findNextSlot({
+      tenantId: ctx.user.tenantId,
+      attendeeId: input.attendeeId,
+      startFrom: input.startFrom,
+      durationMinutes: input.durationMinutes,
+      maxDaysAhead: input.maxDaysAhead,
+      bufferMinutesBefore: input.bufferMinutesBefore,
+      bufferMinutesAfter: input.bufferMinutesAfter,
+      workingHoursStart: 9,
+      workingHoursEnd: 17,
+    });
+    if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+
+    const searchDurationMs = Date.now() - searchStart;
+    const slot = result.value.slot;
+
+    if (slot) {
+      console.log(`[appointments.findNextSlot] Use-case found in ${searchDurationMs.toFixed(2)}ms`);
+      return {
+        slot: {
+          startTime: slot.startTime,
+          endTime: slot.endTime,
+          durationMinutes: slot.durationMinutes,
+        },
+        searchDurationMs,
+      };
+    }
+
+    console.log(`[appointments.findNextSlot] No slot found in ${searchDurationMs.toFixed(2)}ms`);
+    return {
+      slot: null,
+      searchDurationMs,
+    };
+  }),
+
+  /**
+   * Link appointment to a case
+   */
+  linkToCase: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertLegalEntitlement(ctx); // case-linking requires the LEGAL module
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.appointmentId },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.appointmentId} not found`,
+        });
+      }
+
+      // Check if already linked
+      const existingLink = await ctx.prismaWithTenant.appointmentCase.findUnique({
+        where: {
+          appointmentId_caseId: {
+            appointmentId: input.appointmentId,
+            caseId: input.caseId,
+          },
+        },
+      });
+
+      if (existingLink) {
+        return { success: true, message: 'Already linked' };
+      }
+
+      await ctx.prismaWithTenant.appointmentCase.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          appointmentId: input.appointmentId,
+          caseId: input.caseId,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Unlink appointment from a case
+   */
+  unlinkFromCase: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), caseId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      await assertLegalEntitlement(ctx); // case-linking requires the LEGAL module
+      const existing = await ctx.prismaWithTenant.appointmentCase.findUnique({
+        where: {
+          appointmentId_caseId: {
+            appointmentId: input.appointmentId,
+            caseId: input.caseId,
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Link not found',
+        });
+      }
+
+      await ctx.prismaWithTenant.appointmentCase.delete({
+        where: { id: existing.id },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Add attendee to appointment
+   */
+  addAttendee: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointment.findUnique({
+        where: { id: input.appointmentId },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: `Appointment with ID ${input.appointmentId} not found`,
+        });
+      }
+
+      // Check if already added
+      const existingAttendee = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
+        where: {
+          appointmentId_userId: {
+            appointmentId: input.appointmentId,
+            userId: input.userId,
+          },
+        },
+      });
+
+      if (existingAttendee) {
+        return { success: true, message: 'Already added' };
+      }
+
+      await ctx.prismaWithTenant.appointmentAttendee.create({
+        data: {
+          tenantId: ctx.user.tenantId,
+          appointmentId: input.appointmentId,
+          userId: input.userId,
+        },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Remove attendee from appointment
+   */
+  removeAttendee: tenantProcedure
+    .input(z.object({ appointmentId: z.string(), userId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const existing = await ctx.prismaWithTenant.appointmentAttendee.findUnique({
+        where: {
+          appointmentId_userId: {
+            appointmentId: input.appointmentId,
+            userId: input.userId,
+          },
+        },
+      });
+
+      if (!existing) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Attendee not found',
+        });
+      }
+
+      await ctx.prismaWithTenant.appointmentAttendee.delete({
+        where: { id: existing.id },
+      });
+
+      return { success: true };
+    }),
+
+  /**
+   * Get upcoming appointments
+   */
+  upcoming: tenantProcedure
+    .input(z.object({ limit: z.number().min(1).max(50).optional().default(10) }))
+    .query(async ({ ctx, input }) => {
+      const now = new Date();
+
+      const scopeFilter = userScopeFilter(ctx.user);
+      const appointments = await ctx.prismaWithTenant.appointment.findMany({
+        where: {
+          ...scopeFilter,
+          startTime: { gte: now },
+          status: { notIn: ['CANCELLED', 'COMPLETED', 'NO_SHOW'] },
+        },
+        take: input.limit,
+        orderBy: { startTime: 'asc' },
+        include: {
+          attendees: true,
+          linkedCases: true,
+        },
+      });
+
+      return appointments;
+    }),
+
+  /**
+   * Get appointment statistics
+   */
+  stats: tenantProcedure.query(async ({ ctx }) => {
+    const scopeFilter = userScopeFilter(ctx.user);
+    const [total, byStatus, byType, upcoming, overdue] = await Promise.all([
+      ctx.prismaWithTenant.appointment.count({ where: scopeFilter }),
+      ctx.prismaWithTenant.appointment.groupBy({
+        by: ['status'],
+        where: scopeFilter,
+        _count: true,
+      }),
+      ctx.prismaWithTenant.appointment.groupBy({
+        by: ['appointmentType'],
+        where: scopeFilter,
+        _count: true,
+      }),
+      ctx.prismaWithTenant.appointment.count({
+        where: {
+          ...scopeFilter,
+          startTime: { gte: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
+        },
+      }),
+      ctx.prismaWithTenant.appointment.count({
+        where: {
+          ...scopeFilter,
+          endTime: { lt: new Date() },
+          status: { in: ['SCHEDULED', 'CONFIRMED'] },
+        },
+      }),
+    ]);
+
+    return {
+      total,
+      byStatus: byStatus.reduce(
+        (acc, item) => {
+          acc[item.status] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      byType: byType.reduce(
+        (acc, item) => {
+          acc[item.appointmentType] = item._count;
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
+      upcoming,
+      overdue,
+    };
+  }),
+});
+
+// Export type for use in merged router
+export type AppointmentsRouter = typeof appointmentsRouter;
+"
+
+ ❯ src/modules/legal/__tests__/appointments.availability-boundary.test.ts:29:26
+     27|
+     28|   it('routes findNextSlot through the tenant availability loader', () …
+     29|     expect(routerSource).toMatch(/loadTenantAvailability\(/);
+       |                          ^
+     30|     expect(routerSource).toMatch(/findNextSlotWithinAvailability\(/);
+     31|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.availability-boundary.test.ts > appointments router availability boundary (PG-202) > the real container exposes findFirstFreeCandidate on the conflicts use case
+AssertionError: expected 'undefined' to be 'function' // Object.is equality
+
+Expected: "function"
+Received: "undefined"
+
+ ❯ src/modules/legal/__tests__/appointments.availability-boundary.test.ts:34:75
+     32|
+     33|   it('the real container exposes findFirstFreeCandidate on the conflic…
+     34|     expect(typeof container.checkConflictsUseCase.findFirstFreeCandida…
+       |                                                                           ^
+     35|   });
+     36| });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > allows a booking inside the firm hours and calls the use case
+AssertionError: at least one availability call was made: expected 0 to be greater than 0
+ ❯ Module.expectEveryCallTenantScoped src/modules/calendar/__tests__/availability.test-utils.ts:88:60
+     86|     }
+     87|   }
+     88|   expect(calls, 'at least one availability call was made').toBeGreater…
+       |                                                            ^
+     89| }
+     90|
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:997:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects outside hours before the use case runs
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closed weekday before the use case runs
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects a closure date before the use case runs
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects the daily cap before the use case runs
+AssertionError: promise resolved "{ …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attendees": [],
++   "id": "34811217-0000-4000-8000-348112170000",
++   "linkedCases": [],
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1021:38
+    1019|       stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12, ...st…
+    1020|       okCreate();
+    1021|       await expect(create(start, end)).rejects.toMatchObject({
+       |                                      ^
+    1022|         code: 'BAD_REQUEST',
+    1023|         message: expect.stringMatching(message),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > rejects running past midnight before the use case runs
+AssertionError: expected TRPCError: Appointments must start and en… { code: '…' } to match object { code: 'BAD_REQUEST', …(1) }
+(2 matching properties omitted from actual)
+
+- Expected
++ Received
+
+- {
++ TRPCError {
+    "code": "BAD_REQUEST",
+-   "message": StringMatching /past midnight/,
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1021:38
+    1019|       stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12, ...st…
+    1020|       okCreate();
+    1021|       await expect(create(start, end)).rejects.toMatchObject({
+       |                                      ^
+    1022|         code: 'BAD_REQUEST',
+    1023|         message: expect.stringMatching(message),
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > is not bypassed by forceOverrideConflicts
+AssertionError: promise resolved "{ …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attendees": [],
++   "id": "34811217-0000-4000-8000-348112170000",
++   "linkedCases": [],
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1033:7
+    1031|       await expect(
+    1032|         create('2026-04-18T09:00:00Z', '2026-04-18T10:00:00Z', { force…
+    1033|       ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+       |       ^
+    1034|     });
+    1035|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > create > runs the availability check before the use case
+TypeError: actual value must be number or bigint, received "undefined"
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1060:28
+    1058|       const settingsRead = prismaMock.appointmentSettings.findUnique.m…
+    1059|       const useCase = vi.mocked(container.scheduleAppointmentUseCase.e…
+    1060|       expect(settingsRead).toBeLessThan(useCase);
+       |                            ^
+    1061|     });
+    1062|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move onto a closure date
+AssertionError: promise resolved "{ appointment: { …(3) }, …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "appointment": {
++     "attendees": [],
++     "id": "34811217-0000-4000-8000-348112170000",
++     "linkedCases": [],
++   },
++   "previousTime": {
++     "endTime": 2026-04-13T06:00:00.000Z,
++     "startTime": 2026-04-13T06:00:00.000Z,
++   },
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1071:78
+    1069|       });
+    1070|       okReschedule();
+    1071|       await expect(reschedule('2026-04-15T09:00:00Z', '2026-04-15T10:0…
+       |                                                                              ^
+    1072|         code: 'BAD_REQUEST',
+    1073|         message: 'The firm is closed on 2026-04-15.',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > excludes the appointment itself from the daily cap
+AssertionError: expected "vi.fn()" to be called with arguments: [ { where: ObjectContaining{…} } ]
+
+Number of calls: 0
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1082:44
+    1080|       okReschedule();
+    1081|       await expect(reschedule('2026-04-14T09:00:00Z', '2026-04-14T10:0…
+    1082|       expect(prismaMock.appointment.count).toHaveBeenCalledWith({
+       |                                            ^
+    1083|         where: expect.objectContaining({ tenantId: TENANT, id: { not: …
+    1084|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > rejects a move into a full day
+AssertionError: promise resolved "{ appointment: { …(3) }, …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "appointment": {
++     "attendees": [],
++     "id": "34811217-0000-4000-8000-348112170000",
++     "linkedCases": [],
++   },
++   "previousTime": {
++     "endTime": 2026-04-13T06:00:00.000Z,
++     "startTime": 2026-04-13T06:00:00.000Z,
++   },
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1090:78
+    1088|       stubTenantAvailability(prismaMock, { ranges: MON_FRI_9_12, cap: …
+    1089|       okReschedule();
+    1090|       await expect(reschedule('2026-04-14T09:00:00Z', '2026-04-14T10:0…
+       |                                                                              ^
+    1091|         message: 'The daily booking limit for 2026-04-14 has been reac…
+    1092|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > reschedule > uses the firm zone, not UTC
+AssertionError: promise resolved "{ appointment: { …(3) }, …(1) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "appointment": {
++     "attendees": [],
++     "id": "34811217-0000-4000-8000-348112170000",
++     "linkedCases": [],
++   },
++   "previousTime": {
++     "endTime": 2026-04-13T06:00:00.000Z,
++     "startTime": 2026-04-13T06:00:00.000Z,
++   },
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1100:78
+    1098|       // 11:30Z is inside the legacy UTC window but 12:30 BST, after t…
+    1099|       await expect(reschedule('2026-04-14T08:00:00Z', '2026-04-14T09:0…
+    1100|       await expect(reschedule('2026-04-14T11:30:00Z', '2026-04-14T12:0…
+       |                                                                              ^
+    1101|         code: 'BAD_REQUEST',
+    1102|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > findNextSlot > offers only slots inside saved availability for a configured tenant
+TRPCError: Cannot read properties of undefined (reading 'isFailure')
+ ❯ src/modules/legal/appointments.router.ts:1155:16
+    1153|       workingHoursEnd: 17,
+    1154|     });
+    1155|     if (result.isFailure) throw mapDomainErrorToTRPC(result.error);
+       |                ^
+    1156|
+    1157|     const searchDurationMs = Date.now() - searchStart;
+ ❯ resolveMiddleware ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:576:21
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/src/unstable-core-do-not-import/procedureBuilder.ts:642:19
+
+Caused by: TypeError: Cannot read properties of undefined (reading 'isFailure')
+ ❯ src/modules/legal/appointments.router.ts:1155:16
+ ❯ resolveMiddleware ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:221:17
+ ❯ callRecursive ../../node_modules/.pnpm/@trpc+server@11.18.0_typescript@5.9.3/node_modules/@trpc/server/dist/initTRPC-BRf4imah.mjs:256:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/23]⎯
+
+ FAIL  |api| src/modules/legal/__tests__/appointments.router.caller.test.ts > availability enforcement (PG-202) > cross-tenant isolation > the hours of tenant A never govern a booking of tenant B
+AssertionError: promise resolved "{ …(3) }" instead of rejecting
+
+- Expected
++ Received
+
+- Error {
+-   "message": "rejected promise",
++ {
++   "attendees": [],
++   "id": "34811217-0000-4000-8000-348112170000",
++   "linkedCases": [],
+  }
+
+ ❯ src/modules/legal/__tests__/appointments.router.caller.test.ts:1186:81
+    1184|
+    1185|       await expect(appointmentsRouter.createCaller(ctxFor(OTHER)).crea…
+    1186|       await expect(appointmentsRouter.createCaller(ctxFor(TENANT)).cre…
+       |                                                                                 ^
+    1187|         code: 'BAD_REQUEST',
+    1188|       });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/23]⎯
+
+
+ Test Files  5 failed | 2 passed (7)
+      Tests  22 failed | 128 passed (150)
+   Start at  18:29:54
+   Duration  5.33s (transform 4.61s, setup 3.04s, import 7.50s, tests 4.14s, environment 1ms)
+
+# exit=1

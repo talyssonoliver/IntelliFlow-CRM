@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { CostTracker, UsageMetrics } from './cost-tracker';
+import { CostTracker, UsageMetrics, USAGE_HISTORY_LIMIT } from './cost-tracker';
 
 // Mock the ai.config
 vi.mock('../config/ai.config', () => ({
@@ -44,6 +44,68 @@ describe('CostTracker', () => {
     it('should initialize with warning threshold only', () => {
       const customTracker = new CostTracker(15);
       expect(customTracker).toBeDefined();
+    });
+  });
+
+  describe('bounded usage history (PG-199: every model call is metered)', () => {
+    it('keeps at most USAGE_HISTORY_LIMIT records, evicting the oldest', () => {
+      const bounded = new CostTracker(1e9, 1e9);
+      for (let i = 0; i <= USAGE_HISTORY_LIMIT; i++) {
+        bounded.recordUsage({
+          model: 'gpt-4',
+          inputTokens: 1,
+          outputTokens: 1,
+          operationType: `op-${i}`,
+        });
+      }
+      const history = bounded.exportHistory();
+      expect(USAGE_HISTORY_LIMIT).toBe(1000);
+      expect(history).toHaveLength(USAGE_HISTORY_LIMIT);
+      expect(history[0].operationType).toBe('op-1');
+      expect(history[history.length - 1].operationType).toBe(`op-${USAGE_HISTORY_LIMIT}`);
+    });
+
+    // Codex round 16: the daily report must not lose the evicted records.
+    it('keeps the daily statistics and report exact after eviction', () => {
+      const bounded = new CostTracker(1e9, 1e9);
+      for (let i = 0; i <= USAGE_HISTORY_LIMIT; i++) {
+        bounded.recordUsage({
+          model: 'gpt-4',
+          inputTokens: 10,
+          outputTokens: 5,
+          operationType: i === 0 ? 'first' : 'later',
+        });
+      }
+      const stats = bounded.getStatistics();
+      expect(stats.totalOperations).toBe(USAGE_HISTORY_LIMIT + 1);
+      expect(stats.totalCost).toBeCloseTo(bounded.getDailyCost(), 10);
+      expect(stats.totalInputTokens).toBe(10 * (USAGE_HISTORY_LIMIT + 1));
+      expect(stats.totalOutputTokens).toBe(5 * (USAGE_HISTORY_LIMIT + 1));
+      expect(stats.costByOperation['first']).toBeGreaterThan(0);
+      expect(stats.truncated).toBe(false);
+      expect(bounded.generateReport()).toContain(`Total Operations: ${USAGE_HISTORY_LIMIT + 1}`);
+    });
+
+    it('flags a ranged query that reaches past the retained history as truncated', () => {
+      const bounded = new CostTracker(1e9, 1e9);
+      const before = new Date(Date.now() - 60_000);
+      for (let i = 0; i <= USAGE_HISTORY_LIMIT; i++) {
+        bounded.recordUsage({
+          model: 'gpt-4',
+          inputTokens: 1,
+          outputTokens: 1,
+          operationType: 'x',
+        });
+      }
+      const ranged = bounded.getStatistics(before, new Date());
+      expect(ranged.totalOperations).toBe(USAGE_HISTORY_LIMIT);
+      expect(ranged.truncated).toBe(true);
+    });
+
+    it('does not flag a ranged query before any eviction', () => {
+      const small = new CostTracker(1e9, 1e9);
+      small.recordUsage({ model: 'gpt-4', inputTokens: 1, outputTokens: 1, operationType: 'x' });
+      expect(small.getStatistics(new Date(0), new Date()).truncated).toBe(false);
     });
   });
 
@@ -150,6 +212,26 @@ describe('CostTracker', () => {
           operationType: 'expensive',
         });
       }).toThrow('Daily AI cost limit exceeded');
+    });
+
+    it('refuses the next call once the daily limit is reached (checked before the call)', () => {
+      const strictTracker = new CostTracker(5, 0.05);
+      expect(() => strictTracker.assertWithinDailyLimit()).not.toThrow();
+
+      expect(() =>
+        strictTracker.recordUsage({
+          model: 'gpt-4',
+          inputTokens: 10000,
+          outputTokens: 10000,
+          operationType: 'expensive',
+        })
+      ).toThrow('Daily AI cost limit exceeded');
+
+      expect(() => strictTracker.assertWithinDailyLimit()).toThrow('Daily AI cost limit exceeded');
+    });
+
+    it('never refuses a call when no daily limit is configured', () => {
+      expect(() => new CostTracker(5).assertWithinDailyLimit()).not.toThrow();
     });
 
     it('should log warning when threshold exceeded but under limit', () => {

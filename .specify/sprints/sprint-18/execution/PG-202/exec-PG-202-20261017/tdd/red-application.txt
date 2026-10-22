@@ -1,0 +1,95 @@
+# 2026-10-17T17:22:48Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# pnpm --dir packages/application exec vitest run src/usecases/scheduling/__tests__/CheckConflicts.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/application
+
+ ❯ |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts (19 tests | 6 failed) 21ms
+       × returns the first candidate that has no conflict, with one repository read 5ms
+       × widens the read window and the conflict check by the buffers 2ms
+       × returns null for an empty list without reading 1ms
+       × returns null when every candidate conflicts 0ms
+       × fails when the repository throws 0ms
+       × fails on an invalid buffer 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 6 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > returns the first candidate that has no conflict, with one repository read
+TypeError: useCase.findFirstFreeCandidate is not a function
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:369:36
+    367|       const reads = spyOnConflictReads();
+    368|
+    369|       const result = await useCase.findFirstFreeCandidate({
+       |                                    ^
+    370|         tenantId: 'tenant-1',
+    371|         attendeeId: 'user-123',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/6]⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > widens the read window and the conflict check by the buffers
+TypeError: useCase.findFirstFreeCandidate is not a function
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:385:36
+    383|       const reads = spyOnConflictReads();
+    384|
+    385|       const result = await useCase.findFirstFreeCandidate({
+       |                                    ^
+    386|         tenantId: 'tenant-1',
+    387|         attendeeId: 'user-123',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/6]⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > returns null for an empty list without reading
+TypeError: useCase.findFirstFreeCandidate is not a function
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:402:36
+    400|     it('returns null for an empty list without reading', async () => {
+    401|       const reads = spyOnConflictReads();
+    402|       const result = await useCase.findFirstFreeCandidate({
+       |                                    ^
+    403|         tenantId: 'tenant-1',
+    404|         attendeeId: 'user-123',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/6]⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > returns null when every candidate conflicts
+TypeError: useCase.findFirstFreeCandidate is not a function
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:414:36
+    412|     it('returns null when every candidate conflicts', async () => {
+    413|       await saveBusy(9, 12);
+    414|       const result = await useCase.findFirstFreeCandidate({
+       |                                    ^
+    415|         tenantId: 'tenant-1',
+    416|         attendeeId: 'user-123',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/6]⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > fails when the repository throws
+TypeError: useCase.findFirstFreeCandidate is not a function
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:426:36
+    424|         throw new Error('db down');
+    425|       });
+    426|       const result = await useCase.findFirstFreeCandidate({
+       |                                    ^
+    427|         tenantId: 'tenant-1',
+    428|         attendeeId: 'user-123',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/6]⎯
+
+ FAIL  |application| src/usecases/scheduling/__tests__/CheckConflicts.test.ts > CheckConflictsUseCase > findFirstFreeCandidate (PG-202) > fails on an invalid buffer
+TypeError: useCase.findFirstFreeCandidate is not a function
+ ❯ src/usecases/scheduling/__tests__/CheckConflicts.test.ts:436:36
+    434|
+    435|     it('fails on an invalid buffer', async () => {
+    436|       const result = await useCase.findFirstFreeCandidate({
+       |                                    ^
+    437|         tenantId: 'tenant-1',
+    438|         attendeeId: 'user-123',
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/6]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  6 failed | 13 passed (19)
+   Start at  18:22:49
+   Duration  664ms (transform 295ms, setup 0ms, import 413ms, tests 21ms, environment 0ms)
+
+# exit=1

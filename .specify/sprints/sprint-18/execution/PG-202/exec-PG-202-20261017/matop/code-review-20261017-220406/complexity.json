@@ -1,0 +1,10 @@
+{
+  "packages": [],
+  "timestamp": "2026-10-17T22:32:08.9305593+01:00",
+  "summary": {
+    "totalFiles": 2847,
+    "totalLines": 900171,
+    "averageComplexity": 50.76,
+    "highComplexityFiles": 0
+  }
+}

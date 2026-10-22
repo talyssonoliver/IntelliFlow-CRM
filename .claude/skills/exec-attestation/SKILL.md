@@ -77,7 +77,7 @@ Recovery: `docs/runbooks/gate-4b-recovery.md`.
    ```bash
    node tools/scripts/exec-preflight/check-attestation-provenance.mjs <TASK_ID>
    ```
-   It MUST exit 0. It BLOCKs (exit 1) if the provenance block is missing (on a PG-/IFC- task), non-affirmative, or not cross-validated — it confirms `plan_path` exists on disk and carries the `<!-- plan-reviewer: subagent -->` marker, and that `spec_path` exists. If it BLOCKs, fix the provenance block (or rerun the plan-reviewer) — do NOT finish the task.
+   It MUST exit 0. It BLOCKs (exit 1) if the provenance block is missing (on a PG-/IFC- task), non-affirmative, or not cross-validated — it confirms `plan_path` exists on disk and carries the `<!-- plan-reviewer: subagent -->` marker, and that `spec_path` exists. **Light ceremony tier (issue #579):** a task whose tier the gate itself re-derives as `light` (from Sprint_plan.csv + `.specify/memory/task-tiers.yaml` — a claim in the attestation or plan is not trusted) may omit `plan_reviewer_verdict` and the plan marker, provided the plan's sign-off section records `ceremony_tier: light` and the plan creates no `apps/web/src/app/**/page.tsx`. Write `"ceremony_tier": "light"` in the attestation and leave `plan_reviewer_verdict` out (never write `skipped` there; the enum has no such value). `spec_session_consensus` is still required (e.g. `SINGLE-PERSONA — Frontend-Lead, template-following`). A REJECTED verdict, a `full` re-derived tier, or a page.tsx plan still BLOCKs. If it BLOCKs, fix the provenance block (or rerun the plan-reviewer) — do NOT finish the task.
 5. Verify API returns correct status:
    ```bash
    curl http://localhost:3002/api/tasks/validation-summary/<TASK_ID>

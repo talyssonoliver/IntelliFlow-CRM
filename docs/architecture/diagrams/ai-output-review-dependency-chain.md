@@ -219,6 +219,44 @@ chain:
                                    │                         │
                                    │  >> IFC-181 DEPENDS <<  │
                                    └─────────────────────────┘
+                                               │
+                                               ▼
+                                   ┌─────────────────────────┐
+                                   │       PG-198            │
+                                   │   Approval Policies     │
+                                   │   (ADR-079)             │
+                                   │                         │
+                                   │  - Tenant rules for the │
+                                   │    agent-action AND the │
+                                   │    auto-response queues │
+                                   │  - Timeout, min role,   │
+                                   │    opt-in auto-approve, │
+                                   │    escalation sweep     │
+                                   │  - Approved actions now │
+                                   │    really execute       │
+                                   │                         │
+                                   │  Status: IN PROGRESS    │
+                                   │  Sprint: 18             │
+                                   └─────────────────────────┘
+
+    Sibling AI Settings page (same settings panel, independent of PG-198):
+
+                                   ┌─────────────────────────┐
+                                   │       PG-199            │
+                                   │   Model Configuration   │
+                                   │   (ADR-082)             │
+                                   │                         │
+                                   │  - Model, fallbacks,    │
+                                   │    temperature, tokens  │
+                                   │    per AI purpose       │
+                                   │  - Cheaper picks need a │
+                                   │    confirm + audit      │
+                                   │  - Monthly ceiling per  │
+                                   │    purpose, metered     │
+                                   │                         │
+                                   │  Status: IN PROGRESS    │
+                                   │  Sprint: 18             │
+                                   └─────────────────────────┘
 ```
 
 ---

@@ -103,6 +103,30 @@ describe('TimezoneSelector', () => {
     expect(trigger.getAttribute('aria-label')).toBe('Timezone');
   });
 
+  it('puts an external id on the trigger instead of the default aria-label (PG-201)', () => {
+    render(<TimezoneSelector id="schedule-timezone" value="UTC" onChange={vi.fn()} />);
+
+    const trigger = screen.getByTestId('select-trigger');
+    expect(trigger.getAttribute('id')).toBe('schedule-timezone');
+    expect(trigger.getAttribute('aria-label')).toBeNull();
+  });
+
+  it('forwards invalid state and a description to the trigger (PG-201)', () => {
+    render(
+      <TimezoneSelector id="tz" value="UTC" onChange={vi.fn()} invalid describedBy="tz-error" />
+    );
+    const trigger = screen.getByTestId('select-trigger');
+    expect(trigger.getAttribute('aria-invalid')).toBe('true');
+    expect(trigger.getAttribute('aria-describedby')).toBe('tz-error');
+  });
+
+  it('keeps a stored zone the runtime does not list as an option (PG-201)', () => {
+    render(<TimezoneSelector value="Etc/Legacy_Zone" onChange={vi.fn()} />);
+
+    const values = screen.getAllByTestId('select-item').map((i) => i.getAttribute('data-value'));
+    expect(values).toContain('Etc/Legacy_Zone');
+  });
+
   it('disables controls when disabled prop is true', () => {
     const onChange = vi.fn();
     render(<TimezoneSelector value="UTC" onChange={onChange} disabled />);
@@ -155,5 +179,15 @@ describe('TimezoneSelector', () => {
     expect(onChange).not.toHaveBeenCalled();
 
     vi.restoreAllMocks();
+  });
+
+  it('shows the browser-detect button by default', () => {
+    render(<TimezoneSelector value="UTC" onChange={vi.fn()} />);
+    expect(screen.getByRole('button', { name: 'Detect from browser' })).toBeInTheDocument();
+  });
+
+  it('hides the browser-detect button when showDetect is false (firm zone, PG-202)', () => {
+    render(<TimezoneSelector value="UTC" onChange={vi.fn()} showDetect={false} />);
+    expect(screen.queryByRole('button', { name: 'Detect from browser' })).not.toBeInTheDocument();
   });
 });

@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { trpc } from '@/lib/trpc';
-import { Button, Card, ConfirmationDialog, toast } from '@intelliflow/ui';
-import { PageHeader } from '@/components/shared/page-header';
+import { Button, Card, toast } from '@intelliflow/ui';
+import { ModuleSettingsShell } from '@/components/shared/module-settings-shell';
 import type {
   ContactRequiredFieldKey,
   CreateContactTagInput,
@@ -313,26 +313,7 @@ export default function ContactSettingsContent() {
     tagsQuery.error ||
     automationQuery.error;
 
-  const actions = useMemo(
-    () => [
-      {
-        label: 'Reset to Defaults',
-        onClick: () => setResetOpen(true),
-        variant: 'secondary' as const,
-        icon: 'restart_alt',
-        hideOnMobile: true,
-      },
-      {
-        label: isSaving ? 'Saving…' : 'Save Changes',
-        onClick: handleSave,
-        variant: 'primary' as const,
-        icon: 'save',
-        disabled: !isDirty || isSaving || hasDuplicateRulePair,
-        loading: isSaving,
-      },
-    ],
-    [handleSave, isDirty, isSaving, hasDuplicateRulePair]
-  );
+  const canSave = isDirty && !isSaving && !hasDuplicateRulePair;
 
   const handleRetry = async () => {
     try {
@@ -351,142 +332,136 @@ export default function ContactSettingsContent() {
     }
   };
 
-  if (isLoading) return <ContactSettingsLoading />;
-
-  if (error) {
-    return (
-      <div className="w-full text-center py-12">
-        <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
-        <button onClick={handleRetry} className="text-sm text-primary hover:underline">
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const errorFallback = error ? (
+    <div className="w-full text-center py-12">
+      <p className="text-destructive mb-4">Failed to load settings: {error.message}</p>
+      <button onClick={handleRetry} className="text-sm text-primary hover:underline">
+        Retry
+      </button>
+    </div>
+  ) : undefined;
 
   return (
-    <div className="w-full">
-      <PageHeader
-        breadcrumbs={[
-          { label: 'Dashboard', href: '/' },
-          { label: 'Contacts', href: '/contacts' },
-          { label: 'Contact Settings' },
-        ]}
-        title="Contact Settings"
-        description="Configure duplicate detection, required fields, tags, and automation."
-        actions={actions}
-        className="mb-6"
-      />
-
+    <ModuleSettingsShell
+      breadcrumbs={[
+        { label: 'Dashboard', href: '/' },
+        { label: 'Contacts', href: '/contacts' },
+        { label: 'Contact Settings' },
+      ]}
+      title="Contact Settings"
+      description="Configure duplicate detection, required fields, tags, and automation."
+      errorTitle="Failed to load settings"
+      isLoading={isLoading}
+      errorMessage={error?.message ?? null}
+      loadingFallback={<ContactSettingsLoading />}
+      errorFallback={errorFallback}
+      isSaving={isSaving}
+      canSave={canSave}
+      onSave={handleSave}
+      resetOpen={resetOpen}
+      onResetOpenChange={setResetOpen}
+      onResetConfirm={handleReset}
+      resetDescription="Restore duplicate-detection rules, required-field policy, automation toggles, and AI toggles to factory defaults. Tag vocabulary is preserved. This action cannot be undone."
+      resetAction={{ icon: 'restart_alt', hideOnMobile: true }}
+      saveAction={{ icon: 'save' }}
+    >
       {/* ═══════════════════════════════════════════════════════════════════
           BENTO GRID — 12 columns (stacks on mobile)
           Row 1: Duplicate Detection (7)   + Automation (5)
           Row 2: AI & Intelligence (7)     + Required Fields (5)
           Row 3: Tags (8)                  + Configuration Summary (4)
           ═══════════════════════════════════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-5">
-        {/* Duplicate Detection */}
-        <Card className="lg:col-span-7 p-4 sm:p-5">
-          <SectionHeader
-            icon="content_copy"
-            iconBg="bg-blue-100 dark:bg-blue-900/30"
-            iconFg="text-blue-600 dark:text-blue-400"
-            title="Duplicate Detection"
-            description="Rules that flag potential duplicate contacts on create or update."
-          />
-          <DuplicateDetectionTab rules={localRules} onRulesChange={handleRulesChange} />
-        </Card>
+      {/* Duplicate Detection */}
+      <Card className="lg:col-span-7 p-4 sm:p-5">
+        <SectionHeader
+          icon="content_copy"
+          iconBg="bg-blue-100 dark:bg-blue-900/30"
+          iconFg="text-blue-600 dark:text-blue-400"
+          title="Duplicate Detection"
+          description="Rules that flag potential duplicate contacts on create or update."
+        />
+        <DuplicateDetectionTab rules={localRules} onRulesChange={handleRulesChange} />
+      </Card>
 
-        {/* Automation */}
-        <Card className="lg:col-span-5 p-4 sm:p-5">
-          <SectionHeader
-            icon="bolt"
-            iconBg="bg-amber-100 dark:bg-amber-900/30"
-            iconFg="text-amber-600 dark:text-amber-400"
-            title="Automation"
-            description="Automated behaviours for contact management."
-          />
-          <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
-        </Card>
+      {/* Automation */}
+      <Card className="lg:col-span-5 p-4 sm:p-5">
+        <SectionHeader
+          icon="bolt"
+          iconBg="bg-amber-100 dark:bg-amber-900/30"
+          iconFg="text-amber-600 dark:text-amber-400"
+          title="Automation"
+          description="Automated behaviours for contact management."
+        />
+        <AutomationTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
+      </Card>
 
-        {/* AI & Intelligence */}
-        <Card className="lg:col-span-7 p-4 sm:p-5">
-          <SectionHeader
-            icon="neurology"
-            iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
-            iconFg="text-fuchsia-600 dark:text-fuchsia-400"
-            title="AI & Intelligence"
-            description="Control how Aurora's AI augments contact records, duplicates, tags, and replies."
-          />
-          <AISettingsTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
-        </Card>
+      {/* AI & Intelligence */}
+      <Card className="lg:col-span-7 p-4 sm:p-5">
+        <SectionHeader
+          icon="neurology"
+          iconBg="bg-fuchsia-100 dark:bg-fuchsia-900/30"
+          iconFg="text-fuchsia-600 dark:text-fuchsia-400"
+          title="AI & Intelligence"
+          description="Control how Aurora's AI augments contact records, duplicates, tags, and replies."
+        />
+        <AISettingsTab settings={localAutomation} onSettingsChange={handleAutomationChange} />
+      </Card>
 
-        {/* Required Fields */}
-        <Card className="lg:col-span-5 p-4 sm:p-5">
-          <SectionHeader
-            icon="checklist"
-            iconBg="bg-emerald-100 dark:bg-emerald-900/30"
-            iconFg="text-emerald-600 dark:text-emerald-400"
-            title="Required Fields"
-            description="Fields that must be filled in before a contact can be saved."
-          />
-          <RequiredFieldsTab fields={localFields} onFieldsChange={handleFieldsChange} />
-        </Card>
+      {/* Required Fields */}
+      <Card className="lg:col-span-5 p-4 sm:p-5">
+        <SectionHeader
+          icon="checklist"
+          iconBg="bg-emerald-100 dark:bg-emerald-900/30"
+          iconFg="text-emerald-600 dark:text-emerald-400"
+          title="Required Fields"
+          description="Fields that must be filled in before a contact can be saved."
+        />
+        <RequiredFieldsTab fields={localFields} onFieldsChange={handleFieldsChange} />
+      </Card>
 
-        {/* Tags */}
-        <Card className="lg:col-span-8 p-4 sm:p-5">
-          <SectionHeader
-            icon="sell"
-            iconBg="bg-violet-100 dark:bg-violet-900/30"
-            iconFg="text-violet-600 dark:text-violet-400"
-            title="Tags"
-            description="Vocabulary of tags available across the contacts module."
-            action={
-              <Button size="sm" onClick={() => tagsTabRef.current?.openCreate()}>
-                New Tag
-              </Button>
-            }
-          />
-          <TagsTab
-            ref={tagsTabRef}
-            tags={(tagsQuery.data ?? []) as TagRow[]}
-            onCreate={handleTagCreate}
-            onUpdate={handleTagUpdate}
-            onDelete={handleTagDelete}
-          />
-        </Card>
+      {/* Tags */}
+      <Card className="lg:col-span-8 p-4 sm:p-5">
+        <SectionHeader
+          icon="sell"
+          iconBg="bg-violet-100 dark:bg-violet-900/30"
+          iconFg="text-violet-600 dark:text-violet-400"
+          title="Tags"
+          description="Vocabulary of tags available across the contacts module."
+          action={
+            <Button size="sm" onClick={() => tagsTabRef.current?.openCreate()}>
+              New Tag
+            </Button>
+          }
+        />
+        <TagsTab
+          ref={tagsTabRef}
+          tags={(tagsQuery.data ?? []) as TagRow[]}
+          onCreate={handleTagCreate}
+          onUpdate={handleTagUpdate}
+          onDelete={handleTagDelete}
+        />
+      </Card>
 
-        {/* Configuration Summary */}
-        <Card className="lg:col-span-4 p-4 sm:p-5">
-          <SectionHeader
-            icon="summarize"
-            iconBg="bg-slate-100 dark:bg-slate-800"
-            iconFg="text-slate-600 dark:text-slate-300"
-            title="Configuration Summary"
-            description="Live overview of what you have configured on this page."
-          />
-          <ConfigurationSummary
-            rules={localRules}
-            fields={localFields}
-            tags={(tagsQuery.data ?? []) as TagRow[]}
-            automation={localAutomation}
-            lastUpdated={
-              automationQuery.data?.updatedAt ? new Date(automationQuery.data.updatedAt) : null
-            }
-            isDirty={isDirty}
-          />
-        </Card>
-      </div>
-
-      <ConfirmationDialog
-        open={resetOpen}
-        onOpenChange={setResetOpen}
-        title="Reset to Defaults"
-        description="Restore duplicate-detection rules, required-field policy, automation toggles, and AI toggles to factory defaults. Tag vocabulary is preserved. This action cannot be undone."
-        confirmLabel="Reset"
-        variant="destructive"
-        onConfirm={handleReset}
-      />
-    </div>
+      {/* Configuration Summary */}
+      <Card className="lg:col-span-4 p-4 sm:p-5">
+        <SectionHeader
+          icon="summarize"
+          iconBg="bg-slate-100 dark:bg-slate-800"
+          iconFg="text-slate-600 dark:text-slate-300"
+          title="Configuration Summary"
+          description="Live overview of what you have configured on this page."
+        />
+        <ConfigurationSummary
+          rules={localRules}
+          fields={localFields}
+          tags={(tagsQuery.data ?? []) as TagRow[]}
+          automation={localAutomation}
+          lastUpdated={
+            automationQuery.data?.updatedAt ? new Date(automationQuery.data.updatedAt) : null
+          }
+          isDirty={isDirty}
+        />
+      </Card>
+    </ModuleSettingsShell>
   );
 }

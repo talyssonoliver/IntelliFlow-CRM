@@ -27,8 +27,10 @@ import { createTestContext, prismaMock } from '../../../test/setup';
 import { casesRouter } from '../cases.router';
 import { appointmentsRouter } from '../appointments.router';
 import { caseSettingsRouter } from '../case-settings.router';
+import { caseTypesRouter } from '../case-types.router';
 import { documentSettingsRouter } from '../document-settings.router';
 import { documentsRouter } from '../documents.router';
+import { availabilityRouter } from '../../calendar/availability.router';
 
 // appointments + appointment-settings are deliberately NOT here: they are SHARED
 // with the core Calendar feature (CORE_CRM, all tiers) and stay on plain
@@ -36,6 +38,7 @@ import { documentsRouter } from '../documents.router';
 const LEGAL_ROUTERS = {
   cases: casesRouter,
   caseSettings: caseSettingsRouter,
+  caseTypes: caseTypesRouter, // PG-204 (incl. listActive used by the New Case form)
   documentSettings: documentSettingsRouter,
   documents: documentsRouter, // control: was already gated
 } as const;
@@ -155,5 +158,18 @@ describe('shared appointments router — case-linking requires LEGAL', () => {
     const res = await caller.list({});
     expect(res.appointments).toHaveLength(1);
     expect(res.appointments[0].linkedCases).toEqual([]); // cloaked
+  });
+});
+
+// PG-202: firm availability belongs to the core calendar (all tiers), so it must
+// stay reachable for a tenant without the LEGAL module.
+describe('calendar.availability is not LEGAL-gated', () => {
+  it('get is not FORBIDDEN for a tenant without LEGAL', async () => {
+    (prismaMock.appointmentSettings.findUnique as any).mockResolvedValue(null);
+    (prismaMock.availabilityHour.findMany as any).mockResolvedValue([]);
+    (prismaMock.availabilityClosure.findMany as any).mockResolvedValue([]);
+    const caller = (availabilityRouter as any).createCaller(deniedCtx());
+    await expect(caller.get()).resolves.toMatchObject({ isConfigured: false });
+    expect(Object.keys(LEGAL_ROUTERS)).not.toContain('availability');
   });
 });

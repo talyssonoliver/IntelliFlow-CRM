@@ -1,0 +1,42 @@
+[test-slot] slot1 taken for PG-205-stoa@feat/pg-205-contact-types: bash C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-205/ffa3728c-65a3-4817-af33-f16f5452b82b/scratchpad/run.sh C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-205/ffa3728c-65a3-4817-af33-f16f5452b82b/scratchpad/files.txt
+HEAD 3ae41b2df
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/application@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\application
+> tsc --noEmit
+
+TC-application=0
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/validators@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\validators
+> tsc --noEmit
+
+TC-validators=0
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/api@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\api
+> tsc --noEmit
+
+TC-api=0
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/web@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\web
+> pnpm run typegen && tsc --noEmit
+
+../..                                    |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+../ai-worker                             |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/web@0.1.0 typegen C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\web
+> next typegen
+
+Generating route types...
+✓ Types generated successfully
+TC-web=0
+ESLINT-changed=0
+Checking formatting...
+All matched files use Prettier code style!
+PRETTIER-changed=0

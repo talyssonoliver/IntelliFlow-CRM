@@ -1,0 +1,36 @@
+# 2026-10-17T20:50:55Z codex-review round 10 (recovery session ffa3728c), HEAD dbb06a8db + staged
+[codex-review] base ref : origin/main
+[codex-review] changed  : 83 files total
+[codex-review] in scope : 58 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T20:51:55.782Z
+Base ref  : origin/main
+Files in scope : 58
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/contact/contact.router.ts:516-518 — non-atomic-account-replacement
+    Issue    : Replacing an account permanently removes the existing association if linking the replacement fails.
+    Evidence : `await handleDisassociateAccount(...)` persists the unlink before `await handleAssociateAccount(...)` performs a separate lookup and save. ContactService.disassociateFromAccount and associateWithAccount each independently save the contact. If the target account is deleted after the preliminary check, the second service call returns 'Account not found', while the original association has already been committed. The request fails but leaves the contact unlinked, potentially violating its type's required-account rule.
+    Fix      : Implement account replacement as one domain operation and one transactional save, validating the target and updating the association atomically.
+    Fingerprint: a3d0b8522cf8edcf168faef492478579342c81ca545627281c81c60dc16f6ec8
+
+WAIVED FINDINGS (suppressed):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:451-459 — non-atomic-type-usage-guard (fp: 0f290e25353c...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

@@ -70,7 +70,8 @@ import {
   type MemoryRetentionJobResult,
 } from './jobs';
 import { costTracker } from './utils/cost-tracker';
-import { createTenantAiSpendRecorder } from './utils/tenant-ai-spend';
+import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './utils/tenant-ai-spend';
+import { setPurposeSpendReader } from './lib/purpose-ceiling';
 import { aiConfig, loadAIConfig } from './config/ai.config';
 import {
   extractJobContext,
@@ -81,12 +82,13 @@ import {
   type AgentStatusContext,
 } from './services/agent-status';
 import { hallucinationChecker, RedisMonitoringPublisher } from './monitoring';
+import { EmbeddingModelPublisher } from './lib/embedding-model-publisher';
 import type { MonitoringRedisLike } from './monitoring';
 import { MonitoringFlushService } from './monitoring/monitoring-flush.service';
 import { setAuditLogAdapter } from './utils/audit-log';
 import { tenantContextStore } from './tracing/tenant-context.js';
 import { runWithLogContext } from '@intelliflow/observability';
-import { requiredProdEnv } from '@intelliflow/validators/required-url';
+import { requiredProdEnv, isProductionEnv } from '@intelliflow/validators/required-url';
 
 // ============================================================================
 // Constants
@@ -134,6 +136,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private monitoringFlushService?: MonitoringFlushService;
   // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
   private redisMonitoringPublisher?: RedisMonitoringPublisher;
+  private embeddingModelPublisher?: EmbeddingModelPublisher;
   private prisma?: import('@intelliflow/db').PrismaClient;
   /** Unsubscribes the per-tenant AI-spend recorder from the cost tracker. */
   private stopTenantAiSpend?: () => void;
@@ -141,6 +144,8 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   private contactEmbedWorker?: import('./workers/contact-embed-worker.js').ContactEmbedWorker;
   // D5 / issue #259: ingestion queue consumers (text-extraction + ocr-processing).
   private ingestionWorkersHandle?: import('./workers/ingestion-workers.js').IngestionWorkersHandle;
+  // #230: notification-email queue consumer (folded from apps/workers/notifications-worker).
+  private notificationEmailWorkerHandle?: import('./workers/notification-email-worker.js').NotificationEmailWorkerHandle;
   /** Passive dead-letter queue — no worker, just for inspection and replay. */
   private dlqQueue: Queue | null = null;
   /** QueueEvents instances for each AI queue (used for lifecycle listeners). */
@@ -262,6 +267,10 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
         this.redisMonitoringPublisher = new RedisMonitoringPublisher(client, this.prisma as never);
         this.redisMonitoringPublisher.start();
         this.logger.info('RedisMonitoringPublisher started — publishing snapshots every 5s');
+        // PG-199 (owner Q10): the Model Configuration page shows the embedding model this
+        // worker runs; only the worker's environment says which one it is.
+        this.embeddingModelPublisher = new EmbeddingModelPublisher(client);
+        this.embeddingModelPublisher.start();
       } catch (innerErr) {
         this.logger.warn(
           { err: innerErr instanceof Error ? innerErr.message : String(innerErr) },
@@ -289,6 +298,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.wireRetrievalService();
     await this.bootContactEmbedWorker();
     await this.bootIngestionWorkers();
+    await this.bootNotificationEmailWorker();
   }
 
   /**
@@ -297,16 +307,22 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
    */
   private async wireTenantAiSpend(): Promise<void> {
     try {
-      const { PrismaQuotaRepository, PrismaTenantModuleRepository } =
+      const { PrismaQuotaRepository, PrismaTenantModuleRepository, PrismaPurposeSpendRepository } =
         await import('@intelliflow/adapters');
       const { QuotaService } = await import('@intelliflow/application');
       const quota = new QuotaService(
         new PrismaQuotaRepository(this.prisma as never),
         new PrismaTenantModuleRepository(this.prisma as never)
       );
-      const record = createTenantAiSpendRecorder({
-        quota,
-        getTenantId: () => tenantContextStore.getStore()?.tenantId,
+      const getTenantId = () => tenantContextStore.getStore()?.tenantId;
+      const record = createTenantAiSpendRecorder({ quota, getTenantId, logger: this.logger });
+      // PG-199: per-purpose spend feeds the purpose cost ceilings, and the same repository
+      // is the spend reader of the pre-call ceiling check.
+      const purposeSpend = new PrismaPurposeSpendRepository(this.prisma as never);
+      setPurposeSpendReader(purposeSpend);
+      const recordPurpose = createPurposeSpendRecorder({
+        spend: purposeSpend,
+        getTenantId,
         logger: this.logger,
       });
       this.stopTenantAiSpend = costTracker.addListener((usage) => {
@@ -316,9 +332,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             'Tenant AI spend recorder failed unexpectedly — this usage was not attributed'
           );
         });
+        recordPurpose(usage).catch((error: unknown) => {
+          this.logger.warn(
+            { error: error instanceof Error ? error.message : String(error) },
+            'Per-purpose AI spend recorder failed unexpectedly — this usage was not attributed'
+          );
+        });
       });
       this.logger.info(
-        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth'
+        'Tenant AI spend recorder wired — model cost counts toward aiSpendCentsPerMonth and the per-purpose ceilings'
       );
     } catch (error) {
       this.logger.error(
@@ -442,6 +464,123 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
       this.logger.warn(
         { error: error instanceof Error ? error.message : String(error) },
         'Failed to boot ingestion workers — document processing jobs will remain queued'
+      );
+    }
+  }
+
+  /**
+   * #230: Boot the consumer for the notification-email queue.
+   *
+   * `intelliflow-notifications-email` has been produced by
+   * apps/api/.../ticket.router.ts since that router shipped, but its only
+   * intended consumer — apps/workers/notifications-worker, which WAS built,
+   * deployed and promoted — could not consume it (its job schema never
+   * matched the real payload, #230), so jobs have backlogged in Redis. Its
+   * Railway service is kept but must be scaled to 0 BEFORE this ai-worker is
+   * promoted (see docs/operations/runbooks/workers-runbook.md), otherwise the
+   * old worker would claim jobs and fail them. This wires a real BullMQ
+   * consumer inside the already-deployed ai-worker process instead.
+   *
+   * Email delivery reuses the same adapter apps/api wires in container.ts for
+   * production email (createEmailServiceAdapter → Resend/SendGrid, degrading
+   * to a mock in dev when no provider key is configured) rather than
+   * duplicating notifications-worker's own SMTP channel.
+   */
+  private async bootNotificationEmailWorker(): Promise<void> {
+    try {
+      const { bootNotificationEmailWorker, createPrismaUserEmailLookup } =
+        await import('./workers/notification-email-worker.js');
+      const {
+        createEmailServiceAdapter,
+        RealNotificationServiceAdapter,
+        MockNotificationServiceAdapter,
+      } = await import('@intelliflow/adapters');
+
+      const emailProvider = process.env.EMAIL_PROVIDER || 'mock';
+      let notificationService;
+      if (emailProvider === 'resend') {
+        // codex-review finding mock-delivery-drains-real-queue: a missing
+        // RESEND_API_KEY used to fall through to the Mock adapter below,
+        // which reports every send as delivered — so a resend
+        // misconfiguration would silently drain the real backlog as
+        // "successful" without ever sending an email. Refuse to boot the
+        // consumer instead; jobs stay queued (not lost) until fixed.
+        if (!process.env.RESEND_API_KEY) {
+          this.logger.error(
+            { emailProvider },
+            'EMAIL_PROVIDER=resend but RESEND_API_KEY is not set — refusing to boot the ' +
+              'notification email worker (mis-delivery risk). Jobs remain queued.'
+          );
+          return;
+        }
+        notificationService = new RealNotificationServiceAdapter(
+          createEmailServiceAdapter({ resendApiKey: process.env.RESEND_API_KEY }),
+          {
+            fromAddress:
+              process.env.RESEND_FROM_EMAIL ||
+              process.env.EMAIL_FROM_ADDRESS ||
+              'crm@leangency.com',
+            fromName: process.env.EMAIL_FROM_NAME,
+          }
+        );
+      } else if (emailProvider === 'sendgrid') {
+        if (!process.env.SENDGRID_API_KEY) {
+          this.logger.error(
+            { emailProvider },
+            'EMAIL_PROVIDER=sendgrid but SENDGRID_API_KEY is not set — refusing to boot the ' +
+              'notification email worker (mis-delivery risk). Jobs remain queued.'
+          );
+          return;
+        }
+        notificationService = new RealNotificationServiceAdapter(
+          createEmailServiceAdapter({ sendgridApiKey: process.env.SENDGRID_API_KEY }),
+          {
+            fromAddress: process.env.EMAIL_FROM_ADDRESS || 'noreply@intelliflow.com',
+            fromName: process.env.EMAIL_FROM_NAME,
+          }
+        );
+      } else {
+        // codex-review finding mock-sender-drains-production-queue: an
+        // unset/unrecognized EMAIL_PROVIDER in production used to fall
+        // through to the Mock adapter too (same mis-delivery risk as the
+        // resend/sendgrid branches above — it reports every send as
+        // delivered). Mock is only safe in dev/test; require it to be
+        // explicit there and refuse to boot it at all in production.
+        if (isProductionEnv()) {
+          this.logger.error(
+            { emailProvider },
+            'EMAIL_PROVIDER is unset or not a supported real provider in production — ' +
+              'refusing to boot the notification email worker with the Mock adapter ' +
+              '(mis-delivery risk). Set EMAIL_PROVIDER=resend|sendgrid with its API key. ' +
+              'Jobs remain queued.'
+          );
+          return;
+        }
+        notificationService = new MockNotificationServiceAdapter();
+      }
+
+      const redisConnection = {
+        host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
+        port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
+        ...(process.env.REDIS_PASSWORD ? { password: process.env.REDIS_PASSWORD } : {}),
+        ...(process.env.REDIS_USERNAME ? { username: process.env.REDIS_USERNAME } : {}),
+      };
+
+      this.notificationEmailWorkerHandle = await bootNotificationEmailWorker(
+        redisConnection,
+        {
+          users: createPrismaUserEmailLookup(this.prisma as never),
+          notificationService,
+        },
+        this.logger
+      );
+      this.logger.info(
+        'Notification email worker started — intelliflow-notifications-email queue now consumed'
+      );
+    } catch (error) {
+      this.logger.warn(
+        { error: error instanceof Error ? error.message : String(error) },
+        'Failed to boot notification email worker — ticket-assignment emails will remain queued'
       );
     }
   }
@@ -848,6 +987,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
 
     // IFC-214: Stop Redis snapshot publisher cleanly (final tick + redis.quit).
     await this.tryStop(this.redisMonitoringPublisher, 'RedisMonitoringPublisher');
+    await this.tryStop(this.embeddingModelPublisher, 'EmbeddingModelPublisher');
 
     // IFC-310: Stop the contact embedding worker cleanly.
     await this.tryStop(this.contactEmbedWorker, 'ContactEmbedWorker');
@@ -859,6 +999,12 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     await this.tryStop(this.ingestionWorkersHandle, 'IngestionWorkers');
     if (this.ingestionWorkersHandle) {
       this.logger.info('IngestionWorkers stopped');
+    }
+
+    // #230: Stop the notification-email worker cleanly.
+    await this.tryStop(this.notificationEmailWorkerHandle, 'NotificationEmailWorker');
+    if (this.notificationEmailWorkerHandle) {
+      this.logger.info('NotificationEmailWorker stopped');
     }
 
     // H8: Close DLQ queue and lifecycle event listeners

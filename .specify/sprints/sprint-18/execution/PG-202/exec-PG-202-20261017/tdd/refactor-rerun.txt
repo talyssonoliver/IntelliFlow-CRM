@@ -1,0 +1,113 @@
+date: 2026-10-17T20:08:33Z
+head: 5db1ca137e84f723735fc9eb58372328d8e1e0ab
+
+=== 2026-10-17T20:08:33Z pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+
+ Test Files  1 passed (1)
+      Tests  9 passed (9)
+   Start at  21:08:34
+   Duration  3.31s (transform 1.32s, setup 501ms, import 2.54s, tests 94ms, environment 0ms)
+
+exit: 0
+
+=== 2026-10-17T20:08:38Z pnpm --dir packages/domain exec vitest run src/legal/appointments/__tests__/AvailabilityPolicy.test.ts src/legal/appointments/__tests__/availability-roles.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/domain
+
+
+ Test Files  2 passed (2)
+      Tests  51 passed (51)
+   Start at  21:08:38
+   Duration  510ms (transform 137ms, setup 0ms, import 180ms, tests 233ms, environment 0ms)
+
+exit: 0
+
+=== 2026-10-17T20:08:39Z pnpm --dir packages/application exec vitest run src/usecases/scheduling/__tests__/CheckConflicts.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/application
+
+
+ Test Files  1 passed (1)
+      Tests  20 passed (20)
+   Start at  21:08:40
+   Duration  537ms (transform 242ms, setup 0ms, import 339ms, tests 20ms, environment 0ms)
+
+exit: 0
+
+=== 2026-10-17T20:08:40Z pnpm --dir packages/validators exec vitest run src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/validators
+
+
+ Test Files  2 passed (2)
+      Tests  68 passed (68)
+   Start at  21:08:41
+   Duration  572ms (transform 288ms, setup 0ms, import 441ms, tests 56ms, environment 0ms)
+
+exit: 0
+
+=== 2026-10-17T20:08:42Z pnpm --dir apps/api exec vitest run src/modules/calendar/__tests__/availability-enforcement.test.ts src/modules/calendar/__tests__/availability.router.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+
+ Test Files  2 passed (2)
+      Tests  52 passed (52)
+   Start at  21:08:43
+   Duration  2.28s (transform 1.58s, setup 1.02s, import 2.39s, tests 183ms, environment 0ms)
+
+exit: 0
+
+=== 2026-10-17T20:08:45Z pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts src/modules/legal/__tests__/appointments.availability-boundary.test.ts src/modules/legal/__tests__/appointment-settings.router.test.ts src/__tests__/app-router.smoke.test.ts src/agent/__tests__/approved-action-executor.test.ts src/modules/legal/__tests__/legal-module-entitlement.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+
+ Test Files  6 passed (6)
+      Tests  151 passed (151)
+   Start at  21:08:46
+   Duration  4.31s (transform 4.43s, setup 2.67s, import 7.47s, tests 3.76s, environment 0ms)
+
+exit: 0
+
+=== 2026-10-17T20:08:50Z node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-202 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/availability.test.ts
+[test-slot] slot1 taken for PG-202@feat/pg-202-availability (holding group-intelliflow-db): pnpm exec vitest run --project integration tests/integration/availability.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202
+
+
+ Test Files  1 passed (1)
+      Tests  20 passed (20)
+   Start at  21:08:51
+   Duration  2.72s (transform 615ms, setup 1.10s, import 900ms, tests 555ms, environment 0ms)
+
+exit: 0
+
+=== 2026-10-17T20:08:54Z pnpm --dir apps/web exec vitest run src/app/calendar src/components/appointments/__tests__ src/app/appointments/new src/components/settings/__tests__/ModuleSettingsLayout.test.tsx src/components/settings/__tests__/TimezoneSelector.test.tsx src/components/aurora-landing/sections/__tests__/InboxCalendarSection.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/web
+
+
+ Test Files  26 passed (26)
+      Tests  315 passed (315)
+   Start at  21:08:55
+   Duration  18.90s (transform 1.95s, setup 8.20s, import 11.75s, tests 24.75s, environment 21.54s)
+
+exit: 0
+
+=== 2026-10-17T20:09:14Z pnpm --dir packages/ui exec vitest run __tests__/confirmation-dialog.test.tsx
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/ui
+
+
+ Test Files  1 passed (1)
+      Tests  11 passed (11)
+   Start at  21:09:15
+   Duration  1.92s (transform 72ms, setup 274ms, import 180ms, tests 376ms, environment 924ms)
+
+exit: 0
+
+overall: 0

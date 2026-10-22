@@ -1,0 +1,28 @@
+date: 2026-10-18T11:41:23Z
+head: 72051d1931b0e4830b573349395eba1a4ca3c405
+cmd: pnpm --dir packages/validators exec vitest run --coverage.enabled --coverage.reporter=text --coverage.reporter=lcov --coverage.reportsDirectory=C:/Users/talys/AppData/Local/Temp/claude/C--Users-talys-projects-intelliFlow-CRM-worktrees-pg-202/d11d83f7-2e25-41dc-94e6-b7654110c99c/scratchpad/cov/validators --coverage.include=src/availability.ts --coverage.include=src/appointment-settings.ts src/__tests__/availability.test.ts src/__tests__/appointment-settings.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/packages/validators
+      Coverage enabled with v8
+
+
+ Test Files  2 passed (2)
+      Tests  68 passed (68)
+   Start at  12:41:24
+   Duration  585ms (transform 268ms, setup 0ms, import 425ms, tests 55ms, environment 0ms)
+
+ % Coverage report from v8
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |     100 |    97.36 |     100 |     100 |                   
+ availability.ts   |     100 |    95.65 |     100 |     100 | 127               
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 100% ( 57/57 )
+Branches     : 97.36% ( 37/38 )
+Functions    : 100% ( 15/15 )
+Lines        : 100% ( 55/55 )
+================================================================================
+exit: 0

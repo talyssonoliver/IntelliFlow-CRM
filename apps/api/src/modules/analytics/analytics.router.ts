@@ -16,6 +16,7 @@ import { type Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
 import { reportSettingsRouter } from './report-settings.router';
 import { reportTemplatesRouter } from './report-templates.router';
+import { scheduledReportsRouter } from './scheduled-reports.router';
 
 // ADR-070: server-side ANALYTICS entitlement. `getOverview` and `recentActivity`
 // stay on plain `tenantProcedure`: the core dashboard widgets and the governance
@@ -38,6 +39,7 @@ function getAnalyticsService(ctx: Context) {
 export const analyticsRouter = createTRPCRouter({
   reportSettings: reportSettingsRouter,
   reportTemplates: reportTemplatesRouter,
+  scheduledReports: scheduledReportsRouter, // PG-201
 
   /**
    * Get deals won trend (last N months)

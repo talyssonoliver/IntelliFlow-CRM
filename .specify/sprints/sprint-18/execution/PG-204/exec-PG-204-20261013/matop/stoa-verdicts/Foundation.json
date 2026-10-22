@@ -1,0 +1,114 @@
+{
+  "stoa": "Foundation",
+  "task_id": "PG-204",
+  "run_id": "exec-PG-204-20261013",
+  "verdict": "PASS",
+  "produced_by": "stoa-foundation sub-agent",
+  "produced_at": "2026-10-13T07:20:08Z",
+  "head": "6bf14467f52dfab04a5375ce224ae88a41095eb5",
+  "gates": [
+    {
+      "gate": "Typecheck (touched packages: domain, validators, adapters, api, web)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-09-typecheck.log",
+      "notes": "Real per-package tsc --noEmit for 5 packages (web also next typegen), exit 0, 91s, no diagnostics."
+    },
+    {
+      "gate": "Typecheck baseline (root pnpm run typecheck, turbo)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/turbo-typecheck.log",
+      "notes": "Exit 0 but 40/40 tasks were cache hits (FULL TURBO, 0.8s). Content-hashed so valid for HEAD; the uncached tsc evidence is matrix-09. Counted as corroboration only."
+    },
+    {
+      "gate": "Build (domain, validators, db, api, web)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-11-build.log",
+      "notes": "Real builds, exit 0, 183s: tsup domain/validators, db, api, then next build --webpack (Next 16.3.8) generated 224/224 static pages; route table includes /cases/case-types and /cases/new. \"Skipping validation of types\" is the repo next.config setting; types are covered by matrix-09."
+    },
+    {
+      "gate": "Lint (touched packages eslint + lint:sonar:guard)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-10-lint.log",
+      "notes": "eslint src for domain, validators, api, web all exit 0 with no output. Matrix-time sonar guard saw no changed files (clean tree), so sonar-guard-branch-diff.log re-ran it in CI mode."
+    },
+    {
+      "gate": "Lint baseline (root pnpm run lint, turbo)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/turbo-lint.log",
+      "notes": "Exit 0, 37/37 tasks cache hits; corroboration only, matrix-10 is the uncached evidence."
+    },
+    {
+      "gate": "Sonar guard, branch diff (CI mode, 49 TS/TSX files, web a11y guard on 22)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/sonar-guard-branch-diff.log",
+      "notes": "Exit 0 per header. The log ends after the a11y-guard start line with no explicit success line; the exit code is the only completion signal."
+    },
+    {
+      "gate": "Formatting (prettier --check on branch-changed .ts/.tsx/.json/.md files outside .specify and artifacts)",
+      "result": "PASS",
+      "evidence_log": "run by Foundation STOA, no log file",
+      "notes": "No format:check step exists in the validation matrix. Foundation ran prettier --check on the branch-changed source/docs files: all use Prettier code style, exit 0. Full-repo pnpm run format:check was not run (machine constraint)."
+    },
+    {
+      "gate": "Commit message lint (tools/audit/commit_msg_lint.py --base-ref origin/main)",
+      "result": "PASS",
+      "evidence_log": "run by Foundation STOA, no log file",
+      "notes": "checked=34 passed=34 waived=0 failed=0. Zero AI-attribution trailers."
+    },
+    {
+      "gate": "Plan deliverable verification",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/planning/PG-204-plan.md",
+      "notes": "Every path-form file in Files to Create/Modify exists on disk; remaining extraction hits were code snippets or bare names, and the bare names were confirmed (case-settings.test.ts, case-new.html, case-types.router.ts). cases.router.test.ts is conditional per plan step 12 and legitimately untouched. Plan states 68 files; the exact count was not re-tallied."
+    },
+    {
+      "gate": "Dependency architecture (manual import-direction check)",
+      "result": "PASS",
+      "evidence_log": "manual",
+      "notes": "depcruise not run (machine constraint). Manually checked: no package.json or lockfile change; domain case-type-defaults.ts imports only domain-internal modules; validators import @intelliflow/domain (pre-existing dependency, direction allowed); api lib helper imports only local timezone utils. No violation found."
+    },
+    {
+      "gate": "Preflight scripts (exec-readiness, plan-reviewer, nav-wiring, page-doc-cochange)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/preflight-exec-readiness.log",
+      "notes": "All four exit 0 with real check output (5 readiness checks, 0 WARN/BLOCK; real plan-reviewer subagent evidence)."
+    },
+    {
+      "gate": "Diff coverage (supporting)",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/validation-matrix-13-diff-coverage.log",
+      "notes": "97.9% (558/570) against the 80% floor. DeleteCaseTypeDialog.tsx is 3/4 lines (75%) individually, but the gate is aggregate."
+    },
+    {
+      "gate": "Knip unused files (extra, non-Tier-1)",
+      "result": "NOT-ATTRIBUTABLE",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-204/exec-PG-204-20261013/matop/gates/gate-3c-knip.log",
+      "notes": "Exit 1, 12 unused files reported, none touched by this branch (none appear in git diff origin/main...HEAD); pre-existing on main. Not a Foundation gate; recorded for transparency."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "info",
+      "finding": "Root pnpm run build (turbo build of all apps) was not run; matrix-11 built every touched package plus apps/web and apps/api. Disclosed in gate-selection.json (about 12 GB free on C:, three lanes). A package-scoped build is the accepted form per the Foundation definition; the full build is deferred to the runner pre-ship at the final SHA."
+    },
+    {
+      "severity": "info",
+      "finding": "Gates ran under Node v25.2.1 (repo pins 24.x/22); pnpm printed Unsupported engine warnings. tsc, eslint and next build are not affected by the known Node 25 pg-write hang; DB-backed integration (matrix-07) and coverage (matrix-12) correctly ran on Node v22.14.0."
+    },
+    {
+      "severity": "info",
+      "finding": "Not executed: tsx tools/lint/artifact-paths.ts, depcruise, root format:check and eslint --max-warnings=0 . (lint is the repo-configured per-package eslint src). Gaps are documented, not waived; Tier 1 equivalents were covered by real logs or by Foundation re-runs (prettier, commit lint)."
+    },
+    {
+      "severity": "info",
+      "finding": "Matrix timestamps (06:39:53Z to 07:03:33Z) match log file mtimes (07:39 to 08:03 local, UTC+1) and HEAD in validation-matrix.json equals current HEAD 6bf14467f; no logs from a different commit. The working tree shows only .specify/artifacts churn, no source drift."
+    }
+  ],
+  "summary": "All Tier 1 baseline gates for PG-204 at HEAD 6bf14467f are backed by real logs showing genuine output, not only exit codes: uncached per-package tsc for five packages, per-package eslint, and real tsup/next builds (224 static pages, /cases/case-types and /cases/new in the route table). The root turbo typecheck/lint runs were 100% cache hits and are treated as corroboration only. Foundation re-ran light checks: prettier --check on branch-changed files (clean), commit message lint (34/34 pass, no AI attribution), plan deliverable existence (all planned paths present), and a manual dependency-direction review (no violations, no package.json changes). Disclosed gaps, due to the one-process machine constraint: no root full build, no depcruise, no artifact-paths lint, no full-repo format:check. Knip exits 1 on 12 pre-existing unused files unrelated to this branch. Verdict PASS.",
+  "addendum": {
+    "head": "d7d91e5e8",
+    "checked_at": "2026-10-13T08:05:48Z",
+    "result": "PASS",
+    "notes": "Commit d7d91e5e8 changed 8 web files (error text classes, CaseForm, swatch outline in case-type-colors.ts) plus one test. Re-run logs at that head: matrix-09 typecheck exit 0 (uncached tsc for 5 packages incl. next typegen, 07:38-07:40Z, no diagnostics); matrix-10 lint exit 0 (eslint domain/validators/api/web, no output); matrix-11 build exit 0 (tsup + api + next build, 224/224 pages, /cases/case-types and /cases/new in route table, 9 min); matrix-08 web 797 files / 12677 tests passed; matrix-13 diff coverage 97.9% (559/571). validation-matrix.json head is d7d91e5e8; run-1 copies are preserved in gates/run1-at-6bf14467f. Foundation re-ran prettier --check on the 8 changed files (clean) and commit lint on d7d91e5e8 (pass). Same disclosed gaps as before (no root full build, depcruise, artifact-paths, full format:check)."
+  }
+}

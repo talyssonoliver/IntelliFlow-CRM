@@ -8,6 +8,12 @@ export const uuidSchema = z.uuid();
 export const cuidSchema = z.string().check(z.regex(/^c[a-z0-9]{8,}$/, 'Invalid CUID'));
 export const idSchema = z.union([uuidSchema, cuidSchema]);
 
+/** A user id, or a `system:<name>` actor for automated decisions (PG-198). */
+export const actorIdSchema = z.union([
+  idSchema,
+  z.string().check(z.regex(/^system:[a-z][a-z-]*$/, 'Invalid system actor')),
+]);
+
 // Common string schemas
 export const emailSchema = z
   .string()
@@ -28,6 +34,33 @@ export const phoneSchema = z
   .nullable()
   .transform((val, ctx) => {
     if (!val) return undefined;
+
+    const result = PhoneNumber.create(val);
+
+    if (result.isFailure) {
+      ctx.addIssue({
+        code: 'custom',
+        message: result.error.message,
+      });
+      return z.NEVER;
+    }
+
+    return result.value;
+  });
+
+// Phone schema for PATCH-style updates (IFC-412). `phoneSchema` above collapses
+// both "not provided" and an explicit `null` to `undefined` — correct for
+// create (there is nothing to clear), but on update it destroys the signal
+// that the caller wants to CLEAR the phone rather than leave it untouched.
+// Here: key omitted/`undefined` -> leave unchanged; `null` (or blank string,
+// defensively) -> clear; a non-blank string -> validate + set.
+export const phoneUpdateSchema = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((val, ctx) => {
+    if (val === undefined || val === null) return val;
+    if (!val.trim()) return null;
 
     const result = PhoneNumber.create(val);
 

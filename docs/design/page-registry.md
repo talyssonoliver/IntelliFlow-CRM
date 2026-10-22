@@ -759,7 +759,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 5: CRM Core — Contacts (3 routes)
+## Section 5: CRM Core — Contacts (4 routes)
 
 ### Contacts List (`/contacts`)
 
@@ -778,18 +778,33 @@ Each route entry uses this standard table format:
 
 ### New Contact (`/contacts/new`)
 
-| Field          | Value                                                        |
-| -------------- | ------------------------------------------------------------ |
-| **Task ID**    | PG-064, IFC-184                                              |
-| **File Path**  | `apps/web/src/app/contacts/(list)/new/page.tsx`              |
-| **Layout**     | `apps/web/src/app/contacts/(list)/layout.tsx`                |
-| **API Router** | `apps/api/src/modules/contact/contact.router.ts`             |
-| **E2E Test**   | `tests/e2e/forms.spec.ts`                                    |
-| **Unit Tests** | None                                                         |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms           |
-| **Status**     | Implemented                                                  |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                |
-| **Components** | "use client", multi-step form (3 steps), Card, ToastProvider |
+| Field          | Value                                                                                                                                |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-064, IFC-184, PG-205                                                                                                              |
+| **File Path**  | `apps/web/src/app/contacts/(list)/new/page.tsx`                                                                                      |
+| **Layout**     | `apps/web/src/app/contacts/(list)/layout.tsx`                                                                                        |
+| **API Router** | `apps/api/src/modules/contact/contact.router.ts`, `apps/api/src/modules/contact/contact-types.router.ts` (`contactTypes.listActive`) |
+| **E2E Test**   | `tests/e2e/forms.spec.ts`                                                                                                            |
+| **Unit Tests** | `apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx`                                                                       |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms                                                                                   |
+| **Status**     | Implemented                                                                                                                          |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                                        |
+| **Components** | "use client", multi-step form (3 steps), Card, ToastProvider                                                                         |
+
+### Contact Types (`/contacts/contact-types`)
+
+| Field          | Value                                                                                                  |
+| -------------- | ------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-205                                                                                                 |
+| **File Path**  | `apps/web/src/app/contacts/(list)/contact-types/page.tsx`                                              |
+| **Layout**     | `apps/web/src/app/contacts/(list)/layout.tsx`                                                          |
+| **API Router** | `apps/api/src/modules/contact/contact-types.router.ts` (`contactTypes.*`), `contactSettings.tags.list` |
+| **E2E Test**   | None                                                                                                   |
+| **Unit Tests** | `apps/web/src/app/contacts/(list)/contact-types/__tests__/`, `.../contact-types/components/__tests__/` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                        |
+| **Status**     | Implemented                                                                                            |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                          |
+| **Components** | Server Suspense shell, ContactTypesContent, ContactTypeList, ContactTypeDialog, DefaultTagPicker       |
 
 ### Contact Detail (`/contacts/[id]`)
 
@@ -1053,18 +1068,18 @@ Each route entry uses this standard table format:
 
 ### New Case (`/cases/new`)
 
-| Field          | Value                                                     |
-| -------------- | --------------------------------------------------------- |
-| **Task ID**    | PG-138, IFC-136                                           |
-| **File Path**  | `apps/web/src/app/cases/(list)/new/page.tsx`              |
-| **Layout**     | `apps/web/src/app/cases/(list)/layout.tsx`                |
-| **API Router** | `apps/api/src/modules/legal/cases.router.ts`              |
-| **E2E Test**   | None                                                      |
-| **Unit Tests** | None                                                      |
-| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms        |
-| **Status**     | Implemented                                               |
-| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA             |
-| **Components** | "use client", CaseForm, PageHeader, toast, useRequireAuth |
+| Field          | Value                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-138, IFC-136, PG-204                                                                                                  |
+| **File Path**  | `apps/web/src/app/cases/(list)/new/page.tsx`                                                                             |
+| **Layout**     | `apps/web/src/app/cases/(list)/layout.tsx`                                                                               |
+| **API Router** | `apps/api/src/modules/legal/cases.router.ts`, `apps/api/src/modules/legal/case-types.router.ts` (`caseTypes.listActive`) |
+| **E2E Test**   | None                                                                                                                     |
+| **Unit Tests** | `apps/web/src/app/cases/(list)/new/__tests__/page.test.tsx`, `apps/web/src/components/cases/__tests__/CaseForm.test.tsx` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; Server <200ms                                                                       |
+| **Status**     | Implemented                                                                                                              |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                            |
+| **Components** | "use client", CaseForm, PageHeader, toast, useRequireAuth                                                                |
 
 ### Case Detail (`/cases/[id]`)
 
@@ -1132,7 +1147,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 12: Calendar (3 routes)
+## Section 12: Calendar (4 routes)
 
 ### Calendar (`/calendar`)
 
@@ -1179,6 +1194,21 @@ Each route entry uses this standard table format:
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                               |
 | **Components** | "use client", AppointmentDetail, PageHeader, Card, Skeleton, useRequireAuth |
 
+### Availability (`/calendar/availability`)
+
+| Field          | Value                                                                                                                    |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **Task ID**    | PG-202                                                                                                                   |
+| **File Path**  | `apps/web/src/app/calendar/availability/page.tsx`                                                                        |
+| **Layout**     | `apps/web/src/app/calendar/layout.tsx`                                                                                   |
+| **API Router** | `apps/api/src/modules/calendar/availability.router.ts` (`calendar.availability.*`), `appointments.create` / `reschedule` |
+| **E2E Test**   | None                                                                                                                     |
+| **Unit Tests** | `apps/web/src/app/calendar/availability/__tests__/`, `apps/web/src/app/calendar/availability/components/__tests__/`      |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                          |
+| **Status**     | Implemented (enforced at booking once the migration is applied, ADR-081)                                                 |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                            |
+| **Components** | AvailabilityContent, WeeklyHoursCard, TimezoneCard, ClosuresList (forwardRef), BuffersCapCard, PageHeader, EmptyState    |
+
 ---
 
 ## Section 13: Email (2 routes)
@@ -1215,7 +1245,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 14: AI & Automation (14 routes)
+## Section 14: AI & Automation (15 routes)
 
 ### Agent Approvals Hub (`/agent-approvals`)
 
@@ -1291,6 +1321,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                    |
 | **RACI**       | R: AI Team / A: Product / C: Frontend / I: QA                  |
 | **Components** | "use client", AISearchPage, Skeleton, Suspense, useRequireAuth |
+
+### Approval Policies (`/agent-approvals/approval-policies`)
+
+| Field          | Value                                                                                               |
+| -------------- | --------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-198                                                                                              |
+| **File Path**  | `apps/web/src/app/agent-approvals/approval-policies/page.tsx`                                       |
+| **Layout**     | `apps/web/src/app/agent-approvals/layout.tsx`                                                       |
+| **API Router** | `apps/api/src/modules/agent/approval-policies.router.ts` (`approvalPolicies.*`), `ticket.assignees` |
+| **E2E Test**   | None                                                                                                |
+| **Unit Tests** | `apps/web/src/app/agent-approvals/approval-policies/__tests__/`, `.../components/__tests__/`        |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                     |
+| **Status**     | Implemented                                                                                         |
+| **RACI**       | R: Frontend / A: Product / C: AI Team, Backend / I: QA                                              |
+| **Components** | Route shell, ApprovalPoliciesContent, PolicyCard, PolicyDialog, AssignmentsEditor, EffectiveRules   |
 
 ### Churn Risk (`/agent-approvals/churn-risk`)
 
@@ -1412,6 +1457,21 @@ Each route entry uses this standard table format:
 | **RACI**       | R: AI Team / A: Product / C: Frontend / I: QA                |
 | **Components** | AgentLogDetail, Skeleton, Suspense, useRequireAuth           |
 
+### Model Configuration (`/agent-approvals/model-config`)
+
+| Field          | Value                                                                                   |
+| -------------- | --------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-199                                                                                  |
+| **File Path**  | `apps/web/src/app/agent-approvals/model-config/page.tsx`                                |
+| **Layout**     | `apps/web/src/app/agent-approvals/layout.tsx`                                           |
+| **API Router** | `apps/api/src/modules/agent/model-config.router.ts` (`modelConfig.*`)                   |
+| **E2E Test**   | None                                                                                    |
+| **Unit Tests** | `apps/web/src/app/agent-approvals/model-config/__tests__/`, `.../components/__tests__/` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                         |
+| **Status**     | Implemented                                                                             |
+| **RACI**       | R: Frontend / A: Product / C: AI Team, Backend / I: QA                                  |
+| **Components** | Route shell, ModelConfigContent, PurposeCard, FallbackList, ConfirmationDialog          |
+
 ### AI Preview (`/agent-approvals/preview`)
 
 | Field          | Value                                                                                  |
@@ -1444,7 +1504,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 15: Analytics (2 routes)
+## Section 15: Analytics (3 routes)
 
 ### Analytics Dashboard (`/analytics`)
 
@@ -1475,6 +1535,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                                                                 |
 | **RACI**       | R: Frontend / A: Product / C: AI Team / I: QA                                                               |
 | **Components** | "use client", NpsGauge, NpsTrendChart, SentimentDistributionChart (lazy loaded), useFeedbackSurveyDashboard |
+
+### Scheduled Reports (`/analytics/scheduled-reports`)
+
+| Field          | Value                                                                                                                           |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-201                                                                                                                          |
+| **File Path**  | `apps/web/src/app/analytics/(list)/scheduled-reports/page.tsx`                                                                  |
+| **Layout**     | `apps/web/src/app/analytics/(list)/layout.tsx`                                                                                  |
+| **API Router** | `apps/api/src/modules/analytics/scheduled-reports.router.ts` (`analytics.scheduledReports.*`)                                   |
+| **E2E Test**   | None                                                                                                                            |
+| **Unit Tests** | `apps/web/src/app/analytics/scheduled-reports/__tests__/`, `apps/web/src/app/analytics/scheduled-reports/components/__tests__/` |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                                 |
+| **Status**     | Implemented (delivery runs once IFC-308 ships)                                                                                  |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                                   |
+| **Components** | ScheduledReportsContent, ScheduleList, ScheduleDialog, TagsTab (forwardRef), TimezoneSelector, PageHeader, EmptyState           |
 
 ---
 

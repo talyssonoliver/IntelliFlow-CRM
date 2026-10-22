@@ -5,7 +5,7 @@ import {
   Email,
   PhoneNumber,
   ContactStatus,
-  ContactType,
+  ContactTypeKey,
   CrossTenantOrNotFoundError,
   type RepositoryTransaction,
 } from '@intelliflow/domain';
@@ -111,7 +111,7 @@ export class PrismaContactRepository implements ContactRepository {
       zipCode: record.zipCode ?? undefined,
       company: record.company ?? undefined,
       linkedInUrl: record.linkedInUrl ?? undefined,
-      contactType: record.contactType as ContactType | undefined,
+      contactType: record.contactType as ContactTypeKey | undefined,
       tags: record.tags ?? undefined,
       contactNotes: record.contactNotes ?? undefined,
     });
@@ -196,7 +196,7 @@ export class PrismaContactRepository implements ContactRepository {
       zipCode: record.zipCode ?? undefined,
       company: record.company ?? undefined,
       linkedInUrl: record.linkedInUrl ?? undefined,
-      contactType: record.contactType as ContactType | undefined,
+      contactType: record.contactType as ContactTypeKey | undefined,
       tags: record.tags ?? undefined,
       contactNotes: record.contactNotes ?? undefined,
     });
@@ -242,7 +242,7 @@ export class PrismaContactRepository implements ContactRepository {
       zipCode: record.zipCode ?? undefined,
       company: record.company ?? undefined,
       linkedInUrl: record.linkedInUrl ?? undefined,
-      contactType: record.contactType as ContactType | undefined,
+      contactType: record.contactType as ContactTypeKey | undefined,
       tags: record.tags ?? undefined,
       contactNotes: record.contactNotes ?? undefined,
     });

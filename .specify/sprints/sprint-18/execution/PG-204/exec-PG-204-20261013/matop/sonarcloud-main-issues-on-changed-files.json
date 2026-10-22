@@ -1,0 +1,38 @@
+{
+  "source": "sonarcloud.io api/issues/search, branch=main, resolved=false",
+  "files_queried": 49,
+  "issues_by_file": {
+    "apps/web/src/components/cases/types.ts": [
+      {
+        "rule": "typescript:S4323",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 34,
+        "message": "Replace this union type with a type alias."
+      }
+    ],
+    "packages/validators/src/case-settings.ts": [
+      {
+        "rule": "typescript:S1874",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 26,
+        "message": "'(params?: string | { abort?: boolean | undefined; pattern?: RegExp | undefined; error?: string | $ZodErrorMap<$ZodIssueInvalidStringFormat> | undefined; message?: string | undefined; } | undefined): ZodString' is deprecated."
+      },
+      {
+        "rule": "typescript:S1874",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 31,
+        "message": "'ZodIssueCode' is deprecated."
+      },
+      {
+        "rule": "typescript:S1874",
+        "severity": "MINOR",
+        "type": "CODE_SMELL",
+        "line": 73,
+        "message": "'ZodIssueCode' is deprecated."
+      }
+    ]
+  }
+}

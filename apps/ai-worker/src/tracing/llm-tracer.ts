@@ -13,6 +13,9 @@
  * - llm.provider — runtime aiConfig.provider
  * - llm.model_name — logical alias sent to LiteLLM
  * - tenant.id    — from tenantContextStore (AsyncLocalStorage) or 'unknown'
+ *
+ * PG-199: the wrappers are also the single metering site — every successful call is
+ * recorded once (lib/usage-metering.ts), and embeddings check the rag ceiling first.
  */
 
 import { trace, SpanKind, SpanStatusCode, type Span } from '@opentelemetry/api';
@@ -21,16 +24,30 @@ import type { Embeddings } from '@langchain/core/embeddings';
 import type { LLMPurpose, LLMTier } from '../lib/llm-factory.js';
 import { aiConfig } from '../config/ai.config.js';
 import { tenantContextStore } from './tenant-context.js';
+import { GeminiEmbeddings } from '../lib/gemini-embeddings.js';
+import {
+  assertWithinDailyLimit,
+  chatPricingKey,
+  guardEmbeddingCall,
+  recordEmbeddingUsage,
+  recordModelUsage,
+} from '../lib/usage-metering.js';
 
 const tracer = trace.getTracer('intelliflow-ai-worker', '0.1.0');
 
 export interface LLMTracingMeta {
   purpose: LLMPurpose;
   tier: LLMTier;
+  /** PG-199: catalog model pinned by the tenant, when any. */
+  modelId?: string;
+  /** PG-199: pricing key of the model the provider actually runs, when it is not the alias. */
+  pricingKey?: string;
 }
 
 export interface EmbeddingsTracingMeta {
   tier: LLMTier;
+  /** PG-199: MODEL_PRICING key of the embeddings provider in use (default `rag-${tier}`). */
+  pricingKey?: string;
 }
 
 /**
@@ -55,6 +72,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
     options?: InvokeParams[1]
   ) => {
     const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
+    assertWithinDailyLimit();
 
     return tracer.startActiveSpan(
       'llm.invoke',
@@ -64,7 +82,8 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
           'llm.purpose': meta.purpose,
           'llm.tier': meta.tier,
           'llm.provider': aiConfig.provider,
-          'llm.model_name': `${meta.purpose}-${meta.tier}`,
+          'llm.model_name':
+            meta.modelId || meta.pricingKey ? chatPricingKey(meta) : `${meta.purpose}-${meta.tier}`,
           'tenant.id': tenantId,
         },
       },
@@ -72,6 +91,7 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
         try {
           const result = await originalInvoke(input, options);
           span.setStatus({ code: SpanStatusCode.OK });
+          recordModelUsage(meta, input, result);
           return result;
         } catch (err) {
           span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
@@ -84,7 +104,56 @@ export function wrapModelWithTracing(model: BaseChatModel, meta: LLMTracingMeta)
     );
   };
 
+  // PG-199: withStructuredOutput / bindTools go through withConfig, which returns a new
+  // model built from the same fields (not this patched instance). Wrap those clones too,
+  // or every structured call would skip the span and the metering. A binding that
+  // delegates to this instance (e.g. RunnableBinding) is left alone: it is already metered.
+  const withConfig = (model as { withConfig?: unknown }).withConfig;
+  if (typeof withConfig === 'function') {
+    const originalWithConfig = withConfig.bind(model) as (config: unknown) => BaseChatModel;
+    (model as unknown as Record<string, unknown>)['withConfig'] = (config: unknown) => {
+      const bound = originalWithConfig(config);
+      const isClone = bound !== model && bound?.constructor === model.constructor;
+      return isClone ? wrapModelWithTracing(bound, meta) : bound;
+    };
+  }
+
   return model;
+}
+
+/**
+ * Meter each provider request instead of the whole call: `embedDocuments` fans out into
+ * several requests (Promise.all), and when one fails the ones that succeeded were still
+ * billed and must still count toward the rag ceiling. Returns false for a provider without a
+ * known per-request method; the call wrappers then meter the whole successful call.
+ */
+function meterEmbeddingRequests(embeddings: Embeddings, meta: EmbeddingsTracingMeta): boolean {
+  const asRecord = embeddings as unknown as Record<string, unknown>;
+  let method: string;
+  let textsOf: (arg: unknown) => string[];
+  if (embeddings instanceof GeminiEmbeddings) {
+    // One embedContent request per text.
+    method = 'embed';
+    textsOf = (text) => [String(text)];
+  } else if (typeof asRecord['embeddingWithRetry'] === 'function') {
+    // OpenAIEmbeddings (LiteLLM / OpenAI): one request per batch of `input`.
+    method = 'embeddingWithRetry';
+    textsOf = (request) => {
+      const input = (request as { input?: unknown } | undefined)?.input;
+      return Array.isArray(input) ? input.map((item) => String(item)) : [String(input ?? '')];
+    };
+  } else {
+    return false;
+  }
+  const original = (
+    asRecord[method] as (arg: unknown, ...rest: unknown[]) => Promise<unknown>
+  ).bind(embeddings);
+  asRecord[method] = async (arg: unknown, ...rest: unknown[]): Promise<unknown> => {
+    const result = await original(arg, ...rest);
+    recordEmbeddingUsage(tenantContextStore.getStore()?.tenantId, meta, textsOf(arg));
+    return result;
+  };
+  return true;
 }
 
 /**
@@ -107,6 +176,10 @@ export function wrapEmbeddingsWithTracing(
   // Guard for test mocks or minimal stubs that don't implement the embeddings
   // interface. Skip wrapping rather than throwing at instrumentation time.
   const asRecord = embeddings as unknown as Record<string, unknown>;
+  const metersRequests = meterEmbeddingRequests(embeddings, meta);
+  const recordCall = (tenantId: string | undefined, texts: string[]): void => {
+    if (!metersRequests) recordEmbeddingUsage(tenantId, meta, texts);
+  };
 
   if (typeof asRecord['embedQuery'] === 'function') {
     const originalEmbedQuery = (asRecord['embedQuery'] as (text: string) => Promise<number[]>).bind(
@@ -114,7 +187,9 @@ export function wrapEmbeddingsWithTracing(
     );
 
     asRecord['embedQuery'] = async (text: string): Promise<number[]> => {
-      const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
+      const jobTenantId = tenantContextStore.getStore()?.tenantId;
+      const tenantId = jobTenantId ?? 'unknown';
+      await guardEmbeddingCall(jobTenantId, meta.tier);
 
       return tracer.startActiveSpan(
         'llm.embed',
@@ -131,6 +206,7 @@ export function wrapEmbeddingsWithTracing(
           try {
             const result = await originalEmbedQuery(text);
             span.setStatus({ code: SpanStatusCode.OK });
+            recordCall(jobTenantId, [text]);
             return result;
           } catch (err) {
             span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });
@@ -150,7 +226,9 @@ export function wrapEmbeddingsWithTracing(
     ).bind(embeddings);
 
     asRecord['embedDocuments'] = async (texts: string[]): Promise<number[][]> => {
-      const tenantId = tenantContextStore.getStore()?.tenantId ?? 'unknown';
+      const jobTenantId = tenantContextStore.getStore()?.tenantId;
+      const tenantId = jobTenantId ?? 'unknown';
+      await guardEmbeddingCall(jobTenantId, meta.tier);
 
       return tracer.startActiveSpan(
         'llm.embed',
@@ -167,6 +245,7 @@ export function wrapEmbeddingsWithTracing(
           try {
             const result = await originalEmbedDocuments(texts);
             span.setStatus({ code: SpanStatusCode.OK });
+            recordCall(jobTenantId, texts);
             return result;
           } catch (err) {
             span.setStatus({ code: SpanStatusCode.ERROR, message: String(err) });

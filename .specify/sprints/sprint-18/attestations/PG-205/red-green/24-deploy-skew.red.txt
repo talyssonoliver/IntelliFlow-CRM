@@ -1,0 +1,4 @@
+# 2026-10-18T10:29:55Z HEAD 4c1df7cac RED for Aurora P1-3 (deploy skew: untyped contact must not send contactType)
+     × an untyped contact saved without a type change sends no contactType key (deploy skew) 60ms
+AssertionError: expected { id: 'c1', firstName: 'Ann', …(13) } to not have property "contactType"
+      Tests  1 failed | 7 passed (8)

@@ -36,6 +36,13 @@ describe('HelpArticle Schema Validation', () => {
       expect(_input).toBeDefined();
     });
 
+    it('should have isSystem (built-in article, visible to every tenant — #533)', () => {
+      const _input: Partial<Prisma.HelpArticleCreateInput> = {
+        isSystem: undefined,
+      };
+      expect(_input).toBeDefined();
+    });
+
     it('should have tenantId field', () => {
       const _input: Partial<Prisma.HelpArticleUncheckedCreateInput> = {
         tenantId: 'test-tenant',

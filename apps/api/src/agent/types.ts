@@ -69,6 +69,14 @@ export interface PendingAction {
    * to the store's default tenant.
    */
   tenantId?: string;
+  /**
+   * PG-198 (RF-2): the calling agent's own confidence, 0..1. Absent when the
+   * caller supplied none — never derived from impact.
+   */
+  confidence?: number;
+  /** PG-198: set once when the approval sweep escalates the action. */
+  escalatedAt?: Date;
+  escalatedTo?: string;
 }
 
 /**
@@ -117,13 +125,19 @@ export interface ApprovalDecision {
 /**
  * Result of executing an approved action
  */
+/** PG-198: progress of an approved action's real execution (stored with the action). */
+export type ExecutionStatus = 'EXECUTING' | 'SUCCEEDED' | 'FAILED';
+
 export interface ExecutedAction extends PendingAction {
+  executionStatus?: ExecutionStatus;
   executedAt?: Date;
   executionResult?: unknown;
   executionError?: string;
   approval?: ApprovalDecision;
   rollbackAvailable: boolean;
   rollbackToken?: string;
+  /** Epoch ms of an unfinished rollback claim (#856); set only while one is held. */
+  rollbackClaimedAt?: number;
 }
 
 /**
@@ -200,11 +214,8 @@ export interface AgentToolDefinition<TInput = unknown, TOutput = unknown> {
   inputSchema: z.ZodType<TInput>;
   execute: (input: TInput, context: AgentAuthContext) => Promise<AgentToolResult<TOutput>>;
   generatePreview: (input: TInput, context: AgentAuthContext) => Promise<ActionPreview>;
-  rollback?: (
-    actionId: string,
-    executionResult: TOutput,
-    context: AgentAuthContext
-  ) => Promise<RollbackResult>;
+  // Rollback is not a tool hook: approved actions are undone by
+  // approved-action-compensator.ts, through the target module's procedures (#856).
 }
 
 /**

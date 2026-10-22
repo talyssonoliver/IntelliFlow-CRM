@@ -5,6 +5,52 @@
 **Task ID**: IFC-163 **Last Updated**: 2026-01-01 **Owner**: the owner (sole
 operator)
 
+> **#230:** `notifications-worker` was removed from the repo. Its email queue
+> consumer (`intelliflow-notifications-email`) now runs inside `ai-worker`
+> (`apps/ai-worker/src/workers/notification-email-worker.ts`). The sections
+> below that mention `notifications-worker` predate this change and have not
+> been re-verified.
+>
+> **Release order (important).** The old worker's `NotificationJobSchema`
+> requires `notificationId`, `channel` and `recipient`, so it cannot parse the
+> current producer payload (`apps/api/src/modules/ticket/ticket.router.ts`,
+> `queue.add('notification:email', ...)`). If both workers run at once the old
+> one claims jobs and fails them. Follow this order:
+>
+> 1. Check Railway for a running `notifications-worker` service.
+> 2. On the production `ai-worker` service, make sure `EMAIL_PROVIDER` (`resend`
+>    or `sendgrid`), the provider API key (`RESEND_API_KEY` or
+>    `SENDGRID_API_KEY`) and the from-address (`RESEND_FROM_EMAIL` or
+>    `EMAIL_FROM_ADDRESS`) are set. The old worker's `SMTP_*` and `EMAIL_FROM`
+>    are not inherited. Without a real provider in production the consumer
+>    refuses to boot.
+> 3. Scale `notifications-worker` to 0 FIRST. Do not delete it.
+> 4. Promote with `ai-worker` in the promote workflow's `redeploy` input.
+> 5. Confirm the log line `Notification email worker started` and that the
+>    `intelliflow-notifications-email` waiting count drains.
+> 6. Leave `events-worker` unchanged; it runs `MaintenanceScheduler`.
+>
+> **`events-worker` is unchanged and still deployed.** Its outbox consumer and
+> maintenance scheduler stay in `apps/workers/events-worker`; folding them into
+> `ai-worker` needs a redesign first (multi-replica-safe locking, atomic
+> reminder dedup) and is tracked in the follow-up issue linked from #230. Its
+> image is still built and promoted.
+>
+> **Terraform:** `events-worker` and `notifications-worker` stay defined in
+> `infra/terraform/environments/*/terraform.tfvars`. `notifications-worker` is
+> declared with `replicas = 0` (#230) to match the scaled-down Railway service.
+> Removing an entry would make the next `terraform apply` destroy the Railway
+> service; do that only on the owner's explicit go. Note that the
+> `modules/railway` module only documents `replicas`/`cpu`/`memory` (it does not
+> apply them), so the real scale-to-0 is the manual step above. The module still
+> sets `source_image` from the tfvars image
+> (`ghcr.io/.../intelliflow-crm-notifications-worker:latest`), but
+> `build-images.yml` no longer builds it. The last published `:latest` stays in
+> GHCR, so an apply against the existing service does not need a new image;
+> creating the service afresh (a new environment, or after deletion) would pull
+> that frozen image, and if GHCR garbage-collects it the apply or deploy fails.
+> Drop the entry (and the service) together once the owner approves deletion.
+
 ## Overview
 
 This runbook covers operations for the three worker services:
@@ -315,7 +361,7 @@ After 3 failed attempts, jobs move to DLQ for manual triage.
 | -------------------- | ------------- | --- | ------ |
 | events-worker        | 1             | 0.5 | 256Mi  |
 | ingestion-worker     | 1-3           | 1.0 | 512Mi  |
-| notifications-worker | 1-2           | 0.5 | 256Mi  |
+| notifications-worker | 0 (#230)      | 0.5 | 256Mi  |
 
 ## Monitoring & Alerts
 

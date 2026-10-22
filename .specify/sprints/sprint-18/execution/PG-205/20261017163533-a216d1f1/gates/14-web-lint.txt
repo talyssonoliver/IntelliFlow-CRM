@@ -1,0 +1,8 @@
+# 2026-10-17T17:51:29Z pnpm --filter ./apps/web lint
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/web@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\apps\web
+> eslint "src/**/*.{ts,tsx}"
+
+# exit: 0

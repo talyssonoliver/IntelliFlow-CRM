@@ -11,6 +11,7 @@ import {
   AutoResponseDraftRepository,
   AutoResponseDraftQuery,
   ResponseContent,
+  type PendingOlderThanFilter,
   type AutoResponseStatus,
   type TriggerType,
 } from '@intelliflow/domain';
@@ -60,15 +61,17 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
       return;
     }
 
-    const previousVersion = Math.max(data.version - 1, 0);
+    // Optimistic lock (#874): match the version this aggregate was loaded at and
+    // advance it, so a writer holding a stale copy is rejected instead of winning.
     const result = await this.prisma.autoResponseDraft.updateMany({
-      where: { id, version: previousVersion },
-      data,
+      where: { id, version: data.version },
+      data: { ...data, version: data.version + 1 },
     });
 
     if (result.count === 0) {
       throw new OptimisticLockError('AutoResponseDraft', data.id);
     }
+    draft.incrementVersion();
   }
 
   async findById(id: AutoResponseDraftId, tenantId: string): Promise<AutoResponseDraft | null> {
@@ -116,10 +119,73 @@ export class PrismaAutoResponseDraftRepository implements AutoResponseDraftRepos
     return record ? this.toDomain(record) : null;
   }
 
-  async findPendingForApprover(_: string, tenantId: string): Promise<AutoResponseDraft[]> {
+  /**
+   * #857: the pending queue of one approver. A draft belongs to the approver named when
+   * it was submitted (the latest PENDING_APPROVAL entry of its status history); a draft
+   * that names nobody stays visible to every approver of the tenant, so it cannot get
+   * stuck. Drafts assigned to someone else are not returned.
+   */
+  async findPendingForApprover(approverId: string, tenantId: string): Promise<AutoResponseDraft[]> {
     const records = await this.prisma.autoResponseDraft.findMany({
       where: { tenantId, status: 'PENDING_APPROVAL' },
       orderBy: { createdAt: 'asc' },
+    });
+    return records
+      .map((record) => this.toDomain(record))
+      .filter((draft) => {
+        const assigned = assignedApprover(draft);
+        return assigned === undefined || assigned === approverId;
+      });
+  }
+
+  async saveEscalation(draft: AutoResponseDraft): Promise<boolean> {
+    const data = this.toPersistence(draft);
+    const result = await this.prisma.autoResponseDraft.updateMany({
+      where: {
+        id: data.id,
+        tenantId: data.tenantId,
+        status: 'PENDING_APPROVAL',
+        escalationCount: 0,
+        version: data.version,
+      },
+      data: {
+        status: data.status,
+        escalation: data.escalation,
+        escalationCount: data.escalationCount,
+        statusHistory: data.statusHistory,
+        updatedAt: data.updatedAt,
+        version: data.version + 1,
+      },
+    });
+    if (result.count !== 1) return false;
+    draft.incrementVersion();
+    return true;
+  }
+
+  async findPendingOlderThan(
+    tenantId: string,
+    filter: PendingOlderThanFilter,
+    limit: number
+  ): Promise<AutoResponseDraft[]> {
+    const { after } = filter;
+    const records = await this.prisma.autoResponseDraft.findMany({
+      where: {
+        tenantId,
+        status: 'PENDING_APPROVAL',
+        escalationCount: 0,
+        triggerType: { in: filter.triggerTypes },
+        expiresAt: { gt: filter.notExpiredAt },
+        createdAt: { lt: filter.before },
+        // Keyset paging: stable even when earlier rows leave the set meanwhile.
+        ...(after && {
+          OR: [
+            { createdAt: { gt: after.createdAt } },
+            { createdAt: after.createdAt, id: { gt: after.id } },
+          ],
+        }),
+      },
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: limit,
     });
     return records.map((record) => this.toDomain(record));
   }
@@ -372,4 +438,14 @@ function safeParseJSON(value: string): unknown {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * The approver recorded at submission: the actor of the FIRST PENDING_APPROVAL entry.
+ * Later PENDING_APPROVAL entries are escalation resolutions, whose actor is the
+ * resolver and must not reassign the draft.
+ */
+function assignedApprover(draft: AutoResponseDraft): string | undefined {
+  const submitted = draft.statusHistory.find((entry) => entry.status === 'PENDING_APPROVAL');
+  return submitted?.changedBy || undefined;
 }

@@ -244,52 +244,6 @@ describe('Update Agent Tools', () => {
         expect(preview.affectedEntities[0].id).toBe('case-123');
       });
     });
-
-    describe('rollback', () => {
-      it('should successfully rollback a case update', async () => {
-        const context = createMockContext();
-        const executionResult: UpdatedCaseResult = {
-          id: 'case-123',
-          title: 'Updated Title',
-          status: 'OPEN',
-          priority: 'HIGH',
-          previousState: {
-            title: 'Original Title',
-            status: 'OPEN',
-            priority: 'MEDIUM',
-          },
-          updatedAt: new Date(),
-        };
-
-        const result = await updateCaseTool.rollback!('action-123', executionResult, context);
-
-        expect(result.success).toBe(true);
-        expect(result.actionId).toBe('action-123');
-        expect(result.rolledBackAt).toBeDefined();
-        expect(result.restoredState).toEqual(executionResult.previousState);
-      });
-
-      it('should handle rollback errors gracefully', async () => {
-        const context = createMockContext();
-        const executionResult: UpdatedCaseResult = {
-          id: 'case-123',
-          title: 'Updated Title',
-          status: 'OPEN',
-          priority: 'HIGH',
-          previousState: {},
-          updatedAt: new Date(),
-        };
-
-        // Make rollbackStore.add throw
-        const { rollbackStore } = await import('../../approval-workflow.js');
-        vi.mocked(rollbackStore.add).mockRejectedValueOnce(new Error('Rollback failed'));
-
-        const result = await updateCaseTool.rollback!('action-123', executionResult, context);
-
-        expect(result.success).toBe(false);
-        expect(result.error).toContain('Rollback failed');
-      });
-    });
   });
 
   describe('updateAppointmentTool', () => {
@@ -528,60 +482,6 @@ describe('Update Agent Tools', () => {
         expect(preview.affectedEntities).toHaveLength(1);
         expect(preview.affectedEntities[0].type).toBe('APPOINTMENT');
         expect(preview.affectedEntities[0].id).toBe('appt-123');
-      });
-    });
-
-    describe('rollback', () => {
-      it('should successfully rollback an appointment update', async () => {
-        const context = createMockContext();
-        const executionResult: UpdatedAppointmentResult = {
-          id: 'appt-123',
-          title: 'Updated Meeting',
-          startTime: new Date('2024-01-15T14:00:00'),
-          endTime: new Date('2024-01-15T15:00:00'),
-          previousState: {
-            title: 'Original Meeting',
-            startTime: new Date('2024-01-15T10:00:00'),
-            endTime: new Date('2024-01-15T11:00:00'),
-          },
-          updatedAt: new Date(),
-        };
-
-        const result = await updateAppointmentTool.rollback!(
-          'action-123',
-          executionResult,
-          context
-        );
-
-        expect(result.success).toBe(true);
-        expect(result.actionId).toBe('action-123');
-        expect(result.rolledBackAt).toBeDefined();
-        expect(result.restoredState).toEqual(executionResult.previousState);
-      });
-
-      it('should handle rollback errors gracefully', async () => {
-        const context = createMockContext();
-        const executionResult: UpdatedAppointmentResult = {
-          id: 'appt-123',
-          title: 'Updated Meeting',
-          startTime: new Date(),
-          endTime: new Date(),
-          previousState: {},
-          updatedAt: new Date(),
-        };
-
-        // Make rollbackStore.add throw
-        const { rollbackStore } = await import('../../approval-workflow.js');
-        vi.mocked(rollbackStore.add).mockRejectedValueOnce(new Error('Rollback error'));
-
-        const result = await updateAppointmentTool.rollback!(
-          'action-123',
-          executionResult,
-          context
-        );
-
-        expect(result.success).toBe(false);
-        expect(result.error).toContain('Rollback');
       });
     });
   });

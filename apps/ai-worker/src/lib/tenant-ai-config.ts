@@ -27,9 +27,20 @@ const logger = pino({
 // ---------------------------------------------------------------------------
 
 interface CacheEntry {
-  tier: LLMTier;
+  /**
+   * The row's own tier, or null when no row / NULL tier / invalid tier: the caller's
+   * default is applied on read, because callers of one purpose pass different defaults
+   * (PG-199 A1) and a cached default must never leak from one caller to another.
+   */
+  tier: LLMTier | null;
   temperature?: number | null;
   maxTokens?: number | null;
+  /** PG-199 model pin, ordered fallbacks and monthly ceiling (null/[] when unset). */
+  modelId?: string | null;
+  fallbackModelIds?: string[];
+  ceilingCents?: number | null;
+  /** False for a "no row" entry: nothing beyond the caller default applies. */
+  hasRow: boolean;
   expiresAt: number; // ms epoch
 }
 
@@ -44,19 +55,75 @@ function _cacheKey(tenantId: string, purpose: LLMPurpose): string {
 
 const VALID_TIERS: ReadonlySet<string> = new Set<LLMTier>(['free', 'standard', 'premium']);
 
+/** Columns that exist before the PG-199 migration (20261019120000). */
+const LEGACY_SELECT = { tier: true, temperature: true, maxTokens: true } as const;
+
+/** Prisma "table/column does not exist": the database has not been migrated yet. */
+function isSchemaPending(err: unknown): boolean {
+  const code = (err as { code?: unknown } | null)?.code;
+  return code === 'P2021' || code === 'P2022';
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 /**
  * Result of resolving the effective tier for a tenant+purpose.
- * Includes optional overrides for temperature and maxTokens
- * if the DB row specifies them.
+ * Includes optional overrides for temperature and maxTokens and, since PG-199,
+ * the model pin, fallback chain and monthly ceiling, when the DB row specifies them.
  */
 export interface EffectiveTierConfig {
   tier: LLMTier;
   temperature?: number | null;
   maxTokens?: number | null;
+  modelId?: string | null;
+  fallbackModelIds?: string[];
+  ceilingCents?: number | null;
+}
+
+function fromEntry(entry: CacheEntry, defaultTier: LLMTier): EffectiveTierConfig {
+  if (!entry.hasRow) {
+    return { tier: defaultTier, temperature: entry.temperature, maxTokens: entry.maxTokens };
+  }
+  return {
+    tier: entry.tier ?? defaultTier,
+    temperature: entry.temperature ?? null,
+    maxTokens: entry.maxTokens ?? null,
+    modelId: entry.modelId ?? null,
+    fallbackModelIds: entry.fallbackModelIds ?? [],
+    ceilingCents: entry.ceilingCents ?? null,
+  };
+}
+
+interface TenantAIConfigRow {
+  tier: string | null;
+  temperature: number | null;
+  maxTokens: number | null;
+  modelId?: string | null;
+  fallbackModelIds?: string[] | null;
+  monthlyCostCeilingCents?: number | null;
+}
+
+/**
+ * Read the row; on a pre-migration database (PG-199 columns missing) retry with the
+ * legacy columns so the tier/temperature/maxTokens overrides keep working.
+ */
+async function readRow(tenantId: string, purpose: LLMPurpose): Promise<TenantAIConfigRow | null> {
+  const where = { tenantId_purpose: { tenantId, purpose } };
+  try {
+    return (await prisma.tenantAIConfig.findUnique({ where })) as TenantAIConfigRow | null;
+  } catch (err) {
+    if (!isSchemaPending(err)) throw err;
+    logger.warn(
+      { tenantId, purpose, reason: 'schema_pending' },
+      'TenantAIConfig PG-199 columns missing (migration not applied) — model pin and ceiling not enforced'
+    );
+    return (await prisma.tenantAIConfig.findUnique({
+      where,
+      select: LEGACY_SELECT,
+    })) as TenantAIConfigRow | null;
+  }
 }
 
 /**
@@ -68,8 +135,12 @@ export interface EffectiveTierConfig {
  *  2. `tenant_ai_config` table lookup.
  *  3. Falls back to `defaultTier` on cache miss, invalid row value, or DB error.
  *
- * Fail-open: any DB error returns the caller-supplied default so the chain
- * continues to operate normally.
+ * A NULL tier means "this caller's default tier" (PG-199 A1); the row's other
+ * overrides still apply.
+ *
+ * Fail-open: a DB error returns the last known row for this tenant+purpose when there
+ * is one (so an outage never lifts a ceiling), else the caller-supplied default, so
+ * the chain continues to operate normally.
  */
 export async function resolveEffectiveTier(
   tenantId: string,
@@ -82,57 +153,62 @@ export async function resolveEffectiveTier(
   // 1. Cache hit
   const cached = _tierCache.get(key);
   if (cached && cached.expiresAt > now) {
-    return { tier: cached.tier, temperature: cached.temperature, maxTokens: cached.maxTokens };
+    return fromEntry(cached, defaultTier);
   }
 
   // 2. DB lookup
   try {
-    const row = await prisma.tenantAIConfig.findUnique({
-      where: { tenantId_purpose: { tenantId, purpose } },
-    });
+    const row = await readRow(tenantId, purpose);
 
     if (!row) {
-      // No override configured — cache the default so we skip DB on the next call.
+      // No override configured — cache "no row" so we skip DB on the next call.
       _tierCache.set(key, {
-        tier: defaultTier,
+        tier: null,
         temperature: null,
         maxTokens: null,
+        hasRow: false,
         expiresAt: now + CACHE_TTL_MS,
       });
       return { tier: defaultTier };
     }
 
-    // Validate tier value
-    if (!VALID_TIERS.has(row.tier)) {
+    // Validate tier value (NULL = this caller's default tier, PG-199)
+    if (row.tier !== null && !VALID_TIERS.has(row.tier)) {
       logger.warn(
         { tenantId, purpose, rowTier: row.tier },
         'TenantAIConfig row has invalid tier value — falling back to default'
       );
       _tierCache.set(key, {
-        tier: defaultTier,
+        tier: null,
         temperature: null,
         maxTokens: null,
+        hasRow: false,
         expiresAt: now + CACHE_TTL_MS,
       });
       return { tier: defaultTier };
     }
 
-    const effectiveTier = row.tier as LLMTier;
     const entry: CacheEntry = {
-      tier: effectiveTier,
+      tier: row.tier as LLMTier | null,
       temperature: row.temperature ?? null,
       maxTokens: row.maxTokens ?? null,
+      modelId: row.modelId ?? null,
+      fallbackModelIds: row.fallbackModelIds ?? [],
+      ceilingCents: row.monthlyCostCeilingCents ?? null,
+      hasRow: true,
       expiresAt: now + CACHE_TTL_MS,
     };
     _tierCache.set(key, entry);
 
-    return { tier: effectiveTier, temperature: entry.temperature, maxTokens: entry.maxTokens };
+    return fromEntry(entry, defaultTier);
   } catch (err) {
     logger.warn(
       { tenantId, purpose, error: err instanceof Error ? err.message : String(err) },
-      'TenantAIConfig DB lookup failed — using default tier (fail-open)'
+      cached
+        ? 'TenantAIConfig DB lookup failed — serving the last known row (fail-open)'
+        : 'TenantAIConfig DB lookup failed — using default tier (fail-open)'
     );
-    return { tier: defaultTier };
+    return cached ? fromEntry(cached, defaultTier) : { tier: defaultTier };
   }
 }
 

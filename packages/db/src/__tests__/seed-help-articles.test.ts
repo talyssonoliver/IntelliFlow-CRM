@@ -172,6 +172,24 @@ describe('seed-help-articles', () => {
     }
   });
 
+  it('T4b — each upsert sets isSystem: true so every tenant can read it (#533)', async () => {
+    const { fakePrisma, mocks } = buildFakePrisma();
+    happyPath(mocks);
+    __setPrismaForTest(fakePrisma);
+
+    await main();
+
+    expect(mocks.mockUpsert).toHaveBeenCalledTimes(EXPECTED_ARTICLES);
+    for (const call of mocks.mockUpsert.mock.calls) {
+      const { create, update } = call[0] as {
+        create: { isSystem: boolean };
+        update: { isSystem: boolean };
+      };
+      expect(create.isSystem).toBe(true);
+      expect(update.isSystem).toBe(true);
+    }
+  });
+
   it('T5 — section delete-before-create ordering per article', async () => {
     const { fakePrisma, mocks } = buildFakePrisma();
     happyPath(mocks);

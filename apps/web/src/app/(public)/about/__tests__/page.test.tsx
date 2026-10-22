@@ -23,7 +23,7 @@ describe('About Page Metadata', () => {
   it('should have Open Graph metadata', () => {
     expect(metadata.openGraph).toBeDefined();
     expect(metadata.openGraph?.title).toBe('About Aurora: AI-first, governance-grade');
-    expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/about');
+    expect(metadata.openGraph?.url).toBe('https://intelli-flow-crm-web.vercel.app/about');
     expect(metadata.openGraph?.siteName).toBe('Aurora');
     expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
   });

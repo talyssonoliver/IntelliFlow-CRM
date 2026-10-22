@@ -161,15 +161,15 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 5. CRM Core — Contacts (7 pages)
 
-| Route                        | Page             | Description                                     |
-| ---------------------------- | ---------------- | ----------------------------------------------- |
-| `/contacts`                  | Contacts List    | All contacts with filters                       |
-| `/contacts/new`              | New Contact      | Create contact form                             |
-| `/contacts/[id]`             | Contact Detail   | Contact profile and history                     |
-| `/contacts/[id]/edit`        | Edit Contact     | Edit contact fields                             |
-| `/contacts/contact-types`    | Contact Types    | Configure contact type labels and custom fields |
-| `/contacts/contact-settings` | Contact Settings | Tenant-level contact defaults and dedup rules   |
-| `/contacts/import-export`    | Import / Export  | Bulk CSV import and export with field mapping   |
+| Route                        | Page             | Description                                                                                |
+| ---------------------------- | ---------------- | ------------------------------------------------------------------------------------------ |
+| `/contacts`                  | Contacts List    | All contacts with filters                                                                  |
+| `/contacts/new`              | New Contact      | Create contact form                                                                        |
+| `/contacts/[id]`             | Contact Detail   | Contact profile and history                                                                |
+| `/contacts/[id]/edit`        | Edit Contact     | Edit contact fields                                                                        |
+| `/contacts/contact-types`    | Contact Types    | Contact types: status, department, owner, required fields, tags applied on create (PG-205) |
+| `/contacts/contact-settings` | Contact Settings | Tenant-level contact defaults and dedup rules                                              |
+| `/contacts/import-export`    | Import / Export  | Bulk CSV import and export with field mapping                                              |
 
 ---
 
@@ -220,12 +220,12 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 **Calendar** — month/week/day view with merged tasks:
 
-| Route                         | Page              | Description                                        |
-| ----------------------------- | ----------------- | -------------------------------------------------- |
-| `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)        |
-| `/calendar/availability`      | Availability      | Set working hours, time zones, and booking windows |
-| `/calendar/event-types`       | Event Types       | Configure reusable event type templates            |
-| `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations    |
+| Route                         | Page              | Description                                                                 |
+| ----------------------------- | ----------------- | --------------------------------------------------------------------------- |
+| `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)                                 |
+| `/calendar/availability`      | Availability      | Firm hours, closures, buffers and daily limit, enforced at booking (PG-202) |
+| `/calendar/event-types`       | Event Types       | Configure reusable event type templates                                     |
+| `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations                             |
 
 **Appointments** — dedicated table view (separate from /calendar):
 
@@ -282,17 +282,17 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 13. Cases (9 pages)
 
-| Route                        | Page                  | Description                                                                              |
-| ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------- |
-| `/cases`                     | Cases List            | Legal/service case queue with stats and filters                                          |
-| `/cases/new`                 | New Case              | Case creation form                                                                       |
-| `/cases/[id]`                | Case Detail           | Case detail with documents                                                               |
-| `/cases/timeline`            | Case Timeline         | Case history and deadline engine                                                         |
-| `/cases/case-workflows`      | Case Workflow Builder | Visual workflow builder for case automation (IFC-031)                                    |
-| `/cases/case-workflows/[id]` | Workflow Detail       | Individual workflow view with step editor                                                |
-| `/cases/case-workflows/new`  | New Workflow          | Create new case automation workflow                                                      |
-| `/cases/case-types`          | Case Types            | Configure case category labels and SLA defaults                                          |
-| `/cases/case-settings`       | Case Settings         | Tenant-level case defaults: case prefix, default priority, auto-assign (PG-190 — active) |
+| Route                        | Page                  | Description                                                                               |
+| ---------------------------- | --------------------- | ----------------------------------------------------------------------------------------- |
+| `/cases`                     | Cases List            | Legal/service case queue with stats and filters                                           |
+| `/cases/new`                 | New Case              | Case creation form                                                                        |
+| `/cases/[id]`                | Case Detail           | Case detail with documents                                                                |
+| `/cases/timeline`            | Case Timeline         | Case history and deadline engine                                                          |
+| `/cases/case-workflows`      | Case Workflow Builder | Visual workflow builder for case automation (IFC-031)                                     |
+| `/cases/case-workflows/[id]` | Workflow Detail       | Individual workflow view with step editor                                                 |
+| `/cases/case-workflows/new`  | New Workflow          | Create new case automation workflow                                                       |
+| `/cases/case-types`          | Case Types            | Case types: priority, SLA deadline, required fields, checklist applied on create (PG-204) |
+| `/cases/case-settings`       | Case Settings         | Tenant-level case defaults: case prefix, default priority, auto-assign (PG-190 — active)  |
 
 ---
 
@@ -306,7 +306,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/agent-approvals/ai-review/[id]`    | Review Detail       | IFC-181         |
 | `/agent-approvals/ai-search`         | AI Search (RAG)     | PG-144          |
 | `/agent-approvals/ai-settings`       | AI Settings         | —               |
-| `/agent-approvals/approval-policies` | Approval Policies   | —               |
+| `/agent-approvals/approval-policies` | Approval Policies   | PG-198          |
 | `/agent-approvals/churn-risk`        | Churn Risk          | PG-143          |
 | `/agent-approvals/drift`             | Drift Detection     | PG-146          |
 | `/agent-approvals/experiments`       | Experiments         | PG-149          |
@@ -317,7 +317,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/agent-approvals/lead-scoring`      | Lead Scoring        | PG-148          |
 | `/agent-approvals/logs`              | Agent Logs          | PG-152          |
 | `/agent-approvals/logs/[id]`         | Agent Log Detail    | PG-152          |
-| `/agent-approvals/model-config`      | Model Configuration | —               |
+| `/agent-approvals/model-config`      | Model Configuration | PG-199          |
 | `/agent-approvals/preview`           | Preview Mode        | —               |
 | `/agent-approvals/sentiment`         | Sentiment Analysis  | PG-142          |
 | `/agent-approvals/tools`             | Agent Tools         | IFC-191         |
@@ -334,16 +334,16 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ### 15. Analytics & Reports (8 pages)
 
-| Route                          | Page                | Description                                                |
-| ------------------------------ | ------------------- | ---------------------------------------------------------- |
-| `/analytics`                   | Analytics Dashboard | Charts, metrics, and KPIs                                  |
-| `/analytics/feedback`          | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts                         |
-| `/analytics/saved/weekly`      | Weekly Summary      | Last 7 days: revenue, leads, pipeline trends               |
-| `/analytics/saved/monthly`     | Monthly Revenue     | Last 30 days: revenue breakdown, lead sources              |
-| `/analytics/saved/quarterly`   | Q4 Performance      | Quarterly performance summary with YoY comparison          |
-| `/analytics/report-templates`  | Report Templates    | Manage reusable report templates                           |
-| `/analytics/scheduled-reports` | Scheduled Reports   | Configure automated report delivery schedules              |
-| `/analytics/report-settings`   | Report Settings     | Tenant-level report defaults: locale, currency, date range |
+| Route                          | Page                | Description                                                  |
+| ------------------------------ | ------------------- | ------------------------------------------------------------ |
+| `/analytics`                   | Analytics Dashboard | Charts, metrics, and KPIs                                    |
+| `/analytics/feedback`          | Feedback Analytics  | NPS/CSAT/CES metrics, trend charts                           |
+| `/analytics/saved/weekly`      | Weekly Summary      | Last 7 days: revenue, leads, pipeline trends                 |
+| `/analytics/saved/monthly`     | Monthly Revenue     | Last 30 days: revenue breakdown, lead sources                |
+| `/analytics/saved/quarterly`   | Q4 Performance      | Quarterly performance summary with YoY comparison            |
+| `/analytics/report-templates`  | Report Templates    | Manage reusable report templates                             |
+| `/analytics/scheduled-reports` | Scheduled Reports   | Cron schedules per report template (PG-201; sent by IFC-308) |
+| `/analytics/report-settings`   | Report Settings     | Tenant-level report defaults: locale, currency, date range   |
 
 ---
 

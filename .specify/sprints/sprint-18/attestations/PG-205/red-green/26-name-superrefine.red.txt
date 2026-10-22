@@ -1,0 +1,4 @@
+# 2026-10-18T10:32:14Z HEAD 4c1df7cac RED for Aurora P2(a): the dialog never used contactTypeNameSchema (superRefine) in production
+     × validates the name with the shared superRefine schema (contactTypeNameSchema) 253ms
+AssertionError: expected "vi.fn()" to be called with arguments: [ ArrayContaining{…}, 't1' ]
+      Tests  1 failed | 14 passed (15)

@@ -17,11 +17,15 @@ import {
   CASE_STATUSES,
   CASE_PRIORITIES,
   CASE_TASK_STATUSES,
+  CASE_REQUIRED_FIELD_KEYS,
   APPOINTMENT_STATUSES,
   APPOINTMENT_TYPES,
   TICKET_STATUSES,
   TICKET_PRIORITIES,
   SLA_STATUSES,
+  CONTACT_TYPES,
+  CONTACT_TYPE_REQUIRED_FIELD_KEYS,
+  CONTACT_TYPE_OWNER_DEFAULTS,
 } from '@intelliflow/domain';
 
 // Import validator schemas
@@ -33,7 +37,19 @@ import { taskStatusSchema, taskPrioritySchema } from '../src/task';
 
 import { caseStatusSchema, casePrioritySchema, caseTaskStatusSchema } from '../src/case';
 
+import { caseRequiredFieldKeySchema } from '../src/case-settings';
+
 import { ticketStatusSchema, ticketPrioritySchema, slaStatusSchema } from '../src/ticket';
+
+import { contactTypeSchema } from '../src/contact';
+
+import { TAG_COLOR_TOKENS } from '../src/contact-settings';
+
+import {
+  CONTACT_TYPE_COLOR_TOKENS,
+  contactTypeRequiredFieldKeySchema,
+  contactTypeOwnerDefaultSchema,
+} from '../src/contact-types';
 
 describe('Enum Consistency - DRY Architecture', () => {
   describe('Lead enums', () => {
@@ -98,6 +114,13 @@ describe('Enum Consistency - DRY Architecture', () => {
 
       expect(schemaValues).toEqual(domainValues);
     });
+
+    it('should derive caseRequiredFieldKeySchema from domain CASE_REQUIRED_FIELD_KEYS (PG-204)', () => {
+      const domainValues = [...CASE_REQUIRED_FIELD_KEYS];
+      const schemaValues = caseRequiredFieldKeySchema.options;
+
+      expect(schemaValues).toEqual(domainValues);
+    });
   });
 
   describe('Ticket enums', () => {
@@ -120,6 +143,26 @@ describe('Enum Consistency - DRY Architecture', () => {
       const schemaValues = slaStatusSchema.options;
 
       expect(schemaValues).toEqual(domainValues);
+    });
+  });
+
+  describe('Contact type enums (PG-205)', () => {
+    it('should keep contactTypeSchema as the six domain seed keys', () => {
+      expect(contactTypeSchema.options).toEqual([...CONTACT_TYPES]);
+    });
+
+    it('should derive contactTypeRequiredFieldKeySchema from domain CONTACT_TYPE_REQUIRED_FIELD_KEYS', () => {
+      expect(contactTypeRequiredFieldKeySchema.options).toEqual([
+        ...CONTACT_TYPE_REQUIRED_FIELD_KEYS,
+      ]);
+    });
+
+    it('should derive contactTypeOwnerDefaultSchema from domain CONTACT_TYPE_OWNER_DEFAULTS', () => {
+      expect(contactTypeOwnerDefaultSchema.options).toEqual([...CONTACT_TYPE_OWNER_DEFAULTS]);
+    });
+
+    it('should use the contact tag colour tokens for contact types', () => {
+      expect([...CONTACT_TYPE_COLOR_TOKENS]).toEqual([...TAG_COLOR_TOKENS]);
     });
   });
 

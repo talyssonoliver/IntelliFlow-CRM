@@ -7,14 +7,19 @@ worker processes. It builds/runs nothing itself — `build` is a no-op echo and
 `dev`/`typecheck`/`lint` fan out to the sub-workers via `pnpm --filter`. The
 sub-workers are built by root Turbo.
 
+**#230:** `notifications-worker/` was removed. Its
+`intelliflow-notifications-email` queue consumer now lives in `apps/ai-worker`
+(`src/workers/notification-email-worker.ts`). `events-worker/` (outbox
+dispatch + scheduled maintenance) stays here; folding it into ai-worker is
+tracked separately.
+
 ## Sub-workers (each its own package + `src/main.ts` entry)
 
-| Worker                  | Package                             | Responsibility                                                                                           |
-| ----------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `events-worker/`        | `@intelliflow/events-worker`        | Outbox dispatch + subscription bridge + scheduled maintenance jobs                                       |
-| `ingestion-worker/`     | `@intelliflow/ingestion-worker`     | Document/text ingestion jobs (`jobs/extractText.job.ts`)                                                 |
-| `notifications-worker/` | `@intelliflow/notifications-worker` | Multi-channel delivery: `channels/{email,sms,webhook}.ts`                                                |
-| `shared/`               | (shared lib)                        | Cross-worker runtime: `base-worker.ts`, `graceful-shutdown.ts`, `health-server.ts`, `queue-connector.ts` |
+| Worker              | Package                         | Responsibility                                                                                           |
+| ------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `events-worker/`    | `@intelliflow/events-worker`    | Outbox dispatch + subscription bridge + scheduled maintenance jobs                                       |
+| `ingestion-worker/` | `@intelliflow/ingestion-worker` | Document/text ingestion jobs (`jobs/extractText.job.ts`)                                                 |
+| `shared/`           | (shared lib)                    | Cross-worker runtime: `base-worker.ts`, `graceful-shutdown.ts`, `health-server.ts`, `queue-connector.ts` |
 
 ## Entry Points
 

@@ -31,13 +31,20 @@ import {
   toolMetadata,
   ToolDisabledError,
 } from '../../agent/tools';
-import { approvalWorkflowService, pendingActionsStore } from '../../agent/approval-workflow';
+import {
+  ApprovalNotClaimedError,
+  approvalWorkflowService,
+  pendingActionsStore,
+} from '../../agent/approval-workflow';
+import { loadApprovalPolicy, resolveAgentToolExpiry } from '../../agent/approval-policy-loader';
+import { getAuditLogger } from '../../security/audit';
+import { canReview, evaluateAutoApproval, SYSTEM_APPROVAL_ACTOR } from '@intelliflow/domain';
 import { agentAuthorizationService, buildAuthContext } from '../../agent/authorization';
 import { agentLogger } from '../../agent/logger';
 import { hasPermission } from '../../lib/rbac';
 import type { Context } from '../../context';
 import { assertQuota } from '../../shared/quota-guard';
-import type { AgentAuthContext, PendingAction } from '../../agent/types';
+import type { AgentAuthContext, ExecutionStatus, PendingAction } from '../../agent/types';
 
 // ADR-070: server-side AI_INTELLIGENCE entitlement (plan gate, not role gate).
 const protectedProcedure = baseProtectedProcedure.use(requireModule('AI_INTELLIGENCE'));
@@ -53,11 +60,195 @@ const protectedProcedure = baseProtectedProcedure.use(requireModule('AI_INTELLIG
  */
 async function requireTenantOwnedAction(ctx: Context, actionId: string): Promise<PendingAction> {
   const callerTenant = ctx.user?.tenantId;
-  const action = await approvalWorkflowService.getPendingAction(actionId);
-  if (!action || !callerTenant || action.tenantId !== callerTenant) {
+  if (!callerTenant) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
+  }
+  const action = await approvalWorkflowService.getPendingAction(actionId, callerTenant);
+  if (!action || action.tenantId !== callerTenant) {
     throw new TRPCError({ code: 'NOT_FOUND', message: `Pending action not found: ${actionId}` });
   }
   return action;
+}
+
+/**
+ * Read model for the approval queue (PG-198): real confidence as a percent or
+ * null (RF-2 — never derived from impact), impact separately, escalation, and
+ * the execution status of an approved-but-interrupted action.
+ */
+function toActionView(action: PendingAction & { executionStatus?: ExecutionStatus }) {
+  return {
+    id: action.id,
+    toolName: action.toolName,
+    actionType: action.actionType,
+    entityType: action.entityType,
+    preview: action.preview,
+    createdAt: action.createdAt,
+    expiresAt: action.expiresAt,
+    status: action.status,
+    // Stored as a whole percent (floored once at write time); round to undo the /100.
+    confidence: action.confidence === undefined ? null : Math.round(action.confidence * 100),
+    estimatedImpact: action.preview.estimatedImpact ?? null,
+    escalatedAt: action.escalatedAt ?? null,
+    escalatedTo: action.escalatedTo ?? null,
+    executionStatus: action.executionStatus ?? null,
+  };
+}
+
+/**
+ * PG-198 (AC-010): enforce the effective policy's minimum reviewer role. The policy
+ * is read fresh (no cache) and a read failure propagates, so the check fails closed.
+ */
+async function assertPolicyReviewer(ctx: Context, action: PendingAction): Promise<void> {
+  const resolved = await loadApprovalPolicy(
+    ctx.prisma,
+    // requireTenantOwnedAction has already proven this is the caller's tenant.
+    String(action.tenantId),
+    'AGENT_TOOL',
+    action.toolName,
+    action.actionType,
+    { fresh: true }
+  );
+  if (canReview(ctx.user?.role, resolved.rule)) return;
+  throw new TRPCError({
+    code: 'FORBIDDEN',
+    message: `This action needs a reviewer with the ${resolved.rule.minReviewerRole} role or above.`,
+  });
+}
+
+/**
+ * PG-198 (AC-013): auto-approve a just-queued action when the tenant's policy allows
+ * it. Fail closed: any policy-read error leaves the action pending. The requester
+ * must be able to approve it themselves (BR-6); the decision is audit-logged and the
+ * action runs through the same executor as a human approval.
+ */
+async function tryAutoApprove(
+  ctx: Context,
+  agentContext: AgentAuthContext,
+  action: PendingAction,
+  tenantId: string
+) {
+  let resolved;
+  try {
+    resolved = await loadApprovalPolicy(
+      ctx.prisma,
+      tenantId,
+      'AGENT_TOOL',
+      action.toolName,
+      action.actionType,
+      { fresh: true }
+    );
+  } catch (error) {
+    // Fail closed, but visibly: the action stays pending for a person.
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn(`[agent] approval policy unavailable; action left for review: ${message}`);
+    return null;
+  }
+  if (!resolved.rule.autoApproveEnabled) return null;
+
+  const verdict = evaluateAutoApproval({
+    scope: 'AGENT_TOOL',
+    rule: resolved.rule,
+    confidence: action.confidence,
+    impact: action.preview.estimatedImpact,
+    agentKey: action.toolName,
+    actionType: action.actionType,
+    messageType: typeof action.input.type === 'string' ? action.input.type : undefined,
+    requesterRole: ctx.user?.role,
+    requesterCanApprove: await hasPermission(ctx, 'agent:tool-approval', 'approve'),
+    hasSessionRequester: Boolean(ctx.user?.userId),
+  });
+
+  // BR-7: one decision record, written once the outcome is known.
+  const decision = {
+    reason: verdict.reason,
+    policyId: resolved.policyId,
+    policyName: resolved.policyName,
+    threshold: resolved.rule.autoApproveMinConfidence,
+    confidence: action.confidence ?? null,
+    // Caller-asserted (spec C13): bounded by BR-6, recorded so audits can see it.
+    confidenceSource: 'caller',
+    requester: agentContext.userId,
+  };
+  const logDecision = (outcome: 'APPROVED' | 'LEFT_FOR_REVIEW' | 'CLAIM_REFUSED') =>
+    agentLogger.log({
+      userId: agentContext.userId,
+      agentSessionId: agentContext.agentSessionId,
+      toolName: action.toolName,
+      actionType: action.actionType,
+      entityType: action.entityType,
+      input: action.input,
+      success: outcome === 'APPROVED',
+      durationMs: 0,
+      approvalRequired: true,
+      approvalStatus: outcome === 'APPROVED' ? 'APPROVED' : 'PENDING',
+      approvedBy: outcome === 'APPROVED' ? SYSTEM_APPROVAL_ACTOR : undefined,
+      metadata: { autoApproval: { decision: outcome, ...decision } },
+    });
+
+  if (!verdict.approve) {
+    await logDecision('LEFT_FOR_REVIEW');
+    return null;
+  }
+
+  let executed;
+  try {
+    executed = await approvalWorkflowService.approveAction(
+      {
+        actionId: action.id,
+        decision: 'APPROVE',
+        decidedBy: SYSTEM_APPROVAL_ACTOR,
+        decidedAt: new Date(),
+        reason: `Auto-approved by policy "${String(resolved.policyName)}" (${String(resolved.policyId)}): ${verdict.reason}`,
+      },
+      agentContext,
+      ctx
+    );
+  } catch (error) {
+    // Refused before the claim (e.g. invalid input): it stays pending for a person.
+    // Anything later (the action was claimed) must surface, not pretend to be pending.
+    if (error instanceof ApprovalNotClaimedError) {
+      await logDecision('CLAIM_REFUSED');
+      return null;
+    }
+    throw error;
+  }
+  await logDecision('APPROVED');
+  // Durable audit row (the agent log is a buffered file log): system actor + policy id.
+  getAuditLogger(ctx.prisma)
+    .logAction('UPDATE', 'system', action.id, tenantId, {
+      actorType: 'SYSTEM',
+      resourceName: 'agent_action auto-approval',
+      afterState: {
+        ...decision,
+        decision: 'APPROVED',
+        approvedBy: SYSTEM_APPROVAL_ACTOR,
+        executionStatus: executed.executionStatus,
+      },
+      actionReason: `Auto-approved by approval policy "${String(resolved.policyName)}" (${String(resolved.policyId)})`,
+    })
+    .catch((err: unknown) => console.error('[agent] auto-approval audit write failed:', err));
+  return {
+    requiresApproval: false as const,
+    autoApproved: true as const,
+    actionId: executed.id,
+    policyId: resolved.policyId,
+    executionStatus: executed.executionStatus,
+    result: executed.executionResult,
+    error: executed.executionError,
+  };
+}
+
+/**
+ * PG-198: the agent context for executing an approved action carries the tenant and
+ * the client, so ApprovalWorkflowService re-checks the tool's per-tenant enablement
+ * (a tool disabled after the action was queued is refused) instead of bypassing it.
+ */
+function withTenant(
+  agentContext: AgentAuthContext,
+  ctx: Context,
+  tenantId: string
+): AgentAuthContext {
+  return { ...agentContext, tenantId, prisma: ctx.prisma };
 }
 
 /**
@@ -177,6 +368,8 @@ export const agentRouter = createTRPCRouter({
       z.object({
         toolName: z.string(),
         input: z.record(z.string(), z.unknown()),
+        /** PG-198 (RF-2): the calling agent's own confidence, 0..1, when it has one. */
+        confidence: z.number().min(0).max(1).optional(),
       })
     )
     .mutation(async ({ ctx, input }) => {
@@ -242,9 +435,16 @@ export const agentRouter = createTRPCRouter({
           preview,
           status: 'PENDING' as const,
           createdAt: new Date(),
-          expiresAt: new Date(Date.now() + 30 * 60 * 1000), // 30 minutes
+          // PG-198 (AC-008): the tenant's approval policy decides how long this waits.
+          expiresAt: await resolveAgentToolExpiry(
+            ctx.prisma,
+            ctx.user.tenantId,
+            tool.name,
+            tool.actionType
+          ),
           createdBy: agentContext.userId,
           agentSessionId: agentContext.agentSessionId,
+          confidence: input.confidence,
         };
 
         await pendingActionsStore.add(pendingAction);
@@ -262,6 +462,14 @@ export const agentRouter = createTRPCRouter({
           approvalRequired: true,
           approvalStatus: 'PENDING',
         });
+
+        const autoApproved = await tryAutoApprove(
+          ctx,
+          withTenant(agentContext, ctx, ctx.user.tenantId),
+          pendingAction,
+          ctx.user.tenantId
+        );
+        if (autoApproved) return autoApproved;
 
         return {
           requiresApproval: true,
@@ -301,21 +509,12 @@ export const agentRouter = createTRPCRouter({
    */
   getPendingApprovals: protectedProcedure.query(async ({ ctx }) => {
     const agentContext = buildAgentContext(ctx);
-    const pendingActions = await approvalWorkflowService.getPendingActions(
-      agentContext.userId,
-      ctx.user?.tenantId
-    );
+    const [pendingActions, interrupted] = await Promise.all([
+      approvalWorkflowService.getPendingActions(agentContext.userId, ctx.user?.tenantId),
+      approvalWorkflowService.getInterruptedActions(agentContext.userId, ctx.user?.tenantId),
+    ]);
 
-    return pendingActions.map((action) => ({
-      id: action.id,
-      toolName: action.toolName,
-      actionType: action.actionType,
-      entityType: action.entityType,
-      preview: action.preview,
-      createdAt: action.createdAt,
-      expiresAt: action.expiresAt,
-      status: action.status,
-    }));
+    return [...pendingActions, ...interrupted].map(toActionView);
   }),
 
   /**
@@ -327,18 +526,7 @@ export const agentRouter = createTRPCRouter({
       // Tenant ownership guard: only the owning tenant may read an action by id.
       const action = await requireTenantOwnedAction(ctx, input.actionId);
 
-      return {
-        id: action.id,
-        toolName: action.toolName,
-        actionType: action.actionType,
-        entityType: action.entityType,
-        input: action.input,
-        preview: action.preview,
-        createdAt: action.createdAt,
-        expiresAt: action.expiresAt,
-        status: action.status,
-        metadata: action.metadata,
-      };
+      return { ...toActionView(action), input: action.input, metadata: action.metadata };
     }),
 
   /**
@@ -367,9 +555,12 @@ export const agentRouter = createTRPCRouter({
       }
 
       // Tenant ownership guard: an approver can only act on their own tenant's actions.
-      await requireTenantOwnedAction(ctx, input.actionId);
+      const action = await requireTenantOwnedAction(ctx, input.actionId);
+      // PG-198 (AC-010): the policy's minimum reviewer role, on top of the permission.
+      await assertPolicyReviewer(ctx, action);
 
-      const agentContext = buildAgentContext(ctx);
+      // Tenant + client so the tool's per-tenant enablement is re-checked before it runs.
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
 
       const decision = {
         actionId: input.actionId,
@@ -380,10 +571,15 @@ export const agentRouter = createTRPCRouter({
         modifiedInput: input.modifiedInput,
       };
 
-      const executedAction = await approvalWorkflowService.approveAction(decision, agentContext);
+      const executedAction = await approvalWorkflowService.approveAction(
+        decision,
+        agentContext,
+        ctx
+      );
 
       return {
-        success: !executedAction.executionError,
+        success: executedAction.executionStatus === 'SUCCEEDED',
+        executionStatus: executedAction.executionStatus,
         actionId: executedAction.id,
         executedAt: executedAction.executedAt,
         result: executedAction.executionResult,
@@ -417,9 +613,11 @@ export const agentRouter = createTRPCRouter({
       }
 
       // Tenant ownership guard: a reviewer can only act on their own tenant's actions.
-      await requireTenantOwnedAction(ctx, input.actionId);
+      const action = await requireTenantOwnedAction(ctx, input.actionId);
+      // PG-198 (AC-010): the policy's minimum reviewer role, on top of the permission.
+      await assertPolicyReviewer(ctx, action);
 
-      const agentContext = buildAgentContext(ctx);
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
 
       const decision = {
         actionId: input.actionId,
@@ -437,6 +635,47 @@ export const agentRouter = createTRPCRouter({
         status: rejectedAction.status,
         rejectedAt: new Date(),
       };
+    }),
+
+  /**
+   * Roll back an executed action (#856)
+   *
+   * Undoes the action through the target module's own procedure: a created case is
+   * cancelled, a created appointment is cancelled, an unsent email draft is trashed.
+   * Only actions approved with a rollback token, within an hour, can be rolled back.
+   */
+  rollbackAction: protectedProcedure
+    .input(
+      z.object({
+        actionId: z.string(),
+        rollbackToken: z.string(),
+        reason: z.string().min(1).max(500),
+      })
+    )
+    .mutation(async ({ ctx, input }) => {
+      // Undoing an approval takes the same permission and reviewer role as granting it.
+      if (!(await hasPermission(ctx, 'agent:tool-approval', 'approve'))) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'You do not have permission to roll back agent actions.',
+        });
+      }
+
+      const action = await requireTenantOwnedAction(ctx, input.actionId);
+      await assertPolicyReviewer(ctx, action);
+
+      const agentContext = withTenant(buildAgentContext(ctx), ctx, String(action.tenantId));
+
+      return approvalWorkflowService.rollbackAction(
+        {
+          actionId: input.actionId,
+          rollbackToken: input.rollbackToken,
+          requestedBy: agentContext.userId,
+          reason: input.reason,
+        },
+        agentContext,
+        ctx
+      );
     }),
 
   /**

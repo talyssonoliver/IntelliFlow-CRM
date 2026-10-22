@@ -1,0 +1,575 @@
+/**
+ * Approval escalation sweep (PG-198, ADR-079, AC-014).
+ *
+ * One tick, run inside a single transaction guarded by a transaction-scoped
+ * advisory lock so replicas never double-fire:
+ *   1. escalate pending agent actions whose policy escalation delay has passed
+ *      (once — `escalatedAt` is set with a status-guarded update);
+ *   2. escalate pending auto-response drafts the same way, through the
+ *      aggregate (`escalate(system:approval-policy, …)`), with the escalation
+ *      window bounded by the draft's own expiry;
+ *   3. expire overdue pending agent actions.
+ * Escalation runs before expiry. The sweep never approves or executes anything.
+ * Every per-tenant query carries an explicit tenantId; the only cross-tenant reads
+ * are "which tenants have escalation policies" and the expiry flip.
+ */
+
+import {
+  APPROVAL_AGENT_TOOL_KEYS,
+  APPROVAL_AGENT_TOOLS,
+  AUTO_RESPONSE_AGENT_KEY,
+  TRIGGER_TYPES,
+  SYSTEM_APPROVAL_ACTOR,
+  canReview,
+  isEscalationDue,
+  resolveApprovalPolicy,
+  type ApprovalPolicyRecord,
+  type ApprovalPolicyScope,
+  type ApprovalRule,
+  type AutoResponseDraft,
+  type AutoResponseDraftRepository,
+  type TriggerType,
+} from '@intelliflow/domain';
+import { tenantUserWhere } from '@intelliflow/db';
+import { loadTenantApprovalPolicies, type ApprovalPolicyReader } from './approval-policy-loader';
+
+/** Advisory-lock key for the sweep (any constant unique to this job). */
+export const APPROVAL_SWEEP_LOCK_KEY = 1_980_001;
+/** NF-002: items per query page. */
+export const APPROVAL_SWEEP_BATCH = 100;
+/** Draft candidates scanned per policy per tick at most (pages of APPROVAL_SWEEP_BATCH). */
+export const APPROVAL_SWEEP_MAX_PAGES = 10;
+
+/** Where each tenant/policy draft scan stopped on the last bounded tick (per process). */
+const draftScanCursors = new Map<string, { createdAt: Date; id: string } | undefined>();
+
+/** Test hook: forget every saved scan position. */
+export function resetDraftScanCursors(): void {
+  draftScanCursors.clear();
+}
+
+export interface SweepNotification {
+  tenantId: string;
+  userId: string;
+  title: string;
+  body: string;
+  entityType: string;
+  entityId: string;
+  entityName: string;
+  actionUrl: string;
+}
+
+/** BR-7: an escalation the sweep made, with the policy that caused it. */
+export interface SweepEscalationAudit {
+  tenantId: string;
+  policyId: string;
+  policyName: string;
+  entityType: 'agent_action' | 'auto_response_draft';
+  entityId: string;
+  escalatedTo: string;
+  escalateAfterMinutes: number;
+}
+
+/** What the sweep hands out only after its transaction commits. */
+interface SweepOutbox {
+  notifications: SweepNotification[];
+  audits: SweepEscalationAudit[];
+}
+
+interface AgentActionRow {
+  id: string;
+  tenantId: string;
+  actionType: string;
+  description: string;
+  entityName: string;
+  createdAt: Date;
+}
+
+/** The slice of a Prisma transaction client the sweep uses. */
+export interface SweepTx extends ApprovalPolicyReader {
+  $queryRaw<T = unknown>(query: TemplateStringsArray, ...values: unknown[]): Promise<T>;
+  /** Two shapes: the loader's per-tenant read, and the "which tenants escalate" read. */
+  approvalPolicy: ApprovalPolicyReader['approvalPolicy'] & {
+    findMany(args: {
+      where: Record<string, unknown>;
+      select: { tenantId: true };
+      distinct: ['tenantId'];
+    }): Promise<{ tenantId: string }[]>;
+  };
+  agentAction: {
+    findMany(args: unknown): Promise<AgentActionRow[]>;
+    updateMany(args: unknown): Promise<{ count: number }>;
+  };
+  user: {
+    findFirst(
+      args: unknown
+    ): Promise<{ id: string; role?: string | null; email?: string | null } | null>;
+  };
+}
+
+export interface SweepPrisma {
+  $transaction<T>(
+    fn: (tx: SweepTx) => Promise<T>,
+    options?: { timeout?: number; maxWait?: number }
+  ): Promise<T>;
+}
+
+export interface ApprovalSweepDeps {
+  prisma: SweepPrisma;
+  draftRepository: (client: SweepTx) => Promise<AutoResponseDraftRepository>;
+  /** Delivered after the sweep transaction commits, one at a time; failures are logged. */
+  notify: (notification: SweepNotification) => Promise<void>;
+  /** BR-7: records each escalation with its policy id, after the transaction commits. */
+  audit?: (entry: SweepEscalationAudit) => Promise<void>;
+  /**
+   * Agent actions: may this user approve and reject them (permissions, per-user denies)?
+   * Absent → the role check alone decides.
+   */
+  targetCanApprove?: (
+    tenantId: string,
+    user: { id: string; email: string; role: string }
+  ) => Promise<boolean>;
+  log?: Pick<Console, 'warn'> & Partial<Pick<Console, 'error'>>;
+}
+
+export interface ApprovalSweepReport {
+  locked: boolean;
+  agentActionsEscalated: number;
+  draftsEscalated: number;
+  skipped: number;
+  expired: number;
+}
+
+interface TenantContext {
+  tx: SweepTx;
+  deps: ApprovalSweepDeps;
+  tenantId: string;
+  policies: ApprovalPolicyRecord[];
+  now: Date;
+  report: ApprovalSweepReport;
+  /** Target user id → their role while still a user of the tenant, else null. */
+  targets: Map<string, string | null>;
+  /** Target user id → may decide agent actions (permission check, cached per tick). */
+  agentDeciders: Map<string, boolean>;
+  /** Target user id → email, for the permission check. */
+  targetEmails: Map<string, string>;
+  outbox: SweepOutbox;
+}
+
+/** The policies of a queue that escalate, with the (agent, action) pairs each one governs. */
+interface EscalationGroup {
+  /** The policy id (built-in rules never escalate, so this is always a real policy). */
+  id: string;
+  rule: ApprovalRule;
+  /** Tool names (agent queue) or trigger types (auto-response queue). */
+  keys: string[];
+}
+
+function queuePairs(
+  scope: ApprovalPolicyScope
+): { agentKey: string; actionType: string; key: string }[] {
+  if (scope === 'AUTO_RESPONSE') {
+    return TRIGGER_TYPES.map((t) => ({ agentKey: AUTO_RESPONSE_AGENT_KEY, actionType: t, key: t }));
+  }
+  return APPROVAL_AGENT_TOOL_KEYS.map((tool) => ({
+    agentKey: tool,
+    actionType: APPROVAL_AGENT_TOOLS[tool],
+    key: tool,
+  }));
+}
+
+/**
+ * Group a queue's pairs by the escalating policy they resolve to, so each group is
+ * queried with its own delay and only for its own tools/triggers: a batch can never
+ * be filled by items that are not due or whose policy does not escalate.
+ */
+function escalationGroups(
+  policies: ApprovalPolicyRecord[],
+  scope: ApprovalPolicyScope
+): EscalationGroup[] {
+  const groups = new Map<string, EscalationGroup>();
+  for (const pair of queuePairs(scope)) {
+    const resolved = resolveApprovalPolicy(policies, scope, pair.agentKey, pair.actionType);
+    const { rule } = resolved;
+    if (
+      !rule.escalationEnabled ||
+      rule.escalateAfterMinutes === null ||
+      !rule.escalationTargetUserId
+    ) {
+      continue;
+    }
+    const id = String(resolved.policyId);
+    const group = groups.get(id) ?? { id, rule, keys: [] };
+    group.keys.push(pair.key);
+    groups.set(id, group);
+  }
+  return [...groups.values()];
+}
+
+function cutoff(now: Date, minutes: number): Date {
+  return new Date(now.getTime() - minutes * 60_000);
+}
+
+/** BR-9: the target's role while they are still a user of the tenant, else null. */
+async function targetRole(ctx: TenantContext, userId: string): Promise<string | null> {
+  if (ctx.targets.has(userId)) return ctx.targets.get(userId) ?? null;
+  const user = await ctx.tx.user.findFirst({
+    where: { id: userId, ...tenantUserWhere(ctx.tenantId) },
+    select: { id: true, role: true, email: true },
+  });
+  const role = user ? (user.role ?? '') : null;
+  if (user) ctx.targetEmails.set(userId, user.email ?? '');
+  if (role === null) {
+    ctx.deps.log?.warn(
+      `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${userId} is no longer a user of the workspace; skipping`
+    );
+  }
+  ctx.targets.set(userId, role);
+  return role;
+}
+
+/** Agent actions: the target must also hold the approve and reject permissions. */
+async function canDecideAgentActions(ctx: TenantContext, userId: string, role: string) {
+  const check = ctx.deps.targetCanApprove;
+  if (!check) return true;
+  const cached = ctx.agentDeciders.get(userId);
+  if (cached !== undefined) return cached;
+  const ok = await check(ctx.tenantId, {
+    id: userId,
+    email: ctx.targetEmails.get(userId) ?? '',
+    role,
+  });
+  if (!ok) {
+    ctx.deps.log?.warn(
+      `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${userId} lacks permission to decide agent actions; skipping`
+    );
+  }
+  ctx.agentDeciders.set(userId, ok);
+  return ok;
+}
+
+/** The rule's target when it is due now, still valid and able to review; otherwise null. */
+async function dueTarget(
+  ctx: TenantContext,
+  rule: ApprovalRule,
+  startedAt: Date,
+  scope: ApprovalPolicyScope
+): Promise<string | null> {
+  if (!isEscalationDue(startedAt, ctx.now, rule, false)) return null;
+  const target = rule.escalationTargetUserId as string;
+  const role = await targetRole(ctx, target);
+  if (
+    role !== null &&
+    canReview(role, rule) &&
+    (scope !== 'AGENT_TOOL' || (await canDecideAgentActions(ctx, target, role)))
+  ) {
+    return target;
+  }
+  if (role !== null && !canReview(role, rule)) {
+    ctx.deps.log?.warn(
+      `[approval-sweep] tenant=${ctx.tenantId}: escalation target ${target} cannot review under this policy (needs ${rule.minReviewerRole}); skipping`
+    );
+  }
+  ctx.report.skipped += 1;
+  return null;
+}
+
+/**
+ * Queue a notification for delivery after the transaction commits: a failed
+ * notification write must never abort (and roll back) the sweep's transaction.
+ */
+function queueNotification(ctx: TenantContext, notification: SweepNotification): void {
+  ctx.outbox.notifications.push(notification);
+}
+
+function queueAudit(
+  ctx: TenantContext,
+  group: EscalationGroup,
+  entityType: SweepEscalationAudit['entityType'],
+  entityId: string,
+  escalatedTo: string
+): void {
+  ctx.outbox.audits.push({
+    tenantId: ctx.tenantId,
+    policyId: group.id,
+    policyName: policyName(ctx, group),
+    entityType,
+    entityId,
+    escalatedTo,
+    escalateAfterMinutes: group.rule.escalateAfterMinutes as number,
+  });
+}
+
+function policyName(ctx: TenantContext, group: EscalationGroup): string {
+  return ctx.policies.find((p) => p.id === group.id)?.name ?? group.id;
+}
+
+async function escalateAgentActionGroup(ctx: TenantContext, group: EscalationGroup): Promise<void> {
+  const { rule } = group;
+  const rows = await ctx.tx.agentAction.findMany({
+    where: {
+      tenantId: ctx.tenantId,
+      // The actionType column holds the tool name.
+      actionType: { in: group.keys },
+      status: 'PENDING_APPROVAL',
+      escalatedAt: null,
+      expiresAt: { gt: ctx.now },
+      createdAt: { lte: cutoff(ctx.now, rule.escalateAfterMinutes as number) },
+    },
+    orderBy: { createdAt: 'asc' },
+    take: APPROVAL_SWEEP_BATCH,
+  });
+  for (const row of rows) {
+    const target = await dueTarget(ctx, rule, row.createdAt, 'AGENT_TOOL');
+    if (!target) continue;
+    const claimed = await ctx.tx.agentAction.updateMany({
+      where: { id: row.id, tenantId: ctx.tenantId, status: 'PENDING_APPROVAL', escalatedAt: null },
+      data: { escalatedAt: ctx.now, escalatedTo: target },
+    });
+    if (claimed.count !== 1) continue;
+    ctx.report.agentActionsEscalated += 1;
+    queueAudit(ctx, group, 'agent_action', row.id, target);
+    queueNotification(ctx, {
+      tenantId: ctx.tenantId,
+      userId: target,
+      title: 'Agent Action Escalated for Your Review',
+      body: `"${row.description}" has waited ${String(rule.escalateAfterMinutes)} minutes for approval.`,
+      entityType: 'agent_action',
+      entityId: row.id,
+      entityName: row.entityName,
+      actionUrl: `/agent-approvals/preview?actionId=${row.id}`,
+    });
+  }
+}
+
+/** A9: the SLA clock starts when the draft was submitted, not when it was drafted. */
+function submittedAt(draft: AutoResponseDraft): Date {
+  const submissions = draft.statusHistory.filter((h) => h.status === 'PENDING_APPROVAL');
+  return submissions.at(-1)?.changedAt ?? draft.createdAt;
+}
+
+async function escalateDraft(
+  ctx: TenantContext,
+  repository: AutoResponseDraftRepository,
+  group: EscalationGroup,
+  draft: AutoResponseDraft
+): Promise<void> {
+  const { rule } = group;
+  const target = await dueTarget(ctx, rule, submittedAt(draft), 'AUTO_RESPONSE');
+  if (!target) return;
+  // Never beyond the draft's own expiry, so escalation.expiresAt stays truthful: the
+  // aggregate adds the window to its own clock, so measure from the current time and
+  // round down to whole minutes.
+  const remainingMinutes = Math.floor((draft.expiresAt.getTime() - Date.now()) / 60_000);
+  if (remainingMinutes <= 0) return;
+  const windowHours = remainingMinutes / 60;
+  const reason =
+    `Approval SLA: no decision after ${String(rule.escalateAfterMinutes)} minutes ` +
+    `(policy "${policyName(ctx, group)}", ${group.id})`;
+  if (draft.escalate(SYSTEM_APPROVAL_ACTOR, target, reason, windowHours).isFailure) {
+    ctx.report.skipped += 1;
+    return;
+  }
+  // Guarded write: decided or escalated meanwhile -> nothing is overwritten.
+  if (!(await repository.saveEscalation(draft))) {
+    ctx.deps.log?.warn(
+      `[approval-sweep] draft ${draft.id.toString()} not escalated: decided or escalated meanwhile`
+    );
+    ctx.report.skipped += 1;
+    return;
+  }
+  ctx.report.draftsEscalated += 1;
+  queueAudit(ctx, group, 'auto_response_draft', draft.id.toString(), target);
+  queueNotification(ctx, {
+    tenantId: ctx.tenantId,
+    userId: target,
+    title: 'AI Draft Escalated for Your Review',
+    body: `An AI auto-response draft "${draft.content.subject}" has been escalated to you for review. Reason: ${reason}`,
+    entityType: 'auto_response_draft',
+    entityId: draft.id.toString(),
+    entityName: draft.content.subject,
+    actionUrl: '/agent-approvals?status=escalated',
+  });
+}
+
+async function escalateDraftGroup(
+  ctx: TenantContext,
+  repository: AutoResponseDraftRepository,
+  group: EscalationGroup
+): Promise<void> {
+  const base = {
+    before: cutoff(ctx.now, group.rule.escalateAfterMinutes as number),
+    notExpiredAt: ctx.now,
+    triggerTypes: group.keys as TriggerType[],
+  };
+  // Candidates are ordered by creation, but the SLA runs from submission: page past
+  // drafts submitted too recently, up to a bounded scan per tick. Keyset paging, so
+  // drafts escalated on an earlier page cannot shift the next one.
+  // A bounded scan resumes where the previous tick stopped, so drafts submitted too
+  // recently can delay but never permanently block the ones behind them.
+  const cursorKey = `${ctx.tenantId}:${group.id}`;
+  let after = draftScanCursors.get(cursorKey);
+  for (let page = 0; page < APPROVAL_SWEEP_MAX_PAGES; page++) {
+    const drafts = await repository.findPendingOlderThan(
+      ctx.tenantId,
+      { ...base, after },
+      APPROVAL_SWEEP_BATCH
+    );
+    for (const draft of drafts) await escalateDraft(ctx, repository, group, draft);
+    if (drafts.length < APPROVAL_SWEEP_BATCH) {
+      draftScanCursors.delete(cursorKey); // reached the end: start over next tick
+      return;
+    }
+    const last = drafts[drafts.length - 1]!;
+    after = { createdAt: last.createdAt, id: last.id.toString() };
+  }
+  draftScanCursors.set(cursorKey, after);
+}
+
+async function escalateTenant(ctx: TenantContext): Promise<void> {
+  for (const group of escalationGroups(ctx.policies, 'AGENT_TOOL')) {
+    await escalateAgentActionGroup(ctx, group);
+  }
+  const draftGroups = escalationGroups(ctx.policies, 'AUTO_RESPONSE');
+  if (draftGroups.length === 0) return;
+  const repository = await ctx.deps.draftRepository(ctx.tx);
+  for (const group of draftGroups) await escalateDraftGroup(ctx, repository, group);
+}
+
+async function sweepInTransaction(
+  tx: SweepTx,
+  deps: ApprovalSweepDeps,
+  now: Date,
+  outbox: SweepOutbox
+): Promise<ApprovalSweepReport> {
+  const report: ApprovalSweepReport = {
+    locked: false,
+    agentActionsEscalated: 0,
+    draftsEscalated: 0,
+    skipped: 0,
+    expired: 0,
+  };
+  const rows = await tx.$queryRaw<
+    { locked: boolean }[]
+  >`SELECT pg_try_advisory_xact_lock(${APPROVAL_SWEEP_LOCK_KEY}) AS locked`;
+  if (!rows[0]?.locked) return report;
+  report.locked = true;
+
+  const tenants = await tx.approvalPolicy.findMany({
+    where: {
+      escalationEnabled: true,
+      escalateAfterMinutes: { not: null },
+      escalationTargetUserId: { not: null },
+    },
+    select: { tenantId: true },
+    distinct: ['tenantId'],
+  });
+
+  for (const { tenantId } of tenants) {
+    const policies = await loadTenantApprovalPolicies(tx, tenantId, { fresh: true });
+    const ctx: TenantContext = {
+      tx,
+      deps,
+      tenantId,
+      policies,
+      now,
+      report,
+      targets: new Map(),
+      agentDeciders: new Map(),
+      targetEmails: new Map(),
+      outbox,
+    };
+    await escalateTenant(ctx);
+  }
+
+  const expired = await tx.agentAction.updateMany({
+    where: { status: 'PENDING_APPROVAL', expiresAt: { lt: now } },
+    data: { status: 'EXPIRED' },
+  });
+  report.expired = expired.count;
+  return report;
+}
+
+/** Run one sweep tick. Returns `locked: false` (and does nothing) if another replica holds it. */
+export async function runApprovalSweep(
+  deps: ApprovalSweepDeps,
+  now: Date = new Date()
+): Promise<ApprovalSweepReport> {
+  const outbox: SweepOutbox = { notifications: [], audits: [] };
+  const report = await deps.prisma.$transaction((tx) => sweepInTransaction(tx, deps, now, outbox), {
+    timeout: 60_000,
+    maxWait: 10_000,
+  });
+  // Escalations are committed; now tell the targets. Non-blocking, as for manual escalation.
+  for (const notification of outbox.notifications) {
+    try {
+      await deps.notify(notification);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      deps.log?.warn(`[approval-sweep] notification failed: ${message}`);
+    }
+  }
+  for (const entry of outbox.audits) {
+    try {
+      await deps.audit?.(entry);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      // The escalation is committed; name what lacks its audit row so it can be repaired.
+      (deps.log?.error ?? deps.log?.warn)?.(
+        `[approval-sweep] audit write failed for ${entry.entityType} ${entry.entityId} (policy ${entry.policyId}): ${message}`
+      );
+    }
+  }
+  return report;
+}
+
+/** Production wiring: shared Prisma client, the Prisma draft repository, in-app notifications. */
+export async function createDefaultSweepDeps(): Promise<ApprovalSweepDeps> {
+  const [
+    { prisma },
+    adapters,
+    { createNotification },
+    { getAuditLogger },
+    { canDecideAgentActions: canDecideAgentActionsFor },
+  ] = await Promise.all([
+    import('@intelliflow/db'),
+    import('@intelliflow/adapters'),
+    import('../modules/notifications/notifications.router.js'),
+    import('../security/audit/index.js'),
+    import('./escalation-target.js'),
+  ]);
+  const Repository = (
+    adapters as unknown as {
+      PrismaAutoResponseDraftRepository: new (client: unknown) => AutoResponseDraftRepository;
+    }
+  ).PrismaAutoResponseDraftRepository;
+  return {
+    prisma: prisma as unknown as SweepPrisma,
+    draftRepository: async (client) => new Repository(client),
+    notify: async (n) => {
+      await createNotification(prisma as never, {
+        ...n,
+        type: 'ai_action_pending',
+        priority: 'high',
+        actionLabel: 'Review',
+      });
+    },
+    // The shared client is the encrypted extension of PrismaClient (same as createNotification below).
+    targetCanApprove: (tenantId, user) => canDecideAgentActionsFor(prisma as never, tenantId, user),
+    audit: async (entry) => {
+      await getAuditLogger(prisma as never).logAction(
+        'UPDATE',
+        'system',
+        entry.entityId,
+        entry.tenantId,
+        {
+          actorType: 'SYSTEM',
+          resourceName: `${entry.entityType} escalation`,
+          afterState: { ...entry, escalatedBy: SYSTEM_APPROVAL_ACTOR },
+          actionReason: `Escalated by approval policy "${entry.policyName}" (${entry.policyId})`,
+        }
+      );
+    },
+    log: console,
+  };
+}

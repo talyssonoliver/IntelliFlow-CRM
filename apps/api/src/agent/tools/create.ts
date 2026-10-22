@@ -17,19 +17,14 @@ import {
   AgentAuthContext,
   ActionPreview,
   PendingAction,
-  RollbackResult,
   CreateCaseInput,
   CreateCaseInputSchema,
   CreateAppointmentInput,
   CreateAppointmentInputSchema,
 } from '../types';
 import { agentLogger } from '../logger';
+import { resolveAgentToolExpiry } from '../approval-policy-loader';
 import { pendingActionsStore } from '../approval-workflow';
-
-/**
- * Approval expiry time (30 minutes)
- */
-const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
 
 /**
  * Created case result structure
@@ -122,9 +117,18 @@ export const createCaseTool: AgentToolDefinition<CreateCaseInput, CreatedCaseRes
         preview,
         status: 'PENDING',
         createdAt: now,
-        expiresAt: new Date(now.getTime() + APPROVAL_EXPIRY_MS),
+        // PG-198: the tenant's approval policy decides how long this waits.
+        expiresAt: await resolveAgentToolExpiry(
+          context.prisma,
+          context.tenantId,
+          'create_case',
+          'CREATE',
+          now
+        ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
       };
 
       // Store pending action for approval
@@ -253,43 +257,6 @@ export const createCaseTool: AgentToolDefinition<CreateCaseInput, CreatedCaseRes
       estimatedImpact: input.priority === 'URGENT' || input.priority === 'HIGH' ? 'HIGH' : 'MEDIUM',
     };
   },
-
-  async rollback(
-    actionId: string,
-    executionResult: CreatedCaseResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      // In a real implementation, this would soft-delete or mark the case as cancelled
-      // For now, we simulate the rollback
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'create_case',
-        actionType: 'DELETE',
-        entityType: 'CASE',
-        input: { caseId: executionResult.id, action: 'rollback' },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: { deletedCaseId: executionResult.id },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
-  },
 };
 
 /**
@@ -369,9 +336,18 @@ export const createAppointmentTool: AgentToolDefinition<
         preview,
         status: 'PENDING',
         createdAt: now,
-        expiresAt: new Date(now.getTime() + APPROVAL_EXPIRY_MS),
+        // PG-198: the tenant's approval policy decides how long this waits.
+        expiresAt: await resolveAgentToolExpiry(
+          context.prisma,
+          context.tenantId,
+          'create_appointment',
+          'CREATE',
+          now
+        ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
       };
 
       // Store pending action for approval
@@ -546,43 +522,6 @@ export const createAppointmentTool: AgentToolDefinition<
           ? 'HIGH'
           : 'MEDIUM',
     };
-  },
-
-  async rollback(
-    actionId: string,
-    executionResult: CreatedAppointmentResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      // In a real implementation, this would cancel the appointment
-      // For now, we simulate the rollback
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'create_appointment',
-        actionType: 'DELETE',
-        entityType: 'APPOINTMENT',
-        input: { appointmentId: executionResult.id, action: 'rollback' },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: { cancelledAppointmentId: executionResult.id },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
   },
 };
 

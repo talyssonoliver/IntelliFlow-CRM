@@ -1,0 +1,13 @@
+# 2026-10-17T17:52:37Z
+# 1b9202314f7de784a3a693fe68eacc423db6e019
+# pnpm --dir apps/api exec vitest run src/modules/legal/__tests__/appointments.router.caller.test.ts src/modules/legal/__tests__/appointments.availability-boundary.test.ts src/modules/legal/__tests__/appointment-settings.router.test.ts src/__tests__/app-router.smoke.test.ts src/agent/__tests__/approved-action-executor.test.ts src/modules/legal/__tests__/legal-module-entitlement.test.ts src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts src/modules/legal/__tests__/appointments.router.test.ts src/modules/legal/__tests__/appointments.router.comprehensive.test.ts src/modules/legal/__tests__/appointments.tenant-isolation.test.ts src/modules/legal/__tests__/container-appointment-wiring.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+
+ Test Files  11 passed (11)
+      Tests  288 passed (288)
+   Start at  18:52:38
+   Duration  9.78s (transform 6.40s, setup 4.67s, import 21.05s, tests 6.06s, environment 2ms)
+
+# exit=0

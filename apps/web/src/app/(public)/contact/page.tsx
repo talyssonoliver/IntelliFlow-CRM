@@ -17,7 +17,7 @@ export const metadata: Metadata = {
     title: 'Contact Aurora',
     description:
       'Have questions about Aurora? Our team is ready to help you discover how our AI-powered platform can transform your sales process.',
-    url: 'https://intelliflow-crm.com/contact',
+    url: 'https://intelli-flow-crm-web.vercel.app/contact',
     siteName: 'Aurora',
     type: 'website',
   },

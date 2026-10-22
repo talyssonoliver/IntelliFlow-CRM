@@ -254,17 +254,35 @@ Previously missing from the index — added 2026-06-05:
 
 ### Sprint 18+ Governance ADRs (2026-07)
 
-| ADR                                                                          | Title                                                                                        | Status      | Date       | Technical Story             |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | ----------- | ---------- | --------------------------- |
-| [ADR-069](./ADR-069-rolling-wave-rebaselining-and-migration-risk-classes.md) | Rolling-wave rebaselining + migration risk classes                                           | ✅ Accepted | 2026-07-26 | Agent autonomy scoping      |
-| [ADR-070](./ADR-070-independent-product-partner-api.md)                      | IntelliFlow is an independent product; the Leangency Portal integrates through a partner API | ✅ Accepted | 2026-09-30 | Cross-repo audit 2026-09-30 |
-| [ADR-073](./ADR-073-tenant-configurable-account-tiers.md)                    | Tenant-configurable account revenue tiers (derived via one domain resolver)                  | 📝 Proposed | 2026-10-07 | PG-196                      |
-| [ADR-074](./ADR-074-territory-based-account-owner-assignment.md)             | Territory-based account owner assignment                                                     | Accepted    | 2026-10-07 | PG-197                      |
+| ADR                                                                          | Title                                                                                             | Status      | Date       | Technical Story             |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- | ----------- | ---------- | --------------------------- |
+| [ADR-069](./ADR-069-rolling-wave-rebaselining-and-migration-risk-classes.md) | Rolling-wave rebaselining + migration risk classes                                                | ✅ Accepted | 2026-07-26 | Agent autonomy scoping      |
+| [ADR-070](./ADR-070-independent-product-partner-api.md)                      | IntelliFlow is an independent product; the Leangency Portal integrates through a partner API      | ✅ Accepted | 2026-09-30 | Cross-repo audit 2026-09-30 |
+| [ADR-073](./ADR-073-tenant-configurable-account-tiers.md)                    | Tenant-configurable account revenue tiers (derived via one domain resolver)                       | 📝 Proposed | 2026-10-07 | PG-196                      |
+| [ADR-074](./ADR-074-territory-based-account-owner-assignment.md)             | Territory-based account owner assignment                                                          | Accepted    | 2026-10-07 | PG-197                      |
+| [ADR-075](./ADR-075-production-secrets-management.md)                        | Production secrets: Terraform/HCP + Railway native env store, no separate Vault                   | ✅ Accepted | 2026-10-12 | #317                        |
+| [ADR-076](./ADR-076-case-types-applied-at-case-creation.md)                  | Case types applied at case creation (defaults precedence, create-only, tenant-consistent FK)      | Accepted    | 2026-10-13 | PG-204                      |
+| [ADR-077](./ADR-077-push-based-executor-status.md)                           | Push-based executor status file in front of orchestrator polling                                  | 📝 Proposed | 2026-10-16 | #581                        |
+| [ADR-078](./ADR-078-report-schedule-contract.md)                             | Report schedule contract (report_schedules read by the IFC-308 cron)                              | Accepted    | 2026-10-13 | PG-201                      |
+| [ADR-079](./ADR-079-tenant-approval-policies.md)                             | Tenant approval policies for AI work (timeout, minimum reviewer, opt-in auto-approve, escalation) | Accepted    | 2026-10-13 | PG-198                      |
+| [ADR-080](./ADR-080-tenant-contact-types.md)                                 | Tenant-defined contact types keyed by the existing `contactType` column (no contacts backfill)    | ✅ Accepted | 2026-10-17 | PG-205                      |
+| [ADR-081](./ADR-081-tenant-availability.md)                                  | Tenant availability (weekly hours, closures, daily cap) enforced at booking                       | Accepted    | 2026-10-17 | PG-202                      |
+| [ADR-082](./ADR-082-tenant-model-config.md)                                  | Tenant model configuration per AI purpose (catalog pins, price-ranked never-downgrade, ceilings)  | 📝 Proposed | 2026-10-19 | PG-199                      |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**
-> free to reuse. The next sequential ID is **069**. ADRs 067–068 exist as files
-> but predate this index section.
+> free to reuse.
+>
+> **Note on ADR-065:** issue #317 was filed under the working title "ADR-065" on
+> 2026-06-07; `ADR-065` was permanently claimed the next day by an unrelated
+> decision (CRM → Portal delivery sync, IFC-314, PR #333). #317's decision is
+> recorded as **ADR-075** instead — see that file's "Links" section for the full
+> explanation.
+>
+> The next free sequential ID is **078**. ADRs 067–068 and 071–072 exist as
+> files but are not yet listed in this index (pre-existing gap, out of scope
+> here — verify against the actual files in this directory, not this table,
+> before minting a new number).
 
 ### Consolidated / Removed ADRs
 
@@ -275,7 +293,9 @@ Previously missing from the index — added 2026-06-05:
 
 ## Next Steps
 
-Future ADRs use IDs **066+**.
+Future ADRs use IDs **081+** (ADR-080 was the last one taken, 2026-10-17 — check
+the actual files in this directory before trusting this number, since this index
+has previously drifted behind them).
 
 ## Resources
 

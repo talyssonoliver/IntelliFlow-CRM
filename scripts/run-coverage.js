@@ -52,7 +52,6 @@ const PROJECTS = [
   'ui',
   'observability',
   'worker-shared',
-  'notifications-worker',
   'events-worker',
   'ingestion-worker',
   'architecture',

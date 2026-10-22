@@ -2,7 +2,7 @@ import { buildRssFeed } from '@/lib/developer/rss-feed';
 import { CHANGELOG_ENTRIES } from '@/components/developer/changelog-display';
 
 export async function GET() {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelliflow-crm.com';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'https://intelli-flow-crm-web.vercel.app';
 
   const xml = buildRssFeed({
     baseUrl,

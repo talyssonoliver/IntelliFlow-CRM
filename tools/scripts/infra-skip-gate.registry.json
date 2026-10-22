@@ -4,9 +4,9 @@
     {
       "file": "tests/integration/ingestion/file-ingestion.e2e.test.ts",
       "kind": "infra-gated",
-      "maxSkipped": 12,
-      "reviewBy": "2026-10-31",
-      "reason": "ADR-054: #658 — needs a reachable Supabase storage API with the case-documents and case-documents-quarantine buckets. Truly executes only in preship-full-nightly. Eight real defects (incl. a production 500 on documents.upload) accumulated behind this skip; #658 tracks running the orchestration assertions on every PR via a non-Supabase StorageServicePort double."
+      "maxSkipped": 1,
+      "reviewBy": "2027-01-31",
+      "reason": "ADR-054: #665 — only the true Supabase storage round-trip spec needs a reachable Supabase storage API with the case-documents and case-documents-quarantine buckets, so it truly executes only in preship-full-nightly. The orchestration, persistence and domain-contract specs run on every PR against local Postgres with InMemoryStorageAdapter."
     },
     {
       "file": "tests/integration/rls-tenant-isolation.test.ts",

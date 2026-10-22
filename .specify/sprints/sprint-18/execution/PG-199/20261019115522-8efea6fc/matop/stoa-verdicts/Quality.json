@@ -1,0 +1,66 @@
+{
+  "stoa": "Quality",
+  "task_id": "PG-199",
+  "run_id": "20261019115522-8efea6fc",
+  "verdict": "WARN",
+  "gates": [
+    {
+      "name": "test-execution",
+      "result": "PASS",
+      "evidence": "logs/32-matrix-summary.txt: steps 01-09 exit=0. Tests passed: domain 3152, validators 2817, application 1494, adapters 2989, api 7942 (2 skipped), ai-worker 2365 (10 skipped, 1 file), web 13191, integration 15. 0 failed."
+    },
+    {
+      "name": "diff-coverage",
+      "result": "PASS",
+      "evidence": "logs/32-diff-coverage.txt regenerated at HEAD 421640491: TOTAL new_coverage 95.1% (1304/1371) vs floor 80%; usage-metering.ts 98.5% (64/65). PurposeSpendPort.ts (interface/type import) and domain model-config/index.ts (export * lines) have no runtime lines, so no-lcov is not a gap."
+    },
+    {
+      "name": "package-wide-coverage-90",
+      "result": "INFORMATIONAL",
+      "evidence": "logs/32-coverage-after.txt is a scoped related-only run (merged 13.6% lines), not comparable with the before baseline (10.3% full committed summary). 5 projects (web, ai-worker, domain, api, root) report pre-existing threshold debt; no per-package 90% measurement exists for this branch. UPDATE: scripts/pre-ship.mjs documents coverage-floor as CI-only in scoped runs (lines 63-66); the merged full-run ratchet is CI authoritative (ADR-058). Local gate is diff coverage, so this is informational, not a blocker."
+    },
+    {
+      "name": "tdd-red-green",
+      "result": "PASS",
+      "evidence": "RED logs present for each step (01..27-red, 32-codexfix/codex2/codex3/codex4-red) with matching green logs (14-green, 32-codex3-green-*, 32-codex4-green, 32-fix-*)."
+    },
+    {
+      "name": "hygiene-grep",
+      "result": "PASS",
+      "evidence": "git diff merge-base..HEAD: no istanbul/c8 ignore, no .sort() without comparator, no .skip/.todo/xit added except one conditional 'describeDb = DB_URL ? describe : describe.skip' and 'ctx.skip()' when DB unavailable in the integration test (the integration run executed 15/15, none skipped). No thresholdAutoUpdate found in vitest configs."
+    },
+    {
+      "name": "a11y",
+      "result": "PASS",
+      "evidence": "a11y-review.md: sub-agent FAIL (4 major, 6 minor) all fixed in ef870c036; re-run 72/72 with axe (logs/32-fix-web.txt). Not independently re-reviewed by the sub-agent after the fixes."
+    },
+    {
+      "name": "lighthouse",
+      "result": "NEEDS_HUMAN",
+      "evidence": "artifacts/lighthouse/PG-199/README.md: unauthenticated only (perf 93, a11y 90, bp 93, seo 66) on the auth-pending shell; authenticated run blocked by missing LHCI_TEST_EMAIL/PASSWORD. Gate lighthouse-gte-90 not satisfied."
+    },
+    {
+      "name": "artifact-reconcile",
+      "result": "PASS_STRUCTURAL",
+      "evidence": "logs/32-13c-artifacts.txt exit=1: STATUS MISMATCH; plan lists many files not in the CSV artifacts column (CSV lists 5). The files exist on disk; CSV-side reconcile unresolved. UPDATE: all 5 CSV artifacts are in the plan and on disk; mismatch is structural (plan 107 files vs CSV 5), per plan Step 29 note."
+    },
+    {
+      "name": "test-isolation-disclosure",
+      "result": "PASS",
+      "evidence": "One tenant-ai-spend.test.ts run overlapped the background matrix (one-test-process rule breach). Final matrix (logs/32-*, 14:18-14:33Z) all exit=0 and was a clean full rerun, so the earlier overlap cannot affect the recorded results; impact negligible."
+    },
+    {
+      "name": "format-lint-architecture",
+      "result": "PASS",
+      "evidence": "32-15-format-check exit 0 (prettier clean); 32-16-lint-artifacts passed with 102 warnings; 32-17-architecture 40/40."
+    }
+  ],
+  "findings": [
+    "usage-metering.ts resolved: 98.5% (64/65) in the regenerated diff-coverage log.",
+    "Lighthouse authenticated score missing (NEEDS_HUMAN; LHCI credentials absent). Only remaining unmet gate; must be stated as NEEDS_HUMAN in the attestation.",
+    "Package-wide 90% thresholds not measurable locally; CI ratchet is authoritative (informational).",
+    "Artifact reconcile MISMATCH is structural, not a missing file (informational).",
+    "api (2) and ai-worker (10) skipped tests not shown to be pre-existing; none added by the branch."
+  ],
+  "reviewed_at": "2026-10-19T15:13:45Z"
+}

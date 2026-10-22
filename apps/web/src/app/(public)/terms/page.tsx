@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     title: 'Terms of Service',
     description:
       'Read the Aurora Terms of Service, including subscription terms, prohibited activities, disclaimers, and limitation of liability.',
-    url: 'https://intelliflow-crm.com/terms',
+    url: 'https://intelli-flow-crm-web.vercel.app/terms',
     siteName: 'Aurora',
     type: 'website',
   },

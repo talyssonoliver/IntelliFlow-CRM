@@ -46,13 +46,21 @@ export interface RoutingAssignmentDto {
 }
 
 /**
- * The lead an audit row is about. RoutingAudit is ticket-shaped, and lead
- * assignments are written three ways: manual assignment records
- * `details.leadId`; LeadRoutingService records `details.entityType: 'lead'`
- * with the lead id in `ticketId`. Rows for tickets have neither, so a ticket id
- * is never reported as a lead.
+ * The lead an audit row is about. Both lead-routing writers (assignLead,
+ * LeadRoutingService.routeLead) set the `leadId` column directly (#770) — that
+ * is the first and authoritative source. Rows written before that column
+ * existed fall back to the old heuristic: manual assignment recorded
+ * `details.leadId`; LeadRoutingService recorded `details.entityType: 'lead'`
+ * with the lead id in `ticketId`. Rows for tickets have none of these, so a
+ * ticket id is never reported as a lead.
  */
-function readLeadId(details: unknown, ticketId: string): string | null {
+function readLeadId(audit: {
+  leadId: string | null;
+  details: unknown;
+  ticketId: string;
+}): string | null {
+  if (audit.leadId) return audit.leadId;
+  const { details, ticketId } = audit;
   if (!details || typeof details !== 'object') return null;
   if ('leadId' in details && typeof details.leadId === 'string') return details.leadId;
   if ('entityType' in details && details.entityType === 'lead') return ticketId;
@@ -85,7 +93,10 @@ function getLeadRoutingService(ctx: Context): LeadRoutingService {
 
 export const routingRouter = createTRPCRouter({
   /**
-   * List routing rules with optional filtering and cursor pagination
+   * List routing rules with optional filtering and cursor pagination.
+   * Ordered the way the engine evaluates them: priority DESC (higher number =
+   * evaluated first), ties by creation order. The first row is the first rule
+   * to be tried.
    */
   list: tenantProcedure
     .input(
@@ -106,7 +117,7 @@ export const routingRouter = createTRPCRouter({
         where,
         take: input.limit + 1,
         ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
-        orderBy: { priority: 'asc' },
+        orderBy: [{ priority: 'desc' }, { createdAt: 'asc' }, { id: 'asc' }],
       });
 
       let nextCursor: string | undefined;
@@ -202,7 +213,9 @@ export const routingRouter = createTRPCRouter({
     }),
 
   /**
-   * Batch reorder routing rules by updating priorities
+   * Batch reorder routing rules by updating priorities.
+   * Convention: a HIGHER priority is evaluated FIRST (schema + engine), so the
+   * caller assigns the largest number to the rule that should run first.
    */
   reorder: tenantProcedure
     .input(
@@ -271,7 +284,17 @@ export const routingRouter = createTRPCRouter({
     .query(
       async ({ ctx, input }): Promise<{ items: RoutingAssignmentDto[]; nextCursor?: string }> => {
         const audits = await ctx.prismaWithTenant.routingAudit.findMany({
-          where: { tenantId: ctx.tenant.tenantId },
+          where: {
+            tenantId: ctx.tenant.tenantId,
+            // Lead assignments only: RoutingAudit also holds ticket routing.
+            // Post-migration rows carry leadId; older rows are recognised by
+            // the signals readLeadId falls back to.
+            OR: [
+              { leadId: { not: null } },
+              { details: { path: ['entityType'], equals: 'lead' } },
+              { details: { path: ['leadId'], string_contains: '' } },
+            ],
+          },
           take: input.limit + 1,
           ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
           orderBy: { createdAt: 'desc' },
@@ -287,7 +310,7 @@ export const routingRouter = createTRPCRouter({
         const items = audits.map(
           (audit): RoutingAssignmentDto => ({
             id: audit.id,
-            leadId: readLeadId(audit.details, audit.ticketId),
+            leadId: readLeadId(audit),
             reason: audit.reason,
             createdAt: audit.createdAt,
             rule: audit.ruleId ? { name: audit.ruleName ?? 'Unknown' } : null,
@@ -405,7 +428,8 @@ export const routingRouter = createTRPCRouter({
         const audit = await tx.routingAudit.create({
           data: {
             tenantId,
-            ticketId: input.leadId,
+            ticketId: input.leadId, // back-compat; leadId below is the column a reader should use (#770)
+            leadId: input.leadId,
             reason: input.reason,
             toUserId: input.userId,
             toUserName: '',

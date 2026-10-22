@@ -102,11 +102,14 @@ export * from './lead-settings';
 
 // Contact Settings Schemas (PG-182)
 export * from './contact-settings';
+export * from './contact-types';
 
 // Account Settings Schemas (PG-183)
 export * from './account-settings';
 export * from './account-tiers';
 export * from './account-territories';
+export * from './approval-policies';
+export * from './model-config'; // PG-199
 
 // Deal Settings Schemas (PG-184)
 export * from './deal-settings';
@@ -122,9 +125,11 @@ export * from './report-settings';
 
 // Case Settings Schemas (PG-190)
 export * from './case-settings';
+export * from './case-types';
 
 // Appointment Settings Schemas (PG-189 — wired alongside PG-190 to unblock typecheck)
 export * from './appointment-settings';
+export * from './availability'; // PG-202
 
 // Help Article Schemas (IFC-299)
 export * from './help-article';
@@ -137,5 +142,7 @@ export * from './required-url';
 
 // Report Template Schemas (PG-200)
 export * from './report-templates';
+// Scheduled Report Schemas (PG-201)
+export * from './scheduled-reports';
 // Terms Acceptance Schemas (IFC-309)
 export * from './terms-acceptance';

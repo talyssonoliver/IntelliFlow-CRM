@@ -1,0 +1,33 @@
+# 2026-10-17T19:53:04Z codex-review after codex-06 fix (staged)
+[codex-review] base ref : origin/main
+[codex-review] changed  : 83 files total
+[codex-review] in scope : 58 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T19:53:44.000Z
+Base ref  : origin/main
+Files in scope : 58
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/contact/contact-types.router.ts:447-448 — non-atomic-type-usage-guard
+    Issue    : Deleting a contact type can race with contact creation or reassignment and leave contacts referencing a deleted type.
+    Evidence : The transaction checks `tx.contact.count({ where: { tenantId, contactType: existing.key } })` before calling `contactType.deleteMany`, but contacts store the key without a foreign key. A contact.create request can resolve the type, deletion can count zero contacts and commit, and the create request can then persist that deleted key; contact.update has the same race. The transaction does not serialize these operations, and the mocked tests only check sequential counts.
+    Fix      : Coordinate deletion with contact creation and type reassignment using a shared lock held through validation and persistence, or enforce the relationship with a database foreign key that rejects deletion while referenced.
+    Fingerprint: 148dd60f01f2caecd1fe4ecddb68c425fd4f11d40ea657ce50914b6dd64767d4
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

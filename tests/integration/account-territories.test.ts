@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { PrismaClient } from '../../packages/db/generated/prisma/client';
+import { applySchemaSql } from './schema-lock';
 
 const MIGRATION_PATH = join(
   __dirname,
@@ -53,7 +54,8 @@ function splitStatements(sql: string): string[] {
  * absent there. When they are missing, rebuild the three territory tables from
  * the migration's own SQL (they hold only this suite's rows) and add the
  * accounts country CHECK, so the assertions exercise the shipped migration.
- * The accounts columns are left alone — other suites write accounts concurrently.
+ * The accounts columns are left alone — other suites write accounts concurrently, so
+ * the DDL runs under the shared schema lock (see ./schema-lock).
  */
 async function ensureMigrationSql(client: any): Promise<void> {
   const present = await client.$queryRawUnsafe(
@@ -64,18 +66,19 @@ async function ensureMigrationSql(client: any): Promise<void> {
     .split(/\r?\n/)
     .filter((line) => !line.trim().startsWith('--'))
     .join('\n');
-  await client.$executeRawUnsafe(
-    'DROP TABLE IF EXISTS "account_territory_members", "account_territory_rules", "account_territories" CASCADE'
-  );
   const countryCheck = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'accounts_country_iso_check'`
   );
+  const statements = [
+    'DROP TABLE IF EXISTS "account_territory_members", "account_territory_rules", "account_territories" CASCADE',
+  ];
   for (const stmt of splitStatements(sql)) {
     // The geography columns already exist (db push created them).
     if (/^ALTER TABLE "accounts" ADD COLUMN/.test(stmt)) continue;
     if (countryCheck.length > 0 && /accounts_country_iso_check/.test(stmt)) continue;
-    await client.$executeRawUnsafe(stmt);
+    statements.push(stmt);
   }
+  await applySchemaSql(DB_URL!, statements);
 }
 
 const DB_URL = process.env.DATABASE_URL;

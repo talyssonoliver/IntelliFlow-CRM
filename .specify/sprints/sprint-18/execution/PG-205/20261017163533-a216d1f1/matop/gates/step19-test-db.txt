@@ -1,0 +1,18 @@
+# 2026-10-17T21:42:18Z HEAD e929eb220 pnpm --filter @intelliflow/db test
+[test-slot] slot1 taken for PG-205@feat/pg-205-contact-types: pnpm --filter @intelliflow/db test
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> @intelliflow/db@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\db
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/packages/db
+
+
+ Test Files  15 passed | 1 skipped (16)
+      Tests  224 passed | 14 skipped (238)
+   Start at  22:42:19
+   Duration  2.19s (transform 1.53s, setup 0ms, import 2.71s, tests 363ms, environment 2ms)
+
+# exit: 0

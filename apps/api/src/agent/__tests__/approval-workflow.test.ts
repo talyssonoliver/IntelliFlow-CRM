@@ -14,13 +14,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const agentActionRows = vi.hoisted(() => [] as any[]);
-const rollbackSpy = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({
-    success: true,
-    actionId: 'rollback-action',
-    rolledBackAt: new Date(),
-  })
-);
 
 function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
   if (!orderBy) return rows;
@@ -36,10 +29,13 @@ function sortRows(rows: any[], orderBy?: Record<string, 'asc' | 'desc'>) {
   });
 }
 
-function matchesWhere(row: any, where: Record<string, any> | undefined) {
+function matchesWhere(row: any, where: Record<string, any> | undefined): boolean {
   if (!where) return true;
 
   return Object.entries(where).every(([key, value]) => {
+    if (key === 'OR' && Array.isArray(value)) {
+      return value.some((clause): boolean => matchesWhere(row, clause));
+    }
     if (value && typeof value === 'object' && !Array.isArray(value)) {
       if ('gt' in value) return row[key] > value.gt;
       if ('lt' in value) return row[key] < value.lt;
@@ -67,6 +63,9 @@ vi.mock('@intelliflow/db', () => ({
         agentActionRows.push(row);
         return row;
       }),
+      findFirst: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        return agentActionRows.find((row) => matchesWhere(row, where)) ?? null;
+      }),
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
         return agentActionRows.find((row) => row.id === where.id) ?? null;
       }),
@@ -87,6 +86,13 @@ vi.mock('@intelliflow/db', () => ({
 
         const [deleted] = agentActionRows.splice(index, 1);
         return deleted;
+      }),
+      deleteMany: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        const before = agentActionRows.length;
+        for (let i = agentActionRows.length - 1; i >= 0; i--) {
+          if (matchesWhere(agentActionRows[i], where)) agentActionRows.splice(i, 1);
+        }
+        return { count: before - agentActionRows.length };
       }),
       findMany: vi.fn(
         async ({
@@ -123,14 +129,36 @@ vi.mock('../logger', () => ({
 }));
 
 vi.mock('../tools', () => ({
-  getAgentTool: vi.fn((toolName: string) => ({
-    name: toolName,
-    rollback: rollbackSpy,
-  })),
+  getAgentTool: vi.fn((toolName: string) =>
+    toolName === 'missing_tool'
+      ? undefined
+      : {
+          name: toolName,
+          // Re-validation runs against the tool's own schema (PG-198).
+          inputSchema: {
+            safeParse: (value: any) =>
+              typeof value?.title === 'string' && value.title.length > 0
+                ? { success: true, data: value }
+                : { success: false, error: { message: 'title is required' } },
+          },
+        }
+  ),
 }));
 
-import { approvalWorkflowService, pendingActionsStore } from '../approval-workflow';
+const executeSpy = vi.hoisted(() => vi.fn());
+
+vi.mock('../approved-action-executor', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../approved-action-executor')>()),
+  executeApprovedAction: executeSpy,
+}));
+
+import {
+  ApprovalNotClaimedError,
+  approvalWorkflowService,
+  pendingActionsStore,
+} from '../approval-workflow';
 import { PendingAction, ApprovalDecision, AgentAuthContext } from '../types';
+import { getAgentTool } from '../tools';
 
 describe('Approval Workflow', () => {
   const testContext: AgentAuthContext = {
@@ -172,8 +200,11 @@ describe('Approval Workflow', () => {
 
   beforeEach(async () => {
     agentActionRows.length = 0;
-    rollbackSpy.mockClear();
     vi.clearAllMocks();
+    executeSpy.mockResolvedValue({
+      status: 'SUCCEEDED',
+      result: { entityType: 'CASE', entityId: 'case-42' },
+    });
   });
 
   describe('pendingActionsStore', () => {
@@ -261,13 +292,167 @@ describe('Approval Workflow', () => {
           decidedAt: new Date(),
         };
 
-        const executed = await approvalWorkflowService.approveAction(decision, testContext);
+        const requestCtx = { user: { userId: 'manager-1', tenantId: 't-1' } } as any;
+        const executed = await approvalWorkflowService.approveAction(
+          decision,
+          testContext,
+          requestCtx
+        );
 
         expect(executed).toBeDefined();
         expect(executed.status).toBe('APPROVED');
         expect(executed.approval).toBeDefined();
         expect(executed.approval?.decision).toBe('APPROVE');
         expect(executed.executedAt).toBeDefined();
+        // RF-1 (#853): the real executor ran, on the approver's request context.
+        expect(executeSpy).toHaveBeenCalledWith('create_case', action.input, requestCtx, {
+          requesterId: 'user-1',
+        });
+        expect(executed.executionStatus).toBe('SUCCEEDED');
+        expect(executed.executionResult).toEqual({ entityType: 'CASE', entityId: 'case-42' });
+        // #856: a created case can really be undone (cancelled), so a token is offered.
+        expect(executed.rollbackAvailable).toBe(true);
+        expect(executed.rollbackToken).toMatch(/^[0-9a-f-]{36}$/);
+
+        const row = agentActionRows.find((r) => r.id === 'approve-test-1');
+        expect(row.status).toBe('APPROVED');
+        expect(row.reviewedBy).toBe('manager-1');
+        expect(row.proposedState.executionStatus).toBe('SUCCEEDED');
+      });
+
+      it('judges expiry at the claim itself: an action that expires mid-approval never runs', async () => {
+        vi.useFakeTimers({ toFake: ['Date'] });
+        const start = new Date('2026-10-13T10:00:00Z');
+        vi.setSystemTime(start);
+        await pendingActionsStore.add(
+          createTestPendingAction({
+            id: 'expires-mid',
+            expiresAt: new Date(start.getTime() + 1_000),
+          })
+        );
+        // The tool lookup is slow: by the time it returns the action has expired.
+        const original = (getAgentTool as any).getMockImplementation();
+        (getAgentTool as any).mockImplementationOnce((name: string) => {
+          vi.setSystemTime(new Date(start.getTime() + 5_000));
+          return original(name);
+        });
+        try {
+          await expect(
+            approvalWorkflowService.approveAction(
+              {
+                actionId: 'expires-mid',
+                decision: 'APPROVE',
+                decidedBy: 'manager-1',
+                decidedAt: start,
+              },
+              testContext
+            )
+          ).rejects.toBeInstanceOf(ApprovalNotClaimedError);
+          expect(executeSpy).not.toHaveBeenCalled();
+          expect(agentActionRows.find((r) => r.id === 'expires-mid').status).toBe(
+            'PENDING_APPROVAL'
+          );
+        } finally {
+          vi.useRealTimers();
+        }
+      });
+
+      it('stores a failed execution as FAILED with its reason, never as success', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'approve-fail' }));
+        executeSpy.mockResolvedValueOnce({ status: 'FAILED', error: 'Client not found' });
+
+        const executed = await approvalWorkflowService.approveAction(
+          { actionId: 'approve-fail', decision: 'APPROVE', decidedBy: 'm', decidedAt: new Date() },
+          testContext
+        );
+
+        expect(executed.executionStatus).toBe('FAILED');
+        expect(executed.executionError).toBe('Client not found');
+        expect(executed.executionResult).toBeUndefined();
+        const row = agentActionRows.find((r) => r.id === 'approve-fail');
+        expect(row.proposedState).toMatchObject({
+          executionStatus: 'FAILED',
+          executionError: 'Client not found',
+        });
+      });
+
+      it('executes only once when two approvals race (atomic claim)', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'race' }));
+        const decision: ApprovalDecision = {
+          actionId: 'race',
+          decision: 'APPROVE',
+          decidedBy: 'm',
+          decidedAt: new Date(),
+        };
+        // Both approvals read the action as PENDING before either claims it.
+        const stale = await pendingActionsStore.get('race');
+        const getSpy = vi.spyOn(pendingActionsStore, 'get').mockResolvedValue(stale);
+
+        await approvalWorkflowService.approveAction(decision, testContext);
+        await expect(approvalWorkflowService.approveAction(decision, testContext)).rejects.toThrow(
+          /no longer pending/
+        );
+        expect(executeSpy).toHaveBeenCalledTimes(1);
+        getSpy.mockRestore();
+      });
+
+      it('rejects an invalid modification and leaves the action pending', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'bad-mod' }));
+
+        await expect(
+          approvalWorkflowService.approveAction(
+            {
+              actionId: 'bad-mod',
+              decision: 'APPROVE',
+              decidedBy: 'm',
+              decidedAt: new Date(),
+              modifiedInput: { title: '' },
+            },
+            testContext
+          )
+        ).rejects.toThrow(/not valid for create_case/);
+        expect(executeSpy).not.toHaveBeenCalled();
+        expect(agentActionRows.find((r) => r.id === 'bad-mod').status).toBe('PENDING_APPROVAL');
+      });
+
+      it('throws before claiming when the tool no longer exists', async () => {
+        await pendingActionsStore.add(
+          createTestPendingAction({ id: 'gone-tool', toolName: 'missing_tool' })
+        );
+        await expect(
+          approvalWorkflowService.approveAction(
+            { actionId: 'gone-tool', decision: 'APPROVE', decidedBy: 'm', decidedAt: new Date() },
+            testContext
+          )
+        ).rejects.toThrow('Tool not found: missing_tool');
+        expect(agentActionRows.find((r) => r.id === 'gone-tool').status).toBe('PENDING_APPROVAL');
+      });
+
+      it('reports every refusal before the claim as ApprovalNotClaimedError (nothing ran)', async () => {
+        await pendingActionsStore.add(
+          createTestPendingAction({ id: 'expired-2', expiresAt: new Date(Date.now() - 1000) })
+        );
+        const expired = approvalWorkflowService.approveAction(
+          { actionId: 'expired-2', decision: 'APPROVE', decidedBy: 'm', decidedAt: new Date() },
+          testContext
+        );
+        await expect(expired).rejects.toBeInstanceOf(ApprovalNotClaimedError);
+        await expect(expired).rejects.toThrow(/expired|not pending/);
+
+        const getSpy = vi.spyOn(pendingActionsStore, 'get').mockRejectedValue('store down');
+        const failed = approvalWorkflowService.approveAction(
+          { actionId: 'x', decision: 'APPROVE', decidedBy: 'm', decidedAt: new Date() },
+          testContext
+        );
+        await expect(failed).rejects.toBeInstanceOf(ApprovalNotClaimedError);
+        await expect(failed).rejects.toThrow('store down');
+        expect(executeSpy).not.toHaveBeenCalled();
+        getSpy.mockRestore();
+      });
+
+      it('lists interrupted executions for the user', async () => {
+        const interrupted = await approvalWorkflowService.getInterruptedActions('user-1', 't-1');
+        expect(interrupted).toEqual([]);
       });
 
       it('should reject approval for expired actions', async () => {
@@ -307,6 +492,14 @@ describe('Approval Workflow', () => {
 
         const executed = await approvalWorkflowService.approveAction(decision, testContext);
         expect(executed.approval?.modifiedInput).toBeDefined();
+        // The modified input is what actually runs.
+        expect(executeSpy).toHaveBeenCalledWith(
+          'create_case',
+          { title: 'Modified Case Title', clientId: 'client-1', priority: 'HIGH' },
+          undefined,
+          { requesterId: 'user-1' }
+        );
+        expect(executed.input.title).toBe('Modified Case Title');
       });
     });
 
@@ -326,6 +519,37 @@ describe('Approval Workflow', () => {
         const rejected = await approvalWorkflowService.rejectAction(decision, testContext);
 
         expect(rejected.status).toBe('REJECTED');
+        const row = agentActionRows.find((r) => r.id === 'reject-test-1');
+        expect(row).toMatchObject({
+          status: 'REJECTED',
+          reviewedBy: 'manager-1',
+          feedback: 'Not appropriate at this time',
+        });
+      });
+
+      it('an approval and a rejection racing on the same action cannot both win', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'race-2' }));
+        const stale = await pendingActionsStore.get('race-2');
+        const getSpy = vi.spyOn(pendingActionsStore, 'get').mockResolvedValue(stale);
+
+        await approvalWorkflowService.approveAction(
+          { actionId: 'race-2', decision: 'APPROVE', decidedBy: 'a', decidedAt: new Date() },
+          testContext
+        );
+        await expect(
+          approvalWorkflowService.rejectAction(
+            {
+              actionId: 'race-2',
+              decision: 'REJECT',
+              decidedBy: 'b',
+              decidedAt: new Date(),
+              reason: 'x',
+            },
+            testContext
+          )
+        ).rejects.toThrow(/no longer pending/);
+        expect(agentActionRows.find((r) => r.id === 'race-2').status).toBe('APPROVED');
+        getSpy.mockRestore();
       });
 
       it('should throw for non-existent action', async () => {
@@ -339,6 +563,73 @@ describe('Approval Workflow', () => {
         await expect(approvalWorkflowService.rejectAction(decision, testContext)).rejects.toThrow(
           'Pending action not found'
         );
+      });
+    });
+
+    describe('cross-tenant isolation (#883)', () => {
+      const tenantA = '11111111-1111-4111-8111-111111111111';
+      const tenantB = '22222222-2222-4222-8222-222222222222';
+
+      const decisionFor = (actionId: string, decision: 'APPROVE' | 'REJECT'): ApprovalDecision => ({
+        actionId,
+        decision,
+        decidedBy: 'user-b',
+        decidedAt: new Date(),
+        reason: 'x',
+      });
+
+      it('approveAction from another tenant cannot see or claim the action', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'xt-1', tenantId: tenantA }));
+
+        await expect(
+          approvalWorkflowService.approveAction(decisionFor('xt-1', 'APPROVE'), {
+            ...testContext,
+            tenantId: tenantB,
+          })
+        ).rejects.toThrow('Pending action not found');
+
+        expect(agentActionRows.find((r) => r.id === 'xt-1')?.status).toBe('PENDING_APPROVAL');
+        expect(executeSpy).not.toHaveBeenCalled();
+      });
+
+      it('rejectAction from another tenant cannot see or reject the action', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'xt-2', tenantId: tenantA }));
+
+        await expect(
+          approvalWorkflowService.rejectAction(decisionFor('xt-2', 'REJECT'), {
+            ...testContext,
+            tenantId: tenantB,
+          })
+        ).rejects.toThrow('Pending action not found');
+
+        expect(agentActionRows.find((r) => r.id === 'xt-2')?.status).toBe('PENDING_APPROVAL');
+      });
+
+      it('getPendingAction and get() do not return, or expire, an action of another tenant', async () => {
+        await pendingActionsStore.add(
+          createTestPendingAction({
+            id: 'xt-3',
+            tenantId: tenantA,
+            expiresAt: new Date(Date.now() - 1000),
+          })
+        );
+
+        expect(await approvalWorkflowService.getPendingAction('xt-3', tenantB)).toBeUndefined();
+        // Row untouched: the foreign read must not have flipped it to EXPIRED.
+        expect(agentActionRows.find((r) => r.id === 'xt-3')?.status).toBe('PENDING_APPROVAL');
+        expect(await pendingActionsStore.delete('xt-3', tenantB)).toBe(false);
+        expect(agentActionRows.some((r) => r.id === 'xt-3')).toBe(true);
+      });
+
+      it('the owning tenant still approves its own action', async () => {
+        await pendingActionsStore.add(createTestPendingAction({ id: 'xt-4', tenantId: tenantA }));
+
+        const executed = await approvalWorkflowService.approveAction(
+          decisionFor('xt-4', 'APPROVE'),
+          { ...testContext, tenantId: tenantA }
+        );
+
+        expect(executed.id).toBe('xt-4');
       });
     });
 

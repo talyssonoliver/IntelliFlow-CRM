@@ -1,0 +1,14 @@
+# 2026-10-17T16:53:37Z HEAD bd628081a (+ uncommitted validators implementation)
+# cmd: pnpm --filter ./packages/validators exec vitest run src/__tests__/contact-types.test.ts __tests__/enum-consistency.spec.ts __tests__/contact.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/packages/validators
+
+
+ Test Files  3 passed (3)
+      Tests  119 passed (119)
+   Start at  17:53:38
+   Duration  944ms (transform 605ms, setup 0ms, import 1.44s, tests 50ms, environment 0ms)
+
+# exit: 0

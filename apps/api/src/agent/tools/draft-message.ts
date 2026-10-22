@@ -17,17 +17,12 @@ import {
   AgentAuthContext,
   ActionPreview,
   PendingAction,
-  RollbackResult,
   DraftMessageInput,
   DraftMessageInputSchema,
 } from '../types';
 import { agentLogger } from '../logger';
+import { resolveAgentToolExpiry } from '../approval-policy-loader';
 import { pendingActionsStore } from '../approval-workflow';
-
-/**
- * Approval expiry time (30 minutes)
- */
-const APPROVAL_EXPIRY_MS = 30 * 60 * 1000;
 
 export type MessageRecipientType = 'LEAD' | 'CONTACT' | 'ACCOUNT';
 
@@ -210,9 +205,18 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
         preview,
         status: 'PENDING',
         createdAt: now,
-        expiresAt: new Date(now.getTime() + APPROVAL_EXPIRY_MS),
+        // PG-198: the tenant's approval policy decides how long this waits.
+        expiresAt: await resolveAgentToolExpiry(
+          context.prisma,
+          context.tenantId,
+          'draft_message',
+          'DRAFT',
+          now
+        ),
         createdBy: context.userId,
         agentSessionId: context.agentSessionId,
+        // PG-198: the tenant whose approval policy set the expiry owns the row.
+        tenantId: context.tenantId,
         metadata: {
           recipientType: input.recipientType,
           recipientId: input.recipientId,
@@ -312,51 +316,6 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
       warnings: warnings.length > 0 ? warnings : undefined,
       estimatedImpact,
     };
-  },
-
-  async rollback(
-    actionId: string,
-    executionResult: DraftedMessageResult,
-    context: AgentAuthContext
-  ): Promise<RollbackResult> {
-    try {
-      // For drafts, rollback means marking the message as cancelled/deleted
-      // If the message was already sent, rollback is not possible
-
-      if (executionResult.status === 'SENT') {
-        return {
-          success: false,
-          actionId,
-          error: 'Cannot rollback a message that has already been sent',
-        };
-      }
-
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: 'draft_message',
-        actionType: 'DELETE',
-        entityType: 'MESSAGE',
-        input: { messageId: executionResult.id, action: 'rollback' },
-        success: true,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: { originalActionId: actionId },
-      });
-
-      return {
-        success: true,
-        actionId,
-        rolledBackAt: new Date(),
-        restoredState: { cancelledMessageId: executionResult.id },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
-    }
   },
 };
 

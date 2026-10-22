@@ -5,6 +5,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { createLLMForTenant } from '../lib/llm-factory.js';
 import {
   EmailWriterAgent,
   EmailWriterInput,
@@ -45,6 +46,15 @@ vi.mock('../lib/llm-factory.js', () => ({
       invoke: vi.fn().mockResolvedValue(EMAIL_PARSED_RESPONSE),
     })),
   })),
+  // PG-199: agents resolve the tenant model at execute time.
+  createLLMForTenant: vi.fn(async () =>
+    (() => ({
+      invoke: vi.fn().mockResolvedValue({ content: JSON.stringify(EMAIL_PARSED_RESPONSE) }),
+      withStructuredOutput: vi.fn(() => ({
+        invoke: vi.fn().mockResolvedValue(EMAIL_PARSED_RESPONSE),
+      })),
+    }))()
+  ),
   createEmbeddings: vi.fn(() => ({
     embedQuery: vi.fn().mockResolvedValue([]),
     embedDocuments: vi.fn().mockResolvedValue([]),
@@ -285,5 +295,31 @@ describe('EmailWriterAgent', () => {
       const result = emailWriterInputSchema.safeParse(input);
       expect(result.success).toBe(true);
     });
+  });
+});
+
+// PG-199 (owner Q3): the agent runs on the tenant's model settings.
+describe('tenant model (PG-199)', () => {
+  it('resolves the tenant model for its purpose and uses it for the task', async () => {
+    const input: EmailWriterInput = {
+      recipientEmail: 'john@example.com',
+      recipientName: 'John Doe',
+      purpose: 'INITIAL_OUTREACH',
+      context: {},
+      senderName: 'Jane Smith',
+    };
+    const task = createEmailWriterTask(input);
+    task.context = { metadata: { tenantId: 'tenant-pg199' } };
+    const tenantAgent = new EmailWriterAgent();
+    vi.mocked(createLLMForTenant).mockClear();
+
+    const result = await tenantAgent.execute(task as never);
+
+    expect(createLLMForTenant).toHaveBeenCalledWith(
+      'email',
+      'free',
+      expect.objectContaining({ tenantId: 'tenant-pg199' })
+    );
+    expect(result.success).toBe(true);
   });
 });

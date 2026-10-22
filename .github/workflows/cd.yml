@@ -146,7 +146,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: production
-      url: https://intelliflow-crm.dev
+      url: https://intelli-flow-crm-web.vercel.app
     steps:
       - uses: actions/checkout@v7
         with:

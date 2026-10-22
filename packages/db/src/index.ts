@@ -50,6 +50,8 @@ export type {
   ContactRequiredField,
   ContactTag,
   ContactAutomationSetting,
+  ContactType,
+  ContactTypeDefaultTag,
   ContactReplyDraft,
   AccountAIInsight,
   AccountHierarchyConfig,
@@ -64,6 +66,8 @@ export type {
   AccountTerritory, // PG-197
   AccountTerritoryRule,
   AccountTerritoryMember,
+  ApprovalPolicy, // PG-198
+  ApprovalPolicyAssignment,
   DealWinLossReason,
   DealScoringRule,
   DealDuplicateRule,
@@ -82,6 +86,8 @@ export type {
   DocumentRetentionPolicy,
   ReportSettings,
   ReportTemplate,
+  ReportSchedule, // PG-201
+  ReportScheduleTag,
   TaskSettings,
   Case,
   CaseTask,
@@ -90,7 +96,11 @@ export type {
   CaseRequiredField,
   CaseTag,
   CaseAutomationSetting,
+  CaseType,
+  CaseTypeChecklistItem,
   AppointmentSettings,
+  AvailabilityHour, // PG-202
+  AvailabilityClosure,
   PublicFeedback,
   LeadCustomField,
 } from '../generated/prisma/client';

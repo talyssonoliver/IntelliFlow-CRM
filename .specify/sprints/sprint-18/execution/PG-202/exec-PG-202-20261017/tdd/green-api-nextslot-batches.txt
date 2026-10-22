@@ -1,0 +1,13 @@
+date: 2026-10-18T08:56:12Z
+head: fdd76e690fdcb87113b116a836e9550ca2497d21 (+ codex run 7 fix)
+cmd: pnpm --dir apps/api exec vitest run src/modules/calendar/__tests__ src/modules/legal/__tests__/appointments.router.caller.test.ts src/modules/legal/__tests__/appointments.availability-boundary.test.ts src/modules/legal/__tests__/appointments.legacy-hours.characterization.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+
+ Test Files  8 passed (8)
+      Tests  158 passed (158)
+   Start at  09:56:13
+   Duration  5.78s (transform 3.29s, setup 3.29s, import 12.45s, tests 1.85s, environment 1ms)
+
+exit: 0

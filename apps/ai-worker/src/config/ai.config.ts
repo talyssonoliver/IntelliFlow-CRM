@@ -266,6 +266,11 @@ export const MODEL_PRICING = {
   'reasoning-premium': { input: 0.003, output: 0.015 },
   // openai/text-embedding-3-small: $0.02/M (input only; no output tokens for embeddings)
   'rag-premium': { input: 0.00002, output: 0 },
+
+  // PG-199: production embeddings (EMBEDDING_PROVIDER=gemini, llm-factory createEmbeddings).
+  // gemini-embedding-001: $0.15/M input (OpenRouter API pricing for google/gemini-embedding-001,
+  // checked 2026-10-19). Without this key calculateCost priced it as gpt-3.5-turbo.
+  'gemini-embedding-001': { input: 0.00015, output: 0 },
 } as const;
 
 export type ModelName = keyof typeof MODEL_PRICING;
@@ -273,8 +278,57 @@ export type ModelName = keyof typeof MODEL_PRICING;
 /**
  * Calculate cost for a given number of tokens
  */
+/** Unknown pricing keys already reported (PG-199: never price an unknown model silently). */
+/**
+ * PG-199 (owner Q9): the model the LiteLLM gateway reports serving (its deployment model,
+ * provider prefix stripped) → the MODEL_PRICING key priced like it. Lets metering price a
+ * gateway fallback (e.g. reasoning-free → reasoning-standard) as the model that ran.
+ * Kept in parity with infra/litellm/config.yaml by model-config-parity.test.ts.
+ */
+export const LITELLM_SERVED_PRICING: Readonly<Record<string, string>> = {
+  'llama-3.1-8b-instant': 'scoring-free',
+  'llama-3.3-70b-versatile': 'qualification-free',
+  'openai/gpt-oss-20b:free': 'reasoning-free',
+  'gemini-2.5-flash': 'structured-free',
+  'mistral-small-latest': 'scoring-standard',
+  'mistral-medium-latest': 'qualification-standard',
+  'claude-haiku-4-5': 'reasoning-standard',
+  'gpt-4o-mini': 'scoring-premium',
+  'gpt-4o': 'qualification-premium',
+  'claude-sonnet-4-5': 'reasoning-premium',
+};
+
+const SERVED_MODELS_LONGEST_FIRST = Object.keys(LITELLM_SERVED_PRICING).sort(
+  (a, b) => b.length - a.length || a.localeCompare(b)
+);
+
+function matchServed(name: string): string | undefined {
+  if (LITELLM_SERVED_PRICING[name]) return LITELLM_SERVED_PRICING[name];
+  // Providers append a version date (claude-haiku-4-5-20251001, gpt-4o-mini-2024-07-18).
+  const model = SERVED_MODELS_LONGEST_FIRST.find((known) => name.startsWith(`${known}-`));
+  return model ? LITELLM_SERVED_PRICING[model] : undefined;
+}
+
+/** MODEL_PRICING key for a served model name, or undefined when it is not a known deployment. */
+export function servedPricingKey(served: string | undefined): string | undefined {
+  const name = served?.trim().toLowerCase();
+  if (!name) return undefined;
+  return matchServed(name) ?? matchServed(name.split('/').slice(1).join('/'));
+}
+
+const unknownPricingWarned = new Set<string>();
+
 export function calculateCost(model: string, inputTokens: number, outputTokens: number): number {
-  const pricing = MODEL_PRICING[model as ModelName] || MODEL_PRICING['gpt-3.5-turbo'];
+  // PG-199: OpenRouter's explicit free variants (`<vendor>/<model>:free`) cost nothing.
+  if (model.endsWith(':free')) return 0;
+  const known = MODEL_PRICING[model as ModelName];
+  if (!known && !unknownPricingWarned.has(model)) {
+    unknownPricingWarned.add(model);
+    console.warn(
+      `[ai.config] No MODEL_PRICING entry for "${model}" — cost estimated at gpt-3.5-turbo rates`
+    );
+  }
+  const pricing = known || MODEL_PRICING['gpt-3.5-turbo'];
 
   const inputCost = (inputTokens / 1000) * pricing.input;
   const outputCost = (outputTokens / 1000) * pricing.output;

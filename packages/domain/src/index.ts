@@ -33,6 +33,7 @@ export * from './crm/contact/ContactId';
 export * from './crm/contact/ContactEvents';
 export * from './crm/contact/ContactRepository';
 export * from './crm/contact/CrossTenantOrNotFoundError';
+export * from './crm/contact/contact-type-defaults';
 
 // CRM Domain - Accounts
 export * from './crm/account/Account';
@@ -64,6 +65,7 @@ export * from './legal/cases/CaseTaskId';
 export * from './legal/cases/CaseTask';
 export * from './legal/cases/CaseEvents';
 export * from './legal/cases/CaseRepository';
+export * from './legal/cases/case-type-defaults';
 
 // Workflow Events (extends CaseEvents with workflow-specific events)
 export * from './events/case-events';
@@ -77,6 +79,8 @@ export * from './legal/appointments/TimeSlot';
 export * from './legal/appointments/Recurrence';
 export * from './legal/appointments/Buffer';
 export * from './legal/appointments/ConflictDetector';
+export * from './legal/appointments/AvailabilityPolicy'; // PG-202
+export * from './legal/appointments/availability-roles'; // PG-202
 
 // Legal Domain - Terms Acceptance (IFC-309)
 export * from './legal/TermsAcceptance';
@@ -111,6 +115,12 @@ export * from './ai/review';
 
 // AI Domain - Conversation Records (IFC-148)
 export * from './ai/conversation-record';
+
+// AI Domain - Approval Policies (PG-198)
+export * from './ai/approval-policy';
+
+// AI Domain - Model Config (PG-199)
+export * from './ai/model-config';
 
 // Auth Domain - Constants
 export * from './auth/AuthConstants';

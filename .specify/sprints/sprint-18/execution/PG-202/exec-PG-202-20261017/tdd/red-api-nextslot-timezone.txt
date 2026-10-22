@@ -1,0 +1,39 @@
+date: 2026-10-17T21:20:09Z
+head: de2a67b9392ff2447391f1d7a0a6b34856d6f83a (+ stoa fixes)
+cmd: pnpm --dir apps/api exec vitest run src/modules/calendar/__tests__/availability-enforcement.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-202/apps/api
+
+ ❯ |api| src/modules/calendar/__tests__/availability-enforcement.test.ts (33 tests | 1 failed) 307ms
+       × maps an invalid stored timezone to PRECONDITION_FAILED, like create and reschedule 15ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/calendar/__tests__/availability-enforcement.test.ts > availability-enforcement (PG-202) > findNextSlotWithinAvailability > maps an invalid stored timezone to PRECONDITION_FAILED, like create and reschedule
+AssertionError: promise resolved "null" instead of rejecting
+
+- Expected:
+Error {
+  "message": "rejected promise",
+}
+
++ Received:
+null
+
+ ❯ src/modules/calendar/__tests__/availability-enforcement.test.ts:322:7
+    320|           bufferMinutesAfter: 0,
+    321|         })
+    322|       ).rejects.toMatchObject({
+       |       ^
+    323|         code: 'PRECONDITION_FAILED',
+    324|         message:
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 32 passed (33)
+   Start at  22:20:12
+   Duration  9.06s (transform 6.52s, setup 2.97s, import 5.12s, tests 307ms, environment 0ms)
+
+exit: 1

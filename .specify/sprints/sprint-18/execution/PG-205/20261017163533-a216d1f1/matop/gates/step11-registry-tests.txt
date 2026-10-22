@@ -1,0 +1,11 @@
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205/apps/web
+
+
+ Test Files  3 passed (3)
+      Tests  15 passed (15)
+   Start at  18:16:35
+   Duration  1.83s (transform 318ms, setup 1.70s, import 75ms, tests 290ms, environment 2.21s)
+

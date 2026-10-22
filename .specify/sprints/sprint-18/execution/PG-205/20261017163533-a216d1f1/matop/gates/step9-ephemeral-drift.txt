@@ -1,0 +1,17 @@
+2026-10-17T17:09:49Z
+# drift check: migrations applied from scratch on ephemeral intelliflow_test_run_tn2ab0_jhc_4tom (localhost:5433) vs schema.prisma
+Loaded Prisma config from prisma.config.ts.
+
+-- DropForeignKey
+ALTER TABLE "cases" DROP CONSTRAINT "cases_tenantId_caseTypeId_fkey";
+
+-- DropIndex
+DROP INDEX "report_templates_tenantId_name_idx";
+
+-- AlterTable
+ALTER TABLE "document_type_definitions" ALTER COLUMN "updatedAt" DROP DEFAULT;
+
+-- AlterTable
+ALTER TABLE "users" ALTER COLUMN "locale" SET DEFAULT 'en-US';
+
+# exit: 0

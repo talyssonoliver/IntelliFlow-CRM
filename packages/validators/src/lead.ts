@@ -1,5 +1,12 @@
 import { z } from 'zod';
-import { emailSchema, phoneSchema, idSchema, paginationSchema, nameSchema } from './common';
+import {
+  emailSchema,
+  phoneSchema,
+  phoneUpdateSchema,
+  idSchema,
+  paginationSchema,
+  nameSchema,
+} from './common';
 import { LEAD_STATUSES, LEAD_SOURCES, LEAD_ACTIVITY_TYPES } from '@intelliflow/domain';
 
 // Re-export common schemas used by API routers
@@ -70,10 +77,39 @@ export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 // Update Lead Schema - omits immutable fields (email, source)
 // Status can be updated directly here to support archive-style actions (e.g. status: 'LOST').
 // Bulk/lifecycle transitions still go through dedicated endpoints (qualify, convert, bulkUpdateStatus).
+//
+// IFC-412 (owner ruling 2026-10-12): the "required-looking" fields below must be
+// explicitly CLEARABLE from the lead edit form — company, phone, first/last name,
+// estimatedValue, location, website. `.partial()` only ever makes a key
+// omittable (= "leave unchanged"); it does not let a present key carry `null`
+// (= "clear this field"). These overrides add `.nullable()` on top of
+// `.partial()`'s `.optional()` so both signals are distinct:
+//   - key absent / `undefined`  -> unchanged
+//   - key present, value `null` -> cleared
+//   - key present, a real value -> set
+// Every other optional field on this schema keeps baseLeadFieldsSchema's plain
+// optional semantics (a cleared-to-empty value is simply omitted upstream by
+// the caller) — that is unchanged, pre-existing behaviour, not part of #412.
 export const updateLeadSchema = baseLeadFieldsSchema
   .omit({ email: true, source: true })
   .partial()
-  .extend({ id: idSchema, status: leadStatusSchema.optional() });
+  .extend({
+    id: idSchema,
+    status: leadStatusSchema.optional(),
+    firstName: nameSchema.nullable().optional(),
+    lastName: nameSchema.nullable().optional(),
+    company: z
+      .string()
+      .min(1)
+      .max(200)
+      .transform((val) => val.trim())
+      .nullable()
+      .optional(),
+    phone: phoneUpdateSchema,
+    location: z.string().max(200).nullable().optional(),
+    website: z.string().max(200).nullable().optional(),
+    estimatedValue: z.number().int().min(0).nullable().optional(), // In cents
+  });
 
 export type UpdateLeadInput = z.infer<typeof updateLeadSchema>;
 

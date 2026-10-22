@@ -386,6 +386,27 @@ describe('AutoResponseChain', () => {
       await expect(chain.generateResponse(input)).rejects.toThrow();
     });
 
+    it('records confidence 0 (never an invented value) when the model omits it (PG-198)', async () => {
+      (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({
+        invoke: vi.fn().mockRejectedValue(new Error('structured unsupported')),
+      }));
+      (chain as any).llm.invoke.mockResolvedValueOnce({
+        content: JSON.stringify({ subject: 'Hello', body: 'Thanks for reaching out.' }),
+      });
+
+      const output = await chain.generateResponse({
+        triggerType: 'EMAIL_RECEIVED',
+        leadInfo: { id: 'lead-1', name: 'Test User', email: 'test@example.com', status: 'NEW' },
+        context: { originalMessage: 'Test' },
+        tenantSettings: { companyName: 'IntelliFlow', tone: 'professional' },
+      });
+
+      expect(output.confidence).toBe(0);
+      expect(chain.validateResponse(output).issues).toEqual(
+        expect.arrayContaining([expect.stringMatching(/requires human review/)])
+      );
+    });
+
     it('should throw error for invalid LLM response format on fallback path', async () => {
       // Force structured-output path to fail so we exercise the raw-invoke + JSON.parse fallback.
       (chain as any).llm.withStructuredOutput.mockImplementationOnce(() => ({
@@ -594,6 +615,22 @@ describe('AutoResponseChain', () => {
 
       expect(result).toBeDefined();
       expect(typeof result.body).toBe('string');
+    });
+
+    // PG-199 (owner Q6): email has no non-AI fallback — a reached ceiling surfaces as
+    // 'monthly AI ceiling reached for email' with its code, before any model call.
+    it('surfaces the email ceiling error unchanged', async () => {
+      const { createLLMForTenant } = await import('../lib/llm-factory.js');
+      vi.mocked(createLLMForTenant).mockRejectedValueOnce(
+        Object.assign(new Error('monthly AI ceiling reached for email'), {
+          code: 'PURPOSE_CEILING_REACHED',
+        })
+      );
+      const tenantChain = new AutoResponseChain({ tenantId: 'tenant-capped' });
+      await expect(tenantChain.generateResponse(baseInput)).rejects.toMatchObject({
+        code: 'PURPOSE_CEILING_REACHED',
+        message: 'monthly AI ceiling reached for email',
+      });
     });
 
     it('falls back to default instructions when VersionLoader throws', async () => {

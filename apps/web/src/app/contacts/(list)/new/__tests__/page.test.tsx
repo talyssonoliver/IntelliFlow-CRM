@@ -50,8 +50,64 @@ vi.mock('@/lib/auth/AuthContext', () => ({
   useRequireAuth: () => mockUseRequireAuth(),
 }));
 
+// PG-205: the tenant contact types for the picker (ContactTypeSelect).
+const mockContactTypes = vi.hoisted(() => ({
+  data: [
+    {
+      id: 't1',
+      key: 'customer',
+      name: 'Customer',
+      colorToken: 'green',
+      isActive: true,
+      isDefault: false,
+      isSystem: true,
+      requiredFields: [],
+    },
+    {
+      id: 't2',
+      key: 'reseller',
+      name: 'Reseller',
+      colorToken: 'teal',
+      isActive: true,
+      isDefault: false,
+      isSystem: false,
+      requiredFields: [],
+    },
+  ] as Array<Record<string, unknown>>,
+}));
+
+// PG-205 (ruling 9): the shared account search is stubbed; it has its own tests.
+vi.mock('@/components/tasks/EntitySearchField', () => ({
+  EntitySearchField: (props: {
+    entityType: string;
+    value: string;
+    valueName: string;
+    onChange: (id: string, name: string) => void;
+  }) => (
+    <div data-testid={`entity-search-${props.entityType}`}>
+      <span>{props.value ? `Selected: ${props.valueName}` : 'No account'}</span>
+      <button type="button" onClick={() => props.onChange('acc-2', 'Globex')}>
+        Pick Globex
+      </button>
+      <button type="button" onClick={() => props.onChange('', '')}>
+        Clear account
+      </button>
+    </div>
+  ),
+}));
+
 vi.mock('@/lib/trpc', () => ({
   trpc: {
+    contactTypes: {
+      listActive: {
+        useQuery: () => ({
+          data: mockContactTypes.data,
+          isLoading: false,
+          isError: false,
+          refetch: vi.fn(),
+        }),
+      },
+    },
     contact: {
       create: {
         useMutation: (opts?: {
@@ -215,17 +271,20 @@ describe('CreateNewContactPage - Wizard Navigation (T-03)', () => {
     expect(screen.getByRole('heading', { name: 'Company & Role' })).toBeInTheDocument();
   });
 
-  it('requires contactTypeOther when contact type is "other"', () => {
+  // PG-205 (owner ruling 6): the discarded "Other — please specify" field is removed.
+  it('offers "No type" plus the tenant contact types, and no "please specify" field', () => {
     render(<CreateNewContactPage />);
     fillPersonalStep();
     clickNext();
     clickNext();
-    fireEvent.change(screen.getByLabelText('Contact Type'), { target: { value: 'other' } });
-    fireEvent.click(screen.getByRole('button', { name: /Create Contact/i }));
-    expect(
-      screen.getByText('Please specify the contact type', { selector: 'p' })
-    ).toBeInTheDocument();
-    expect(mockCreateMutateAsync).not.toHaveBeenCalled();
+    const select = screen.getByLabelText('Contact Type') as HTMLSelectElement;
+    expect(Array.from(select.options).map((o) => o.textContent)).toEqual([
+      'No type',
+      'Customer',
+      'Reseller',
+    ]);
+    fireEvent.change(select, { target: { value: 'customer' } });
+    expect(screen.queryByLabelText(/Please specify the contact type/i)).toBeNull();
   });
 });
 
@@ -265,23 +324,105 @@ describe('CreateNewContactPage - Submit (T-03)', () => {
       email: 'jane@example.com',
       department: 'Legal',
       contactType: 'customer',
-      status: 'ACTIVE',
     });
+    // PG-205: an untouched status is not sent, so a contact type's default status can
+    // apply (the domain default is still ACTIVE when there is no type default).
+    expect(payload.status).toBeUndefined();
     expect(payload.tags).toEqual(['vip', 'lead']);
   });
 
-  it('maps contactType "other" to the literal "other"', async () => {
+  it('sends a status the user chose', async () => {
     render(<CreateNewContactPage />);
     fillPersonalStep();
     clickNext();
     clickNext();
-    fireEvent.change(screen.getByLabelText('Contact Type'), { target: { value: 'other' } });
-    fireEvent.change(screen.getByLabelText(/Please specify the contact type/i), {
-      target: { value: 'Reseller' },
-    });
+    fireEvent.change(screen.getByLabelText('Status'), { target: { value: 'CUSTOMER' } });
     fireEvent.click(screen.getByRole('button', { name: /Create Contact/i }));
     await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(1));
-    expect(mockCreateMutateAsync.mock.calls[0][0].contactType).toBe('other');
+    expect(mockCreateMutateAsync.mock.calls[0][0].status).toBe('CUSTOMER');
+  });
+
+  it('submits a tenant-defined type key as chosen (PG-205)', async () => {
+    render(<CreateNewContactPage />);
+    fillPersonalStep();
+    clickNext();
+    clickNext();
+    fireEvent.change(screen.getByLabelText('Contact Type'), { target: { value: 'reseller' } });
+    fireEvent.click(screen.getByRole('button', { name: /Create Contact/i }));
+    await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(1));
+    expect(mockCreateMutateAsync.mock.calls[0][0].contactType).toBe('reseller');
+  });
+
+  it('shows "Type default" as the initial status, so the form shows what is sent (codex 5d433a8c)', () => {
+    render(<CreateNewContactPage />);
+    fillPersonalStep();
+    clickNext();
+    clickNext();
+    const status = screen.getByLabelText('Status') as HTMLSelectElement;
+    expect(status.value).toBe('');
+    expect(status.options[status.selectedIndex].textContent).toBe('Type default');
+  });
+
+  it('links an account from the Company & Role step and sends its id (ruling 9, codex 183f8dca)', async () => {
+    render(<CreateNewContactPage />);
+    fillPersonalStep();
+    clickNext();
+    fireEvent.click(screen.getByRole('button', { name: 'Pick Globex' }));
+    expect(screen.getByText('Selected: Globex')).toBeInTheDocument();
+    clickNext();
+    fireEvent.click(screen.getByRole('button', { name: /Create Contact/i }));
+    await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(1));
+    expect(mockCreateMutateAsync.mock.calls[0][0].accountId).toBe('acc-2');
+  });
+
+  it('sends no account when none is linked', async () => {
+    render(<CreateNewContactPage />);
+    fillPersonalStep();
+    clickNext();
+    clickNext();
+    fireEvent.click(screen.getByRole('button', { name: /Create Contact/i }));
+    await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(1));
+    expect(mockCreateMutateAsync.mock.calls[0][0].accountId).toBeUndefined();
+  });
+
+  it('keeps an explicit "No type" after leaving and re-entering the step (codex 35dbcd23)', () => {
+    mockContactTypes.data = mockContactTypes.data.map((t) => ({
+      ...t,
+      isDefault: t.key === 'reseller',
+    }));
+    try {
+      render(<CreateNewContactPage />);
+      fillPersonalStep();
+      clickNext();
+      clickNext();
+      fireEvent.change(screen.getByLabelText('Contact Type'), { target: { value: '' } });
+      fireEvent.click(screen.getByRole('button', { name: /Previous/i }));
+      clickNext();
+      expect((screen.getByLabelText('Contact Type') as HTMLSelectElement).value).toBe('');
+    } finally {
+      mockContactTypes.data = mockContactTypes.data.map((t) => ({ ...t, isDefault: false }));
+    }
+  });
+
+  it('preselects the tenant default type and sends no type when "No type" is chosen', async () => {
+    mockContactTypes.data = mockContactTypes.data.map((t) => ({
+      ...t,
+      isDefault: t.key === 'reseller',
+    }));
+    try {
+      render(<CreateNewContactPage />);
+      fillPersonalStep();
+      clickNext();
+      clickNext();
+      const select = screen.getByLabelText('Contact Type') as HTMLSelectElement;
+      expect(select.value).toBe('reseller');
+      fireEvent.change(select, { target: { value: '' } });
+      fireEvent.click(screen.getByRole('button', { name: /Create Contact/i }));
+      await waitFor(() => expect(mockCreateMutateAsync).toHaveBeenCalledTimes(1));
+      expect(mockCreateMutateAsync.mock.calls[0][0].contactType).toBeUndefined();
+    } finally {
+      mockContactTypes.data = mockContactTypes.data.map((t) => ({ ...t, isDefault: false }));
+    }
   });
 
   it('redirects to /contacts after a successful create', async () => {

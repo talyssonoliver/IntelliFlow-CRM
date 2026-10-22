@@ -408,4 +408,26 @@ describe('CaseList', () => {
     expect(screen.getByText('Test Case Alpha')).toBeInTheDocument();
     expect(screen.getByText('Second Case')).toBeInTheDocument();
   });
+
+  // codex deadline-display-timezone-mismatch (PG-204): a deadline is the end of a day in the
+  // case timezone, so it is shown as a date in that zone (UTC when the case has none).
+  it('shows the deadline date in the case timezone', () => {
+    const nyCase: CaseListItem = {
+      ...mockCase,
+      deadline: '2026-12-02T04:59:59.999Z',
+      timezone: 'America/New_York',
+    };
+    render(<CaseList {...defaultProps} cases={[nyCase]} />);
+    expect(screen.getByText('1 Dec 2026')).toBeInTheDocument();
+  });
+
+  it('shows the deadline date in UTC when the case has no timezone', () => {
+    const utcCase: CaseListItem = {
+      ...mockCase,
+      deadline: '2026-07-01T23:59:59.999Z',
+      timezone: null,
+    };
+    render(<CaseList {...defaultProps} cases={[utcCase]} />);
+    expect(screen.getByText('1 Jul 2026')).toBeInTheDocument();
+  });
 });

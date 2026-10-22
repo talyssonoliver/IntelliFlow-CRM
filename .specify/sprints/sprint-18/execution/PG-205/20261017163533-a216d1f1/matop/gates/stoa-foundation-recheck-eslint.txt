@@ -1,0 +1,1 @@
+[test-slot] slot2 taken for PG-205-stoa@feat/pg-205-contact-types: pnpm exec eslint --max-warnings=0 src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx

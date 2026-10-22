@@ -1,0 +1,3 @@
+# 2026-10-18T08:57:16Z HEAD a6b5ad8d8 node tools/scripts/exec-preflight/check-lighthouse-waiver.mjs PG-205 18
+[lighthouse-waiver] OK — no Lighthouse KPI with met:false in PG-205 attestation.
+# exit: 0

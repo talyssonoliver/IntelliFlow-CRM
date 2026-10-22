@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 132 files total
+[codex-review] in scope : 67 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T20:30:26.032Z
+Base ref  : origin/main
+Files in scope : 67
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/availability-enforcement.ts:186 — non-atomic-daily-cap
+    Issue    : Concurrent bookings or reschedules can exceed the firm's daily booking limit.
+    Evidence : `await prisma.appointment.count(...)` checks capacity separately from persistence: appointments.create subsequently calls scheduleAppointmentUseCase.execute(), and reschedule similarly writes afterward. With a cap of 1 and no bookings, two concurrent requests for different times can both count 0, pass evaluateAvailability, and save successfully. Neither write serializes this check with the other request.
+    Fix      : Serialize capacity checks and appointment writes using a shared tenant/day lock held within the same database transaction, or use serializable transactions with retry handling; ensure create and reschedule participate in the same mechanism.
+    Fingerprint: 846f69b2cc7bea8e6f95445eb395652486145070427ff4d6de25e7f369bdb753
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

@@ -222,7 +222,7 @@ module "supabase" {
   enable_pgvector = true
 
   # Authentication
-  auth_site_url = "https://intelliflow-crm.com"
+  auth_site_url = "https://intelli-flow-crm-web.vercel.app"
   jwt_expiry    = 3600
 
   # Storage
@@ -262,8 +262,10 @@ module "vercel" {
     repo = "intelliflow/intelliflow-crm"
   }
 
-  # Domains
-  domains = ["intelliflow-crm.com", "www.intelliflow-crm.com"]
+  # Domains — production has no custom domain; the default *.vercel.app
+  # project domain (intelli-flow-crm-web.vercel.app) is canonical (#229). Add
+  # custom domains here only if the project later buys one.
+  domains = []
 
   # Environment variables
   environment_variables = {

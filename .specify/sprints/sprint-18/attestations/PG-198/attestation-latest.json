@@ -1,0 +1,369 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-198",
+  "run_id": "PG-198-validation-20261013-145028",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-10-19T19:25:43Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 105,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 15,
+    "gates_failed": 0,
+    "kpis_met": 5,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pwsh scripts/code-review-analysis.ps1 -Sprint 18 -TaskId PG-198 -LinkToGates -Quick (turbo typecheck, 27 packages, via test slot)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T14:22:11Z",
+      "duration_ms": 172654
+    },
+    {
+      "name": "Tests",
+      "command": "node with-slot.mjs --label PG-198 -- pnpm --filter @intelliflow/api test (full suite at HEAD; other packages in notes)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T13:40:25Z",
+      "duration_ms": 115290
+    },
+    {
+      "name": "Lint",
+      "command": "pwsh scripts/code-review-analysis.ps1 -Sprint 18 -TaskId PG-198 -LinkToGates -Quick (turbo lint, 27 packages, via test slot; same run as TypeScript, timestamp = run start)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T14:22:11Z",
+      "duration_ms": 90173
+    },
+    {
+      "name": "Build",
+      "command": "node with-slot.mjs --label PG-198 -- pnpm --filter @intelliflow/api build; same for @intelliflow/web build (Foundation STOA)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-13T13:47:31Z",
+      "duration_ms": 344000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "context_ack",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "plan_checkboxes",
+      "passed": true,
+      "exit_code": 0,
+      "score": 100
+    },
+    {
+      "gate_id": "artifact_hashes",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "import_reachability",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "runtime_wiring",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "shared_component_reuse",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "build_validation",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "validation_matrix",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "coverage_measurement",
+      "passed": true,
+      "exit_code": 0,
+      "score": 97
+    },
+    {
+      "gate_id": "dead_code",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "stoa_verdicts",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "nav_wiring",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "diff_coverage",
+      "passed": true,
+      "exit_code": 0,
+      "score": 97
+    },
+    {
+      "gate_id": "lighthouse_waiver_cap",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "gate_id": "lighthouse_evidence",
+      "passed": true,
+      "exit_code": 0
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Changed-line coverage (diff-coverage, Sonar new_coverage parity)",
+      "target": ">= 80%",
+      "actual": "96.8% (1497/1546 lines + branch conditions), 2026-10-13T14:21Z",
+      "met": true
+    },
+    {
+      "kpi": "Scoped coverage, changed API files",
+      "target": "Lines >= 90%, Branches >= 80%",
+      "actual": "Lines 100%, Statements 100%, Functions 100%, Branches 96.37% (760 tests, Quality STOA)",
+      "met": true
+    },
+    {
+      "kpi": "Scoped coverage, approval-policies web files",
+      "target": "Lines >= 90%, Branches >= 80%",
+      "actual": "Statements 98.77%, Branches 95.53%, Functions 98.19%, Lines 99.65% (1059 tests, Quality STOA)",
+      "met": true
+    },
+    {
+      "kpi": "Domain approval-policy coverage",
+      "target": ">= 95%",
+      "actual": "Statements 100% (84/84), Branches 100% (64/64), Functions 100%, Lines 100% (47 tests, Domain STOA)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse >= 90 on /agent-approvals/approval-policies",
+      "target": "Performance >= 0.90 and Accessibility >= 0.90",
+      "actual": "Authenticated, Path C (tools/lighthouse/lhci-auth.js; desktop preset; 3 runs, 2026-10-19T19:23:52.698Z to 2026-10-19T19:24:28.857Z). Local production build at localhost:3400, local API on :4000, local Supabase auth + Postgres; a local test ADMIN signed in. Performance 0.93/0.95/0.95 (median 0.95), accessibility 0.96/0.96/0.96. Median report: artifacts/lighthouse/PG-198/approval-policies-auth.report.json; all runs: artifacts/lighthouse/PG-198/auth-kpi/.",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Approval policies page at /agent-approvals/approval-policies (thresholds, reviewers, escalation, timeout SLAs, per-agent overrides)",
+      "met": true,
+      "evidence": "apps/web/src/app/agent-approvals/approval-policies/**; web build route table lists the route; 1059 scoped web tests"
+    },
+    {
+      "criterion": "Backend: tenant-scoped approvalPolicies router, resolver, real executor, escalation sweep",
+      "met": true,
+      "evidence": "approval-policies.router.ts mounted in router.ts; sweep started in http-server.ts:562, stopped in main.ts:28; api 7441 passed at HEAD"
+    },
+    {
+      "criterion": "Module-settings playbook followed (PageHeader + bento, EmptyState, toggles wired)",
+      "met": true,
+      "evidence": "PRD addendum toggle table (autoApproveEnabled, escalationEnabled, isDefault wired); a11y-expert re-review PASS"
+    },
+    {
+      "criterion": "GATE:lighthouse-gte-90",
+      "met": true,
+      "evidence": "Authenticated run: performance 0.95 (median), accessibility 0.96; artifacts/lighthouse/PG-198/approval-policies-auth.report.json"
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178 (Completed)",
+    "PG-152 (Completed)",
+    "PG-192 (Completed)"
+  ],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-10-13T00:07:22Z",
+    "files_read": [
+      {
+        "path": "apps/web/src/components/sidebar/configs/agent-approvals.ts",
+        "sha256": "3226a6fd60569f683e228b74450b23b8724a80e646e7d25df1ad87176748c700"
+      },
+      {
+        "path": "apps/web/src/components/ai-monitoring/AgentLogsViewer.tsx",
+        "sha256": "753857eab9931d5d9f8fdfd6db645a8dba7eed21273096553f79cd66abca5e5b"
+      },
+      {
+        "path": "docs/planning/module-settings-playbook.md",
+        "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3"
+      },
+      {
+        "path": "docs/planning/prd-module-settings.md",
+        "sha256": "de6cea5c763e09dab9965658990e24507ca45c395e9893e66b0a8b4dc4cbb590"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-198-spec.md",
+        "sha256": "f0b963530959bf3b620024c6d82a1d483b7c4e54ec6509b116a6b0e576ebaec6"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/PG-198-plan.md",
+        "sha256": "75ae709a85e5bd1996253458ac711495113fde5588fa7764a2b776a30fd776d9"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/context/PG-198/PG-198-owner-ruling.md",
+        "sha256": "f30db5288242de90438d46426a2495b9eab10d60f4e75a2df11d15ecf2e9d6f6"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/context/PG-198/PG-198-open-question.md",
+        "sha256": "408862f61902a661afa5b8b31dcba7ea67f49d48d6ee8c9d7784593e3aa32b89"
+      },
+      {
+        "path": "apps/api/src/agent/approval-workflow.ts",
+        "sha256": "b4c1883e3ebcbb3b6ee34d1147ffd301178eacda5cfe86239806e3cbee53c7a4"
+      },
+      {
+        "path": "apps/api/src/modules/autoresponse/autoresponse.router.ts",
+        "sha256": "0a6e34bc963230789b9e48687097fc1f3f486c3657b77904e67cbf13fd2bd9a6"
+      }
+    ],
+    "invariants_acknowledged": [
+      "OWNER RULINGS: R1 router in apps/api/src/modules/agent/ mounted beside agent; R2 never-downgrade is PG-199; Q1=B policies govern BOTH agent tool actions (AgentAction) and AI auto-response drafts; Q2=B enforce timeout, minimum reviewer role, auto-approve (default OFF) and escalation now, with a real executor, real confidence and an escalation scheduler; Q3=A minimum role on top of existing permission; Q4=B colorToken per policy with CHECK, TagsTab N/A.",
+      "NO-ROWS INVARIANT: a tenant with no policy rows behaves exactly as today (agent actions 30 min, drafts 24 h, permission-only gates, no auto-approve, no escalation).",
+      "AUTO-APPROVE GOVERNANCE: only when enabled, confidence finite in [0,1] and strictly above a 90..99 threshold (ISO 42001 D.1), impact present and not HIGH, not DELETE, not draft_message EMAIL/SMS, and the session requester could approve it themselves (min role + approve permission); audit-logged as system:approval-policy; DB errors fail closed.",
+      "REAL EXECUTION: approving an agent action atomically claims it (status-guarded updateMany) and runs the real tRPC procedure via a lazily imported per-router createCaller on the approver ctx; failures persist executionStatus FAILED with the error; never a canned success; no rollback token without a real undo.",
+      "REAL CONFIDENCE: AgentAction.confidenceScore is caller-supplied or NULL, never derived from impact; the auto-response chain never invents 0.7.",
+      "TENANT BOUNDARY: every policy, loader, sweep and executor query carries an explicit tenantId; foreign ids return NOT_FOUND; RLS is defence in depth only.",
+      "PLAYBOOK: PageHeader + 12-col bento, canonical EmptyState rules/passive without action, size=sm Title Case buttons, Save disabled when !isDirty || isSaving || hasConflict, $transaction on multi-row writes, never skipDuplicates, P2002 -> CONFLICT, Zod superRefine rows N and M, AI default false restated in SQL.",
+      "MIGRATIONS (L13): one Class A additive migration plus one CREATE INDEX CONCURRENTLY migration; production apply is manual and must precede the code.",
+      "RUNNER RULES: commit with hooks only; no push/PR/merge; one scoped test process at a time; full-package/DB runs via the slot wrapper; DB only on local :5433, never .env.local DATABASE_URL."
+    ]
+  },
+  "artifact_hashes": {
+    "packages/domain/src/ai/approval-policy/__tests__/approval-policy.test.ts": "5927f5b9ee7849aa733d0da1e1bcd46d413e3fb32d102400a65df71bdb0bfd55",
+    "packages/domain/src/ai/approval-policy/constants.ts": "d3b4aca4beaf4ebd8fee03e835393edd450dd1c22be53eaff0bb2e5986147ba3",
+    "packages/domain/src/ai/approval-policy/index.ts": "5ff524fea2401c73b5ad1d422ee668474a386e38f5165dbcd7da8f066128da1b",
+    "packages/domain/src/ai/approval-policy/predicates.ts": "60f98ec21289c5086a1dbc30846eb7af2f54518cce57d6331406261b09aca3b5",
+    "packages/domain/src/ai/approval-policy/resolver.ts": "234f82da1f00640c70cac23873978586f03c99782afe8b89a0abbda085aa9bb1",
+    "packages/validators/src/__tests__/approval-policies.test.ts": "b9591610e54ae5d566ef92fed084aa2685efc3393f5a56ae882ca08b3faec0ff",
+    "packages/validators/src/approval-policies.ts": "006f978586902b86b7860d7cb5a8e2c43c4b74fb17060c4e1ddc366c67a0a7eb",
+    "packages/db/prisma/migrations/20261016120000_approval_policies/migration.sql": "85af17bd88e34a1d13f038d478eb7c9840ad8edee28309a5c652fc06f6c496c6",
+    "packages/db/prisma/migrations/20261016120100_agent_actions_pending_sweep_idx/migration.sql": "e5b1d626096cb6628b1228b807521f65ea19deecfb0b75b9a4acf8584a2930bd",
+    "apps/api/src/__tests__/http-server.approval-sweep.test.ts": "626994e69c057ebde27532c3cd29a583ca64391d5bb94e5813ec76625771ab77",
+    "apps/api/src/agent/__tests__/approval-escalation-sweep.test.ts": "d836d87f6e2993dcd934e0b7f1cf91aa9e8991c219e760bae69bf63acce0153c",
+    "apps/api/src/agent/__tests__/approval-policy-loader.test.ts": "4c26d824e1de80c005b5e6dc30c4ac2c4cb01cc68ad657db94d040d7319e0b63",
+    "apps/api/src/agent/__tests__/approval-sweep-scheduler.test.ts": "d8f50916d54025480d576484d63b6a91a22f0d287dd4d595806d9ad2cf79d58c",
+    "apps/api/src/agent/__tests__/approved-action-executor.test.ts": "803d4131d53f3a667123619447d7f8b7e19675c8b64d5f7e4553c3f6d2bb5534",
+    "apps/api/src/agent/__tests__/escalation-target.test.ts": "603ffd28ec134b08d9b8a522712e83622b9b0e14d0283f8d652de7778f1295a2",
+    "apps/api/src/agent/approval-escalation-sweep.ts": "1fc857f2aa35709e60177b84a321125e1ca4d16283c23f3ad9a5879c128d3f26",
+    "apps/api/src/agent/approval-policy-loader.ts": "af887c9ab67361990f77de02468518008b880b0887e48ac5ec6682b00a1f8220",
+    "apps/api/src/agent/approval-sweep-scheduler.ts": "0d4aeeb7878c4cb55d04f7465d7ad8059a5d6d9b6292130dd863080f3ad509e2",
+    "apps/api/src/agent/approved-action-executor.ts": "d38b997da3b27ec35aef7f13c3d30e3b02895e368628790358240de0d6acf89f",
+    "apps/api/src/agent/escalation-target.ts": "6b79f923205347a8d206a8b98adde0393f18d46189124b11c04004a5029925d5",
+    "apps/api/src/modules/agent/__tests__/approval-policies.router.test.ts": "99e00b2601d37ccf2dd86d02cf89d8225b80f7659da8f5815f2a2b044ead8166",
+    "apps/api/src/modules/agent/__tests__/settings-shared.test.ts": "b9ced6b09f22a5d3c8a3e3d8293b800a1f84c8e7f52df6b67189b526e36636fd",
+    "apps/api/src/modules/agent/approval-policies.router.ts": "193bb32af75bc6d9ee728455c30746491f779c859deff98fdefc545c2a21e448",
+    "apps/api/src/modules/agent/settings-shared.ts": "48e6e70f2e39d730bea8ce1a3f0d44c5d7cbaa14e59ddac19b418f4d2d6ac2e1",
+    "apps/api/src/modules/autoresponse/__tests__/autoresponse.router.policies.test.ts": "f957bdeae6f286675ac70e7fc9f3a2166d77a50f503dac1704d68b6a51a090a0",
+    "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesContent.tsx": "a3e4c00efaaa2833efccf0845e77e6bdd7adad61261919e1149fa3e168867a33",
+    "apps/web/src/app/agent-approvals/approval-policies/ApprovalPoliciesLoading.tsx": "e11cfda2bfb23d5c8715d58a032724d96e04dc57797b760bff2f7584860aa3c4",
+    "apps/web/src/app/agent-approvals/approval-policies/__tests__/ApprovalPoliciesContent.test.tsx": "00558f562197b8fcac45aaf776e70cc9fba8dcac67c87a4ab6fdb6ea5ab950e0",
+    "apps/web/src/app/agent-approvals/approval-policies/__tests__/page.test.tsx": "74ca19978ae97c0b68ea7094119650de92361b7ebd77b8208406f8916c298259",
+    "apps/web/src/app/agent-approvals/approval-policies/components/AssignmentsEditor.tsx": "58fc6fe04636b6136cfc91c5d989979e5a141eb67108c1b8222fac3c9733ce4b",
+    "apps/web/src/app/agent-approvals/approval-policies/components/EffectiveRules.tsx": "3758025f7fd3ff3719a728ab049f39a86a4e072c2706247d4cc354e11eed5dec",
+    "apps/web/src/app/agent-approvals/approval-policies/components/PolicyCard.tsx": "ae61083813e9875b18ba494dde0414cec79bbad4d8229b508e75c0e90e757e9a",
+    "apps/web/src/app/agent-approvals/approval-policies/components/PolicyDialog.tsx": "5665035e6e7773dfa505dd8d1cb6691350fa9b76c44321744be1eb7f1fe4f73d",
+    "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/AssignmentsEditor.test.tsx": "7fad226f9fb1bbedcfe99a0ab8aea0a352851d0f6f21b5afa7c271cc9d646e55",
+    "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/EffectiveRules.test.tsx": "3a9aeb9b611e7d9ba932601498be507e8b7715cc8561298bbc9a6dc4980fb730",
+    "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/PolicyCard.test.tsx": "205cf7b8f71b242def54e500ee68e6e1dccb7ae2fcda81f84ad9a4c87bdd09e2",
+    "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/PolicyDialog.test.tsx": "f3c866e8d96d61cfcfd8552175e4d425bdf7efb442cef1afbbb5d82b52eb83b6",
+    "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/fixtures.ts": "e2e8861de91f739ee908c3f8d6aa9c8971c27aeed18cee5e659157ad46613dfa",
+    "apps/web/src/app/agent-approvals/approval-policies/components/__tests__/policy-model.test.ts": "5f0511e9beb7e2f0d20626e2e1135353c58bd5f764934eaebe02bdf2500c8327",
+    "apps/web/src/app/agent-approvals/approval-policies/components/policy-model.ts": "23ee572244b6e48dfa6b47b1c9c9b3c009d899a95416d403a81d46d3de346147",
+    "apps/web/src/lib/__tests__/color-tokens.test.ts": "1d8150223d26d28960546893bc48c4485bd833aa3a63eaf082b2eff5106090cf",
+    "apps/web/src/lib/color-tokens.ts": "895f2c9c8b4b5b512fb86b72513bd9637aa0780339e3cba8124fa3f9c30ab8ef",
+    "tests/integration/approval-policies.test.ts": "781993abca40fa6dc71eec4f2351c8b4841027014d845e7a91821e0aaa55bf80",
+    "docs/architecture/adr/ADR-079-tenant-approval-policies.md": "74fc8c6c649a5cda810b46eba757d612482fd7c7f2579842775b73dd62679d91",
+    "artifacts/coverage/PG-198-before.json": "79f3208912852900185806c9a45ad021dd669ed37e3e58d384fff3c9647b0fdc",
+    ".specify/sprints/sprint-18/context/PG-198/PG-198-consensus-rerun.md": "28e500b01148f7e9ca9747aaa931cc4f79ccaa199db7c81723923b46e6ca5e1f",
+    ".specify/sprints/sprint-18/context/PG-198/PG-198-exploration.md": "27679b75e45c3cd49ae76a7091bd15b87b1d9c799b6347d6cd2906b494511308",
+    ".specify/sprints/sprint-18/context/PG-198/PG-198-open-question.md": "408862f61902a661afa5b8b31dcba7ea67f49d48d6ee8c9d7784593e3aa32b89",
+    ".specify/sprints/sprint-18/context/PG-198/PG-198-owner-ruling.md": "f30db5288242de90438d46426a2495b9eab10d60f4e75a2df11d15ecf2e9d6f6",
+    "packages/domain/src/autoresponse/AutoResponseDraftRepository.ts": "5889635ea0610bf2d9b675a4ed1ef6ca0ef338091bd271c98bbff4a6ec29d9c3",
+    "packages/domain/src/autoresponse/__tests__/AutoResponseDraft.test.ts": "2fa52c58f00b5ecb173d87894ccb0ad4ebc90bbcf5e26c168060967ff03afda2",
+    "packages/domain/src/autoresponse/index.ts": "f29b46b9047e62d69a883ddacc5a9f7c89c8e168cce2ff9728e074a7e3fc0590",
+    "packages/domain/src/index.ts": "4488aca8d09192e8cd926d0256b0b5dc9cc9f9da5713f49cb61a082840b018db",
+    "packages/validators/src/auto-response.ts": "62b1b5c1dcc064905803c647fc060fc2204f3cb5c94d5e61eb1435ae587afb61",
+    "packages/validators/src/common.ts": "f6ea2ef3d093fd875fc7bb29cd3c019a6eba61c20737fc87cc5b5686f6bec08b",
+    "packages/validators/src/index.ts": "fe8edb20f373c9a755f6736973a397d1c5e503bec158131f1447f5258bf60899",
+    "packages/db/prisma/schema.prisma": "9254b37db31422dbe2f5375afc0ad68f2a920234e62d91229b4261bbaaae7637",
+    "packages/db/src/index.ts": "4214c459341b2bbfef695921632384e33b72f40110054229c0973aad135bd2e5",
+    "packages/adapters/src/repositories/PrismaAutoResponseDraftRepository.ts": "12ddc3c43979b004ce549d7dc7567f05855cabb4e3801842cfe0e604623641d6",
+    "packages/adapters/src/repositories/__tests__/PrismaAutoResponseDraftRepository.additional.test.ts": "52d92646c2399b3adc599cd7912b655c697c8036bac5984f2b75d62d0be59193",
+    "packages/adapters/src/repositories/__tests__/PrismaAutoResponseDraftRepository.supplementary.test.ts": "6816bcebf5c344176fff151010085fbae74c2f7215498c84eeeb01bd9f342fdb",
+    "packages/adapters/src/repositories/__tests__/PrismaAutoResponseDraftRepository.test.ts": "75b186948eb612794dd166970babaddadd2a203f74a497f665adc570e797f437",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "9c90d6385376086c0f27881d6529334658ff71c89806bfd16847b6ff36421f21",
+    "apps/api/src/agent/__tests__/approval-workflow.supplementary.test.ts": "51106deeb9173fba4db4c9637fe4f6b6117f9665f200a1d057fc4b05f5f9d35d",
+    "apps/api/src/agent/__tests__/approval-workflow.test.ts": "15041b13145944a74d67d5fd34cea39d2718940d2a8335bd846e35a9a32e17cb",
+    "apps/api/src/agent/__tests__/prisma-action-store.test.ts": "aa859fd37da96d97a66fcbe762925efa41d469de2832749066a2b08a7036d9c1",
+    "apps/api/src/agent/__tests__/tools.test.ts": "dc09fc8efb848d812f2edbe88389d7b870aa3ce033e6ba4a26cf38aced1f0dc5",
+    "apps/api/src/agent/approval-workflow.ts": "b8214739423c5ef205fa3e761ba41a6c2a5b25e7b8ee9cb543352299f6666a1a",
+    "apps/api/src/agent/prisma-action-store.ts": "c71d14ae6b48ec0520e2845f895a0d8087ebf9a8378cd489ea152a8989442ec6",
+    "apps/api/src/agent/tools/create.ts": "fabbfb32d499a31fe1d7a9d1f255293d10f40f38eab92025460125233d19d280",
+    "apps/api/src/agent/tools/draft-message.ts": "32869f5faddd7fb9e8c96ae512cff81b1e962e5989c8726706d09c59cbc74275",
+    "apps/api/src/agent/tools/update.ts": "37c732c612fe43152ebefa4e1e078a0e0e71e48cc7d6d0f4704c3f8101273ba9",
+    "apps/api/src/agent/types.ts": "4cec2b844df62abfa18009e34b00afa2296914596657f9a2b073e004d1dcd114",
+    "apps/api/src/http-server.ts": "8a416290c80ba99a61d9abd37de357feb99579c32a5f5c3fb45cddeb41989f46",
+    "apps/api/src/main.test.ts": "cee53a93032b73af6cbda42b26d1d996e8daa2d5caf60e215de02329fce4af7b",
+    "apps/api/src/main.ts": "c7fdac0ea01494f9f96deb6716e836d4729ae9b9c862dfa4638edcaa1b3c8763",
+    "apps/api/src/modules/agent/__tests__/agent.router.test.ts": "e189a9e562832024cbd6de574f8cef5fc68762d9e6e415d215677f17750ad42a",
+    "apps/api/src/modules/agent/agent.router.ts": "13afb0ad6a78794e8b1858f5a92ac71ba77da8ea1c626d027c2ff2c80404234d",
+    "apps/api/src/modules/autoresponse/__tests__/autoresponse.router.additional.test.ts": "9ae0fe5249352c053f1b60615d2393e80540435ed59e5fd4527a8e7aae28d6ed",
+    "apps/api/src/modules/autoresponse/__tests__/autoresponse.router.caller.test.ts": "aeefedd23ba47c572ede94715d6081d4fc423cf11fb58d9685c151398fcb744a",
+    "apps/api/src/modules/autoresponse/autoresponse.router.ts": "7fdcf9543e440dc0ce4c7cad94cd6faf551a195f443dd050512c7c6470ad8139",
+    "apps/api/src/router.ts": "5a77284aaa26cadbade7934d32c7838bd480611e21783cef090f1a96fda54d98",
+    "apps/ai-worker/src/chains/auto-response.chain.test.ts": "0d8ef72c76f040d842f749d0a56c1f9b178a65d5a74ab520fca2596ff6ded179",
+    "apps/ai-worker/src/chains/auto-response.chain.ts": "1fb1e02f8f9961a423e1b78bdb43480f8c77ae4fa6e57969e270357971affc7c",
+    "apps/web/src/app/accounts/(list)/territory-mapping/components/territory-colors.ts": "6309e87e8eeae3af2e0e056f7e84f0521f8aa8a75f740f3ccccd2ad809759e8a",
+    "apps/web/src/app/agent-approvals/approval-policies/page.tsx": "024610c735dcee4b11b3fe8872c09e20a7ee6481cc3cee7a0bd107a960944d5b",
+    "apps/web/src/app/agent-approvals/preview/__tests__/page.test.tsx": "73ff98537ebd514710b5b6628e582331d943798bda4c1afaa56b32524755b39f",
+    "apps/web/src/app/agent-approvals/preview/page.tsx": "e521f0cce55d526a62c12371cbd0f572464540f0b6f335ca6463db7ce2dae159",
+    "apps/web/src/components/shared/page-header.tsx": "07b0a01451095f4689928d83daacd7a1ed315aa3ef0dfde53c2eb9cfd98e9484",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "0d5e4ac64ecefad419d04f2f5156295b50875b22f8a9d916a71baf433604d1bc",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv": "020651e2518fe264ee72654c1412ed9b97b9eb1889fc4593cbf9a4a74326f566",
+    "docs/architecture/adr/README.md": "d91f0422a3dd4104e3dfb73a85b168bdd607a42b239a95eb664244bf3da57c00",
+    "docs/architecture/diagrams/ai-output-review-dependency-chain.md": "56a6f0cbf83f22faa582583ee5d81ad491c774c42b9cc189c7bf529fd9a22c84",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "42df34cb21fc868dcf35200557377efee8191424898029bda04b925af2f2ef3c",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "d5ce83413a8aac6b87708a7c8364e153050317232a894efeb1d8c27b5e4b4bdd",
+    "docs/design/information-architecture.md": "d2b10b993efb10c7b718c3124242349fe709353db09648c12a8d5563f86b3e3a",
+    "docs/design/navigation-reachability-audit.md": "04d781fa4da3df37779c41fccd021dafd71cf950d4718b845f7b1c5f677736e8",
+    "docs/design/page-registry.md": "9f095671ce599cf18a8fe79aafe3081322a1df7a6ddbc056ece2166dd96d3dc2",
+    "docs/design/sitemap.md": "79b54678df419177a4b2331b76610cac88f4e36bbd12681692c2ce808a1d5d49",
+    "docs/design/ui-flow-mapping.md": "daa34908ca74b8e47514a9cea259c34d6b7c589ab59be817ee832bff8422bf48",
+    "docs/planning/prd-module-settings.md": "1b8490174ed99413134525744f4435ddccd9194d4483feffe4f61b1776788518",
+    "artifacts/metrics/debt-ledger.yaml": "c9ac4be8e1a061ecc83e0d74c93b822592cc2872bd5f668944615da2b76903b8",
+    ".specify/sprints/sprint-18/attestations/PG-198/task-tracking.json": "4ea13a3a559d473b76bd45a91f558f638a88e350995e6cd42e7f6618a7a66a72",
+    "artifacts/lighthouse/PG-198/path-a-approval-policies.json": "f986429e4e142bb8208324f6e1ebb202e091f83c6e3031ca9416c59b8ad6e860",
+    "artifacts/lighthouse/PG-198/approval-policies-auth.report.json": "7c7e45d9c3d2bd9e102b6297fd451fab9a942858681783721247ba7fb06cdd95"
+  },
+  "environment": {
+    "os": "win32 (Windows 11 Pro 10.0.26200)",
+    "node_version": "v22.14.0",
+    "git_commit": "e2f0e78cc",
+    "branch": "agent/PG-198-approval-policies"
+  },
+  "notes": "Verdict COMPLETE since 2026-10-19 (see the authenticated Lighthouse note at the end). Originally NEEDS_HUMAN: two gates were open, and neither can be closed by this lane:\n(1) Gates 13 and 14 Lighthouse BLOCK (rc=1): KPI met:false, and sprint-18 already has 2 unapproved waivers (PG-180, PG-189).\nNo approver is named; the owner decides between an authenticated run and a waiver (lighthouse_waiver_approved_by).\n(2) Gate 4b push: the runner runs pre-ship and pushes. This attestation was written before the push, which is a\ndeliberate deviation from the exec-attestation precondition. It is acceptable only because the verdict is NOT COMPLETE.\nFull package suites, each after its package's last commit: domain 2981, validators 2567, db 208+14 skipped, adapters 2971,\napi 7441+18 skipped (13:40Z at HEAD), ai-worker 2212 (exit 1 is the pre-existing #878 teardown), web 12641 (07:38Z),\nintegration 24/24 (13:42Z).\nCoverage AFTER (attestations/PG-198/coverage-after.json): autoresponse.router lines 75.63->93.99, agent.router branches\n68.96->86.44; documented small negatives; no BLOCK.\nSTOAs: foundation, domain, security, quality, intelligence all PASS at b1fa75033 (execution/PG-198/run-20261013T000654Z/matop).\nCodex review: round 5 PASS, 0 findings. Plan-reviewer: iteration 7 APPROVE.\nTDD: RED observed pre-implementation for Phase A; retroactive RED (pre-fix sources) for later fixes, the last three\nre-observed 14:34-14:35Z (tdd-evidence.md).\nProduction: migrations 20261016120000_approval_policies and 20261016120100_agent_actions_pending_sweep_idx (CREATE INDEX CONCURRENTLY) must be applied to production before\nthis code ships. That is the owner's step.\nAC-017: TagsTab N/A (colorToken per policy, owner ruling Q4=B).\nNav wiring: sidebar config apps/web/src/components/sidebar/configs/agent-approvals.ts:200-205 links\n/agent-approvals/approval-policies; check-nav-wiring.mjs PG-198 exit 0.\nFollow-ups filed: #891 (rollback actor, pre-existing), #892 (timeline 0.85 confidence, pre-existing); open: #856 #857 #883 #890 (appointments part) #878 #905.\nPost-merge (2026-10-16, main 9ddaa23d3 merged as 1e8e9f504). Commits after the validation run above:\n- ADR renumbered 077 to 079 (main holds ADR-075..078).\n- Migrations renamed 20261013120000/120100 to 20261016120000/120100 (ed751e8fd).\n- cases.router and section-header now carry main's code: PG-204 fixed #872 and the cases part of #890. Their hashes were\n  dropped from artifact_hashes, because they no longer differ from main.\n- The sweep tests' wall-clock fix (4c120845d).\nRe-runs at 4c120845d's code (Node v22.14.0, through the test slot):\n- fresh DB from bootstrapStatements() (scripts/test-db.mjs up): 73 migrations applied; migrate status up to date; migrate diff\n  shows nothing on PG-198 objects (migration-check-c.md).\n- integration approval-policies: 24/24 on that DB (15:33Z).\n- domain: 3017 passed. validators: 2679 passed. db: 224 passed + 14 skipped. adapters: 2982 passed.\n- api: 7700 passed + 18 skipped, 4 failed (15:36Z). The 4 were draft-sweep wall-clock fixtures; after the fix the file\n  passes 30/30 (15:44Z).\n- web: 12841 passed, 1 failed (15:43Z): information-architecture router count. It was fixed to 69, and the IA plus\n  ui-flow-mapping reconciliation tests then passed 7/7.\n- ai-worker: 2245 passed + 10 skipped, rc 0.\n- Codex review vs origin/main at ed751e8fd: PASS, 0 findings, 79 files (15:36Z).\nPre-ship at f74108fd8 (2026-10-16T15:49-16:23Z): 31 of 34 steps passed (unit, integration, coverage, diff-coverage, build, typecheck, lint\nand gitleaks all passed). codex-review FAILED with 1 real MEDIUM finding: regenerate kept the model confidence on text a reviewer\nedited at approval. Fixed in e2f0e78cc, test-first (RED 16:24:25Z, GREEN 16:25:49Z, autoresponse 112/112). Pre-ship is re-run after this\ncommit; its result is reported in the PR, not here.\nThe validation_results above are from b1fa75033 and were not re-run as a block.\nAuthenticated Lighthouse (2026-10-19, rc-tenant856 lane): this closes the NEEDS_HUMAN item, so no waiver is needed.\n- Setup, localhost only: supabase start (isolated project, migrations off), then prisma migrate deploy (77 migrations) into its\n  Postgres. The API runs on :4000 against it and IntelliFlow's test Redis (:6380, db 14). next build plus next start run on :3400\n  with NEXT_PUBLIC_API_URL/SUPABASE_URL pointed at those local services. A local test user was created in Supabase auth; its\n  first sign-in auto-provisioned an ADMIN tenant. onboarding.complete was called once so the welcome modal does not cover the page.\n- Harness fix: lhci-auth.js opened the audited page to set the tokens. The app booted without a session, redirected to /login\n  and could clear them, so 2 of 3 trial loads audited /login. It now sets them from /robots.txt. After the fix, 4 of 4 loads\n  reached the page, and the Lighthouse final screenshot shows the signed-in Approval Policies page with its effective rules.\n- KPI runs (performance + accessibility only, as the KPI names): perf 0.93/0.95/0.95, a11y 0.96/0.96/0.96; no runtimeError.\n- Outside this KPI, recorded and not hidden (one all-category run, same session: artifacts/lighthouse/PG-198/auth-all-categories/): best-practices 0.74\n  (third-party cookie from m.stripe.com, aspect ratio of the brand wordmark images, inspector issues: all app-wide);\n  SEO 0.69 (is-crawlable only: robots.txt disallows the signed-in app, by design); color-contrast fails on the active\n  AI-settings nav link and the \"New Policy\" buttons (a11y still 0.96); TTI 1.8-2.5 s against the harness's 1 s home-page\n  assertion (PG-166), which is not this task's KPI.\n- Provenance, found and NOT fixed here: check-attestation-provenance.mjs BLOCKs because plan_path and spec_path are not on disk. The block is\n  the same on the attestation as merged. sprint-*/planning/ and sprint-*/specifications/ are gitignored (.specify/sprints/.gitignore),\n  and the PG-198 worktree that held them no longer exists. They were not rebuilt: a reconstruction would not be the reviewed text.\n  The lane transcript (pg-198 session 52a6ff74) and pg198-scratch/ still hold them.",
+  "nav_wiring_confirmed": true,
+  "spec_session_consensus": "UNANIMOUS 4/4 APPROVED on the final spec (/spec-consensus re-run 06:24:48-06:26:47Z: backend-architect, ai-specialist, domain-expert, frontend-lead; threshold 66%); context/PG-198/PG-198-consensus-rerun.md",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer subagent a1dfc51e87d5789fc (iteration 7 APPROVE, after iterations 1-6 REVISE / no verdict, recorded in the plan sign-off table)",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-198-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-198-plan.md"
+}

@@ -71,6 +71,8 @@ vi.mock('next/navigation', () => ({
     refresh: vi.fn(),
     prefetch: vi.fn(),
   }),
+  // PG-205: the list reads `?segment=` from the sidebar links.
+  useSearchParams: () => ({ get: () => null }),
 }));
 
 vi.mock('@/lib/auth/AuthContext', () => ({
@@ -85,6 +87,8 @@ vi.mock('@/lib/api', () => ({
         stats: { invalidate: h.statsInvalidate },
       },
     }),
+    // PG-205: tenant contact types for the Type filter and badges.
+    contactTypes: { listActive: { useQuery: () => ({ data: [] }) } },
     contact: {
       list: {
         useQuery: (input: Record<string, unknown>, opts: Record<string, unknown>) => {

@@ -19,8 +19,30 @@
  * @task IFC-139
  */
 
+import { randomUUID } from 'node:crypto';
 import type { PrismaClient } from '@intelliflow/db';
-import type { PendingAction, ExecutedAction, ApprovalStatus } from './types';
+import { confidenceToPercent } from '@intelliflow/domain';
+import type { PendingAction, ExecutedAction, ApprovalStatus, ExecutionStatus } from './types';
+
+/** Provenance marker (in aiReasoning) for a confidence supplied by the calling agent. */
+const CONFIDENCE_SOURCE_KEY = 'confidenceSource';
+const AGENT_CONFIDENCE = 'agent';
+
+/** An approved action still EXECUTING after this long was interrupted (crash/restart). */
+const INTERRUPTED_AFTER_MS = 5 * 60 * 1000;
+
+/**
+ * A rollback claimed longer ago than this, and neither recorded nor released, was
+ * interrupted (#856). It may be claimed again: the compensations are idempotent.
+ */
+const ROLLBACK_CLAIM_STALE_MS = 5 * 60 * 1000;
+
+/** Claimable: never claimed (or released), or a claim that has gone stale. */
+function rollbackClaimable(proposed: Record<string, unknown> | null, now: number): boolean {
+  if (proposed?.rollbackAvailable === true) return true;
+  const claimedAt = proposed?.rollbackClaimedAt;
+  return typeof claimedAt === 'number' && claimedAt < now - ROLLBACK_CLAIM_STALE_MS;
+}
 
 // Infer the AgentAction row type from Prisma's findUnique return
 type AgentAction = NonNullable<Awaited<ReturnType<PrismaClient['agentAction']['findUnique']>>>;
@@ -52,13 +74,20 @@ export class PrismaAgentActionStore {
   // ---------------------------------------------------------------------------
 
   async add(action: PendingAction): Promise<void> {
+    const confidenceScore = this.toConfidenceScore(action.confidence);
     await this.prisma.agentAction.create({
       data: {
         id: action.id,
         actionType: action.toolName,
         description: action.preview.summary,
-        aiReasoning: JSON.stringify(action.metadata ?? {}),
-        confidenceScore: this.impactToConfidence(action.preview.estimatedImpact),
+        // The marker tells real model confidence apart from legacy impact-derived scores.
+        aiReasoning: JSON.stringify(
+          confidenceScore === null
+            ? (action.metadata ?? {})
+            : { ...action.metadata, [CONFIDENCE_SOURCE_KEY]: AGENT_CONFIDENCE }
+        ),
+        // RF-2 (#854): the caller's real confidence (0-100) or NULL — never derived from impact.
+        confidenceScore,
         status: STATUS_TO_DB[action.status] as any,
         entityId: (action.input.entityId as string) ?? action.id,
         entityType: action.entityType.toLowerCase(),
@@ -77,8 +106,13 @@ export class PrismaAgentActionStore {
     });
   }
 
-  async get(id: string): Promise<PendingAction | undefined> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  /**
+   * #883: every by-id access is scoped by tenant. `tenantId` defaults to the store's
+   * default tenant (background callers); request paths pass the caller's tenant. A row
+   * of another tenant is indistinguishable from a missing one, and is never written.
+   */
+  async get(id: string, tenantId: string = this.tenantId): Promise<PendingAction | undefined> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return undefined;
 
     const action = this.toPendingAction(row);
@@ -86,15 +120,18 @@ export class PrismaAgentActionStore {
     // Check expiry
     if (action.status === 'PENDING' && action.expiresAt < new Date()) {
       action.status = 'EXPIRED';
-      await this.update(action);
+      await this.update(action, tenantId);
     }
 
     return action;
   }
 
-  async update(action: PendingAction): Promise<void> {
-    await this.prisma.agentAction.update({
-      where: { id: action.id },
+  async update(
+    action: PendingAction,
+    tenantId: string = action.tenantId ?? this.tenantId
+  ): Promise<void> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: { id: action.id, tenantId },
       data: {
         status: STATUS_TO_DB[action.status] as any,
         previousState: action.input as any,
@@ -103,12 +140,15 @@ export class PrismaAgentActionStore {
           action.status === 'APPROVED' || action.status === 'REJECTED' ? new Date() : undefined,
       },
     });
+    if (result.count === 0) {
+      throw new Error(`Agent action not found in tenant: ${action.id}`);
+    }
   }
 
-  async delete(id: string): Promise<boolean> {
+  async delete(id: string, tenantId: string = this.tenantId): Promise<boolean> {
     try {
-      await this.prisma.agentAction.delete({ where: { id } });
-      return true;
+      const result = await this.prisma.agentAction.deleteMany({ where: { id, tenantId } });
+      return result.count > 0;
     } catch {
       return false;
     }
@@ -124,7 +164,8 @@ export class PrismaAgentActionStore {
   async findByUser(userId: string, tenantId: string = this.tenantId): Promise<PendingAction[]> {
     const rows = await this.prisma.agentAction.findMany({
       where: {
-        agentId: userId,
+        // PG-198: the requester's own actions plus those escalated to this user.
+        OR: [{ agentId: userId }, { escalatedTo: userId }],
         status: 'PENDING_APPROVAL' as any,
         expiresAt: { gt: new Date() },
         tenantId,
@@ -178,13 +219,90 @@ export class PrismaAgentActionStore {
     return result.count;
   }
 
+  /**
+   * PG-198 (RF-1, #853): atomically take a pending, unexpired action for execution.
+   * Only one caller can win (status-guarded update), so an action never runs twice.
+   */
+  async claimForExecution(
+    action: PendingAction,
+    reviewedBy: string,
+    now: Date,
+    executedInput: Record<string, unknown> = action.input
+  ): Promise<boolean> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id: action.id,
+        tenantId: action.tenantId ?? this.tenantId,
+        status: 'PENDING_APPROVAL' as any,
+        expiresAt: { gt: now },
+      },
+      data: {
+        status: 'APPROVED' as any,
+        reviewedAt: now,
+        reviewedBy,
+        // The input that is about to run is recorded atomically with EXECUTING, so an
+        // interrupted execution still shows what actually ran.
+        proposedState: { ...action.preview, executionStatus: 'EXECUTING', executedInput } as any,
+      },
+    });
+    return result.count === 1;
+  }
+
+  /**
+   * PG-198: reject a still-pending action with the same status guard the approval
+   * claim uses, so an approval and a rejection can never both win.
+   */
+  async rejectIfPending(
+    action: PendingAction,
+    reviewedBy: string,
+    reason: string | undefined,
+    now: Date
+  ): Promise<boolean> {
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id: action.id,
+        tenantId: action.tenantId ?? this.tenantId,
+        status: 'PENDING_APPROVAL' as any,
+      },
+      data: {
+        status: 'REJECTED' as any,
+        reviewedAt: now,
+        reviewedBy,
+        feedback: reason ?? null,
+      },
+    });
+    return result.count === 1;
+  }
+
+  /**
+   * Approved actions whose execution never finished (left EXECUTING by a crash),
+   * requested or approved by this user. They are shown, never re-run.
+   */
+  async findInterrupted(
+    userId: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction[]> {
+    const rows = await this.prisma.agentAction.findMany({
+      where: {
+        tenantId,
+        status: 'APPROVED' as any,
+        proposedState: { path: ['executionStatus'], equals: 'EXECUTING' },
+        reviewedAt: { lt: new Date(Date.now() - INTERRUPTED_AFTER_MS) },
+        OR: [{ agentId: userId }, { reviewedBy: userId }],
+      },
+      orderBy: { reviewedAt: 'desc' },
+      take: 50,
+    });
+    return rows.map((r) => this.toExecutedAction(r));
+  }
+
   // ---------------------------------------------------------------------------
   // ExecutedActionsStore API
   // ---------------------------------------------------------------------------
 
   async addExecuted(action: ExecutedAction): Promise<void> {
-    await this.prisma.agentAction.update({
-      where: { id: action.id },
+    const result = await this.prisma.agentAction.updateMany({
+      where: { id: action.id, tenantId: action.tenantId ?? this.tenantId },
       data: {
         status: 'APPROVED' as any,
         reviewedAt: action.executedAt ?? new Date(),
@@ -192,6 +310,10 @@ export class PrismaAgentActionStore {
         feedback: action.approval?.reason,
         proposedState: {
           ...(action.preview as any),
+          executionStatus: action.executionStatus,
+          // The input that actually ran (approver modifications included); the
+          // original proposal stays in previousState.
+          executedInput: action.input,
           executionResult: action.executionResult,
           executionError: action.executionError,
           rollbackAvailable: action.rollbackAvailable,
@@ -199,15 +321,24 @@ export class PrismaAgentActionStore {
         } as any,
       },
     });
+    if (result.count === 0) {
+      throw new Error(`Agent action not found in tenant: ${action.id}`);
+    }
   }
 
-  async getExecuted(id: string): Promise<ExecutedAction | undefined> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  async getExecuted(
+    id: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction | undefined> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row || row.status !== ('APPROVED' as any)) return undefined;
     return this.toExecutedAction(row);
   }
 
-  async findByRollbackToken(token: string): Promise<ExecutedAction | undefined> {
+  async findByRollbackToken(
+    token: string,
+    tenantId: string = this.tenantId
+  ): Promise<ExecutedAction | undefined> {
     // Rollback token is stored inside proposedState JSON (no generated column yet).
     // Filter on the JSON path directly (proposedState->>"rollbackToken") so the DB
     // returns only the matching row(s) — this is correctness-critical: without it,
@@ -220,31 +351,129 @@ export class PrismaAgentActionStore {
     const rows = await this.prisma.agentAction.findMany({
       where: {
         status: 'APPROVED' as any,
-        tenantId: this.tenantId,
+        tenantId,
         proposedState: { path: ['rollbackToken'], equals: token },
       },
       orderBy: { createdAt: 'desc' },
       take: 500,
     });
 
+    const now = Date.now();
     for (const row of rows) {
       const proposed = row.proposedState as Record<string, unknown> | null;
-      if (proposed?.rollbackToken === token && proposed?.rollbackAvailable) {
+      if (proposed?.rollbackToken === token && rollbackClaimable(proposed, now)) {
         return this.toExecutedAction(row);
       }
     }
     return undefined;
   }
 
-  async disableRollback(id: string): Promise<void> {
-    const row = await this.prisma.agentAction.findUnique({ where: { id } });
+  async disableRollback(id: string, tenantId: string = this.tenantId): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
     if (!row) return;
 
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     proposed.rollbackAvailable = false;
-    await this.prisma.agentAction.update({
-      where: { id },
+    proposed.rollbackClaimedAt = null;
+    await this.prisma.agentAction.updateMany({
+      where: { id, tenantId },
       data: { proposedState: proposed as any },
+    });
+  }
+
+  /**
+   * Take the rollback for one caller (#856). The update matches only while the rollback is
+   * available or its previous claim is stale, so of two concurrent requests exactly one
+   * runs the compensation. The claim time lets an interrupted request's claim be retaken.
+   *
+   * Returns the claim id, or null when not claimed. Release and record are fenced on it, so
+   * a request whose stale claim was retaken cannot release or overwrite the newer claim.
+   */
+  async claimRollback(
+    id: string,
+    tenantId: string,
+    token: string,
+    now: number = Date.now()
+  ): Promise<string | null> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row) return null;
+    const claimId = randomUUID();
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    const result = await this.prisma.agentAction.updateMany({
+      where: {
+        id,
+        tenantId,
+        status: 'APPROVED' as any,
+        proposedState: { path: ['rollbackToken'], equals: token },
+        OR: [
+          { proposedState: { path: ['rollbackAvailable'], equals: true } },
+          { proposedState: { path: ['rollbackClaimedAt'], lt: now - ROLLBACK_CLAIM_STALE_MS } },
+        ],
+      },
+      data: {
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: false,
+          rollbackClaimedAt: now,
+          rollbackClaimId: claimId,
+        } as any,
+      },
+    });
+    return result.count === 1 ? claimId : null;
+  }
+
+  /** Give a claimed rollback back after a compensation that left the target as it was. */
+  async releaseRollback(id: string, tenantId: string, claimId: string): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row || row.status !== ('APPROVED' as any)) return;
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    await this.prisma.agentAction.updateMany({
+      where: {
+        id,
+        tenantId,
+        status: 'APPROVED' as any,
+        proposedState: { path: ['rollbackClaimId'], equals: claimId },
+      },
+      data: {
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: true,
+          rollbackClaimedAt: null,
+          rollbackClaimId: null,
+        } as any,
+      },
+    });
+  }
+
+  /** Record that the action's effect was undone: by whom, why, and what was restored. */
+  async markRolledBack(
+    id: string,
+    tenantId: string,
+    claimId: string,
+    rollback: {
+      rolledBackBy: string;
+      rolledBackAt: Date;
+      reason?: string;
+      restoredState?: Record<string, unknown>;
+    }
+  ): Promise<void> {
+    const row = await this.prisma.agentAction.findFirst({ where: { id, tenantId } });
+    if (!row) return;
+    const proposed = (row.proposedState as Record<string, unknown>) ?? {};
+    // Fenced like release: a superseded claim's holder leaves the newer claim to record it.
+    await this.prisma.agentAction.updateMany({
+      where: { id, tenantId, proposedState: { path: ['rollbackClaimId'], equals: claimId } },
+      data: {
+        status: 'ROLLED_BACK' as any,
+        rolledBackAt: rollback.rolledBackAt,
+        rolledBackBy: rollback.rolledBackBy,
+        rollbackReason: rollback.reason ?? null,
+        proposedState: {
+          ...proposed,
+          rollbackAvailable: false,
+          rollbackRestoredState: rollback.restoredState,
+        } as any,
+      },
     });
   }
 
@@ -263,9 +492,17 @@ export class PrismaAgentActionStore {
   // Mappers
   // ---------------------------------------------------------------------------
 
-  private toPendingAction(row: AgentAction): PendingAction {
+  /**
+   * Execution fields ride along so a read by id (the detail view) shows an interrupted or
+   * failed execution the same way the queue does. `update()` never writes them back.
+   */
+  private toPendingAction(
+    row: AgentAction
+  ): PendingAction &
+    Pick<ExecutedAction, 'executionStatus' | 'executionResult' | 'executionError'> {
     const proposed = (row.proposedState as Record<string, unknown>) ?? {};
     const input = (row.previousState as Record<string, unknown>) ?? {};
+    const metadata = row.aiReasoning ? this.safeParseJson(row.aiReasoning) : undefined;
 
     return {
       id: row.id,
@@ -279,14 +516,24 @@ export class PrismaAgentActionStore {
         changes: (proposed.changes as any[]) ?? [],
         affectedEntities: (proposed.affectedEntities as any[]) ?? [],
         warnings: (proposed.warnings as string[]) ?? [],
-        estimatedImpact: this.confidenceToImpact(row.confidenceScore),
+        estimatedImpact: this.toImpact(proposed.estimatedImpact),
       },
+      // Legacy rows (before PG-198) hold an impact-derived score: not a confidence.
+      confidence:
+        row.confidenceScore !== null && metadata?.[CONFIDENCE_SOURCE_KEY] === AGENT_CONFIDENCE
+          ? row.confidenceScore / 100
+          : undefined,
+      escalatedAt: row.escalatedAt ?? undefined,
+      escalatedTo: row.escalatedTo ?? undefined,
       status: STATUS_FROM_DB[row.status] ?? 'PENDING',
       createdAt: row.createdAt,
       expiresAt: row.expiresAt,
       createdBy: row.agentId,
       agentSessionId: row.agentName,
-      metadata: row.aiReasoning ? this.safeParseJson(row.aiReasoning) : undefined,
+      metadata,
+      executionStatus: proposed.executionStatus as ExecutionStatus | undefined,
+      executionResult: proposed.executionResult,
+      executionError: proposed.executionError as string | undefined,
     };
   }
 
@@ -296,6 +543,8 @@ export class PrismaAgentActionStore {
 
     return {
       ...pending,
+      input: (proposed.executedInput as Record<string, unknown> | undefined) ?? pending.input,
+      executionStatus: proposed.executionStatus as ExecutionStatus | undefined,
       executedAt: row.reviewedAt ?? undefined,
       executionResult: proposed.executionResult,
       executionError: proposed.executionError as string | undefined,
@@ -310,26 +559,22 @@ export class PrismaAgentActionStore {
         : undefined,
       rollbackAvailable: (proposed.rollbackAvailable as boolean) ?? false,
       rollbackToken: proposed.rollbackToken as string | undefined,
+      rollbackClaimedAt:
+        typeof proposed.rollbackClaimedAt === 'number' ? proposed.rollbackClaimedAt : undefined,
     };
   }
 
-  private impactToConfidence(impact?: 'LOW' | 'MEDIUM' | 'HIGH'): number {
-    switch (impact) {
-      case 'LOW':
-        return 30;
-      case 'MEDIUM':
-        return 60;
-      case 'HIGH':
-        return 90;
-      default:
-        return 50;
-    }
+  /** 0..1 → whole percent (floored, so 0.899 never reads as 90); invalid/absent → null. */
+  private toConfidenceScore(confidence: unknown): number | null {
+    const percent = confidenceToPercent(confidence);
+    // Floor, never round up (0.899 -> 89), but absorb float error: 0.57 * 100 is
+    // 56.99999999999999 in binary floating point and must store 57.
+    return percent === null ? null : Math.floor(percent + 1e-9);
   }
 
-  private confidenceToImpact(confidence: number): 'LOW' | 'MEDIUM' | 'HIGH' {
-    if (confidence >= 70) return 'HIGH';
-    if (confidence >= 40) return 'MEDIUM';
-    return 'LOW';
+  /** The impact stored with the preview; anything else is unknown. */
+  private toImpact(value: unknown): 'LOW' | 'MEDIUM' | 'HIGH' | undefined {
+    return value === 'LOW' || value === 'MEDIUM' || value === 'HIGH' ? value : undefined;
   }
 
   private inferActionType(actionType: string): 'SEARCH' | 'CREATE' | 'UPDATE' | 'DELETE' | 'DRAFT' {

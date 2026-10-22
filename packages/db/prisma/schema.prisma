@@ -125,6 +125,7 @@ model Tenant {
   agentAvailabilities  AgentAvailability[]        @ignore
   routingRules         RoutingRule[]              @ignore
   accountTerritories   AccountTerritory[]         @ignore
+  approvalPolicies     ApprovalPolicy[]           @ignore
   routingAudits        RoutingAudit[]             @ignore
   notifications        Notification[]             @ignore
   notifPreferences     NotificationPreference[]   @ignore
@@ -154,6 +155,7 @@ model Tenant {
   contactRequiredFields  ContactRequiredField[]   @ignore
   contactTags            ContactTag[]             @ignore
   contactAutomationSettings ContactAutomationSetting[] @ignore
+  contactTypes           ContactType[]            @ignore // PG-205
   dealWinLossReasons     DealWinLossReason[]      @ignore
   dealScoringRules       DealScoringRule[]        @ignore
   dealDuplicateRules     DealDuplicateRule[]      @ignore
@@ -185,9 +187,13 @@ model Tenant {
   caseRequiredFields        CaseRequiredField[]       @ignore
   caseTags                  CaseTag[]                 @ignore
   caseAutomationSettings    CaseAutomationSetting[]   @ignore
+  caseTypes                 CaseType[]                @ignore // PG-204
   appointmentSettings       AppointmentSettings[]     @ignore
+  availabilityHours              AvailabilityHour[]               @ignore // PG-202
+  availabilityClosures           AvailabilityClosure[]            @ignore // PG-202
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
+  reportScheduleTags        ReportScheduleTag[]       @ignore
   taskSettings              TaskSettings[]            @ignore
   toolEnablements           TenantToolEnablement[]    // H6: per-tenant tool on/off
   aiConfigs                 TenantAIConfig[]           // M8/M9: per-tenant LLM tier overrides
@@ -222,19 +228,29 @@ model TenantToolEnablement {
 // M8/M9 — Per-tenant LLM tier override for createLLM(purpose, tier)
 // P2.8 — rateLimitPerMinute added: per-tenant rate-limit override; null falls back to the
 //        global AI_RATE_LIMIT_PER_MINUTE env var (see apps/ai-worker/src/config/ai.config.ts).
+// PG-199 (ADR-082) — model pin, ordered fallbacks and monthly cost ceiling per purpose;
+//        tier is nullable (NULL = each caller keeps its own default tier).
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261019120000_tenant_model_config and
+// migrations/20261019120100_tenant_ai_config_rls — do not drop in a diff):
+//   - CHECKs on purpose, tier, temperature, maxTokens, monthlyCostCeilingCents, fallbackModelIds
+//   - RLS policy tenant_ai_config_tenant_isolation
 model TenantAIConfig {
-  id                 String   @id @default(cuid())
-  tenantId           String
-  purpose            String   // "scoring" | "qualification" | "email" | "reasoning" | "structured" | "rag"
-  tier               String   // "free" | "standard" | "premium"
-  temperature        Float?
-  maxTokens          Int?
-  rateLimitPerMinute Int?     // P2.8: null = use global env default
+  id                      String   @id @default(cuid())
+  tenantId                String
+  purpose                 String   // "scoring" | "qualification" | "email" | "reasoning" | "structured" | "rag"
+  tier                    String?  // "free" | "standard" | "premium"; NULL = caller default tier (PG-199)
+  temperature             Float?
+  maxTokens               Int?
+  rateLimitPerMinute      Int?     // P2.8: null = use global env default
+  modelId                 String?  // PG-199: catalog model pin (@intelliflow/domain MODEL_CATALOG); NULL = tier default
+  fallbackModelIds        String[] @default([]) // PG-199: ordered fallback catalog ids (<= 3)
+  monthlyCostCeilingCents Int?     // PG-199: per-purpose monthly ceiling in cents; NULL = none, 0 = blocked
   // Absent row = use factory default. A row overrides the default tier for that purpose.
-  createdAt          DateTime @default(now())
-  updatedAt          DateTime @updatedAt
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 
-  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant                  Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, purpose])
   @@index([tenantId])
@@ -525,6 +541,7 @@ model User {
   memberships         TenantMembership[]
   loginGrants         PartnerLoginGrant[]
   accountTerritoryMemberships AccountTerritoryMember[] // PG-197
+  approvalPolicyEscalations   ApprovalPolicy[] @relation("ApprovalPolicyEscalationTarget") // PG-198
 
   @@index([email])
   @@index([role])
@@ -839,6 +856,9 @@ model Contact {
   @@index([tenantId, lastContactedAt])
   // HOME-PERF: home.getAIInsights stale-contact query (ownerId + lastContactedAt)
   @@index([tenantId, ownerId, lastContactedAt])
+  // PG-205: contact type filter / segments / type-in-use count. Built CONCURRENTLY by
+  // migrations/20261017120100_contacts_type_idx (single-statement migration).
+  @@index([tenantId, contactType])
   @@map("contacts")
 }
 
@@ -1507,7 +1527,7 @@ model DealAutomationSetting {
   notifyOnOwnerChange        Boolean @default(false)
   notifyOnStageChange        Boolean @default(false)
   notifyOnHighValueStageMove Boolean @default(false)
-  highValueThreshold         Decimal @db.Decimal(15, 2) @default(50000)
+  highValueThreshold         Decimal @default(50000) @db.Decimal(15, 2)
 
   // AI & Intelligence (defaults FALSE — playbook §7)
   aiDuplicateDetection     Boolean @default(false)
@@ -1600,7 +1620,8 @@ model AgentAction {
   actionType      String            // 'lead_update', 'email_draft', 'deal_stage_change', 'task_create'
   description     String
   aiReasoning     String            @db.Text
-  confidenceScore Int               // 0-100
+  // PG-198 (RF-2): the calling agent's real confidence 0-100, or NULL when none was supplied.
+  confidenceScore Int?              // 0-100
   status          AgentActionStatus @default(PENDING_APPROVAL)
 
   // Entity being affected
@@ -1628,6 +1649,10 @@ model AgentAction {
   rolledBackBy    String?
   rollbackReason  String?
 
+  // PG-198: approval-policy escalation (set once by the approval sweep)
+  escalatedAt     DateTime?
+  escalatedTo     String?
+
   // DBA-002: Multi-tenancy (DB has tenantId NOT NULL)
   tenantId        String
   tenant          Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -1641,6 +1666,67 @@ model AgentAction {
   @@index([tenantId, createdAt])
   @@index([tenantId, status])
   @@map("agent_actions")
+}
+
+// ─── PG-198: Approval Policies ──────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261016120000_approval_policies and
+// migrations/20261016120100_agent_actions_pending_sweep_idx — do not drop in a diff):
+//   - approval_policies_tenant_scope_lower_name_key  UNIQUE ("tenantId", "scope", lower("name"))
+//   - approval_policies_one_default_key              UNIQUE ("tenantId", "scope") WHERE "isDefault"
+//   - CHECKs on scope, colorToken, minReviewerRole, timeout/threshold/escalation ranges
+//   - RLS tenant policies on both tables
+//   - agent_actions_pending_sweep_idx  ("tenantId", "createdAt") WHERE status = 'PENDING_APPROVAL'
+
+/// A tenant approval policy for one approval queue (ADR-079).
+model ApprovalPolicy {
+  id                       String   @id @default(cuid())
+  tenantId                 String
+  tenant                   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name                     String   @db.VarChar(100)
+  description              String?
+  colorToken               String   @default("slate")
+  /// AGENT_TOOL | AUTO_RESPONSE (SQL CHECK; domain APPROVAL_POLICY_SCOPES).
+  scope                    String
+  isDefault                Boolean  @default(false)
+  timeoutMinutes           Int
+  /// USER | SALES_REP | MANAGER | ADMIN (SQL CHECK; domain APPROVER_ROLES).
+  minReviewerRole          String   @default("USER")
+  /// AI auto-approval is opt-in (playbook §7).
+  autoApproveEnabled       Boolean  @default(false)
+  /// Percent 90-99; the model confidence must be strictly above it.
+  autoApproveMinConfidence Int?
+  escalationEnabled        Boolean  @default(false)
+  escalateAfterMinutes     Int?
+  escalationTargetUserId   String?
+  escalationTarget         User?    @relation("ApprovalPolicyEscalationTarget", fields: [escalationTargetUserId], references: [id], onDelete: SetNull)
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  assignments ApprovalPolicyAssignment[]
+
+  // DBA-012: composite targets so assignments carry the policy's tenant and scope
+  @@unique([tenantId, id])
+  @@unique([tenantId, id, scope])
+  @@index([tenantId, scope])
+  @@map("approval_policies")
+}
+
+/// Routes one (agent, action) pair of a queue to a policy; "*" is a wildcard.
+model ApprovalPolicyAssignment {
+  id         String         @id @default(cuid())
+  tenantId   String
+  policyId   String
+  /// Copy of the policy's scope, kept equal by the composite FK.
+  scope      String
+  policy     ApprovalPolicy @relation(fields: [tenantId, policyId, scope], references: [tenantId, id, scope], onDelete: Cascade, onUpdate: Cascade)
+  agentKey   String         @db.VarChar(64)
+  actionType String         @db.VarChar(64)
+  createdAt  DateTime       @default(now())
+
+  @@unique([tenantId, scope, agentKey, actionType])
+  @@index([tenantId, policyId])
+  @@map("approval_policy_assignments")
 }
 
 // ============================================
@@ -2137,6 +2223,9 @@ model Case {
   closedAt     DateTime?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  /// PG-204 — case type applied at creation (ADR-076). Plain scalar: the tenant-consistent
+  /// FK ("tenantId","caseTypeId") -> case_types("tenantId","id") is SQL-only (see CaseType).
+  caseTypeId   String?
 
   // Multi-tenancy
   tenantId    String
@@ -2254,6 +2343,56 @@ model CaseAutomationSetting {
   @@map("case_automation_settings")
 }
 
+// ─── PG-204: Case Types ─────────────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261013120000_case_types, asserted by
+// tests/integration/case-types.test.ts — do not drop in a diff):
+//   - case_types_tenant_lower_name_key   UNIQUE ("tenantId", lower("name"))
+//   - case_types_one_default_key         UNIQUE ("tenantId") WHERE "isDefault"
+//   - cases_tenantId_caseTypeId_fkey     FOREIGN KEY ("tenantId","caseTypeId")
+//                                        REFERENCES case_types("tenantId","id") ON DELETE NO ACTION
+//     (Prisma cannot model an optional relation over the required tenantId)
+//   - CHECKs on colorToken, defaultSlaDays, name, requiredFields, checklist title/sortOrder
+//   - RLS tenant policies on both tables
+
+/// A tenant-defined case type whose defaults are applied when a case is created (ADR-076).
+model CaseType {
+  id              String        @id @default(cuid())
+  tenantId        String
+  tenant          Tenant        @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String        @db.VarChar(100)
+  category        String?       @db.VarChar(60)
+  colorToken      String        @default("slate")
+  defaultPriority CasePriority?
+  defaultSlaDays  Int?
+  requiredFields  String[]      @default([])
+  isActive        Boolean       @default(true)
+  isDefault       Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  checklist CaseTypeChecklistItem[]
+
+  // DBA-012: composite target for tenant-consistent child FKs
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive])
+  @@map("case_types")
+}
+
+/// One resolution-checklist step of a case type; seeded as a CaseTask on case creation.
+model CaseTypeChecklistItem {
+  id         String   @id @default(cuid())
+  tenantId   String
+  caseTypeId String
+  caseType   CaseType @relation(fields: [tenantId, caseTypeId], references: [tenantId, id], onDelete: Cascade)
+  title      String   @db.VarChar(200)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  @@index([tenantId, caseTypeId])
+  @@map("case_type_checklist_items")
+}
+
 /// PG-189 — per-tenant appointment / calendar module settings. Landed alongside
 /// PG-190 to unblock AC-007 after the PG-189 Ralph-loop shipped the router
 /// without the backing schema. See PG-190 attestation notes.
@@ -2270,12 +2409,48 @@ model AppointmentSettings {
   primaryCalendar            Calendar? @relation("AppointmentSettingsPrimaryCalendar", fields: [primaryCalendarId], references: [id], onDelete: SetNull)
   syncExternalCalendars      Boolean   @default(false)
   defaultTimezone            String    @default("UTC")
+  /// PG-202 — NULL = no daily cap. CHECK 1..500 lives in SQL (appointment_settings_maxDailyBookings_check).
+  maxDailyBookings           Int?
+  /// PG-202 — NULL = availability never saved; every booking path keeps its legacy rule (ADR-081).
+  availabilityConfiguredAt   DateTime?
   tenant                     Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   createdAt                  DateTime  @default(now())
   updatedAt                  DateTime  @updatedAt
 
   @@index([primaryCalendarId])
   @@map("appointment_settings")
+}
+
+/// PG-202 — firm-wide weekly working hours: local minutes-of-day in AppointmentSettings.defaultTimezone.
+/// weekday 0 = Sunday. CHECKs (weekday 0-6, 0 <= start < end <= 1440) are SQL-only.
+model AvailabilityHour {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  weekday     Int      @db.SmallInt
+  startMinute Int      @db.SmallInt
+  endMinute   Int      @db.SmallInt
+  createdAt   DateTime @default(now())
+
+  @@unique([tenantId, weekday, startMinute])
+  @@index([tenantId, weekday])
+  @@map("availability_hours")
+}
+
+/// PG-202 — all-day closure, inclusive calendar dates in the firm timezone. DATE columns are read and
+/// written as UTC-midnight Dates; convert with the YYYY-MM-DD string at the boundary, never via local time.
+model AvailabilityClosure {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  startDate DateTime @db.Date
+  endDate   DateTime @db.Date
+  reason    String?  @db.VarChar(200)
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, startDate, endDate])
+  @@index([tenantId, startDate])
+  @@map("availability_closures")
 }
 
 /// PG-187 — per-tenant report defaults. Landed alongside PG-190 to unblock
@@ -2331,6 +2506,11 @@ model ReportTemplate {
 
   tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // PG-201: schedules that deliver this layout (FK ON DELETE NO ACTION).
+  schedules ReportSchedule[]
+
+  // PG-201: target of the tenant-consistent (tenantId, templateId) FK on report_schedules.
+  @@unique([tenantId, id])
   // Uniqueness enforced by partial indexes in migration 20260629000002:
   //   private  -> UNIQUE (tenantId, createdBy, name) WHERE sharingScope='private'
   //   shared   -> UNIQUE (tenantId, name) WHERE sharingScope!='private'
@@ -2338,6 +2518,26 @@ model ReportTemplate {
   @@index([tenantId])
   @@index([createdBy])
   @@map("report_templates")
+}
+
+/// PG-201 — per-tenant tag catalogue for scheduled reports (name + colour token).
+/// Schedules store tag names in `report_schedules.tags` (same model as Account.tags).
+/// SQL-only: UNIQUE (tenantId, lower(name)); CHECK colorToken IN the 18-token palette.
+model ReportScheduleTag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String   @db.VarChar(50)
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("report_schedule_tags")
 }
 
 model CaseTask {
@@ -2351,6 +2551,9 @@ model CaseTask {
   completedAt DateTime?
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt
+  /// PG-204 — order of a step seeded from a case type's resolution checklist (0-based);
+  /// null for tasks added by hand (read order: position nulls last, then dueDate).
+  position    Int?
 
   tenantId    String
   tenant      Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -2541,9 +2744,9 @@ model SLAPolicy {
   tickets                 Ticket[]
   ticketAutomationSettings TicketAutomationSetting[]
 
-  @@index([tenantId])
   // DBA-014: Tenant-scoped name uniqueness
   @@unique([tenantId, name])
+  @@index([tenantId])
   @@map("sla_policies")
 }
 
@@ -3753,11 +3956,11 @@ model EmailTemplate {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([category])
   @@index([isActive])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("email_templates")
 }
 
@@ -4262,12 +4465,12 @@ model RoutingRule {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([isActive])
   @@index([priority])
   @@index([tenantId])
   @@index([tenantId, isActive, priority]) // IFC-030: Active rules by priority for routing
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("routing_rules")
 }
 
@@ -4276,7 +4479,9 @@ model RoutingAudit {
   id          String   @id @default(cuid())
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  ticketId    String
+  ticketId    String   // Lead-routing rows store the lead id here too (back-compat); see leadId.
+  leadId      String?  // #770: set by lead-routing writers; null for ticket-routing rows. Lets a
+                        // reader tell the two kinds of audit apart without the ticketId/details heuristic.
   ruleId      String?
   ruleName    String?
   fromUserId  String?
@@ -4289,6 +4494,7 @@ model RoutingAudit {
   createdAt   DateTime @default(now())
 
   @@index([ticketId])
+  @@index([leadId])
   @@index([toUserId])
   @@index([createdAt])
   @@index([tenantId])
@@ -4319,13 +4525,13 @@ model TicketCategory {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-013: Tenant-scoped category name uniqueness
+  @@unique([tenantId, name])
   @@index([parentId])
   @@index([isActive])
   // DBA-033: Missing slaPolicyId index for SLA policy lookups
   @@index([slaPolicyId])
   @@index([tenantId])
-  // DBA-013: Tenant-scoped category name uniqueness
-  @@unique([tenantId, name])
   @@map("ticket_categories")
 }
 
@@ -4482,12 +4688,12 @@ model BusinessRule {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([entityType])
   @@index([ruleType])
   @@index([isActive])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("business_rules")
 }
 
@@ -4539,11 +4745,11 @@ model DashboardConfig {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([userId])
   @@index([isDefault])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("dashboard_configs")
 }
 
@@ -4591,26 +4797,43 @@ model ReportDefinition {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  // DBA-014: Tenant-scoped name uniqueness
+  @@unique([tenantId, name])
   @@index([category])
   @@index([createdBy])
   @@index([tenantId])
-  // DBA-014: Tenant-scoped name uniqueness
-  @@unique([tenantId, name])
   @@map("report_definitions")
 }
 
-/// Scheduled report
+/// Scheduled report (PG-201, ADR-078). Evolved in place, additively: every
+/// legacy column stays. IFC-308's BullMQ cron reads active rows with a
+/// `cronExpression` (pattern) + `timezone` (tz).
+///
+/// SQL-only (Prisma cannot express them — see migration 20261013120000_report_schedules_pg201):
+///   - UNIQUE (tenantId, lower(name))
+///   - CHECK colorToken IN the 18-token palette
+///   - CHECK cronExpression IS NULL OR exactly 5 space-separated fields
+///   - CHECK NOT isActive OR templateId IS NOT NULL OR reportId IS NOT NULL
 model ReportSchedule {
   id          String   @id @default(cuid())
-  reportId    String
-  report      ReportDefinition @relation(fields: [reportId], references: [id], onDelete: Cascade)
-  frequency   String   // 'daily', 'weekly', 'monthly', 'quarterly'
+  reportId    String?
+  report      ReportDefinition? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  // PG-201: PG-200 layout to deliver; tenant-consistent composite FK.
+  templateId  String?
+  template    ReportTemplate? @relation(fields: [tenantId, templateId], references: [tenantId, id], onDelete: NoAction)
+  name        String?  @db.VarChar(100)
+  description String?
+  frequency   String   // 'daily', 'weekly', 'monthly', 'quarterly', 'custom' (kept consistent with cronExpression)
   dayOfWeek   Int?     // 0-6 for weekly
-  dayOfMonth  Int?     // 1-31 for monthly
-  timeOfDay   String   // HH:MM format
+  dayOfMonth  Int?     // 1-28 for monthly/quarterly presets
+  timeOfDay   String?  // HH:MM format; NULL for custom cron
+  cronExpression String? @db.VarChar(100) // 5-field cron (BullMQ pattern)
   timezone    String   @default("Europe/London")
   recipients  Json     // Array of email addresses
-  format      String   @default("pdf") // 'pdf', 'excel', 'csv'
+  format      String   @default("pdf") // 'pdf', 'csv', 'email_body', 'excel'
+  colorToken  String   @default("slate")
+  tags        String[] @default([])
+  createdBy   String?
   isActive    Boolean  @default(true)
   lastRunAt   DateTime?
   nextRunAt   DateTime?
@@ -4631,8 +4854,10 @@ model ReportSchedule {
 /// Report execution history
 model ReportExecution {
   id          String   @id @default(cuid())
-  reportId    String
-  report      ReportDefinition @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  reportId    String?
+  report      ReportDefinition? @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  // PG-201: template-only schedules record their run against the PG-200 layout.
+  templateId  String?
   scheduleId  String?
   triggeredBy String   // 'schedule', 'manual', 'api'
   status      ReportExecutionStatus
@@ -4808,10 +5033,10 @@ model WebhookEndpoint {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
-  @@index([isActive])
-  @@index([tenantId])
   // DBA-014: Tenant-scoped name uniqueness
   @@unique([tenantId, name])
+  @@index([isActive])
+  @@index([tenantId])
   @@map("webhook_endpoints")
 }
 
@@ -4951,7 +5176,7 @@ model CaseDocument {
   title             String
   description       String?  @db.Text
   documentType      String   @map("document_type") // CONTRACT, AGREEMENT, EVIDENCE, etc.
-  documentTypeLabel String?  @db.Text @map("document_type_label")
+  documentTypeLabel String?  @map("document_type_label") @db.Text
   classification    String   // PUBLIC, INTERNAL, CONFIDENTIAL, PRIVILEGED
   tags              String[] @default([])
 
@@ -4970,7 +5195,7 @@ model CaseDocument {
   signedAt          DateTime? @map("signed_at")
   signatureHash     String?  @map("signature_hash")
   signatureIpAddress String? @map("signature_ip_address")
-  signatureUserAgent String? @db.Text @map("signature_user_agent")
+  signatureUserAgent String?   @map("signature_user_agent") @db.Text
 
   // Audit
   createdBy         String   @map("created_by")
@@ -5042,8 +5267,8 @@ model CaseDocumentAudit {
   // Actor
   userId      String   @map("user_id")
   // DBA-017: IP addresses capped at 45 chars for IPv6-mapped-IPv4
-  ipAddress   String?  @db.VarChar(45) @map("ip_address")
-  userAgent   String?  @db.Text @map("user_agent")
+  ipAddress String? @map("ip_address") @db.VarChar(45)
+  userAgent String? @map("user_agent") @db.Text
 
   // Change details
   changes     Json? // Before/after values for updates
@@ -5298,7 +5523,6 @@ enum DLQStatus {
   RESOLVED
   DISCARDED
 }
-
 
 // ============================================
 // LEAD CONVERSION AUDIT (IFC-061, FLOW-006)
@@ -5684,6 +5908,15 @@ model HelpArticle {
   status            ArticleStatus   @default(DRAFT)
   publishedAt       DateTime?
 
+  /// Built-in article maintained centrally and readable by EVERY tenant
+  /// (#533). Only the seed script may set this — create/update never accept
+  /// it from client input — so a tenant can never make its own content
+  /// globally visible. Mutations (update/delete/publish/unpublish) stay
+  /// scoped to `tenantId` as before: a system row's owning tenantId is never
+  /// a real customer tenant, so other tenants' tenantId-scoped writes can
+  /// never reach it.
+  isSystem          Boolean         @default(false)
+
   // Multi-tenancy
   tenantId          String
   tenant            Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -5702,6 +5935,7 @@ model HelpArticle {
   @@index([categoryId])
   @@index([status])
   @@index([tenantId, categoryId])
+  @@index([isSystem])
   @@map("help_articles")
 }
 
@@ -5957,9 +6191,66 @@ model ContactTag {
   tenantId    String
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
+  defaultForTypes ContactTypeDefaultTag[] // PG-205
+
   @@unique([tenantId, name])
+  // PG-205 / DBA-012: composite target for contact_type_default_tags(tenantId, contactTagId)
+  @@unique([tenantId, id])
   @@index([tenantId])
   @@map("contact_tags")
+}
+
+// ─── PG-205: Contact Types ──────────────────────────────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261017120000_contact_types, asserted by
+// tests/integration/contact-types.test.ts — do not drop in a diff):
+//   - contact_types_tenant_lower_name_key  UNIQUE ("tenantId", lower("name"))
+//   - contact_types_one_default_key        UNIQUE ("tenantId") WHERE "isDefault"
+//   - CHECKs on key format, name, colorToken, defaultOwner, defaultDepartment,
+//     sortOrder, requiredFields, default => active, reserved system keys
+//   - RLS tenant policies on both tables
+// contacts.contactType stores the type `key` (no FK, no backfill — ADR-080).
+
+/// A tenant contact type whose defaults are applied when a contact is created (ADR-080).
+model ContactType {
+  id                String         @id @default(cuid())
+  tenantId          String
+  tenant            Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  key               String         @db.VarChar(40)
+  name              String         @db.VarChar(50)
+  colorToken        String         @default("slate")
+  isSystem          Boolean        @default(false)
+  isActive          Boolean        @default(true)
+  isDefault         Boolean        @default(false)
+  sortOrder         Int            @default(0)
+  defaultStatus     ContactStatus?
+  defaultDepartment String?        @db.VarChar(100)
+  defaultOwner      String         @default("CREATOR") // CREATOR | ACCOUNT_OWNER (SQL CHECK)
+  requiredFields    String[]       @default([])
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  defaultTags ContactTypeDefaultTag[]
+
+  @@unique([tenantId, key])
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive])
+  @@map("contact_types")
+}
+
+/// A ContactTag added to new contacts of a type (PG-205 "default labels").
+model ContactTypeDefaultTag {
+  tenantId      String
+  contactTypeId String
+  contactTagId  String
+  createdAt     DateTime    @default(now())
+
+  contactType ContactType @relation(fields: [tenantId, contactTypeId], references: [tenantId, id], onDelete: Cascade)
+  contactTag  ContactTag  @relation(fields: [tenantId, contactTagId], references: [tenantId, id], onDelete: Cascade)
+
+  @@id([contactTypeId, contactTagId])
+  @@index([tenantId, contactTagId])
+  @@map("contact_type_default_tags")
 }
 
 model ContactAutomationSetting {

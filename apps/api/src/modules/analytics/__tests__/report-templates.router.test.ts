@@ -11,7 +11,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { TRPCError } from '@trpc/server';
 import { reportTemplatesRouter } from '../report-templates.router';
 import { prismaMock, createTestContext, TEST_UUIDS } from '../../../test/setup';
 
@@ -405,6 +404,23 @@ describe('Report Templates Router (PG-200)', () => {
 
       expect(prismaMock.$transaction).toHaveBeenCalled();
       expect(result).toEqual({ deleted: true });
+    });
+
+    it('maps a template still used by a scheduled report (P2003) to CONFLICT (PG-201)', async () => {
+      (prismaMock.$transaction as any).mockRejectedValueOnce(
+        Object.assign(new Error('Foreign key constraint violated'), { code: 'P2003' })
+      );
+
+      await expect(caller.delete({ id: mockTemplate.id })).rejects.toMatchObject({
+        code: 'CONFLICT',
+        message: expect.stringMatching(/scheduled reports/),
+      });
+    });
+
+    it('rethrows other database errors from delete', async () => {
+      (prismaMock.$transaction as any).mockRejectedValueOnce(new Error('connection lost'));
+
+      await expect(caller.delete({ id: mockTemplate.id })).rejects.toThrow('connection lost');
     });
 
     it('throws NOT_FOUND when caller is not the creator', async () => {

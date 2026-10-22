@@ -92,7 +92,6 @@ test.describe('Lead Form', () => {
       // Old test used "Website", "Social Media", "Email Campaign", "Cold Call", "Event" —
       // none of those labels exist. Real labels: "Website / Organic", "Referral",
       // "LinkedIn", "Conference / Event", "Cold Outreach", "Other".
-      const sourceSelect = page.locator('select#source');
       const realOptions = [
         'Website / Organic',
         'Referral',

@@ -33,12 +33,20 @@ Task(
     5. Build the traceability matrix (every AC/NF from spec must map to a plan step)
     6. Audit the Files Summary count, runtime wiring checks, and validation matrix
     7. Return verdict: APPROVE or REVISE with specific fix list
+    8. Work in the foreground: no background jobs, no waiting. Return the
+       verdict as your final message, ending with the Run Metrics block.
 
     CRITICAL: Do NOT approve plans with known gaps. Previous plans had 12+ gaps
     that wasted entire exec cycles. Your job is to catch ALL issues NOW.
   """
 )
 ```
+
+The reviewer is a nested-subagent boundary: a spawned `task-executor` yields
+there and only resumes when the orchestrator pumps it (see "Driving sub-agent
+executors" in `.claude/agents/orchestrator.md`, and the diagnostic in
+`.claude/agents/plan-reviewer.md`, issue #578). When the reviewer's result
+arrives, continue to Phase 5 immediately; do not stop to report.
 
 ### Handling REVISE Verdict
 

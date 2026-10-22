@@ -1,0 +1,64 @@
+# 2026-10-17T17:02:46Z HEAD bd628081a (+ uncommitted test; NO migration yet)
+# NOTE: not an assertion RED — before the migration the tables do not exist, so setup fails. Recorded as the pre-implementation state only.
+# cmd: pnpm exec vitest run --project integration tests/integration/contact-types.test.ts
+[test-slot] slot1 taken for PG-205-int@feat/pg-205-contact-types (holding group-intelliflow-db): pnpm exec vitest run --project integration tests/integration/contact-types.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-205
+
+stdout | contact-types.test.ts
+🧪 Integration Test Suite Starting...
+
+================================================================================
+⚠️  INTEGRATION TESTS SKIPPED
+================================================================================
+Reason: Failed to load database client: Unknown file extension ".ts" for C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\db\generated\prisma\client.ts
+
+To run integration tests:
+  1. Generate Prisma client: pnpm run db:generate
+  2. Install Docker for testcontainers
+  3. Or set DATABASE_URL environment variable
+
+Coverage is NOT affected by skipped infrastructure tests.
+================================================================================
+
+
+stdout | contact-types.test.ts
+✅ Integration Test Suite Complete
+
+ ❯ |integration| contact-types.test.ts (24 tests | 24 skipped) 184ms
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |integration| contact-types.test.ts > PG-205 contact types (real DB)
+Error: ENOENT: no such file or directory, open 'C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-205\packages\db\prisma\migrations\20261017120100_contacts_type_idx\migration.sql'
+ ❯ withoutComments contact-types.test.ts:29:10
+     27|
+     28| function withoutComments(path: string): string {
+     29|   return readFileSync(path, 'utf-8')
+       |          ^
+     30|     .split(/\r?\n/)
+     31|     .filter((line) => !line.trim().startsWith('--'))
+ ❯ ensureContactsTypeIndex contact-types.test.ts:97:38
+ ❯ contact-types.test.ts:152:5
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |integration| contact-types.test.ts > PG-205 contact types (real DB)
+TypeError: Cannot read properties of undefined (reading 'deleteMany')
+ ❯ contact-types.test.ts:162:30
+    160|     if (!prisma) return;
+    161|     const tenants = { in: [TENANT_A, TENANT_B, TENANT_SEED] };
+    162|     await prisma.contactType.deleteMany({ where: { tenantId: tenants }…
+       |                              ^
+    163|     await prisma.contactTag.deleteMany({ where: { tenantId: tenants } …
+    164|     await prisma.tenant.deleteMany({ where: { id: tenants } });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  24 skipped (24)
+   Start at  18:02:47
+   Duration  1.86s (transform 360ms, setup 1.03s, import 461ms, tests 184ms, environment 0ms)
+
+# exit: 1

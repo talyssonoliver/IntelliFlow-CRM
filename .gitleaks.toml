@@ -56,6 +56,8 @@ paths = [
   '''^\.specify/sprints/sprint\-15/attestations/PG\-040/attestation\-latest\.json$''',
   '''^\.specify/sprints/sprint\-15/attestations/PG\-040/attestation\.json$''',
   '''^\.specify/sprints/sprint\-18/attestations/PG\-058/attestation\.json$''',
+  '''^\.specify/sprints/sprint\-18/attestations/PG\-198/attestation\-latest\.json$''',
+  '''^\.specify/sprints/sprint\-18/attestations/PG\-198/attestation\.json$''',
   '''^\.specify/sprints/sprint\-19/attestations/PG\-166/attestation\.json$''',
   '''^\.specify/sprints/sprint\-19/attestations/SEC\-643/attestation\.json$''',
   '''^\.specify/sprints/sprint\-3/attestations/IFC\-006/attestation\-latest\.json$''',

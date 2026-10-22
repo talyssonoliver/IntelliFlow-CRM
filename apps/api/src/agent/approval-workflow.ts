@@ -25,7 +25,21 @@ import {
 import { agentLogger } from './logger';
 import { getAgentTool, getForTenant, ToolDisabledError } from './tools';
 import { PrismaAgentActionStore } from './prisma-action-store';
+import { executeApprovedAction, prepareExecutionInput } from './approved-action-executor';
+import { canCompensate, compensateApprovedAction } from './approved-action-compensator';
+import type { Context } from '../context';
 import { prisma as sharedPrisma } from '@intelliflow/db';
+
+/**
+ * PG-198: an approval was refused before the action was claimed — nothing ran and the
+ * action is still pending (or already decided by someone else).
+ */
+export class ApprovalNotClaimedError extends Error {
+  constructor(message: string, cause?: unknown) {
+    super(message, cause === undefined ? undefined : { cause });
+    this.name = 'ApprovalNotClaimedError';
+  }
+}
 
 // ---------------------------------------------------------------------------
 // Persistent Prisma-backed store (replaces in-memory Maps)
@@ -46,9 +60,9 @@ export const actionStore = new PrismaAgentActionStore(sharedPrisma as never, DEF
 // Legacy aliases for callers that import these directly
 export const pendingActionsStore = {
   add: (a: PendingAction) => actionStore.add(a),
-  get: (id: string) => actionStore.get(id),
-  update: (a: PendingAction) => actionStore.update(a),
-  delete: (id: string) => actionStore.delete(id),
+  get: (id: string, tenantId?: string) => actionStore.get(id, tenantId),
+  update: (a: PendingAction, tenantId?: string) => actionStore.update(a, tenantId),
+  delete: (id: string, tenantId?: string) => actionStore.delete(id, tenantId),
   findByUser: (userId: string, tenantId?: string) => actionStore.findByUser(userId, tenantId),
   findBySession: (sessionId: string) => actionStore.findBySession(sessionId),
   findPending: () => actionStore.findPending(),
@@ -57,9 +71,10 @@ export const pendingActionsStore = {
 
 export const executedActionsStore = {
   add: (a: ExecutedAction) => actionStore.addExecuted(a),
-  get: (id: string) => actionStore.getExecuted(id),
-  findByRollbackToken: (token: string) => actionStore.findByRollbackToken(token),
-  disableRollback: (id: string) => actionStore.disableRollback(id),
+  get: (id: string, tenantId?: string) => actionStore.getExecuted(id, tenantId),
+  findByRollbackToken: (token: string, tenantId?: string) =>
+    actionStore.findByRollbackToken(token, tenantId),
+  disableRollback: (id: string, tenantId?: string) => actionStore.disableRollback(id, tenantId),
   findAll: () => actionStore.findAllExecuted(),
 };
 
@@ -178,6 +193,14 @@ export class ApprovalWorkflowService {
   }
 
   /**
+   * PG-198 (A2): approved actions whose execution was interrupted (left EXECUTING),
+   * requested or approved by this user — shown to reviewers, never re-run.
+   */
+  async getInterruptedActions(userId: string, tenantId?: string): Promise<ExecutedAction[]> {
+    return actionStore.findInterrupted(userId, tenantId);
+  }
+
+  /**
    * Get all pending actions for an agent session
    */
   async getPendingActionsForSession(sessionId: string): Promise<PendingAction[]> {
@@ -188,18 +211,20 @@ export class ApprovalWorkflowService {
   /**
    * Get a specific pending action by ID
    */
-  async getPendingAction(actionId: string): Promise<PendingAction | undefined> {
-    return pendingActionsStore.get(actionId);
+  async getPendingAction(actionId: string, tenantId?: string): Promise<PendingAction | undefined> {
+    return pendingActionsStore.get(actionId, tenantId);
   }
 
   /**
-   * Approve and execute a pending action
+   * Everything that must succeed before an approved action may run: it exists, is
+   * pending and unexpired, its tool is still enabled, the input is valid, and this
+   * caller wins the atomic claim. Any failure here means nothing was claimed.
    */
-  async approveAction(
+  private async claimApproval(
     decision: ApprovalDecision,
     context: AgentAuthContext
-  ): Promise<ExecutedAction> {
-    const action = await pendingActionsStore.get(decision.actionId);
+  ): Promise<{ action: PendingAction; inputToExecute: Record<string, unknown> }> {
+    const action = await pendingActionsStore.get(decision.actionId, context.tenantId);
 
     if (!action) {
       throw new Error(`Pending action not found: ${decision.actionId}`);
@@ -216,56 +241,81 @@ export class ApprovalWorkflowService {
     }
 
     const tool = await this.resolveApprovalTool(action, context);
-
-    // Update action status
-    action.status = 'APPROVED';
-    await pendingActionsStore.update(action);
-
     if (!tool) {
       throw new Error(`Tool not found: ${action.toolName}`);
     }
 
-    // Use modified input if provided
-    const inputToExecute = decision.modifiedInput || action.input;
+    // Validate before claiming, so a bad modification leaves the action pending.
+    const inputToExecute = prepareExecutionInput(
+      action.toolName,
+      tool.inputSchema,
+      action.input,
+      decision.modifiedInput
+    );
 
-    // Execute the approved action
-    let executionResult: unknown;
-    let executionError: string | undefined;
-
-    try {
-      // Dispatch the tool action via the registered tool handler.
-      // The tool.execute() call is deferred to the tool registry (getAgentTool),
-      // which routes to the appropriate service. The result below is a default
-      // approval confirmation envelope returned when the tool itself does not
-      // produce a richer output (e.g. write-only side-effect actions).
-      executionResult = {
-        success: true,
-        message: 'Action executed successfully',
-        entityId: randomUUID(),
-        timestamp: new Date(),
-      };
-    } catch (error) {
-      executionError = error instanceof Error ? error.message : 'Execution failed';
+    // Expiry is judged at the claim itself, not when approval started: the reads above
+    // take time, and an action that expired meanwhile must not run.
+    if (
+      !(await actionStore.claimForExecution(action, decision.decidedBy, new Date(), inputToExecute))
+    ) {
+      throw new ApprovalNotClaimedError('Action is no longer pending (already decided or expired)');
     }
 
-    // Generate rollback token if action supports rollback
-    const rollbackToken = tool.rollback ? randomUUID() : undefined;
+    return { action, inputToExecute };
+  }
 
-    // Create executed action record
+  /**
+   * Approve and execute a pending action (PG-198 RF-1, #853).
+   *
+   * The action is claimed atomically (only one approver can win), the input that
+   * will run is re-validated with the tool's schema, and the real mutation runs
+   * through the target module's tRPC procedure on the approver's request
+   * context. A failure is stored as FAILED with its reason — never as success.
+   * A rollback token is issued only when the action succeeded and a real
+   * compensation exists for it (#856): see approved-action-compensator.ts.
+   */
+  async approveAction(
+    decision: ApprovalDecision,
+    context: AgentAuthContext,
+    requestCtx?: Context
+  ): Promise<ExecutedAction> {
+    let action: PendingAction;
+    let inputToExecute: Record<string, unknown>;
+    const claimedAt = new Date();
+    try {
+      ({ action, inputToExecute } = await this.claimApproval(decision, context));
+    } catch (error) {
+      // Nothing was claimed or run: callers (auto-approval) may leave it pending.
+      throw error instanceof ApprovalNotClaimedError
+        ? error
+        : new ApprovalNotClaimedError(
+            error instanceof Error ? error.message : String(error),
+            error
+          );
+    }
+
+    const outcome = await executeApprovedAction(action.toolName, inputToExecute, requestCtx, {
+      requesterId: action.createdBy,
+    });
+    const durationMs = Date.now() - claimedAt.getTime();
+    const rollbackAvailable =
+      outcome.status === 'SUCCEEDED' && canCompensate(action.toolName, outcome.result);
+
     const executedAction: ExecutedAction = {
       ...action,
+      input: inputToExecute,
+      status: 'APPROVED',
+      executionStatus: outcome.status,
       executedAt: new Date(),
-      executionResult,
-      executionError,
+      executionResult: outcome.result,
+      executionError: outcome.error,
       approval: decision,
-      rollbackAvailable: !!tool.rollback && !executionError,
-      rollbackToken,
+      rollbackAvailable,
+      rollbackToken: rollbackAvailable ? randomUUID() : undefined,
     };
 
-    // Store executed action
     await executedActionsStore.add(executedAction);
 
-    // Log the approval and execution
     await agentLogger.log({
       userId: context.userId,
       agentSessionId: context.agentSessionId,
@@ -273,17 +323,18 @@ export class ApprovalWorkflowService {
       actionType: action.actionType,
       entityType: action.entityType,
       input: inputToExecute,
-      output: executionResult,
-      success: !executionError,
-      error: executionError,
-      durationMs: 0,
+      output: outcome.result,
+      success: outcome.status === 'SUCCEEDED',
+      error: outcome.error,
+      durationMs,
       approvalRequired: true,
       approvalStatus: 'APPROVED',
       approvedBy: decision.decidedBy,
       metadata: {
         originalActionId: action.id,
         modifiedInput: !!decision.modifiedInput,
-        rollbackAvailable: executedAction.rollbackAvailable,
+        executionStatus: outcome.status,
+        rollbackAvailable,
       },
     });
 
@@ -297,7 +348,7 @@ export class ApprovalWorkflowService {
     decision: ApprovalDecision,
     context: AgentAuthContext
   ): Promise<PendingAction> {
-    const action = await pendingActionsStore.get(decision.actionId);
+    const action = await pendingActionsStore.get(decision.actionId, context.tenantId);
 
     if (!action) {
       throw new Error(`Pending action not found: ${decision.actionId}`);
@@ -307,9 +358,13 @@ export class ApprovalWorkflowService {
       throw new Error(`Action is not pending: ${action.status}`);
     }
 
-    // Update action status
+    // Status-guarded (PG-198): loses cleanly to a concurrent approval or expiry.
+    if (
+      !(await actionStore.rejectIfPending(action, decision.decidedBy, decision.reason, new Date()))
+    ) {
+      throw new Error('Action is no longer pending (already decided or expired)');
+    }
     action.status = 'REJECTED';
-    await pendingActionsStore.update(action);
 
     // Log the rejection
     await agentLogger.log({
@@ -333,96 +388,106 @@ export class ApprovalWorkflowService {
   }
 
   /**
-   * Request rollback of an executed action
+   * Roll back an executed action (#856).
+   *
+   * The token is looked up in the caller's tenant only, the rollback is claimed
+   * atomically (two concurrent requests cannot both run it), and the undo itself runs
+   * through the target module's own procedure on the requester's request context.
+   * Compensations are idempotent and reconcile from the target's state, so a reported
+   * failure means the target is not undone and the claim is given back for a retry. A
+   * claim left by an interrupted request goes stale and can be taken again.
    */
   async rollbackAction(
     request: RollbackRequest,
-    context: AgentAuthContext
+    context: AgentAuthContext,
+    requestCtx?: Context
   ): Promise<RollbackResult> {
-    // Find executed action by rollback token
-    const executedAction = await executedActionsStore.findByRollbackToken(request.rollbackToken);
+    const fail = (error: string): RollbackResult => ({
+      success: false,
+      actionId: request.actionId,
+      error,
+    });
+    const tenantId = context.tenantId ?? DEFAULT_TENANT_ID;
+    const executedAction = await executedActionsStore.findByRollbackToken(
+      request.rollbackToken,
+      tenantId
+    );
 
-    if (!executedAction) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Invalid rollback token or action not found',
-      };
+    if (!executedAction || executedAction.id !== request.actionId) {
+      return fail('Invalid rollback token or action not found');
     }
 
-    if (!executedAction.rollbackAvailable) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Rollback is no longer available for this action',
-      };
-    }
-
-    // Check rollback window
+    // Check rollback window. A stale claim was requested inside it and was interrupted; it
+    // may finish late, since its compensation may already have been applied.
     const executedAt = executedAction.executedAt;
-    if (executedAt && Date.now() - executedAt.getTime() > this.rollbackWindowMs) {
-      await executedActionsStore.disableRollback(executedAction.id);
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Rollback window has expired (1 hour limit)',
-      };
+    if (
+      executedAction.rollbackClaimedAt === undefined &&
+      executedAt &&
+      Date.now() - executedAt.getTime() > this.rollbackWindowMs
+    ) {
+      await executedActionsStore.disableRollback(executedAction.id, tenantId);
+      return fail('Rollback window has expired (1 hour limit)');
     }
 
-    // Bypass rationale: rollback is an infrastructure/admin operation that undoes
-    // an already-approved action. Tenant-level tool enablement should NOT block a
-    // rollback — an admin could disable a tool AFTER approval, and we still need
-    // to undo the executed action. Intentionally uses getAgentTool() without
-    // tenant-gating to ensure rollbacks are always executable.
-    const tool = getAgentTool(executedAction.toolName);
-    if (!tool?.rollback) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: 'Tool does not support rollback',
-      };
+    // Tenant tool enablement is deliberately not re-checked: an admin may disable a tool
+    // after approval, and its executed actions must still be undoable.
+    if (!canCompensate(executedAction.toolName, executedAction.executionResult)) {
+      return fail('Tool does not support rollback');
     }
 
-    try {
-      // Execute rollback
-      const result = await tool.rollback(
-        executedAction.id,
-        executedAction.executionResult,
-        context
-      );
+    const claimId = await actionStore.claimRollback(
+      executedAction.id,
+      tenantId,
+      request.rollbackToken
+    );
+    if (!claimId) {
+      return fail('Rollback is no longer available for this action');
+    }
 
-      if (result.success) {
-        // Disable further rollbacks
-        await executedActionsStore.disableRollback(executedAction.id);
-      }
+    const outcome = await compensateApprovedAction(
+      executedAction.toolName,
+      executedAction.executionResult,
+      requestCtx
+    );
+    const rolledBackAt = new Date();
 
-      // Log the rollback
-      await agentLogger.log({
-        userId: context.userId,
-        agentSessionId: context.agentSessionId,
-        toolName: executedAction.toolName,
-        actionType: 'DELETE', // Rollback is effectively a delete/undo
-        entityType: executedAction.entityType,
-        input: { action: 'rollback', reason: request.reason },
-        output: result,
-        success: result.success,
-        error: result.error,
-        durationMs: 0,
-        approvalRequired: false,
-        metadata: {
-          originalActionId: executedAction.id,
-          rollbackReason: request.reason,
-        },
+    if (outcome.success) {
+      await actionStore.markRolledBack(executedAction.id, tenantId, claimId, {
+        rolledBackBy: request.requestedBy,
+        rolledBackAt,
+        reason: request.reason,
+        restoredState: outcome.restoredState,
       });
-
-      return result;
-    } catch (error) {
-      return {
-        success: false,
-        actionId: request.actionId,
-        error: error instanceof Error ? error.message : 'Rollback failed',
-      };
+    } else {
+      await actionStore.releaseRollback(executedAction.id, tenantId, claimId);
     }
+
+    await agentLogger.log({
+      userId: context.userId,
+      agentSessionId: context.agentSessionId,
+      toolName: executedAction.toolName,
+      actionType: 'DELETE', // Rollback is effectively a delete/undo
+      entityType: executedAction.entityType,
+      input: { action: 'rollback', reason: request.reason },
+      output: outcome,
+      success: outcome.success,
+      error: outcome.error,
+      durationMs: 0,
+      approvalRequired: false,
+      metadata: {
+        originalActionId: executedAction.id,
+        rollbackReason: request.reason,
+      },
+    });
+
+    return outcome.success
+      ? {
+          success: true,
+          actionId: executedAction.id,
+          rolledBackAt,
+          restoredState: outcome.restoredState,
+        }
+      : fail(outcome.error ?? 'Rollback failed');
   }
 
   /**

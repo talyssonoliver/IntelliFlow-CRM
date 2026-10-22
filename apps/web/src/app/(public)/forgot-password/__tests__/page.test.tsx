@@ -439,7 +439,9 @@ describe('ForgotPasswordPage (IFC-120)', () => {
 
     it('should have Open Graph metadata', () => {
       expect(metadata.openGraph).toBeDefined();
-      expect(metadata.openGraph?.url).toBe('https://intelliflow-crm.com/forgot-password');
+      expect(metadata.openGraph?.url).toBe(
+        'https://intelli-flow-crm-web.vercel.app/forgot-password'
+      );
       expect(metadata.openGraph?.siteName).toBe('Aurora');
       expect((metadata.openGraph as Record<string, unknown>)?.type).toBe('website');
     });

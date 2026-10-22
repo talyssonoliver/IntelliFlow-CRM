@@ -1089,6 +1089,16 @@ Runtime Wiring (IFC-222):
 
 Backend (done):  ANALYTICS-001 ✅ + IFC-003 ✅ + IFC-096 ✅ ──► IFC-200 ✅ ──► IFC-190 ✅
 Frontend (next): IFC-037 ⬜ ──► IFC-038 ⬜ (wires IFC-190 to UI)
+
+PG-201 (Scheduled Reports, ADR-078) ✅:
+  PG-178 ✅ + PG-187 ✅ (report settings) + PG-200 ✅ (report_templates)
+    ──► validators scheduled-reports.ts (cadence presets, cron, IANA timezone, recipients, tags)
+    ──► db migration 20261013120000_report_schedules_pg201
+          (report_schedules evolved in place, report_schedule_tags, report_executions.templateId,
+           one-time report_settings.scheduledDelivery copy)
+    ──► api scheduled-reports.router.ts (analytics.scheduledReports.*, cron-parser nextRunAt)
+    ──► web /analytics/scheduled-reports (ScheduledReportsContent) + Report Settings link card
+    ──► IFC-308 ⬜ BullMQ cron reads active report_schedules (pattern + tz) — category-2 consumer
 ```
 
 ---
@@ -1300,6 +1310,30 @@ Dependency Chain:
   IFC-021 (Agents) ✅ ──┬──► IFC-139 (Tools Auth) ✅ ──► IFC-149 (Approval) ✅ ──► agent.router ✅ ──► UI ⬜
                         ├──► IFC-148 (Memory) ✅ ────────────────────────────────────────────────────┘
                         └──► IFC-125 (Guardrails) ✅ ──► IFC-128 (Review) ⏳ ────────────────────────┘
+
+PG-198 (Approval Policies, ADR-079) — extends IFC-149 and IFC-029:
+  domain ai/approval-policy (constants, resolver, predicates)
+    ──► validators approval-policies.ts
+    ──► db migrations 20261016120000_approval_policies (2 tables, CHECKs, RLS; agent_actions
+          escalatedAt/escalatedTo, confidenceScore nullable)
+          + 20261016120100_agent_actions_pending_sweep_idx (CONCURRENTLY)
+    ──► api approval-policy-loader + approved-action-executor + approval-escalation-sweep/scheduler
+          ──► agent.router (expiry, min role, auto-approve, real execution)
+          ──► autoResponse.router (expiry, min role, auto-approve, session actor)
+    ──► api modules/agent/approval-policies.router.ts (approvalPolicies.*)
+    ──► web /agent-approvals/approval-policies (ApprovalPoliciesContent)
+          + /agent-approvals/preview (real confidence, Escalated badge)
+
+PG-199 (Model Configuration, ADR-082) — extends ADR-048 (createLLM factory) and IFC-312:
+  domain ai/model-config (catalog, caller default tiers, price-ranked Never-Downgrade rules)
+    ──► validators model-config.ts
+    ──► db migrations 20261019120000_tenant_model_config (tier nullable, modelId, fallbacks,
+          monthly ceiling, named CHECKs) + 20261019120100_tenant_ai_config_rls (separately removable)
+    ──► application PurposeSpendPort ──► adapters PrismaPurposeSpendRepository
+    ──► api modules/agent/model-config.router.ts (modelConfig.get/update/resetToDefaults)
+    ──► ai-worker tenant-ai-config + purpose-ceiling + llm-factory (pins, fallback chain)
+          + usage-metering (chat and embeddings, per purpose) ──► agents, summary job, embed workers
+    ──► web /agent-approvals/model-config (ModelConfigContent) + settings search entry
 ```
 
 ---
@@ -2434,6 +2468,104 @@ Parent hub:    apps/web/src/components/cases/CaseSettingsPanel.tsx:8-30
 Smoke guard:   apps/api/src/__tests__/app-router.smoke.test.ts (asserts
                every sub-router + procedures — closes PG-187/PG-189/PG-190
                de-registration defect class)
+```
+
+### Case Types (PG-204 — applied at case creation, ADR-076)
+
+```
+PG-178 ✅ + PG-190 ✅ ──► PG-204 (Case Types)
+
+Domain:  packages/domain/src/legal/cases/case-type-defaults.ts
+           resolveCaseCreateDefaults (explicit input > type > PG-190 module default)
+           CASE_REQUIRED_FIELD_KEYS · CASE_TYPE_LIMITS · CASE_TYPE_ADMIN_ROLES
+Validators: packages/validators/src/case-types.ts (+ case.ts: priority optional, caseTypeId)
+
+Prisma models (tenant-scoped, RLS on):
+  CaseType               @@map "case_types"                 (0..50 per tenant)
+  CaseTypeChecklistItem  @@map "case_type_checklist_items"  (0..20 per type)
+  Case.caseTypeId        nullable scalar
+    ├─ FK case_types.tenantId → Tenant (ON DELETE CASCADE)
+    ├─ FK (tenantId, caseTypeId) items → case_types(tenantId, id) (CASCADE)
+    └─ FK (tenantId, caseTypeId) cases → case_types(tenantId, id) (NO ACTION, SQL-only)
+
+Migration: 20261013120000_case_types/migration.sql (Class A, manual prod apply)
+
+appRouter.caseTypes: list / listActive / create / update / delete / setDefault
+appRouter.cases.create → resolveCaseCreateDefaults → $transaction(case + CaseTask seeds)
+appRouter.cases.getById → caseType {id, name, colorToken}
+
+/cases/(list)/case-types/page.tsx → CaseTypesContent → trpc.caseTypes.*
+/cases/(list)/new/page.tsx → CaseForm (type picker) → api.caseTypes.listActive,
+                             api.caseSettings.requiredFields.list, api.cases.create
+Sidebar entry: apps/web/src/components/sidebar/configs/cases.ts:14
+```
+
+### Contact Types (PG-205 — applied at contact creation, ADR-080)
+
+```
+PG-178 ✅ + PG-182 ✅ ──► PG-205 ✅ (Contact Types, delivered on feat/pg-205-contact-types)
+
+Domain:  packages/domain/src/crm/contact/contact-type-defaults.ts
+           resolveContactCreateDefaults (explicit input > type default)
+           CONTACT_TYPE_LIMITS · CONTACT_TYPE_ADMIN_ROLES · CONTACT_POLICY_FIELD_TO_COLUMN
+         Contact.ts: ContactTypeKey = string + key-format invariant (CONTACT_TYPES = 6 reserved keys)
+Validators: packages/validators/src/contact-types.ts (+ contact.ts: contactTypeKeySchema,
+            contactQuerySchema.contactType / segment 'vip')
+
+Prisma models (tenant-scoped, RLS on; keyed by the existing contacts.contactType string — no FK):
+  ContactType            @@map "contact_types"              (0..50 per tenant, 6 system rows seeded lazily)
+  ContactTypeDefaultTag  @@map "contact_type_default_tags"  (0..10 tags per type)
+    ├─ FK contact_types.tenantId → Tenant (ON DELETE CASCADE)
+    ├─ FK (tenantId, contactTypeId) → contact_types(tenantId, id) (CASCADE)
+    └─ FK (tenantId, tagId) → contact_tags(tenantId, id) (CASCADE)
+  Contact @@index([tenantId, contactType])
+
+Migrations (Class A, manual prod apply BEFORE the API ships — L13):
+  20261017120000_contact_types/migration.sql
+  20261017120100_contacts_type_idx/migration.sql (CREATE INDEX CONCURRENTLY)
+
+appRouter.contactTypes: list / listActive / create / update / delete / setDefault
+appRouter.contact.create → resolveContactTypeForCreate → resolveContactCreateDefaults
+                           (status, department, owner rule, default tags, type required fields)
+appRouter.contact.update → assertContactTypeOnUpdate (no defaults re-applied)
+appRouter.contact.list   → { contactType, segment: 'vip' → tags hasSome }
+
+/contacts/(list)/contact-types/page.tsx → ContactTypesContent → trpc.contactTypes.*,
+                                          trpc.contactSettings.tags.list
+/contacts/(list)/new/page.tsx, ContactForm (edit) → ContactTypeSelect → contactTypes.listActive
+/contacts (ContactsPageClient) → Type filter + ?segment= links → contact.list; ContactList Type badge
+Sidebar entry: apps/web/src/components/sidebar/configs/contacts.ts:12-17
+Parent hub:    apps/web/src/components/contacts/ContactSettingsPanel.tsx:16-22
+```
+
+---
+
+### Availability (PG-202 — enforced at booking, ADR-081)
+
+```
+PG-178 ✅ + PG-189 ✅ ──► PG-202 (Availability) ✅
+
+Domain:  packages/domain/src/legal/appointments/AvailabilityPolicy.ts
+           evaluateAvailability · generateCandidates · localDayBoundsUtc · LEGACY_BOOKING_HOURS
+         packages/domain/src/legal/appointments/availability-roles.ts (AVAILABILITY_ADMIN_ROLES)
+Application: CheckConflictsUseCase.findFirstFreeCandidate (one repository read)
+Validators: packages/validators/src/availability.ts (+ appointment-settings.ts: update omits buffers/timezone)
+
+Prisma models (tenant-scoped, RLS on):
+  AvailabilityHour     @@map "availability_hours"     (weekday, startMinute, endMinute; firm-zone local minutes)
+  AvailabilityClosure  @@map "availability_closures"  (startDate, endDate DATE; reason)
+  AppointmentSettings  + maxDailyBookings, availabilityConfiguredAt (NULL = legacy rules)
+
+Migration: 20261017130000_availability/migration.sql (Class A, manual prod apply BEFORE the API)
+
+appRouter.calendar.availability: get / update / resetToDefaults
+appRouter.appointments.create / reschedule → assertAppointmentWithinAvailability (availability-enforcement.ts)
+appRouter.appointments.findNextSlot → findNextSlotWithinAvailability (configured tenants; API-only)
+
+/calendar/availability/page.tsx → AvailabilityContent → trpc.calendar.availability.*
+/calendar/calendar-settings → links to Availability (no longer edits buffers/timezone)
+/appointments/new → AppointmentForm (firm default buffers prefill; server errors shown)
+Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:15-17
 ```
 
 ---

@@ -1,5 +1,22 @@
 # Pipeline Phases — Detailed Instructions
 
+## Phase 0.3: Ceremony Tier Detection (issue #579)
+
+Runs once per invocation, before Phase 1:
+
+```bash
+npx tsx tools/scripts/ceremony-tier-audit.ts --task {TASK_ID} --json
+```
+
+Read the `tier` field (`light` or `full`) from stdout and carry it through
+Phases 1 and 2 as `--tier={tier}`. If the script errors for any reason, `tier`
+defaults to `full` — never skip ceremony because the detector itself failed.
+Phase 3 (`/exec`) and its MATOP/STOA validation are unaffected by tier; only
+`/spec-session`'s debate rounds and `/plan-session`'s Plan-Reviewer spawn
+change. The four deterministic conditions behind `light` vs `full`, worked
+examples against real Sprint_plan.csv history, and exactly what each session
+skips: **references/ceremony-tier.md**.
+
 ## Pipeline Flow (Full)
 
 **CRITICAL**: Each invocation runs the FULL pipeline — all remaining phases in
@@ -14,6 +31,7 @@ PLAN_PATH = .specify/sprints/sprint-{SPRINT_NUMBER}/planning/{TASK_ID}-plan.md
 DELIVERY_PATH = .specify/sprints/sprint-{SPRINT_NUMBER}/execution/{TASK_ID}/
 ATTESTATION_PATH = .specify/sprints/sprint-{SPRINT_NUMBER}/attestations/{TASK_ID}/attestation.json
 
+0. Run Phase 0.3 Ceremony Tier Detection (above) — get `tier` (defaults to `full` on any error)
 1. Read Sprint_plan.csv to find TASK_ID's sprint number and current status
 2. Check which artifacts exist using Glob tool
 
@@ -25,12 +43,12 @@ IF status is "Completed" or "DONE":
 THEN run ALL remaining phases sequentially (do NOT stop between phases):
 
 IF SPEC_PATH does NOT exist:
-   → PHASE 1: Run /spec-session
+   → PHASE 1: Run /spec-session --tier={tier}
    → On SUCCESS: continue immediately to Phase 2
    → On FAILURE: STOP (let Ralph retry the full pipeline)
 
 IF PLAN_PATH does NOT exist:
-   → PHASE 2: Run /plan-session
+   → PHASE 2: Run /plan-session --tier={tier}
    → On SUCCESS: continue immediately to Phase 3
    → On FAILURE: STOP (let Ralph retry the full pipeline)
 
@@ -113,10 +131,11 @@ prematurely with a false completion promise.
 
 ## Phase 1: Specification
 
-1. Invoke the `/spec-session` skill with TASK_ID: use the Skill tool with
-   `skill: "spec-session", args: "{TASK_ID}"`
+1. Invoke the `/spec-session` skill with TASK_ID and tier: use the Skill tool
+   with `skill: "spec-session", args: "{TASK_ID} --tier={tier}"`
 2. Follow ALL spec-session instructions (context hydration, agent selection,
-   STOA consensus)
+   STOA consensus) — Light Tier Mode collapses agent selection and the debate
+   rounds; see spec-session's own `## Light Tier Mode` section
 3. On SUCCESS: **continue immediately to Phase 2** — do NOT stop
 4. On FAILURE (STOA rejection, missing deps): fix the issue and STOP — Ralph
    will retry the full pipeline
@@ -128,10 +147,12 @@ Complete"
 
 ## Phase 2: Planning
 
-1. Invoke the `/plan-session` skill with TASK_ID: use the Skill tool with
-   `skill: "plan-session", args: "{TASK_ID}"`
+1. Invoke the `/plan-session` skill with TASK_ID and tier: use the Skill tool
+   with `skill: "plan-session", args: "{TASK_ID} --tier={tier}"`
 2. Follow ALL plan-session instructions (TDD decomposition, plan review,
-   hexagonal layer order)
+   hexagonal layer order) — Light Tier Mode skips the Plan-Reviewer spawn only
+   when the plan creates no `page.tsx`; see plan-session's own
+   `## Light Tier Mode` section
 3. On SUCCESS: **continue immediately to Phase 3** — do NOT stop
 4. On FAILURE (plan reviewer rejects): revise the plan and STOP — Ralph will
    retry the full pipeline

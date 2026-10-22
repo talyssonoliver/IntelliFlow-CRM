@@ -1,0 +1,90 @@
+{
+  "reviewer": "pg202-a11y-reviewer (a11y-expert sub-agent)",
+  "standard": "WCAG 2.1 AA",
+  "verdict": "PASS WITH MINOR",
+  "reviewed_files": [
+    "apps/web/src/app/calendar/calendar-settings/components/AvailabilityPointer.tsx",
+    "apps/web/src/app/calendar/availability/AvailabilityContent.tsx",
+    "apps/web/src/app/calendar/availability/components/AvailabilityBanners.tsx",
+    "apps/web/src/app/calendar/availability/__tests__/AvailabilityContent.actions.test.tsx",
+    "apps/web/src/components/appointments/AppointmentDetail.tsx",
+    "apps/web/src/components/appointments/__tests__/AppointmentDetail.test.tsx",
+    "packages/ui/src/components/confirmation-dialog.tsx"
+  ],
+  "checks": [
+    {
+      "id": "F1",
+      "criterion": "1.4.3 Contrast (Minimum)",
+      "result": "PASS",
+      "evidence": "AvailabilityPointer.tsx:9 now text-blue-700 dark:text-blue-300. blue-700 (#1d4ed8) on slate-50 is 6.41:1; blue-300 (#93c5fd) on slate-800/50 over the dark card (#1d2a39) is 8.09:1 (8.07:1 on the card alone). Both above 4.5:1; underline kept."
+    },
+    {
+      "id": "F2",
+      "criterion": "2.4.3 Focus Order",
+      "result": "PASS",
+      "evidence": "AvailabilityContent.tsx handleReload now calls setFocusTarget(WEEKLY_HOURS_TITLE_ID) after adopt and clearing the error, and it does so whether or not result.data exists, so the unmounted banner never leaves focus on body. The heading has tabIndex=-1 (WeeklyHoursCard.tsx:101 focusableTitle). AvailabilityContent.actions.test.tsx CONFLICT test asserts document.activeElement is the level-2 'Weekly hours' heading."
+    },
+    {
+      "id": "F3",
+      "criterion": "4.1.2 Name, Role, Value",
+      "result": "PASS",
+      "evidence": "AppointmentDetail.tsx: <dialog aria-labelledby={DIALOG_TITLE_ID}> and all five h3 titles (complete, cancel, reschedule, addAttendee, linkCase) carry that id; they render under mutually exclusive activeDialog conditions, so the id is unique in the DOM. AppointmentDetail.test.tsx asserts getByRole('dialog', { name: 'Reschedule Appointment' })."
+    },
+    {
+      "id": "F4",
+      "criterion": "2.4.3 Focus Order",
+      "result": "PASS",
+      "evidence": "confirmReset catch sets serverError and focusOnResetCloseRef = SERVER_ERROR_ID; the banner has id={SERVER_ERROR_ID} and tabIndex=-1 (AvailabilityBanners.tsx:8,88-90). ConfirmationDialog still closes after onConfirm resolves (confirmation-dialog.tsx:79-81), and onCloseAutoFocus preventDefaults and focuses the banner, which is already committed at that point. The ref is consumed on every close (set to null before use), so a later Cancel is not hijacked. Test asserts focus is on the role=alert. Success path still focuses the Weekly hours title via the same ref."
+    },
+    {
+      "id": "F8",
+      "criterion": "2.1.1 / 3.2.2",
+      "result": "PASS",
+      "evidence": "AppointmentDetail.tsx: Escape listener is its own effect with early return when !activeDialog || isActionLoading and deps [activeDialog, isActionLoading], removed on cleanup. The actionError-clearing effect is keyed on [activeDialog] only, so a failed action (isActionLoading flip) does not clear the error. Re-enables once the action settles on failure. Test 'ignores Escape while the dialog action is running' covers it. Residual: no event.defaultPrevented check for an inner popover (optional)."
+    }
+  ],
+  "findings": [
+    {
+      "id": "F7",
+      "severity": "minor",
+      "criterion": "4.1.3 Status Messages",
+      "file": "apps/web/src/app/calendar/availability/components/AvailabilityBanners.tsx",
+      "line": 44,
+      "problem": "Still open, accepted by the team as minor: the validation summary role=alert re-announces its count as errors change while the user types after a failed Save.",
+      "fix": "Optional follow-up: freeze the summary text until the next Save."
+    },
+    {
+      "id": "F12",
+      "severity": "info",
+      "criterion": "Evidence quality",
+      "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/tdd/green-web-availability.log",
+      "line": 8,
+      "problem": "Still open, accepted as minor: axe evidence has color-contrast disabled and does not cover the detail dialog or AvailabilityPointer; contrast evidence is the computed table only. The new getByRole('dialog', { name }) test partly closes the dialog gap.",
+      "fix": "None required for PG-202."
+    },
+    {
+      "id": "F5/F6",
+      "severity": "info",
+      "criterion": "1.4.11 / 1.4.3 (shared tokens)",
+      "file": "packages/ui/src/components/switch.tsx",
+      "line": 8,
+      "problem": "Unchecked switch track and input borders about 1.2:1; white on primary 4.15:1. Pre-existing shared tokens, tracked on issue #871 as stated; not a PG-202 regression. Should stay listed as a known gap in the VPAT row.",
+      "fix": "Follow-up on #871."
+    },
+    {
+      "id": "N1",
+      "severity": "info",
+      "criterion": "Formatting (not a11y)",
+      "file": "apps/web/src/app/calendar/calendar-settings/components/AvailabilityPointer.tsx",
+      "line": 9,
+      "problem": "The Link line is now over 100 columns on one line and the test file lines near AvailabilityContent.actions.test.tsx:215 are long; Prettier format-check in pre-ship may reformat them.",
+      "fix": "Run the formatter on the touched files when slots are free."
+    }
+  ],
+  "contrast": [
+    { "pair": "AvailabilityPointer link text-blue-700 (#1d4ed8) on slate-50 (#f8fafc), light", "ratio": "6.41:1", "result": "PASS" },
+    { "pair": "AvailabilityPointer link text-blue-300 (#93c5fd) on slate-800/50 over dark card (#1d2a39)", "ratio": "8.09:1", "result": "PASS" },
+    { "pair": "text-blue-700 on white (reference)", "ratio": "6.70:1", "result": "PASS" }
+  ],
+  "limitations": "Code reading and arithmetic only; no tests, browser or screen reader were run. Not verified at runtime: that Radix runs onCloseAutoFocus after the banner is committed in a real browser (jsdom test asserts it, and the order follows from confirmation-dialog.tsx:79-81), and that the earlier-listed browser/AT behaviours (live-region timing, native date input width at 320px, toast live region) behave as expected."
+}

@@ -52,20 +52,29 @@ function resolveJsonPath(value: any, path: string[]): any {
 // proposedState->>"rollbackToken").
 function matchesCondition(row: any, key: string, value: any): boolean {
   if (value && typeof value === 'object' && !Array.isArray(value)) {
-    if ('gt' in value) return row[key] > value.gt;
-    if ('lt' in value) return row[key] < value.lt;
-    if ('not' in value) return row[key] !== value.not;
     if ('path' in value && 'equals' in value) {
       return resolveJsonPath(row[key], value.path as string[]) === value.equals;
     }
+    if ('path' in value && 'lt' in value) {
+      const nested = resolveJsonPath(row[key], value.path as string[]);
+      return typeof nested === 'number' && nested < value.lt;
+    }
+    if ('gt' in value) return row[key] > value.gt;
+    if ('lt' in value) return row[key] < value.lt;
+    if ('not' in value) return row[key] !== value.not;
   }
   return row[key] === value;
 }
 
-function matchesWhere(row: any, where: Record<string, any> | undefined) {
+function matchesWhere(row: any, where: Record<string, any> | undefined): boolean {
   if (!where) return true;
 
-  return Object.entries(where).every(([key, value]) => matchesCondition(row, key, value));
+  return Object.entries(where).every(([key, value]) => {
+    const clauses = value as Record<string, any>[];
+    if (key === 'AND') return clauses.every((clause) => matchesWhere(row, clause));
+    if (key === 'OR') return clauses.some((clause) => matchesWhere(row, clause));
+    return matchesCondition(row, key, value);
+  });
 }
 
 vi.mock('@intelliflow/db', () => ({
@@ -84,6 +93,9 @@ vi.mock('@intelliflow/db', () => ({
         };
         agentActionRows.push(row);
         return row;
+      }),
+      findFirst: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        return agentActionRows.find((row) => matchesWhere(row, where)) ?? null;
       }),
       findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
         return agentActionRows.find((row) => row.id === where.id) ?? null;
@@ -105,6 +117,13 @@ vi.mock('@intelliflow/db', () => ({
 
         const [deleted] = agentActionRows.splice(index, 1);
         return deleted;
+      }),
+      deleteMany: vi.fn(async ({ where }: { where?: Record<string, any> }) => {
+        const before = agentActionRows.length;
+        for (let i = agentActionRows.length - 1; i >= 0; i--) {
+          if (matchesWhere(agentActionRows[i], where)) agentActionRows.splice(i, 1);
+        }
+        return { count: before - agentActionRows.length };
       }),
       findMany: vi.fn(
         async ({
@@ -135,6 +154,7 @@ vi.mock('@intelliflow/db', () => ({
 }));
 import {
   ApprovalWorkflowService,
+  actionStore,
   pendingActionsStore,
   executedActionsStore,
   rollbackStore,
@@ -147,6 +167,25 @@ vi.mock('../tools', () => ({
 }));
 
 // Mock the logger module
+// PG-198: the real executor is covered in approved-action-executor.test.ts.
+vi.mock('../approved-action-executor', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../approved-action-executor')>()),
+  // A plain function: this suite resets vi.fn() implementations between tests.
+  executeApprovedAction: async () => ({
+    status: 'SUCCEEDED',
+    result: { entityType: 'CASE', entityId: 'case-1' },
+  }),
+}));
+
+// #856: the real compensator is covered in approved-action-compensator.test.ts.
+const compensateSpy = vi.hoisted(() => vi.fn());
+vi.mock('../approved-action-compensator', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('../approved-action-compensator')>()),
+  compensateApprovedAction: compensateSpy,
+}));
+
+const passthroughSchema = { safeParse: (value: unknown) => ({ success: true, data: value }) };
+
 vi.mock('../logger', () => ({
   agentLogger: {
     log: vi.fn().mockResolvedValue(undefined),
@@ -414,46 +453,48 @@ describe('Approval Workflow (supplementary)', () => {
       );
     });
 
-    it('should set rollbackAvailable based on tool rollback support', async () => {
+    it('offers a rollback token when the succeeded action can be undone (#856)', async () => {
       const action = createTestPendingAction({ id: 'rollback-check-action' });
       await pendingActionsStore.add(action);
-
-      // Mock tool with rollback support
       (getAgentTool as any).mockReturnValue({
         name: 'create_case',
-        rollback: vi.fn(),
+        inputSchema: passthroughSchema,
       });
 
-      const decision: ApprovalDecision = {
-        actionId: 'rollback-check-action',
-        decision: 'APPROVE',
-        decidedBy: 'manager-1',
-        decidedAt: new Date(),
-      };
+      const result = await service.approveAction(
+        {
+          actionId: 'rollback-check-action',
+          decision: 'APPROVE',
+          decidedBy: 'manager-1',
+          decidedAt: new Date(),
+        },
+        testContext
+      );
 
-      const result = await service.approveAction(decision, testContext);
       expect(result.rollbackAvailable).toBe(true);
       expect(result.rollbackToken).toBeDefined();
+      const found = await executedActionsStore.findByRollbackToken(result.rollbackToken!);
+      expect(found?.id).toBe('rollback-check-action');
     });
 
-    it('should set rollbackAvailable=false when tool has no rollback', async () => {
-      const action = createTestPendingAction({ id: 'no-rollback-action' });
+    it('offers no rollback token for an action that cannot be undone (an update)', async () => {
+      const action = createTestPendingAction({ id: 'no-rollback-action', toolName: 'update_case' });
       await pendingActionsStore.add(action);
-
-      // Mock tool without rollback support
       (getAgentTool as any).mockReturnValue({
-        name: 'create_case',
-        // no rollback property
+        name: 'update_case',
+        inputSchema: passthroughSchema,
       });
 
-      const decision: ApprovalDecision = {
-        actionId: 'no-rollback-action',
-        decision: 'APPROVE',
-        decidedBy: 'manager-1',
-        decidedAt: new Date(),
-      };
+      const result = await service.approveAction(
+        {
+          actionId: 'no-rollback-action',
+          decision: 'APPROVE',
+          decidedBy: 'manager-1',
+          decidedAt: new Date(),
+        },
+        testContext
+      );
 
-      const result = await service.approveAction(decision, testContext);
       expect(result.rollbackAvailable).toBe(false);
       expect(result.rollbackToken).toBeUndefined();
     });
@@ -481,213 +522,220 @@ describe('Approval Workflow (supplementary)', () => {
   });
 
   describe('ApprovalWorkflowService.rollbackAction', () => {
-    it('should return error when rollback is no longer available', async () => {
-      const executedAction: ExecutedAction = {
-        ...createTestPendingAction({ id: 'rollback-unavail-1' }),
-        executedAt: new Date(),
-        rollbackAvailable: false,
-        rollbackToken: 'unavail-token',
-      };
-      // Must set rollbackAvailable to true for findByRollbackToken to find it,
-      // but then we test the !rollbackAvailable branch. Let's add it with true first.
-      executedAction.rollbackAvailable = true;
-      await storeExecutedAction(executedAction);
-      // Now disable rollback
-      await executedActionsStore.disableRollback('rollback-unavail-1');
+    const requestCtx = { user: { userId: 'user-1', tenantId: 'tenant-1' } } as any;
+    const caseResult = { entityType: 'CASE', entityId: 'case-created-1' };
 
-      const result = await service.rollbackAction(
+    const storeRollbackable = async (
+      id: string,
+      overrides: Partial<ExecutedAction> = {}
+    ): Promise<void> => {
+      await storeExecutedAction({
+        ...createTestPendingAction({ id, toolName: 'create_case' }),
+        executedAt: new Date(),
+        executionStatus: 'SUCCEEDED',
+        executionResult: caseResult,
+        rollbackAvailable: true,
+        rollbackToken: `${id}-token`,
+        ...overrides,
+      });
+    };
+
+    const rollback = (id: string, context: AgentAuthContext = testContext, token?: string) =>
+      service.rollbackAction(
         {
-          actionId: 'rollback-unavail-1',
-          rollbackToken: 'unavail-token',
+          actionId: id,
+          rollbackToken: token ?? `${id}-token`,
           requestedBy: 'user-1',
-          reason: 'Undo',
+          reason: 'Wrong client',
         },
-        testContext
+        context,
+        requestCtx
       );
 
-      // Token won't be found since rollbackAvailable is now false
+    beforeEach(() => {
+      compensateSpy.mockResolvedValue({
+        success: true,
+        restoredState: { cancelledCaseId: 'case-created-1' },
+      });
+    });
+
+    it('cancels the created case through the compensator and records the rollback', async () => {
+      await storeRollbackable('rb-ok');
+
+      const result = await rollback('rb-ok');
+
+      expect(result.success).toBe(true);
+      expect(result.restoredState).toEqual({ cancelledCaseId: 'case-created-1' });
+      expect(compensateSpy).toHaveBeenCalledWith('create_case', caseResult, requestCtx);
+      const row = agentActionRows.find((r) => r.id === 'rb-ok');
+      expect(row.status).toBe('ROLLED_BACK');
+      expect(row.rolledBackBy).toBe('user-1');
+      expect(row.rollbackReason).toBe('Wrong client');
+      expect(row.proposedState.rollbackAvailable).toBe(false);
+      expect(row.proposedState.rollbackRestoredState).toEqual({
+        cancelledCaseId: 'case-created-1',
+      });
+    });
+
+    it('cannot be used twice', async () => {
+      await storeRollbackable('rb-twice');
+
+      expect((await rollback('rb-twice')).success).toBe(true);
+      const second = await rollback('rb-twice');
+
+      expect(second.success).toBe(false);
+      expect(second.error).toContain('Invalid rollback token');
+      expect(compensateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('runs the compensation once when two rollbacks race', async () => {
+      await storeRollbackable('rb-race');
+
+      const results = await Promise.all([rollback('rb-race'), rollback('rb-race')]);
+
+      expect(results.filter((r) => r.success)).toHaveLength(1);
+      expect(compensateSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('gives the claim back when the compensation fails, so it can be retried', async () => {
+      await storeRollbackable('rb-fail');
+      compensateSpy.mockResolvedValueOnce({
+        success: false,
+        error: 'Cannot transition from CLOSED to CANCELLED',
+      });
+
+      const result = await rollback('rb-fail');
+
       expect(result.success).toBe(false);
+      expect(result.error).toBe('Cannot transition from CLOSED to CANCELLED');
+      const row = agentActionRows.find((r) => r.id === 'rb-fail');
+      expect(row.status).toBe('APPROVED');
+      expect(row.proposedState.rollbackAvailable).toBe(true);
+      expect(row.proposedState.rollbackClaimedAt).toBeNull();
+      expect(row.proposedState.rollbackClaimId).toBeNull();
+      expect((await rollback('rb-fail')).success).toBe(true);
+    });
+
+    it('does not find a token from another tenant', async () => {
+      await storeRollbackable('rb-tenant');
+
+      const result = await rollback('rb-tenant', { ...testContext, tenantId: 'other-tenant' });
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Invalid rollback token');
+      expect(compensateSpy).not.toHaveBeenCalled();
+    });
+
+    it('rejects a token that belongs to a different action', async () => {
+      await storeRollbackable('rb-a');
+      await storeRollbackable('rb-b');
+
+      const result = await rollback('rb-a', testContext, 'rb-b-token');
+
+      expect(result.success).toBe(false);
+      expect(compensateSpy).not.toHaveBeenCalled();
+    });
+
+    it('should return error when rollback is no longer available', async () => {
+      await storeRollbackable('rb-disabled');
+      await executedActionsStore.disableRollback('rb-disabled');
+
+      const result = await rollback('rb-disabled');
+
+      expect(result.success).toBe(false);
+      expect(compensateSpy).not.toHaveBeenCalled();
     });
 
     it('should return error when rollback window has expired', async () => {
-      const longAgo = new Date(Date.now() - 2 * 60 * 60 * 1000); // 2 hours ago
-      const executedAction: ExecutedAction = {
-        ...createTestPendingAction({ id: 'rollback-expired-1' }),
-        executedAt: longAgo,
-        rollbackAvailable: true,
-        rollbackToken: 'expired-window-token',
-      };
-      await storeExecutedAction(executedAction);
+      await storeRollbackable('rb-expired', {
+        executedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      });
 
-      const result = await service.rollbackAction(
-        {
-          actionId: 'rollback-expired-1',
-          rollbackToken: 'expired-window-token',
-          requestedBy: 'user-1',
-          reason: 'Too late',
-        },
-        testContext
-      );
+      const result = await rollback('rb-expired');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Rollback window has expired');
+      expect(compensateSpy).not.toHaveBeenCalled();
     });
 
-    it('should return error when tool does not support rollback', async () => {
-      const executedAction: ExecutedAction = {
-        ...createTestPendingAction({ id: 'no-tool-rollback-1', toolName: 'no_rollback_tool' }),
-        executedAt: new Date(),
-        rollbackAvailable: true,
-        rollbackToken: 'no-tool-rb-token',
+    it('lets an interrupted claim be retaken once stale, even past the window', async () => {
+      await storeRollbackable('rb-stale', {
+        executedAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+      });
+      const row = agentActionRows.find((r) => r.id === 'rb-stale');
+      // The request that claimed it died between the claim and the compensation.
+      row.proposedState = {
+        ...row.proposedState,
+        rollbackAvailable: false,
+        rollbackClaimedAt: Date.now() - 10 * 60 * 1000,
       };
-      await storeExecutedAction(executedAction);
 
-      // Mock tool without rollback
-      (getAgentTool as any).mockReturnValue({
-        name: 'no_rollback_tool',
-        // no rollback
-      });
-
-      const result = await service.rollbackAction(
-        {
-          actionId: 'no-tool-rollback-1',
-          rollbackToken: 'no-tool-rb-token',
-          requestedBy: 'user-1',
-          reason: 'Undo',
-        },
-        testContext
-      );
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Tool does not support rollback');
-    });
-
-    it('should successfully rollback when all conditions are met', async () => {
-      const executedAction: ExecutedAction = {
-        ...createTestPendingAction({ id: 'success-rollback-1', toolName: 'create_case' }),
-        executedAt: new Date(),
-        executionResult: { entityId: 'case-created-1' },
-        rollbackAvailable: true,
-        rollbackToken: 'success-rb-token',
-      };
-      await storeExecutedAction(executedAction);
-
-      // Mock tool with successful rollback
-      const mockRollback = vi.fn().mockResolvedValue({
-        success: true,
-        actionId: 'success-rollback-1',
-        rolledBackAt: new Date(),
-      });
-      (getAgentTool as any).mockReturnValue({
-        name: 'create_case',
-        rollback: mockRollback,
-      });
-
-      const result = await service.rollbackAction(
-        {
-          actionId: 'success-rollback-1',
-          rollbackToken: 'success-rb-token',
-          requestedBy: 'user-1',
-          reason: 'Wrong data',
-        },
-        testContext
-      );
+      const result = await rollback('rb-stale');
 
       expect(result.success).toBe(true);
-      expect(mockRollback).toHaveBeenCalled();
-
-      // Rollback should be disabled after success
-      const afterRollback = await executedActionsStore.get('success-rollback-1');
-      expect(afterRollback!.rollbackAvailable).toBe(false);
+      expect(compensateSpy).toHaveBeenCalledTimes(1);
+      expect(row.status).toBe('ROLLED_BACK');
     });
 
-    it('should handle rollback function throwing an error', async () => {
-      const executedAction: ExecutedAction = {
-        ...createTestPendingAction({ id: 'error-rollback-1', toolName: 'create_case' }),
-        executedAt: new Date(),
-        executionResult: { entityId: 'case-created-2' },
-        rollbackAvailable: true,
-        rollbackToken: 'error-rb-token',
-      };
-      await storeExecutedAction(executedAction);
+    it('a superseded claim cannot release or record over the claim that replaced it', async () => {
+      await storeRollbackable('rb-fence');
+      const tenant = '00000000-0000-4000-8000-000000000001';
+      const longAgo = Date.now() - 10 * 60 * 1000;
 
-      // Mock tool with failing rollback
-      (getAgentTool as any).mockReturnValue({
-        name: 'create_case',
-        rollback: vi.fn().mockRejectedValue(new Error('Rollback database error')),
+      // Worker A claims, then stalls past the stale threshold; worker B retakes the claim.
+      const claimA = await actionStore.claimRollback('rb-fence', tenant, 'rb-fence-token', longAgo);
+      const claimB = await actionStore.claimRollback('rb-fence', tenant, 'rb-fence-token');
+      expect(claimA).toBeTruthy();
+      expect(claimB).toBeTruthy();
+      expect(claimB).not.toBe(claimA);
+
+      // A wakes up and reports: neither its release nor its record touches B's claim.
+      await actionStore.releaseRollback('rb-fence', tenant, claimA!);
+      await actionStore.markRolledBack('rb-fence', tenant, claimA!, {
+        rolledBackBy: 'worker-a',
+        rolledBackAt: new Date(),
       });
+      const row = agentActionRows.find((r) => r.id === 'rb-fence');
+      expect(row.status).toBe('APPROVED');
+      expect(row.proposedState.rollbackAvailable).toBe(false);
+      expect(row.proposedState.rollbackClaimId).toBe(claimB);
+      // So no third worker can claim while B holds it.
+      expect(await actionStore.claimRollback('rb-fence', tenant, 'rb-fence-token')).toBeNull();
 
-      const result = await service.rollbackAction(
-        {
-          actionId: 'error-rollback-1',
-          rollbackToken: 'error-rb-token',
-          requestedBy: 'user-1',
-          reason: 'Undo',
-        },
-        testContext
-      );
+      await actionStore.markRolledBack('rb-fence', tenant, claimB!, {
+        rolledBackBy: 'worker-b',
+        rolledBackAt: new Date(),
+      });
+      expect(row.status).toBe('ROLLED_BACK');
+      expect(row.rolledBackBy).toBe('worker-b');
+    });
+
+    it('does not let a fresh claim be taken by a second request', async () => {
+      await storeRollbackable('rb-fresh');
+      const row = agentActionRows.find((r) => r.id === 'rb-fresh');
+      row.proposedState = {
+        ...row.proposedState,
+        rollbackAvailable: false,
+        rollbackClaimedAt: Date.now() - 30 * 1000,
+      };
+
+      const result = await rollback('rb-fresh');
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Rollback database error');
+      expect(compensateSpy).not.toHaveBeenCalled();
     });
 
-    it('should not disable rollback when rollback fails', async () => {
-      const executedAction: ExecutedAction = {
-        ...createTestPendingAction({ id: 'fail-rollback-1', toolName: 'create_case' }),
-        executedAt: new Date(),
-        executionResult: { entityId: 'case-3' },
-        rollbackAvailable: true,
-        rollbackToken: 'fail-rb-token',
-      };
-      await storeExecutedAction(executedAction);
-
-      // Mock tool with unsuccessful rollback (but no throw)
-      (getAgentTool as any).mockReturnValue({
-        name: 'create_case',
-        rollback: vi.fn().mockResolvedValue({
-          success: false,
-          actionId: 'fail-rollback-1',
-          error: 'Entity already deleted',
-        }),
+    it('refuses an action with no compensation (an update)', async () => {
+      await storeRollbackable('rb-update', {
+        toolName: 'update_case',
+        executionResult: { entityType: 'CASE', entityId: 'case-9' },
       });
 
-      const result = await service.rollbackAction(
-        {
-          actionId: 'fail-rollback-1',
-          rollbackToken: 'fail-rb-token',
-          requestedBy: 'user-1',
-          reason: 'Undo',
-        },
-        testContext
-      );
-
-      expect(result.success).toBe(false);
-    });
-
-    it('should return error when tool is not found', async () => {
-      const executedAction: ExecutedAction = {
-        ...createTestPendingAction({ id: 'no-tool-1', toolName: 'missing_tool' }),
-        executedAt: new Date(),
-        rollbackAvailable: true,
-        rollbackToken: 'no-tool-token',
-      };
-      await storeExecutedAction(executedAction);
-
-      // Mock tool as undefined
-      (getAgentTool as any).mockReturnValue(undefined);
-
-      const result = await service.rollbackAction(
-        {
-          actionId: 'no-tool-1',
-          rollbackToken: 'no-tool-token',
-          requestedBy: 'user-1',
-          reason: 'Undo',
-        },
-        testContext
-      );
+      const result = await rollback('rb-update');
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Tool does not support rollback');
+      expect(compensateSpy).not.toHaveBeenCalled();
     });
   });
 

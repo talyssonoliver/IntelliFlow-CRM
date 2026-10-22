@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     title: 'Aurora pricing: start free, pick a plan when you are ready',
     description:
       'Transparent per-user pricing. Starter, Professional, Enterprise, and Custom plans. All include a 14-day free trial with 17% annual savings.',
-    url: 'https://intelliflow-crm.com/pricing',
+    url: 'https://intelli-flow-crm-web.vercel.app/pricing',
     siteName: 'Aurora',
     type: 'website',
   },

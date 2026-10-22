@@ -1,0 +1,7 @@
+# 2026-10-18T08:50:31Z HEAD ab5c70b0f RED for codex-review-13 finding 2f19f195 (contact tags max 50 vs ContactTag names max 60)
+       × a tag as long as the longest ContactTag name is a valid contact tag 5ms
+       × rejects a tag one character over in both places 2ms
+AssertionError: expected undefined to be 60 // Object.is equality
+AssertionError: expected true to be false // Object.is equality
+ Test Files  1 failed (1)
+      Tests  2 failed | 58 passed (60)

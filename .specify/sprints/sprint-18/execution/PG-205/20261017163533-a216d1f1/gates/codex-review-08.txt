@@ -1,0 +1,36 @@
+# 2026-10-17T19:53:56Z codex-review after the second race fingerprint waiver (staged)
+[codex-review] base ref : origin/main
+[codex-review] changed  : 83 files total
+[codex-review] in scope : 58 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-17T19:54:48.848Z
+Base ref  : origin/main
+Files in scope : 58
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/app/contacts/(list)/new/page.tsx:263 — required-account-unrepresentable-in-form
+    Issue    : The New Contact form offers types that require an account but provides no way to supply the required account association.
+    Evidence : `contactType: toOptional(formData.contactType)` submits the selected type, but `ContactFormData` and `contactData` contain no `accountId` or account picker. Contact Types settings explicitly allows `requiredFields: ['accountId']`, and `assertTypeRequiredOnCreate` rejects the resulting request because `input.accountId` is absent. Selecting such a type, including through default preselection, therefore makes creation fail regardless of the other form values.
+    Fix      : Add a tenant account picker and submit its selected `accountId`, allowing users to satisfy account-required types and use the ACCOUNT_OWNER default.
+    Fingerprint: 183f8dcafd022519c4a52872d20a638f323f7854c105c79ff467edf321abfe10
+
+WAIVED FINDINGS (suppressed):
+  [HIGH] apps/api/src/modules/contact/contact-types.router.ts:451 — non-atomic-type-deletion-guard (fp: 0f290e25353c...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+# exit: 1

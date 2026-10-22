@@ -10,6 +10,7 @@ import { leadRouter } from './modules/lead/lead.router';
 import { leadSettingsRouter } from './modules/lead/lead-settings.router';
 import { contactRouter } from './modules/contact/contact.router';
 import { contactSettingsRouter } from './modules/contact/contact-settings.router';
+import { contactTypesRouter } from './modules/contact/contact-types.router';
 import { accountRouter } from './modules/account/account.router';
 import { accountSettingsRouter } from './modules/account/account-settings.router';
 import { accountTiersRouter } from './modules/account/account-tiers.router';
@@ -33,10 +34,13 @@ import { casesRouter } from './modules/legal/cases.router';
 import { documentsRouter } from './modules/legal/documents.router';
 import { documentSettingsRouter } from './modules/legal/document-settings.router';
 import { caseSettingsRouter } from './modules/legal/case-settings.router';
+import { caseTypesRouter } from './modules/legal/case-types.router';
 import { appointmentSettingsRouter } from './modules/legal/appointment-settings.router';
 import { reportSettingsRouter } from './modules/analytics/report-settings.router';
 import { uploadRouter } from './modules/documents/upload.router';
 import { agentRouter } from './modules/agent/agent.router';
+import { approvalPoliciesRouter } from './modules/agent/approval-policies.router'; // PG-198
+import { modelConfigRouter } from './modules/agent/model-config.router'; // PG-199
 import { conversationRouter } from './modules/agent/conversation.router';
 import { auditRouter } from './modules/security/audit.router';
 import { authRouter } from './modules/auth/auth.router';
@@ -142,12 +146,14 @@ export const appRouter = createTRPCRouter({
   ticketConfig: ticketConfigRouter, // PG-173: Ticket Configuration Pages
   leadSettings: leadSettingsRouter, // PG-178: Lead Settings Configuration
   contactSettings: contactSettingsRouter, // PG-182: Contact Settings Configuration
+  contactTypes: contactTypesRouter, // PG-205: Contact Types (applied at contact creation, ADR-080)
   accountSettings: accountSettingsRouter, // PG-183: Account Settings Configuration
   accountTiers: accountTiersRouter, // PG-196: tenant-configurable account revenue tiers
   accountTerritories: accountTerritoriesRouter, // PG-197: Territory Mapping
   dealSettings: dealSettingsRouter, // PG-184: Deal Settings Configuration
   ticketSettings: ticketSettingsRouter, // PG-185: Ticket Settings Configuration
   caseSettings: caseSettingsRouter, // PG-190: Case Settings Configuration
+  caseTypes: caseTypesRouter, // PG-204: Case Types (applied at case creation, ADR-076)
   appointmentSettings: appointmentSettingsRouter, // PG-189: Appointment/Calendar Settings (wired alongside PG-190)
   reportSettings: reportSettingsRouter, // PG-187: Report Settings (wired alongside PG-190)
   taskSettings: taskSettingsRouter, // PG-191: Task Settings Configuration
@@ -165,6 +171,8 @@ export const appRouter = createTRPCRouter({
 
   // AI & Automation
   agent: agentRouter,
+  approvalPolicies: approvalPoliciesRouter, // PG-198: Approval Policies
+  modelConfig: modelConfigRouter, // PG-199: Model Config
   conversation: conversationRouter, // IFC-148: Conversation records, messages, tool calls
   chainVersion: chainVersionRouter,
   zepBudget: zepBudgetRouter,

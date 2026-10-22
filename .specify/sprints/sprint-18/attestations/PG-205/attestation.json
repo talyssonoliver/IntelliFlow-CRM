@@ -1,72 +1,399 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-205",
-  "run_id": "eng-ops-002-r16-pg-205-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "20261017163533-a216d1f1",
+  "attestor": "Claude Code (claude-opus-5-5) - /full-pipeline PG-205 exec recovery lane (session ffa3728c), branch feat/pg-205-contact-types",
+  "attestation_timestamp": "2026-10-18T15:49:26Z",
+  "verdict": "NEEDS_HUMAN",
+  "context_acknowledgment": {
+    "files_read": [
+      {
+        "path": "apps/web/src/components/sidebar/configs/contacts.ts",
+        "sha256": "a90b3b835985698c80460a8bfcd5d1d0e1b730a2da2faaa146c20cb641d14f6a"
+      },
+      {
+        "path": "apps/web/src/app/contacts/(list)/contact-settings/ContactSettingsContent.tsx",
+        "sha256": "0ea144e641da815e3e4f289c51839efdaad3bab1c84a503ca06d1c0a27a276a7"
+      },
+      {
+        "path": "apps/api/src/modules/contact/contact-automation.ts",
+        "sha256": "cd85b8f2c78a29e4cfddee69d452d999d3401b4921ee5a48c92f00716aa1526f"
+      },
+      {
+        "path": "docs/planning/module-settings-playbook.md",
+        "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3"
+      },
+      {
+        "path": "docs/planning/prd-module-settings.md",
+        "sha256": "097b7bc9f25a29cffa354a5c263ef887c8754bf4ba8c85bde168ce0783b2c044"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Owner ruling: tenants start with the six existing contactType keys (customer, prospect, partner, vendor, investor, other); existing contacts.contactType values are never rewritten (no backfill).",
+      "Contact types are applied at contact creation only: explicit input > type default; required = tenant-wide ContactRequiredField rules UNION type requiredFields, checked after defaults; defaults never re-applied on update.",
+      "Every contactType / ContactTag / account query carries an explicit tenantId (prismaWithTenant does not inject it; RLS is not FORCEd).",
+      "Writes on contactTypes are limited to ADMIN/MANAGER/OWNER/SUPER_ADMIN via an in-handler assert; reads are open; contacts is CORE_CRM so plain tenantProcedure (no module gate).",
+      "Destructive writes run in $transaction; createMany never uses skipDuplicates; P2002 maps to one CONFLICT message without echoing input.",
+      "colorToken is one of the 18 contact TAG_COLOR_TOKENS, enforced by Zod, a DB CHECK and a fixed UI class map; AI defaults stay FALSE (no AI toggles added; all 12 existing toggles already wired).",
+      "Migrations 20261017120000 and 20261017120100 are additive Class A; production apply is manual (prisma migrate deploy) before the API is promoted (L13); never db push/reset against a non-local DB.",
+      "The tenant-wide jobTitle required-field key maps to the real title column (B14 fix)."
+    ],
+    "acknowledged_at": "2026-10-17T16:37:13Z"
+  },
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 98,
+    "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
-    "kpis_missed": 0,
-    "placeholders_found": 1
+    "gates_passed": 21,
+    "gates_failed": 4
   },
   "artifact_hashes": {
-    "apps/web/src/app/contacts/(list)/contact-types/page.tsx": "5730d6501a1bccfa4e9f24cf58d196087a5f82867195393c927b168062957204"
+    ".specify/sprints/sprint-18/attestations/PG-205/context_ack.json": "3fb00c0612b433004f969438963caf86ddd0c9e8f092d6159a9b3edee56e4a53",
+    "packages/domain/src/crm/contact/__tests__/contact-type-defaults.test.ts": "dadcd079abcb3d70fce9e7a7837f90e2ab6249e4427383f295edf55067cccefb",
+    "packages/validators/src/__tests__/contact-types.test.ts": "7ce27c43cec41ff5de63ae2f186d50999e001062582e814026eae8e95daba4ab",
+    "apps/api/src/modules/contact/__tests__/contact-type-resolver.test.ts": "1b7a8424353bbe16f5bcac5e9f4140b9d4f5d6c8bdf77d5d0f7c7a40edf78df6",
+    "apps/api/src/modules/contact/__tests__/contact-types.router.test.ts": "938b8f537eddd293570f378c965af0f9d637f397940a6b1f3f445d7083265050",
+    "apps/api/src/modules/contact/__tests__/contact.router.contact-types.test.ts": "2cda216e759f5f5c0cb1aa6ce7bcab6442664ae488e08cbc3f83ba5375bd0470",
+    "tests/integration/contact-types.test.ts": "9224a775006d62812f3c37d7548bd7c22b96b4dc9415613f8eb0c287f81416cd",
+    "tests/integration/case-types.test.ts": "ba545c6a499a2b7c77f73f5ecd49ceedd928d4848f52b84d04630ff7a618583a",
+    "apps/web/src/app/contacts/(list)/contact-types/__tests__/page.test.tsx": "6ee2dc0f56d68b2b0f5a8945dc2de654a355ba117599d764663e9302bb79878f",
+    "apps/web/src/app/contacts/(list)/contact-types/__tests__/ContactTypesContent.test.tsx": "6195080ffd09b98b69fd5326dc511145abee18720d15cc7e1fdd2d90f1736b88",
+    "apps/web/src/app/contacts/(list)/contact-types/__tests__/ContactTypesLoading.test.tsx": "6ed39b51057947a6345c4782dc4745d360f4bc0b42a1abd6de9daae3074fccd0",
+    "apps/web/src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeList.test.tsx": "35e2b148030867c88bf587455544b71d069a4a1cabe30ce33b4604612eae33c4",
+    "apps/web/src/app/contacts/(list)/contact-types/components/__tests__/ContactTypeDialog.test.tsx": "2e6e3983f8623b5938898a7620054252eea6c7623b7fd0ffa73e019fdea13cd7",
+    "apps/web/src/app/contacts/(list)/contact-types/components/__tests__/DefaultTagPicker.test.tsx": "6e13c9e7251d8731a70789d41fdac960e8385d212dae95a08d0dca55d2c3700f",
+    "apps/web/src/app/contacts/(list)/contact-types/components/__tests__/DeleteContactTypeDialog.test.tsx": "0c4b11be30a6106d6e6e5785cda5dbb1c62f9f1e646abf109b19ceb112925430",
+    "apps/web/src/components/contacts/__tests__/ContactTypeSelect.test.tsx": "2e948bcc8e1bd27a1869899cceb083409dcc7a3e6b760492a48b4ab167889aae",
+    "apps/web/src/components/contacts/__tests__/ContactTypeBadge.test.tsx": "30995e3ca08d807aa5e5460ce3591d600e67fd486d0b1ee21d567e15c472c5ed",
+    "apps/web/src/components/contacts/__tests__/contact-type-colors.test.ts": "8dcb115a7efa1026ebb79f4dccfdbd649faf2ce8ba8175f1d6586e5c4114d1b5",
+    "apps/web/src/app/contacts/[id]/edit/__tests__/page.test.tsx": "fdae376b3acad5934002465940d868aa5bdc11ad2b6f1d1554eae3f9533b45ea",
+    "apps/web/src/components/sidebar/__tests__/contacts-config.test.ts": "b7e09ae8c86b0e580c25a2f15bc81acd73d2934cc58b41c8101e218b4dafad9a",
+    "apps/web/src/app/contacts/(list)/__tests__/ContactsPageClient.contact-types.test.tsx": "b53b713f8c138da5e3ffc08caa286e35e806025d304b956c80f42ea1538f60bc",
+    "apps/web/src/components/contacts/__tests__/ContactList.contact-types.test.tsx": "e2e37244240d775e23b3c82deacd6b885cc1a3ec5ffdff8ce3ccf12c7c3f3218",
+    ".specify/sprints/sprint-18/attestations/PG-205/red-green/red-green-index.md": "36bb4baaff4a84fe07c334f7cfd9e84dd90dcdb2db1cbf4916a010b3cbb10db9",
+    "packages/domain/src/crm/contact/contact-type-defaults.ts": "0cb1d4a888674bca957fd3da4319f30a6f544f3065cddaefd779901e7209c834",
+    "packages/validators/src/contact-types.ts": "cc40bc73e26621dc702a107b2e662e286bc2c65e4ad820cefb739044e5d584a3",
+    "packages/db/prisma/migrations/20261017120000_contact_types/migration.sql": "3321c5c5c998e89194a50f4b0b767f074f92e7e2678c980a2a6506d10d46d725",
+    "packages/db/prisma/migrations/20261017120100_contacts_type_idx/migration.sql": "62079575ee1afae7c8a1c835377b4e833ea0fc30308c2db0bf128c4275204333",
+    "apps/api/src/modules/contact/contact-type-resolver.ts": "4b10fc9bd3862b9e5905dd8e66f1b3e912be101b57bdc0d06949a554f2b3c700",
+    "apps/api/src/modules/contact/contact-types.router.ts": "69d1f76a1da9b7d41600483790dd412281d8a98a372a1e8e28a03b8b0ef8a6da",
+    "apps/web/src/app/contacts/(list)/contact-types/ContactTypesContent.tsx": "0df0959c5f11916451464b04b54cb4c6dfb28835001d77f113c8d395dc2138af",
+    "apps/web/src/app/contacts/(list)/contact-types/ContactTypesLoading.tsx": "e394068de16b71b36bc086ac0ca4ee11c74213513b0f1cf258fb893866a89b03",
+    "apps/web/src/app/contacts/(list)/contact-types/components/ContactTypeList.tsx": "891b36f76e320ed56c7ff7acebf7aac75aaac35314eda19d28adc916983edd2a",
+    "apps/web/src/app/contacts/(list)/contact-types/components/ContactTypeDialog.tsx": "45665fcad3dfd421548dfcf3e2b14d123bd83f8a6d17e4a05631ddac93adc0cd",
+    "apps/web/src/app/contacts/(list)/contact-types/components/DefaultTagPicker.tsx": "281472603a56662a45048724a5cf1fff451c7da507c6a40e49b1245027d7cb72",
+    "apps/web/src/app/contacts/(list)/contact-types/components/DeleteContactTypeDialog.tsx": "87da013906653fedbf11cd7b8c867d47f7445fa1ec062c80f345969c5f074d50",
+    "apps/web/src/components/contacts/contact-type-colors.ts": "dbfc2a112500e0793173324038425174ad52a8f0473d7d00158a80ad996f3cb6",
+    "apps/web/src/components/contacts/ContactTypeBadge.tsx": "63a124382ea4faa0ae51cab42b4c4d82e3ebee7fc71f9327a663a7bf38773db8",
+    "apps/web/src/components/contacts/ContactTypeSelect.tsx": "bf91f1389b5e07b07dfde40cd3f99b963fa1893c4a53fb01e47384cdb0c8c4b8",
+    ".specify/sprints/sprint-18/findings/PG-205-findings.md": "9cd7c889918816ece0b3ef86b1d65c8b9c0cd80c8890965a282f49b048017bb6",
+    "packages/domain/src/crm/contact/__tests__/Contact.additional.test.ts": "0470147917b2aa48d525148d8d7b049027a6c27aea17381a59e3a1faf23486f6",
+    "packages/validators/__tests__/enum-consistency.spec.ts": "a0e7d000fd5ab3d651b236d64711b85c8613a51071020cbd28807393aefc6a99",
+    "packages/validators/__tests__/contact.test.ts": "05f073327bf1dc39bb043d70755ecadc5e8a5afbf69ff8d11759787afe64eb1d",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "4112144458637c6cb579adfa50cc2816ff98074ac51066e4a721d4667c18102e",
+    "apps/api/src/modules/contact/__tests__/contact-automation.test.ts": "0a62516c0be0217cd0b6817aede566f2ac37c55803e061207c9e218129a55824",
+    "apps/web/src/app/contacts/(list)/new/__tests__/page.test.tsx": "8bc21e915ee8b6b06e52238aaf0630c3d8cf3953f77b3139ddd86a69cc7b53ba",
+    "apps/web/src/components/contacts/__tests__/ContactForm.test.tsx": "c8ab9b818f4110b06786e842d9515e2a773538bf850ab654cf61b734ad3b0f92",
+    "apps/web/src/lib/contacts/__tests__/contact-search.test.ts": "df40c1550c7bff15944c9c82bfbe192a773559503f05ff791737cc35ad59b96d",
+    "packages/domain/src/crm/contact/Contact.ts": "5672013893b2d125ac0d50e8cf77cc0209a8ea7cc3bb61574c7ce28ea7333213",
+    "packages/domain/src/index.ts": "32841e69e9bd599a08eec70a504c9697c40c0dd6e7a5f02eb680afe401f10542",
+    "packages/validators/src/contact.ts": "e9835b5a756d4f53058fe740f8038d5058cbbfff982a1ff420866ef2b3572a82",
+    "packages/validators/src/index.ts": "b773153d01ac4d6159c5060a6822ecc3d158fd1b6f9370c565844015976f2345",
+    "packages/db/prisma/schema.prisma": "f854ad7b01d32fa2dbacff28538b52422bbf95cd334496cd99ff42a9d4bb981a",
+    "packages/db/src/index.ts": "7f04ed62d2c5918bc7e7a35d6310ac4e56493cb9ac5cb13517f288474fbad052",
+    "packages/application/src/services/ContactService.ts": "b09280088df5096e09200729994db7381ced4561d5447f64a7a326fb31df2b8f",
+    "packages/adapters/src/repositories/PrismaContactRepository.ts": "f1291f8ef0b00d6e6f8ff8543a76b6def537aa0ceb96f6fc069a5bb080c65450",
+    "apps/api/src/router.ts": "bf068fa8b6f99f609a596e63063009016001fed0f48acdd3dfcbfb2db6d8c3e5",
+    "apps/api/src/security/types.ts": "7b68277aa18dd142a002fad0a798821ce8376187c008158e63a5c632ab2e2426",
+    "docs/design/ui-flow-mapping.md": "6a81824f4053d466e4c651b6230bf022d5f677b522f113cdc0a2c256616b5945",
+    "docs/design/information-architecture.md": "27328cbe3be1c8138a1a4d464db4a1fa207071b0823d68b21a135b3ea29b6f5b",
+    "apps/api/src/modules/contact/contact.router.ts": "c76004faaaf43c66ec6541820579d50328f20b586b58b8300c7752043b16440f",
+    "apps/api/src/modules/contact/contact-automation.ts": "cc94f26b3cd229673321d469b7f641f6aa856239191266c4fb6b7fce4af59e06",
+    "apps/web/src/app/contacts/(list)/contact-types/page.tsx": "9995eacfa7c17cb63600a256797d0da14b0a41e1bfc7c66c538ad6579eca1c63",
+    "apps/web/src/app/contacts/(list)/new/page.tsx": "fa35bffdc7ee58171a3d4e0f96fed64ae9da5fa1d33c512c7716671b19f3c035",
+    "apps/web/src/components/contacts/ContactForm.tsx": "4f9aa964364bcda6f55e3ec697d629d32d465a52ef7e7ef605e3d9f1d1affa00",
+    "apps/web/src/app/contacts/[id]/edit/page.tsx": "edd83f1059e154ea0305a7beb1518f5c7575853b4881c0eea3f0c28aa20a6f7b",
+    "apps/web/src/app/contacts/(list)/ContactsPageClient.tsx": "f6802e26a8fb24e958f4b5518ec8be3fa501393864b324ede280e69ff3bfb91f",
+    "apps/web/src/lib/contacts/contact-search.ts": "3f9e710c5d33c83e80acfb4052a0c4ca4ccccb650062a0ae7b3885bfe87aed85",
+    "docs/design/page-registry.md": "28b2895a3fdfc562fec488bd36effb7b3cb590c83ad39359b395bb9a94a4248f",
+    "docs/design/sitemap.md": "8b98a0888166aeaaf76a98909b995af6f3a495705dbc7387490ee067903dc3d3",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "3ec1b582e4a2b341b7d549af929808cfdd25eb654ad12b14d9dd8513f2968c22",
+    "docs/design/navigation-reachability-audit.md": "f8df08e00f5375b7f2d5950d1effbacc87ab868d965f0ef80e556d51ebbe0086",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "08ba9a35ff9fa007021f1274e4f7b742c611c29f919b715cef8b6371bc294e94",
+    "docs/architecture/diagrams/core-crm-dependency-chain.md": "82f4b9ac738f968a1542770bdb392df1d80a2884b015e601899752742390284b",
+    "docs/planning/prd-module-settings.md": "8b99a1c068583eea29de08729a79147a5060e0fca2b73c0be38ebff9e31d45f5",
+    "docs/architecture/adr/ADR-080-tenant-contact-types.md": "ad63191492598d81105c065a615f5b9457f64dcfd2caa0d22a3809a2bd93b815",
+    "docs/architecture/adr/README.md": "afd8e295dc0f7112b361a2672b66ade66a20f089db11a6cafd57cb2b99eecc8c",
+    "docs/compliance-and-governance/compliance/wcag-conformance-statement.md": "02a168d94d2142c6481c69f4801f487ab51bbd44333587faf7a8e372c04b9e63",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "cfbe2baef34d93d378b40caf4370859aeb663b7c9fbe561163eb9cfde8d4c33a",
+    "artifacts/metrics/debt-ledger.yaml": "0f576ae3772631a33f4ec4cbdd2c8711dcf4164b46a6de84c545a7b2bde1d232",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/design-check.md": "52f5ff5b91a17c8acf13653c407b4b62631ccb4291360b1260cbca26460bb362",
+    "artifacts/lighthouse/PG-205/contacts-contact-types-r1.report.json": "78352771a1175e1708a9ce25d82dffb4a222613287757f20e6dc525f15a8acd0",
+    "artifacts/lighthouse/PG-205/contacts-new-r1.report.json": "14c51d1a170cd45658fe1d66696907dd77c950fac86a21a1cdd76c6a9cb2d5de",
+    "artifacts/lighthouse/PG-205/waiver-evidence.md": "a1fc0e381d1cb3900595d51217344585757efa3f5b6d6d2204c5418145df8cd1",
+    "artifacts/coverage/PG-205-after.json": "40e39c34ff2e415f1cb328b1c01e9960f1f108aebbdebdd032140353e2bd8a2b",
+    "artifacts/coverage/PG-205-before.json": "05861ff94df114309b54594a654a034859b80a86441e6d2629c038b12edc3da4",
+    "packages/validators/src/contact-settings.ts": "fd125877cc53055b7b26c884ebb18f360695a509885ed21fee1df781b81d157d",
+    "docs/compliance-and-governance/compliance/vpat-2.5.md": "c1c1d6f50968cbaaf70f6baab2cef566655c06996eb405b550b424774069bab5",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/PG-205-delivery.md": "48e4e7960072d4f17eac20018c89471c55fe4639ef53fd783ecd4cd206d0387c",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-aggregate.json": "dfba35de5c802e641bed1b157068076f2d1802ed5d4775b2e45e4fad415ac7b4",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/compliance-check.md": "891fb6bc290e8a63cfc614975770fb47bef0fbf536c86a38ca623432efd9b3e4",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/a11y-review.md": "2ac53c724d23868e34cf41e90953bcb86c14f118c5ba1a370d30049ebb19728d",
+    "apps/web/src/components/settings/TypeSettingsLoading.tsx": "51f90309cf8abd96a96bfdb51e4c20b4334ab5ae4b9ae418652e896b0d7ee812",
+    "apps/web/src/components/settings/DeleteTypeDialog.tsx": "16e6691874eb3283ffa6a326c9681828c23413abdd58b34ac6c7f1133ec9c4c2",
+    "apps/web/src/app/cases/(list)/case-types/CaseTypesLoading.tsx": "255ce205404c75d5d7bcde6b82462b16df3467ecaf6bb5d06a07d54a7f5e3c0a",
+    "apps/web/src/app/cases/(list)/case-types/components/DeleteCaseTypeDialog.tsx": "6bb04d6c2e8d27a6c801c438f9e9eeab9eee0a57c3e4da275c4ac065f8261874",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-duplication-round.txt": "a387ab98941fc7e6b2bfc34e15fed34d9018519e2dbd444d9fae73c43a3d0926",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-dedup-web-tests.txt": "c1216c48a912d878788e8ce6dfa7d6197902a22c832d2ad298b6a79c1bccf1fc",
+    ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-s2871-server-tests.txt": "17fd125713bfe68c13a8182e83059bf3fcd1b0e51661e8622d4c17900fddf998"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm --filter @intelliflow/domain typecheck && pnpm --filter @intelliflow/validators typecheck && pnpm --filter @intelliflow/db typecheck && pnpm --filter @intelliflow/application typecheck && pnpm --filter @intelliflow/adapters typecheck && pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/web typecheck",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-17T21:30:09Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-typecheck-*.txt (+ stoa-foundation-recheck-typecheck.txt at 24a91a9f6)"
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm --filter @intelliflow/domain test && pnpm --filter @intelliflow/validators test && pnpm --filter @intelliflow/db test && pnpm --filter @intelliflow/application test && pnpm --filter @intelliflow/adapters test && pnpm --filter @intelliflow/api test && pnpm --filter @intelliflow/web exec vitest run && pnpm test:integration (slot, exclusive intelliflow-db)",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-17T21:52:02Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-test-*.txt: domain 3060, validators 2741, db 224+14 skipped, application 1486, adapters 2982, api 7801+18 skipped, web 12990, tools 33, integration 440+50 skipped; contact-types integration 24/24; post-run commits re-verified in red-green/22-23 and the STOA re-checks"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm --filter @intelliflow/domain lint && pnpm --filter @intelliflow/validators lint && pnpm --filter @intelliflow/db lint && pnpm --filter @intelliflow/application lint && pnpm --filter @intelliflow/adapters lint && pnpm --filter @intelliflow/api lint && pnpm --filter @intelliflow/web lint && CI=1 SONAR_GUARD_BASE=origin/main pnpm run lint:sonar:guard",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-18T08:46:05Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-lint-*.txt, sonar-guard-branch.txt"
+    },
+    {
+      "name": "Build",
+      "command": "pnpm turbo build --filter=./packages/* && pnpm --filter ./apps/web build",
+      "exit_code": 0,
+      "passed": true,
+      "timestamp": "2026-10-17T21:58:53Z",
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-build-packages.txt, step19-build-web.txt (HEAD 7319f0d2c)"
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
+      "gate_id": "preflights (page-doc-cochange, plan-reviewer-subagent, exec-readiness, nav-wiring, task-json-schemas)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-check-*.txt, gate-task-json-schemas.txt"
+    },
+    {
+      "gate_id": "gate-0 context-ack",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/attestations/PG-205/context_ack.json (5 files, 8 invariants)"
+    },
+    {
+      "gate_id": "gate-1 plan checkboxes",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/planning/PG-205-plan.md: all boxes ticked, each with its evidence"
+    },
+    {
+      "gate_id": "gate-2 artifact hashes",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-2-artifact-hashes.json: 39 create + 43 modify exist, 0 shims"
+    },
+    {
+      "gate_id": "gate-2b import reachability",
+      "passed": true,
+      "log_path": "13/13 created source files imported"
+    },
+    {
+      "gate_id": "gate-2c runtime wiring",
+      "passed": true,
+      "log_path": "stub gone, hard-coded options gone, z.enum replaced, consumers wired (compliance-check.md)"
+    },
+    {
+      "gate_id": "gate-2d shared component reuse",
+      "passed": true,
+      "log_path": "ContactTypeBadge composes ui Badge; delete dialog needs the inline server error (ConfirmationDialog has none)"
+    },
+    {
+      "gate_id": "gate-3 build validation",
+      "passed": true,
+      "log_path": "4/4 validation_results"
+    },
+    {
+      "gate_id": "gate-3a validation matrix",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates (every matrix row mapped to a full-suite or targeted log; prisma validate step19-prisma-validate.txt)"
+    },
+    {
+      "gate_id": "gate-3b scoped coverage",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-3b-scoped-coverage.txt: S 96.46 / B 90.91 / F 92.40 / L 97.21; stoa-quality-recheck-coverage.txt"
+    },
+    {
+      "gate_id": "gate-3c knip dead code",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-knip.txt: 0 PG-205 issues"
+    },
+    {
+      "gate_id": "diff-coverage (Sonar new_coverage mirror)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/step19-diff-coverage.txt",
+      "score": 95.4
+    },
+    {
+      "gate_id": "codex-review",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/gates/codex-review-15.txt (fix round, 2026-10-18T10:40:02Z): PASS, 0 unwaived; round 14 also PASS (waiver 0f290e25/148dd60f = owner ruling 8)"
+    },
+    {
+      "gate_id": "simplify (Step 15)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/step15-simplify.md"
+    },
+    {
+      "gate_id": "a11y-expert WCAG 2.1 AA",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/a11y-review.md: PASS_WITH_FIXES, fixed in 7319f0d2c"
+    },
+    {
+      "gate_id": "code-review skill",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/code-review-summary.json (quick)"
+    },
+    {
+      "gate_id": "sonarqube-fix skill",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/sonarqube-fix-report.md"
+    },
+    {
+      "gate_id": "stoa-foundation",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Foundation.json (FAIL at 3ae41b2df: prettier; PASS on re-check at 24a91a9f6)"
+    },
+    {
+      "gate_id": "stoa-domain",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Domain.json (PASS)"
+    },
+    {
+      "gate_id": "stoa-security",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Security.json (PASS; gitleaks clean)"
+    },
+    {
+      "gate_id": "stoa-quality",
       "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-205 requires page.tsx (exists), ContactTypesContent.tsx (MISSING), apps/api/src/modules/contact/contact-types.router.ts (MISSING), packages/validators/src/contact-types.ts (MISSING), context_ack.json (MISSING). Broad grep for contact-types router/validator logic across apps/api and packages/validators returned zero hits."
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-verdicts/Quality.json (WARN: per-file branches 81-87%)"
+    },
+    {
+      "gate_id": "stoa-aggregate",
+      "passed": false,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/stoa-aggregate.json: WARN"
+    },
+    {
+      "gate_id": "compliance-check skill",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/compliance-check.md"
+    },
+    {
+      "gate_id": "lighthouse-gte-90 (Gate 14)",
+      "passed": false,
+      "log_path": "NEEDS_HUMAN: artifacts/lighthouse/PG-205/waiver-evidence.md (auth routes redirect to /login; no non-production LHCI_TEST_* credentials)"
+    },
+    {
+      "gate_id": "worktree-landed (Gate 4b)",
+      "passed": false,
+      "log_path": "NEEDS_HUMAN (runner-owned): .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/gate-check-worktree-landed.txt BLOCK (unpushed; the batch-2 mission fixes the branch name feat/pg-205-contact-types, not agent/<TASK>); pre-ship + one push follow this commit"
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Diff coverage on changed lines (Sonar new_coverage mirror)",
+      "target": ">= 80%",
+      "actual": "TOTAL 95.4% (960/1006 lines + branch conditions) at 7319f0d2c",
+      "met": true
+    },
+    {
+      "kpi": "Domain coverage",
+      "target": "> 95%",
+      "actual": "domain package Lines 95.25%, Statements 95.2%, Branches 92.16%, Functions 93.3% (3060 tests); contact-type-defaults.ts Lines 100%, Contact.ts 100%",
+      "met": true
+    },
+    {
+      "kpi": "Full suites of touched packages",
+      "target": "all green",
+      "actual": "domain 3060, validators 2741, db 224 (+14 skipped), application 1486, adapters 2982, api 7801 (+18 skipped), web 12990 (825 files), integration 440 (+50 skipped), tools 33",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse (performance/accessibility) on /contacts/contact-types and /contacts/new",
+      "target": ">= 90",
+      "actual": "open gate: Path A at 7319f0d2c ends on /login for both routes (login-page scores 0.87-0.88 perf, 0.93 a11y, not PG-205); no non-production credentials for Path C; NEEDS_HUMAN, no approver named",
+      "met": false
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-182"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /contacts/(list)/contact-types renders",
+      "criterion": "Contact types at /contacts/(list)/contact-types (tenant types seeded from the six CONTACT_TYPES, owner ruling 1; required fields per type, default fields, default labels)",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "contact-types.router.ts, ContactTypesContent.tsx, contact.create applies resolveContactCreateDefaults"
     },
     {
-      "criterion": "Taxonomy: person/organization/vendor/partner, required fields per type, default fields, default labels implemented",
-      "met": false,
-      "evidence": "page.tsx (16 lines) is a static placeholder ('Contact types configuration coming soon.'). No form, no data fetch, no contact-type model."
+      "criterion": "PageHeader + bento grid; canonical EmptyState passive; system CTAs",
+      "met": true,
+      "evidence": "ContactTypesContent.tsx (lg:grid-cols-12), ContactTypeList EmptyState entity=contacts phase=passive"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate type names; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "$transaction on destructive writes; no skipDuplicates",
+      "met": true,
+      "evidence": "contactTypes.update/delete/setDefault in $transaction; resolver createMany without skipDuplicates"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
+      "criterion": "Zod superRefine for duplicate type names; colorToken CHECK constraint",
+      "met": true,
+      "evidence": "contactTypeNameSchema (superRefine, packages/validators/src/contact-types.ts) is what ContactTypeDialog validates names with (red-green/26-*, wired 2026-10-18 after the runner audit found it unused); the DB (tenantId, lower(name)) unique index stays authoritative for races; colorToken CHECK in migration 20261017120000"
+    },
+    {
+      "criterion": "AI defaults FALSE; every Boolean toggle wired or declared",
+      "met": true,
+      "evidence": "no AI toggles added; PRD addendum Boolean toggles table (isActive/isDefault/isSystem wired)"
+    },
+    {
+      "criterion": "cross-tenant negative test",
+      "met": true,
+      "evidence": "contact-types.router.test.ts FOREIGN id NOT_FOUND; integration composite FK + RLS"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
       "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "evidence": "NEEDS_HUMAN, artifacts/lighthouse/PG-205/waiver-evidence.md"
+    },
+    {
+      "criterion": "verified by: pnpm test",
+      "met": true,
+      "evidence": "Tests validation_result"
     }
   ],
-  "dependencies_verified": [],
+  "nav_wiring_confirmed": true,
+  "spec_session_consensus": "7/7 APPROVED in 1 round (/spec-consensus subagent mode, voters launched after 16:15:37Z, verdicts back before 16:16:34Z, 2026-10-17); owner rulings 1-9 recorded in PG-205-owner-ruling.md",
+  "plan_reviewer_verdict": "APPROVED_WITH_CHANGES",
+  "plan_reviewer_agent": "plan-reviewer-pg205",
+  "plan_reviewer_marker": "<!-- plan-reviewer: subagent -->",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-205-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-205-plan.md",
   "environment": {
-    "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v22.14.0 (nvm) for every test/build/typecheck/lint run; host default v25.2.1 not used for gates",
+    "git_commit": "77b5cbd2f45f7a706b0b52ebfb2c55815fde78d6",
+    "branch": "feat/pg-205-contact-types"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit 2e7bb135ada2108554f853ae04f99e16da4b98bd ('feat(web): add account, lead, contact, and deal subpages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: ContactTypesContent.tsx, contact-types.router.ts, contact-types validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
-  "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
-    "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-205/context_ack.json — absent"
-    ]
-  }
+  "notes": "PRISMA MIGRATIONS (L13, LOUD): packages/db/prisma/migrations/20261017120000_contact_types and 20261017120100_contacts_type_idx (CREATE INDEX CONCURRENTLY). Class A, additive. The production apply is MANUAL with prisma migrate deploy and MUST happen BEFORE the API is promoted.\nVERDICT NEEDS_HUMAN because: (1) Lighthouse DoD 12 cannot be measured on authenticated routes without non-production credentials (no waiver approver named; the owner decides); (2) Gate 4b is runner-owned: the batch-2 mission requires one pre-ship at the final SHA and one push AFTER this attestation is committed, and fixes the branch name feat/pg-205-contact-types. This attestation is therefore written before the push, contrary to the exec-attestation Gate 4b precondition. That conflict is disclosed here, not hidden.\nSTOA aggregate WARN: Quality WARN on per-file branch coverage 81-87% (aggregate >= 80% floor). Foundation FAIL (prettier on one test file) at 3ae41b2df was fixed in 24a91a9f6 and PASSed on re-check.\nRECOVERY: the first exec lane (session 476f3de8) was killed mid-exec. The recovery lane (session ffa3728c, from 2026-10-17T20:49:35Z) re-verified 18941caa GREEN (its RED came from the first lane), then fixed codex a3d0b852, 068bafef, 0dc7d185 and 2f19f195 and the a11y review findings, all test-first with logs. red-green-index.md was compiled at the end, as it states. The session or host was idle between 2026-10-17T22:04:14Z and 2026-10-18T08:34:18Z.\nRUNNER AUDIT FIX ROUND (2026-10-18, Aurora): P1-1 the 147 tracked .log evidence files were renamed to .txt (artifact-lint rejects tracked *.log) and every citation updated; P1-2 the integration colour-token test no longer assumes the hand-written contact_tags CHECK that db push (CI) never creates; P1-3 Edit Contact sends contactType only when it changed (null only when an existing type is cleared), so an untyped contact saves against the pre-promote API; P2(a) the duplicate-name superRefine is now what the dialog validates with; P2(b) a11y #4/#5 were class-only fixes without their own RED (claim corrected); P2(c) no self-referencing hashes; P2(d) the delete/create race is covered by ruling 8, not by a test (the integration test is sequential). Owner ruling 8 re-confirmed by Talysson on 2026-10-18 (relayed by Aurora).\nMAIN MERGE + SONAR ROUND (2026-10-18, Aurora): origin/main a593ea1b5 (#916, PG-202) merged; both routers kept in app-router.smoke.test.ts, both sides kept in the ADR README, dependency chains, debt ledger (PG-202 x6 + PG-205 x4) and codex waivers; ui-flow-mapping counts re-merged to 70 routers / 412 procedures; VPAT row 1.11.0 and WCAG statement row 1.10.0 for PG-205 (after PG-202). SonarCloud S2871: both id sorts in contact-types.router.ts changedFields use localeCompare (order-only comparison, no behaviour change, no RED). New duplication 3.6% -> loading skeleton and delete dialog extracted to apps/web/src/components/settings (shared with PG-204 case types), 47 of 132 duplicated lines removed; tests: .specify/sprints/sprint-18/execution/PG-205/20261017163533-a216d1f1/matop/gates/sonar-dedup-web-tests.txt (165) and sonar-s2871-server-tests.txt (411 + 2 skipped).\nACCEPTED RISK: owner ruling 8, contactTypes.delete race with a concurrent contact save (no FK, ADR-080), waivers 0f290e25/148dd60f.\nCoverage highlights: diff 95.4%; domain lines 95.25%; created-file scoped S96.46/B90.91/F92.40/L97.21.\nNot committed (generated churn): artifacts/benchmarks/IFC-310-merge.json, artifacts/coverage/* (rewritten by the scoped coverage run), artifacts/reports/plan-lint-report.json."
 }

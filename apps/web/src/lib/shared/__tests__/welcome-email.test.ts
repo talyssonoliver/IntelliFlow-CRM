@@ -192,4 +192,49 @@ describe('welcome-email', () => {
       expect(/^[0-9a-f]+$/i.test(token)).toBe(true);
     });
   });
+
+  describe('APP_URL resolution (#229)', () => {
+    const ORIGINAL_APP_URL = process.env.NEXT_PUBLIC_APP_URL;
+
+    afterEach(() => {
+      vi.unstubAllEnvs();
+      if (ORIGINAL_APP_URL === undefined) {
+        delete process.env.NEXT_PUBLIC_APP_URL;
+      } else {
+        process.env.NEXT_PUBLIC_APP_URL = ORIGINAL_APP_URL;
+      }
+      vi.resetModules();
+    });
+
+    it('uses NEXT_PUBLIC_APP_URL for links when it is set', async () => {
+      vi.resetModules();
+      vi.stubEnv('NEXT_PUBLIC_APP_URL', 'https://staging.example.invalid');
+
+      const { buildWelcomeEmailPayload } = await import('../welcome-email');
+      const payload = buildWelcomeEmailPayload({
+        fullName: 'Jane Smith',
+        email: 'jane@example.com',
+        verificationToken: 'test-token-123',
+      });
+
+      expect(payload.htmlBody).toContain(
+        'https://staging.example.invalid/auth/verify-email/test-token-123'
+      );
+      expect(payload.htmlBody).not.toContain('intelli-flow-crm-web.vercel.app');
+    });
+
+    it('falls back to the canonical production domain when NEXT_PUBLIC_APP_URL is unset', async () => {
+      vi.resetModules();
+      vi.unstubAllEnvs();
+      delete process.env.NEXT_PUBLIC_APP_URL;
+
+      const { buildWelcomeEmailPayload } = await import('../welcome-email');
+      const payload = buildWelcomeEmailPayload({
+        fullName: 'Bob Wilson',
+        email: 'bob@example.com',
+      });
+
+      expect(payload.htmlBody).toContain('https://intelli-flow-crm-web.vercel.app/dashboard');
+    });
+  });
 });

@@ -1,5 +1,11 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createTenantAiSpendRecorder } from './tenant-ai-spend';
+
+const { notePurposeSpend, notePurposeSpendTotal } = vi.hoisted(() => ({
+  notePurposeSpend: vi.fn(),
+  notePurposeSpendTotal: vi.fn(),
+}));
+vi.mock('../lib/purpose-ceiling.js', () => ({ notePurposeSpend, notePurposeSpendTotal }));
+import { createTenantAiSpendRecorder, createPurposeSpendRecorder } from './tenant-ai-spend';
 import { tenantContextStore } from '../tracing/tenant-context';
 
 function setup(
@@ -117,5 +123,98 @@ describe('createTenantAiSpendRecorder', () => {
 
     expect(increment).toHaveBeenCalledTimes(1);
     expect(increment).toHaveBeenCalledWith('tenant-alpha', 'aiSpendCentsPerMonth', 50);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// PG-199: per-purpose spend (hundredths of a cent), next to the tenant aggregate
+// ---------------------------------------------------------------------------
+
+describe('createPurposeSpendRecorder (PG-199)', () => {
+  function purposeSetup(
+    tenantId: string | undefined,
+    addSpend = vi.fn().mockResolvedValue(1),
+    now = () => new Date('2026-10-19T12:00:00Z')
+  ) {
+    const logger = { warn: vi.fn() };
+    const record = createPurposeSpendRecorder({
+      spend: { addSpend },
+      getTenantId: () => tenantId,
+      logger,
+      now,
+    });
+    return { record, addSpend, logger };
+  }
+
+  it('writes the call cost to the purpose counter for the UTC month, in centicents', async () => {
+    const { record, addSpend } = purposeSetup('tenant-1');
+    await record({ cost: 0.0123, metadata: { purpose: 'reasoning' } });
+    expect(addSpend).toHaveBeenCalledWith('tenant-1', 'reasoning', '2026-10', 123);
+  });
+
+  it('accumulates sub-centicent costs per (tenant, purpose) instead of dropping them', async () => {
+    const { record, addSpend } = purposeSetup('tenant-1');
+    await record({ cost: 0.00004, metadata: { purpose: 'rag' } }); // 0.4 centicent
+    expect(addSpend).not.toHaveBeenCalled();
+    await record({ cost: 0.00007, metadata: { purpose: 'rag' } }); // +0.7 -> 1.1
+    expect(addSpend).toHaveBeenCalledWith('tenant-1', 'rag', '2026-10', 1);
+  });
+
+  it('ignores usage without a known purpose, a non-billable tenant or no cost', async () => {
+    const a = purposeSetup('tenant-1');
+    await a.record({ cost: 0.5, metadata: { purpose: 'billing' } });
+    await a.record({ cost: 0.5 });
+    await a.record({ cost: 0, metadata: { purpose: 'email' } });
+    expect(a.addSpend).not.toHaveBeenCalled();
+
+    const b = purposeSetup('unknown');
+    await b.record({ cost: 0.5, metadata: { purpose: 'email' } });
+    const c = purposeSetup(undefined);
+    await c.record({ cost: 0.5, metadata: { purpose: 'email' } });
+    expect(b.addSpend).not.toHaveBeenCalled();
+    expect(c.addSpend).not.toHaveBeenCalled();
+  });
+
+  it('keeps the spend for the next call and warns when the write fails', async () => {
+    const addSpend = vi.fn().mockRejectedValueOnce(new Error('db down')).mockResolvedValue(1);
+    const { record, logger } = purposeSetup('tenant-1', addSpend);
+    await record({ cost: 0.01, metadata: { purpose: 'email' } }); // 100 centicents, fails
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.objectContaining({ tenantId: 'tenant-1', purpose: 'email', centiCents: 100 }),
+      expect.stringContaining('USAGE_NOT_RECORDED')
+    );
+    await record({ cost: 0.0001, metadata: { purpose: 'email' } }); // +1
+    expect(addSpend).toHaveBeenLastCalledWith('tenant-1', 'email', '2026-10', 101);
+  });
+
+  it('adds new spend to the ceiling cache once, never the retried part again', async () => {
+    notePurposeSpend.mockClear();
+    const addSpend = vi.fn().mockRejectedValueOnce(new Error('db down')).mockResolvedValue(1);
+    const { record } = purposeSetup('tenant-1', addSpend);
+    await record({ cost: 0.01, metadata: { purpose: 'email' } }); // 100 new, write fails
+    await record({ cost: 0.0001, metadata: { purpose: 'email' } }); // 1 new, writes 101
+    expect(addSpend).toHaveBeenLastCalledWith('tenant-1', 'email', '2026-10', 101);
+    expect(notePurposeSpend.mock.calls.map((c) => c[2])).toEqual([100, 1]);
+  });
+
+  it('reports the persisted total of each successful write to the ceiling cache', async () => {
+    notePurposeSpendTotal.mockClear();
+    const { record } = purposeSetup('tenant-1', vi.fn().mockResolvedValue(4_321));
+    await record({ cost: 0.0123, metadata: { purpose: 'reasoning' } });
+    expect(notePurposeSpendTotal).toHaveBeenCalledWith(
+      'tenant-1',
+      'reasoning',
+      4_321,
+      expect.any(Date)
+    );
+  });
+
+  it('starts a fresh carry in a new month', async () => {
+    let now = new Date('2026-10-31T23:59:59Z');
+    const { record, addSpend } = purposeSetup('tenant-1', vi.fn().mockResolvedValue(1), () => now);
+    await record({ cost: 0.00005, metadata: { purpose: 'rag' } }); // 0.5, carried in October
+    now = new Date('2026-11-01T00:00:01Z');
+    await record({ cost: 0.00005, metadata: { purpose: 'rag' } }); // 0.5 in November
+    expect(addSpend).not.toHaveBeenCalled();
   });
 });

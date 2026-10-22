@@ -1,0 +1,18 @@
+{
+  "task_id": "PG-204",
+  "run_id": "exec-PG-204-20261013",
+  "selected_at": "2026-10-13T06:39:43Z",
+  "source": ".claude/skills/exec/references/phase3-matop-validation.md (STOA Selection table)",
+  "selection": [
+    { "stoa": "Foundation", "role": "lead", "why": "always included; PG-* page task (component, page, UI)" },
+    { "stoa": "Domain", "role": "supporting", "why": "business logic: case-type defaults applied at case creation (domain resolver, router precedence); the task's STOA is domain" },
+    { "stoa": "Quality", "role": "supporting", "why": "keywords test / coverage / a11y: TDD suites, diff coverage, axe + WCAG review" },
+    { "stoa": "Security", "role": "supporting", "why": "keyword permission: admin-only mutations (RBAC), tenant isolation, a migration with RLS" }
+  ],
+  "not_selected": [
+    { "stoa": "Intelligence", "why": "no AI, ML or embedding change" },
+    { "stoa": "Automation", "why": "no CI, CD, pipeline or Docker change" }
+  ],
+  "baseline_gates": ["turbo-typecheck (root pnpm run typecheck)", "turbo-lint (root pnpm run lint)", "build (matrix row 11: touched packages + web)"],
+  "baseline_note": "Root 'pnpm run build' (turbo build of every app) is not run here: ~12 GB free on C:, and three lanes share the machine. The build of every touched package plus apps/web is matrix row 11; the full build runs in the runner's pre-ship at the final SHA."
+}

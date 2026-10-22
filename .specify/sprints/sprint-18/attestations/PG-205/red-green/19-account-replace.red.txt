@@ -1,0 +1,8 @@
+# 2026-10-17T20:01:38Z HEAD dbb06a8db RED for codex-review-09 finding 18941caa (re-run with the getContactById mock; first run's 2nd test failed on the missing mock)
+     × replaces a linked account: target checked in the tenant, then unlink and link (codex 18941caa) 15ms
+     × replacing with an unknown or foreign account fails before any write 10ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: expected "vi.fn()" to be called with arguments: [ ObjectContaining{…} ]
+AssertionError: promise resolved "{ …(23) }" instead of rejecting
+ Test Files  1 failed (1)
+      Tests  2 failed | 34 skipped (36)

@@ -1,0 +1,160 @@
+{
+  "stoa": "Quality",
+  "task_id": "PG-202",
+  "run_id": "exec-PG-202-20261017",
+  "verdict": "WARN",
+  "produced_by": "stoa-quality sub-agent",
+  "produced_at": "2026-10-17T21:08:03Z",
+  "head": "f3115da9b6c619c88ef7dd7cb91bb365215ffb94",
+  "gates": [
+    {
+      "gate": "Full suites per touched package",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/summary.tsv, 02..08",
+      "notes": "All rows exit 0. domain 3072 passed; application 1488; validators 2722; api 7795 passed + 18 skipped; web 12954 passed; integration 20 passed + 5 skipped. Zero failures. Caveat: matrix logs carry head 1cd895b72 and the a11y fix files were rewritten about 50s after the web full run started (see findings)."
+    },
+    {
+      "gate": "Coverage: domain > 95%",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/12-cov-domain.log",
+      "notes": "AvailabilityPolicy.ts + availability-roles.ts: statements 99.47, branches 96.9, functions 100, lines 100 (364 tests)."
+    },
+    {
+      "gate": "Coverage: validators > 90%",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/14-cov-validators.log",
+      "notes": "availability.ts + appointment-settings.ts: 100 / 97.36 / 100 / 100."
+    },
+    {
+      "gate": "Coverage: API > 90% on new files",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/15-cov-api.log",
+      "notes": "availability-enforcement.ts, availability.router.ts, calendar.router.ts: 97.85 / 92.38 / 100 / 100 (107 tests). appointments.router.ts and appointment-settings.router.ts are not in the coverage include (legal/*.router.ts is a Sonar coverage exclusion) but are exercised by appointments.router.caller, appointments.availability-boundary and appointment-settings.router tests."
+    },
+    {
+      "gate": "Coverage: application > 90%",
+      "result": "WARN",
+      "evidence_log": "matop/validation-matrix/13-cov-application.log",
+      "notes": "CheckConflicts.ts file-wide: statements 91.8, branches 70, functions 100, lines 91.07. Uncovered lines 103,143,188,209,245 are pre-existing code; the PG-202 additions are 25/25 changed lines (100%) in 18-diff-coverage.log. Branches 70% file-wide is below 90 but not attributable to this diff."
+    },
+    {
+      "gate": "Coverage: web (new files)",
+      "result": "WARN",
+      "evidence_log": "matop/validation-matrix/16-cov-web.log",
+      "notes": "Scoped aggregate 90.71 / 85.32 / 83.78 / 91.61. No web target was set in the brief. New web files are lines 90-100 but branches 81-88 (ClosuresList 81.25, WeeklyHoursCard 81.81, AvailabilityContent 84, availability-draft 91.96, BuffersCapCard functions 85.71). The aggregate is dragged down mostly by modified pre-existing files (AppointmentDetail 63.5% lines, appointments/new/page.tsx 73%)."
+    },
+    {
+      "gate": "Diff coverage >= 80% (Sonar new_coverage parity)",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/18-diff-coverage.log",
+      "notes": "95.8% (1115/1164), exit 0. The first run (summary.tsv row 18, exit 1) used package-relative lcov paths and is a harness path error, not a coverage failure; the rerun log is the valid one and is correctly labelled. Lowest files: CalendarSettingsContent 80.0 (4/5), AvailabilityContent 89.7. The listed Buffer.ts 0/4 'no lcov' is a behaviour-preserving constant extraction (Buffer.MAX_MINUTES = 240); Buffer.test.ts asserts the 240 boundary at lines 59-73, so it is covered, but the gate prints it as a red cross yet still exits 0. legal/*.router.ts and page.tsx are Sonar-excluded, so they do not appear."
+    },
+    {
+      "gate": "RED/GREEN discipline (TDD logs)",
+      "result": "PASS",
+      "evidence_log": "tdd/red-*.log, tdd/green-*.log, tdd/refactor-rerun.log",
+      "notes": "Every layer has a red and a green log. Genuine behavioural REDs: application (6 failures, 'findFirstFreeCandidate is not a function'; existing-buffer red has 3 AssertionErrors), api-wiring (22 failures: smoke registration, 7:00-19:00 helper still present, forceOverride not bypassing, past-midnight, closure, cap), web surfaces (25 failures in 17 files incl. BufferRemindersTab, CalendarSettingsContent, AppointmentForm), domain-dst-fold (2 AssertionErrors), domain-dst-slots (2), web-allday (2), web-inflight-save (1), ui-confirmation-dialog (1), validators appointment-settings strip (1). The first REDs for brand-new modules (domain AvailabilityPolicy/availability-roles, api calendar router/enforcement, integration, validators availability, web availability components) are 'Cannot find module' or 'Failed to resolve import' only, which is the conventional new-file RED but proves nothing about assertions on its own; the later per-fix reds cover the logic. Characterization test pinned the legacy 07:00-19:00 behaviour 9/9 before (1b9202314, router untouched) and after the change."
+    },
+    {
+      "gate": "AC traceability spot-check (opened tests)",
+      "result": "PASS",
+      "evidence_log": "PG-202-plan.md Acceptance Criteria Traceability; test files below",
+      "notes": "AC-004/006/015/019 domain + enforcement tests (AvailabilityPolicy.test.ts, availability-enforcement.test.ts: legacy, configured, cap with firm-local day window, 25-hour DST day, exclude rescheduled id, invalid stored tz -> PRECONDITION_FAILED); AC-011 overlap superRefine (availability.test.ts:93-111, exact path and message asserted); AC-010 single $transaction ordering settings, hours, closures (availability.router.test.ts:211-216, no transaction when FORBIDDEN at :276); AC-019 FORBIDDEN for USER with no writes (availability.router.test.ts:269); AC-018 named CHECKs, uniques, cascade, RLS policy USING+WITH CHECK, DATE round trip under far-east zone (tests/integration/availability.test.ts); AC-020/021 migration missing P2021/P2022 -> legacy fallback, real P2022 against a stub-schema (availability-enforcement.test.ts:89, integration:384); AC-021 buffers/timezone stripped and reset leaves them (appointment-settings.router.test.ts:110,155); AC-023 firm default buffers passed to form (page.onsuccess.test.tsx:70); AC-022 server message in role=alert (AppointmentForm.test.tsx:170-176); AC-009 ClosuresList imperative handle openCreate (ClosuresList.test.tsx:54-56); AC-024 axe-core zero violations in component tests (color-contrast disabled, accepted as minor in a11y-review-recheck.json)."
+    },
+    {
+      "gate": "Negative paths",
+      "result": "PASS",
+      "evidence_log": "same test files",
+      "notes": "FORBIDDEN (availability.router.test.ts:269); cross-tenant scoping via expectEveryCallTenantScoped and tenant B rows (availability.router.test.ts:154, availability.test.ts RLS) plus appointments.tenant-isolation.test.ts unchanged; CONFLICT (router + enforcement + caller); P2021/P2022 migration missing; invalid timezone (enforcement, policy, validators); cap reached and cap-1 offered by findNextSlot; closure dates (create and reschedule); past midnight (BAD_REQUEST), forceOverrideConflicts not bypassing; DST fall-back repeated hour and spring-forward gap for both evaluation and slot generation."
+    },
+    {
+      "gate": "Regression suites for touched existing code",
+      "result": "PASS",
+      "evidence_log": "06-api-full.log, 08-web-full.log, 01-characterization.log, 13-cov-application.log",
+      "notes": "Full api and web suites ran and are green, which include appointments.router caller/comprehensive/tenant-isolation, appointment-settings.router, app-router.smoke, approved-action-executor, legal-module-entitlement, CalendarSettingsContent/BufferRemindersTab/CalendarIntegrationTab, AppointmentForm/AppointmentDetail, ModuleSettingsLayout, TimezoneSelector, InboxCalendarSection. Existing files were edited in place (CheckConflicts.test.ts, appointments.router.caller.test.ts, entitlement) rather than weakened; no assertion deletions were looked for beyond that and were not sampled line by line."
+    },
+    {
+      "gate": "Skipped or focused tests added",
+      "result": "PASS",
+      "evidence_log": "git diff origin/main...HEAD, grep for it.skip/.only/describe.skip/test.todo/xit/fit",
+      "notes": "No it.skip, .only, test.todo or xit added. The only hit is tests/integration/availability.test.ts:96 'describeDb = DB_URL ? describe : describe.skip', an env guard copied from the existing integration suites. Two conditional ctx.skip() paths exist in the RLS session test (no 'authenticated' role, no grants) and are logged as disclosed skips."
+    },
+    {
+      "gate": "Integration skips (5 skipped) acceptable",
+      "result": "PASS",
+      "evidence_log": "matop/validation-matrix/07-integration.log; tests/integration/rls-tenant-isolation.test.ts:36-90",
+      "notes": "The 5 skips are exactly the 5 it() blocks of the pre-existing rls-tenant-isolation suite (file untouched by this diff). It skips via a beforeAll probe ('SET LOCAL ROLE authenticated; SELECT 1 FROM accounts') plus beforeEach ctx.skip, a deliberate, commented design for DBs without Supabase grants. The skip is NOT hiding PG-202 coverage: availability.test.ts has 13 plain it() + one it.each of 6 = 20 tests, and the run reports exactly 20 passed, so its own RLS session check (:352) ran and passed rather than skipping. This is inferred from the count, since the log is not verbose. Caveat: CI without DATABASE_URL skips the whole file silently (see finding)."
+    },
+    {
+      "gate": "Wall-clock / fixed-date fixture hazard",
+      "result": "PASS",
+      "evidence_log": "grep of new tests",
+      "notes": "availability.router.test.ts:107, availability-enforcement.test.ts:40 and appointments.router.caller.test.ts:991 pin Date with vi.useFakeTimers({ toFake: ['Date'] }) + setSystemTime(NOW) around the PG-202 blocks. The domain policy is pure (explicit dates). Web availability tests and components contain no Date.now/new Date(). CheckConflicts.test.ts pins the clock to 2025-01-01. The remaining new Date() in caller.test.ts lines 39-43, 464, 519 are pre-existing mock payloads not compared against now."
+    },
+    {
+      "gate": "Test helpers excluded from coverage",
+      "result": "PASS",
+      "evidence_log": "sonar-project.properties coverage.exclusions, coverage commands in summary.tsv",
+      "notes": "availability.test-utils.ts and availability-fixtures.ts live under __tests__ (excluded by **/__tests__/**). Coverage runs used narrow --coverage.include of production files, so helpers do not inflate or deflate figures. thresholdAutoUpdate not found in vitest configs and no vitest/coverage config is in the diff."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "medium",
+      "file": "apps/web/src/components/appointments/AppointmentDetail.tsx",
+      "line": 0,
+      "issue": "The web full run (08-web-full.log, 20:40:36Z to 20:46:49Z, head 1cd895b72) started before the a11y fixes landed. File mtimes of AvailabilityContent, AvailabilityBanners, AvailabilityPointer, AppointmentDetail and AppointmentDetail.test are 20:41:24Z, about 50s into that run, and the fixes were committed afterwards as 015016c13. The matrix commit message says 'full matrix on the final code'; that is not strictly true for the 12954-test web run. Mitigation: the scoped web coverage run (16-cov-web, 20:57Z, 25 files and 311 tests across calendar/, appointments/__tests__, settings) plus typecheck, lint and build ran after the edit and passed.",
+      "fix": "When the test slot frees up, re-run `pnpm --dir apps/web exec vitest run` once at the final HEAD, or record that the post-a11y evidence is the scoped run only. Also note HEAD has since moved to f3115da9b (checkpoint docs only)."
+    },
+    {
+      "severity": "medium",
+      "file": "apps/web/src/app/calendar/availability/components/ClosuresList.tsx",
+      "line": 164,
+      "issue": "New web files are line-covered (90-100%) but branch coverage is 81.25% (ClosuresList), 81.81% (WeeklyHoursCard), 84% (AvailabilityContent lines 84-90 and 275 uncovered), and BuffersCapCard functions 85.71% (line 127). Scoped web aggregate is 85.32% branches and 83.78% functions, below the generic 90% rule in the Quality agent definition. The brief set no web target and diff coverage passes at 89.7-96.8% on these files.",
+      "fix": "Add tests for AvailabilityContent.tsx 84-90 and 275, BuffersCapCard.tsx 127, ClosuresList.tsx 164 and WeeklyHoursCard uncovered branches, or have the owner accept the web branch figure explicitly."
+    },
+    {
+      "severity": "low",
+      "file": "packages/application/src/usecases/scheduling/CheckConflicts.ts",
+      "line": 103,
+      "issue": "File-wide branches 70% and lines 91.07% in 13-cov-application.log. The uncovered lines (103,143,188,209,245) are pre-existing code, not the new findFirstFreeCandidate (diff coverage 25/25). Reported so the gap is not read as a regression.",
+      "fix": "No action required for PG-202; optionally add branch tests for the legacy conflict methods in a follow-up."
+    },
+    {
+      "severity": "low",
+      "file": "tools/audit/codex-review-waivers.yaml",
+      "line": 1079,
+      "issue": "The daily cap is count-then-insert (not atomic). Two concurrent creates at the cap can both pass. It is waived as PG-202-AVAILABILITY-KNOWN-LIMITS-001 and marked pending owner confirmation, and there is no concurrency test for it, so the behaviour is untested by design.",
+      "fix": "Leave as a documented limit, or add a test that asserts the limitation (so a future atomic fix flips it). Owner confirmation is a NEEDS_HUMAN item, not a Quality blocker."
+    },
+    {
+      "severity": "low",
+      "file": "tests/integration/availability.test.ts",
+      "line": 96,
+      "issue": "describeDb = DB_URL ? describe : describe.skip: in any environment without DATABASE_URL the whole PG-202 DB suite skips silently (same pattern as existing suites, and the #658 silent-skip gate exists for CI). Locally the run proved 20 passed.",
+      "fix": "Confirm that the CI integration job sets DATABASE_URL so this file runs there; no code change needed."
+    },
+    {
+      "severity": "low",
+      "file": ".specify/sprints/sprint-18/execution/PG-202/exec-PG-202-20261017/matop/validation-matrix/summary.tsv",
+      "line": 19,
+      "issue": "summary.tsv shows row 18-diff-coverage with exit 1 (first attempt used package-relative lcov paths and reported 0%). 18-diff-coverage.log holds the valid rerun (exit 0, 95.8%) and says so in its header, but summary.tsv was not updated, so a reader of the TSV alone sees a failing gate. The log also prints a red cross for Buffer.ts yet exits 0.",
+      "fix": "Update the summary row to the rerun's exit 0 or add a note column, so the TSV and the log agree."
+    },
+    {
+      "severity": "low",
+      "file": "artifacts/metrics/debt-ledger.yaml",
+      "line": 0,
+      "issue": "Diff contains 12011 changed lines in artifacts/metrics/debt-ledger.yaml, 2182 in tools/audit/codex-review-waivers.yaml and 3711 in packages/db/prisma/schema.prisma (very large for an additive schema change, likely line-ending or formatting churn). Not a test issue, but it makes the diff hard to review and can hide regressions.",
+      "fix": "Check whether these are CRLF or reformat churn (git diff -w --stat) and revert the noise if so."
+    },
+    {
+      "severity": "info",
+      "file": ".specify/sprints/sprint-18/specifications/PG-202-spec.md",
+      "line": 375,
+      "issue": "AC-025 (Lighthouse >= 90) maps to matrix row 20 and is NEEDS_HUMAN per the spec when authenticated Lighthouse is not possible. No Lighthouse log is in the validation matrix, so that AC has no test evidence from this STOA's inputs.",
+      "fix": "Foundation or the lead should record the Lighthouse result or the NEEDS_HUMAN reason in the PR."
+    }
+  ],
+  "limitations": "Judged from logs and by reading tests; per instructions nothing was run (no tests, coverage, builds or servers). Test counts and percentages are quoted from the logs, not reproduced. The claim that the availability RLS session test passed (not skipped) is inferred from 20 passed + 5 skipped = 14 `it` blocks with one it.each of 6 plus the 5 rls blocks; the integration log is not verbose. Regression coverage of existing suites is taken from the green full api and web runs, not from a line-by-line review of edits to existing tests. Mutation testing was not configured or run. Verdict is WARN rather than PASS because of the web branch/function coverage on new files, the web full run overlapping the a11y edits, and the unrepresentative summary.tsv row; under a strict reading of the Quality agent's 90% rule, with no WARN band, the scoped web aggregate (branches 85.32, functions 83.78) and CheckConflicts branches (70) would be FAIL, so the lead should decide which reading applies. No fixed-date wall-clock time bombs, skipped or focused tests were found."
+}

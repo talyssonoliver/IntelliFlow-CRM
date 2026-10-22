@@ -24,6 +24,14 @@ interface TimezoneSelectorProps {
   value: string;
   onChange: (timezone: string) => void;
   disabled?: boolean;
+  /** id for the trigger, so an external <Label htmlFor> names it. */
+  id?: string;
+  /** Marks the trigger invalid (aria-invalid). */
+  invalid?: boolean;
+  /** id of an element describing the trigger, e.g. a field error. */
+  describedBy?: string;
+  /** Show the "Detect from browser" button (default true). Hidden for a firm-wide zone (PG-202). */
+  showDetect?: boolean;
 }
 
 /** Curated fallback list when Intl.supportedValuesOf is unavailable */
@@ -108,11 +116,21 @@ function formatTimezoneLabel(tz: string): string {
   }
 }
 
-export function TimezoneSelector({ value, onChange, disabled }: Readonly<TimezoneSelectorProps>) {
+export function TimezoneSelector({
+  value,
+  onChange,
+  disabled,
+  id,
+  invalid,
+  describedBy,
+  showDetect = true,
+}: Readonly<TimezoneSelectorProps>) {
   const grouped = useMemo(() => {
     const tzList = getTimezones();
+    // A stored zone this runtime does not list must still render as the selection.
+    if (value && !tzList.includes(value)) tzList.push(value);
     return groupByRegion(tzList);
-  }, []);
+  }, [value]);
 
   const regionOrder = ['Europe', 'America', 'Asia', 'Africa', 'Australia', 'Pacific', 'Other'];
   const sortedRegions = regionOrder.filter((r) => grouped[r]?.length);
@@ -137,7 +155,13 @@ export function TimezoneSelector({ value, onChange, disabled }: Readonly<Timezon
   return (
     <div className="space-y-2">
       <Select value={value} onValueChange={onChange} disabled={disabled}>
-        <SelectTrigger aria-label="Timezone" className="w-full">
+        <SelectTrigger
+          id={id}
+          aria-label={id ? undefined : 'Timezone'}
+          aria-invalid={invalid || undefined}
+          aria-describedby={describedBy}
+          className="w-full"
+        >
           <SelectValue placeholder="Select timezone" />
         </SelectTrigger>
         <SelectContent className="max-h-[300px]">
@@ -153,15 +177,17 @@ export function TimezoneSelector({ value, onChange, disabled }: Readonly<Timezon
           ))}
         </SelectContent>
       </Select>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={detectBrowserTimezone}
-        disabled={disabled}
-      >
-        Detect from browser
-      </Button>
+      {showDetect && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={detectBrowserTimezone}
+          disabled={disabled}
+        >
+          Detect from browser
+        </Button>
+      )}
     </div>
   );
 }

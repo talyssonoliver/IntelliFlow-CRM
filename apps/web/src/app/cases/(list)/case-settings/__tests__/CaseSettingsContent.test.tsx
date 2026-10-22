@@ -85,6 +85,7 @@ const H = vi.hoisted(() => {
     data: generalData as typeof generalData | undefined,
     isLoading: false,
     error: null as Error | null,
+    refetch: vi.fn(),
   };
 
   const usersState = {
@@ -157,7 +158,7 @@ vi.mock('@/lib/trpc', () => ({
             data: H.generalQueryState.data,
             isLoading: H.generalQueryState.isLoading,
             error: H.generalQueryState.error,
-            refetch: vi.fn(),
+            refetch: H.generalQueryState.refetch,
           }),
         },
         update: H.makeMutation(H.mocks.generalUpdate),
@@ -407,6 +408,54 @@ describe('CaseSettingsContent — loading + error branches', () => {
     render(<CaseSettingsContent />);
     expect(screen.getByText(/network unavailable/i)).toBeTruthy();
     expect(screen.getByRole('button', { name: /retry/i })).toBeTruthy();
+  });
+
+  it('Retry in the error banner refetches the general settings', async () => {
+    H.generalQueryState.error = new Error('Network unavailable');
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.click(screen.getByRole('button', { name: /retry/i }));
+    expect(H.generalQueryState.refetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('choosing a tag colour is carried into tags.create', async () => {
+    const user = userEvent.setup();
+    render(<CaseSettingsContent />);
+    await user.type(screen.getByLabelText('New tag name'), 'VIP');
+    await user.selectOptions(screen.getByLabelText('New tag color'), 'blue');
+    await user.click(screen.getByRole('button', { name: /add tag/i }));
+    expect(H.mocks.tagCreate).toHaveBeenCalledWith({ name: 'VIP', colorToken: 'blue' });
+  });
+
+  it('Configuration Summary shows the assigned auto-assign user when enabled', () => {
+    H.generalQueryState.data = {
+      ...H.generalData,
+      autoAssignEnabled: true,
+      autoAssignUserId: 'u1',
+      autoAssignUser: { id: 'u1', name: 'Alice', email: 'alice@test.com' },
+    } as never;
+    render(<CaseSettingsContent />);
+    expect(screen.getByText('Alice', { selector: 'dd *, dd' })).toBeTruthy();
+  });
+
+  it('Configuration Summary falls back to the email, or a placeholder, for the auto-assign user', () => {
+    H.generalQueryState.data = {
+      ...H.generalData,
+      autoAssignEnabled: true,
+      autoAssignUserId: 'u1',
+      autoAssignUser: { id: 'u1', name: null, email: 'alice@test.com' },
+    } as never;
+    const { unmount } = render(<CaseSettingsContent />);
+    expect(screen.getByText('alice@test.com', { selector: 'dd' })).toBeTruthy();
+    unmount();
+    H.generalQueryState.data = {
+      ...H.generalData,
+      autoAssignEnabled: true,
+      autoAssignUserId: null,
+      autoAssignUser: null,
+    } as never;
+    render(<CaseSettingsContent />);
+    expect(screen.getByText('Enabled (no user)')).toBeTruthy();
   });
 
   it('auto-assign user search shows nothing when users query returns empty list', async () => {

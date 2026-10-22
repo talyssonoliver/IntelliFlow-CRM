@@ -1,0 +1,3 @@
+# 2026-10-18T10:31:21Z HEAD 4c1df7cac GREEN for Aurora P1-2 (integration colour-token test independent of db push vs migrate deploy). No local RED: the local test DB has the hand-written contact_tags_colorToken_check, so the old test passed here; the failing evidence is CI 'Integration Tests' on PR #915.
+ Test Files  1 passed (1)
+      Tests  24 passed (24)

@@ -187,6 +187,105 @@ describe('PrismaAutoResponseDraftRepository', () => {
     });
   });
 
+  describe('findPendingOlderThan (PG-198)', () => {
+    it('returns un-escalated, unexpired pending drafts of the given triggers, oldest first', async () => {
+      const before = new Date('2026-10-13T10:00:00Z');
+      const now = new Date('2026-10-13T12:00:00Z');
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        createMockDraftData({ status: 'PENDING_APPROVAL' }),
+      ] as never);
+
+      const result = await repository.findPendingOlderThan(
+        'tenant-1',
+        { before, notExpiredAt: now, triggerTypes: ['EMAIL_RECEIVED', 'MANUAL'] },
+        25
+      );
+
+      expect(mockPrisma.autoResponseDraft.findMany).toHaveBeenCalledWith({
+        where: {
+          tenantId: 'tenant-1',
+          status: 'PENDING_APPROVAL',
+          escalationCount: 0,
+          triggerType: { in: ['EMAIL_RECEIVED', 'MANUAL'] },
+          expiresAt: { gt: now },
+          createdAt: { lt: before },
+        },
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        take: 25,
+      });
+      expect(result).toHaveLength(1);
+      expect(result[0].status).toBe('PENDING_APPROVAL');
+    });
+
+    it('pages with a (createdAt, id) keyset cursor', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([]);
+      const cursorAt = new Date('2026-10-13T09:00:00Z');
+      await repository.findPendingOlderThan(
+        'tenant-1',
+        {
+          before: new Date(),
+          notExpiredAt: new Date(),
+          triggerTypes: ['MANUAL'],
+          after: { createdAt: cursorAt, id: 'draft-9' },
+        },
+        100
+      );
+      const call = vi.mocked(mockPrisma.autoResponseDraft.findMany).mock.calls[0]![0] as any;
+      expect(call.where.OR).toEqual([
+        { createdAt: { gt: cursorAt } },
+        { createdAt: cursorAt, id: { gt: 'draft-9' } },
+      ]);
+      expect(call.take).toBe(100);
+      expect(call).not.toHaveProperty('skip');
+    });
+  });
+
+  describe('saveEscalation (PG-198)', () => {
+    function escalatedDraft() {
+      const draft = AutoResponseDraft.create({
+        tenantId: 'tenant-1',
+        leadId: 'lead-123',
+        leadTenantId: 'tenant-1',
+        leadStatus: 'NEW',
+        triggerType: 'EMAIL_RECEIVED',
+        content: ResponseContent.create({ subject: 'Hi', body: 'Body' }),
+        aiConfidence: 0.5,
+        modelVersion: 'm',
+        recipientEmail: 'test@example.com',
+      }).value;
+      draft.submitForApproval('approver-1');
+      draft.escalate('system:approval-policy', 'manager-1', 'SLA', 1);
+      return draft;
+    }
+
+    it('writes only while the stored draft is still pending and never escalated', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 1 } as never);
+      const draft = escalatedDraft();
+
+      await expect(repository.saveEscalation(draft)).resolves.toBe(true);
+
+      const call = vi.mocked(mockPrisma.autoResponseDraft.updateMany).mock.calls[0]![0] as any;
+      expect(call.where).toEqual({
+        id: draft.id.toString(),
+        tenantId: 'tenant-1',
+        status: 'PENDING_APPROVAL',
+        escalationCount: 0,
+        version: 0,
+      });
+      expect(call.data).toMatchObject({ status: 'ESCALATED', escalationCount: 1, version: 1 });
+      expect(Object.keys(call.data).sort()).toEqual(
+        ['escalation', 'escalationCount', 'status', 'statusHistory', 'updatedAt', 'version'].sort()
+      );
+      // A reviewer still holding the version-0 copy is now rejected by save().
+      expect(draft.version).toBe(1);
+    });
+
+    it('reports false (nothing written) when a decision landed meanwhile', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 0 } as never);
+      await expect(repository.saveEscalation(escalatedDraft())).resolves.toBe(false);
+    });
+  });
+
   describe('findPendingForApprover', () => {
     it('should return drafts with PENDING_APPROVAL status', async () => {
       const mockData = [createMockDraftData({ status: 'PENDING_APPROVAL' })];
@@ -211,6 +310,77 @@ describe('PrismaAutoResponseDraftRepository', () => {
           }),
         })
       );
+    });
+  });
+
+  describe('findPendingForApprover (#857)', () => {
+    const submittedTo = (approverId: string | undefined, id: string) =>
+      createMockDraftData({
+        id,
+        status: 'PENDING_APPROVAL',
+        statusHistory: JSON.stringify([
+          { status: 'DRAFT', changedAt: new Date().toISOString() },
+          {
+            status: 'PENDING_APPROVAL',
+            changedAt: new Date().toISOString(),
+            ...(approverId ? { changedBy: approverId } : {}),
+          },
+        ]),
+      });
+
+    it('does not return a draft assigned to another approver', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        submittedTo('approver-a', DRAFT_ID_1),
+      ] as never);
+
+      const forB = await repository.findPendingForApprover('approver-b', 'tenant-1');
+      const forA = await repository.findPendingForApprover('approver-a', 'tenant-1');
+
+      expect(forB).toHaveLength(0);
+      expect(forA).toHaveLength(1);
+    });
+
+    it('returns only the own drafts of the approver from a mixed queue', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        submittedTo('approver-a', DRAFT_ID_1),
+        submittedTo('approver-b', DRAFT_ID_2),
+      ] as never);
+
+      const forB = await repository.findPendingForApprover('approver-b', 'tenant-1');
+
+      expect(forB.map((d) => d.id.toString())).toEqual([DRAFT_ID_2]);
+    });
+
+    it('keeps the assignee after a manager resolves an escalation', async () => {
+      const at = new Date().toISOString();
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        createMockDraftData({
+          id: DRAFT_ID_1,
+          status: 'PENDING_APPROVAL',
+          statusHistory: JSON.stringify([
+            { status: 'DRAFT', changedAt: at },
+            { status: 'PENDING_APPROVAL', changedAt: at, changedBy: 'approver-a' },
+            { status: 'ESCALATED', changedAt: at, changedBy: 'approver-a' },
+            { status: 'PENDING_APPROVAL', changedAt: at, changedBy: 'manager-b' },
+          ]),
+        }),
+      ] as never);
+
+      const forA = await repository.findPendingForApprover('approver-a', 'tenant-1');
+      const forC = await repository.findPendingForApprover('approver-c', 'tenant-1');
+
+      expect(forA).toHaveLength(1);
+      expect(forC).toHaveLength(0);
+    });
+
+    it('keeps a draft that names no approver visible to everyone', async () => {
+      vi.mocked(mockPrisma.autoResponseDraft.findMany).mockResolvedValue([
+        submittedTo(undefined, DRAFT_ID_1),
+      ] as never);
+
+      const result = await repository.findPendingForApprover('approver-b', 'tenant-1');
+
+      expect(result).toHaveLength(1);
     });
   });
 
@@ -242,9 +412,9 @@ describe('PrismaAutoResponseDraftRepository', () => {
       expect(mockPrisma.autoResponseDraft.updateMany).toHaveBeenCalled();
     });
 
-    it('should increment version on update', async () => {
+    it('should increment version on update (#874)', async () => {
+      // Loaded at version 0 (as rehydrated by toDomain); nothing pre-increments.
       const draft = createMockDraft();
-      draft.incrementVersion();
 
       vi.mocked(mockPrisma.autoResponseDraft.findUnique).mockResolvedValue(
         createMockDraftData({ version: 0 }) as never
@@ -256,13 +426,27 @@ describe('PrismaAutoResponseDraftRepository', () => {
       expect(mockPrisma.autoResponseDraft.updateMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({
-            version: 0, // Previous version in WHERE clause
+            version: 0, // The version this copy was loaded at
           }),
           data: expect.objectContaining({
-            version: 1, // New version in data
+            version: 1, // Advanced
           }),
         })
       );
+      // The in-memory aggregate follows, so a second save in the same request works.
+      expect(draft.version).toBe(1);
+    });
+
+    it('rejects a stale copy after another writer advanced the version (#874)', async () => {
+      const mine = createMockDraft();
+      vi.mocked(mockPrisma.autoResponseDraft.findUnique).mockResolvedValue(
+        createMockDraftData({ version: 1 }) as never
+      );
+      // Stored is now at version 1; this copy was loaded at 0 -> no row matches.
+      vi.mocked(mockPrisma.autoResponseDraft.updateMany).mockResolvedValue({ count: 0 } as never);
+
+      await expect(repository.save(mine)).rejects.toThrow(OptimisticLockError);
+      expect(mine.version).toBe(0);
     });
 
     it('should throw OptimisticLockError on version conflict', async () => {
@@ -309,8 +493,9 @@ describe('PrismaAutoResponseDraftRepository', () => {
         expect.objectContaining({
           where: expect.objectContaining({
             id: draft.id.toString(),
-            version: 2,
+            version: 3,
           }),
+          data: expect.objectContaining({ version: 4 }),
         })
       );
     });

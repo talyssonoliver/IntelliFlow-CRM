@@ -1,0 +1,6 @@
+# 2026-10-17T19:51:47Z HEAD dbb06a8db RED for codex-review-06 finding 068bafef (re-run after adding the associateWithAccount service mock; the first run failed on the missing mock, not an assertion)
+     × a type that requires an account rejects an unknown or foreign account before any write (codex 068bafef) 20ms
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+AssertionError: promise resolved "{ …(23) }" instead of rejecting
+ Test Files  1 failed (1)
+      Tests  1 failed | 1 passed | 32 skipped (34)

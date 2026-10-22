@@ -56,7 +56,7 @@ export interface WelcomeEmailSuccess {
 // ============================================
 
 const APP_NAME = 'Aurora';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://intelliflow-crm.com';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://intelli-flow-crm-web.vercel.app';
 const SENDER_EMAIL = process.env.NEXT_PUBLIC_SENDER_EMAIL || 'noreply@intelliflow-crm.com';
 const SUPPORT_EMAIL = process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@intelliflow-crm.com';
 

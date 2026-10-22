@@ -6,6 +6,7 @@ const mocks = vi.hoisted(() => ({
   startApiServer: vi.fn(),
   disconnectPrisma: vi.fn(),
   shutdownAllQueues: vi.fn(),
+  stopApprovalSweep: vi.fn(),
 }));
 
 vi.mock('./tracing/otel', () => ({ startTracing: mocks.startTracing }));
@@ -13,6 +14,9 @@ vi.mock('./tracing/sentry', () => ({ initializeSentry: mocks.initializeSentry })
 vi.mock('@intelliflow/db', () => ({ disconnectPrisma: mocks.disconnectPrisma }));
 vi.mock('@intelliflow/platform/queues', () => ({ shutdownAllQueues: mocks.shutdownAllQueues }));
 vi.mock('./http-server', () => ({ startApiServer: mocks.startApiServer }));
+vi.mock('./agent/approval-sweep-scheduler', () => ({
+  stopApprovalSweep: mocks.stopApprovalSweep,
+}));
 
 describe('api main entry point', () => {
   let exitSpy: ReturnType<typeof vi.spyOn>;
@@ -65,5 +69,24 @@ describe('api main entry point', () => {
 
     expect(errorSpy).toHaveBeenCalledWith('[API] Sentry initialization failed:', sentryError);
     expect(exitSpy).not.toHaveBeenCalled();
+  });
+
+  it('stops the approval sweep on SIGTERM before shutting down (PG-198)', async () => {
+    mocks.startApiServer.mockResolvedValue(undefined);
+    mocks.shutdownAllQueues.mockResolvedValue(undefined);
+    mocks.disconnectPrisma.mockResolvedValue(undefined);
+    vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await import('./main.js');
+    const handler = onSpy.mock.calls.find(
+      (c: unknown[]) => c[0] === 'SIGTERM'
+    )![1] as () => Promise<void>;
+    await handler();
+
+    expect(mocks.stopApprovalSweep).toHaveBeenCalledTimes(1);
+    expect(mocks.stopApprovalSweep.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.shutdownAllQueues.mock.invocationCallOrder[0]!
+    );
+    expect(exitSpy).toHaveBeenCalledWith(0);
   });
 });

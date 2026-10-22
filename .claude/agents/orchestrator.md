@@ -151,6 +151,26 @@ A spawned `task-executor` is NOT a self-driving CLI session:
   (`git ls-remote origin refs/heads/feat/*`, `gh pr checks`, attestation read
   via blob hash) — NOT the agent's self-reports — using a `run_in_background`
   until-loop timer; don't tight-poll a parked agent.
+- **Time-box every boundary (issue #578).** Idle time at a boundary looks like
+  slow work from the outside, so record it. In the owner ledger keep, per
+  executor, `phase`, `phase_started_at` and `idle_since` (set when the executor
+  reports it spawned a nested subagent, or stops without a promise). If an
+  executor has been idle for more than 10 minutes with no background job of
+  yours outstanding, pump it now and note the idle minutes. A reviewer that
+  "took hours" is first a question about when it was pumped.
+- **Status file, only when an executor has been told to publish (ADR-077, issue
+  #581).** Nothing makes an executor write it yet: your spawn prompt must tell
+  it to run `node tools/scripts/executor-status.mjs write <TASK> --phase <p>`
+  with `INTELLIFLOW_EXECUTOR_STATUS=1`. Only then check it first with
+  `node tools/scripts/executor-status.mjs read <TASK> --since <dispatch ISO time>`.
+  Always pass `--since`: the file lives in the shared main clone and a
+  re-dispatched task would otherwise inherit the previous run's
+  `failed`/`merged` record. Exit 0 means fresh or terminal for THIS run, so act
+  on it. Exit 2 means anything else (missing, stale, invalid, unbound, bad task
+  id or `--since`): fall back to the transcript/git polling above. If you did
+  not tell the executor to publish, do not read the file at all. Never skip the
+  git checks for the Definition of Done; the file is a progress hint, not
+  evidence.
 - Tell idle agents to **stand by silently** (stop self-monitoring CI) once you
   own the watch, to avoid notification churn.
 

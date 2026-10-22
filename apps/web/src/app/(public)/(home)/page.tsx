@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     title: 'Aurora, the AI CRM that asks before it acts',
     description:
       'Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Nothing goes out until a person says yes.',
-    url: 'https://intelliflow-crm.com',
+    url: 'https://intelli-flow-crm-web.vercel.app',
     siteName: 'Aurora',
     type: 'website',
   },
