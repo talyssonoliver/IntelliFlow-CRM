@@ -134,8 +134,8 @@ export async function getOAuthAccessToken(
 
 /**
  * The access token and the credential version it belongs to: a rotation moves
- * the version on, and a stale rotation (credentials changed meanwhile) keeps
- * the version read, which no longer matches the stored one.
+ * the version on. A rotation that finds the credentials changed meanwhile
+ * fails with CONNECT_FAILED and never hands out the token it minted.
  */
 export async function getOAuthAccess(
   prisma: MailboxWriter,
@@ -180,8 +180,10 @@ export async function getOAuthAccess(
       where: { id: mailbox.id, tenantId: mailbox.tenantId, tokenVersion: mailbox.tokenVersion },
       data: { refreshToken: refreshed.refreshToken, tokenVersion: { increment: 1 } },
     });
-    // Stale credentials: do not cache.
-    if (stored.count !== 1) return { accessToken: refreshed.accessToken, tokenVersion };
+    // The credentials changed meanwhile (rotated elsewhere, reconnected or
+    // disconnected): the token minted from the old ones is never used. The
+    // code is a retryable one that leaves the mailbox status alone.
+    if (stored.count !== 1) throw new MailboxTransportError('CONNECT_FAILED');
     tokenVersion += 1;
   }
   accessTokens.set(mailbox.id, {

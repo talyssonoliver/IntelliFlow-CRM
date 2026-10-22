@@ -137,7 +137,7 @@ describe('getOAuthAccessToken', () => {
     expect((t.oauth('GMAIL') as any).refresh).toHaveBeenCalledTimes(2);
   });
 
-  it('does not cache a token minted from credentials that changed meanwhile', async () => {
+  it('never uses or caches a token minted from credentials that changed meanwhile (codex MEDIUM)', async () => {
     vi.stubEnv('PRISMA_FIELD_ENCRYPTION_KEY', 'k'.repeat(44));
     const refresh = vi.fn(async () => ({
       accessToken: 'at',
@@ -148,9 +148,22 @@ describe('getOAuthAccessToken', () => {
     const prisma = prismaStub();
     prisma.emailMailbox.updateMany.mockResolvedValue({ count: 0 }); // the compare-and-set lost
     const mailbox = { ...gmailMailbox, kind: 'MICROSOFT', tokenVersion: 4 };
-    await getOAuthAccessToken(prisma as never, mailbox as never, t, NOW);
-    await getOAuthAccessToken(prisma as never, mailbox as never, t, NOW);
+    // A disconnect or reconnect landed while the refresh was in flight: the old
+    // account's token is refused (retryable), so nothing is sent with it.
+    await expect(
+      getOAuthAccessToken(prisma as never, mailbox as never, t, NOW)
+    ).rejects.toMatchObject({ code: 'CONNECT_FAILED' });
+    await expect(
+      getOAuthAccessToken(prisma as never, mailbox as never, t, NOW)
+    ).rejects.toBeInstanceOf(MailboxTransportError);
     expect(refresh).toHaveBeenCalledTimes(2);
+    // The mailbox status is left to whoever changed the credentials.
+    expect(prisma.emailMailbox.updateMany).toHaveBeenCalledTimes(2);
+    for (const [args] of prisma.emailMailbox.updateMany.mock.calls as unknown as Array<
+      [{ data: Record<string, unknown> }]
+    >) {
+      expect(args.data).not.toHaveProperty('status');
+    }
   });
 
   it('stores a rotated refresh token with a tokenVersion compare-and-set (key required)', async () => {
