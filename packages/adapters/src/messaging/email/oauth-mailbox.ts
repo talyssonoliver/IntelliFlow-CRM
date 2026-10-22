@@ -12,7 +12,11 @@
  * text and tokens are never carried.
  */
 import { createHash, randomBytes } from 'node:crypto';
-import type { MailboxErrorCode, OAuthMailboxProvider } from '@intelliflow/domain';
+import {
+  EMAIL_LIMITS,
+  type MailboxErrorCode,
+  type OAuthMailboxProvider,
+} from '@intelliflow/domain';
 import { isBounceSenderAddress } from './bounce-senders';
 import { MailboxTransportError } from './mailbox-errors';
 
@@ -85,6 +89,10 @@ const MAX_LIST_PAGES = 20;
 const LIST_PAGE_SIZE = 100;
 /** Times a Gmail window past the page cap is halved before the scan gives up moving on. */
 const MAX_GMAIL_WINDOW_SPLITS = 8;
+/** Largest bounce report read; bigger ones are skipped unread, as the IMAP reader does. */
+const MAX_REPORT_BYTES = EMAIL_LIMITS.bounceScanMaxMessageBytes;
+/** Gmail's JSON for a report at the limit: the base64url MIME plus the other fields. */
+const MAX_GMAIL_RAW_RESPONSE_BYTES = Math.ceil(MAX_REPORT_BYTES / 3) * 4 + 16 * 1024;
 
 interface TokenResponse {
   access_token?: string;
@@ -121,6 +129,34 @@ async function json<T>(response: Response): Promise<T> {
     return (await response.json()) as T;
   } catch {
     throw new MailboxTransportError('REJECTED');
+  }
+}
+
+/**
+ * A response body as text, or null once it passes `maxBytes`: a declared
+ * length over it is refused unread, and a longer stream is cancelled at the
+ * byte that crosses it, so an oversized message is never held in memory.
+ */
+async function boundedText(response: Response, maxBytes: number): Promise<string | null> {
+  if (Number(response.headers.get('content-length')) > maxBytes) {
+    await response.body?.cancel().catch(() => undefined);
+    return null;
+  }
+  if (!response.body) return '';
+  const reader = response.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const chunk = await reader.read().catch(() => {
+      throw new MailboxTransportError('CONNECT_FAILED');
+    });
+    if (chunk.done) return Buffer.concat(chunks).toString('utf8');
+    total += chunk.value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      return null;
+    }
+    chunks.push(chunk.value);
   }
 }
 
@@ -337,11 +373,10 @@ export class OAuthMailboxClient {
         { headers }
       );
       if (!response.ok) throw httpError(response.status);
-      out.push({
-        key: message.id,
-        raw: await response.text(),
-        receivedAt: new Date(message.receivedDateTime),
-      });
+      // Oversized: skipped, while the cursor still moves past it.
+      const raw = await boundedText(response, MAX_REPORT_BYTES);
+      if (raw === null) continue;
+      out.push({ key: message.id, raw, receivedAt: new Date(message.receivedDateTime) });
     }
     const resumeFrom = scan.resumeAt ?? scan.lastSeen ?? since;
     return { messages: out, resumeFrom: scan.truncated ? resumeFrom : null };
@@ -368,7 +403,7 @@ function epochSecond(message: RawDsnMessage): number {
   return Math.floor(message.receivedAt.getTime() / 1000);
 }
 
-/** One Gmail message as raw MIME, or null when it has none. */
+/** One Gmail message as raw MIME, or null when it has none or it is oversized (skipped). */
 async function readGmailRaw(
   headers: Record<string, string>,
   id: string
@@ -377,11 +412,20 @@ async function readGmailRaw(
     headers,
   });
   if (!response.ok) throw httpError(response.status);
-  const data = await json<{ id: string; raw?: string; internalDate?: string }>(response);
+  const text = await boundedText(response, MAX_GMAIL_RAW_RESPONSE_BYTES);
+  if (text === null) return null;
+  let data: { id: string; raw?: string; internalDate?: string };
+  try {
+    data = JSON.parse(text) as typeof data;
+  } catch {
+    throw new MailboxTransportError('REJECTED');
+  }
   if (!data.raw) return null;
+  const raw = Buffer.from(data.raw, 'base64url');
+  if (raw.byteLength > MAX_REPORT_BYTES) return null;
   return {
     key: data.id,
-    raw: Buffer.from(data.raw, 'base64url').toString('utf8'),
+    raw: raw.toString('utf8'),
     receivedAt: new Date(Number(data.internalDate ?? 0)),
   };
 }

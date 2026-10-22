@@ -1,4 +1,5 @@
 import { createHash } from 'node:crypto';
+import { EMAIL_LIMITS } from '@intelliflow/domain';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   GMAIL_MAILBOX_SCOPES,
@@ -452,6 +453,139 @@ describe('listDsnSince', () => {
     const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 50);
     expect(calls()).toHaveLength(1);
     expect(result.resumeFrom).toEqual(new Date(Date.UTC(2026, 9, 19, 1)));
+  });
+
+  describe('oversized reports (never held in memory, cursor still moves past them)', () => {
+    const limit = EMAIL_LIMITS.bounceScanMaxMessageBytes;
+    /** A body streamed in 64 KB chunks with no declared length; counts what was pulled. */
+    const streamed = (totalBytes: number) => {
+      const state = { pulled: 0, cancelled: false };
+      const chunk = new Uint8Array(64 * 1024).fill(0x41);
+      const body = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          if (state.pulled >= totalBytes) return controller.close();
+          state.pulled += chunk.byteLength;
+          controller.enqueue(chunk);
+        },
+        cancel() {
+          state.cancelled = true;
+        },
+      });
+      return { response: Promise.resolve(new Response(body, { status: 200 })), state };
+    };
+
+    it('Microsoft: skips a report whose declared length is over the limit and keeps the next one', async () => {
+      fetchMock
+        .mockReturnValueOnce(
+          respond(200, { value: [graphMessage('big', 1, true), graphMessage('ok', 2, true)] })
+        )
+        .mockReturnValueOnce(
+          respond(200, 'x'.repeat(limit + 1), { 'content-length': String(limit + 1) })
+        )
+        .mockReturnValueOnce(respond(200, 'MIME-OK'));
+      const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince(
+        'at',
+        since,
+        50
+      );
+      expect(result).toEqual({
+        messages: [{ key: 'ok', raw: 'MIME-OK', receivedAt: new Date(Date.UTC(2026, 9, 19, 2)) }],
+        resumeFrom: null,
+      });
+    });
+
+    it('Microsoft: stops reading an undeclared body at the limit instead of downloading it all', async () => {
+      const big = streamed(50 * 1024 * 1024);
+      fetchMock
+        .mockReturnValueOnce(respond(200, { value: [graphMessage('big', 1, true)] }))
+        .mockReturnValueOnce(big.response);
+      const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince(
+        'at',
+        since,
+        50
+      );
+      expect(result).toEqual({ messages: [], resumeFrom: null });
+      expect(big.state.cancelled).toBe(true);
+      expect(big.state.pulled).toBeLessThanOrEqual(limit + 2 * 64 * 1024);
+    });
+
+    it('Microsoft: keeps a report of exactly the limit', async () => {
+      fetchMock
+        .mockReturnValueOnce(respond(200, { value: [graphMessage('edge', 1, true)] }))
+        .mockReturnValueOnce(respond(200, 'x'.repeat(limit)));
+      const result = await new OAuthMailboxClient('MICROSOFT', config).listDsnSince(
+        'at',
+        since,
+        50
+      );
+      expect(result.messages.map((m) => m.raw.length)).toEqual([limit]);
+    });
+
+    it('Gmail: skips a report whose decoded MIME is over the limit and keeps the next one', async () => {
+      fetchMock
+        .mockReturnValueOnce(respond(200, { messages: [{ id: 'ok' }, { id: 'big' }] }))
+        .mockReturnValueOnce(
+          respond(200, {
+            id: 'big',
+            internalDate: String(Date.UTC(2026, 9, 19, 1)),
+            raw: Buffer.alloc(limit + 1, 0x41).toString('base64url'),
+          })
+        )
+        .mockReturnValueOnce(gmailRaw('ok', 2));
+      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
+      expect(result).toEqual({
+        messages: [{ key: 'ok', raw: 'R-ok', receivedAt: new Date(Date.UTC(2026, 9, 19, 2)) }],
+        resumeFrom: null,
+      });
+    });
+
+    it('Gmail: stops reading a huge response before decoding any of it', async () => {
+      const big = streamed(50 * 1024 * 1024);
+      fetchMock
+        .mockReturnValueOnce(respond(200, { messages: [{ id: 'big' }] }))
+        .mockReturnValueOnce(big.response);
+      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
+      expect(result).toEqual({ messages: [], resumeFrom: null });
+      expect(big.state.cancelled).toBe(true);
+      expect(big.state.pulled).toBeLessThan(2 * limit);
+    });
+
+    it('Gmail: keeps a report of exactly the limit', async () => {
+      fetchMock
+        .mockReturnValueOnce(respond(200, { messages: [{ id: 'edge' }] }))
+        .mockReturnValueOnce(
+          respond(200, {
+            id: 'edge',
+            internalDate: String(Date.UTC(2026, 9, 19, 1)),
+            raw: Buffer.alloc(limit, 0x41).toString('base64url'),
+          })
+        );
+      const result = await new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50);
+      expect(result.messages.map((m) => m.raw.length)).toEqual([limit]);
+    });
+
+    it('Gmail: a message whose JSON cannot be read is a refusal, not a crash', async () => {
+      fetchMock
+        .mockReturnValueOnce(respond(200, { messages: [{ id: 'bad' }] }))
+        .mockReturnValueOnce(respond(200, '{not json'));
+      await expect(
+        new OAuthMailboxClient('GMAIL', config).listDsnSince('at', since, 50)
+      ).rejects.toMatchObject({ code: 'REJECTED' });
+    });
+
+    it('a body that breaks off mid-stream is a connection failure', async () => {
+      const broken = new ReadableStream<Uint8Array>({
+        pull(controller) {
+          controller.error(new Error('reset'));
+        },
+      });
+      fetchMock
+        .mockReturnValueOnce(respond(200, { value: [graphMessage('a', 1, true)] }))
+        .mockReturnValueOnce(Promise.resolve(new Response(broken, { status: 200 })));
+      await expect(
+        new OAuthMailboxClient('MICROSOFT', config).listDsnSince('at', since, 50)
+      ).rejects.toMatchObject({ code: 'CONNECT_FAILED' });
+    });
   });
 
   it('only ever calls the fixed provider hosts', async () => {
