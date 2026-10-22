@@ -19,7 +19,7 @@ import { trace, SpanStatusCode, type Span } from '@opentelemetry/api';
 import { captureException, setUser, setTag, setContext } from './sentry';
 import { runWithQueryBudget, budgetForRoute, getQueryBudgetSnapshot } from '@intelliflow/db';
 import type { Context } from '../context';
-import { getApiLogger } from './logger';
+import { apiLog } from './logger';
 
 // Initialize tRPC for middleware
 const t = initTRPC.context<Context>().create();
@@ -164,7 +164,8 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
           // still current so they carry its trace_id/span_id to Loki.
           const logPath = safePath(path);
           if (duration > 50) {
-            getApiLogger().warn(
+            apiLog(
+              'warn',
               {
                 type: 'trpc.slow',
                 correlationId,
@@ -176,7 +177,8 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
               'slow trpc request'
             );
           }
-          getApiLogger().info(
+          apiLog(
+            'info',
             {
               type: 'trpc.request',
               correlationId,
@@ -204,7 +206,8 @@ export const tracingMiddleware = t.middleware(async ({ path, type, next, ctx }) 
 
           // IFC-074: no error message, stack or cause on the record — free text
           // can carry user input. Sentry and the span keep the message.
-          getApiLogger().error(
+          apiLog(
+            'error',
             {
               type: 'trpc.error',
               correlationId,

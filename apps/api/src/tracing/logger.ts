@@ -15,6 +15,7 @@
 import { createLogger, type Logger } from '@intelliflow/observability';
 
 let apiLogger: Logger | undefined;
+let failureReported = false;
 
 /** The api's pino logger, named after the OTel service (default `intelliflow-api`). */
 export function getApiLogger(): Logger {
@@ -24,7 +25,30 @@ export function getApiLogger(): Logger {
   return apiLogger;
 }
 
+/**
+ * Emit one record. Logging must never fail or change a request: a logger that
+ * cannot be built (e.g. pino rejects an unknown LOG_LEVEL) or a write that
+ * throws is swallowed, and reported once on stderr so the gap is visible.
+ */
+export function apiLog(
+  level: 'info' | 'warn' | 'error',
+  record: Record<string, unknown>,
+  message: string
+): void {
+  try {
+    getApiLogger()[level](record, message);
+  } catch (error) {
+    if (!failureReported) {
+      failureReported = true;
+      console.error(
+        `[api-logger] structured logging unavailable: ${error instanceof Error ? error.message : 'unknown error'}`
+      );
+    }
+  }
+}
+
 /** Drop the cached logger so the next call builds a new one (tests only). */
 export function resetApiLoggerForTests(): void {
   apiLogger = undefined;
+  failureReported = false;
 }

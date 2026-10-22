@@ -95,6 +95,8 @@ const apiLogger = vi.hoisted(() => ({
 }));
 vi.mock('../tracing/logger', () => ({
   getApiLogger: () => apiLogger,
+  apiLog: (level: 'info' | 'warn' | 'error', record: unknown, message: string) =>
+    apiLogger[level](record, message),
   resetApiLoggerForTests: () => undefined,
 }));
 

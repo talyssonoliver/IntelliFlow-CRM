@@ -76,6 +76,41 @@ describe('getApiLogger', () => {
     expect(createLogger).toHaveBeenCalledWith({ name: 'intelliflow-api' });
   });
 
+  it('apiLog writes the record through the logger at the given level', async () => {
+    const { apiLog } = await import('./logger.js');
+
+    apiLog('warn', { type: 'trpc.slow' }, 'slow trpc request');
+
+    expect(fakeLogger.warn).toHaveBeenCalledWith({ type: 'trpc.slow' }, 'slow trpc request');
+  });
+
+  it('apiLog swallows a logger that cannot be built and reports it once', async () => {
+    createLogger.mockImplementation(() => {
+      throw new Error('unknown level INFO');
+    });
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { apiLog } = await import('./logger.js');
+
+    expect(() => apiLog('info', { type: 'trpc.request' }, 'trpc request')).not.toThrow();
+    expect(() => apiLog('error', { type: 'trpc.error' }, 'trpc error')).not.toThrow();
+
+    expect(consoleError).toHaveBeenCalledTimes(1);
+    expect(consoleError.mock.calls[0][0]).toContain('unknown level INFO');
+  });
+
+  it('apiLog swallows a write that throws', async () => {
+    fakeLogger.error.mockImplementationOnce(() => {
+      throw 'not an error object';
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { apiLog } = await import('./logger.js');
+
+    expect(() => apiLog('error', { type: 'trpc.error' }, 'trpc error')).not.toThrow();
+    expect(console.error).toHaveBeenCalledWith(
+      '[api-logger] structured logging unavailable: unknown error'
+    );
+  });
+
   it('resetApiLoggerForTests forces a new logger on the next call', async () => {
     const { getApiLogger, resetApiLoggerForTests } = await import('./logger.js');
 
