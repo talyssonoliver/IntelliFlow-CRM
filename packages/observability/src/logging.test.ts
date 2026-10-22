@@ -239,6 +239,26 @@ describe('createLogger — real records', () => {
     ['nested token', { auth: { token: 'x'.repeat(12) } }, (r: Record<string, any>) => r.auth.token],
     ['accessToken', { accessToken: 'x'.repeat(12) }, (r: Record<string, any>) => r.accessToken],
     ['refreshToken', { refreshToken: 'x'.repeat(12) }, (r: Record<string, any>) => r.refreshToken],
+    [
+      'nested userEmail',
+      { user: { userEmail: 'person@example.invalid' } },
+      (r: Record<string, any>) => r.user.userEmail,
+    ],
+    [
+      'nested accessToken',
+      { session: { accessToken: 'x'.repeat(12) } },
+      (r: Record<string, any>) => r.session.accessToken,
+    ],
+    [
+      'nested refreshToken',
+      { session: { refreshToken: 'x'.repeat(12) } },
+      (r: Record<string, any>) => r.session.refreshToken,
+    ],
+    [
+      'nested api_key',
+      { cfg: { api_key: 'x'.repeat(12) } },
+      (r: Record<string, any>) => r.cfg.api_key,
+    ],
     ['apiKey', { apiKey: 'x'.repeat(12) }, (r: Record<string, any>) => r.apiKey],
     [
       'nested apiKey',
