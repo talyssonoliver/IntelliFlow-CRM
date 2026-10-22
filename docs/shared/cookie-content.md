@@ -2,7 +2,7 @@
 title: Cookie Policy
 version: v2026.10
 effectiveDate: 2026-10-07
-contactEmail: privacy@leangency.com
+contactEmail: hello@leangency.com
 summary:
   - Necessary cookies keep the site working, authenticate sessions, and remember
     your cookie choices; they cannot be turned off.

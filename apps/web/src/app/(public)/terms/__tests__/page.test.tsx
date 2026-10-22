@@ -39,10 +39,10 @@ describe('TermsPage', () => {
     expect(screen.getByText(/7 october 2026/i)).toBeInTheDocument();
 
     const emailLinks = screen.getAllByRole('link', {
-      name: /legal@leangency.com/i,
+      name: /hello@leangency.com/i,
     });
     expect(emailLinks.length).toBeGreaterThanOrEqual(1);
-    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:legal@leangency.com');
+    expect(emailLinks[0]).toHaveAttribute('href', 'mailto:hello@leangency.com');
   });
 
   it('renders inside the Aurora shell (no main of its own) with section navigation links', () => {

@@ -2,7 +2,7 @@
 title: Privacy Policy
 version: v2026.10
 effectiveDate: 2026-10-07
-contactEmail: privacy@leangency.com
+contactEmail: hello@leangency.com
 summary:
   - We collect account, product usage, and support interaction data needed to
     operate Aurora.
@@ -54,6 +54,6 @@ limits of legal retention obligations.
 ## Contact Us
 
 If you have privacy questions, data-subject requests, or concerns about this
-policy, contact Leangency at privacy@leangency.com. We review policy changes
+policy, contact Leangency at hello@leangency.com. We review policy changes
 before release and publish an updated version identifier whenever the policy
 changes materially.
