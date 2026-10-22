@@ -99,7 +99,11 @@ Chosen option 4.
   threshold within 30 days. Only the status code and a truncated diagnostic are
   stored; no mail content.
 - **Suppression.** Suppressed recipients are dropped before quota is reserved;
-  the response lists them; all-suppressed sends nothing.
+  the response lists them; all-suppressed sends nothing. A recipient the SMTP
+  server refuses permanently (5xx) at send time is a hard bounce no DSN will
+  report, so the send applies the hard-bounce rule itself (source `SMTP`), in
+  the transaction that records the bounce; a temporary (4xx) refusal never
+  suppresses.
 - **Attachments (Q11).** Compose uploads attachments to the private
   `email-attachments` bucket before sending; the send re-checks the blocked
   extensions and the 25 MB total.

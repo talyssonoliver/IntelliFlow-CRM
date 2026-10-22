@@ -18,10 +18,12 @@
 import { MailboxTransportError, buildMime, type MimeAttachment } from '@intelliflow/adapters';
 import type { EmailAttachmentStoragePort } from '@intelliflow/application';
 import {
+  evaluateBounce,
   isEmailSettingsAdminRole,
   normalizeEmail,
   partitionRecipients,
   resolveSendingMailbox,
+  type BounceRules,
   type MailboxErrorCode,
   type MailboxStatus,
 } from '@intelliflow/domain';
@@ -121,6 +123,14 @@ function recordMetadata(
   };
 }
 
+/** Permanent (5xx) refusals: the rest of `rejected` were refused temporarily (4xx). */
+function hardRefusals(refused: { rejected: string[]; temporary: string[] }): string[] {
+  const temporary = new Set(refused.temporary.map((address) => address.toLowerCase()));
+  return refused.rejected
+    .map((address) => address.toLowerCase())
+    .filter((address) => !temporary.has(address));
+}
+
 /** Record metadata naming refused recipients, or nothing when all were accepted. */
 function rejectedMetadata(
   input: SendUserEmailInput,
@@ -130,16 +140,43 @@ function rejectedMetadata(
 ): { metadata?: Record<string, unknown> } {
   if (refused.rejected.length === 0) return {};
   const lower = refused.rejected.map((address) => address.toLowerCase());
-  // A temporary (4xx) refusal is bounced for this send, never a hard bounce.
-  const temporary = new Set(refused.temporary.map((address) => address.toLowerCase()));
   return {
     metadata: {
       ...recordMetadata(input, skipped, options),
       rejectedRecipients: lower,
       bouncedRecipients: lower,
-      hardBouncedRecipients: lower.filter((address) => !temporary.has(address)),
+      // A temporary (4xx) refusal is bounced for this send, never a hard bounce.
+      hardBouncedRecipients: hardRefusals(refused),
     },
   };
+}
+
+/**
+ * A permanent SMTP refusal is a hard bounce the DSN reader never sees (the
+ * server never accepted the mail), so the tenant's hard-bounce rule is applied
+ * here, in the transaction that records the bounce.
+ */
+async function suppressHardRefusals(
+  tx: any,
+  ids: { tenantId: string; recordId: string },
+  rules: BounceRules,
+  hard: string[]
+): Promise<void> {
+  const decision = evaluateBounce('HARD', rules, 0);
+  if (!decision.suppress) return;
+  for (const email of new Set(hard.map(normalizeEmail))) {
+    await tx.emailSuppression.upsert({
+      where: { tenantId_email: { tenantId: ids.tenantId, email } },
+      create: {
+        tenantId: ids.tenantId,
+        email,
+        reason: decision.reason,
+        source: 'SMTP',
+        emailRecordId: ids.recordId,
+      },
+      update: {},
+    });
+  }
 }
 
 /** FAILED with its code; an authentication failure also marks the mailbox ERROR. */
@@ -291,20 +328,25 @@ export async function dispatchUserMail(
     // they are recorded as bounced (the Sent list shows "Partly bounced").
     const rejected = sendTo.filter((address) => sent.rejected.includes(address.toLowerCase()));
     if (rejected.length > 0) await releaseQuota(rejected.length);
-    await db.emailRecord.update({
-      where: { id: recordId, tenantId },
-      data: {
-        status: 'SENT',
-        sentAt: now(),
-        messageIdHeader: mime.messageId,
-        provider: sent.provider,
-        providerMessageId: sent.providerMessageId,
-        ...rejectedMetadata(input, recipients.skipped, options, {
-          rejected,
-          temporary: sent.rejectedTemporarily ?? [],
-        }),
-      },
-    });
+    const refused = { rejected, temporary: sent.rejectedTemporarily ?? [] };
+    const sentData = {
+      status: 'SENT',
+      sentAt: now(),
+      messageIdHeader: mime.messageId,
+      provider: sent.provider,
+      providerMessageId: sent.providerMessageId,
+      ...rejectedMetadata(input, recipients.skipped, options, refused),
+    };
+    const hard = hardRefusals(refused);
+    const sentRecordId = recordId;
+    if (hard.length === 0) {
+      await db.emailRecord.update({ where: { id: sentRecordId, tenantId }, data: sentData });
+    } else {
+      await db.$transaction(async (tx: any) => {
+        await tx.emailRecord.update({ where: { id: sentRecordId, tenantId }, data: sentData });
+        await suppressHardRefusals(tx, { tenantId, recordId: sentRecordId }, settings, hard);
+      });
+    }
     return { id: recordId, status: 'SENT', skipped: recipients.skipped, rejected };
   } catch (error) {
     // The recipients got it: keep the charge and the SENT outcome; surface the error.

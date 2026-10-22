@@ -186,7 +186,7 @@ export interface SuppressionDto {
   id: string;
   email: string;
   reason: (typeof SUPPRESSION_REASONS)[number];
-  source: 'DSN' | 'MANUAL';
+  source: 'DSN' | 'SMTP' | 'MANUAL';
   createdAt: string;
 }
 

@@ -68,6 +68,8 @@ beforeEach(() => {
   (prismaMock.tenantEmailSettings.findUnique as any).mockResolvedValue(null);
   (prismaMock.emailMailbox.findMany as any).mockResolvedValue([ownMailbox]);
   (prismaMock.emailSuppression.findMany as any).mockResolvedValue([]);
+  (prismaMock.emailSuppression.upsert as any).mockResolvedValue({});
+  (prismaMock.$transaction as any).mockImplementation(async (fn: any) => fn(prismaMock));
   (prismaMock.emailRecord.create as any).mockImplementation(async ({ data }: any) => ({
     id: 'rec-1',
     ...data,
@@ -309,6 +311,63 @@ describe('dispatchUserMail', () => {
       rejectedRecipients: ['b@example.invalid'],
       bouncedRecipients: ['b@example.invalid'],
       hardBouncedRecipients: [],
+    });
+    // Codex pre-ship MEDIUM: a 4xx refusal never suppresses the address.
+    expect(prismaMock.emailSuppression.upsert).not.toHaveBeenCalled();
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  describe('a permanent (5xx) SMTP refusal applies the hard-bounce rule (codex pre-ship MEDIUM)', () => {
+    beforeEach(() => {
+      transport.send.mockResolvedValue({
+        provider: 'SMTP',
+        providerMessageId: '<srv@x>',
+        rejected: ['b@example.invalid', 'c@example.invalid'],
+        rejectedTemporarily: ['c@example.invalid'],
+      });
+    });
+    const send = () =>
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...input, to: ['a@example.invalid', 'B@example.invalid', 'c@example.invalid'] },
+        deps()
+      );
+
+    it('suppresses only the permanently refused address, with the bounce, in one transaction (default SUPPRESS)', async () => {
+      await expect(send()).resolves.toMatchObject({ status: 'SENT' });
+      expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
+      expect(prismaMock.emailRecord.update).toHaveBeenCalledTimes(1);
+      expect(prismaMock.emailSuppression.upsert).toHaveBeenCalledTimes(1);
+      expect(prismaMock.emailSuppression.upsert).toHaveBeenCalledWith({
+        where: { tenantId_email: { tenantId, email: 'b@example.invalid' } },
+        create: {
+          tenantId,
+          email: 'b@example.invalid',
+          reason: 'HARD_BOUNCE',
+          source: 'SMTP',
+          emailRecordId: 'rec-1',
+        },
+        update: {},
+      });
+    });
+
+    it('records the hard bounce but suppresses nothing when hardBounceAction is NONE', async () => {
+      (prismaMock.tenantEmailSettings.findUnique as any).mockResolvedValue({
+        tenantId,
+        hardBounceAction: 'NONE',
+      });
+      await send();
+      const update = (prismaMock.emailRecord.update as any).mock.calls[0][0].data;
+      expect(update.metadata.hardBouncedRecipients).toEqual(['b@example.invalid']);
+      expect(prismaMock.emailSuppression.upsert).not.toHaveBeenCalled();
+    });
+
+    it('keeps the SENT outcome visible as an error if the suppression cannot be written', async () => {
+      (prismaMock.emailSuppression.upsert as any).mockRejectedValue(new Error('db down'));
+      await expect(send()).rejects.toThrow('db down');
+      // Delivered: the quota is kept (only the refused two come back) and nothing is FAILED.
+      expect(quota.release).toHaveBeenCalledTimes(1);
+      expect(quota.release).toHaveBeenCalledWith(2);
     });
   });
 
