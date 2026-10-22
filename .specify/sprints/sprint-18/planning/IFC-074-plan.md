@@ -350,9 +350,9 @@ After Steps 8-12 validate the decision. Also correct the stale "Future ADRs use 
 - All files touched above (no new files)
 
 **Validation:**
-- [ ] `pnpm --filter @intelliflow/observability typecheck && pnpm --filter @intelliflow/observability lint`
-- [ ] `pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/api lint`
-- [ ] `pnpm exec eslint tools/scripts/observability/collect-observability-evidence.mjs tools/scripts/lib/grafana-provisioning.mjs tools/scripts/__tests__/collect-observability-evidence.test.ts tools/scripts/lib/grafana-provisioning.test.ts`
+- [x] `pnpm --filter @intelliflow/observability typecheck && pnpm --filter @intelliflow/observability lint`
+- [x] `pnpm --filter @intelliflow/api typecheck && pnpm --filter @intelliflow/api lint`
+- [x] `pnpm exec eslint tools/scripts/observability/collect-observability-evidence.mjs tools/scripts/lib/grafana-provisioning.mjs tools/scripts/__tests__/collect-observability-evidence.test.ts tools/scripts/lib/grafana-provisioning.test.ts`
 
 ### Phase 5: VALIDATION
 

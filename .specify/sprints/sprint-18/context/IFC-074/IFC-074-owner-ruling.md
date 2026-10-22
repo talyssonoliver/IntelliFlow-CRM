@@ -22,3 +22,18 @@ the api request log is `console.log`, not pino). ai-worker correlation and real 
 3. ai-worker correlation rows and MTTD are real now. The api row is NEEDS_HUMAN until the PR is
    merged and deployed; a collector re-run then closes it.
 4. The Sprint_plan row stays **In Progress** until that post-deploy re-run. Do not mark it Completed.
+
+---
+
+# Owner ruling 2 (2026-10-22) — ship blocker #1000
+
+**Question:** IFC-074 is built and validated, but every lane's pre-ship now fails on new critical
+advisories on main (next RCE in apps/project-tracker, @sentry/nextjs, dompurify) — filed as #1000, none
+touched by IFC-074. How should IFC-074 ship?
+
+**Options put:** A: separate fix PR first (recommended) · B: bump deps inside IFC-074 · C: stop and hand
+to Aurora.
+
+**Answer: A — "Separate fix PR first (Recommended)".** The lane opens a small dependency PR for #1000
+(same shape as #975) from its own worktree, with its own pre-ship and PR (not merged by the lane).
+IFC-074 waits for that fix to land on main, then merges main, runs its own pre-ship once and pushes.
