@@ -548,6 +548,26 @@ describeDb('PG-207 email tables (real DB)', () => {
       await expectRejected(prisma.emailBounceReceipt.create({ data: receipt }), UNIQUE);
     });
 
+    it('rejects an over-long status as P2000, the data error the bounce scan isolates', async () => {
+      const mailbox = await prisma.emailMailbox.findFirst({
+        where: { tenantId: TENANT_A, userId: USER_A1 },
+      });
+      await expect(
+        prisma.emailBounceReceipt.create({
+          data: {
+            tenantId: TENANT_A,
+            mailboxId: mailbox.id,
+            dsnKey: '1:44',
+            recipient: 'late@example.invalid',
+            kind: 'DELAYED',
+            statusCode: 'x'.repeat(100),
+            matchConfidence: 'LOW',
+            receivedAt: new Date(Date.UTC(2026, 9, 20)),
+          },
+        })
+      ).rejects.toMatchObject({ code: 'P2000' });
+    });
+
     it('refuses a receipt whose mailbox belongs to another tenant (composite FK)', async () => {
       const mailbox = await prisma.emailMailbox.findFirst({
         where: { tenantId: TENANT_A, userId: USER_A1 },

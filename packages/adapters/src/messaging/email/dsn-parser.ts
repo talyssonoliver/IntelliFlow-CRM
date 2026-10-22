@@ -56,6 +56,14 @@ const MAX_PARTS = 20;
  */
 const MAX_RECIPIENTS = EMAIL_LIMITS.maxRecipients;
 const ADDRESS = /^[^\s@<>"]{1,64}@[^\s@<>"]{1,255}$/;
+/** RFC 3464 status code: class.subject.detail (at most 9 characters). */
+const STATUS_CODE = /^[245]\.\d{1,3}\.\d{1,3}$/;
+
+/** The Status field when it is a well-formed code; otherwise empty (untrusted input). */
+function statusCode(value: string | undefined): string {
+  const status = (value ?? '').trim();
+  return STATUS_CODE.test(status) ? status : '';
+}
 
 /** Replaces every whitespace-separated token containing "@" (linear, no backtracking). */
 function redactAddresses(value: string): string {
@@ -246,7 +254,7 @@ export function parseDsn(raw: string): ParsedDsn | null {
       recipients.push({
         recipient,
         action: (fields['action'] ?? '').trim().toLowerCase(),
-        status: (fields['status'] ?? '').trim(),
+        status: statusCode(fields['status']),
         diagnostic: cleanDiagnostic(fields['diagnostic-code']),
       });
     }

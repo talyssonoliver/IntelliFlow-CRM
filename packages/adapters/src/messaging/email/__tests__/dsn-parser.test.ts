@@ -40,6 +40,19 @@ describe('parseDsn', () => {
     ]);
   });
 
+  it('keeps a Status only in RFC 3464 class.subject.detail form (never an oversized value)', () => {
+    const parsed = parseDsn(
+      makeDsn({
+        recipients: [
+          { address: 'late@example.invalid', action: 'delayed', status: '4.'.repeat(50) },
+          { address: 'gone@example.invalid', action: 'failed', status: '5.1.1 (user unknown)' },
+          { address: 'soft@example.invalid', action: 'failed', status: '4.2.2' },
+        ],
+      })
+    );
+    expect(parsed?.recipients.map((r) => r.status)).toEqual(['', '', '4.2.2']);
+  });
+
   it('keeps a short, address-redacted, control-free diagnostic', () => {
     const parsed = parseDsn(
       makeDsn({

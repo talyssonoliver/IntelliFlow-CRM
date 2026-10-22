@@ -585,6 +585,59 @@ describe('runBounceScan', () => {
     });
   });
 
+  describe('one bad message never fails a scan (codex pre-ship HIGH: untrusted Status disabled the mailbox)', () => {
+    it('a delayed notice with a 100-character Status is stored without it; the mailbox stays ACTIVE', async () => {
+      const fake = fakeDb();
+      const raw = makeDsn({
+        recipients: [
+          { address: 'gone@example.invalid', action: 'delayed', status: 'x'.repeat(100) },
+        ],
+      });
+      const report = await runBounceScan(deps(fake, [{ key: '7:11', raw }]).d);
+      expect(report.failures).toBe(0);
+      expect(fake.receipts[0]).toMatchObject({ kind: 'DELAYED', statusCode: null });
+      expect(fake.mailboxUpdates[0].data).toMatchObject({ failureCount: 0, imapLastUid: 42 });
+    });
+
+    it('a message the database rejects as data is skipped and the scan goes on past it', async () => {
+      const fake = fakeDb();
+      const create = fake.db.emailBounceReceipt.create.getMockImplementation();
+      fake.db.emailBounceReceipt.create.mockImplementationOnce(async () => {
+        throw Object.assign(new Error('value too long'), { code: 'P2000' });
+      });
+      fake.db.emailBounceReceipt.create.mockImplementation(create);
+      const report = await runBounceScan(
+        deps(fake, [
+          { key: '7:11', raw: makeDsn() },
+          {
+            key: '7:12',
+            raw: makeDsn({
+              recipients: [{ address: 'ok@example.invalid', action: 'failed', status: '5.1.1' }],
+            }),
+          },
+        ]).d
+      );
+      expect(report.failures).toBe(0);
+      expect(fake.receipts.map((r: any) => r.recipient)).toEqual(['ok@example.invalid']);
+      expect(fake.mailboxUpdates[0].data).toMatchObject({ failureCount: 0, imapLastUid: 42 });
+    });
+
+    it('a connection-type failure still fails the scan (so nothing is skipped during an outage)', async () => {
+      const fake = fakeDb();
+      fake.db.emailBounceReceipt.create.mockImplementationOnce(async () => {
+        throw Object.assign(new Error('db unreachable'), { code: 'P1001' });
+      });
+      const report = await runBounceScan(deps(fake, [{ key: '7:11', raw: makeDsn() }]).d);
+      expect(report.failures).toBe(1);
+    });
+
+    it('an over-long message key is stored hashed, within its column', async () => {
+      const fake = fakeDb();
+      await runBounceScan(deps(fake, [{ key: 'k'.repeat(300), raw: makeDsn() }]).d);
+      expect(fake.receipts[0].dsnKey.length).toBeLessThanOrEqual(255);
+    });
+  });
+
   it('reads the SMTP mailbox over IMAP from its cursor and advances it', async () => {
     const fake = fakeDb();
     const { d, read } = deps(fake, []);

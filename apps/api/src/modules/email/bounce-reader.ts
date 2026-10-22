@@ -17,6 +17,7 @@
  * - At most 25 suppressions per mailbox per scan; no mail content is stored.
  * - Failures back off exponentially; 5 in a row mark the mailbox ERROR.
  */
+import { createHash } from 'node:crypto';
 import { MailboxTransportError, parseDsn, type RawDsnMessage } from '@intelliflow/adapters';
 import {
   EMAIL_LIMITS,
@@ -490,12 +491,16 @@ async function recordReceiptOnce(
         data: {
           tenantId: mailbox.tenantId,
           mailboxId: mailbox.id,
-          dsnKey: message.key,
+          dsnKey: receiptKey(message.key),
           recipient: entry.recipient,
           emailRecordId: matched ? matched.id : null,
           kind: matched ? kind : 'UNMATCHED',
-          statusCode: entry.status || null,
-          diagnostic: entry.diagnostic,
+          // Within the column limits (untrusted report content, never a scan failure).
+          statusCode:
+            entry.status && entry.status.length <= RECEIPT_LIMITS.statusCode ? entry.status : null,
+          diagnostic: entry.diagnostic
+            ? entry.diagnostic.slice(0, RECEIPT_LIMITS.diagnostic)
+            : null,
           matchConfidence: matched ? 'HIGH' : 'LOW',
           receivedAt: message.receivedAt,
         },
@@ -530,6 +535,30 @@ async function recordReceiptOnce(
     if (prismaErrorCode(error) === 'P2002') return null;
     throw error;
   }
+}
+
+/** EmailBounceReceipt column limits (packages/db schema). */
+const RECEIPT_LIMITS = { dsnKey: 255, recipient: 320, statusCode: 16, diagnostic: 200 } as const;
+
+/**
+ * Prisma errors that mean "this data cannot be stored" (too long, wrong type,
+ * constraint) - a property of one report, not of the database being down.
+ */
+const DATA_ERROR_CODES = new Set([
+  'P2000',
+  'P2004',
+  'P2005',
+  'P2006',
+  'P2007',
+  'P2011',
+  'P2012',
+  'P2020',
+]);
+
+/** A provider message id as a receipt key: hashed when it would not fit its column. */
+function receiptKey(key: string): string {
+  if (key.length <= RECEIPT_LIMITS.dsnKey) return key;
+  return `sha256:${createHash('sha256').update(key).digest('hex')}`;
 }
 
 function shouldNotifySender(
@@ -585,7 +614,7 @@ async function processReport(
 
   for (const entry of report.recipients) {
     const kind = classifyDsnStatus(entry.action, entry.status);
-    if (!kind) continue;
+    if (!kind || entry.recipient.length > RECEIPT_LIMITS.recipient) continue;
     const matched = entitledFor(report, entry.recipient, mailbox, recordRecipients) ? record : null;
 
     const outcome = await recordReceiptOnce(deps, {
@@ -624,7 +653,15 @@ async function processReports(
       await processReport(deps, mailbox, message, state, now);
     } catch (error) {
       if (error instanceof SuppressionCapReached) return { stopped: true, lastDone };
-      throw error;
+      // One report the database rejects as data never fails the scan (it would
+      // back off and finally disable the mailbox): log it and go on past it.
+      // Anything else - e.g. the database being down - still fails the scan,
+      // so no report is skipped during an outage.
+      if (!DATA_ERROR_CODES.has(prismaErrorCode(error) ?? '')) throw error;
+      console.warn('[email] bounce report skipped: data rejected', {
+        mailboxId: mailbox.id,
+        code: prismaErrorCode(error),
+      });
     }
     lastDone = message;
   }
