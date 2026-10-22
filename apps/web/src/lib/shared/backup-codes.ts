@@ -77,7 +77,7 @@ IMPORTANT - Please read carefully:
 5. Do not share these codes with anyone
 
 If you lose access to your account and these codes, contact support at:
-support@leangency.com
+hello@leangency.com
 
 ================================================================================
 `;

@@ -488,7 +488,7 @@ Aurora
   return {
     to: email,
     from: process.env.NEXT_PUBLIC_SENDER_EMAIL || 'crm@leangency.com',
-    replyTo: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'support@leangency.com',
+    replyTo: process.env.NEXT_PUBLIC_SUPPORT_EMAIL || 'hello@leangency.com',
     subject: 'Reset your Aurora password',
     htmlBody,
     textBody,
