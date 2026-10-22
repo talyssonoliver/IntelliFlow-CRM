@@ -112,7 +112,11 @@ function freshScanState(): { failureCount: number; nextScanAt: Date } {
   return { failureCount: 0, nextScanAt: new Date() };
 }
 
-/** Creates or updates the scope's mailbox. A racing duplicate is CONFLICT. */
+/**
+ * Creates or updates the scope's mailbox. A racing duplicate is CONFLICT, and
+ * so is an update whose row changed since it was read and validated: a kept
+ * password is only ever paired with the server it was checked against.
+ */
 async function writeMailbox(
   ctx: EmailRouterCtx,
   existing: MailboxRow | null,
@@ -125,7 +129,11 @@ async function writeMailbox(
       // New credentials: cached access tokens of the old ones stop being valid,
       // and an in-flight bounce scan loses its lease (its writes are refused).
       return await ctx.prismaWithTenant.emailMailbox.update({
-        where: { id: existing.id },
+        where: {
+          id: existing.id,
+          tenantId: existing.tenantId,
+          tokenVersion: existing.tokenVersion,
+        },
         data: { ...data, tokenVersion: { increment: 1 }, lockedUntil: null },
       });
     }
@@ -137,6 +145,12 @@ async function writeMailbox(
       throw new TRPCError({
         code: 'CONFLICT',
         message: 'This mailbox was just connected. Reload and try again.',
+      });
+    }
+    if (prismaErrorCode(err) === 'P2025') {
+      throw new TRPCError({
+        code: 'CONFLICT',
+        message: 'This mailbox was just changed. Reload and try again.',
       });
     }
     throw err;
@@ -461,6 +475,10 @@ export const emailMailboxRouter = createTRPCRouter({
         imapUidValidity: null,
         imapLastUid: null,
         scanCursorAt: null,
+      }).catch(async (error: unknown) => {
+        // Not stored (a racing connect or save): the new grant is given back.
+        await client.revoke(tokens.refreshToken).catch(() => undefined);
+        throw error;
       });
       auditEmail(c, existing ? 'UPDATE' : 'CREATE', RESOURCE, row.id, {
         scope: saved.scope,

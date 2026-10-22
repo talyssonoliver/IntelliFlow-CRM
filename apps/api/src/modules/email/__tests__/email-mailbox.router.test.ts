@@ -171,7 +171,12 @@ describe('emailMailbox.saveSmtp', () => {
     await member().saveSmtp({ ...saveInput, smtpPassword: undefined });
     const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
     expect(data).not.toHaveProperty('smtpPassword');
-    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].where).toEqual({ id: 'mb1' });
+    // Only the row that was read and validated: a save meanwhile is not overwritten.
+    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].where).toEqual({
+      id: 'mb1',
+      tenantId,
+      tokenVersion: 0,
+    });
   });
 
   it('new credentials end any in-flight bounce scan lease (its stale writes are refused)', async () => {
@@ -348,6 +353,22 @@ describe('emailMailbox.saveSmtp', () => {
       Object.assign(new Error('dup'), { code: 'P2002' })
     );
     await expect(member().saveSmtp(saveInput)).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+
+  it('a save that raced another save is CONFLICT, so a kept password never meets another server (codex HIGH)', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow({ tokenVersion: 3 }));
+    // Another save moved tokenVersion on after this one read and validated the row.
+    (prismaMock.emailMailbox.update as any).mockRejectedValueOnce(
+      Object.assign(new Error('not found'), { code: 'P2025' })
+    );
+    await expect(
+      member().saveSmtp({ ...saveInput, smtpPassword: undefined })
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].where).toEqual({
+      id: 'mb1',
+      tenantId,
+      tokenVersion: 3,
+    });
   });
 
   it('refuses an unverified user (verifiedTenantProcedure)', async () => {
@@ -606,6 +627,27 @@ describe('emailMailbox OAuth connect', () => {
     const data = (prismaMock.emailMailbox.update as any).mock.calls[0][0].data;
     expect(data.tokenVersion).toEqual({ increment: 1 });
     expect(data).toMatchObject({ status: 'ACTIVE', failureCount: 0 });
+  });
+
+  it('gives the new grant back when a racing save wins the reconnect (CONFLICT)', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({ kind: 'GMAIL', smtpPassword: null, refreshToken: 'old', tokenVersion: 4 })
+    );
+    (prismaMock.emailOAuthState.findFirst as any).mockResolvedValue({
+      id: 'st1',
+      scope: 'USER',
+      codeVerifier: 'v'.repeat(43),
+      expiresAt: new Date(Date.now() + 60_000),
+    });
+    (prismaMock.emailOAuthState.deleteMany as any).mockResolvedValue({ count: 1 });
+    (prismaMock.emailMailbox.update as any).mockRejectedValueOnce(
+      Object.assign(new Error('not found'), { code: 'P2025' })
+    );
+    await expect(
+      member().oauthComplete({ provider: 'GMAIL', code: 'c'.repeat(20), state: 's'.repeat(43) })
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+    expect(t.oauthClient.revoke).toHaveBeenCalledWith(secret);
+    expect(t.oauthClient.revoke).not.toHaveBeenCalledWith('old');
   });
 
   it('maps a provider failure during completion to a coded BAD_REQUEST', async () => {

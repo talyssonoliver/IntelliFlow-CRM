@@ -311,6 +311,28 @@ describeDb('PG-207 email tables (real DB)', () => {
       await prisma.emailMailbox.delete({ where: { id: row.id } });
     });
 
+    it('refuses a mailbox update keyed on a credential version that moved on', async () => {
+      const row = await prisma.emailMailbox.create({
+        data: smtpMailbox({ userId: USER_A2, fromAddress: 'cas@mail.example.invalid' }),
+      });
+      const keyed = { id: row.id, tenantId: row.tenantId, tokenVersion: row.tokenVersion };
+      await prisma.emailMailbox.update({
+        where: keyed,
+        data: { smtpHost: 'smtp.b.example.invalid', tokenVersion: { increment: 1 } },
+      });
+      // The racing save read the old version: it must not overwrite the winner.
+      await expectRejected(
+        prisma.emailMailbox.update({
+          where: keyed,
+          data: { smtpHost: 'smtp.a.example.invalid', tokenVersion: { increment: 1 } },
+        }),
+        ['P2025']
+      );
+      const stored = await prisma.emailMailbox.findUniqueOrThrow({ where: { id: row.id } });
+      expect(stored.smtpHost).toBe('smtp.b.example.invalid');
+      await prisma.emailMailbox.delete({ where: { id: row.id } });
+    });
+
     it('serialises soft-bounce counting with a transaction advisory lock', async () => {
       const key = 'email-soft-bounce:tenant:someone@example.invalid';
       const order: string[] = [];
