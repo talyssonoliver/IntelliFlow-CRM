@@ -1,11 +1,18 @@
 # Vendor DPA Register
 
-[DRAFT — research and documentation only, not legal advice. This register
-records what each vendor's own currently-published terms say, as read on
-2026-10-12. It does not record that any agreement has been signed, accepted, or
-countersigned on Leangency's behalf — see "Owner actions" at the end for the
-handful of account-level steps that genuinely need the owner, and why no code,
-UI, settings, or feature was added to the CRM to produce this.]
+Status: internal research and documentation, not legal advice, and not reviewed
+by a qualified lawyer. This register records what each vendor's own published
+terms said when read on 2026-10-12. It does not record that any agreement has
+been signed, accepted, or countersigned on Leangency's behalf. The Railway,
+Sentry, and OpenRouter steps are deferred by the owner until the first customer,
+and Vercel stays on the Hobby plan, where its DPA does not apply (see "Owner
+rulings" below).
+
+This register is internal. Unlike `docs/shared/dpa-content.md` and
+`docs/shared/aup-content.md`, which the public `/dpa` and `/aup` pages render in
+full, no page renders this file. Account identifiers, owner rulings,
+infrastructure detail, and per-vendor verdicts belong here, not in the public
+DPA.
 
 ## Purpose and scope
 
@@ -20,8 +27,8 @@ vendor's own current published terms:
   signature, or opt-in, and exactly where?
 - **(b) Tier** — does the DPA apply on the plan/tier actually in use? Where this
   can't be told from an environment-variable name or public docs, that is stated
-  rather than assumed — the Vercel Hobby-plan finding earlier in this issue is
-  exactly the kind of gap a silent assumption would miss.
+  rather than assumed — the Vercel Hobby-plan finding below is exactly the kind
+  of gap a silent assumption would miss.
 - **(c) UK transfer mechanism** — which safeguard the vendor names for a
   restricted transfer out of the UK (UK IDTA, UK Addendum to the EU SCCs, or the
   UK Extension to the EU-U.S. Data Privacy Framework).
@@ -53,10 +60,11 @@ action, not guessed.
 - DPA: https://vercel.com/legal/dpa (updated 17 March 2026, effective 31 March
   2026). Text: "This Addendum applies to Vercel's Processing of Personal Data as
   a Processor... for Customers who are on Enterprise and Pro plans."
-- Already verified earlier in this issue: this project's team is on Hobby
-  (`vercel api /v2/teams/<id>` → `billing.plan: "hobby"`). Vercel's own Terms of
-  Service restrict Hobby to "personal or non-commercial use"
-  (https://vercel.com/legal/terms, §4), and Aurora is commercial use.
+- Verified 2026-10-12: this project's team is on Hobby
+  (`vercel api /v2/teams/<id>` → `billing.plan: "hobby"`,
+  `billing.status: "active"`). Vercel's own Terms of Service restrict Hobby to
+  "personal or non-commercial use" (https://vercel.com/legal/terms, §4), and
+  Aurora is commercial use.
 - Self-serve upgrade path exists: dashboard → team Settings → Billing → upgrade
   to Pro (https://vercel.com/docs/plans). No DPA exists for this processing
   until that upgrade happens (or hosting moves elsewhere).
@@ -203,16 +211,15 @@ own:
    Stripe confirmed on 19 August 2026 that it is acquiring OpenRouter
    (TechCrunch,
    https://techcrunch.com/2026/08/19/stripe-didnt-really-buy-openrouter-because-of-the-singularity/,
-   "Stripe confirmed on Wednesday that it was buying OpenRouter"), in a deal
-   various outlets put at $7-8bn+. OpenRouter's own blog commitment, quoted in
-   that piece, says its "product, mission, and current commitments remain
-   unchanged," and the deal was expected to close "in a few weeks" from that
-   date — so by 2026-10-12 it has likely already closed. This doesn't change
-   today's verdict (the DPA-availability and ZDR-configuration problems above
-   are unrelated to who owns OpenRouter), but it is a reason to re-check
-   OpenRouter's terms again once the acquisition closes and Stripe's own
-   policies have had a chance to apply, rather than treat this register as
-   settled indefinitely.
+   "Stripe confirmed on Wednesday that it was buying OpenRouter"). OpenRouter's
+   own blog commitment, quoted in that piece, says its "product, mission, and
+   current commitments remain unchanged," and the deal was expected to close "in
+   a few weeks" from that date — so by 2026-10-12 it has likely already closed.
+   This doesn't change today's verdict (the DPA-availability and
+   ZDR-configuration problems above are unrelated to who owns OpenRouter), but
+   it is a reason to re-check OpenRouter's terms again once the acquisition
+   closes and Stripe's own policies have had a chance to apply, rather than
+   treat this register as settled indefinitely.
 
 **What would make OpenRouter suitable**: an Enterprise agreement with a signed
 DPA (Exhibit A), _and_ every AI-worker OpenRouter request setting
@@ -276,10 +283,37 @@ of these four is done today:
 4. **Sentry's DPA is accepted** — the electronic opt-in completed for this
    account.
 
-Until all four are true, this register's own position is: no customer should see
-this DPA as a final document, consistent with "Draft Status and Owner Approval"
-in `docs/shared/dpa-content.md`.
+Until all four are true, the DPA must not be signed with any customer. The
+public DPA says so in its own status line ("Introduction and Parties") and in
+"International Transfers", without the account-level detail recorded here.
 
 Google's Gemini API acceptance (see "Google LLC" above) and every "automatic"
 vendor needed no owner action either — they were already satisfied by the
 account already being live, or require no action at all.
+
+## How the sub-processor list was checked
+
+The sub-processor list in `docs/shared/dpa-content.md` was checked on 2026-10-12
+against which environment-variable names exist on Aurora's Vercel production
+project and its Railway production services (`api`, `ai-worker`,
+`notifications-worker`, `events-worker`, `ingestion-worker`, `ws`). Values were
+never read, only which credentials are configured. Details found during that
+check that are kept here rather than in the public DPA:
+
+- **Redis**: Upstash is live only for rate limiting on the web application (a
+  REST URL/token pair). The API and worker services' caching and job-queue Redis
+  is the Railway-hosted instance.
+- **Gemini**: embeddings use the `gemini-embedding-001` model.
+- **OpenRouter routing**: the codebase's default model, absent an override, is
+  an open-weight OpenAI model served through OpenRouter's own infrastructure;
+  the configuration supports routing to other providers depending on the tier.
+- **Not live**: no SendGrid, OpenAI, Anthropic, or AWS/S3 credential is
+  configured on either platform.
+- **Cloudinary**: credentials are provisioned on the Vercel production project,
+  but no code in the repository calls the Cloudinary API. The only in-repo
+  matches for "cloudinary" are Next.js's built-in image-loader names and
+  framework documentation. No personal data reaches Cloudinary today; the DPA
+  must be updated before that changes.
+- **Stripe**: receives only Leangency's own billing relationship with the
+  customer, so Leangency is controller for that data and Stripe is outside the
+  DPA's sub-processor list.

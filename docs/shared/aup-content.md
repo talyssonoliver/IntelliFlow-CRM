@@ -20,10 +20,8 @@ summary:
 
 ## Introduction
 
-[DRAFT — pending owner review and approval. This text has not been reviewed by a
-qualified lawyer and does not take legal effect until Talysson da Silva Oliveira
-approves it and the entity details below are confirmed. Nothing in this draft
-should be relied upon or published as a final policy.]
+Status: this policy has not yet been reviewed by a qualified lawyer. Questions
+about it can be sent to hello@leangency.com.
 
 This Acceptable Use Policy ("AUP") applies to every customer, end user,
 integration, and partner that accesses Aurora, which is provided by Talysson da
@@ -108,11 +106,3 @@ out why you believe the action was mistaken. As Leangency is a sole-trader
 operation, an appeal is reviewed by Talysson da Silva Oliveira or a person he
 designates who was not responsible for the original enforcement decision, rather
 than by a separate legal department.
-
-## Draft Status and Owner Approval
-
-This Acceptable Use Policy was drafted to replace placeholder text (tracked as
-S17-AUDIT-007 in issue #260) and has not undergone legal review. It is a
-starting point for Talysson da Silva Oliveira to review, amend, and approve —
-not a finished, legally-reviewed document. The entity details above are
-resolved; there is no outstanding [OWNER TO CONFIRM] in this policy.
