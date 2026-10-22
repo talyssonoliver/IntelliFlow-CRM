@@ -96,6 +96,23 @@ describe('getApiLogger', () => {
 
     expect(consoleError).toHaveBeenCalledTimes(1);
     expect(consoleError.mock.calls[0][0]).toContain('unknown level INFO');
+    // the failed build is remembered: no rebuild (and no new transport) per request
+    expect(createLogger).toHaveBeenCalledTimes(1);
+  });
+
+  it('resetApiLoggerForTests clears a remembered build failure', async () => {
+    createLogger.mockImplementationOnce(() => {
+      throw new Error('unknown level INFO');
+    });
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const { apiLog, resetApiLoggerForTests } = await import('./logger.js');
+
+    apiLog('info', { type: 'trpc.request' }, 'trpc request');
+    resetApiLoggerForTests();
+    apiLog('info', { type: 'trpc.request' }, 'trpc request');
+
+    expect(createLogger).toHaveBeenCalledTimes(2);
+    expect(fakeLogger.info).toHaveBeenCalledWith({ type: 'trpc.request' }, 'trpc request');
   });
 
   it('apiLog swallows a write that throws', async () => {

@@ -15,7 +15,16 @@
 import { createLogger, type Logger } from '@intelliflow/observability';
 
 let apiLogger: Logger | undefined;
+let loggerUnavailable = false;
 let failureReported = false;
+
+function reportFailureOnce(error: unknown): void {
+  if (failureReported) return;
+  failureReported = true;
+  console.error(
+    `[api-logger] structured logging unavailable: ${error instanceof Error ? error.message : 'unknown error'}`
+  );
+}
 
 /** The api's pino logger, named after the OTel service (default `intelliflow-api`). */
 export function getApiLogger(): Logger {
@@ -28,27 +37,34 @@ export function getApiLogger(): Logger {
 /**
  * Emit one record. Logging must never fail or change a request: a logger that
  * cannot be built (e.g. pino rejects an unknown LOG_LEVEL) or a write that
- * throws is swallowed, and reported once on stderr so the gap is visible.
+ * throws is swallowed, and reported once on stderr so the gap is visible. A
+ * failed build is remembered and not retried per request (each attempt can
+ * start a pino-pretty worker in development before pino throws).
  */
 export function apiLog(
   level: 'info' | 'warn' | 'error',
   record: Record<string, unknown>,
   message: string
 ): void {
+  if (loggerUnavailable) return;
+  let logger: Logger;
   try {
-    getApiLogger()[level](record, message);
+    logger = getApiLogger();
   } catch (error) {
-    if (!failureReported) {
-      failureReported = true;
-      console.error(
-        `[api-logger] structured logging unavailable: ${error instanceof Error ? error.message : 'unknown error'}`
-      );
-    }
+    loggerUnavailable = true;
+    reportFailureOnce(error);
+    return;
+  }
+  try {
+    logger[level](record, message);
+  } catch (error) {
+    reportFailureOnce(error);
   }
 }
 
-/** Drop the cached logger so the next call builds a new one (tests only). */
+/** Drop the cached logger and any remembered failure (tests only). */
 export function resetApiLoggerForTests(): void {
   apiLogger = undefined;
+  loggerUnavailable = false;
   failureReported = false;
 }
