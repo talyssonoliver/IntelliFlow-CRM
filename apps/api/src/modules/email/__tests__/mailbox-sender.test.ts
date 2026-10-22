@@ -333,10 +333,14 @@ describe('dispatchUserMail', () => {
         deps()
       );
 
-    it('suppresses only the permanently refused address, with the bounce, in one transaction (default SUPPRESS)', async () => {
+    it('stores SENT first, then suppresses only the permanently refused address (default SUPPRESS)', async () => {
       await expect(send()).resolves.toMatchObject({ status: 'SENT' });
-      expect(prismaMock.$transaction).toHaveBeenCalledTimes(1);
       expect(prismaMock.emailRecord.update).toHaveBeenCalledTimes(1);
+      expect((prismaMock.emailRecord.update as any).mock.invocationCallOrder[0]).toBeLessThan(
+        (prismaMock.emailSuppression.upsert as any).mock.invocationCallOrder[0]
+      );
+      // The accepted delivery is never tied to the suppression write (codex HIGH).
+      expect(prismaMock.$transaction).not.toHaveBeenCalled();
       expect(prismaMock.emailSuppression.upsert).toHaveBeenCalledTimes(1);
       expect(prismaMock.emailSuppression.upsert).toHaveBeenCalledWith({
         where: { tenantId_email: { tenantId, email: 'b@example.invalid' } },
@@ -362,12 +366,79 @@ describe('dispatchUserMail', () => {
       expect(prismaMock.emailSuppression.upsert).not.toHaveBeenCalled();
     });
 
-    it('keeps the SENT outcome visible as an error if the suppression cannot be written', async () => {
-      (prismaMock.emailSuppression.upsert as any).mockRejectedValue(new Error('db down'));
-      await expect(send()).rejects.toThrow('db down');
-      // Delivered: the quota is kept (only the refused two come back) and nothing is FAILED.
+    it('a failed suppression write never undoes or fails the accepted send (codex HIGH)', async () => {
+      (prismaMock.emailSuppression.upsert as any).mockRejectedValue(
+        Object.assign(new Error('db down'), { code: 'P1001' })
+      );
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      await expect(send()).resolves.toMatchObject({ id: 'rec-1', status: 'SENT' });
+      const update = (prismaMock.emailRecord.update as any).mock.calls[0][0].data;
+      expect(update).toMatchObject({ status: 'SENT', messageIdHeader: expect.any(String) });
+      expect(update.metadata.hardBouncedRecipients).toEqual(['b@example.invalid']);
+      // Delivered: only the refused two come back, and nothing is FAILED.
       expect(quota.release).toHaveBeenCalledTimes(1);
       expect(quota.release).toHaveBeenCalledWith(2);
+      expect(errors).toHaveBeenCalledWith('[email] smtp refusal suppression failed', {
+        recordId: 'rec-1',
+        recipients: 1,
+        code: 'P1001',
+      });
+      errors.mockRestore();
+    });
+  });
+
+  describe('every recipient refused (EENVELOPE, codex MEDIUM)', () => {
+    const refusedAll = (temporary: string[]) =>
+      new MailboxTransportError('REJECTED', {
+        rejected: ['a@example.invalid', 'b@example.invalid'],
+        temporary,
+      });
+    const send = () =>
+      dispatchUserMail(
+        createTestContext() as never,
+        { ...input, to: ['A@example.invalid', 'b@example.invalid'] },
+        deps()
+      );
+
+    it('records FAILED with the bounces, suppresses the permanent refusals and releases all quota', async () => {
+      transport.send.mockRejectedValue(refusedAll([]));
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      await expect(errorOf(send())).resolves.toMatchObject({ code: 'BAD_GATEWAY' });
+      errors.mockRestore();
+      const update = (prismaMock.emailRecord.update as any).mock.calls[0][0].data;
+      expect(update.status).toBe('FAILED');
+      expect(update.metadata).toMatchObject({
+        sendErrorCode: 'REJECTED',
+        rejectedRecipients: ['a@example.invalid', 'b@example.invalid'],
+        bouncedRecipients: ['a@example.invalid', 'b@example.invalid'],
+        hardBouncedRecipients: ['a@example.invalid', 'b@example.invalid'],
+      });
+      expect(
+        (prismaMock.emailSuppression.upsert as any).mock.calls.map((c: any) => c[0].create)
+      ).toEqual([
+        expect.objectContaining({
+          email: 'a@example.invalid',
+          source: 'SMTP',
+          reason: 'HARD_BOUNCE',
+        }),
+        expect.objectContaining({
+          email: 'b@example.invalid',
+          source: 'SMTP',
+          reason: 'HARD_BOUNCE',
+        }),
+      ]);
+      // Nothing was sent: the whole reservation comes back.
+      expect(quota.release).toHaveBeenCalledWith();
+    });
+
+    it('a temporary (4xx) refusal of everyone is recorded but suppresses nothing', async () => {
+      transport.send.mockRejectedValue(refusedAll(['a@example.invalid', 'b@example.invalid']));
+      const errors = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      await errorOf(send());
+      errors.mockRestore();
+      const update = (prismaMock.emailRecord.update as any).mock.calls[0][0].data;
+      expect(update.metadata.hardBouncedRecipients).toEqual([]);
+      expect(prismaMock.emailSuppression.upsert).not.toHaveBeenCalled();
     });
   });
 

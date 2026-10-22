@@ -101,9 +101,11 @@ Chosen option 4.
 - **Suppression.** Suppressed recipients are dropped before quota is reserved;
   the response lists them; all-suppressed sends nothing. A recipient the SMTP
   server refuses permanently (5xx) at send time is a hard bounce no DSN will
-  report, so the send applies the hard-bounce rule itself (source `SMTP`), in
-  the transaction that records the bounce; a temporary (4xx) refusal never
-  suppresses.
+  report, so the send applies the hard-bounce rule itself (source `SMTP`),
+  whether some or all recipients were refused. The send outcome is stored first
+  and on its own; the suppression follows and never fails or undoes an accepted
+  send (a failed write is logged; the hard bounce stays on the record). A
+  temporary (4xx) refusal never suppresses.
 - **Attachments (Q11).** Compose uploads attachments to the private
   `email-attachments` bucket before sending; the send re-checks the blocked
   extensions and the 25 MB total.

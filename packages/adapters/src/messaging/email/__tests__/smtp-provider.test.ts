@@ -99,6 +99,59 @@ describe('SmtpMailboxTransport', () => {
     });
   });
 
+  it('keeps who was refused when the server refuses every recipient (EENVELOPE)', async () => {
+    const everyone = Object.assign(new Error(`550 5.1.1 no such user ${secret}`), {
+      code: 'EENVELOPE',
+      responseCode: 550,
+      rejected: ['A@example.invalid', 'b@example.invalid', 'stranger@elsewhere.example.invalid'],
+      rejectedErrors: [
+        Object.assign(new Error('unknown'), { recipient: 'A@example.invalid', responseCode: 550 }),
+        Object.assign(new Error('busy'), { recipient: 'b@example.invalid', responseCode: 452 }),
+      ],
+    });
+    const transport = fakeTransport({ sendMail: vi.fn(async () => Promise.reject(everyone)) });
+    const smtp = new SmtpMailboxTransport({
+      createTransport: () => transport,
+      lookup: publicLookup,
+    });
+    const error = await smtp
+      .send(
+        config(),
+        { from: 'me@mail.example.com', to: ['a@example.invalid', 'b@example.invalid'] },
+        Buffer.from('x')
+      )
+      .catch((e: unknown) => e);
+    // Only addresses from our own envelope; none of the server's text.
+    expect(error).toMatchObject({
+      code: 'REJECTED',
+      refused: {
+        rejected: ['a@example.invalid', 'b@example.invalid'],
+        temporary: ['b@example.invalid'],
+      },
+    });
+    expect(JSON.stringify(error, Object.getOwnPropertyNames(error as object))).not.toContain(
+      secret
+    );
+    expect(transport.close).toHaveBeenCalled();
+  });
+
+  it('carries no refusals on a failure that names no recipient of ours', async () => {
+    const transport = fakeTransport({
+      sendMail: vi.fn(async () =>
+        Promise.reject(Object.assign(new Error('x'), { code: 'EENVELOPE', rejected: 'nope' }))
+      ),
+    });
+    const smtp = new SmtpMailboxTransport({
+      createTransport: () => transport,
+      lookup: publicLookup,
+    });
+    const error = await smtp
+      .send(config(), { from: 'me@mail.example.com', to: ['a@example.invalid'] }, Buffer.from('x'))
+      .catch((e: unknown) => e);
+    expect(error).toMatchObject({ code: 'REJECTED' });
+    expect((error as { refused?: unknown }).refused).toBeUndefined();
+  });
+
   it('reports recipients the server refused while accepting the rest', async () => {
     const transport = fakeTransport({
       sendMail: vi.fn(async () => ({

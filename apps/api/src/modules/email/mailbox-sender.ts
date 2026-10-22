@@ -131,6 +131,19 @@ function hardRefusals(refused: { rejected: string[]; temporary: string[] }): str
     .filter((address) => !temporary.has(address));
 }
 
+const NO_REFUSALS = { rejected: [], temporary: [] };
+
+/** The refused-recipient fields of the record metadata. */
+function refusalFields(refused: { rejected: string[]; temporary: string[] }) {
+  const lower = refused.rejected.map((address) => address.toLowerCase());
+  return {
+    rejectedRecipients: lower,
+    bouncedRecipients: lower,
+    // A temporary (4xx) refusal is bounced for this send, never a hard bounce.
+    hardBouncedRecipients: hardRefusals(refused),
+  };
+}
+
 /** Record metadata naming refused recipients, or nothing when all were accepted. */
 function rejectedMetadata(
   input: SendUserEmailInput,
@@ -139,38 +152,47 @@ function rejectedMetadata(
   refused: { rejected: string[]; temporary: string[] }
 ): { metadata?: Record<string, unknown> } {
   if (refused.rejected.length === 0) return {};
-  const lower = refused.rejected.map((address) => address.toLowerCase());
-  return {
-    metadata: {
-      ...recordMetadata(input, skipped, options),
-      rejectedRecipients: lower,
-      bouncedRecipients: lower,
-      // A temporary (4xx) refusal is bounced for this send, never a hard bounce.
-      hardBouncedRecipients: hardRefusals(refused),
-    },
-  };
+  return { metadata: { ...recordMetadata(input, skipped, options), ...refusalFields(refused) } };
 }
 
 /**
  * A permanent SMTP refusal is a hard bounce the DSN reader never sees (the
  * server never accepted the mail), so the tenant's hard-bounce rule is applied
- * here, in the transaction that records the bounce.
+ * here. It runs after the send outcome is stored and never fails the send: if
+ * this write fails, the hard bounce stays on the record (`hardBouncedRecipients`).
  */
 async function suppressHardRefusals(
-  tx: any,
+  db: any,
   ids: { tenantId: string; recordId: string },
   rules: BounceRules,
   hard: string[]
 ): Promise<void> {
   const decision = evaluateBounce('HARD', rules, 0);
-  if (!decision.suppress) return;
+  if (!decision.suppress || hard.length === 0) return;
+  try {
+    await writeSuppressions(db, ids, decision.reason, hard);
+  } catch (error) {
+    console.error('[email] smtp refusal suppression failed', {
+      recordId: ids.recordId,
+      recipients: hard.length,
+      code: (error as { code?: unknown } | null)?.code ?? null,
+    });
+  }
+}
+
+async function writeSuppressions(
+  db: any,
+  ids: { tenantId: string; recordId: string },
+  reason: string | null,
+  hard: string[]
+): Promise<void> {
   for (const email of new Set(hard.map(normalizeEmail))) {
-    await tx.emailSuppression.upsert({
+    await db.emailSuppression.upsert({
       where: { tenantId_email: { tenantId: ids.tenantId, email } },
       create: {
         tenantId: ids.tenantId,
         email,
-        reason: decision.reason,
+        reason,
         source: 'SMTP',
         emailRecordId: ids.recordId,
       },
@@ -337,16 +359,9 @@ export async function dispatchUserMail(
       providerMessageId: sent.providerMessageId,
       ...rejectedMetadata(input, recipients.skipped, options, refused),
     };
-    const hard = hardRefusals(refused);
-    const sentRecordId = recordId;
-    if (hard.length === 0) {
-      await db.emailRecord.update({ where: { id: sentRecordId, tenantId }, data: sentData });
-    } else {
-      await db.$transaction(async (tx: any) => {
-        await tx.emailRecord.update({ where: { id: sentRecordId, tenantId }, data: sentData });
-        await suppressHardRefusals(tx, { tenantId, recordId: sentRecordId }, settings, hard);
-      });
-    }
+    // The accepted delivery is stored first and on its own; suppression follows.
+    await db.emailRecord.update({ where: { id: recordId, tenantId }, data: sentData });
+    await suppressHardRefusals(db, { tenantId, recordId }, settings, hardRefusals(refused));
     return { id: recordId, status: 'SENT', skipped: recipients.skipped, rejected };
   } catch (error) {
     // The recipients got it: keep the charge and the SENT outcome; surface the error.
@@ -355,15 +370,20 @@ export async function dispatchUserMail(
     if (recordId === null) throw error;
 
     const code = transportCode(error);
+    // Every recipient refused (SMTP): the refusals are still bounces, and a
+    // permanent one is a hard bounce, as in a partial refusal.
+    const refused = (error instanceof MailboxTransportError && error.refused) || NO_REFUSALS;
     console.error('[email] user mail send failed', { recordId, code });
     await recordFailure(
       db,
       { recordId, tenantId, mailboxId: mailbox.id, tokenVersion: mailbox.tokenVersion, code },
       {
         ...recordMetadata(input, recipients.skipped, options),
+        ...(refused.rejected.length > 0 ? refusalFields(refused) : {}),
         sendErrorCode: code,
       }
     );
+    await suppressHardRefusals(db, { tenantId, recordId }, settings, hardRefusals(refused));
     throw sendError('SEND_FAILED', { mailboxErrorCode: code, skipped: recipients.skipped });
   }
 }

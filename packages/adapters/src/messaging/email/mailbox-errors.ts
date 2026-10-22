@@ -8,10 +8,22 @@ import type { MailboxErrorCode } from '@intelliflow/domain';
  */
 export class MailboxTransportError extends Error {
   readonly code: MailboxErrorCode;
+  /**
+   * When the server refused every recipient: which ones, and which of those
+   * refusals were temporary (4xx). Only addresses from our own envelope.
+   */
+  readonly refused?: MailboxRefusals;
 
-  constructor(code: MailboxErrorCode) {
+  constructor(code: MailboxErrorCode, refused?: MailboxRefusals) {
     super(`Mailbox transport failed: ${code}`);
     this.name = 'MailboxTransportError';
     this.code = code;
+    if (refused) this.refused = refused;
   }
+}
+
+/** Refused recipients, lower-cased; `temporary` is the 4xx subset of `rejected`. */
+export interface MailboxRefusals {
+  rejected: string[];
+  temporary: string[];
 }

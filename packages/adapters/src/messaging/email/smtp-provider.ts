@@ -9,7 +9,7 @@
  */
 import nodemailer from 'nodemailer';
 import { SMTP_PORTS, type SmtpSecurityMode } from '@intelliflow/domain';
-import { MailboxTransportError } from './mailbox-errors';
+import { MailboxTransportError, type MailboxRefusals } from './mailbox-errors';
 import { resolvePublicHost, type LookupFn } from './public-host';
 
 export interface SmtpConnectionConfig {
@@ -35,6 +35,28 @@ interface SmtpTransporter {
   }>;
   verify(): Promise<unknown>;
   close(): void;
+}
+
+/** nodemailer's refusal fields, on a sent result or on an EENVELOPE error. */
+interface SmtpRefusalSource {
+  rejected?: Array<string | { address: string }>;
+  rejectedErrors?: Array<{ recipient?: string; responseCode?: number }>;
+}
+
+/**
+ * The refused recipients, restricted to our own envelope (nothing else the
+ * server sent is kept), and which of them were refused temporarily (4xx).
+ */
+function refusalsOf(source: SmtpRefusalSource, envelope: SmtpEnvelope): MailboxRefusals {
+  const ours = new Set(envelope.to.map((address) => address.toLowerCase()));
+  const rejected = (Array.isArray(source.rejected) ? source.rejected : [])
+    .map((r) => String(typeof r === 'string' ? r : r?.address).toLowerCase())
+    .filter((address) => ours.has(address));
+  const temporary = (Array.isArray(source.rejectedErrors) ? source.rejectedErrors : [])
+    .filter((e) => typeof e?.responseCode === 'number' && e.responseCode < 500)
+    .map((e) => String(e.recipient ?? '').toLowerCase())
+    .filter((address) => ours.has(address));
+  return { rejected, temporary };
 }
 
 type CreateTransport = (options: Record<string, unknown>) => SmtpTransporter;
@@ -124,20 +146,18 @@ export class SmtpMailboxTransport {
       const info = await transporter.sendMail({ envelope, raw });
       // A server may accept some recipients and refuse others at RCPT TO; the
       // send then resolves, so the refused ones must be reported, not assumed sent.
-      const rejected = (info.rejected ?? []).map((r) =>
-        (typeof r === 'string' ? r : r.address).toLowerCase()
-      );
-      const temporary = (info.rejectedErrors ?? [])
-        .filter((e) => typeof e.responseCode === 'number' && e.responseCode < 500)
-        .map((e) => String(e.recipient ?? '').toLowerCase())
-        .filter(Boolean);
+      const { rejected, temporary } = refusalsOf(info, envelope);
       return {
         providerMessageId: info.messageId ?? null,
         rejected,
         ...(temporary.length > 0 ? { rejectedTemporarily: temporary } : {}),
       };
     } catch (error) {
-      throw mapSmtpError(error);
+      const mapped = mapSmtpError(error);
+      // Every recipient refused (EENVELOPE): keep who, so the caller can record
+      // the bounces and apply the hard-bounce rule.
+      const refused = refusalsOf((error ?? {}) as SmtpRefusalSource, envelope);
+      throw refused.rejected.length > 0 ? new MailboxTransportError(mapped.code, refused) : mapped;
     } finally {
       transporter.close();
     }
