@@ -1,21 +1,22 @@
 # Current State Report
-_Generated: 2026-10-19T10:01:17.003Z_
+_Generated: 2026-10-22T14:15:12.678Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 438/619 tasks completed (70.76%), 164 backlog, 0 blocked, 17 in progress.
-- Numbered sprint progress alone: 433/613 tasks completed or attested inside numbered sprints.
+- Overall progress: 441/619 tasks completed (71.24%), 162 backlog, 0 blocked, 16 in progress.
+- Numbered sprint progress alone: 436/613 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: SALES-001 (Sprint 1), IFC-056 (Sprint 9), IFC-234 (Sprint 18), PG-199 (Sprint 18), PG-203 (Sprint 18).
-- Active focus band: Sprints 0, 1, 6, 8 carry the earliest remaining backlog.
+- Ready-to-start work: IFC-056 (Sprint 18), IFC-234 (Sprint 18), PG-203 (Sprint 18), PG-206 (Sprint 18), PG-207 (Sprint 18).
+- Active focus band: Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-033 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-199 (Backlog), PG-203 (Backlog), PG-206 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002 (In Progress), ENG-OPS-002.R03 (Backlog), ENG-OPS-002.R16 (Backlog).
+- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-033 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-203 (Backlog), PG-206 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002.R03 (Backlog).
+- Sprint mismatches (attestation in different sprint than CSV Target Sprint): ENV-008-AI (CSV sprint 18, attested in sprint 0), EP-001-AI (CSV sprint 18, attested in sprint 0), IFC-056 (CSV sprint 18, attested in sprint 9), IFC-074 (CSV sprint 18, attested in sprint 1), IFC-097 (CSV sprint 18, attested in sprint 9), PG-014 (CSV sprint 18, attested in sprint 12), SALES-001 (CSV sprint 18, attested in sprint 1), IFC-116 (CSV sprint 18, attested in sprint 9), IFC-117 (CSV sprint 18, attested in sprint 6), IFC-142 (CSV sprint 18, attested in sprint 8), IFC-151 (CSV sprint 18, attested in sprint 6).
 
 ## Continuous Work
 
@@ -30,8 +31,8 @@ _Generated: 2026-10-19T10:01:17.003Z_
 
 ## Sprint 0 - Foundation & AI Setup
 
-- Status: 32/34 completed, 0 backlog, 0 blocked, 2 in progress.
-- Primary focus areas: Foundation Setup (17), AI Foundation (7), Go-to-Market (2).
+- Status: 32/32 completed, 0 backlog, 0 blocked.
+- Primary focus areas: Foundation Setup (15), AI Foundation (7), Go-to-Market (2).
 - Evidence coverage: 32/32 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
@@ -41,13 +42,9 @@ _Generated: 2026-10-19T10:01:17.003Z_
 - **ENV-005-AI** — CI/CD Pipeline with Predictive Optimization. Pipeline AI-generated; Predictive caching; Security gates automated
 - **ENV-006-AI** — Prisma Schema with Generated Optimizations. Schema AI-optimized; Migrations AI-tested; Seed data AI-generated
 
-**Open Work**
-- **ENV-008-AI** — Automated Observability with Predictive Monitoring. OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled
-- **EP-001-AI** — EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline). OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned
-
 ## Sprint 1 - Sprint 1 - Validation & Architecture
 
-- Status: 11/13 completed, 1 backlog, 0 blocked, 1 in progress.
+- Status: 11/11 completed, 0 backlog, 0 blocked.
 - Primary focus areas: Validation (3), Architecture (2), Foundation Setup (2).
 - Evidence coverage: 11/11 completed tasks have canonical `attestation.json` evidence.
 
@@ -57,10 +54,6 @@ _Generated: 2026-10-19T10:01:17.003Z_
 - **BRAND-002** — Design Tokens Integration Plan (Tailwind/shadcn theme mapping). UI kit created; Component library built
 - **ENV-018-AI** — Sprint Planning and Velocity Prediction. Backlog AI-prioritized; Velocity AI-predicted; Risks AI-identified
 - **GOV-001** — Architecture Governance Pack (ADR + ARP templates, decision workflow, flowcharts). Architecture governance process defined; Audit logging ADR complete
-
-**Open Work**
-- **IFC-074** — PHASE-040: Full Stack Observability. Traces, metrics, logs unified with context; Root cause identifiable
-- **SALES-001** — Commercial Narrative + Pitch Deck Outline + One-Pager. Sales motion defined; Team enablement complete
 
 ## Sprint 2 - Core Domain & Documentation
 
@@ -116,7 +109,7 @@ _Generated: 2026-10-19T10:01:17.003Z_
 
 ## Sprint 6 - Sprint 6
 
-- Status: 37/39 completed, 0 backlog, 0 blocked, 2 in progress.
+- Status: 37/37 completed, 0 backlog, 0 blocked.
 - Primary focus areas: Core CRM (8), MVP Week 1 (7), Intelligence (5).
 - Evidence coverage: 37/37 completed tasks have canonical `attestation.json` evidence.
 
@@ -126,10 +119,6 @@ _Generated: 2026-10-19T10:01:17.003Z_
 - **PG-137** — Ticket Management Page - List detail SLA indicators escalation customer portal view. PG-137 Ticket Management Page: 8 components (TicketList, TicketDetail, TicketCard, SLAIndicator, EscalationAlert, TicketForm, CustomerPortalView, TicketAssignSidebar), 3 route pages, useTicketFilters hook, sla-service utility, ticket-test-u......
 - **IFC-020** — PHASE-011: LangChain Pipeline Design. LangChain pipeline design completed with modular architecture supporting lead scoring, email generation, and conversation memory via Zep integration. LangChain pipeline architecture designed; Extensible chain pattern implemented; Cost tracking integrated
 - **IFC-025** — PHASE-011: A/B Testing Framework. Hexagonal architecture: domain constants -> validators -> application service -> API router -> UI; All experiment schemas derive from domain EXPERIMENT_STATUSES/TYPES constants; Statistical methods:... AI vs manual scoring comparison; Statistical analysis;...
-
-**Open Work**
-- **IFC-117** — Monitor AI models for drift, latency, hallucination and ROI. Metrics collected for AI models; dashboards show drift/hallucination; alerts configured; AI metrics must be collected by actual code paths and pushed to dashboards
-- **IFC-151** — Event consumers framework: retries + DLQ + backoff + observability; standard webhook/idempotency utilities. Consumer SDK supports retries/backoff; DLQ storage/triage workflow; idempotent handlers; poison-message handling; metrics and alerts; chaos tests
 
 ## Sprint 7 - Sprint 7
 
@@ -146,7 +135,7 @@ _Generated: 2026-10-19T10:01:17.003Z_
 
 ## Sprint 8 - Sprint 8 - Risk Management
 
-- Status: 8/9 completed, 0 backlog, 0 blocked, 1 in progress.
+- Status: 8/8 completed, 0 backlog, 0 blocked.
 - Primary focus areas: AI Intelligence (4), Risk Mgmt (2), Core CRM (1).
 - Evidence coverage: 8/8 completed tasks have canonical `attestation.json` evidence.
 
@@ -157,13 +146,10 @@ _Generated: 2026-10-19T10:01:17.003Z_
 - **IFC-118** — Establish and maintain a risk register with mitigation actions. Task completed and verified Risk register created, risks scored by impact/likelihood, mitigation owners assigned; review scheduled per sprint
 - **IFC-094** — Documents Management - Upload & Sign. Task completed and verified Contracts signed electronically, preview inline
 
-**Open Work**
-- **IFC-142** — Define SLOs/SLIs and alerting; establish on-call and incident management process; conduct restore drills; create capacity and cost budgets for AI inference and search. SLOs and SLIs defined for core services; alert rules configured; on-call rota established with escalation policies; incident runbook prepared; restore drill executed successfully; budgets defined and monitored
-
 ## Sprint 9 - Sprint 9 - Risk Management
 
-- Status: 4/7 completed, 1 backlog, 0 blocked, 2 in progress.
-- Primary focus areas: Risk Mgmt (2), Compliance (1), Migration (1).
+- Status: 4/4 completed, 0 backlog, 0 blocked.
+- Primary focus areas: Compliance (1), Migration (1), Reports (1).
 - Evidence coverage: 4/4 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
@@ -171,11 +157,6 @@ _Generated: 2026-10-19T10:01:17.003Z_
 - **IFC-124** — Audit Logs Encryption & Compliance. Task must create three required artifacts; Encryption module must support AES-256-GCM with key rotation; Retention policy must document compliance requirements Create audit-encryption-module.ts with AES-256-GCM encryption;...
 - **IFC-057** — Create vendor abstraction documentation and migration test plan. Can migrate from Supabase/Vercel if needed
 - **IFC-096** — Custom dashboards created with export functionality (CSV/PDF) in apps/web. Custom dashboards created, export functional
-
-**Open Work**
-- **IFC-097** — Distributed Tracing & Logging. 99% of requests traced; Dashboards available; Trace coverage report created
-- **IFC-116** — Create OpenTelemetry config and observability documentation. All services emit structured logs, traces and metrics; dashboards and alerts created; SLOs defined
-- **IFC-056** — Team Upskilling Program. Continuous learning: tRPC, Next.js 16.0.10 (Turbopack FS caching, Cache Components, proxy replacing middleware), LangChain
 
 ## Sprint 10 - Sprint 10
 
@@ -205,8 +186,8 @@ _Generated: 2026-10-19T10:01:17.003Z_
 
 ## Sprint 12 - Public Pages & Documentation
 
-- Status: 12/13 completed, 0 backlog, 0 blocked, 1 in progress.
-- Primary focus areas: Public Pages (5), Documentation (2), Infrastructure (2).
+- Status: 12/12 completed, 0 backlog, 0 blocked.
+- Primary focus areas: Public Pages (4), Documentation (2), Infrastructure (2).
 - Evidence coverage: 12/12 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
@@ -215,9 +196,6 @@ _Generated: 2026-10-19T10:01:17.003Z_
 - **EXP-PLATFORM-001** — Platform utilities package - feature flags, resilience patterns, job queues, workflow orchestration. Platform utilities package completed with feature flags, resilience patterns, job queues, and workflow orchestration. Feature flags implemented; Resilience patterns implemented; Job queue implemented
 - **IFC-042** — tRPC API Client SDK Docs. SDK package wraps @intelliflow/api-client with additional utilities. Documentation includes migration guides from REST and GraphQL. Type declarations added to work around missing .d.ts in api-client. NPM package docs created; TypeScript examples provided;...
 - **IFC-081** — API Documentation (tRPC + OpenAPI). API documentation completed with OpenAPI 3.0.3 spec and Postman collection for testing. OpenAPI specification created; Postman collection created; Examples included
-
-**Open Work**
-- **PG-014** — Status Page. Status page created; Real-time status monitoring; Incident timeline displayed
 
 ## Sprint 13 - Sprint 13 - UI Pages & Lead Intelligence
 
@@ -289,9 +267,9 @@ _Generated: 2026-10-19T10:01:17.003Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 59/67 completed, 7 backlog, 0 blocked, 1 in progress.
+- Status: 60/78 completed, 8 backlog, 0 blocked, 10 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
-- Evidence coverage: 59/59 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 60/60 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **DOC-015** — Docs Integrity Reconciliation - Regenerate and sync conflicting design-document route totals from filesystem source of truth. DOC-015 (Docs Integrity / route-total reconciliation, Issue #019 / R-023) closure. The substantive reconciliation was completed in a prior session but its uncommitted changes were stranded in the working tree on main after PR #590 merged.......
@@ -301,31 +279,31 @@ _Generated: 2026-10-19T10:01:17.003Z_
 - **IFC-265** — Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.. Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...
 
 **Open Work**
-- **INFRA-TF-004** — Environment tfvars (dev/staging/prod) + remote state backend + a monitoring Terraform module (Grafana/Prometheus/Loki/Tempo as observability-as-code) + wire ai-worker OpenTelemetry (IFC-032).. tfvars exist for all 3 envs; remote backend bootstrapped; monitoring module provisions the stack; OTel endpoint is a TF output; ai-worker emits traces
-- **IFC-234** — Settings Pages Wiring - 4 settings pages with hardcoded data and inert buttons. Team: hardcoded 4-person array, inert Invite/Remove/Role buttons. Integrations: hardcoded provider list, inert Connect/Disconnect buttons. Notifications: hardcoded const, no useState, no onClick on toggles. Account: profile name/email has no save mutation, 3 security buttons (Change Password, Enable 2FA, Download Data) have no onClick. Wire all to real tRPC mutations and queries.. Team page loads real users from API with working Invite/Remove/Role; Integrations shows real connection status; Notifications toggles persist via mutation; Account profile saves name/email; security buttons functional; tests >=90%
-- **PG-199** — Module Settings - Model Config (/agent-approvals/model-config). Route /agent-approvals/model-config renders; Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented; Never-Downgrade rule respected; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...
-- **PG-203** — Module Settings - Event Types (/calendar/event-types). Route /calendar/event-types renders; Meeting type definitions: duration, color, default description, booking link slug, required form fields, location type implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...
-- **PG-206** — Module Settings - Storage Policies (/documents/(list)/storage-policies). /documents/storage-policies renders real retention-policy data (no stub); Backend surface confirmed (no new router/model needed); module-settings-playbook: PageHeader + bento + canonical EmptyState + $transaction destructive writes
+- **ENV-008-AI** — Automated Observability with Predictive Monitoring. OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled
+- **EP-001-AI** — EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline). OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned
+- **IFC-074** — PHASE-040: Full Stack Observability. Traces, metrics, logs unified with context; Root cause identifiable
+- **IFC-097** — Distributed Tracing & Logging. 99% of requests traced; Dashboards available; Trace coverage report created
+- **PG-014** — Status Page. Status page created; Real-time status monitoring; Incident timeline displayed
 
 ## Sprint 19 - Sprint 19
 
-- Status: 11/19 completed, 4 backlog, 0 blocked, 4 in progress.
+- Status: 13/19 completed, 3 backlog, 0 blocked, 3 in progress.
 - Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).
-- Evidence coverage: 11/11 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 13/13 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
 - **ENG-OPS-002.R10** — Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests. Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed.... ticket+task terminal-state guards; property tests un-skipped
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
 - **PG-064** — Contacts List. PG-064 (Contacts List) reconcile. RECON-FIRST (3rd attempt; prior two slipped on data-model assumptions and spec ambiguity): read the actual code before scoping. Finding... Contacts listed; Search working; Segments functional
+- **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). AUDIT ONLY — no correction code. Reconciliation self-corrected a 12-task phantom false-positive (PG-196..208 pages verified present under apps/web/src/app) => 0 true phantom completions. Real problem is evidence:... Verifiable baseline of S1-18 delivered state;...
 - **ENG-OPS-003** — Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634). RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings:......
-- **PG-065** — Contact 360. RECONCILE via full pipeline (spec-session + plan-session + exec). The Contact 360 view already existed on main (route-registry Status=Implemented), implemented inline in the 2576-line Contact360Page.... response under 200ms, Lighthouse 90, data complete
 
 **Open Work**
 - **IFC-033** — PHASE-005: Load Testing with k6. System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report
 - **IFC-304** — Article Analytics Dashboard — PR A: analytics foundation + instrumentation. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
-- **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed
 - **AUTOMATION-004** — Task-contract JSON schema + dispatch-binding enforcement (ADR-072). 20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding:...
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
+- **ENG-OPS-002.R03** — Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json. CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md
 
 ## Sprint 20 - Sprint 20
 
