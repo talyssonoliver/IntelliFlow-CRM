@@ -241,7 +241,31 @@ describe('SmtpMailboxTransport', () => {
     const smtp = new SmtpMailboxTransport({ lookup: publicLookup });
     await smtp.verify(config());
     expect(nodemailerMock.createTransport).toHaveBeenCalledTimes(1);
-    expect(nodemailerMock.createTransport.mock.calls[0]?.[0]).toMatchObject({ host: '8.8.4.4' });
+    expect(nodemailerMock.createTransport.mock.calls[0]?.[0]).toMatchObject({
+      host: '8.8.4.4',
+      secure: false,
+      requireTLS: true,
+    });
+  });
+
+  it('gives nodemailer implicit TLS for SSL, never a plaintext session', async () => {
+    nodemailerMock.createTransport.mockClear();
+    await new SmtpMailboxTransport({ lookup: publicLookup }).verify(
+      config({ port: 465, security: 'SSL' })
+    );
+    const options = nodemailerMock.createTransport.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(options).toMatchObject({ secure: true });
+    expect(options.requireTLS).toBeUndefined();
+    expect(options.ignoreTLS).toBeUndefined();
+  });
+
+  it('refuses a security mode that is neither SSL nor STARTTLS before connecting', async () => {
+    const createTransport = vi.fn(() => fakeTransport());
+    const smtp = new SmtpMailboxTransport({ createTransport, lookup: publicLookup });
+    await expect(
+      smtp.verify(config({ security: 'NONE' as SmtpConnectionConfig['security'] }))
+    ).rejects.toMatchObject({ code: 'TLS_FAILED' });
+    expect(createTransport).not.toHaveBeenCalled();
   });
 });
 

@@ -59,7 +59,27 @@ function refusalsOf(source: SmtpRefusalSource, envelope: SmtpEnvelope): MailboxR
   return { rejected, temporary };
 }
 
-type CreateTransport = (options: Record<string, unknown>) => SmtpTransporter;
+/** Implicit TLS, or STARTTLS that must succeed. There is no plaintext mode. */
+type SmtpTlsMode = { secure: true } | { secure: false; requireTLS: true };
+
+type SmtpTransportOptions = SmtpTlsMode & Record<string, unknown>;
+
+type CreateTransport = (options: SmtpTransportOptions) => SmtpTransporter;
+
+/** The TLS options for a security mode; anything else is refused before connecting. */
+function tlsModeFor(security: SmtpSecurityMode): SmtpTlsMode {
+  if (security === 'SSL') return { secure: true };
+  if (security === 'STARTTLS') return { secure: false, requireTLS: true };
+  throw new MailboxTransportError('TLS_FAILED');
+}
+
+/** nodemailer, with the TLS mode restated so no call can open a plaintext session. */
+function nodemailerTransport(options: SmtpTransportOptions): SmtpTransporter {
+  const transporter = options.secure
+    ? nodemailer.createTransport({ ...options, secure: true })
+    : nodemailer.createTransport({ ...options, secure: false, requireTLS: true });
+  return transporter as unknown as SmtpTransporter;
+}
 
 export interface SmtpMailboxTransportDeps {
   createTransport?: CreateTransport;
@@ -93,13 +113,12 @@ export class SmtpMailboxTransport {
   private readonly lookup: LookupFn | undefined;
 
   constructor(deps: SmtpMailboxTransportDeps = {}) {
-    this.createTransport =
-      deps.createTransport ??
-      ((options) => nodemailer.createTransport(options) as unknown as SmtpTransporter);
+    this.createTransport = deps.createTransport ?? nodemailerTransport;
     this.lookup = deps.lookup;
   }
 
   private async open(config: SmtpConnectionConfig): Promise<SmtpTransporter> {
+    const tlsMode = tlsModeFor(config.security);
     const pinned = await resolvePublicHost(config.host, config.port, {
       allowedPorts: SMTP_PORTS,
       lookup: this.lookup,
@@ -107,8 +126,7 @@ export class SmtpMailboxTransport {
     return this.createTransport({
       host: pinned.address,
       port: pinned.port,
-      secure: config.security === 'SSL',
-      requireTLS: config.security === 'STARTTLS',
+      ...tlsMode,
       auth: { user: config.username, pass: config.password },
       tls: { servername: pinned.servername, minVersion: 'TLSv1.2' },
       connectionTimeout: 10_000,

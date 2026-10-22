@@ -186,7 +186,7 @@ async function writeSuppressions(
   reason: string | null,
   hard: string[]
 ): Promise<void> {
-  for (const email of new Set(hard.map(normalizeEmail))) {
+  for (const email of new Set(hard.map((address) => normalizeEmail(address)))) {
     await db.emailSuppression.upsert({
       where: { tenantId_email: { tenantId: ids.tenantId, email } },
       create: {
@@ -259,8 +259,8 @@ export async function dispatchUserMail(
   const mailbox = resolved.mailbox;
 
   // 2. Suppression (Q9): drop suppressed recipients, keep the rest.
-  const allRecipients = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])].map(
-    normalizeEmail
+  const allRecipients = [...input.to, ...(input.cc ?? []), ...(input.bcc ?? [])].map((address) =>
+    normalizeEmail(address)
   );
   const suppressedRows: Array<{ email: string }> = await db.emailSuppression.findMany({
     where: { tenantId, email: { in: [...new Set(allRecipients)] } },
