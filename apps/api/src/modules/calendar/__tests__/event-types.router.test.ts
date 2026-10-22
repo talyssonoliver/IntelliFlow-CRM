@@ -362,11 +362,43 @@ describe('update (AC-004, AC-006, AC-023)', () => {
       maxDurationMinutes: 60,
     } as never);
     prismaMock.user.count.mockResolvedValue(0 as never);
+    prismaMock.user.findMany
+      .mockResolvedValueOnce([{ id: HOST, name: 'Hana Host' }] as never) // names
+      .mockResolvedValueOnce([] as never); // still members: none
     prismaMock.eventType.updateMany.mockResolvedValue({ count: 1 } as never);
-    await admin().update({ ...input({ durationMinutes: 10, isActive: false }), id: ID });
+    const dto = await admin().update({
+      ...input({ durationMinutes: 10, isActive: false }),
+      id: ID,
+    });
+    // The reply still says the host is gone, as list() does (codex).
+    expect(dto.hostAvailable).toBe(false);
     expect(prismaMock.eventType.updateMany).toHaveBeenCalled();
     expect(prismaMock.appointmentSettings.findUnique).not.toHaveBeenCalled();
     expect(prismaMock.user.count).not.toHaveBeenCalled();
+  });
+
+  it('re-checks the range and the host when an inactive type is switched back on (codex)', async () => {
+    prismaMock.eventType.findFirst.mockResolvedValue(
+      row({ durationMinutes: 10, isActive: false }) as never
+    );
+    prismaMock.eventType.findMany.mockResolvedValue([] as never);
+    prismaMock.appointmentSettings.findUnique.mockResolvedValue({
+      minDurationMinutes: 15,
+      maxDurationMinutes: 60,
+    } as never);
+    await expectCode(
+      admin().update({ ...input({ durationMinutes: 10, isActive: true }), id: ID }),
+      'BAD_REQUEST'
+    );
+    // In range, but the unchanged host has left: still refused on reactivation.
+    prismaMock.eventType.findFirst.mockResolvedValue(row({ isActive: false }) as never);
+    prismaMock.appointmentSettings.findUnique.mockResolvedValue({
+      minDurationMinutes: 5,
+      maxDurationMinutes: 480,
+    } as never);
+    prismaMock.user.count.mockResolvedValue(0 as never);
+    await expectCode(admin().update({ ...input({ isActive: true }), id: ID }), 'NOT_FOUND');
+    expect(prismaMock.eventType.updateMany).not.toHaveBeenCalled();
   });
 
   it('still checks a changed duration against the current range', async () => {

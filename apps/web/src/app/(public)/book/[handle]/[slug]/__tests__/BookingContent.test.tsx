@@ -41,6 +41,7 @@ vi.mock('@/lib/trpc', () => ({
 }));
 
 import BookingContent, {
+  addCalendarDays,
   bookingErrorMessage,
   firstErrorTarget,
   looksLikeEmail,
@@ -311,7 +312,53 @@ describe('BookingContent', () => {
       error: null,
     };
     renderFlow();
-    expect(screen.getByText(/No open times in the next 14 days/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/No open times in the next 14 days\. Try later dates\./)
+    ).toBeInTheDocument();
+  });
+
+  it('pages through the 60-day booking horizon 14 days at a time (owner ruling)', () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date('2026-11-01T12:00:00Z'));
+      renderFlow();
+      const earlier = screen.getByRole('button', { name: 'Earlier dates' });
+      const later = screen.getByRole('button', { name: 'Later dates' });
+      expect(earlier).toBeDisabled();
+      const from = () => (h.slotsArgs.at(-1) as { fromDate: string }).fromDate;
+      expect(from()).toBe('2026-11-01');
+      fireEvent.click(later);
+      expect(from()).toBe('2026-11-15');
+      for (let i = 0; i < 3; i += 1) fireEvent.click(later);
+      // 56 days ahead is the last window that starts inside the 60-day horizon.
+      expect(from()).toBe('2026-12-27');
+      expect(later).toBeDisabled();
+      fireEvent.click(earlier);
+      expect(from()).toBe('2026-12-13');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('asks the visitor to contact the firm only when the last window is empty too', () => {
+    h.slots = {
+      data: { timezone: 'Europe/London', days: [{ date: '2026-12-27', slots: [] }] },
+      isLoading: false,
+      isError: false,
+      error: null,
+    };
+    renderFlow();
+    for (let i = 0; i < 4; i += 1) {
+      fireEvent.click(screen.getByRole('button', { name: 'Later dates' }));
+    }
+    expect(
+      screen.getByText(/No open times in these dates\. Please contact the firm\./)
+    ).toBeInTheDocument();
+  });
+
+  it('adds whole calendar days across month and year ends', () => {
+    expect(addCalendarDays('2026-12-27', 14)).toBe('2027-01-10');
+    expect(addCalendarDays('2026-02-20', 14)).toBe('2026-03-06');
   });
 
   it('explains a failed slot lookup and retries on request', () => {

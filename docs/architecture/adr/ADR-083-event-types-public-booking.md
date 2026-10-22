@@ -155,11 +155,12 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
   saved availability are not bookable (Q10).
 - **Abuse.**
   - `booking_attempts` holds salted HMAC hashes of email and IP, never raw
-    values. Caps: email 3 per 24 h and IP 10 per hour, counting every attempt;
-    event type 30 per hour, counting only public bookings that landed
-    (`appointments.bookedVia = 'PUBLIC_LINK'`). Owner ruling 2026-10-21: if
-    failed attempts counted toward the shared event-type cap, junk could lock
-    real visitors out for the hour.
+    values. Caps: IP 10 per hour, counting every attempt; event type 30 per hour
+    and email 3 per 24 h, counting only public bookings that landed
+    (`appointments.bookedVia = 'PUBLIC_LINK'`). Owner rulings 2026-10-21 (event
+    type) and 2026-10-22 (email): if failed attempts counted, junk could lock
+    real visitors out, and a stranger typing a client's email three times would
+    block that client for a day.
   - Client IP for the caps:
     - The browser calls the API directly on Railway (`NEXT_PUBLIC_API_URL`).
       Railway's edge writes `X-Real-IP` and overwrites `X-Forwarded-For` on

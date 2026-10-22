@@ -9,6 +9,7 @@
  */
 import { z } from 'zod';
 import {
+  BOOKING_HORIZON_DAYS,
   BOOKING_MAX_DAYS_PER_QUERY,
   BOOKING_SLUG_PATTERN,
   EVENT_LOCATION_TYPES,
@@ -24,6 +25,9 @@ import {
 import { appointmentTypeSchema } from './appointment';
 import { idSchema } from './common';
 import { TAG_COLOR_TOKENS, tagColorTokenSchema } from './contact-settings';
+
+/** How far ahead a public booking may be made; the booking page pages through it. */
+export { BOOKING_HORIZON_DAYS };
 
 export const EVENT_TYPE_COLOR_TOKENS = TAG_COLOR_TOKENS;
 export const eventTypeColorTokenSchema = tagColorTokenSchema;
@@ -69,6 +73,10 @@ function isHttpsUrl(value: string): boolean {
   }
 }
 
+const requiredFieldsSchema = z
+  .array(eventTypeRequiredFieldSchema)
+  .max(EVENT_TYPE_REQUIRED_FIELDS.length);
+
 const eventTypeFieldsSchema = z
   .object({
     name: z.string().trim().min(1, 'Name is required').max(EVENT_TYPE_LIMITS.nameMax),
@@ -94,10 +102,7 @@ const eventTypeFieldsSchema = z
       .transform(blankToNull),
     appointmentType: appointmentTypeSchema.default('MEETING'),
     hostUserId: idSchema,
-    requiredFields: z
-      .array(eventTypeRequiredFieldSchema)
-      .max(EVENT_TYPE_REQUIRED_FIELDS.length)
-      .default([]),
+    requiredFields: requiredFieldsSchema.default([]),
     leadSource: eventTypeLeadSourceSchema.default('BOOKING'),
     isActive: z.boolean().default(true),
   })
@@ -137,9 +142,18 @@ function refineEventType(data: EventTypeFields, ctx: z.RefinementCtx): void {
 export const createEventTypeSchema = eventTypeFieldsSchema.superRefine(refineEventType);
 export type CreateEventTypeInput = z.infer<typeof createEventTypeSchema>;
 
-// isActive has no default here: an update that omits it must not reactivate an inactive type.
+// No defaults on update: a field an update omits must fail validation, never reset the stored
+// value (isActive must not reactivate a type; requiredFields must not stop asking for a phone).
 export const updateEventTypeSchema = eventTypeFieldsSchema
-  .extend({ id: idSchema, isActive: z.boolean() })
+  .extend({
+    id: idSchema,
+    colorToken: eventTypeColorTokenSchema,
+    locationType: eventLocationTypeSchema,
+    appointmentType: appointmentTypeSchema,
+    requiredFields: requiredFieldsSchema,
+    leadSource: eventTypeLeadSourceSchema,
+    isActive: z.boolean(),
+  })
   .strict()
   .superRefine(refineEventType);
 export type UpdateEventTypeInput = z.infer<typeof updateEventTypeSchema>;

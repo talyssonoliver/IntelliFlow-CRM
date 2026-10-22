@@ -37,7 +37,7 @@
  * booking columns (ADR-083 exception).
  */
 import { TRPCError } from '@trpc/server';
-import { tenantUserWhere } from '@intelliflow/db';
+import { Prisma, tenantUserWhere } from '@intelliflow/db';
 import {
   BOOKING_CONSENT_VERSION,
   BOOKING_HORIZON_DAYS,
@@ -68,6 +68,7 @@ import type { Context } from '../../context';
 import { loadTenantAvailability, type AvailabilityPrisma } from './availability-enforcement';
 import {
   assertBookingCaps,
+  assertEmailBookingCap,
   assertEventTypeBookingCap,
   bookingClientIp,
   bookingLookupLimiter,
@@ -80,6 +81,7 @@ import {
   recordBookingAttempt,
 } from './booking-abuse';
 import { sendBookingEmails } from './booking-email';
+import { recurringBusyIntervals } from './recurring-busy';
 import { enqueueLeadScoring } from '../lead/lead-scoring-enqueue';
 import { onAppointmentCreated } from '../legal/appointment-side-effects';
 
@@ -206,6 +208,8 @@ async function computeSlots(
       status: { in: [...CAP_COUNTED_STATUSES] },
       startTime: { lt: windowEnd },
       endTime: { gt: windowStart },
+      // Recurring series are expanded below, skipped dates included.
+      recurrence: { equals: Prisma.AnyNull },
       OR: [
         { organizerId: eventType.hostUserId },
         { attendees: { some: { userId: eventType.hostUserId } } },
@@ -213,12 +217,36 @@ async function computeSlots(
     },
     select: { startTime: true, endTime: true, bufferMinutesBefore: true, bufferMinutesAfter: true },
   });
-  const busy: BusyInterval[] = busyRows.map((b) => ({
-    start: b.startTime,
-    end: b.endTime,
-    bufferBeforeMinutes: b.bufferMinutesBefore,
-    bufferAfterMinutes: b.bufferMinutesAfter,
-  }));
+  // A recurring appointment is one row; its later occurrences are busy too (codex HIGH).
+  const recurringRows = await db.appointment.findMany({
+    where: {
+      tenantId: eventType.tenantId,
+      status: { in: [...CAP_COUNTED_STATUSES] },
+      startTime: { lt: windowEnd },
+      recurrence: { not: Prisma.AnyNull },
+      OR: [
+        { organizerId: eventType.hostUserId },
+        { attendees: { some: { userId: eventType.hostUserId } } },
+      ],
+    },
+    select: {
+      startTime: true,
+      endTime: true,
+      bufferMinutesBefore: true,
+      bufferMinutesAfter: true,
+      recurrence: true,
+      timezone: true,
+    },
+  });
+  const busy: BusyInterval[] = [
+    ...busyRows.map((b) => ({
+      start: b.startTime,
+      end: b.endTime,
+      bufferBeforeMinutes: b.bufferMinutesBefore,
+      bufferAfterMinutes: b.bufferMinutesAfter,
+    })),
+    ...recurringBusyIntervals(recurringRows, windowStart, windowEnd),
+  ];
 
   const bookedPerDay: Record<string, number> = {};
   if (rules.maxDailyBookings !== null) {
@@ -227,12 +255,39 @@ async function computeSlots(
         tenantId: eventType.tenantId,
         status: { in: [...CAP_COUNTED_STATUSES] },
         startTime: { gte: windowStart, lt: windowEnd },
+        recurrence: { equals: Prisma.AnyNull },
       },
       select: { startTime: true },
     });
     for (const b of booked) {
       const day = toZonedParts(b.startTime, rules.timezone).date;
       bookedPerDay[day] = (bookedPerDay[day] ?? 0) + 1;
+    }
+    // Every occurrence of tenant-wide recurring appointments counts on its own day. The
+    // stored first one always counts, even if its date is skipped: it is still a scheduled
+    // row holding its slot (the overlap constraint reserves it), so it is a booking that day.
+    const series = await db.appointment.findMany({
+      where: {
+        tenantId: eventType.tenantId,
+        status: { in: [...CAP_COUNTED_STATUSES] },
+        startTime: { lt: windowEnd },
+        recurrence: { not: Prisma.AnyNull },
+      },
+      select: {
+        startTime: true,
+        endTime: true,
+        bufferMinutesBefore: true,
+        bufferMinutesAfter: true,
+        recurrence: true,
+        timezone: true,
+      },
+    });
+    for (const row of series) {
+      for (const occurrence of recurringBusyIntervals([row], windowStart, windowEnd)) {
+        if (occurrence.start < windowStart) continue;
+        const day = toZonedParts(occurrence.start, rules.timezone).date;
+        bookedPerDay[day] = (bookedPerDay[day] ?? 0) + 1;
+      }
     }
   }
 
@@ -669,6 +724,7 @@ export const publicBookingRouter = createTRPCRouter({
             }
             assertRequiredAnswers(current.eventType, input.answers);
             await assertEventTypeBookingCap(tx, { tenantId, eventTypeId: eventType.id }, now);
+            await assertEmailBookingCap(tx, { tenantId, email: input.email }, now);
 
             const rules = await loadRules(tx, tenantId);
             const date = toZonedParts(start, rules.timezone).date;

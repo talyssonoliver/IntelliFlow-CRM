@@ -170,6 +170,20 @@ describe('updateEventTypeSchema / deleteEventTypeSchema', () => {
     expect(updateEventTypeSchema.safeParse(valid()).success).toBe(false);
   });
 
+  it('has no defaults: an omitted field fails instead of resetting the stored value (codex)', () => {
+    for (const field of [
+      'colorToken',
+      'locationType',
+      'appointmentType',
+      'requiredFields',
+      'leadSource',
+    ]) {
+      const partial = { ...valid(), id: ID } as Record<string, unknown>;
+      delete partial[field];
+      expect(updateEventTypeSchema.safeParse(partial).success, field).toBe(false);
+    }
+  });
+
   it('takes only an id on delete', () => {
     expect(deleteEventTypeSchema.safeParse({ id: ID }).success).toBe(true);
     expect(deleteEventTypeSchema.safeParse({ id: ID, tenantId: 't' }).success).toBe(false);
