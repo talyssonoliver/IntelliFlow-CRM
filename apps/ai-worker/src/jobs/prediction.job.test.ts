@@ -28,6 +28,11 @@ import type { Job } from 'bullmq';
 // and returns its conservative fallback: { qualificationLevel: 'UNQUALIFIED', ... }.
 // processQualification maps 'UNQUALIFIED' → 'NOT_QUALIFIED', preserving the
 // contract tests that assert prediction.value === 'NOT_QUALIFIED'.
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+vi.mock('../lib/data-request-guard', async (importOriginal) =>
+  (await import('../test/mocks/data-request-guard.mock')).passThroughGuard(await importOriginal())
+);
+
 vi.mock('../lib/llm-factory.js', () => ({
   createLLM: vi.fn(() => ({
     invoke: vi.fn().mockResolvedValue({ content: '{}' }),

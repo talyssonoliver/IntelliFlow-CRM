@@ -5,6 +5,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Job } from 'bullmq';
 
 const mockChurn = vi.fn();
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+vi.mock('../lib/data-request-guard', async (importOriginal) =>
+  (await import('../test/mocks/data-request-guard.mock')).passThroughGuard(await importOriginal())
+);
+
 vi.mock('../chains/churn-risk.chain', () => ({
   getChurnRiskChain: vi.fn(() => ({ predictChurnRisk: mockChurn })),
 }));

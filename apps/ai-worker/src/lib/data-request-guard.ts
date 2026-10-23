@@ -125,6 +125,88 @@ export async function writeContactIfStillEligible<T>(
   });
 }
 
+/** A lead or a contact: the people insights and predictions are written about. */
+export type SubjectKind = 'lead' | 'contact';
+
+/** The skip reason an insight or prediction job reports for an erased or restricted person. */
+export const SUBJECT_NOT_PROCESSABLE = 'data-subject-request';
+
+type SubjectRow = { id: string; email: string | null };
+type SubjectFind = {
+  findFirst(args: {
+    where: { id: string; tenantId: string };
+    select: { email: true };
+  }): Promise<{ email: string | null } | null>;
+  findMany(args: {
+    where: { id: { in: string[] }; tenantId: string };
+    select: { id: true; email: true };
+  }): Promise<SubjectRow[]>;
+};
+
+export interface SubjectPrisma extends Pick<GuardPrisma, 'processingRestriction'> {
+  lead: SubjectFind;
+  contact: SubjectFind;
+}
+
+/** May AI process this stored address? Not erased, not restricted (contacts may have none). */
+function eligibleAddress(email: string | null, restricted: Set<string>): boolean {
+  const normalized = normalizeSubjectEmail(email ?? '');
+  return !isErasedEmail(normalized) && !restricted.has(normalized);
+}
+
+/**
+ * Before an insight or prediction model call (#1002, owner ruling 2026-10-23): the subject's
+ * current stored address when they may be processed, or null when they are missing, erased or
+ * restricted. The address is what the locked write later compares against.
+ */
+export async function eligibleSubjectEmail(
+  prisma: SubjectPrisma,
+  subject: { kind: SubjectKind; id: string; tenantId: string }
+): Promise<string | null> {
+  const row = await prisma[subject.kind].findFirst({
+    where: { id: subject.id, tenantId: subject.tenantId },
+    select: { email: true },
+  });
+  if (!row) return null;
+  const email = row.email ?? '';
+  return (await isRestrictedOrErased(prisma, subject.tenantId, email)) ? null : email;
+}
+
+/** The leads and contacts of a batch that may be processed, each with its stored address. */
+export async function eligibleSubjects(
+  prisma: SubjectPrisma,
+  tenantId: string,
+  ids: { leadIds: string[]; contactIds: string[] }
+): Promise<{ leads: Map<string, string>; contacts: Map<string, string> }> {
+  const restricted = new Set(await restrictedEmails(prisma as GuardPrisma, tenantId));
+  const select = { id: true, email: true } as const;
+  const [leads, contacts] = await Promise.all([
+    ids.leadIds.length
+      ? prisma.lead.findMany({ where: { id: { in: ids.leadIds }, tenantId }, select })
+      : [],
+    ids.contactIds.length
+      ? prisma.contact.findMany({ where: { id: { in: ids.contactIds }, tenantId }, select })
+      : [],
+  ]);
+  const eligible = (rows: SubjectRow[]) =>
+    new Map(
+      rows.filter((r) => eligibleAddress(r.email, restricted)).map((r) => [r.id, r.email ?? ''])
+    );
+  return { leads: eligible(leads), contacts: eligible(contacts) };
+}
+
+/** The locked write for either kind of subject (lead or contact row lock, then address). */
+export function writeSubjectIfStillEligible<T>(
+  prisma: { $transaction<R>(fn: (tx: LockingTx) => Promise<R>): Promise<R> },
+  subject: { kind: SubjectKind; id: string; tenantId: string; email: string },
+  write: (tx: LockingTx) => Promise<T>
+): Promise<LockedWrite<T>> {
+  const { tenantId, email } = subject;
+  return subject.kind === 'lead'
+    ? writeIfStillEligible(prisma, { leadId: subject.id, tenantId, email }, write)
+    : writeContactIfStillEligible(prisma, { contactId: subject.id, tenantId, email }, write);
+}
+
 /** A client that can run a raw query (the dispatcher's candidate read). */
 export interface RawQueryPrisma {
   $queryRaw<T = unknown>(query: TemplateStringsArray, ...values: unknown[]): Promise<T>;

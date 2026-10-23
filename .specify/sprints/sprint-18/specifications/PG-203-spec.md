@@ -861,7 +861,10 @@ The public procedures live in their own `privacy-public.router.ts`, which is the
 - before `enqueueLeadScoring` (lead create, public booking);
 - in `lead.scoreLead` (manual scoring, which returns a clear PRECONDITION_FAILED);
 - before the contact embedding job is enqueued and before `updateLeadEmbedding`;
-- in `AutoResponseService` draft creation for that recipient.
+- in `AutoResponseService` draft creation for that recipient;
+- in the AI insight and prediction workers (owner Q21, issue #1002), for restriction and erasure alike: the
+  contact insight chain, the tenant insight job and the prediction job leave the person out before the model
+  call, and write only under the row and address locks after a re-check (`writeSubjectIfStillEligible`).
 
 The lead and contact detail pages show a banner, "Processing restricted (data request)", with the date. Outreach and
 marketing suppression is a follow-up task, recorded in the docs.
@@ -935,6 +938,7 @@ marketing suppression is a follow-up task, recorded in the docs.
 - **D-AC-08:** Restriction:
   - completing a RESTRICTION or OBJECTION creates an active restriction;
   - scoring, embedding and draft creation skip or refuse for that email;
+  - AI insights and predictions are neither generated nor written for a restricted or erased person (Q21);
   - the banner shows;
   - lifting informs the person first.
 - **D-AC-09:** The SLA job alerts ADMINs once per request, inside 7 days or overdue, with no PII. It is

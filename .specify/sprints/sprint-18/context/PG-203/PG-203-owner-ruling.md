@@ -131,3 +131,9 @@ Answer: **CRM core auto, comms checklist.** Auto-erase the lead/contact profile,
 Finding: a new booker's lead was created inside the booking request, so a booking for an email NOT in the CRM took measurably longer; timing bookings could reveal who is already a client.
 
 Answer: **Create lead after reply.** The visitor gets the confirmation first; the lead is created and linked a moment after (same lock, same rules). If that step fails, the booking still stands and the host email says to add the lead by hand.
+
+## Q21 — restriction and erasure for AI insights and predictions (2026-10-23, AskUserQuestion, issue #1002)
+
+Finding (codex round 24 on the DSAR PR): the insight and prediction workers did not check a restriction or an erasure before the model call. A queued job could send an erased person's context to the model, and restricted people still got insights and predictions.
+
+Answer: **Stop both, in PR 2.** A processing restriction and an erasure both stop AI insights and predictions (an Art 18 extension of Q18). Each worker checks the person before the model call and writes only under the row and address locks after a re-check, as embedding does.

@@ -3,10 +3,13 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import {
+  eligibleSubjectEmail,
+  eligibleSubjects,
   scorableLeads,
   scoringBlockedBy,
   writeContactIfStillEligible,
   writeIfStillEligible,
+  writeSubjectIfStillEligible,
 } from '../data-request-guard';
 
 function prismaWith(opts: {
@@ -134,5 +137,89 @@ describe('writeContactIfStillEligible', () => {
         write
       )
     ).resolves.toEqual({ written: false, reason: 'LEAD_MISSING' });
+  });
+});
+
+describe('insight and prediction subjects (#1002)', () => {
+  function subjects(rows: { leads?: SubjectRows; contacts?: SubjectRows; restricted?: string[] }) {
+    const table = (map: SubjectRows = {}) => ({
+      findFirst: vi.fn(async ({ where }: { where: { id: string } }) =>
+        where.id in map ? { email: map[where.id] ?? null } : null
+      ),
+      findMany: vi.fn(async ({ where }: { where: { id: { in: string[] } } }) =>
+        where.id.in.filter((id) => id in map).map((id) => ({ id, email: map[id] ?? null }))
+      ),
+    });
+    const restricted = rows.restricted ?? [];
+    return {
+      lead: table(rows.leads),
+      contact: table(rows.contacts),
+      processingRestriction: {
+        findFirst: vi.fn(async ({ where }: { where: { subjectEmail: string } }) =>
+          restricted.includes(where.subjectEmail) ? { id: 'r1' } : null
+        ),
+        findMany: vi.fn(async () => restricted.map((subjectEmail) => ({ subjectEmail }))),
+      },
+    };
+  }
+  type SubjectRows = Record<string, string | null>;
+  const ref = (kind: 'lead' | 'contact', id: string) => ({ kind, id, tenantId: 't1' });
+
+  it('returns the stored address of an eligible person, empty for a contact without one', async () => {
+    const prisma = subjects({ leads: { l1: 'Ada@Example.invalid' }, contacts: { c1: null } });
+    await expect(eligibleSubjectEmail(prisma, ref('lead', 'l1'))).resolves.toBe(
+      'Ada@Example.invalid'
+    );
+    await expect(eligibleSubjectEmail(prisma, ref('contact', 'c1'))).resolves.toBe('');
+  });
+
+  it.each([
+    ['missing', {}],
+    ['erased', { leads: { l1: 'erased-l1@erased.invalid' } }],
+    ['restricted', { leads: { l1: ' ADA@example.invalid' }, restricted: ['ada@example.invalid'] }],
+  ])('returns null for a %s person', async (_label, rows) => {
+    await expect(eligibleSubjectEmail(subjects(rows), ref('lead', 'l1'))).resolves.toBeNull();
+  });
+
+  it('keeps only eligible people of a batch, with their stored addresses', async () => {
+    const prisma = subjects({
+      leads: { l1: 'ada@example.invalid', l2: 'Bob@Example.invalid' },
+      contacts: { c1: 'erased-c1@erased.invalid', c2: null },
+      restricted: ['bob@example.invalid'],
+    });
+    const result = await eligibleSubjects(prisma, 't1', {
+      leadIds: ['l1', 'l2', 'gone'],
+      contactIds: ['c1', 'c2'],
+    });
+    expect([...result.leads]).toEqual([['l1', 'ada@example.invalid']]);
+    expect([...result.contacts]).toEqual([['c2', '']]);
+  });
+
+  it('does not query a table when the batch has no one of that kind', async () => {
+    const prisma = subjects({});
+    const result = await eligibleSubjects(prisma, 't1', { leadIds: [], contactIds: [] });
+    expect(result.leads.size + result.contacts.size).toBe(0);
+    expect(prisma.lead.findMany).not.toHaveBeenCalled();
+    expect(prisma.contact.findMany).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['lead', 'FROM leads'],
+    ['contact', 'FROM contacts'],
+  ] as const)('locks the %s row for the write', async (kind, table) => {
+    const tx = {
+      $queryRaw: vi.fn(async () => [{ email: 'ada@example.invalid' }]),
+      processingRestriction: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
+    const prisma = { $transaction: vi.fn(async (fn: any) => fn(tx)) };
+    const write = vi.fn().mockResolvedValue('saved');
+    await expect(
+      writeSubjectIfStillEligible(
+        prisma,
+        { ...ref(kind, 'x1'), email: 'ada@example.invalid' },
+        write
+      )
+    ).resolves.toEqual({ written: true, value: 'saved' });
+    expect((tx.$queryRaw.mock.calls[0] as any)[0].join('?')).toContain(table);
   });
 });

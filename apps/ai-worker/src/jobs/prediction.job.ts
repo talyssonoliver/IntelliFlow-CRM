@@ -40,6 +40,14 @@ import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker } from '../lib/llm-factory';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
+// PG-203 #1002: erased and restricted people get no prediction
+import {
+  eligibleSubjectEmail,
+  SUBJECT_NOT_PROCESSABLE,
+  writeSubjectIfStillEligible,
+  type SubjectKind,
+  type SubjectPrisma,
+} from '../lib/data-request-guard';
 
 const logger = pino({
   name: 'prediction-job',
@@ -132,6 +140,16 @@ export async function processPredictionJob(
         return { skipped: true, reason: 'feature-flag-disabled' } as unknown as PredictionJobResult;
       }
 
+      // PG-203 #1002 (owner ruling): an erased or restricted person is never sent to the model.
+      const subjectEmail = await processableSubjectEmail(entityType, entityId, tenantId);
+      if (subjectEmail === null) {
+        logger.info(
+          { jobId: job.id, tenantId, entityType, entityId, predictionType },
+          'AI prediction job skipped — erased or restricted data subject'
+        );
+        return { skipped: true, reason: SUBJECT_NOT_PROCESSABLE } as unknown as PredictionJobResult;
+      }
+
       logger.info(
         {
           jobId: job.id,
@@ -184,17 +202,19 @@ export async function processPredictionJob(
       await job.updateProgress(90);
 
       // Persist prediction results to entity insight tables
-      await persistPredictionResult(
+      const persisted = await persistPredictionResult(
         entityType,
         entityId,
         tenantId,
         predictionType,
         prediction,
-        recommendations
+        recommendations,
+        subjectEmail
       );
 
-      // Notify on high churn risk (non-blocking)
-      if (predictionType === 'CHURN_RISK') {
+      // Notify on high churn risk (non-blocking); never for a person erased or restricted
+      // while the model ran.
+      if (predictionType === 'CHURN_RISK' && persisted !== 'blocked') {
         await notifyHighChurnRisk(tenantId, entityType, entityId, prediction, context);
       }
 
@@ -325,10 +345,36 @@ async function persistContactPrediction(
   logger.info({ entityId, predictionType }, 'Persisted prediction to ContactAIInsight');
 }
 
+/** A lead or contact is a person whose data requests apply; other entity types are not. */
+function subjectKind(entityType: string): SubjectKind | null {
+  return entityType === 'lead' || entityType === 'contact' ? entityType : null;
+}
+
+/**
+ * The person's stored address when they may be processed, null when they are missing, erased
+ * or restricted (#1002). Entity types that are not people always pass, as an empty address.
+ */
+async function processableSubjectEmail(
+  entityType: string,
+  entityId: string,
+  tenantId: string
+): Promise<string | null> {
+  const kind = subjectKind(entityType);
+  if (!kind) return '';
+  const { prisma } = await import('@intelliflow/db');
+  return eligibleSubjectEmail(prisma as unknown as SubjectPrisma, {
+    kind,
+    id: entityId,
+    tenantId,
+  });
+}
+
 /**
  * Persist prediction results to entity-level insight tables.
  * Uses the same LeadAIInsight / ContactAIInsight tables as the insight job,
- * closing the loop so entity 360 pages show prediction data.
+ * closing the loop so entity 360 pages show prediction data. The write happens under the
+ * person's row and address locks after a re-check, so an erasure or restriction that landed
+ * while the model ran wins ('blocked', #1002).
  */
 async function persistPredictionResult(
   entityType: string,
@@ -336,35 +382,31 @@ async function persistPredictionResult(
   tenantId: string,
   predictionType: string,
   prediction: PredictionJobResult['prediction'],
-  recommendations: string[]
-): Promise<void> {
+  recommendations: string[],
+  subjectEmail: string
+): Promise<'written' | 'blocked' | 'skipped' | 'failed'> {
+  const kind = subjectKind(entityType);
+  if (!kind) {
+    logger.info(
+      { entityType, entityId, predictionType },
+      'Prediction persistence skipped — no AI insight table for this entity type'
+    );
+    return 'skipped'; // no DB write — skip audit entry
+  }
   try {
     const { prisma } = await import('@intelliflow/db');
-
-    if (entityType === 'lead') {
-      await persistLeadPrediction(
-        prisma,
-        entityId,
-        tenantId,
-        predictionType,
-        prediction,
-        recommendations
-      );
-    } else if (entityType === 'contact') {
-      await persistContactPrediction(
-        prisma,
-        entityId,
-        tenantId,
-        predictionType,
-        prediction,
-        recommendations
-      );
-    } else {
+    const persist = kind === 'lead' ? persistLeadPrediction : persistContactPrediction;
+    const outcome = await writeSubjectIfStillEligible(
+      prisma as never,
+      { kind, id: entityId, tenantId, email: subjectEmail },
+      (tx) => persist(tx, entityId, tenantId, predictionType, prediction, recommendations)
+    );
+    if (!outcome.written) {
       logger.info(
-        { entityType, entityId, predictionType },
-        'Prediction persistence skipped — no AI insight table for this entity type'
+        { entityType, entityId, predictionType, reason: outcome.reason },
+        'Prediction not persisted — data subject erased or restricted during the model call'
       );
-      return; // no DB write — skip audit entry
+      return 'blocked';
     }
 
     // H4: emit AI_AGENT audit entry after successful DB write — non-fatal
@@ -378,6 +420,7 @@ async function persistPredictionResult(
     }).catch((err: unknown) => {
       logger.warn({ entityId, entityType, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
     });
+    return 'written';
   } catch (error) {
     logger.error(
       {
@@ -387,6 +430,7 @@ async function persistPredictionResult(
       },
       'Failed to persist prediction result to DB'
     );
+    return 'failed';
   }
 }
 

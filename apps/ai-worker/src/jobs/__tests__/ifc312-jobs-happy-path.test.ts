@@ -25,6 +25,13 @@ const prismaContactCountMock = vi.fn();
 const prismaOpportunityCountMock = vi.fn();
 const prismaIndustryFindManyMock = vi.fn().mockResolvedValue([]);
 
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+vi.mock('../../lib/data-request-guard', async (importOriginal) =>
+  (await import('../../test/mocks/data-request-guard.mock')).passThroughGuard(
+    await importOriginal()
+  )
+);
+
 vi.mock('@intelliflow/db', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@intelliflow/db');
   return {
