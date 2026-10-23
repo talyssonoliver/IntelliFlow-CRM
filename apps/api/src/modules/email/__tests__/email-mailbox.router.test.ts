@@ -690,7 +690,7 @@ describe('emailMailbox.disconnect', () => {
     await expect(member().disconnect({ scope: 'USER' })).resolves.toEqual({ disconnected: true });
     expect(t.oauthClient.revoke).toHaveBeenCalledWith(secret);
     expect(prismaMock.emailMailbox.update).toHaveBeenCalledWith({
-      where: { id: 'mb1' },
+      where: { id: 'mb1', tenantId, tokenVersion: 0 },
       data: {
         status: 'DISCONNECTED',
         lastErrorCode: null,
@@ -714,6 +714,46 @@ describe('emailMailbox.disconnect', () => {
     t.oauthClient.revoke.mockRejectedValueOnce(new Error('down'));
     await member().disconnect({ scope: 'USER' });
     expect(prismaMock.emailMailbox.update).toHaveBeenCalled();
+  });
+
+  it('clears the secrets before revoking, so a failed clear never revokes', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({ kind: 'GMAIL', refreshToken: secret, smtpPassword: null })
+    );
+    const order: string[] = [];
+    (prismaMock.emailMailbox.update as any).mockImplementationOnce(async () => {
+      order.push('clear');
+      return smtpRow({ status: 'DISCONNECTED' });
+    });
+    t.oauthClient.revoke.mockImplementationOnce(async () => {
+      order.push('revoke');
+    });
+    await member().disconnect({ scope: 'USER' });
+    expect(order).toEqual(['clear', 'revoke']);
+  });
+
+  it('is CONFLICT and revokes nothing when a reconnect or save changed the mailbox meanwhile', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(
+      smtpRow({ kind: 'GMAIL', refreshToken: secret, smtpPassword: null, tokenVersion: 2 })
+    );
+    (prismaMock.emailMailbox.update as any).mockRejectedValueOnce(
+      Object.assign(new Error('not found'), { code: 'P2025' })
+    );
+    await expect(member().disconnect({ scope: 'USER' })).rejects.toMatchObject({
+      code: 'CONFLICT',
+    });
+    expect((prismaMock.emailMailbox.update as any).mock.calls[0][0].where).toEqual({
+      id: 'mb1',
+      tenantId,
+      tokenVersion: 2,
+    });
+    expect(t.oauthClient.revoke).not.toHaveBeenCalled();
+  });
+
+  it('passes on any other write failure', async () => {
+    (prismaMock.emailMailbox.findFirst as any).mockResolvedValue(smtpRow());
+    (prismaMock.emailMailbox.update as any).mockRejectedValueOnce(new Error('db down'));
+    await expect(member().disconnect({ scope: 'USER' })).rejects.toThrow('db down');
   });
 
   it('is NOT_FOUND without a mailbox; members cannot disconnect the company mailbox', async () => {

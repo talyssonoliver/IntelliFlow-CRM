@@ -496,26 +496,39 @@ export const emailMailboxRouter = createTRPCRouter({
       assertScopeAllowed(c, input.scope, 'disconnect');
       const row = await findMailbox(c, input.scope);
       if (!row) throw mailboxNotFound();
+      // Cleared first, and only if these are still the credentials read: a
+      // reconnect or save made meanwhile stands (CONFLICT), and only the grant
+      // actually disconnected is revoked.
+      await c.prismaWithTenant.emailMailbox
+        .update({
+          where: { id: row.id, tenantId: row.tenantId, tokenVersion: row.tokenVersion },
+          data: {
+            status: 'DISCONNECTED',
+            lastErrorCode: null,
+            smtpPassword: null,
+            imapPassword: null,
+            refreshToken: null,
+            imapUidValidity: null,
+            imapLastUid: null,
+            scanCursorAt: null,
+            tokenVersion: { increment: 1 },
+            // An in-flight bounce scan loses its lease and writes nothing back.
+            lockedUntil: null,
+          },
+        })
+        .catch((err: unknown) => {
+          if (prismaErrorCode(err) === 'P2025') {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: 'This mailbox was just changed. Reload and try again.',
+            });
+          }
+          throw err;
+        });
       if (row.kind !== 'SMTP' && row.refreshToken) {
         const client = emailRuntimeDeps(c).transports.oauth(row.kind as OAuthMailboxProvider);
         await client?.revoke(row.refreshToken).catch(() => undefined);
       }
-      await c.prismaWithTenant.emailMailbox.update({
-        where: { id: row.id },
-        data: {
-          status: 'DISCONNECTED',
-          lastErrorCode: null,
-          smtpPassword: null,
-          imapPassword: null,
-          refreshToken: null,
-          imapUidValidity: null,
-          imapLastUid: null,
-          scanCursorAt: null,
-          tokenVersion: { increment: 1 },
-          // An in-flight bounce scan loses its lease and writes nothing back.
-          lockedUntil: null,
-        },
-      });
       auditEmail(c, 'UPDATE', RESOURCE, row.id, { scope: input.scope, disconnected: true });
       return { disconnected: true };
     }),
