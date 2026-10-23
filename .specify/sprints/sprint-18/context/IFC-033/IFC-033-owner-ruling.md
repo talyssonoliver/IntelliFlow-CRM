@@ -5,8 +5,8 @@
 ## Question
 
 IFC-033's close criterion (#795 reopen, `task-tracking.json` blockers) is a k6 run against a
-deployed environment, with owner approval. No staging environment exists: `staging.intelliflow-crm.dev`
-does not resolve, and the repo has no STAGING variables or secrets. The only deployed target is the
+deployed environment, with owner approval. No staging environment exists: the staging URL in
+`.github/workflows/cd.yml` (`deploy-staging`) does not resolve, and the repo has no STAGING variables or secrets. The only deployed target is the
 production Railway API (`PRODUCTION_API_URL`). The nightly k6 job from #887 has never run: it stays
 queued for a self-hosted runner and is cancelled every night.
 
