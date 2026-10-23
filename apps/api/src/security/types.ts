@@ -104,6 +104,11 @@ export type ResourceType =
   | 'report_schedule' // PG-201 audit trail
   | 'contact_type' // PG-205 audit trail
   | 'event_type' // PG-203 audit trail (event types + booking link)
+  // PG-207 audit trail (ids, field names and counts only — never addresses or secrets)
+  | 'email_mailbox'
+  | 'email_settings'
+  | 'email_signature'
+  | 'email_suppression'
   | 'model_config'; // PG-199 audit trail
 
 /**

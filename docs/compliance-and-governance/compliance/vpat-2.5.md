@@ -4,7 +4,7 @@
 
 **Product Name:** IntelliFlow CRM **Product Version:** 0.1.0 (Sprint 17)
 **Report Date:** 2026-04-16 **Contact:** accessibility@intelliflow.com
-**Evaluation Methods Used:** Static code review (92 routes), Lighthouse CI
+**Evaluation Methods Used:** Static code review (93 routes), Lighthouse CI
 runtime (26 URLs), axe-core automated testing (8 component tests in jsdom)
 
 ---
@@ -151,3 +151,4 @@ minimum every 6 months.
 | 1.10.0  | 2026-10-17 | Engineering (PG-202)          | `/calendar/availability` stub replaced at the same URL (route count unchanged, 92); Calendar Settings, New Appointment and the appointment detail dialog reviewed; a11y-expert WCAG 2.1 AA review PASS WITH MINOR after fixes. Known gap carried by shared tokens (gh #871): 1.4.11 Switch off-state track 1.24:1, 1.4.3 white on primary 4.15:1 (Partially Supports, unchanged by PG-202) |
 | 1.11.0  | 2026-10-18 | Engineering (PG-205)          | Reviewed modified routes `/contacts/contact-types` (stub replaced by the contact types page), `/contacts/new` and contact edit (type picker, account field); route count unchanged (92); a11y-expert WCAG 2.1 AA review PASS WITH FIXES (fixed), no new conformance exceptions                                                                                                             |
 | 1.12.0  | 2026-10-19 | Engineering (PG-199)          | `/agent-approvals/model-config` stub replaced at the same URL (route count unchanged, 92); a11y-expert WCAG 2.1 AA review FAIL (4 major), all fixed and re-tested with axe; no new conformance exceptions. Shared Slider thumb naming gap filed as gh #929 (component not used by this page)                                                                                               |
+| 1.13.0  | 2026-10-21 | Engineering (PG-207)          | Added `/email/oauth/callback` (mailbox OAuth return page) — route count 92 → 93; `/email/email-settings` and `/email/signatures` stubs replaced at the same URLs; a11y-expert WCAG 2.1 AA review: high and medium findings fixed (`abdc38383`), no new conformance exceptions                                                                                                              |

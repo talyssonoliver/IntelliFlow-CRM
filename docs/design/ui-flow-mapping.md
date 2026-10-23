@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 215 implemented **Total Flows**: 42 **API
-> Routers**: 72 (424 procedures)
+> Guide Components **Total Pages**: 216 implemented **Total Flows**: 42 **API
+> Routers**: 76 (444 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -422,10 +422,13 @@ procedures: `getEventType`, `listSlots`, `book`; ADR-083).
 
 ### Email Section
 
-| Route         | Task ID | Sprint | Status | Primary Flow | Components Required                          | API Router |
-| ------------- | ------- | ------ | ------ | ------------ | -------------------------------------------- | ---------- |
-| `/email`      | -       | 14     | ✅     | FLOW-016     | data-table, badge, search-input, btn-primary | `email.*`  |
-| `/email/[id]` | -       | 14     | ✅     | FLOW-016     | card, email-viewer, timeline                 | `email.*`  |
+| Route                   | Task ID | Sprint | Status | Primary Flow | Components Required                                    | API Router                          |
+| ----------------------- | ------- | ------ | ------ | ------------ | ------------------------------------------------------ | ----------------------------------- |
+| `/email`                | -       | 14     | ✅     | FLOW-016     | data-table, badge, search-input, btn-primary           | `email.*`                           |
+| `/email/[id]`           | -       | 14     | ✅     | FLOW-016     | card, email-viewer, timeline                           | `email.*`                           |
+| `/email/email-settings` | PG-207  | 18     | ✅     | FLOW-016     | card, switch, radio-group, select, confirmation-dialog | `emailMailbox.*`, `emailSettings.*` |
+| `/email/signatures`     | PG-207  | 18     | ✅     | FLOW-016     | card, dialog, rich-text-editor, empty-state            | `emailSignatures.*`                 |
+| `/email/oauth/callback` | PG-207  | 18     | ✅     | FLOW-016     | status / alert                                         | `emailMailbox.oauthComplete`        |
 
 **Email (Inbound) Router Procedures** (12 total):
 
@@ -736,6 +739,10 @@ data
 | `subscriptions`              | 5          | Real-time WebSocket subscriptions                     | ✅ Active         |
 | `integrations`               | 6          | `/settings/integrations`                              | ✅ Active         |
 | `email`                      | 12         | `/email`, `/email/[id]`                               | ✅ Active         |
+| `emailMailbox`               | 7          | `/email/email-settings`, `/email/oauth/callback`      | ✅ Active         |
+| `emailSettings`              | 6          | `/email/email-settings` (incl. `suppression.*`)       | ✅ Active         |
+| `emailSignatures`            | 6          | `/email/signatures`, `/email/compose`                 | ✅ Active         |
+| `emailAttachments`           | 1          | `/email/compose`                                      | ✅ Active         |
 | `webhooks`                   | 9          | `/docs/webhooks`, webhook management                  | ✅ Active         |
 | `home`                       | 7          | Authenticated home page data (IFC-182)                | ✅ Active         |
 | `notifications`              | 8          | `/notifications`, `/notifications/settings`           | ✅ Active         |
@@ -757,7 +764,7 @@ data
 | `modelConfig`                | 3          | `/agent-approvals/model-config` (PG-199)              | ✅ Active         |
 | `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)     | ✅ Active         |
 | `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)              | ✅ Active         |
-| **Total**                    | **424**    | **51 routers**                                        |                   |
+| **Total**                    | **444**    | **55 routers**                                        |                   |
 
 ---
 

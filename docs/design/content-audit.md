@@ -24,10 +24,10 @@ tracks navigation ghost-link status. It does not implement fixes by itself.
 
 ### Current baseline
 
-- **Total Pages (filesystem total): 215** — `page.tsx` entries scanned from
+- **Total Pages (filesystem total): 216** — `page.tsx` entries scanned from
   `apps/web/src/app`
 - **33 public entries** under `(public)/`
-- **168 auth-gated entries** outside `(public)/` and `(developer)/`
+- **169 auth-gated entries** outside `(public)/` and `(developer)/`
 - **14 developer entries** under `(developer)/`
 - **0 unresolved ghost links** after route-group-aware reconciliation
 - **85 average SEO score** across public routes

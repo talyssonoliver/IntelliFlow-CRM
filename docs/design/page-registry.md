@@ -1241,7 +1241,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 13: Email (2 routes)
+## Section 13: Email (5 routes)
 
 ### Email Inbox (`/email`)
 
@@ -1272,6 +1272,51 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                          |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA        |
 | **Components** | Server component, EmailPage with initialEmailId prop |
+
+### Email Settings (`/email/email-settings`)
+
+| Field          | Value                                                                                                                                                                 |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-207                                                                                                                                                                |
+| **File Path**  | `apps/web/src/app/email/email-settings/page.tsx`                                                                                                                      |
+| **Layout**     | `apps/web/src/app/email/layout.tsx`                                                                                                                                   |
+| **API Router** | `emailMailbox.*`, `emailSettings.*` (incl. `suppression.*`) — `apps/api/src/modules/email/email-mailbox.router.ts`, `email-settings.router.ts`                        |
+| **E2E Test**   | None                                                                                                                                                                  |
+| **Unit Tests** | `apps/web/src/app/email/email-settings/__tests__/`, `apps/web/src/app/email/email-settings/components/__tests__/`                                                     |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                                                                       |
+| **Status**     | Implemented (ADR-085; OAuth providers need app registration)                                                                                                          |
+| **RACI**       | R: Frontend / A: Product / C: Backend, Security / I: QA                                                                                                               |
+| **Components** | ModuleSettingsShell (`leading`, `hideActions`), MyMailboxCard, SmtpMailboxForm (lazy), SecretField, CompanyMailboxCard, SuppressionListCard (lazy), OAuthReturnNotice |
+
+### Email Signatures (`/email/signatures`)
+
+| Field          | Value                                                                                                            |
+| -------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-207                                                                                                           |
+| **File Path**  | `apps/web/src/app/email/signatures/page.tsx`                                                                     |
+| **Layout**     | `apps/web/src/app/email/layout.tsx`                                                                              |
+| **API Router** | `emailSignatures.*` — `apps/api/src/modules/email/email-signatures.router.ts`                                    |
+| **E2E Test**   | None                                                                                                             |
+| **Unit Tests** | `apps/web/src/app/email/signatures/__tests__/`, `apps/web/src/app/email/signatures/components/__tests__/`        |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                  |
+| **Status**     | Implemented                                                                                                      |
+| **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                                                                    |
+| **Components** | PageHeader, SectionHeader, EmptyState (`signatures`), SignatureDialog (lazy, RichTextEditor), ConfirmationDialog |
+
+### Mailbox Sign-in Return (`/email/oauth/callback`)
+
+| Field          | Value                                                       |
+| -------------- | ----------------------------------------------------------- |
+| **Task ID**    | PG-207                                                      |
+| **File Path**  | `apps/web/src/app/email/oauth/callback/page.tsx`            |
+| **Layout**     | `apps/web/src/app/email/layout.tsx`                         |
+| **API Router** | `emailMailbox.oauthComplete`                                |
+| **E2E Test**   | None                                                        |
+| **Unit Tests** | `apps/web/src/app/email/oauth/callback/__tests__/`          |
+| **KPI**        | n/a (redirect target, noindex)                              |
+| **Status**     | Implemented (redirect target, not a navigation destination) |
+| **RACI**       | R: Frontend / A: Product / C: Security / I: QA              |
+| **Components** | OAuthCallbackContent (StrictMode-safe single completion)    |
 
 ---
 
@@ -2120,7 +2165,7 @@ Each route entry uses this standard table format:
 | 10. Cases           | 4       | 4           | 0         | 0       |
 | 11. Tasks           | 2       | 2           | 0         | 0       |
 | 12. Calendar        | 3       | 3           | 0         | 0       |
-| 13. Email           | 2       | 2           | 0         | 0       |
+| 13. Email           | 5       | 5           | 0         | 0       |
 | 14. AI & Automation | 14      | 13          | 1         | 0       |
 | 15. Analytics       | 2       | 1           | 1         | 0       |
 | 16. Settings        | 9       | 4           | 5         | 0       |
@@ -2129,7 +2174,7 @@ Each route entry uses this standard table format:
 | 19. Notifications   | 2       | 1           | 1         | 0       |
 | 20. Profile         | 1       | 0           | 1         | 0       |
 | 21. Support Portal  | 1       | 1           | 0         | 0       |
-| **Total**           | **105** | **88**      | **14**    | **3**   |
+| **Total**           | **108** | **91**      | **14**    | **3**   |
 
 ### Backend Integration Status
 

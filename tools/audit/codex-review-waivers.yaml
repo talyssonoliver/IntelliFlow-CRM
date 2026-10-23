@@ -1229,3 +1229,27 @@ waivers:
       appointments (L1). Tracked as one deliberate fix in gh #967.
     author: PG-203 lane
     date: '2026-10-21'
+  - fingerprint: 29d856dd7cbf20c7c5e85f4622c10de5b08de040ff10d6d337c2b3b982172760
+    reason: >-
+      PG-207 premature-unmatched-receipt (bounce-reader.ts receipt match). Accepted risk, tracked
+      for a fix in gh #984. The window is the milliseconds between the transport accepting a send
+      and dispatchUserMail saving messageIdHeader/sentAt. A DSN must come back from the remote MTA
+      and then be picked up by the next periodic scan, so on a normal send it cannot be scanned in
+      that window. The real fix (Message-ID saved before dispatch, deferred reports for in-flight
+      PENDING records, re-evaluating UNMATCHED receipts) changes the #961 bounce matcher and needs
+      its own review. The waiver expires so the gate re-blocks if #984 slips.
+    author: talyssonoliver (approved in the PG-207 runner modal, 2026-10-22)
+    date: '2026-10-22'
+    expires: '2026-11-21'
+  - fingerprint: 4e69cea586893aea249b551d7c592ce5b1eff4bb511f16fde88e762c2c252829
+    reason: >-
+      PG-207 gmail-excludes-exchange-bounces (oauth-mailbox.ts Gmail bounce query). Accepted
+      missed-feature gap, tracked for a fix in gh #985. Exchange NDRs (#970) delivered into a
+      Gmail-connected mailbox are not fetched, so those bounces are missed. This has no security,
+      privacy or data-integrity effect: the #961 trust rules still decide what a report may do. The
+      fix needs the live D5 header spike (#965) to show which Gmail search matches
+      MicrosoftExchange<hex> senders; an untested query could silently match nothing. The waiver
+      expires so the gate re-blocks if #985 slips.
+    author: talyssonoliver (approved in the PG-207 modal, 2026-10-22)
+    date: '2026-10-22'
+    expires: '2026-11-21'

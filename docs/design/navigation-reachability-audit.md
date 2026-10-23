@@ -290,14 +290,15 @@ Legend:
 
 ### Email (6 routes)
 
-| Route                   |  H  | UM  | SB  | IP  | Reachable? | Notes                       |
-| ----------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------- |
-| `/email`                | YES | --  | SB  | --  |    YES     | Header nav + sidebar wired  |
-| `/email/[id]`           | --  | --  | --  | IP  |     OK     | From inbox rows             |
-| `/email/compose`        | --  | --  | --  | IP  |     OK     | Compose button in email app |
-| `/email/templates`      | --  | --  | SB  | --  |    YES     | Email sidebar               |
-| `/email/signatures`     | --  | --  | SB  | --  |    YES     | Email sidebar               |
-| `/email/email-settings` | --  | --  | SB  | --  |    YES     | Email sidebar               |
+| Route                   |  H  | UM  | SB  | IP  | Reachable? | Notes                                                                                                                          |
+| ----------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------------------------------------------------------------------------------------------ |
+| `/email`                | YES | --  | SB  | --  |    YES     | Header nav + sidebar wired                                                                                                     |
+| `/email/[id]`           | --  | --  | --  | IP  |     OK     | From inbox rows                                                                                                                |
+| `/email/compose`        | --  | --  | --  | IP  |     OK     | Compose button in email app                                                                                                    |
+| `/email/templates`      | --  | --  | SB  | --  |    YES     | Email sidebar                                                                                                                  |
+| `/email/signatures`     | --  | --  | SB  | --  |    YES     | Email sidebar                                                                                                                  |
+| `/email/email-settings` | --  | --  | SB  | IP  |    YES     | Email sidebar; compose "Open Email Settings" link                                                                              |
+| `/email/oauth/callback` | --  | --  | --  | --  |    N/A     | Redirect target of the Google / Microsoft mailbox sign-in (`EMAIL_OAUTH_REDIRECT_URI`); no navigation entry by design (PG-207) |
 
 ### Governance (10 routes)
 
@@ -525,7 +526,8 @@ updated at ship time):
 - Contacts: `contact-types`, `contact-settings`, `import-export`
 - Deals: `deal-stages`, `deal-settings`, `deal-automation`
 - Documents: `document-types`, `storage-policies`, `document-settings`
-- Email: `compose`, `templates`, `signatures`, `email-settings`
+- Email: `compose`, `templates`, `signatures`, `email-settings`,
+  `oauth/callback` (redirect target)
 - Governance: `quality-reports/trpc-benchmark`
 - Leads: `pipeline`, `routing`, `lead-settings`
 - Tasks: `task-types`, `task-settings`, `automation`

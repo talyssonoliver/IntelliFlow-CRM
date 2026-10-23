@@ -6,6 +6,7 @@ import { useTimezoneContext } from '@/providers/TimezoneProvider';
 import { EntityHoverCard } from '@/components/shared';
 import DOMPurify from 'isomorphic-dompurify';
 import { cn } from '@/lib/utils';
+import { DeliveryStatusBadge } from './DeliveryStatusBadge';
 
 interface EmailMessageData {
   id: string;
@@ -21,6 +22,9 @@ interface EmailMessageData {
     size: number;
     checksum: string;
   }>;
+  /** PG-207: delivery status of a sent email, for the Bounced / Failed badge. */
+  status?: string;
+  bouncedRecipientCount?: number;
 }
 
 interface EmailMessageProps {
@@ -110,6 +114,11 @@ export function EmailMessage({
             ))}
           </span>
         </div>
+
+        <DeliveryStatusBadge
+          status={message.status}
+          bouncedRecipientCount={message.bouncedRecipientCount}
+        />
 
         {/* Timestamp */}
         <time dateTime={message.receivedAt} className="shrink-0 text-xs text-muted-foreground">

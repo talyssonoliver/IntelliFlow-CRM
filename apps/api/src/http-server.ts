@@ -18,6 +18,8 @@ import {
 import { container, containerReady } from './container';
 import { approvalSweepIntervalFromEnv, startApprovalSweep } from './agent/approval-sweep-scheduler';
 import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
+import { bounceScanIntervalFromEnv, startBounceScanner } from './modules/email/bounce-scheduler';
+import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
 import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
@@ -564,6 +566,15 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
     run: async () => {
       await containerReady;
       return runApprovalSweep(await createDefaultSweepDeps());
+    },
+  });
+
+  // PG-207: bounce scanner — reads delivery reports from connected mailboxes.
+  startBounceScanner({
+    intervalMs: bounceScanIntervalFromEnv(process.env),
+    run: async () => {
+      await containerReady;
+      return runBounceScan(await createBounceReaderDeps());
     },
   });
 
