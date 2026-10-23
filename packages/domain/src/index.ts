@@ -171,3 +171,6 @@ export * from './automation/RoutingConstants';
 // server-side steps[].config validation) and the React workflow builder
 // (for palette entries + per-type config forms).
 export * from './workflow/node-catalog';
+
+// PG-207 (ADR-085): user mailbox sending, bounce rules and signature defaults.
+export * from './email';

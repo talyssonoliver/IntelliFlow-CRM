@@ -1,0 +1,10 @@
+[test-slot] slot1 taken for PG-207@feat/pg-207-email-settings: pnpm --dir apps/api exec vitest run src/modules/email/__tests__/dark-launch.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207/apps/api
+
+
+ Test Files  1 passed (1)
+      Tests  6 passed (6)
+   Start at  10:36:04
+   Duration  2.57s (transform 1.07s, setup 488ms, import 1.87s, tests 46ms, environment 0ms)
+

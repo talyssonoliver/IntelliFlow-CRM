@@ -103,6 +103,8 @@ export const NOTIFICATION_TYPES = [
   'email_received',
   'email_opened',
   'email_replied',
+  // PG-207: a sent email bounced (sender notified when notifySenderOnBounce is on)
+  'email_bounced',
 ] as const;
 
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];

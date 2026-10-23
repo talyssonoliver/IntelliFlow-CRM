@@ -1,0 +1,11 @@
+packages/domain/src/email/attachment-path.ts: statements 8/8 (100.0%), branches 9/9 (100.0%) missed lines []
+packages/domain/src/email/dsn-classification.ts: statements 11/11 (100.0%), branches 8/8 (100.0%) missed lines []
+packages/domain/src/email/email-address.ts: statements 2/2 (100.0%), branches 0/0 (0.0%) missed lines []
+packages/domain/src/email/email-constants.ts: statements 19/19 (100.0%), branches 2/2 (100.0%) missed lines []
+packages/domain/src/email/evaluate-bounce.ts: statements 6/6 (100.0%), branches 8/8 (100.0%) missed lines []
+packages/domain/src/email/index.ts: statements 0/0 (0.0%), branches 0/0 (0.0%) missed lines []
+packages/domain/src/email/partition-recipients.ts: statements 14/14 (100.0%), branches 6/6 (100.0%) missed lines []
+packages/domain/src/email/resolve-default-signature.ts: statements 1/1 (100.0%), branches 3/3 (100.0%) missed lines []
+packages/domain/src/email/resolve-sending-mailbox.ts: statements 7/7 (100.0%), branches 11/11 (100.0%) missed lines []
+packages/domain/src/workflow/node-catalog.ts: statements 72/72 (100.0%), branches 42/42 (100.0%) missed lines []
+TOTAL statements 140/140 (100.0%), branches 89/89 (100.0%)

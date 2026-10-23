@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-19
+last_updated: 2026-10-21
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -4930,6 +4930,67 @@ items:
       attendeeId min(1).max(64); durationMinutes int().min(5).max(1440); router test.
     status: open
     notes: 'gh issue #914. Found by the PG-202 STOA-Security review; pre-existing.'
+  PG-207-IFC-144-FALSE-COMPLETION:
+    origin_task: PG-207
+    owner: Tech Lead (STOA-Quality)
+    severity: high
+    description: >-
+      IFC-144 is marked Completed, but production email.sendEmail used a
+      module-level outbound service that fell back to the mock provider without
+      SENDGRID_API_KEY (absent in Railway), so user mail was recorded SENT
+      without being sent. Fixed on feat/pg-207-email-settings (8d9803710):
+      dispatchUserMail is the only send path and arch-guards.test.ts forbids the
+      mock service under modules/email. GitHub issue #955.
+    created_at: 2026-10-21
+    expiry_date: 2026-11-21
+    remediation_sprint: 18
+    remediation_plan: >-
+      When PG-207 merges, correct the IFC-144 attestation (its send claim was
+      false in production) and close #955.
+    status: open
+    notes: 'Kept open until PG-207 is merged; the code fix is in the PG-207 branch.'
+  PG-207-DSAR-EMAIL-COVERAGE:
+    origin_task: PG-207
+    owner: Backend Eng (STOA-Security)
+    severity: medium
+    description: >-
+      DSARWorkflow (apps/api/src/workflow/dsar-workflow.ts:287-335) exports
+      leads, contacts, accounts and opportunities only. EmailRecord, and the
+      PG-207 tables EmailSuppression, EmailBounceReceipt, EmailSignature and
+      EmailMailbox, are not exported or erased for a data subject. GitHub issue
+      #956.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 20
+    remediation_plan: >-
+      Export email records naming the subject's address plus suppressions and
+      receipts for it; on erasure delete receipts, keep the suppression only as
+      a hashed address, redact the address in EmailRecord recipients; DSAR
+      tests.
+    status: open
+    notes: 'Bounce receipts are already purged after 90 days by the bounce reader.'
+  PG-207-OAUTH-LIGHTHOUSE-NEEDS-HUMAN:
+    origin_task: PG-207
+    owner: Product Owner
+    severity: medium
+    description: >-
+      Google and Microsoft OAuth apps are not registered (EMAIL_OAUTH_* env
+      unset), so their Connect buttons stay disabled with the reason shown;
+      gmail.readonly needs Google's restricted-scope security assessment before
+      public launch. The live check that X-IntelliFlow-Record and the Message-ID
+      survive into Gmail / Microsoft DSNs (D5, CA-22) needs those apps.
+      Lighthouse on /email/email-settings and /email/signatures needs
+      LHCI_TEST_EMAIL / LHCI_TEST_PASSWORD.
+    created_at: 2026-10-21
+    expiry_date: 2026-12-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Register both apps with the ADR-085 scopes and the callback
+      EMAIL_OAUTH_REDIRECT_URI; set the env in Railway; run the D5 header spike
+      on one Gmail and one Microsoft mailbox; run the authenticated Lighthouse
+      harness on both pages.
+    status: open
+    notes: 'SMTP sending and IMAP bounce reading work without these.'
   PG-199-F1-CHAINVERSION-MODEL-UNUSED:
     origin_task: PG-199
     owner: AI Team

@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-20T21:56:14.021Z",
+  "timestamp": "2026-10-21T19:46:34.021Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 73,
-    "total_endpoints": 576,
-    "total_queries": 246,
-    "total_mutations": 330,
+    "total_routers": 76,
+    "total_endpoints": 590,
+    "total_queries": 251,
+    "total_mutations": 339,
     "routers": [
       {
         "name": "contact",
@@ -1261,6 +1261,18 @@
         "mutations": 4
       },
       {
+        "name": "emailSettings",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "emailSignatures",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "feedback",
         "endpoints": 6,
         "queries": 3,
@@ -1399,6 +1411,12 @@
         "mutations": 1
       },
       {
+        "name": "emailMailbox",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
         "name": "termsAcceptance",
         "endpoints": 2,
         "queries": 1,
@@ -1461,16 +1479,16 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 201,
-    "total_fields": 2892,
-    "total_indexes": 906,
-    "total_relations": 284,
+    "total_tables": 207,
+    "total_fields": 2996,
+    "total_indexes": 924,
+    "total_relations": 293,
     "tables_with_embeddings": 4,
     "enums": 78,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 176,
+        "fields": 181,
         "indexes": 6,
         "relations": 3,
         "hasEmbedding": false
@@ -1484,7 +1502,7 @@
       },
       {
         "name": "User",
-        "fields": 46,
+        "fields": 48,
         "indexes": 7,
         "relations": 8,
         "hasEmbedding": false
@@ -1500,6 +1518,13 @@
         "name": "ConversationRecord",
         "fields": 36,
         "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailMailbox",
+        "fields": 36,
+        "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1528,6 +1553,13 @@
         "name": "AuditLogEntry",
         "fields": 32,
         "indexes": 8,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailRecord",
+        "fields": 31,
+        "indexes": 9,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1570,13 +1602,6 @@
         "name": "Notification",
         "fields": 28,
         "indexes": 10,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailRecord",
-        "fields": 26,
-        "indexes": 7,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1966,6 +1991,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailBounceReceipt",
+        "fields": 14,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "ChatMessage",
         "fields": 14,
         "indexes": 4,
@@ -2134,6 +2166,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantEmailSettings",
+        "fields": 12,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "KPIDefinition",
         "fields": 12,
         "indexes": 3,
@@ -2229,6 +2268,13 @@
         "fields": 11,
         "indexes": 6,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSignature",
+        "fields": 11,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2414,6 +2460,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailOAuthState",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "PerformanceMetric",
         "fields": 10,
         "indexes": 6,
@@ -2515,6 +2568,13 @@
         "name": "PipelineSnapshot",
         "fields": 9,
         "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSuppression",
+        "fields": 9,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -3234,11 +3294,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 60,
-    "total_schemas": 644,
+    "total_validators": 63,
+    "total_schemas": 662,
     "by_complexity": {
-      "complex": 35,
-      "moderate": 21,
+      "complex": 36,
+      "moderate": 23,
       "simple": 4
     },
     "validators": [
@@ -3417,6 +3477,12 @@
         "complexity": "complex"
       },
       {
+        "name": "email-mailbox",
+        "file": "email-mailbox.ts",
+        "schemas": 8,
+        "complexity": "moderate"
+      },
+      {
         "name": "help-article",
         "file": "help-article.ts",
         "schemas": 8,
@@ -3467,6 +3533,18 @@
       {
         "name": "case-types",
         "file": "case-types.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "email-settings",
+        "file": "email-settings.ts",
+        "schemas": 5,
+        "complexity": "complex"
+      },
+      {
+        "name": "email-signatures",
+        "file": "email-signatures.ts",
         "schemas": 5,
         "complexity": "moderate"
       },
@@ -4850,6 +4928,82 @@
         "name": "upload.getUploadStatus",
         "method": "GET",
         "description": "Get upload status"
+      }
+    ],
+    "emailMailbox": [
+      {
+        "name": "emailMailbox.getMine",
+        "method": "GET",
+        "description": "Get mine"
+      },
+      {
+        "name": "emailMailbox.getTenant",
+        "method": "POST",
+        "description": "Get tenant"
+      }
+    ],
+    "emailSettings": [
+      {
+        "name": "emailSettings.list",
+        "method": "GET",
+        "description": "List emailSettingss with pagination"
+      },
+      {
+        "name": "emailSettings.add",
+        "method": "POST",
+        "description": "Add"
+      },
+      {
+        "name": "emailSettings.remove",
+        "method": "POST",
+        "description": "Remove"
+      },
+      {
+        "name": "emailSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "emailSettings.update",
+        "method": "POST",
+        "description": "Update emailSettings"
+      },
+      {
+        "name": "emailSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      }
+    ],
+    "emailSignatures": [
+      {
+        "name": "emailSignatures.list",
+        "method": "GET",
+        "description": "List emailSignaturess with pagination"
+      },
+      {
+        "name": "emailSignatures.create",
+        "method": "POST",
+        "description": "Create new emailSignatures"
+      },
+      {
+        "name": "emailSignatures.update",
+        "method": "POST",
+        "description": "Update emailSignatures"
+      },
+      {
+        "name": "emailSignatures.delete",
+        "method": "POST",
+        "description": "Delete emailSignatures"
+      },
+      {
+        "name": "emailSignatures.setDefault",
+        "method": "POST",
+        "description": "Set default"
+      },
+      {
+        "name": "emailSignatures.resolveDefault",
+        "method": "GET",
+        "description": "Resolve default"
       }
     ],
     "inbound": [

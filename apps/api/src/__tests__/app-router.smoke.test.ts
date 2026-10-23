@@ -264,4 +264,30 @@ describe('appRouter smoke — PG-190 module-settings registration', () => {
     expect(accountTiers?.update).toBeDefined();
     expect(accountTiers?.resetToDefaults).toBeDefined();
   });
+
+  it('registers the PG-207 email routers with every procedure', async () => {
+    const { appRouter } = await import('../router.js');
+    const record = appRouter._def.record as Record<string, any>;
+    const expected: Record<string, string[]> = {
+      emailMailbox: [
+        'getMine',
+        'getTenant',
+        'saveSmtp',
+        'testConnection',
+        'oauthStart',
+        'oauthComplete',
+        'disconnect',
+      ],
+      emailSettings: ['get', 'update', 'resetToDefaults'],
+      emailSignatures: ['list', 'create', 'update', 'delete', 'setDefault', 'resolveDefault'],
+      emailAttachments: ['upload'],
+    };
+    for (const [router, procedures] of Object.entries(expected)) {
+      expect(record[router]).toBeDefined();
+      for (const procedure of procedures) expect(record[router]?.[procedure]).toBeDefined();
+    }
+    for (const procedure of ['list', 'add', 'remove']) {
+      expect(record.emailSettings?.suppression?.[procedure]).toBeDefined();
+    }
+  });
 });

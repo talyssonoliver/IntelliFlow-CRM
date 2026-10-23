@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils';
 import { EMAIL_LABELS } from '@/components/sidebar/configs/EmailSidebarContent';
 import { EntityHoverCard } from '@/components/shared';
 import { useTimezoneContext } from '@/providers/TimezoneProvider';
+import { DeliveryStatusBadge } from './DeliveryStatusBadge';
 
 interface EmailItemData {
   id: string;
@@ -15,6 +16,9 @@ interface EmailItemData {
   isRead: boolean;
   labels?: string[];
   attachments: Array<{ filename: string; contentType: string; size: number; checksum: string }>;
+  /** PG-207: delivery status of a sent email, for the Bounced / Failed badge. */
+  status?: string;
+  bouncedRecipientCount?: number;
 }
 
 interface EmailListItemProps {
@@ -98,6 +102,10 @@ export function EmailListItem({ email, isSelected, onSelect }: Readonly<EmailLis
               {email.subject}
             </div>
             <div className="flex items-center gap-1">
+              <DeliveryStatusBadge
+                status={email.status}
+                bouncedRecipientCount={email.bouncedRecipientCount}
+              />
               <span className="truncate text-xs text-muted-foreground">{getPreview(email)}</span>
               {email.labels && email.labels.length > 0 && (
                 <span className="flex items-center gap-0.5 shrink-0">

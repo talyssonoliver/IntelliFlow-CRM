@@ -20,7 +20,7 @@ partially supported on the `/deals` pipeline view.
 
 ## 2. Scope
 
-This statement covers the IntelliFlow CRM web application across all 183
+This statement covers the IntelliFlow CRM web application across all 184
 user-facing routes. Dynamic segment routes (e.g., `/contacts/[id]`,
 `/settings/help-center/articles/[id]/edit`) inherit conformance status from
 their parent static route and are not listed separately.
@@ -47,10 +47,10 @@ their parent static route and are not listed separately.
   `/cases/case-types`, `/cases/case-workflows`, `/cases/case-workflows/new`,
   `/cases/new`, `/cases/timeline`, `/documents`, `/documents/document-settings`,
   `/documents/document-types`, `/documents/new`, `/documents/storage-policies`
-- **CRM — Calendar & Email (11):** `/appointments`, `/appointments/new`,
+- **CRM — Calendar & Email (12):** `/appointments`, `/appointments/new`,
   `/calendar`, `/calendar/availability`, `/calendar/calendar-settings`,
   `/calendar/event-types`, `/email`, `/email/compose`, `/email/email-settings`,
-  `/email/signatures`, `/email/templates`
+  `/email/oauth/callback`, `/email/signatures`, `/email/templates`
 - **CRM — Tasks & Tickets (11):** `/tasks`, `/tasks/automation`,
   `/tasks/task-settings`, `/tasks/task-types`, `/tickets`,
   `/tickets/automations`, `/tickets/new`, `/tickets/sla-policies`,
@@ -271,3 +271,4 @@ Users who encounter accessibility barriers can report issues via:
 | 1.9.0   | 2026-10-17 | Engineering (PG-202)          | Reviewed `/calendar/availability` (stub replaced by the availability page, already in scope; route count unchanged) and modified `/calendar/calendar-settings`, `/appointments/new` and the appointment detail dialog; `<section aria-labelledby>` cards, per-day fieldsets with positional names, a `role="alert"` validation summary with links that focus their field, focus management after save, reset and reload, a named modal dialog; axe in component tests; a11y-expert review FAIL, then fixed, re-check PASS WITH MINOR. Known gap (1.4.11 / 1.4.3, shared tokens, gh #871): unchecked Switch track 1.24:1 and white on primary 4.15:1 |
 | 1.10.0  | 2026-10-18 | Engineering (PG-205)          | `/contacts/contact-types` stub replaced at the same URL (route count unchanged); `/contacts/new`, contact edit and the contacts list gain the contact type picker, Type filter and badges; labelled fieldsets, `<output>` live regions, `role="alert"` errors with focus on the invalid field, text for every colour cue; a11y-expert WCAG 2.1 AA review PASS WITH FIXES (fixed)                                                                                                                                                                                                                                                                    |
 | 1.11.0  | 2026-10-19 | Engineering (PG-199)          | `/agent-approvals/model-config` stub replaced at the same URL (already in scope; route count unchanged): one card per AI purpose with labelled model selects, a native range plus "Custom temperature" checkbox (aria-valuetext), fallback reorder buttons with live announcements, errors tied to their controls with focus on the first invalid field, notes in a mounted live region, focus kept after confirm dialogs; axe in component tests; a11y-expert review FAIL, then fixed. Known gap: shared Slider thumb has no accessible name (gh #929, not used here)                                                                              |
+| 1.12.0  | 2026-10-21 | Engineering (PG-207)          | Added `/email/oauth/callback` (the mailbox OAuth return page, `noindex`) — scope now 184 routes; `/email/email-settings` and `/email/signatures` stubs replaced at the same URLs. Sectioned cards with `aria-labelledby`, secret fields with show/hide, the Save button stays enabled and focuses the first invalid field, `role="alert"` send refusals that take focus, a signature preview that is `inert`, and a callback page heading that states the outcome; axe in component tests; a11y-expert WCAG 2.1 AA review: 3 high and 6 medium findings fixed (`abdc38383`), no new conformance exceptions                                          |

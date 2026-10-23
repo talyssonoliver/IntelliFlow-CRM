@@ -1,0 +1,46 @@
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207
+> turbo run typecheck && pnpm run lint:sonar:guard
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running typecheck in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/domain:build: cache hit, suppressing logs 472cadfcf8e11864
+@intelliflow/webhooks:build: cache hit, suppressing logs dab634e9ae76a3a6
+@intelliflow/partner-sdk:build: cache hit, suppressing logs 51d4b72bec5b98a9
+@intelliflow/observability:build: cache hit, suppressing logs e720f3ced7dad1ff
+@intelliflow/db:build: cache hit, suppressing logs c81e4ceda4652a67
+@intelliflow/validators:build: cache hit, suppressing logs ebb20150a27a5569
+@intelliflow/platform:build: cache hit, suppressing logs bcfdfac23290808f
+@intelliflow/application:build: cache hit, suppressing logs 89770333ddd7d02a
+@intelliflow/worker-shared:build: cache hit, suppressing logs 26ca01765cd6a233
+@intelliflow/adapters:build: cache hit, suppressing logs e9c30de0091dfd37
+@intelliflow/ai-worker:build: cache hit, suppressing logs 1babd61147910141
+@intelliflow/events-worker:build: cache hit, suppressing logs 79e4ba02f3d64733
+@intelliflow/ingestion-worker:build: cache hit, suppressing logs fd8cec91f938b631
+@intelliflow/api:build: cache hit, suppressing logs 1c4b96d63a063733
+@intelliflow/api-client:build: cache hit, suppressing logs d72becf9ab89e6d9
+
+ Tasks:    38 successful, 38 total
+Cached:    15 cached, 38 total
+  Time:    1m52.646s 
+
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 lint:sonar:guard C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207
+> tsx tools/scripts/lint-sonar-guard.ts
+
+sonar-guard: checking 103 changed TS/TSX files.
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+sonar-guard: running web accessibility guard on 14 file(s).
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
