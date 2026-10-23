@@ -9,7 +9,7 @@
  * the request FOR UPDATE, and leaves communications as a counted manual checklist.
  * PublicFeedback is Aurora's own product feedback (no tenant) and is out of scope.
  */
-import type { PrismaClient } from '@intelliflow/db';
+import { Prisma, type PrismaClient } from '@intelliflow/db';
 import { DSAR_LIMITS, ERASED_EMAIL_DOMAIN } from '@intelliflow/domain';
 import type {
   ErasureOutcome,
@@ -34,20 +34,38 @@ interface SubjectIds {
 // Every address match uses dsar_normalise_email, the SQL twin of normalizeSubjectEmail (any
 // outer whitespace, tabs and newlines included, then lower case), so a stored address with
 // stray whitespace is never left out of an export or an erasure (codex).
-async function subjectIds(db: Db, tenantId: string, email: string): Promise<SubjectIds> {
+/**
+ * The erasure locks the rows it selects (`lock`), so a concurrent correction of an address
+ * cannot move a row away from (or onto) this person between the selection and the anonymising
+ * updates (codex). Previews and exports read without locks.
+ */
+const rowLock = (lock: boolean) => (lock ? Prisma.sql`FOR UPDATE` : Prisma.empty);
+
+async function subjectIds(
+  db: Db,
+  tenantId: string,
+  email: string,
+  lock = false
+): Promise<SubjectIds> {
   const leads = await db.$queryRaw<Array<{ id: string }>>`
     SELECT id FROM leads
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email(email) = ${email}`;
+    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email(email) = ${email} ${rowLock(lock)}`;
   const contacts = await db.$queryRaw<Array<{ id: string }>>`
     SELECT id FROM contacts
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email(email) = ${email}`;
+    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email(email) = ${email} ${rowLock(lock)}`;
   return { leadIds: leads.map((r) => r.id), contactIds: contacts.map((r) => r.id) };
 }
 
-async function bookedAppointmentIds(db: Db, tenantId: string, email: string): Promise<string[]> {
+async function bookedAppointmentIds(
+  db: Db,
+  tenantId: string,
+  email: string,
+  lock = false
+): Promise<string[]> {
   const rows = await db.$queryRaw<Array<{ id: string }>>`
     SELECT id FROM appointments
-    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("bookerEmail") = ${email}`;
+    WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("bookerEmail") = ${email}
+    ${rowLock(lock)}`;
   return rows.map((r) => r.id);
 }
 
@@ -63,9 +81,20 @@ interface AddressIds {
 
 async function addressIds(db: Db, tenantId: string, email: string): Promise<AddressIds> {
   const ids = (rows: Array<{ id: string }>) => rows.map((r) => r.id);
+  // To, CC and BCC are stored as comma-separated lists (PG-207 mailbox sender, inbound mail):
+  // each address is compared on its own, so a person among several recipients or only on
+  // CC/BCC is found, and an address that merely contains theirs is not (codex).
   const emailRecords = await db.$queryRaw<Array<{ id: string }>>`
     SELECT id FROM email_records WHERE "tenantId" = ${tenantId}
-      AND (dsar_normalise_email("fromEmail") = ${email} OR dsar_normalise_email("toEmail") = ${email})`;
+      AND (
+        dsar_normalise_email("fromEmail") = ${email}
+        OR EXISTS (
+          SELECT 1
+          FROM unnest(string_to_array(concat_ws(',', "toEmail", "ccEmails", "bccEmails"), ','))
+            AS recipient(address)
+          WHERE dsar_normalise_email(recipient.address) = ${email}
+        )
+      )`;
   const tickets = await db.$queryRaw<Array<{ id: string }>>`
     SELECT id FROM tickets
     WHERE "tenantId" = ${tenantId} AND dsar_normalise_email("contactEmail") = ${email}`;
@@ -146,7 +175,17 @@ async function checklist(
         OR: [{ contactId: { in: contactIds } }, { id: { in: byAddress.feedback } }],
       },
     }),
-    db.notification.count({ where: { tenantId, id: { in: byAddress.notifications } } }),
+    // Sent to the person by address, or about them: AI insight and churn alerts to staff
+    // carry the lead or contact id as their source (codex).
+    db.notification.count({
+      where: {
+        tenantId,
+        OR: [
+          { id: { in: byAddress.notifications } },
+          { sourceId: { in: [...leadIds, ...contactIds] } },
+        ],
+      },
+    }),
     db.autoResponseDraft.count({
       where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
     }),
@@ -504,9 +543,9 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
           WHERE id = ${input.requestId} AND "tenantId" = ${tenantId} FOR UPDATE`;
         if (locked[0]?.status !== 'VERIFIED') return { outcome: 'NOT_PENDING' as const };
 
-        const ids = await subjectIds(tx, tenantId, subjectEmail);
+        const ids = await subjectIds(tx, tenantId, subjectEmail, true);
         const { leadIds, contactIds } = ids;
-        const appointmentIds = await bookedAppointmentIds(tx, tenantId, subjectEmail);
+        const appointmentIds = await bookedAppointmentIds(tx, tenantId, subjectEmail, true);
         const manual = await checklist(tx, tenantId, subjectEmail, ids);
 
         // Leads: a per-row placeholder keeps @@unique([email, tenantId]) satisfied.

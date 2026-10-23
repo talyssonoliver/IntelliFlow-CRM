@@ -979,6 +979,62 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       expect(text).not.toContain('Prefers mornings');
     });
 
+    it('finds mail sent to the person among several recipients or only on CC/BCC (codex)', async () => {
+      const grace = `${RUN}-grace@example.invalid`;
+      const other = `${RUN}-other@example.invalid`;
+      const mail = (tenantId: string, fields: Record<string, string | null>) =>
+        prisma.emailRecord.create({
+          data: {
+            tenantId,
+            subject: 'Hello',
+            body: 'Body',
+            fromEmail: other,
+            toEmail: other,
+            ...fields,
+          },
+        });
+      const found = [
+        await mail(TENANT_A, { toEmail: `${other}, ${grace.toUpperCase()}` }),
+        await mail(TENANT_A, { ccEmails: ` ${grace}` }),
+        await mail(TENANT_A, { bccEmails: `${other}, ${grace}` }),
+      ].map((r) => r.id);
+      const decoys = [
+        await mail(TENANT_A, { toEmail: `x${grace}`, ccEmails: `${grace}.uk` }),
+        await mail(TENANT_B, { toEmail: grace }),
+      ].map((r) => r.id);
+      try {
+        // Exactly the three: the substring decoy and the other firm's copy are left out. The
+        // export lists dates only for mail and withholds the bodies.
+        const exported = await subjects.buildExport(TENANT_A, grace);
+        expect(exported.data.emailRecords).toHaveLength(3);
+        expect(exported.withheld.MESSAGE_BODIES).toBe(3);
+        const preview = await subjects.previewErasure(TENANT_A, grace);
+        expect(preview.checklist.emailRecords).toBe(3);
+      } finally {
+        await prisma.emailRecord.deleteMany({ where: { id: { in: [...found, ...decoys] } } });
+      }
+    });
+
+    it('lists staff notifications about the person on the checklist (codex)', async () => {
+      const before = await subjects.previewErasure(TENANT_A, SUBJECT);
+      const alert = await prisma.notification.create({
+        data: {
+          tenantId: TENANT_A,
+          recipientId: ADMIN_A,
+          subject: 'High churn risk',
+          body: 'Ada has gone quiet',
+          sourceType: 'ai_recommendation',
+          sourceId: contactA,
+        },
+      });
+      try {
+        const after = await subjects.previewErasure(TENANT_A, SUBJECT);
+        expect(after.checklist.notifications).toBe(before.checklist.notifications + 1);
+      } finally {
+        await prisma.notification.delete({ where: { id: alert.id } });
+      }
+    });
+
     it('previews counts without changing anything', async () => {
       const preview = await subjects.previewErasure(TENANT_A, SUBJECT);
       expect(preview.counts).toEqual({ leads: 1, contacts: 1, bookings: 1 });
@@ -1150,6 +1206,67 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
           clockBreached: false,
         })
       ).resolves.toEqual({ outcome: 'NOT_PENDING' });
+    });
+
+    it('never erases a record whose address is corrected away while the erasure runs (codex)', async () => {
+      const carol = `${RUN}-carol@example.invalid`;
+      const dave = `${RUN}-dave@example.invalid`;
+      const lead = await prisma.lead.create({
+        data: { tenantId: TENANT_A, ownerId: ADMIN_A, email: carol, firstName: 'Dave' },
+      });
+      const request = await dsars.createStaff({
+        tenantId: TENANT_A,
+        type: 'ERASURE',
+        subjectEmail: carol,
+        capEmailHash: hex('7'),
+        details: null,
+        objectionScope: null,
+        identityMethod: 'IN_PERSON_ID',
+        identityNote: 'Passport checked at the front desk',
+        receivedAt: new Date(),
+        receivedOnReason: null,
+        verifiedAt: new Date(),
+        slaDeadline: new Date(Date.now() + 30 * 24 * HOUR),
+        createdById: ADMIN_A,
+      });
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      let corrected!: () => void;
+      const correctedYet = new Promise<void>((resolve) => (corrected = resolve));
+      try {
+        // A staff correction: the record was Dave's all along. Held open until the erasure waits.
+        const correction = prisma.$transaction(
+          async (tx: any) => {
+            await tx.lead.update({ where: { id: lead.id }, data: { email: dave } });
+            corrected();
+            await gate;
+          },
+          { timeout: 20_000 }
+        );
+        await correctedYet;
+        const erasing = subjects.erase({
+          tenantId: TENANT_A,
+          requestId: request.id,
+          subjectEmail: carol,
+          resolvedById: ADMIN_A,
+          note: 'No hold applies',
+          now: new Date(),
+          clockBreached: false,
+        });
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        release();
+        await correction;
+        const result = await erasing;
+
+        expect(result).toMatchObject({ outcome: 'ERASED', result: { counts: { leads: 0 } } });
+        await expect(prisma.lead.findUnique({ where: { id: lead.id } })).resolves.toMatchObject({
+          email: dave,
+          firstName: 'Dave',
+        });
+      } finally {
+        release();
+        await prisma.lead.delete({ where: { id: lead.id } });
+      }
     });
 
     it('refuses any AI-derived write for the erased person afterwards (owner ruling: DB guard)', async () => {

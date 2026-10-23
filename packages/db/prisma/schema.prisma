@@ -161,6 +161,11 @@ model Tenant {
   contactTags            ContactTag[]             @ignore
   contactAutomationSettings ContactAutomationSetting[] @ignore
   contactTypes           ContactType[]            @ignore // PG-205
+  emailMailboxes         EmailMailbox[]           @ignore // PG-207
+  emailOAuthStates       EmailOAuthState[]        @ignore // PG-207
+  emailSettings          TenantEmailSettings?     @ignore // PG-207
+  emailSignatures        EmailSignature[]         @ignore // PG-207
+  emailSuppressions      EmailSuppression[]       @ignore // PG-207
   dealWinLossReasons     DealWinLossReason[]      @ignore
   dealScoringRules       DealScoringRule[]        @ignore
   dealDuplicateRules     DealDuplicateRule[]      @ignore
@@ -551,6 +556,8 @@ model User {
   loginGrants         PartnerLoginGrant[]
   accountTerritoryMemberships AccountTerritoryMember[] // PG-197
   approvalPolicyEscalations   ApprovalPolicy[] @relation("ApprovalPolicyEscalationTarget") // PG-198
+  emailMailboxes              EmailMailbox[]   // PG-207
+  emailSignatures             EmailSignature[] // PG-207
 
   @@index([email])
   @@index([role])
@@ -4187,6 +4194,12 @@ model EmailRecord {
   dealId       String?
   userId       String?  // Sender
   metadata     Json?    // Additional tracking data
+  // PG-207: the mailbox it was sent from and the ids used to match bounce reports
+  mailboxId         String?
+  mailbox           EmailMailbox? @relation(fields: [mailboxId], references: [id], onDelete: SetNull)
+  messageIdHeader   String?  @db.VarChar(255)
+  provider          String?  @db.VarChar(12)
+  providerMessageId String?  @db.VarChar(255)
   createdAt    DateTime @default(now())
 
   // IFC-069: Tenant isolation for unified activity feed
@@ -4202,6 +4215,8 @@ model EmailRecord {
   // IFC-069: Composite index for unified activity feed
   @@index([tenantId, createdAt(sort: Desc)])
   @@index([tenantId, isRead])
+  @@index([tenantId, messageIdHeader])
+  @@index([mailboxId])
   @@map("email_records")
 }
 
@@ -4233,6 +4248,163 @@ model EmailAttachment {
   @@index([emailId])
   @@index([tenantId])
   @@map("email_attachments")
+}
+
+// ============================================
+// PG-207 (ADR-085): user mailboxes, email settings, signatures, bounces
+// ============================================
+
+/// A mailbox user mail is sent from: the user's own (scope USER, one per user)
+/// or the company mailbox (scope TENANT, one per tenant). kind SMTP keeps
+/// SMTP (+ optional IMAP for bounce reading) settings; kind GMAIL / MICROSOFT
+/// keeps an OAuth refresh token (access tokens are never persisted).
+/// Secrets are encrypted via ENCRYPTED_FIELDS (packages/db/src/field-encryption.ts).
+/// One-per-user / one-per-tenant and the per-kind required columns are SQL
+/// partial unique indexes and CHECKs (migration 20261020120000_email_mailboxes).
+model EmailMailbox {
+  id              String    @id @default(cuid())
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  scope           String    @db.VarChar(10) // USER | TENANT (SQL CHECK)
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind            String    @db.VarChar(12) // SMTP | GMAIL | MICROSOFT (SQL CHECK)
+  status          String    @default("ACTIVE") @db.VarChar(14) // ACTIVE | ERROR | DISCONNECTED
+  lastErrorCode   String?   @db.VarChar(32)
+  fromAddress     String    @db.VarChar(320)
+  fromName        String?   @db.VarChar(100)
+  smtpHost        String?   @db.VarChar(253)
+  smtpPort        Int?
+  smtpSecurity    String?   @db.VarChar(10) // SSL | STARTTLS
+  smtpUsername    String?   @db.VarChar(320)
+  /// @encrypted
+  smtpPassword    String?   @db.Text
+  imapHost        String?   @db.VarChar(253)
+  imapPort        Int?
+  imapUsername    String?   @db.VarChar(320)
+  /// @encrypted
+  imapPassword    String?   @db.Text
+  accountAddress  String?   @db.VarChar(320)
+  /// @encrypted
+  refreshToken    String?   @db.Text
+  grantedScopes   String[]  @default([])
+  tokenVersion    Int       @default(0)
+  imapUidValidity BigInt?
+  imapLastUid     BigInt?
+  scanCursorAt    DateTime?
+  nextScanAt      DateTime  @default(now())
+  lockedUntil     DateTime?
+  failureCount    Int       @default(0)
+  sendWindowStart DateTime?
+  sendWindowCount Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  emailRecords   EmailRecord[]
+  bounceReceipts EmailBounceReceipt[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, scope])
+  @@index([status, nextScanAt])
+  @@map("email_mailboxes")
+}
+
+/// Single-use OAuth connect state (PKCE). Only the sha256 of the state is
+/// stored; the verifier is encrypted. Expires after 10 minutes.
+model EmailOAuthState {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String
+  scope        String   @db.VarChar(10)
+  provider     String   @db.VarChar(12)
+  stateHash    String   @unique @db.VarChar(64)
+  /// @encrypted
+  codeVerifier String   @db.Text
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("email_oauth_states")
+}
+
+/// Tenant email settings (singleton per tenant; a missing row means defaults).
+model TenantEmailSettings {
+  id                         String   @id @default(cuid())
+  tenantId                   String   @unique
+  tenant                     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  allowTenantMailboxFallback Boolean  @default(false)
+  replyToAddress             String?  @db.VarChar(320)
+  trackOpens                 Boolean  @default(false)
+  trackClicks                Boolean  @default(false)
+  hardBounceAction           String   @default("SUPPRESS") @db.VarChar(10) // SUPPRESS | NONE
+  softBounceThreshold        Int      @default(3)
+  notifySenderOnBounce       Boolean  @default(false)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@map("tenant_email_settings")
+}
+
+/// A signature owned by a user (scope USER) or the organisation (scope ORG).
+/// Names are unique per owner scope (lower(name), SQL); one default per user
+/// and one per organisation (SQL partial unique indexes). HTML is sanitised
+/// server-side before it is stored.
+model EmailSignature {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  scope     String   @db.VarChar(10) // USER | ORG
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String   @db.VarChar(100)
+  html      String   @db.Text
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, scope, userId])
+  @@map("email_signatures")
+}
+
+/// An address user mail is no longer sent to. Stored lower-cased (SQL CHECK).
+model EmailSuppression {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email         String   @db.VarChar(320)
+  reason        String   @db.VarChar(20) // HARD_BOUNCE | SOFT_BOUNCE_LIMIT | MANUAL
+  source        String   @db.VarChar(10) // DSN | MANUAL
+  emailRecordId String?
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  @@unique([tenantId, email])
+  @@map("email_suppressions")
+}
+
+/// One per (bounce report, recipient): idempotency for the bounce reader and
+/// the source of the 30-day soft-bounce count. No mail content is stored —
+/// only the status code and a truncated, address-redacted diagnostic.
+model EmailBounceReceipt {
+  id                String       @id @default(cuid())
+  tenantId          String
+  mailboxId         String
+  mailbox           EmailMailbox @relation(fields: [tenantId, mailboxId], references: [tenantId, id], onDelete: Cascade)
+  dsnKey            String       @db.VarChar(255)
+  recipient         String       @db.VarChar(320)
+  emailRecordId     String?
+  kind              String       @db.VarChar(10) // HARD | SOFT | DELAYED | UNMATCHED
+  statusCode        String?      @db.VarChar(16)
+  diagnostic        String?      @db.VarChar(200)
+  matchConfidence   String       @db.VarChar(6) // HIGH | LOW
+  excludedFromCount Boolean      @default(false)
+  receivedAt        DateTime
+  createdAt         DateTime     @default(now())
+
+  @@unique([mailboxId, dsnKey, recipient])
+  @@index([tenantId, recipient, receivedAt])
+  @@map("email_bounce_receipts")
 }
 
 // ============================================

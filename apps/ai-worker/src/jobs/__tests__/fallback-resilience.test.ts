@@ -100,12 +100,11 @@ vi.mock('../../agents/next-best-action.agent', () => ({
   createNBAAgent: () => ({ execute: mockNBAExecute }),
 }));
 
-vi.mock('@intelliflow/db', () => ({
-  prisma: {
-    // PG-203: the locked re-check before the insight write runs on this same mock.
-    $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
-      fn((await import('@intelliflow/db')).prisma)
-    ),
+vi.mock('@intelliflow/db', () => {
+  const prisma: Record<string, unknown> = {
+    // PG-203: the locked re-check before the insight write runs on this same mock object.
+    // Never re-import the module here: a nested import can resolve to the real client.
+    $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
     $queryRaw: vi.fn(async (_sql: TemplateStringsArray, leadId: string) => {
       const email = storedLeads.get(leadId);
       return email ? [{ email }] : [];
@@ -123,8 +122,9 @@ vi.mock('@intelliflow/db', () => ({
       }),
     },
     processingRestriction: { findFirst: vi.fn().mockResolvedValue(null) },
-  },
-}));
+  };
+  return { prisma };
+});
 
 vi.mock('../../utils/audit-log', () => ({
   logAIAgentAction: mockLogAIAgentAction,

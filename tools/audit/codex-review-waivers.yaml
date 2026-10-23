@@ -1229,3 +1229,57 @@ waivers:
       appointments (L1). Tracked as one deliberate fix in gh #967.
     author: PG-203 lane
     date: '2026-10-21'
+  - fingerprint: 29d856dd7cbf20c7c5e85f4622c10de5b08de040ff10d6d337c2b3b982172760
+    reason: >-
+      PG-207 premature-unmatched-receipt (bounce-reader.ts receipt match). Accepted risk, tracked
+      for a fix in gh #984. The window is the milliseconds between the transport accepting a send
+      and dispatchUserMail saving messageIdHeader/sentAt. A DSN must come back from the remote MTA
+      and then be picked up by the next periodic scan, so on a normal send it cannot be scanned in
+      that window. The real fix (Message-ID saved before dispatch, deferred reports for in-flight
+      PENDING records, re-evaluating UNMATCHED receipts) changes the #961 bounce matcher and needs
+      its own review. The waiver expires so the gate re-blocks if #984 slips.
+    author: talyssonoliver (approved in the PG-207 runner modal, 2026-10-22)
+    date: '2026-10-22'
+    expires: '2026-11-21'
+  - fingerprint: 4e69cea586893aea249b551d7c592ce5b1eff4bb511f16fde88e762c2c252829
+    reason: >-
+      PG-207 gmail-excludes-exchange-bounces (oauth-mailbox.ts Gmail bounce query). Accepted
+      missed-feature gap, tracked for a fix in gh #985. Exchange NDRs (#970) delivered into a
+      Gmail-connected mailbox are not fetched, so those bounces are missed. This has no security,
+      privacy or data-integrity effect: the #961 trust rules still decide what a report may do. The
+      fix needs the live D5 header spike (#965) to show which Gmail search matches
+      MicrosoftExchange<hex> senders; an untested query could silently match nothing. The waiver
+      expires so the gate re-blocks if #985 slips.
+    author: talyssonoliver (approved in the PG-207 modal, 2026-10-22)
+    date: '2026-10-22'
+    expires: '2026-11-21'
+  - fingerprint: 0b96db390cd3c70b99d550184155e48462f64d405b2475dab1dfd7460d4ae08e
+    reason: >-
+      Real but fail-safe race, tracked in gh #1007. A rejection racing a concurrent address
+      change can leave one extra ACTIVE restriction on the new address. That direction keeps
+      AI processing off for the person (more protection, never less), exposes and loses no
+      data, and an admin can lift the copy by id on /settings/privacy-requests. The fix is a
+      shared lock protocol across liftForRequest and dsar_carry_restriction plus a real-DB
+      race test, which is out of scope for the PR 2 spiral (security/data-loss only).
+    author: PG-203 lane
+    date: '2026-10-23'
+    expires: '2026-11-22'
+  - fingerprint: 06873f7e4645800930d22c803069993f274f8f194a81bab7f4fc70e6e90050fe
+    reason: >-
+      Missed-feature gap, tracked in gh #1009: the admin UI does not keep the post-erasure
+      manual cleanup checklist on completed requests. No data is exposed or lost; the erasure
+      itself is complete and the preview shows the checklist before it runs. Persisting it
+      needs a new request column and UI, out of scope for the PR 2 spiral (security/data-loss).
+    author: PG-203 lane
+    date: '2026-10-23'
+    expires: '2026-11-22'
+  - fingerprint: 2712acaa3686fee514bea9d5c64a76250c69346af659ceac6a925b76e1e0f135
+    reason: >-
+      Pre-existing data-model gap, tracked in gh #1010: AI-created tasks store no lead or contact
+      id, so the erasure cannot match tasks created before it. Since #1002 (owner Q21) no task,
+      insight, notification or activity is created for an erased or restricted person (locked
+      re-check). Matching older tasks needs a provenance column on tasks (schema change), out of
+      scope for the PR 2 spiral.
+    author: PG-203 lane
+    date: '2026-10-23'
+    expires: '2026-11-22'

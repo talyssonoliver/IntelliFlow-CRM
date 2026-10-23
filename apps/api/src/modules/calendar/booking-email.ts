@@ -195,9 +195,10 @@ export function buildHostNotification(d: BookingEmailDetails): EmailMessage {
  */
 function plainAnswerLine(label: string, value: string): string {
   if (label !== 'Notes') return `${label}: ${stripLineBreaks(value)}`;
+  // Every line terminator a mail client may honour starts a new quoted line.
   const quoted = value
-    .split('\n')
-    .map((line) => `> ${line.replace('\r', '')}`)
+    .split(/\r\n|[\n\r\u0085\u2028\u2029]/)
+    .map((line) => `> ${line}`)
     .join('\n');
   return `${label}:\n${quoted}`;
 }

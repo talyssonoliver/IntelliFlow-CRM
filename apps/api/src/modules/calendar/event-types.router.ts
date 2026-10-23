@@ -28,6 +28,7 @@ import {
   type EventTypeListDto,
   type EventTypeOptionDto,
 } from '@intelliflow/validators';
+import { lockTenantBookings } from './booking-lock';
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { assertTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 import { getAuditLogger } from '../../security/audit-logger';
@@ -82,16 +83,6 @@ type HostRow = {
   givenName: string | null;
   familyName: string | null;
 };
-
-/**
- * Config writes that change what is bookable take the public booking's per-tenant lock
- * (public-booking.router.ts), so a booking never commits against a type that was
- * disabled, re-hosted or deleted while it was in flight.
- */
-async function lockBookings(tx: Tx, tenantId: string): Promise<void> {
-  const lockKey = `booking:${tenantId}`;
-  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
-}
 
 function assertEventTypeAdmin(ctx: EventTypeCtx): void {
   if (!isAvailabilityAdminRole(ctx.user?.role)) {
@@ -161,12 +152,21 @@ function fieldsData(input: CreateEventTypeInput) {
 }
 
 /** Write-time rules: catalogue uniqueness, Calendar-settings duration range, host in this tenant. */
+/**
+ * On update, `current` is the row read under the booking lock. While the type was active and
+ * stays so, or stays inactive, the duration range and the host are only re-checked when they
+ * change, so a type created under older Calendar settings (or whose host left) can still be
+ * renamed or switched off. Switching a type back on re-checks both: it becomes bookable again.
+ */
 async function assertWritable(
   tx: Tx,
   tenantId: string,
   input: CreateEventTypeInput,
-  excludeId: string | null
+  excludeId: string | null,
+  current: { durationMinutes: number; hostUserId: string; isActive: boolean } | null = null
 ): Promise<void> {
+  const reactivating = current !== null && !current.isActive && input.isActive;
+  const kept = current !== null && !reactivating;
   const existing = await tx.eventType.findMany({
     where: { tenantId },
     select: { id: true, name: true, slug: true },
@@ -182,19 +182,22 @@ async function assertWritable(
     });
   }
 
-  const settings = await tx.appointmentSettings.findUnique({
-    where: { tenantId },
-    select: { minDurationMinutes: true, maxDurationMinutes: true },
-  });
-  const min = settings?.minDurationMinutes ?? EVENT_TYPE_LIMITS.minDurationMinutes;
-  const max = settings?.maxDurationMinutes ?? EVENT_TYPE_LIMITS.maxDurationMinutes;
-  if (input.durationMinutes < min || input.durationMinutes > max) {
-    throw new TRPCError({
-      code: 'BAD_REQUEST',
-      message: `Duration must be between ${min} and ${max} minutes (Calendar settings).`,
+  if (!kept || current.durationMinutes !== input.durationMinutes) {
+    const settings = await tx.appointmentSettings.findUnique({
+      where: { tenantId },
+      select: { minDurationMinutes: true, maxDurationMinutes: true },
     });
+    const min = settings?.minDurationMinutes ?? EVENT_TYPE_LIMITS.minDurationMinutes;
+    const max = settings?.maxDurationMinutes ?? EVENT_TYPE_LIMITS.maxDurationMinutes;
+    if (input.durationMinutes < min || input.durationMinutes > max) {
+      throw new TRPCError({
+        code: 'BAD_REQUEST',
+        message: `Duration must be between ${min} and ${max} minutes (Calendar settings).`,
+      });
+    }
   }
 
+  if (kept && current.hostUserId === input.hostUserId) return;
   const hostCount = await tx.user.count({
     where: { id: input.hostUserId, ...tenantUserWhere(tenantId) },
   });
@@ -320,7 +323,7 @@ export const eventTypesRouter = createTRPCRouter({
       try {
         created = await ctx.prismaWithTenant.$transaction(async (tx) => {
           // Serialises concurrent creates too, so the per-tenant cap cannot be overshot.
-          await lockBookings(tx, tenantId);
+          await lockTenantBookings(tx, tenantId);
           const count = await tx.eventType.count({ where: { tenantId } });
           if (count >= EVENT_TYPE_LIMITS.maxPerTenant) {
             throw new TRPCError({ code: 'CONFLICT', message: LIMIT_REACHED });
@@ -335,8 +338,11 @@ export const eventTypesRouter = createTRPCRouter({
         rethrowUniqueConflict(err);
       }
       audit(ctx, 'CREATE', created.id, { afterState: fieldsData(input) });
-      const { hosts } = await readHosts(ctx.prismaWithTenant, tenantId, [created.hostUserId]);
-      return toDto(created, hosts.get(created.hostUserId), true);
+      const { hosts, available } = await readHosts(ctx.prismaWithTenant, tenantId, [
+        created.hostUserId,
+      ]);
+      // The real membership, as list() reports it: an unchanged host may have left the firm.
+      return toDto(created, hosts.get(created.hostUserId), available.has(created.hostUserId));
     }),
 
   update: tenantProcedure
@@ -354,8 +360,13 @@ export const eventTypesRouter = createTRPCRouter({
       let updated: EventTypeRow;
       try {
         updated = await ctx.prismaWithTenant.$transaction(async (tx) => {
-          await lockBookings(tx, tenantId);
-          await assertWritable(tx, tenantId, fields, id);
+          await lockTenantBookings(tx, tenantId);
+          const current = await tx.eventType.findFirst({
+            where: { id, tenantId },
+            select: { durationMinutes: true, hostUserId: true, isActive: true },
+          });
+          if (!current) throw new TRPCError({ code: 'NOT_FOUND', message: NOT_FOUND });
+          await assertWritable(tx, tenantId, fields, id, current);
           const result = await tx.eventType.updateMany({
             where: { id, tenantId },
             data: fieldsData(fields),
@@ -370,8 +381,11 @@ export const eventTypesRouter = createTRPCRouter({
         rethrowUniqueConflict(err);
       }
       audit(ctx, 'UPDATE', id, { beforeState: { ...before }, afterState: fieldsData(fields) });
-      const { hosts } = await readHosts(ctx.prismaWithTenant, tenantId, [updated.hostUserId]);
-      return toDto(updated, hosts.get(updated.hostUserId), true);
+      const { hosts, available } = await readHosts(ctx.prismaWithTenant, tenantId, [
+        updated.hostUserId,
+      ]);
+      // The real membership, as list() reports it: an unchanged host may have left the firm.
+      return toDto(updated, hosts.get(updated.hostUserId), available.has(updated.hostUserId));
     }),
 
   delete: tenantProcedure.input(deleteEventTypeSchema).mutation(async ({ ctx, input }) => {
@@ -379,7 +393,7 @@ export const eventTypesRouter = createTRPCRouter({
     assertEventTypeAdmin(ctx);
     const tenantId = ctx.tenant.tenantId;
     const deleted = await ctx.prismaWithTenant.$transaction(async (tx) => {
-      await lockBookings(tx, tenantId);
+      await lockTenantBookings(tx, tenantId);
       const existing = await tx.eventType.findFirst({
         where: { id: input.id, tenantId },
         select: { id: true, name: true },
@@ -402,7 +416,7 @@ export const eventTypesRouter = createTRPCRouter({
       let link: { bookingHandle: string | null; bookingPrivacyUrl: string | null };
       try {
         link = await ctx.prismaWithTenant.$transaction(async (tx) => {
-          await lockBookings(tx, tenantId);
+          await lockTenantBookings(tx, tenantId);
           return tx.tenant.update({
             where: { id: tenantId },
             data: { bookingHandle: input.handle, bookingPrivacyUrl: input.privacyUrl },

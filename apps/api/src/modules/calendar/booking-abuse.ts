@@ -3,12 +3,13 @@
  *
  * The in-process PublicRateLimiter is per API process and the distributed PUBLIC
  * tier passes through without Redis, so the binding caps are counted from the
- * `booking_attempts` table: per booker email (3 / 24 h) and per client IP (10 / h),
- * per tenant, counting every attempt. The per-event-type cap (30 / h) counts only
- * public bookings that landed (owner ruling 2026-10-21): if failed attempts counted
- * there, anyone could burn it with junk and lock real visitors out for the hour. It
- * is checked inside the booking transaction, under the per-tenant booking lock, so
- * concurrent bookings cannot both pass it.
+ * `booking_attempts` table per client IP (10 / h, per tenant), counting every attempt.
+ * The per-event-type cap (30 / h, owner ruling 2026-10-21) and the per-email cap
+ * (3 / 24 h, owner ruling 2026-10-22) count only public bookings that landed: if failed
+ * attempts counted there, anyone could burn them with junk and lock real visitors out
+ * (a stranger typing a client's email three times would block that client for a day).
+ * Both are checked inside the booking transaction, under the per-tenant booking lock,
+ * so concurrent bookings cannot both pass them.
  * Only salted HMAC-SHA256 hashes are stored, never a raw email or IP. Rows older than 48 h are pruned on the next
  * booking of the same tenant, so the table stays bounded without a worker.
  */
@@ -104,22 +105,45 @@ export interface BookingAttemptKeys {
   ipHash: string;
 }
 
+/** Every attempt from this client IP in the last hour (floods stay bounded). */
 export async function assertBookingCaps(
   prisma: AttemptPrisma,
   keys: BookingAttemptKeys,
   now: Date
 ): Promise<void> {
-  const lastDay = new Date(now.getTime() - 24 * MS_PER_HOUR);
-  const lastHour = new Date(now.getTime() - MS_PER_HOUR);
-  const [byEmail, byIp] = await Promise.all([
-    prisma.bookingAttempt.count({
-      where: { tenantId: keys.tenantId, emailHash: keys.emailHash, createdAt: { gt: lastDay } },
-    }),
-    prisma.bookingAttempt.count({
-      where: { tenantId: keys.tenantId, ipHash: keys.ipHash, createdAt: { gt: lastHour } },
-    }),
-  ]);
-  if (byEmail >= BOOKING_CAPS.perEmailPerDay || byIp >= BOOKING_CAPS.perIpPerHour) {
+  const byIp = await prisma.bookingAttempt.count({
+    where: {
+      tenantId: keys.tenantId,
+      ipHash: keys.ipHash,
+      createdAt: { gt: new Date(now.getTime() - MS_PER_HOUR) },
+    },
+  });
+  if (byIp >= BOOKING_CAPS.perIpPerHour) {
+    throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: TOO_MANY });
+  }
+}
+
+/**
+ * Landed public bookings for this email (one inbox, +tags folded) in the last 24 h;
+ * call under the booking lock. Failed attempts never count (owner ruling 2026-10-22).
+ */
+export async function assertEmailBookingCap(
+  prisma: BookedPrisma,
+  keys: { tenantId: string; email: string },
+  now: Date
+): Promise<void> {
+  const booked = await prisma.appointment.findMany({
+    where: {
+      tenantId: keys.tenantId,
+      bookedVia: 'PUBLIC_LINK',
+      bookerEmail: { not: null },
+      createdAt: { gt: new Date(now.getTime() - 24 * MS_PER_HOUR) },
+    },
+    select: { bookerEmail: true },
+  });
+  const inbox = normalizeEmailForCap(keys.email);
+  const mine = booked.filter((b) => normalizeEmailForCap(b.bookerEmail ?? '') === inbox).length;
+  if (mine >= BOOKING_CAPS.perEmailPerDay) {
     throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: TOO_MANY });
   }
 }

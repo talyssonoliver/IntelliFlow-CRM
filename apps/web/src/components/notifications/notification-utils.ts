@@ -359,6 +359,15 @@ const TYPE_CONFIGS: Record<string, TypeConfig> = {
     label: 'Replied',
     group: 'Email',
   },
+  // PG-207: a sent email bounced (sent to the sender when the tenant enables it)
+  email_bounced: {
+    icon: 'error',
+    bgColor: 'bg-red-50 dark:bg-red-900/20',
+    iconColor: 'text-red-600 dark:text-red-400',
+    ringColor: 'ring-red-100 dark:ring-red-800',
+    label: 'Bounced',
+    group: 'Email',
+  },
 };
 
 const DEFAULT_CONFIG: TypeConfig = {

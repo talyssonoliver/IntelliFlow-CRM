@@ -12,6 +12,7 @@ import {
   bookingClientIp,
   ipv6Prefix64,
   assertBookingCaps,
+  assertEmailBookingCap,
   assertEventTypeBookingCap,
   getBookingSalt,
   hashBookingValue,
@@ -77,22 +78,10 @@ describe('assertBookingCaps', () => {
     prismaMock.appointment.count.mockReset();
   });
 
-  function counts(email: number, ip: number) {
-    prismaMock.bookingAttempt.count
-      .mockResolvedValueOnce(email as never)
-      .mockResolvedValueOnce(ip as never);
-  }
-
-  it('passes under every cap and counts each window for this tenant', async () => {
-    counts(2, 9);
+  it('counts every attempt from this IP in the last hour, for this tenant only', async () => {
+    prismaMock.bookingAttempt.count.mockResolvedValueOnce(9 as never);
     await expect(assertBookingCaps(prismaMock as never, HASHES, NOW)).resolves.toBeUndefined();
-    const calls = prismaMock.bookingAttempt.count.mock.calls.map(([arg]) => arg!.where);
-    expect(calls).toEqual([
-      {
-        tenantId: TENANT,
-        emailHash: HASHES.emailHash,
-        createdAt: { gt: new Date('2026-11-01T10:00:00Z') },
-      },
+    expect(prismaMock.bookingAttempt.count.mock.calls.map(([arg]) => arg!.where)).toEqual([
       {
         tenantId: TENANT,
         ipHash: HASHES.ipHash,
@@ -102,15 +91,48 @@ describe('assertBookingCaps', () => {
     expect(prismaMock.appointment.count).not.toHaveBeenCalled();
   });
 
-  it.each([
-    ['email (3 per 24 h)', 3, 0],
-    ['ip (10 per hour)', 0, 10],
-  ])('throws the same generic TOO_MANY_REQUESTS at the %s cap', async (_label, e, i) => {
-    counts(e, i);
+  it('throws the generic TOO_MANY_REQUESTS at 10 attempts per hour', async () => {
+    prismaMock.bookingAttempt.count.mockResolvedValueOnce(10 as never);
     await expect(assertBookingCaps(prismaMock as never, HASHES, NOW)).rejects.toMatchObject({
       code: 'TOO_MANY_REQUESTS',
       message: 'Too many booking attempts. Please try again later.',
     });
+  });
+});
+
+describe('assertEmailBookingCap (owner ruling 2026-10-22)', () => {
+  beforeEach(() => prismaMock.appointment.findMany.mockReset());
+  const keys = { tenantId: TENANT, email: 'Ada+work@Example.invalid' };
+
+  it('counts only landed public bookings for the same inbox in the last 24 h', async () => {
+    prismaMock.appointment.findMany.mockResolvedValueOnce([
+      { bookerEmail: 'ada@example.invalid' },
+      { bookerEmail: 'ADA+promo@example.invalid' },
+      { bookerEmail: 'grace@example.invalid' },
+      { bookerEmail: null },
+    ] as never);
+    await expect(assertEmailBookingCap(prismaMock as never, keys, NOW)).resolves.toBeUndefined();
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledWith({
+      where: {
+        tenantId: TENANT,
+        bookedVia: 'PUBLIC_LINK',
+        bookerEmail: { not: null },
+        createdAt: { gt: new Date('2026-11-01T10:00:00Z') },
+      },
+      select: { bookerEmail: true },
+    });
+  });
+
+  it('refuses a fourth landed booking for that inbox; failed attempts never count', async () => {
+    prismaMock.appointment.findMany.mockResolvedValueOnce([
+      { bookerEmail: 'ada@example.invalid' },
+      { bookerEmail: 'ada+1@example.invalid' },
+      { bookerEmail: 'Ada@Example.invalid' },
+    ] as never);
+    await expect(assertEmailBookingCap(prismaMock as never, keys, NOW)).rejects.toMatchObject({
+      code: 'TOO_MANY_REQUESTS',
+    });
+    expect(prismaMock.bookingAttempt.count).not.toHaveBeenCalled();
   });
 });
 

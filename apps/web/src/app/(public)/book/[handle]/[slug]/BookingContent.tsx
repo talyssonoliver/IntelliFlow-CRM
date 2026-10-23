@@ -9,10 +9,13 @@
  * everything; this component only explains. Imports stay light (types only from
  * the validators) so the public page does not pull server code into its bundle.
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Button, Checkbox, Input, Label, Textarea } from '@intelliflow/ui';
-import type { PublicBookResultDto } from '@intelliflow/validators/event-types';
+import {
+  BOOKING_HORIZON_DAYS,
+  type PublicBookResultDto,
+} from '@intelliflow/validators/event-types';
 import { trpc } from '@/lib/trpc';
 
 const LOCATION_LABELS: Record<string, string> = {
@@ -24,6 +27,8 @@ const LOCATION_LABELS: Record<string, string> = {
 
 const FIELD_LABELS: Record<string, string> = { phone: 'Phone', company: 'Company', notes: 'Notes' };
 const DAYS_TO_SHOW = 14;
+/** The last 14-day window still starts inside the booking horizon (the server's bound). */
+const LAST_WINDOW = Math.floor(BOOKING_HORIZON_DAYS / DAYS_TO_SHOW);
 const GENERIC_ERROR = 'Something went wrong. Please try again.';
 /** Server messages that are safe and useful to show as-is. */
 const SHOWN_SERVER_CODES = new Set(['CONFLICT', 'TOO_MANY_REQUESTS', 'BAD_REQUEST']);
@@ -35,6 +40,19 @@ export function looksLikeEmail(value: string): boolean {
   const domain = value.slice(at + 1);
   const dot = domain.lastIndexOf('.');
   return dot > 0 && dot < domain.length - 1;
+}
+
+/** 'YYYY-MM-DD' plus whole days, on the calendar (no time zone involved). */
+export function addCalendarDays(date: string, days: number): string {
+  const [y, m, d] = date.split('-').map(Number);
+  return new Date(Date.UTC(y!, m! - 1, d! + days)).toISOString().slice(0, 10);
+}
+
+/** The empty-window notice: try a later window while one exists, else contact the firm. */
+export function noTimesMessage(windowIndex: number): string {
+  const when = windowIndex === 0 ? 'in the next 14 days' : 'in these dates';
+  const next = windowIndex < LAST_WINDOW ? 'Try later dates.' : 'Please contact the firm.';
+  return `No open times ${when}. ${next}`;
 }
 
 /** Today's date ('YYYY-MM-DD') in the given IANA zone. */
@@ -302,11 +320,26 @@ export default function BookingContent({
 }: Readonly<{ handle: string; slug: string }>) {
   const eventQuery = trpc.publicBooking.getEventType.useQuery({ handle, slug }, { retry: false });
   const event = eventQuery.data;
-  const fromDate = useMemo(() => todayIn(event?.timezone ?? 'UTC'), [event?.timezone]);
+  const firmZone = event?.timezone ?? 'UTC';
+  // Recomputed on every render, so a page left open past the firm's midnight asks for the
+  // new day instead of one the server now rejects as outside the window.
+  // Which 14-day window of the booking horizon is shown (0 = starting today).
+  const [windowIndex, setWindowIndex] = useState(0);
+  const fromDate = addCalendarDays(todayIn(firmZone), windowIndex * DAYS_TO_SHOW);
   const slotsQuery = trpc.publicBooking.listSlots.useQuery(
     { handle, slug, fromDate, days: DAYS_TO_SHOW },
     { enabled: Boolean(event), retry: false }
   );
+  const [, setDayCheck] = useState(0);
+  /** Reload the times; after midnight a re-render switches to the new day's query instead. */
+  const reloadSlots = () => {
+    if (addCalendarDays(todayIn(firmZone), windowIndex * DAYS_TO_SHOW) !== fromDate) {
+      setDayCheck((n) => n + 1);
+      return;
+    }
+    // A failed refetch shows through slotsQuery.isError (with its own retry button).
+    slotsQuery.refetch().catch(() => undefined);
+  };
   const bookMutation = trpc.publicBooking.book.useMutation();
 
   const [visitorZone, setVisitorZone] = useState<string | null>(null);
@@ -341,6 +374,12 @@ export default function BookingContent({
   }
 
   const days = slotsQuery.data?.days ?? [];
+  /** Move to another 14-day window; the chosen day and time belong to the old one. */
+  const showWindow = (index: number) => {
+    setWindowIndex(Math.min(Math.max(index, 0), LAST_WINDOW));
+    setDate('');
+    update('start', '');
+  };
   const firstOpenDay = days.find((d) => d.slots.length > 0)?.date ?? '';
   const selectedDate = date || firstOpenDay;
   const daySlots = days.find((d) => d.date === selectedDate)?.slots ?? [];
@@ -371,8 +410,7 @@ export default function BookingContent({
     } catch (error) {
       if (errorCode(error) === 'CONFLICT') {
         update('start', '');
-        // A failed refetch shows through slotsQuery.isError (with its own retry button).
-        slotsQuery.refetch().catch(() => undefined);
+        reloadSlots();
       }
       setErrors({ form: bookingErrorMessage(error) });
     }
@@ -424,15 +462,33 @@ export default function BookingContent({
                 ? 'Too many requests just now. Please wait a moment and try again.'
                 : 'The available times could not be loaded.'}
             </p>
-            <Button type="button" variant="outline" onClick={() => void slotsQuery.refetch()}>
+            <Button type="button" variant="outline" onClick={reloadSlots}>
               Try again
             </Button>
           </div>
         )}
         {!slotsQuery.isLoading && days.length > 0 && !firstOpenDay && (
-          <p className="text-muted-foreground">
-            No open times in the next 14 days. Please contact the firm.
-          </p>
+          <p className="text-muted-foreground">{noTimesMessage(windowIndex)}</p>
+        )}
+        {!slotsQuery.isLoading && !slotsQuery.isError && (
+          <nav aria-label="Booking dates" className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              disabled={windowIndex === 0}
+              onClick={() => showWindow(windowIndex - 1)}
+            >
+              Earlier dates
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={windowIndex >= LAST_WINDOW}
+              onClick={() => showWindow(windowIndex + 1)}
+            >
+              Later dates
+            </Button>
+          </nav>
         )}
         {/* Always mounted, so changes to the count are announced (WCAG 4.1.3). */}
         <p aria-live="polite" className="text-sm text-muted-foreground">

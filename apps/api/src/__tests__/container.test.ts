@@ -184,6 +184,22 @@ vi.mock('@intelliflow/adapters', () => ({
       return { name: 'avScanner' };
     }
   },
+  // PG-207 mailbox transports (mailbox-transport.ts builds them at container init)
+  SmtpMailboxTransport: class {
+    constructor() {
+      return { name: 'smtpTransport' };
+    }
+  },
+  ImapBounceReader: class {
+    constructor() {
+      return { name: 'imapReader' };
+    }
+  },
+  OAuthMailboxClient: class {
+    constructor() {
+      return { name: 'oauthClient' };
+    }
+  },
   MockNotificationServiceAdapter: class {
     constructor() {
       return {
@@ -567,6 +583,25 @@ describe('Container', () => {
     expect(container.adapters.caseDocumentRepository).toBeDefined();
     expect(container.adapters.storageService).toBeDefined();
     expect(container.adapters.avScanner).toBeDefined();
+  });
+
+  it('should wire the PG-207 mailbox transports (SMTP, IMAP, OAuth) into adapters', () => {
+    const transports = container.adapters.mailboxTransports;
+    expect(transports.smtp).toEqual({ name: 'smtpTransport' });
+    expect(transports.imap).toEqual({ name: 'imapReader' });
+    expect(typeof transports.oauth).toBe('function');
+    expect(transports.oauthConfigured).toEqual({
+      GMAIL: Boolean(
+        process.env.EMAIL_OAUTH_GOOGLE_CLIENT_ID &&
+        process.env.EMAIL_OAUTH_GOOGLE_CLIENT_SECRET &&
+        process.env.EMAIL_OAUTH_REDIRECT_URI
+      ),
+      MICROSOFT: Boolean(
+        process.env.EMAIL_OAUTH_MICROSOFT_CLIENT_ID &&
+        process.env.EMAIL_OAUTH_MICROSOFT_CLIENT_SECRET &&
+        process.env.EMAIL_OAUTH_REDIRECT_URI
+      ),
+    });
   });
 
   describe('container.get()', () => {

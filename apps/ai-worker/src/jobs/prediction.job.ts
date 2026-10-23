@@ -212,10 +212,22 @@ export async function processPredictionJob(
         subjectEmail
       );
 
-      // Notify on high churn risk (non-blocking); never for a person erased or restricted
-      // while the model ran.
-      if (predictionType === 'CHURN_RISK' && persisted !== 'blocked') {
-        await notifyHighChurnRisk(tenantId, entityType, entityId, prediction, context);
+      // Erased or restricted while the model ran: nothing about the person survives, not even
+      // in the job result BullMQ keeps in Redis after completion (codex).
+      if (persisted === 'blocked') {
+        return { skipped: true, reason: SUBJECT_NOT_PROCESSABLE } as unknown as PredictionJobResult;
+      }
+
+      // Notify on high churn risk (non-blocking)
+      if (predictionType === 'CHURN_RISK') {
+        await notifyHighChurnRisk(
+          tenantId,
+          entityType,
+          entityId,
+          prediction,
+          subjectEmail,
+          context
+        );
       }
 
       // Transform to job result
@@ -444,6 +456,7 @@ async function notifyHighChurnRisk(
   entityType: string,
   entityId: string,
   prediction: PredictionJobResult['prediction'],
+  subjectEmail: string,
   context?: Record<string, unknown>
 ): Promise<void> {
   if (prediction.confidence < 0.7) return;
@@ -461,27 +474,41 @@ async function notifyHighChurnRisk(
 
   try {
     const { prisma } = await import('@intelliflow/db');
-    await prisma.notification.create({
-      data: {
-        tenantId,
-        recipientId,
-        channel: 'IN_APP',
-        subject: `High churn risk: ${entityType} ${entityId}`,
-        body: prediction.explanation || 'High churn risk detected — review and take action.',
-        priority: 'HIGH',
-        status: 'PENDING',
-        category: 'ALERTS',
-        sourceType: 'ai_recommendation',
-        sourceId: entityId,
-        metadata: {
-          notificationType: 'ai_recommendation',
-          predictionType: 'CHURN_RISK',
-          confidence: prediction.confidence,
-          riskLevel,
-          actionUrl: `/${entityType}s/${entityId}`,
+    const kind = subjectKind(entityType);
+    const notify = (db: typeof prisma) =>
+      db.notification.create({
+        data: {
+          tenantId,
+          recipientId,
+          channel: 'IN_APP',
+          subject: `High churn risk: ${entityType} ${entityId}`,
+          body: prediction.explanation || 'High churn risk detected — review and take action.',
+          priority: 'HIGH',
+          status: 'PENDING',
+          category: 'ALERTS',
+          sourceType: 'ai_recommendation',
+          sourceId: entityId,
+          metadata: {
+            notificationType: 'ai_recommendation',
+            predictionType: 'CHURN_RISK',
+            confidence: prediction.confidence,
+            riskLevel,
+            actionUrl: `/${entityType}s/${entityId}`,
+          },
         },
-      },
-    });
+      });
+    if (!kind) {
+      await notify(prisma);
+      return;
+    }
+    // The alert repeats the prediction about a person: it takes the person's locks and
+    // re-checks, so an erasure or restriction that committed after the prediction write
+    // leaves it unwritten (#1002, codex).
+    await writeSubjectIfStillEligible(
+      prisma as never,
+      { kind, id: entityId, tenantId, email: subjectEmail },
+      (tx) => notify(tx as unknown as typeof prisma)
+    );
   } catch {
     // Non-blocking — notification failure should not affect prediction pipeline
   }

@@ -37,7 +37,7 @@
  * booking columns (ADR-083 exception).
  */
 import { TRPCError } from '@trpc/server';
-import { tenantUserWhere } from '@intelliflow/db';
+import { Prisma, tenantUserWhere } from '@intelliflow/db';
 import {
   BOOKING_CONSENT_VERSION,
   BOOKING_HORIZON_DAYS,
@@ -68,6 +68,7 @@ import type { Context } from '../../context';
 import { loadTenantAvailability, type AvailabilityPrisma } from './availability-enforcement';
 import {
   assertBookingCaps,
+  assertEmailBookingCap,
   assertEventTypeBookingCap,
   bookingLookupLimiter,
   bookingSlotsLimiter,
@@ -80,6 +81,7 @@ import {
   recordBookingAttempt,
 } from './booking-abuse';
 import { sendBookingEmails } from './booking-email';
+import { recurringBusyIntervals, type RecurringBusyRow } from './recurring-busy';
 import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { enqueueLeadScoring } from '../lead/lead-scoring-enqueue';
 import { restrictionReader } from '../privacy/restriction-reader';
@@ -91,6 +93,7 @@ const TRY_AGAIN = 'Please try again.';
 const REQUIRED_MISSING = 'Please complete all required fields.';
 const OUT_OF_WINDOW = 'Choose a date within the booking window.';
 const FAILED = 'We could not complete your booking. Please try again.';
+const LOOKUP_FAILED = 'This booking page could not be loaded. Please try again.';
 
 /** Placeholder id for the reads that run even when the lookup found nothing (same call shape). */
 const NONE = '__none__';
@@ -101,6 +104,22 @@ const TITLE_MAX = 200;
 type Db = Context['prisma'];
 type Tx = Parameters<Parameters<Db['$transaction']>[0]>[0];
 type Reader = Db | Tx;
+type SeriesRow = RecurringBusyRow;
+
+/** Every column the busy and cap reads need, a recurring row's rule and zone included. */
+const SERIES_SELECT = {
+  startTime: true,
+  endTime: true,
+  bufferMinutesBefore: true,
+  bufferMinutesAfter: true,
+  recurrence: true,
+  timezone: true,
+} as const;
+
+/** A recurring appointment: one stored row standing for every occurrence of its rule. */
+function isSeries(row: SeriesRow): boolean {
+  return row.recurrence !== null && row.recurrence !== undefined;
+}
 
 interface Bookable {
   eventType: {
@@ -208,39 +227,78 @@ async function computeSlots(
   const windowEnd = new Date(
     localDayBoundsUtc(addDays(fromDate, days - 1), rules.timezone).endUtc.getTime() + MS_PER_DAY
   );
-  const busyRows = await db.appointment.findMany({
+  // One read each (NF-001): the host's busy rows and, under a daily cap, the tenant's
+  // bookings, run side by side. Each takes the plain rows in the window plus every
+  // recurring series that started before its end, since a series is one row whose later
+  // occurrences are busy too (codex HIGH); series are expanded below.
+  const hostRowsRead = db.appointment.findMany({
     where: {
       tenantId: eventType.tenantId,
       status: { in: [...CAP_COUNTED_STATUSES] },
       startTime: { lt: windowEnd },
-      endTime: { gt: windowStart },
       OR: [
         { organizerId: eventType.hostUserId },
         { attendees: { some: { userId: eventType.hostUserId } } },
       ],
+      AND: [
+        {
+          OR: [
+            { recurrence: { equals: Prisma.AnyNull }, endTime: { gt: windowStart } },
+            { recurrence: { not: Prisma.AnyNull } },
+          ],
+        },
+      ],
     },
-    select: { startTime: true, endTime: true, bufferMinutesBefore: true, bufferMinutesAfter: true },
+    select: SERIES_SELECT,
   });
-  const busy: BusyInterval[] = busyRows.map((b) => ({
-    start: b.startTime,
-    end: b.endTime,
-    bufferBeforeMinutes: b.bufferMinutesBefore,
-    bufferAfterMinutes: b.bufferMinutesAfter,
-  }));
+  const tenantRowsRead =
+    rules.maxDailyBookings === null
+      ? Promise.resolve([])
+      : db.appointment.findMany({
+          where: {
+            tenantId: eventType.tenantId,
+            status: { in: [...CAP_COUNTED_STATUSES] },
+            startTime: { lt: windowEnd },
+            OR: [
+              { recurrence: { equals: Prisma.AnyNull }, startTime: { gte: windowStart } },
+              { recurrence: { not: Prisma.AnyNull } },
+            ],
+          },
+          select: SERIES_SELECT,
+        });
+  const [hostRows, tenantRows] = await Promise.all([hostRowsRead, tenantRowsRead]);
 
-  const bookedPerDay: Record<string, number> = {};
-  if (rules.maxDailyBookings !== null) {
-    const booked = await db.appointment.findMany({
-      where: {
-        tenantId: eventType.tenantId,
-        status: { in: [...CAP_COUNTED_STATUSES] },
-        startTime: { gte: windowStart, lt: windowEnd },
-      },
-      select: { startTime: true },
+  const busy: BusyInterval[] = [];
+  const hostSeries: SeriesRow[] = [];
+  for (const row of hostRows) {
+    if (isSeries(row)) {
+      hostSeries.push(row);
+      continue;
+    }
+    busy.push({
+      start: row.startTime,
+      end: row.endTime,
+      bufferBeforeMinutes: row.bufferMinutesBefore,
+      bufferAfterMinutes: row.bufferMinutesAfter,
     });
-    for (const b of booked) {
-      const day = toZonedParts(b.startTime, rules.timezone).date;
-      bookedPerDay[day] = (bookedPerDay[day] ?? 0) + 1;
+  }
+  busy.push(...recurringBusyIntervals(hostSeries, windowStart, windowEnd));
+
+  // Every occurrence of a tenant-wide recurring appointment counts on its own day. The
+  // stored first one always counts, even if its date is skipped: it is still a scheduled
+  // row holding its slot (the overlap constraint reserves it), so it is a booking that day.
+  const bookedPerDay: Record<string, number> = {};
+  const countOn = (start: Date): void => {
+    const day = toZonedParts(start, rules.timezone).date;
+    bookedPerDay[day] = (bookedPerDay[day] ?? 0) + 1;
+  };
+  for (const row of tenantRows) {
+    if (!isSeries(row)) {
+      countOn(row.startTime);
+      continue;
+    }
+    for (const occurrence of recurringBusyIntervals([row], windowStart, windowEnd)) {
+      if (occurrence.start >= windowStart) countOn(occurrence.start);
     }
   }
 
@@ -433,6 +491,27 @@ function rethrowBookingError(err: unknown): never {
   throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: FAILED });
 }
 
+/** A lookup failed for a reason that is not ours to explain: the anonymous caller gets a fixed message. */
+function rethrowLookupError(err: unknown): never {
+  if (err instanceof TRPCError) throw err;
+  console.error('[public-booking] lookup failed', {
+    code: (err as { code?: string } | null)?.code ?? 'unknown',
+  });
+  throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: LOOKUP_FAILED });
+}
+
+/**
+ * Runs a whole public procedure under one error mapper, so no database read (before, inside
+ * or after a transaction) can hand Prisma or driver text to an unauthenticated caller.
+ */
+async function publicly<T>(rethrow: (err: unknown) => never, work: () => Promise<T>): Promise<T> {
+  try {
+    return await work();
+  } catch (err) {
+    return rethrow(err);
+  }
+}
+
 /** Handler for detached post-commit work: error class only (driver/SMTP text can carry PII). */
 function logDetachedFailure(error: unknown): void {
   console.error('[public-booking] detached post-booking work failed', {
@@ -557,156 +636,173 @@ function dataRequestUrl(handle: string): string | undefined {
 }
 
 export const publicBookingRouter = createTRPCRouter({
-  getEventType: publicProcedure
-    .input(publicBookingLookupSchema)
-    .query(async ({ ctx, input }): Promise<PublicEventTypeDto> => {
-      // Throttled per IP before the first read, so handles cannot be enumerated at speed.
-      bookingLookupLimiter.check(ipHashOf(ctx.req as Request | undefined, getBookingSalt()));
-      const { eventType, settings } = await resolveBookable(ctx.prisma, input.handle, input.slug);
-      return {
-        firmName: eventType.tenant.name,
-        eventName: eventType.name,
-        durationMinutes: eventType.durationMinutes,
-        description: eventType.description,
-        locationType: eventType.locationType,
-        requiredFields: eventType.requiredFields as EventTypeRequiredField[],
-        timezone: settings.defaultTimezone,
-        colorToken: eventType.colorToken,
-        privacyUrl: eventType.tenant.bookingPrivacyUrl,
-      };
-    }),
+  getEventType: publicProcedure.input(publicBookingLookupSchema).query(
+    ({ ctx, input }): Promise<PublicEventTypeDto> =>
+      publicly(rethrowLookupError, async () => {
+        // Throttled per IP before the first read, so handles cannot be enumerated at speed.
+        bookingLookupLimiter.check(ipHashOf(ctx.req as Request | undefined, getBookingSalt()));
+        const { eventType, settings } = await resolveBookable(ctx.prisma, input.handle, input.slug);
+        return {
+          firmName: eventType.tenant.name,
+          eventName: eventType.name,
+          durationMinutes: eventType.durationMinutes,
+          description: eventType.description,
+          locationType: eventType.locationType,
+          requiredFields: eventType.requiredFields as EventTypeRequiredField[],
+          timezone: settings.defaultTimezone,
+          colorToken: eventType.colorToken,
+          privacyUrl: eventType.tenant.bookingPrivacyUrl,
+        };
+      })
+  ),
 
-  listSlots: publicProcedure
-    .input(publicSlotsInputSchema)
-    .query(async ({ ctx, input }): Promise<PublicSlotsDto> => {
-      bookingSlotsLimiter.check(ipHashOf(ctx.req as Request | undefined, getBookingSalt()));
-      const bookable = await resolveBookable(ctx.prisma, input.handle, input.slug);
-      const rules = await loadRules(ctx.prisma, bookable.eventType.tenantId);
-      const now = new Date();
-      const today = toZonedParts(now, rules.timezone).date;
-      if (input.fromDate < today || input.fromDate > addDays(today, BOOKING_HORIZON_DAYS)) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: OUT_OF_WINDOW });
-      }
-      const days = await computeSlots(ctx.prisma, bookable, rules, input.fromDate, input.days, now);
-      return {
-        timezone: rules.timezone,
-        days: days.map((d) => ({
-          date: d.date,
-          slots: d.slots.map((s) => ({ start: s.start.toISOString(), end: s.end.toISOString() })),
-        })),
-      };
-    }),
+  listSlots: publicProcedure.input(publicSlotsInputSchema).query(
+    ({ ctx, input }): Promise<PublicSlotsDto> =>
+      publicly(rethrowLookupError, async () => {
+        bookingSlotsLimiter.check(ipHashOf(ctx.req as Request | undefined, getBookingSalt()));
+        const bookable = await resolveBookable(ctx.prisma, input.handle, input.slug);
+        const rules = await loadRules(ctx.prisma, bookable.eventType.tenantId);
+        const now = new Date();
+        const today = toZonedParts(now, rules.timezone).date;
+        if (input.fromDate < today || input.fromDate > addDays(today, BOOKING_HORIZON_DAYS)) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: OUT_OF_WINDOW });
+        }
+        const days = await computeSlots(
+          ctx.prisma,
+          bookable,
+          rules,
+          input.fromDate,
+          input.days,
+          now
+        );
+        return {
+          timezone: rules.timezone,
+          days: days.map((d) => ({
+            date: d.date,
+            slots: d.slots.map((s) => ({ start: s.start.toISOString(), end: s.end.toISOString() })),
+          })),
+        };
+      })
+  ),
 
-  book: publicProcedure
-    .input(publicBookInputSchema)
-    .mutation(async ({ ctx, input }): Promise<PublicBookResultDto> => {
-      const start = new Date(input.start);
-      if (input.__honeypot) {
-        // Bots get a plausible success and no database work.
-        return { startsAt: start.toISOString(), endsAt: start.toISOString(), timezone: 'UTC' };
-      }
-      const salt = getBookingSalt();
-      // Throttled per IP before any read or lock, so a flood cannot queue on the tenant lock.
-      bookingSubmitLimiter.check(ipHashOf(ctx.req as Request | undefined, salt));
-      const bookable = await resolveBookable(ctx.prisma, input.handle, input.slug);
-      const { eventType, settings } = bookable;
-      const tenantId = eventType.tenantId;
+  book: publicProcedure.input(publicBookInputSchema).mutation(
+    ({ ctx, input }): Promise<PublicBookResultDto> =>
+      publicly(rethrowBookingError, async () => {
+        const start = new Date(input.start);
+        const salt = getBookingSalt();
+        // Throttled per IP before any read or lock, so a flood cannot queue on the tenant lock.
+        bookingSubmitLimiter.check(ipHashOf(ctx.req as Request | undefined, salt));
+        const bookable = await resolveBookable(ctx.prisma, input.handle, input.slug);
+        const { eventType, settings } = bookable;
+        if (input.__honeypot) {
+          // Bots get a success shaped exactly like a real one (duration, firm timezone), so the
+          // reply does not tell them they were caught; only the read-only lookup runs.
+          const fakeEnd = new Date(start.getTime() + eventType.durationMinutes * MS_PER_MINUTE);
+          return {
+            startsAt: start.toISOString(),
+            endsAt: fakeEnd.toISOString(),
+            timezone: settings.defaultTimezone,
+          };
+        }
+        const tenantId = eventType.tenantId;
 
-      assertRequiredAnswers(eventType, input.answers);
+        assertRequiredAnswers(eventType, input.answers);
 
-      const now = new Date();
-      const keys = {
-        tenantId,
-        eventTypeId: eventType.id,
-        emailHash: hashBookingValue(normalizeEmailForCap(input.email), salt),
-        ipHash: ipHashOf(ctx.req as Request | undefined, salt),
-      };
-      // Lock-free pre-check: an over-cap caller is refused before it can wait on the lock.
-      await assertBookingCaps(ctx.prisma, keys, now);
-      await pruneBookingAttempts(ctx.prisma, tenantId, now);
-      try {
-        // Count + insert atomically per tenant; committed before the booking so a failed booking still counts.
-        await ctx.prisma.$transaction(async (tx) => {
-          await lockTenant(tx, tenantId, 'booking-attempts');
-          await assertBookingCaps(tx, keys, now);
-          await recordBookingAttempt(tx, keys);
-        });
-      } catch (err) {
-        rethrowBookingError(err);
-      }
-
-      const end = new Date(start.getTime() + eventType.durationMinutes * MS_PER_MINUTE);
-      const booker = { name: input.name, email: input.email, answers: input.answers };
-      let outcome: {
-        appointment: Awaited<ReturnType<Tx['appointment']['create']>>;
-        match: BookerMatch;
-        bookable: Bookable;
-      };
-      try {
-        outcome = await ctx.prisma.$transaction(async (tx) => {
-          await lockTenant(tx, tenantId, 'booking');
-          // Re-resolve under the lock: event-type writes take the same lock, so this is current.
-          const current = await resolveBookable(tx, input.handle, input.slug);
-          if (
-            current.eventType.id !== eventType.id ||
-            current.eventType.durationMinutes !== eventType.durationMinutes
-          ) {
-            throw new TRPCError({ code: 'CONFLICT', message: SLOT_TAKEN });
-          }
-          assertRequiredAnswers(current.eventType, input.answers);
-          await assertEventTypeBookingCap(tx, { tenantId, eventTypeId: eventType.id }, now);
-
-          const rules = await loadRules(tx, tenantId);
-          const date = toZonedParts(start, rules.timezone).date;
-          const [day] = await computeSlots(tx, current, rules, date, 1, now);
-          if (!day?.slots.some((s) => s.start.getTime() === start.getTime())) {
-            throw new TRPCError({ code: 'CONFLICT', message: SLOT_TAKEN });
-          }
-
-          // Classification only: a new booker's lead is created after the reply (owner Q20).
-          const match = await classifyBooker(tx, tenantId, input.email);
-          const fresh = current.eventType;
-          const freshSettings = current.settings;
-          const appointment = await tx.appointment.create({
-            data: {
-              tenantId,
-              title: `${fresh.name} with ${input.name}`.slice(0, TITLE_MAX),
-              description: fresh.description,
-              startTime: start,
-              endTime: end,
-              timezone: rules.timezone,
-              appointmentType: fresh.appointmentType as never,
-              status: 'SCHEDULED',
-              location: fresh.locationDetails,
-              organizerId: fresh.hostUserId,
-              bufferMinutesBefore: freshSettings.defaultBufferBeforeMinutes,
-              bufferMinutesAfter: freshSettings.defaultBufferAfterMinutes,
-              reminderMinutes: freshSettings.defaultReminderMinutes,
-              eventTypeId: fresh.id,
-              leadId: match.kind === 'linked' ? match.leadId : null,
-              bookerName: input.name,
-              bookerEmail: input.email,
-              bookingAnswers: bookingAnswers(input.answers) ?? undefined,
-              bookedVia: 'PUBLIC_LINK',
-              bookingConsentAt: now,
-              bookingConsentVersion: BOOKING_CONSENT_VERSION,
-            },
-            include: { attendees: true, linkedCases: true },
+        const now = new Date();
+        const keys = {
+          tenantId,
+          eventTypeId: eventType.id,
+          emailHash: hashBookingValue(normalizeEmailForCap(input.email), salt),
+          ipHash: ipHashOf(ctx.req as Request | undefined, salt),
+        };
+        // Lock-free pre-check: an over-cap caller is refused before it can wait on the lock.
+        await assertBookingCaps(ctx.prisma, keys, now);
+        await pruneBookingAttempts(ctx.prisma, tenantId, now);
+        try {
+          // Count + insert atomically per tenant; committed before the booking so a failed booking still counts.
+          await ctx.prisma.$transaction(async (tx) => {
+            await lockTenant(tx, tenantId, 'booking-attempts');
+            await assertBookingCaps(tx, keys, now);
+            await recordBookingAttempt(tx, keys);
           });
-          return { appointment, match, bookable: current };
-        });
-      } catch (err) {
-        rethrowBookingError(err);
-      }
+        } catch (err) {
+          rethrowBookingError(err);
+        }
 
-      afterBooking(ctx, outcome.bookable, outcome.appointment, outcome.match, booker).catch(
-        logDetachedFailure
-      );
-      // The timezone the appointment was committed with (config is re-read under the lock).
-      return {
-        startsAt: start.toISOString(),
-        endsAt: end.toISOString(),
-        timezone: outcome.appointment.timezone ?? outcome.bookable.settings.defaultTimezone,
-      };
-    }),
+        const end = new Date(start.getTime() + eventType.durationMinutes * MS_PER_MINUTE);
+        const booker = { name: input.name, email: input.email, answers: input.answers };
+        let outcome: {
+          appointment: Awaited<ReturnType<Tx['appointment']['create']>>;
+          match: BookerMatch;
+          bookable: Bookable;
+        };
+        try {
+          outcome = await ctx.prisma.$transaction(async (tx) => {
+            await lockTenant(tx, tenantId, 'booking');
+            // Re-resolve under the lock: event-type writes take the same lock, so this is current.
+            const current = await resolveBookable(tx, input.handle, input.slug);
+            if (
+              current.eventType.id !== eventType.id ||
+              current.eventType.durationMinutes !== eventType.durationMinutes
+            ) {
+              throw new TRPCError({ code: 'CONFLICT', message: SLOT_TAKEN });
+            }
+            assertRequiredAnswers(current.eventType, input.answers);
+            await assertEventTypeBookingCap(tx, { tenantId, eventTypeId: eventType.id }, now);
+            await assertEmailBookingCap(tx, { tenantId, email: input.email }, now);
+
+            const rules = await loadRules(tx, tenantId);
+            const date = toZonedParts(start, rules.timezone).date;
+            const [day] = await computeSlots(tx, current, rules, date, 1, now);
+            if (!day?.slots.some((s) => s.start.getTime() === start.getTime())) {
+              throw new TRPCError({ code: 'CONFLICT', message: SLOT_TAKEN });
+            }
+
+            // Classification only: a new booker's lead is created after the reply (owner Q20).
+            const match = await classifyBooker(tx, tenantId, input.email);
+            const fresh = current.eventType;
+            const freshSettings = current.settings;
+            const appointment = await tx.appointment.create({
+              data: {
+                tenantId,
+                title: `${fresh.name} with ${input.name}`.slice(0, TITLE_MAX),
+                description: fresh.description,
+                startTime: start,
+                endTime: end,
+                timezone: rules.timezone,
+                appointmentType: fresh.appointmentType as never,
+                status: 'SCHEDULED',
+                location: fresh.locationDetails,
+                organizerId: fresh.hostUserId,
+                bufferMinutesBefore: freshSettings.defaultBufferBeforeMinutes,
+                bufferMinutesAfter: freshSettings.defaultBufferAfterMinutes,
+                reminderMinutes: freshSettings.defaultReminderMinutes,
+                eventTypeId: fresh.id,
+                leadId: match.kind === 'linked' ? match.leadId : null,
+                bookerName: input.name,
+                bookerEmail: input.email,
+                bookingAnswers: bookingAnswers(input.answers) ?? undefined,
+                bookedVia: 'PUBLIC_LINK',
+                bookingConsentAt: now,
+                bookingConsentVersion: BOOKING_CONSENT_VERSION,
+              },
+              include: { attendees: true, linkedCases: true },
+            });
+            return { appointment, match, bookable: current };
+          });
+        } catch (err) {
+          rethrowBookingError(err);
+        }
+
+        afterBooking(ctx, outcome.bookable, outcome.appointment, outcome.match, booker).catch(
+          logDetachedFailure
+        );
+        // The timezone the appointment was committed with (config is re-read under the lock).
+        return {
+          startsAt: start.toISOString(),
+          endsAt: end.toISOString(),
+          timezone: outcome.appointment.timezone ?? outcome.bookable.settings.defaultTimezone,
+        };
+      })
+  ),
 });

@@ -108,6 +108,19 @@ async function ensureMigrationSql(client: any): Promise<string | null> {
     await createIndexConcurrently(DB_URL!, statement);
   }
 
+  // The organizer no-overlap EXCLUDE constraint (RACE-BOOKI-01) is SQL-only; the
+  // slot-taken test needs the real rejection, so add it from its own migration.
+  const exclusion: unknown[] = await client.$queryRawUnsafe(
+    `SELECT 1 FROM pg_constraint WHERE conname = 'appointments_no_overlap_per_organizer'`
+  );
+  if (exclusion.length === 0) {
+    await applySchemaSql(
+      DB_URL!,
+      splitStatements(migrationFile('20260530000000_appointment_no_overlap_exclusion')),
+      { tolerate: ALREADY_THERE }
+    );
+  }
+
   const present: unknown[] = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'event_types_colorToken_check'`
   );
@@ -688,28 +701,32 @@ describeDb('PG-203 event types and public booking (real DB)', () => {
       );
     });
 
-    it('NF-001: listSlots for 14 days answers with p95 under 300 ms', async () => {
+    it('NF-001: listSlots for 14 days answers with p95 under 300 ms', async ({ annotate }) => {
       await eventType(TENANT_A, HOST_A, { slug: 'timed' });
       // Some busy time for the host across the window, so the busy query has rows to read.
       for (let day = 1; day <= 10; day++) {
         await appointment(TENANT_A, HOST_A);
       }
       const fromDate = new Date().toISOString().slice(0, 10);
-      const timings: number[] = [];
-      for (let run = 0; run < 10; run++) {
-        const started = performance.now();
-        const result = await publicBookingRouter
+      const listSlots = () =>
+        publicBookingRouter
           .createCaller(context())
           .listSlots({ handle: HANDLE_A, slug: 'timed', fromDate, days: 14 });
+      // One unmeasured call first (module and connection warm-up), then 20 samples, so the
+      // p95 is the 19th of 20 calls rather than the single slowest of a few.
+      await listSlots();
+      const timings: number[] = [];
+      for (let run = 0; run < 20; run++) {
+        const started = performance.now();
+        const result = await listSlots();
         timings.push(performance.now() - started);
         expect(result.days).toHaveLength(14);
       }
       timings.sort((a, b) => a - b);
       const p95 = timings[Math.ceil(0.95 * timings.length) - 1];
-      console.log(
-        `NF-001: listSlots 14 days, 10 runs: p95 ${p95.toFixed(1)} ms, median ${timings[4].toFixed(1)} ms`
-      );
-      expect(p95).toBeLessThan(300);
+      const summary = `NF-001: listSlots 14 days, 20 runs: p95 ${p95.toFixed(1)} ms, median ${timings[9].toFixed(1)} ms, max ${timings[19].toFixed(1)} ms`;
+      await annotate(summary, 'nf-001');
+      expect(p95, summary).toBeLessThan(300);
     });
 
     it('NF-004: a lock held past lock_timeout fails fast with "Please try again." and writes nothing', async () => {

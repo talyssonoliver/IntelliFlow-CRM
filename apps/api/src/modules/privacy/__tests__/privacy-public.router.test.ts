@@ -250,3 +250,33 @@ describe('logging (D6 log-capture)', () => {
     for (const s of spies) s.mockRestore();
   });
 });
+
+describe('unexpected failures (codex: no cause reaches the anonymous caller)', () => {
+  const leak = 'relation "dsar_requests" does not exist: ada@example.invalid';
+  const fixed = {
+    code: 'INTERNAL_SERVER_ERROR',
+    message: 'Data requests are temporarily unavailable.',
+  };
+
+  it.each([
+    ['getFirm', () => caller().getFirm({ handle: submitInput.handle })],
+    ['submit', () => caller().submit(submitInput)],
+    ['verify', () => caller().verify({ requestId: REQUEST_ID, token: TOKEN })],
+    ['downloadExport', () => caller().downloadExport({ requestId: REQUEST_ID, token: TOKEN })],
+  ])('%s answers with a fixed message and logs only the error code', async (_name, call) => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    const failure = Object.assign(new Error(leak), { code: 'P2010' });
+    prismaMock.tenant.findUnique.mockRejectedValueOnce(failure);
+    service.verify.mockRejectedValueOnce(failure);
+    service.downloadExport.mockRejectedValueOnce(failure);
+
+    const thrown = await call().catch((e: unknown) => e);
+
+    expect(thrown).toMatchObject(fixed);
+    expect(JSON.stringify(thrown)).not.toContain('ada@example.invalid');
+    expect(JSON.stringify(error.mock.calls)).toBe(
+      JSON.stringify([['[privacy] public request failed', { code: 'P2010' }]])
+    );
+    error.mockRestore();
+  });
+});

@@ -7,6 +7,7 @@
  * detached post-commit work is awaited with vi.waitFor.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Prisma } from '@intelliflow/db';
 import { publicBookingRouter } from '../public-booking.router';
 import { bookingLookupLimiter, bookingSlotsLimiter, bookingSubmitLimiter } from '../booking-abuse';
 import { prismaMock, createPublicContext } from '../../../test/setup';
@@ -284,13 +285,115 @@ describe('listSlots (AC-011)', () => {
     stubBookable({ settings: settingsRow({ maxDailyBookings: 1 }) });
     prismaMock.appointment.findMany
       .mockResolvedValueOnce([] as never) // host busy time
-      .mockResolvedValueOnce([{ startTime: new Date('2026-11-02T15:00:00Z') }] as never); // cap count
+      .mockResolvedValueOnce([
+        {
+          startTime: new Date('2026-11-02T15:00:00Z'),
+          endTime: new Date('2026-11-02T15:30:00Z'),
+          bufferMinutesBefore: 0,
+          bufferMinutesAfter: 0,
+          recurrence: null,
+          timezone: null,
+        },
+      ] as never); // tenant bookings
     const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 2 });
     expect(result.days[0].slots).toEqual([]);
     expect(result.days[1].slots.length).toBeGreaterThan(0);
+    // Two reads in all (NF-001): the host's rows, then the tenant's, not filtered by host.
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledTimes(2);
     const capWhere = (prismaMock.appointment.findMany.mock.calls[1][0] as any).where;
     expect(capWhere.tenantId).toBe(TENANT);
-    expect(capWhere.OR).toBeUndefined();
+    expect(JSON.stringify(capWhere)).not.toContain(HOST);
+    expect(capWhere.OR).toEqual([
+      { recurrence: { equals: Prisma.AnyNull }, startTime: { gte: expect.any(Date) } },
+      { recurrence: { not: Prisma.AnyNull } },
+    ]);
+  });
+
+  it('reads only the host rows when no daily cap is set', async () => {
+    stubBookable();
+    await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 14 });
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it('counts later occurrences of recurring appointments towards the daily cap (codex)', async () => {
+    stubBookable({ settings: settingsRow({ maxDailyBookings: 1 }) });
+    const weekly = {
+      // Someone else's weekly Monday 15:00 meeting, first held a week earlier.
+      startTime: new Date('2026-10-26T15:00:00Z'),
+      endTime: new Date('2026-10-26T15:30:00Z'),
+      bufferMinutesBefore: 0,
+      bufferMinutesAfter: 0,
+      recurrence: { frequency: 'WEEKLY', interval: 1, daysOfWeek: ['MONDAY'] },
+    };
+    prismaMock.appointment.findMany
+      .mockResolvedValueOnce([] as never) // host busy time
+      .mockResolvedValueOnce([weekly] as never); // tenant bookings: one recurring series
+    const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 2 });
+    expect(result.days[0].slots).toEqual([]); // Monday: the occurrence fills the cap
+    expect(result.days[1].slots.length).toBeGreaterThan(0);
+    const seriesWhere = (prismaMock.appointment.findMany.mock.calls[1][0] as any).where;
+    expect(seriesWhere.tenantId).toBe(TENANT);
+    expect(JSON.stringify(seriesWhere)).not.toContain(HOST);
+  });
+
+  it('counts a stored first occurrence towards the cap even when its date is skipped', async () => {
+    stubBookable({ settings: settingsRow({ maxDailyBookings: 1 }) });
+    const skippedFirst = {
+      startTime: new Date('2026-11-02T15:00:00Z'),
+      endTime: new Date('2026-11-02T15:30:00Z'),
+      bufferMinutesBefore: 0,
+      bufferMinutesAfter: 0,
+      recurrence: {
+        frequency: 'WEEKLY',
+        daysOfWeek: ['MONDAY'],
+        exceptionDates: ['2026-11-02T15:00:00.000Z'],
+      },
+      timezone: 'Europe/London',
+    };
+    prismaMock.appointment.findMany
+      .mockResolvedValueOnce([] as never) // host busy time
+      .mockResolvedValueOnce([skippedFirst] as never); // tenant bookings: one recurring series
+    const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 2 });
+    // The row is still a scheduled appointment the database reserves: the day is full.
+    expect(result.days[0].slots).toEqual([]);
+    expect(result.days[1].slots.length).toBeGreaterThan(0);
+  });
+
+  it("never offers a later occurrence of the host's recurring appointment (codex HIGH)", async () => {
+    stubBookable();
+    prismaMock.appointment.findMany.mockResolvedValueOnce([
+      // No stored row overlaps 2 November; the one series does.
+      {
+        // Weekly on Mondays 10:00-11:00 UTC, first occurrence a week earlier.
+        startTime: new Date('2026-10-26T10:00:00Z'),
+        endTime: new Date('2026-10-26T11:00:00Z'),
+        bufferMinutesBefore: 0,
+        bufferMinutesAfter: 0,
+        recurrence: { frequency: 'WEEKLY', interval: 1, daysOfWeek: ['MONDAY'] },
+      },
+    ] as never);
+    const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 1 });
+    const starts = result.days[0].slots.map((s) => s.start);
+    expect(starts.length).toBeGreaterThan(0);
+    for (const start of starts) {
+      const t = new Date(start).getTime();
+      expect(
+        t >= Date.parse('2026-11-02T10:00:00Z') && t < Date.parse('2026-11-02T11:00:00Z')
+      ).toBe(false);
+    }
+    // One host read: plain rows overlapping the window, and every series that started
+    // before its end (expanded in code, so a skipped first date stays free).
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledTimes(1);
+    const hostWhere = (prismaMock.appointment.findMany.mock.calls[0][0] as any).where;
+    expect(hostWhere.tenantId).toBe(TENANT);
+    expect(hostWhere.AND).toEqual([
+      {
+        OR: [
+          { recurrence: { equals: Prisma.AnyNull }, endTime: { gt: expect.any(Date) } },
+          { recurrence: { not: Prisma.AnyNull } },
+        ],
+      },
+    ]);
   });
 
   it('rejects a start date in the past or beyond the 60-day horizon', async () => {
@@ -321,16 +424,20 @@ describe('book — gates before the transaction (AC-015, AC-017)', () => {
     stubBookingWrites();
   });
 
-  it('a filled honeypot gets a fake success with zero database calls', async () => {
+  it('a filled honeypot gets a success shaped like a real one, and nothing is written', async () => {
     const result = await caller().book({ ...bookInput, __honeypot: 'i-am-a-bot' });
-    expect(result).toMatchObject({ startsAt: SLOT });
     for (const fn of [
-      prismaMock.eventType.findFirst,
       prismaMock.bookingAttempt.create,
+      prismaMock.appointment.create,
       prismaMock.$transaction,
     ]) {
       expect(fn).not.toHaveBeenCalled();
     }
+    // The honeypot is throttled like any submit; clear it before the real booking.
+    bookingSubmitLimiter.reset();
+    const real = await caller().book(bookInput);
+    // Same duration and firm timezone as a real booking (codex): the bot cannot tell.
+    expect(result).toEqual(real);
   });
 
   it('a missing required answer is BAD_REQUEST and nothing is written', async () => {
@@ -343,7 +450,7 @@ describe('book — gates before the transaction (AC-015, AC-017)', () => {
   });
 
   it('refuses an over-cap caller with the lock-free pre-check, before the prune or any lock', async () => {
-    prismaMock.bookingAttempt.count.mockResolvedValueOnce(3 as never);
+    prismaMock.bookingAttempt.count.mockResolvedValueOnce(10 as never); // 10 per IP per hour
     await expect(caller().book(bookInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
     expect(prismaMock.bookingAttempt.deleteMany).not.toHaveBeenCalled();
     expect(prismaMock.$transaction).not.toHaveBeenCalled(); // never queues on the tenant lock
@@ -386,9 +493,9 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
     expect(raw[2][0]).toContain('pg_advisory_xact_lock(hashtextextended(');
     expect(raw[2][1]).toEqual([`booking-attempts:${TENANT}`]);
     const attemptsLock = prismaMock.$executeRaw.mock.invocationCallOrder[2];
-    // Counts 0-1 are the lock-free pre-check; 2-3 are the atomic re-count under the lock.
-    expect(prismaMock.bookingAttempt.count.mock.invocationCallOrder[1]).toBeLessThan(attemptsLock);
-    expect(attemptsLock).toBeLessThan(prismaMock.bookingAttempt.count.mock.invocationCallOrder[2]);
+    // Count 0 is the lock-free pre-check; 1 is the atomic re-count under the lock.
+    expect(prismaMock.bookingAttempt.count.mock.invocationCallOrder[0]).toBeLessThan(attemptsLock);
+    expect(attemptsLock).toBeLessThan(prismaMock.bookingAttempt.count.mock.invocationCallOrder[1]);
     expect(prismaMock.bookingAttempt.create.mock.invocationCallOrder[0]).toBeLessThan(
       prismaMock.$executeRaw.mock.invocationCallOrder[3]
     );
@@ -637,6 +744,21 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
     });
   });
 
+  it("a stranger's failed attempts never block a client's email; landed bookings do (owner ruling)", async () => {
+    // Many failed attempts with this email are on record: they no longer count.
+    prismaMock.bookingAttempt.count.mockResolvedValue(0 as never);
+    await expect(caller().book(bookInput)).resolves.toBeDefined();
+    bookingSubmitLimiter.reset();
+    // Three landed bookings for the same inbox in the last day: the fourth is refused.
+    prismaMock.appointment.findMany.mockImplementation(((args: any) =>
+      Promise.resolve(
+        args.select?.bookerEmail
+          ? Array.from({ length: 3 }, () => ({ bookerEmail: 'ada@example.invalid' }))
+          : []
+      )) as never);
+    await expect(caller().book(bookInput)).rejects.toMatchObject({ code: 'TOO_MANY_REQUESTS' });
+  });
+
   it('checks the event-type cap on landed bookings under the booking lock, before any write', async () => {
     stubBookable();
     stubBookingWrites();
@@ -712,6 +834,64 @@ describe('book — the transaction (AC-012, AC-016, AC-018, AC-019, R5, R7)', ()
       .catch((e: unknown) => e)) as { code: string; message: string };
     expect(error.code).toBe('INTERNAL_SERVER_ERROR');
     expect(error.message).not.toContain('secret detail');
+  });
+});
+
+describe('public procedures never disclose a database error (codex)', () => {
+  // Prisma-shaped failures from reads that run outside any booking transaction.
+  const dbError = () =>
+    Object.assign(
+      new Error('Invalid `prisma.tenant.findUnique()`: relation internal_table_detail'),
+      {
+        code: 'P1001',
+      }
+    );
+
+  beforeEach(() => {
+    stubBookable();
+    stubBookingWrites();
+  });
+
+  async function failure(run: () => Promise<unknown>) {
+    return (await run().catch((e: unknown) => e)) as { code: string; message: string };
+  }
+
+  it('getEventType: a failed lookup read returns a fixed message', async () => {
+    prismaMock.tenant.findUnique.mockRejectedValueOnce(dbError());
+    const error = await failure(() => caller().getEventType(lookup));
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).toBe('This booking page could not be loaded. Please try again.');
+  });
+
+  it('listSlots: a failed availability read returns a fixed message', async () => {
+    prismaMock.availabilityHour.findMany.mockRejectedValueOnce(dbError());
+    const error = await failure(() =>
+      caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 1 })
+    );
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).not.toContain('internal_table_detail');
+    expect(error.message).not.toContain('prisma');
+  });
+
+  it('book: a failed read before the transaction returns a fixed message', async () => {
+    prismaMock.eventType.findFirst.mockRejectedValueOnce(dbError());
+    const error = await failure(() => caller().book(bookInput));
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).toBe('We could not complete your booking. Please try again.');
+  });
+
+  it('book: a failed lock-free cap check returns a fixed message', async () => {
+    prismaMock.bookingAttempt.count.mockRejectedValueOnce(dbError());
+    const error = await failure(() => caller().book(bookInput));
+    expect(error.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(error.message).not.toContain('internal_table_detail');
+  });
+
+  it('keeps intentional errors: an unknown handle is still NOT_FOUND', async () => {
+    stubBookable({ tenant: null });
+    const error = await failure(() => caller().getEventType(lookup));
+    expect(error.code).toBe('NOT_FOUND');
+    expect(error.message).toBe('This booking page is not available.');
   });
 });
 

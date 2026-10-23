@@ -50,6 +50,23 @@ function dsarService(ctx: Context) {
   return service;
 }
 
+/**
+ * Every public handler runs inside this: our own fixed-message errors pass through, anything
+ * else (a database or service failure) reaches the anonymous caller as one fixed message, and
+ * only its code is logged, since driver text can carry query arguments (codex).
+ */
+async function publicly<T>(work: () => Promise<T>): Promise<T> {
+  try {
+    return await work();
+  } catch (err) {
+    if (err instanceof TRPCError) throw err;
+    console.error('[privacy] public request failed', {
+      code: (err as { code?: string } | null)?.code ?? 'unknown',
+    });
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: UNAVAILABLE });
+  }
+}
+
 function clientIpHash(ctx: Context, salt: string): string {
   return ipHashOf(ctx.req as Request | undefined, salt);
 }
@@ -72,75 +89,79 @@ async function findFirm(ctx: Context, handle: string): Promise<PublicFirm> {
 }
 
 export const privacyPublicProcedures = {
-  getFirm: publicProcedure
-    .input(dsarFirmLookupSchema)
-    .query(async ({ ctx, input }): Promise<DsarFirmDto> => {
-      bookingLookupLimiter.check(clientIpHash(ctx, getBookingSalt()));
-      const firm = await findFirm(ctx, input.handle);
-      return { firmName: firm.name, privacyUrl: firm.privacyUrl };
-    }),
+  getFirm: publicProcedure.input(dsarFirmLookupSchema).query(
+    ({ ctx, input }): Promise<DsarFirmDto> =>
+      publicly(async () => {
+        bookingLookupLimiter.check(clientIpHash(ctx, getBookingSalt()));
+        const firm = await findFirm(ctx, input.handle);
+        return { firmName: firm.name, privacyUrl: firm.privacyUrl };
+      })
+  ),
 
-  submit: publicProcedure
-    .input(dsarSubmitSchema)
-    .mutation(async ({ ctx, input }): Promise<DsarSubmitResultDto> => {
-      // Bots get the same answer and no database work.
-      if (input.__honeypot) return { message: DSAR_SUBMIT_MESSAGE };
-      const salt = getBookingSalt();
-      const ipHash = clientIpHash(ctx, salt);
-      bookingSubmitLimiter.check(ipHash);
-      const service = dsarService(ctx);
-      const firm = await findFirm(ctx, input.handle);
-      const result = await service.submit({
-        firm: { tenantId: firm.tenantId, name: firm.name, handle: firm.handle },
-        type: input.type,
-        email: input.email,
-        details: input.details || null,
-        objectionScope: input.objectionScope ?? null,
-        ipHash,
-        now: new Date(),
-      });
-      if (result.outcome === 'TOO_MANY') {
-        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: TOO_MANY });
-      }
-      return { message: result.message };
-    }),
+  submit: publicProcedure.input(dsarSubmitSchema).mutation(
+    ({ ctx, input }): Promise<DsarSubmitResultDto> =>
+      publicly(async () => {
+        // Bots get the same answer and no database work.
+        if (input.__honeypot) return { message: DSAR_SUBMIT_MESSAGE };
+        const salt = getBookingSalt();
+        const ipHash = clientIpHash(ctx, salt);
+        bookingSubmitLimiter.check(ipHash);
+        const service = dsarService(ctx);
+        const firm = await findFirm(ctx, input.handle);
+        const result = await service.submit({
+          firm: { tenantId: firm.tenantId, name: firm.name, handle: firm.handle },
+          type: input.type,
+          email: input.email,
+          details: input.details || null,
+          objectionScope: input.objectionScope ?? null,
+          ipHash,
+          now: new Date(),
+        });
+        if (result.outcome === 'TOO_MANY') {
+          throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: TOO_MANY });
+        }
+        return { message: result.message };
+      })
+  ),
 
-  verify: publicProcedure
-    .input(dsarTokenInputSchema)
-    .mutation(async ({ ctx, input }): Promise<DsarVerifyResultDto> => {
-      bookingSubmitLimiter.check(clientIpHash(ctx, getBookingSalt()));
-      const result = await dsarService(ctx).verify({
-        requestId: input.requestId,
-        token: input.token,
-        now: new Date(),
-      });
-      if (result.outcome !== 'VERIFIED') {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
-      }
-      return {
-        type: result.type,
-        dueDate: result.dueDate.toISOString(),
-        exportEmailed: result.exportEmailed,
-      };
-    }),
+  verify: publicProcedure.input(dsarTokenInputSchema).mutation(
+    ({ ctx, input }): Promise<DsarVerifyResultDto> =>
+      publicly(async () => {
+        bookingSubmitLimiter.check(clientIpHash(ctx, getBookingSalt()));
+        const result = await dsarService(ctx).verify({
+          requestId: input.requestId,
+          token: input.token,
+          now: new Date(),
+        });
+        if (result.outcome !== 'VERIFIED') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
+        }
+        return {
+          type: result.type,
+          dueDate: result.dueDate.toISOString(),
+          exportEmailed: result.exportEmailed,
+        };
+      })
+  ),
 
-  downloadExport: publicProcedure
-    .input(dsarTokenInputSchema)
-    .mutation(async ({ ctx, input }): Promise<DsarExportDto> => {
-      bookingLookupLimiter.check(clientIpHash(ctx, getBookingSalt()));
-      const result = await dsarService(ctx).downloadExport({
-        requestId: input.requestId,
-        token: input.token,
-        now: new Date(),
-      });
-      if (result.outcome === 'LIMIT') {
-        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: DOWNLOAD_LIMIT });
-      }
-      if (result.outcome !== 'OK') {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
-      }
-      return result.export;
-    }),
+  downloadExport: publicProcedure.input(dsarTokenInputSchema).mutation(
+    ({ ctx, input }): Promise<DsarExportDto> =>
+      publicly(async () => {
+        bookingLookupLimiter.check(clientIpHash(ctx, getBookingSalt()));
+        const result = await dsarService(ctx).downloadExport({
+          requestId: input.requestId,
+          token: input.token,
+          now: new Date(),
+        });
+        if (result.outcome === 'LIMIT') {
+          throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: DOWNLOAD_LIMIT });
+        }
+        if (result.outcome !== 'OK') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
+        }
+        return result.export;
+      })
+  ),
 };
 
 export const privacyPublicRouter = createTRPCRouter(privacyPublicProcedures);

@@ -56,6 +56,10 @@ vi.mock('@intelliflow/adapters', () => {
     PrismaTenantModuleRepository: named('tenantModuleRepository'),
     PrismaTenantUsageAdapter: named('tenantUsageAdapter'),
     PrismaQuotaRepository: named('quotaRepository'),
+    // PG-207 mailbox transports (constructed by createMailboxTransports in createAdapters)
+    SmtpMailboxTransport: named('smtpMailboxTransport'),
+    ImapBounceReader: named('imapBounceReader'),
+    OAuthMailboxClient: named('oauthMailboxClient'),
     PrismaAnalyticsRepository: named('analyticsRepository'),
     PrismaDsarRepository: named('dsarRepository'),
     PrismaProcessingRestrictionRepository: named('processingRestrictionRepository'),

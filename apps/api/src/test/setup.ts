@@ -297,6 +297,7 @@ export const mockAdapters = {
   processingRestrictionRepository: mockDeep<any>(),
   subjectDataRepository: mockDeep<any>(),
   quotaRepository: mockDeep<any>(),
+  mailboxTransports: mockDeep<any>(),
 };
 
 /**

@@ -5,21 +5,31 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 const add = vi.fn();
-const close = vi.fn();
+const on = vi.fn();
 const Queue = vi.fn(function (this: Record<string, unknown>, name: string, opts: unknown) {
   this.name = name;
   this.opts = opts;
   this.add = add;
-  this.close = close;
+  this.on = on;
 });
 
 vi.mock('../../../lib/load-bullmq', () => ({ loadBullMQ: vi.fn(async () => ({ Queue })) }));
 vi.mock('@intelliflow/platform/queues/types', () => ({
   QUEUE_NAMES: { AI_SCORING: 'ai-scoring' },
 }));
+const getDefaultConnectionConfig = vi.fn(() => ({
+  host: 'redis.example.invalid',
+  port: 6380,
+  db: 2,
+  tls: true,
+}));
+vi.mock('@intelliflow/platform/queues/connection', () => ({ getDefaultConnectionConfig }));
 
-import { enqueueLeadScoring } from '../lead-scoring-enqueue';
 import { loadBullMQ } from '../../../lib/load-bullmq';
+
+import type * as EnqueueModule from '../lead-scoring-enqueue';
+
+let enqueueLeadScoring: typeof EnqueueModule.enqueueLeadScoring;
 
 const input = {
   leadId: 'lead-1',
@@ -41,20 +51,29 @@ const allowAll = {
 };
 
 describe('enqueueLeadScoring', () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     add.mockReset().mockResolvedValue(undefined);
-    close.mockReset().mockResolvedValue(undefined);
+    on.mockReset();
     Queue.mockClear();
+    // A fresh module per test: the queue is process-wide by design.
+    vi.resetModules();
+    ({ enqueueLeadScoring } = await import('../lead-scoring-enqueue.js'));
   });
 
   it('adds a score-lead job to the AI scoring queue with the lead payload and an OTel carrier', async () => {
     await enqueueLeadScoring(input, allowAll);
-    expect(Queue).toHaveBeenCalledWith(
-      'ai-scoring',
-      expect.objectContaining({
-        connection: expect.objectContaining({ host: expect.any(String), port: expect.any(Number) }),
-      })
-    );
+    // The shared worker connection settings, TLS and db included, failing fast (codex).
+    expect(Queue).toHaveBeenCalledWith('ai-scoring', {
+      connection: {
+        host: 'redis.example.invalid',
+        port: 6380,
+        password: undefined,
+        db: 2,
+        tls: {},
+        maxRetriesPerRequest: 1,
+        enableOfflineQueue: false,
+      },
+    });
     expect(add).toHaveBeenCalledWith('score-lead', {
       leadId: 'lead-1',
       tenantId: 'tenant-1',
@@ -62,7 +81,68 @@ describe('enqueueLeadScoring', () => {
       correlationId: 'lead-create-lead-1',
       _otelCarrier: expect.any(Object),
     });
-    expect(close).toHaveBeenCalledTimes(1);
+    expect(on).toHaveBeenCalledWith('error', expect.any(Function));
+  });
+
+  it('reuses one queue across calls, also after Redis rejected an add (codex: no leaked clients)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    add.mockRejectedValueOnce(new Error('redis down'));
+    await enqueueLeadScoring(input, allowAll);
+    await enqueueLeadScoring(input, allowAll);
+    await enqueueLeadScoring(input, allowAll);
+    expect(Queue).toHaveBeenCalledTimes(1);
+    expect(add).toHaveBeenCalledTimes(3);
+    // Connection errors are logged by class only, at most once a minute.
+    const onError = on.mock.calls[0]![1] as (e: Error) => void;
+    warn.mockClear();
+    onError(new Error('ECONNREFUSED 127.0.0.1'));
+    onError(new Error('ECONNREFUSED 127.0.0.1'));
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(JSON.stringify(warn.mock.calls[0])).not.toContain('127.0.0.1');
+    warn.mockRestore();
+  });
+
+  it('refuses new calls while 50 earlier adds are still unsettled (bounded during an outage)', async () => {
+    vi.useFakeTimers();
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      let release: () => void = () => {};
+      const stuck = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      add.mockReturnValue(stuck);
+      const calls = Array.from({ length: 50 }, () => enqueueLeadScoring(input, allowAll));
+      await vi.advanceTimersByTimeAsync(5_000);
+      await Promise.all(calls); // each gave up waiting, but its add is still pending
+      expect(add).toHaveBeenCalledTimes(50);
+      await enqueueLeadScoring(input, allowAll);
+      expect(add).toHaveBeenCalledTimes(50);
+      expect(JSON.stringify(warn.mock.calls.at(-1))).toContain('still waiting on Redis');
+      // Once Redis answers, the slots are free again.
+      release();
+      await vi.advanceTimersByTimeAsync(0);
+      add.mockResolvedValue(undefined);
+      await enqueueLeadScoring(input, allowAll);
+      expect(add).toHaveBeenCalledTimes(51);
+    } finally {
+      warn.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('gives up on an add that never settles instead of waiting forever', async () => {
+    vi.useFakeTimers();
+    try {
+      add.mockReturnValueOnce(new Promise(() => {}));
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const pending = enqueueLeadScoring(input, allowAll);
+      await vi.advanceTimersByTimeAsync(5_000);
+      await expect(pending).resolves.toBeUndefined();
+      expect(JSON.stringify(warn.mock.calls[0])).toContain('timed out');
+      warn.mockRestore();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('never throws: a queue failure is logged without PII and swallowed', async () => {
@@ -76,10 +156,12 @@ describe('enqueueLeadScoring', () => {
     warn.mockRestore();
   });
 
-  it('swallows a failure to load BullMQ too', async () => {
+  it('swallows a failure to load BullMQ too, and tries again on the next call', async () => {
     vi.mocked(loadBullMQ).mockRejectedValueOnce(new Error('no bullmq'));
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     await expect(enqueueLeadScoring(input, allowAll)).resolves.toBeUndefined();
+    await enqueueLeadScoring(input, allowAll);
+    expect(add).toHaveBeenCalledTimes(1);
     warn.mockRestore();
   });
 
@@ -91,6 +173,7 @@ describe('enqueueLeadScoring', () => {
     await enqueueLeadScoring(input, restricted);
     expect(restricted.status).toHaveBeenCalledWith('tenant-1', 'ada@example.invalid');
     expect(Queue).not.toHaveBeenCalled();
+    expect(add).not.toHaveBeenCalled();
     expect(JSON.stringify(info.mock.calls)).not.toContain('ada@example.invalid');
     info.mockRestore();
   });
@@ -100,6 +183,7 @@ describe('enqueueLeadScoring', () => {
     const info = vi.spyOn(console, 'info').mockImplementation(() => {});
     await enqueueLeadScoring(input, { status: vi.fn().mockRejectedValue(new Error('db down')) });
     expect(Queue).not.toHaveBeenCalled();
+    expect(add).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledWith('[lead-scoring] Restriction check failed; not scoring', {
       leadId: 'lead-1',
       error: 'Error',

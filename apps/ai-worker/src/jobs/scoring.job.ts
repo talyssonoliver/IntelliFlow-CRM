@@ -23,6 +23,7 @@ import {
   scorableLeads,
   scoringBlockedBy,
   writeIfStillEligible,
+  type ScoringBlock,
 } from '../lib/data-request-guard';
 import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
 
@@ -490,7 +491,7 @@ async function persistScoringResult(
   result: ScoringResult,
   tier: LeadTier,
   recommendations: string[]
-): Promise<void> {
+): Promise<ScoringBlock | null> {
   // Defensive guard: never upsert against a placeholder / unresolved leadId.
   // The scheduled cron sentinel uses NIL_UUID, and no real Lead row exists for
   // it — an upsert here violates lead_ai_insights_leadId_fkey. Skip and log
@@ -500,7 +501,7 @@ async function persistScoringResult(
       { leadId, tenantId },
       'Skipping LeadAIInsight persist — leadId is unresolved/placeholder (no Lead row)'
     );
-    return;
+    return null;
   }
 
   try {
@@ -541,7 +542,7 @@ async function persistScoringResult(
         { leadId, tenantId, reason: outcome.reason },
         'Scoring result discarded — data request'
       );
-      return;
+      return outcome.reason;
     }
 
     logger.info({ leadId, score: result.score, tier }, 'Persisted scoring result to LeadAIInsight');
@@ -562,6 +563,7 @@ async function persistScoringResult(
       'Failed to persist scoring result'
     );
   }
+  return null;
 }
 
 /**
@@ -648,7 +650,19 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
       const recommendations = generateRecommendations(tier, result.score);
 
       const tenantId = validatedData.tenantId;
-      await persistScoringResult(leadId, tenantId, lead.email, result, tier, recommendations);
+      const discarded = await persistScoringResult(
+        leadId,
+        tenantId,
+        lead.email,
+        result,
+        tier,
+        recommendations
+      );
+      // Erased or restricted while the model ran: the score is not returned either, since
+      // BullMQ keeps completed job results in Redis (codex).
+      if (discarded) {
+        return { skipped: true, reason: discarded } as unknown as ScoringJobResult;
+      }
 
       const processingTimeMs = Date.now() - startTime;
       const jobResult: ScoringJobResult = {

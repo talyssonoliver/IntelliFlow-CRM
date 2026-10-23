@@ -6,8 +6,11 @@ import DOMPurify from 'isomorphic-dompurify';
 import { trpc } from '@/lib/trpc';
 import { toast } from '@intelliflow/ui';
 import { cn } from '@/lib/utils';
+import { mailboxAddressSchema } from '@intelliflow/validators';
+import { getEmailSendError, partialSendNotice, type EmailSendErrorView } from './send-errors';
+import { SendErrorAlert } from './SendErrorAlert';
 
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isEmailAddress = (value: string) => mailboxAddressSchema.safeParse(value).success;
 
 type InlineMode = 'reply' | 'replyAll' | 'forward';
 
@@ -60,6 +63,7 @@ export function InlineCompose({
   const [forwardTo, setForwardTo] = useState('');
   const [hasBody, setHasBody] = useState(false);
   const bodyRef = useRef<HTMLDivElement>(null);
+  const [sendError, setSendError] = useState<EmailSendErrorView | null>(null);
   const sendMutation = trpc.email.sendEmail.useMutation();
 
   const quotedBody =
@@ -67,10 +71,15 @@ export function InlineCompose({
       ? `<br><div style="border-left:2px solid #ccc;padding-left:8px;color:#666"><p><strong>Forwarded message:</strong></p>${DOMPurify.sanitize(originalMessage.htmlBody)}</div>`
       : '';
 
+  // One object for the editor's whole life: React 19 re-applies
+  // dangerouslySetInnerHTML whenever the object changes, which would wipe the
+  // typed reply on every re-render (PG-207).
+  const [quotedBodyProp] = useState(() => (quotedBody ? { __html: quotedBody } : undefined));
+
   // Track body content changes from contentEditable
   const handleBodyInput = useCallback(() => {
     const html = bodyRef.current?.innerHTML ?? '';
-    const text = html.replace(/<[^>]*>/g, '').trim();
+    const text = html.replaceAll(/<[^<>]*>/g, '').trim();
     setHasBody(text.length > 0);
   }, []);
 
@@ -81,7 +90,7 @@ export function InlineCompose({
       const trimmed = forwardTo.trim();
       if (!trimmed) {
         errors.push('Recipient email is required');
-      } else if (!EMAIL_REGEX.test(trimmed)) {
+      } else if (!isEmailAddress(trimmed)) {
         errors.push('Enter a valid email address');
       }
     }
@@ -96,7 +105,7 @@ export function InlineCompose({
   const handleSend = useCallback(async () => {
     // Re-check body from DOM in case state is stale
     const body = bodyRef.current?.innerHTML ?? '';
-    const plainText = body.replace(/<[^>]*>/g, '').trim();
+    const plainText = body.replaceAll(/<[^<>]*>/g, '').trim();
     if (!plainText) {
       toast({ title: 'Message body is required', variant: 'destructive' });
       return;
@@ -108,23 +117,29 @@ export function InlineCompose({
       return;
     }
 
-    if (mode === 'forward' && !EMAIL_REGEX.test(to[0])) {
+    if (mode === 'forward' && !isEmailAddress(to[0])) {
       toast({ title: 'Enter a valid email address', variant: 'destructive' });
       return;
     }
 
+    setSendError(null);
     try {
-      await sendMutation.mutateAsync({
+      const result = await sendMutation.mutateAsync({
         to,
         cc: recipients.cc.length > 0 ? recipients.cc : undefined,
         subject: getSubject(mode, originalMessage.subject),
         htmlBody: body,
         threadId: originalMessage.id,
       });
-      toast({ title: mode === 'forward' ? 'Email forwarded' : 'Reply sent' });
+      const notice = partialSendNotice(result);
+      toast({
+        title: mode === 'forward' ? 'Email forwarded' : 'Reply sent',
+        ...(notice ? { description: notice } : {}),
+      });
       onSent();
-    } catch {
-      toast({ title: 'Failed to send', variant: 'destructive' });
+    } catch (error) {
+      // The reply stays as typed; the alert says what to do next.
+      setSendError(getEmailSendError(error));
     }
   }, [mode, forwardTo, recipients, originalMessage, sendMutation, onSent]);
 
@@ -184,14 +199,17 @@ export function InlineCompose({
           suppressContentEditableWarning
           onInput={handleBodyInput}
           className="min-h-[80px] max-h-[200px] overflow-y-auto text-sm focus:outline-none prose prose-sm max-w-none"
-          dangerouslySetInnerHTML={quotedBody ? { __html: quotedBody } : undefined}
+          dangerouslySetInnerHTML={quotedBodyProp}
         />
       </div>
+
+      {/* Coded send refusal (PG-207, AC-EM-018) */}
+      {sendError && <SendErrorAlert error={sendError} className="mx-3 my-1.5 text-xs" />}
 
       {/* Validation hints */}
       {validationErrors.length > 0 && (
         <div
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-destructive"
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-700 dark:text-red-300"
           role="alert"
         >
           <span className="material-symbols-outlined text-base shrink-0" aria-hidden="true">

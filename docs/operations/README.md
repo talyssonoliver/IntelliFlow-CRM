@@ -47,17 +47,18 @@ Per-service operational how-tos. Each file covers one service, one
 responsibility, and follows a consistent shape (Overview → Metrics/Alerts →
 Procedures → Troubleshooting → Retry/DLQ → Escalation).
 
-| Runbook                                                             | Scope                                                                                  |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| [dlq-triage.md](runbooks/dlq-triage.md)                             | Dead-letter-queue triage across all event consumers                                    |
-| [easypanel-runbook.md](runbooks/easypanel-runbook.md)               | EasyPanel-hosted monitoring stack (Prometheus, Grafana, Loki, SonarQube)               |
-| [ingestion.md](runbooks/ingestion.md)                               | Document/email ingestion pipeline                                                      |
-| [maintenance-runbook.md](runbooks/maintenance-runbook.md)           | Developer-workstation disk/cache maintenance                                           |
-| [monitoring-runbook.md](runbooks/monitoring-runbook.md)             | OTLP push pipeline, health checks, local monitoring stack                              |
-| [notification-service.md](runbooks/notification-service.md)         | Multi-channel notification delivery (IFC-157 — consolidates former `notifications.md`) |
-| [release-checklist.md](runbooks/release-checklist.md)               | Pre-release sign-off steps                                                             |
-| [workers-runbook.md](runbooks/workers-runbook.md)                   | Event, ingestion, notification worker services                                         |
-| [workflow-troubleshooting.md](runbooks/workflow-troubleshooting.md) | Temporal/LangGraph/BullMQ workflow diagnosis (IFC-141)                                 |
+| Runbook                                                             | Scope                                                                                    |
+| ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| [dlq-triage.md](runbooks/dlq-triage.md)                             | Dead-letter-queue triage across all event consumers                                      |
+| [easypanel-runbook.md](runbooks/easypanel-runbook.md)               | EasyPanel-hosted monitoring stack (Prometheus, Grafana, Loki, SonarQube)                 |
+| [ingestion.md](runbooks/ingestion.md)                               | Document/email ingestion pipeline                                                        |
+| [maintenance-runbook.md](runbooks/maintenance-runbook.md)           | Developer-workstation disk/cache maintenance                                             |
+| [monitoring-runbook.md](runbooks/monitoring-runbook.md)             | OTLP push pipeline, health checks, local monitoring stack                                |
+| [notification-service.md](runbooks/notification-service.md)         | Multi-channel notification delivery (IFC-157 — consolidates former `notifications.md`)   |
+| [release-checklist.md](runbooks/release-checklist.md)               | Pre-release sign-off steps                                                               |
+| [user-mailboxes.md](runbooks/user-mailboxes.md)                     | User mailboxes (SMTP/Gmail/Microsoft), bounce scanner and bounce trust (PG-207, ADR-085) |
+| [workers-runbook.md](runbooks/workers-runbook.md)                   | Event, ingestion, notification worker services                                           |
+| [workflow-troubleshooting.md](runbooks/workflow-troubleshooting.md) | Temporal/LangGraph/BullMQ workflow diagnosis (IFC-141)                                   |
 
 ## Cross-cutting process docs
 

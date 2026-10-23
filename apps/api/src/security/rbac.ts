@@ -56,6 +56,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     contact_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-205
     event_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-203
     dsar_request: ['read', 'write', 'export', 'manage', 'admin'], // PG-203 (ADMIN only)
+    email_mailbox: ['read', 'write', 'delete', 'manage', 'admin'], // PG-207: own + company mailbox
+    email_settings: ['read', 'write', 'manage', 'admin'],
+    email_signature: ['read', 'write', 'delete', 'manage', 'admin'],
+    email_suppression: ['read', 'write', 'delete', 'manage', 'admin'],
     model_config: ['read', 'write', 'delete', 'manage', 'admin'], // PG-199
     goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
@@ -75,6 +79,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     contact_type: ['read', 'write', 'delete', 'manage'], // PG-205: managers edit types
     event_type: ['read', 'write', 'delete', 'manage'], // PG-203: managers edit event types
     dsar_request: [], // PG-203: data requests are ADMIN only
+    email_mailbox: ['read', 'write', 'delete', 'manage'], // PG-207: EMAIL_SETTINGS_ADMIN_ROLES
+    email_settings: ['read', 'write', 'manage'],
+    email_signature: ['read', 'write', 'delete', 'manage'],
+    email_suppression: ['read', 'write', 'delete', 'manage'],
     model_config: ['read', 'write', 'delete', 'manage'], // PG-199: managers edit model settings
     goal: ['read', 'write', 'manage'],
   },
@@ -94,6 +102,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     contact_type: ['read'], // PG-205
     event_type: ['read'], // PG-203
     dsar_request: [], // PG-203: data requests are ADMIN only
+    email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
+    email_settings: ['read'],
+    email_signature: ['read', 'write', 'delete'], // own signatures only
+    email_suppression: [],
     model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
@@ -113,6 +125,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     contact_type: ['read'], // PG-205
     event_type: ['read'], // PG-203
     dsar_request: [], // PG-203: data requests are ADMIN only
+    email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
+    email_settings: ['read'],
+    email_signature: ['read', 'write', 'delete'], // own signatures only
+    email_suppression: [],
     model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
@@ -132,6 +148,10 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     contact_type: ['read'], // PG-205
     event_type: ['read'], // PG-203
     dsar_request: [], // PG-203: data requests are ADMIN only
+    email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
+    email_settings: ['read'],
+    email_signature: ['read', 'write', 'delete'], // own signatures only
+    email_suppression: [],
     model_config: ['read'], // PG-199
     goal: ['read'],
   },

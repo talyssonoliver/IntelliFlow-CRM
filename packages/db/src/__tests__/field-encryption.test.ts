@@ -60,9 +60,38 @@ describe('schema.prisma — @encrypted annotations', () => {
     expect(n).not.toMatch(/\/\/\/\s*@encrypted[^\n]*\n\s*promptHash/);
   });
 
-  it('contains exactly three @encrypted annotations total', () => {
+  it('contains exactly seven @encrypted annotations total (3 + PG-207 mailbox and OAuth secrets)', () => {
     const matches = schema.match(/\/\/\/\s*@encrypted/gm) ?? [];
-    expect(matches).toHaveLength(3);
+    expect(matches).toHaveLength(7);
+  });
+
+  it('annotates the PG-207 mailbox and OAuth-state secrets', () => {
+    const n = schema.replace(/\r\n/g, '\n');
+    for (const field of ['smtpPassword', 'imapPassword', 'refreshToken', 'codeVerifier']) {
+      expect(n).toMatch(new RegExp(`///\\s*@encrypted[^\\n]*\\n\\s*${field}\\s`));
+    }
+  });
+
+  it('every annotated field is in ENCRYPTED_FIELDS (the map, not the comment, drives encryption)', async () => {
+    const { ENCRYPTED_FIELDS } = await import('../field-encryption.js');
+    const n = schema.replace(/\r\n/g, '\n');
+    const annotated: string[] = [];
+    let model = '';
+    const lines = n.split('\n');
+    lines.forEach((line, i) => {
+      const m = /^model\s+(\w+)\s*\{/.exec(line);
+      if (m) model = m[1] ?? '';
+      if (/^\s*\/\/\/\s*@encrypted/.test(line)) {
+        const field = /^\s*(\w+)\s/.exec(lines[i + 1] ?? '')?.[1];
+        annotated.push(`${model}.${field}`);
+      }
+    });
+    const mapped = Object.entries(ENCRYPTED_FIELDS).flatMap(([m, fields]) =>
+      fields.map((f) => `${m}.${f}`)
+    );
+    expect([...annotated].sort()).toEqual([...mapped].sort());
+    expect(ENCRYPTED_FIELDS.EmailMailbox).toEqual(['smtpPassword', 'imapPassword', 'refreshToken']);
+    expect(ENCRYPTED_FIELDS.EmailOAuthState).toEqual(['codeVerifier']);
   });
 });
 

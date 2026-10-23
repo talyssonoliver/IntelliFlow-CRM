@@ -112,6 +112,15 @@ export {
 // Outbound Email Service (PG-084)
 export { createOutboundEmailService, OutboundEmailService } from './messaging/email/outbound';
 
+// User mailbox transports and bounce reading (PG-207, ADR-085)
+export * from './messaging/email/mailbox-errors';
+export * from './messaging/email/public-host';
+export * from './messaging/email/mime';
+export * from './messaging/email/smtp-provider';
+export * from './messaging/email/oauth-mailbox';
+export * from './messaging/email/dsn-parser';
+export * from './messaging/email/imap-dsn-reader';
+
 // Webhook Service Adapter (IFC-144)
 export * from './messaging/WebhookServiceAdapter';
 

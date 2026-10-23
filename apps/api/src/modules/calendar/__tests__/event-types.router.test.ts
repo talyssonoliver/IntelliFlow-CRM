@@ -328,6 +328,7 @@ describe('update (AC-004, AC-006, AC-023)', () => {
   it('updates with a tenant-scoped updateMany and ignores its own slug in the duplicate check', async () => {
     prismaMock.eventType.findFirst
       .mockResolvedValueOnce(row() as never)
+      .mockResolvedValueOnce(row() as never) // re-read under the lock
       .mockResolvedValueOnce(row({ name: 'Renamed' }) as never);
     prismaMock.eventType.findMany.mockResolvedValue([
       { id: ID, name: 'Initial consultation', slug: 'initial-consultation' },
@@ -349,6 +350,66 @@ describe('update (AC-004, AC-006, AC-023)', () => {
     prismaMock.eventType.findFirst.mockResolvedValueOnce(row() as never);
     prismaMock.eventType.updateMany.mockResolvedValue({ count: 0 } as never);
     await expectCode(admin().update({ ...input(), id: ID }), 'NOT_FOUND');
+  });
+
+  it('lets an out-of-range or host-less type be switched off without re-checking them (codex)', async () => {
+    // Created at 10 minutes; Calendar settings now require 15-60, and the host has left.
+    const legacy = row({ durationMinutes: 10 });
+    prismaMock.eventType.findFirst.mockResolvedValue(legacy as never);
+    prismaMock.eventType.findMany.mockResolvedValue([] as never);
+    prismaMock.appointmentSettings.findUnique.mockResolvedValue({
+      minDurationMinutes: 15,
+      maxDurationMinutes: 60,
+    } as never);
+    prismaMock.user.count.mockResolvedValue(0 as never);
+    prismaMock.user.findMany
+      .mockResolvedValueOnce([{ id: HOST, name: 'Hana Host' }] as never) // names
+      .mockResolvedValueOnce([] as never); // still members: none
+    prismaMock.eventType.updateMany.mockResolvedValue({ count: 1 } as never);
+    const dto = await admin().update({
+      ...input({ durationMinutes: 10, isActive: false }),
+      id: ID,
+    });
+    // The reply still says the host is gone, as list() does (codex).
+    expect(dto.hostAvailable).toBe(false);
+    expect(prismaMock.eventType.updateMany).toHaveBeenCalled();
+    expect(prismaMock.appointmentSettings.findUnique).not.toHaveBeenCalled();
+    expect(prismaMock.user.count).not.toHaveBeenCalled();
+  });
+
+  it('re-checks the range and the host when an inactive type is switched back on (codex)', async () => {
+    prismaMock.eventType.findFirst.mockResolvedValue(
+      row({ durationMinutes: 10, isActive: false }) as never
+    );
+    prismaMock.eventType.findMany.mockResolvedValue([] as never);
+    prismaMock.appointmentSettings.findUnique.mockResolvedValue({
+      minDurationMinutes: 15,
+      maxDurationMinutes: 60,
+    } as never);
+    await expectCode(
+      admin().update({ ...input({ durationMinutes: 10, isActive: true }), id: ID }),
+      'BAD_REQUEST'
+    );
+    // In range, but the unchanged host has left: still refused on reactivation.
+    prismaMock.eventType.findFirst.mockResolvedValue(row({ isActive: false }) as never);
+    prismaMock.appointmentSettings.findUnique.mockResolvedValue({
+      minDurationMinutes: 5,
+      maxDurationMinutes: 480,
+    } as never);
+    prismaMock.user.count.mockResolvedValue(0 as never);
+    await expectCode(admin().update({ ...input({ isActive: true }), id: ID }), 'NOT_FOUND');
+    expect(prismaMock.eventType.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('still checks a changed duration against the current range', async () => {
+    prismaMock.eventType.findFirst.mockResolvedValue(row({ durationMinutes: 30 }) as never);
+    prismaMock.eventType.findMany.mockResolvedValue([] as never);
+    prismaMock.appointmentSettings.findUnique.mockResolvedValue({
+      minDurationMinutes: 15,
+      maxDurationMinutes: 60,
+    } as never);
+    await expectCode(admin().update({ ...input({ durationMinutes: 10 }), id: ID }), 'BAD_REQUEST');
+    expect(prismaMock.eventType.updateMany).not.toHaveBeenCalled();
   });
 });
 

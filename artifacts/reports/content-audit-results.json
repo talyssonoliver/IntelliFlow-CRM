@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-22T13:29:54.838Z",
+  "generated_at": "2026-10-23T15:37:20.795Z",
   "tool_version": "1.2.0",
   "routes": [
     {
@@ -7864,13 +7864,13 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Email",
-          "source": "layout"
+          "value": "Email Settings — Aurora",
+          "source": "page"
         },
         "description": {
-          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
-          "source": "root-layout",
-          "length": 131
+          "value": "Connect the mailbox your email is sent from, and set the reply-to address, tracking and bounce handling.",
+          "source": "page",
+          "length": 104
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -7922,18 +7922,81 @@
       "notes": ""
     },
     {
-      "route": "/email/signatures",
-      "file_path": "apps/web/src/app/email/signatures/page.tsx",
+      "route": "/email/oauth/callback",
+      "file_path": "apps/web/src/app/email/oauth/callback/page.tsx",
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Email",
-          "source": "layout"
+          "value": "Connecting Mailbox — Aurora",
+          "source": "page"
         },
         "description": {
           "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
           "source": "root-layout",
           "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": true
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/email/signatures",
+      "file_path": "apps/web/src/app/email/signatures/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Signatures — Aurora",
+          "source": "page"
+        },
+        "description": {
+          "value": "Personal and organisation email signatures, added when you write a new email.",
+          "source": "page",
+          "length": 77
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -13907,12 +13970,12 @@
     }
   ],
   "summary": {
-    "total_routes": 219,
+    "total_routes": 220,
     "public_routes": 36,
-    "auth_gated_routes": 169,
+    "auth_gated_routes": 170,
     "developer_routes": 14,
     "routes_with_seo_score": 36,
-    "routes_pending_runtime_measurement": 219,
+    "routes_pending_runtime_measurement": 220,
     "average_seo_score_public": 84,
     "legal_pages_missing": [],
     "ghost_link_count": 0

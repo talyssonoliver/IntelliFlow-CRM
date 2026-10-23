@@ -488,8 +488,10 @@ As defined above. The public DTOs are explicit `select` allowlists. Snapshot tes
   - A failed email does not undo the booking. Tests use the mock adapter only (R4).
 - AC-017: Abuse caps come from `booking_attempts`, counted with salted hashes: email 3 per 24 h, IP 10 per hour, event type
   30 per hour. *Exec adaptation (owner ruling 2026-10-21, Category A): the event-type cap counts landed public bookings
-  (`appointments.bookedVia = 'PUBLIC_LINK'`), not attempts, so junk cannot lock real visitors out; email and IP still
-  count every attempt.* There is also a `listSlots` per-IP limiter. A production start without `BOOKING_IP_SALT` refuses (R1, R6).
+  (`appointments.bookedVia = 'PUBLIC_LINK'`), not attempts, so junk cannot lock real visitors out. Exec adaptation
+  (owner ruling 2026-10-22, Category A): the email cap also counts landed public bookings for the same inbox (+tags
+  folded), checked under the booking lock, so a stranger cannot block a client's email with junk; IP still counts
+  every attempt.* There is also a `listSlots` per-IP limiter. A production start without `BOOKING_IP_SALT` refuses (R1, R6).
 - AC-018: Leads (Q11, R7):
   - No match: create a Lead with the event type's source and owner = host, via
     `LeadService.createLeadInTransaction`. LeadCreated lands in the outbox in the same transaction, which the

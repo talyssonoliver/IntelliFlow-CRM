@@ -19,12 +19,19 @@ export function escapeHtml(value: unknown): string {
   return String(value).replace(/[&<>"']/g, (ch) => HTML_ESCAPES[ch]);
 }
 
-/** Replaces every control character (incl. CR/LF and tab) with a space, collapses runs and trims. */
+/**
+ * C0 and C1 controls, DEL, and the Unicode line/paragraph separators: anything a mail client
+ * may render as a line break (NEL is C1 0x85).
+ */
+export function isControlOrLineBreak(code: number): boolean {
+  return code < 0x20 || (code >= 0x7f && code <= 0x9f) || code === 0x2028 || code === 0x2029;
+}
+
+/** Replaces every control character and line break with a space, collapses runs and trims. */
 export function stripLineBreaks(value: string): string {
   let out = '';
   for (const ch of value) {
-    const code = ch.codePointAt(0) ?? 0;
-    out += code < 0x20 || code === 0x7f ? ' ' : ch;
+    out += isControlOrLineBreak(ch.codePointAt(0) ?? 0) ? ' ' : ch;
   }
   return out.split(' ').filter(Boolean).join(' ');
 }

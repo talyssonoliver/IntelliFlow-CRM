@@ -813,7 +813,8 @@ describe('ScoringJob', () => {
       raw.mockResolvedValueOnce([{ email: 'erased-l1@erased.invalid' }]);
       const result = (await processScoringJob(queued)) as any;
       expect(mockScoreLead).toHaveBeenCalled();
-      expect(result.score).toBeDefined();
+      // BullMQ keeps the job result in Redis: it carries no score either (codex).
+      expect(result).toEqual({ skipped: true, reason: 'ERASED' });
       expect(
         (prisma as { leadAIInsight: { upsert: ReturnType<typeof vi.fn> } }).leadAIInsight.upsert
       ).not.toHaveBeenCalled();

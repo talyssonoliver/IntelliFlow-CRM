@@ -208,8 +208,24 @@ describe('prediction job', () => {
 
     const result = await processPredictionJob(churnJob('lead', LEAD));
 
-    expect(result).toMatchObject({ entityId: LEAD, predictionType: 'CHURN_RISK' });
+    // The job result is kept in Redis after completion: it carries no prediction either.
+    expect(result).toEqual({ skipped: true, reason: 'data-subject-request' });
+    expect(JSON.stringify(result)).not.toContain('Call them');
     expect(mockLeadAIInsightUpsert).not.toHaveBeenCalled();
+    expect(mockNotificationCreate).not.toHaveBeenCalled();
+  });
+
+  it('sends no alert when the person is erased right after the prediction is stored', async () => {
+    db.leads.set(LEAD, ADA);
+    mockLeadAIInsightUpsert.mockImplementation(async () => {
+      // The erasure commits between the prediction write and the alert.
+      db.lockedEmail.set(LEAD, erased(LEAD));
+      return {};
+    });
+
+    await processPredictionJob(churnJob('lead', LEAD));
+
+    expect(mockLeadAIInsightUpsert).toHaveBeenCalledOnce();
     expect(mockNotificationCreate).not.toHaveBeenCalled();
   });
 
