@@ -108,6 +108,19 @@ async function ensureMigrationSql(client: any): Promise<string | null> {
     await createIndexConcurrently(DB_URL!, statement);
   }
 
+  // The organizer no-overlap EXCLUDE constraint (RACE-BOOKI-01) is SQL-only; the
+  // slot-taken test needs the real rejection, so add it from its own migration.
+  const exclusion: unknown[] = await client.$queryRawUnsafe(
+    `SELECT 1 FROM pg_constraint WHERE conname = 'appointments_no_overlap_per_organizer'`
+  );
+  if (exclusion.length === 0) {
+    await applySchemaSql(
+      DB_URL!,
+      splitStatements(migrationFile('20260530000000_appointment_no_overlap_exclusion')),
+      { tolerate: ALREADY_THERE }
+    );
+  }
+
   const present: unknown[] = await client.$queryRawUnsafe(
     `SELECT 1 FROM pg_constraint WHERE conname = 'event_types_colorToken_check'`
   );
