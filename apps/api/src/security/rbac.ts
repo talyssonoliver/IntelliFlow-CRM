@@ -55,6 +55,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     report_schedule: ['read', 'write', 'delete', 'manage', 'admin'],
     contact_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-205
     event_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-203
+    dsar_request: ['read', 'write', 'export', 'manage', 'admin'], // PG-203 (ADMIN only)
     model_config: ['read', 'write', 'delete', 'manage', 'admin'], // PG-199
     goal: ['read', 'write', 'delete', 'export', 'manage', 'admin'],
   },
@@ -73,6 +74,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     report_schedule: ['read', 'write', 'delete', 'manage'],
     contact_type: ['read', 'write', 'delete', 'manage'], // PG-205: managers edit types
     event_type: ['read', 'write', 'delete', 'manage'], // PG-203: managers edit event types
+    dsar_request: [], // PG-203: data requests are ADMIN only
     model_config: ['read', 'write', 'delete', 'manage'], // PG-199: managers edit model settings
     goal: ['read', 'write', 'manage'],
   },
@@ -91,6 +93,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
     event_type: ['read'], // PG-203
+    dsar_request: [], // PG-203: data requests are ADMIN only
     model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
@@ -109,6 +112,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
     event_type: ['read'], // PG-203
+    dsar_request: [], // PG-203: data requests are ADMIN only
     model_config: ['read'], // PG-199
     goal: ['read', 'write'],
   },
@@ -127,6 +131,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
     event_type: ['read'], // PG-203
+    dsar_request: [], // PG-203: data requests are ADMIN only
     model_config: ['read'], // PG-199
     goal: ['read'],
   },

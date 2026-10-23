@@ -20,11 +20,20 @@ const repo = vi.hoisted(() => ({
   save: vi.fn(),
 }));
 
+// PG-203: the processing-restriction read the draft creators make (nobody restricted by default).
+const restrictions = vi.hoisted(() => ({ status: vi.fn() }));
+
 vi.mock('@intelliflow/adapters', () => {
   function MockPrismaAutoResponseDraftRepository() {
     return repo;
   }
-  return { PrismaAutoResponseDraftRepository: MockPrismaAutoResponseDraftRepository };
+  function MockPrismaProcessingRestrictionRepository() {
+    return restrictions;
+  }
+  return {
+    PrismaAutoResponseDraftRepository: MockPrismaAutoResponseDraftRepository,
+    PrismaProcessingRestrictionRepository: MockPrismaProcessingRestrictionRepository,
+  };
 });
 
 const loadApprovalPolicy = vi.hoisted(() => vi.fn());
@@ -82,6 +91,46 @@ beforeEach(() => {
   repo.findActiveByLeadAndTrigger.mockResolvedValue(null);
   repo.save.mockResolvedValue(undefined);
   loadApprovalPolicy.mockResolvedValue(policy());
+  restrictions.status.mockResolvedValue({ restricted: false, blocksMarketing: false, since: null });
+});
+
+describe('processing restrictions (PG-203, owner Q18, sign-off 7)', () => {
+  const RESTRICTED = { restricted: true, blocksMarketing: false, since: new Date() };
+
+  it('refuses to create a draft for a restricted recipient and saves nothing', async () => {
+    restrictions.status.mockResolvedValue(RESTRICTED);
+    await expect(
+      autoResponseRouter.createCaller(ctx()).create({
+        tenantId: TENANT,
+        leadId: LEAD,
+        leadTenantId: TENANT,
+        leadStatus: 'NEW',
+        triggerType: 'FORM_SUBMIT',
+        subject: 'Hello',
+        body: 'Body',
+        aiConfidence: 0.8,
+        recipientEmail: 'lead@example.invalid',
+        expiryHours: 168,
+      })
+    ).rejects.toMatchObject({
+      code: 'PRECONDITION_FAILED',
+      message: 'Processing is restricted for this person (data request).',
+    });
+    expect(restrictions.status).toHaveBeenCalledWith(TENANT, 'lead@example.invalid');
+    expect(repo.save).not.toHaveBeenCalled();
+  });
+
+  it('refuses to regenerate a draft for a recipient restricted since', async () => {
+    const original = draft();
+    original.submitForApproval(USER);
+    original.reject(USER, 'Wrong tone');
+    repo.findById.mockResolvedValue(original);
+    restrictions.status.mockResolvedValue(RESTRICTED);
+    await expect(
+      autoResponseRouter.createCaller(ctx()).regenerate({ draftId: original.id.toString() })
+    ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+    expect(repo.save).not.toHaveBeenCalled();
+  });
 });
 
 describe('create / regenerate — expiry from the policy (AC-009)', () => {

@@ -36,6 +36,10 @@ const input = {
   correlationId: 'lead-create-lead-1',
 };
 
+const allowAll = {
+  status: vi.fn(async () => ({ restricted: false, blocksMarketing: false, since: null })),
+};
+
 describe('enqueueLeadScoring', () => {
   beforeEach(() => {
     add.mockReset().mockResolvedValue(undefined);
@@ -44,7 +48,7 @@ describe('enqueueLeadScoring', () => {
   });
 
   it('adds a score-lead job to the AI scoring queue with the lead payload and an OTel carrier', async () => {
-    await enqueueLeadScoring(input);
+    await enqueueLeadScoring(input, allowAll);
     expect(Queue).toHaveBeenCalledWith(
       'ai-scoring',
       expect.objectContaining({
@@ -64,7 +68,7 @@ describe('enqueueLeadScoring', () => {
   it('never throws: a queue failure is logged without PII and swallowed', async () => {
     add.mockRejectedValueOnce(new Error('redis down'));
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await expect(enqueueLeadScoring(input)).resolves.toBeUndefined();
+    await expect(enqueueLeadScoring(input, allowAll)).resolves.toBeUndefined();
     expect(warn).toHaveBeenCalledTimes(1);
     const logged = JSON.stringify(warn.mock.calls[0]);
     expect(logged).toContain('lead-1');
@@ -75,7 +79,32 @@ describe('enqueueLeadScoring', () => {
   it('swallows a failure to load BullMQ too', async () => {
     vi.mocked(loadBullMQ).mockRejectedValueOnce(new Error('no bullmq'));
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    await expect(enqueueLeadScoring(input)).resolves.toBeUndefined();
+    await expect(enqueueLeadScoring(input, allowAll)).resolves.toBeUndefined();
     warn.mockRestore();
+  });
+
+  it('never queues a person with an active processing restriction (PG-203, owner Q18)', async () => {
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    const restricted = {
+      status: vi.fn(async () => ({ restricted: true, blocksMarketing: false, since: new Date() })),
+    };
+    await enqueueLeadScoring(input, restricted);
+    expect(restricted.status).toHaveBeenCalledWith('tenant-1', 'ada@example.invalid');
+    expect(Queue).not.toHaveBeenCalled();
+    expect(JSON.stringify(info.mock.calls)).not.toContain('ada@example.invalid');
+    info.mockRestore();
+  });
+
+  it('does not queue when the restriction check itself fails (fails closed)', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const info = vi.spyOn(console, 'info').mockImplementation(() => {});
+    await enqueueLeadScoring(input, { status: vi.fn().mockRejectedValue(new Error('db down')) });
+    expect(Queue).not.toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledWith('[lead-scoring] Restriction check failed; not scoring', {
+      leadId: 'lead-1',
+      error: 'Error',
+    });
+    warn.mockRestore();
+    info.mockRestore();
   });
 });

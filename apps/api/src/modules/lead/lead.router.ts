@@ -45,12 +45,14 @@ import { getAuditLogger } from '../../security/audit-logger';
 import { assertQuota, withQuotaLock } from '../../shared/quota-guard';
 import { detectScoreBias, type LeadScoringBiasCheck } from '@intelliflow/adapters';
 import { createNotification } from '../notifications/notifications.router';
+import { restrictionReader } from '../privacy/restriction-reader';
 import { deriveLeadInsights } from '../../shared/lead-insight-deriver';
 import {
   Lead,
   LeadId,
   Email,
   PhoneNumber,
+  ProcessingRestrictedError,
   type LeadStatus,
   type LeadSource,
 } from '@intelliflow/domain';
@@ -532,20 +534,23 @@ export const leadRouter = createTRPCRouter({
 
     // Fire-and-forget: enqueue AI lead scoring (best-effort; shared with public booking, PG-203).
     // enqueueLeadScoring logs its own failures; this handler only covers an unexpected rejection.
-    enqueueLeadScoring({
-      leadId: result.value.id.value,
-      tenantId: typedCtx.tenant.tenantId,
-      lead: {
-        email: input.email,
-        source: input.source,
-        firstName: input.firstName,
-        lastName: input.lastName,
-        company: input.company,
-        title: input.title,
-        phone: input.phone?.value,
+    enqueueLeadScoring(
+      {
+        leadId: result.value.id.value,
+        tenantId: typedCtx.tenant.tenantId,
+        lead: {
+          email: input.email,
+          source: input.source,
+          firstName: input.firstName,
+          lastName: input.lastName,
+          company: input.company,
+          title: input.title,
+          phone: input.phone?.value,
+        },
+        correlationId: `lead-create-${result.value.id.value}`,
       },
-      correlationId: `lead-create-${result.value.id.value}`,
-    }).catch((error: unknown) => {
+      restrictionReader(ctx)
+    ).catch((error: unknown) => {
       console.warn('[lead.router] AI scoring enqueue failed', {
         error: error instanceof Error ? error.name : 'unknown',
       });
@@ -1190,6 +1195,10 @@ export const leadRouter = createTRPCRouter({
             code: 'NOT_FOUND',
             message: result.error.message,
           });
+        }
+        // PG-203 (owner Q18): a data request restricted processing of this person.
+        if (result.error instanceof ProcessingRestrictedError) {
+          throw new TRPCError({ code: 'PRECONDITION_FAILED', message: result.error.message });
         }
 
         throw new TRPCError({

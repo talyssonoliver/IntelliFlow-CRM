@@ -9,13 +9,21 @@ import {
   PhoneNumber,
   LeadRepository,
   LeadStatusConflictError,
+  LeadIdentityChangedError,
   Contact,
   Account,
   CreateLeadProps,
   RepositoryTransaction,
+  ProcessingRestrictedError,
+  isErasedEmail,
+  normalizeSubjectEmail,
 } from '@intelliflow/domain';
 import { AIServicePort, EventBusPort } from '../ports/external';
 import { ContactRepository, AccountRepository } from '../ports/repositories';
+import {
+  ALLOW_ALL_RESTRICTIONS,
+  type ProcessingRestrictionPort,
+} from '../ports/repositories/ProcessingRestrictionPort';
 import { TransactionPort } from '../ports/TransactionPort';
 import {
   PersistenceError,
@@ -100,7 +108,12 @@ export class LeadService {
     private readonly accountRepository: AccountRepository,
     private readonly aiService: AIServicePort,
     private readonly eventBus: EventBusPort,
-    private readonly transactionManager: TransactionPort
+    private readonly transactionManager: TransactionPort,
+    /** PG-203 DSAR: a restricted person is never AI-scored. Optional so existing call sites compile. */
+    private readonly processingRestrictions: Pick<
+      ProcessingRestrictionPort,
+      'status'
+    > = ALLOW_ALL_RESTRICTIONS
   ) {}
 
   /**
@@ -232,6 +245,15 @@ export class LeadService {
       return Result.fail(new ValidationError(`Lead not found: ${leadId}`));
     }
 
+    // PG-203 DSAR (owner Q18): processing is restricted for this person — no AI call.
+    const scoredEmail = normalizeSubjectEmail(lead.email.value);
+    // An erased lead is never scored again, whatever port the service was built with.
+    if (isErasedEmail(scoredEmail)) return Result.fail(new ProcessingRestrictedError());
+    const restriction = await this.processingRestrictions.status(lead.tenantId, scoredEmail);
+    if (restriction.restricted) {
+      return Result.fail(new ProcessingRestrictedError());
+    }
+
     const previousScore = lead.score.value;
     const expectedStatus = lead.status;
 
@@ -264,39 +286,35 @@ export class LeadService {
       return Result.fail(updateResult.error);
     }
 
-    // Auto-qualify or auto-disqualify based on score
-    let autoQualified = false;
-    let autoDisqualified = false;
-
-    if (score >= LEAD_SCORE_THRESHOLDS.AUTO_QUALIFY && lead.status === 'NEW') {
-      const qualifyResult = lead.qualify(
-        'AI-AutoQualify',
-        `Score ${score} exceeds threshold ${LEAD_SCORE_THRESHOLDS.AUTO_QUALIFY}`
-      );
-      if (qualifyResult.isSuccess) {
-        autoQualified = true;
-      }
-    } else if (score <= LEAD_SCORE_THRESHOLDS.AUTO_DISQUALIFY && lead.status === 'NEW') {
-      const statusResult = lead.changeStatus('UNQUALIFIED', 'AI-AutoDisqualify');
-      if (statusResult.isSuccess) {
-        autoDisqualified = true;
-      }
-    }
+    const { autoQualified, autoDisqualified } = this.applyAutoStatus(lead, score);
 
     // Persist changes + events atomically (DDD-002 pattern). Scoring mutates the
     // score fields; the auto-(dis)qualify above is the only status change. The
     // plain save never writes `status`, so a status change goes through a
     // compare-and-set on the status the scoring was based on (first, so a lost
     // race rolls back before anything else is written).
+    // PG-203 DSAR: the person may have been restricted during the AI call; then the
+    // result is discarded, not stored. The check runs in the write's transaction under the
+    // person's address lock, so a restriction cannot commit between it and the write (codex).
+    // Locks are taken in the worker's order (writeIfStillEligible): the lead row first, by the
+    // score-only write, then the address lock in the check; a restricted result rolls back.
     try {
       await this.transactionManager.run(async (tx) => {
+        // Score-only, and only while the email is still the one scored: a result that
+        // returns after an erasure cannot restore the erased person's data (codex).
+        await this.leadRepository.save(lead, { scoreOnlyIfEmail: scoredEmail }, tx);
+        const after = await this.processingRestrictions.status(lead.tenantId, scoredEmail, tx);
+        if (after.restricted) throw new ProcessingRestrictedError();
         if (lead.status !== expectedStatus) {
           await this.leadRepository.save(lead, { expectedStatus }, tx);
         }
-        await this.leadRepository.save(lead, undefined, tx);
         await this.publishEvents(lead, tx);
       });
     } catch (error) {
+      if (error instanceof ProcessingRestrictedError) return Result.fail(error);
+      if (error instanceof LeadIdentityChangedError) {
+        return Result.fail(new ValidationError(error.message));
+      }
       return Result.fail(
         this.saveFailure(error, expectedStatus, 'Failed to save lead after scoring')
       );
@@ -311,6 +329,26 @@ export class LeadService {
       autoQualified,
       autoDisqualified,
     });
+  }
+
+  /** Auto-qualify or auto-disqualify a NEW lead based on its AI score. */
+  private applyAutoStatus(
+    lead: Lead,
+    score: number
+  ): { autoQualified: boolean; autoDisqualified: boolean } {
+    if (lead.status !== 'NEW') return { autoQualified: false, autoDisqualified: false };
+    if (score >= LEAD_SCORE_THRESHOLDS.AUTO_QUALIFY) {
+      const qualifyResult = lead.qualify(
+        'AI-AutoQualify',
+        `Score ${score} exceeds threshold ${LEAD_SCORE_THRESHOLDS.AUTO_QUALIFY}`
+      );
+      return { autoQualified: qualifyResult.isSuccess, autoDisqualified: false };
+    }
+    if (score <= LEAD_SCORE_THRESHOLDS.AUTO_DISQUALIFY) {
+      const statusResult = lead.changeStatus('UNQUALIFIED', 'AI-AutoDisqualify');
+      return { autoQualified: false, autoDisqualified: statusResult.isSuccess };
+    }
+    return { autoQualified: false, autoDisqualified: false };
   }
 
   /**

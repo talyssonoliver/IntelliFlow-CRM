@@ -590,10 +590,16 @@ export default function BookingContent({
         </Button>
       </form>
 
-      <footer className="mt-12 text-xs text-muted-foreground">
-        {'Powered by '}
-        <Link href="/" className="underline underline-offset-2">
-          Aurora
+      <footer className="mt-12 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+        <span>
+          {'Powered by '}
+          <Link href="/" className="underline underline-offset-2">
+            Aurora
+          </Link>
+        </span>
+        {/* PG-203 DSAR: the firm's data request page. */}
+        <Link href={`/dsar/${encodeURIComponent(handle)}`} className="underline underline-offset-2">
+          Your personal data
         </Link>
       </footer>
     </main>

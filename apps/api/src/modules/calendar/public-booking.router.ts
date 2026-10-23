@@ -69,18 +69,20 @@ import { loadTenantAvailability, type AvailabilityPrisma } from './availability-
 import {
   assertBookingCaps,
   assertEventTypeBookingCap,
-  bookingClientIp,
   bookingLookupLimiter,
   bookingSlotsLimiter,
   bookingSubmitLimiter,
   getBookingSalt,
   hashBookingValue,
+  ipHashOf,
   normalizeEmailForCap,
   pruneBookingAttempts,
   recordBookingAttempt,
 } from './booking-abuse';
 import { sendBookingEmails } from './booking-email';
+import { requiredProdEnv } from '@intelliflow/validators/required-url';
 import { enqueueLeadScoring } from '../lead/lead-scoring-enqueue';
+import { restrictionReader } from '../privacy/restriction-reader';
 import { onAppointmentCreated } from '../legal/appointment-side-effects';
 
 const NOT_AVAILABLE = 'This booking page is not available.';
@@ -114,7 +116,7 @@ interface Bookable {
     hostUserId: string;
     requiredFields: string[];
     leadSource: string;
-    tenant: { name: string; bookingPrivacyUrl: string | null };
+    tenant: { name: string; bookingPrivacyUrl: string | null; bookingHandle: string };
   };
   settings: {
     defaultTimezone: string;
@@ -158,7 +160,14 @@ async function resolveBookable(db: Reader, handle: string, slug: string): Promis
   });
   const eventType =
     found && tenant
-      ? { ...found, tenant: { name: tenant.name, bookingPrivacyUrl: tenant.bookingPrivacyUrl } }
+      ? {
+          ...found,
+          tenant: {
+            name: tenant.name,
+            bookingPrivacyUrl: tenant.bookingPrivacyUrl,
+            bookingHandle: handle,
+          },
+        }
       : null;
   const tenantId = eventType?.tenantId ?? NONE;
   const [settings, hostCount] = await Promise.all([
@@ -259,10 +268,6 @@ function assertRequiredAnswers(eventType: Bookable['eventType'], answers: Public
     (field) => !answers[field]?.trim()
   );
   if (missing.length > 0) throw new TRPCError({ code: 'BAD_REQUEST', message: REQUIRED_MISSING });
-}
-
-function ipHashOf(ctx: Context, salt: string): string {
-  return hashBookingValue(bookingClientIp(ctx.req as Request | undefined), salt);
 }
 
 function bookingAnswers(answers: PublicBookAnswers): PublicBookAnswers | null {
@@ -471,20 +476,23 @@ async function afterBooking(
     const created = lead.created;
     // Not awaited: scoring waits on Redis readiness and must never hold up the emails below.
     step('ai-scoring', () =>
-      enqueueLeadScoring({
-        leadId: created.id.value,
-        tenantId: eventType.tenantId,
-        lead: {
-          email: created.email.value,
-          source: created.source,
-          firstName: created.firstName ?? undefined,
-          lastName: created.lastName ?? undefined,
-          company: created.company ?? undefined,
-          title: created.title ?? undefined,
-          phone: created.phone?.value,
+      enqueueLeadScoring(
+        {
+          leadId: created.id.value,
+          tenantId: eventType.tenantId,
+          lead: {
+            email: created.email.value,
+            source: created.source,
+            firstName: created.firstName ?? undefined,
+            lastName: created.lastName ?? undefined,
+            company: created.company ?? undefined,
+            title: created.title ?? undefined,
+            phone: created.phone?.value,
+          },
+          correlationId: `lead-create-${created.id.value}`,
         },
-        correlationId: `lead-create-${created.id.value}`,
-      })
+        restrictionReader(ctx)
+      )
     ).catch(logDetachedFailure);
     await step('lead-activity', () =>
       ctx.prisma.leadActivity.create({
@@ -529,8 +537,23 @@ async function afterBooking(
       matchedExistingRecord: lead.matchedExistingRecord,
       linkedEarlierBookingLead: lead.linkedEarlierBookingLead,
       leadNotCreated: lead.leadNotCreated,
+      dataRequestUrl: dataRequestUrl(eventType.tenant.bookingHandle),
     });
   });
+}
+
+/**
+ * The firm's public data request page (PG-203 DSAR), for the booker's confirmation. A
+ * missing APP_URL in production drops the link (logged), never the confirmation itself.
+ */
+function dataRequestUrl(handle: string): string | undefined {
+  try {
+    const appUrl = requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000');
+    return `${appUrl}/dsar/${encodeURIComponent(handle)}`;
+  } catch {
+    console.error('[public-booking] APP_URL is not set; data request link left out');
+    return undefined;
+  }
 }
 
 export const publicBookingRouter = createTRPCRouter({
@@ -538,7 +561,7 @@ export const publicBookingRouter = createTRPCRouter({
     .input(publicBookingLookupSchema)
     .query(async ({ ctx, input }): Promise<PublicEventTypeDto> => {
       // Throttled per IP before the first read, so handles cannot be enumerated at speed.
-      bookingLookupLimiter.check(ipHashOf(ctx, getBookingSalt()));
+      bookingLookupLimiter.check(ipHashOf(ctx.req as Request | undefined, getBookingSalt()));
       const { eventType, settings } = await resolveBookable(ctx.prisma, input.handle, input.slug);
       return {
         firmName: eventType.tenant.name,
@@ -556,7 +579,7 @@ export const publicBookingRouter = createTRPCRouter({
   listSlots: publicProcedure
     .input(publicSlotsInputSchema)
     .query(async ({ ctx, input }): Promise<PublicSlotsDto> => {
-      bookingSlotsLimiter.check(ipHashOf(ctx, getBookingSalt()));
+      bookingSlotsLimiter.check(ipHashOf(ctx.req as Request | undefined, getBookingSalt()));
       const bookable = await resolveBookable(ctx.prisma, input.handle, input.slug);
       const rules = await loadRules(ctx.prisma, bookable.eventType.tenantId);
       const now = new Date();
@@ -584,7 +607,7 @@ export const publicBookingRouter = createTRPCRouter({
       }
       const salt = getBookingSalt();
       // Throttled per IP before any read or lock, so a flood cannot queue on the tenant lock.
-      bookingSubmitLimiter.check(ipHashOf(ctx, salt));
+      bookingSubmitLimiter.check(ipHashOf(ctx.req as Request | undefined, salt));
       const bookable = await resolveBookable(ctx.prisma, input.handle, input.slug);
       const { eventType, settings } = bookable;
       const tenantId = eventType.tenantId;
@@ -596,7 +619,7 @@ export const publicBookingRouter = createTRPCRouter({
         tenantId,
         eventTypeId: eventType.id,
         emailHash: hashBookingValue(normalizeEmailForCap(input.email), salt),
-        ipHash: ipHashOf(ctx, salt),
+        ipHash: ipHashOf(ctx.req as Request | undefined, salt),
       };
       // Lock-free pre-check: an over-cap caller is refused before it can wait on the lock.
       await assertBookingCaps(ctx.prisma, keys, now);

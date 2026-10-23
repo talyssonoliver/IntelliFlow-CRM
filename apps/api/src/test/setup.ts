@@ -17,6 +17,7 @@ process.env.QUOTA_GUARD_ALLOW_MISSING_SERVICE = '1';
 import type { PrismaClient, Prisma as PrismaNamespace } from '@intelliflow/db';
 import { Prisma } from '@intelliflow/db';
 import { mockDeep, mockReset } from 'vitest-mock-extended';
+import { NOT_RESTRICTED } from '@intelliflow/application';
 import type { BaseContext } from '../context';
 
 // ============================================================================
@@ -142,6 +143,9 @@ beforeEach(() => {
   Object.values(mockSecurityServices).forEach(safeMockReset);
   // Reset mockAdapters
   Object.values(mockAdapters).forEach(safeMockReset);
+  // PG-203: nobody is restricted by a data request unless a test says so (the reset above
+  // leaves the deep mock answering undefined, which the restriction checks treat as a failure).
+  mockAdapters.processingRestrictionRepository.status.mockResolvedValue(NOT_RESTRICTED);
 });
 
 /**
@@ -167,6 +171,7 @@ afterAll(() => {
  */
 export const mockServices = {
   lead: mockDeep<any>(),
+  dsar: mockDeep<any>(), // PG-203
   contact: mockDeep<any>(),
   account: mockDeep<any>(),
   opportunity: mockDeep<any>(),
@@ -287,6 +292,10 @@ export const mockAdapters = {
   notificationAuditLogger: mockDeep<any>(),
   experimentRepository: mockDeep<any>(),
   appointmentRepository: mockDeep<any>(),
+  // PG-203 DSAR
+  dsarRepository: mockDeep<any>(),
+  processingRestrictionRepository: mockDeep<any>(),
+  subjectDataRepository: mockDeep<any>(),
   quotaRepository: mockDeep<any>(),
 };
 

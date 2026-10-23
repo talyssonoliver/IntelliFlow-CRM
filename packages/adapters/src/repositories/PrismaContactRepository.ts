@@ -46,6 +46,24 @@ function toPhoneNumber(phone: string | null): PhoneNumber | undefined {
  * Prisma Contact Repository
  * Implements ContactRepository port using Prisma ORM
  */
+type RawExecutor = (query: TemplateStringsArray, ...values: unknown[]) => Promise<number>;
+
+/**
+ * PG-203 DSAR: the surviving record of a merge holds the merged person's data, so an active
+ * processing restriction on the secondary's address covers the primary's too, in the merge's
+ * transaction and under the address lock (codex). Skipped only by harnesses without raw SQL.
+ */
+async function carryRestriction(
+  tx: { $executeRaw?: RawExecutor },
+  tenantId: string,
+  fromEmail: string | null,
+  toEmail: string | null
+): Promise<void> {
+  if (!tx.$executeRaw || !fromEmail || !toEmail) return;
+  // Called on the client itself: Prisma's raw tag needs its `this`.
+  await tx.$executeRaw`SELECT dsar_carry_restriction(${tenantId}, ${fromEmail}, ${toEmail})`;
+}
+
 export class PrismaContactRepository implements ContactRepository {
   constructor(private readonly prisma: PrismaClient) {}
 
@@ -290,6 +308,7 @@ export class PrismaContactRepository implements ContactRepository {
           update: (args: unknown) => Promise<unknown>;
           delete: (args: unknown) => Promise<unknown>;
         };
+        $executeRaw?: RawExecutor;
       };
 
       // AC-006 / TC-NEG-002: NEVER swallow errors inside the $transaction —
@@ -362,6 +381,8 @@ export class PrismaContactRepository implements ContactRepository {
           data: mergeData,
         });
       }
+
+      await carryRestriction(txAny, tenantId, secondary.email, primary.email);
 
       await txAny.contact.delete({
         where: { id: secondaryId, tenantId },

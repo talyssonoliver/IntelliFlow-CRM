@@ -49,7 +49,7 @@ beforeAll(async () => {
 
 describe('Sitemap Reconciliation', () => {
   // TC-25
-  it('total page.tsx count equals 215 (regression guard)', () => {
+  it('total page.tsx count equals 219 (regression guard)', () => {
     // Updated by PG-186: document-settings, document-types, storage-policies moved to (list)/.
     // Net count increased by 2 from PG-182/PG-183/PG-186 work (was 205 before sprint-17).
     // 208 = 207 baseline + 3 newly-tracked under agent-approvals/logs/*, governance/quality-reports/coverage/
@@ -62,8 +62,9 @@ describe('Sitemap Reconciliation', () => {
     // Aurora rebrand: +1 for the unlinked, noindex design preview preview/aurora/page.tsx → 212.
     // PG-197: +2 for accounts/(list)/new/page.tsx and accounts/[id]/edit/page.tsx → 214.
     // PG-203: +1 for the public booking page (public)/book/[handle]/[slug]/page.tsx → 215.
+    // PG-203 DSAR: +4 (3 public /dsar pages, /settings/privacy-requests) → 219.
     const pageFiles = findPageFiles(APP_DIR);
-    expect(pageFiles.length).toBe(215);
+    expect(pageFiles.length).toBe(219);
   });
 
   // TC-26

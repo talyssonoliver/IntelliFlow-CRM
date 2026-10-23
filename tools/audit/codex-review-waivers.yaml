@@ -1229,3 +1229,16 @@ waivers:
       appointments (L1). Tracked as one deliberate fix in gh #967.
     author: PG-203 lane
     date: '2026-10-21'
+  - fingerprint: 6468c85e01edd84bbe0a363105c457d989db4bc44ed4d04d7d6fa1f4cc44004d
+    reason: >-
+      The resurrection claim is a false positive. Migration 20261022120000_dsar_requests guards
+      ai_scores, lead_ai_insights, contact_ai_insights and ai_insights with BEFORE INSERT OR
+      UPDATE triggers that refuse any write for an erased lead or contact, from any worker,
+      including the entity-insight, insight-generation and prediction upserts. Each trigger
+      takes FOR KEY SHARE on the subject row, so an in-flight write either waits for the
+      erasure and is refused, or lands first and is deleted by it. Proven by the integration
+      test "refuses any AI-derived write for the erased person afterwards"; the DB guard was the
+      owner's ruling. What remains (no model call for a queued job after erasure, and whether
+      a restriction should also stop insights, beyond spec D-AC-08 / Q18) is tracked in gh #1002.
+    author: PG-203 lane
+    date: '2026-10-23'

@@ -9,6 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   DSAR_LIMITS,
   DSAR_REQUEST_TYPES,
+  accessResolutionNote,
   DSAR_STATUSES,
   DSAR_WITHHELD_CATEGORIES,
   accessCompletesAtVerify,
@@ -66,6 +67,7 @@ describe('constants', () => {
       'TICKET_SUBJECTS',
       'MESSAGE_BODIES',
       'DOCUMENTS',
+      'EXCESS_ROWS',
     ]);
   });
 });
@@ -231,5 +233,22 @@ describe('ProcessingRestrictedError', () => {
     expect(error).toBeInstanceOf(DomainError);
     expect(error.code).toBe('PROCESSING_RESTRICTED');
     expect(error.message).toBe('Processing is restricted for this person (data request).');
+  });
+});
+
+describe('accessResolutionNote', () => {
+  it('keeps a note without withholdings as written', () => {
+    expect(accessResolutionNote('Sent the export.', [])).toBe('Sent the export.');
+  });
+
+  it('adds one line listing what was withheld and why', () => {
+    expect(
+      accessResolutionNote('Sent the export.', [
+        { category: 'THIRD_PARTY', count: 2, reason: 'Names other clients' },
+        { category: 'EXCESS_ROWS', count: 10, reason: 'Over the export limit' },
+      ])
+    ).toBe(
+      'Sent the export.\nWithheld: THIRD_PARTY: 2 (Names other clients); EXCESS_ROWS: 10 (Over the export limit)'
+    );
   });
 });

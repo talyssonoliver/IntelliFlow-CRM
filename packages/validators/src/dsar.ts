@@ -10,6 +10,7 @@ import { z } from 'zod';
 import {
   DSAR_IDENTITY_METHODS,
   DSAR_LIMITS,
+  accessResolutionNote,
   DSAR_OBJECTION_SCOPES,
   DSAR_REQUEST_TYPES,
   DSAR_STATUSES,
@@ -113,6 +114,10 @@ export const dsarLogRequestSchema = z
         path: ['objectionScope'],
       });
     }
+    // dsar_requests_objectionScope_check: only an objection carries a scope (codex).
+    if (value.type !== 'OBJECTION' && value.objectionScope) {
+      ctx.addIssue({ code: 'custom', message: 'Only for objections', path: ['objectionScope'] });
+    }
   });
 export type DsarLogRequestInput = z.infer<typeof dsarLogRequestSchema>;
 
@@ -145,7 +150,17 @@ export const dsarCompleteAccessSchema = z
       )
       .max(DSAR_WITHHELD_CATEGORIES.length),
   })
-  .strict();
+  .strict()
+  .superRefine((value, ctx) => {
+    // Stored as one note: the note plus the withholding reasons must fit the column.
+    if (accessResolutionNote(value.note, value.withheld).length > DSAR_LIMITS.noteMax) {
+      ctx.addIssue({
+        code: 'custom',
+        message: `The note and the withholding reasons together must fit in ${DSAR_LIMITS.noteMax} characters`,
+        path: ['note'],
+      });
+    }
+  });
 export type DsarCompleteAccessInput = z.infer<typeof dsarCompleteAccessSchema>;
 
 export const dsarExtendSchema = z
@@ -215,6 +230,8 @@ export interface DsarRequestDto {
   effectiveDeadline: string | null;
   overdue: boolean;
   exportIssuedAt: string | null;
+  /** A download link exists and has not expired: the admin can revoke it, whatever the status. */
+  exportLinkActive: boolean;
   completedAt: string | null;
   resolutionNote: string | null;
   clockBreached: boolean;

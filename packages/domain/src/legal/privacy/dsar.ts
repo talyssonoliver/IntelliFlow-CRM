@@ -40,8 +40,9 @@ export const RESTRICTION_KINDS = ['RESTRICTION', 'OBJECTION'] as const;
 export type RestrictionKind = (typeof RESTRICTION_KINDS)[number];
 
 /**
- * Free-text categories the automatic export withholds until the firm has reviewed them
- * (legal privilege, third parties). Only types, dates, statuses and counts are exported.
+ * What the automatic export withholds until the firm has reviewed it: free text (legal
+ * privilege, third parties; only types, dates, statuses and counts are exported) and any
+ * rows past the per-category cap, which are counted rather than silently dropped.
  */
 export const DSAR_WITHHELD_CATEGORIES = [
   'NOTES',
@@ -49,6 +50,7 @@ export const DSAR_WITHHELD_CATEGORIES = [
   'TICKET_SUBJECTS',
   'MESSAGE_BODIES',
   'DOCUMENTS',
+  'EXCESS_ROWS',
 ] as const;
 export type DsarWithheldCategory = (typeof DSAR_WITHHELD_CATEGORIES)[number];
 
@@ -79,6 +81,21 @@ const MS_PER_HOUR = 3_600_000;
 export const ERASED_EMAIL_DOMAIN = 'erased.invalid';
 
 /** Trim and lowercase. No `+tag` folding: the subject is the exact address they verified. */
+/**
+ * The resolution note stored when an access request completes: the admin's note plus
+ * one line listing what was withheld and why. It must fit `DSAR_LIMITS.noteMax`
+ * (dsar_requests_resolutionNote_check), so the validator and the service both
+ * measure this exact string (codex).
+ */
+export function accessResolutionNote(
+  note: string,
+  withheld: ReadonlyArray<{ category: string; count: number; reason: string }>
+): string {
+  if (withheld.length === 0) return note;
+  const summary = withheld.map((w) => `${w.category}: ${w.count} (${w.reason})`).join('; ');
+  return `${note}\nWithheld: ${summary}`;
+}
+
 export function normalizeSubjectEmail(email: string): string {
   return email.trim().toLowerCase();
 }

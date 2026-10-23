@@ -32,6 +32,9 @@ import {
   PrismaExperimentRepository,
   PrismaAppointmentRepository,
   PrismaConversationSearchRepository,
+  PrismaDsarRepository,
+  PrismaProcessingRestrictionRepository,
+  PrismaSubjectDataRepository,
   InMemoryEventBus,
   PrismaTransactionManager,
   MockAIService,
@@ -87,6 +90,7 @@ import {
   ExperimentService,
   NotificationService,
   ConversationSearchService,
+  DataSubjectRequestService,
 } from '@intelliflow/application';
 import {
   getAuditLogger,
@@ -106,6 +110,8 @@ import {
 import { createActiveEmbeddingModelReader } from './modules/agent/active-embedding-model';
 import { HomeCacheService } from './modules/home/home.cache';
 import { PublicFeedbackService } from './modules/public-feedback/public-feedback.service';
+import { createDsarEmailNotifier } from './modules/privacy/dsar-email';
+import { createDsarTokenPort } from './modules/privacy/dsar-token';
 import type { CachePort } from '@intelliflow/application';
 // IFC-310: Duplicate-detection runtime services
 import {
@@ -345,6 +351,10 @@ const createAdapters = async (prismaClient: PrismaClient) => {
   const notificationAuditLogger = new PrismaNotificationAuditLogger(prismaClient);
   const experimentRepository = new PrismaExperimentRepository(prismaClient);
   const appointmentRepository = new PrismaAppointmentRepository(prismaClient);
+  // PG-203 DSAR: requests, processing restrictions, and one person's CRM data.
+  const dsarRepository = new PrismaDsarRepository(prismaClient);
+  const processingRestrictionRepository = new PrismaProcessingRestrictionRepository(prismaClient);
+  const subjectDataRepository = new PrismaSubjectDataRepository(prismaClient);
 
   // Storage & AV (IFC-094)
   const storageService = new SupabaseStorageAdapter(
@@ -491,6 +501,9 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     notificationAuditLogger,
     experimentRepository,
     appointmentRepository,
+    dsarRepository,
+    processingRestrictionRepository,
+    subjectDataRepository,
     eventBus,
     transactionManager,
     aiService,
@@ -549,14 +562,31 @@ const createServices = async (prismaClient: PrismaClient) => {
     adapters.accountRepository,
     adapters.aiService,
     adapters.eventBus,
-    adapters.transactionManager
+    adapters.transactionManager,
+    // PG-203 (owner Q18): a processing restriction stops AI scoring.
+    adapters.processingRestrictionRepository
   );
+
+  // PG-203 DSAR: the firm is the controller; links carry the token in the URL fragment only.
+  const dataSubjectRequestService = new DataSubjectRequestService({
+    repo: adapters.dsarRepository,
+    subjectData: adapters.subjectDataRepository,
+    restrictions: adapters.processingRestrictionRepository,
+    notifications: createDsarEmailNotifier({
+      sender: adapters.notificationService,
+      adminEmails: (tenantId) => adapters.dsarRepository.adminEmails(tenantId),
+    }),
+    tokens: createDsarTokenPort(),
+    appUrl: () => requiredProdEnv('APP_URL', process.env.APP_URL, 'http://localhost:3000'),
+  });
 
   const contactService = new ContactService(
     adapters.contactRepository,
     adapters.accountRepository,
     adapters.leadRepository,
-    adapters.eventBus
+    adapters.eventBus,
+    // PG-203: a processing restriction follows the contact to a new email.
+    adapters.processingRestrictionRepository
   );
 
   const accountService = new AccountService(
@@ -789,6 +819,8 @@ const createServices = async (prismaClient: PrismaClient) => {
 
   return {
     leadService,
+    // PG-203: data subject requests
+    dataSubjectRequestService,
     contactService,
     accountService,
     opportunityService,

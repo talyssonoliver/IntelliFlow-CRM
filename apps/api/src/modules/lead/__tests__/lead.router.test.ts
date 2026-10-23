@@ -9,6 +9,7 @@ import { TEST_UUIDS } from '../../../test/setup';
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+import { ProcessingRestrictedError } from '@intelliflow/domain';
 vi.mock('../lead-scoring-enqueue', () => ({ enqueueLeadScoring: vi.fn(async () => undefined) }));
 
 import { leadRouter } from '../lead.router';
@@ -107,20 +108,24 @@ describe('Lead Router', () => {
       });
 
       expect(enqueueLeadScoring).toHaveBeenCalledTimes(1);
-      expect(enqueueLeadScoring).toHaveBeenCalledWith({
-        leadId: TEST_UUIDS.lead1,
-        tenantId: TEST_UUIDS.tenant,
-        lead: {
-          email: 'scored@example.com',
-          source: 'REFERRAL',
-          firstName: 'Sam',
-          lastName: 'Score',
-          company: undefined,
-          title: undefined,
-          phone: undefined,
+      expect(enqueueLeadScoring).toHaveBeenCalledWith(
+        {
+          leadId: TEST_UUIDS.lead1,
+          tenantId: TEST_UUIDS.tenant,
+          lead: {
+            email: 'scored@example.com',
+            source: 'REFERRAL',
+            firstName: 'Sam',
+            lastName: 'Score',
+            company: undefined,
+            title: undefined,
+            phone: undefined,
+          },
+          correlationId: `lead-create-${TEST_UUIDS.lead1}`,
         },
-        correlationId: `lead-create-${TEST_UUIDS.lead1}`,
-      });
+        // PG-203: the processing-restriction reader (the container adapter in production).
+        ctx.adapters!.processingRestrictionRepository
+      );
     });
 
     it('passes the qualificationNote to the service for atomic persistence', async () => {
@@ -1424,6 +1429,25 @@ describe('Lead Router', () => {
         expect.objectContaining({
           code: 'INTERNAL_SERVER_ERROR',
           message: 'AI service unavailable',
+        })
+      );
+    });
+  });
+
+  describe('scoreWithAI and processing restrictions (PG-203, owner Q18)', () => {
+    it('answers PRECONDITION_FAILED with the data-request message when processing is restricted', async () => {
+      const ctx = createTestContext();
+      const callerWithService = leadRouter.createCaller(ctx);
+      ctx.services!.lead!.scoreLead = vi.fn().mockResolvedValue({
+        isSuccess: false,
+        isFailure: true,
+        error: new ProcessingRestrictedError(),
+      });
+
+      await expect(callerWithService.scoreWithAI({ leadId: TEST_UUIDS.lead1 })).rejects.toThrow(
+        expect.objectContaining({
+          code: 'PRECONDITION_FAILED',
+          message: 'Processing is restricted for this person (data request).',
         })
       );
     });

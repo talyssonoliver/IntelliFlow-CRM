@@ -20,6 +20,8 @@ import type { Job } from 'bullmq';
 // ============================================================================
 
 const mockScoreLead = vi.hoisted(() => vi.fn());
+/** PG-203: lead id -> stored email, for the data-request re-check in processScoringJob. */
+const storedLeads = vi.hoisted(() => new Map<string, string>());
 const mockPredictChurnRisk = vi.hoisted(() => vi.fn());
 const mockNBAExecute = vi.hoisted(() => vi.fn());
 const mockQualScoreLead = vi.hoisted(() => vi.fn());
@@ -93,13 +95,27 @@ vi.mock('../../agents/next-best-action.agent', () => ({
 
 vi.mock('@intelliflow/db', () => ({
   prisma: {
+    // PG-203: the locked re-check before the insight write runs on this same mock.
+    $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) =>
+      fn((await import('@intelliflow/db')).prisma)
+    ),
+    $queryRaw: vi.fn(async (_sql: TemplateStringsArray, leadId: string) => {
+      const email = storedLeads.get(leadId);
+      return email ? [{ email }] : [];
+    }),
     leadAIInsight: { upsert: mockLeadAIInsightUpsert },
     contactAIInsight: { upsert: mockContactAIInsightUpsert },
     notification: { create: mockNotificationCreate },
     lead: {
       groupBy: vi.fn().mockResolvedValue([]),
       findMany: vi.fn().mockResolvedValue([]),
+      // PG-203: the stored lead still has the email its job was queued with.
+      findFirst: vi.fn(async ({ where }: { where: { id: string } }) => {
+        const email = storedLeads.get(where.id);
+        return email ? { email } : null;
+      }),
     },
+    processingRestriction: { findFirst: vi.fn().mockResolvedValue(null) },
   },
 }));
 
@@ -115,7 +131,9 @@ vi.mock('../../monitoring/hallucination-checker', () => ({
   hallucinationChecker: { checkOutput: mockCheckOutput },
 }));
 
-vi.mock('@intelliflow/domain', () => ({
+vi.mock('@intelliflow/domain', async (importActual) => ({
+  // PG-203: the data-request guard uses the real email helpers.
+  ...(await importActual<typeof import('@intelliflow/domain')>()),
   requiresHumanReview: mockRequiresHumanReview,
 }));
 
@@ -141,6 +159,14 @@ function makeScoringJob(
     source: string;
   }> = {}
 ): Job<any> {
+  const email = overrides.email ?? 'test@example.com';
+  // Jobs for different people get different lead ids (two run side by side below).
+  const leadId =
+    overrides.leadId ??
+    (overrides.email
+      ? `00000000-0000-4000-8000-${String(storedLeads.size + 100).padStart(12, '0')}`
+      : '00000000-0000-4000-8000-000000000001');
+  storedLeads.set(leadId, email);
   return {
     id: 'test-job-1',
     name: 'score-lead',
@@ -148,10 +174,10 @@ function makeScoringJob(
     token: 'test-token',
     attemptsMade: 2,
     data: {
-      leadId: overrides.leadId ?? '00000000-0000-4000-8000-000000000001',
+      leadId,
       tenantId: overrides.tenantId ?? '00000000-0000-4000-8000-000000000002',
       lead: {
-        email: overrides.email ?? 'test@example.com',
+        email,
         title: overrides.title ?? 'VP Engineering',
         company: overrides.company ?? 'Acme Corp',
         source: overrides.source ?? 'website',

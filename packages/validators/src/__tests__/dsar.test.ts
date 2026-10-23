@@ -124,6 +124,36 @@ describe('admin schemas', () => {
     ).toBe(false);
   });
 
+  it('gives a scope only to staff-logged objections (dsar_requests_objectionScope_check)', () => {
+    const base = {
+      email: 'ada@example.invalid',
+      receivedOn: '2026-10-20',
+      identityMethod: 'SIGNED_LETTER',
+      identityNote: 'Signed letter matched the address on file',
+    };
+    expect(
+      dsarLogRequestSchema.safeParse({ ...base, type: 'ACCESS', objectionScope: 'MARKETING' })
+        .success
+    ).toBe(false);
+    expect(
+      dsarLogRequestSchema.safeParse({ ...base, type: 'OBJECTION', objectionScope: 'MARKETING' })
+        .success
+    ).toBe(true);
+  });
+
+  it('keeps the note and the withholding reasons within the stored 2000 characters', () => {
+    const withheld = [{ category: 'NOTES', count: 2, reason: 'Legal professional privilege' }];
+    expect(
+      dsarCompleteAccessSchema.safeParse({ id: CUID, note: 'x'.repeat(2000), withheld: [] }).success
+    ).toBe(true);
+    expect(
+      dsarCompleteAccessSchema.safeParse({ id: CUID, note: 'x'.repeat(2000), withheld }).success
+    ).toBe(false);
+    expect(
+      dsarCompleteAccessSchema.safeParse({ id: CUID, note: 'x'.repeat(1900), withheld }).success
+    ).toBe(true);
+  });
+
   it('bounds the completion fields; the service decides which a type requires', () => {
     expect(
       dsarCompleteSchema.parse({ id: CUID, note: 'Done', noHoldConfirmed: true })

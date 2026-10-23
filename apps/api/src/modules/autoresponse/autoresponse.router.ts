@@ -37,6 +37,7 @@ import {
 import type { Context } from '../../context';
 import { getTenantContext } from '../../security/tenant-context';
 import { createNotification } from '../notifications/notifications.router';
+import { restrictionReader } from '../privacy/restriction-reader';
 import { loadApprovalPolicy, type LoadOptions } from '../../agent/approval-policy-loader';
 
 // Lazy-load the repository implementation to avoid workspace resolution issues
@@ -180,6 +181,24 @@ async function tryAutoApproveDraft(
   return draft.approve(SYSTEM_APPROVAL_ACTOR, undefined, reason).isSuccess;
 }
 
+/**
+ * PG-203 (owner Q18; spec sign-off 7): no AI draft reply is created for a person whose
+ * processing is restricted by a data request.
+ */
+async function assertRecipientNotRestricted(
+  ctx: Context,
+  tenantId: string,
+  recipientEmail: string
+): Promise<void> {
+  const status = await restrictionReader(ctx).status(tenantId, recipientEmail);
+  if (status.restricted) {
+    throw new TRPCError({
+      code: 'PRECONDITION_FAILED',
+      message: 'Processing is restricted for this person (data request).',
+    });
+  }
+}
+
 export const autoResponseRouter = createTRPCRouter({
   /**
    * Create a new auto-response draft
@@ -210,6 +229,8 @@ export const autoResponseRouter = createTRPCRouter({
           message: `Active draft already exists for lead ${input.leadId} with trigger ${input.triggerType}`,
         });
       }
+
+      await assertRecipientNotRestricted(ctx, typedCtx.tenant.tenantId, input.recipientEmail);
 
       // Create response content
       let content: ResponseContent;
@@ -855,6 +876,8 @@ export const autoResponseRouter = createTRPCRouter({
           message: `An active draft already exists for lead ${original.leadId} with trigger ${original.triggerType}`,
         });
       }
+
+      await assertRecipientNotRestricted(ctx, typedCtx.tenant.tenantId, original.recipientEmail);
 
       // Build content — use overrides if provided, else reuse original
       const originalContent = original.content.toValue();

@@ -724,20 +724,23 @@ describe('book — after commit (AC-016, AC-019)', () => {
   it('queues AI scoring for a new lead, writes its activity, runs side effects without ICS and sends two emails', async () => {
     await caller().book(bookInput);
     await vi.waitFor(() => expect(sendEmail).toHaveBeenCalledTimes(2));
-    expect(enqueueLeadScoring).toHaveBeenCalledWith({
-      leadId: 'clhlead000000000000',
-      tenantId: TENANT,
-      lead: {
-        email: 'ada@example.invalid',
-        source: 'BOOKING',
-        firstName: 'Ada',
-        lastName: 'Lovelace',
-        company: undefined,
-        title: undefined,
-        phone: '+442079460000',
+    expect(enqueueLeadScoring).toHaveBeenCalledWith(
+      {
+        leadId: 'clhlead000000000000',
+        tenantId: TENANT,
+        lead: {
+          email: 'ada@example.invalid',
+          source: 'BOOKING',
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          company: undefined,
+          title: undefined,
+          phone: '+442079460000',
+        },
+        correlationId: 'lead-create-clhlead000000000000',
       },
-      correlationId: 'lead-create-clhlead000000000000',
-    });
+      expect.objectContaining({ status: expect.any(Function) })
+    );
     expect(prismaMock.leadActivity.create).toHaveBeenCalledWith({
       data: expect.objectContaining({
         leadId: 'clhlead000000000000',

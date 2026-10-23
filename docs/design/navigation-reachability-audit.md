@@ -6,7 +6,7 @@
 > typing the URL directly.
 
 > **Canonical counts**: All "page.tsx" file-count references in this document
-> reflect the filesystem total (Total Pages: 215) emitted by
+> reflect the filesystem total (Total Pages: 219) emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
@@ -120,29 +120,32 @@ Legend:
   a booking link; deliberately not linked from in-app navigation)
 - **--** = No entry (unreachable from that layer)
 
-### Public Pages (33 routes) — All reachable via PublicHeader/PublicFooter, except the external-entry booking page
+### Public Pages (36 routes) — All reachable via PublicHeader/PublicFooter, except the external-entry booking and DSAR pages
 
-| Route                                                     | Status | Notes                                                                                                                                                                                                              |
-| --------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `/` (public)                                              | OK     | Public home                                                                                                                                                                                                        |
-| `/about`                                                  | OK     | Footer link                                                                                                                                                                                                        |
-| `/aup`                                                    | OK     | Footer link (Acceptable Use Policy)                                                                                                                                                                                |
-| `/blog`, `/blog/[slug]`                                   | OK     | Header/footer links                                                                                                                                                                                                |
-| `/careers`, `/careers/[id]`                               | OK     | Footer link                                                                                                                                                                                                        |
-| `/contact`                                                | OK     | Header/footer link                                                                                                                                                                                                 |
-| `/features`                                               | OK     | Header link                                                                                                                                                                                                        |
-| `/privacy`                                                | OK     | Footer, signup, home, cookie banner                                                                                                                                                                                |
-| `/terms`                                                  | OK     | Footer, signup, registration, welcome email                                                                                                                                                                        |
-| `/cookies`                                                | OK     | Footer (2x), cookie banner                                                                                                                                                                                         |
-| `/dpa`                                                    | OK     | Footer (legal list)                                                                                                                                                                                                |
-| `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA                                                                                                                                                                                                         |
-| `/forgot-password`, `/reset-password/*`                   | OK     | Login page link                                                                                                                                                                                                    |
-| `/mfa/verify`                                             | OK     | Login flow                                                                                                                                                                                                         |
-| `/verify-email/*`                                         | OK     | Signup flow                                                                                                                                                                                                        |
-| `/logout`                                                 | OK     | Auth flow                                                                                                                                                                                                          |
-| `/lp/[slug]`                                              | OK     | Marketing campaign links                                                                                                                                                                                           |
-| `/partners`, `/press`, `/pricing`, `/security`, `/status` | OK     | Footer links                                                                                                                                                                                                       |
-| `/book/[handle]/[slug]`                                   | OK     | External entry (PG-203): booking link built by `BookingLinkCard.tsx` (`<origin>/book/<handle>/<slug>`) and shared with clients. Chrome-free, `noindex`, disallowed in `robots.ts`, no sidebar entry. Not a waiver. |
+| Route                                                     | Status | Notes                                                                                                                                                                                                                                         |
+| --------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/` (public)                                              | OK     | Public home                                                                                                                                                                                                                                   |
+| `/about`                                                  | OK     | Footer link                                                                                                                                                                                                                                   |
+| `/aup`                                                    | OK     | Footer link (Acceptable Use Policy)                                                                                                                                                                                                           |
+| `/blog`, `/blog/[slug]`                                   | OK     | Header/footer links                                                                                                                                                                                                                           |
+| `/careers`, `/careers/[id]`                               | OK     | Footer link                                                                                                                                                                                                                                   |
+| `/contact`                                                | OK     | Header/footer link                                                                                                                                                                                                                            |
+| `/features`                                               | OK     | Header link                                                                                                                                                                                                                                   |
+| `/privacy`                                                | OK     | Footer, signup, home, cookie banner                                                                                                                                                                                                           |
+| `/terms`                                                  | OK     | Footer, signup, registration, welcome email                                                                                                                                                                                                   |
+| `/cookies`                                                | OK     | Footer (2x), cookie banner                                                                                                                                                                                                                    |
+| `/dpa`                                                    | OK     | Footer (legal list)                                                                                                                                                                                                                           |
+| `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA                                                                                                                                                                                                                                    |
+| `/forgot-password`, `/reset-password/*`                   | OK     | Login page link                                                                                                                                                                                                                               |
+| `/mfa/verify`                                             | OK     | Login flow                                                                                                                                                                                                                                    |
+| `/verify-email/*`                                         | OK     | Signup flow                                                                                                                                                                                                                                   |
+| `/logout`                                                 | OK     | Auth flow                                                                                                                                                                                                                                     |
+| `/lp/[slug]`                                              | OK     | Marketing campaign links                                                                                                                                                                                                                      |
+| `/partners`, `/press`, `/pricing`, `/security`, `/status` | OK     | Footer links                                                                                                                                                                                                                                  |
+| `/book/[handle]/[slug]`                                   | OK     | External entry (PG-203): booking link built by `BookingLinkCard.tsx` (`<origin>/book/<handle>/<slug>`) and shared with clients. Chrome-free, `noindex`, disallowed in `robots.ts`, no sidebar entry. Not a waiver.                            |
+| `/dsar/[handle]`                                          | OK     | External entry (PG-203): "Your personal data" link in the public booking page footer (`BookingContent.tsx`) and the booking confirmation email. Chrome-free, `noindex`, disallowed in `robots.ts` (`/dsar/`), no sidebar entry. Not a waiver. |
+| `/dsar/[handle]/verify`                                   | OK     | External entry (PG-203): link in the DSAR verification email only (token in the URL fragment). Chrome-free, `noindex`, disallowed in `robots.ts` (`/dsar/`), no sidebar entry. Not a waiver.                                                  |
+| `/dsar/[handle]/export`                                   | OK     | External entry (PG-203): link in the DSAR export email only (token in the URL fragment). Chrome-free, `noindex`, disallowed in `robots.ts` (`/dsar/`), no sidebar entry. Not a waiver.                                                        |
 
 ### Dashboard (3 routes)
 
@@ -341,23 +344,24 @@ Legend:
 | ---------- | :-: | :-: | :-: | :-: | :--------: | --------- |
 | `/profile` | --  | YES | --  | --  |    YES     | User menu |
 
-### Settings (10 routes + 3 cross-links)
+### Settings (11 routes + 3 cross-links)
 
-| Route                     |  H  | UM  | SB  | IP  | Reachable? | Notes                                                                               |
-| ------------------------- | :-: | :-: | :-: | :-: | :--------: | ----------------------------------------------------------------------------------- |
-| `/settings`               | --  | YES | --  | --  |    YES     | User menu                                                                           |
-| `/settings/account`       | --  | --  | SB  | --  |    YES     |                                                                                     |
-| `/settings/ai`            | --  | --  | SB  | --  |    YES     | Also cross-linked from AI sidebar                                                   |
-| `/settings/integrations`  | --  | --  | SB  | --  |    YES     |                                                                                     |
-| `/settings/notifications` | --  | --  | SB  | --  |    YES     |                                                                                     |
-| `/settings/pipeline`      | --  | --  | SB  | --  |    YES     |                                                                                     |
-| `/settings/routing`       | --  | --  | SB  | --  |    YES     |                                                                                     |
-| `/settings/security/mfa`  | --  | --  | SB  | --  |    YES     |                                                                                     |
-| `/settings/team`          | --  | --  | SB  | --  |    YES     |                                                                                     |
-| `/settings/automation`    | --  | --  | SB  | --  |    YES     | Settings sidebar "Automation" item — unified bento page for IFC-031 FU-011 + FU-012 |
-| → `/billing`              | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link                                        |
-| → `/governance`           | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link                                        |
-| → `/docs`                 | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — SUPER_ADMIN only                                  |
+| Route                        |  H  | UM  | SB  | IP  | Reachable? | Notes                                                                                                                            |
+| ---------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------------------------------------------------------------------------------------------------------- |
+| `/settings`                  | --  | YES | --  | --  |    YES     | User menu                                                                                                                        |
+| `/settings/account`          | --  | --  | SB  | --  |    YES     |                                                                                                                                  |
+| `/settings/ai`               | --  | --  | SB  | --  |    YES     | Also cross-linked from AI sidebar                                                                                                |
+| `/settings/integrations`     | --  | --  | SB  | --  |    YES     |                                                                                                                                  |
+| `/settings/notifications`    | --  | --  | SB  | --  |    YES     |                                                                                                                                  |
+| `/settings/pipeline`         | --  | --  | SB  | --  |    YES     |                                                                                                                                  |
+| `/settings/routing`          | --  | --  | SB  | --  |    YES     |                                                                                                                                  |
+| `/settings/security/mfa`     | --  | --  | SB  | --  |    YES     |                                                                                                                                  |
+| `/settings/team`             | --  | --  | SB  | --  |    YES     |                                                                                                                                  |
+| `/settings/privacy-requests` | --  | --  | SB  | --  |    YES     | Settings sidebar "Privacy Requests" item (`configs/settings.ts`, id `privacy-requests`, ADMIN only) and Settings search (PG-203) |
+| `/settings/automation`       | --  | --  | SB  | --  |    YES     | Settings sidebar "Automation" item — unified bento page for IFC-031 FU-011 + FU-012                                              |
+| → `/billing`                 | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link                                                                                     |
+| → `/governance`              | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — cross-link                                                                                     |
+| → `/docs`                    | --  | --  | SB  | --  |    YES     | Settings sidebar "More" section — SUPER_ADMIN only                                                                               |
 
 ### Tasks (5 routes)
 
@@ -520,6 +524,8 @@ updated at ship time):
 - Appointments: dedicated `/appointments` section (separate from `/calendar`)
 - AUP: `/aup` public page
 - Calendar: `availability`, `event-types`, `calendar-settings`
+- DSAR: public `/dsar/[handle]`, `/dsar/[handle]/verify`,
+  `/dsar/[handle]/export` and `/settings/privacy-requests` (PG-203)
 - Cases: `case-types`, `case-settings`, `case-workflows/[id]`,
   `case-workflows/new`
 - Contacts: `contact-types`, `contact-settings`, `import-export`

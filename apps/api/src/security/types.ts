@@ -104,6 +104,7 @@ export type ResourceType =
   | 'report_schedule' // PG-201 audit trail
   | 'contact_type' // PG-205 audit trail
   | 'event_type' // PG-203 audit trail (event types + booking link)
+  | 'dsar_request' // PG-203 audit trail (data subject requests; adminTenantProcedure gates them)
   | 'model_config'; // PG-199 audit trail
 
 /**

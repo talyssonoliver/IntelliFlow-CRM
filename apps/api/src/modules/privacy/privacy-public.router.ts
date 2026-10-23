@@ -1,0 +1,146 @@
+/**
+ * Public data subject request procedures (PG-203, spec Addendum A; owner rulings Q16/Q17).
+ *
+ * A person asks a firm (found by its booking handle) to act on their personal data. Every
+ * procedure is throttled per client IP hash before its first read, as the public booking
+ * procedures are. `getFirm` makes one handle read whatever the outcome; `submit` answers the
+ * same thing whether or not the email matches anything, and a filled honeypot gets that
+ * answer with no database work. Tokens arrive in the body (the page reads them from the URL
+ * fragment) and never return to the browser. Errors carry fixed messages, never causes.
+ */
+import { TRPCError } from '@trpc/server';
+import {
+  dsarFirmLookupSchema,
+  dsarSubmitSchema,
+  dsarTokenInputSchema,
+  type DsarExportDto,
+  type DsarFirmDto,
+  type DsarSubmitResultDto,
+  type DsarVerifyResultDto,
+} from '@intelliflow/validators';
+import { DSAR_SUBMIT_MESSAGE } from '@intelliflow/application';
+import { createTRPCRouter, publicProcedure } from '../../trpc';
+import type { Context } from '../../context';
+import {
+  bookingLookupLimiter,
+  bookingSubmitLimiter,
+  getBookingSalt,
+  ipHashOf,
+} from '../calendar/booking-abuse';
+
+const NOT_AVAILABLE = 'This page is not available.';
+const TOO_MANY = 'Too many requests. Please try again later.';
+const INVALID_LINK = 'This link is invalid or has expired.';
+const DOWNLOAD_LIMIT = 'This download link has been used too many times. Contact the firm.';
+const UNAVAILABLE = 'Data requests are temporarily unavailable.';
+
+interface PublicFirm {
+  tenantId: string;
+  name: string;
+  handle: string;
+  privacyUrl: string | null;
+}
+
+function dsarService(ctx: Context) {
+  const service = ctx.services?.dsar;
+  if (!service) {
+    console.error('[privacy] DataSubjectRequestService is not wired');
+    throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: UNAVAILABLE });
+  }
+  return service;
+}
+
+function clientIpHash(ctx: Context, salt: string): string {
+  return ipHashOf(ctx.req as Request | undefined, salt);
+}
+
+/** The single public lookup: one read by handle; unknown handle and no page look the same. */
+async function findFirm(ctx: Context, handle: string): Promise<PublicFirm> {
+  const tenant = await ctx.prisma.tenant.findUnique({
+    where: { bookingHandle: handle },
+    select: { id: true, name: true, bookingHandle: true, bookingPrivacyUrl: true },
+  });
+  if (!tenant?.bookingHandle) {
+    throw new TRPCError({ code: 'NOT_FOUND', message: NOT_AVAILABLE });
+  }
+  return {
+    tenantId: tenant.id,
+    name: tenant.name,
+    handle: tenant.bookingHandle,
+    privacyUrl: tenant.bookingPrivacyUrl,
+  };
+}
+
+export const privacyPublicProcedures = {
+  getFirm: publicProcedure
+    .input(dsarFirmLookupSchema)
+    .query(async ({ ctx, input }): Promise<DsarFirmDto> => {
+      bookingLookupLimiter.check(clientIpHash(ctx, getBookingSalt()));
+      const firm = await findFirm(ctx, input.handle);
+      return { firmName: firm.name, privacyUrl: firm.privacyUrl };
+    }),
+
+  submit: publicProcedure
+    .input(dsarSubmitSchema)
+    .mutation(async ({ ctx, input }): Promise<DsarSubmitResultDto> => {
+      // Bots get the same answer and no database work.
+      if (input.__honeypot) return { message: DSAR_SUBMIT_MESSAGE };
+      const salt = getBookingSalt();
+      const ipHash = clientIpHash(ctx, salt);
+      bookingSubmitLimiter.check(ipHash);
+      const service = dsarService(ctx);
+      const firm = await findFirm(ctx, input.handle);
+      const result = await service.submit({
+        firm: { tenantId: firm.tenantId, name: firm.name, handle: firm.handle },
+        type: input.type,
+        email: input.email,
+        details: input.details || null,
+        objectionScope: input.objectionScope ?? null,
+        ipHash,
+        now: new Date(),
+      });
+      if (result.outcome === 'TOO_MANY') {
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: TOO_MANY });
+      }
+      return { message: result.message };
+    }),
+
+  verify: publicProcedure
+    .input(dsarTokenInputSchema)
+    .mutation(async ({ ctx, input }): Promise<DsarVerifyResultDto> => {
+      bookingSubmitLimiter.check(clientIpHash(ctx, getBookingSalt()));
+      const result = await dsarService(ctx).verify({
+        requestId: input.requestId,
+        token: input.token,
+        now: new Date(),
+      });
+      if (result.outcome !== 'VERIFIED') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
+      }
+      return {
+        type: result.type,
+        dueDate: result.dueDate.toISOString(),
+        exportEmailed: result.exportEmailed,
+      };
+    }),
+
+  downloadExport: publicProcedure
+    .input(dsarTokenInputSchema)
+    .mutation(async ({ ctx, input }): Promise<DsarExportDto> => {
+      bookingLookupLimiter.check(clientIpHash(ctx, getBookingSalt()));
+      const result = await dsarService(ctx).downloadExport({
+        requestId: input.requestId,
+        token: input.token,
+        now: new Date(),
+      });
+      if (result.outcome === 'LIMIT') {
+        throw new TRPCError({ code: 'TOO_MANY_REQUESTS', message: DOWNLOAD_LIMIT });
+      }
+      if (result.outcome !== 'OK') {
+        throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
+      }
+      return result.export;
+    }),
+};
+
+export const privacyPublicRouter = createTRPCRouter(privacyPublicProcedures);

@@ -385,3 +385,14 @@ describe('firstErrorTarget', () => {
     expect(firstErrorTarget({ form: 'x' }, [])).toBeNull();
   });
 });
+
+describe('data request link (PG-203 DSAR)', () => {
+  it("links the firm's data request page from the footer", () => {
+    h.eventType = { data: EVENT, isLoading: false, error: null };
+    h.slots = { data: SLOTS, isLoading: false, isError: false, error: null };
+    renderFlow();
+    expect(screen.getByRole('link', { name: 'Your personal data' }).getAttribute('href')).toBe(
+      '/dsar/smith-law'
+    );
+  });
+});
