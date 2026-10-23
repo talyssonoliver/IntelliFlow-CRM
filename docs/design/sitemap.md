@@ -1,6 +1,6 @@
 # IntelliFlow CRM - Sitemap
 
-**Total Pages**: 214 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
+**Total Pages**: 216 | **Flows**: 42 | **Layouts**: 37 | **API Routers**: 60
 
 _Location_: `docs/design/sitemap.md` · _Last Updated_: 2026-07-21 · _Procs_: 232
 
@@ -74,6 +74,8 @@ intelliflow.com
 │   │   └── /careers/[id]                 [PG-012] Job posting detail
 │   │
 │   ├── /lp/[slug]                        [PG-013] Campaign landing pages
+│   │
+│   ├── /book/[handle]/[slug]             [PG-203] Public booking page (external entry, noindex, not in sitemap.xml, no sidebar)
 │   │
 │   ├── /login                            → FLOW-001
 │   ├── /signup                           → FLOW-001
@@ -216,8 +218,9 @@ intelliflow.com
 │   ├── /email/[id]                       Email detail
 │   ├── /email/compose                    Full-screen compose window
 │   ├── /email/templates                  Reusable email templates
-│   ├── /email/signatures                 HTML email signatures
-│   └── /email/email-settings             IMAP/SMTP, sync rules, aliases
+│   ├── /email/signatures                 Personal and organisation signatures (PG-207)
+│   ├── /email/email-settings             Sending mailbox, reply-to, tracking, bounces (PG-207)
+│   └── /email/oauth/callback             Mailbox sign-in return (redirect target, PG-207)
 │
 ├── AI & AUTOMATION ──────────────────────── Layout: agent-approvals
 │   │
@@ -344,7 +347,7 @@ intelliflow.com
 
 | Section                       | Pages   | Status                                                                                                                        |
 | ----------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| Public Pages                  | 32      | Marketing, auth, blog, careers, callbacks, SSO, legal, system, AUP                                                            |
+| Public Pages                  | 33      | Marketing, auth, blog, careers, callbacks, SSO, legal, system, AUP, public booking (noindex)                                  |
 | Developer Portal              | 14      | Docs (10), apps (3), apps/new (1)                                                                                             |
 | Dashboard                     | 3       | Main, new, customize                                                                                                          |
 | CRM Core: Leads               | 7       | List, new, detail, edit, pipeline, routing, lead-settings                                                                     |
@@ -357,7 +360,7 @@ intelliflow.com
 | Tasks                         | 5       | List, detail, types, settings, automation                                                                                     |
 | Calendar                      | 4       | View, availability, event-types, settings                                                                                     |
 | Appointments                  | 3       | List, new, detail                                                                                                             |
-| Email                         | 6       | Inbox, detail, compose, templates, signatures, settings                                                                       |
+| Email                         | 7       | Inbox, detail, compose, templates, signatures, settings, OAuth callback                                                       |
 | AI & Automation               | 20      | Queue + 19 sub-pages                                                                                                          |
 | AI Insights                   | 1       | All insights (paginated, filtered)                                                                                            |
 | Analytics                     | 8       | Dashboard, feedback, weekly, monthly, quarterly, templates, scheduled, settings                                               |
@@ -368,7 +371,7 @@ intelliflow.com
 | Profile                       | 1       | User profile                                                                                                                  |
 | Support Portal                | 3       | SLA queue, new, detail                                                                                                        |
 | Support / Help Center         | 3       | Index, search, article                                                                                                        |
-| **Sum of category subtotals** | **257** | Bucketing-based sum (Settings 23 = Core 12 + Module Settings 11; not filesystem-equivalent — see Canonical counts admonition) |
+| **Sum of category subtotals** | **258** | Bucketing-based sum (Settings 23 = Core 12 + Module Settings 11; not filesystem-equivalent — see Canonical counts admonition) |
 
 ---
 
@@ -432,7 +435,7 @@ in the sitemap.
 
 | Category      | Route                                                                                                                                                                                                                                                            | Status      | Flow               |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- | ------------------ |
-| Public        | `/`, `/login`, `/signup`, `/sso`, `/aup`, etc. (32 pages)                                                                                                                                                                                                        | Implemented | FLOW-001           |
+| Public        | `/`, `/login`, `/signup`, `/sso`, `/aup`, `/book/[handle]/[slug]` (noindex), etc. (33 pages)                                                                                                                                                                     | Implemented | FLOW-001           |
 | Developer     | `/docs`, `/docs/api`, `/docs/auth`, `/docs/changelog`, `/docs/guides`, `/docs/integrations`, `/docs/sdk`, `/docs/webhooks`, `/docs/architecture`, `/docs/cli`, `/developers/apps`, `/developers/apps/new`, `/developers/apps/[id]`, `/developers/apps/[id]/edit` | Implemented | -                  |
 | Dashboard     | `/dashboard`, `/dashboard/new`, `/dashboard/customize`                                                                                                                                                                                                           | Implemented | FLOW-025           |
 | Leads         | `/leads`, `/leads/new`, `/leads/[id]`, `/leads/[id]/edit`, `/leads/pipeline`, `/leads/routing`, `/leads/lead-settings`                                                                                                                                           | Implemented | FLOW-005, FLOW-006 |
@@ -445,7 +448,7 @@ in the sitemap.
 | Tasks         | `/tasks`, `/tasks/[id]`, `/tasks/task-types`, `/tasks/task-settings`, `/tasks/automation`                                                                                                                                                                        | Implemented | -                  |
 | Calendar      | `/calendar`, `/calendar/availability`, `/calendar/event-types`, `/calendar/calendar-settings`                                                                                                                                                                    | Implemented | -                  |
 | Appointments  | `/appointments`, `/appointments/new`, `/appointments/[id]`                                                                                                                                                                                                       | Implemented | -                  |
-| Email         | `/email`, `/email/[id]`, `/email/compose`, `/email/templates`, `/email/signatures`, `/email/email-settings`                                                                                                                                                      | Implemented | -                  |
+| Email         | `/email`, `/email/[id]`, `/email/compose`, `/email/templates`, `/email/signatures`, `/email/email-settings`, `/email/oauth/callback`                                                                                                                             | Implemented | -                  |
 | AI            | `/agent-approvals` + 19 sub-pages (ai-settings, approval-policies, model-config included)                                                                                                                                                                        | Implemented | IFC-149            |
 | Analytics     | `/analytics`, `/analytics/feedback`, `/analytics/saved/weekly`, `/analytics/saved/monthly`, `/analytics/saved/quarterly`, `/analytics/report-templates`, `/analytics/scheduled-reports`, `/analytics/report-settings`                                            | Implemented | FLOW-023           |
 | Settings      | `/settings/*` (23 pages: core 12 + module settings 11)                                                                                                                                                                                                           | Implemented | FLOW-035, FLOW-045 |
@@ -622,7 +625,8 @@ apps/web/src/app/
 │   ├── careers/
 │   │   ├── page.tsx              # /careers
 │   │   └── [id]/page.tsx         # /careers/[id]
-│   └── lp/[slug]/page.tsx        # /lp/[slug]
+│   ├── lp/[slug]/page.tsx        # /lp/[slug]
+│   └── book/[handle]/[slug]/page.tsx  # /book/[handle]/[slug] (PG-203, noindex)
 │
 ├── (developer)/                  # DEVELOPER PORTAL (14 pages)
 │   ├── developers/apps/page.tsx  # /developers/apps

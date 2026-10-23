@@ -1,13 +1,13 @@
 # PRD: Module Settings Pages
 
-| Field         | Value                                                                  |
-| ------------- | ---------------------------------------------------------------------- |
-| Feature Name  | Module Settings Pages                                                  |
-| Status        | Active                                                                 |
-| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-199, PG-201, PG-202, PG-204 |
-| Created       | 2026-03-11                                                             |
-| Last Updated  | 2026-10-19                                                             |
-| Author        | Spec Session (PG-178)                                                  |
+| Field         | Value                                                                                  |
+| ------------- | -------------------------------------------------------------------------------------- |
+| Feature Name  | Module Settings Pages                                                                  |
+| Status        | Active                                                                                 |
+| Related Tasks | PG-178, PG-182, PG-183, PG-196, PG-197, PG-199, PG-201, PG-202, PG-203, PG-204, PG-207 |
+| Created       | 2026-03-11                                                                             |
+| Last Updated  | 2026-10-21                                                                             |
+| Author        | Spec Session (PG-178)                                                                  |
 
 ## Problem Statement
 
@@ -1113,3 +1113,167 @@ before the API is promoted.
 settings, settings search entry. Temperature uses a native range input because
 the shared Slider does not label its thumb (issue filed). Neither migration is
 applied to production.
+
+## PG-203 Addendum: Event Types and Public Booking (2026-10-21)
+
+Owner rulings (2026-10-20/21,
+`.specify/sprints/sprint-18/context/PG-203/PG-203-owner-ruling.md`):
+
+- Q1/Q3: event types are applied in the New Appointment form, and a live public
+  booking page ships in this task.
+- Q4: an unmatched booking creates a Lead. Q11 later changed the matched case:
+  existing records are flagged to the host instead of being linked.
+- Q5: a host user per event type.
+- Q6: confirmation email to the booker and notification to the host.
+- Q7: a firm booking handle, because `Tenant.slug` must not be published.
+- Q8/Q9: booking leads are always AI-scored, with no switch. The admin chooses
+  the lead source (WEBSITE or BOOKING).
+- Q10: no public booking until availability is saved.
+- Q11: existing records are never auto-linked.
+- Q12: the firm's privacy URL is optional, with `/privacy` as the fallback.
+
+Spec: `.specify/sprints/sprint-18/specifications/PG-203-spec.md`. ADR-083.
+
+### Additional User Stories
+
+- **US-ET1 (Catalogue)**: As a firm admin or manager, I want to define our
+  meeting types (duration, colour, default description, location, host, required
+  booker details), so that appointments start from a consistent template.
+- **US-ET2 (Apply)**: As a user creating an appointment, I want to pick an event
+  type that fills the end time, location and description, so that I book faster
+  and consistently.
+- **US-ET3 (Booking link)**: As a firm admin, I want a public booking link per
+  event type under our own handle, so that clients can book open times
+  themselves.
+- **US-ET4 (Book)**: As a prospective client, I want to see open times in my
+  timezone and book one with my name and email, so that I get a confirmed
+  appointment without back-and-forth.
+- **US-ET5 (Capture)**: As a host, I want each new booker captured as an
+  AI-scored lead and to be told when a booker matches an existing client, so
+  that no opportunity is lost and records stay clean.
+
+### Additional Acceptance Criteria
+
+AC-001 to AC-027 are defined in the spec. In summary:
+
+- `/calendar/event-types` follows the playbook: PageHeader, 12-column bento,
+  canonical EmptyState, a SectionHeader CTA, and a list with an `openCreate`
+  forwardRef handle. Non-admins get a read-only view.
+- Event types store name, slug (unique per tenant; superRefine plus DB),
+  duration (5..480, within the firm's min..max), one of 18 colour tokens (DB
+  CHECK), location type and details, host, AppointmentType, required fields,
+  lead source and active flag. RLS applies.
+- The public booking page `/book/<handle>/<slug>`:
+  - Slots come from PG-202 availability minus the host's busy time.
+  - The server re-checks under a per-tenant advisory lock.
+  - The not-available response is identical in every case, with no enumeration.
+  - Abuse caps are counted in the DB.
+  - Emails are escaped and the booker's email is marked unverified.
+  - Consent is stored and DSAR covers the booker's data.
+- WCAG 2.1 AA. Lighthouse ≥ 90, recorded as NEEDS_HUMAN if it cannot be
+  measured.
+
+### Boolean toggles (playbook §8)
+
+There is one persisted Boolean, `isActive`, and it is wired (category 1): it
+hides a type from the picker and the public page. There are no AI toggles.
+**Deviation from playbook §7 "AI defaults false"**: the owner overrode it
+(Q8/Q9), so booking leads are always scored. The playbook rule itself is tracked
+as gh #972.
+
+### Follow-ups
+
+- PG-211: self-service cancel and reschedule for bookers (signed token).
+- PG-212: notice and horizon settings per event type.
+- PG-213: a purge rule for booker PII under the PG-206 retention policies.
+
+**Prisma migrations** `20261021120000` to `20261021120500` (six, all Class A)
+must be applied to production before this ships.
+
+## PG-207 Addendum: Email Settings and User Mailboxes (2026-10-21)
+
+Owner rulings Q1-Q11 (2026-10-20/21,
+`.specify/sprints/sprint-18/context/PG-207/PG-207-owner-ruling.md`): user mail
+leaves from the user's own mailbox (Google, Microsoft or SMTP), never from
+IntelliFlow's domain; an admin-enabled company mailbox is the fallback for users
+without one; bounces are read back from the sending mailbox and enforced through
+a suppression list (suppressed recipients are skipped, the rest sent);
+signatures live on `/email/signatures` and are prefilled in new messages;
+compose attachments are uploaded to private tenant storage and really sent
+(Q11). The fake production send (mock provider recording SENT) is fixed here.
+Spec: `.specify/sprints/sprint-18/specifications/PG-207-spec.md`. ADR-085.
+
+### Additional User Stories
+
+- **US-EM1 (My mailbox)**: As a user, I want to connect my own Google, Microsoft
+  or SMTP mailbox, so that my emails are sent from my own address.
+- **US-EM2 (Company mailbox)**: As an admin, I want to connect a company mailbox
+  and decide whether members without their own mailbox may send through it.
+- **US-EM3 (Honest sending)**: As a user, I want an email to show SENT only when
+  it actually left, and a clear prompt when I have no mailbox connected.
+- **US-EM4 (Reply-to)**: As an admin, I want to set a tenant-wide reply-to
+  address.
+- **US-EM5 (Bounces)**: As an admin, I want bounced addresses detected
+  automatically and suppressed according to our rules, so that we stop mailing
+  dead addresses.
+- **US-EM6 (Suppression list)**: As an admin, I want to see, add and remove
+  suppressed addresses.
+- **US-EM7 (Signatures)**: As a user, I want personal signatures, and as an
+  admin, organisation signatures, with a default that is prefilled in new
+  messages.
+- **US-EM8 (Tracking)**: As an admin, I want to choose whether opens and clicks
+  are tracked once tracking ships (IFC-221).
+
+### Additional Acceptance Criteria
+
+Defined as AC-EM-001..040 in the spec (finalised at spec consensus). In summary:
+
+- AC-EM-001 to 009: personal and company mailboxes; SMTP presets; encrypted,
+  write-only secrets (refused without the key); SSRF-safe test connection; OAuth
+  with PKCE and single-use state; disconnect revokes; unconfigured providers
+  shown disabled; revoked tokens move the mailbox to ERROR.
+- AC-EM-010 to 019: one send path for user mail; mailbox resolution (own, then
+  company if allowed, else refuse; no fallback from a broken own mailbox); From
+  is the mailbox address; failures are FAILED with no fallback; SENT only when
+  accepted; suppressed recipients skipped before quota; attachments really sent;
+  coded errors shown in compose.
+- AC-EM-020 to 023: admin-edited tenant settings with documented defaults; reset
+  keeps mailboxes, signatures and suppressions; tracking labelled as pending
+  IFC-221.
+- AC-EM-024 to 031: lease-based bounce reader; only delivery-status reports,
+  matched to our own sent records; hard/soft rules; per-recipient bounces;
+  idempotent; optional sender notification; audited suppression management.
+- AC-EM-032 to 036: user and org signatures, sanitised, unique names
+  (superRefine + index), one default per scope, prefill on new messages only.
+- AC-EM-037 to 040: tenant and user isolation with negative tests; playbook
+  layout; WCAG 2.1 AA and Lighthouse ≥ 90 (or NEEDS_HUMAN); registries.
+
+### Boolean toggles (playbook §8)
+
+| Toggle                       | Category | Runtime consumer                             |
+| ---------------------------- | -------- | -------------------------------------------- |
+| `allowTenantMailboxFallback` | 1        | mailbox resolution in the user-mail sender   |
+| `notifySenderOnBounce`       | 1        | bounce reader → `email_bounced` notification |
+| `trackOpens`                 | 2        | IFC-221 (broadened to every mailbox kind)    |
+| `trackClicks`                | 2        | IFC-221 (broadened to every mailbox kind)    |
+| `EmailSignature.isDefault`   | 1        | compose prefill                              |
+
+No AI toggles; no colour tokens; no tags (TagsTab N/A).
+
+### Delivery status
+
+| Item                                                                      | Status      |
+| ------------------------------------------------------------------------- | ----------- |
+| Spec (owner rulings Q1-Q11, ADR-085)                                      | Done        |
+| Plan (plan-reviewer APPROVE)                                              | Done        |
+| DB (8 Class A migrations), domain, validators, adapters                   | Done        |
+| API (single send path, mailbox/settings/signature routers, bounce reader) | Done        |
+| Web (email settings, signatures, OAuth return, compose)                   | Done        |
+| Validations, reviews, attestation                                         | In Progress |
+| Lighthouse, OAuth app registration, live DSN header spike                 | NEEDS_HUMAN |
+
+Attachments (Q11): `emailAttachments.upload` stores each file (≤ 10 MB,
+executables refused) in the private `email-attachments` bucket through
+`EmailAttachmentStoragePort`; `sendEmail` takes the storage paths and fails the
+send if any attachment cannot be read. Findings and deviations:
+`.specify/sprints/sprint-18/execution/PG-207/PG-207-findings.md`.

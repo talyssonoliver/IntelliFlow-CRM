@@ -1,0 +1,10 @@
+[test-slot] slot1 taken for PG-207@feat/pg-207-email-settings: pnpm --dir apps/api exec vitest run src/modules/email
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207/apps/api
+
+
+ Test Files  23 passed (23)
+      Tests  292 passed (292)
+   Start at  21:35:52
+   Duration  10.79s (transform 6.00s, setup 6.66s, import 24.37s, tests 4.14s, environment 2ms)
+

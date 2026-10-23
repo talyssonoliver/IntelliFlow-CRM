@@ -1,0 +1,11 @@
+-- PG-203: (tenantId, id) composite target on leads (DBA-012 pattern), so appointments."leadId" can be a
+-- tenant-safe composite FK (20261021120400). ADR-083.
+--
+-- Class A: CREATE UNIQUE INDEX CONCURRENTLY never blocks writes on "leads". It cannot run inside a
+-- transaction, so it is the only statement in this migration (precedent: 20261017120100_contacts_type_idx).
+-- "id" is already the primary key, so ("tenantId", "id") is unique for every existing row and the build
+-- cannot fail on data. IF NOT EXISTS makes a retry safe once an INVALID index from a failed build is dropped.
+--
+-- Recovery plan: forward-only; the index can be dropped (DROP INDEX CONCURRENTLY) once the FK that uses it
+-- is dropped, with no data effect.
+CREATE UNIQUE INDEX CONCURRENTLY IF NOT EXISTS "leads_tenantId_id_key" ON "leads"("tenantId", "id");

@@ -1,0 +1,135 @@
+{
+  "taskId": "PG-203",
+  "taskMetadata": {
+    "taskId": "PG-203",
+    "section": "Settings",
+    "description": "Module Settings - Event Types (/calendar/event-types)",
+    "owner": "Frontend Dev (STOA-Foundation)",
+    "status": "Specifying",
+    "dependencies": [
+      "PG-178",
+      "PG-189"
+    ],
+    "definitionOfDone": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate booking slugs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
+    "targetSprint": "18",
+    "affectedPaths": [
+      "ARTIFACT:apps/web/src/app/calendar/event-types/page.tsx",
+      "ARTIFACT:apps/web/src/app/calendar/event-types/EventTypesContent.tsx",
+      "ARTIFACT:apps/api/src/modules/calendar/event-types.router.ts",
+      "ARTIFACT:packages/validators/src/event-types.ts",
+      "EVIDENCE:.specify/sprints/sprint-18/attestations/PG-203/context_ack.json"
+    ]
+  },
+  "dependencyArtifacts": [
+    {
+      "taskId": "PG-178",
+      "status": "Completed",
+      "codeFiles": [],
+      "interfaces": [],
+      "patterns": [],
+      "attestationPath": ".specify\\sprints\\sprint-16\\attestations\\PG-178"
+    },
+    {
+      "taskId": "PG-189",
+      "status": "Completed",
+      "codeFiles": [],
+      "interfaces": [],
+      "patterns": [],
+      "attestationPath": ".specify\\sprints\\sprint-18\\attestations\\PG-189"
+    }
+  ],
+  "codebasePatterns": [],
+  "projectKnowledge": {
+    "claudeMd": "# CLAUDE.md\n\n**IntelliFlow CRM** — AI-powered CRM system. 597 tasks across Sprints 0–29 (plus\ncontinuous tasks) tracked in `Sprint_plan.csv`; the IFC-010 Go/No-Go passed\n2025-12-27. For the **live sprint, phase, and completion status**, read\n`docs/SESSION_CONTEXT.md` (regenerated each session) — do not hardcode the\nactive sprint here, or it goes stale (ENG-OPS-002 STALE-001).\n\n## Task ID Conventions\n\n- `EXC-*`: Exception/special tasks\n- `AI-SETUP-*`: AI tooling configuration\n- `ENV-*-AI`: Environment setup with AI automation\n- `AUTOMATION-*`: AI agent coordination\n- `IFC-*`: IntelliFlow Core features\n- `PG-*`: Page/UI implementations\n\n## Core Tech Stack\n\n- **Monorepo**: Turborepo + pnpm workspaces\n- **Backend**: tRPC, Prisma ORM, PostgreSQL\n- **Frontend**: Next.js 16.0.10 (App Router), shadcn/ui, Tailwind CSS\n- **Database**: Supabase (PostgreSQL + pgvector)\n- **AI/LLM**: LangChain, CrewAI, OpenAI, Ollama (local dev)\n- **Infra**: Docker Compose, Railway/Vercel\n- **Testing**: Vitest, Playwright\n- **Observability**: OpenTelemetry, Sentry\n\n## Sprint Plan\n\n**DO NOT read `Sprint_plan.csv` directly** — exceeds token limit. Use split\nfiles:\n\n```\napps/project-tracker/docs/metrics/_global/\n├── Sprint_plan.csv      # Source of truth (edit here only)\n├── Sprint_plan_A.csv    # 67 rows (EXC-INIT-001 → IFC-042)\n├── Sprint_plan_B.csv    # 72 rows (IFC-043 → PG-015)\n├── Sprint_plan_C.csv    # 73 rows (PG-016 → SALES-002)\n├── Sprint_plan_D.csv    # 69 rows (PM-OPS-001 → IFC-123)\n├── Sprint_plan_E.csv    # 63 rows (IFC-124 → IFC-170)\n├── Sprint_plan_F.csv    # 64 rows (IFC-171 → PG-156)\n├── Sprint_plan_G.csv    # 64 rows (PG-157 → IFC-233)\n├── Sprint_plan_H.csv    # 62 rows (IFC-234 → IFC-296)\n└── Sprint_plan_I.csv    # 26 rows (IFC-297 → IFC-308)\n```\n\nRegenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts` Full guide:\n`docs/claude-refs/sprint-plan-guide.md`\n\n## Project Structure (Top Level)\n\n```\napps/\n  web/             # Next.js frontend\n  api/             # tRPC API server\n  ai-worker/       # AI processing (LangChain/CrewAI)\n  project-tracker/ # Sprint tracker dashboard (http://localhost:3002/)\npackages/\n  db/              # Prisma schema & client\n  domain/          # Domain models (DDD, zero infra deps)\n  application/     # Use cases, ports\n  adapters/        # Repository implementations\n  validators/      # Zod schemas\n  api-client/      # Generated tRPC client\n  ui/              # Shared shadcn/ui components\ndocs/              # Docusaurus docs, ADRs, design diagrams\nartifacts/         # Build artifacts, reports, metrics, coverage\n```\n\n## Coverage Architecture\n\nCoverage uses **Istanbul** provider (not V8) with two output directories:\n\n| Directory                    | Written by                           | Purpose                      |\n| ---------------------------- | ------------------------------------ | ---------------------------- |\n| `artifacts/coverage-vitest/` | TDD watch-mode / ad-hoc `--coverage` | Quick dev feedback           |\n| `artifacts/coverage/`        | `scripts/run-coverage.js` (merged)   | Canonical data for SonarQube |\n\n- **`pnpm test:coverage`** runs all 16 workspace projects sequentially, merges\n  into `artifacts/coverage/`\n- **`COVERAGE_RUN=1`** env var controls which dir Vitest targets + disables\n  `forceExit`\n- Background TDD processes **never** overwrite the merged SonarQube data\n\n## Critical File Locations\n\n- **Sprint_plan.csv/json**: `apps/project-tracker/docs/metrics/_global/`\n- **Metrics Infrastructure**: `apps/project-tracker/docs/metrics/`\n  - Task files: `sprint-N/phase-*/TASK-ID.json`\n  - Schemas: `schemas/*.schema.json`\n- **Sprint plan API**: `apps/project-tracker/app/api/sprint-plan/route.ts`\n- **Dependency chains**:\n  `docs/architecture/diagrams/complete-dependency-chains.md`\n\n## Context by Area\n\nEach subdirectory has its own CLAUDE.md with area-specific rules and patterns:\n\n| Directory                        | Key Topics                                                          |\n| -------------------------------- | ------------------------------------------------------------------- |\n| `apps/web/CLAUDE.md`             | Next.js patterns, Lighthouse CI, build validation, coverage scoping |\n| `apps/api/CLAUDE.md`             | tRPC modules, container.ts wiring (CRITICAL), DTS resolution        |\n| `apps/ai-worker/CLAUDE.md`       | LangChain/CrewAI, Ollama dev, AI targets                            |\n| `apps/project-tracker/CLAUDE.md` | Single source of truth, JSON schemas, sync methods                  |\n| `packages/domain/CLAUDE.md`      | Zero infra deps, DRY enums, stale dist fix                          |\n| `packages/db/CLAUDE.md`          | Prisma 5.22.0, NEVER --no-engine, tenantId rule                     |\n| `packages/adapters/CLAUDE.md`    | Repository pattern, container wiring, mock casting                  |\n\n## Intent Layer\n\nThis repo follows the **Intent Layer** model (upstream:\n`github.com/orban/intent-layer`): each `CLAUDE.md` is an **Intent Node** — a\ncompressed, high-signal summary of its subtree (contracts, patterns, pitfalls).\nThis root file is the map; the **Context by Area** table above plus the nodes\nbelow are the children.\n\n**Repo adaptation (overrides upstream defaults):** Claude-only — **no\n`AGENTS.md`, no `.intent-layer/`, no framework hooks**. Generated Intent Layer\nmetadata (token/staleness analysis) lives in `docs/operations/intent-layer/`,\nnot `.intent-layer/`.\n\n**Current Intent Nodes (25):** root,\n`apps/{web,api,ai-worker,project-tracker,workers}`,\n`packages/{adapters,ai,application,db,domain,observability,platform,sdk,search,test-fixtures,ui,validators,webhooks}`,\n`docs/{audit,compliance-and-governance,operations}`, `tools/{scripts,plan}`,\n`infra/monitoring`. ⚠ `packages/{ai,search}` are **orphaned/parked** — see their\nnodes and `docs/operations/intent-layer/README.md` (orphan & wiring audit).\n\n**Maintenance** (read-only; never registers hooks): run the upstream analysis\nscripts from an external clone against this repo, e.g. `detect_state.sh`,\n`estimate_all_candidates.sh`, `detect_staleness.sh`,\n`detect_changes.sh main HEAD`. See `docs/operations/intent-layer/` for the last\nanalysis run, node-gap recommendations, and the compatibility report.\n\n## Reference Docs\n\nDetailed guides loaded on-demand:\n\n| Doc                                     | Topics                                                          |\n| --------------------------------------- | --------------------------------------------------------------- |\n| `docs/claude-refs/sprint-plan-guide.md` | CSV columns, pre-req prefixes, dashboard views, task structure  |\n| `docs/claude-refs/architecture.md`      | DDD/hexagonal, events, AI patterns, design patterns, dep chains |\n| `docs/claude-refs/feature-workflow.md`  | 9-step feature creation, testing strategy, git workflow         |\n| `docs/claude-refs/dev-commands.md`      | All bash commands (setup, dev, test, db, lint, AI)              |\n| `docs/claude-refs/nonfunctional.md`     | Performance targets, security, monitoring                       |\n| `docs/claude-refs/gotchas.md`           | 14 common gotchas + testing-specific gotchas                    |\n| `docs/claude-refs/sprint-context.md`    | Sprint phases (0-33), decision gates                            |\n| `docs/claude-refs/ai-workflow.md`       | Claude Code workflows, Copilot, AI code gen                     |\n\n## Critical Rules\n\n### Never Mock or Simulate Data\n\nAll data displayed must come from real sources. If infrastructure unavailable,\nshow \"pending\" status. Never populate fields with fake values.\n\n### Never Skip Build Validation\n\nALL 4 validations are NON-NEGOTIABLE: TypeScript, Tests, Lint, **Build**.\n\"Next.js compiles on demand\" is NOT a valid reason to skip build.\n\n### Pre-ship Gate Is Not Skippable\n\n`scripts/pre-ship.mjs` (husky `pre-push`) mirrors CI's required checks locally\nand runs on **every** branch push. There is **no `SKIP_PRESHIP` bypass** — it\nwas removed (the #265 retro: a gate skippable by one env var is a gate that\nrots). If a step genuinely can't run because infra is down (Docker / local test\nDB), use `PRESHIP_ALLOW_MISSING=1` — it runs **everything else** and records the\ngap; it is NOT a full skip. The only full escape is the deliberate\n`git push --no-verify`, which needs explicit owner approval. Provision the\nworktree instead: copy `.env.local` but point `DATABASE_URL` at the **local test\nDB** (never prod — `.env.local`'s `DATABASE_URL` is production Supabase; use\n`DATABASE_TEST_URL`). The gate includes `diff-coverage` (mirrors Sonar\n`new_coverage` ≥80% on changed lines) so under-tested diffs fail locally, not\nafter a CI round.\n\n**Test scope:** locally the test steps run only the tests related to the files\nchanged since `origin/main` (`vitest related`); the full 10k+ suite is CI's\nsharded runners' job. Typecheck, lint and all other gates stay full.\n`PRESHIP_FULL_TESTS=1` runs the full suite locally; lockfile, `package.json`\n(other than `scripts`), vitest/tsconfig, Prisma schema or test-setup changes\nwiden to full on their own.\n\n**At most 3 full test runs at once, machine-wide.** Before any step the gate\nre-runs itself under the shared slot semaphore (`scripts/lib/test-slot.mjs`),\nwhich waits for a free slot and releases it on exit. Separately, the gate\nguarantees **no orphaned steps**: each step runs async with its PID recorded,\nand its whole process tree is stopped (`taskkill /T /F` on Windows) on success,\nfailure, a signal or an uncaught exception. A detached watchdog, started from\n`os.tmpdir()` (never the repo), covers a hard kill of the gate and the death of\nanything above it (the `git push`, the hook shell). See\n`scripts/lib/preship-gate.mjs`, `scripts/preship-process.mjs` and\n`scripts/preship-watchdog.mjs`.\n\n### Sprint_plan.csv is Single Source of Truth\n\nAlways edit CSV for task updates. Run sync after changes. Never edit derived\nJSON files directly.\n\n**Rolling-wave rebaselining (Category A/B/C — full policy:\n`docs/operations/agent-autonomy-policy.md`, ADR-069):** the roadmap is a living\nplan. **Category A** (implementation adaptation — status, evidence,\nsplit/estimate, dependency corrections) and **Category B** (roadmap rebaseline\n**inside the approved outcome envelope**) are **autonomous**. Category B\nrequires the full envelope: never delete the outcome, never silently drop\nacceptance criteria, record old→new + evidence + impact, edit only canonical\n`Sprint_plan.csv`, regenerate splits + reports, run plan validation, get\nindependent review. **Category C is human-only** — removing/materially altering\nan approved outcome, weakening security/tenant/privacy/compliance, external\nspend, or permanently abandoning a capability.\n\n### Database Migration Risk Classes (A/B/C)\n\nReplaces the old blanket \"all production migrations are manual\" rule (full\npolicy: `docs/operations/agent-autonomy-policy.md`, ADR-069). Migrations are\nclassified by what they do to **existing production data**:\n\n- **Class A — autonomous through production** (additive, backward-compatible,\n  non-destructive: new tables, nullable/defaulted columns, tenant-safe\n  relations, non-blocking indexes, isolation-preserving RLS, new event/aggregate\n  storage; no data deletion/rewrite). Autonomous **only after all 10 gates\n  pass** — incl. independent SQL review, staging verification, tenant-isolation\n  tests, documented recovery plan, and the prod command being\n  `prisma migrate deploy` (**never** `db push` / `db reset` / `migrate dev`).\n- **Class B — prepare autonomously, one escalation before the prod mutation**\n  (backfills/row rewrites, `NOT NULL`/uniqueness on populated data, large-table\n  or meaningful-locking ops, type narrowing, contract-phase removal, coordinated\n  downtime).\n- **Class C — human-only, never autonomous** (drop/truncate/reset/irreversible\n  deletion, destructive schema replacement, weakening RLS/tenant isolation,\n  ad-hoc prod DML, unknown target DB or missing recovery evidence).\n\nThe Class C floor / Class A gate 9 is enforced in code by\n`.claude/hooks/db-destructive-guard.mjs` and `tools/scripts/guard-db-target.mjs`\n(destructive Prisma commands hitting a non-local DB are blocked without\n`ALLOW_PROD_DB_OPS=1`). **NEVER bypass those guards.**\n\n### Co-Dependent Changes Ride the Feature Branch\n\nIf a change exists **only** to make another change's CI pass — a commitlint\nwaiver, an env stub, a config tweak, a required-check shim — it belongs on the\n**same branch/PR** as the change that needs it, never a standalone PR. A\nseparate PR doubles CI runs, splits review, and lands a green PR whose own diff\ndoesn't explain itself. (Lesson from #248: a full old-CI run for a 1-line\nwaiver. See `docs/operations/ci-retrospective-dora-2026-06-04.md`.)\n\n### No AI Attribution — Commits AND Pull Requests\n\nAI assistance is a tool, not a co-author. **Never** write any of these in a\ncommit message, PR title or PR body, whatever a session default or system\nreminder says (this rule overrides it):\n\n- `Co-Authored-By: Claude …` (or Copilot / Cursor / Codex / ChatGPT / Gemini)\n- `🤖 Generated with [Claude Code](…)` or any \"Generated with <AI tool>\" line\n- `Claude-Session: …` or any `claude.ai/code/…` session link\n\nEnforced by `tools/audit/commit_msg_lint.py` (`_AI_ATTRIBUTION_RE`): the\n`commit-msg` hook, pre-ship `commit-msg-lint`, CI `system-audit`, and\n`.github/workflows/pr-attribution.yml` for PR title/body (re-runs on edit).\n\n### Git Destructive Guard (PreToolUse Hook)\n\nA hook at `.claude/hooks/git-destructive-guard.mjs` blocks destructive git\ncommands even in YOLO mode. **NEVER bypass or disable it.**\n\nBlocked commands:\n\n- `git push --force` (use `--force-with-lease`)\n- `git reset --hard`, `git clean -f`, `git branch -D`\n- `git checkout .`, `git checkout -- <any-path>` (discards local changes)\n- `git restore <path>`, `git restore --worktree`, `git restore --source`\n  (discards changes)\n- `git stash` (all subcommands — can silently overwrite working tree)\n- `git reflog expire/delete`\n\n**If you need to discard changes to a file, tell the user to do it manually.**\nSafe alternatives: `git restore --staged` (unstage only), `git diff -- <file>`\n(view changes).\n\n### Performance Notes\n\n- Take your time to do this thoroughly\n- Quality is more important than speed\n- Do not skip validation steps\n\n## Session Continuation\n\n`docs/SESSION_CONTEXT.md` is the cross-session handoff file — a compact digest\nof the current working state generated from the metrics tree + git.\n\n**Rules:**\n\n1. **At the start of every new session**, read `docs/SESSION_CONTEXT.md` before\n   doing anything else. It tells you which sprint is active, what's in progress,\n   what blockers exist, and what the next unblocked tasks are. Its **Project\n   Health** section shows project-wide completion % and evidence health from the\n   full state report.\n2. **After completing a task or before running out of context**, regenerate it\n   so the next session starts from an accurate snapshot:\n   - CLI: `npx tsx apps/project-tracker/scripts/generate-context.ts`\n   - API: `curl -X POST http://localhost:3002/api/context`\n   - Slash command: `/refresh-context`\n   - All three also regenerate `docs/CURRENT_STATE_REPORT.md` automatically.\n3. **Never edit `docs/SESSION_CONTEXT.md` by hand** — it is derived from the\n   metrics files, same discipline as `Sprint_plan.json`.\n4. **For full sprint-by-sprint detail**, read `docs/CURRENT_STATE_REPORT.md` —\n   the deep reference with per-sprint breakdowns, attestation evidence, and\n   source health diagnostics. Generated from `.specify/` attestations + CSV.\n\n**Generator sources**:\n\n- Session digest: `apps/project-tracker/lib/context-snapshot.ts`\n- Full state report: `apps/project-tracker/lib/current-state-report.ts`\n\n## Resources\n\n- **Sprint Plan**: `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`\n- **Session Context** (quick digest): `docs/SESSION_CONTEXT.md`\n- **Current State Report** (full detail): `docs/CURRENT_STATE_REPORT.md`\n- **Metrics Dashboard**: http://localhost:3002/\n- **Context Snapshot API**: http://localhost:3002/api/context (GET = view, POST\n  = regenerate — also refreshes the state report)\n- **ADRs**: `docs/architecture/adr/`\n- **Dependency Chains**:\n  `docs/architecture/diagrams/complete-dependency-chains.md`\n- **Design Mockups**: `docs/design/README.md`\n",
+    "architectureDocs": [
+      "docs\\architecture\\adr\\ADR-000-feasibility.md",
+      "docs\\architecture\\adr\\ADR-001-modern-stack.md",
+      "docs\\architecture\\adr\\ADR-002-domain-driven-design.md",
+      "docs\\architecture\\adr\\ADR-003-type-safe-api-design.md",
+      "docs\\architecture\\adr\\ADR-004-multi-tenancy.md",
+      "docs\\architecture\\adr\\ADR-005-workflow-engine.md",
+      "docs\\architecture\\adr\\ADR-006-agent-tools.md",
+      "docs\\architecture\\adr\\ADR-007-data-governance.md",
+      "docs\\architecture\\adr\\ADR-008-audit-logging.md",
+      "docs\\architecture\\adr\\ADR-009-zero-trust-security.md"
+    ],
+    "domainModels": [
+      "packages\\domain\\src\\activity-feed\\ActivityFeedConstants.ts",
+      "packages\\domain\\src\\activity-feed\\ActivityFeedStatsTypes.ts",
+      "packages\\domain\\src\\activity-feed\\ActivityFeedTypes.ts",
+      "packages\\domain\\src\\activity-feed\\index.ts",
+      "packages\\domain\\src\\activity-feed\\__tests__\\ActivityFeedConstants.test.ts"
+    ],
+    "schemas": [
+      "packages\\validators\\src\\account-settings.ts",
+      "packages\\validators\\src\\account-territories.ts",
+      "packages\\validators\\src\\account-tiers.ts",
+      "packages\\validators\\src\\account.ts",
+      "packages\\validators\\src\\activity-feed.ts"
+    ]
+  },
+  "sources": [
+    {
+      "type": "task_metadata",
+      "path": "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "CLAUDE.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-000-feasibility.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-001-modern-stack.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-002-domain-driven-design.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-003-type-safe-api-design.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-004-multi-tenancy.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-005-workflow-engine.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-006-agent-tools.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-007-data-governance.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-008-audit-logging.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    },
+    {
+      "type": "project_knowledge",
+      "path": "docs\\architecture\\adr\\ADR-009-zero-trust-security.md",
+      "loadedAt": "2026-10-20T22:39:06.236Z"
+    }
+  ],
+  "hydratedAt": "2026-10-20T22:39:06.236Z",
+  "contextHash": "4472bc475784797b73359cb74260c3f84297beccf34920989916399289b34424"
+}

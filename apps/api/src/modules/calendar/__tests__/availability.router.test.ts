@@ -73,6 +73,7 @@ function updateInput(overrides: Record<string, unknown> = {}) {
 
 function txMock() {
   return {
+    $executeRaw: vi.fn().mockResolvedValue(1),
     appointmentSettings: {
       upsert: vi.fn().mockResolvedValue(settingsRow()),
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
@@ -222,6 +223,9 @@ describe('availabilityRouter (PG-202)', () => {
           tx.availabilityClosure.createMany
         );
         expect([...order].sort((a, b) => a - b)).toEqual(order);
+        // The public booking lock is taken before anything changes (codex).
+        expect(tx.$executeRaw.mock.calls[0]?.[1]).toBe(`booking:${TENANT}`);
+        expect(tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(order[0]!);
 
         expect(tx.appointmentSettings.upsert).toHaveBeenCalledWith({
           where: { tenantId: TENANT },
@@ -363,6 +367,10 @@ describe('availabilityRouter (PG-202)', () => {
         where: { tenantId: TENANT },
         data: { maxDailyBookings: null, availabilityConfiguredAt: null },
       });
+      expect(tx.$executeRaw.mock.calls[0]?.[1]).toBe(`booking:${TENANT}`);
+      expect(tx.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+        tx.appointmentSettings.updateMany.mock.invocationCallOrder[0]!
+      );
       const order = callOrder(
         tx.appointmentSettings.updateMany,
         tx.availabilityHour.deleteMany,

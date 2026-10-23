@@ -2570,6 +2570,71 @@ Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:15-17
 
 ---
 
+### Event Types + Public Booking (PG-203 — in progress, ADR-083)
+
+```
+PG-202 ✅ (Availability) ──► PG-203 (Event Types + public booking) ⏳ in progress
+                               ├──► PG-211 (booker self-service cancel/reschedule)  [follow-up, depends on PG-203]
+                               ├──► PG-212 (per-type minimum notice and horizon)    [follow-up, depends on PG-203]
+                               └──► PG-213 (booker PII purge under PG-206 policies) [follow-up, depends on PG-203]
+
+Prisma models: EventType @@map "event_types" · BookingAttempt @@map "booking_attempts" (abuse counters)
+appRouter.calendar.eventTypes: list / listActive / create / update / delete / setBookingLink   (6 tenant procedures)
+appRouter.publicBooking: getEventType / listSlots / book                                      (3 public procedures)
+
+/calendar/event-types/page.tsx → EventTypesContent → trpc.calendar.eventTypes.*   (replaces the coming-soon stub)
+/appointments/new → AppointmentForm event type picker → calendar.eventTypes.listActive
+/book/[handle]/[slug]/page.tsx → BookingContent → trpc.publicBooking.*
+  External entry: BookingLinkCard builds <origin>/book/<handle>/<slug>; noindex, disallowed in robots.ts, no sidebar entry
+Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:12
+```
+
+### Email Settings and User Mailboxes (PG-207 — ADR-085)
+
+```
+PG-178 ✅ + IFC-144 ✅ + PG-141 ✅ ──► PG-207 (Email Settings, user-mailbox sending) 🔄
+   absorbs PG-084's OAuth connect/send (owner ruling Q10); IFC-221 tracking broadened to every mailbox kind
+
+Domain:  packages/domain/src/email/
+           resolveSendingMailbox · partitionRecipients · classifyDsnStatus · evaluateBounce
+           resolveDefaultSignature · normalizeEmail · EMAIL_LIMITS · EMAIL_SETTINGS_ADMIN_ROLES
+         packages/domain/src/workflow/node-catalog.ts isPublicIpAddress (CIDR tables, SSRF)
+Application: ports/external/StorageServicePort.ts EmailAttachmentStoragePort
+Validators: packages/validators/src/{email-mailbox,email-settings,email-signatures}.ts
+Adapters: packages/adapters/src/messaging/email/
+           smtp-provider (SmtpMailboxTransport, pinned public host) · imap-dsn-reader (ImapBounceReader)
+           oauth-mailbox (OAuthMailboxClient: Gmail / Microsoft Graph, PKCE, revoke)
+           mime (MailComposer, X-IntelliFlow-Record + Message-ID) · dsn-parser · public-host
+         SupabaseStorageAdapter upload/downloadEmailAttachment (private email-attachments bucket)
+
+Prisma models (tenant-scoped, RLS on; secrets in ENCRYPTED_FIELDS):
+  EmailMailbox, EmailOAuthState, TenantEmailSettings, EmailSignature,
+  EmailSuppression, EmailBounceReceipt; EmailRecord + mailboxId, messageIdHeader,
+  provider, providerMessageId
+Migrations (Class A, manual prod apply BEFORE the API):
+  20261020120000_email_mailboxes · 120100_email_settings_signatures ·
+  120200_email_suppression_receipts · 120300_email_record_message_ids (NOT VALID) ·
+  120310 / 120320 VALIDATE (one statement each) ·
+  120400_email_records_message_id_idx · 120500_email_records_mailbox_id_idx (CONCURRENTLY)
+
+apps/api/src/modules/email/
+  mailbox-sender.ts dispatchUserMail ◄── email.sendEmail, email.processEmail(forward)
+  mailbox-transport.ts ◄── container.ts adapters.mailboxTransports
+  appRouter.emailMailbox / emailSettings(.suppression) / emailSignatures / emailAttachments
+  bounce-reader.ts runBounceScan ◄── bounce-scheduler.ts ◄── http-server.ts startApiServer
+  email-automation.ts notifyEmailBounced (email_bounced notification)
+  trpc.ts errorFormatter → data.emailSendError
+
+/email/email-settings → EmailSettingsContent → emailMailbox.*, emailSettings.*
+/email/oauth/callback → OAuthCallbackContent → emailMailbox.oauthComplete (redirect target)
+/email/signatures → SignaturesContent → emailSignatures.*
+/email/compose → ComposeClient → emailSignatures.resolveDefault → EmailCompose
+   (emailAttachments.upload → email.sendEmail; coded errors via send-errors.ts)
+Sidebar entries: apps/web/src/components/sidebar/configs/email.ts:10-11
+```
+
+---
+
 ## Governance Quality Report Pages Chain (PG-176)
 
 ```

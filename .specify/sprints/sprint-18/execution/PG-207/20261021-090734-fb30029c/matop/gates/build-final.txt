@@ -1,0 +1,362 @@
+[test-slot] slot1 taken for PG-207@feat/pg-207-email-settings: pnpm build
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207
+> turbo run build
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running build in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/domain:build: cache hit, suppressing logs 718ed5cc14e675c2
+@intelliflow/workers:build: cache hit, suppressing logs 58790125c6ff704c
+@intelliflow/webhooks:build: cache hit, suppressing logs a4c7df6d097a0c2b
+@intelliflow/partner-sdk:build: cache hit, suppressing logs 870aa97e5c2ffa27
+@intelliflow/observability:build: cache hit, suppressing logs d5a92c117c110a5d
+@intelliflow/db:build: cache hit, suppressing logs 32c794dacbd6fe7e
+@intelliflow/search:build: cache hit, suppressing logs a2791dc8d6c2e71d
+@intelliflow/validators:build: cache hit, suppressing logs 59d214123554ca97
+@intelliflow/application:build: cache hit, suppressing logs 90659a707a803e3a
+@intelliflow/platform:build: cache hit, suppressing logs b95c6411e04319e4
+@intelliflow/adapters:build: cache hit, suppressing logs df3ec5b5d9980241
+@intelliflow/worker-shared:build: cache hit, suppressing logs 55b532e6fd5848fd
+@intelliflow/events-worker:build: cache hit, suppressing logs 7ea96b89187594a2
+@intelliflow/ai-worker:build: cache hit, suppressing logs 118997a843cbc938
+@intelliflow/ingestion-worker:build: cache hit, suppressing logs 9e1dbc7b11845008
+@intelliflow/api:build: cache hit, suppressing logs c107c8f3457f8d2f
+@intelliflow/api-client:build: cache hit, suppressing logs e299583a479733d6
+@intelliflow/sdk:build: cache miss, executing 01ace74889a3e3c1
+@intelliflow/web:build: cache miss, executing 5d79dd3f1770201d
+@intelliflow/project-tracker:build: cache hit, suppressing logs 175af4dd69eaba2d
+@intelliflow/sdk:build: 
+@intelliflow/sdk:build: > @intelliflow/sdk@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\packages\sdk
+@intelliflow/sdk:build: > tsup
+@intelliflow/sdk:build: 
+@intelliflow/web:build: 
+@intelliflow/web:build: > @intelliflow/web@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\apps\web
+@intelliflow/web:build: > next build --webpack
+@intelliflow/web:build: 
+@intelliflow/sdk:build: [34mCLI[39m Building entry: src/index.ts
+@intelliflow/sdk:build: [34mCLI[39m Using tsconfig: tsconfig.json
+@intelliflow/sdk:build: [34mCLI[39m tsup v8.5.1
+@intelliflow/sdk:build: [34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-207\packages\sdk\tsup.config.ts
+@intelliflow/sdk:build: [34mCLI[39m Target: es2020
+@intelliflow/sdk:build: [34mCLI[39m Cleaning output folder
+@intelliflow/sdk:build: [34mCJS[39m Build start
+@intelliflow/sdk:build: [34mESM[39m Build start
+@intelliflow/sdk:build: [32mESM[39m [1mdist\index.js     [22m[32m1.97 KB[39m
+@intelliflow/sdk:build: [32mESM[39m [1mdist\index.js.map [22m[32m5.54 KB[39m
+@intelliflow/sdk:build: [32mESM[39m ⚡️ Build success in 18ms
+@intelliflow/sdk:build: [32mCJS[39m [1mdist\index.cjs     [22m[32m3.58 KB[39m
+@intelliflow/sdk:build: [32mCJS[39m [1mdist\index.cjs.map [22m[32m5.52 KB[39m
+@intelliflow/sdk:build: [32mCJS[39m ⚡️ Build success in 19ms
+@intelliflow/web:build: ▲ Next.js 16.3.8 (webpack)
+@intelliflow/web:build: ⚠ `eslint` configuration in next.config.js is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+@intelliflow/web:build: ⚠ Invalid next.config.js options detected: 
+@intelliflow/web:build: ⚠     Unrecognized key(s) in object: 'eslint'
+@intelliflow/web:build: ⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+@intelliflow/web:build: ⚠ `experimental.useCache` is deprecated. Please use the top-level `cacheComponents` option instead in next.config.js.
+@intelliflow/web:build: ✓ Running next.config.js took 603ms
+@intelliflow/web:build: - Experiments (use with caution):
+@intelliflow/web:build:   · clientTraceMetadata
+@intelliflow/web:build:   · optimizePackageImports
+@intelliflow/web:build:   · serverActions
+@intelliflow/web:build:   ✓ useCache
+@intelliflow/web:build:   ✓ webpackMemoryOptimizations
+@intelliflow/web:build: 
+@intelliflow/web:build:   Creating an optimized production build ...
+@intelliflow/web:build: ⚠ Compiled with warnings in 60s
+@intelliflow/web:build: 
+@intelliflow/web:build: ../../node_modules/.pnpm/web-worker@1.5.0/node_modules/web-worker/src/node/index.js
+@intelliflow/web:build: Critical dependency: the request of a dependency is an expression
+@intelliflow/web:build: 
+@intelliflow/web:build: Import trace for requested module:
+@intelliflow/web:build: ../../node_modules/.pnpm/web-worker@1.5.0/node_modules/web-worker/src/node/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/make-asynchronous@1.1.0/node_modules/make-asynchronous/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/super-regex@1.1.0/node_modules/super-regex/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/is-identifier@1.0.1/node_modules/is-identifier/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/stringify-object@6.0.0/node_modules/stringify-object/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/httpsnippet-lite/targets/javascript/jquery/client.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/plugins/js/jquery/jquery.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/plugins/js/jquery/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/clients/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/snippetz.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+snippetz@0.9.17/node_modules/@scalar/snippetz/dist/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+api-client@3.10.4_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3/node_modules/@scalar/api-client/dist/v2/blocks/operation-code-sample/helpers/generate-client-options.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+api-client@3.10.4_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3/node_modules/@scalar/api-client/dist/v2/blocks/operation-code-sample/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/helpers/map-config-to-workspace-store.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/components/ApiReference.vue.script.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/components/ApiReference.vue.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+api-reference@1.60.0_axios@1.20.0_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference/dist/index.js
+@intelliflow/web:build: ../../node_modules/.pnpm/@scalar+api-reference-react@0.9.47_axios@1.20.0_react@19.2.7_tailwindcss@4.3.0_typescript@5.9.3_zod@4.4.3/node_modules/@scalar/api-reference-react/dist/index.js
+@intelliflow/web:build: ./src/components/shared/api-reference-renderer.tsx
+@intelliflow/web:build: ./src/components/shared/api-reference-client.tsx
+@intelliflow/web:build: 
+@intelliflow/web:build:   Skipping validation of types
+@intelliflow/web:build:   Finished TypeScript config validation in 9ms ...
+@intelliflow/web:build:   Collecting page data using 11 workers ...
+@intelliflow/web:build:   Generating static pages using 11 workers (0/225) ...
+@intelliflow/web:build:   Generating static pages using 11 workers (56/225) 
+@intelliflow/web:build:   Generating static pages using 11 workers (112/225) 
+@intelliflow/web:build:   Generating static pages using 11 workers (168/225) 
+@intelliflow/web:build: ✓ Generating static pages using 11 workers (225/225) in 15.8s
+@intelliflow/web:build:   Finalizing page optimization ...
+@intelliflow/web:build:   Collecting build traces ...
+@intelliflow/web:build: 
+@intelliflow/web:build: Route (app)                                     Revalidate  Expire
+@intelliflow/web:build: ┌ ƒ /
+@intelliflow/web:build: ├ ○ /_not-found
+@intelliflow/web:build: ├ ○ /404
+@intelliflow/web:build: ├ ○ /500
+@intelliflow/web:build: ├ ƒ /about
+@intelliflow/web:build: ├ ƒ /accounts
+@intelliflow/web:build: ├ ƒ /accounts/[id]
+@intelliflow/web:build: ├ ƒ /accounts/[id]/edit
+@intelliflow/web:build: ├ ○ /accounts/account-settings
+@intelliflow/web:build: ├ ○ /accounts/account-tiers
+@intelliflow/web:build: ├ ○ /accounts/new
+@intelliflow/web:build: ├ ○ /accounts/territory-mapping
+@intelliflow/web:build: ├ ○ /activity
+@intelliflow/web:build: ├ ○ /agent-approvals
+@intelliflow/web:build: ├ ○ /agent-approvals/agents
+@intelliflow/web:build: ├ ○ /agent-approvals/ai-review
+@intelliflow/web:build: ├ ƒ /agent-approvals/ai-review/[id]
+@intelliflow/web:build: ├ ○ /agent-approvals/ai-search
+@intelliflow/web:build: ├ ○ /agent-approvals/ai-settings
+@intelliflow/web:build: ├ ○ /agent-approvals/approval-policies
+@intelliflow/web:build: ├ ○ /agent-approvals/churn-risk
+@intelliflow/web:build: ├ ○ /agent-approvals/drift
+@intelliflow/web:build: ├ ○ /agent-approvals/experiments
+@intelliflow/web:build: ├ ○ /agent-approvals/history
+@intelliflow/web:build: ├ ○ /agent-approvals/insights
+@intelliflow/web:build: ├ ○ /agent-approvals/latency
+@intelliflow/web:build: ├ ○ /agent-approvals/lead-scoring
+@intelliflow/web:build: ├ ○ /agent-approvals/logs
+@intelliflow/web:build: ├ ƒ /agent-approvals/logs/[id]
+@intelliflow/web:build: ├ ○ /agent-approvals/model-config
+@intelliflow/web:build: ├ ○ /agent-approvals/preview
+@intelliflow/web:build: ├ ○ /agent-approvals/sentiment
+@intelliflow/web:build: ├ ○ /agent-approvals/tools
+@intelliflow/web:build: ├ ○ /analytics
+@intelliflow/web:build: ├ ○ /analytics/feedback
+@intelliflow/web:build: ├ ○ /analytics/report-settings
+@intelliflow/web:build: ├ ○ /analytics/report-templates
+@intelliflow/web:build: ├ ○ /analytics/saved/monthly
+@intelliflow/web:build: ├ ○ /analytics/saved/quarterly
+@intelliflow/web:build: ├ ○ /analytics/saved/weekly
+@intelliflow/web:build: ├ ○ /analytics/scheduled-reports
+@intelliflow/web:build: ├ ƒ /api/adr
+@intelliflow/web:build: ├ ƒ /api/adr/create
+@intelliflow/web:build: ├ ƒ /api/adr/index
+@intelliflow/web:build: ├ ƒ /api/adr/status
+@intelliflow/web:build: ├ ƒ /api/adr/validate
+@intelliflow/web:build: ├ ƒ /api/avatar-proxy
+@intelliflow/web:build: ├ ƒ /api/billing/pdf-proxy
+@intelliflow/web:build: ├ ƒ /api/compliance/[standardId]
+@intelliflow/web:build: ├ ƒ /api/compliance/risks
+@intelliflow/web:build: ├ ƒ /api/compliance/timeline
+@intelliflow/web:build: ├ ƒ /api/developer/changelog-rss
+@intelliflow/web:build: ├ ƒ /api/developer/webhook-test
+@intelliflow/web:build: ├ ƒ /api/health
+@intelliflow/web:build: ├ ƒ /api/openapi
+@intelliflow/web:build: ├ ƒ /api/quality-reports
+@intelliflow/web:build: ├ ƒ /api/quality-reports/generate
+@intelliflow/web:build: ├ ƒ /api/quality-reports/status
+@intelliflow/web:build: ├ ƒ /api/quality-reports/test-run
+@intelliflow/web:build: ├ ƒ /api/quality-reports/test-run/[runId]
+@intelliflow/web:build: ├ ƒ /api/quality-reports/test-run/events
+@intelliflow/web:build: ├ ƒ /api/quality-reports/view
+@intelliflow/web:build: ├ ƒ /api/webhooks/google/calendar
+@intelliflow/web:build: ├ ƒ /api/webhooks/microsoft/calendar
+@intelliflow/web:build: ├ ○ /appointments
+@intelliflow/web:build: ├ ƒ /appointments/[id]
+@intelliflow/web:build: ├ ○ /appointments/new
+@intelliflow/web:build: ├ ƒ /aup
+@intelliflow/web:build: ├ ƒ /auth/callback
+@intelliflow/web:build: ├ ○ /billing
+@intelliflow/web:build: ├ ○ /billing/cancel
+@intelliflow/web:build: ├ ○ /billing/checkout
+@intelliflow/web:build: ├ ○ /billing/invoices
+@intelliflow/web:build: ├ ƒ /billing/invoices/[id]
+@intelliflow/web:build: ├ ○ /billing/payment-methods
+@intelliflow/web:build: ├ ○ /billing/plans
+@intelliflow/web:build: ├ ○ /billing/receipts
+@intelliflow/web:build: ├ ○ /billing/settings
+@intelliflow/web:build: ├ ○ /billing/subscriptions
+@intelliflow/web:build: ├ ○ /billing/upgrade
+@intelliflow/web:build: ├ ○ /billing/usage
+@intelliflow/web:build: ├ ƒ /blog
+@intelliflow/web:build: ├ ƒ /blog/[slug]
+@intelliflow/web:build: ├ ○ /calendar
+@intelliflow/web:build: ├ ○ /calendar/availability
+@intelliflow/web:build: ├ ○ /calendar/calendar-settings
+@intelliflow/web:build: ├ ○ /calendar/event-types
+@intelliflow/web:build: ├ ƒ /careers
+@intelliflow/web:build: ├ ƒ /careers/[id]
+@intelliflow/web:build: ├ ○ /cases
+@intelliflow/web:build: ├ ƒ /cases/[id]
+@intelliflow/web:build: ├ ○ /cases/case-settings
+@intelliflow/web:build: ├ ○ /cases/case-types
+@intelliflow/web:build: ├ ○ /cases/case-workflows
+@intelliflow/web:build: ├ ƒ /cases/case-workflows/[id]
+@intelliflow/web:build: ├ ○ /cases/case-workflows/new
+@intelliflow/web:build: ├ ○ /cases/new
+@intelliflow/web:build: ├ ○ /cases/timeline
+@intelliflow/web:build: ├ ƒ /contact
+@intelliflow/web:build: ├ ƒ /contacts
+@intelliflow/web:build: ├ ƒ /contacts/[id]
+@intelliflow/web:build: ├ ƒ /contacts/[id]/edit
+@intelliflow/web:build: ├ ○ /contacts/contact-settings
+@intelliflow/web:build: ├ ○ /contacts/contact-types
+@intelliflow/web:build: ├ ○ /contacts/import-export
+@intelliflow/web:build: ├ ○ /contacts/new
+@intelliflow/web:build: ├ ƒ /cookies
+@intelliflow/web:build: ├ ƒ /dashboard
+@intelliflow/web:build: ├ ○ /dashboard/customize
+@intelliflow/web:build: ├ ○ /dashboard/new
+@intelliflow/web:build: ├ ○ /deals
+@intelliflow/web:build: ├ ƒ /deals/[id]
+@intelliflow/web:build: ├ ƒ /deals/[id]/forecast
+@intelliflow/web:build: ├ ○ /deals/all/forecast
+@intelliflow/web:build: ├ ○ /deals/deal-automation
+@intelliflow/web:build: ├ ○ /deals/deal-settings
+@intelliflow/web:build: ├ ○ /deals/deal-stages
+@intelliflow/web:build: ├ ○ /deals/forecast
+@intelliflow/web:build: ├ ○ /deals/new
+@intelliflow/web:build: ├ ○ /deals/trash
+@intelliflow/web:build: ├ ○ /developers/apps
+@intelliflow/web:build: ├ ƒ /developers/apps/[id]
+@intelliflow/web:build: ├ ƒ /developers/apps/[id]/edit
+@intelliflow/web:build: ├ ○ /developers/apps/new
+@intelliflow/web:build: ├ ○ /docs
+@intelliflow/web:build: ├ ○ /docs/api
+@intelliflow/web:build: ├ ○ /docs/architecture
+@intelliflow/web:build: ├ ○ /docs/auth
+@intelliflow/web:build: ├ ○ /docs/changelog
+@intelliflow/web:build: ├ ○ /docs/cli
+@intelliflow/web:build: ├ ○ /docs/guides
+@intelliflow/web:build: ├ ○ /docs/integrations
+@intelliflow/web:build: ├ ○ /docs/sdk
+@intelliflow/web:build: ├ ○ /docs/webhooks
+@intelliflow/web:build: ├ ○ /documents
+@intelliflow/web:build: ├ ƒ /documents/[id]
+@intelliflow/web:build: ├ ○ /documents/document-settings
+@intelliflow/web:build: ├ ○ /documents/document-types
+@intelliflow/web:build: ├ ○ /documents/new
+@intelliflow/web:build: ├ ○ /documents/storage-policies
+@intelliflow/web:build: ├ ƒ /dpa
+@intelliflow/web:build: ├ ○ /email
+@intelliflow/web:build: ├ ƒ /email/[id]
+@intelliflow/web:build: ├ ○ /email/compose
+@intelliflow/web:build: ├ ○ /email/email-settings
+@intelliflow/web:build: ├ ○ /email/oauth/callback
+@intelliflow/web:build: ├ ○ /email/signatures
+@intelliflow/web:build: ├ ○ /email/templates
+@intelliflow/web:build: ├ ƒ /features
+@intelliflow/web:build: ├ ƒ /forgot-password
+@intelliflow/web:build: ├ ○ /governance
+@intelliflow/web:build: ├ ○ /governance/adr
+@intelliflow/web:build: ├ ○ /governance/compliance
+@intelliflow/web:build: ├ ○ /governance/policies
+@intelliflow/web:build: ├ ○ /governance/quality-reports
+@intelliflow/web:build: ├ ƒ /governance/quality-reports/[reportId]
+@intelliflow/web:build: ├ ○ /governance/quality-reports/coverage
+@intelliflow/web:build: ├ ○ /governance/quality-reports/lighthouse
+@intelliflow/web:build: ├ ○ /governance/quality-reports/performance
+@intelliflow/web:build: ├ ○ /governance/quality-reports/trpc-benchmark
+@intelliflow/web:build: ├ ○ /help-center
+@intelliflow/web:build: ├ ƒ /help-center/[article]
+@intelliflow/web:build: ├ ○ /help-center/search
+@intelliflow/web:build: ├ ○ /icon.svg
+@intelliflow/web:build: ├ ○ /insights
+@intelliflow/web:build: ├ ƒ /leads
+@intelliflow/web:build: ├ ƒ /leads/[id]
+@intelliflow/web:build: ├ ƒ /leads/[id]/edit
+@intelliflow/web:build: ├ ○ /leads/import
+@intelliflow/web:build: ├ ○ /leads/lead-settings
+@intelliflow/web:build: ├ ○ /leads/new
+@intelliflow/web:build: ├ ○ /leads/pipeline
+@intelliflow/web:build: ├ ○ /leads/routing
+@intelliflow/web:build: ├ ƒ /login
+@intelliflow/web:build: ├ ƒ /logout
+@intelliflow/web:build: ├ ƒ /lp/[slug]
+@intelliflow/web:build: ├ ƒ /maintenance
+@intelliflow/web:build: ├ ○ /manifest.webmanifest
+@intelliflow/web:build: ├ ƒ /mfa/verify
+@intelliflow/web:build: ├ ○ /notifications
+@intelliflow/web:build: ├ ○ /notifications/channels
+@intelliflow/web:build: ├ ○ /notifications/quiet-hours
+@intelliflow/web:build: ├ ○ /notifications/settings
+@intelliflow/web:build: ├ ○ /opengraph-image
+@intelliflow/web:build: ├ ƒ /partners
+@intelliflow/web:build: ├ ƒ /press
+@intelliflow/web:build: ├ ƒ /press/[id]
+@intelliflow/web:build: ├ ○ /preview/aurora                                     1d      1y
+@intelliflow/web:build: ├ ƒ /pricing
+@intelliflow/web:build: ├ ƒ /privacy
+@intelliflow/web:build: ├ ○ /profile
+@intelliflow/web:build: ├ ƒ /reset-password/[token]
+@intelliflow/web:build: ├ ƒ /reset-password/callback
+@intelliflow/web:build: ├ ○ /robots.txt
+@intelliflow/web:build: ├ ƒ /security
+@intelliflow/web:build: ├ ○ /settings
+@intelliflow/web:build: ├ ○ /settings/account
+@intelliflow/web:build: ├ ○ /settings/accounts
+@intelliflow/web:build: ├ ○ /settings/appointments
+@intelliflow/web:build: ├ ○ /settings/automation
+@intelliflow/web:build: ├ ○ /settings/automation/custom-actions
+@intelliflow/web:build: ├ ○ /settings/automation/custom-node-types
+@intelliflow/web:build: ├ ○ /settings/billing
+@intelliflow/web:build: ├ ○ /settings/cases
+@intelliflow/web:build: ├ ○ /settings/contacts
+@intelliflow/web:build: ├ ○ /settings/deals
+@intelliflow/web:build: ├ ○ /settings/documents
+@intelliflow/web:build: ├ ƒ /settings/help-center/articles
+@intelliflow/web:build: ├ ƒ /settings/help-center/articles/[id]/edit
+@intelliflow/web:build: ├ ○ /settings/help-center/articles/new
+@intelliflow/web:build: ├ ○ /settings/integrations
+@intelliflow/web:build: ├ ○ /settings/leads
+@intelliflow/web:build: ├ ○ /settings/notifications
+@intelliflow/web:build: ├ ○ /settings/pipeline
+@intelliflow/web:build: ├ ○ /settings/reports
+@intelliflow/web:build: ├ ○ /settings/routing
+@intelliflow/web:build: ├ ○ /settings/security/mfa
+@intelliflow/web:build: ├ ○ /settings/security/mfa/setup
+@intelliflow/web:build: ├ ○ /settings/tasks
+@intelliflow/web:build: ├ ○ /settings/team
+@intelliflow/web:build: ├ ○ /settings/tickets
+@intelliflow/web:build: ├ ƒ /signup
+@intelliflow/web:build: ├ ƒ /signup/success
+@intelliflow/web:build: ├ ○ /sitemap.xml
+@intelliflow/web:build: ├ ƒ /sso
+@intelliflow/web:build: ├ ƒ /status
+@intelliflow/web:build: ├ ○ /support/tickets
+@intelliflow/web:build: ├ ƒ /support/tickets/[id]
+@intelliflow/web:build: ├ ○ /support/tickets/new
+@intelliflow/web:build: ├ ○ /tasks
+@intelliflow/web:build: ├ ƒ /tasks/[id]
+@intelliflow/web:build: ├ ○ /tasks/automation
+@intelliflow/web:build: ├ ○ /tasks/task-settings
+@intelliflow/web:build: ├ ○ /tasks/task-types
+@intelliflow/web:build: ├ ƒ /terms
+@intelliflow/web:build: ├ ○ /tickets
+@intelliflow/web:build: ├ ƒ /tickets/[id]
+@intelliflow/web:build: ├ ○ /tickets/automations
+@intelliflow/web:build: ├ ○ /tickets/new
+@intelliflow/web:build: ├ ○ /tickets/sla-policies
+@intelliflow/web:build: ├ ○ /tickets/types
+@intelliflow/web:build: ├ ○ /upgrade
+@intelliflow/web:build: ├ ƒ /verify-email/[token]
+@intelliflow/web:build: └ ƒ /verify-email/callback
+@intelliflow/web:build: 
+@intelliflow/web:build: 
+@intelliflow/web:build: ○  (Static)   prerendered as static content
+@intelliflow/web:build: ƒ  (Dynamic)  server-rendered on demand
+@intelliflow/web:build: 
+
+ Tasks:    20 successful, 20 total
+Cached:    18 cached, 20 total
+  Time:    2m6.304s 
+

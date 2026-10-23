@@ -289,6 +289,38 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
     └───────────────────────────────────────────────────────────────────────┘
 ```
 
+## Event Types and Public Booking Chain (PG-203, ADR-083)
+
+```
+    ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
+    ║  EVENT TYPES + PUBLIC BOOKING (tenant event types, /book link)           ⏳ IN PROGRESS  ║
+    ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
+
+    PG-202 (firm availability) ✅
+                                   │
+                                   ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │ DB: event_types · booking_attempts (abuse counters)                   │
+    │ API: calendar.eventTypes.list / listActive / create / update /        │
+    │        delete / setBookingLink                       (6 tenant)       │
+    │      publicBooking.getEventType / listSlots / book   (3 public)       │
+    └───────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+    ┌───────────────────────────────────────────────────────────────────────┐
+    │ Web: /calendar/event-types (EventTypesContent, BookingLinkCard)       │
+    │      /appointments/new → event type picker (listActive)               │
+    │      /book/[handle]/[slug] (BookingContent) - external entry,         │
+    │        noindex, robots-disallowed, no sidebar entry                   │
+    └───────────────────────────────────────────────────────────────────────┘
+                                   │
+                                   ▼
+    Follow-ups (each depends on PG-203):
+      PG-211  booker self-service cancel / reschedule
+      PG-212  per-type minimum notice and booking horizon
+      PG-213  booker PII purge under the PG-206 retention policies
+```
+
 ---
 
 ## Missing Tasks Summary (To Create)

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "generated_at": "2026-10-23T15:23:53.932Z",
+    "generated_at": "2026-10-21T17:04:18.973Z",
     "schema_version": "1.0.0",
     "sprint_scope": 0
   },
@@ -188,7 +188,7 @@
         "AI-SETUP-003"
       ],
       "priority": "critical",
-      "days_until_expiry": -116
+      "days_until_expiry": -114
     },
     {
       "rule": "WAIVER_USED",
@@ -208,7 +208,7 @@
         "ENV-010-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -116
+      "days_until_expiry": -114
     },
     {
       "rule": "WAIVER_USED",
@@ -228,7 +228,7 @@
         "ENV-014-AI"
       ],
       "priority": "critical",
-      "days_until_expiry": -116
+      "days_until_expiry": -114
     }
   ],
   "review_queue": [
