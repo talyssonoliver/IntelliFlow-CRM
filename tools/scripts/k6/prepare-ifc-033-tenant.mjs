@@ -100,30 +100,40 @@ async function call(baseUrl, proc, input, token, fetchImpl = fetch) {
 }
 
 /**
- * Sign up, falling back to login when the account already exists. Returns an access token.
+ * Sign up, falling back to login when the account already exists.
+ * Resolves to the access token and its expiry (Supabase access tokens are short-lived).
  * @param {FetchLike} [fetchImpl]
  */
 export async function acquireToken(baseUrl, email, password, fetchImpl = fetch) {
+  let signup = null;
+  let signupError = null;
   try {
-    const signup = await call(
+    signup = await call(
       baseUrl,
       'auth.signup',
       { email, password, confirmPassword: password, name: 'IFC-033 Load Test', acceptTerms: true },
       undefined,
       fetchImpl
     );
-    if (signup?.session?.accessToken) return signup.session.accessToken;
-    if (signup?.needsEmailVerification) {
-      throw new Error('auth.signup needs email verification; confirm the inbox, then re-run');
-    }
   } catch (err) {
-    if (/verification/.test(String(err.message))) throw err;
-    // Account exists (or signup refused): try a normal login with the same credentials.
+    signupError = err; // Usually "account exists": fall back to a normal login below.
   }
-  const login = await call(baseUrl, 'auth.login', { email, password }, undefined, fetchImpl);
+  if (signup?.session?.accessToken) {
+    return { token: signup.session.accessToken, expiresAt: signup.session.expiresAt ?? null };
+  }
+  if (signup?.needsEmailVerification) {
+    throw new Error('auth.signup needs email verification; confirm the inbox, then re-run');
+  }
+  let login;
+  try {
+    login = await call(baseUrl, 'auth.login', { email, password }, undefined, fetchImpl);
+  } catch (err) {
+    const context = signupError ? ` (signup also failed: ${signupError.message})` : '';
+    throw new Error(`${err.message}${context}`, { cause: err });
+  }
   const token = login?.session?.accessToken;
   if (!token) throw new Error('auth.login returned no access token');
-  return token;
+  return { token, expiresAt: login.session.expiresAt ?? null };
 }
 
 /**
@@ -134,63 +144,83 @@ export async function prepareTenant(
   { baseUrl, email, password, poolSize, runTag },
   fetchImpl = fetch
 ) {
-  const token = await acquireToken(baseUrl, email, password, fetchImpl);
+  const { token, expiresAt } = await acquireToken(baseUrl, email, password, fetchImpl);
   const [seedInput, ...poolInputs] = buildLeadInputs(poolSize + 1, runTag);
   const seed = await call(baseUrl, 'lead.create', seedInput, token, fetchImpl);
-  const poolIds = [];
+  const createdIds = [];
   for (const input of poolInputs) {
     const lead = await call(baseUrl, 'lead.create', input, token, fetchImpl);
-    poolIds.push(lead.id);
+    createdIds.push(lead.id);
   }
-  for (const ids of chunk(poolIds)) {
-    await call(baseUrl, 'lead.bulkUpdateStatus', { ids, status: 'QUALIFIED' }, token, fetchImpl);
+  // bulkUpdateStatus answers 200 even when ids fail; trust only `successful`, so the
+  // k6 conversion scenario never receives a lead that is still NEW.
+  const poolIds = [];
+  for (const ids of chunk(createdIds)) {
+    const res = await call(
+      baseUrl,
+      'lead.bulkUpdateStatus',
+      { ids, status: 'QUALIFIED' },
+      token,
+      fetchImpl
+    );
+    if (res?.failed?.length) {
+      throw new Error(
+        `lead.bulkUpdateStatus left ${res.failed.length} lead(s) unqualified: ${res.failed[0].error}`
+      );
+    }
+    poolIds.push(...(res?.successful ?? []));
   }
-  return { token, seedLeadId: seed.id, poolIds };
+  return { token, expiresAt, seedLeadId: seed.id, poolIds };
 }
 
-function upsertEnvFile(path, values) {
+/** Unique per run: lead emails are unique per tenant, so a re-run must not reuse a tag. */
+export function defaultRunTag(now = Date.now()) {
+  return `run-${now.toString(36)}`;
+}
+
+/** Set KEY=value lines in a dotenv-style file, keeping every other line. */
+export function upsertEnvFile(path, values) {
   const lines = existsSync(path) ? readFileSync(path, 'utf8').split(/\r?\n/).filter(Boolean) : [];
   const kept = lines.filter((l) => !Object.keys(values).some((k) => l.startsWith(`${k}=`)));
   const added = Object.entries(values).map(([k, v]) => `${k}=${v}`);
   writeFileSync(path, `${[...kept, ...added].join('\n')}\n`, { mode: 0o600 });
 }
 
-async function main() {
-  const here = dirname(fileURLToPath(import.meta.url));
-  const repoRoot = resolve(here, '../../..');
+/**
+ * @param {{ env?: Record<string, string | undefined>; repoRoot: string; fetchImpl?: FetchLike;
+ *   log?: (line: string) => void }} deps
+ */
+export async function main({ env = process.env, repoRoot, fetchImpl = fetch, log = console.log }) {
+  const baseUrl = env.BASE_URL;
+  const email = env.K6_TEST_EMAIL;
+  if (!baseUrl || !email) throw new Error('BASE_URL and K6_TEST_EMAIL must be set.');
   const envFile = resolve(repoRoot, '.env.k6.local');
-  const baseUrl = process.env.BASE_URL;
-  const email = process.env.K6_TEST_EMAIL;
-  if (!baseUrl || !email) {
-    console.error('ERROR: BASE_URL and K6_TEST_EMAIL must be set.');
-    process.exit(1);
-  }
-  const password = process.env.K6_TEST_PASSWORD || generatePassword();
-  const poolSize = Number(process.env.POOL_SIZE || 20);
-  const runTag = process.env.RUN_TAG || new Date().toISOString().slice(0, 10);
+  const password = env.K6_TEST_PASSWORD || generatePassword();
+  const poolSize = Number(env.POOL_SIZE || 20);
+  const runTag = env.RUN_TAG || defaultRunTag();
 
   // Persist credentials before any network call so a retry reuses the same account.
   upsertEnvFile(envFile, { K6_TEST_EMAIL: email, K6_TEST_PASSWORD: password });
-  const { token, seedLeadId, poolIds } = await prepareTenant({
-    baseUrl,
-    email,
-    password,
-    poolSize,
-    runTag,
-  });
+  const { token, expiresAt, seedLeadId, poolIds } = await prepareTenant(
+    { baseUrl, email, password, poolSize, runTag },
+    fetchImpl
+  );
   upsertEnvFile(envFile, { K6_AUTH_TOKEN: token, SEED_LEAD_ID: seedLeadId });
 
-  const dataDir = resolve(here, '.data');
+  const dataDir = resolve(repoRoot, 'tools/scripts/k6/.data');
   mkdirSync(dataDir, { recursive: true });
   writeFileSync(resolve(dataDir, 'qualified-leads.json'), JSON.stringify(poolIds, null, 2));
-  console.log(
-    `[prepare] tenant ready on ${baseUrl}: seed lead ${seedLeadId}, ${poolIds.length} QUALIFIED`
+  log(`[prepare] tenant ready on ${baseUrl}: seed lead ${seedLeadId}, ${poolIds.length} QUALIFIED`);
+  log(
+    `[prepare] K6_AUTH_TOKEN and SEED_LEAD_ID written to .env.k6.local (gitignored); ` +
+      `token expires ${expiresAt ?? 'at an unknown time'}, keep DURATION inside that`
   );
-  console.log('[prepare] K6_AUTH_TOKEN and SEED_LEAD_ID written to .env.k6.local (gitignored)');
+  return { seedLeadId, poolSize: poolIds.length, runTag };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((err) => {
+  const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+  main({ repoRoot }).catch((err) => {
     console.error(`[prepare] ${err.message}`);
     process.exit(1);
   });

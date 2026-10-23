@@ -47,8 +47,10 @@ The median `trpc.mutation.lead.create` trace in Grafana Tempo
 statement costing about the same: `BEGIN` 147 ms, `SET` 147 ms, `COMMIT` 148 ms,
 each `INSERT`/`SELECT` about 150 ms. A `SET` takes microseconds on the server,
 so this is network round-trip time between Railway `api` and Supabase
-`eu-central-1`, and six round-trips make up the request. The same code ran at
-11.6 ms p95 with the DB on the same host (§2). The fix is to co-locate `api`
+`eu-central-1`. The 898 ms request is about six such round-trips; the trace
+holds 8 `pg.query` spans totalling about 1,190 ms, so some fall outside the
+request span (they overlap it or finish after the response). The same code ran
+at 11.6 ms p95 with the DB on the same host (§2). The fix is to co-locate `api`
 with the database, not to tune code. The Railway region could not be read (the
 CLI login had expired). Secondary finding from the same trace: `lead.create`
 opens a new Redis connection per request for the fire-and-forget `score-lead`
