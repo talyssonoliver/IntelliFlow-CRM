@@ -24,7 +24,10 @@ Production layout, for reference:
   deployed)
 - Alerts by email to the owner from Grafana Cloud alerting (delivery proven by
   IFC-032 on 2026-10-06; real ai-worker error alerts fire, measured mean MTTD
-  268.7 s on 2026-10-22 — see `artifacts/reports/mttr-baseline.json`)
+  268.7 s on 2026-10-22 — see `artifacts/reports/mttr-baseline.json`). The
+  fastest error alert is `ifc074-error-spans-direct` (error spans in ai-worker
+  or api in the last 2 minutes); Asserts' ErrorRatioBreach follows about 3-6
+  minutes after the first error.
 
 ### 1.1 Incident Definition
 

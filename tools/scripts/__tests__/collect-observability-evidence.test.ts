@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
+  groupEpisodes,
   parseArgs,
   run,
   sanitizeSpanName,
@@ -659,6 +660,51 @@ describe('collect-observability-evidence: MTTD', () => {
     expect(json.kpi.cause_if_not_met).toMatch(/pending period/);
   });
 
+  it('judges the KPI on the first alert from any rule per error episode', async () => {
+    // One burst of errors, two rules: the direct rule fires 70 s after the
+    // first error, Asserts' ErrorRatioBreach 300 s after it.
+    const cfg = healthy();
+    const firstError = NOW_S - 7300;
+    cfg.errorSpans = {
+      'ai-worker': [{ traceId: ERR_TRACE, spanId: SPAN_B, start: firstError }],
+    };
+    const alerting = (t: number, ruleUID: string, alertname: string): Transition => ({
+      t,
+      ruleUID,
+      alertname,
+      service: 'ai-worker',
+      previous: 'Normal',
+      current: 'Alerting',
+    });
+    cfg.history = [
+      alerting(firstError + 70, 'r-fast', 'ErrorSpansDirect'),
+      alerting(firstError + 300, 'r-err', 'ErrorRatioBreach'),
+    ];
+    cfg.rules = [
+      { uid: 'r-err', title: 'ErrorRatioBreach', for: '0s', folderUID: 'kg', ruleGroup: 'asserts' },
+      { uid: 'r-fast', title: 'ErrorSpansDirect', for: '0s', folderUID: 'ip', ruleGroup: 'prod' },
+    ];
+    const { json, h } = await baseline(cfg);
+    expect(json.schema_version).toBe('2.1.0');
+    expect(json.incidents.map((i: { mttd_s: number }) => i.mttd_s)).toEqual([70, 300]);
+    expect(json.aggregates.mean_s).toBe(185);
+    expect(json.episodes).toEqual([
+      {
+        service: 'ai-worker',
+        t_first_error: new Date(firstError * 1000).toISOString(),
+        first_error_trace_id: ERR_TRACE,
+        t_detected: new Date((firstError + 70) * 1000).toISOString(),
+        detected_by: 'r-fast',
+        mttd_s: 70,
+        incidents: 2,
+        rule_uids: ['r-fast', 'r-err'],
+      },
+    ]);
+    expect(json.episode_aggregates).toMatchObject({ n_episodes: 1, mean_s: 70 });
+    expect(json.kpi).toMatchObject({ basis: 'error_episode', met: true });
+    expect(h.logs.join('\n')).toMatch(/episodes 1, mean MTTD 70 s, KPI met true/);
+  });
+
   it('reports no cause when the KPI is met', async () => {
     const { json } = await baseline(healthy());
     expect(json.kpi).toMatchObject({ met: true, cause_if_not_met: null });
@@ -791,6 +837,61 @@ describe('splitIncidents', () => {
     });
     const incidents = splitIncidents([mk(0), mk(1799), mk(3599)]);
     expect(incidents.map((i: unknown[]) => i.length)).toEqual([2, 1]);
+  });
+});
+
+describe('groupEpisodes', () => {
+  const at = (s: number) => new Date(Date.UTC(2026, 9, 22, 12, 0, s)).toISOString();
+  const inc = (
+    rule: string,
+    service: string,
+    errorS: number,
+    alertS: number,
+    trace = ERR_TRACE
+  ) => ({
+    rule_uid: rule,
+    service,
+    anchored: true,
+    t_first_error: at(errorS),
+    t_alerting: at(alertS),
+    first_error_trace_id: trace,
+  });
+
+  it('joins incidents whose first errors are up to 600 s apart and splits at 601 s', () => {
+    const episodes = groupEpisodes([
+      inc('a', 'ai-worker', 0, 300),
+      inc('b', 'ai-worker', 600, 660),
+      inc('c', 'ai-worker', 1201, 1300),
+    ]);
+    expect(episodes.map((e) => [e.incidents, e.mttd_s, e.detected_by])).toEqual([
+      [2, 300, 'a'],
+      [1, 99, 'c'],
+    ]);
+  });
+
+  it('measures from the earliest error to the earliest alert, whichever rules they came from', () => {
+    const [episode] = groupEpisodes([
+      inc('slow', 'ai-worker', 10, 300, TRACE_A),
+      inc('fast', 'ai-worker', 0, 70, TRACE_B),
+    ]);
+    expect(episode).toMatchObject({
+      first_error_trace_id: TRACE_B,
+      detected_by: 'fast',
+      mttd_s: 70,
+      rule_uids: ['fast', 'slow'],
+    });
+  });
+
+  it('keeps services apart and ignores unanchored incidents', () => {
+    const episodes = groupEpisodes([
+      inc('a', 'ai-worker', 0, 100),
+      inc('a', 'api', 5, 50),
+      { rule_uid: 'a', service: 'api', anchored: false, t_alerting: at(20) },
+    ]);
+    expect(episodes.map((e) => [e.service, e.mttd_s])).toEqual([
+      ['ai-worker', 100],
+      ['api', 45],
+    ]);
   });
 });
 

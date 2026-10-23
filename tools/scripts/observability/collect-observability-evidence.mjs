@@ -46,6 +46,7 @@ const DAY_S = 86400;
 const SLICE_DAYS = 7;
 const INCIDENT_GAP_S = 1800;
 const ERROR_LOOKBACK_S = 1800;
+const EPISODE_JOIN_S = 600;
 const SEARCH_PAGE = 50;
 const MAX_NARROWING = 20;
 const HISTORY_LINE_LIMIT = 5000;
@@ -136,6 +137,7 @@ const LIMITATIONS = [
   'Grafana-managed (App Observability) rules are read live from the provisioning API; their settings are not in the repo.',
   'Auto-resolve time is the Alerting to Normal transition of the rule, not a human resolution time.',
   'Incidents are runs of Alerting transitions per rule and service split by a gap of 30 minutes or more.',
+  "The KPI is judged per error episode: anchored incidents of one service whose first error spans start within 10 minutes of the episode's first error are one episode, detected by the earliest alert from any rule.",
 ];
 const TRUNCATION_LIMITATION =
   'An alert-history slice returned the Loki line limit; some transitions may be missing.';
@@ -455,6 +457,51 @@ async function earliestErrorSpan(get, service, lo, hi) {
   return earliest;
 }
 
+/**
+ * Group anchored incidents into error episodes. Several rules can alert on the
+ * same burst of errors (Asserts' ErrorRatioBreach and the repo's direct rule);
+ * counting each alert separately would score the slow rule against the KPI
+ * even when the fast one already fired. An incident joins the episode of its
+ * service whose first error is at most EPISODE_JOIN_S earlier; the episode is
+ * detected by the earliest alert among its incidents.
+ */
+export function groupEpisodes(incidents) {
+  const sorted = incidents
+    .filter((i) => i.anchored)
+    .map((i) => ({
+      ...i,
+      e: Date.parse(i.t_first_error) / 1000,
+      a: Date.parse(i.t_alerting) / 1000,
+    }))
+    .sort((x, y) => x.e - y.e || x.a - y.a);
+  const open = new Map();
+  const episodes = [];
+  for (const i of sorted) {
+    const current = open.get(i.service);
+    if (current && i.e - current.e <= EPISODE_JOIN_S) {
+      current.members.push(i);
+      continue;
+    }
+    const episode = { service: i.service, e: i.e, members: [i] };
+    open.set(i.service, episode);
+    episodes.push(episode);
+  }
+  return episodes.map(({ service, e, members }) => {
+    const first = members.reduce((x, y) => (y.a < x.a ? y : x));
+    const origin = members.find((m) => m.e === e);
+    return {
+      service,
+      t_first_error: iso(e),
+      first_error_trace_id: origin.first_error_trace_id,
+      t_detected: iso(first.a),
+      detected_by: first.rule_uid,
+      mttd_s: round3(first.a - e),
+      incidents: members.length,
+      rule_uids: [...new Set(members.map((m) => m.rule_uid))],
+    };
+  });
+}
+
 async function describeRules(get, ruleUids, repoTitles) {
   const all = (await listAlertRules(get)) ?? [];
   const rules = [];
@@ -581,17 +628,20 @@ async function collectMttd(get, window, repo) {
   const mean = n ? round3(anchoredValues.reduce((a, b) => a + b, 0) / n) : null;
   const ruleUids = [...new Set(incidents.map((i) => i.rule_uid))];
   const rules = await describeRules(get, ruleUids, repo.titles);
-  const met = n ? mean < KPI_TARGET_S : null;
-  // The cause follows the rule behind most anchored incidents: a pending
+
+  // The KPI is judged per error episode (first alert from any rule).
+  const episodes = groupEpisodes(incidents);
+  const episodeValues = episodes.map((e) => e.mttd_s).sort((a, b) => a - b);
+  const m = episodeValues.length;
+  const episodeMean = m ? round3(episodeValues.reduce((a, b) => a + b, 0) / m) : null;
+  const met = m ? episodeMean < KPI_TARGET_S : null;
+  // The cause follows the rule that detected most episodes: a pending
   // period (`for` > 0) or the condition itself taking time to cross.
   const hasPendingPeriod = (uid) => {
     const rule = rules.find((r) => r.uid === uid);
     return Boolean(rule?.for) && rule.for !== '0s' && rule.for !== '0';
   };
-  const anchoredIncidents = incidents.filter((i) => i.anchored);
-  const pendingShare = n
-    ? anchoredIncidents.filter((i) => hasPendingPeriod(i.rule_uid)).length / n
-    : 0;
+  const pendingShare = m ? episodes.filter((e) => hasPendingPeriod(e.detected_by)).length / m : 0;
   const anyPending = pendingShare > 0.5;
 
   return {
@@ -608,9 +658,18 @@ async function collectMttd(get, window, repo) {
       p90_s: n ? round3(nearestRank(anchoredValues, 0.9)) : null,
       share_lt_120s: n ? round3(anchoredValues.filter((v) => v < KPI_TARGET_S).length / n) : null,
     },
+    episodes,
+    episode_aggregates: {
+      n_episodes: m,
+      mean_s: episodeMean,
+      median_s: m ? round3(median(episodeValues)) : null,
+      p90_s: m ? round3(nearestRank(episodeValues, 0.9)) : null,
+      share_lt_120s: m ? round3(episodeValues.filter((v) => v < KPI_TARGET_S).length / m) : null,
+    },
     kpi: {
       target_s: KPI_TARGET_S,
       statistic: 'mean',
+      basis: 'error_episode',
       met,
       cause_if_not_met:
         met === false ? (anyPending ? CAUSES.pendingPeriod : CAUSES.detectionLatency) : null,
@@ -701,7 +760,7 @@ export async function run({
     const alertWindow = { start: nowS - opts.alertWindowDays * DAY_S, end: nowS };
     const mttd = await collectMttd(get, alertWindow, repo);
     const baseline = {
-      schema_version: '2.0.0',
+      schema_version: '2.1.0',
       task_id: 'IFC-074',
       generated_at: collectedAt,
       measurement_method: 'grafana-cloud-readonly-collector',
@@ -721,7 +780,8 @@ export async function run({
     const summary =
       `correlation rows ${rows.length} (PASS ${rows.filter((r) => r.status === 'PASS').length}); ` +
       `incidents ${mttd.aggregates.n_incidents}, anchored ${mttd.aggregates.n_anchored}, ` +
-      `mean MTTD ${mttd.aggregates.mean_s ?? 'n/a'} s, KPI met ${mttd.kpi.met}`;
+      `episodes ${mttd.episode_aggregates.n_episodes}, ` +
+      `mean MTTD ${mttd.episode_aggregates.mean_s ?? 'n/a'} s, KPI met ${mttd.kpi.met}`;
 
     if (opts.dryRun) {
       log(`dry run: ${summary}`);

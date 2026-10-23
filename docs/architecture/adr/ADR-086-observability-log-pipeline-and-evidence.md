@@ -62,9 +62,16 @@ Chosen option: 1.
 - Observability evidence is produced only by the read-only collector
   `tools/scripts/observability/collect-observability-evidence.mjs` from Grafana
   Cloud (Loki, Tempo, Prometheus, alert state history). Its outputs are
-  allowlist-validated and fail closed. MTTD = time of the alert's transition to
-  Alerting minus the start of the earliest error span of that incident; the KPI
-  statistic is the mean.
+  allowlist-validated and fail closed. Per incident, MTTD = time of the alert's
+  transition to Alerting minus the start of the earliest error span of that
+  incident. The KPI is judged per error episode: anchored incidents of one
+  service whose first errors start within 10 minutes of each other are one
+  episode, and its MTTD runs from the earliest error to the earliest alert from
+  any rule. The statistic is the mean over episodes. (Amended 2026-10-23:
+  Grafana Asserts' ErrorRatioBreach cannot fire sooner than about 180 s after
+  the first error, so a direct span-metrics rule was added in the repo's
+  rules-as-code; per alert, the slow rule would still count against the KPI
+  after the fast one had already fired.)
 
 ### Positive Consequences
 

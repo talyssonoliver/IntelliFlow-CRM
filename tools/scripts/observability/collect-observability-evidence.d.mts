@@ -20,6 +20,25 @@ export const EXCLUSION_REASONS: { deliveryTest: string; assertsUp: string };
 export function parseArgs(argv: string[]): CollectorOptions;
 export function sanitizeSpanName(name: string): string;
 export function splitIncidents<T extends { t: number }>(transitions: T[]): T[][];
+export interface EpisodeIncident {
+  rule_uid: string;
+  service: string;
+  t_alerting: string;
+  anchored: boolean;
+  t_first_error?: string;
+  first_error_trace_id?: string;
+}
+export interface ErrorEpisode {
+  service: string;
+  t_first_error: string;
+  first_error_trace_id: string;
+  t_detected: string;
+  detected_by: string;
+  mttd_s: number;
+  incidents: number;
+  rule_uids: string[];
+}
+export function groupEpisodes(incidents: EpisodeIncident[]): ErrorEpisode[];
 export function run(options?: {
   env?: Record<string, string | undefined>;
   argv?: string[];
