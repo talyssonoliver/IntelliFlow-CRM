@@ -81,7 +81,7 @@ import {
   recordBookingAttempt,
 } from './booking-abuse';
 import { sendBookingEmails } from './booking-email';
-import { recurringBusyIntervals } from './recurring-busy';
+import { recurringBusyIntervals, type RecurringBusyRow } from './recurring-busy';
 import { enqueueLeadScoring } from '../lead/lead-scoring-enqueue';
 import { onAppointmentCreated } from '../legal/appointment-side-effects';
 
@@ -102,6 +102,22 @@ const TITLE_MAX = 200;
 type Db = Context['prisma'];
 type Tx = Parameters<Parameters<Db['$transaction']>[0]>[0];
 type Reader = Db | Tx;
+type SeriesRow = RecurringBusyRow;
+
+/** Every column the busy and cap reads need, a recurring row's rule and zone included. */
+const SERIES_SELECT = {
+  startTime: true,
+  endTime: true,
+  bufferMinutesBefore: true,
+  bufferMinutesAfter: true,
+  recurrence: true,
+  timezone: true,
+} as const;
+
+/** A recurring appointment: one stored row standing for every occurrence of its rule. */
+function isSeries(row: SeriesRow): boolean {
+  return row.recurrence !== null && row.recurrence !== undefined;
+}
 
 interface Bookable {
   eventType: {
@@ -202,92 +218,78 @@ async function computeSlots(
   const windowEnd = new Date(
     localDayBoundsUtc(addDays(fromDate, days - 1), rules.timezone).endUtc.getTime() + MS_PER_DAY
   );
-  const busyRows = await db.appointment.findMany({
+  // One read each (NF-001): the host's busy rows and, under a daily cap, the tenant's
+  // bookings, run side by side. Each takes the plain rows in the window plus every
+  // recurring series that started before its end, since a series is one row whose later
+  // occurrences are busy too (codex HIGH); series are expanded below.
+  const hostRowsRead = db.appointment.findMany({
     where: {
       tenantId: eventType.tenantId,
       status: { in: [...CAP_COUNTED_STATUSES] },
       startTime: { lt: windowEnd },
-      endTime: { gt: windowStart },
-      // Recurring series are expanded below, skipped dates included.
-      recurrence: { equals: Prisma.AnyNull },
       OR: [
         { organizerId: eventType.hostUserId },
         { attendees: { some: { userId: eventType.hostUserId } } },
       ],
-    },
-    select: { startTime: true, endTime: true, bufferMinutesBefore: true, bufferMinutesAfter: true },
-  });
-  // A recurring appointment is one row; its later occurrences are busy too (codex HIGH).
-  const recurringRows = await db.appointment.findMany({
-    where: {
-      tenantId: eventType.tenantId,
-      status: { in: [...CAP_COUNTED_STATUSES] },
-      startTime: { lt: windowEnd },
-      recurrence: { not: Prisma.AnyNull },
-      OR: [
-        { organizerId: eventType.hostUserId },
-        { attendees: { some: { userId: eventType.hostUserId } } },
+      AND: [
+        {
+          OR: [
+            { recurrence: { equals: Prisma.AnyNull }, endTime: { gt: windowStart } },
+            { recurrence: { not: Prisma.AnyNull } },
+          ],
+        },
       ],
     },
-    select: {
-      startTime: true,
-      endTime: true,
-      bufferMinutesBefore: true,
-      bufferMinutesAfter: true,
-      recurrence: true,
-      timezone: true,
-    },
+    select: SERIES_SELECT,
   });
-  const busy: BusyInterval[] = [
-    ...busyRows.map((b) => ({
-      start: b.startTime,
-      end: b.endTime,
-      bufferBeforeMinutes: b.bufferMinutesBefore,
-      bufferAfterMinutes: b.bufferMinutesAfter,
-    })),
-    ...recurringBusyIntervals(recurringRows, windowStart, windowEnd),
-  ];
+  const tenantRowsRead =
+    rules.maxDailyBookings === null
+      ? Promise.resolve([])
+      : db.appointment.findMany({
+          where: {
+            tenantId: eventType.tenantId,
+            status: { in: [...CAP_COUNTED_STATUSES] },
+            startTime: { lt: windowEnd },
+            OR: [
+              { recurrence: { equals: Prisma.AnyNull }, startTime: { gte: windowStart } },
+              { recurrence: { not: Prisma.AnyNull } },
+            ],
+          },
+          select: SERIES_SELECT,
+        });
+  const [hostRows, tenantRows] = await Promise.all([hostRowsRead, tenantRowsRead]);
 
-  const bookedPerDay: Record<string, number> = {};
-  if (rules.maxDailyBookings !== null) {
-    const booked = await db.appointment.findMany({
-      where: {
-        tenantId: eventType.tenantId,
-        status: { in: [...CAP_COUNTED_STATUSES] },
-        startTime: { gte: windowStart, lt: windowEnd },
-        recurrence: { equals: Prisma.AnyNull },
-      },
-      select: { startTime: true },
-    });
-    for (const b of booked) {
-      const day = toZonedParts(b.startTime, rules.timezone).date;
-      bookedPerDay[day] = (bookedPerDay[day] ?? 0) + 1;
+  const busy: BusyInterval[] = [];
+  const hostSeries: SeriesRow[] = [];
+  for (const row of hostRows) {
+    if (isSeries(row)) {
+      hostSeries.push(row);
+      continue;
     }
-    // Every occurrence of tenant-wide recurring appointments counts on its own day. The
-    // stored first one always counts, even if its date is skipped: it is still a scheduled
-    // row holding its slot (the overlap constraint reserves it), so it is a booking that day.
-    const series = await db.appointment.findMany({
-      where: {
-        tenantId: eventType.tenantId,
-        status: { in: [...CAP_COUNTED_STATUSES] },
-        startTime: { lt: windowEnd },
-        recurrence: { not: Prisma.AnyNull },
-      },
-      select: {
-        startTime: true,
-        endTime: true,
-        bufferMinutesBefore: true,
-        bufferMinutesAfter: true,
-        recurrence: true,
-        timezone: true,
-      },
+    busy.push({
+      start: row.startTime,
+      end: row.endTime,
+      bufferBeforeMinutes: row.bufferMinutesBefore,
+      bufferAfterMinutes: row.bufferMinutesAfter,
     });
-    for (const row of series) {
-      for (const occurrence of recurringBusyIntervals([row], windowStart, windowEnd)) {
-        if (occurrence.start < windowStart) continue;
-        const day = toZonedParts(occurrence.start, rules.timezone).date;
-        bookedPerDay[day] = (bookedPerDay[day] ?? 0) + 1;
-      }
+  }
+  busy.push(...recurringBusyIntervals(hostSeries, windowStart, windowEnd));
+
+  // Every occurrence of a tenant-wide recurring appointment counts on its own day. The
+  // stored first one always counts, even if its date is skipped: it is still a scheduled
+  // row holding its slot (the overlap constraint reserves it), so it is a booking that day.
+  const bookedPerDay: Record<string, number> = {};
+  const countOn = (start: Date): void => {
+    const day = toZonedParts(start, rules.timezone).date;
+    bookedPerDay[day] = (bookedPerDay[day] ?? 0) + 1;
+  };
+  for (const row of tenantRows) {
+    if (!isSeries(row)) {
+      countOn(row.startTime);
+      continue;
+    }
+    for (const occurrence of recurringBusyIntervals([row], windowStart, windowEnd)) {
+      if (occurrence.start >= windowStart) countOn(occurrence.start);
     }
   }
 

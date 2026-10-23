@@ -7,6 +7,7 @@
  * detached post-commit work is awaited with vi.waitFor.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { Prisma } from '@intelliflow/db';
 import { publicBookingRouter } from '../public-booking.router';
 import { bookingLookupLimiter, bookingSlotsLimiter, bookingSubmitLimiter } from '../booking-abuse';
 import { prismaMock, createPublicContext } from '../../../test/setup';
@@ -284,14 +285,34 @@ describe('listSlots (AC-011)', () => {
     stubBookable({ settings: settingsRow({ maxDailyBookings: 1 }) });
     prismaMock.appointment.findMany
       .mockResolvedValueOnce([] as never) // host busy time
-      .mockResolvedValueOnce([] as never) // host recurring series
-      .mockResolvedValueOnce([{ startTime: new Date('2026-11-02T15:00:00Z') }] as never); // cap count
+      .mockResolvedValueOnce([
+        {
+          startTime: new Date('2026-11-02T15:00:00Z'),
+          endTime: new Date('2026-11-02T15:30:00Z'),
+          bufferMinutesBefore: 0,
+          bufferMinutesAfter: 0,
+          recurrence: null,
+          timezone: null,
+        },
+      ] as never); // tenant bookings
     const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 2 });
     expect(result.days[0].slots).toEqual([]);
     expect(result.days[1].slots.length).toBeGreaterThan(0);
-    const capWhere = (prismaMock.appointment.findMany.mock.calls[2][0] as any).where;
+    // Two reads in all (NF-001): the host's rows, then the tenant's, not filtered by host.
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledTimes(2);
+    const capWhere = (prismaMock.appointment.findMany.mock.calls[1][0] as any).where;
     expect(capWhere.tenantId).toBe(TENANT);
-    expect(capWhere.OR).toBeUndefined();
+    expect(JSON.stringify(capWhere)).not.toContain(HOST);
+    expect(capWhere.OR).toEqual([
+      { recurrence: { equals: Prisma.AnyNull }, startTime: { gte: expect.any(Date) } },
+      { recurrence: { not: Prisma.AnyNull } },
+    ]);
+  });
+
+  it('reads only the host rows when no daily cap is set', async () => {
+    stubBookable();
+    await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 14 });
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledTimes(1);
   });
 
   it('counts later occurrences of recurring appointments towards the daily cap (codex)', async () => {
@@ -306,15 +327,13 @@ describe('listSlots (AC-011)', () => {
     };
     prismaMock.appointment.findMany
       .mockResolvedValueOnce([] as never) // host busy time
-      .mockResolvedValueOnce([] as never) // host recurring series
-      .mockResolvedValueOnce([] as never) // stored starts in the window
-      .mockResolvedValueOnce([weekly] as never); // tenant-wide recurring series
+      .mockResolvedValueOnce([weekly] as never); // tenant bookings: one recurring series
     const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 2 });
     expect(result.days[0].slots).toEqual([]); // Monday: the occurrence fills the cap
     expect(result.days[1].slots.length).toBeGreaterThan(0);
-    const seriesWhere = (prismaMock.appointment.findMany.mock.calls[3][0] as any).where;
+    const seriesWhere = (prismaMock.appointment.findMany.mock.calls[1][0] as any).where;
     expect(seriesWhere.tenantId).toBe(TENANT);
-    expect(seriesWhere.OR).toBeUndefined();
+    expect(JSON.stringify(seriesWhere)).not.toContain(HOST);
   });
 
   it('counts a stored first occurrence towards the cap even when its date is skipped', async () => {
@@ -333,9 +352,7 @@ describe('listSlots (AC-011)', () => {
     };
     prismaMock.appointment.findMany
       .mockResolvedValueOnce([] as never) // host busy time
-      .mockResolvedValueOnce([] as never) // host recurring series
-      .mockResolvedValueOnce([] as never) // stored starts in the window
-      .mockResolvedValueOnce([skippedFirst] as never); // tenant-wide recurring series
+      .mockResolvedValueOnce([skippedFirst] as never); // tenant bookings: one recurring series
     const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 2 });
     // The row is still a scheduled appointment the database reserves: the day is full.
     expect(result.days[0].slots).toEqual([]);
@@ -344,18 +361,17 @@ describe('listSlots (AC-011)', () => {
 
   it("never offers a later occurrence of the host's recurring appointment (codex HIGH)", async () => {
     stubBookable();
-    prismaMock.appointment.findMany
-      .mockResolvedValueOnce([] as never) // no stored row overlaps 2 November
-      .mockResolvedValueOnce([
-        {
-          // Weekly on Mondays 10:00-11:00 UTC, first occurrence a week earlier.
-          startTime: new Date('2026-10-26T10:00:00Z'),
-          endTime: new Date('2026-10-26T11:00:00Z'),
-          bufferMinutesBefore: 0,
-          bufferMinutesAfter: 0,
-          recurrence: { frequency: 'WEEKLY', interval: 1, daysOfWeek: ['MONDAY'] },
-        },
-      ] as never);
+    prismaMock.appointment.findMany.mockResolvedValueOnce([
+      // No stored row overlaps 2 November; the one series does.
+      {
+        // Weekly on Mondays 10:00-11:00 UTC, first occurrence a week earlier.
+        startTime: new Date('2026-10-26T10:00:00Z'),
+        endTime: new Date('2026-10-26T11:00:00Z'),
+        bufferMinutesBefore: 0,
+        bufferMinutesAfter: 0,
+        recurrence: { frequency: 'WEEKLY', interval: 1, daysOfWeek: ['MONDAY'] },
+      },
+    ] as never);
     const result = await caller().listSlots({ ...lookup, fromDate: '2026-11-02', days: 1 });
     const starts = result.days[0].slots.map((s) => s.start);
     expect(starts.length).toBeGreaterThan(0);
@@ -365,12 +381,19 @@ describe('listSlots (AC-011)', () => {
         t >= Date.parse('2026-11-02T10:00:00Z') && t < Date.parse('2026-11-02T11:00:00Z')
       ).toBe(false);
     }
-    const recurringWhere = (prismaMock.appointment.findMany.mock.calls[1][0] as any).where;
-    expect(recurringWhere.tenantId).toBe(TENANT);
-    expect(recurringWhere.recurrence).toHaveProperty('not');
-    // The ordinary busy query leaves series out, so a skipped first date stays free.
-    const plainWhere = (prismaMock.appointment.findMany.mock.calls[0][0] as any).where;
-    expect(plainWhere.recurrence).toHaveProperty('equals');
+    // One host read: plain rows overlapping the window, and every series that started
+    // before its end (expanded in code, so a skipped first date stays free).
+    expect(prismaMock.appointment.findMany).toHaveBeenCalledTimes(1);
+    const hostWhere = (prismaMock.appointment.findMany.mock.calls[0][0] as any).where;
+    expect(hostWhere.tenantId).toBe(TENANT);
+    expect(hostWhere.AND).toEqual([
+      {
+        OR: [
+          { recurrence: { equals: Prisma.AnyNull }, endTime: { gt: expect.any(Date) } },
+          { recurrence: { not: Prisma.AnyNull } },
+        ],
+      },
+    ]);
   });
 
   it('rejects a start date in the past or beyond the 60-day horizon', async () => {
