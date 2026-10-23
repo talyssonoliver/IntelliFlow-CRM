@@ -109,3 +109,35 @@ platform limit.
 - Context ack: `.specify/sprints/sprint-19/attestations/IFC-033/context_ack.json`
 - Run artifacts: `docs/evidence/ifc-033/` (HTML report, Grafana PNG, summary
   JSON), mirrored to `artifacts/reports/` + `artifacts/benchmarks/`
+
+---
+
+## Reopen amendment (2026-10-22, owner rulings)
+
+#795 reopened IFC-033: the canonical run above targeted `localhost:4000`, while
+the row's KPI ("System handles 5000 leads/hour") concerns the deployed system. No
+staging environment exists. The owner made three rulings
+(`.specify/sprints/sprint-18/context/IFC-033/IFC-033-owner-ruling.md`): run against
+**production** in a dedicated tenant, run smaller to cap the per-lead AI scoring
+cost, and close the task on throughput, tracking p95. These change two acceptance
+criteria. Neither is dropped: both are restated with the old wording kept.
+
+| #   | Old                                  | New                                                                                                                                                       | Evidence                                                                                           |
+| --- | ------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| AC3 | p95 < 200 ms (gate)                  | Measured and reported against 200 ms. **Production FAIL: 1,137 ms client, 2,024 ms POST server-side.** Owner accepts closure with the gap tracked (#1001) | k6 summary, Grafana Cloud, Tempo trace                                                             |
+| AC7 | Run never touches production         | The run targets the **deployed production API** inside a dedicated load-test tenant, all writes through the API (never the DB), synthetic data tagged and left in place | owner rulings 2026-10-22; tenant verified to hold only synthetic leads before load                 |
+
+**Production result (2026-10-22 23:06:36Z to 23:08:54Z):**
+
+| Criterion                 | Result                                    |
+| ------------------------- | ----------------------------------------- |
+| AC1 real run              | ✅ k6 output with real timestamps         |
+| AC2 throughput            | ✅ 5,435 leads/hour (185 in 123 s)        |
+| AC3 p95                   | ❌ 1,137 ms (owner-accepted, #1001)       |
+| AC4 error rate            | ✅ 0 % (0 / 391)                          |
+| AC5 atomic conversion     | ✅ 20 / 20                                |
+| AC6 bottleneck            | ✅ about 147 ms per API-to-database round-trip (cross-region), from a Tempo trace |
+| AC7 target                | ✅ as amended                             |
+| AC8 `pnpm test:load`      | ✅ entry point used; exits 99 on the AC3 threshold, as designed |
+
+Details: `docs/shared/bottleneck-analysis.md` §0.

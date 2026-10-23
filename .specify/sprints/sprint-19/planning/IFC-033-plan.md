@@ -83,6 +83,41 @@ evidence only — the load test observes the system, it does not modify it.
 
 ---
 
+### Phase 6 — Deployed-environment run (reopen #795, 2026-10-22)
+
+#795 reopened IFC-033 because S6–S8 targeted `localhost:4000`. Its close criterion
+(`attestations/IFC-033/task-tracking.json` blockers): a k6 run against a deployed
+environment, with owner approval, and the dashboard taken from the hosted backend
+production reports to. These steps were added on 2026-10-22 and record the work as
+it was done. The owner's rulings are in
+`.specify/sprints/sprint-18/context/IFC-033/IFC-033-owner-ruling.md`.
+
+- [x] **S15** — Audit the merged deliverables against the DoD. Result: harness,
+      reports, ADR and bottleneck doc hold. The only gap is the deployed target.
+      There is no staging (DNS does not resolve, no STAGING vars or secrets), and the
+      #887 nightly has never run (it stays queued for a self-hosted runner).
+- [x] **S16** — Owner rulings: production, a dedicated tenant, a smaller run to cap
+      the per-lead AI scoring cost (2 min at 23 leads per 15 s), synthetic data left in place.
+- [x] **S17** — Harness changes, default behaviour unchanged: optional
+      `K6_AUTH_TOKEN` Bearer header and `INGEST_TIME_UNIT`/`CONVERT_TIME_UNIT` in
+      `ifc-033-critical-path.js`. New `prepare-ifc-033-tenant.mjs` (signup or login,
+      seed lead, QUALIFIED pool through `lead.bulkUpdateStatus`, credentials only in
+      the gitignored `.env.k6.local`), with unit tests in
+      `__tests__/prepare-ifc-033-tenant.test.ts`. Note: the test file was written after
+      the module, not RED-first.
+- [x] **S18** — Provision the tenant on production. Verified before load: `lead.list`
+      showed 21 leads, all synthetic.
+- [x] **S19** — Production run, 2026-10-22 23:06:36Z to 23:08:54Z: 5,435 leads/hour,
+      0 % errors, 20/20 conversions, client p95 1,137 ms (**FAIL** against 200 ms),
+      k6 exit 99.
+- [x] **S20** — Server-side evidence from Grafana Cloud: Prometheus p50/p95 by method,
+      a Tempo trace breakdown, and dashboard `ifc033-prod-api-load` rendered to
+      `artifacts/misc/grafana-load-test.png`.
+- [x] **S21** — Bottleneck: about 147 ms per API-to-database round-trip
+      (cross-region). Documented in `bottleneck-analysis.md` §0, tracked in #1001 and
+      debt-ledger `PROD-API-DB-CROSS-REGION-LATENCY-001`. The owner ruled the task
+      closes on throughput.
+
 ## Verification (independently re-run 2026-07-25 on `origin/main` @ `f4ec0b0cb`)
 
 | Check                                        | Result                                                    |

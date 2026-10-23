@@ -5021,6 +5021,32 @@ items:
       Forward aria-label/aria-labelledby to SliderPrimitive.Thumb; axe test in packages/ui.
     status: open
     notes: 'gh issue #929. Found during PG-199; pre-existing, out of scope.'
+  PROD-API-DB-CROSS-REGION-LATENCY-001:
+    origin_task: IFC-033
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      Production API p95 misses the ADR-018 budget (200 ms). The IFC-033 k6 run against
+      the production API on 2026-10-22 measured client p95 1,137 ms and server-side p95
+      POST 2,024 ms / GET 701 ms (Grafana Cloud). Throughput passed (5,435 leads/hour) and
+      errors were 0 %. A Tempo trace of lead.create (3fe5f6d158d600bb0d26b4d41c4ae693) shows
+      every Postgres round-trip costing about 147 ms, BEGIN and SET included, so the cost is
+      network RTT between the Railway api service and Supabase eu-central-1, not load.
+      Secondary: lead.create builds a new BullMQ Queue (a new Redis connection) per request
+      for the fire-and-forget score-lead enqueue (apps/api/src/modules/lead/lead.router.ts:533-558).
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-22
+    remediation_sprint: 20
+    remediation_plan: >-
+      Confirm the Railway region of the production api service, move it (and the
+      DB-querying workers) to an EU region next to Supabase eu-central-1 (owner decision:
+      production infra), then re-run pnpm test:load against production with the IFC-033
+      parameters. Separately, reuse one module-level BullMQ Queue per process in lead.create.
+    notes: >-
+      git issue #1001. Owner ruling 2026-10-22: IFC-033 closes on throughput, and the p95
+      gap is tracked here, in #1001 and in docs/shared/bottleneck-analysis.md (production
+      section). Tracked per project Rule 8.
 summary:
   total_items: 439
   by_severity:
