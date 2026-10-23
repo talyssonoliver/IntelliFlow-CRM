@@ -107,6 +107,8 @@ export type {
   AppointmentSettings,
   AvailabilityHour, // PG-202
   AvailabilityClosure,
+  EventType, // PG-203
+  BookingAttempt, // PG-203
   PublicFeedback,
   LeadCustomField,
 } from '../generated/prisma/client';

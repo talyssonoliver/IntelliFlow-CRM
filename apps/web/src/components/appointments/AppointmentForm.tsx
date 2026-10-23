@@ -33,6 +33,26 @@ export interface AppointmentFormProps {
   onConflictCheck: (params: ConflictCheckParams) => void;
   /** Firm default buffers (PG-202 owner Q7); used for new appointments only. */
   defaultBuffers?: { before: number; after: number };
+  /** PG-203: the firm's active event types, offered as templates for new appointments. */
+  eventTypes?: readonly EventTypeOption[];
+}
+
+/** The fields of an event type the form uses (calendar.eventTypes.listActive). */
+export interface EventTypeOption {
+  id: string;
+  name: string;
+  durationMinutes: number;
+  description: string | null;
+  locationDetails: string | null;
+  appointmentType: AppointmentType;
+}
+
+/**
+ * `datetime-local` value plus `minutes`, in the same wall-clock form. The value is read
+ * as UTC so the sum and toLocalDateTimeString's UTC getters agree in every browser zone.
+ */
+export function addMinutesLocal(value: string, minutes: number): string {
+  return toLocalDateTimeString(new Date(Date.parse(`${value}Z`) + minutes * 60_000));
 }
 
 const SUBMIT_ERROR_ID = 'form-submit-error';
@@ -55,6 +75,7 @@ export function AppointmentForm({
   conflicts,
   onConflictCheck,
   defaultBuffers,
+  eventTypes,
 }: Readonly<AppointmentFormProps>) {
   const isEdit = !!appointment;
   const router = useRouter();
@@ -95,6 +116,28 @@ export function AppointmentForm({
   const [reminderMinutes, setReminderMinutes] = useState(appointment?.reminderMinutes ?? 60);
   const [forceOverrideConflicts, setForceOverrideConflicts] = useState(false);
   const [calendarId, setCalendarId] = useState(appointment?.calendarId || '');
+  const [eventTypeId, setEventTypeId] = useState('');
+  // Once the user edits the end time, the event type's duration no longer drives it.
+  const [endTouched, setEndTouched] = useState(false);
+  const selectedEventType = eventTypes?.find((t) => t.id === eventTypeId);
+  const showEventTypePicker = !isEdit && (eventTypes?.length ?? 0) > 0;
+
+  const chooseEventType = (id: string) => {
+    setEventTypeId(id);
+    const chosen = eventTypes?.find((t) => t.id === id);
+    if (!chosen) return; // clearing the choice keeps the values already filled
+    setAppointmentType(chosen.appointmentType);
+    if (!location.trim() && chosen.locationDetails) setLocation(chosen.locationDetails);
+    if (!description.trim() && chosen.description) setDescription(chosen.description);
+    if (startTime && !endTouched) setEndTime(addMinutesLocal(startTime, chosen.durationMinutes));
+  };
+
+  const changeStartTime = (value: string) => {
+    setStartTime(value);
+    if (value && selectedEventType && !endTouched) {
+      setEndTime(addMinutesLocal(value, selectedEventType.durationMinutes));
+    }
+  };
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   // A rejection from the server (e.g. outside firm hours, a closure, the daily limit).
@@ -159,6 +202,7 @@ export function AppointmentForm({
         reminderMinutes,
         forceOverrideConflicts,
         calendarId: calendarId || null,
+        eventTypeId: selectedEventType?.id,
       });
     } catch (error) {
       setSubmitError(
@@ -213,6 +257,33 @@ export function AppointmentForm({
         />
       </div>
 
+      {/* Event type (PG-203): a template for new appointments */}
+      {showEventTypePicker && (
+        <div>
+          <label htmlFor="appt-event-type" className="block text-sm font-medium text-gray-700 mb-1">
+            Event type
+          </label>
+          <select
+            id="appt-event-type"
+            value={eventTypeId}
+            onChange={(e) => chooseEventType(e.target.value)}
+            disabled={isSubmitting}
+            aria-describedby="appt-event-type-help"
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm disabled:opacity-50"
+          >
+            <option value="">None</option>
+            {eventTypes?.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name} ({t.durationMinutes} min)
+              </option>
+            ))}
+          </select>
+          <p id="appt-event-type-help" className="text-xs text-gray-500 mt-1">
+            Sets the type and end time, and fills an empty location and description.
+          </p>
+        </div>
+      )}
+
       {/* Type */}
       <div>
         <label htmlFor="appt-type" className="block text-sm font-medium text-gray-700 mb-1">
@@ -247,7 +318,7 @@ export function AppointmentForm({
             id="appt-start"
             type="datetime-local"
             value={startTime}
-            onChange={(e) => setStartTime(e.target.value)}
+            onChange={(e) => changeStartTime(e.target.value)}
             disabled={isSubmitting}
             className={`w-full rounded-md border px-3 py-2 text-sm ${errors.startTime ? 'border-red-300' : 'border-gray-300'} disabled:opacity-50`}
             aria-invalid={!!errors.startTime}
@@ -267,7 +338,10 @@ export function AppointmentForm({
             id="appt-end"
             type="datetime-local"
             value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
+            onChange={(e) => {
+              setEndTime(e.target.value);
+              setEndTouched(true);
+            }}
             disabled={isSubmitting}
             className={`w-full rounded-md border px-3 py-2 text-sm ${errors.endTime ? 'border-red-300' : 'border-gray-300'} disabled:opacity-50`}
             aria-invalid={!!errors.endTime}

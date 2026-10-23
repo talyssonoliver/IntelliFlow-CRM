@@ -1128,6 +1128,107 @@ waivers:
       PG-202-AVAILABILITY-KNOWN-LIMITS-001.
     author: talyssonoliver (approved in the PG-202 lane modal, 2026-10-17)
     date: '2026-10-17'
+  - fingerprint: 283b28bc7d89203adc3672b6d0e2324890e7fe34338adb652ec098b0bef7f0a5
+    reason: >-
+      PG-203 public booking vs in-app create/reschedule and the firm daily cap. This is the same accepted
+      PG-202 best-effort cap (spec NF-004 / ADR-081 "Daily cap: best-effort (check-then-insert)"; waivers
+      25c5826c, 1a5ce81b and 846f69b2 above). In-app appointments.create/reschedule check the cap without a lock.
+      Public bookings ARE serialised among themselves under the per-tenant pg_advisory_xact_lock
+      ('booking:<tenant>', ADR-083), and host double-booking stays blocked by the organizer-overlap
+      constraint. Worst case: one booking over the cap when a staff create races a public booking on the
+      same day. No cross-tenant or data-corruption effect. A locked fix of the in-app path is
+      already tracked in gh #913 and debt-ledger PG-202-AVAILABILITY-KNOWN-LIMITS-001; PG-203 adds the
+      'booking:<tenant>' key for that fix to reuse.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'
+  - fingerprint: 349b41c39051aea89fbd73014b3d37ad75e7dcb603c1095dbf40a0071c462428
+    reason: >-
+      Same finding as waiver 283b28bc above (public booking vs in-app create and the best-effort daily
+      cap), anchored by a later review run on the computeSlots re-check line. Same evidence and tracking:
+      ADR-081 best-effort cap, public bookings serialised under 'booking:<tenant>' (ADR-083), host
+      overlap still blocked by constraint, in-app locked fix tracked in gh #913 / debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'
+  - fingerprint: 03ea1eee86c5313c586aedb09ea94950226eb71e5309e829ff1df3795dcaa08b
+    reason: >-
+      Same finding as waivers 283b28bc and 349b41c3 above (public booking vs in-app create and the
+      best-effort daily cap), anchored by a later review run on another line of the locked re-check. Same
+      evidence and tracking: ADR-081 best-effort cap, public bookings serialised under 'booking:<tenant>'
+      (ADR-083), host overlap blocked by constraint, in-app locked fix tracked in gh #913 / debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'
+  - fingerprint: 5a87a4758e290d1a1f51eb46ab0ffe9b7e02ddf3351f2dca1861e9a1ddc7e9a8
+    reason: >-
+      Same accepted risk as waivers 283b28bc, 349b41c3 and 03ea1eee, raised this time on the in-app
+      appointments.create side (appointments.router.ts). Same-slot double-booking of one host is not
+      possible: appointments_no_overlap_per_organizer (20260530000000) rejects it at the database, and
+      the PG-203 integration run hit that constraint (tests/integration/event-types.test.ts). What
+      remains is the ADR-081 best-effort daily cap (one over the cap when a staff create races a public
+      booking). The router header and ADR-083 now state the guarantee's exact scope (public bookings
+      only). The locked in-app fix is tracked in gh #913 and debt-ledger
+      PG-202-AVAILABILITY-KNOWN-LIMITS-001.
+    author: PG-203 lane (the owner accepted this same best-effort-cap risk for PG-202, 2026-10-17)
+    date: '2026-10-21'
+  - fingerprint: 0841b6ae973e691edb51af15fd79547d704692dae82283534a9fe51a30f05c0a
+    reason: >-
+      Verified false positive (stale review of already-fixed code, codex run 25): it reports event-type quota counted from booking_attempts,
+      but the staged booking-abuse.ts counts the event-type cap from appointments (bookedVia PUBLIC_LINK) in assertEventTypeBookingCap, called inside the booking transaction under the booking lock (public-booking.router.ts); assertBookingCaps now reads bookingAttempt only for email and IP. Owner ruling Q15, 2026-10-21.
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 15a74f26a20bbdc1a0ca2ed69a6bc836f6f1c77b4361d86d3ac4c9dc14c8dc21
+    reason: >-
+      Verified false positive (stale review of already-fixed code, codex run 25): it reports booker name echoed in the booker confirmation,
+      but `git show :apps/api/src/modules/calendar/booking-email.ts` shows a fixed 'Hello,' at both greeting lines; booking-email.test.ts asserts a phishing-style name never appears in either body (fixed after codex run 20).
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 09b86fba05ce506c9b8d4e0ddf73ae47a82c67eec394ad5fde8f474277b8655d
+    reason: >-
+      Verified false positive (stale review of already-fixed code, codex run 25): it reports no slotsQuery error state,
+      but the staged BookingContent.tsx renders `slotsQuery.isError` with a role=alert message (rate-limit wording for TOO_MANY_REQUESTS) and a Try again button calling refetch(); BookingContent.test.tsx covers it (fixed after codex run 19).
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 131539101fe29aff695a295032a9faa5055a5df2b78079cd693476620f8c28bc
+    reason: >-
+      Real, but pre-existing and app-wide, not PG-203's: the Prisma-to-domain conversion drops reminderMinutes/timezone. The same conversion and scheduler
+      are used unchanged from main for every in-app appointment, so no appointment reminder is
+      scheduled today, and the recipients are user ids, not emails. Fixing only the conversion
+      would switch broken-recipient reminders on for every appointment (L1). Tracked as a single
+      deliberate fix in gh #967 (recipient contract, user-id to email resolution, booker decision).
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 58003f60e4bcf2ef83e71a37ce67db627cfb1879dc0b20d478b49848ded6cbf2
+    reason: >-
+      Real, but pre-existing and app-wide, not PG-203's: the reminder scheduler sends to attendeeIds, which is empty for public bookings. The same conversion and scheduler
+      are used unchanged from main for every in-app appointment, so no appointment reminder is
+      scheduled today, and the recipients are user ids, not emails. Fixing only the conversion
+      would switch broken-recipient reminders on for every appointment (L1). Tracked as a single
+      deliberate fix in gh #967 (recipient contract, user-id to email resolution, booker decision).
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 1bc2a213fd9dc1107209362f2b7e9dd2494f7fa7d869e61c77dea644096eb126
+    reason: >-
+      Real but pre-existing class, same root cause as waivers 283b28bc/5a87a475: the in-app
+      appointments.create path takes no booking lock (gh #913). New angle: the
+      appointments_no_overlap_per_organizer constraint covers the organizer only, so a staff
+      appointment that lists the public host as an ATTENDEE can race a public booking. The same
+      gap exists today between two staff appointments (organizer in one, attendee in the other).
+      Public bookings re-check the host's attendee busy time under the lock (computeSlots ORs
+      organizer and attendee), so only a concurrent staff create can slip through. The fix
+      belongs to the locked in-app path in #913, extended to attendees; the attendee case was
+      added to #913 on 2026-10-21.
+    author: PG-203 lane
+    date: '2026-10-21'
+  - fingerprint: 0f18f6791d6d7d80b209314d453aef5d7709971c7a22c08569095a435801c018
+    reason: >-
+      Same finding as waivers 13153910 and 58003f60 (gh #967), re-anchored on
+      appointment-side-effects.ts:63 after line shifts. Pre-existing and app-wide: the conversion
+      drops reminderMinutes and the scheduler uses attendee ids as recipients, for every
+      appointment. Fixing only the conversion would switch broken-recipient reminders on for all
+      appointments (L1). Tracked as one deliberate fix in gh #967.
+    author: PG-203 lane
+    date: '2026-10-21'
   - fingerprint: 29d856dd7cbf20c7c5e85f4622c10de5b08de040ff10d6d337c2b3b982172760
     reason: >-
       PG-207 premature-unmatched-receipt (bounce-reader.ts receipt match). Accepted risk, tracked

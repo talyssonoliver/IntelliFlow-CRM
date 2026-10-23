@@ -29,13 +29,28 @@
   },
   "kpis": {},
   "notes": "Event types at /calendar/event-types: meeting type definitions (duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md. Wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312.",
-  "phase": "",
-  "started_at": null,
+  "phase": "plan",
+  "started_at": "2026-10-20T22:13:00Z",
   "status_history": [
     {
       "at": "2026-04-18T00:00:00Z",
       "note": "Task created — playbook-compliant module settings sub-page (PG-182/183/186 pattern)",
       "status": "Backlog"
+    },
+    {
+      "at": "2026-10-20T22:20:00Z",
+      "note": "spec-session started (AURORA PG-203 lane); owner rulings Q1-Q8",
+      "status": "Specifying"
+    },
+    {
+      "at": "2026-10-20T23:07:00Z",
+      "note": "spec consensus 6/6 (Round 4.2); owner rulings Q9-Q12; ADR-083",
+      "status": "Spec Complete"
+    },
+    {
+      "at": "2026-10-20T23:18:40Z",
+      "note": "plan-session: plan written; plan-reviewer subagent REVISE (8 ERROR) then APPROVE; check-plan-reviewer-subagent PASS",
+      "status": "Plan Complete"
     }
   ],
   "stream": null,

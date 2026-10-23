@@ -54,6 +54,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read', 'write', 'delete', 'manage', 'admin'],
     report_schedule: ['read', 'write', 'delete', 'manage', 'admin'],
     contact_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-205
+    event_type: ['read', 'write', 'delete', 'manage', 'admin'], // PG-203
     email_mailbox: ['read', 'write', 'delete', 'manage', 'admin'], // PG-207: own + company mailbox
     email_settings: ['read', 'write', 'manage', 'admin'],
     email_signature: ['read', 'write', 'delete', 'manage', 'admin'],
@@ -75,6 +76,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read', 'write', 'manage'],
     report_schedule: ['read', 'write', 'delete', 'manage'],
     contact_type: ['read', 'write', 'delete', 'manage'], // PG-205: managers edit types
+    event_type: ['read', 'write', 'delete', 'manage'], // PG-203: managers edit event types
     email_mailbox: ['read', 'write', 'delete', 'manage'], // PG-207: EMAIL_SETTINGS_ADMIN_ROLES
     email_settings: ['read', 'write', 'manage'],
     email_signature: ['read', 'write', 'delete', 'manage'],
@@ -96,6 +98,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    event_type: ['read'], // PG-203
     email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
@@ -117,6 +120,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    event_type: ['read'], // PG-203
     email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only
@@ -138,6 +142,7 @@ const DEFAULT_PERMISSIONS: Record<RoleName, Record<ResourceType, PermissionActio
     pipeline_config: ['read'],
     report_schedule: ['read'],
     contact_type: ['read'], // PG-205
+    event_type: ['read'], // PG-203
     email_mailbox: ['read', 'write', 'delete'], // PG-207: own mailbox only
     email_settings: ['read'],
     email_signature: ['read', 'write', 'delete'], // own signatures only

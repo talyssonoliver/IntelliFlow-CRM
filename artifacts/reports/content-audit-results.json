@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-07T11:28:00.940Z",
+  "generated_at": "2026-10-21T17:06:03.293Z",
   "tool_version": "1.2.0",
   "routes": [
     {
@@ -25,7 +25,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "page"
         },
         "og_site_name": {
@@ -88,7 +88,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -153,7 +153,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -218,7 +218,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/about",
+          "value": "https://intelli-flow-crm-web.vercel.app/about",
           "source": "page"
         },
         "og_site_name": {
@@ -283,7 +283,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -346,7 +346,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -409,7 +409,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -472,7 +472,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -535,7 +535,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -598,7 +598,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -661,7 +661,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -724,7 +724,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -789,7 +789,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -854,7 +854,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -917,7 +917,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -980,7 +980,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1045,7 +1045,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1108,7 +1108,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1171,7 +1171,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1234,7 +1234,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1297,7 +1297,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1360,7 +1360,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1423,7 +1423,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1486,7 +1486,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1549,7 +1549,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1612,7 +1612,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1675,7 +1675,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1738,7 +1738,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1801,7 +1801,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1864,7 +1864,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1898,6 +1898,7 @@
       "stale_content": {
         "classification": "stale",
         "patterns_found": [
+          "percentage",
           "placeholder"
         ],
         "data_sources": []
@@ -1929,7 +1930,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -1992,7 +1993,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2055,7 +2056,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2118,7 +2119,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2164,13 +2165,13 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Report Settings — IntelliFlow",
+          "value": "Report Settings — Aurora",
           "source": "page"
         },
         "description": {
-          "value": "Configure default date range, display currency, and scheduled delivery for analytics reports.",
+          "value": "Configure the default date range and display currency for analytics reports.",
           "source": "page",
-          "length": 93
+          "length": 76
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -2181,7 +2182,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2244,7 +2245,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2307,7 +2308,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2370,7 +2371,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2433,7 +2434,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2479,13 +2480,13 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Analytics",
-          "source": "layout"
+          "value": "Scheduled Reports",
+          "source": "page"
         },
         "description": {
-          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
-          "source": "root-layout",
-          "length": 131
+          "value": "Schedule report templates for delivery: cron cadence, timezone, recipients and delivery format.",
+          "source": "page",
+          "length": 95
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -2496,7 +2497,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2559,7 +2560,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2622,7 +2623,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2685,7 +2686,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2748,7 +2749,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/aup",
+          "value": "https://intelli-flow-crm-web.vercel.app/aup",
           "source": "page"
         },
         "og_site_name": {
@@ -2811,7 +2812,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2874,7 +2875,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -2937,7 +2938,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3000,7 +3001,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3063,7 +3064,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3126,7 +3127,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3189,7 +3190,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3252,7 +3253,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3315,7 +3316,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3361,7 +3362,7 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Billing Settings — IntelliFlow",
+          "value": "Billing Settings — Aurora",
           "source": "page"
         },
         "description": {
@@ -3378,7 +3379,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3441,7 +3442,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3504,7 +3505,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3567,7 +3568,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3630,7 +3631,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3697,7 +3698,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3742,6 +3743,69 @@
       "notes": ""
     },
     {
+      "route": "/book/[handle]/[slug]",
+      "file_path": "apps/web/src/app/(public)/book/[handle]/[slug]/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": true
+      },
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/calendar",
       "file_path": "apps/web/src/app/calendar/(list)/page.tsx",
       "access_tier": "auth-gated",
@@ -3764,7 +3828,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3827,7 +3891,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3890,7 +3954,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -3953,7 +4017,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4016,7 +4080,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4079,7 +4143,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4146,7 +4210,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4209,7 +4273,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4272,7 +4336,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4335,7 +4399,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4398,7 +4462,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4461,7 +4525,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4524,7 +4588,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4587,7 +4651,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4650,7 +4714,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4713,7 +4777,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/contact",
+          "value": "https://intelli-flow-crm-web.vercel.app/contact",
           "source": "page"
         },
         "og_site_name": {
@@ -4776,7 +4840,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4839,7 +4903,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4904,7 +4968,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -4967,7 +5031,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5030,7 +5094,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5093,7 +5157,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5156,7 +5220,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5221,7 +5285,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/cookies",
+          "value": "https://intelli-flow-crm-web.vercel.app/cookies",
           "source": "page"
         },
         "og_site_name": {
@@ -5284,7 +5348,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5347,7 +5411,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5412,7 +5476,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5475,7 +5539,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5538,7 +5602,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5603,7 +5667,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5666,7 +5730,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5729,7 +5793,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5792,7 +5856,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5855,7 +5919,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5918,7 +5982,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -5981,7 +6045,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6044,7 +6108,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6090,7 +6154,7 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Developer Apps | IntelliFlow CRM",
+          "value": "Developer Apps | Aurora",
           "source": "page"
         },
         "description": {
@@ -6107,7 +6171,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6170,7 +6234,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6233,7 +6297,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6279,7 +6343,7 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Create New App | Developer Apps | IntelliFlow CRM",
+          "value": "Create New App | Developer Apps | Aurora",
           "source": "page"
         },
         "description": {
@@ -6296,7 +6360,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6359,7 +6423,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6405,7 +6469,7 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "API Reference | IntelliFlow CRM",
+          "value": "API Reference | Aurora",
           "source": "page"
         },
         "description": {
@@ -6422,7 +6486,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6468,13 +6532,13 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Architecture | IntelliFlow CRM",
+          "value": "Architecture | Aurora",
           "source": "page"
         },
         "description": {
-          "value": "Architecture Decision Records (ADRs) for IntelliFlow CRM — browse decisions on system design, data management, AI integration, and platform infrastructure",
+          "value": "Architecture Decision Records (ADRs) for Aurora — browse decisions on system design, data management, AI integration, and platform infrastructure",
           "source": "page",
-          "length": 154
+          "length": 145
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -6485,7 +6549,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6531,13 +6595,13 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Authentication | IntelliFlow CRM",
+          "value": "Authentication | Aurora",
           "source": "page"
         },
         "description": {
-          "value": "Authentication guides for IntelliFlow CRM — OAuth 2.0, JWT tokens, MFA setup, session management, and API key reference.",
+          "value": "Authentication guides for Aurora — OAuth 2.0, JWT tokens, MFA setup, session management, and API key reference.",
           "source": "page",
-          "length": 120
+          "length": 111
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -6548,7 +6612,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6594,13 +6658,13 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Changelog | IntelliFlow CRM",
+          "value": "Changelog | Aurora",
           "source": "page"
         },
         "description": {
-          "value": "Release notes, version history, and breaking change notifications for IntelliFlow CRM platform updates",
+          "value": "Release notes, version history, and breaking change notifications for Aurora platform updates",
           "source": "page",
-          "length": 102
+          "length": 93
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -6611,7 +6675,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6657,13 +6721,13 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "CLI Reference | IntelliFlow CRM",
+          "value": "CLI Reference | Aurora",
           "source": "page"
         },
         "description": {
-          "value": "CLI documentation for IntelliFlow CRM — monorepo development commands for setup, testing, database management, and AI development",
+          "value": "CLI documentation for Aurora — monorepo development commands for setup, testing, database management, and AI development",
           "source": "page",
-          "length": 129
+          "length": 120
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -6674,7 +6738,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6720,13 +6784,13 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Developer Guides | IntelliFlow CRM",
+          "value": "Developer Guides | Aurora",
           "source": "page"
         },
         "description": {
-          "value": "Developer guides for IntelliFlow CRM — getting started, development workflows, testing strategies, AI development, deployment, and best practices",
+          "value": "Developer guides for Aurora — getting started, development workflows, testing strategies, AI development, deployment, and best practices",
           "source": "page",
-          "length": 145
+          "length": 136
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -6737,7 +6801,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6783,7 +6847,7 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Integration Resources | IntelliFlow CRM",
+          "value": "Integration Resources | Aurora",
           "source": "page"
         },
         "description": {
@@ -6800,7 +6864,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6846,13 +6910,13 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "SDK Guides | IntelliFlow CRM",
+          "value": "SDK Guides | Aurora",
           "source": "page"
         },
         "description": {
-          "value": "SDK documentation for IntelliFlow CRM — TypeScript client libraries, React hooks, installation guides, and quickstart examples",
+          "value": "SDK documentation for Aurora — TypeScript client libraries, React hooks, installation guides, and quickstart examples",
           "source": "page",
-          "length": 126
+          "length": 117
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -6863,7 +6927,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6909,13 +6973,13 @@
       "access_tier": "developer",
       "metadata": {
         "title": {
-          "value": "Webhooks | IntelliFlow CRM",
+          "value": "Webhooks | Aurora",
           "source": "page"
         },
         "description": {
-          "value": "Webhook documentation for IntelliFlow CRM — event types, signature verification, retry policies, and interactive endpoint testing",
+          "value": "Webhook documentation for Aurora — event types, signature verification, retry policies, and interactive endpoint testing",
           "source": "page",
-          "length": 129
+          "length": 120
         },
         "og_title": {
           "value": "Aurora, the AI CRM that asks before it acts",
@@ -6926,7 +6990,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -6989,7 +7053,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7054,7 +7118,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7119,7 +7183,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7182,7 +7246,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7245,7 +7309,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7310,7 +7374,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7373,7 +7437,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/dpa",
+          "value": "https://intelli-flow-crm-web.vercel.app/dpa",
           "source": "page"
         },
         "og_site_name": {
@@ -7422,7 +7486,7 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Email | IntelliFlow CRM",
+          "value": "Email | Aurora",
           "source": "page"
         },
         "description": {
@@ -7439,7 +7503,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7485,7 +7549,7 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Email | IntelliFlow CRM",
+          "value": "Email | Aurora",
           "source": "page"
         },
         "description": {
@@ -7502,7 +7566,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7548,7 +7612,7 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Compose Email | IntelliFlow CRM",
+          "value": "Compose Email | Aurora",
           "source": "page"
         },
         "description": {
@@ -7565,7 +7629,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7628,7 +7692,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7691,7 +7755,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7817,7 +7881,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -7880,7 +7944,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/features",
+          "value": "https://intelli-flow-crm-web.vercel.app/features",
           "source": "page"
         },
         "og_site_name": {
@@ -7947,7 +8011,7 @@
           "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/forgot-password",
+          "value": "https://intelli-flow-crm-web.vercel.app/forgot-password",
           "source": "layout"
         },
         "og_site_name": {
@@ -8010,7 +8074,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8075,7 +8139,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8140,7 +8204,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8205,7 +8269,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8270,7 +8334,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8335,7 +8399,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8398,7 +8462,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8461,7 +8525,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8524,7 +8588,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8587,7 +8651,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8650,7 +8714,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8715,7 +8779,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8778,7 +8842,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8843,7 +8907,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8906,7 +8970,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -8969,7 +9033,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9034,7 +9098,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9097,7 +9161,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9160,7 +9224,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9223,7 +9287,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9286,7 +9350,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9349,7 +9413,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9412,7 +9476,7 @@
           "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/login",
+          "value": "https://intelli-flow-crm-web.vercel.app/login",
           "source": "layout"
         },
         "og_site_name": {
@@ -9477,7 +9541,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9540,7 +9604,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9607,7 +9671,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9672,7 +9736,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9735,7 +9799,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9798,7 +9862,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9861,7 +9925,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9924,7 +9988,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -9987,7 +10051,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/partners",
+          "value": "https://intelli-flow-crm-web.vercel.app/partners",
           "source": "page"
         },
         "og_site_name": {
@@ -10054,7 +10118,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/press",
+          "value": "https://intelli-flow-crm-web.vercel.app/press",
           "source": "page"
         },
         "og_site_name": {
@@ -10121,7 +10185,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10188,7 +10252,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10251,7 +10315,7 @@
           "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/pricing",
+          "value": "https://intelli-flow-crm-web.vercel.app/pricing",
           "source": "layout"
         },
         "og_site_name": {
@@ -10318,7 +10382,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/privacy",
+          "value": "https://intelli-flow-crm-web.vercel.app/privacy",
           "source": "page"
         },
         "og_site_name": {
@@ -10381,7 +10445,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10444,7 +10508,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10507,7 +10571,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10570,7 +10634,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/security",
+          "value": "https://intelli-flow-crm-web.vercel.app/security",
           "source": "page"
         },
         "og_site_name": {
@@ -10633,7 +10697,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10698,7 +10762,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10761,7 +10825,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10824,7 +10888,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10887,7 +10951,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -10950,7 +11014,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11013,7 +11077,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11076,7 +11140,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11139,7 +11203,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11202,7 +11266,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11265,7 +11329,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11328,7 +11392,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11391,7 +11455,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11454,7 +11518,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11517,7 +11581,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11580,7 +11644,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11643,7 +11707,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11706,7 +11770,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11769,7 +11833,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11832,7 +11896,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11895,7 +11959,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11958,7 +12022,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12021,7 +12085,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12086,7 +12150,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12149,7 +12213,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12212,7 +12276,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12275,7 +12339,7 @@
           "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/signup",
+          "value": "https://intelli-flow-crm-web.vercel.app/signup",
           "source": "layout"
         },
         "og_site_name": {
@@ -12338,7 +12402,7 @@
           "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/signup",
+          "value": "https://intelli-flow-crm-web.vercel.app/signup",
           "source": "layout"
         },
         "og_site_name": {
@@ -12404,7 +12468,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12467,7 +12531,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12530,7 +12594,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12595,7 +12659,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12658,7 +12722,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12721,7 +12785,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12786,7 +12850,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12849,7 +12913,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12895,7 +12959,7 @@
       "access_tier": "auth-gated",
       "metadata": {
         "title": {
-          "value": "Task Settings — IntelliFlow",
+          "value": "Task Settings — Aurora",
           "source": "page"
         },
         "description": {
@@ -12912,7 +12976,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -12975,7 +13039,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13038,7 +13102,7 @@
           "source": "page"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/terms",
+          "value": "https://intelli-flow-crm-web.vercel.app/terms",
           "source": "page"
         },
         "og_site_name": {
@@ -13101,7 +13165,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13166,7 +13230,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13229,7 +13293,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13292,7 +13356,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13355,7 +13419,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13418,7 +13482,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13481,7 +13545,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -13549,7 +13613,7 @@
           "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/verify-email",
+          "value": "https://intelli-flow-crm-web.vercel.app/verify-email",
           "source": "layout"
         },
         "og_site_name": {
@@ -13612,7 +13676,7 @@
           "source": "layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com/verify-email",
+          "value": "https://intelli-flow-crm-web.vercel.app/verify-email",
           "source": "layout"
         },
         "og_site_name": {
@@ -13654,11 +13718,11 @@
     }
   ],
   "summary": {
-    "total_routes": 215,
-    "public_routes": 32,
+    "total_routes": 216,
+    "public_routes": 33,
     "auth_gated_routes": 169,
     "developer_routes": 14,
-    "routes_with_seo_score": 32,
+    "routes_with_seo_score": 33,
     "routes_pending_runtime_measurement": 215,
     "average_seo_score_public": 85,
     "legal_pages_missing": [],

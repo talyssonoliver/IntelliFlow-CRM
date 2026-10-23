@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-21T19:46:34.021Z",
+  "timestamp": "2026-10-23T02:46:18.736Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 76,
-    "total_endpoints": 590,
-    "total_queries": 251,
-    "total_mutations": 339,
+    "total_routers": 78,
+    "total_endpoints": 599,
+    "total_queries": 255,
+    "total_mutations": 344,
     "routers": [
       {
         "name": "contact",
@@ -1255,6 +1255,12 @@
         "mutations": 4
       },
       {
+        "name": "eventTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "contactTypes",
         "endpoints": 6,
         "queries": 2,
@@ -1375,6 +1381,12 @@
         "mutations": 1
       },
       {
+        "name": "publicBooking",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
         "name": "appointmentSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1479,24 +1491,24 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 207,
-    "total_fields": 2996,
-    "total_indexes": 924,
-    "total_relations": 293,
+    "total_tables": 209,
+    "total_fields": 3032,
+    "total_indexes": 935,
+    "total_relations": 295,
     "tables_with_embeddings": 4,
-    "enums": 78,
+    "enums": 79,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 181,
-        "indexes": 6,
+        "fields": 185,
+        "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
       },
       {
         "name": "Lead",
         "fields": 49,
-        "indexes": 14,
+        "indexes": 15,
         "relations": 3,
         "hasEmbedding": true
       },
@@ -1505,6 +1517,13 @@
         "fields": 48,
         "indexes": 7,
         "relations": 8,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Appointment",
+        "fields": 38,
+        "indexes": 10,
+        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1561,13 +1580,6 @@
         "fields": 31,
         "indexes": 9,
         "relations": 2,
-        "hasEmbedding": false
-      },
-      {
-        "name": "Appointment",
-        "fields": 30,
-        "indexes": 10,
-        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1757,6 +1769,13 @@
         "fields": 17,
         "indexes": 3,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EventType",
+        "fields": 17,
+        "indexes": 5,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -2803,6 +2822,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "BookingAttempt",
+        "fields": 7,
+        "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "TicketRequiredField",
         "fields": 7,
         "indexes": 3,
@@ -3294,10 +3320,10 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 63,
-    "total_schemas": 662,
+    "total_validators": 64,
+    "total_schemas": 671,
     "by_complexity": {
-      "complex": 36,
+      "complex": 37,
       "moderate": 23,
       "simple": 4
     },
@@ -3467,6 +3493,12 @@
       {
         "name": "common",
         "file": "common.ts",
+        "schemas": 9,
+        "complexity": "complex"
+      },
+      {
+        "name": "event-types",
+        "file": "event-types.ts",
         "schemas": 9,
         "complexity": "complex"
       },
@@ -4598,6 +4630,55 @@
         "name": "calendar.delete",
         "method": "POST",
         "description": "Delete calendar"
+      }
+    ],
+    "eventTypes": [
+      {
+        "name": "eventTypes.list",
+        "method": "GET",
+        "description": "List eventTypess with pagination"
+      },
+      {
+        "name": "eventTypes.listActive",
+        "method": "GET",
+        "description": "List active"
+      },
+      {
+        "name": "eventTypes.create",
+        "method": "POST",
+        "description": "Create new eventTypes"
+      },
+      {
+        "name": "eventTypes.update",
+        "method": "POST",
+        "description": "Update eventTypes"
+      },
+      {
+        "name": "eventTypes.delete",
+        "method": "POST",
+        "description": "Delete eventTypes"
+      },
+      {
+        "name": "eventTypes.setBookingLink",
+        "method": "POST",
+        "description": "Set booking link"
+      }
+    ],
+    "publicBooking": [
+      {
+        "name": "publicBooking.getEventType",
+        "method": "GET",
+        "description": "Get event type"
+      },
+      {
+        "name": "publicBooking.listSlots",
+        "method": "GET",
+        "description": "List slots"
+      },
+      {
+        "name": "publicBooking.book",
+        "method": "POST",
+        "description": "Book"
       }
     ],
     "chainVersion": [

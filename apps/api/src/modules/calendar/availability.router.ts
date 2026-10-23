@@ -19,6 +19,7 @@ import {
 import { createTRPCRouter, tenantProcedure } from '../../trpc';
 import { assertTenantContext, type TenantAwareContext } from '../../security/tenant-context';
 import { DEFAULT_APPOINTMENT_SETTINGS } from '../legal/appointment-settings.defaults';
+import { lockTenantBookings } from './booking-lock';
 
 type AvailabilityReader = Pick<
   PrismaClient,
@@ -136,6 +137,8 @@ export const availabilityRouter = createTRPCRouter({
 
       try {
         return await ctx.prismaWithTenant.$transaction(async (tx) => {
+          // A public booking in flight finishes against the rules it read (codex).
+          await lockTenantBookings(tx, tenantId);
           // Settings row first: its row lock serialises concurrent saves (no merged weeks).
           await tx.appointmentSettings.upsert({
             where: { tenantId },
@@ -164,6 +167,7 @@ export const availabilityRouter = createTRPCRouter({
     assertAvailabilityAdmin(ctx);
     const tenantId = ctx.tenant.tenantId;
     return ctx.prismaWithTenant.$transaction(async (tx) => {
+      await lockTenantBookings(tx, tenantId);
       // Back to the legacy booking rules; buffers and timezone are kept.
       await tx.appointmentSettings.updateMany({
         where: { tenantId },

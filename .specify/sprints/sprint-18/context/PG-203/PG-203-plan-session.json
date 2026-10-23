@@ -1,0 +1,41 @@
+{
+  "taskId": "PG-203",
+  "sprint": 18,
+  "session": "plan",
+  "completedAt": "2026-10-20T23:18:40Z",
+  "spec": ".specify/sprints/sprint-18/specifications/PG-203-spec.md",
+  "plan": ".specify/sprints/sprint-18/planning/PG-203-plan.md",
+  "planReviewer": {
+    "agent": ".claude/agents/plan-reviewer.md",
+    "passes": [
+      {
+        "verdict": "REVISE",
+        "errors": 8,
+        "warns": 7,
+        "info": 3
+      },
+      {
+        "verdict": "APPROVE",
+        "errors": 0,
+        "warns": 1
+      }
+    ]
+  },
+  "steps": 20,
+  "filesSummary": {
+    "createSource": 24,
+    "modifySource": 26,
+    "testsCreate": 17,
+    "testsModify": 14,
+    "docs": 17
+  },
+  "estimate": "20-28h",
+  "plannedFinish": "2026-10-23",
+  "prismaMigrations": [
+    "20261021120000_lead_source_booking",
+    "20261021120100_event_types",
+    "20261021120200_tenants_booking_handle_idx",
+    "20261021120300_leads_tenant_id_key",
+    "20261021120400_appointments_lead_fk"
+  ]
+}
