@@ -1,0 +1,22 @@
+{
+  "stoa": "Foundation",
+  "task_id": "IFC-033",
+  "run_id": "run-20261022-reopen-prod",
+  "verdict": "PASS",
+  "gates": [
+    {"gate": "typecheck (turbo)", "result": "PASS", "evidence": "gates/summary.txt: typecheck exit=0"},
+    {"gate": "lint (turbo)", "result": "PASS", "evidence": "gates/summary.txt: lint exit=0"},
+    {"gate": "build (turbo)", "result": "PASS", "evidence": "gates/summary.txt: build exit=0; turbo-build.txt 20 tasks, 14m0s"},
+    {"gate": "tracked log/coverage/tsbuildinfo files", "result": "PASS", "evidence": "git ls-files | grep -cE '\.(log|coverage|tsbuildinfo)$' = 0"},
+    {"gate": "CSV Artifacts To Track exist", "result": "PASS", "evidence": "load-test-report.html, bottleneck-analysis.md, grafana-load-test.png, context_ack.json, ADR-017 all present"},
+    {"gate": "gitignored write targets", "result": "PASS", "evidence": "git check-ignore: .env.k6.local (.gitignore:99), tools/scripts/k6/.data/ (.gitignore:394)"},
+    {"gate": "scope of committed files", "result": "PASS", "evidence": "16 files, all k6 tooling, IFC-033 evidence/docs, plan/spec, attestation tracking, debt ledger"},
+    {"gate": "k6 local defaults unchanged", "result": "PASS", "evidence": "INGEST/CONVERT_TIME_UNIT default '1s'; AUTH_HEADERS empty unless K6_AUTH_TOKEN; Object.assign preserves MUT_HEADERS keys"},
+    {"gate": "eslint/prettier/tsc on new files; k6 inspect", "result": "NOT_REVERIFIED", "evidence": "orchestrator-reported; covered by repo lint exit=0; not re-run (read-only constraint)"}
+  ],
+  "findings": [
+    {"severity": "INFO", "file": "tools/scripts/k6/prepare-ifc-033-tenant.mjs", "line": 1, "issue": "Host default node is v25.2.1; script needs Node 22+ (global fetch, no node-22-only APIs found, uses only node:crypto/fs/path/url). Not run, so Node 22 execution is by inspection only.", "fix": "Run under Node 22 (repo pin) when used."},
+    {"severity": "INFO", "file": "turbo-build.txt", "line": 0, "issue": "Turbo warning: no output files for @intelliflow/workers#build (pre-existing, unrelated).", "fix": "None required."}
+  ],
+  "reviewed_at": "2026-10-23T00:00:00Z"
+}

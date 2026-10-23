@@ -1,0 +1,30 @@
+[test-slot] slot3 taken for IFC-033@feat/ifc-033-ifc033: pnpm run lint
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-033
+> turbo run lint
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running lint in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/domain:build: cache hit, suppressing logs 54816edaac4b711e
+@intelliflow/webhooks:build: cache hit, suppressing logs fc74f5b5d419799d
+@intelliflow/partner-sdk:build: cache hit, suppressing logs f6776110e071c360
+@intelliflow/observability:build: cache hit, suppressing logs 56ec4ebd20444c48
+@intelliflow/db:build: cache hit, suppressing logs f43266d84f633da3
+@intelliflow/validators:build: cache hit, suppressing logs e9f1612211cbfd2d
+@intelliflow/application:build: cache hit, suppressing logs 7ad2f6ff354b196f
+@intelliflow/platform:build: cache hit, suppressing logs cdae1c3e195a22ed
+@intelliflow/worker-shared:build: cache hit, suppressing logs 5c48bbdd712f376f
+@intelliflow/adapters:build: cache hit, suppressing logs 71c247fd398be224
+@intelliflow/ai-worker:build: cache hit, suppressing logs cd1b5f8e4a3c4830
+@intelliflow/api:build: cache hit, suppressing logs a563dcdddea61b5a
+@intelliflow/api-client:build: cache hit, suppressing logs 30c9fc4a169f88f9
+
+ Tasks:    36 successful, 36 total
+Cached:    35 cached, 36 total
+  Time:    19.125s 
+

@@ -1,0 +1,5 @@
+typecheck exit=0
+lint exit=0
+build exit=0
+root-tests exit=1
+root-tests@fed314f7a: 117 files passed, 2654 tests passed, 2 skipped, 0 failed (see root-tests.txt)

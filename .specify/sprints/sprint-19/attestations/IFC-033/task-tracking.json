@@ -11,6 +11,11 @@
       "status": "In Progress",
       "at": "2026-10-23T00:09:13.281Z",
       "note": "Exec session (reconcile-and-attest, owner ruling 2026-10-22): audit found the only DoD gap is a deployed-environment run; k6 against production in a dedicated tenant."
+    },
+    {
+      "status": "Completed",
+      "at": "2026-10-23T15:23:04.739Z",
+      "note": "Owner ruling 2026-10-22: closes on the throughput KPI (5,435 leads/hour in production). p95 1,137 ms recorded as a measured FAIL under the ADR-018 waiver, tracked in #1001. Attestation run-20261022-reopen-prod."
     }
   ],
   "blockers": [
@@ -39,8 +44,8 @@
       "resolution": "Resolved: the k6 run against a deployed environment was done with owner approval on 2026-10-22 (the #887 nightly is still not producing reports; that is IFC-007/#318 scope, not this task)."
     }
   ],
-  "percent_complete": 50,
-  "updated_at": "2026-10-05T23:30:00Z",
+  "percent_complete": 100,
+  "updated_at": "2026-10-23T15:23:04.739Z",
   "started_at": "2026-10-22T22:39:25Z",
   "execution": {
     "started_at": "2026-10-22T22:39:25Z",
@@ -49,6 +54,11 @@
       "STOA-Quality",
       "STOA-Foundation",
       "STOA-Security"
-    ]
-  }
+    ],
+    "completed_at": "2026-10-23T15:23:04.739Z",
+    "duration_minutes": 1004,
+    "last_error": null
+  },
+  "completed_at": "2026-10-23T15:23:04.739Z",
+  "actual_duration_minutes": 1004
 }

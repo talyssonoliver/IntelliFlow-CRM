@@ -15,8 +15,9 @@ baseline)
 ## 0. Production run (2026-10-22): throughput PASS, p95 FAIL
 
 IFC-033 was reopened (#795) because the July run targeted `localhost:4000`, not
-a deployed environment. No staging environment exists, so on the owner's rulings
-of 2026-10-22
+a deployed environment. There is no staging API or database (`cd.yml`
+`deploy-staging` builds only the web app), so on the owner's rulings of
+2026-10-22
 (`.specify/sprints/sprint-18/context/IFC-033/IFC-033-owner-ruling.md`) the run
 targeted the **production API** inside a dedicated load-test tenant, sized down
 to cap the AI scoring cost of each `lead.create`.
@@ -31,7 +32,7 @@ to cap the AI scoring cost of each `lead.create`.
 
 | Metric                        | Budget             | Achieved                                    | Verdict |
 | ----------------------------- | ------------------ | ------------------------------------------- | ------- |
-| Lead throughput               | ≥ 5,000 leads/hour | **185 leads in 123 s ≈ 5,435 leads/hour**   | ✅      |
+| Lead throughput               | ≥ 5,000 leads/hour | **185 leads in 122.5 s ≈ 5,435 leads/hour** | ✅      |
 | Error rate                    | < 0.1 %            | **0 %** (0 / 391 requests)                  | ✅      |
 | Atomic conversions            | exercised          | **20 / 20** lead→deal                       | ✅      |
 | p95 latency (client, k6)      | < 200 ms           | **1,137 ms**                                | ❌      |

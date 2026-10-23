@@ -17,10 +17,16 @@
 2. Dependencies Completed: IFC-030, IFC-032 — ✅ (CSV `Dependencies`)
 3. The atomic conversion under test exists (DDD-001/002, #621) — ✅ merged
    `15c1b4dec` is the conversion commit's merge base
-4. **Prod-safety preflight** — confirm the target DB is `:5433`, not Supabase:
+4. **Prod-safety preflight (July local baseline only)** — confirm the target DB is `:5433`, not Supabase:
    ```
    node -e "console.log(process.env.DATABASE_URL)"   # must be localhost:5433
    ```
+5. **Production-run preflight (Phase 6, 2026-10-22)** — the spec amendment's
+   "Production-run conditions" replace #4 for the deployed run: a fresh owner
+   approval for this run (recorded), `BASE_URL` is the deployed API, a tenant
+   created for load testing whose `lead.list` shows only `@loadtest.example.com`
+   leads before load, writes through the API only, credentials only in the
+   gitignored `.env.k6.local`. All checked on 2026-10-22 before S19 (S18).
 
 ---
 
@@ -33,6 +39,8 @@
 | `performance-gate.yml`           | GitHub Actions                       | Adds a **secret-free** job              | workflow run                                  |
 | `k6-load-test.json` (Grafana)    | Grafana provisioning                 | N/A (new dashboard)                     | dashboard renders                             |
 | `docs/evidence/ifc-033/*`        | Audit evidence for IFC-034 Gate-3    | Blocks IFC-034 if templated             | manual provenance review                      |
+| `prepare-ifc-033-tenant.mjs` (Phase 6) | Operator CLI before a deployed `pnpm test:load` | N/A (new)                  | `__tests__/prepare-ifc-033-tenant.test.ts`; S18 |
+| `artifacts/benchmarks/ifc-033-deployed/*` (Phase 6) | Production-run evidence | Supersedes `docs/evidence/ifc-033/` as current | S19/S20 |
 
 **Zero production runtime code changed.** IFC-033 adds tooling, CI, and
 evidence only — the load test observes the system, it does not modify it.
@@ -94,7 +102,8 @@ it was done. The owner's rulings are in
 
 - [x] **S15** — Audit the merged deliverables against the DoD. Result: harness,
       reports, ADR and bottleneck doc hold. The only gap is the deployed target.
-      There is no staging (DNS does not resolve, no STAGING vars or secrets), and the
+      There is no staging API or database (`cd.yml` `deploy-staging` builds only the web app;
+      no STAGING vars or secrets), and the
       #887 nightly has never run (it stays queued for a self-hosted runner).
 - [x] **S16** — Owner rulings: production, a dedicated tenant, a smaller run to cap
       the per-lead AI scoring cost (2 min at 23 leads per 15 s), synthetic data left in place.
@@ -104,7 +113,10 @@ it was done. The owner's rulings are in
       seed lead, QUALIFIED pool through `lead.bulkUpdateStatus`, credentials only in
       the gitignored `.env.k6.local`), with unit tests in
       `__tests__/prepare-ifc-033-tenant.test.ts`. Note: the test file was written after
-      the module, not RED-first.
+      the module, not RED-first. Review fixes in `02023bf9d`: honour
+      `bulkUpdateStatus` `{successful, failed}` (it answers 200 on partial failure),
+      unique default run tag, combined signup+login error, token expiry printed,
+      `main()` injectable and tested (24 tests, 94.7 % lines).
 - [x] **S18** — Provision the tenant on production. Verified before load: `lead.list`
       showed 21 leads, all synthetic.
 - [x] **S19** — Production run, 2026-10-22 23:06:36Z to 23:08:54Z: 5,435 leads/hour,
@@ -116,9 +128,41 @@ it was done. The owner's rulings are in
 - [x] **S21** — Bottleneck: about 147 ms per API-to-database round-trip
       (cross-region). Documented in `bottleneck-analysis.md` §0, tracked in #1001 and
       debt-ledger `PROD-API-DB-CROSS-REGION-LATENCY-001`. The owner ruled the task
-      closes on throughput.
+      closes on throughput. (Cross-region is inferred: Supabase is `eu-central-1`; the
+      Railway API region is unconfirmed.)
+- [x] **S22** — Re-record the ADR-068 attestation for the production run: p95 as a
+      measured FAIL under the owner waiver, verdict COMPLETE resting on the owner
+      ruling. Then flip the CSV row through `tools/scripts/flip-task-status.mjs`.
+
+**Files (Phase 6).** Created: `tools/scripts/k6/prepare-ifc-033-tenant.mjs`,
+`tools/scripts/k6/__tests__/prepare-ifc-033-tenant.test.ts`,
+`artifacts/benchmarks/ifc-033-deployed/k6-run-output.txt`,
+`artifacts/benchmarks/ifc-033-deployed/server-side-telemetry.json`,
+`artifacts/coverage/IFC-033-before.json`, `artifacts/coverage/IFC-033-after.json`.
+Modified: `tools/scripts/k6/ifc-033-critical-path.js`,
+`tools/scripts/k6/run-ifc-033-load-test.mjs`, `artifacts/reports/load-test-report.html`,
+`artifacts/benchmarks/ifc-033-load-summary.json`, `artifacts/misc/grafana-load-test.png`,
+`docs/shared/bottleneck-analysis.md`, `artifacts/metrics/debt-ledger.yaml`, this plan,
+the spec, and the IFC-033 attestation files.
+
+**AC traceability (Phase 6, production run):**
+
+| AC  | Step(s)        | Evidence                                                                 |
+| --- | -------------- | ------------------------------------------------------------------------ |
+| AC1 | S19            | `k6-run-output.txt`, `load-test-report.html` (real timestamps)            |
+| AC2 | S19            | 5,435 leads/hour, `ifc-033-load-summary.json`                            |
+| AC3 | S19, S20, S22  | FAIL 1,137 ms client, recorded as FAIL under owner waiver                |
+| AC4 | S19            | 0 % errors (0 / 391)                                                     |
+| AC5 | S18, S19       | 20/20 conversions from the QUALIFIED pool                                |
+| AC6 | S20, S21       | Tempo trace: about 147 ms per round-trip, `bottleneck-analysis.md` §0       |
+| AC7 | S16, S18       | owner rulings, tenant verified synthetic-only before load                |
+| AC8 | S17, S19       | `pnpm test:load` wrapper used for the run; exits 99 on the AC3 threshold |
 
 ## Verification (independently re-run 2026-07-25 on `origin/main` @ `f4ec0b0cb`)
+
+> This table verifies the **July local baseline**. Its "8/8 PASS" and "Completed"
+> rows were true then and were reopened by #795. The current evidence is Phase 6
+> (`artifacts/benchmarks/ifc-033-deployed/`); `docs/evidence/ifc-033/` keeps the July run.
 
 | Check                                        | Result                                                    |
 | -------------------------------------------- | --------------------------------------------------------- |
@@ -138,4 +182,48 @@ it was done. The owner's rulings are in
 - The 36 % `429` rate under over-drive is a **single-user artifact**. A
   multi-user load profile (distinct `userId` per VU) would raise the observed
   ceiling. Worth a follow-up run before IFC-034's Gate-3 review if a higher
-  headroom figure is needed; the current 4.3× margin already clears the budget.
+  headroom figure is needed. (The 4.3× margin was the July local run.)
+- Production (Phase 6): throughput clears the budget at 1.09× (5,435/h at a
+  deliberately capped rate, not a ceiling), but p95 fails, at 1,137 ms against 200 ms.
+  The fix (co-locate `api` with the database) is an owner infra decision
+  tracked in #1001. AC3 stays FAIL until a re-run after that fix passes.
+
+---
+
+## Plan-Reviewer Sign-off
+
+<!-- plan-reviewer: subagent -->
+
+**Verdict: APPROVED_WITH_CHANGES** (2026-10-23)
+
+Verified against the branch diff (dd164c4ca..fed314f7a): S15-S21 are backed by
+artifacts (k6-run-output.txt, server-side-telemetry.json, bottleneck-analysis
+§0, debt-ledger entry, task-tracking resolutions, summary JSON with p95=false).
+S17 states the test-after deviation honestly. Numbers match the owner ruling.
+
+Required changes (plan text, no code):
+
+1. Stale evidence: `docs/evidence/ifc-033/` still holds the July localhost
+   run (not touched in this diff) while the Verification table cites it as
+   current. Either refresh/annotate it or point the table at
+   `artifacts/benchmarks/ifc-033-deployed/`.
+2. Preflight #4 ("DATABASE_URL must be localhost:5433") and S6 contradict the
+   amended AC7. Add a Phase 6 preflight (production target, tenant isolation,
+   API-only writes) and mark the old one local-baseline only.
+3. Add AC traceability for Phase 6 (AC1-AC8 to S15-S21); AC8 is not cited.
+4. Add the missing step: re-record the ADR-068 attestation (p95 as measured
+   FAIL, COMPLETE resting on the owner ruling) and the CSV/status update.
+5. Add Files to Create/Modify for Phase 6 (prepare-ifc-033-tenant.mjs and its
+   test are absent from the Reality Checks table); mention the 02023bf9d
+   bulkUpdateStatus fix under S17.
+6. Update the Residual section; its "4.3x margin clears the budget" claim is
+   stale for the deployed run.
+
+### Re-review (2026-10-23)
+
+<!-- plan-reviewer: subagent -->
+
+**Verdict: APPROVED.** All six required changes are present and accurate. S22 is
+honestly left unticked; the task must not be closed or the CSV flipped until it
+is done. Nit (non-blocking): preflight #5 cites the spec's "Production-run
+conditions", which the spec's Reopen amendment does not use as a heading.

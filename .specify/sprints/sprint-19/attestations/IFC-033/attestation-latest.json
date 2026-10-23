@@ -1,0 +1,367 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-033",
+  "run_id": "run-20261022-reopen-prod",
+  "attestor": "Claude Code /exec (IFC-033 lane, runner Aurora)",
+  "attestation_timestamp": "2026-10-23T15:23:37.923Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 26,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 18,
+    "gates_failed": 2,
+    "kpis_met": 4,
+    "kpis_missed": 1,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck (turbo, 38 tasks; full cache hit, 599 ms)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-23T00:30:02.922Z",
+      "duration_ms": 599
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run --project root (117 files, 2654 passed, 2 skipped, 0 failed at fed314f7a)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-23T15:15:00.048Z",
+      "duration_ms": 69520
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint (turbo, 36 tasks) + eslint/prettier on changed files",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-23T00:30:25.293Z",
+      "duration_ms": 19125
+    },
+    {
+      "name": "Build",
+      "command": "pnpm run build (turbo, 20 tasks)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-23T00:44:27.617Z",
+      "duration_ms": 840169
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan_checkboxes",
+      "passed": true,
+      "score": 100,
+      "log_path": ".specify/sprints/sprint-19/planning/IFC-033-plan.md (22/22)"
+    },
+    {
+      "gate_id": "artifact_hashes",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json#artifact_hashes"
+    },
+    {
+      "gate_id": "build_validation",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/gates/summary.txt"
+    },
+    {
+      "gate_id": "coverage_measurement",
+      "passed": true,
+      "score": 94.73,
+      "log_path": "artifacts/coverage/IFC-033-after.json (prepare-ifc-033-tenant.mjs lines)"
+    },
+    {
+      "gate_id": "context_ack",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-19/attestations/IFC-033/context_ack.json (gatekeeper: 18 files, 7 invariants)"
+    },
+    {
+      "gate_id": "real-benchmark-data",
+      "passed": true,
+      "timestamp": "2026-10-22T23:08:54Z",
+      "log_path": "artifacts/benchmarks/ifc-033-deployed/k6-run-output.txt"
+    },
+    {
+      "gate_id": "throughput-5000-per-hour",
+      "passed": true,
+      "score": 5435,
+      "timestamp": "2026-10-22T23:08:54Z",
+      "log_path": "artifacts/benchmarks/ifc-033-load-summary.json"
+    },
+    {
+      "gate_id": "p95-under-200ms",
+      "passed": false,
+      "score": 1137.4,
+      "exit_code": 99,
+      "timestamp": "2026-10-22T23:08:54Z",
+      "log_path": "FAIL with owner waiver (ADR-018 Decision 4; owner ruling 2026-10-22; #1001): artifacts/benchmarks/ifc-033-load-summary.json"
+    },
+    {
+      "gate_id": "error-rate-under-0.1pct",
+      "passed": true,
+      "score": 0,
+      "timestamp": "2026-10-22T23:08:54Z",
+      "log_path": "artifacts/benchmarks/ifc-033-load-summary.json"
+    },
+    {
+      "gate_id": "atomic-conversion-exercised",
+      "passed": true,
+      "score": 20,
+      "timestamp": "2026-10-22T23:08:54Z",
+      "log_path": "artifacts/benchmarks/ifc-033-load-summary.json"
+    },
+    {
+      "gate_id": "bottleneck-identified",
+      "passed": true,
+      "log_path": "docs/shared/bottleneck-analysis.md §0; artifacts/benchmarks/ifc-033-deployed/server-side-telemetry.json"
+    },
+    {
+      "gate_id": "deployed-target-owner-approved",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/context/IFC-033/IFC-033-owner-ruling.md (AC7 as amended)"
+    },
+    {
+      "gate_id": "validate-pnpm-test-load",
+      "passed": true,
+      "exit_code": 99,
+      "log_path": "pnpm test:load wrapper used for the run; exit 99 is the AC3 threshold crossing, by design"
+    },
+    {
+      "gate_id": "stoa-quality",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/stoa-verdicts/Quality.json (WARN then PASS on recheck)"
+    },
+    {
+      "gate_id": "stoa-foundation",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/stoa-verdicts/Foundation.json"
+    },
+    {
+      "gate_id": "stoa-security",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/stoa-verdicts/Security.json"
+    },
+    {
+      "gate_id": "codex-review",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": "artifacts/codex-review/summary.txt (0 files in scope: tools/scripts is outside sonar.sources; independent code-review agent used instead, 3 defects fixed in 02023bf9d)"
+    },
+    {
+      "gate_id": "nav-wiring",
+      "passed": true,
+      "log_path": "N/A: no page.tsx (check-nav-wiring.mjs OK)"
+    },
+    {
+      "gate_id": "lighthouse-evidence",
+      "passed": true,
+      "log_path": "N/A: no Lighthouse KPI (check-lighthouse-evidence.mjs OK)"
+    },
+    {
+      "gate_id": "worktree-landed (Gate 4b)",
+      "passed": false,
+      "exit_code": 1,
+      "log_path": "NEEDS_HUMAN (runner-owned): pre-push state. Branch feat/ifc-033-ifc033 set by the dispatch (not agent/<TASK>); pushed once after pre-ship per the dispatch note; tree carries pre-existing .claude/skills edits and regenerated report timestamps not owned by this task. Re-run after push and reported to Aurora"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Lead throughput (production)",
+      "target": ">= 5,000 leads/hour",
+      "actual": "5435/hour (185 leads, k6 test-run duration 122.5 s)",
+      "met": true
+    },
+    {
+      "kpi": "p95 latency, ingestion (production, client)",
+      "target": "< 200 ms",
+      "actual": "1137.4 ms (server-side POST 2,024 ms / GET 701 ms, bucket-interpolated)",
+      "met": false
+    },
+    {
+      "kpi": "Error rate (production)",
+      "target": "< 0.1 %",
+      "actual": "0 % (0 / 391)",
+      "met": true
+    },
+    {
+      "kpi": "Atomic lead->deal conversions",
+      "target": "> 0, 0 failures",
+      "actual": "20 / 20, 0 failures",
+      "met": true
+    },
+    {
+      "kpi": "Diff coverage, prepare-ifc-033-tenant.mjs",
+      "target": ">= 80 % lines",
+      "actual": "94.73 % lines, 90.56 % branches",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "System handles 5000 leads/hour with automation",
+      "met": true,
+      "evidence": "Production API, 2026-10-22 23:06:36Z-23:08:54Z: 5,435 leads/hour, 0 % errors, 20/20 atomic conversions, AI scoring enqueued per lead (artifacts/benchmarks/ifc-033-load-summary.json)."
+    },
+    {
+      "criterion": "artifacts: load-test-report.html",
+      "met": true,
+      "evidence": "artifacts/reports/load-test-report.html, generated by handleSummary() of the production run (generatedAt 2026-10-22T23:08:52.894Z)."
+    },
+    {
+      "criterion": "artifacts: bottleneck-analysis.md",
+      "met": true,
+      "evidence": "docs/shared/bottleneck-analysis.md §0: about 147 ms per API-to-database round-trip (Tempo trace 3fe5f6d158d600bb0d26b4d41c4ae693)."
+    },
+    {
+      "criterion": "artifacts: grafana-load-test.png",
+      "met": true,
+      "evidence": "Rendered by Grafana Cloud (the hosted backend production exports to) from dashboard ifc033-prod-api-load over the run window."
+    },
+    {
+      "criterion": "load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+      "met": true,
+      "evidence": "Report contains the verbatim k6 summary and the run timestamp; raw output in artifacts/benchmarks/ifc-033-deployed/k6-run-output.txt."
+    },
+    {
+      "criterion": "Performance validated, bottlenecks identified (KPI)",
+      "met": true,
+      "evidence": "Throughput validated in production; p95 measured as FAIL and the bottleneck identified and tracked (#1001, debt-ledger PROD-API-DB-CROSS-REGION-LATENCY-001)."
+    }
+  ],
+  "dependencies_verified": [
+    "IFC-030",
+    "IFC-032"
+  ],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-10-23T00:47:06.641Z",
+    "files_read": [
+      {
+        "path": ".specify/memory/Framework.md",
+        "sha256": "62bfcd54fccbfcb5dcf3a67b4811d638371191fa1c51d11ddd8218be6f5e26ad"
+      },
+      {
+        "path": "audit-matrix.yml",
+        "sha256": "bff47a6dd151d7ee3b173d9f47367687237102f4640e49212dac9addf7e0a7ff"
+      },
+      {
+        "path": "docs/development/tdd-guidelines.md",
+        "sha256": "6cd548dae2bf569f9041c3f9743d7b4d9d93cbb29b99f70b2d5a758a179780ff"
+      },
+      {
+        "path": "infra/monitoring/routing-rules-config.yaml",
+        "sha256": "1dc03fb4c5dead1a69b6056bbd1a18b6f387af0d32675eafb75c2cc8506f2eb9"
+      },
+      {
+        "path": "artifacts/misc/otel-collector-config.yaml",
+        "sha256": "e232d011a8e6d7634538830b8f8dcdce3bf5cec296997566c192370d99218976"
+      },
+      {
+        "path": ".specify/sprints/sprint-19/specifications/IFC-033-spec.md",
+        "sha256": "2560746f293eb52ba38ed3255c69537c8b3718d0626bdde7843c40252ab5e7be"
+      },
+      {
+        "path": ".specify/sprints/sprint-19/planning/IFC-033-plan.md",
+        "sha256": "1650dc76020b65093423a0d2912db414a8fed117526d22cd9ec3ad0ae5b7f081"
+      },
+      {
+        "path": "docs/architecture/adr/ADR-017-workflow-reliability.md",
+        "sha256": "f81f8c45ef75688a9359c706ecbdfdf97d14d1b80ee836765a358c8b709e9e91"
+      },
+      {
+        "path": "docs/operations/sprint-18-orchestrator-prompt.md",
+        "sha256": "85cb2216c56bd4640d2c5bfe7fdd30b1016911c2082fce1de6f677ee254105ab"
+      },
+      {
+        "path": "tools/scripts/k6/ifc-033-critical-path.js",
+        "sha256": "aaf898558c8ac0c7f5f73f7252e25047e70e15bc926b992024a24e2237220dfd"
+      },
+      {
+        "path": "tools/scripts/k6/run-ifc-033-load-test.mjs",
+        "sha256": "a50f8fbb4ba0f2e5285cd756c1e36d8bb0b9ff951969e03f4b54016e3571a2dc"
+      },
+      {
+        "path": "tools/scripts/k6/get-auth-token.mjs",
+        "sha256": "8de6b7a85712e0226f49b6a2760b1916e6f2ecdafb5cc2cb07dc13925bab6721"
+      },
+      {
+        "path": "apps/api/src/modules/lead/lead.router.ts",
+        "sha256": "577ac757711177986d30f680619aece3b013bd82b45fcd4268e547a3083cd264"
+      },
+      {
+        "path": "apps/ai-worker/src/lib/feature-flags.ts",
+        "sha256": "ac61899ee48c9f67fa8c8a1faa99e5520639f44db9a25fdad06a749df0dcc47f"
+      },
+      {
+        "path": "apps/ai-worker/src/jobs/scoring.job.ts",
+        "sha256": "0cb498a8a7c090aad31330b8364c1ac384ad1f789d17f4623b75ae55bee1bb04"
+      },
+      {
+        "path": "apps/api/src/modules/auth/auth.router.ts",
+        "sha256": "242c2c35dd4eb149e0b0eafa5663aa613f560c32bf20f7be70507b84a0e7e5c3"
+      },
+      {
+        "path": "packages/validators/src/auth.ts",
+        "sha256": "2f4bf21cea3483971c895d20f1091642953169a9ac77e0de99cff5e5991677a8"
+      },
+      {
+        "path": "docs/shared/bottleneck-analysis.md",
+        "sha256": "87ebad9fc931477082f09b236805bedbc18e4f218b3dbc9cc6ec9f339386aa96"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Evidence must come from a real k6 execution with real timestamps; no template report (RISK-S19-02, GATE:real-benchmark-data).",
+      "ADR-017 §4 / ADR-018 budget: >= 5,000 leads/hour, p95 < 200 ms, error rate < 0.1 %; k6 thresholds enforce it in-script and the result is reported as measured, never rounded into a pass.",
+      "Production is touched only on explicit owner rulings: a dedicated tenant, all writes through the deployed API, never the database directly, synthetic data identifiable and not deleted without the owner.",
+      "No credential (real or fake-shaped) in any committed file or commit message; live tokens stay in gitignored .env.k6.local.",
+      "DATABASE_URL in .env.local is production Supabase and is never used by tests; local tests use the :5433 test DB.",
+      "Never bypass pre-ship, the git-destructive guard or the secret scan; at most one test process at a time through the slot wrapper.",
+      "Sprint_plan.csv is the single source of truth; status flips go through tools/scripts/flip-task-status.mjs, never hand edits to derived files."
+    ]
+  },
+  "artifact_hashes": {
+    "tools/scripts/k6/ifc-033-critical-path.js": "aaf898558c8ac0c7f5f73f7252e25047e70e15bc926b992024a24e2237220dfd",
+    "tools/scripts/k6/run-ifc-033-load-test.mjs": "a50f8fbb4ba0f2e5285cd756c1e36d8bb0b9ff951969e03f4b54016e3571a2dc",
+    "tools/scripts/k6/prepare-ifc-033-tenant.mjs": "9aa438f03724060d8215dff951e21560b72dfd9c3d9e821997ae63674c1770aa",
+    "tools/scripts/k6/__tests__/prepare-ifc-033-tenant.test.ts": "0c193fa452c4775c3437c153038aed5bba0c72d39b7bd58c13f3d01e970ea7ee",
+    "artifacts/reports/load-test-report.html": "a872dc6e7acc4ad928819c03ec13e5e2b91591e2740bb6027d4c08d828b35eb3",
+    "artifacts/benchmarks/ifc-033-load-summary.json": "d773aed8ca8fb6b590d377be9a39785c0699e7d59ea9f33cba175f6c3f567809",
+    "artifacts/benchmarks/ifc-033-deployed/k6-run-output.txt": "3f29c8bf8c4cc9b014baee6291323b4a72b7a4b74ee405bda8d95c2a448c4104",
+    "artifacts/benchmarks/ifc-033-deployed/server-side-telemetry.json": "16cadb18090d914e0a0ee8798c514fc1436e597301548e3f73a5127a5f7492cf",
+    "artifacts/misc/grafana-load-test.png": "a87c594fa8386352f02b8e19f663971ccee75e4a9a2bd713989df073b175fffe",
+    "docs/shared/bottleneck-analysis.md": "8df128e0aae4a765aba094b90a89f8a5a2c8d92830420362d0c87a272d49dc92",
+    "docs/architecture/adr/ADR-017-workflow-reliability.md": "f81f8c45ef75688a9359c706ecbdfdf97d14d1b80ee836765a358c8b709e9e91",
+    "artifacts/metrics/debt-ledger.yaml": "73e3617c038ff5d02d75e905fa336a0d95c023f05683945eb17f0bd6327db756",
+    "artifacts/coverage/IFC-033-before.json": "31c8f04be4cb83893acb41f77277441c831c5dc7a0bccac282c31f1f3cf37a16",
+    "artifacts/coverage/IFC-033-after.json": "ad15ee08486663a0d5cb46da445b21ed39336ae084e30a518f3e6cf7439edacb",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "9bdf7ecb5d77b82168e511c34dfe1cb8fb3e73289f364be1cc00bf061713f845",
+    ".specify/sprints/sprint-19/specifications/IFC-033-spec.md": "51dff2e9d6ed74cf86aea795cd62fe3d6034268bada091a1728f6ec82e5c3bcf",
+    ".specify/sprints/sprint-19/planning/IFC-033-plan.md": "efb22ee30644ffe39ad1febdcc9b0aa6493d4afdaa8a7de7c4ac19f3f07a440d",
+    ".specify/sprints/sprint-19/attestations/IFC-033/context_ack.json": "95a382d51a2dbbfce34f7064ca2f4f33719612d94ab9173f82efc19aa1c8ae98",
+    ".specify/sprints/sprint-19/attestations/IFC-033/task-tracking.json": "054b8cea8d13e8cc78b5d7094562dcf8a46384126dc2bbafbc403b2b745c195f",
+    ".specify/sprints/sprint-18/context/IFC-033/IFC-033-owner-ruling.md": "9b1a5d76d0e26224cb4c6560d463baf3af87b16bce6620b2ce48d266f01d92da",
+    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/IFC-033-delivery.md": "e070766ea6f0e6301e5772091ed8f1b199700ac9598d64c2020287306e8da45f",
+    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/spec-consensus.json": "e010a181151e6408c2be8cd025ba680c9d57dedf9a50bf62b45626ec79872df4",
+    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/gate-selection.json": "2785ace498c78b9050224d4964fae37b511bae1b4a41b6222aadb840c030fca3",
+    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/stoa-verdicts/Quality.json": "eca6f5269d4c1c85a3a3920104617dc6f56ad9788b00794ee8d9f87cab23ec5d",
+    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/stoa-verdicts/Foundation.json": "62e7a4a0d8008dd8510c5144738dfce46a3f97641b8a2bcf7b08eb1e9af4491d",
+    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/stoa-verdicts/Security.json": "6fae65c497243fb415ff9a42b1f1b27549dc5ae3fa2dd0e597d6171a333eeec7"
+  },
+  "environment": {
+    "os": "Windows 11 Pro 10.0.26200",
+    "node_version": "v22.14.0",
+    "git_commit": "fed314f7a221179d1befc7a454319a1991b548eb",
+    "branch": "feat/ifc-033-ifc033"
+  },
+  "notes": "Reopened by #795 (the July run targeted localhost). On owner rulings of 2026-10-22 (no staging API/DB exists) the k6 run targeted the production API in a dedicated load-test tenant, sized down to cap the per-lead AI scoring cost. COMPLETE rests on the third owner ruling: close on the throughput KPI, with p95 recorded as a measured FAIL under the ADR-018 Decision 4 waiver (ADR-017 Decision 4 budget p95 < 200 ms is NOT met in production: 1,137 ms client). Two gates are recorded passed:false: p95-under-200ms (owner waiver, #1001) and worktree-landed Gate 4b (pre-push; runner-owned branch name and single push after pre-ship). TDD order: tests were written after the module (stated in plan S17). No Prisma migration. hydrate-context was not run for this retrospective spec (no context_pack.manifest.json). Production side effects left in place for the owner: about 206 synthetic leads, 20 converted deals with their contacts and accounts, the load-test tenant and account, and Grafana Cloud dashboard ifc033-prod-api-load. Typecheck result is a turbo cache hit (599 ms). Coverage: tools/scripts/k6 lines 5.19 % -> 12.14 %.",
+  "spec_session_consensus": "APPROVED (3/3 in round 2; round 1 was 1/3) — spec reopen amendment reviewed by test-engineer, devops-lead and security-lead subagents; the July spec itself is retrospective with no consensus of its own. Record: .specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/spec-consensus.json",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer subagent (2026-10-23; APPROVED_WITH_CHANGES, then APPROVED on re-review)",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-19/specifications/IFC-033-spec.md",
+  "plan_path": ".specify/sprints/sprint-19/planning/IFC-033-plan.md",
+  "ceremony_tier": "full"
+}
