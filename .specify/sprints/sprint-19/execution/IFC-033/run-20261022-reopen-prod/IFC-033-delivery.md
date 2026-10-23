@@ -153,7 +153,7 @@ The independent code review found three real defects and one risk. All were fixe
   retrospective, and hydrate-context was not run in this session.
 - **No Prisma migration.**
 - **Production data**: about 206 synthetic leads, 20 converted deals with their
-  contacts and accounts, a load-test tenant and its account
-  (talyssondasilvaoliveira+ifc033-loadtest@gmail.com) remain in production. They
+  contacts and accounts, a load-test tenant and the dedicated load-test account
+  remain in production. They
   are left in place, and deleting them is the owner's decision. Grafana Cloud
   dashboard `ifc033-prod-api-load` was created.
