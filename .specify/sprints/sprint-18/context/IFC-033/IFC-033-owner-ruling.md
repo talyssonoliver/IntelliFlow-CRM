@@ -72,3 +72,18 @@ The attestation records p95 as a measured FAIL against the ADR-018 budget, and t
 non-zero on it. The bottleneck is tracked in a GitHub issue, `artifacts/metrics/debt-ledger.yaml` and
 `docs/shared/bottleneck-analysis.md`. The COMPLETE verdict rests on this owner ruling, not on every
 threshold passing.
+
+## Fourth ruling: pre-existing `.claude/skills` edits in the worktree (2026-10-23)
+
+The worktree started this session with 8 modified `.claude/skills` files that are not part of IFC-033.
+Seven `sonarqube-fix` files differ from HEAD only in line endings. `exec-attestation/SKILL.md` drops the
+"light ceremony tier" paragraph that main has. A dirty tree makes the pre-push hook skip publishing the
+pre-ship attestation. Options: A. discard all 8; B. keep them and push dirty, then run
+`pnpm preship:attest` separately; **C. stop and ask Aurora (the runner)**.
+
+**Answer: C. Stop and ask Aurora.** The lane paused before pre-ship.
+
+**Aurora's answer (2026-10-23): A.** "They aren't mine. They're seeding churn from the worktree template; the
+same 8 files were dirty in ifc-074. The 7 sonarqube-fix files differ only in CRLF line endings.
+exec-attestation/SKILL.md is a stale copy that would revert the #579 light-tier paragraph." The 8 files and
+the generated `artifacts/reports/plan-lint-report.json` churn were reset to HEAD before pre-ship.
