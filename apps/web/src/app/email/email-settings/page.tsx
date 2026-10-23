@@ -1,18 +1,23 @@
-'use client';
+/**
+ * Email Settings — PG-207 (/email/email-settings, ADR-085).
+ *
+ * Server Component shell: streams the skeleton, then hydrates the client
+ * content inside Suspense (it reads the OAuth return query).
+ */
+import { Suspense } from 'react';
+import EmailSettingsContent from './EmailSettingsContent';
+import { EmailSettingsLoading } from './EmailSettingsLoading';
+
+export const metadata = {
+  title: 'Email Settings — Aurora',
+  description:
+    'Connect the mailbox your email is sent from, and set the reply-to address, tracking and bounce handling.',
+};
 
 export default function EmailSettingsPage() {
   return (
-    <div className="space-y-6 p-4">
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">Email Settings</h1>
-        <p className="text-muted-foreground mt-1">
-          Manage email defaults, sync, and display preferences.
-        </p>
-      </div>
-      <div className="rounded-lg border border-border bg-card p-8 text-center text-muted-foreground">
-        <span className="material-symbols-outlined text-4xl mb-2 block">tune</span>
-        <p>Email settings configuration coming soon.</p>
-      </div>
-    </div>
+    <Suspense fallback={<EmailSettingsLoading />}>
+      <EmailSettingsContent />
+    </Suspense>
   );
 }

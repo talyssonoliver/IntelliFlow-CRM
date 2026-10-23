@@ -162,12 +162,22 @@ export function parseEmailAddresses(header: string): ParsedEmailAddress[] {
   return parts.map(parseEmailAddress);
 }
 
+/** RFC 2046: a boundary is 1 to 70 characters. */
+const MAX_BOUNDARY_LENGTH = 70;
+
 /**
- * MIME boundary parser
+ * MIME boundary parser. A longer value than RFC 2046 allows is refused: the
+ * boundary comes from untrusted mail (PG-207 bounce reports).
  */
 export function parseMimeBoundary(contentType: string): string | null {
   const match = /boundary=["']?([^"';\s]+)["']?/i.exec(contentType);
-  return match ? match[1] : null;
+  if (!match || match[1].length > MAX_BOUNDARY_LENGTH) return null;
+  return match[1];
+}
+
+/** The text as a literal inside a RegExp (no metacharacter keeps its meaning). */
+function escapeRegExp(text: string): string {
+  return text.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 /**
@@ -465,7 +475,9 @@ export function parseMimeParts(raw: string, boundary?: string): MimePart[] {
   const parts: MimePart[] = [];
   const boundaryMarker = `--${boundary}`;
   const endMarkerSuffix = `${boundary}--`;
-  const sections = raw.split(new RegExp(`${boundaryMarker}(?!-)`));
+  // Escaped: the boundary is attacker-controlled, and a raw value such as
+  // `(a+)+$` would turn this split into catastrophic backtracking.
+  const sections = raw.split(new RegExp(`${escapeRegExp(boundaryMarker)}(?!-)`));
 
   for (const section of sections) {
     const part = parseMimeSection(section, endMarkerSuffix);

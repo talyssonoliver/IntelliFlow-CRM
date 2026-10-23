@@ -30,9 +30,12 @@ export interface FieldEncryptionConfig {
 // Field map — explicit, not DMMF-driven (safe across Prisma major versions)
 // ---------------------------------------------------------------------------
 
-const ENCRYPTED_FIELDS: Record<string, readonly string[]> = {
+export const ENCRYPTED_FIELDS: Record<string, readonly string[]> = {
   ChainVersion: ['prompt', 'systemPrompt'],
   WebhookEndpoint: ['secret'],
+  // PG-207 (ADR-085): mailbox credentials and the OAuth PKCE verifier.
+  EmailMailbox: ['smtpPassword', 'imapPassword', 'refreshToken'],
+  EmailOAuthState: ['codeVerifier'],
 };
 
 // ---------------------------------------------------------------------------

@@ -34,10 +34,23 @@ export function ComposeClient() {
   }, [toParam]);
 
   // Fetch original email for reply/forward modes
+  const needsOriginal = !!emailId && mode !== 'new';
   const emailQuery = trpc.email.getEmail.useQuery(
     { emailId: emailId! },
-    { enabled: !!emailId && mode !== 'new' }
+    { enabled: needsOriginal }
   );
+
+  // PG-207 (owner ruling Q5): only a new message starts with the default
+  // signature; replies and forwards start without one.
+  const prefillSignature = mode === 'new' && !emailId;
+  const signatureQuery = trpc.emailSignatures.resolveDefault.useQuery(undefined, {
+    enabled: prefillSignature,
+  });
+
+  // Compose reads its initial body once, so it renders only after what it
+  // starts from has loaded; a failed signature lookup just means no signature.
+  const ready =
+    !(prefillSignature && signatureQuery.isLoading) && !(needsOriginal && emailQuery.isLoading);
 
   const handleDone = useCallback(() => {
     router.push('/email');
@@ -61,14 +74,23 @@ export function ComposeClient() {
       </div>
 
       {/* Compose form */}
-      <EmailCompose
-        mode={mode}
-        originalEmail={emailQuery.data ?? undefined}
-        initialTo={initialTo}
-        onDiscard={handleDone}
-        onSent={handleDone}
-        className="flex-1"
-      />
+      {ready ? (
+        <EmailCompose
+          mode={mode}
+          originalEmail={emailQuery.data ?? undefined}
+          initialTo={initialTo}
+          initialSignatureHtml={
+            prefillSignature ? (signatureQuery.data?.html ?? undefined) : undefined
+          }
+          onDiscard={handleDone}
+          onSent={handleDone}
+          className="flex-1"
+        />
+      ) : (
+        <output className="block px-6 py-4 text-sm text-muted-foreground">
+          Preparing your message…
+        </output>
+      )}
     </div>
   );
 }

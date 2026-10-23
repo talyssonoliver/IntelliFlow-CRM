@@ -1,0 +1,10 @@
+packages/adapters/src/messaging/email/dsn-parser.ts: statements 58/60 (96.7%), branches 49/55 (89.1%) missed lines [83, 136]
+packages/adapters/src/messaging/email/imap-dsn-reader.ts: statements 55/61 (90.2%), branches 35/41 (85.4%) missed lines [83, 129, 142, 172, 190, 192]
+packages/adapters/src/messaging/email/inbound.ts: statements 6/6 (100.0%), branches 4/4 (100.0%) missed lines []
+packages/adapters/src/messaging/email/mailbox-errors.ts: statements 3/3 (100.0%), branches 0/0 (0.0%) missed lines []
+packages/adapters/src/messaging/email/mime.ts: statements 25/25 (100.0%), branches 29/32 (90.6%) missed lines []
+packages/adapters/src/messaging/email/oauth-mailbox.ts: statements 165/179 (92.2%), branches 112/135 (83.0%) missed lines [123, 171, 193, 236, 243, 246, 267, 302, 333, 373, 375, 398, 437, 444]
+packages/adapters/src/messaging/email/public-host.ts: statements 11/12 (91.7%), branches 9/10 (90.0%) missed lines [8]
+packages/adapters/src/messaging/email/smtp-provider.ts: statements 35/37 (94.6%), branches 39/42 (92.9%) missed lines [51, 106]
+packages/adapters/src/storage/SupabaseStorageAdapter.ts: statements 27/29 (93.1%), branches 19/20 (95.0%) missed lines [112, 113]
+TOTAL statements 385/412 (93.4%), branches 296/339 (87.3%)

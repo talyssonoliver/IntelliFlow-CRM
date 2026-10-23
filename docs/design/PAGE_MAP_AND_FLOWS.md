@@ -35,10 +35,10 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category                                        | Count |
 | ----------------------------------------------- | ----- |
-| Total Pages                                     | 214   |
-| Public Pages                                    | 32    |
+| Total Pages                                     | 216   |
+| Public Pages                                    | 33    |
 | Developer Pages                                 | 14    |
-| Protected Pages                                 | 168   |
+| Protected Pages                                 | 169   |
 | Next.js API handlers (excluded from page total) | 19    |
 | Layouts                                         | 36    |
 
@@ -224,7 +224,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | ----------------------------- | ----------------- | --------------------------------------------------------------------------- |
 | `/calendar`                   | Calendar View     | Appointment calendar (month/week/day views)                                 |
 | `/calendar/availability`      | Availability      | Firm hours, closures, buffers and daily limit, enforced at booking (PG-202) |
-| `/calendar/event-types`       | Event Types       | Configure reusable event type templates                                     |
+| `/calendar/event-types`       | Event Types       | Tenant event types: duration, buffers, slug and booking link (PG-203)       |
 | `/calendar/calendar-settings` | Calendar Settings | Tenant-level calendar defaults and integrations                             |
 
 **Appointments** — dedicated table view (separate from /calendar):
@@ -237,16 +237,17 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 10. CRM Core — Email (6 pages)
+### 10. CRM Core — Email (7 pages)
 
-| Route                   | Page             | Description                                  |
-| ----------------------- | ---------------- | -------------------------------------------- |
-| `/email`                | Email Inbox      | Email list and compose                       |
-| `/email/[id]`           | Email Detail     | Email thread view                            |
-| `/email/compose`        | Compose Email    | Full-screen compose window with rich editor  |
-| `/email/templates`      | Email Templates  | Manage reusable email templates              |
-| `/email/signatures`     | Email Signatures | Manage HTML email signatures per user/team   |
-| `/email/email-settings` | Email Settings   | IMAP/SMTP configuration, sync rules, aliases |
+| Route                   | Page             | Description                                                                                      |
+| ----------------------- | ---------------- | ------------------------------------------------------------------------------------------------ |
+| `/email`                | Email Inbox      | Email list and compose                                                                           |
+| `/email/[id]`           | Email Detail     | Email thread view                                                                                |
+| `/email/compose`        | Compose Email    | Full-screen compose window with rich editor                                                      |
+| `/email/templates`      | Email Templates  | Manage reusable email templates                                                                  |
+| `/email/signatures`     | Email Signatures | Personal and organisation signatures; the default prefills new messages                          |
+| `/email/email-settings` | Email Settings   | Sending mailbox (Google, Microsoft, SMTP), reply-to, tracking, bounce handling, suppression list |
+| `/email/oauth/callback` | Mailbox Sign-in  | Return page for Google / Microsoft mailbox sign-in (redirect target)                             |
 
 ---
 
@@ -448,6 +449,18 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/settings/help-center/articles`                    | Help Article Admin List    | ADMIN/MANAGER CRUD list: status, category, search, publish/unpublish/delete (PG-180). Reachable via settings sidebar item `help-center-articles` (role-filtered). |
 | `/settings/help-center/articles/new` (PG-181)       | Help Article Editor — New  | Tiptap editor for drafting new articles (downstream, same sprint)                                                                                                 |
 | `/settings/help-center/articles/[id]/edit` (PG-181) | Help Article Editor — Edit | Tiptap editor for existing articles (downstream, same sprint)                                                                                                     |
+
+### 23. Public Booking (1 page — No Authentication, Not Indexed)
+
+Located in `(public)` route group but rendered chrome-free (no public header or
+footer, no sidebar). `noindex`, disallowed in `robots.ts`, absent from the
+sitemap, and not linked from any in-app navigation. It is an external entry
+point: reached from the booking link built by `BookingLinkCard.tsx`
+(`<origin>/book/<handle>/<slug>`) and shared with the firm's clients.
+
+| Route                   | Page           | Description                                                                                                                  |
+| ----------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `/book/[handle]/[slug]` | Public Booking | Unauthenticated slot picker and booking form for one event type, served by the `publicBooking` tRPC router (PG-203, ADR-083) |
 
 ---
 

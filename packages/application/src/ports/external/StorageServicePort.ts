@@ -43,3 +43,29 @@ export interface StorageServicePort {
    */
   getSignedUrl(storageKey: string, expiresIn: number): Promise<string>;
 }
+
+/**
+ * Email attachment storage (PG-207, ADR-085). Attachments a user adds in compose
+ * are stored per tenant and read back when the email is sent from the user's
+ * mailbox. Paths are always `<tenantId>/...`; a path outside the caller's
+ * tenant is refused.
+ */
+export interface EmailAttachmentStoragePort {
+  /** Stores the file and returns its storage path (`<tenantId>/<uuid>-<name>`). */
+  uploadEmailAttachment(
+    tenantId: string,
+    file: Buffer,
+    fileName: string,
+    contentType: string
+  ): Promise<string>;
+
+  /** Reads a stored attachment; refuses any path not under `<tenantId>/`. */
+  downloadEmailAttachment(tenantId: string, storagePath: string): Promise<Buffer>;
+
+  /** A signed download link valid for `expiresInSeconds`; same tenant rule as download. */
+  emailAttachmentDownloadUrl(
+    tenantId: string,
+    storagePath: string,
+    expiresInSeconds: number
+  ): Promise<string>;
+}

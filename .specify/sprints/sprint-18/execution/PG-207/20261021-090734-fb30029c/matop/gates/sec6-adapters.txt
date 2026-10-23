@@ -1,0 +1,14 @@
+[test-slot] waiting for a test slot (3/3 busy: slot1 PG-208@feat/pg-208-task-automation pid 40468, 0m; slot2 pg-203@feat/pg-203-event-types pid 27384, 11m; slot3 PG-207@feat/pg-207-email-settings pid 44336, 0m)
+[test-slot] slot3 taken for PG-207@feat/pg-207-email-settings: pnpm --filter ./packages/adapters exec vitest run src/messaging/email/__tests__/dsn-parser.test.ts src/messaging/email/__tests__/bounce-senders.test.ts
+.                                        |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+apps/ai-worker                           |  WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-207/packages/adapters
+
+
+ Test Files  2 passed (2)
+      Tests  40 passed (40)
+   Start at  00:36:44
+   Duration  867ms (transform 506ms, setup 0ms, import 684ms, tests 29ms, environment 0ms)
+
+EXIT=0 DURATION=44s
