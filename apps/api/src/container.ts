@@ -785,6 +785,7 @@ const createServices = async (prismaClient: PrismaClient) => {
         return results.map((r) => ({ id: r.item.id, similarity: r.similarity }));
       },
       generateEmbedding: generateContactQueryEmbedding,
+      restrictions: adapters.processingRestrictionRepository,
       enqueueEmbeddingJob: async (payload) => {
         try {
           const { Queue } = await import(/* webpackIgnore: true */ 'bullmq');

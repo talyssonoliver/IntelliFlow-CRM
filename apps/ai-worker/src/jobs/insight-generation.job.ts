@@ -28,12 +28,16 @@ import { getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
 // PG-203 #1002: erased and restricted people get no insight
 import {
+  dealContactIds,
   eligibleSubjects,
   writeSubjectIfStillEligible,
   type SubjectPrisma,
 } from '../lib/data-request-guard';
 
-type EligibleSubjects = Awaited<ReturnType<typeof eligibleSubjects>>;
+/** Kept people with their stored addresses, plus each kept deal's contact (if it has one). */
+type EligibleSubjects = Awaited<ReturnType<typeof eligibleSubjects>> & {
+  dealContacts: Map<string, string>;
+};
 import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
 
 const logger = pino({
@@ -296,33 +300,21 @@ async function populateEntityInsights(
   }
 
   // jobData holds only eligible people (processableJobData), so each has a stored address.
-  const leadResults = await Promise.all(
-    jobData.hotLeads.map((lead) =>
-      upsertLeadInsight(
-        prisma,
-        lead,
-        insightMap.get(lead.id),
-        tenantId,
-        eligible.leads.get(lead.id) ?? ''
-      )
-    )
-  );
-  const contactResults = await Promise.all(
-    jobData.staleContacts.map((contact) =>
-      upsertContactInsight(
-        prisma,
-        contact,
-        insightMap.get(contact.id),
-        tenantId,
-        eligible.contacts.get(contact.id) ?? ''
-      )
-    )
-  );
+  // One at a time: each write is a locking transaction holding a pooled connection, and
+  // these lists are not capped like the model input is (plan-reviewer).
+  let leads = 0;
+  for (const lead of jobData.hotLeads) {
+    const email = eligible.leads.get(lead.id) ?? '';
+    if (await upsertLeadInsight(prisma, lead, insightMap.get(lead.id), tenantId, email)) leads++;
+  }
+  let contacts = 0;
+  for (const contact of jobData.staleContacts) {
+    const email = eligible.contacts.get(contact.id) ?? '';
+    const llm = insightMap.get(contact.id);
+    if (await upsertContactInsight(prisma, contact, llm, tenantId, email)) contacts++;
+  }
 
-  return {
-    leads: leadResults.filter(Boolean).length,
-    contacts: contactResults.filter(Boolean).length,
-  };
+  return { leads, contacts };
 }
 
 // ============================================================================
@@ -916,24 +908,55 @@ async function persistInsightRecord(
 /**
  * PG-203 #1002 (owner ruling): drop erased and restricted people from the job before the
  * model call, so their data is never sent. Returns the remaining data and each kept
- * person's stored address for the locked writes afterwards.
+ * person's stored address for the locked writes afterwards. A deal at risk is a person's
+ * deal when it has a contact (its name can carry theirs), so it follows that contact.
  */
 async function processableJobData(
-  prisma: unknown,
+  prisma: any,
   data: InsightJobData
 ): Promise<{ data: InsightJobData; eligible: EligibleSubjects }> {
-  const eligible = await eligibleSubjects(prisma as SubjectPrisma, data.tenantId, {
+  const dealContact = await dealContactIds(
+    prisma,
+    data.tenantId,
+    data.dealsAtRisk.map((d) => d.id)
+  );
+  const people = await eligibleSubjects(prisma as SubjectPrisma, data.tenantId, {
     leadIds: data.hotLeads.map((l) => l.id),
-    contactIds: data.staleContacts.map((c) => c.id),
+    contactIds: [
+      ...data.staleContacts.map((c) => c.id),
+      ...[...dealContact.values()].filter((id): id is string => !!id),
+    ],
+  });
+  const dealContacts = new Map<string, string>();
+  const keptDeals = data.dealsAtRisk.filter((d) => {
+    const contactId = dealContact.get(d.id);
+    if (!contactId) return dealContact.has(d.id);
+    if (!people.contacts.has(contactId)) return false;
+    dealContacts.set(d.id, contactId);
+    return true;
   });
   return {
     data: {
       ...data,
-      hotLeads: data.hotLeads.filter((l) => eligible.leads.has(l.id)),
-      staleContacts: data.staleContacts.filter((c) => eligible.contacts.has(c.id)),
+      dealsAtRisk: keptDeals,
+      hotLeads: data.hotLeads.filter((l) => people.leads.has(l.id)),
+      staleContacts: data.staleContacts.filter((c) => people.contacts.has(c.id)),
     },
-    eligible,
+    eligible: { ...people, dealContacts },
   };
+}
+
+/** The person an insight is about: a lead, a contact, or a kept deal's contact. */
+function insightSubject(
+  insight: GeneratedInsight,
+  eligible: EligibleSubjects
+): { kind: 'lead' | 'contact'; id: string } | null {
+  const { entityType: kind, entityId } = insight;
+  if (!entityId) return null;
+  if (kind === 'lead' || kind === 'contact') return { kind, id: entityId };
+  const contactId =
+    kind === 'opportunity' || kind === 'deal' ? eligible.dealContacts.get(entityId) : undefined;
+  return contactId ? { kind: 'contact', id: contactId } : null;
 }
 
 /**
@@ -948,14 +971,13 @@ async function persistInsightForSubject(
   eligible: EligibleSubjects,
   persist: (client: any) => Promise<boolean>
 ): Promise<boolean> {
-  const kind = insight.entityType;
-  if (!insight.entityId || (kind !== 'lead' && kind !== 'contact')) return persist(prisma);
-  const email = (kind === 'lead' ? eligible.leads : eligible.contacts).get(insight.entityId);
+  const subject = insightSubject(insight, eligible);
+  if (!subject) return persist(prisma);
+  // About a person the job did not keep (dropped before the model call): never written.
+  const email = (subject.kind === 'lead' ? eligible.leads : eligible.contacts).get(subject.id);
   if (email === undefined) return false;
-  const outcome = await writeSubjectIfStillEligible(
-    prisma,
-    { kind, id: insight.entityId, tenantId, email },
-    (tx) => persist(tx)
+  const outcome = await writeSubjectIfStillEligible(prisma, { ...subject, tenantId, email }, (tx) =>
+    persist(tx)
   );
   return outcome.written && outcome.value;
 }

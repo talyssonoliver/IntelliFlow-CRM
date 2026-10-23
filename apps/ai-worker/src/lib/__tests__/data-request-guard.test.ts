@@ -3,6 +3,7 @@
  */
 import { describe, it, expect, vi } from 'vitest';
 import {
+  dealContactIds,
   eligibleSubjectEmail,
   eligibleSubjects,
   scorableLeads,
@@ -221,5 +222,31 @@ describe('insight and prediction subjects (#1002)', () => {
       )
     ).resolves.toEqual({ written: true, value: 'saved' });
     expect((tx.$queryRaw.mock.calls[0] as any)[0].join('?')).toContain(table);
+  });
+});
+
+describe('dealContactIds (Q22: a deal follows its contact)', () => {
+  it("maps each of the firm's deals to its contact, null when it has none", async () => {
+    const findMany = vi.fn().mockResolvedValue([
+      { id: 'd1', contactId: 'c1' },
+      { id: 'd2', contactId: null },
+    ]);
+    const map = await dealContactIds({ opportunity: { findMany } }, 't1', ['d1', 'd2', 'gone']);
+    expect([...map]).toEqual([
+      ['d1', 'c1'],
+      ['d2', null],
+    ]);
+    expect(findMany).toHaveBeenCalledWith({
+      where: { id: { in: ['d1', 'd2', 'gone'] }, tenantId: 't1' },
+      select: { id: true, contactId: true },
+    });
+  });
+
+  it('does not query when there are no deals', async () => {
+    const findMany = vi.fn();
+    await expect(dealContactIds({ opportunity: { findMany } }, 't1', [])).resolves.toEqual(
+      new Map()
+    );
+    expect(findMany).not.toHaveBeenCalled();
   });
 });

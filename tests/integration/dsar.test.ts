@@ -25,7 +25,10 @@ import { PrismaProcessingRestrictionRepository } from '../../packages/adapters/s
 import { PrismaSubjectDataRepository } from '../../packages/adapters/src/repositories/PrismaSubjectDataRepository';
 import { PrismaContactRepository } from '../../packages/adapters/src/repositories/PrismaContactRepository';
 import { PrismaLeadRepository } from '../../packages/adapters/src/repositories/PrismaLeadRepository';
-import { dispatchCandidateIds } from '../../apps/ai-worker/src/lib/data-request-guard';
+import {
+  dispatchCandidateIds,
+  writeSubjectIfStillEligible,
+} from '../../apps/ai-worker/src/lib/data-request-guard';
 import { applySchemaSql, sqlState } from './schema-lock';
 
 const MIGRATION = join(
@@ -1208,6 +1211,83 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       ).resolves.toEqual({ outcome: 'NOT_PENDING' });
     });
 
+    it('exports and erases AI insights stored under the deals of the person (codex, Q22)', async () => {
+      // Insight generation treats a deal as its contact's and stores the insight under the
+      // opportunity id, so the export and the erasure must reach it through the contact.
+      const frank = `${RUN}-frank@example.invalid`;
+      const contact = await prisma.contact.create({
+        data: {
+          tenantId: TENANT_A,
+          ownerId: ADMIN_A,
+          email: frank,
+          firstName: 'Frank',
+          lastName: 'Deal',
+        },
+      });
+      const account = await prisma.account.create({
+        data: { tenantId: TENANT_A, ownerId: ADMIN_A, name: `${RUN} Frank Co` },
+      });
+      const deal = await prisma.opportunity.create({
+        data: {
+          tenantId: TENANT_A,
+          ownerId: ADMIN_A,
+          accountId: account.id,
+          contactId: contact.id,
+          name: 'Frank renewal',
+          value: 1000,
+        },
+      });
+      await prisma.aIInsight.create({
+        data: {
+          tenantId: TENANT_A,
+          type: 'warning',
+          category: 'sales',
+          title: 'Frank has gone quiet',
+          description: 'Frank Deal stopped replying',
+          confidence: 80,
+          entityType: 'opportunity',
+          entityId: deal.id,
+        },
+      });
+      const request = await dsars.createStaff({
+        tenantId: TENANT_A,
+        type: 'ERASURE',
+        subjectEmail: frank,
+        capEmailHash: hex('8'),
+        details: null,
+        objectionScope: null,
+        identityMethod: 'IN_PERSON_ID',
+        identityNote: 'Passport checked at the front desk',
+        receivedAt: new Date(),
+        receivedOnReason: null,
+        verifiedAt: new Date(),
+        slaDeadline: new Date(Date.now() + 30 * 24 * HOUR),
+        createdById: ADMIN_A,
+      });
+      try {
+        const exported = await subjects.buildExport(TENANT_A, frank);
+        expect(exported.data.aiInsights).toHaveLength(1);
+
+        const result = await subjects.erase({
+          tenantId: TENANT_A,
+          requestId: request.id,
+          subjectEmail: frank,
+          resolvedById: ADMIN_A,
+          note: 'No hold applies',
+          now: new Date(),
+          clockBreached: false,
+        });
+        expect(result).toMatchObject({ outcome: 'ERASED', result: { counts: { aiInsights: 1 } } });
+        await expect(
+          prisma.aIInsight.count({ where: { tenantId: TENANT_A, entityId: deal.id } })
+        ).resolves.toBe(0);
+      } finally {
+        await prisma.aIInsight.deleteMany({ where: { tenantId: TENANT_A, entityId: deal.id } });
+        await prisma.opportunity.delete({ where: { id: deal.id } });
+        await prisma.account.delete({ where: { id: account.id } });
+      }
+    });
+
     it('never erases a record whose address is corrected away while the erasure runs (codex)', async () => {
       const carol = `${RUN}-carol@example.invalid`;
       const dave = `${RUN}-dave@example.invalid`;
@@ -1265,6 +1345,54 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
         });
       } finally {
         release();
+        await prisma.lead.delete({ where: { id: lead.id } });
+      }
+    });
+
+    it('a worker write waits for a restriction being written, then writes nothing (Q21/Q22)', async () => {
+      // The AI workers' locked write on real locks: the lead row, then the person's address
+      // lock (dsar_subject_lock), then the restriction read. A restriction committed while
+      // the worker waits on the address lock must be seen, so nothing is stored.
+      const erin = `${RUN}-erin@example.invalid`;
+      const lead = await prisma.lead.create({
+        data: { tenantId: TENANT_A, ownerId: ADMIN_A, email: erin, firstName: 'Erin' },
+      });
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      let locked!: () => void;
+      const lockedYet = new Promise<void>((resolve) => (locked = resolve));
+      try {
+        const restricting = prisma.$transaction(
+          async (tx: any) => {
+            await tx.$executeRaw`SELECT dsar_subject_lock(${TENANT_A}, ${erin})`;
+            locked();
+            await gate;
+            await tx.processingRestriction.create({
+              data: { tenantId: TENANT_A, subjectEmail: erin },
+            });
+          },
+          { timeout: 20_000 }
+        );
+        await lockedYet;
+        let wrote = false;
+        const writing = writeSubjectIfStillEligible(
+          prisma,
+          { kind: 'lead', id: lead.id, tenantId: TENANT_A, email: erin },
+          async () => {
+            wrote = true;
+          }
+        );
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        release();
+        await restricting;
+
+        await expect(writing).resolves.toEqual({ written: false, reason: 'RESTRICTED' });
+        expect(wrote).toBe(false);
+      } finally {
+        release();
+        await prisma.processingRestriction.deleteMany({
+          where: { tenantId: TENANT_A, subjectEmail: erin },
+        });
         await prisma.lead.delete({ where: { id: lead.id } });
       }
     });

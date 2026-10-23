@@ -137,3 +137,9 @@ Answer: **Create lead after reply.** The visitor gets the confirmation first; th
 Finding (codex round 24 on the DSAR PR): the insight and prediction workers did not check a restriction or an erasure before the model call. A queued job could send an erased person's context to the model, and restricted people still got insights and predictions.
 
 Answer: **Stop both, in PR 2.** A processing restriction and an erasure both stop AI insights and predictions (an Art 18 extension of Q18). Each worker checks the person before the model call and writes only under the row and address locks after a re-check, as embedding does.
+
+## Q22 — restriction and erasure for every AI path (2026-10-23, AskUserQuestion, plan-reviewer finding on Addendum B)
+
+Finding (plan-reviewer, Addendum B must-fix 2): beyond scoring, embeddings, drafts (Q18) and insights and predictions (Q21), other AI paths still send a lead's or contact's data to a model with no restriction or erasure check: contact enrichment, tag suggestions, contact reply drafts, conversation summaries, and the next-best-action, qualification, follow-up and email-writer agents.
+
+Answer: **All AI paths, in PR 2.** A processing restriction and an erasure stop every AI path that sends a person's data to a model. Each checks the person before the model call and writes its result only under the person's row and address locks after a re-check.

@@ -1283,3 +1283,13 @@ waivers:
     author: PG-203 lane
     date: '2026-10-23'
     expires: '2026-11-22'
+  - fingerprint: 5b63b61f24c8c0387832ac82cdc68951c3d8f0df933e013676ecc11fc6342e67
+    reason: >-
+      False positive. The finding says processableJobData returns dealsAtRisk unchanged, but it
+      returns `dealsAtRisk: keptDeals` (insight-generation.job.ts processableJobData), where
+      keptDeals drops every deal whose contact is erased or restricted (dealContactIds +
+      eligibleSubjects). Deal insights are written under the contact's locks (insightSubject).
+      Tests use real deals: insights-predictions-data-requests.test.ts 'deals at risk follow their
+      contact' (a restricted contact's deal is absent from the model input).
+    author: PG-203 lane
+    date: '2026-10-23'

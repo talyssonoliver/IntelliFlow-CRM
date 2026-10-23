@@ -25,7 +25,9 @@ import {
   TicketStatus as PrismaTicketStatus,
 } from '@intelliflow/db';
 import { z } from 'zod';
+import { isErasedEmail, normalizeSubjectEmail } from '@intelliflow/domain';
 import { EmbeddingChain } from '../chains/embedding.chain';
+import { restrictedEmails, type GuardPrisma } from '../lib/data-request-guard';
 import { DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG } from '../config/relevance-config';
 import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
 
@@ -99,6 +101,8 @@ interface OpportunityRecord {
   createdAt: Date;
   updatedAt: Date;
   account: { name: string };
+  /** The deal's person, if any (PG-203 Q22: the deal follows its contact). */
+  contact: { email: string } | null;
 }
 
 interface DocumentAclRecord {
@@ -178,6 +182,7 @@ interface TicketRecord {
   priority: string;
   slaStatus: string | null;
   contactName: string | null;
+  contactEmail: string;
   assigneeId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -595,6 +600,25 @@ export class RetrievalService {
   }
 
   /**
+   * PG-203 Q22: search results feed AI prompts (RAG), so an erased or restricted person's
+   * record never comes back, whatever entity the prompt is about. Matched on the stored
+   * address, normalised as the restriction key is.
+   */
+  private async withoutDataRequestSubjects(
+    tenantId: string,
+    results: SearchResult[]
+  ): Promise<SearchResult[]> {
+    if (results.length === 0) return results;
+    const restricted = new Set(
+      await restrictedEmails(this.prisma as unknown as GuardPrisma, tenantId)
+    );
+    return results.filter((result) => {
+      const email = normalizeSubjectEmail(String(result.metadata?.['email'] ?? ''));
+      return !isErasedEmail(email) && !restricted.has(email);
+    });
+  }
+
+  /**
    * Search a specific data source
    */
   private async searchSource(
@@ -606,13 +630,22 @@ export class RetrievalService {
 
     switch (source) {
       case 'leads':
-        return this.searchLeads(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          await this.searchLeads(config, aclFilter)
+        );
       case 'contacts':
-        return this.searchContacts(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          await this.searchContacts(config, aclFilter)
+        );
       case 'accounts':
         return this.searchAccounts(config, aclFilter);
       case 'opportunities':
-        return this.searchOpportunities(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          await this.searchOpportunities(config, aclFilter)
+        );
       case 'documents':
         // IFC-155: Route to appropriate search method based on searchType
         return this.searchDocumentsDispatch(config, aclFilter, aclContext);
@@ -624,7 +657,10 @@ export class RetrievalService {
       case 'messages':
         return this.searchMessages(config, aclFilter);
       case 'tickets':
-        return this.searchTickets(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          await this.searchTickets(config, aclFilter)
+        );
       default:
         return [];
     }
@@ -842,8 +878,16 @@ export class RetrievalService {
         cn."createdAt" as "createdAt",
         cn."updatedAt" as "updatedAt"
       FROM contact_notes cn
+      JOIN contacts c ON c.id = cn."contactId" AND c."tenantId" = cn."tenantId"
       WHERE cn."tenantId" = ${tenantId}
         AND cn.search_vector @@ plainto_tsquery('english', ${query})
+        -- PG-203 Q22: notes on an erased or restricted person never reach an AI prompt.
+        AND c.email NOT LIKE '%@erased.invalid'
+        AND NOT EXISTS (
+          SELECT 1 FROM processing_restrictions pr
+          WHERE pr."tenantId" = cn."tenantId" AND pr."liftedAt" IS NULL
+            AND pr."subjectEmail" = dsar_normalise_email(c.email)
+        )
       ORDER BY rank DESC
       LIMIT ${limit}
     `;
@@ -1182,6 +1226,7 @@ export class RetrievalService {
       },
       include: {
         account: true,
+        contact: { select: { email: true } },
       },
       take: 100,
       orderBy: { updatedAt: 'desc' },
@@ -1199,6 +1244,8 @@ export class RetrievalService {
         value: opp.value.toString(),
         probability: opp.probability,
         accountName: opp.account.name,
+        // A deal with no contact has no address, which no restriction matches.
+        email: opp.contact?.email ?? '',
       },
       acl: {
         viewableBy: [opp.ownerId],
@@ -1408,6 +1455,7 @@ export class RetrievalService {
         priority: ticket.priority,
         slaStatus: ticket.slaStatus,
         contactName: ticket.contactName,
+        email: ticket.contactEmail,
       },
       acl: {
         viewableBy: ticket.assigneeId ? [ticket.assigneeId] : [],

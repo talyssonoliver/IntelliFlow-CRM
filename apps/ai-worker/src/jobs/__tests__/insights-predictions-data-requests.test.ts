@@ -1,6 +1,7 @@
 /**
  * PG-203 #1002 (owner ruling 2026-10-23: "Stop both, in PR 2") — AI insights and predictions
- * stop for a person who is erased or under a processing restriction.
+ * stop for a person who is erased or under a processing restriction. Q22 ("All AI paths, in
+ * PR 2") extends that to contact enrichment, tag suggestions and reply drafts.
  *
  * Runs the real data-request guard against a fake database: an ineligible person is never
  * sent to the model, and one erased or restricted while the model ran gets nothing written.
@@ -13,6 +14,8 @@ const db = vi.hoisted(() => ({
   /** Overrides what the FOR UPDATE re-read sees (the row changed during the model call). */
   lockedEmail: new Map<string, string>(),
   restricted: new Set<string>(),
+  /** Opportunity id -> its contact id (null: a deal with no contact). */
+  deals: new Map<string, string | null>(),
 }));
 const mockPredictChurnRisk = vi.hoisted(() => vi.fn());
 const mockNBAExecute = vi.hoisted(() => vi.fn());
@@ -23,6 +26,22 @@ const mockLeadAIInsightUpsert = vi.hoisted(() => vi.fn());
 const mockContactAIInsightUpsert = vi.hoisted(() => vi.fn());
 const mockAIInsightCreate = vi.hoisted(() => vi.fn());
 const mockNotificationCreate = vi.hoisted(() => vi.fn());
+const mockQualify = vi.hoisted(() => vi.fn());
+const mockEnrich = vi.hoisted(() => vi.fn());
+const mockContactUpdate = vi.hoisted(() => vi.fn());
+const mockSuggestTags = vi.hoisted(() => vi.fn());
+const mockDraftReply = vi.hoisted(() => vi.fn());
+const mockReplyDraftCreate = vi.hoisted(() => vi.fn());
+
+vi.mock('../../shared/enrichment-adapter', () => ({
+  getEnrichmentAdapter: () => ({ enrichContact: mockEnrich }),
+}));
+vi.mock('../../contact-tag-suggestion.chain', () => ({ suggestContactTags: mockSuggestTags }));
+vi.mock('../../contact-reply-draft.chain', () => ({ draftContactReply: mockDraftReply }));
+vi.mock('../../agents/qualification.agent', () => ({
+  createQualificationTask: vi.fn(() => ({})),
+  qualificationAgent: { execute: mockQualify },
+}));
 
 vi.mock('../../lib/llm-factory', () => ({
   getLLMBreaker: () => ({ execute: <T>(fn: () => Promise<T>) => fn() }),
@@ -76,7 +95,31 @@ vi.mock('@intelliflow/db', () => {
   });
   const prisma: Record<string, unknown> = {
     lead: table(db.leads),
-    contact: table(db.contacts),
+    contact: {
+      ...table(db.contacts),
+      // The enrichment chain reads the whole row; company and title are empty, so filled in.
+      findUnique: vi.fn(async ({ where }: { where: { tenantId_id: { id: string } } }) => {
+        const id = where.tenantId_id.id;
+        return db.contacts.has(id) ? { id, email: db.contacts.get(id), company: null } : null;
+      }),
+      update: mockContactUpdate,
+    },
+    contactAutomationSetting: {
+      findUnique: vi.fn().mockResolvedValue({
+        aiEnrichment: true,
+        aiTagSuggestions: true,
+        aiAutoReplyDrafting: true,
+        aiInsightGeneration: true,
+      }),
+    },
+    contactReplyDraft: { create: mockReplyDraftCreate },
+    opportunity: {
+      findMany: vi.fn(async ({ where }: { where: { id: { in: string[] } } }) =>
+        where.id.in
+          .filter((id) => db.deals.has(id))
+          .map((id) => ({ id, contactId: db.deals.get(id) ?? null }))
+      ),
+    },
     processingRestriction: {
       findFirst: vi.fn(async ({ where }: { where: { subjectEmail: string } }) =>
         db.restricted.has(where.subjectEmail) ? { id: 'r1' } : null
@@ -106,6 +149,10 @@ vi.mock('@intelliflow/db', () => {
 import { processPredictionJob } from '../prediction.job';
 import { processInsightJob } from '../insight-generation.job';
 import { generateContactInsight } from '../../contact-insight.chain';
+import { processEntityInsightJob } from '../entity-insight.job';
+import { processEnrichmentJob } from '../enrichment.job';
+import { processTagSuggestionJob } from '../tag-suggestion.job';
+import { processReplyDraftJob } from '../reply-draft.job';
 
 const TENANT = '00000000-0000-4000-a000-000000000001';
 const LEAD = '00000000-0000-4000-a000-0000000000a1';
@@ -155,6 +202,7 @@ beforeEach(() => {
   db.contacts.clear();
   db.lockedEmail.clear();
   db.restricted.clear();
+  db.deals.clear();
   mockPredictChurnRisk.mockResolvedValue(HIGH_CHURN);
   mockGenerateInsightsWithMeta.mockResolvedValue({ insights: [], source: 'llm' });
   mockCreateLLMForTenant.mockResolvedValue({
@@ -229,8 +277,8 @@ describe('prediction job', () => {
     expect(mockNotificationCreate).not.toHaveBeenCalled();
   });
 
-  it('applies the same guard to a contact, which may have no email at all', async () => {
-    db.contacts.set(CONTACT, null);
+  it('applies the same guard to a contact', async () => {
+    db.contacts.set(CONTACT, ADA);
     await processPredictionJob(churnJob('contact', CONTACT));
     expect(mockContactAIInsightUpsert).toHaveBeenCalledOnce();
 
@@ -400,5 +448,238 @@ describe('contact insight chain', () => {
     db.contacts.set(CONTACT, ADA);
     await expect(generateContactInsight(input)).resolves.toMatchObject({ success: true });
     expect(mockContactAIInsightUpsert).toHaveBeenCalledOnce();
+  });
+});
+
+describe('every prediction type (reviewer should-fix 1)', () => {
+  it.each(['NEXT_BEST_ACTION', 'QUALIFICATION'] as const)(
+    '%s: a restricted lead is never sent to the model',
+    async (predictionType) => {
+      db.leads.set(LEAD, ADA);
+      db.restricted.add(ADA);
+      const job = bullJob({
+        entityType: 'lead',
+        entityId: LEAD,
+        predictionType,
+        tenantId: TENANT,
+        priority: 5,
+      });
+
+      await expect(processPredictionJob(job)).resolves.toEqual({
+        skipped: true,
+        reason: 'data-subject-request',
+      });
+      expect(mockNBAExecute).not.toHaveBeenCalled();
+      expect(mockQualify).not.toHaveBeenCalled();
+      expect(mockLeadAIInsightUpsert).not.toHaveBeenCalled();
+    }
+  );
+});
+
+describe('entity insight job (reviewer should-fix 2)', () => {
+  it('runs the contact chain, which refuses a restricted contact before the model', async () => {
+    db.contacts.set(CONTACT, ADA);
+    db.restricted.add(ADA);
+
+    await expect(
+      processEntityInsightJob(
+        bullJob({ entityType: 'contact', entityId: CONTACT, tenantId: TENANT })
+      )
+    ).resolves.toEqual({ result: { success: false, reason: 'data-subject-request' } });
+    expect(mockCreateLLMForTenant).not.toHaveBeenCalled();
+  });
+});
+
+describe('Q22: contact enrichment', () => {
+  const job = () => bullJob({ entityType: 'contact', entityId: CONTACT, tenantId: TENANT });
+
+  beforeEach(() => {
+    mockEnrich.mockResolvedValue({ company: 'Engines Ltd', modelVersion: 'm1', source: 'llm' });
+  });
+
+  it('never sends a restricted contact to the model', async () => {
+    db.contacts.set(CONTACT, ADA);
+    db.restricted.add(ADA);
+    await processEnrichmentJob(job());
+    expect(mockEnrich).not.toHaveBeenCalled();
+    expect(mockContactUpdate).not.toHaveBeenCalled();
+  });
+
+  it('writes nothing back onto a contact erased during the model call', async () => {
+    db.contacts.set(CONTACT, ADA);
+    mockEnrich.mockImplementation(async () => {
+      db.lockedEmail.set(CONTACT, erased(CONTACT));
+      return { company: 'Engines Ltd', modelVersion: 'm1', source: 'llm' };
+    });
+    await expect(processEnrichmentJob(job())).resolves.toEqual({
+      enrichment: { success: false, reason: 'data-subject-request' },
+    });
+    expect(mockContactUpdate).not.toHaveBeenCalled();
+  });
+
+  it('fills the empty fields of an eligible contact', async () => {
+    db.contacts.set(CONTACT, ADA);
+    await processEnrichmentJob(job());
+    expect(mockContactUpdate).toHaveBeenCalledWith({
+      where: { tenantId_id: { tenantId: TENANT, id: CONTACT } },
+      data: { company: 'Engines Ltd' },
+    });
+  });
+});
+
+describe('Q22: contact tag suggestions', () => {
+  const job = () =>
+    bullJob({
+      entityType: 'contact',
+      entityId: CONTACT,
+      tenantId: TENANT,
+      profileSnapshot: { firstName: 'Ada', bio: 'Met at the fair' },
+    });
+
+  it('suggests nothing and sends nothing for a restricted contact', async () => {
+    db.contacts.set(CONTACT, ADA);
+    db.restricted.add(ADA);
+    await expect(processTagSuggestionJob(job())).resolves.toEqual({
+      suggestions: [],
+      modelVersion: 'data-subject-request',
+    });
+    expect(mockSuggestTags).not.toHaveBeenCalled();
+  });
+
+  it('asks the model for an eligible contact', async () => {
+    db.contacts.set(CONTACT, ADA);
+    mockSuggestTags.mockResolvedValue({ suggestions: [], modelVersion: 'm1' });
+    await processTagSuggestionJob(job());
+    expect(mockSuggestTags).toHaveBeenCalledOnce();
+    // The profile is read from the row now; the queued snapshot (which may predate an
+    // erasure) is never sent (codex).
+    expect(JSON.stringify(mockSuggestTags.mock.calls[0])).not.toContain('Met at the fair');
+  });
+});
+
+describe('Q22: contact reply drafts', () => {
+  const job = () =>
+    bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [{ from: ADA, body: 'Can we meet?', at: '2026-10-23T09:00:00Z' }],
+    });
+  const draft = {
+    success: true,
+    draft: { draftSubject: 'Re: meeting', draftBody: 'Yes', confidence: 0.8, modelVersion: 'm1' },
+  };
+
+  it('never sends the thread of a restricted contact to the model', async () => {
+    db.contacts.set(CONTACT, ADA);
+    db.restricted.add(ADA);
+    await expect(processReplyDraftJob(job())).resolves.toEqual({ skipped: true });
+    expect(mockDraftReply).not.toHaveBeenCalled();
+    expect(mockReplyDraftCreate).not.toHaveBeenCalled();
+  });
+
+  it('stores no draft for a contact restricted during the model call', async () => {
+    db.contacts.set(CONTACT, ADA);
+    mockDraftReply.mockImplementation(async () => {
+      db.restricted.add(ADA);
+      return draft;
+    });
+    await expect(processReplyDraftJob(job())).resolves.toEqual({ skipped: true });
+    expect(mockReplyDraftCreate).not.toHaveBeenCalled();
+  });
+
+  it('stores the draft for an eligible contact', async () => {
+    db.contacts.set(CONTACT, ADA);
+    mockDraftReply.mockResolvedValue(draft);
+    mockReplyDraftCreate.mockResolvedValue({ id: 'draft-1' });
+    await expect(processReplyDraftJob(job())).resolves.toEqual({ draftId: 'draft-1' });
+  });
+});
+
+describe('deals at risk follow their contact (reviewer must-fix 3)', () => {
+  const DEAL_HELD = 'deal-held';
+  const DEAL_OPEN = 'deal-no-contact';
+  const DEAL_KEPT = 'deal-kept';
+  const dealJob = (ids: string[]) =>
+    bullJob({
+      tenantId: TENANT,
+      userId: 'user-1',
+      dealsAtRisk: ids.map((id) => ({ id, name: `${id} renewal`, daysSinceUpdate: 30 })),
+      overdueTasksCount: 0,
+      hotLeads: [],
+      staleContacts: [],
+    });
+  const aboutDeal = (id: string) => ({
+    entityId: id,
+    entityType: 'opportunity',
+    type: 'warning',
+    title: `About ${id}`,
+    description: 'Gone quiet.',
+    suggestedActions: ['Call'],
+    confidence: 0.8,
+    priority: 'medium',
+    reasoning: 'Inactivity',
+  });
+
+  it('drops a deal whose contact is restricted; keeps a deal with no contact', async () => {
+    db.contacts.set(CONTACT, BOB);
+    db.restricted.add(BOB);
+    db.deals.set(DEAL_HELD, CONTACT);
+    db.deals.set(DEAL_OPEN, null);
+
+    await processInsightJob(dealJob([DEAL_HELD, DEAL_OPEN]));
+
+    const [input] = mockGenerateInsightsWithMeta.mock.calls[0]!;
+    expect(input.dealsAtRisk.map((d: { id: string }) => d.id)).toEqual([DEAL_OPEN]);
+  });
+
+  it('writes no insight about a kept deal whose contact is restricted during the model call', async () => {
+    db.contacts.set(CONTACT, ADA);
+    db.deals.set(DEAL_KEPT, CONTACT);
+    mockGenerateInsightsWithMeta.mockImplementation(async () => {
+      db.restricted.add(ADA);
+      return { insights: [aboutDeal(DEAL_KEPT)], source: 'llm' };
+    });
+
+    await expect(processInsightJob(dealJob([DEAL_KEPT]))).resolves.toMatchObject({
+      insightsCreated: 0,
+    });
+    expect(mockAIInsightCreate).not.toHaveBeenCalled();
+  });
+
+  it('writes the insight about a deal with no contact as before', async () => {
+    db.deals.set(DEAL_OPEN, null);
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [aboutDeal(DEAL_OPEN)],
+      source: 'llm',
+    });
+    mockAIInsightCreate.mockResolvedValue({ id: 'ins-1' });
+
+    await expect(processInsightJob(dealJob([DEAL_OPEN]))).resolves.toMatchObject({
+      insightsCreated: 1,
+    });
+  });
+});
+
+describe('Q22: tag suggestions made while the person is restricted (codex)', () => {
+  it('returns none when the contact is restricted during the model call', async () => {
+    db.contacts.set(CONTACT, ADA);
+    mockSuggestTags.mockImplementation(async () => {
+      db.restricted.add(ADA);
+      return {
+        suggestions: [{ label: 'vip', confidence: 0.9, reason: 'Ada is a VIP' }],
+        modelVersion: 'm1',
+      };
+    });
+
+    await expect(
+      processTagSuggestionJob(
+        bullJob({
+          entityType: 'contact',
+          entityId: CONTACT,
+          tenantId: TENANT,
+          profileSnapshot: { firstName: 'Ada' },
+        })
+      )
+    ).resolves.toEqual({ suggestions: [], modelVersion: 'data-subject-request' });
   });
 });

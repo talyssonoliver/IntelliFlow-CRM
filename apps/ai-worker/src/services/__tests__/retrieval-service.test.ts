@@ -58,6 +58,8 @@ function createMockPrisma() {
     userPermission: {
       findMany: vi.fn().mockResolvedValue([]),
     },
+    // PG-203 Q22: active restrictions (none unless a test adds some).
+    processingRestriction: { findMany: vi.fn().mockResolvedValue([]) },
     lead: {
       findMany: vi.fn().mockResolvedValue([]),
     },
@@ -1011,5 +1013,94 @@ describe('RetrievalService', () => {
       const svc = createRetrievalService(mockPrisma as any, { minScore: 0.5 });
       expect(svc).toBeInstanceOf(RetrievalService);
     });
+  });
+});
+
+describe('RetrievalService - data requests (PG-203 Q22)', () => {
+  const config: SearchConfig = {
+    tenantId: 'tenant-1',
+    userId: 'user-1',
+    userRoles: [],
+    query: 'Ada Lovelace',
+    searchType: 'hybrid',
+    limit: 20,
+    offset: 0,
+    includeMetadata: true,
+    minRelevanceScore: 0,
+    semanticThreshold: 0.7,
+  };
+  const person = (id: string, email: string) => ({
+    id,
+    email,
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    company: 'Engines',
+    title: 'Analyst',
+    status: 'NEW',
+    score: 80,
+    source: 'WEBSITE',
+    ownerId: 'user-1',
+    createdAt: now,
+    updatedAt: now,
+    // Ticket columns: the person is named by contactEmail.
+    contactEmail: email,
+    contactName: 'Ada Lovelace',
+    ticketNumber: `T-${id}`,
+    subject: 'Ada Lovelace',
+    description: 'Asked about fees',
+    priority: 'HIGH',
+    slaStatus: null,
+    assigneeId: 'user-1',
+    // Opportunity columns: the person is the deal's contact.
+    name: 'Ada Lovelace renewal',
+    stage: 'PROPOSAL',
+    value: 1000,
+    probability: 50,
+    account: { name: 'Engines' },
+    contact: { email },
+  });
+  const table = (prisma: ReturnType<typeof createMockPrisma>, source: string) =>
+    ({
+      leads: prisma.lead,
+      contacts: prisma.contact,
+      tickets: prisma.ticket,
+      opportunities: prisma.opportunity,
+    })[source]!;
+
+  it.each(['leads', 'contacts', 'tickets', 'opportunities'] as const)(
+    'never returns an erased or restricted person from %s (RAG feeds AI prompts)',
+    async (source) => {
+      const prisma = createMockPrisma();
+      prisma.processingRestriction.findMany.mockResolvedValue([
+        { subjectEmail: 'held@example.invalid' },
+      ]);
+      const rows = [
+        person('keep', 'ada@example.invalid'),
+        person('held', ' Held@Example.invalid '),
+        person('gone', 'erased-gone@erased.invalid'),
+      ];
+      table(prisma, source).findMany.mockResolvedValue(rows);
+
+      const response = await new RetrievalService(prisma as any).search({
+        ...config,
+        sources: [source],
+      });
+
+      expect(response.results.map((r) => r.id)).toEqual(['keep']);
+      expect(prisma.processingRestriction.findMany).toHaveBeenCalledWith({
+        where: { tenantId: 'tenant-1', liftedAt: null },
+        select: { subjectEmail: true },
+      });
+    }
+  );
+
+  it('leaves out notes on an erased or restricted contact in the notes query', async () => {
+    const prisma = createMockPrisma();
+    await new RetrievalService(prisma as any).search({ ...config, sources: ['notes'] });
+
+    const sql = (prisma.$queryRaw.mock.calls[0]![0] as string[]).join('?');
+    expect(sql).toContain("c.email NOT LIKE '%@erased.invalid'");
+    expect(sql).toContain('pr."subjectEmail" = dsar_normalise_email(c.email)');
+    expect(sql).toContain('pr."liftedAt" IS NULL');
   });
 });

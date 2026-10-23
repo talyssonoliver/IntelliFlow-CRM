@@ -462,6 +462,7 @@ describe('Lead Router', () => {
         value: mockDomainLead,
       });
 
+      vi.mocked(enqueueLeadScoring).mockClear();
       const result = await callerWithService.update({
         id: TEST_UUIDS.lead1,
         firstName: 'Updated',
@@ -471,6 +472,15 @@ describe('Lead Router', () => {
       expect(ctx.services!.lead!.updateLead).toHaveBeenCalledWith(
         TEST_UUIDS.lead1,
         expect.objectContaining({ firstName: 'Updated' })
+      );
+      // PG-203 Q22: the re-score goes through the shared enqueue and its restriction gate.
+      expect(enqueueLeadScoring).toHaveBeenCalledWith(
+        expect.objectContaining({
+          leadId: TEST_UUIDS.lead1,
+          correlationId: `lead-update-${TEST_UUIDS.lead1}`,
+          lead: expect.objectContaining({ email: 'lead@example.com' }),
+        }),
+        expect.objectContaining({ status: expect.any(Function) })
       );
     });
 

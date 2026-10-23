@@ -56,6 +56,27 @@ async function subjectIds(
   return { leadIds: leads.map((r) => r.id), contactIds: contacts.map((r) => r.id) };
 }
 
+/**
+ * The AI insights about the person: those on their leads and contacts, and those on deals
+ * whose contact is theirs. Insight generation treats a deal as its contact's (PG-203 Q22: its
+ * name can carry theirs) and stores the insight under the opportunity id (codex).
+ */
+async function subjectInsightWhere(db: Db, tenantId: string, ids: SubjectIds) {
+  const deals = ids.contactIds.length
+    ? await db.opportunity.findMany({
+        where: { tenantId, contactId: { in: ids.contactIds } },
+        select: { id: true },
+      })
+    : [];
+  return {
+    tenantId,
+    OR: [
+      { entityId: { in: [...ids.leadIds, ...ids.contactIds] } },
+      { entityType: 'opportunity', entityId: { in: deals.map((d) => d.id) } },
+    ],
+  };
+}
+
 async function bookedAppointmentIds(
   db: Db,
   tenantId: string,
@@ -234,7 +255,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
       requests: { tenantId, subjectEmail },
     };
     const LIMIT = TAKE + 1;
-    const insightOwned = { tenantId, entityId: { in: [...leadIds, ...contactIds] } };
+    const insightOwned = await subjectInsightWhere(db, tenantId, { leadIds, contactIds });
 
     const [
       leads,
@@ -599,7 +620,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
           where: { tenantId, contactId: { in: contactIds } },
         });
         const insights = await tx.aIInsight.deleteMany({
-          where: { tenantId, entityId: { in: [...leadIds, ...contactIds] } },
+          where: await subjectInsightWhere(tx, tenantId, ids),
         });
         // The slot itself stays (it is the firm's calendar); who booked it and why does not.
         const bookings = await tx.$executeRaw`

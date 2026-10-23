@@ -106,6 +106,11 @@ interface GenerateEmbedding {
 export interface ContactDuplicateDetectionDeps {
   findSimilarContacts?: FindSimilarContacts;
   generateEmbedding?: GenerateEmbedding;
+  /**
+   * PG-203 Q22: the submitted address's processing restriction (an erased placeholder counts
+   * as restricted). Without it the AI branch never runs: the check fails closed.
+   */
+  restrictions?: { status(tenantId: string, email: string): Promise<{ restricted: boolean }> };
   enqueueEmbeddingJob?: (payload: {
     contactId: string;
     tenantId: string;
@@ -262,6 +267,24 @@ export function createContactDuplicateDetectionService(
     return prismaWithTenant.contact.findMany({ where, take: MAX_CANDIDATES });
   }
 
+  /**
+   * PG-203 Q22: a restricted or erased person's details are never sent to the embedding model;
+   * the deterministic checks still run. No reader, or a failed read, also skips the AI branch.
+   */
+  async function aiBlockedFor(tenantId: string, email: string | null | undefined) {
+    // Restrictions are keyed on the address: a submission without one matches none.
+    if (!email) return false;
+    if (!deps.restrictions) return true;
+    try {
+      return (await deps.restrictions.status(tenantId, email)).restricted;
+    } catch (error) {
+      console.warn('[contact-duplicates] Restriction check failed; AI branch skipped', {
+        error: error instanceof Error ? error.name : 'unknown',
+      });
+      return true;
+    }
+  }
+
   async function runAiBranch(
     ctx: HasTenantContext,
     payload: ContactCheckInput,
@@ -270,6 +293,7 @@ export function createContactDuplicateDetectionService(
   ): Promise<DuplicateMatch<Contact>[]> {
     if (!flags.aiDuplicateDetection) return deterministicMatches;
     if (!deps.findSimilarContacts || !deps.generateEmbedding) return deterministicMatches;
+    if (await aiBlockedFor(ctx.tenant.tenantId, payload.email)) return deterministicMatches;
 
     try {
       const text = contactToEmbeddableText(payload);

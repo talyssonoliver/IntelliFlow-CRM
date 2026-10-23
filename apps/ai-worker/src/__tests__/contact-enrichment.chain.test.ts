@@ -14,6 +14,11 @@ const ENRICHMENT_PAYLOAD = {
   source: 'llm' as const,
 };
 
+// PG-203 Q22: every person eligible here; the blocked paths have their own tests.
+vi.mock('../lib/data-request-guard', async (importOriginal) =>
+  (await import('../test/mocks/data-request-guard.mock')).passThroughGuard(await importOriginal())
+);
+
 vi.mock('../shared/enrichment-adapter.js', () => ({
   getEnrichmentAdapter: vi.fn(() => ({
     enrichContact: vi.fn().mockResolvedValue(ENRICHMENT_PAYLOAD),

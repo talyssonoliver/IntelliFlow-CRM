@@ -40,6 +40,14 @@ vi.mock('@intelliflow/db', async () => {
       contactAutomationSetting: prismaContactSettingMock,
       accountAutomationSetting: prismaAccountSettingMock,
       contact: {
+        // PG-203 Q22: the tag job reads the profile as stored now.
+        findFirst: vi.fn().mockResolvedValue({
+          firstName: 'Ada',
+          lastName: 'Lovelace',
+          title: 'Engineer',
+          company: 'Engines',
+          contactNotes: 'engineer',
+        }),
         findUnique: prismaContactFindUniqueMock,
         count: prismaContactCountMock,
         update: prismaContactUpdateMock,

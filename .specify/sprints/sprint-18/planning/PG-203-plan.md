@@ -1401,3 +1401,269 @@ reviewer_subagent: plan-reviewer (PG-203 DSAR addendum, 2026-10-22)
 | Revision 2 | **APPROVE** | One non-blocking D7 note: confirm `lead.updateMany` at `lead.router.ts:1563/1684/1754`, `routing.router.ts:422` and `LeadRoutingService.ts:293` never write `email` |
 
 - [ ] D7: confirm the other lead writers listed above never set `email`, and record the grep in the findings.
+
+## Plan Addendum B: restriction and erasure stop every AI path (owner Q21 and Q22, issue #1002)
+
+**Status: written after the code.** The first part (Q21) shipped in ba00e098b as a spec amendment during exec without
+its own plan review. The runner relayed the owner's 2026-10-23 ruling (the full pipeline for every task), so this
+addendum records the plan the code follows. The plan-reviewer subagent reviews it below. Revision 1 answers that
+review's REVISE, which included the scope question the owner then ruled on as Q22.
+
+**Rulings.**
+
+- Q21 (2026-10-23, AskUserQuestion): "Stop both, in PR 2". A processing restriction and an erasure stop AI insights and
+  predictions.
+- Q22 (2026-10-23, AskUserQuestion, after plan-reviewer must-fix 2): "All AI paths, in PR 2". They stop every AI path
+  that sends a person's data to a model.
+
+Both extend Q18 (spec: Restriction enforcement, D-AC-08).
+
+**The rule every path follows.** Before the model call, the person (lead or contact) is checked with
+`eligibleSubjectEmail` / `eligibleSubjects`. A missing, erased or restricted person is never sent. Anything stored
+about the person afterwards is written in `writeSubjectIfStillEligible`, which takes the row lock, then
+`dsar_subject_lock`, then reads the restriction. This is the lock order of scoring and embedding (Addendum A, D7). An
+erasure or restriction that lands while the model runs therefore wins. Results BullMQ keeps in Redis carry no personal
+output when a write was refused.
+
+### Scope: every production AI path that sends a person's data to a model
+
+The inventory comes from an Explore pass over `apps/ai-worker`, `apps/api` and `packages/*` on e18b89710.
+
+| # | Path | Model call | Stored | Guard (step) |
+|---|---|---|---|---|
+| 1 | Lead scoring `scoring.job.ts` | scoring chain | `leadAIInsight` | Addendum A D7; result retention fix (Q4) |
+| 2 | `LeadService.scoreLead` | AI service | score | Addendum A D7 |
+| 3 | Contact embedding `contact-embed-worker.ts` | embeddings | `contacts.embedding` | Addendum A D7 |
+| 4 | Contact insight `contact-insight.chain.ts` (via `entity-insight.job.ts`) | insight LLM | `contactAIInsight` | Q2 |
+| 5 | Tenant insights `insight-generation.job.ts` (hot leads, stale contacts, deals at risk) | insight chain | `aIInsight`, `leadAIInsight`, `contactAIInsight`, activity, notification, task | Q3 |
+| 6 | Predictions `prediction.job.ts` (churn, NBA, qualification) | chain or agent | `leadAIInsight` / `contactAIInsight`, churn alert | Q4 |
+| 7 | Contact enrichment `contact-enrichment.chain.ts` (via `enrichment.job.ts`) | enrichment adapter | fills empty `contacts` columns | Q7 |
+| 8 | Contact tag suggestions `tag-suggestion.job.ts` | tag chain | nothing (returned to the caller) | Q8 |
+| 9 | Contact reply drafts `reply-draft.job.ts` | reply chain | `contactReplyDraft` | Q9 |
+| 10 | Duplicate detection AI branch `contact-duplicate-detection.service.ts` (API) | query embedding | nothing (similarity search) | Q10 |
+| 11 | RAG retrieval `services/retrieval-service.ts` (NBA prompts: notes, plus lead and contact search) | feeds other prompts | nothing | Q11 |
+| 12 | Lead re-score on `lead.update` (`lead.router.ts`) | queues path 1 | via path 1 | Q12 |
+
+**Out of scope, with the reason for each.**
+
+- **Conversation summaries (`summarize-conversation.job.ts`): unreachable today.** The only producer,
+  `ConversationRecordCallbackHandler`, is never attached; `attachConversationRecording` has no caller. Agent logs also
+  share one conversation per tenant and agent type (`agent-status.ts`), so wiring summaries later needs a person tag
+  on each `MessageRecord` (its `metadata` JSON) before anything is summarised.
+- **Dead code with no production caller:** `followup.agent.ts`, `email-writer.agent.ts`, `auto-response.chain.ts`,
+  `ticket-routing.chain.ts`, the case, deal and ticket automation jobs (not in the worker switch, never queued),
+  `ScoreLeadUseCase` (never built), and `reindex-worker.ts` (not started).
+- **Account paths:** enrichment, industry inference, tag suggestion, insight and scoring send account fields and
+  counts, never a contact.
+- **Opportunity and account predictions (path 6):** the API puts only the tenant and user ids in their context. The
+  one route to person data, RAG, is filtered in Q11.
+- **Entity insight fan-out (`entity-insight.job.ts`, nightly):** it queues contacts without a filter. Each job's model
+  call is refused by path 4, so the cost is wasted jobs, not processing.
+- **API writers without a model call:** `intelligence.router.ts` and `contact.router.ts` insight upserts are manual
+  data, not AI processing.
+- **Tasks created before an erasure:** there is no person provenance on tasks (issue #1010, waived with an expiry).
+  New ones are covered by Q3.
+
+### Files to Create
+
+- `apps/ai-worker/src/jobs/__tests__/insights-predictions-data-requests.test.ts` (real guard, fake database)
+- `apps/ai-worker/src/test/mocks/data-request-guard.mock.ts` (pass-through guard for job-behaviour suites)
+
+### Files to Modify
+
+- Guard: `apps/ai-worker/src/lib/data-request-guard.ts`, `apps/ai-worker/src/lib/__tests__/data-request-guard.test.ts`
+- Workers: `apps/ai-worker/src/contact-insight.chain.ts`, `apps/ai-worker/src/jobs/insight-generation.job.ts`,
+  `apps/ai-worker/src/jobs/prediction.job.ts`, `apps/ai-worker/src/jobs/scoring.job.ts`,
+  `apps/ai-worker/src/contact-enrichment.chain.ts`, `apps/ai-worker/src/jobs/tag-suggestion.job.ts`,
+  `apps/ai-worker/src/jobs/reply-draft.job.ts`, `apps/ai-worker/src/services/retrieval-service.ts`
+- Adapters: `packages/adapters/src/repositories/PrismaSubjectDataRepository.ts` (deal insights in export and erasure),
+  `packages/adapters/src/repositories/__tests__/PrismaDsarAdapters.test.ts`
+- API: `apps/api/src/modules/contact/contact-duplicate-detection.service.ts`, `apps/api/src/container.ts`,
+  `apps/api/src/modules/lead/lead.router.ts`
+- Tests that now load the pass-through mock (eleven suites): `apps/ai-worker/src/jobs/prediction.job.test.ts`,
+  `apps/ai-worker/src/jobs/prediction.job.additional.test.ts`,
+  `apps/ai-worker/src/jobs/__tests__/fallback-resilience.test.ts`,
+  `apps/ai-worker/src/jobs/__tests__/ifc312-jobs-happy-path.test.ts`,
+  `apps/ai-worker/src/jobs/__tests__/ifc312-jobs.test.ts`,
+  `apps/ai-worker/src/jobs/__tests__/insight-generation.job.fallback.test.ts`,
+  `apps/ai-worker/src/jobs/__tests__/insight-generation.job.test.ts`,
+  `apps/ai-worker/src/jobs/__tests__/prediction-tenant-isolation.test.ts`,
+  `apps/ai-worker/src/jobs/__tests__/security-fixes.test.ts`, `apps/ai-worker/src/__tests__/contact-insight.chain.test.ts`,
+  `apps/ai-worker/src/__tests__/contact-enrichment.chain.test.ts`
+- Other tests: `apps/ai-worker/src/jobs/scoring.job.test.ts`,
+  `apps/ai-worker/src/services/__tests__/retrieval-service.test.ts` (plus the mock factories in
+  `retrieval-service.additional.test.ts` and `retrieval-service.b11.test.ts`),
+  `apps/api/src/modules/contact/__tests__/contact-duplicate-detection.service.test.ts`,
+  `apps/api/src/modules/lead/__tests__/lead.router.test.ts`, `tests/integration/dsar.test.ts`
+- Docs and gates: `.specify/sprints/sprint-18/specifications/PG-203-spec.md`,
+  `.specify/sprints/sprint-18/context/PG-203/PG-203-owner-ruling.md` (Q21, Q22). `tools/audit/codex-review-waivers.yaml`
+  (waiver 6468c85e removed in ba00e098b; one false-positive waiver, 5b63b61f, added with its evidence).
+
+**CSV alignment.** This addendum adds no page and no route, so the PG-203 row's "Artifacts To Track" (the PR 1 event
+types files and `context_ack.json`) is unchanged. Its "Validation Method" (typecheck, test, lint, build) is covered row
+by row in the validation matrix below.
+
+### Steps
+
+#### Q1: guard helpers (`data-request-guard.ts`)
+
+- [x] RED `data-request-guard.test.ts`, describe "insight and prediction subjects (#1002)". `eligibleSubjectEmail`
+  returns the stored address and null for a missing, erased or restricted person. `eligibleSubjects` keeps only
+  eligible people and skips a table with no ids. `writeSubjectIfStillEligible` locks the lead or the contact row.
+- [x] GREEN: `SubjectKind`, `SUBJECT_NOT_PROCESSABLE`, `eligibleSubjectEmail`, `eligibleSubjects` and
+  `writeSubjectIfStillEligible` (reusing `writeIfStillEligible` / `writeContactIfStillEligible`).
+
+#### Q2: contact insight chain (path 4)
+
+- [x] RED "contact insight chain": a restricted contact gets no LLM call and no upsert; a contact erased during the
+  call gets no upsert; an eligible contact gets its insight. "entity insight job": `processEntityInsightJob` reaches
+  the chain, which refuses before `createLLMForTenant`.
+- [x] GREEN: the check runs before `createLLMForTenant`, and the upsert runs in `writeSubjectIfStillEligible`.
+
+#### Q3: tenant insight job (path 5)
+
+- [x] RED "insight generation job" and "deals at risk follow their contact":
+  - restricted and erased people are absent from the chain input;
+  - a deal whose contact is restricted is dropped, and a deal with no contact is kept;
+  - insights are written only for kept people;
+  - nothing is written for a person, or a kept deal's contact, restricted during the call;
+  - side effects are written for a kept person, and none when the person is erased after the record write;
+  - a failed side effect keeps the insight.
+- [x] GREEN:
+  - `processableJobData` runs before capping and the model call (deals follow `opportunity.contactId`);
+  - `persistInsightForSubject` locks on the lead, the contact, or the kept deal's contact;
+  - the side effects run in their own locked transaction, so they stay non-blocking (one failed side effect aborts
+    only that transaction, never the insight);
+  - `populateEntityInsights` writes one person at a time (each write holds a pooled connection).
+- [x] Export and erasure follow the same rule (codex, after Revision 1). `PrismaSubjectDataRepository`
+  (`subjectInsightWhere`) covers AI insights stored under an opportunity whose contact is the person, as well as those on
+  their leads and contacts. Test: `tests/integration/dsar.test.ts`, "exports and erases AI insights stored under the
+  deals of the person". RED was proved with the earlier filter: the export found 0.
+
+#### Q4: prediction job and the scoring result (paths 6 and 1)
+
+- [x] RED "prediction job" and "every prediction type":
+  - restricted, erased or missing leads, for CHURN_RISK, NEXT_BEST_ACTION and QUALIFICATION, are skipped before the
+    model;
+  - erased or restricted during the call returns `{ skipped: true, reason: 'data-subject-request' }`, with no
+    prediction text, no upsert and no alert;
+  - erased after the prediction write sends no alert;
+  - an opportunity is not checked.
+  - `scoring.job.test.ts` "discards the result when the person is erased" returns `{ skipped: true, reason: 'ERASED' }`.
+- [x] GREEN:
+  - `processableSubjectEmail` runs after the feature flag;
+  - `persistPredictionResult` writes under the locks and returns `'blocked'`;
+  - `notifyHighChurnRisk` locks for a lead or contact;
+  - `persistScoringResult` returns the block reason.
+  - A `'failed'` persist (a database error) still returns the prediction as before. This is not a data-request case.
+
+#### Q7: contact enrichment (path 7)
+
+- [x] RED "Q22: contact enrichment": a restricted contact is never sent to the adapter; nothing is written back onto a
+  contact erased during the call; an eligible contact's empty fields are filled.
+- [x] GREEN: in `contact-enrichment.chain.ts`, the check runs before `adapter.enrichContact`, and the
+  `contact.update` runs in `writeSubjectIfStillEligible`.
+
+#### Q8: contact tag suggestions (path 8)
+
+- [x] RED "Q22: contact tag suggestions": a restricted contact gets no model call and an empty list; an eligible one
+  is asked. "tag suggestions made while the person is restricted": a restriction during the call returns none.
+- [x] GREEN: the check runs before `suggestContactTags`. The profile sent is read from the contact row at that moment,
+  never taken from the queued snapshot, which may predate an erasure (codex). A re-check runs after the call. The suggestions reach the
+  caller and the job result in Redis, so none are returned if the person was erased, restricted or changed address
+  during the call (codex). Nothing is stored, so no locked write is needed.
+
+#### Q9: contact reply drafts (path 9)
+
+- [x] RED "Q22: contact reply drafts": a restricted contact's thread is never sent; no draft is stored for a contact
+  restricted during the call; an eligible contact's draft is stored.
+- [x] GREEN: the check runs before `draftContactReply`, and `contactReplyDraft.create` runs in
+  `writeSubjectIfStillEligible`.
+
+#### Q10: duplicate detection AI branch (path 10, API)
+
+- [x] RED in `contact-duplicate-detection.service.test.ts`, "data requests (PG-203 Q22)": the details are not embedded
+  when the submitted address is restricted, when the check is unreadable, or when no reader is wired, and the
+  deterministic checks still run. An unrestricted person is embedded.
+- [x] GREEN: a `restrictions` dependency (`ProcessingRestrictionPort.status`, wired in `container.ts`; an erased
+  placeholder counts as restricted) is checked before `generateEmbedding`. The check fails closed. A submission
+  with no address cannot match a restriction (they are keyed on it), so it is not blocked.
+
+#### Q11: RAG retrieval (path 11)
+
+- [x] RED in `retrieval-service.test.ts`, "data requests (PG-203 Q22)": lead, contact, ticket and opportunity search
+  never return an erased or restricted person, and the notes query excludes notes on an erased or restricted contact.
+- [x] GREEN: `withoutDataRequestSubjects` filters the lead, contact, ticket and opportunity results on the
+  normalised stored address (`metadata.email`). A ticket's address is its `contactEmail`. An opportunity's is its
+  contact's (codex), and a deal with no contact keeps an empty address, which no restriction matches. The notes SQL joins `contacts` and excludes
+  `@erased.invalid` and active `processing_restrictions` matches.
+- Out of scope in Q11, with reasons:
+  - **Message search** (`searchMessages`): `RAG_SOURCES` allows it, but no production caller asks for it. The only caller, the NBA agent, requests documents, notes and conversations.
+  - **Conversation search** (`searchConversations`): it returns conversation-level fields only (title, summary,
+    context name), never messages. Summaries are unreachable (see above), and the agent-status task descriptions
+    are short labels. Narrow, and noted here for the summaries follow-up.
+
+#### Q12: lead re-score on update (path 12)
+
+- [x] RED in `lead.router.test.ts` "update": the re-score goes through `enqueueLeadScoring` with a restriction reader.
+- [x] GREEN: `lead.update` calls `enqueueLeadScoring(job, restrictionReader(ctx))` instead of its own queue.
+
+#### Q5: existing suites
+
+- [x] The eleven suites listed above load the pass-through mock (every person eligible) because they test job
+  behaviour. A guard call deleted from a guarded path is caught by a suite running the real guard:
+  `insights-predictions-data-requests.test.ts` covers paths 4 to 9 (contact insight, tenant insights, predictions,
+  enrichment, tag suggestions and reply drafts). `scoring.job.test.ts` and `contact-embed-worker.test.ts`
+  (Addendum A D7) cover paths 1 and 3. `contact-duplicate-detection.service.test.ts` covers path 10,
+  `retrieval-service.test.ts` path 11, and `lead.router.test.ts` path 12.
+- [x] `fallback-resilience.test.ts`: the `$transaction` mock passes its own object. A nested import of the mocked
+  module can resolve to the real client.
+
+#### Q6: docs and gates
+
+- [x] Spec: "Restriction enforcement" and D-AC-08 cover AI insights and predictions (Q21) and every AI path (Q22).
+- [x] Owner-ruling log: Q21 and Q22.
+- [x] `tools/audit/codex-review-waivers.yaml`: waiver 6468c85e removed (fixed). Closes #1002.
+
+#### Q13: the locks on a real database (plan-reviewer must-fix 4)
+
+- [x] RED, then GREEN: `tests/integration/dsar.test.ts`, "a worker write waits for a restriction being written, then
+  writes nothing". A transaction holds `dsar_subject_lock` and inserts a restriction while
+  `writeSubjectIfStillEligible` waits on the lock; the write must see it and store nothing. RED was proved by moving
+  the restriction read before the lock: the test fails ("written: true").
+
+### D-AC-08 traceability (Q21 and Q22 clauses)
+
+| Clause | Steps | Tests |
+|---|---|---|
+| Insights and predictions are neither generated nor written for a restricted or erased person (Q21) | Q1–Q4, Q13 | `insights-predictions-data-requests.test.ts` (prediction job, every prediction type, insight generation job, deals, contact insight chain, entity insight job); `data-request-guard.test.ts`; `dsar.test.ts` race test |
+| No AI path sends a restricted or erased person's data to a model, or stores its output (Q22) | Q7–Q12 | `insights-predictions-data-requests.test.ts` (Q22 describes); `contact-duplicate-detection.service.test.ts`; `retrieval-service.test.ts`; `lead.router.test.ts` |
+
+### Validation matrix (Addendum B)
+
+| Check | Command |
+|---|---|
+| Typecheck | `pnpm exec turbo typecheck --filter=@intelliflow/ai-worker --filter=@intelliflow/api --filter=@intelliflow/adapters` |
+| Lint | `pnpm exec turbo lint --filter=@intelliflow/ai-worker --filter=@intelliflow/api` |
+| Build | `pnpm exec turbo build --filter=@intelliflow/ai-worker --filter=@intelliflow/api` |
+| ai-worker unit (guard, all jobs, the eleven mock suites) | `pnpm exec vitest run --project ai-worker` |
+| API unit (duplicates, lead router, privacy) | `pnpm exec vitest run --project api` |
+| Real DB (migrated): locks and erasure | `pnpm test:db:run -- pnpm exec vitest run --project integration tests/integration/dsar.test.ts` |
+| Real DB (CI-style `db push`): full integration project | the db-push wrapper used for #1003 (see PR body) |
+| Codex gate | `node scripts/codex-review.mjs` (two consecutive PASS rounds) |
+| Pre-ship with diff coverage ≥80% | the runner's push: `scripts/pre-ship.mjs` (husky pre-push), then `pnpm preship:attest` |
+
+### Plan-Reviewer Sign-off: Addendum B (Q21 and Q22)
+
+<!-- plan-reviewer: subagent -->
+reviewer_subagent: plan-reviewer (Task subagent, .claude/agents/plan-reviewer.md), PG-203 Addendum B, 2026-10-23, lead session f7d22516-a758-41d6-8916-a2c4accfdecc
+
+| Pass | Verdict | Items |
+|---|---|---|
+| Initial (code on e18b89710) | REVISE | 5 must-fix: no file lists, checkboxes or traceability; other AI paths unguarded (put to the owner, ruled Q22 "All AI paths, in PR 2"); deals at risk unguarded; no real-DB test of the locked write; thin validation matrix. 7 should-fix. |
+| Revision 1 | **APPROVE** | No must-fix. 5 should-fix, all applied: Q5 wording names the suite per path; the waivers entry marked done; the ticket RAG source filtered (opportunity, message and conversation search noted out of scope with reasons); the no-address case in Q10 commented. |
+
+The reviewer found no defect in the guard code at either pass. It verified the lock order, each Q22 guard, deals
+following their contact, and the scope claims (no other synchronous LLM call on lead or contact data in `apps/api`;
+`attachConversationRecording` has no production caller). It did not run tests. The counts in the validation matrix
+come from the lead session's runs.

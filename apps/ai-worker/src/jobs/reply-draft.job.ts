@@ -11,6 +11,11 @@ import { z } from 'zod';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { draftContactReply, type EmailThreadEntry } from '../contact-reply-draft.chain.js';
+import {
+  eligibleSubjectEmail,
+  writeSubjectIfStillEligible,
+  type SubjectPrisma,
+} from '../lib/data-request-guard';
 
 const logger = pino({
   name: 'reply-draft-job',
@@ -50,6 +55,15 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
       return { skipped: true };
     }
 
+    // PG-203 Q22: the thread and the person's details are never sent to the model for an
+    // erased or restricted contact.
+    const subject = { kind: 'contact' as const, id: contactId, tenantId };
+    const email = await eligibleSubjectEmail(prisma as unknown as SubjectPrisma, subject);
+    if (email === null) {
+      logger.info({ contactId, tenantId }, 'reply-draft skipped — data subject request');
+      return { skipped: true };
+    }
+
     const result = await draftContactReply({
       contactId,
       tenantId,
@@ -64,22 +78,32 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
 
     const draft = result.draft;
     // CRITICAL (ADR-037): status is HARD-CODED to DRAFT. Never emit SENT here.
-    const row = await prisma.contactReplyDraft.create({
-      data: {
-        contactId,
-        tenantId,
-        ...(emailThreadId ? { emailThreadId } : {}),
-        draftSubject: draft.draftSubject,
-        draftBody: draft.draftBody,
-        tone: draft.tone ?? null,
-        status: 'DRAFT',
-        confidence: draft.confidence,
-        modelVersion: draft.modelVersion,
-        ...(createdBy ? { createdBy } : {}),
-      },
-    });
+    // Stored only under the contact row and address locks, after re-checking (Q22).
+    const outcome = await writeSubjectIfStillEligible(
+      prisma as never,
+      { ...subject, email },
+      (tx) =>
+        (tx as unknown as typeof prisma).contactReplyDraft.create({
+          data: {
+            contactId,
+            tenantId,
+            ...(emailThreadId ? { emailThreadId } : {}),
+            draftSubject: draft.draftSubject,
+            draftBody: draft.draftBody,
+            tone: draft.tone ?? null,
+            status: 'DRAFT',
+            confidence: draft.confidence,
+            modelVersion: draft.modelVersion,
+            ...(createdBy ? { createdBy } : {}),
+          },
+        })
+    );
+    if (!outcome.written) {
+      logger.info({ contactId, tenantId }, 'reply-draft discarded — data subject request');
+      return { skipped: true };
+    }
 
-    return { draftId: row.id };
+    return { draftId: outcome.value.id };
   } catch (err) {
     logger.error({ err, contactId, tenantId }, 'reply-draft job failed');
     throw err;

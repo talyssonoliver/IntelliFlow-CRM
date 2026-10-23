@@ -556,6 +556,7 @@ describe('PrismaSubjectDataRepository', () => {
       'leadAIInsight',
       'contactAIInsight',
       'aIInsight',
+      'opportunity',
     ];
     return mockPrisma(Object.fromEntries(names.map((n) => [n, empty()])));
   }
@@ -576,13 +577,18 @@ describe('PrismaSubjectDataRepository', () => {
     prisma.contact.count.mockResolvedValue(1);
     prisma.leadFile.count.mockResolvedValue(4);
     prisma.leadAIInsight.findMany.mockResolvedValue([{ engagementScore: 40 }]);
+    // A deal of the person's contact: its insights are the person's too (Q22, codex).
+    prisma.opportunity.findMany.mockResolvedValue([{ id: 'o1' }]);
     const repo = new PrismaSubjectDataRepository(asClient(prisma));
     const exported = await repo.buildExport('t1', 'ada@example.invalid');
     // AI-derived data about the person is part of the export (Art 15).
     expect(exported.data.leadInsights).toEqual([{ engagementScore: 40 }]);
     expect(prisma.aIInsight.findMany.mock.calls[0][0].where).toEqual({
       tenantId: 't1',
-      entityId: { in: ['l1', 'c1'] },
+      OR: [
+        { entityId: { in: ['l1', 'c1'] } },
+        { entityType: 'opportunity', entityId: { in: ['o1'] } },
+      ],
     });
     expect(exported.withheld).toEqual({
       NOTES: 4,
@@ -673,6 +679,7 @@ describe('PrismaSubjectDataRepository', () => {
     prisma.leadFile.updateMany.mockResolvedValue({ count: 1 });
     prisma.aIScore.deleteMany.mockResolvedValue({ count: 2 });
     prisma.aIInsight.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.opportunity.findMany.mockResolvedValue([{ id: 'o1' }]);
     const repo = new PrismaSubjectDataRepository(asClient(prisma));
     const result = await repo.erase(eraseInput);
     expect(result.outcome).toBe('ERASED');
@@ -681,7 +688,10 @@ describe('PrismaSubjectDataRepository', () => {
     expect(prisma.$transaction).toHaveBeenCalledTimes(1);
     expect(prisma.aIInsight.deleteMany.mock.calls[0][0].where).toEqual({
       tenantId: 't1',
-      entityId: { in: ['l1', 'c1'] },
+      OR: [
+        { entityId: { in: ['l1', 'c1'] } },
+        { entityType: 'opportunity', entityId: { in: ['o1'] } },
+      ],
     });
     expect(prisma.dsarRequest.updateMany.mock.calls[0][0]).toMatchObject({
       where: { id: 'r1', tenantId: 't1', status: 'VERIFIED' },

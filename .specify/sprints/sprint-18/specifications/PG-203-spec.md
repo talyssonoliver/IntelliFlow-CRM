@@ -866,7 +866,11 @@ The public procedures live in their own `privacy-public.router.ts`, which is the
 - in `AutoResponseService` draft creation for that recipient;
 - in the AI insight and prediction workers (owner Q21, issue #1002), for restriction and erasure alike: the
   contact insight chain, the tenant insight job and the prediction job leave the person out before the model
-  call, and write only under the row and address locks after a re-check (`writeSubjectIfStillEligible`).
+  call, and write only under the row and address locks after a re-check (`writeSubjectIfStillEligible`);
+- on every other AI path that sends a person's data to a model (owner Q22): contact enrichment, contact tag
+  suggestions, contact reply drafts, the duplicate-detection embedding, RAG retrieval (notes, lead and contact search),
+  deals at risk (through their contact), and the `lead.update` re-score. The rule is the same: check before the model
+  call, and write under the locks. Plan Addendum B lists every path and what is out of scope.
 
 The lead and contact detail pages show a banner, "Processing restricted (data request)", with the date. Outreach and
 marketing suppression is a follow-up task, recorded in the docs.
@@ -941,6 +945,7 @@ marketing suppression is a follow-up task, recorded in the docs.
   - completing a RESTRICTION or OBJECTION creates an active restriction;
   - scoring, embedding and draft creation skip or refuse for that email;
   - AI insights and predictions are neither generated nor written for a restricted or erased person (Q21);
+  - no AI path sends a restricted or erased person's data to a model, or stores its output (Q22);
   - the banner shows;
   - lifting informs the person first.
 - **D-AC-09:** The SLA job alerts ADMINs once per request, inside 7 days or overdue, with no PII. It is

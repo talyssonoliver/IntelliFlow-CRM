@@ -195,6 +195,31 @@ export async function eligibleSubjects(
   return { leads: eligible(leads), contacts: eligible(contacts) };
 }
 
+/**
+ * Each deal's contact (null: a deal with no contact). A deal at risk carries its name into an
+ * insight prompt, which can name that person, so it follows its contact (Q22). Deals not in
+ * the firm are absent from the map.
+ */
+export async function dealContactIds(
+  prisma: {
+    opportunity: {
+      findMany(args: {
+        where: { id: { in: string[] }; tenantId: string };
+        select: { id: true; contactId: true };
+      }): Promise<Array<{ id: string; contactId: string | null }>>;
+    };
+  },
+  tenantId: string,
+  dealIds: string[]
+): Promise<Map<string, string | null>> {
+  if (dealIds.length === 0) return new Map();
+  const deals = await prisma.opportunity.findMany({
+    where: { id: { in: dealIds }, tenantId },
+    select: { id: true, contactId: true },
+  });
+  return new Map(deals.map((d) => [d.id, d.contactId]));
+}
+
 /** The locked write for either kind of subject (lead or contact row lock, then address). */
 export function writeSubjectIfStillEligible<T>(
   prisma: { $transaction<R>(fn: (tx: LockingTx) => Promise<R>): Promise<R> },

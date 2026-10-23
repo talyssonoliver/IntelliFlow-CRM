@@ -34,6 +34,11 @@ export function passThroughGuard<T extends object>(actual: T) {
         contacts: new Map(ids.contactIds.map((id) => [id, SUBJECT_EMAIL])),
       })
     ),
+    // Every deal exists and has no contact, so none is dropped.
+    dealContactIds: vi.fn(
+      async (_prisma: unknown, _tenantId: string, dealIds: string[]) =>
+        new Map<string, string | null>(dealIds.map((id) => [id, null]))
+    ),
     writeSubjectIfStillEligible: vi.fn(
       async (prisma: unknown, _subject: unknown, write: (tx: unknown) => Promise<unknown>) => ({
         written: true as const,
