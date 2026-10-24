@@ -1946,7 +1946,7 @@ Dependency Chain:
                                             │
                                             ▼
                                  ┌──────────────────┐
-                                 │dsar.router       │
+                                 │privacy.router    │
                                  │      ⬜          │
                                  └────────┬─────────┘
                                           │
@@ -1960,7 +1960,7 @@ Dependency Chain:
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  IFC-140 (Governance) ✅ ──┬──► IFC-058 (Retention) ⬜ ──► dsar.router ⬜ ──┬──► PG-122 (Export) ⬜
+  IFC-140 (Governance) ✅ ──┬──► IFC-058 (Retention) ⬜ ──► privacy.router ✅ ──┬──► PG-122 (Export) ⬜
                             ├──► dsar.ts (Val) ⬜ ─────────────────────────┴──► PG-123 (Deletion) ⬜
                             └──► Retention Engine ⬜ ────────────────────────────────────────────────┘
 ```
@@ -2166,7 +2166,7 @@ Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ─
 ```
 Lead Qualification:   IFC-004 ✅ ──► IFC-005 ✅ ──► IFC-024 ⬜ ──► IFC-030 ⏳ ──► PG-132 ✅
 Smart Routing:        IFC-030 ⏳ ──► routing-rules.ts ⬜ ──► routing.router ⬜ ──► PG-132 ✅
-DSAR:                 IFC-140 ✅ ──► IFC-058 ⬜ ──► dsar.router ⬜ ──► PG-122/123 ⬜
+DSAR:                 IFC-140 ✅ ──► IFC-058 ⬜ ──► privacy.router ✅ (PG-203) ──► PG-122/123 ⬜
 Legal Case Workflows: IFC-136 ✅ ──► IFC-147 ✅ ──► IFC-141 ⬜ ──► Status Transitions ⬜ ──► PG-138 ✅
 ```
 

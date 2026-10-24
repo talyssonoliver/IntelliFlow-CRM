@@ -1254,6 +1254,11 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
   for `exportData`. A thrown error there lost the erasure checklist or a used verification link.
 - Codex (HIGH): a prediction whose queued context names another address than the person's current one is skipped
   (as for enrichment). Codex (MEDIUM): RAG recall when restricted matches fill the 100-row window, #1021 (waived).
+- Codex (LOW): the public submission caps count public-form rows only, so requests staff logged never block the
+  person's own request. Plan revision 1 must-fix 3 docs: flow-index, both dependency diagrams, retention-policy,
+  the intent-layer README, `packages/search/CLAUDE.md` and the retention config now point at the new code; the
+  config's DSAR block is marked as target settings (#1015). The checkpoint grep finds only history, evidence files
+  and the orphaned `embedding-purge.service.ts` actor string.
 - Tests: `apps/api/src/modules/privacy/__tests__/dsar-sla-scheduler.test.ts` (fake clock, fake store, recording
   client), `dsar-sla-deps.test.ts`, `apps/api/src/__tests__/http-server.dsar-sla.test.ts`, `main.test.ts`, and
   four real-database tests in `tests/integration/dsar.test.ts` (due, overdue, 3-day repeat, extension window,
