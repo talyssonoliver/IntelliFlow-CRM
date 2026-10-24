@@ -194,6 +194,11 @@ function getAttestationHashes(taskId, sprint) {
   return null;
 }
 
+/** artifact_hashes values are `sha256:<hex>` (bare <hex> in older attestations). */
+function bareDigest(value) {
+  return typeof value === 'string' && value.startsWith('sha256:') ? value.slice('sha256:'.length) : value;
+}
+
 /** Cross-check attestation hashes against master */
 function crossCheckHashes(taskId, sprint) {
   const hashes = getAttestationHashes(taskId, sprint);
@@ -204,7 +209,7 @@ function crossCheckHashes(taskId, sprint) {
     const actualHash = masterFileSha(filePath);
     if (actualHash === null) {
       mismatches.push({ path: filePath, expected: expectedHash, actual: 'NOT_ON_MASTER' });
-    } else if (actualHash !== expectedHash) {
+    } else if (actualHash !== bareDigest(expectedHash)) {
       mismatches.push({ path: filePath, expected: expectedHash, actual: actualHash });
     }
   }

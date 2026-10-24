@@ -177,7 +177,9 @@ function reportHashMatchesArtifacts(reportPath, attestation) {
   const declared = hashes[rel];
   if (typeof declared !== 'string') return false;
   const actual = sha256OfFile(reportPath);
-  return actual !== null && actual === declared;
+  // artifact_hashes values are `sha256:<hex>` (bare <hex> in older attestations).
+  const digest = declared.startsWith('sha256:') ? declared.slice('sha256:'.length) : declared;
+  return actual !== null && actual === digest;
 }
 
 function main() {
