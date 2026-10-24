@@ -16,14 +16,44 @@
  */
 
 import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createFileHasher } from './lib/evidence-hash.js';
+import { createFileHasher, type FileHasher } from './lib/evidence-hash.js';
 import { digestsByPath, rewriteArtifactHashesText } from './lib/artifact-hash.js';
 
 const REPO_ROOT = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
-function main(argv: string[]): number {
+/** Rewrites (or, with --check, inspects) one file. Returns true when it should fail the run. */
+function convert(file: string, text: string, changed: number, check: boolean): boolean {
+  if (check) {
+    if (changed === 0) return false;
+    console.log(`${file}: ${changed} bare digest(s) remain`);
+    return true;
+  }
+  if (changed === 0) {
+    console.log(`${file}: already in sha256:<hex> form`);
+    return false;
+  }
+  writeFileSync(file, text);
+  console.log(`${file}: ${changed} digest(s) rewritten to sha256:<hex>`);
+  return false;
+}
+
+/** Re-hashes every listed file from the tree. Returns true when any is missing or differs. */
+function verifyAgainstTree(file: string, text: string, hashFile: FileHasher): boolean {
+  const entries = Object.entries(digestsByPath(JSON.parse(text).artifact_hashes));
+  let bad = 0;
+  for (const [path, digest] of entries) {
+    const actual = hashFile(path);
+    if (actual === digest) continue;
+    bad++;
+    console.log(`${file}: ${actual === null ? 'MISSING' : 'MISMATCH'} ${path}`);
+  }
+  console.log(`${file}: verified ${entries.length - bad}/${entries.length} against the tree`);
+  return bad > 0;
+}
+
+export function main(argv: string[], repoRoot: string = REPO_ROOT): number {
   const check = argv.includes('--check');
   const verify = argv.includes('--verify');
   const files = argv.filter((a) => !a.startsWith('--'));
@@ -32,40 +62,17 @@ function main(argv: string[]): number {
     return 2;
   }
 
-  const hashFile = createFileHasher(REPO_ROOT);
+  const hashFile = createFileHasher(repoRoot);
   let failed = false;
-
   for (const file of files) {
-    const original = readFileSync(file, 'utf8');
-    const { text, changed } = rewriteArtifactHashesText(original);
-
-    if (check) {
-      if (changed > 0) {
-        console.log(`${file}: ${changed} bare digest(s) remain`);
-        failed = true;
-      }
-    } else if (changed > 0) {
-      writeFileSync(file, text);
-      console.log(`${file}: ${changed} digest(s) rewritten to sha256:<hex>`);
-    } else {
-      console.log(`${file}: already in sha256:<hex> form`);
-    }
-
-    if (verify) {
-      const entries = Object.entries(digestsByPath(JSON.parse(text).artifact_hashes));
-      let bad = 0;
-      for (const [path, digest] of entries) {
-        const actual = hashFile(path);
-        if (actual !== digest) {
-          bad++;
-          console.log(`${file}: ${actual === null ? 'MISSING' : 'MISMATCH'} ${path}`);
-        }
-      }
-      console.log(`${file}: verified ${entries.length - bad}/${entries.length} against the tree`);
-      if (bad > 0) failed = true;
-    }
+    const { text, changed } = rewriteArtifactHashesText(readFileSync(file, 'utf8'));
+    failed = convert(file, text, changed, check) || failed;
+    if (verify) failed = verifyAgainstTree(file, text, hashFile) || failed;
   }
   return failed ? 1 : 0;
 }
 
-process.exit(main(process.argv.slice(2)));
+// Run only as a script, so main() can be imported by tests.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  process.exit(main(process.argv.slice(2)));
+}

@@ -777,7 +777,7 @@ function addUniquePath(arr: string[], path: string): void {
 /**
  * Extract file paths from attestation.json artifact_hashes
  */
-function enrichFromAttestationFile(
+export function enrichFromAttestationFile(
   taskMap: TaskFileMap,
   taskId: string,
   attestationPath: string
