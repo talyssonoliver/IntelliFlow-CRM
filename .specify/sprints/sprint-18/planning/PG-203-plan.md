@@ -1241,6 +1241,19 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
   an export is never marked complete with them left out. The extension email gap joins #1014 (waived).
 - Codex (HIGH): RAG also leaves out the addresses of completed erasure requests (`erasedSubjectEmails`), so a
   retained ticket with no linked contact that still carries an erased person's address is never retrieved.
+- Codex (HIGH, D10 round): a failed erasure audit row is retried once, then logged with the request id and counts,
+  and the committed erasure and its checklist are still returned (throwing lost the checklist; a retry was a
+  CONFLICT). Codex (MEDIUM): auto-completed access export versus a later download, #1020 (waived).
+- Codex (HIGH): contact enrichment refuses a seed whose address is not the one the guard just checked, so an older,
+  now-restricted address never reaches the provider. AI-created task copies after erasure: #1010 (waived again).
+- Codex (MEDIUM): cancelling an erasure after its deadline records `clockBreached`, like a late rejection.
+- Codex (MEDIUM): the insight AI_AGENT audit entry is written after the locked insight write commits, not inside
+  it, so the audit adapter's own connection cannot starve on a pool of one.
+- Codex (MEDIUM): nothing after a committed transition throws any more: the firm lookups after verify, extend,
+  reject, cancel and completion fall back to "the firm", and a failed export issue at verify leaves the request open
+  for `exportData`. A thrown error there lost the erasure checklist or a used verification link.
+- Codex (HIGH): a prediction whose queued context names another address than the person's current one is skipped
+  (as for enrichment). Codex (MEDIUM): RAG recall when restricted matches fill the 100-row window, #1021 (waived).
 - Tests: `apps/api/src/modules/privacy/__tests__/dsar-sla-scheduler.test.ts` (fake clock, fake store, recording
   client), `dsar-sla-deps.test.ts`, `apps/api/src/__tests__/http-server.dsar-sla.test.ts`, `main.test.ts`, and
   four real-database tests in `tests/integration/dsar.test.ts` (due, overdue, 3-day repeat, extension window,
@@ -1274,24 +1287,38 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
 - [ ] Material Symbols only. Any new glyphs go into the subset regeneration.
 
 ### Step D10: Docs and registries
-- [ ] Rewrite `docs/compliance-and-governance/data-governance/dsar-process.md`.
-- [ ] `gdpr-compliance.md`: controller/processor statement and corrected evidence.
-- [ ] `gdpr-compliance-checklist.csv`: GDPR-005..010, -021, -023, -031.
-- [ ] `docs/security/security-claims-audit.md`: the Missing items resolved.
-- [ ] ADR-007 addendum; ADR-083 DSAR section.
-- [ ] `TRPC_PROCEDURE_CATALOG.md`, `docs/api/trpc-routes.md` and `FLOW-040.md`.
-- [ ] Page registries: four new pages, total 219. PAGE_MAP gets a "Data requests" section; sitemap, page registry,
+- [x] Rewrite `docs/compliance-and-governance/data-governance/dsar-process.md`.
+- [x] `gdpr-compliance.md`: controller/processor statement and corrected evidence.
+- [x] `gdpr-compliance-checklist.csv`: GDPR-005..010, -021, -023, -031.
+- [x] `docs/security/security-claims-audit.md`: the Missing items resolved.
+- [x] ADR-007 addendum; ADR-083 DSAR section.
+- [x] `TRPC_PROCEDURE_CATALOG.md`, `docs/api/trpc-routes.md` and `FLOW-040.md`.
+- [x] Page registries: four new pages, total 219. PAGE_MAP gets a "Data requests" section; sitemap, page registry,
   IA, nav reachability (`/dsar` as an external entry from the booking page; settings sidebar), ui-flow (routers and
   procedures), and the content audit regenerated.
-- [ ] PRD addendum: DSAR delivery and the migration note (L13).
+- [x] PRD addendum: DSAR delivery and the migration note (L13).
 
 ### Step D11: Follow-ups and red flags
-- [ ] `/create-task` (owner approval gate):
+- [x] `/create-task` (owner approval gate):
   - outreach suppression keyed on `blocksMarketing` (sign-off 6);
   - automated erasure of communications;
   - DSAR CSV export and Art 20(2) direct transfer;
   - Art 19 recipient notification.
-- [ ] Findings: the ADR-007 false claim; the hold-registry absence; residual items.
+- [x] Findings: the ADR-007 false claim; the hold-registry absence; residual items.
+
+**Done (2026-10-24):**
+- D10: `dsar-process.md` rewritten; `gdpr-compliance.md` (controller/processor statement, Chapter III evidence);
+  checklist rows GDPR-005..010, -021, -023, -031 (Implemented or Partial, with evidence paths);
+  `security-claims-audit.md` §3.8; ADR-007 addendum (the "automated DSAR workflows" and "DSAR workflow functional"
+  claims marked superseded); ADR-083 "Data subject requests"; PRD addendum with the L13 migration note; FLOW-040
+  rewritten; `privacy` router (17 procedures) in `TRPC_PROCEDURE_CATALOG.md` and `docs/api/trpc-routes.md`, stale
+  `dsar.*` entries removed. Page registries already carried the four pages (total 220 after the PR 1 merge;
+  docs-integrity PASS). Drift: there is no allowlist file; the SQL-only objects are listed in the `schema.prisma`
+  comment block, the repo's convention (8 CHECKs, 4 SET NULL user FKs, the partial unique index, 2 RLS policies,
+  10 functions, 8 triggers).
+- D11: owner approved IFC-315 to IFC-318 in Sprint 19 (2026-10-24): outreach suppression, communications erasure,
+  CSV export with Art 20(2) transfer, Art 19 notices. Findings: ADR-007 corrected; no legal-hold registry and stale
+  `anonymize_record()` / `docs/legal` claims filed as #1019.
 
 ### Step D12: Validation, reviews, close
 - [ ] Every package suite touched (domain, validators, application, adapters, db, api, ai-worker, web), plus
