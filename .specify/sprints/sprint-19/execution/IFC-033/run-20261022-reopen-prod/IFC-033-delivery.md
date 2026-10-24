@@ -141,6 +141,16 @@ The independent code review found three real defects and one risk. All were fixe
   gatekeeper-validated). Nav-wiring and Lighthouse are N/A (no page). PRD is N/A
   (tooling); ADR-017 and ADR-018 exist.
 
+## Post-review fix (SonarCloud, PR #1013)
+
+The Quality Gate flagged two `jssecurity:S5145` log-injection issues in
+`prepare-ifc-033-tenant.mjs`. The `log()` lines interpolated `baseUrl` and the server-supplied
+`seedLeadId` and `expiresAt`. A new `stripControlChars` now removes CR/LF and other control
+characters from those values, from the CLI's error message, and from every value written to
+`.env.k6.local`. That last one closes a related gap: a server-supplied id carrying a newline
+could have added a variable line. Two tests were added (26 in total). Module coverage is now
+95 % lines and 90.9 % branches.
+
 ## Known gaps (stated, not hidden)
 
 - **Gate 4b** (worktree landed): BLOCK until the single push after pre-ship.

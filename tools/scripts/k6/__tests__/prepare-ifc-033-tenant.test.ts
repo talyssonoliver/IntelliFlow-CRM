@@ -12,6 +12,7 @@ import {
   buildLeadInputs,
   chunk,
   defaultRunTag,
+  stripControlChars,
   generatePassword,
   main,
   prepareTenant,
@@ -232,6 +233,50 @@ describe('prepareTenant', () => {
     await expect(prepareTenant({ ...OPTS, poolSize: 1 }, impl)).rejects.toThrow(
       'lead.create failed (HTTP 429): slow down'
     );
+  });
+});
+
+describe('stripControlChars', () => {
+  it('removes CR, LF, tab, NUL and DEL but keeps printable text', () => {
+    expect(stripControlChars('a\r\nb\tc\u0000d\u007fe')).toBe('abcde');
+    expect(stripControlChars('lead-1 ok:/x?y=z')).toBe('lead-1 ok:/x?y=z');
+    expect(stripControlChars(42)).toBe('42');
+  });
+});
+
+describe('server-supplied values cannot forge lines (log injection, S5145)', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'ifc033-inject-'));
+  });
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('keeps each log line single-line and adds no extra env variable', async () => {
+    const evilId = 'lead-0\r\n[prepare] forged line\nEVIL=1';
+    const { impl } = fakeFetch((proc, body) => {
+      if (proc === 'auth.signup') {
+        return ok({ session: { accessToken: 'tkn', expiresAt: 'soon\r\nforged' } });
+      }
+      if (proc === 'lead.create') return ok({ id: body.email.includes('-0@') ? evilId : 'lead-x' });
+      return ok({ successful: body.ids, failed: [] });
+    });
+    const lines: string[] = [];
+    await main({
+      env: { BASE_URL: `${BASE}\r\nforged`, K6_TEST_EMAIL: 'a@example.invalid', POOL_SIZE: '1' },
+      repoRoot: dir,
+      fetchImpl: impl,
+      log: (l) => lines.push(l),
+    });
+
+    expect(lines).toHaveLength(2);
+    for (const l of lines) expect(l).not.toMatch(/[\r\n]/);
+    expect(lines[0]).toContain('seed lead lead-0[prepare] forged lineEVIL=1');
+    expect(lines[1]).toContain('token expires soonforged');
+    const env = readFileSync(join(dir, '.env.k6.local'), 'utf8').split('\n').filter(Boolean);
+    expect(env.filter((l) => l.startsWith('EVIL='))).toEqual([]);
+    expect(env).toContain('SEED_LEAD_ID=lead-0[prepare] forged lineEVIL=1');
   });
 });
 

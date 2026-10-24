@@ -4,7 +4,7 @@
   "task_id": "IFC-033",
   "run_id": "run-20261022-reopen-prod",
   "attestor": "Claude Code /exec (IFC-033 lane, runner Aurora)",
-  "attestation_timestamp": "2026-10-23T21:09:56.243Z",
+  "attestation_timestamp": "2026-10-24T00:02:16.057Z",
   "verdict": "COMPLETE",
   "evidence_summary": {
     "artifacts_verified": 26,
@@ -71,8 +71,8 @@
     {
       "gate_id": "coverage_measurement",
       "passed": true,
-      "score": 94.73,
-      "log_path": "artifacts/coverage/IFC-033-after.json (prepare-ifc-033-tenant.mjs lines)"
+      "score": 95,
+      "log_path": "prepare-ifc-033-tenant.mjs lines, re-measured after the S5145 fix (26 tests); IFC-033-after.json holds the earlier 94.73 % snapshot"
     },
     {
       "gate_id": "context_ack",
@@ -196,7 +196,7 @@
     {
       "kpi": "Diff coverage, prepare-ifc-033-tenant.mjs",
       "target": ">= 80 % lines",
-      "actual": "94.73 % lines, 90.56 % branches",
+      "actual": "95 % lines, 90.9 % branches (26 tests, after the S5145 log-injection fix)",
       "met": true
     }
   ],
@@ -325,8 +325,8 @@
   "artifact_hashes": {
     "tools/scripts/k6/ifc-033-critical-path.js": "aaf898558c8ac0c7f5f73f7252e25047e70e15bc926b992024a24e2237220dfd",
     "tools/scripts/k6/run-ifc-033-load-test.mjs": "a50f8fbb4ba0f2e5285cd756c1e36d8bb0b9ff951969e03f4b54016e3571a2dc",
-    "tools/scripts/k6/prepare-ifc-033-tenant.mjs": "9aa438f03724060d8215dff951e21560b72dfd9c3d9e821997ae63674c1770aa",
-    "tools/scripts/k6/__tests__/prepare-ifc-033-tenant.test.ts": "0c193fa452c4775c3437c153038aed5bba0c72d39b7bd58c13f3d01e970ea7ee",
+    "tools/scripts/k6/prepare-ifc-033-tenant.mjs": "9a6aade2005e187c4ffae82dc0ec985e7c82def15336566f31d71959f609683d",
+    "tools/scripts/k6/__tests__/prepare-ifc-033-tenant.test.ts": "ecf262a50ae51265ad5ec4764e8ae84c5e222764345a2593cf2e0ad98eb61bde",
     "artifacts/reports/load-test-report.html": "a872dc6e7acc4ad928819c03ec13e5e2b91591e2740bb6027d4c08d828b35eb3",
     "artifacts/benchmarks/ifc-033-load-summary.json": "d773aed8ca8fb6b590d377be9a39785c0699e7d59ea9f33cba175f6c3f567809",
     "artifacts/benchmarks/ifc-033-deployed/k6-run-output.txt": "3f29c8bf8c4cc9b014baee6291323b4a72b7a4b74ee405bda8d95c2a448c4104",
@@ -343,7 +343,7 @@
     ".specify/sprints/sprint-19/attestations/IFC-033/context_ack.json": "95a382d51a2dbbfce34f7064ca2f4f33719612d94ab9173f82efc19aa1c8ae98",
     ".specify/sprints/sprint-19/attestations/IFC-033/task-tracking.json": "054b8cea8d13e8cc78b5d7094562dcf8a46384126dc2bbafbc403b2b745c195f",
     ".specify/sprints/sprint-18/context/IFC-033/IFC-033-owner-ruling.md": "7d995f9f96715a7e603ce1d3a79bc8718a391ee9923910320d3dc42b15343b09",
-    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/IFC-033-delivery.md": "01e70f4b6581817085099123d66778bb9be47b2ca8181a9ae74c808ce668a4d7",
+    ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/IFC-033-delivery.md": "96969b8c60bc520b0bef2722edf41af63d2903bc0f67272ee85efd5db6b30ec6",
     ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/spec-consensus.json": "e010a181151e6408c2be8cd025ba680c9d57dedf9a50bf62b45626ec79872df4",
     ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/gate-selection.json": "2785ace498c78b9050224d4964fae37b511bae1b4a41b6222aadb840c030fca3",
     ".specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/matop/stoa-verdicts/Quality.json": "eca6f5269d4c1c85a3a3920104617dc6f56ad9788b00794ee8d9f87cab23ec5d",
@@ -353,10 +353,10 @@
   "environment": {
     "os": "Windows 11 Pro 10.0.26200",
     "node_version": "v22.14.0",
-    "git_commit": "71d9837f1c6c0470718ffebf39d0765c5690782a",
+    "git_commit": "a1dd02c43c2d26031fbe24c71f12da8e93f585ed",
     "branch": "feat/ifc-033-ifc033"
   },
-  "notes": "Reopened by #795 (the July run targeted localhost). On owner rulings of 2026-10-22 (no staging API/DB exists) the k6 run targeted the production API in a dedicated load-test tenant, sized down to cap the per-lead AI scoring cost. COMPLETE rests on the third owner ruling: close on the throughput KPI, with p95 recorded as a measured FAIL under the ADR-018 Decision 4 waiver (ADR-017 Decision 4 budget p95 < 200 ms is NOT met in production: 1,137 ms client). Two gates are recorded passed:false: p95-under-200ms (owner waiver, #1001) and worktree-landed Gate 4b (pre-push; runner-owned branch name and single push after pre-ship). TDD order: tests were written after the module (stated in plan S17). No Prisma migration. hydrate-context was not run for this retrospective spec (no context_pack.manifest.json). Production side effects left in place for the owner: about 206 synthetic leads, 20 converted deals with their contacts and accounts, the load-test tenant and account, and Grafana Cloud dashboard ifc033-prod-api-load. Typecheck result is a turbo cache hit (599 ms). Coverage: tools/scripts/k6 lines 5.19 % -> 12.14 %.",
+  "notes": "Reopened by #795 (the July run targeted localhost). On owner rulings of 2026-10-22 (no staging API/DB exists) the k6 run targeted the production API in a dedicated load-test tenant, sized down to cap the per-lead AI scoring cost. COMPLETE rests on the third owner ruling: close on the throughput KPI, with p95 recorded as a measured FAIL under the ADR-018 Decision 4 waiver (ADR-017 Decision 4 budget p95 < 200 ms is NOT met in production: 1,137 ms client). Two gates are recorded passed:false: p95-under-200ms (owner waiver, #1001) and worktree-landed Gate 4b (pre-push; runner-owned branch name and single push after pre-ship). TDD order: tests were written after the module (stated in plan S17). No Prisma migration. hydrate-context was not run for this retrospective spec (no context_pack.manifest.json). Production side effects left in place for the owner: about 206 synthetic leads, 20 converted deals with their contacts and accounts, the load-test tenant and account, and Grafana Cloud dashboard ifc033-prod-api-load. SonarCloud jssecurity:S5145 (log injection) on #1013 fixed: server- and env-supplied values are stripped of control characters before logs and .env.k6.local. Typecheck result is a turbo cache hit (599 ms). Coverage: tools/scripts/k6 lines 5.19 % -> 12.14 %.",
   "spec_session_consensus": "APPROVED (3/3 in round 2; round 1 was 1/3) — spec reopen amendment reviewed by test-engineer, devops-lead and security-lead subagents; the July spec itself is retrospective with no consensus of its own. Record: .specify/sprints/sprint-19/execution/IFC-033/run-20261022-reopen-prod/spec-consensus.json",
   "plan_reviewer_verdict": "APPROVED",
   "plan_reviewer_agent": "plan-reviewer subagent (2026-10-23; APPROVED_WITH_CHANGES, then APPROVED on re-review)",

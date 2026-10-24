@@ -178,11 +178,24 @@ export function defaultRunTag(now = Date.now()) {
   return `run-${now.toString(36)}`;
 }
 
+/**
+ * Drop CR/LF and other control characters from a value before it reaches a log line or the env
+ * file. Server-supplied values (ids, expiry, error messages) could otherwise forge extra lines.
+ */
+export function stripControlChars(value) {
+  return Array.from(String(value))
+    .filter((ch) => {
+      const code = ch.charCodeAt(0);
+      return code >= 32 && code !== 127;
+    })
+    .join('');
+}
+
 /** Set KEY=value lines in a dotenv-style file, keeping every other line. */
 export function upsertEnvFile(path, values) {
   const lines = existsSync(path) ? readFileSync(path, 'utf8').split(/\r?\n/).filter(Boolean) : [];
   const kept = lines.filter((l) => !Object.keys(values).some((k) => l.startsWith(`${k}=`)));
-  const added = Object.entries(values).map(([k, v]) => `${k}=${v}`);
+  const added = Object.entries(values).map(([k, v]) => `${k}=${stripControlChars(v)}`);
   writeFileSync(path, `${[...kept, ...added].join('\n')}\n`, { mode: 0o600 });
 }
 
@@ -210,10 +223,15 @@ export async function main({ env = process.env, repoRoot, fetchImpl = fetch, log
   const dataDir = resolve(repoRoot, 'tools/scripts/k6/.data');
   mkdirSync(dataDir, { recursive: true });
   writeFileSync(resolve(dataDir, 'qualified-leads.json'), JSON.stringify(poolIds, null, 2));
-  log(`[prepare] tenant ready on ${baseUrl}: seed lead ${seedLeadId}, ${poolIds.length} QUALIFIED`);
+  const safe = stripControlChars;
+  log(
+    `[prepare] tenant ready on ${safe(baseUrl)}: seed lead ${safe(seedLeadId)}, ` +
+      `${poolIds.length} QUALIFIED`
+  );
   log(
     `[prepare] K6_AUTH_TOKEN and SEED_LEAD_ID written to .env.k6.local (gitignored); ` +
-      `token expires ${expiresAt ?? 'at an unknown time'}, keep DURATION inside that`
+      `token expires ${expiresAt == null ? 'at an unknown time' : safe(expiresAt)}, ` +
+      `keep DURATION inside that`
   );
   return { seedLeadId, poolSize: poolIds.length, runTag };
 }
@@ -221,7 +239,7 @@ export async function main({ env = process.env, repoRoot, fetchImpl = fetch, log
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const repoRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
   main({ repoRoot }).catch((err) => {
-    console.error(`[prepare] ${err.message}`);
+    console.error(`[prepare] ${stripControlChars(err.message)}`);
     process.exit(1);
   });
 }
