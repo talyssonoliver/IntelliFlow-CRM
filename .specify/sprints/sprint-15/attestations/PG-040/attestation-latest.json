@@ -17,10 +17,10 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(developer)/developers/apps/new/page.tsx": "84788a262cd1aaa3d1f69167a6d4108a8947b0535b67237ccfb2098d07ca7e57",
-    "apps/web/src/components/developer/app-creator.tsx": "4f2d3d4a550bf7944f84f9f63645795913fa5f174f360b9267c5c8cb713f65f2",
-    "apps/web/src/lib/developer/oauth-setup.ts": "9713d8c312f60ccf1c1c7fc1fc6679a278b43c10c682fcd5913c6fec09f93e45",
-    ".specify/sprints/sprint-15/attestations/PG-040/context_ack.json": "7bc13e0ba653281693a83c790ddd1158a3b0f3cf244f608f4cccce4ca5c9e372"
+    "apps/web/src/app/(developer)/developers/apps/new/page.tsx": "sha256:84788a262cd1aaa3d1f69167a6d4108a8947b0535b67237ccfb2098d07ca7e57",
+    "apps/web/src/components/developer/app-creator.tsx": "sha256:4f2d3d4a550bf7944f84f9f63645795913fa5f174f360b9267c5c8cb713f65f2",
+    "apps/web/src/lib/developer/oauth-setup.ts": "sha256:9713d8c312f60ccf1c1c7fc1fc6679a278b43c10c682fcd5913c6fec09f93e45",
+    ".specify/sprints/sprint-15/attestations/PG-040/context_ack.json": "sha256:7bc13e0ba653281693a83c790ddd1158a3b0f3cf244f608f4cccce4ca5c9e372"
   },
   "validation_results": [
     {

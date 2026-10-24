@@ -7,9 +7,9 @@
   "attestation_timestamp": "2026-02-27T21:15:00Z",
   "verdict": "COMPLETE",
   "artifact_hashes": {
-    "apps/web/src/lib/developer/oauth-setup.ts": "c89bd4acbe286a08380262aeb56b1e35ae4b87f21ee6042ca0c6da169345a9f3",
-    "apps/web/src/components/developer/app-creator.tsx": "4f2d3d4a550bf7944f84f9f63645795913fa5f174f360b9267c5c8cb713f65f2",
-    "apps/web/src/app/(developer)/developers/apps/new/page.tsx": "84788a262cd1aaa3d1f69167a6d4108a8947b0535b67237ccfb2098d07ca7e57"
+    "apps/web/src/lib/developer/oauth-setup.ts": "sha256:c89bd4acbe286a08380262aeb56b1e35ae4b87f21ee6042ca0c6da169345a9f3",
+    "apps/web/src/components/developer/app-creator.tsx": "sha256:4f2d3d4a550bf7944f84f9f63645795913fa5f174f360b9267c5c8cb713f65f2",
+    "apps/web/src/app/(developer)/developers/apps/new/page.tsx": "sha256:84788a262cd1aaa3d1f69167a6d4108a8947b0535b67237ccfb2098d07ca7e57"
   },
   "validation_results": [
     {
