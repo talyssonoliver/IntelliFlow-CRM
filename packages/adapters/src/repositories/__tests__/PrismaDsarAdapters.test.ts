@@ -100,6 +100,14 @@ describe('PrismaDsarRepository', () => {
     expect(prisma.dsarRequest.create).not.toHaveBeenCalled();
   });
 
+  it('counts only public submissions toward the caps, never requests staff logged (codex)', async () => {
+    const { prisma, repo } = setup([0, 0, 0]);
+    await repo.reserveSubmission(submission(), CAPS, NOW);
+    const wheres = prisma.dsarRequest.count.mock.calls.map((c: [{ where: object }]) => c[0].where);
+    expect(wheres).toHaveLength(3);
+    for (const where of wheres) expect(where).toMatchObject({ source: 'PUBLIC_FORM' });
+  });
+
   it('skips the IP cap when the IP is unknown', async () => {
     const { prisma, repo } = setup([0, 0]);
     await repo.reserveSubmission(submission({ ipHash: null }), CAPS, NOW);

@@ -102,9 +102,12 @@ export class PrismaDsarRepository implements DsarRepositoryPort {
         });
         if (recent) return { outcome: 'COOLDOWN' as const };
 
+        // The caps limit the public form only: requests staff logged for the person never
+        // stop them from asking themselves (codex).
         const perTenantEmail = await tx.dsarRequest.count({
           where: {
             tenantId: record.tenantId,
+            source: 'PUBLIC_FORM',
             subjectEmail: record.subjectEmail,
             createdAt: { gt: dayAgo },
           },
@@ -113,13 +116,22 @@ export class PrismaDsarRepository implements DsarRepositoryPort {
 
         if (record.ipHash) {
           const perIp = await tx.dsarRequest.count({
-            where: { tenantId: record.tenantId, ipHash: record.ipHash, createdAt: { gt: hourAgo } },
+            where: {
+              tenantId: record.tenantId,
+              source: 'PUBLIC_FORM',
+              ipHash: record.ipHash,
+              createdAt: { gt: hourAgo },
+            },
           });
           if (perIp >= caps.perIpPerHour) return { outcome: 'CAPPED' as const };
         }
 
         const global = await tx.dsarRequest.count({
-          where: { capEmailHash: record.capEmailHash, createdAt: { gt: dayAgo } },
+          where: {
+            source: 'PUBLIC_FORM',
+            capEmailHash: record.capEmailHash,
+            createdAt: { gt: dayAgo },
+          },
         });
         if (global >= caps.globalEmailPerDay) return { outcome: 'CAPPED' as const };
 
