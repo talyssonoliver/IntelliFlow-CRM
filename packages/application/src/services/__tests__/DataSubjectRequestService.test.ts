@@ -681,6 +681,25 @@ describe('staff requests (compliance R3; security S5)', () => {
       resolutionNote: 'Cancelled: Logged by mistake',
     });
     expect(notices.map((n) => n.kind)).toEqual(['ERASURE_CANCELLED']);
+    expect(repo.rows.get(id)!.clockBreached).toBe(false);
+  });
+
+  it('records a cancellation after the deadline as late (codex)', async () => {
+    await log();
+    const id = [...repo.rows.keys()][0];
+    const afterDeadline = new Date(repo.rows.get(id)!.slaDeadline!.getTime() + 86_400_000);
+    await service.cancelErasure({
+      tenantId: 'tenant-a',
+      id,
+      actorId: 'admin-2',
+      reason: 'Logged by mistake',
+      now: afterDeadline,
+    });
+    expect(repo.rows.get(id)).toMatchObject({
+      status: 'REJECTED',
+      clockBreached: true,
+      completedAt: afterDeadline,
+    });
   });
 });
 
@@ -739,6 +758,47 @@ describe('complete (D-AC-06/08)', () => {
       })
     );
     expect(notices.map((n) => n.kind)).toEqual(['COMPLETED']);
+  });
+
+  it('a committed verification is reported even when the firm lookup or export issue fails (codex)', async () => {
+    await submit({ type: 'ACCESS' });
+    const id = [...repo.rows.keys()][0];
+    const findFirm = vi.spyOn(repo, 'findFirm').mockRejectedValue(new Error('db down'));
+    await expect(
+      service.verify({ requestId: id, token: 'token-1', now: NOW })
+    ).resolves.toMatchObject({
+      outcome: 'VERIFIED',
+      exportEmailed: false,
+    });
+    expect(repo.rows.get(id)!.status).toBe('VERIFIED');
+    findFirm.mockRestore();
+
+    await submit({ type: 'ACCESS', email: 'bob@example.invalid' });
+    const second = [...repo.rows.keys()][1]!;
+    subjectData.buildExport.mockRejectedValueOnce(new Error('db down'));
+    await expect(
+      service.verify({ requestId: second, token: 'token-2', now: NOW })
+    ).resolves.toMatchObject({ outcome: 'VERIFIED', exportEmailed: false });
+  });
+
+  it('returns the committed erasure even when the firm lookup for the email fails (codex)', async () => {
+    const id = await verified('ERASURE');
+    const findFirm = vi.spyOn(repo, 'findFirm').mockRejectedValue(new Error('db down'));
+    await expect(
+      service.complete({
+        tenantId: 'tenant-a',
+        id,
+        actorId: 'admin-2',
+        note: 'Erased',
+        noHoldConfirmed: true,
+        now: NOW,
+      })
+    ).resolves.toEqual({
+      outcome: 'OK',
+      erasure: { counts: { leads: 1 }, checklist: { emailRecords: 2 } },
+    });
+    expect(notices.map((n) => n.kind)).toEqual(['COMPLETED']);
+    findFirm.mockRestore();
   });
 
   it('a double-run erasure is a CONFLICT (the adapter re-reads the request under the lock)', async () => {

@@ -271,19 +271,22 @@ export const privacyAdminRouter = createTRPCRouter({
       });
       assertOk(result);
       if (result.erasure) {
-        // Awaited: an erasure without its audit row must surface, not pass silently.
-        await audit(
-          ctx,
-          'DELETE',
-          input.id,
-          {
-            change: 'ERASED',
-            noHoldConfirmed: true,
-            counts: result.erasure.counts,
-            checklist: result.erasure.checklist,
-          },
-          true
-        );
+        const { counts, checklist } = result.erasure;
+        const metadata = { change: 'ERASED', noHoldConfirmed: true, counts, checklist };
+        // Awaited and retried once. The erasure has already committed, so a failure must not
+        // throw: that would lose the admin's cleanup checklist and a retry is a CONFLICT
+        // (codex). The counts go to the error log instead (no personal data).
+        await audit(ctx, 'DELETE', input.id, metadata, true)
+          .catch(() => audit(ctx, 'DELETE', input.id, metadata, true))
+          .catch((error: unknown) => {
+            console.error('[privacy] Erasure audit row not written', {
+              requestId: input.id,
+              tenantId: ctx.tenant.tenantId,
+              counts,
+              checklist,
+              error: error instanceof Error ? error.name : 'unknown',
+            });
+          });
         return { erasure: result.erasure };
       }
       await audit(ctx, 'UPDATE', input.id, {
@@ -338,6 +341,7 @@ export const privacyAdminRouter = createTRPCRouter({
         id: input.id,
         actorId: ctx.tenant.userId,
         reason: input.reason,
+        now: new Date(),
       });
       assertOk(result);
       await audit(ctx, 'UPDATE', input.id, { change: 'ERASURE_CANCELLED' });

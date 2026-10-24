@@ -14,6 +14,7 @@
 
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
+import { normalizeSubjectEmail } from '@intelliflow/domain';
 import { getEnrichmentAdapter, type ContactSeed } from './shared/enrichment-adapter.js';
 import {
   eligibleSubjectEmail,
@@ -86,6 +87,11 @@ export async function enrichContact(input: EnrichContactInput): Promise<EnrichCo
     tenantId,
   });
   if (email === null) return { success: false, reason: SUBJECT_NOT_PROCESSABLE };
+  // The seed is what reaches the provider: it must be the identity just checked, not an older
+  // address the contact has since moved from (codex).
+  if (normalizeSubjectEmail(seed.email) !== normalizeSubjectEmail(email)) {
+    return { success: false, reason: SUBJECT_NOT_PROCESSABLE };
+  }
 
   const adapter = getEnrichmentAdapter();
   const enrichment = await adapter.enrichContact(seed, tenantId);

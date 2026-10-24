@@ -834,6 +834,7 @@ async function persistEntityActivity(
   }
 }
 
+/** Writes the insight; returns its id, or null when it was a duplicate or its entity is gone. */
 async function persistInsightRecord(
   prisma: any,
   insight: GeneratedInsight,
@@ -842,7 +843,7 @@ async function persistInsightRecord(
   validatedData: InsightJobData,
   now: Date,
   job: Job<InsightJobData>
-): Promise<boolean> {
+): Promise<string | null> {
   const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
 
   const existingInsight = await prisma.aIInsight.findFirst({
@@ -853,7 +854,7 @@ async function persistInsightRecord(
       status: { in: ['NEW', 'VIEWED', 'ACTED_ON'] },
     },
   });
-  if (existingInsight) return false;
+  if (existingInsight) return null;
 
   if (insight.entityId && insight.entityType) {
     const exists = await entityExists(prisma, insight.entityType, insight.entityId, tenantId);
@@ -862,7 +863,7 @@ async function persistInsightRecord(
         { jobId: job.id, entityType: insight.entityType, entityId: insight.entityId },
         'Skipping insight — referenced entity no longer exists'
       );
-      return false;
+      return null;
     }
   }
 
@@ -891,18 +892,24 @@ async function persistInsightRecord(
     },
   });
 
-  // H4: emit AI_AGENT audit entry — non-fatal (warn and continue on failure)
+  return created.id as string;
+}
+
+/**
+ * H4: the AI_AGENT audit entry for a written insight — non-fatal. Called after the locked
+ * write commits: the audit adapter takes its own connection, which a transaction still
+ * holding one could starve on a small pool (codex).
+ */
+async function auditInsightCreated(tenantId: string, insightId: string): Promise<void> {
   await logAIAgentAction({
     tenantId,
     agentName: 'insight-generation-job',
     resourceType: 'AIInsight',
-    resourceId: created.id as string,
+    resourceId: insightId,
     action: 'CREATE',
   }).catch((err: unknown) => {
-    logger.warn({ insightId: created.id, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
+    logger.warn({ insightId, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
   });
-
-  return true;
 }
 
 /**
@@ -1189,10 +1196,27 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       let insightsCreated = 0;
 
       for (const insight of insights) {
-        const created = await persistInsightForSubject(prisma, insight, tenantId, eligible, (db) =>
-          persistInsightRecord(db, insight, tenantId, userId, validatedData, now, job)
+        const record = { id: null as string | null };
+        const created = await persistInsightForSubject(
+          prisma,
+          insight,
+          tenantId,
+          eligible,
+          async (db) => {
+            record.id = await persistInsightRecord(
+              db,
+              insight,
+              tenantId,
+              userId,
+              validatedData,
+              now,
+              job
+            );
+            return record.id !== null;
+          }
         );
-        if (!created) continue;
+        if (!created || record.id === null) continue;
+        await auditInsightCreated(tenantId, record.id);
         insightsCreated++;
         // The activity, notification and task repeat the insight text, so they take the
         // person's locks and re-check too: an erasure that committed after the record write

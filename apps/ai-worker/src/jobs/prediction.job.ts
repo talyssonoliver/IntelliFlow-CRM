@@ -33,7 +33,7 @@ import { hallucinationChecker } from '../monitoring/hallucination-checker';
 // Fix #20: conversation record audit logging
 import { logConversationRecord } from '../utils/conversation-record-logger';
 // Fix #15: human review threshold check
-import { requiresHumanReview } from '@intelliflow/domain';
+import { normalizeSubjectEmail, requiresHumanReview } from '@intelliflow/domain';
 // H4: AI_AGENT audit entries
 import { logAIAgentAction } from '../utils/audit-log';
 // H9/H10: circuit breaker + fallbacks
@@ -144,7 +144,15 @@ export async function processPredictionJob(
       // PG-203 #1002 (owner ruling): an erased or restricted person is never sent to the model.
       const subject = await predictionSubject(entityType, entityId, tenantId);
       const subjectEmail = await processableSubjectEmail(subject, tenantId);
-      if (subjectEmail === null) {
+      // The queued context goes to the model as it is: it must name the person just checked,
+      // not an address they have since moved from (codex).
+      const queuedEmail = typeof context?.['email'] === 'string' ? context['email'] : null;
+      const staleContext =
+        subjectEmail !== null &&
+        subject !== null &&
+        queuedEmail !== null &&
+        normalizeSubjectEmail(queuedEmail) !== normalizeSubjectEmail(subjectEmail);
+      if (subjectEmail === null || staleContext) {
         logger.info(
           { jobId: job.id, tenantId, entityType, entityId, predictionType },
           'AI prediction job skipped — erased or restricted data subject'

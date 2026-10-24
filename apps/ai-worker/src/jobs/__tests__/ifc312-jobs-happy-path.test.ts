@@ -126,7 +126,7 @@ describe('IFC-312 job happy paths', () => {
       prismaContactSettingMock.findUnique.mockResolvedValue({ aiEnrichment: true });
       prismaContactFindUniqueMock.mockResolvedValue({
         id: 'c-1',
-        email: 'jane@acme.com',
+        email: 'subject@example.invalid',
         firstName: 'Jane',
         lastName: null,
         company: null,

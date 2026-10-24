@@ -1327,3 +1327,29 @@ waivers:
     author: PG-203 lane
     date: '2026-10-24'
     expires: '2026-11-23'
+  - fingerprint: 13391d7a0e546774a297e520d6767850855e9d6d7c6243af0fa786085c347449
+    reason: >-
+      Narrow timing case: free text added between verification and download is withheld from an
+      auto-completed access export with the "reasons emailed" note. Art 15 is answered as of the
+      request; not a security, data-loss or regression finding (codex spiral rule). Tracked in
+      #1020 (serve the verification snapshot, or reword the note for later data).
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 02b088e4de2cb2fea357b3b244bfc430f7d624ce34ba1d590045551dc3070576
+    reason: >-
+      Same gap as #1010 (already filed and waived): AI-created tasks carry no lead or contact id,
+      so erasure cannot find or count them. New tasks for a restricted or erased person are not
+      created (Q21); tagging tasks with their person needs a schema change, tracked in #1010.
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 071999c8ad8086fb913bb0ad820e0c26865dcac94e8498d4ec8b9aef16e4b5be
+    reason: >-
+      Recall, not privacy: the Q22 filter runs after each source's 100-row query, so heavy
+      restricted matches can crowd out eligible ones. Fail-safe (no restricted data reaches a
+      prompt); not a security, data-loss or regression finding (codex spiral rule). Tracked in
+      #1021 (push the exclusion into the source queries).
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'

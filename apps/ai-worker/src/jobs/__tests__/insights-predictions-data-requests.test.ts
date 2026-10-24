@@ -151,6 +151,7 @@ import { processInsightJob } from '../insight-generation.job';
 import { generateContactInsight } from '../../contact-insight.chain';
 import { processEntityInsightJob } from '../entity-insight.job';
 import { processEnrichmentJob } from '../enrichment.job';
+import { enrichContact } from '../../contact-enrichment.chain';
 import { processTagSuggestionJob } from '../tag-suggestion.job';
 import { processReplyDraftJob } from '../reply-draft.job';
 
@@ -289,6 +290,19 @@ describe('prediction job', () => {
     });
     expect(mockPredictChurnRisk).toHaveBeenCalledOnce();
     expect(mockNotificationCreate).not.toHaveBeenCalled();
+  });
+
+  it("never sends a queued context that names an address other than the person's current one (codex)", async () => {
+    // Queued for Ada's old address; the lead has since moved to Bob's (unrestricted).
+    db.leads.set(LEAD, BOB);
+    const queued = churnJob('lead', LEAD);
+    queued.data.context = { userId: 'user-1', email: ' Ada@Example.invalid ', name: 'Ada' };
+
+    await expect(processPredictionJob(queued)).resolves.toMatchObject({
+      skipped: true,
+      reason: 'data-subject-request',
+    });
+    expect(mockPredictChurnRisk).not.toHaveBeenCalled();
   });
 
   it('applies the same guard to a contact', async () => {
@@ -431,6 +445,35 @@ describe('insight generation job', () => {
     expect(mockLeadAIInsightUpsert).toHaveBeenCalledOnce();
     expect(mockLeadAIInsightUpsert.mock.calls[0]![0].where.leadId_tenantId.leadId).toBe(LEAD);
     expect(mockContactAIInsightUpsert).not.toHaveBeenCalled();
+  });
+
+  it('writes the audit entry after the locked write commits, not inside it (codex: pool)', async () => {
+    const { prisma } = (await import('@intelliflow/db')) as any;
+    const { logAIAgentAction } = (await import('../../utils/audit-log')) as any;
+    let open = 0;
+    prisma.$transaction.mockImplementation(async (fn: (tx: unknown) => Promise<unknown>) => {
+      open += 1;
+      try {
+        return await fn(prisma);
+      } finally {
+        open -= 1;
+      }
+    });
+    const openAtAudit: number[] = [];
+    logAIAgentAction.mockImplementation(async () => {
+      openAtAudit.push(open);
+    });
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [about('lead', LEAD)],
+      source: 'llm',
+    });
+    mockAIInsightCreate.mockResolvedValue({ id: 'ins-1' });
+
+    await expect(processInsightJob(insightJob())).resolves.toMatchObject({ insightsCreated: 1 });
+    expect(logAIAgentAction).toHaveBeenCalledWith(
+      expect.objectContaining({ resourceType: 'AIInsight', resourceId: 'ins-1' })
+    );
+    expect(openAtAudit[0]).toBe(0);
   });
 
   it('writes nothing about a kept person restricted while the model ran', async () => {
@@ -589,6 +632,22 @@ describe('Q22: contact enrichment', () => {
     await expect(processEnrichmentJob(job())).resolves.toEqual({
       enrichment: { success: false, reason: 'data-subject-request' },
     });
+    expect(mockContactUpdate).not.toHaveBeenCalled();
+  });
+
+  it('never sends a seed whose address is not the contact checked (codex)', async () => {
+    // The contact moved from Ada's address to Bob's; Ada's address is restricted. A seed still
+    // carrying Ada's address must not reach the provider, nor fill Bob's record.
+    db.contacts.set(CONTACT, BOB);
+    db.restricted.add(ADA);
+    await expect(
+      enrichContact({
+        contactId: CONTACT,
+        tenantId: TENANT,
+        seed: { email: ' Ada@Example.invalid ', firstName: 'Ada', lastName: 'Lovelace' },
+      })
+    ).resolves.toEqual({ success: false, reason: 'data-subject-request' });
+    expect(mockEnrich).not.toHaveBeenCalled();
     expect(mockContactUpdate).not.toHaveBeenCalled();
   });
 

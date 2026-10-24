@@ -278,12 +278,35 @@ describe('complete', () => {
     );
   });
 
-  it('fails the call when the erasure audit row cannot be written', async () => {
-    service.complete.mockResolvedValue({ outcome: 'OK', erasure: { counts: {}, checklist: {} } });
-    auditLog.mockRejectedValue(new Error('audit store down'));
+  it('retries a failed erasure audit row once', async () => {
+    const erasure = { counts: { leads: 1 }, checklist: { tickets: 2 } };
+    service.complete.mockResolvedValue({ outcome: 'OK', erasure });
+    auditLog.mockRejectedValueOnce(new Error('audit store down')).mockResolvedValue('audit-1');
     await expect(
       adminCaller().complete({ id: ID, note: 'No hold applies', noHoldConfirmed: true })
-    ).rejects.toThrow();
+    ).resolves.toEqual({ erasure });
+    expect(auditLog).toHaveBeenCalledTimes(2);
+  });
+
+  it('still returns the committed erasure and its checklist when the audit row cannot be written (codex)', async () => {
+    // The erasure has already committed: throwing would lose the admin's cleanup checklist,
+    // and a retry is a CONFLICT. The counts go to the error log instead (no personal data).
+    const erasure = { counts: { leads: 1 }, checklist: { tickets: 2 } };
+    service.complete.mockResolvedValue({ outcome: 'OK', erasure });
+    auditLog.mockRejectedValue(new Error('audit store down'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await expect(
+      adminCaller().complete({ id: ID, note: 'No hold applies', noHoldConfirmed: true })
+    ).resolves.toEqual({ erasure });
+    expect(auditLog).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalledWith('[privacy] Erasure audit row not written', {
+      requestId: ID,
+      tenantId: TENANT,
+      counts: { leads: 1 },
+      checklist: { tickets: 2 },
+      error: 'Error',
+    });
+    error.mockRestore();
   });
 
   it('completes other types and records whether marketing was stopped', async () => {

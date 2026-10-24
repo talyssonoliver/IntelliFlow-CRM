@@ -187,7 +187,9 @@ export class DataSubjectRequestService {
     );
     if (!verified) return { outcome: 'INVALID' };
 
-    const firm = await this.deps.repo.findFirm(record.tenantId);
+    // Everything below runs after the verification committed: a failed read or send must not
+    // throw, because the link is now used and the person cannot verify again (codex).
+    const firm = await this.deps.repo.findFirm(record.tenantId).catch(() => null);
     const firmName = firm?.name ?? 'the firm';
     this.dispatch({
       kind: 'VERIFIED',
@@ -206,7 +208,8 @@ export class DataSubjectRequestService {
 
     let exportEmailed = false;
     if (EXPORT_TYPES.has(record.type) && firm?.handle) {
-      exportEmailed = await this.issueExport(verified, firm, input.now);
+      // Not issued: the admin sees an open access request and sends it with exportData.
+      exportEmailed = await this.issueExport(verified, firm, input.now).catch(() => false);
     }
     return { outcome: 'VERIFIED', type: record.type, dueDate, exportEmailed };
   }
@@ -347,7 +350,7 @@ export class DataSubjectRequestService {
       { onlyIfNotExtended: true }
     );
     if (!updated) return { outcome: 'CONFLICT' };
-    const firm = await this.deps.repo.findFirm(input.tenantId);
+    const firm = await this.deps.repo.findFirm(input.tenantId).catch(() => null);
     this.dispatch({
       kind: 'EXTENDED',
       to: record.subjectEmail,
@@ -462,7 +465,7 @@ export class DataSubjectRequestService {
       exportExpiresAt: null,
     });
     if (!done) return { outcome: 'CONFLICT' };
-    const firm = await this.deps.repo.findFirm(input.tenantId);
+    const firm = await this.deps.repo.findFirm(input.tenantId).catch(() => null);
     const firmName = firm?.name ?? 'the firm';
     let restrictionKept = false;
     if (record.type === 'RESTRICTION') {
@@ -500,7 +503,9 @@ export class DataSubjectRequestService {
     id: string;
     actorId: string;
     reason: string;
+    now?: Date;
   }): Promise<Ok | NotFound | Conflict | Invalid> {
+    const now = input.now ?? new Date();
     const record = await this.deps.repo.findForTenant(input.tenantId, input.id);
     if (!record) return { outcome: 'NOT_FOUND' };
     if (record.type !== 'ERASURE') return { outcome: 'INVALID', field: 'type' };
@@ -509,10 +514,12 @@ export class DataSubjectRequestService {
       status: 'REJECTED',
       resolvedById: input.actorId,
       resolutionNote: `Cancelled: ${input.reason}`,
-      completedAt: new Date(),
+      completedAt: now,
+      // A cancellation after the deadline answers the request late, like a rejection (codex).
+      clockBreached: rejectionIsLate(record, now),
     });
     if (!done) return { outcome: 'CONFLICT' };
-    const firm = await this.deps.repo.findFirm(input.tenantId);
+    const firm = await this.deps.repo.findFirm(input.tenantId).catch(() => null);
     this.dispatch({
       kind: 'ERASURE_CANCELLED',
       to: record.subjectEmail,
@@ -716,7 +723,9 @@ export class DataSubjectRequestService {
     marketingStopped: boolean,
     withheld: ReadonlyArray<{ category: DsarWithheldCategory; count: number; reason: string }> = []
   ): Promise<void> {
-    const firm = await this.deps.repo.findFirm(record.tenantId);
+    // Runs after the request has committed: a failed lookup must not throw, or the caller loses
+    // the result it can no longer get again (an erasure's checklist; a retry is a CONFLICT).
+    const firm = await this.deps.repo.findFirm(record.tenantId).catch(() => null);
     this.dispatch({
       kind: 'COMPLETED',
       to: record.subjectEmail,
