@@ -10,6 +10,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { getRelativeSchemaPath, SCHEMA_FILES } from '../schema-paths';
+import { prefixArtifactHash } from '../artifact-hash';
 import type {
   ArtifactVerification,
   ValidationResult,
@@ -191,7 +192,7 @@ export function generateAttestation(
   const artifactHashes: Record<string, string> = {};
   for (const artifact of findings.artifacts) {
     if (artifact.sha256 && artifact.status === 'found') {
-      artifactHashes[artifact.path] = artifact.sha256;
+      artifactHashes[artifact.path] = prefixArtifactHash(artifact.sha256);
     }
   }
 

@@ -11,6 +11,7 @@
 import { createHash } from 'node:crypto';
 import { closeSync, fstatSync, openSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { formatArtifactHash, isArtifactHash } from './artifact-hash.js';
 
 const SHA256_RE = /^[a-f0-9]{64}$/;
 
@@ -56,10 +57,10 @@ export function fixArtifactHashes(
   if (!hashes) return false;
   let modified = false;
   for (const [path, hash] of Object.entries(hashes)) {
-    if (isSha256(hash)) continue;
+    if (isArtifactHash(hash)) continue;
     const real = hashFile(path);
     if (real) {
-      hashes[path] = real;
+      hashes[path] = formatArtifactHash(real);
       changes.push(`artifact_hashes[${path}]: replaced "${String(hash)}" with the file's hash`);
     } else {
       delete hashes[path];
