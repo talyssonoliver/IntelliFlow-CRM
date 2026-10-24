@@ -54,6 +54,7 @@ describe('alert rules config', () => {
       'ifc032-workflow-error-rate',
       'ifc032-workflow-p95-latency',
       'ifc032-api-error-rate',
+      'ifc074-error-spans-direct',
     ]);
   });
 
@@ -62,8 +63,9 @@ describe('alert rules config', () => {
   // check if it ever goes quiet. The other four watch traffic that does not
   // exist yet (workflow.lead.route has no callers; #802 hasn't promoted the
   // api SERVER spans) and opt out with requireSeries:false so the script can
-  // report them without failing the run.
-  it('the four traffic-less rules opt out of the live-series requirement; the safety check does not', () => {
+  // report them without failing the run. ifc074-error-spans-direct watches
+  // ai-worker error spans, which exist today, so it keeps the check too.
+  it('the four traffic-less rules opt out of the live-series requirement; the others do not', () => {
     const byUid = Object.fromEntries(
       CONFIG.rules.map((r: { uid: string; requireSeries?: boolean }) => [r.uid, r.requireSeries])
     );
@@ -73,7 +75,27 @@ describe('alert rules config', () => {
       'ifc032-workflow-error-rate': false,
       'ifc032-workflow-p95-latency': false,
       'ifc032-api-error-rate': false,
+      'ifc074-error-spans-direct': undefined,
     });
+  });
+
+  // IFC-074: Asserts' ErrorRatioBreach fires 180-360 s after the first error
+  // (recording rule + 60 s look-back). This rule exists to detect in under
+  // 120 s, so pin what that depends on: raw span metrics, no offset, a short
+  // window, no pending period, the stack's minimum 60 s interval.
+  it('the fast error rule reads span metrics directly with no delay built in', () => {
+    const entry = CONFIG.rules.find((r: { uid: string }) => r.uid === 'ifc074-error-spans-direct');
+    expect(entry.expr).toMatch(/^sum by \(service\) \(increase\(traces_spanmetrics_calls_total\{/);
+    expect(entry.expr).toContain('status_code="STATUS_CODE_ERROR"');
+    expect(entry.expr).toContain('[2m]');
+    expect(entry.expr).not.toMatch(/asserts:|offset/);
+    expect(entry).toMatchObject({ operator: 'gt', threshold: 0, for: '0s', noData: 'OK' });
+    expect(CONFIG.group.intervalSeconds).toBe(60);
+
+    const rule = buildRule(entry, CONFIG);
+    expect(rule.for).toBe('0s');
+    expect(rule.data[0].relativeTimeRange.to).toBe(0);
+    expect(rule.data[0].model.instant).toBe(true);
   });
 
   it('reports missing fields, bad operators, bad thresholds and duplicates', () => {
@@ -144,11 +166,11 @@ describe('run', () => {
   it('creates missing rules, updates existing ones, sets the group interval and removes the test rule', async () => {
     const g = fakeGrafana({ existing: ['ifc032-api-error-rate'], folder: 404 });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(5);
+    expect(result.applied).toBe(6);
     const writes = g.calls.filter((c) => c.method !== 'GET').map((c) => `${c.method} ${c.path}`);
     expect(writes).toContain('POST /api/folders');
     expect(writes).toContain('PUT /api/v1/provisioning/alert-rules/ifc032-api-error-rate');
-    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(4);
+    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(5);
     expect(writes).toContain(
       'PUT /api/v1/provisioning/folder/intelliflow-prod/rule-groups/intelliflow-prod'
     );
@@ -158,7 +180,7 @@ describe('run', () => {
   it('with --send-test also applies the always-firing delivery rule and keeps it', async () => {
     const g = fakeGrafana();
     const result = await run({ env, argv: ['--send-test'], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(6);
+    expect(result.applied).toBe(7);
     const posted = g.calls
       .filter((c) => c.method === 'POST')
       .map((c) => (c.body as { uid?: string }).uid);
@@ -167,20 +189,20 @@ describe('run', () => {
   });
 
   it('fails loudly when a rule watches a metric with no live series', async () => {
-    // ifc032-telemetry-silent is the one rule that still requires series (#812);
-    // the other four opted out with requireSeries:false, so forcing 0 series on
-    // one of THOSE (e.g. latency) must NOT fail the run — only telemetry-silent's
-    // selector (the only one matching "ai-worker") can trigger this failure.
+    // ifc032-telemetry-silent and ifc074-error-spans-direct still require series
+    // (#812); the other four opted out with requireSeries:false, so forcing 0
+    // series on one of THOSE (e.g. latency) must NOT fail the run — only the two
+    // selectors matching "ai-worker" can trigger this failure.
     const g = fakeGrafana({ series: (q) => (q.includes('ai-worker') ? 0 : 2) });
     await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
-      'match no live series (check metric names): ifc032-telemetry-silent'
+      'match no live series (check metric names): ifc032-telemetry-silent, ifc074-error-spans-direct'
     );
   });
 
   it('does not fail the run when a requireSeries:false rule has no live series (#812)', async () => {
     const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(5);
+    expect(result.applied).toBe(6);
     expect(result.empty).toEqual([]);
   });
 
