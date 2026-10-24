@@ -171,7 +171,7 @@ CREATE TABLE legal_holds (
   released_by UUID REFERENCES users(id)
 );
 
--- DSAR requests table
+-- DSAR requests table (superseded 2026-10-24: never applied; see the PG-203 addendum)
 CREATE TABLE dsar_requests (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   tenant_id UUID NOT NULL REFERENCES tenants(id),
@@ -360,6 +360,10 @@ export class PlaceLegalHoldUseCase {
 
 ### DSAR Workflow
 
+> **Superseded (2026-10-24, PG-203).** The `dsar_requests` table above and the
+> `ProcessDSARUseCase` below were never applied or built. See the addendum at
+> the end of this ADR for what exists.
+
 Automate Data Subject Access Requests:
 
 ```typescript
@@ -480,7 +484,8 @@ export function decryptField(ciphertext: string): string {
 - [x] Retention policies defined per classification tier
 - [x] Scheduled job deleting expired data
 - [x] Legal hold prevents deletion
-- [x] DSAR workflow functional
+- [x] DSAR workflow functional _(superseded 2026-10-24: this was never true. See
+      the PG-203 addendum below.)_
 - [x] Field-level encryption for privileged data
 - [x] Data residency metadata tracked
 - [x] Audit log for all governance actions
@@ -548,3 +553,161 @@ If built-in governance proves insufficient:
 - [Data Classification Best Practices](https://www.nist.gov/publications/guide-protecting-confidentiality-personally-identifiable-information-pii)
 - [Legal Hold Requirements](https://www.aba.com/tools-resources/legal-hold-best-practices)
 - [DSAR Response Templates](https://gdpr.eu/data-subject-access-request/)
+
+## Addendum (2026-10-24, PG-203): data subject requests
+
+This addendum corrects a false claim in this ADR and records the DSAR design
+that now exists. Spec:
+`.specify/sprints/sprint-18/specifications/PG-203-spec.md` (Addendum A). Owner
+rulings Q16 to Q22:
+`.specify/sprints/sprint-18/context/PG-203/PG-203-owner-ruling.md`.
+
+### Correction: the DSAR workflow did not exist
+
+The original decision and validation criteria said:
+
+> "...legal hold flags to prevent deletion, and automated DSAR workflows built
+> on tRPC."
+>
+> "- [x] DSAR workflow functional"
+
+**Superseded.** Exploration for PG-203 found this was never true:
+
+- The `dsar_requests` and `legal_holds` tables, and `anonymize_record`, existed
+  only in an unapplied Supabase SQL file. No Prisma migration and no production
+  snapshot contained them.
+- `ProcessDSARUseCase` (`packages/application/src/usecases/dsar.usecase.ts`) and
+  the legal-hold use case were never written. The old `dsar-workflow.ts` called
+  Prisma accessors that do not exist, used the nil UUID as the subject, and let
+  a public GET trigger an erasure. There were no `/dsar` pages and no SLA job.
+- No legal-hold registry exists anywhere. An erasure therefore records the
+  admin's confirmation that no hold or retention duty applies, instead of
+  checking a registry.
+
+The old SQL and use case above are kept as history only. The design below
+replaces them. The old workflow file and its tests are deleted.
+
+### Design
+
+Each firm (tenant) is the controller. Aurora is the processor.
+
+**Tables** (migration `20261022120000_dsar_requests`, Class A: new tables, enums
+and triggers; no existing column is altered):
+
+- `dsar_requests`: one row per request. The statuses are `PENDING_VERIFICATION`,
+  `VERIFIED`, `COMPLETED` and `REJECTED`. The types are `ACCESS`,
+  `RECTIFICATION`, `ERASURE`, `RESTRICTION`, `PORTABILITY` and `OBJECTION`.
+  Tokens are stored only as hashes. Named CHECKs enforce the hash shapes, the
+  staff identity note and the export token and expiry pair.
+- `processing_restrictions`: one active row per person per firm (a partial
+  unique index on `(tenantId, subjectEmail) WHERE liftedAt IS NULL`). It records
+  whether the restriction also blocks marketing (`blocksMarketing`) and the
+  requests that caused it (`dsarRequestIds`).
+- Both tables have RLS (`USING` and `WITH CHECK` on the tenant setting) and a
+  tenant FK with cascade. User FKs are `ON DELETE SET NULL`.
+
+**Subject.** The person is `(tenantId, normalised email)`. The normalisation is
+trim and lowercase, with no `+tag` folding. A user id is never the subject. A
+restriction is keyed on the same normalised email, per firm. The cross-firm
+email-bombing cap uses a separate hash (`capEmailHash`) that does strip `+tag`.
+
+**Flow.** A public request goes through `/dsar/<bookingHandle>` (see ADR-083).
+The person confirms from an emailed link whose token is in the URL fragment.
+Staff can also log a request for a person, with a recorded identity check. The
+deadline is one calendar month, from verification (public) or from the date
+received (staff). An admin may extend it by one or two months. A job emails firm
+admins before the deadline. After verification, `ACCESS` and `PORTABILITY` email
+an expiring export link. They complete at once only when nothing is withheld.
+Otherwise the firm completes them after reviewing what was withheld. `ERASURE`,
+`RECTIFICATION`, `RESTRICTION` and `OBJECTION` wait for an ADMIN on
+`/settings/privacy-requests`. A `RESTRICTION` applies from verification.
+
+### Erasure model (owner Q19: CRM core automatic, communications as a checklist)
+
+Erasure runs in one transaction, scoped to the tenant and the exact email. It
+first re-reads the request `FOR UPDATE` and runs only if it is still `VERIFIED`,
+so a double click or two admins cannot run it twice. It anonymises in place:
+
+- **Leads and contacts.** The email becomes `erased-<row id>@erased.invalid`
+  (unique per row). Profile fields are cleared, tags are emptied and the
+  embedding is cleared. Contact names become `Erased`.
+- **Notes and activities.** Note content is replaced, and note embeddings and
+  search vectors are cleared. Activity text is replaced.
+- **Booking fields.** The booker name, email, answers and consent fields on
+  appointments are cleared. The slot stays.
+- **Derived AI data** (scores and lead, contact and entity insights) is deleted.
+- **Lead file rows** lose their name. The storage locator stays so the stored
+  object can be found and deleted by hand.
+- **Not automated, shown as a counted checklist.** Email records, tickets,
+  chats, feedback, notifications, auto-response and reply drafts, calendar
+  events, experiment assignments and stored lead files.
+- **Audit logs** keep counts and the admin id, never erased values. The audit
+  row is awaited.
+
+A staff-logged erasure needs more care. The person is warned by email first, and
+the run needs a second ADMIN, or a 24 hour pause when the firm has one ADMIN.
+
+### Database triggers
+
+All are in the migration and need no application cooperation:
+
+- **Erasure guard.** `BEFORE INSERT OR UPDATE` triggers on `ai_scores`,
+  `lead_ai_insights`, `contact_ai_insights` and `ai_insights` refuse a write for
+  an erased lead or contact. The check takes `FOR KEY SHARE` on the subject row,
+  so it waits for an erasure in flight and then sees the erased address.
+- **Address-follow.** `AFTER UPDATE OF email` triggers on `leads` and `contacts`
+  copy an active restriction to the record's new address, so an edit or a
+  contact merge cannot escape it. The old address stays restricted.
+- **Keep-erased.** `BEFORE UPDATE OF email` triggers on `leads` and `contacts`
+  refuse to change the address of a row that holds its erased address. A stale
+  snapshot saved after an erasure therefore cannot write the person back.
+
+### Lock order
+
+Every write about a person takes locks in the same order:
+
+1. the lead or contact row (`FOR UPDATE`);
+2. the person's address lock, `dsar_subject_lock(tenant, email)`, a transaction
+   advisory lock on the tenant and normalised email;
+3. then the restriction read.
+
+Writing a restriction takes the address lock first. The address-follow trigger
+takes the locks of both addresses in a fixed order, so two carries in opposite
+directions cannot deadlock. A rare deadlock between an insight update and an
+erasure is resolved by Postgres aborting one transaction. Both are safe to
+retry. The public request caps take a per-tenant advisory lock, then a
+per-email-hash one.
+
+### AI paths (owner Q18, Q21, Q22)
+
+A restriction or an erasure stops every AI path that sends a person's data to a
+model. Each path checks the person before the model call. It writes its result
+only under the locks above, after re-checking (`writeSubjectIfStillEligible` in
+`apps/ai-worker/src/lib/data-request-guard.ts`). An erasure or restriction that
+lands while the model runs therefore wins. The lead and contact detail pages
+show a "Processing restricted" banner. Plan Addendum B lists every path.
+
+### Delivery
+
+The migration is Class A. It is applied through the gated
+`prisma migrate deploy` workflow before the API that reads the tables is
+promoted. The SLA job (`dsar-sla-scheduler.ts`) is its own module. It is
+disabled under test, on serverless runtimes, and with `DSAR_SLA_INTERVAL_MS=0`.
+It takes `pg_try_advisory_xact_lock`, so one replica runs each tick.
+
+### Out of scope (tracked)
+
+- Outreach and marketing suppression keyed on `blocksMarketing`: IFC-315. A
+  marketing objection only records the admin's manual confirmation.
+- Automated erasure of communications and stored files, a CSV export with
+  Article 20(2) direct transfer, and Article 19 recipient notification: IFC-316,
+  IFC-317 and IFC-318.
+- A legal-hold registry: none exists, so an admin confirms instead (#1019).
+- #1007: a rejected restriction can survive on an address changed during the
+  rejection (it fails safe: one extra restriction).
+- #1009: keep the erasure cleanup checklist on completed requests.
+- #1010: AI-created tasks keep insight text about an erased person.
+- #1014: a failed rejection or completion email is not retried or shown to the
+  admin.
+- #1015: conversations and messages carry no person key, so RAG, export and
+  erasure cannot reach them.

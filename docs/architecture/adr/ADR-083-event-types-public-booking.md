@@ -218,3 +218,39 @@ Chosen: option 3 with the concurrency and abuse-counter choices above.
   - a gh issue for the PUBLIC tier's leftmost-XFF keying and Redis pass-through;
   - a gh issue for the placeholder ICS recipients;
   - a gh issue for the playbook's "AI defaults false" rule.
+
+## Data subject requests
+
+PG-203 also ships data subject requests (DSAR). Design and erasure model: the
+PG-203 addendum in ADR-007.
+
+- **The booking handle is reused.** The public page is `/dsar/<bookingHandle>`
+  (owner Q16). The tenant slug is never exposed. A firm without a handle cannot
+  receive public requests, and logs them in the app instead.
+- **Two links lead to it.**
+  - The booking page footer has a "Your personal data" link
+    (`BookingContent.tsx`).
+  - The booker's confirmation email carries the same URL (`dataRequestUrl` in
+    `booking-email.ts`, built in `public-booking.router.ts` from `APP_URL`). If
+    `APP_URL` is missing in production, the link is left out and logged. The
+    confirmation itself is still sent.
+- **Same stance as public booking.**
+  - The procedures (`privacy.getFirm`, `submit`, `verify`, `downloadExport`) are
+    public-only and live in `privacy-public.router.ts`. They reuse the booking
+    per-IP limiters and `ipHashOf` from `booking-abuse.ts`, which run before any
+    database read.
+  - An unknown handle and a firm with no handle return the same NOT_FOUND.
+  - `submit` gives one response whether or not the email matches CRM data. A
+    filled honeypot gets that response with no database work.
+  - Caps are counted in the database, not only in process: 3 per email per firm
+    per day, 10 per IP hash per hour, and 3 per email across all firms per day.
+    A cap hit returns TOO_MANY_REQUESTS.
+  - Tokens are salted HMACs under a key derived from `BOOKING_IP_SALT`, and
+    production fails closed without the salt.
+- **Tokens stay out of server-visible URLs.** Links carry the token in the URL
+  fragment. The pages send it in a POST body. `/dsar/*` is served with
+  `Referrer-Policy: no-referrer` and `Cache-Control: no-store`
+  (`next.config.js`), and `robots` disallows `/dsar/`.
+- **Booker data is covered.** The export includes the appointments booked with
+  the email, with the booker fields and consent time and version. Erasure clears
+  those fields and keeps the slot.

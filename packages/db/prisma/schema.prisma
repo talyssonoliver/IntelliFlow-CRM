@@ -2562,7 +2562,24 @@ model BookingAttempt {
 // Replaces the never-applied raw-SQL data_subject_requests design (ADR-007 addendum).
 // SQL-only (documented here): named CHECKs, hash CHECKs, the createdById/resolvedById/
 // liftedById -> users FKs (ON DELETE SET NULL), the partial unique index on active
-// restrictions and the RLS policies.
+// restrictions and the RLS policies. Do not drop in a diff. In full (all in
+// migrations/20261022120000_dsar_requests):
+//   - CHECKs on dsar_requests: dsar_requests_source_check, dsar_requests_capEmailHash_check,
+//     dsar_requests_ipHash_check, dsar_requests_details_check, dsar_requests_objectionScope_check,
+//     dsar_requests_identityMethod_check, dsar_requests_staff_identity_check,
+//     dsar_requests_exportDownloads_check
+//   - FKs to users, ON DELETE SET NULL: dsar_requests_createdById_fkey, dsar_requests_resolvedById_fkey,
+//     processing_restrictions_createdById_fkey, processing_restrictions_liftedById_fkey
+//   - partial unique index processing_restrictions_active_key
+//   - RLS (ENABLE ROW LEVEL SECURITY + policies): dsar_requests_tenant_isolation,
+//     processing_restrictions_tenant_isolation
+//   - functions: dsar_lead_is_erased, dsar_contact_is_erased, dsar_refuse_erased_lead_write,
+//     dsar_refuse_erased_contact_write, dsar_refuse_erased_entity_insight, dsar_keep_erased,
+//     dsar_normalise_email, dsar_subject_lock, dsar_carry_restriction, dsar_follow_subject_email
+//   - triggers: ai_scores_dsar_erased_guard, lead_ai_insights_dsar_erased_guard,
+//     contact_ai_insights_dsar_erased_guard, ai_insights_dsar_erased_guard,
+//     leads_dsar_keep_erased, contacts_dsar_keep_erased, leads_dsar_follow_email,
+//     contacts_dsar_follow_email
 // ============================================
 
 enum DsarRequestType {

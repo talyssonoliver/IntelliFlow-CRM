@@ -337,18 +337,25 @@ anywhere in the codebase.
 
 ### 3.8 Right to Erasure (GDPR)
 
-**Verdict: IMPLEMENTED (most complete claim, with gaps)**
+**Verdict: IMPLEMENTED for the CRM core, with gaps (PG-203, 2026-10-24)**
 
-| Aspect                                | Status      | Evidence                                                                           |
-| ------------------------------------- | ----------- | ---------------------------------------------------------------------------------- |
-| `DSARWorkflow` — all GDPR Arts 15–22  | Implemented | `apps/api/src/workflow/dsar-workflow.ts` (~670 lines)                              |
-| Article 17 erasure                    | Implemented | `handleErasureRequest()` — legal hold check, SQL anonymization, search index purge |
-| Article 15 access                     | Implemented | `handleAccessRequest()` — full data export                                         |
-| Article 20 portability                | Implemented | `handlePortabilityRequest()`                                                       |
-| IFC-155 vector redaction              | Implemented | `purgeSearchIndexes()` — embeddings + FTS redacted with `[REDACTED - GDPR]`        |
-| **`data_subject_requests` table**     | **Missing** | `this.db.data_subject_requests.create()` called but no Prisma model found          |
-| **`anonymize_record()` SQL function** | **Missing** | Called in raw SQL (line 421) but not in any migration file                         |
-| **API endpoint for DSAR**             | **Missing** | `DSARWorkflow` is instantiated via factory but no tRPC router exposes it to users  |
+The original `DSARWorkflow` never ran: it called Prisma accessors that did not
+exist, and its tables and `anonymize_record()` were never applied. PG-203
+removed it and built the data subject request process in its place. See
+`docs/compliance-and-governance/data-governance/dsar-process.md`.
+
+| Aspect                                       | Status      | Evidence                                                                                                                                                                                                                                      |
+| -------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Request storage                              | Implemented | `dsar_requests` and `processing_restrictions` tables with row level security, `packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql` (replaces the missing `data_subject_requests`)                                       |
+| API endpoint for DSAR                        | Implemented | `privacy` router mounted in `apps/api/src/router.ts`: public `privacy-public.router.ts`, ADMIN-only `privacy-admin.router.ts`, tests in `apps/api/src/modules/privacy/__tests__/`                                                             |
+| Request pages                                | Implemented | `apps/web/src/app/(public)/dsar/`, `apps/web/src/app/settings/privacy-requests/`                                                                                                                                                              |
+| Article 15 access, Article 20 portability    | Implemented | `PrismaSubjectDataRepository.buildExport` (JSON, field allowlist, free text withheld and counted), emailed expiring link; no CSV and no Art 20(2) transfer                                                                                    |
+| Article 17 erasure                           | Partial     | `PrismaSubjectDataRepository.erase`: one transaction, anonymise in place, tested in `tests/integration/dsar.test.ts` (replaces `anonymize_record()`, which was never applied). Communications and stored files are a counted manual checklist |
+| IFC-155 vector redaction                     | Implemented | `erase` sets `embedding` and `search_vector` to NULL on leads, contacts and their notes (replaces `purgeSearchIndexes()`)                                                                                                                     |
+| Article 18 restriction, Article 21 objection | Partial     | `PrismaProcessingRestrictionRepository.ts`, `apps/ai-worker/src/lib/data-request-guard.ts`: every AI path that sends the person's data to a model checks it first. Outreach and marketing are not stopped automatically                       |
+| Identity verification and deadline           | Implemented | `apps/api/src/modules/privacy/dsar-token.ts`, `packages/domain/src/legal/privacy/dsar.ts`, `apps/api/src/modules/privacy/dsar-sla-scheduler.ts`                                                                                               |
+| **Legal hold registry**                      | **Missing** | No legal hold table exists. The erasing admin confirms that no hold or retention duty applies (#1019)                                                                                                                                         |
+| **Erasure of communications and files**      | **Missing** | Emails, tickets, chats, feedback, notifications, drafts and stored files are counted, not erased (IFC-316; #1009, #1010, #1015, #956)                                                                                                         |
 
 ### 3.9 File Upload Security
 
@@ -556,13 +563,13 @@ environment variables are absent:
 
 ### Medium (address within 30 days)
 
-| #   | Finding                                                       | Section | Status    | Fix                                                                                                                                                                      |
-| --- | ------------------------------------------------------------- | ------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 13  | MFA is opt-in, not mandatory                                  | 1.1     | **FIXED** | `MFA_REQUIRED` env flag in `auth.router.ts:319`; returns `mfaEnrollmentRequired: true` when user hasn't enrolled                                                         |
-| 14  | AI output hallucination checker built but not wired           | 4.2     | **FIXED** | `hallucinationChecker.checkOutput()` wired in `prediction.job.ts:419` and `insight-generation.job.ts:550`; logs warnings, does not block                                 |
-| 15  | Human-review gate computed but not enforced                   | 4.5     | **FIXED** | `requiresReview` flag propagated through scoring result (`scoring.chain.ts:216`); `requiresHumanReview()` called with confidence + chain type in `prediction.job.ts:438` |
-| 16  | No automated data retention purge job                         | 3.7     | **FIXED** | `retention-purge.service.ts` — `purgeExpiredRecords()` with batch deletion (default 100), AuditLogEntry + SecurityEvent support, 7 tests                                 |
-| 17  | DSAR workflow has no API endpoint                             | 3.8     | **FIXED** | `dsar.router.ts` with `submitDSAR` (public mutation) and `getDSARStatus` (token-gated query) + 10 tests                                                                  |
-| 18  | RLS session variable `app.current_tenant_id` never set by API | 3.4     | **FIXED** | `tenant-context.ts` — `withTenantContext(prisma, tenantId)` uses `$extends` + `$allOperations` to prepend `SET app.current_tenant_id`                                    |
-| 19  | API server has no security headers                            | 2.5     | **FIXED** | `http-server.ts:100–113` sets HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Cache-Control no-store                                        |
-| 20  | AI conversation records never written to DB                   | 4.4     | **FIXED** | `conversation-record-logger.ts` — `logConversationRecord()` utility; wired in `prediction.job.ts:408` and `insight-generation.job.ts:535`; 6 dedicated tests             |
+| #   | Finding                                                       | Section | Status    | Fix                                                                                                                                                                                                                                                                          |
+| --- | ------------------------------------------------------------- | ------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 13  | MFA is opt-in, not mandatory                                  | 1.1     | **FIXED** | `MFA_REQUIRED` env flag in `auth.router.ts:319`; returns `mfaEnrollmentRequired: true` when user hasn't enrolled                                                                                                                                                             |
+| 14  | AI output hallucination checker built but not wired           | 4.2     | **FIXED** | `hallucinationChecker.checkOutput()` wired in `prediction.job.ts:419` and `insight-generation.job.ts:550`; logs warnings, does not block                                                                                                                                     |
+| 15  | Human-review gate computed but not enforced                   | 4.5     | **FIXED** | `requiresReview` flag propagated through scoring result (`scoring.chain.ts:216`); `requiresHumanReview()` called with confidence + chain type in `prediction.job.ts:438`                                                                                                     |
+| 16  | No automated data retention purge job                         | 3.7     | **FIXED** | `retention-purge.service.ts` — `purgeExpiredRecords()` with batch deletion (default 100), AuditLogEntry + SecurityEvent support, 7 tests                                                                                                                                     |
+| 17  | DSAR workflow has no API endpoint                             | 3.8     | **FIXED** | PG-203 replaced the workflow and the earlier `dsar.router.ts` (both removed). The `privacy` router (`apps/api/src/modules/privacy/`) exposes public requests, verification, export download and ADMIN-only handling; tests beside it and in `tests/integration/dsar.test.ts` |
+| 18  | RLS session variable `app.current_tenant_id` never set by API | 3.4     | **FIXED** | `tenant-context.ts` — `withTenantContext(prisma, tenantId)` uses `$extends` + `$allOperations` to prepend `SET app.current_tenant_id`                                                                                                                                        |
+| 19  | API server has no security headers                            | 2.5     | **FIXED** | `http-server.ts:100–113` sets HSTS, X-Frame-Options DENY, X-Content-Type-Options nosniff, Referrer-Policy, Cache-Control no-store                                                                                                                                            |
+| 20  | AI conversation records never written to DB                   | 4.4     | **FIXED** | `conversation-record-logger.ts` — `logConversationRecord()` utility; wired in `prediction.job.ts:408` and `insight-generation.job.ts:535`; 6 dedicated tests                                                                                                                 |
