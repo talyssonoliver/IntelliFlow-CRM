@@ -29,6 +29,13 @@ import {
   dispatchCandidateIds,
   writeSubjectIfStillEligible,
 } from '../../apps/ai-worker/src/lib/data-request-guard';
+import {
+  DSAR_SLA_LOCK_KEY,
+  createPrismaDsarSlaStore,
+  runDsarSlaSweep,
+  type DsarSlaDeps,
+  type DsarSlaPrisma,
+} from '../../apps/api/src/modules/privacy/dsar-sla-scheduler';
 import { applySchemaSql, sqlState } from './schema-lock';
 
 const MIGRATION = join(
@@ -100,7 +107,8 @@ async function ensureMigrationSql(client: any): Promise<string | null> {
 const RUN = `pg203d_${Date.now()}_${randomBytes(3).toString('hex')}`;
 const TENANT_A = `${RUN}_a`;
 const TENANT_B = `${RUN}_b`;
-const TENANTS = [TENANT_A, TENANT_B];
+const TENANT_C = `${RUN}_c`;
+const TENANTS = [TENANT_A, TENANT_B, TENANT_C];
 const ADMIN_A = `${RUN}_admin_a`;
 const ADMIN_B = `${RUN}_admin_b`;
 const SUBJECT = `${RUN}-ada@example.invalid`;
@@ -1018,23 +1026,43 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       }
     });
 
-    it('lists staff notifications about the person on the checklist (codex)', async () => {
+    it('lists staff notifications about the person and their deals on the checklist (codex)', async () => {
       const before = await subjects.previewErasure(TENANT_A, SUBJECT);
-      const alert = await prisma.notification.create({
+      const account = await prisma.account.create({
+        data: { tenantId: TENANT_A, ownerId: ADMIN_A, name: `${RUN} Ada Co` },
+      });
+      // A deal follows its contact (Q22): its churn alert carries the deal id as its source.
+      const deal = await prisma.opportunity.create({
         data: {
           tenantId: TENANT_A,
-          recipientId: ADMIN_A,
-          subject: 'High churn risk',
-          body: 'Ada has gone quiet',
-          sourceType: 'ai_recommendation',
-          sourceId: contactA,
+          ownerId: ADMIN_A,
+          accountId: account.id,
+          contactId: contactA,
+          name: 'Ada renewal',
+          value: 1000,
         },
       });
+      const alerts = await Promise.all(
+        [contactA, deal.id].map((sourceId) =>
+          prisma.notification.create({
+            data: {
+              tenantId: TENANT_A,
+              recipientId: ADMIN_A,
+              subject: 'High churn risk',
+              body: 'Ada has gone quiet',
+              sourceType: 'ai_recommendation',
+              sourceId,
+            },
+          })
+        )
+      );
       try {
         const after = await subjects.previewErasure(TENANT_A, SUBJECT);
-        expect(after.checklist.notifications).toBe(before.checklist.notifications + 1);
+        expect(after.checklist.notifications).toBe(before.checklist.notifications + 2);
       } finally {
-        await prisma.notification.delete({ where: { id: alert.id } });
+        await prisma.notification.deleteMany({ where: { id: { in: alerts.map((a) => a.id) } } });
+        await prisma.opportunity.delete({ where: { id: deal.id } });
+        await prisma.account.delete({ where: { id: account.id } });
       }
     });
 
@@ -1494,6 +1522,237 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
           data: { email: `erased-${leadA}@erased.invalid`, status: 'UNQUALIFIED' },
         })
       ).resolves.toMatchObject({ status: 'UNQUALIFIED' });
+    });
+  });
+  describe('DSAR deadline alerts (plan D8, real locks)', () => {
+    type Sent = { to: string[]; textBody: string };
+
+    /** A fake provider that records every message; the sweep runs on this suite's client. */
+    function sweepWith(now: Date, accept = true, deferred = new Map<string, number>()) {
+      const sent: Sent[] = [];
+      const deps: DsarSlaDeps = {
+        store: createPrismaDsarSlaStore(prisma as DsarSlaPrisma),
+        sender: {
+          sendEmail: async (email: Sent) => {
+            sent.push(email);
+            return { isFailure: !accept };
+          },
+        },
+        appUrl: () => 'https://app.example.invalid',
+        now: () => now,
+        log: { info: () => undefined, warn: () => undefined, error: () => undefined },
+        deferred,
+      };
+      return { run: () => runDsarSlaSweep(deps), sent };
+    }
+
+    const sentIds = (sent: Sent[], ids: string[]) =>
+      ids.filter((id) => sent.some((email) => email.textBody.includes(id)));
+
+    async function seed(tenantId: string, columns: Record<string, unknown>): Promise<string> {
+      const row = await prisma.dsarRequest.create({
+        data: {
+          tenantId,
+          type: 'ACCESS',
+          source: 'PUBLIC_FORM',
+          subjectEmail: `${RUN}-${randomBytes(3).toString('hex')}@example.invalid`,
+          capEmailHash: randomBytes(32).toString('hex'),
+          ...columns,
+        },
+        select: { id: true },
+      });
+      return row.id;
+    }
+
+    it('alerts due, overdue and re-windowed requests once, and repeats an overdue one after 3 days', async () => {
+      const now = new Date();
+      const at = (days: number) => new Date(now.getTime() + days * 24 * HOUR);
+      const verified = { status: 'VERIFIED', verifiedAt: at(-25) };
+      const ids = {
+        dueSoon: await seed(TENANT_A, { ...verified, slaDeadline: at(5) }),
+        notYet: await seed(TENANT_A, { ...verified, slaDeadline: at(20) }),
+        unverified: await seed(TENANT_A, { slaDeadline: at(1) }),
+        overdueJustAlerted: await seed(TENANT_A, {
+          ...verified,
+          slaDeadline: at(-2),
+          slaAlertedAt: at(-1),
+        }),
+        overdueStale: await seed(TENANT_A, {
+          ...verified,
+          slaDeadline: at(-10),
+          slaAlertedAt: at(-4),
+        }),
+        // Alerted for its old deadline, then extended into a new window: alerted again.
+        extendedIntoWindow: await seed(TENANT_A, {
+          ...verified,
+          slaDeadline: at(-1),
+          extendedUntil: at(6),
+          slaAlertedAt: at(-8),
+        }),
+        extendedFar: await seed(TENANT_A, {
+          ...verified,
+          slaDeadline: at(-1),
+          extendedUntil: at(30),
+        }),
+        completed: await seed(TENANT_A, { ...verified, status: 'COMPLETED', slaDeadline: at(-3) }),
+      };
+      const all = Object.values(ids);
+
+      const first = sweepWith(now);
+      await expect(first.run()).resolves.toMatchObject({ failed: 0 });
+      expect(sentIds(first.sent, all).sort()).toEqual(
+        [ids.dueSoon, ids.overdueStale, ids.extendedIntoWindow].sort()
+      );
+      const email = first.sent.find((e) => e.textBody.includes(ids.dueSoon))!;
+      expect(email.to).toEqual([`${ADMIN_A}@example.invalid`]);
+      const marked = await prisma.dsarRequest.findMany({
+        where: { id: { in: all } },
+        select: { id: true, slaAlertedAt: true },
+      });
+      const alertedAt = new Map(marked.map((r: any) => [r.id, r.slaAlertedAt?.getTime()]));
+      expect(alertedAt.get(ids.dueSoon)).toBe(now.getTime());
+      expect(alertedAt.get(ids.notYet)).toBeUndefined();
+
+      // The next tick sends none of them again.
+      const second = sweepWith(new Date(now.getTime() + HOUR));
+      await second.run();
+      expect(sentIds(second.sent, all)).toEqual([]);
+
+      // Three days on, the overdue ones repeat; the one now inside its window does not.
+      const later = sweepWith(at(3.1));
+      await later.run();
+      expect(sentIds(later.sent, all).sort()).toEqual(
+        [ids.overdueJustAlerted, ids.overdueStale].sort()
+      );
+    });
+
+    it('marks nothing when the provider refuses, so the next tick retries', async () => {
+      const now = new Date();
+      const id = await seed(TENANT_A, {
+        status: 'VERIFIED',
+        verifiedAt: now,
+        slaDeadline: new Date(now.getTime() + 2 * 24 * HOUR),
+      });
+      const refused = sweepWith(now, false);
+      await refused.run();
+      expect(sentIds(refused.sent, [id])).toEqual([id]);
+      const row = await prisma.dsarRequest.findUniqueOrThrow({ where: { id } });
+      expect(row.slaAlertedAt).toBeNull();
+      // A process that never failed to send it (another replica, a restart) tries it at once.
+      const retry = sweepWith(now);
+      await retry.run();
+      expect(sentIds(retry.sent, [id])).toEqual([id]);
+    });
+
+    it('claims past a request it could not alert, then tries it again after 6 hours (codex)', async () => {
+      const now = new Date();
+      const verified = { status: 'VERIFIED', verifiedAt: now };
+      const first = await seed(TENANT_A, {
+        ...verified,
+        slaDeadline: new Date(now.getTime() - 30 * 24 * HOUR),
+      });
+      const deferred = new Map<string, number>();
+      await sweepWith(now, false, deferred).run();
+      expect(deferred.has(first)).toBe(true);
+
+      const later = await seed(TENANT_A, {
+        ...verified,
+        slaDeadline: new Date(now.getTime() + 24 * HOUR),
+      });
+      const next = sweepWith(new Date(now.getTime() + HOUR), true, deferred);
+      await next.run();
+      expect(sentIds(next.sent, [first, later])).toEqual([later]);
+
+      const afterBackoff = sweepWith(new Date(now.getTime() + 7 * HOUR), true, deferred);
+      await afterBackoff.run();
+      expect(sentIds(afterBackoff.sent, [first, later])).toEqual([first]);
+    });
+
+    it("falls back to the firm's earliest active user when it has no admin", async () => {
+      await prisma.tenant.create({ data: { id: TENANT_C, name: 'Brown Law', slug: TENANT_C } });
+      await prisma.user.create({
+        data: {
+          id: `${RUN}_owner_c`,
+          tenantId: TENANT_C,
+          email: `${RUN}_owner_c@example.invalid`,
+          role: 'USER',
+          createdAt: new Date(Date.now() - 48 * HOUR),
+        },
+      });
+      await prisma.user.create({
+        data: {
+          id: `${RUN}_staff_c`,
+          tenantId: TENANT_C,
+          email: `${RUN}_staff_c@example.invalid`,
+          role: 'USER',
+        },
+      });
+      const now = new Date();
+      const id = await seed(TENANT_C, {
+        status: 'VERIFIED',
+        verifiedAt: now,
+        slaDeadline: new Date(now.getTime() + 24 * HOUR),
+      });
+      const sweep = sweepWith(now);
+      await sweep.run();
+      const email = sweep.sent.find((e) => e.textBody.includes(id));
+      expect(email?.to).toEqual([`${RUN}_owner_c@example.invalid`]);
+    });
+
+    it('skips the tick while another replica holds the lock, and skips rows another transaction holds', async () => {
+      const now = new Date();
+      const verified = { status: 'VERIFIED', verifiedAt: now };
+      const held = await seed(TENANT_A, {
+        ...verified,
+        slaDeadline: new Date(now.getTime() + 24 * HOUR),
+      });
+      const free = await seed(TENANT_A, {
+        ...verified,
+        slaDeadline: new Date(now.getTime() + 25 * HOUR),
+      });
+
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      let ready: () => void = () => undefined;
+      const holding = new Promise<void>((resolve) => (ready = resolve));
+
+      // Another replica's tick holds the sweep lock.
+      const replica = prisma.$transaction(
+        async (tx: any) => {
+          await tx.$executeRaw`SELECT pg_advisory_xact_lock(${DSAR_SLA_LOCK_KEY})`;
+          ready();
+          await gate;
+        },
+        { timeout: 30_000 }
+      );
+      await holding;
+      const blocked = sweepWith(now);
+      await expect(blocked.run()).resolves.toEqual({ skipped: 'LOCKED' });
+      expect(blocked.sent).toEqual([]);
+      release();
+      await replica;
+
+      // An admin action holds one row: the tick passes it by and alerts the other.
+      let releaseRow: () => void = () => undefined;
+      const rowGate = new Promise<void>((resolve) => (releaseRow = resolve));
+      let rowReady: () => void = () => undefined;
+      const rowHeld = new Promise<void>((resolve) => (rowReady = resolve));
+      const admin = prisma.$transaction(
+        async (tx: any) => {
+          await tx.$queryRaw`SELECT id FROM dsar_requests WHERE id = ${held} FOR UPDATE`;
+          rowReady();
+          await rowGate;
+        },
+        { timeout: 30_000 }
+      );
+      await rowHeld;
+      const sweep = sweepWith(now);
+      await sweep.run();
+      releaseRow();
+      await admin;
+      expect(sentIds(sweep.sent, [held, free])).toEqual([free]);
+      const row = await prisma.dsarRequest.findUniqueOrThrow({ where: { id: held } });
+      expect(row.slaAlertedAt).toBeNull();
     });
   });
 });

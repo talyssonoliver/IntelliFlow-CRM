@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   disconnectPrisma: vi.fn(),
   shutdownAllQueues: vi.fn(),
   stopApprovalSweep: vi.fn(),
+  stopDsarSlaScheduler: vi.fn(),
 }));
 
 vi.mock('./tracing/otel', () => ({ startTracing: mocks.startTracing }));
@@ -16,6 +17,9 @@ vi.mock('@intelliflow/platform/queues', () => ({ shutdownAllQueues: mocks.shutdo
 vi.mock('./http-server', () => ({ startApiServer: mocks.startApiServer }));
 vi.mock('./agent/approval-sweep-scheduler', () => ({
   stopApprovalSweep: mocks.stopApprovalSweep,
+}));
+vi.mock('./modules/privacy/dsar-sla-scheduler', () => ({
+  stopDsarSlaScheduler: mocks.stopDsarSlaScheduler,
 }));
 
 describe('api main entry point', () => {
@@ -84,6 +88,11 @@ describe('api main entry point', () => {
     await handler();
 
     expect(mocks.stopApprovalSweep).toHaveBeenCalledTimes(1);
+    // PG-203 D8: the DSAR deadline alerts stop before the queues and the database.
+    expect(mocks.stopDsarSlaScheduler).toHaveBeenCalledTimes(1);
+    expect(mocks.stopDsarSlaScheduler.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.shutdownAllQueues.mock.invocationCallOrder[0]!
+    );
     expect(mocks.stopApprovalSweep.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.shutdownAllQueues.mock.invocationCallOrder[0]!
     );

@@ -1293,3 +1293,37 @@ waivers:
       contact' (a restricted contact's deal is absent from the model input).
     author: PG-203 lane
     date: '2026-10-23'
+  - fingerprint: 1536a6ef22f2143a525f731fe1c9b8307d1260835c67dbb1cfad96b54175a49c
+    reason: >-
+      Delivery-reliability gap, not a security, data-loss or regression finding (codex spiral
+      rule). A refused rejection/completion email is logged by kind and not retried or shown to
+      the admin. Tracked in #1014 (await the notice and return personNotified, or an outbox
+      retried by the D8 sweep).
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 02c0c7751a4bd6084002b02d0bfb39eba7d3cac8932a68409f11323dd1ea10ee
+    reason: >-
+      Scoped out in PG-203 Plan Addendum B (Q11), approved by the plan reviewer: conversation and
+      message records carry no person key to filter on; message search has no production caller,
+      and conversation summaries are unreachable (attachConversationRecording has no caller).
+      Tracked in #1015: tag them with their person, then filter RAG and reach them from erasure.
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 0d03e2fa595a91c2459e432f84de2a4e5d2f6c14e74fac88dd147f2c18b36fb7
+    reason: >-
+      Same delivery-reliability gap as 1536a6ef (fire-and-forget notices), here for the
+      extension email. Not a security, data-loss or regression finding (codex spiral rule).
+      Tracked in #1014 (comment added): await the notice and return personNotified, or an outbox.
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'
+  - fingerprint: 24c6b825e5af0ce579dbbd64ce0a4d88d4003e9ff89e7e8929819fa3154f37ff
+    reason: >-
+      Same fire-and-forget notice gap as 1536a6ef and 0d03e2fa, here for the access completion
+      email (with the withholding reasons). Not a security, data-loss or regression finding
+      (codex spiral rule). Tracked in #1014, whose body already names the completion notice.
+    author: PG-203 lane
+    date: '2026-10-24'
+    expires: '2026-11-23'

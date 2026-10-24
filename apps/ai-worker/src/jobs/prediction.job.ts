@@ -42,6 +42,7 @@ import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observabil
 import { isAiFeatureEnabled } from '../lib/feature-flags';
 // PG-203 #1002: erased and restricted people get no prediction
 import {
+  dealContactIds,
   eligibleSubjectEmail,
   SUBJECT_NOT_PROCESSABLE,
   writeSubjectIfStillEligible,
@@ -141,7 +142,8 @@ export async function processPredictionJob(
       }
 
       // PG-203 #1002 (owner ruling): an erased or restricted person is never sent to the model.
-      const subjectEmail = await processableSubjectEmail(entityType, entityId, tenantId);
+      const subject = await predictionSubject(entityType, entityId, tenantId);
+      const subjectEmail = await processableSubjectEmail(subject, tenantId);
       if (subjectEmail === null) {
         logger.info(
           { jobId: job.id, tenantId, entityType, entityId, predictionType },
@@ -209,6 +211,7 @@ export async function processPredictionJob(
         predictionType,
         prediction,
         recommendations,
+        subject,
         subjectEmail
       );
 
@@ -216,6 +219,14 @@ export async function processPredictionJob(
       // in the job result BullMQ keeps in Redis after completion (codex).
       if (persisted === 'blocked') {
         return { skipped: true, reason: SUBJECT_NOT_PROCESSABLE } as unknown as PredictionJobResult;
+      }
+      // The locked re-check did not complete: the person's eligibility is unknown, so nothing
+      // about them is returned or alerted on (fails closed, codex).
+      if (persisted === 'failed') {
+        return {
+          skipped: true,
+          reason: 'eligibility-unverified',
+        } as unknown as PredictionJobResult;
       }
 
       // Notify on high churn risk (non-blocking)
@@ -225,6 +236,7 @@ export async function processPredictionJob(
           entityType,
           entityId,
           prediction,
+          subject,
           subjectEmail,
           context
         );
@@ -357,28 +369,40 @@ async function persistContactPrediction(
   logger.info({ entityId, predictionType }, 'Persisted prediction to ContactAIInsight');
 }
 
-/** A lead or contact is a person whose data requests apply; other entity types are not. */
-function subjectKind(entityType: string): SubjectKind | null {
-  return entityType === 'lead' || entityType === 'contact' ? entityType : null;
+/** The person a prediction is about; null when it is about no one, MISSING when the deal is gone. */
+type PredictionSubject = { kind: SubjectKind; id: string } | null | 'MISSING';
+
+/**
+ * A lead or contact is the person. A deal follows its contact (Q22, as insights do; codex): its
+ * prediction context carries the contact's name, email and messages. A deal with no contact and
+ * an account are about no one; a deal that no longer exists fails closed.
+ */
+async function predictionSubject(
+  entityType: string,
+  entityId: string,
+  tenantId: string
+): Promise<PredictionSubject> {
+  if (entityType === 'lead' || entityType === 'contact') return { kind: entityType, id: entityId };
+  if (entityType !== 'opportunity') return null;
+  const { prisma } = await import('@intelliflow/db');
+  const contacts = await dealContactIds(prisma as never, tenantId, [entityId]);
+  if (!contacts.has(entityId)) return 'MISSING';
+  const contactId = contacts.get(entityId);
+  return contactId ? { kind: 'contact', id: contactId } : null;
 }
 
 /**
  * The person's stored address when they may be processed, null when they are missing, erased
- * or restricted (#1002). Entity types that are not people always pass, as an empty address.
+ * or restricted (#1002). A prediction about no one always passes, as an empty address.
  */
 async function processableSubjectEmail(
-  entityType: string,
-  entityId: string,
+  subject: PredictionSubject,
   tenantId: string
 ): Promise<string | null> {
-  const kind = subjectKind(entityType);
-  if (!kind) return '';
+  if (subject === 'MISSING') return null;
+  if (subject === null) return '';
   const { prisma } = await import('@intelliflow/db');
-  return eligibleSubjectEmail(prisma as unknown as SubjectPrisma, {
-    kind,
-    id: entityId,
-    tenantId,
-  });
+  return eligibleSubjectEmail(prisma as unknown as SubjectPrisma, { ...subject, tenantId });
 }
 
 /**
@@ -395,10 +419,22 @@ async function persistPredictionResult(
   predictionType: string,
   prediction: PredictionJobResult['prediction'],
   recommendations: string[],
+  subject: PredictionSubject,
   subjectEmail: string
 ): Promise<'written' | 'blocked' | 'skipped' | 'failed'> {
-  const kind = subjectKind(entityType);
+  const kind = entityType === 'lead' || entityType === 'contact' ? entityType : null;
   if (!kind) {
+    // A deal's result is kept in the job result: it is dropped too if its contact was erased or
+    // restricted while the model ran (the re-check under the contact's locks).
+    if (subject && subject !== 'MISSING') {
+      const { prisma } = await import('@intelliflow/db');
+      const outcome = await writeSubjectIfStillEligible(
+        prisma as never,
+        { ...subject, tenantId, email: subjectEmail },
+        async () => undefined
+      );
+      if (!outcome.written) return 'blocked';
+    }
     logger.info(
       { entityType, entityId, predictionType },
       'Prediction persistence skipped — no AI insight table for this entity type'
@@ -456,6 +492,7 @@ async function notifyHighChurnRisk(
   entityType: string,
   entityId: string,
   prediction: PredictionJobResult['prediction'],
+  subject: PredictionSubject,
   subjectEmail: string,
   context?: Record<string, unknown>
 ): Promise<void> {
@@ -474,7 +511,6 @@ async function notifyHighChurnRisk(
 
   try {
     const { prisma } = await import('@intelliflow/db');
-    const kind = subjectKind(entityType);
     const notify = (db: typeof prisma) =>
       db.notification.create({
         data: {
@@ -497,7 +533,7 @@ async function notifyHighChurnRisk(
           },
         },
       });
-    if (!kind) {
+    if (subject === null || subject === 'MISSING') {
       await notify(prisma);
       return;
     }
@@ -506,7 +542,7 @@ async function notifyHighChurnRisk(
     // leaves it unwritten (#1002, codex).
     await writeSubjectIfStillEligible(
       prisma as never,
-      { kind, id: entityId, tenantId, email: subjectEmail },
+      { ...subject, tenantId, email: subjectEmail },
       (tx) => notify(tx as unknown as typeof prisma)
     );
   } catch {

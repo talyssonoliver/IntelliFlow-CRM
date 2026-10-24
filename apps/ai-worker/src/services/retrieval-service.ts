@@ -27,7 +27,7 @@ import {
 import { z } from 'zod';
 import { isErasedEmail, normalizeSubjectEmail } from '@intelliflow/domain';
 import { EmbeddingChain } from '../chains/embedding.chain';
-import { restrictedEmails, type GuardPrisma } from '../lib/data-request-guard';
+import { erasedSubjectEmails, restrictedEmails, type GuardPrisma } from '../lib/data-request-guard';
 import { DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG } from '../config/relevance-config';
 import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
 
@@ -183,6 +183,7 @@ interface TicketRecord {
   slaStatus: string | null;
   contactName: string | null;
   contactEmail: string;
+  contactId?: string | null;
   assigneeId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -606,16 +607,53 @@ export class RetrievalService {
    */
   private async withoutDataRequestSubjects(
     tenantId: string,
-    results: SearchResult[]
+    results: SearchResult[],
+    /** Result id → the address of the record it is linked to, checked as well (tickets). */
+    linkedEmails: Map<string, string> = new Map()
   ): Promise<SearchResult[]> {
     if (results.length === 0) return results;
-    const restricted = new Set(
-      await restrictedEmails(this.prisma as unknown as GuardPrisma, tenantId)
+    const [restrictions, erasures] = await Promise.all([
+      restrictedEmails(this.prisma as unknown as GuardPrisma, tenantId),
+      erasedSubjectEmails(this.prisma as never, tenantId),
+    ]);
+    // Restrictions and completed erasures are keyed on the normalised address.
+    const restricted = new Set([...restrictions, ...erasures].map(normalizeSubjectEmail));
+    const blocked = (raw: string | undefined) => {
+      const email = normalizeSubjectEmail(raw ?? '');
+      return isErasedEmail(email) || restricted.has(email);
+    };
+    return results.filter(
+      (result) =>
+        !blocked(String(result.metadata?.['email'] ?? '')) && !blocked(linkedEmails.get(result.id))
     );
-    return results.filter((result) => {
-      const email = normalizeSubjectEmail(String(result.metadata?.['email'] ?? ''));
-      return !isErasedEmail(email) && !restricted.has(email);
+  }
+
+  /**
+   * Tickets keep the address they were raised with, and erasure leaves tickets for the admin's
+   * checklist: the linked contact's current address (erased, or moved under a restriction) is
+   * what says whether the person may be sent to a model. Used for the check only.
+   */
+  private async ticketContactEmails(
+    tenantId: string,
+    results: SearchResult[]
+  ): Promise<Map<string, string>> {
+    const contactIdByTicket = new Map<string, string>();
+    for (const result of results) {
+      const contactId = result.metadata?.['contactId'];
+      if (typeof contactId === 'string' && contactId) contactIdByTicket.set(result.id, contactId);
+    }
+    const linked = new Map<string, string>();
+    if (contactIdByTicket.size === 0) return linked;
+    const contacts: Array<{ id: string; email: string }> = await this.prisma.contact.findMany({
+      where: { tenantId, id: { in: [...new Set(contactIdByTicket.values())] } },
+      select: { id: true, email: true },
     });
+    const emailById = new Map(contacts.map((c) => [c.id, c.email]));
+    for (const [ticketId, contactId] of contactIdByTicket) {
+      const email = emailById.get(contactId);
+      if (email !== undefined) linked.set(ticketId, email);
+    }
+    return linked;
   }
 
   /**
@@ -656,11 +694,14 @@ export class RetrievalService {
         return this.searchConversations(config, aclFilter);
       case 'messages':
         return this.searchMessages(config, aclFilter);
-      case 'tickets':
+      case 'tickets': {
+        const tickets = await this.searchTickets(config, aclFilter);
         return this.withoutDataRequestSubjects(
           aclContext.tenantId,
-          await this.searchTickets(config, aclFilter)
+          tickets,
+          await this.ticketContactEmails(aclContext.tenantId, tickets)
         );
+      }
       default:
         return [];
     }
@@ -1456,6 +1497,7 @@ export class RetrievalService {
         slaStatus: ticket.slaStatus,
         contactName: ticket.contactName,
         email: ticket.contactEmail,
+        contactId: ticket.contactId ?? null,
       },
       acl: {
         viewableBy: ticket.assigneeId ? [ticket.assigneeId] : [],

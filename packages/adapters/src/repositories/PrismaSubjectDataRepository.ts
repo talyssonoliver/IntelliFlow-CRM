@@ -56,23 +56,28 @@ async function subjectIds(
   return { leadIds: leads.map((r) => r.id), contactIds: contacts.map((r) => r.id) };
 }
 
+/** The deals whose contact is the person's: AI output about a deal is about its contact (Q22). */
+async function subjectDealIds(db: Db, tenantId: string, contactIds: string[]): Promise<string[]> {
+  if (contactIds.length === 0) return [];
+  const deals = await db.opportunity.findMany({
+    where: { tenantId, contactId: { in: contactIds } },
+    select: { id: true },
+  });
+  return deals.map((d) => d.id);
+}
+
 /**
  * The AI insights about the person: those on their leads and contacts, and those on deals
  * whose contact is theirs. Insight generation treats a deal as its contact's (PG-203 Q22: its
  * name can carry theirs) and stores the insight under the opportunity id (codex).
  */
 async function subjectInsightWhere(db: Db, tenantId: string, ids: SubjectIds) {
-  const deals = ids.contactIds.length
-    ? await db.opportunity.findMany({
-        where: { tenantId, contactId: { in: ids.contactIds } },
-        select: { id: true },
-      })
-    : [];
+  const dealIds = await subjectDealIds(db, tenantId, ids.contactIds);
   return {
     tenantId,
     OR: [
       { entityId: { in: [...ids.leadIds, ...ids.contactIds] } },
-      { entityType: 'opportunity', entityId: { in: deals.map((d) => d.id) } },
+      { entityType: 'opportunity', entityId: { in: dealIds } },
     ],
   };
 }
@@ -163,6 +168,7 @@ async function checklist(
 ): Promise<Record<string, number>> {
   const { leadIds, contactIds } = ids;
   const byAddress = await addressIds(db, tenantId, email);
+  const dealIds = await subjectDealIds(db, tenantId, contactIds);
   const [
     emailRecords,
     tickets,
@@ -197,13 +203,13 @@ async function checklist(
       },
     }),
     // Sent to the person by address, or about them: AI insight and churn alerts to staff
-    // carry the lead or contact id as their source (codex).
+    // carry the lead, contact or (for their deals) opportunity id as their source (codex).
     db.notification.count({
       where: {
         tenantId,
         OR: [
           { id: { in: byAddress.notifications } },
-          { sourceId: { in: [...leadIds, ...contactIds] } },
+          { sourceId: { in: [...leadIds, ...contactIds, ...dealIds] } },
         ],
       },
     }),
@@ -276,6 +282,8 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
       contactNotes,
       inlineContactNotes,
       leadFiles,
+      contactReplyDrafts,
+      autoResponseDrafts,
     ] = await Promise.all([
       upTo(
         db.lead.findMany({
@@ -485,6 +493,11 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         where: { ...where.contact, contactNotes: { not: null }, NOT: { contactNotes: '' } },
       }),
       db.leadFile.count({ where: where.leadOwned }),
+      // Reply drafts written to the person are message bodies: withheld and counted (codex).
+      db.contactReplyDraft.count({ where: where.contactOwned }),
+      db.autoResponseDraft.count({
+        where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
+      }),
     ]);
 
     const lists = [
@@ -525,7 +538,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         NOTES: leadNotes + contactNotes + inlineContactNotes,
         ACTIVITY_TEXT: leadActivities.total + contactActivities.total,
         TICKET_SUBJECTS: tickets.total,
-        MESSAGE_BODIES: emailRecords.total + chats.total,
+        MESSAGE_BODIES: emailRecords.total + chats.total + contactReplyDrafts + autoResponseDrafts,
         DOCUMENTS: leadFiles,
         EXCESS_ROWS: lists.reduce((sum, list) => sum + list.total - list.rows.length, 0),
       },

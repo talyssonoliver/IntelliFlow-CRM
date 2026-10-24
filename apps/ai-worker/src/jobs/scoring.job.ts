@@ -491,7 +491,7 @@ async function persistScoringResult(
   result: ScoringResult,
   tier: LeadTier,
   recommendations: string[]
-): Promise<ScoringBlock | null> {
+): Promise<ScoringBlock | 'UNVERIFIED' | null> {
   // Defensive guard: never upsert against a placeholder / unresolved leadId.
   // The scheduled cron sentinel uses NIL_UUID, and no real Lead row exists for
   // it — an upsert here violates lead_ai_insights_leadId_fkey. Skip and log
@@ -562,6 +562,9 @@ async function persistScoringResult(
       { leadId, error: error instanceof Error ? error.message : String(error) },
       'Failed to persist scoring result'
     );
+    // The locked re-check did not complete, so the person's eligibility is unknown: the score
+    // is not returned either (fails closed, codex).
+    return 'UNVERIFIED';
   }
   return null;
 }

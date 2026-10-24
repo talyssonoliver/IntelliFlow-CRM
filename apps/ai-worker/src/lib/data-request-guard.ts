@@ -274,6 +274,29 @@ export async function restrictedEmails(prisma: GuardPrisma, tenantId: string): P
   return rows.map((r) => r.subjectEmail);
 }
 
+/**
+ * The addresses of people whose erasure completed. Erasure anonymises their lead and contact
+ * rows but leaves communications (tickets, mail, chats) on the admin's checklist with the
+ * original address, and writes no restriction for it: AI retrieval leaves those out too.
+ */
+export async function erasedSubjectEmails(
+  prisma: {
+    dsarRequest: {
+      findMany(args: {
+        where: { tenantId: string; type: 'ERASURE'; status: 'COMPLETED' };
+        select: { subjectEmail: true };
+      }): Promise<Array<{ subjectEmail: string }>>;
+    };
+  },
+  tenantId: string
+): Promise<string[]> {
+  const rows = await prisma.dsarRequest.findMany({
+    where: { tenantId, type: 'ERASURE', status: 'COMPLETED' },
+    select: { subjectEmail: true },
+  });
+  return rows.map((r) => r.subjectEmail);
+}
+
 export async function scorableLeads<T extends { email: string }>(
   prisma: GuardPrisma,
   tenantId: string,

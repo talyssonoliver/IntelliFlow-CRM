@@ -821,6 +821,14 @@ describe('ScoringJob', () => {
       expect(raw.mock.calls[0]![0].join('?')).toContain('FOR UPDATE');
     });
 
+    it('returns no score when the locked re-check cannot run (fails closed, codex)', async () => {
+      const tx = (prisma as unknown as { $transaction: ReturnType<typeof vi.fn> }).$transaction;
+      tx.mockRejectedValueOnce(new Error('lock timeout'));
+      const result = (await processScoringJob(job())) as any;
+      expect(mockScoreLead).toHaveBeenCalled();
+      expect(result).toEqual({ skipped: true, reason: 'UNVERIFIED' });
+    });
+
     it('reads the lead and the restriction inside the job tenant, by normalised email', async () => {
       await processScoringJob(job());
       expect(db.lead.findFirst).toHaveBeenCalledWith({

@@ -45,6 +45,7 @@ function createMockPrisma() {
     userPermission: { findMany: vi.fn().mockResolvedValue([]) },
     // PG-203 Q22: active restrictions (none unless a test adds some).
     processingRestriction: { findMany: vi.fn().mockResolvedValue([]) },
+    dsarRequest: { findMany: vi.fn().mockResolvedValue([]) },
     lead: { findMany: vi.fn().mockResolvedValue([]) },
     contact: { findMany: vi.fn().mockResolvedValue([]) },
     account: { findMany: vi.fn().mockResolvedValue([]) },

@@ -60,6 +60,8 @@ function createMockPrisma() {
     },
     // PG-203 Q22: active restrictions (none unless a test adds some).
     processingRestriction: { findMany: vi.fn().mockResolvedValue([]) },
+    // PG-203: completed erasure requests (none unless a test adds some).
+    dsarRequest: { findMany: vi.fn().mockResolvedValue([]) },
     lead: {
       findMany: vi.fn().mockResolvedValue([]),
     },
@@ -1093,6 +1095,59 @@ describe('RetrievalService - data requests (PG-203 Q22)', () => {
       });
     }
   );
+
+  it('leaves out a ticket whose linked contact was erased or is restricted, whatever address the ticket kept (codex)', async () => {
+    const prisma = createMockPrisma();
+    prisma.processingRestriction.findMany.mockResolvedValue([
+      { subjectEmail: 'held-now@example.invalid' },
+    ]);
+    // Erasure leaves tickets for the admin's checklist, so a ticket keeps the old address.
+    prisma.ticket.findMany.mockResolvedValue([
+      { ...person('keep', 'ada@example.invalid'), contactId: 'c-keep' },
+      { ...person('erased', 'ada-old@example.invalid'), contactId: 'c-erased' },
+      { ...person('moved', 'ada-older@example.invalid'), contactId: 'c-held' },
+      { ...person('walk-in', 'walkin@example.invalid'), contactId: null },
+    ]);
+    prisma.contact.findMany.mockResolvedValue([
+      { id: 'c-keep', email: 'ada@example.invalid' },
+      { id: 'c-erased', email: 'erased-c-erased@erased.invalid' },
+      { id: 'c-held', email: ' Held-Now@Example.invalid ' },
+    ]);
+
+    const response = await new RetrievalService(prisma as any).search({
+      ...config,
+      sources: ['tickets'],
+    });
+
+    expect(response.results.map((r) => r.id).sort()).toEqual(['keep', 'walk-in']);
+    expect(prisma.contact.findMany).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1', id: { in: ['c-keep', 'c-erased', 'c-held'] } },
+      select: { id: true, email: true },
+    });
+    // The linked address is used for the check only, never added to what the AI is given.
+    expect(JSON.stringify(response.results)).not.toContain('Held-Now');
+  });
+
+  it("leaves out a ticket with no linked contact that still carries an erased person's address (codex)", async () => {
+    const prisma = createMockPrisma();
+    // Erasure leaves tickets for the checklist and writes no restriction for the address.
+    prisma.dsarRequest.findMany.mockResolvedValue([{ subjectEmail: 'ada@example.invalid' }]);
+    prisma.ticket.findMany.mockResolvedValue([
+      { ...person('gone', ' Ada@Example.invalid '), contactId: null },
+      { ...person('keep', 'bob@example.invalid'), contactId: null },
+    ]);
+
+    const response = await new RetrievalService(prisma as any).search({
+      ...config,
+      sources: ['tickets'],
+    });
+
+    expect(response.results.map((r) => r.id)).toEqual(['keep']);
+    expect(prisma.dsarRequest.findMany).toHaveBeenCalledWith({
+      where: { tenantId: 'tenant-1', type: 'ERASURE', status: 'COMPLETED' },
+      select: { subjectEmail: true },
+    });
+  });
 
   it('leaves out notes on an erased or restricted contact in the notes query', async () => {
     const prisma = createMockPrisma();

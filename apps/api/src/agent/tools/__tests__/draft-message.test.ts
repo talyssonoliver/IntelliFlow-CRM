@@ -87,6 +87,15 @@ describe('Draft Message Agent Tool', () => {
       });
     });
 
+    it('refuses an erased lead: its placeholder address carries no restriction (codex)', async () => {
+      mockPrisma.lead.findFirst.mockResolvedValueOnce({ email: 'erased-lead-123@erased.invalid' });
+      const result = await draftMessageTool.execute(input, createMockContext());
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Processing is restricted for this person (data request).',
+      });
+    });
+
     it('checks a contact recipient by its own email', async () => {
       restriction.active = { blocksMarketing: true };
       const result = await draftMessageTool.execute(

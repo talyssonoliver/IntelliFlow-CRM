@@ -1205,12 +1205,46 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
 
 ### Step D8: SLA scheduler
 **Files:** `apps/api/src/modules/privacy/dsar-sla-scheduler.ts`, plus wiring in `http-server.ts`
-- [ ] It uses its own interval and env guard (`DSAR_SLA_INTERVAL_MS`), is disabled under test and on serverless,
+- [x] It uses its own interval and env guard (`DSAR_SLA_INTERVAL_MS`), is disabled under test and on serverless,
   and uses `pg_try_advisory_xact_lock`.
-- [ ] Claims use `FOR UPDATE SKIP LOCKED`. `slaAlertedAt` is set after a successful send. Overdue alerts repeat
+- [x] Claims use `FOR UPDATE SKIP LOCKED`. `slaAlertedAt` is set after a successful send. Overdue alerts repeat
   every 3 days.
-- [ ] Alerts go to ADMINs, falling back to the owner, else an error log with the tenant id only. No PII.
-- [ ] Tests use a fake clock.
+- [x] Alerts go to ADMINs, falling back to the owner, else an error log with the tenant id only. No PII.
+- [x] Tests use a fake clock.
+
+**Done (2026-10-24):** `dsar-sla-scheduler.ts` (interval, sweep, Prisma store, deps), started from
+`startApiServer` and stopped on SIGTERM in `main.ts`; `buildAdminSlaEmail` in `dsar-email.ts`;
+`DSAR_SLA_INTERVAL_MS` in `.env.example`.
+- The schema has no tenant owner field, so "the owner" is the firm's earliest-created active user (the account
+  that set it up), with the same revoked-membership filter as the admin lookup.
+- A request alerted for an earlier deadline gets a fresh alert when an extension moves it into a new 7-day window.
+- Codex (HIGH, batch starvation): a request that could not be alerted (send refused, nobody to alert) is put aside
+  in the process for 6 hours and the claim leaves it out, so 50 undeliverable requests cannot block the rest.
+- Codex (MEDIUM, transaction timeout): each request is claimed, alerted and marked in its own short transaction
+  (60 s, one send), so a slow provider cannot roll back the markers of alerts already sent. A tick sends at most 50
+  and stops if another replica takes the lock.
+- Codex on earlier PR 2 code: RAG ticket search now also checks each ticket's linked contact (erased or restricted)
+  (fixed; `retrieval-service.test.ts`); a refused rejection/completion email is not retried (#1014, waived).
+- Codex (HIGH): opportunity predictions now follow the deal's contact, like insights (Q22): checked before the
+  model, re-checked under the contact's locks after it, and the churn alert is written under those locks; a deal
+  with no contact is about no one, and a missing deal fails closed (`insights-predictions-data-requests.test.ts`).
+- Codex (MEDIUM): the erasure checklist counts notifications about the person's deals too (`subjectDealIds`,
+  shared with `subjectInsightWhere`; real-DB test). Codex (HIGH) on conversation/message RAG: the Q11 scope-out
+  above stands; tracked in #1015 and waived.
+- Codex (HIGH x2): a contact update without an email now checks the stored contact (erased, restricted or gone:
+  no embedding); `autoresponse.regenerate` checks the lead as it is now (erased or restricted at its new address:
+  refused; gone: NOT_FOUND), and so does `create` (codex MEDIUM). RED shown on the old router.
+- Codex (MEDIUM, fail-open): when the locked re-check throws (a lock timeout), the scoring and prediction jobs
+  return no result (`UNVERIFIED` / `eligibility-unverified`). Three prediction suites that wrote to an unmocked
+  client (the failure was swallowed before) now mock the insight tables in memory.
+- Codex (MEDIUM): the export counts contact reply drafts and auto-response drafts under MESSAGE_BODIES withheld, so
+  an export is never marked complete with them left out. The extension email gap joins #1014 (waived).
+- Codex (HIGH): RAG also leaves out the addresses of completed erasure requests (`erasedSubjectEmails`), so a
+  retained ticket with no linked contact that still carries an erased person's address is never retrieved.
+- Tests: `apps/api/src/modules/privacy/__tests__/dsar-sla-scheduler.test.ts` (fake clock, fake store, recording
+  client), `dsar-sla-deps.test.ts`, `apps/api/src/__tests__/http-server.dsar-sla.test.ts`, `main.test.ts`, and
+  four real-database tests in `tests/integration/dsar.test.ts` (due, overdue, 3-day repeat, extension window,
+  refused send retried, owner fallback, the advisory lock, and `SKIP LOCKED` against a row an admin holds).
 
 ### Step D9: Web
 **Files to Create:**

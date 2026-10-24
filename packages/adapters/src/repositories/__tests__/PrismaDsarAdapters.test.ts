@@ -576,6 +576,9 @@ describe('PrismaSubjectDataRepository', () => {
     // One contact with an inline staff note (codex: it is withheld and counted too).
     prisma.contact.count.mockResolvedValue(1);
     prisma.leadFile.count.mockResolvedValue(4);
+    // Reply drafts written to the person are message bodies too: withheld and counted (codex).
+    prisma.contactReplyDraft.count.mockResolvedValue(2);
+    prisma.autoResponseDraft.count.mockResolvedValue(1);
     prisma.leadAIInsight.findMany.mockResolvedValue([{ engagementScore: 40 }]);
     // A deal of the person's contact: its insights are the person's too (Q22, codex).
     prisma.opportunity.findMany.mockResolvedValue([{ id: 'o1' }]);
@@ -594,9 +597,16 @@ describe('PrismaSubjectDataRepository', () => {
       NOTES: 4,
       ACTIVITY_TEXT: 1,
       TICKET_SUBJECTS: 1,
-      MESSAGE_BODIES: 3,
+      MESSAGE_BODIES: 6,
       DOCUMENTS: 4,
       EXCESS_ROWS: 0,
+    });
+    expect(prisma.contactReplyDraft.count).toHaveBeenCalledWith({
+      where: { tenantId: 't1', contactId: { in: ['c1'] } },
+    });
+    expect(prisma.autoResponseDraft.count.mock.calls[0][0].where).toMatchObject({
+      tenantId: 't1',
+      OR: [{ leadId: { in: ['l1'] } }, { id: { in: expect.any(Array) } }],
     });
     expect(prisma.lead.findMany.mock.calls[0][0].where).toEqual({
       tenantId: 't1',

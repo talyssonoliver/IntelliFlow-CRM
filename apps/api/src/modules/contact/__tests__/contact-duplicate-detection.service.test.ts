@@ -535,4 +535,61 @@ describe('ContactDuplicateDetectionService — data requests (PG-203 Q22)', () =
     await service.checkForCreate(ctx, { email: 'a@b.com', firstName: 'Ada' }, flags());
     expect(generateEmbedding).toHaveBeenCalledOnce();
   });
+
+  describe('an update that does not change the email checks the stored contact (codex)', () => {
+    const nameRules = [
+      { field: 'name', matchStrategy: 'exact', threshold: 100, isActive: true, sortOrder: 0 },
+    ];
+    const update = { firstName: 'Ada', lastName: 'Lovelace' };
+
+    function setUp(stored: { email: string | null } | null, restrictedEmail?: string) {
+      const generateEmbedding = vi.fn(async () => [0.1]);
+      const restrictions = {
+        status: vi.fn(async (_tenantId: string, email: string) => ({
+          restricted: email === restrictedEmail,
+        })),
+      };
+      const service = createContactDuplicateDetectionService({
+        findSimilarContacts: async () => [],
+        generateEmbedding,
+        restrictions,
+      });
+      const ctx = buildCtx({
+        rules: nameRules,
+        contacts: [{ id: 'c-2', firstName: 'Ada', lastName: 'Lovelace', tenantId: TENANT_A }],
+      });
+      const findFirst = vi.fn(async () => stored);
+      (ctx.prismaWithTenant as any).contact.findFirst = findFirst;
+      return { service, ctx, generateEmbedding, restrictions, findFirst };
+    }
+
+    it('never embeds a restricted contact renamed without an email in the update', async () => {
+      const { service, ctx, generateEmbedding, restrictions, findFirst } = setUp(
+        { email: 'held@b.com' },
+        'held@b.com'
+      );
+      await service.checkForUpdate(ctx, 'c-1', update, flags());
+      expect(findFirst).toHaveBeenCalledWith({
+        where: { id: 'c-1', tenantId: TENANT_A },
+        select: { email: true },
+      });
+      expect(restrictions.status).toHaveBeenCalledWith(TENANT_A, 'held@b.com');
+      expect(generateEmbedding).not.toHaveBeenCalled();
+    });
+
+    it.each([
+      ['erased', { email: 'erased-c-1@erased.invalid' }],
+      ['gone', null],
+    ])('never embeds a contact that is %s', async (_label, stored) => {
+      const { service, ctx, generateEmbedding } = setUp(stored);
+      await service.checkForUpdate(ctx, 'c-1', update, flags());
+      expect(generateEmbedding).not.toHaveBeenCalled();
+    });
+
+    it('embeds a contact that is neither', async () => {
+      const { service, ctx, generateEmbedding } = setUp({ email: 'ada@b.com' }, 'held@b.com');
+      await service.checkForUpdate(ctx, 'c-1', update, flags());
+      expect(generateEmbedding).toHaveBeenCalledOnce();
+    });
+  });
 });

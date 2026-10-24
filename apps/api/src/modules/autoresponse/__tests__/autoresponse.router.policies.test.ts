@@ -22,6 +22,8 @@ const repo = vi.hoisted(() => ({
 
 // PG-203: the processing-restriction read the draft creators make (nobody restricted by default).
 const restrictions = vi.hoisted(() => ({ status: vi.fn() }));
+// The lead as it is now (regenerate reads it: codex).
+const leads = vi.hoisted(() => ({ findFirst: vi.fn() }));
 
 vi.mock('@intelliflow/adapters', () => {
   function MockPrismaAutoResponseDraftRepository() {
@@ -48,7 +50,7 @@ const LEAD = '00000000-0000-4000-8000-000000000201';
 
 function ctx(role = 'SALES_REP', userId: string | undefined = USER) {
   return {
-    prisma: {} as any,
+    prisma: { lead: leads } as any,
     user: userId ? { userId, email: 'u@example.invalid', role, tenantId: TENANT } : undefined,
     tenant: { tenantId: TENANT, tenantType: 'user', userId, role, canAccessAllTenantData: false },
     prismaWithTenant: { marker: 'tenant-client' } as any,
@@ -92,6 +94,7 @@ beforeEach(() => {
   repo.save.mockResolvedValue(undefined);
   loadApprovalPolicy.mockResolvedValue(policy());
   restrictions.status.mockResolvedValue({ restricted: false, blocksMarketing: false, since: null });
+  leads.findFirst.mockResolvedValue({ email: 'lead@example.invalid' });
 });
 
 describe('processing restrictions (PG-203, owner Q18, sign-off 7)', () => {
@@ -130,6 +133,74 @@ describe('processing restrictions (PG-203, owner Q18, sign-off 7)', () => {
       autoResponseRouter.createCaller(ctx()).regenerate({ draftId: original.id.toString() })
     ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
     expect(repo.save).not.toHaveBeenCalled();
+  });
+
+  describe('regenerate checks the lead as it is now, not only the address on the draft (codex)', () => {
+    function rejected() {
+      const original = draft();
+      original.submitForApproval(USER);
+      original.reject(USER, 'Wrong tone');
+      repo.findById.mockResolvedValue(original);
+      return autoResponseRouter.createCaller(ctx()).regenerate({ draftId: original.id.toString() });
+    }
+
+    it('refuses a lead erased since: erasure keeps its drafts but rewrites its address', async () => {
+      leads.findFirst.mockResolvedValue({ email: `erased-${LEAD}@erased.invalid` });
+      await expect(rejected()).rejects.toMatchObject({
+        code: 'PRECONDITION_FAILED',
+        message: 'Processing is restricted for this person (data request).',
+      });
+      expect(leads.findFirst).toHaveBeenCalledWith({
+        where: { id: LEAD, tenantId: TENANT },
+        select: { email: true },
+      });
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a lead whose new address is restricted', async () => {
+      leads.findFirst.mockResolvedValue({ email: 'moved@example.invalid' });
+      restrictions.status.mockImplementation(async (_tenantId: string, email: string) => ({
+        restricted: email === 'moved@example.invalid',
+        blocksMarketing: false,
+        since: null,
+      }));
+      await expect(rejected()).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('create also refuses an erased lead, or a lead restricted at its stored address', async () => {
+      const create = () =>
+        autoResponseRouter.createCaller(ctx()).create({
+          tenantId: TENANT,
+          leadId: LEAD,
+          leadTenantId: TENANT,
+          leadStatus: 'NEW',
+          triggerType: 'FORM_SUBMIT',
+          subject: 'Hello',
+          body: 'Body',
+          aiConfidence: 0.8,
+          // A delayed request still carries the address the lead had before.
+          recipientEmail: 'lead@example.invalid',
+          expiryHours: 168,
+        });
+      leads.findFirst.mockResolvedValue({ email: `erased-${LEAD}@erased.invalid` });
+      await expect(create()).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+
+      leads.findFirst.mockResolvedValue({ email: 'moved@example.invalid' });
+      restrictions.status.mockImplementation(async (_tenantId: string, email: string) => ({
+        restricted: email === 'moved@example.invalid',
+        blocksMarketing: false,
+        since: null,
+      }));
+      await expect(create()).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+      expect(repo.save).not.toHaveBeenCalled();
+    });
+
+    it('refuses a lead that no longer exists', async () => {
+      leads.findFirst.mockResolvedValue(null);
+      await expect(rejected()).rejects.toMatchObject({ code: 'NOT_FOUND' });
+      expect(repo.save).not.toHaveBeenCalled();
+    });
   });
 });
 

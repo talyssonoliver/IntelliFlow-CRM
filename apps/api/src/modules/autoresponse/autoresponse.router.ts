@@ -28,6 +28,7 @@ import {
   AutoResponseDraft,
   AutoResponseDraftId,
   ResponseContent,
+  ERASED_EMAIL_DOMAIN,
   SYSTEM_APPROVAL_ACTOR,
   canReview,
   evaluateAutoApproval,
@@ -185,6 +186,8 @@ async function tryAutoApproveDraft(
  * PG-203 (owner Q18; spec sign-off 7): no AI draft reply is created for a person whose
  * processing is restricted by a data request.
  */
+const RESTRICTED_MESSAGE = 'Processing is restricted for this person (data request).';
+
 async function assertRecipientNotRestricted(
   ctx: Context,
   tenantId: string,
@@ -192,11 +195,37 @@ async function assertRecipientNotRestricted(
 ): Promise<void> {
   const status = await restrictionReader(ctx).status(tenantId, recipientEmail);
   if (status.restricted) {
-    throw new TRPCError({
-      code: 'PRECONDITION_FAILED',
-      message: 'Processing is restricted for this person (data request).',
-    });
+    throw new TRPCError({ code: 'PRECONDITION_FAILED', message: RESTRICTED_MESSAGE });
   }
+}
+
+/**
+ * A draft keeps the address it was written for. Erasure rewrites the lead's address and leaves
+ * its drafts for the admin's checklist, and an address change moves a restriction with the
+ * lead: so the lead as it is now decides as well (codex).
+ */
+async function assertLeadStillProcessable(
+  ctx: Context,
+  tenantId: string,
+  leadId: string
+): Promise<void> {
+  const db = ctx.prismaWithTenant as unknown as {
+    lead: {
+      findFirst(args: {
+        where: { id: string; tenantId: string };
+        select: { email: true };
+      }): Promise<{ email: string | null } | null>;
+    };
+  };
+  const lead = await db.lead.findFirst({
+    where: { id: leadId, tenantId },
+    select: { email: true },
+  });
+  if (!lead) throw new TRPCError({ code: 'NOT_FOUND', message: `Lead not found: ${leadId}` });
+  if (lead.email?.trim().toLowerCase().endsWith(`@${ERASED_EMAIL_DOMAIN}`)) {
+    throw new TRPCError({ code: 'PRECONDITION_FAILED', message: RESTRICTED_MESSAGE });
+  }
+  if (lead.email) await assertRecipientNotRestricted(ctx, tenantId, lead.email);
 }
 
 export const autoResponseRouter = createTRPCRouter({
@@ -231,6 +260,7 @@ export const autoResponseRouter = createTRPCRouter({
       }
 
       await assertRecipientNotRestricted(ctx, typedCtx.tenant.tenantId, input.recipientEmail);
+      await assertLeadStillProcessable(ctx, typedCtx.tenant.tenantId, input.leadId);
 
       // Create response content
       let content: ResponseContent;
@@ -878,6 +908,7 @@ export const autoResponseRouter = createTRPCRouter({
       }
 
       await assertRecipientNotRestricted(ctx, typedCtx.tenant.tenantId, original.recipientEmail);
+      await assertLeadStillProcessable(ctx, typedCtx.tenant.tenantId, original.leadId);
 
       // Build content — use overrides if provided, else reuse original
       const originalContent = original.content.toValue();

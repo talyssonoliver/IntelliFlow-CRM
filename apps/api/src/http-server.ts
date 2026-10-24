@@ -20,6 +20,12 @@ import { approvalSweepIntervalFromEnv, startApprovalSweep } from './agent/approv
 import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
 import { bounceScanIntervalFromEnv, startBounceScanner } from './modules/email/bounce-scheduler';
 import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
+import {
+  createDsarSlaDeps,
+  dsarSlaIntervalFromEnv,
+  runDsarSlaSweep,
+  startDsarSlaScheduler,
+} from './modules/privacy/dsar-sla-scheduler';
 import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
@@ -575,6 +581,15 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
     run: async () => {
       await containerReady;
       return runBounceScan(await createBounceReaderDeps());
+    },
+  });
+
+  // PG-203 D8: DSAR deadline alerts to the firm's admins — its own interval.
+  startDsarSlaScheduler({
+    intervalMs: dsarSlaIntervalFromEnv(process.env),
+    run: async () => {
+      await containerReady;
+      return runDsarSlaSweep(await createDsarSlaDeps());
     },
   });
 

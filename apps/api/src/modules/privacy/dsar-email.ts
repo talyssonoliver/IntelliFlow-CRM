@@ -12,14 +12,14 @@ import type { DsarNotice, DsarNotificationPort } from '@intelliflow/application'
 import type { DsarRequestType, DsarWithheldCategory } from '@intelliflow/domain';
 import { escapeHtml, stripLineBreaks } from '../../security/html-escape';
 
-interface EmailMessage {
+export interface EmailMessage {
   to: string[];
   subject: string;
   htmlBody: string;
   textBody: string;
 }
 
-interface EmailSender {
+export interface EmailSender {
   sendEmail(options: EmailMessage): Promise<{ isFailure: boolean; error?: unknown }>;
 }
 
@@ -193,14 +193,50 @@ export function buildAdminNewRequestEmail(
   ]);
 }
 
-/** True when the provider accepted the message. */
-async function deliver(sender: EmailSender, email: EmailMessage, kind: string): Promise<boolean> {
+/**
+ * A VERIFIED request is inside 7 days of its effective deadline, or past it (plan D8). The
+ * firm's admins get the type, the deadline, the request reference and the page: never the
+ * person's address or anything they typed.
+ */
+export function buildAdminSlaEmail(
+  alert: {
+    requestId: string;
+    type: DsarRequestType;
+    deadline: Date;
+    overdue: boolean;
+    pageUrl: string;
+  },
+  to: string[]
+): EmailMessage {
+  const kind = alert.type.toLowerCase();
+  const due = formatDate(alert.deadline);
+  const lines = alert.overdue
+    ? [
+        `A data subject request (${kind}) passed its deadline on ${due} and is still open.`,
+        'The time limit in UK GDPR Article 12(3) has passed: answer it now and record why it was late.',
+      ]
+    : [`A data subject request (${kind}) must be answered by ${due}.`];
+  return message(
+    to,
+    alert.overdue ? 'Data subject request overdue' : 'Data subject request due soon',
+    [...lines, `Request reference: ${alert.requestId}.`],
+    { label: 'Open privacy requests', url: alert.pageUrl }
+  );
+}
+
+/** True when the provider accepted the message. Logs the kind and error class only. */
+export async function deliverDsarEmail(
+  sender: EmailSender,
+  email: EmailMessage,
+  kind: string,
+  log: Pick<Console, 'warn'> = console
+): Promise<boolean> {
   try {
     const result = await sender.sendEmail(email);
     if (!result.isFailure) return true;
-    console.warn('[dsar] Email was not sent', { kind });
+    log.warn('[dsar] Email was not sent', { kind });
   } catch (error) {
-    console.warn('[dsar] Email failed', {
+    log.warn('[dsar] Email failed', {
       kind,
       error: error instanceof Error ? error.name : 'unknown',
     });
@@ -221,7 +257,7 @@ export function createDsarEmailNotifier(deps: {
         return false;
       }
       if (notice.kind !== 'ADMIN_NEW_REQUEST') {
-        return deliver(sender, buildDsarEmail(notice), notice.kind);
+        return deliverDsarEmail(sender, buildDsarEmail(notice), notice.kind);
       }
       try {
         const admins = await deps.adminEmails(notice.tenantId);
@@ -231,7 +267,11 @@ export function createDsarEmailNotifier(deps: {
           });
           return false;
         }
-        return await deliver(sender, buildAdminNewRequestEmail(notice, admins), notice.kind);
+        return await deliverDsarEmail(
+          sender,
+          buildAdminNewRequestEmail(notice, admins),
+          notice.kind
+        );
       } catch (error) {
         console.warn('[dsar] Admin alert failed', {
           kind: notice.kind,

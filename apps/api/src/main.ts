@@ -13,6 +13,7 @@ import { shutdownAllQueues } from '@intelliflow/platform/queues';
 import { startApiServer } from './http-server';
 import { stopApprovalSweep } from './agent/approval-sweep-scheduler';
 import { stopBounceScanner } from './modules/email/bounce-scheduler';
+import { stopDsarSlaScheduler } from './modules/privacy/dsar-sla-scheduler';
 
 initializeSentry()
   .catch((err) => {
@@ -28,6 +29,7 @@ process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
   stopApprovalSweep();
   stopBounceScanner();
+  stopDsarSlaScheduler();
   await shutdownAllQueues();
   await disconnectPrisma();
   process.exit(0);

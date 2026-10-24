@@ -158,6 +158,7 @@ const TENANT = '00000000-0000-4000-a000-000000000001';
 const LEAD = '00000000-0000-4000-a000-0000000000a1';
 const OTHER_LEAD = '00000000-0000-4000-a000-0000000000a2';
 const CONTACT = '00000000-0000-4000-a000-0000000000c1';
+const DEAL = '00000000-0000-4000-a000-0000000000d1';
 const ADA = 'ada@example.invalid';
 const BOB = 'bob@example.invalid';
 const erased = (id: string) => `erased-${id}@erased.invalid`;
@@ -172,7 +173,7 @@ function bullJob<T>(data: T) {
   } as any;
 }
 
-const churnJob = (entityType: 'lead' | 'contact' | 'opportunity', entityId: string) =>
+const churnJob = (entityType: 'lead' | 'contact' | 'opportunity' | 'account', entityId: string) =>
   bullJob({
     entityType,
     entityId,
@@ -277,6 +278,19 @@ describe('prediction job', () => {
     expect(mockNotificationCreate).not.toHaveBeenCalled();
   });
 
+  it('returns nothing about the person when the locked re-check cannot run (fails closed, codex)', async () => {
+    const { prisma } = (await import('@intelliflow/db')) as any;
+    db.leads.set(LEAD, ADA);
+    prisma.$transaction.mockRejectedValueOnce(new Error('lock timeout'));
+
+    await expect(processPredictionJob(churnJob('lead', LEAD))).resolves.toEqual({
+      skipped: true,
+      reason: 'eligibility-unverified',
+    });
+    expect(mockPredictChurnRisk).toHaveBeenCalledOnce();
+    expect(mockNotificationCreate).not.toHaveBeenCalled();
+  });
+
   it('applies the same guard to a contact', async () => {
     db.contacts.set(CONTACT, ADA);
     await processPredictionJob(churnJob('contact', CONTACT));
@@ -292,12 +306,73 @@ describe('prediction job', () => {
     expect(mockPredictChurnRisk).not.toHaveBeenCalled();
   });
 
-  it('does not consult data requests for an entity that is not a person', async () => {
+  it('does not consult data requests for an account or a deal with no contact', async () => {
     const { prisma } = (await import('@intelliflow/db')) as any;
-    await processPredictionJob(churnJob('opportunity', LEAD));
-    expect(mockPredictChurnRisk).toHaveBeenCalledOnce();
+    await processPredictionJob(churnJob('account', '00000000-0000-4000-a000-0000000000e1'));
+    db.deals.set(DEAL, null);
+    await processPredictionJob(churnJob('opportunity', DEAL));
+    expect(mockPredictChurnRisk).toHaveBeenCalledTimes(2);
     expect(prisma.lead.findFirst).not.toHaveBeenCalled();
     expect(prisma.processingRestriction.findFirst).not.toHaveBeenCalled();
+    expect(mockNotificationCreate).toHaveBeenCalledTimes(2);
+  });
+
+  describe('a deal follows its contact (Q22, codex)', () => {
+    it.each([
+      ['restricted', () => db.restricted.add(ADA)],
+      ['erased', () => db.contacts.set(CONTACT, erased(CONTACT))],
+    ])('skips a deal whose contact is %s, before the model call', async (_label, setUp) => {
+      db.deals.set(DEAL, CONTACT);
+      db.contacts.set(CONTACT, ADA);
+      setUp();
+
+      await expect(processPredictionJob(churnJob('opportunity', DEAL))).resolves.toMatchObject({
+        skipped: true,
+        reason: 'data-subject-request',
+      });
+      expect(mockPredictChurnRisk).not.toHaveBeenCalled();
+      expect(mockNotificationCreate).not.toHaveBeenCalled();
+    });
+
+    it('fails closed for a deal that no longer exists', async () => {
+      await expect(processPredictionJob(churnJob('opportunity', DEAL))).resolves.toMatchObject({
+        skipped: true,
+      });
+      expect(mockPredictChurnRisk).not.toHaveBeenCalled();
+    });
+
+    it('keeps nothing and sends no alert when the contact is restricted during the model call', async () => {
+      db.deals.set(DEAL, CONTACT);
+      db.contacts.set(CONTACT, ADA);
+      mockPredictChurnRisk.mockImplementation(async () => {
+        db.restricted.add(ADA);
+        return HIGH_CHURN;
+      });
+
+      await expect(processPredictionJob(churnJob('opportunity', DEAL))).resolves.toMatchObject({
+        skipped: true,
+        reason: 'data-subject-request',
+      });
+      expect(mockNotificationCreate).not.toHaveBeenCalled();
+    });
+
+    it("alerts on an eligible contact's deal under the contact's locks", async () => {
+      const { prisma } = (await import('@intelliflow/db')) as any;
+      db.deals.set(DEAL, CONTACT);
+      db.contacts.set(CONTACT, ADA);
+
+      await expect(processPredictionJob(churnJob('opportunity', DEAL))).resolves.toMatchObject({
+        entityType: 'opportunity',
+        entityId: DEAL,
+      });
+      expect(mockNotificationCreate).toHaveBeenCalledOnce();
+      // No insight table for deals: nothing is upserted for the contact.
+      expect(mockContactAIInsightUpsert).not.toHaveBeenCalled();
+      const lockedReads = prisma.$queryRaw.mock.calls.filter((c: [string[]]) =>
+        c[0].join('?').includes('FROM contacts')
+      );
+      expect(lockedReads.length).toBeGreaterThan(0);
+    });
   });
 });
 

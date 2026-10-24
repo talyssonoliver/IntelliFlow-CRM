@@ -11,6 +11,7 @@
  */
 
 import type { Contact, PrismaClient } from '@intelliflow/db';
+import { ERASED_EMAIL_DOMAIN } from '@intelliflow/domain';
 import type { ContactAutomationFlags } from './contact-automation';
 import {
   type DuplicateMatch,
@@ -285,15 +286,39 @@ export function createContactDuplicateDetectionService(
     }
   }
 
+  /**
+   * An update need not carry the email: the stored contact decides too (codex). Erased (its
+   * address anonymised), restricted or gone: the AI branch is skipped.
+   */
+  async function storedContactBlocked(ctx: HasTenantContext, contactId: string) {
+    const prismaWithTenant = ctx.prismaWithTenant as unknown as {
+      contact: {
+        findFirst: (args: {
+          where: { id: string; tenantId: string };
+          select: { email: true };
+        }) => Promise<{ email: string | null } | null>;
+      };
+    };
+    const stored = await prismaWithTenant.contact.findFirst({
+      where: { id: contactId, tenantId: ctx.tenant.tenantId },
+      select: { email: true },
+    });
+    if (!stored) return true;
+    if (stored.email?.trim().toLowerCase().endsWith(`@${ERASED_EMAIL_DOMAIN}`)) return true;
+    return aiBlockedFor(ctx.tenant.tenantId, stored.email);
+  }
+
   async function runAiBranch(
     ctx: HasTenantContext,
     payload: ContactCheckInput,
     deterministicMatches: DuplicateMatch<Contact>[],
-    flags: ContactAutomationFlags
+    flags: ContactAutomationFlags,
+    contactId?: string
   ): Promise<DuplicateMatch<Contact>[]> {
     if (!flags.aiDuplicateDetection) return deterministicMatches;
     if (!deps.findSimilarContacts || !deps.generateEmbedding) return deterministicMatches;
     if (await aiBlockedFor(ctx.tenant.tenantId, payload.email)) return deterministicMatches;
+    if (contactId && (await storedContactBlocked(ctx, contactId))) return deterministicMatches;
 
     try {
       const text = contactToEmbeddableText(payload);
@@ -452,7 +477,8 @@ export function createContactDuplicateDetectionService(
       ctx,
       payload,
       deterministic as DuplicateMatch<Contact>[],
-      flags
+      flags,
+      excludeId
     );
 
     const decision = decide(fullMatches, payload, flags);
