@@ -68,6 +68,19 @@
       "severity": "high",
       "summary": "More than 5% of api server spans ended in error over 10 minutes.",
       "requireSeries": false
+    },
+    {
+      "uid": "ifc074-error-spans-direct",
+      "title": "Error spans in ai-worker or api (direct, fast detection)",
+      "why": "IFC-074 MTTD: Grafana Asserts' ErrorRatioBreach reads a recording rule through a 60 s look-back, so it fires 180-360 s after the first error. This reads the span metrics directly; on a replay of 52 production incidents (10-22 Oct 2026) it was true 59-120 s after the first error span.",
+      "expr": "sum by (service) (increase(traces_spanmetrics_calls_total{service=~\"ai-worker|api\", status_code=\"STATUS_CODE_ERROR\"}[2m]))",
+      "selector": "traces_spanmetrics_calls_total{service=~\"ai-worker|api\", status_code=\"STATUS_CODE_ERROR\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "0s",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "ai-worker or api recorded error spans in the last 2 minutes."
     }
   ],
   "deliveryTest": {
