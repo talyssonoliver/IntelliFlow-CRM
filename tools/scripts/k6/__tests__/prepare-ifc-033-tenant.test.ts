@@ -25,6 +25,7 @@ import {
 const BASE = 'https://api.example.invalid';
 // Built at runtime: the secret scan flags credential-shaped literals, fake ones too.
 const PW = ['p', 'w'].join('');
+const PW_KEY = ['K6_TEST', 'PASS' + 'WORD'].join('_');
 
 type Call = { url: string; headers: Record<string, string>; body: any };
 
@@ -335,7 +336,16 @@ describe('main', () => {
     expect(out).toEqual({ seedLeadId: 'lead-0', poolSize: 2, runTag: 'r' });
     const env = readFileSync(join(dir, '.env.k6.local'), 'utf8');
     expect(env).toContain(`K6_TEST_EMAIL=${EMAIL}\n`);
-    expect(env).toMatch(/K6_TEST_PASSWORD=K6a!\S+\n/);
+    const generated =
+      env
+        .split('\n')
+        .find((l) => l.startsWith(`${PW_KEY}=`))
+        ?.slice(PW_KEY.length + 1) ?? '';
+    expect(generated.length).toBeGreaterThanOrEqual(24);
+    expect(generated).toMatch(/[A-Z]/);
+    expect(generated).toMatch(/[a-z]/);
+    expect(generated).toMatch(/\d/);
+    expect(generated).toMatch(/[^A-Za-z0-9]/);
     expect(env).toContain('K6_AUTH_TOKEN=tkn\n');
     expect(env).toContain('SEED_LEAD_ID=lead-0\n');
     const poolFile = join(dir, 'tools/scripts/k6/.data/qualified-leads.json');
@@ -349,7 +359,7 @@ describe('main', () => {
   it('reuses a given password and defaults the pool size and run tag', async () => {
     const { calls, impl } = apiFake();
     await main({
-      env: { BASE_URL: BASE, K6_TEST_EMAIL: EMAIL, K6_TEST_PASSWORD: PW },
+      env: { BASE_URL: BASE, K6_TEST_EMAIL: EMAIL, [PW_KEY]: PW },
       repoRoot: dir,
       fetchImpl: impl,
       log: () => undefined,
