@@ -41,6 +41,10 @@ jobs:
             dockerfile: apps/workers/events-worker/Dockerfile
           - service: ingestion-worker
             dockerfile: apps/workers/ingestion-worker/Dockerfile
+          # One process running ai-worker + events-worker + ingestion-worker, so
+          # production can run a single Railway service (cost cut, 2026-10-25).
+          - service: combined-worker
+            dockerfile: apps/workers/combined-worker/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v7

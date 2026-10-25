@@ -920,7 +920,8 @@ describe('PrismaLeadRepository', () => {
       const thirtyDaysAgo = callArgs.where.OR[1].updatedAt.lt;
 
       const expectedDate = new Date();
-      expectedDate.setDate(expectedDate.getDate() - 30);
+      // UTC, like the repository: local setDate drifts by an hour across a DST change
+      expectedDate.setUTCDate(expectedDate.getUTCDate() - 30);
 
       // Check that the date is approximately 30 days ago (within 1 second tolerance)
       expect(Math.abs(thirtyDaysAgo.getTime() - expectedDate.getTime())).toBeLessThan(1000);
