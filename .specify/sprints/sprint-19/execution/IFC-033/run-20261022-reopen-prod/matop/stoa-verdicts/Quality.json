@@ -1,0 +1,104 @@
+{
+  "stoa": "Quality",
+  "task_id": "IFC-033",
+  "run_id": "run-20261022-reopen-prod",
+  "verdict": "PASS",
+  "gates": [
+    {
+      "gate": "GATE:real-benchmark-data",
+      "result": "PASS",
+      "evidence": "k6-run-output.txt, summary JSON, HTML report, telemetry JSON agree: 185 leads/123 s = 5435/h, 0% errors (391 req), 20 conversions, p95 1137.4 ms. Timestamps: k6 error line 2026-10-23T00:08:54+01:00 = 23:08:54Z, summary generatedAt 23:08:52.894Z, inside window 23:06:36Z-23:08:54Z. Arithmetic consistent (23/15s*120s=184, 185 creates+185 reads+20 converts=390~391)."
+    },
+    {
+      "gate": "p95 truthfulness",
+      "result": "PASS",
+      "evidence": "p95 reported as FAIL (class=fail in HTML, pass.p95=false in JSON, FAIL in bottleneck-analysis s0, spec AC3, plan S19, k6 exit 99, debt-ledger, ruling). Never presented as a pass. Not a failure cause per owner ruling (#1001)."
+    },
+    {
+      "gate": "grafana-load-test.png",
+      "result": "PASS",
+      "evidence": "Viewed: Grafana Cloud render, window 23:04-23:11 UTC, req/s ramps 23:07-23:10, p95 vs 200 ms budget line shown above budget. Curves trail run as documented."
+    },
+    {
+      "gate": "New tests (prepare-ifc-033-tenant)",
+      "result": "WARN",
+      "evidence": "12 tests (orchestrator-reported 12/12) fake fetch at the real boundary and assert URLs/headers/bodies; helpers, acquireToken (4 branches), prepareTenant covered. Not exercised: upsertEnvFile (l.151-156), main() (l.158-190), entry guard (l.192-197), signup-200-without-session fall-through. Estimated ~25-30 of ~85 executable lines uncovered, diff coverage roughly 65-70%, below 80%. tools/**/*.mjs is in vitest coverage include so it counts. Not measured (no test runs allowed)."
+    },
+    {
+      "gate": "Flaky timeout plausibility",
+      "result": "PASS",
+      "evidence": "flaky-test-skip-gate.test.ts timeout is an unrelated file, passed alone 58/58 with new file per orchestrator; plausible under shared-machine load."
+    },
+    {
+      "gate": "Coverage baseline",
+      "result": "PASS",
+      "evidence": "artifacts/coverage/IFC-033-before.json present. No AFTER file found in artifacts/coverage (not required by DoD)."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "high",
+      "file": "tools/scripts/k6/prepare-ifc-033-tenant.mjs",
+      "line": "151-197",
+      "issue": "upsertEnvFile, main() and the entry guard have no tests; likely diff-coverage below the 80% pre-ship/Sonar floor.",
+      "fix": "Export main/upsertEnvFile with injectable env, paths and fetch; test with a tmp dir (missing env vars -> exit, env file merge keeps other keys, mode 0600, qualified-leads.json written). Or measure with the diff-coverage gate and adjust."
+    },
+    {
+      "severity": "low",
+      "file": "tools/scripts/k6/prepare-ifc-033-tenant.mjs",
+      "line": "115-122",
+      "issue": "Branch where signup returns 200 with no session and no needsEmailVerification (falls through to login) is untested.",
+      "fix": "Add one test."
+    },
+    {
+      "severity": "low",
+      "file": "docs/shared/bottleneck-analysis.md",
+      "line": "s0",
+      "issue": "States six round-trips make up the 898 ms request, but telemetry lists 8 pg.query spans (BEGIN, SET, 3 INSERT, 2 SELECT, COMMIT) summing about 1192 ms, more than the 898 ms parent, so spans overlap or are not all serial. Telemetry request counts (GET 202 + POST 235 = 437 over a 140 s window) also exceed k6's 391 by design of the window, undocumented.",
+      "fix": "Reword as roughly 147 ms per statement, several statements per request; note the window difference."
+    },
+    {
+      "severity": "info",
+      "file": ".specify/sprints/sprint-19/planning/IFC-033-plan.md",
+      "line": "S17",
+      "issue": "Plan discloses tests were written after the module, not RED-first. Honest, but a TDD deviation.",
+      "fix": "None; keep disclosure."
+    },
+    {
+      "severity": "info",
+      "file": ".specify/sprints/sprint-19/attestations/IFC-033/task-tracking.json",
+      "line": "status",
+      "issue": "Status history ends at In Progress and updated_at is stale (2026-10-05) while blockers are resolved.",
+      "fix": "Update at attestation time."
+    }
+  ],
+  "reviewed_at": "2026-10-23T00:30:00Z",
+  "recheck": {
+    "commit": "02023bf9d",
+    "rechecked_at": "2026-10-23T00:46:21.247Z",
+    "verdict": "PASS",
+    "results": [
+      {
+        "finding": "high: main/upsertEnvFile/entry guard untested",
+        "result": "RESOLVED",
+        "evidence": "main() exported with injected env/repoRoot/fetchImpl/log; tests for requires-env, writes creds+token+pool without logging token, defaults, unknown expiry; upsertEnvFile and defaultRunTag tested. Orchestrator-measured 95.4% stmts, 90.56% branches, 94.73% lines; only the CLI entry guard (222-225) uncovered, above the 80% diff-coverage floor."
+      },
+      {
+        "finding": "low: signup-200-without-session untested",
+        "result": "RESOLVED",
+        "evidence": "acquireToken restructured so the path falls through to login; tests added for signup-also-failed, login-only error, no-token."
+      },
+      {
+        "finding": "low: six round-trips wording",
+        "result": "RESOLVED",
+        "evidence": "bottleneck-analysis.md now says about six round-trips and explains 8 pg.query spans (~1,190 ms) exceed the request span. Per-window request-count note not added (info only)."
+      },
+      {
+        "finding": "info: TDD order, stale task-tracking",
+        "result": "UNCHANGED",
+        "evidence": "Disclosure stays in plan S17; task-tracking updated_at to refresh at attestation."
+      }
+    ],
+    "new_defects_check": "Reviewer-found fixes (bulkUpdateStatus successful/failed honoured and throws on failures, unique run tag, combined signup+login error) read correctly in the diff; no regression seen. Not re-run (read-only); relies on orchestrator 24/24."
+  }
+}
