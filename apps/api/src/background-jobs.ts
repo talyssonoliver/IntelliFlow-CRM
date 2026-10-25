@@ -27,6 +27,13 @@ import {
   stopBounceScanner,
 } from './modules/email/bounce-scheduler';
 import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
+import {
+  checkBackgroundJobsHeartbeat,
+  getHeartbeatStore,
+  type BackgroundJobsHeartbeatCheck,
+  type HeartbeatJob,
+  type HeartbeatStore,
+} from './background-jobs-heartbeat';
 
 /** Env var that switches the jobs off in the api process. */
 export const API_BACKGROUND_JOBS_ENV = 'API_BACKGROUND_JOBS';
@@ -53,6 +60,8 @@ export interface StartBackgroundJobsOptions {
   /** Resolves once the DI container is usable; defaults to the api container. */
   ready?: () => Promise<unknown>;
   log?: Pick<Console, 'warn' | 'info'>;
+  /** Where each finished tick leaves its heartbeat; defaults to the shared Redis store. */
+  heartbeat?: HeartbeatStore | null;
 }
 
 export interface StartedBackgroundJobs {
@@ -74,14 +83,28 @@ export function startBackgroundJobs({
   env = process.env,
   ready = defaultReady,
   log = console,
+  heartbeat = getHeartbeatStore(env),
 }: StartBackgroundJobsOptions = {}): StartedBackgroundJobs {
+  // Best effort: a heartbeat failure must never fail a tick.
+  const beat = async (job: HeartbeatJob): Promise<void> => {
+    try {
+      await heartbeat?.record(job, Date.now());
+    } catch (error) {
+      log.warn(
+        `[background-jobs] heartbeat write failed: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
+  };
+
   // PG-198: approval escalation/expiry sweep.
   const approvalSweep = startApprovalSweep({
     intervalMs: approvalSweepIntervalFromEnv(env),
     log,
     run: async () => {
       await ready();
-      return runApprovalSweep(await createDefaultSweepDeps());
+      const report = await runApprovalSweep(await createDefaultSweepDeps());
+      await beat('approvalSweep');
+      return report;
     },
   });
 
@@ -91,15 +114,26 @@ export function startBackgroundJobs({
     log,
     run: async () => {
       await ready();
-      return runBounceScan(await createBounceReaderDeps());
+      const report = await runBounceScan(await createBounceReaderDeps());
+      await beat('bounceScan');
+      return report;
     },
   });
 
   return { approvalSweep, bounceScan };
 }
 
-/** Stop every timer started by `startBackgroundJobs` (SIGTERM, tests). */
-export function stopBackgroundJobs(): void {
-  stopApprovalSweep();
-  stopBounceScanner();
+/**
+ * Stop every timer started by `startBackgroundJobs` and wait for a tick that is
+ * mid-flight (SIGTERM, tests). The caller's shutdown timeout still caps the wait.
+ */
+export async function stopBackgroundJobs(): Promise<void> {
+  await Promise.all([stopApprovalSweep(), stopBounceScanner()]);
+}
+
+/** Heartbeat health for /health/detailed and the combined worker. Read-only, on request. */
+export function checkBackgroundJobsHealth(
+  env: NodeJS.ProcessEnv = process.env
+): Promise<BackgroundJobsHeartbeatCheck> {
+  return checkBackgroundJobsHeartbeat({ env });
 }

@@ -4,7 +4,8 @@ import { createBackgroundJobsWorker, type ApiBackgroundJobsModule } from '../bac
 function makeModule(started = { approvalSweep: true, bounceScan: true }) {
   const mod: ApiBackgroundJobsModule = {
     startBackgroundJobs: vi.fn(() => started),
-    stopBackgroundJobs: vi.fn(),
+    stopBackgroundJobs: vi.fn(async () => undefined),
+    checkBackgroundJobsHealth: vi.fn(async () => ({ status: 'ok' as const })),
   };
   return mod;
 }
@@ -72,17 +73,96 @@ describe('createBackgroundJobsWorker', () => {
     expect(worker.getStatus()).toEqual({ state: 'idle' });
   });
 
-  it('checkHealth is ok while running and an error otherwise', async () => {
+  it('stop waits for the api to finish its in-flight tick', async () => {
+    let finish!: () => void;
+    const mod = makeModule();
+    mod.stopBackgroundJobs = vi.fn(() => new Promise<void>((resolve) => (finish = resolve)));
+    const worker = createBackgroundJobsWorker(async () => mod, { info: vi.fn() });
+    await worker.start();
+
+    let stopped = false;
+    const stopping = worker.stop().then(() => (stopped = true));
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    expect(stopped).toBe(false);
+    expect(worker.getStatus()).toEqual({ state: 'running' });
+
+    finish();
+    await stopping;
+    expect(worker.getStatus()).toEqual({ state: 'stopped' });
+  });
+
+  it('checkHealth is an error before start and after stop', async () => {
     const worker = createBackgroundJobsWorker(async () => makeModule(), { info: vi.fn() });
     expect(await worker.checkHealth!()).toEqual({
       timers: { status: 'error', message: 'background jobs are idle' },
     });
 
     await worker.start();
-    expect(await worker.checkHealth!()).toEqual({ timers: { status: 'ok' } });
-
     await worker.stop();
     expect((await worker.checkHealth!()).timers.status).toBe('error');
+  });
+
+  it('checkHealth is ok while running with a fresh heartbeat', async () => {
+    const worker = createBackgroundJobsWorker(async () => makeModule(), { info: vi.fn() });
+    await worker.start();
+
+    expect(await worker.checkHealth!()).toEqual({
+      timers: { status: 'ok' },
+      heartbeat: { status: 'ok' },
+    });
+  });
+
+  it('checkHealth reports degraded (never error) when no sweep has ticked', async () => {
+    const mod = makeModule();
+    mod.checkBackgroundJobsHealth = vi.fn(async () => ({
+      status: 'degraded' as const,
+      message: 'No tick from approvalSweep',
+    }));
+    const worker = createBackgroundJobsWorker(async () => mod, { info: vi.fn() });
+    await worker.start();
+
+    expect(await worker.checkHealth!()).toEqual({
+      timers: { status: 'ok' },
+      heartbeat: { status: 'degraded', message: 'No tick from approvalSweep' },
+    });
+  });
+
+  it('checkHealth passes an unknown heartbeat through as ok with its message', async () => {
+    const mod = makeModule();
+    mod.checkBackgroundJobsHealth = vi.fn(async () => ({
+      status: 'unknown' as const,
+      message: 'REDIS_HOST is not set',
+    }));
+    const worker = createBackgroundJobsWorker(async () => mod, { info: vi.fn() });
+    await worker.start();
+
+    expect((await worker.checkHealth!()).heartbeat).toEqual({
+      status: 'ok',
+      message: 'REDIS_HOST is not set',
+    });
+  });
+
+  it('checkHealth degrades when the heartbeat read throws', async () => {
+    const mod = makeModule();
+    mod.checkBackgroundJobsHealth = vi.fn(async () => {
+      throw new Error('redis down');
+    });
+    const worker = createBackgroundJobsWorker(async () => mod, { info: vi.fn() });
+    await worker.start();
+
+    expect((await worker.checkHealth!()).heartbeat).toEqual({
+      status: 'degraded',
+      message: 'redis down',
+    });
+  });
+
+  it('checkHealth stringifies a non-Error heartbeat failure', async () => {
+    const mod = makeModule();
+    mod.checkBackgroundJobsHealth = vi.fn(() => Promise.reject('plain'));
+    const worker = createBackgroundJobsWorker(async () => mod, { info: vi.fn() });
+    await worker.start();
+
+    expect((await worker.checkHealth!()).heartbeat?.message).toBe('plain');
   });
 
   it('defaults the logger to console', async () => {

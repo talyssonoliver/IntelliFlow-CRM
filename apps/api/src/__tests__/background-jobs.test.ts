@@ -8,12 +8,13 @@ type SchedulerOptions = { intervalMs: number; run: () => Promise<unknown> };
 
 const m = vi.hoisted(() => ({
   startApprovalSweep: vi.fn((_options: SchedulerOptions) => true),
-  stopApprovalSweep: vi.fn(),
+  stopApprovalSweep: vi.fn<() => Promise<void>>(async () => undefined),
   approvalSweepIntervalFromEnv: vi.fn(() => 111),
   runApprovalSweep: vi.fn().mockResolvedValue({ locked: true }),
   createDefaultSweepDeps: vi.fn().mockResolvedValue({ marker: 'sweep-deps' }),
   startBounceScanner: vi.fn((_options: SchedulerOptions) => true),
-  stopBounceScanner: vi.fn(),
+  stopBounceScanner: vi.fn<() => Promise<void>>(async () => undefined),
+  checkBackgroundJobsHeartbeat: vi.fn(async () => ({ status: 'ok' })),
   bounceScanIntervalFromEnv: vi.fn(() => 222),
   runBounceScan: vi.fn().mockResolvedValue({ mailboxesScanned: 0 }),
   createBounceReaderDeps: vi.fn().mockResolvedValue({ marker: 'bounce-deps' }),
@@ -37,12 +38,17 @@ vi.mock('../modules/email/bounce-reader', () => ({
   runBounceScan: m.runBounceScan,
   createBounceReaderDeps: m.createBounceReaderDeps,
 }));
+vi.mock('../background-jobs-heartbeat', () => ({
+  checkBackgroundJobsHeartbeat: m.checkBackgroundJobsHeartbeat,
+  getHeartbeatStore: () => null,
+}));
 vi.mock('../container', () => ({ containerReady: Promise.resolve('container') }));
 
 import {
   API_BACKGROUND_JOBS_ENV,
   apiBackgroundJobsEnabled,
   backgroundJobsFlagEnabled,
+  checkBackgroundJobsHealth,
   startBackgroundJobs,
   stopBackgroundJobs,
 } from '../background-jobs';
@@ -57,6 +63,9 @@ beforeEach(() => {
   m.createDefaultSweepDeps.mockResolvedValue({ marker: 'sweep-deps' });
   m.runBounceScan.mockResolvedValue({ mailboxesScanned: 0 });
   m.createBounceReaderDeps.mockResolvedValue({ marker: 'bounce-deps' });
+  m.stopApprovalSweep.mockResolvedValue(undefined);
+  m.stopBounceScanner.mockResolvedValue(undefined);
+  m.checkBackgroundJobsHeartbeat.mockResolvedValue({ status: 'ok' });
 });
 
 describe('backgroundJobsFlagEnabled', () => {
@@ -132,9 +141,82 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     expect(m.createDefaultSweepDeps).toHaveBeenCalledTimes(1);
   });
 
-  it('stops both schedulers', () => {
-    stopBackgroundJobs();
+  it('stops both schedulers and waits for both in-flight ticks', async () => {
+    let finishSweep!: () => void;
+    m.stopApprovalSweep.mockImplementation(() => new Promise<void>((r) => (finishSweep = r)));
+    let done = false;
+
+    const stopping = stopBackgroundJobs().then(() => (done = true));
+    await new Promise((resolve) => setTimeout(resolve, 10));
     expect(m.stopApprovalSweep).toHaveBeenCalledTimes(1);
     expect(m.stopBounceScanner).toHaveBeenCalledTimes(1);
+    expect(done).toBe(false);
+
+    finishSweep();
+    await stopping;
+    expect(done).toBe(true);
+  });
+});
+
+describe('heartbeat', () => {
+  const store = () => ({
+    record: vi.fn(async (_job: string, _at: number) => undefined),
+    read: vi.fn(),
+  });
+
+  it('each finished tick records its own heartbeat, after the job completed', async () => {
+    const heartbeat = store();
+    const order: string[] = [];
+    m.runApprovalSweep.mockImplementation(async () => {
+      order.push('sweep');
+      return { locked: true };
+    });
+    heartbeat.record.mockImplementation(async (job: string) => {
+      order.push(`beat:${job}`);
+    });
+    startBackgroundJobs({ env: {}, ready: async () => undefined, heartbeat });
+
+    await m.startApprovalSweep.mock.calls[0]![0].run();
+    await m.startBounceScanner.mock.calls[0]![0].run();
+
+    expect(order).toEqual(['sweep', 'beat:approvalSweep', 'beat:bounceScan']);
+    expect(heartbeat.record).toHaveBeenCalledWith('approvalSweep', expect.any(Number));
+  });
+
+  it('does not record a heartbeat for a tick that failed', async () => {
+    const heartbeat = store();
+    m.runApprovalSweep.mockRejectedValue(new Error('db down'));
+    startBackgroundJobs({ env: {}, ready: async () => undefined, heartbeat });
+
+    await expect(m.startApprovalSweep.mock.calls[0]![0].run()).rejects.toThrow('db down');
+    expect(heartbeat.record).not.toHaveBeenCalled();
+  });
+
+  it('a heartbeat write failure never fails the tick; it is logged', async () => {
+    const heartbeat = store();
+    heartbeat.record.mockRejectedValueOnce(new Error('redis down'));
+    heartbeat.record.mockRejectedValueOnce('plain');
+    const log = { warn: vi.fn(), info: vi.fn() };
+    startBackgroundJobs({ env: {}, ready: async () => undefined, heartbeat, log });
+
+    await expect(m.startApprovalSweep.mock.calls[0]![0].run()).resolves.toEqual({ locked: true });
+    await expect(m.startBounceScanner.mock.calls[0]![0].run()).resolves.toEqual({
+      mailboxesScanned: 0,
+    });
+    expect(log.warn).toHaveBeenCalledWith('[background-jobs] heartbeat write failed: redis down');
+    expect(log.warn).toHaveBeenCalledWith('[background-jobs] heartbeat write failed: plain');
+  });
+
+  it('runs fine with no heartbeat store (no Redis configured)', async () => {
+    startBackgroundJobs({ env: {}, ready: async () => undefined, heartbeat: null });
+    await expect(m.startApprovalSweep.mock.calls[0]![0].run()).resolves.toEqual({ locked: true });
+  });
+
+  it('checkBackgroundJobsHealth reads the heartbeat only when called', async () => {
+    expect(m.checkBackgroundJobsHeartbeat).not.toHaveBeenCalled();
+    await expect(checkBackgroundJobsHealth({ MARK: 'x' } as never)).resolves.toEqual({
+      status: 'ok',
+    });
+    expect(m.checkBackgroundJobsHeartbeat).toHaveBeenCalledWith({ env: { MARK: 'x' } });
   });
 });

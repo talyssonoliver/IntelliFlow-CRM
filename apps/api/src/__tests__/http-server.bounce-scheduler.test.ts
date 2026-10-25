@@ -32,7 +32,7 @@ describe('bounce scanner wiring', () => {
 
   it('API_BACKGROUND_JOBS=off starts no scanner', async () => {
     vi.stubEnv('API_BACKGROUND_JOBS', 'off');
-    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     try {
       server = startApiServer({ port: 0 });
       await new Promise<void>((resolve) => server!.once('listening', () => resolve()));

@@ -25,7 +25,7 @@ initializeSentry()
 
 process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
-  stopBackgroundJobs();
+  await stopBackgroundJobs();
   await shutdownAllQueues();
   await disconnectPrisma();
   process.exit(0);

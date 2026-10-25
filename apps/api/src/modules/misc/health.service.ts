@@ -26,7 +26,29 @@ export type HealthProbes = {
   redisPing?: () => Promise<string>;
   /** Number of workers consuming each queue the API produces to. */
   queueConsumers?: () => Promise<Record<string, number>>;
+  /** Last-tick heartbeat of the approval sweep and bounce scan (read on request only). */
+  backgroundJobs?: () => Promise<BackgroundJobsCheck>;
 };
+
+type BackgroundJobsCheck = {
+  /** `unknown` never degrades: there is nothing to judge by. */
+  status: 'ok' | 'degraded' | 'unknown';
+  jobs?: unknown;
+  message?: string;
+};
+
+async function getBackgroundJobsCheck(
+  probe: () => Promise<BackgroundJobsCheck>
+): Promise<BackgroundJobsCheck> {
+  try {
+    return await withTimeout(probe(), 'Background jobs heartbeat');
+  } catch (error) {
+    return {
+      status: 'unknown',
+      message: error instanceof Error ? error.message : 'Unknown heartbeat error',
+    };
+  }
+}
 
 const PROBE_TIMEOUT_MS = 2000;
 
@@ -131,16 +153,20 @@ export async function getDetailedHealth(
   probes: HealthProbes = {}
 ) {
   const startTime = Date.now();
-  const [database, redis, queues] = await Promise.all([
+  const [database, redis, queues, backgroundJobs] = await Promise.all([
     getDatabaseConnectivity(prisma),
     probes.redisPing ? getRedisConnectivity(probes.redisPing) : undefined,
     probes.queueConsumers ? getQueueConsumers(probes.queueConsumers) : undefined,
+    probes.backgroundJobs ? getBackgroundJobsCheck(probes.backgroundJobs) : undefined,
   ]);
   const totalLatency = Date.now() - startTime;
 
   // A queue with no consumer is "degraded": jobs pile up and nothing reports it.
   const healthy =
-    database.status === 'ok' && redis?.status !== 'error' && (!queues || queues.status === 'ok');
+    database.status === 'ok' &&
+    redis?.status !== 'error' &&
+    (!queues || queues.status === 'ok') &&
+    backgroundJobs?.status !== 'degraded';
 
   const result = {
     status: healthy ? ('healthy' as const) : ('degraded' as const),
@@ -149,6 +175,7 @@ export async function getDetailedHealth(
       database,
       ...(redis ? { redis } : {}),
       ...(queues ? { queues } : {}),
+      ...(backgroundJobs ? { backgroundJobs } : {}),
     },
     ...getRuntimeMetadata(),
   };

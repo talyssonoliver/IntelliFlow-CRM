@@ -13,12 +13,17 @@
  * @module combined-worker/background-jobs
  */
 
-import type { ManagedWorker } from './combined';
+import type { ComponentCheck, ManagedWorker } from './combined';
 
 /** The slice of `@intelliflow/api`'s background-jobs module used here. */
 export interface ApiBackgroundJobsModule {
   startBackgroundJobs(): { approvalSweep: boolean; bounceScan: boolean };
-  stopBackgroundJobs(): void;
+  stopBackgroundJobs(): Promise<void>;
+  /** Last-tick heartbeat judgement; read on request only. */
+  checkBackgroundJobsHealth(): Promise<{
+    status: 'ok' | 'degraded' | 'unknown';
+    message?: string;
+  }>;
 }
 
 /**
@@ -43,20 +48,37 @@ export function createBackgroundJobsWorker(
       );
     },
     async stop() {
-      jobs?.stopBackgroundJobs();
+      // Waits for a tick that is mid-flight (commit, notification, audit); the
+      // combined shutdown timeout still caps the wait.
+      await jobs?.stopBackgroundJobs();
       state = 'stopped';
     },
     getStatus() {
       return { state };
     },
-    // Joins the combined /health aggregation like the BullMQ workers do.
+    // Joins the combined /health aggregation like the BullMQ workers do. A
+    // missing heartbeat is `degraded` (still serving, never 503).
     async checkHealth() {
-      return {
+      const checks: Record<string, ComponentCheck> = {
         timers:
           state === 'running'
             ? { status: 'ok' }
             : { status: 'error', message: `background jobs are ${state}` },
       };
+      if (state !== 'running' || !jobs) return checks;
+      try {
+        const heartbeat = await jobs.checkBackgroundJobsHealth();
+        checks.heartbeat =
+          heartbeat.status === 'degraded'
+            ? { status: 'degraded', message: heartbeat.message }
+            : { status: 'ok', ...(heartbeat.message ? { message: heartbeat.message } : {}) };
+      } catch (error) {
+        checks.heartbeat = {
+          status: 'degraded',
+          message: error instanceof Error ? error.message : String(error),
+        };
+      }
+      return checks;
     },
   };
 }

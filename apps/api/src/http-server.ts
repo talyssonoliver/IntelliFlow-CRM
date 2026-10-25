@@ -567,8 +567,10 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
   if (apiBackgroundJobsEnabled(process.env)) {
     startBackgroundJobs({ ready: () => containerReady });
   } else {
-    console.log(
-      `[API] background jobs disabled (${API_BACKGROUND_JOBS_ENV}=off) — run them in the combined worker`
+    console.warn(
+      `[API] WARN background jobs disabled (${API_BACKGROUND_JOBS_ENV}=off): the approval sweep and ` +
+        'email bounce scan run only if the combined worker has COMBINED_BACKGROUND_JOBS=on. ' +
+        'If neither is set nothing runs them; /health/detailed reports degraded after 3x the interval.'
     );
   }
 
