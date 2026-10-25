@@ -43,6 +43,7 @@ import {
   createApiClient,
   querySeriesCount,
   redactBody,
+  requireEnv,
 } from '../lib/grafana-provisioning.mjs';
 
 const CONFIG_PATH = join(
@@ -135,12 +136,8 @@ export async function run({
 
   const problems = validateConfig(config);
   if (problems.length) throw new Error(`config invalid:\n  ${problems.join('\n  ')}`);
-  if (!env.SM_API_URL || !env.SM_ACCESS_TOKEN) {
-    throw new Error('SM_API_URL and SM_ACCESS_TOKEN are required');
-  }
-  if (!env.GRAFANA_URL || !env.GRAFANA_SA_TOKEN) {
-    throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
-  }
+  requireEnv(env, ['SM_API_URL', 'SM_ACCESS_TOKEN']);
+  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
 
   const sm = createApiClient(env.SM_API_URL, env.SM_ACCESS_TOKEN, fetchImpl, { sleep });
   const grafana = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
@@ -192,7 +189,8 @@ export async function run({
       uid: config.folder.uid,
       title: config.folder.title,
     });
-    if (made.status >= 300) throw new Error(`create folder: HTTP ${made.status} ${redactBody(made.text)}`);
+    if (made.status >= 300)
+      throw new Error(`create folder: HTTP ${made.status} ${redactBody(made.text)}`);
     log(`created folder ${config.folder.uid}`);
   } else if (folder.status !== 200) {
     throw new Error(`read folder: HTTP ${folder.status}`);

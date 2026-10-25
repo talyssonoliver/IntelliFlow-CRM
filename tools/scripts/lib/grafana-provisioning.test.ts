@@ -4,6 +4,7 @@ import {
   createApiClient,
   querySeriesCount,
   redactBody,
+  requireEnv,
   RETRY_DELAYS_MS,
 } from './grafana-provisioning.mjs';
 
@@ -85,6 +86,17 @@ describe('createApiClient retry on 503 (the Grafana Cloud instance waking up)', 
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('requireEnv', () => {
+  it('names every required variable when one is missing or empty', () => {
+    expect(() => requireEnv({ A: 'x', B: '' }, ['A', 'B'])).toThrow('A and B are required');
+    expect(() => requireEnv({}, ['A'])).toThrow('A are required');
+  });
+
+  it('passes when every variable is set', () => {
+    expect(() => requireEnv({ A: 'x', B: 'y' }, ['A', 'B'])).not.toThrow();
   });
 });
 

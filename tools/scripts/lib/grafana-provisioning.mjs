@@ -15,6 +15,14 @@ export const RETRY_DELAYS_MS = [5000, 10000, 20000, 40000, 60000, 60000, 60000];
 
 const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/**
+ * Throws `<A> and <B> are required` unless every named variable is set, so
+ * each apply script refuses to start, before any request, in the same words.
+ */
+export function requireEnv(env, names) {
+  if (names.some((name) => !env[name])) throw new Error(`${names.join(' and ')} are required`);
+}
+
 /** Minimal bearer-token JSON client shared by every Grafana-shaped API this repo talks to. */
 export function createApiClient(baseUrl, token, fetchImpl = fetch, { sleep = defaultSleep } = {}) {
   const send = (method, path, body) =>

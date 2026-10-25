@@ -1,0 +1,6 @@
+## eslint
+eslint exit=0
+## prettier
+Checking formatting...
+All matched files use Prettier code style!
+prettier exit=0

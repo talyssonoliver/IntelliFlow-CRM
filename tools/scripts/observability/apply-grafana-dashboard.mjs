@@ -15,7 +15,7 @@
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createApiClient, redactBody } from '../lib/grafana-provisioning.mjs';
+import { createApiClient, redactBody, requireEnv } from '../lib/grafana-provisioning.mjs';
 
 const CONFIG_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -92,9 +92,7 @@ export async function run({
 
   const problems = validateConfig(config);
   if (problems.length) throw new Error(`dashboard file invalid:\n  ${problems.join('\n  ')}`);
-  if (!env.GRAFANA_URL || !env.GRAFANA_SA_TOKEN) {
-    throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
-  }
+  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
   const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
 
   const folder = await api('GET', `/api/folders/${config.folderUid}`);

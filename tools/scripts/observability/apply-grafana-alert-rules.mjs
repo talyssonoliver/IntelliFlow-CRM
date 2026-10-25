@@ -22,6 +22,7 @@ import {
   createApiClient,
   querySeriesCount,
   redactBody,
+  requireEnv,
 } from '../lib/grafana-provisioning.mjs';
 
 const RULES_PATH = join(
@@ -102,9 +103,7 @@ export async function run({
 
   const problems = validateConfig(config);
   if (problems.length) throw new Error(`rules file invalid:\n  ${problems.join('\n  ')}`);
-  if (!env.GRAFANA_URL || !env.GRAFANA_SA_TOKEN) {
-    throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
-  }
+  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
   const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
 
   // Every rule must watch metrics that exist, or it silently never fires.
@@ -126,7 +125,8 @@ export async function run({
       uid: config.folder.uid,
       title: config.folder.title,
     });
-    if (made.status >= 300) throw new Error(`create folder: HTTP ${made.status} ${redactBody(made.text)}`);
+    if (made.status >= 300)
+      throw new Error(`create folder: HTTP ${made.status} ${redactBody(made.text)}`);
     log(`created folder ${config.folder.uid}`);
   } else if (folder.status !== 200) {
     throw new Error(`read folder: HTTP ${folder.status}`);
@@ -140,7 +140,8 @@ export async function run({
       existing.status === 200
         ? await api('PUT', `/api/v1/provisioning/alert-rules/${entry.uid}`, rule)
         : await api('POST', '/api/v1/provisioning/alert-rules', rule);
-    if (res.status >= 300) throw new Error(`${entry.uid}: HTTP ${res.status} ${redactBody(res.text)}`);
+    if (res.status >= 300)
+      throw new Error(`${entry.uid}: HTTP ${res.status} ${redactBody(res.text)}`);
     log(`${existing.status === 200 ? 'updated' : 'created'} ${entry.uid}`);
   }
 
