@@ -5,7 +5,12 @@
   "execution": {
     "started_at": "2026-10-25T16:19:27Z",
     "executor": "Claude Code /exec",
-    "agents": ["stoa-intelligence", "stoa-quality", "stoa-foundation", "stoa-security"]
+    "agents": [
+      "stoa-intelligence",
+      "stoa-quality",
+      "stoa-foundation",
+      "stoa-security"
+    ]
   },
   "status_history": [
     {
@@ -32,6 +37,11 @@
       "status": "In Progress",
       "at": "2026-10-25T16:19:27Z",
       "note": "Exec session started (/exec IFC-117, sprint 18)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T19:58:52Z",
+      "note": "Exec validated (typecheck, lint, build, ai-worker tests, tools tests, clean exit, coverage after). Attestation verdict NEEDS_HUMAN: production evidence N1-N7 is the owner's after promotion. The CSV stays In Progress at 90% because validate-sprint-data does not accept Needs Human yet. Not pushed yet (single push with pre-ship follows)."
     }
   ],
   "blockers": [
@@ -51,6 +61,6 @@
       "resolved_at": null
     }
   ],
-  "percent_complete": 50,
-  "updated_at": "2026-10-25T16:18:12Z"
+  "percent_complete": 90,
+  "updated_at": "2026-10-25T19:58:52Z"
 }

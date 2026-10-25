@@ -196,31 +196,31 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-009, AC-010 (partly), NF-001, NF-002, NF-003
 
 **Test cases:**
-- [ ] Every name, type and unit in `AI_METRIC_DEFINITIONS` matches the spec table. The latency histogram's bucket boundaries equal
+- [x] Every name, type and unit in `AI_METRIC_DEFINITIONS` matches the spec table. The latency histogram's bucket boundaries equal
   `[50,100,250,500,1000,1500,2000,3000,5000,10000,30000]`.
-- [ ] Model normalisation:
+- [x] Model normalisation:
   - every `MODEL_PRICING` key round-trips unchanged (parametrised over `Object.keys(MODEL_PRICING)`);
   - `'unknown'`, `'default'`, `undefined`, `''`, `'x:free'`, `'__proto__'`, `'constructor'`, `'toString'` all map to `other`;
   - a dated gateway name maps through `servedPricingKey` (`config/ai.config.ts:313-317`).
-- [ ] Runtime allowlist: unknown `metric`, `severity`, `status`, `urgency`, `value_type`, `hallucination_type`, `reason` and `chain` values
+- [x] Runtime allowlist: unknown `metric`, `severity`, `status`, `urgency`, `value_type`, `hallucination_type`, `reason` and `chain` values
   map to `other` (or `unknown` for chain). The allowlist arrays are exhaustive against their unions (a `satisfies` type test).
-- [ ] `error_class` classifier:
+- [x] `error_class` classifier:
   - a timeout error gives `timeout`;
   - an HTTP 429 shape gives `rate_limited`;
   - a ZodError or SyntaxError gives `parse`;
   - `class FooTenant123Error`, a non-Error throw, and `{message: CANARY}` all give `other`.
-- [ ] Error canary: the canary appears in no attribute. The canary is built at runtime as `['CANARY', 'MARKER', 'a'.repeat(8)].join('_')`.
-- [ ] Cardinality: feeding 1,000 random strings into every attribute position keeps the number of distinct series ≤ the computed bound.
+- [x] Error canary: the canary appears in no attribute. The canary is built at runtime as `['CANARY', 'MARKER', 'a'.repeat(8)].join('_')`.
+- [x] Cardinality: feeding 1,000 random strings into every attribute position keeps the number of distinct series ≤ the computed bound.
   The pre-seeded series count equals the bound for the closed sets.
-- [ ] Recorders never throw. With an instrument whose `add`/`record` throws, every `record*` returns normally.
-- [ ] `recordConfidence` with NaN, Infinity, −0.1, 1.1, a string or undefined records nothing.
-- [ ] `recordCost` for an unknown model records nothing on OTel. For a known model it records the value, including 0.
-- [ ] `drift.last_check` is not observed before the first tick, and is observed after `recordDriftTick` (also on an
+- [x] Recorders never throw. With an instrument whose `add`/`record` throws, every `record*` returns normally.
+- [x] `recordConfidence` with NaN, Infinity, −0.1, 1.1, a string or undefined records nothing.
+- [x] `recordCost` for an unknown model records nothing on OTel. For a known model it records the value, including 0.
+- [x] `drift.last_check` is not observed before the first tick, and is observed after `recordDriftTick` (also on an
   `insufficient_data`-only tick).
-- [ ] Gauge callbacks that throw do not abort collection.
+- [x] Gauge callbacks that throw do not abort collection.
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/otel-ai-metrics.test.ts` FAILS, because the module is missing.
+- [x] `AIW src/monitoring/__tests__/otel-ai-metrics.test.ts` FAILS, because the module is missing.
 
 #### Step 2: Global-wiring test
 
@@ -232,15 +232,15 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-010
 
 **Test cases:**
-- [ ] `metrics.disable()`, then `expect(metrics.setGlobalMeterProvider(provider)).toBe(true)`.
-- [ ] One `recordInference` through the production `getMeter` path reaches the reader. This proves that the aliased
+- [x] `metrics.disable()`, then `expect(metrics.setGlobalMeterProvider(provider)).toBe(true)`.
+- [x] One `recordInference` through the production `getMeter` path reaches the reader. This proves that the aliased
   `@opentelemetry/api` (`apps/ai-worker/vitest.config.ts:15-20`) shares the global.
-- [ ] `afterAll` awaits `provider.shutdown()`, then calls `metrics.disable()`.
-- [ ] Static check: no non-test file under `apps/ai-worker/src` imports `initMetrics`. It walks the files with `fs` and a
+- [x] `afterAll` awaits `provider.shutdown()`, then calls `metrics.disable()`.
+- [x] Static check: no non-test file under `apps/ai-worker/src` imports `initMetrics`. It walks the files with `fs` and a
   regex, so it does not depend on shell grep and stays Windows-safe (NF-009).
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/otel-ai-metrics.global.test.ts` FAILS.
+- [x] `AIW src/monitoring/__tests__/otel-ai-metrics.global.test.ts` FAILS.
 
 #### Step 3: `withMonitoring` call-site tests
 
@@ -252,30 +252,30 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-002, AC-003, AC-004, AC-008
 
 **Test cases:**
-- [ ] Success records:
+- [x] Success records: _(Deviation: no-value booking asserted; the debug log line exists at `chain-monitor.ts:321` but is not asserted — the module-level pino logger would need a module mock.)_
   - an inference with `outcome=success` and latency;
   - a confidence, only when the result carries a raw `confidence` (no default 1);
   - a cost, only when usage is present and the model is known;
   - an estimated value equal to `roiTracker.recordValueByType(...).estimatedValue`, only when `valueType` is passed, with a
     debug log when it is absent.
-- [ ] Drift sample = score/100 for `score: 1` (gives 0.01, which fixes `:228`) and for `score: 72` (gives 0.72).
+- [x] Drift sample = score/100 for `score: 1` (gives 0.01, which fixes `:228`) and for `score: 72` (gives 0.72).
   `recordDrift:false` records no sample.
-- [ ] `HallucinationOutcome`:
+- [x] `HallucinationOutcome`:
   - checked + hallucinated gives `checks+1`, `detected+1` and `types` per type;
   - checked and not hallucinated, but with types present, gives `checks+1` and no `types`;
   - skipped (`no_context`, `no_text`, `too_short`) gives `skipped{reason}` only;
   - a checker error gives `skipped{reason:error}`.
-- [ ] `MonitoredResult.metrics.hallucinated` is `true`, `false` or `null`.
-- [ ] Error path:
+- [x] `MonitoredResult.metrics.hallucinated` is `true`, `false` or `null`.
+- [x] Error path:
   - `outcome=error` with a classified `error_class`;
   - the error is rethrown;
   - no drift sample, no value and no hallucination record.
-- [ ] Direct `hallucinationChecker.checkOutput(...)` calls do not move the call-site counters (the AC-004 path at
+- [x] Direct `hallucinationChecker.checkOutput(...)` calls do not move the call-site counters (the AC-004 path at
   `ai-worker.ts:1253`).
-- [ ] A throwing instrument leaves the chain result unchanged (NF-003).
+- [x] A throwing instrument leaves the chain result unchanged (NF-003).
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/chain-monitor.otel.test.ts` FAILS.
+- [x] `AIW src/monitoring/__tests__/chain-monitor.otel.test.ts` FAILS.
 
 #### Step 4: Drift statistics tests
 
@@ -290,32 +290,32 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-005, AC-007
 
 **Test cases:**
-- [ ] Pure shift is detected. Same spread, mean shifted by at least 2σ, n ≥ 200 per window. Expect a detected tick and
+- [x] Pure shift is detected. Same spread, mean shifted by at least 2σ, n ≥ 200 per window. Expect a detected tick and
   severity ≥ medium. This fails today because of per-window bin edges (`drift-detector.ts:392-398`).
-- [ ] No-shift control: the same distribution gives no detection, with p > 0.2.
-- [ ] Exact KS statistic on a small hand-computed sample: D equals the literal.
-- [ ] KS with ties: tied integer scores are evaluated at distinct values, so D is not inflated.
-- [ ] Real n: an equal shift gives a smaller p at n=2000 than at n=20. This fails today because n is fixed at 100 (`:438`).
-- [ ] PSI null calibration at n=25/m=50: over 200 seeded null draws, the mean excess PSI is below 0.1.
-- [ ] False-positive rate: across 200 seeded null windows, detected ticks ≤ 5 at α=0.01, with margin.
-- [ ] Gate boundaries:
+- [x] No-shift control: the same distribution gives no detection, with p > 0.2.
+- [x] Exact KS statistic on a small hand-computed sample: D equals the literal.
+- [x] KS with ties: tied integer scores are evaluated at distinct values, so D is not inflated.
+- [x] Real n: an equal shift gives a smaller p at n=2000 than at n=20. This fails today because n is fixed at 100 (`:438`).
+- [x] PSI null calibration at n=25/m=50: over 200 seeded null draws, the mean excess PSI is below 0.1.
+- [x] False-positive rate: across 200 seeded null windows, detected ticks ≤ 5 at α=0.01, with margin.
+- [x] Gate boundaries:
   - all four combinations of (p < 0.01 or not) × (excess PSI ≥ 0.1 or D ≥ 0.1, or not);
   - the severity band edges at exactly 0.1, 0.2, 0.25 and 0.5 for PSI, and 0.1, 0.2, 0.3 and 0.5 for D.
-- [ ] Persistence:
+- [x] Persistence:
   - three consecutive detected ticks give ONE onset;
   - a 4th detected tick gives no new onset;
   - three clear ticks end the event;
   - a new shift gives a second onset.
-- [ ] Reference windows: the reference is the same 6h slice on days −1..−7 and never overlaps the current 6h window.
+- [x] Reference windows: the reference is the same 6h slice on days −1..−7 and never overlaps the current 6h window.
   Below 50 reference or 25 current samples the status is `insufficient_data`, never `none` (AC-007).
-- [ ] Retention: samples older than 8d are pruned. The per-key cap keeps the newest 50,000. The per-sample record is O(1):
+- [x] Retention: samples older than 8d are pruned. The per-key cap keeps the newest 50,000. The per-sample record is O(1):
   pruning is amortised and happens on tick.
-- [ ] Structured keys: a model name containing `:` round-trips. `DriftResult.model` is set, and so is `DriftResult.status`.
-- [ ] `driftHistory` is capped at 7d.
-- [ ] `user_satisfaction` and `user_correction_error` are not evaluated by the scheduled path.
+- [x] Structured keys: a model name containing `:` round-trips. `DriftResult.model` is set, and so is `DriftResult.status`.
+- [x] `driftHistory` is capped at 7d.
+- [x] `user_satisfaction` and `user_correction_error` are not evaluated by the scheduled path.
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/drift-detector.shift.test.ts` FAILS on the shift, real-n, persistence and reference cases.
+- [x] `AIW src/monitoring/__tests__/drift-detector.shift.test.ts` FAILS on the shift, real-n, persistence and reference cases.
 
 #### Step 5: Scheduler tests
 
@@ -327,22 +327,22 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-006
 
 **Test cases:**
-- [ ] `vi.useFakeTimers()`. `afterEach` calls `vi.useRealTimers()` and stops the scheduler.
-- [ ] `start()` creates one interval of 30 min, and calling it twice is idempotent. There is no run at boot.
-- [ ] `vi.advanceTimersByTimeAsync(30*60_000)` calls `detectAllDrift` once and `recordDriftTick` once.
-- [ ] A throwing `detectAllDrift` is logged, and the next tick still fires.
-- [ ] Re-entrancy: while a tick awaits a pending promise, a second interval does not start a second run.
-- [ ] `stop()` leaves `vi.getTimerCount() === 0`, and later advances produce no calls.
-- [ ] The interval handle has been `unref`'d.
-- [ ] Captured-logger leak test: a seeded run's sample values, distributions and recommendations never appear in the log
+- [x] `vi.useFakeTimers()`. `afterEach` calls `vi.useRealTimers()` and stops the scheduler.
+- [x] `start()` creates one interval of 30 min, and calling it twice is idempotent. There is no run at boot.
+- [x] `vi.advanceTimersByTimeAsync(30*60_000)` calls `detectAllDrift` once and `recordDriftTick` once.
+- [x] A throwing `detectAllDrift` is logged, and the next tick still fires.
+- [x] Re-entrancy: while a tick awaits a pending promise, a second interval does not start a second run.
+- [x] `stop()` leaves `vi.getTimerCount() === 0`, and later advances produce no calls.
+- [x] The interval handle has been `unref`'d.
+- [x] Captured-logger leak test: a seeded run's sample values, distributions and recommendations never appear in the log
   output. Only the fixed fields do.
-- [ ] `AIWorker.onStart` ordering, with the AIWorker dependencies mocked using the harness from
+- [x] `AIWorker.onStart` ordering, with the AIWorker dependencies mocked using the harness from _(Deviation: lives in `src/__tests__/ai-worker.boot-folded-workers.test.ts`, which already has the AIWorker harness.)_
   `apps/ai-worker/src/__tests__/ai-worker.boot-folded-workers.test.ts`:
   - the scheduler starts even when a later step (`registerScheduledJobs`) throws;
   - `onStop` stops it before the flush service stops.
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/drift-scheduler.test.ts` FAILS.
+- [x] `AIW src/monitoring/__tests__/drift-scheduler.test.ts` FAILS.
 
 #### Step 6: Real-chain integration test
 
@@ -354,11 +354,11 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-001, AC-002, AC-008, AC-009, NF-003
 
 **Setup.**
-- [ ] `beforeAll`:
+- [x] `beforeAll`:
   - build the `MeterProvider` and the DELTA reader;
   - call `metrics.disable()`;
   - `expect(metrics.setGlobalMeterProvider(p)).toBe(true)`.
-- [ ] `beforeEach`, in this order:
+- [x] `beforeEach`, in this order: _(Equivalent: `vi.doMock` inside `loadChain()`, with collect-and-discard in `beforeEach`.)_
   - `vi.stubEnv('AI_PROVIDER', 'mock')`;
   - `vi.resetModules()`;
   - `vi.stubGlobal('fetch', fakeFetch)`, with `fakeFetch` built inside `beforeEach`;
@@ -367,46 +367,46 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   - `__resetFactoryCache()`;
   - `vi.spyOn(chainMonitor, 'getConfig').mockReturnValue(createChainMonitor().getConfig())`;
   - `new LeadScoringChain({ provider: 'mock' })`.
-- [ ] `afterEach`: collect and discard.
-- [ ] `afterAll`: `await provider.shutdown()`, then `metrics.disable()`.
+- [x] `afterEach`: collect and discard.
+- [x] `afterAll`: `await provider.shutdown()`, then `metrics.disable()`.
 
 **Fake fetch.**
-- [ ] It returns an OpenAI `chat.completion` whose `message.content` is a JSON string valid against `leadScoreSchema`.
+- [x] It returns an OpenAI `chat.completion` whose `message.content` is a JSON string valid against `leadScoreSchema`.
   - Factors have reasoning of at least 10 characters.
   - `usage: { prompt_tokens: 2000, completion_tokens: 500 }`.
-- [ ] Request assertion: the body's `response_format.type === 'json_schema'`. The structured-output method is `jsonSchema`
+- [x] Request assertion: the body's `response_format.type === 'json_schema'`. The structured-output method is `jsonSchema`
   for `scoring-free` (`@langchain/openai` `base.js:472-476`).
 
 **Guards.**
-- [ ] `result.score > 0`.
-- [ ] `result.modelVersion !== 'error:v1'`.
-- [ ] `fetch` called exactly once.
-- [ ] No `outcome=error` data point.
+- [x] `result.score > 0`.
+- [x] `result.modelVersion !== 'error:v1'`.
+- [x] `fetch` called exactly once.
+- [x] No `outcome=error` data point.
 
 **Assertions**, from one `reader.collect()`:
-- [ ] latency histogram count = 1 for `{model:'scoring-free', chain:'lead_scoring', outcome:'success'}`;
-- [ ] inference count = 1;
-- [ ] cost ≈ the literal `2000/1000·0.00005 + 500/1000·0.00008 = 0.00014` (from `config/ai.config.ts:235`), checked with
+- [x] latency histogram count = 1 for `{model:'scoring-free', chain:'lead_scoring', outcome:'success'}`;
+- [x] inference count = 1;
+- [x] cost ≈ the literal `2000/1000·0.00005 + 500/1000·0.00008 = 0.00014` (from `config/ai.config.ts:235`), checked with
   `toBeCloseTo(0.00014, 9)`;
-- [ ] estimated value = 0.5 (`roi-tracker.ts:683`);
-- [ ] confidence recorded once;
-- [ ] hallucination checks = 1, so the check ran.
+- [x] estimated value = 0.5 (`roi-tracker.ts:683`);
+- [x] confidence recorded once;
+- [x] hallucination checks = 1, so the check ran.
 
 **Further cases.**
-- [ ] Leak guard: `JSON.stringify` of all data points contains none of the lead email canary, the operationId pattern, or the
+- [x] Leak guard: `JSON.stringify` of all data points contains none of the lead email canary, the operationId pattern, or the
   reasoning text.
-- [ ] Error case: the fake fetch returns HTTP 500, so the chain returns `error:v1`. Expect an `outcome=error` point, no value,
+- [x] Error case: the fake fetch returns HTTP 500, so the chain returns `error:v1`. Expect an `outcome=error` point, no value, _(Deviation: HTTP 400 is used; ChatOpenAI retries 5xx, which would break the one-fetch assertion. HTTP 500 is covered on the Grafana dry-run side.)_
   no drift sample, and no hallucination check.
-- [ ] Pre-monitoring error: make `createLLMForTenant` or the prompt resolution throw. Expect exactly one `outcome=error`,
+- [x] Pre-monitoring error: make `createLLMForTenant` or the prompt resolution throw. Expect exactly one `outcome=error`,
   `error_class=other` point from the outer catch; the "already counted" flag prevents a double count.
-- [ ] Concurrency: `Promise.all` of 2 calls gives 2 latency points and a cost of exactly 2 × 0.00014.
-- [ ] `result.modelVersion` starts with the chain's own provider (`mock:`), not with `aiConfig.provider`. This fixes
+- [x] Concurrency: `Promise.all` of 2 calls gives 2 latency points and a cost of exactly 2 × 0.00014.
+- [x] `result.modelVersion` starts with the chain's own provider (`mock:`), not with `aiConfig.provider`. This fixes
   `scoring.chain.ts:212`.
-- [ ] Fallback path: `new LeadScoringChain({ provider: 'mock', recordDrift: false })` gives no drift sample and still gives
+- [x] Fallback path: `new LeadScoringChain({ provider: 'mock', recordDrift: false })` gives no drift sample and still gives
   an inference point. The job-level wiring is unit-tested in `apps/ai-worker/src/jobs/scoring.job.test.ts` in S15.
 
 **Validation:**
-- [ ] `AIW src/chains/__tests__/scoring.chain.otel.integration.test.ts` FAILS.
+- [x] `AIW src/chains/__tests__/scoring.chain.otel.integration.test.ts` FAILS.
 
 #### Step 7: Alert-rules sibling script tests
 
@@ -418,41 +418,41 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-012, NF-007, NF-008
 
 **Test cases:**
-- [ ] The committed `infra/monitoring/grafana/cloud/ai-alert-rules.json` passes `validateConfig` (returns `[]`).
-- [ ] UIDs are pinned exactly: `ifc117-hallucination-rate`, `ifc117-drift-shift`, `ifc117-drift-stalled`,
+- [x] The committed `infra/monitoring/grafana/cloud/ai-alert-rules.json` passes `validateConfig` (returns `[]`).
+- [x] UIDs are pinned exactly: `ifc117-hallucination-rate`, `ifc117-drift-shift`, `ifc117-drift-stalled`,
   `ifc117-inference-p95-latency`, `ifc117-inference-error-ratio`, `ifc117-ai-metrics-silent`.
-- [ ] Every rule has `requireSeries: false` and `noData: "OK"`.
-- [ ] Folder and group are `intelliflow-ai`. A config using the IFC-032 values from `infra/monitoring/grafana/cloud/alert-rules.json`
+- [x] Every rule has `requireSeries: false` and `noData: "OK"`.
+- [x] Folder and group are `intelliflow-ai`. A config using the IFC-032 values from `infra/monitoring/grafana/cloud/alert-rules.json`
   (read live) is rejected.
-- [ ] Thresholds come from the exported thresholds config (NF-007). The hallucination expression contains `>= bool 0.05`.
-- [ ] Negative cases:
+- [x] Thresholds come from the exported thresholds config (NF-007). The hallucination expression contains `>= bool 0.05`.
+- [x] Negative cases:
   - a missing field;
   - a bad operator;
   - a duplicate uid;
   - a uid without the `ifc117-` prefix;
   - unsafe `uid`, `folder.uid`, `group.name` or `datasourceUid` values: `a/../b`, `?x`, `#x`, ` x`.
-- [ ] Parity test. The original `SAFE_PATH_SEGMENT` is NOT exported: it is a `const` at
+- [x] Parity test. The original `SAFE_PATH_SEGMENT` is NOT exported: it is a `const` at
   `tools/scripts/observability/apply-grafana-alert-rules.mjs:49`, and that file must not be edited.
   - The test reads the file with `fs` and extracts the regex literal with
     `/const SAFE_PATH_SEGMENT = (\/.+\/[a-z]*);/`.
   - It asserts that the extracted source equals the sibling's exported `SAFE_PATH_SEGMENT.source`.
   - A negative case feeds the extractor text without the const and expects it to throw ("parity source not found"), so
     a rename in ENV-008-AI's rewrite fails loudly instead of passing vacuously.
-- [ ] Fake Grafana `fetchImpl`, modelled on the `fakeGrafana` helper in `tools/scripts/__tests__/apply-grafana-alert-rules.test.ts`:
+- [x] Fake Grafana `fetchImpl`, modelled on the `fakeGrafana` helper in `tools/scripts/__tests__/apply-grafana-alert-rules.test.ts`:
   - the folder is created on a 404;
   - the rules are PUT or POSTed and only the `intelliflow-ai` group is PUT;
   - nothing is ever deleted;
   - there is no delivery test.
-- [ ] `--dry-run`:
+- [x] `--dry-run`:
   - writes nothing;
   - runs the series check AND an instant query per `expr`;
   - an HTTP error or `status:'error'` on any expr fails the run with the rule uid named;
   - empty results pass under `requireSeries:false`.
-- [ ] Token hygiene, with the token built at runtime as `'x'.repeat(24)` and the host `grafana.example.invalid`:
+- [x] Token hygiene, with the token built at runtime as `'x'.repeat(24)` and the host `grafana.example.invalid`:
   - a missing token throws a message that does not contain the token;
   - a 401 response with a body echo leaves neither the token nor `Authorization` in the thrown message or the logs;
   - error text is truncated to 200 characters.
-- [ ] Workflow YAML contract (`.github/workflows/grafana-ai-alert-rules.yml`, parsed as YAML):
+- [x] Workflow YAML contract (`.github/workflows/grafana-ai-alert-rules.yml`, parsed as YAML):
   - `on` has only `push` (branches `[main]`, paths = the rules file, the script, the workflow, `tools/scripts/lib/grafana-provisioning.mjs`)
     and `workflow_dispatch` with input `dry_run`;
   - no `pull_request` or `pull_request_target`;
@@ -464,11 +464,11 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   - the concurrency group is `grafana-ai-alert-rules`;
   - `timeout-minutes` is at least 12. ENV-008-AI's `createApiClient` will retry HTTP 503 eight times over about 255 s,
     according to env-008-ai-c7 on 2026-10-25.
-- [ ] Error text is redacted locally. ENV-008-AI's `redactBody` is not on main yet, so the sibling script must not import
+- [x] Error text is redacted locally. ENV-008-AI's `redactBody` is not on main yet, so the sibling script must not import
   it. Issue 13 in S26 switches it over after that lane merges.
 
 **Validation:**
-- [ ] `ROOTV tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts` FAILS.
+- [x] `ROOTV tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts` FAILS.
 
 #### Step 8: Static cross-check of instruments vs dashboard and rules
 
@@ -482,40 +482,40 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-013
 
 **Test cases:**
-- [ ] Registered instruments are DERIVED, not listed twice: run every `record*` once against an in-memory reader and
+- [x] Registered instruments are DERIVED, not listed twice: run every `record*` once against an in-memory reader and
   collect `descriptor.name`, `type` and `unit`.
   - The test imports the ai-worker facade by relative path. If the root project cannot resolve the
     `@opentelemetry/sdk-metrics` devDependency there, fall back to importing the exported `AI_METRIC_DEFINITIONS`, plus a
     facade test (S1) asserting that the definitions equal the collected descriptors.
-- [ ] A golden table of OTel → Prometheus pairs, hard-coded and marked ASSUMPTION in the header. Examples:
+- [x] A golden table of OTel → Prometheus pairs, hard-coded and marked ASSUMPTION in the header. Examples:
   - `intelliflow.ai.inference.latency` (ms, histogram) → `intelliflow_ai_inference_latency_milliseconds_{bucket,sum,count}`
   - counters → `_total`
   - unit-less gauges → no suffix
-- [ ] A PromQL tokenizer extracts metric identifiers from every `expr` and `selector` in `ai-alert-rules.json`, and from every
+- [x] A PromQL tokenizer extracts metric identifiers from every `expr` and `selector` in `ai-alert-rules.json`, and from every
   panel target in `dashboard-ai-models.json`.
   - `names.length > 0` per expression.
   - It is checked against a known tricky expression first: the span gate with `histogram_quantile`, `by (le)`, label matchers
     and `or vector(0)`.
-- [ ] Every extracted name is a golden translation of a registered instrument, or the allowed span-gate metric
+- [x] Every extracted name is a golden translation of a registered instrument, or the allowed span-gate metric
   `traces_spanmetrics_calls_total`.
-- [ ] Every label used in a rule or panel selector is in the facade allowlist, or is a resource or span label
+- [x] Every label used in a rule or panel selector is in the facade allowlist, or is a resource or span label
   (`job`, `service`, `span_name`, `le`).
-- [ ] Negative control: the same checker run over both legacy fixtures FAILS (expects ≥1 violation each).
-- [ ] The dashboard JSON parses and has ENV-008-AI's config shape: `{ folderUid: 'intelliflow-prod', dashboard: { uid, title, panels } }`.
+- [x] Negative control: the same checker run over both legacy fixtures FAILS (expects ≥1 violation each).
+- [x] The dashboard JSON parses and has ENV-008-AI's config shape: `{ folderUid: 'intelliflow-prod', dashboard: { uid, title, panels } }`.
   - Top-level keys are exactly `folderUid` and `dashboard`. There is no `overwrite` and no `message`, because their apply
     script adds those.
   - `dashboard.uid === 'ifc117-ai-models'`.
   - No panel has an `id`.
   - Every target has `datasource: { uid: 'grafanacloud-prom' }`.
-- [ ] Spec §6 notes are present as panel descriptions or titles:
+- [x] Spec §6 notes are present as panel descriptions or titles:
   - the ROI panel says "estimated" and shows "n/a" when cost is 0 (its expression guards the zero denominator);
   - the hallucination panel says "detected by heuristic checker";
   - a text or description mentions the timeout double-count;
   - a text or description says auto-response is not monitored in production.
-- [ ] The header comment states that this cannot prove the live Grafana names (N5).
+- [x] The header comment states that this cannot prove the live Grafana names (N5).
 
 **Validation:**
-- [ ] `ROOTV tools/scripts/__tests__/ai-monitoring-assets.test.ts` FAILS, because the files are missing.
+- [x] `ROOTV tools/scripts/__tests__/ai-monitoring-assets.test.ts` FAILS, because the files are missing.
 
 #### Step 9: Retraining-trigger job test rewrite
 
@@ -527,12 +527,12 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 **Acceptance Criteria Addressed:** AC-011
 
 **Test cases:**
-- [ ] A breach calls `recordRetrainingTrigger({urgency})` once with the job's urgency.
-- [ ] No breach means no call.
-- [ ] An unknown urgency is still passed through; the facade clamps it, as tested in S1.
+- [x] A breach calls `recordRetrainingTrigger({urgency})` once with the job's urgency.
+- [x] No breach means no call.
+- [x] An unknown urgency is still passed through; the facade clamps it, as tested in S1.
 
 **Validation:**
-- [ ] `AIW src/jobs/__tests__/feedback-analytics.job.test.ts` FAILS, because the import is missing.
+- [x] `AIW src/jobs/__tests__/feedback-analytics.job.test.ts` FAILS, because the import is missing.
 
 ### Phase 2: GREEN — Make Tests Pass
 
@@ -545,10 +545,10 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 - `pnpm-lock.yaml`
 
 **Validation:**
-- [ ] `pnpm install` succeeds.
-- [ ] `pnpm --filter @intelliflow/ai-worker why @opentelemetry/sdk-metrics` shows only 2.8.0 for ai-worker.
-- [ ] The lockfile diff is limited to that entry.
-- [ ] Note: the lockfile change widens local pre-ship to the full suite (`scripts/pre-ship.mjs:259-262`). Budget ~25–30 min.
+- [x] `pnpm install` succeeds.
+- [x] `pnpm --filter @intelliflow/ai-worker why @opentelemetry/sdk-metrics` shows only 2.8.0 for ai-worker.
+- [x] The lockfile diff is limited to that entry.
+- [x] Note: the lockfile change widens local pre-ship to the full suite (`scripts/pre-ship.mjs:259-262`). Budget ~25–30 min.
 
 #### Step 11: OTel facade
 
@@ -567,8 +567,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   (`AI_ALERT_THRESHOLDS = { hallucinationRate: 0.05, latencyP95Ms: 2000, errorRatio: 0.05 }`, NF-007).
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/otel-ai-metrics.test.ts src/monitoring/__tests__/otel-ai-metrics.global.test.ts` PASS.
-- [ ] `pnpm --filter @intelliflow/ai-worker typecheck` exits 0.
+- [x] `AIW src/monitoring/__tests__/otel-ai-metrics.test.ts src/monitoring/__tests__/otel-ai-metrics.global.test.ts` PASS.
+- [x] `pnpm --filter @intelliflow/ai-worker typecheck` exits 0.
 
 #### Step 12: Drift statistics and detector
 
@@ -600,8 +600,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   the flushed drift event's `model` equals `DriftResult.model`, not the metric name.
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/drift-detector.shift.test.ts` PASS.
-- [ ] Rerun `AIW src/monitoring/drift-detector.test.ts src/monitoring/drift-detector.additional.test.ts src/monitoring/__tests__/monitoring-flush.service.test.ts`.
+- [x] `AIW src/monitoring/__tests__/drift-detector.shift.test.ts` PASS.
+- [x] Rerun `AIW src/monitoring/drift-detector.test.ts src/monitoring/drift-detector.additional.test.ts src/monitoring/__tests__/monitoring-flush.service.test.ts`.
   Update the assertions that encode the old formula, and record each changed assertion in the delivery report.
 
 #### Step 13: Drift scheduler
@@ -617,7 +617,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
     `recordDriftTick` → a fixed-field log.
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/drift-scheduler.test.ts` PASS, except the `onStart` ordering case, which closes in S16.
+- [x] `AIW src/monitoring/__tests__/drift-scheduler.test.ts` PASS, except the `onStart` ordering case, which closes in S16.
 
 #### Step 14: `withMonitoring` changes
 
@@ -637,7 +637,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   context-less case asserting that no value is booked.
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/chain-monitor.otel.test.ts src/monitoring/__tests__/chain-monitor.test.ts src/monitoring/__tests__/chain-monitor.metrics-fidelity.test.ts` PASS.
+- [x] `AIW src/monitoring/__tests__/chain-monitor.otel.test.ts src/monitoring/__tests__/chain-monitor.test.ts src/monitoring/__tests__/chain-monitor.metrics-fidelity.test.ts` PASS.
 
 #### Step 15: Chain and job wiring
 
@@ -656,7 +656,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   the fallback chain is constructed with `recordDrift: false`. Write it RED first.
 
 **Validation:**
-- [ ] `AIW src/chains/__tests__/scoring.chain.otel.integration.test.ts src/chains/scoring.chain.test.ts src/jobs/scoring.job.test.ts src/jobs/__tests__` PASS.
+- [x] `AIW src/chains/__tests__/scoring.chain.otel.integration.test.ts src/chains/scoring.chain.test.ts src/jobs/scoring.job.test.ts src/jobs/__tests__` PASS.
 
 #### Step 16: Worker lifecycle
 
@@ -669,7 +669,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   - in `onStop()` (`:978`): stop the scheduler before `monitoringFlushService.stop()`.
 
 **Validation:**
-- [ ] `AIW src/monitoring/__tests__/drift-scheduler.test.ts src/__tests__/ai-worker.boot-contact-embed.test.ts src/__tests__/ai-worker.boot-folded-workers.test.ts src/__tests__/ai-worker.supplementary2.test.ts src/__tests__/ai-worker.tenant-ai-spend-wiring.test.ts`
+- [x] `AIW src/monitoring/__tests__/drift-scheduler.test.ts src/__tests__/ai-worker.boot-contact-embed.test.ts src/__tests__/ai-worker.boot-folded-workers.test.ts src/__tests__/ai-worker.supplementary2.test.ts src/__tests__/ai-worker.tenant-ai-spend-wiring.test.ts`
   PASS. These rerun the existing lifecycle tests. If any of them needs an update for the new `onStart` calls, it is added
   to the Modify list and the delivery report.
 
@@ -685,8 +685,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 - `apps/ai-worker/src/metrics/__tests__/prometheus-exporter.test.ts`
 
 **Validation:**
-- [ ] `AIW src/jobs/__tests__/feedback-analytics.job.test.ts` PASS.
-- [ ] `git grep -n "prometheus-exporter\|default-dev-token\|METRICS_TOKEN" -- apps packages` returns nothing. Sprint-6
+- [x] `AIW src/jobs/__tests__/feedback-analytics.job.test.ts` PASS.
+- [x] `git grep -n "prometheus-exporter\|default-dev-token\|METRICS_TOKEN" -- apps packages` returns nothing. Sprint-6
   history, generated artifacts and the CSV are handled in S25.
 
 #### Step 18: Remove the Prometheus text path
@@ -709,8 +709,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   Remove the text-builder cases. Keep `getMonitoringStatus` and every other case.
 
 **Validation:**
-- [ ] `AIW src/monitoring` PASS.
-- [ ] `pnpm --filter @intelliflow/ai-worker typecheck` exits 0.
+- [x] `AIW src/monitoring` PASS.
+- [x] `pnpm --filter @intelliflow/ai-worker typecheck` exits 0.
 
 #### Step 19: Fake-green and flaky tests
 
@@ -725,7 +725,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   asserting one, or remove it in favour of S4, and say which.
 
 **Validation:**
-- [ ] `AIW src/chains src/monitoring` PASS.
+- [x] `AIW src/chains src/monitoring` PASS.
 
 #### Step 20: AI alert rules, script and workflow
 
@@ -753,10 +753,10 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 - `.github/workflows/grafana-ai-alert-rules.yml`, matching the S7 contract.
 
 **Validation:**
-- [ ] `ROOTV tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts`
+- [x] `ROOTV tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts`
   PASS. The second file is unchanged.
-- [ ] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0.
-- [ ] `actionlint .github/workflows/grafana-ai-alert-rules.yml` exits 0, if it is installed; this is advisory in pre-ship.
+- [x] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0.
+- [x] `actionlint .github/workflows/grafana-ai-alert-rules.yml` exits 0, if it is installed; this is advisory in pre-ship. _(actionlint is not installed on this host; advisory only.)_
 
 #### Step 21: AI dashboard JSON
 
@@ -772,7 +772,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   - Panels as in spec §6.
 
 **Validation:**
-- [ ] `ROOTV tools/scripts/__tests__/ai-monitoring-assets.test.ts` PASS.
+- [x] `ROOTV tools/scripts/__tests__/ai-monitoring-assets.test.ts` PASS.
 
 #### Step 22: `ai-metrics.json` and the TRACK-004 consumer
 
@@ -790,7 +790,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   added to `apps/project-tracker/__tests__/tracking/AIMetrics.test.ts`.
 
 **Validation:**
-- [ ] `ROOTV apps/project-tracker/__tests__/tracking/ai-api.test.ts apps/project-tracker/__tests__/tracking/AIMetrics.test.ts` PASS.
+- [x] `ROOTV apps/project-tracker/__tests__/tracking/ai-api.test.ts apps/project-tracker/__tests__/tracking/AIMetrics.test.ts` PASS.
 
 ### Phase 3: REFACTOR — Clean Up
 
@@ -803,10 +803,10 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 - Keep comment density matching the surrounding code.
 
 **Validation:**
-- [ ] `pnpm --filter @intelliflow/ai-worker lint` exits 0.
-- [ ] `npx eslint tools/scripts/observability/apply-grafana-ai-alert-rules.mjs tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts tools/scripts/__tests__/ai-monitoring-assets.test.ts` exits 0.
-- [ ] `npx prettier --check` on every changed file exits 0.
-- [ ] `pnpm --filter @intelliflow/ai-worker typecheck` exits 0.
+- [x] `pnpm --filter @intelliflow/ai-worker lint` exits 0.
+- [x] `npx eslint tools/scripts/observability/apply-grafana-ai-alert-rules.mjs tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts tools/scripts/__tests__/ai-monitoring-assets.test.ts` exits 0.
+- [x] `npx prettier --check` on every changed file exits 0.
+- [x] `pnpm --filter @intelliflow/ai-worker typecheck` exits 0.
 
 ### Phase 4: VALIDATION, DOCS, CSV
 
@@ -828,8 +828,8 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
 - The ADR status is NOT changed here. That happens in S28, after final validation.
 
 **Validation:**
-- [ ] `npx prettier --check` on these files exits 0.
-- [ ] `pnpm validate:docs-integrity` (`tsx tools/scripts/docs-integrity-audit.ts`) exits 0.
+- [x] `npx prettier --check` on these files exits 0.
+- [x] `pnpm validate:docs-integrity` (`tsx tools/scripts/docs-integrity-audit.ts`) exits 0.
 
 #### Step 25: CSV rebaseline (Category B) and status
 
@@ -853,7 +853,7 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
   in `_I`/`_J` is not staged.
 
 **Validation:**
-- [ ] Run `npx tsx tools/scripts/validate-artifacts.ts IFC-117` AFTER the S27 attestation exists. The spec keeps the CSV
+- [x] Run `npx tsx tools/scripts/validate-artifacts.ts IFC-117` AFTER the S27 attestation exists. The spec keeps the CSV
   swap minimal (option (b) from plan review iteration 2), so this script is EXPECTED to exit 1: it fails on any CSV-only or
   plan-only path (`tools/scripts/validate-artifacts.ts:545`). No gate requires it to pass: it is referenced only as a
   helper in the exec-gates references, and not by `scripts/pre-ship.mjs` or `tools/scripts/exec-preflight/`.
@@ -876,10 +876,10 @@ in `afterEach` with `__resetAiMetricsForTests()`, which also unregisters the gau
     `attestation.json`.
 
   Any path outside this set is a real finding and is fixed before the push.
-- [ ] Also run `node tools/scripts/exec-preflight/check-exec-readiness.mjs IFC-117` and record that it accepts the outcome
+- [x] Also run `node tools/scripts/exec-preflight/check-exec-readiness.mjs IFC-117` and record that it accepts the outcome
   (it does not call `validate-artifacts`).
-- [ ] `pnpm validate:sprint-data` exits 0.
-- [ ] `node tools/scripts/audit/phantom-completed-audit.mjs` shows no new finding.
+- [x] `pnpm validate:sprint-data` exits 0.
+- [x] `node tools/scripts/audit/phantom-completed-audit.mjs` shows no new finding.
 
 #### Step 26: Follow-up issues
 
@@ -959,7 +959,7 @@ commit.
 - `docs/architecture/adr/README.md`: the ADR-088 row status becomes `Accepted`.
 
 **Validation:**
-- [ ] `npx prettier --check docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md docs/architecture/adr/README.md` exits 0.
+- [x] `npx prettier --check docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md docs/architecture/adr/README.md` exits 0.
 
 ## Validation Matrix
 
