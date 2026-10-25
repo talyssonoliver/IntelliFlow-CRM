@@ -16,6 +16,11 @@
       "status": "In Progress",
       "at": "2026-10-25T16:03:11Z",
       "note": "Spec complete. Consensus 5/5 APPROVED (IFC-117-spec-consensus.json). Spec: .specify/sprints/sprint-18/specifications/IFC-117-spec.md. ADR-088 proposed."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T16:18:12Z",
+      "note": "Plan complete: .specify/sprints/sprint-18/planning/IFC-117-plan.md (28 steps). Plan-reviewer subagent: REVISE, REVISE, then APPROVED_WITH_CHANGES; all fixes applied. The CSV stays In Progress (Planning is not an allowed transition)."
     }
   ],
   "blockers": [
@@ -36,5 +41,5 @@
     }
   ],
   "percent_complete": 50,
-  "updated_at": "2026-10-25T16:03:11Z"
+  "updated_at": "2026-10-25T16:18:12Z"
 }
