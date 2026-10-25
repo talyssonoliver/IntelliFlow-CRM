@@ -5,10 +5,20 @@
 // scripts' identical HTTP client and alert-rule payload shape live in one
 // place instead of drifting apart as separate copies.
 
+/**
+ * Waits between attempts when Grafana answers 503 (ENV-008-AI AC-001). A
+ * Grafana Cloud instance that has gone to sleep answers 503 until it wakes,
+ * which took long enough to keep grafana-alert-rules.yml red from 2026-10-06.
+ * 8 attempts over 255 s; any other status is returned at once.
+ */
+export const RETRY_DELAYS_MS = [5000, 10000, 20000, 40000, 60000, 60000, 60000];
+
+const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /** Minimal bearer-token JSON client shared by every Grafana-shaped API this repo talks to. */
-export function createApiClient(baseUrl, token, fetchImpl = fetch) {
-  return async (method, path, body) => {
-    const res = await fetchImpl(`${baseUrl.replace(/\/$/, '')}${path}`, {
+export function createApiClient(baseUrl, token, fetchImpl = fetch, { sleep = defaultSleep } = {}) {
+  const send = (method, path, body) =>
+    fetchImpl(`${baseUrl.replace(/\/$/, '')}${path}`, {
       method,
       headers: {
         Authorization: `Bearer ${token}`,
@@ -18,6 +28,13 @@ export function createApiClient(baseUrl, token, fetchImpl = fetch) {
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
+  return async (method, path, body) => {
+    let res = await send(method, path, body);
+    for (const delay of RETRY_DELAYS_MS) {
+      if (res.status !== 503) break;
+      await sleep(delay);
+      res = await send(method, path, body);
+    }
     const text = await res.text();
     let json;
     try {
@@ -27,6 +44,25 @@ export function createApiClient(baseUrl, token, fetchImpl = fetch) {
     }
     return { status: res.status, json, text };
   };
+}
+
+const REDACTION_PATTERNS = [
+  /Bearer\s+\S+/gi,
+  /glsa_\w+/g,
+  // Any long base64 or URL-safe run: tokens, signatures, session ids.
+  /[A-Za-z0-9+/_-]{32,}={0,2}/g,
+];
+const REDACT_MAX = 200;
+
+/**
+ * A response body made safe for an error message in a CI log (ENV-008-AI
+ * NF-001): token-shaped runs are replaced and the text is cut to 200 chars.
+ */
+export function redactBody(text) {
+  if (text === undefined || text === null) return '';
+  let out = String(text);
+  for (const pattern of REDACTION_PATTERNS) out = out.replace(pattern, '<redacted>');
+  return out.length > REDACT_MAX ? `${out.slice(0, REDACT_MAX)}…[truncated]` : out;
 }
 
 /** Number of live series a selector matches over the last hour, via the datasource proxy. */

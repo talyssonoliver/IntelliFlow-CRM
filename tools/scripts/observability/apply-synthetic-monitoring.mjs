@@ -42,6 +42,7 @@ import {
   buildAlertRulePayload,
   createApiClient,
   querySeriesCount,
+  redactBody,
 } from '../lib/grafana-provisioning.mjs';
 
 const CONFIG_PATH = join(
@@ -127,6 +128,7 @@ export async function run({
   argv = process.argv,
   fetchImpl = fetch,
   log = console.log,
+  sleep,
 } = {}) {
   const dryRun = argv.includes('--dry-run');
   const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
@@ -140,8 +142,8 @@ export async function run({
     throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
   }
 
-  const sm = createApiClient(env.SM_API_URL, env.SM_ACCESS_TOKEN, fetchImpl);
-  const grafana = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl);
+  const sm = createApiClient(env.SM_API_URL, env.SM_ACCESS_TOKEN, fetchImpl, { sleep });
+  const grafana = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
 
   // Resolve probe location names to ids. Fail loud rather than silently
   // creating a check that watches from nowhere.
@@ -179,7 +181,7 @@ export async function run({
     ? await sm('POST', '/api/v1/check/update', { id: existingCheck.id, ...checkPayload })
     : await sm('POST', '/api/v1/check/add', checkPayload);
   if (checkRes.status >= 300)
-    throw new Error(`apply check: HTTP ${checkRes.status} ${checkRes.text}`);
+    throw new Error(`apply check: HTTP ${checkRes.status} ${redactBody(checkRes.text)}`);
   log(`${existingCheck ? 'updated' : 'created'} check ${config.check.job}`);
 
   // 2. The alert rule. See the module comment: never touches the
@@ -190,7 +192,7 @@ export async function run({
       uid: config.folder.uid,
       title: config.folder.title,
     });
-    if (made.status >= 300) throw new Error(`create folder: HTTP ${made.status} ${made.text}`);
+    if (made.status >= 300) throw new Error(`create folder: HTTP ${made.status} ${redactBody(made.text)}`);
     log(`created folder ${config.folder.uid}`);
   } else if (folder.status !== 200) {
     throw new Error(`read folder: HTTP ${folder.status}`);
@@ -206,7 +208,7 @@ export async function run({
       ? await grafana('PUT', `/api/v1/provisioning/alert-rules/${config.alertRule.uid}`, rule)
       : await grafana('POST', '/api/v1/provisioning/alert-rules', rule);
   if (ruleRes.status >= 300)
-    throw new Error(`${config.alertRule.uid}: HTTP ${ruleRes.status} ${ruleRes.text}`);
+    throw new Error(`${config.alertRule.uid}: HTTP ${ruleRes.status} ${redactBody(ruleRes.text)}`);
   log(`${existingRule.status === 200 ? 'updated' : 'created'} ${config.alertRule.uid}`);
 
   // 3. Only prove the alert watches a metric that exists when the check was

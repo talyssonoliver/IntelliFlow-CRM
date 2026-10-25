@@ -1,0 +1,85 @@
+{
+  "_comment": "ENV-008-AI production SLOs (ADR-087). Targets come from docs/operations/slo-definitions.md and must not be tuned to pass. Applied by .github/workflows/grafana-slos.yml with tools/scripts/observability/apply-grafana-slos.mjs. Windows are 28 days rolling (Grafana has no calendar window); the doc's 30-day calendar window, 3x/2h burn rule and 75%-budget rule are recorded gaps.",
+  "folderUid": "intelliflow-prod",
+  "destinationDatasourceUid": "grafanacloud-prom",
+  "slos": [
+    {
+      "uuid": "env008-api-availability",
+      "name": "api availability",
+      "description": "Share of api server requests (health probes excluded) that do not end in an error span. Target 99.9% over 28 days (slo-definitions.md L33). Not counted: tRPC failures that return 200 or 4xx, because they surface as INTERNAL spans, not server errors; and requests slower than 30 s that did not error.",
+      "query": {
+        "type": "ratio",
+        "ratio": {
+          "successMetric": {
+            "prometheusMetric": "traces_spanmetrics_calls_total{service=\"api\", span_kind=\"SPAN_KIND_SERVER\", span_name!~\"(GET|HEAD) (/api)?/health(/.*)?\", status_code!=\"STATUS_CODE_ERROR\"}"
+          },
+          "totalMetric": {
+            "prometheusMetric": "traces_spanmetrics_calls_total{service=\"api\", span_kind=\"SPAN_KIND_SERVER\", span_name!~\"(GET|HEAD) (/api)?/health(/.*)?\"}"
+          }
+        }
+      },
+      "objectives": [{ "value": 0.999, "window": "28d" }],
+      "labels": [
+        { "key": "source", "value": "env-008-ai" },
+        { "key": "team", "value": "owner" }
+      ],
+      "alerting": {
+        "fastBurn": {
+          "labels": [{ "key": "severity", "value": "critical" }],
+          "annotations": [
+            {
+              "key": "summary",
+              "value": "api availability is burning its 28-day error budget fast"
+            }
+          ]
+        },
+        "slowBurn": {
+          "labels": [{ "key": "severity", "value": "warning" }],
+          "annotations": [
+            {
+              "key": "summary",
+              "value": "api availability is burning its 28-day error budget steadily"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "uuid": "env008-api-latency",
+      "name": "api latency",
+      "description": "Share of api server requests (health probes excluded) that finish within 200 ms, from the native span-latency histogram. Target 95% over 28 days (slo-definitions.md L56, p95 < 200 ms). No burn-rate alerting yet: production p95 was 2.72 s on 2026-10-22, so the budget is already spent. Enable alerting when #1001 is fixed.",
+      "query": {
+        "type": "freeform",
+        "freeform": {
+          "query": "histogram_fraction(0, 0.2, sum(rate(traces_spanmetrics_latency{service=\"api\", span_kind=\"SPAN_KIND_SERVER\", span_name!~\"(GET|HEAD) (/api)?/health(/.*)?\"}[$__rate_interval])))"
+        }
+      },
+      "objectives": [{ "value": 0.95, "window": "28d" }],
+      "labels": [
+        { "key": "source", "value": "env-008-ai" },
+        { "key": "team", "value": "owner" }
+      ]
+    },
+    {
+      "uuid": "env008-ai-worker-llm-success",
+      "name": "ai-worker LLM success",
+      "description": "Share of ai-worker llm.invoke calls that do not end in an error span. Target 99.5% over 28 days (slo-definitions.md L116). Very low call volume (about 10 calls a week), so most evaluation steps have no data. No burn-rate alerting yet: every llm.invoke span failed in production on 2026-10-22. Enable alerting when #1029 is fixed.",
+      "query": {
+        "type": "ratio",
+        "ratio": {
+          "successMetric": {
+            "prometheusMetric": "traces_spanmetrics_calls_total{service=\"ai-worker\", span_name=\"llm.invoke\", status_code!=\"STATUS_CODE_ERROR\"}"
+          },
+          "totalMetric": {
+            "prometheusMetric": "traces_spanmetrics_calls_total{service=\"ai-worker\", span_name=\"llm.invoke\"}"
+          }
+        }
+      },
+      "objectives": [{ "value": 0.995, "window": "28d" }],
+      "labels": [
+        { "key": "source", "value": "env-008-ai" },
+        { "key": "team", "value": "owner" }
+      ]
+    }
+  ]
+}
