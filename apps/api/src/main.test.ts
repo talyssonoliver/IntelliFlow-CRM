@@ -6,7 +6,7 @@ const mocks = vi.hoisted(() => ({
   startApiServer: vi.fn(),
   disconnectPrisma: vi.fn(),
   shutdownAllQueues: vi.fn(),
-  stopApprovalSweep: vi.fn(),
+  stopBackgroundJobs: vi.fn(),
 }));
 
 vi.mock('./tracing/otel', () => ({ startTracing: mocks.startTracing }));
@@ -14,8 +14,8 @@ vi.mock('./tracing/sentry', () => ({ initializeSentry: mocks.initializeSentry })
 vi.mock('@intelliflow/db', () => ({ disconnectPrisma: mocks.disconnectPrisma }));
 vi.mock('@intelliflow/platform/queues', () => ({ shutdownAllQueues: mocks.shutdownAllQueues }));
 vi.mock('./http-server', () => ({ startApiServer: mocks.startApiServer }));
-vi.mock('./agent/approval-sweep-scheduler', () => ({
-  stopApprovalSweep: mocks.stopApprovalSweep,
+vi.mock('./background-jobs', () => ({
+  stopBackgroundJobs: mocks.stopBackgroundJobs,
 }));
 
 describe('api main entry point', () => {
@@ -83,8 +83,8 @@ describe('api main entry point', () => {
     )![1] as () => Promise<void>;
     await handler();
 
-    expect(mocks.stopApprovalSweep).toHaveBeenCalledTimes(1);
-    expect(mocks.stopApprovalSweep.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mocks.stopBackgroundJobs).toHaveBeenCalledTimes(1);
+    expect(mocks.stopBackgroundJobs.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.shutdownAllQueues.mock.invocationCallOrder[0]!
     );
     expect(exitSpy).toHaveBeenCalledWith(0);

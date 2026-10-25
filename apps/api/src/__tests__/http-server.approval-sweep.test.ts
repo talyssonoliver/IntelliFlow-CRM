@@ -51,4 +51,30 @@ describe('approval sweep wiring', () => {
     await expect(options.run()).resolves.toEqual({ locked: true });
     expect(sweep.runApprovalSweep).toHaveBeenCalledWith({ marker: 'deps' });
   });
+
+  it('API_BACKGROUND_JOBS=off starts no sweep, so the idle api makes no outbound traffic', async () => {
+    vi.stubEnv('API_BACKGROUND_JOBS', 'off');
+    const log = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    try {
+      server = startApiServer({ port: 0 });
+      await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+
+      expect(sweep.startApprovalSweep).not.toHaveBeenCalled();
+      expect(log).toHaveBeenCalledWith(expect.stringContaining('background jobs disabled'));
+    } finally {
+      log.mockRestore();
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('API_BACKGROUND_JOBS=on keeps the sweep running', async () => {
+    vi.stubEnv('API_BACKGROUND_JOBS', 'on');
+    try {
+      server = startApiServer({ port: 0 });
+      await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+      expect(sweep.startApprovalSweep).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
 });
