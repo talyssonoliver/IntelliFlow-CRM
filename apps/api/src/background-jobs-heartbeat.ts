@@ -151,6 +151,16 @@ export function resetHeartbeatStore(): void {
   sharedStore = undefined;
 }
 
+// Whether this process started the jobs itself. Only then does its own uptime
+// count as the grace period for a job that has not ticked yet; a process that
+// only observes (the api with its jobs off) must not restart that grace period
+// every time it boots.
+let jobsRunHere = false;
+
+export function markJobsRunningHere(running = true): void {
+  jobsRunHere = running;
+}
+
 export interface JobHeartbeatStatus {
   status: 'ok' | 'stale' | 'disabled';
   lastRunAt: string | null;
@@ -188,6 +198,11 @@ export interface EvaluateInput {
   intervals: Record<HeartbeatJob, number>;
   /** How long this process has been up; a job that never ticked gets this long to start. */
   uptimeMs: number;
+  /**
+   * Whether this process runs the jobs. When it only observes, a job with no
+   * heartbeat at all is stale at once: its runner has never been seen.
+   */
+  runsJobsHere: boolean;
 }
 
 /** Pure staleness rule: no tick within 3x the interval means degraded. */
@@ -196,6 +211,7 @@ export function evaluateHeartbeats({
   reads,
   intervals,
   uptimeMs,
+  runsJobsHere,
 }: EvaluateInput): BackgroundJobsHeartbeatCheck {
   const jobs = {} as Record<HeartbeatJob, JobHeartbeatStatus>;
   const stale: string[] = [];
@@ -208,7 +224,8 @@ export function evaluateHeartbeats({
       continue;
     }
     const limit = intervalMs * HEARTBEAT_STALE_FACTOR;
-    const silentFor = last === null ? uptimeMs : now - last;
+    const neverTickedGrace = runsJobsHere ? uptimeMs : Number.POSITIVE_INFINITY;
+    const silentFor = last === null ? neverTickedGrace : now - last;
     const isStale = silentFor > limit;
     jobs[job] = { status: isStale ? 'stale' : 'ok', lastRunAt, intervalMs };
     if (isStale) stale.push(job);
@@ -228,6 +245,8 @@ export interface CheckOptions {
   store?: HeartbeatStore | null;
   now?: () => number;
   uptimeMs?: () => number;
+  /** Defaults to whether this process started the jobs (markJobsRunningHere). */
+  runsJobsHere?: boolean;
 }
 
 /** Reads the heartbeat and judges it. Called only from a health request. */
@@ -236,6 +255,7 @@ export async function checkBackgroundJobsHeartbeat({
   store = getHeartbeatStore(env),
   now = Date.now,
   uptimeMs = () => process.uptime() * 1000,
+  runsJobsHere = jobsRunHere,
 }: CheckOptions = {}): Promise<BackgroundJobsHeartbeatCheck> {
   if (!store) return { status: 'unknown', message: 'REDIS_HOST is not set; no heartbeat store' };
   let reads: HeartbeatReads;
@@ -252,5 +272,6 @@ export async function checkBackgroundJobsHeartbeat({
     reads,
     intervals: heartbeatIntervals(env),
     uptimeMs: uptimeMs(),
+    runsJobsHere,
   });
 }

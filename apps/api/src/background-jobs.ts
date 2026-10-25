@@ -31,6 +31,7 @@ import {
   checkBackgroundJobsHeartbeat,
   closeHeartbeatStore,
   getHeartbeatStore,
+  markJobsRunningHere,
   type BackgroundJobsHeartbeatCheck,
   type HeartbeatJob,
   type HeartbeatStore,
@@ -140,6 +141,7 @@ export function startBackgroundJobs({
     },
   });
 
+  markJobsRunningHere(approvalSweep || bounceScan);
   return { approvalSweep, bounceScan };
 }
 
@@ -149,6 +151,7 @@ export function startBackgroundJobs({
  */
 export async function stopBackgroundJobs(): Promise<void> {
   await Promise.all([stopApprovalSweep(), stopBounceScanner()]);
+  markJobsRunningHere(false);
   // After the ticks drained, so their final heartbeat write is not cut off.
   await closeHeartbeatStore().catch(() => undefined);
 }

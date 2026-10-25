@@ -225,6 +225,7 @@ describe('evaluateHeartbeats', () => {
       reads: { approvalSweep: NOW - 10_000, bounceScan: NOW - limit },
       intervals,
       uptimeMs: 10 * MINUTE,
+      runsJobsHere: true,
     });
     expect(result.status).toBe('ok');
     expect(result.jobs!.approvalSweep).toMatchObject({ status: 'ok' });
@@ -236,6 +237,7 @@ describe('evaluateHeartbeats', () => {
       reads: { approvalSweep: NOW - limit - 1, bounceScan: NOW },
       intervals,
       uptimeMs: 10 * MINUTE,
+      runsJobsHere: true,
     });
     expect(result.status).toBe('degraded');
     expect(result.jobs!.approvalSweep.status).toBe('stale');
@@ -246,10 +248,32 @@ describe('evaluateHeartbeats', () => {
 
   it('gives a job that never ticked its first 3x interval of process uptime', () => {
     const reads = { approvalSweep: null, bounceScan: null };
-    expect(evaluateHeartbeats({ now: NOW, reads, intervals, uptimeMs: limit }).status).toBe('ok');
-    const late = evaluateHeartbeats({ now: NOW, reads, intervals, uptimeMs: limit + 1 });
+    expect(
+      evaluateHeartbeats({ now: NOW, reads, intervals, uptimeMs: limit, runsJobsHere: true }).status
+    ).toBe('ok');
+    const late = evaluateHeartbeats({
+      now: NOW,
+      reads,
+      intervals,
+      uptimeMs: limit + 1,
+      runsJobsHere: true,
+    });
     expect(late.status).toBe('degraded');
     expect(late.jobs!.approvalSweep.lastRunAt).toBeNull();
+  });
+
+  it('an observer that does not run the jobs gets no grace for a missing heartbeat', () => {
+    const reads = { approvalSweep: null, bounceScan: NOW - 1000 };
+    const result = evaluateHeartbeats({
+      now: NOW,
+      reads,
+      intervals,
+      uptimeMs: 1000,
+      runsJobsHere: false,
+    });
+    expect(result.status).toBe('degraded');
+    expect(result.jobs!.approvalSweep.status).toBe('stale');
+    expect(result.jobs!.bounceScan.status).toBe('ok');
   });
 
   it('skips a job whose interval is 0 (disabled on purpose)', () => {
@@ -258,6 +282,7 @@ describe('evaluateHeartbeats', () => {
       reads: { approvalSweep: null, bounceScan: null },
       intervals: { approvalSweep: 0, bounceScan: 0 },
       uptimeMs: 99 * MINUTE,
+      runsJobsHere: true,
     });
     expect(result.status).toBe('ok');
     expect(result.jobs!.approvalSweep.status).toBe('disabled');

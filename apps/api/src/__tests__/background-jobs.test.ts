@@ -16,6 +16,7 @@ const m = vi.hoisted(() => ({
   stopBounceScanner: vi.fn<() => Promise<void>>(async () => undefined),
   checkBackgroundJobsHeartbeat: vi.fn(async () => ({ status: 'ok' })),
   closeHeartbeatStore: vi.fn<() => Promise<void>>(async () => undefined),
+  markJobsRunningHere: vi.fn(),
   bounceScanIntervalFromEnv: vi.fn(() => 222),
   runBounceScan: vi.fn().mockResolvedValue({ mailboxesScanned: 0 }),
   createBounceReaderDeps: vi.fn().mockResolvedValue({ marker: 'bounce-deps' }),
@@ -43,6 +44,7 @@ vi.mock('../background-jobs-heartbeat', () => ({
   checkBackgroundJobsHeartbeat: m.checkBackgroundJobsHeartbeat,
   closeHeartbeatStore: m.closeHeartbeatStore,
   getHeartbeatStore: () => null,
+  markJobsRunningHere: m.markJobsRunningHere,
 }));
 vi.mock('../container', () => ({ containerReady: Promise.resolve('container') }));
 
