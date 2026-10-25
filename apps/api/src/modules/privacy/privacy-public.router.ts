@@ -20,6 +20,7 @@ import {
 } from '@intelliflow/validators';
 import { DSAR_SUBMIT_MESSAGE } from '@intelliflow/application';
 import { createTRPCRouter, publicProcedure } from '../../trpc';
+import { getAuditLogger } from '../../security/audit-logger';
 import type { Context } from '../../context';
 import {
   bookingLookupLimiter,
@@ -69,6 +70,30 @@ async function publicly<T>(work: () => Promise<T>): Promise<T> {
 
 function clientIpHash(ctx: Context, salt: string): string {
   return ipHashOf(ctx.req as Request | undefined, salt);
+}
+
+/**
+ * Compliance #6: a download of personal data is recorded. The service answers with the export
+ * only, so the firm comes from the request row. The actor is the system: the person is known
+ * by the link alone, and no address, token or IP reaches the row. Never fails the download
+ * that has already happened; the log carries the error class only.
+ */
+async function auditExportDownload(ctx: Context, requestId: string): Promise<void> {
+  try {
+    const row = await ctx.prisma.dsarRequest.findUnique({
+      where: { id: requestId },
+      select: { tenantId: true },
+    });
+    if (!row) throw new Error('Request not found');
+    await getAuditLogger(ctx.prisma).logAction('EXPORT', 'dsar_request', requestId, row.tenantId, {
+      actorType: 'SYSTEM',
+      metadata: { change: 'EXPORT_DOWNLOADED_BY_SUBJECT' },
+    });
+  } catch (error) {
+    console.error('[privacy] Export download audit row not written', {
+      error: error instanceof Error ? error.name : 'unknown',
+    });
+  }
 }
 
 /** The single public lookup: one read by handle; unknown handle and no page look the same. */
@@ -159,6 +184,7 @@ export const privacyPublicProcedures = {
         if (result.outcome !== 'OK') {
           throw new TRPCError({ code: 'BAD_REQUEST', message: INVALID_LINK });
         }
+        await auditExportDownload(ctx, input.requestId);
         return result.export;
       })
   ),

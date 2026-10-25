@@ -56,7 +56,9 @@ describe('RestrictionBanner', () => {
     };
     const { container } = render(<RestrictionBanner entity="lead" id="l1" />);
     expect(screen.getByText('Processing restricted (data request) since 22 Oct 2026')).toBeTruthy();
-    expect(screen.getByRole('status')).toBeTruthy();
+    const note = screen.getByRole('note', { name: 'Processing restriction' });
+    expect(note.tagName).toBe('DIV');
+    expect(screen.queryByRole('status')).toBeNull();
     const results = await axe.run(container, { rules: { 'color-contrast': { enabled: false } } });
     expect(results.violations).toEqual([]);
   });

@@ -139,6 +139,9 @@ class FakeRepo implements DsarRepositoryPort {
   }
   /** Runs once, between the service's token check and its download count. */
   beforeCount: (() => void) | null = null;
+  async purgeExpiredUnverified() {
+    return 0;
+  }
   async countAdmins() {
     return this.admins;
   }
@@ -295,6 +298,7 @@ describe('submit (D-AC-02)', () => {
       perTenantEmailPerDay: 3,
       perIpPerHour: 10,
       globalEmailPerDay: 3,
+      perTenantPerDay: 50,
       resendCooldownMinutes: 60,
     });
     const row = [...repo.rows.values()][0];
@@ -630,18 +634,21 @@ describe('staff requests (compliance R3; security S5)', () => {
     });
     expect(blocked).toEqual({ outcome: 'REFUSED', reason: 'ERASURE_NOTICE_NOT_SENT' });
     expect(subjectData.erase).not.toHaveBeenCalled();
-    // The email works again: the warning is sent now, and a second admin may proceed.
+    // The email works again: the warning is sent now, and the 24 hours start from it, even
+    // for a second admin (owner Q25).
     refusedKinds.delete('ERASURE_LOGGED');
-    const done = await service.complete({
-      tenantId: 'tenant-a',
-      id,
-      actorId: 'admin-2',
-      note: 'Erased',
-      noHoldConfirmed: true,
-      now: NOW,
-    });
-    expect(done.outcome).toBe('OK');
+    const complete = (now: Date) =>
+      service.complete({
+        tenantId: 'tenant-a',
+        id,
+        actorId: 'admin-2',
+        note: 'Erased',
+        noHoldConfirmed: true,
+        now,
+      });
+    expect(await complete(NOW)).toEqual({ outcome: 'REFUSED', reason: 'WAIT_24H' });
     expect(repo.rows.get(id)!.erasureNoticeAt).toEqual(NOW);
+    expect((await complete(new Date(NOW.getTime() + 24 * HOUR))).outcome).toBe('OK');
   });
 
   it('a single admin waits 24 hours from the warning, not from logging (codex)', async () => {
@@ -903,6 +910,24 @@ describe('complete (D-AC-06/08)', () => {
     expect(restrictions.rows).toHaveLength(0);
   });
 
+  it('still closes the rejection and tells the person when the lift itself fails (codex)', async () => {
+    const id = await verified('RESTRICTION');
+    notices.length = 0;
+    const lift = vi
+      .spyOn(restrictions, 'liftForRequest')
+      .mockRejectedValue(new Error('lock timeout'));
+    const result = await service.reject({
+      tenantId: 'tenant-a',
+      id,
+      actorId: ADMIN,
+      reason: 'The data is accurate as recorded',
+      now: NOW,
+    });
+    expect(result).toEqual({ outcome: 'OK', restrictionKept: true });
+    expect(notices.map((n) => n.kind)).toContain('REJECTED');
+    lift.mockRestore();
+  });
+
   it('keeps the restriction when the lifting notice could not be sent (codex)', async () => {
     const id = await verified('RESTRICTION');
     refusedKinds.add('RESTRICTION_LIFTING');
@@ -987,6 +1012,106 @@ describe('complete (D-AC-06/08)', () => {
     expect(download.export.withheld[0]!.note).toContain('reasons were sent to you by email');
   });
 
+  describe('completeAccess checks the live withheld counts (compliance blocker)', () => {
+    const complete = async (
+      live: Record<string, number>,
+      withheld: Array<{ category: string; count: number; reason: string }>
+    ) => {
+      // Something is withheld when the person verifies (so the request stays open); what is
+      // withheld when the admin completes it can differ.
+      subjectData.buildExport.mockResolvedValue({ data: {}, withheld: { NOTES: 1 } });
+      const id = await verified('ACCESS');
+      subjectData.buildExport.mockResolvedValue({ data: {}, withheld: live });
+      const result = await service.completeAccess({
+        tenantId: 'tenant-a',
+        id,
+        actorId: ADMIN,
+        note: 'Reviewed',
+        withheld: withheld as never,
+        now: NOW,
+      });
+      return { id, result };
+    };
+
+    it('refuses when a category that is withheld now was left out of the reasons', async () => {
+      const { id, result } = await complete({ NOTES: 2, DESCRIPTIONS: 1 }, [
+        { category: 'NOTES', count: 2, reason: 'Legal professional privilege' },
+      ]);
+      expect(result).toEqual({ outcome: 'INVALID', field: 'withheld' });
+      expect(repo.rows.get(id)).toMatchObject({ status: 'VERIFIED' });
+    });
+
+    it('refuses a count lower than what the export withholds now (codex)', async () => {
+      // Two notes were reviewed; a third was added before the admin completed the request.
+      const { result } = await complete({ NOTES: 3 }, [
+        { category: 'NOTES', count: 2, reason: 'Legal professional privilege' },
+      ]);
+      expect(result).toEqual({ outcome: 'INVALID', field: 'withheld' });
+    });
+
+    it('refuses when no reasons are given at all but something is withheld', async () => {
+      const { result } = await complete({ AI_TEXT: 3 }, []);
+      expect(result).toEqual({ outcome: 'INVALID', field: 'withheld' });
+    });
+
+    it('refuses a category given with a zero count or a blank reason', async () => {
+      expect(
+        (await complete({ NOTES: 2 }, [{ category: 'NOTES', count: 0, reason: 'Privilege' }]))
+          .result
+      ).toEqual({ outcome: 'INVALID', field: 'withheld' });
+      expect(
+        (await complete({ NOTES: 2 }, [{ category: 'NOTES', count: 2, reason: '   ' }])).result
+      ).toEqual({ outcome: 'INVALID', field: 'withheld' });
+    });
+
+    it('closes the request when every live category has a count and a reason', async () => {
+      const { id, result } = await complete({ NOTES: 2, STAFF_TEXT: 1, TICKET_SUBJECTS: 0 }, [
+        { category: 'NOTES', count: 2, reason: 'Legal professional privilege' },
+        { category: 'STAFF_TEXT', count: 1, reason: 'Names a third party' },
+      ]);
+      expect(result.outcome).toBe('OK');
+      expect(repo.rows.get(id)).toMatchObject({ status: 'COMPLETED' });
+    });
+
+    it('closes the request when nothing is withheld now', async () => {
+      const { result } = await complete({}, []);
+      expect(result.outcome).toBe('OK');
+    });
+  });
+
+  it('qualifies the automated-decision statement and admits an unpublished retention notice', async () => {
+    await submit({ type: 'ACCESS' });
+    const id = [...repo.rows.keys()][0];
+    await service.verify({ requestId: id, token: 'token-1', now: NOW });
+    const result = await service.downloadExport({ requestId: id, token: 'token-2', now: NOW });
+    if (result.outcome !== 'OK') throw new Error('expected OK');
+    const info = result.export.processingInformation;
+    // Art 22: a score can set a new enquiry's status, so the text must not claim staff alone decide.
+    expect(info.automatedDecisions).toMatch(/set (the status|a lead)/i);
+    expect(info.automatedDecisions).toMatch(
+      /no decision with legal or similarly significant effect/i
+    );
+    // No privacy notice published: no invented periods, the person may ask the firm directly.
+    expect(info.retention).toMatch(/has not published/i);
+    expect(info.retention).toMatch(/ask (the firm|Smith Law) directly/i);
+    expect(info.retention).not.toMatch(/See the firm/);
+  });
+
+  it('points to the published notice for retention when the firm has one', async () => {
+    await submit({ type: 'ACCESS' });
+    const id = [...repo.rows.keys()][0];
+    await service.verify({ requestId: id, token: 'token-1', now: NOW });
+    vi.spyOn(repo, 'findFirm').mockResolvedValue({
+      ...FIRM,
+      privacyUrl: 'https://smith.example.invalid/privacy',
+    } as never);
+    const result = await service.downloadExport({ requestId: id, token: 'token-2', now: NOW });
+    if (result.outcome !== 'OK') throw new Error('expected OK');
+    expect(result.export.processingInformation.retention).toBe(
+      'See https://smith.example.invalid/privacy for how long each category is kept.'
+    );
+  });
+
   it('refuses an access completion whose stored note would exceed 2000 characters (codex)', async () => {
     subjectData.buildExport.mockResolvedValue({ data: {}, withheld: { NOTES: 2 } });
     const id = await verified('ACCESS');
@@ -1000,6 +1125,27 @@ describe('complete (D-AC-06/08)', () => {
     });
     expect(result).toEqual({ outcome: 'INVALID', field: 'resolutionNoteLength' });
     expect(repo.rows.get(id)).toMatchObject({ status: 'VERIFIED' });
+  });
+
+  it('counts an extension from the start of the clock, not from the clamped first month (compliance)', async () => {
+    // Verified on 31 Jan: one month is 28 Feb, and three months is 30 Apr, not 28 Apr.
+    const verifiedAt = new Date('2027-01-31T10:00:00Z');
+    const row = repo.seed({
+      type: 'RECTIFICATION',
+      status: 'VERIFIED',
+      verifiedAt,
+      slaDeadline: new Date('2027-02-28T10:00:00Z'),
+    });
+    const ok = await service.extend({
+      tenantId: 'tenant-a',
+      id: row.id,
+      actorId: ADMIN,
+      months: 2,
+      reason: 'Many records to review',
+      now: new Date('2027-02-01T10:00:00Z'),
+    });
+    expect(ok.outcome).toBe('OK');
+    expect(repo.rows.get(row.id)!.extendedUntil!.toISOString()).toBe('2027-04-30T10:00:00.000Z');
   });
 
   it('extends once, by one or two months, before the original deadline, and tells the person', async () => {

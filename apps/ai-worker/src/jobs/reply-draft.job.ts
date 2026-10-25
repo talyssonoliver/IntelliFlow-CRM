@@ -13,6 +13,7 @@ import { prisma } from '@intelliflow/db';
 import { draftContactReply, type EmailThreadEntry } from '../contact-reply-draft.chain.js';
 import {
   eligibleSubjectEmail,
+  queuedAddressBlocked,
   writeSubjectIfStillEligible,
   type SubjectPrisma,
 } from '../lib/data-request-guard';
@@ -41,6 +42,32 @@ export const ReplyDraftJobDataSchema = z.object({
 });
 export type ReplyDraftJobData = z.infer<typeof ReplyDraftJobDataSchema>;
 
+/**
+ * One header token as an address: lowercased, without surrounding quotes or trailing full
+ * stops. Apostrophes are legal inside an address (o'neil@), so they are only trimmed from the
+ * ends, never split on (codex).
+ */
+function tokenAddress(token: string): string {
+  let address = token.toLowerCase();
+  while (address.startsWith("'")) address = address.slice(1);
+  while (address.endsWith('.') || address.endsWith("'")) address = address.slice(0, -1);
+  return address;
+}
+
+/**
+ * Every address a queued thread names, in its From and To lines:
+ * "Name <a@example.invalid>, (b@example.invalid), mailto:c@example.invalid." → tokens, keeping
+ * the ones with an @ (codex: a missed form fails open).
+ */
+function threadAddresses(thread: ReadonlyArray<{ from: string; to?: string }>): string[] {
+  const lines = thread.flatMap((entry) => [entry.from, entry.to ?? '']);
+  const addresses = lines
+    .flatMap((line) => line.split(/[\s<>,;:()"[\]]+/))
+    .map(tokenAddress)
+    .filter((address) => address.includes('@'));
+  return [...new Set(addresses)];
+}
+
 export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise<{
   skipped?: boolean;
   draftId?: string;
@@ -63,6 +90,18 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
       logger.info({ contactId, tenantId }, 'reply-draft skipped — data subject request');
       return { skipped: true };
     }
+    // The queued thread goes to the model as it is: no one it names may be restricted or
+    // erased either, such as the contact's previous address (codex).
+    // The contact's own current address was checked above as a contact (an old erasure of a
+    // person who came back is not a block); the thread's other addresses are checked here.
+    const own = email.trim().toLowerCase();
+    const participants = threadAddresses(emailThread).filter((a) => a !== own);
+    for (const address of participants) {
+      if (await queuedAddressBlocked(prisma as never, tenantId, address)) {
+        logger.info({ contactId, tenantId }, 'reply-draft skipped — data subject request');
+        return { skipped: true };
+      }
+    }
 
     const result = await draftContactReply({
       contactId,
@@ -81,9 +120,15 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
     // Stored only under the contact row and address locks, after re-checking (Q22).
     const outcome = await writeSubjectIfStillEligible(
       prisma as never,
-      { ...subject, email },
-      (tx) =>
-        (tx as unknown as typeof prisma).contactReplyDraft.create({
+      { ...subject, email, alsoLock: participants },
+      async (tx) => {
+        // The thread's other people too, re-checked while their address locks are held (taken
+        // with the contact's, in one sorted order): one restricted or erased while the model
+        // ran stops the draft, and two drafts on one thread cannot deadlock (codex).
+        for (const address of participants) {
+          if (await queuedAddressBlocked(tx as never, tenantId, address)) return null;
+        }
+        return (tx as unknown as typeof prisma).contactReplyDraft.create({
           data: {
             contactId,
             tenantId,
@@ -96,9 +141,10 @@ export async function processReplyDraftJob(job: Job<ReplyDraftJobData>): Promise
             modelVersion: draft.modelVersion,
             ...(createdBy ? { createdBy } : {}),
           },
-        })
+        });
+      }
     );
-    if (!outcome.written) {
+    if (!outcome.written || outcome.value === null) {
       logger.info({ contactId, tenantId }, 'reply-draft discarded — data subject request');
       return { skipped: true };
     }

@@ -41,7 +41,24 @@ const IDENTITY_LABELS: Record<IdentityMethod, string> = {
   OTHER: 'Other (describe below)',
 };
 
+// Mirrors DSAR_LIMITS.identityNoteMin in the domain package (the server validates properly).
 const IDENTITY_NOTE_MIN = 20;
+
+type LogField = 'email' | 'receivedOn' | 'receivedOnReason' | 'identityNote';
+
+export interface LogProblem {
+  field: LogField;
+  message: string;
+}
+
+const FIELD_IDS: Record<LogField, string> = {
+  email: 'log-email',
+  receivedOn: 'log-received',
+  receivedOnReason: 'log-received-reason',
+  identityNote: 'log-identity-note',
+};
+
+const ERROR_ID = 'log-request-error';
 
 interface Draft {
   type: RequestType;
@@ -79,15 +96,25 @@ function looksLikeEmail(value: string): boolean {
   return dot > at + 1 && dot < value.length - 1;
 }
 
-/** The first problem with a draft, in form order, or null. */
-export function logRequestProblem(draft: Draft): string | null {
-  if (!looksLikeEmail(draft.email.trim())) return 'Enter a valid email address.';
-  if (draft.receivedOn > today()) return 'The received date cannot be in the future.';
+/** The first problem with a draft, in form order, and the field it belongs to, or null. */
+export function logRequestProblem(draft: Draft): LogProblem | null {
+  if (!looksLikeEmail(draft.email.trim())) {
+    return { field: 'email', message: 'Enter a valid email address.' };
+  }
+  if (draft.receivedOn > today()) {
+    return { field: 'receivedOn', message: 'The received date cannot be in the future.' };
+  }
   if (draft.receivedOn < today() && !draft.receivedOnReason.trim()) {
-    return 'Say why the request is logged after the day it was received.';
+    return {
+      field: 'receivedOnReason',
+      message: 'Say why the request is logged after the day it was received.',
+    };
   }
   if (draft.identityNote.trim().length < IDENTITY_NOTE_MIN) {
-    return `Describe the identity check in at least ${IDENTITY_NOTE_MIN} characters.`;
+    return {
+      field: 'identityNote',
+      message: `Describe the identity check in at least ${IDENTITY_NOTE_MIN} characters.`,
+    };
   }
   return null;
 }
@@ -111,15 +138,18 @@ export function LogRequestDialog({
   error,
   onSubmit,
   onClose,
+  onCloseAutoFocus,
 }: Readonly<{
   open: boolean;
   pending: boolean;
   error: string | null;
   onSubmit: (input: DsarLogRequestInput) => void;
   onClose: () => void;
+  /** Lets the page decide where focus goes when the dialog closes. */
+  onCloseAutoFocus?: (event: Event) => void;
 }>) {
   const [draft, setDraft] = useState<Draft>(emptyDraft);
-  const [problem, setProblem] = useState<string | null>(null);
+  const [problem, setProblem] = useState<LogProblem | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -128,19 +158,30 @@ export function LogRequestDialog({
     }
   }, [open]);
 
+  // Move focus to the field that needs fixing (WCAG 3.3.1, 2.4.3); a new object per
+  // attempt, so pressing the button again with the same problem focuses it again.
+  useEffect(() => {
+    if (problem) document.getElementById(FIELD_IDS[problem.field])?.focus();
+  }, [problem]);
+
+  const invalid = (field: LogField) => (problem?.field === field ? true : undefined);
+  const describedBy = (field: LogField, ...ids: string[]) =>
+    [...ids, ...(problem?.field === field ? [ERROR_ID] : [])].join(' ') || undefined;
+
   const update = <K extends keyof Draft>(key: K, value: Draft[K]) =>
     setDraft((current) => ({ ...current, [key]: value }));
 
   const submit = () => {
+    if (pending) return;
     const found = logRequestProblem(draft);
     setProblem(found);
     if (!found) onSubmit(toLogRequestInput(draft));
   };
 
-  const shown = problem ?? error;
+  const shown = problem?.message ?? error;
   return (
     <Dialog open={open} onOpenChange={(next) => (next ? null : onClose())}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>Log a request</DialogTitle>
           <DialogDescription>
@@ -186,6 +227,8 @@ export function LogRequestDialog({
               id="log-email"
               type="email"
               maxLength={320}
+              aria-invalid={invalid('email')}
+              aria-describedby={describedBy('email')}
               value={draft.email}
               onChange={(e) => update('email', e.target.value)}
             />
@@ -196,6 +239,8 @@ export function LogRequestDialog({
               id="log-received"
               type="date"
               max={today()}
+              aria-invalid={invalid('receivedOn')}
+              aria-describedby={describedBy('receivedOn')}
               value={draft.receivedOn}
               onChange={(e) => update('receivedOn', e.target.value)}
             />
@@ -206,6 +251,8 @@ export function LogRequestDialog({
               <Input
                 id="log-received-reason"
                 maxLength={500}
+                aria-invalid={invalid('receivedOnReason')}
+                aria-describedby={describedBy('receivedOnReason')}
                 value={draft.receivedOnReason}
                 onChange={(e) => update('receivedOnReason', e.target.value)}
               />
@@ -228,10 +275,15 @@ export function LogRequestDialog({
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="log-identity-note">Identity check details</Label>
+            <p id="log-identity-note-hint" className="text-xs text-muted-foreground">
+              {`At least ${IDENTITY_NOTE_MIN} characters`}
+            </p>
             <Textarea
               id="log-identity-note"
               rows={2}
               maxLength={500}
+              aria-invalid={invalid('identityNote')}
+              aria-describedby={describedBy('identityNote', 'log-identity-note-hint')}
               value={draft.identityNote}
               onChange={(e) => update('identityNote', e.target.value)}
             />
@@ -248,12 +300,13 @@ export function LogRequestDialog({
           </div>
           {draft.type === 'ERASURE' && (
             <p className="text-sm text-muted-foreground">
-              The person is emailed that an erasure was logged. Another administrator must carry it
-              out, or, if you are the only one, it can run 24 hours after logging.
+              The person is emailed that an erasure was logged. It can run 24 hours after that
+              email, so they can object, and another administrator must carry it out unless you are
+              the only one.
             </p>
           )}
           {shown && (
-            <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+            <p id={ERROR_ID} role="alert" className="text-sm text-red-700 dark:text-red-300">
               {shown}
             </p>
           )}
@@ -262,7 +315,7 @@ export function LogRequestDialog({
           <Button type="button" variant="outline" onClick={onClose} disabled={pending}>
             Cancel
           </Button>
-          <Button type="button" onClick={submit} disabled={pending}>
+          <Button type="button" onClick={submit} aria-disabled={pending || undefined}>
             {pending ? 'Saving…' : 'Log request'}
           </Button>
         </DialogFooter>

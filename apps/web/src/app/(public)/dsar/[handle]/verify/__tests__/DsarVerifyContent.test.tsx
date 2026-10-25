@@ -5,7 +5,7 @@
  */
 import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
 
 const h = vi.hoisted(() => ({ verify: vi.fn() }));
@@ -50,6 +50,29 @@ describe('DsarVerifyContent', () => {
     expect(window.location.hash).toBe('');
     expect(window.location.href).not.toContain(TOKEN);
     await axeClean(container);
+  });
+
+  it('moves focus to the result heading and titles the page for the result', async () => {
+    h.verify.mockResolvedValue({
+      type: 'ACCESS',
+      dueDate: '2026-11-22T10:00:00.000Z',
+      exportEmailed: false,
+    });
+    render(<DsarVerifyContent />);
+    const heading = await screen.findByRole('heading', { name: 'Your request is confirmed' });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+    expect(document.title).toBe('Your request is confirmed');
+  });
+
+  it('focuses the heading and retitles the page for an invalid link', async () => {
+    h.verify.mockRejectedValue(Object.assign(new Error('x'), { data: { code: 'BAD_REQUEST' } }));
+    render(<DsarVerifyContent />);
+    const heading = await screen.findByRole('heading', {
+      name: 'This link is invalid or has expired',
+    });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    expect(document.title).toBe('This link is invalid or has expired');
   });
 
   it('says nothing about an export for other request types', async () => {

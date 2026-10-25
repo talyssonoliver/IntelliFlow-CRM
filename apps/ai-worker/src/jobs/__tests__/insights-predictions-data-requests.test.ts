@@ -16,6 +16,10 @@ const db = vi.hoisted(() => ({
   restricted: new Set<string>(),
   /** Opportunity id -> its contact id (null: a deal with no contact). */
   deals: new Map<string, string | null>(),
+  /** Addresses whose erasure request completed (no restriction is left behind for them). */
+  erasedSubjects: new Set<string>(),
+  /** Opportunity id -> its current name (default: `<id> renewal`). */
+  dealNames: new Map<string, string>(),
 }));
 const mockPredictChurnRisk = vi.hoisted(() => vi.fn());
 const mockNBAExecute = vi.hoisted(() => vi.fn());
@@ -113,11 +117,20 @@ vi.mock('@intelliflow/db', () => {
       }),
     },
     contactReplyDraft: { create: mockReplyDraftCreate },
+    dsarRequest: {
+      findFirst: vi.fn(async ({ where }: { where: { subjectEmail: string } }) =>
+        db.erasedSubjects.has(where.subjectEmail) ? { id: 'dsar-1' } : null
+      ),
+    },
     opportunity: {
       findMany: vi.fn(async ({ where }: { where: { id: { in: string[] } } }) =>
         where.id.in
           .filter((id) => db.deals.has(id))
-          .map((id) => ({ id, contactId: db.deals.get(id) ?? null }))
+          .map((id) => ({
+            id,
+            contactId: db.deals.get(id) ?? null,
+            name: db.dealNames.get(id) ?? `${id} renewal`,
+          }))
       ),
     },
     processingRestriction: {
@@ -205,6 +218,8 @@ beforeEach(() => {
   db.lockedEmail.clear();
   db.restricted.clear();
   db.deals.clear();
+  db.dealNames.clear();
+  db.erasedSubjects.clear();
   mockPredictChurnRisk.mockResolvedValue(HIGH_CHURN);
   mockGenerateInsightsWithMeta.mockResolvedValue({ insights: [], source: 'llm' });
   mockCreateLLMForTenant.mockResolvedValue({
@@ -297,6 +312,20 @@ describe('prediction job', () => {
     db.leads.set(LEAD, BOB);
     const queued = churnJob('lead', LEAD);
     queued.data.context = { userId: 'user-1', email: ' Ada@Example.invalid ', name: 'Ada' };
+
+    await expect(processPredictionJob(queued)).resolves.toMatchObject({
+      skipped: true,
+      reason: 'data-subject-request',
+    });
+    expect(mockPredictChurnRisk).not.toHaveBeenCalled();
+  });
+
+  it('checks a queued address even when the deal no longer has a contact (codex)', async () => {
+    // Queued while Ada was the deal's contact; the contact was removed since, and Ada restricted.
+    db.deals.set(DEAL, null);
+    db.restricted.add(ADA);
+    const queued = churnJob('opportunity', DEAL);
+    queued.data.context = { userId: 'user-1', email: ADA, name: 'Ada' };
 
     await expect(processPredictionJob(queued)).resolves.toMatchObject({
       skipped: true,
@@ -711,6 +740,114 @@ describe('Q22: contact reply drafts', () => {
     expect(mockReplyDraftCreate).not.toHaveBeenCalled();
   });
 
+  it('never sends a queued thread that names a restricted address (codex)', async () => {
+    // Queued for Ada's old address; the contact is now Bob's, and Ada is restricted.
+    db.contacts.set(CONTACT, BOB);
+    db.restricted.add(ADA);
+    const queued = bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [
+        {
+          from: 'Ada Lovelace <Ada@Example.invalid>',
+          body: 'Can we meet?',
+          at: '2026-10-23T09:00:00Z',
+        },
+      ],
+    });
+    await expect(processReplyDraftJob(queued)).resolves.toEqual({ skipped: true });
+    expect(mockDraftReply).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a comment form', `John (${'Ada@Example.invalid'})`],
+    ['a mailto: prefix', 'mailto:ada@example.invalid'],
+    ['a trailing full stop', 'ada@example.invalid.'],
+    ['single quotes around it', "'ada@example.invalid'"],
+  ])('finds a restricted address written in %s (codex)', async (_label, header) => {
+    db.contacts.set(CONTACT, BOB);
+    db.restricted.add(ADA);
+    const queued = bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [{ from: header, body: 'Hello', at: '2026-10-23T09:00:00Z' }],
+    });
+    await expect(processReplyDraftJob(queued)).resolves.toEqual({ skipped: true });
+    expect(mockDraftReply).not.toHaveBeenCalled();
+  });
+
+  it("keeps an apostrophe in an address: o'neil@ is checked as written (codex)", async () => {
+    const oneil = "o'neil@example.invalid";
+    db.contacts.set(CONTACT, BOB);
+    db.restricted.add(oneil);
+    const queued = bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [{ from: `Siobhan O'Neil <${oneil}>`, body: 'Hi', at: '2026-10-23T09:00:00Z' }],
+    });
+    await expect(processReplyDraftJob(queued)).resolves.toEqual({ skipped: true });
+    expect(mockDraftReply).not.toHaveBeenCalled();
+  });
+
+  it('never sends a queued thread from a person whose erasure completed (codex)', async () => {
+    db.contacts.set(CONTACT, BOB);
+    db.erasedSubjects.add(ADA);
+    const queued = bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [{ from: ADA, to: BOB, body: 'Can we meet?', at: '2026-10-23T09:00:00Z' }],
+    });
+    await expect(processReplyDraftJob(queued)).resolves.toEqual({ skipped: true });
+    expect(mockDraftReply).not.toHaveBeenCalled();
+  });
+
+  it('stores no draft when another person in the thread is restricted during the model call (codex)', async () => {
+    db.contacts.set(CONTACT, ADA);
+    mockDraftReply.mockImplementation(async () => {
+      db.restricted.add(BOB);
+      return draft;
+    });
+    const queued = bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [{ from: ADA, to: BOB, body: 'Bob asked too', at: '2026-10-23T09:00:00Z' }],
+    });
+    await expect(processReplyDraftJob(queued)).resolves.toEqual({ skipped: true });
+    expect(mockReplyDraftCreate).not.toHaveBeenCalled();
+  });
+
+  it('locks every thread address in one sorted order, so drafts on one thread cannot deadlock (codex)', async () => {
+    const { prisma } = (await import('@intelliflow/db')) as any;
+    db.contacts.set(CONTACT, BOB);
+    mockDraftReply.mockResolvedValue(draft);
+    mockReplyDraftCreate.mockResolvedValue({ id: 'draft-1' });
+    const queued = bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [{ from: ADA, to: BOB, body: 'Both of us', at: '2026-10-23T09:00:00Z' }],
+    });
+    await processReplyDraftJob(queued);
+    const locked = prisma.$queryRaw.mock.calls
+      .filter((c: [string[]]) => c[0].join('?').includes('dsar_subject_lock('))
+      .map((c: unknown[]) => c[2]);
+    // The contact is Bob, yet ada@ is locked first: one sorted order for every job.
+    expect(locked).toEqual([ADA, BOB]);
+    expect(mockReplyDraftCreate).toHaveBeenCalledOnce();
+  });
+
+  it('drafts for a person who came back after an old erasure: their own address is checked as a contact (codex)', async () => {
+    db.contacts.set(CONTACT, ADA);
+    db.erasedSubjects.add(ADA);
+    mockDraftReply.mockResolvedValue(draft);
+    mockReplyDraftCreate.mockResolvedValue({ id: 'draft-2' });
+    const queued = bullJob({
+      contactId: CONTACT,
+      tenantId: TENANT,
+      emailThread: [{ from: ADA, body: 'I am back', at: '2026-10-23T09:00:00Z' }],
+    });
+    await expect(processReplyDraftJob(queued)).resolves.toEqual({ draftId: 'draft-2' });
+  });
+
   it('stores no draft for a contact restricted during the model call', async () => {
     db.contacts.set(CONTACT, ADA);
     mockDraftReply.mockImplementation(async () => {
@@ -764,6 +901,21 @@ describe('deals at risk follow their contact (reviewer must-fix 3)', () => {
 
     const [input] = mockGenerateInsightsWithMeta.mock.calls[0]!;
     expect(input.dealsAtRisk.map((d: { id: string }) => d.id)).toEqual([DEAL_OPEN]);
+  });
+
+  it('sends the deal as it is now, never the queued name (codex: contact replaced since)', async () => {
+    // Queued as "Ada's renewal" while Ada was its contact; the deal now belongs to Bob.
+    db.contacts.set(CONTACT, BOB);
+    db.deals.set(DEAL_KEPT, CONTACT);
+    db.dealNames.set(DEAL_KEPT, 'Engines renewal');
+    const queued = dealJob([DEAL_KEPT]);
+    queued.data.dealsAtRisk[0].name = "Ada Lovelace's renewal";
+
+    await processInsightJob(queued);
+
+    const [input] = mockGenerateInsightsWithMeta.mock.calls[0]!;
+    expect(input.dealsAtRisk.map((d: { name: string }) => d.name)).toEqual(['Engines renewal']);
+    expect(JSON.stringify(input)).not.toContain('Ada Lovelace');
   });
 
   it('writes no insight about a kept deal whose contact is restricted during the model call', async () => {

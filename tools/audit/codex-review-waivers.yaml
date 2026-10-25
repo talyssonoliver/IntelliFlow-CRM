@@ -1338,12 +1338,15 @@ waivers:
     expires: '2026-11-23'
   - fingerprint: 02b088e4de2cb2fea357b3b244bfc430f7d624ce34ba1d590045551dc3070576
     reason: >-
-      Same gap as #1010 (already filed and waived): AI-created tasks carry no lead or contact id,
-      so erasure cannot find or count them. New tasks for a restricted or erased person are not
-      created (Q21); tagging tasks with their person needs a schema change, tracked in #1010.
+      Codex has used this fingerprint for two findings in PrismaSubjectDataRepository.ts.
+      (1) AI-created tasks carry no lead or contact id, so erasure cannot find them: #1010.
+      (2) Deal names and task titles appear in the export while descriptions are withheld: this
+      is owner ruling Q23 (2026-10-25: "deals (name, value, stage, dates) and tasks (title,
+      status, dates); descriptions withheld"), recorded in PG-203-owner-ruling.md. Changing it
+      needs a new owner decision, not a code fix.
     author: PG-203 lane
-    date: '2026-10-24'
-    expires: '2026-11-23'
+    date: '2026-10-25'
+    expires: '2026-11-24'
   - fingerprint: 071999c8ad8086fb913bb0ad820e0c26865dcac94e8498d4ec8b9aef16e4b5be
     reason: >-
       Recall, not privacy: the Q22 filter runs after each source's 100-row query, so heavy
@@ -1353,3 +1356,46 @@ waivers:
     author: PG-203 lane
     date: '2026-10-24'
     expires: '2026-11-23'
+  - fingerprint: 10bd40e109ea14b5338e9520437715b79bf05f168f6dc5953bfe04d313dcdcd9
+    reason: >-
+      Same finding as 13391d7a, tracked in #1020: a completed access export rebuilt at download
+      time can show data added after the request was answered with the "reasons emailed" note.
+      Art 15 is answered as of the request; a narrow timing case, not a security, data-loss or
+      regression finding (codex spiral rule).
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 17e93f5337a708618a81c280a1472b519e144f41679315264489dcf789cce557
+    reason: >-
+      Same gap as #1010 (and fingerprint 02b088e4): AI-generated tasks carry no lead or contact id,
+      so neither the export nor the erasure checklist can find them. Tagging tasks with their
+      person needs a schema change, tracked in #1010; new tasks for a restricted or erased person
+      are not created (Q21).
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 70c3c847f16c3283b6bb17fa37770efbb6ded3de78b9050596c2257541006011
+    reason: >-
+      Third fingerprint for #1020 (see 13391d7a and 10bd40e1): a completed access export rebuilt
+      at download time can show data added after the request was answered, with the "reasons
+      emailed" note. Narrow timing case, not a security, data-loss or regression finding.
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 19f1b339aef58e3ef60419526b05bfa6732bd808a9c0a7190ae49dd5b2d8a7ed
+    reason: >-
+      By design (PG-203 spec Addendum A; SubmitCaps documents "same tenant + same IP hash"):
+      the database IP cap is per firm. Across firms, an IP is throttled by the in-memory submit
+      limiter in booking-abuse.ts (bookingSubmitLimiter, per IP for every firm), the global
+      folded-email cap, and now the per-firm daily cap (Q24). LOW, not a security regression.
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'
+  - fingerprint: 1350993204ce39b35b7aa2faf73aa439424e27cb5238341df6e2c77e7865ac41
+    reason: >-
+      LOW, fail-safe: when a rejected RESTRICTION request shares its restriction with another open
+      request, the lifting notice goes out though the restriction stays. Processing stays
+      restricted. Tracked in #1027 (check the restriction is held only by this request first).
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'

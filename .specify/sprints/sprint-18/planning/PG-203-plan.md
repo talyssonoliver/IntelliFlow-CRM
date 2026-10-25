@@ -1259,6 +1259,52 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
   the intent-layer README, `packages/search/CLAUDE.md` and the retention config now point at the new code; the
   config's DSAR block is marked as target settings (#1015). The checkpoint grep finds only history, evidence files
   and the orphaned `embedding-purge.service.ts` actor string.
+
+**D12 reviews (2026-10-24/25):** a11y-expert PASS WITH MINOR, security-lead PASS WITH MINOR, compliance FAIL. Owner
+rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
+- a11y: focus and live announcements on the verify and export pages, field-level errors and hints in the dialogs,
+  focus after a dialog action, the banner as a note, per-row download labels, reduced-motion skeletons. The
+  destructive colour token's contrast stays a known shared gap (#871).
+- Q23 deals and tasks in the export (descriptions withheld) and on the erasure checklist; calendar events,
+  notifications and experiment assignments counted as withheld. Q26 AI text, staff text and booking answers
+  withheld for review (new categories DESCRIPTIONS, AI_TEXT, STAFF_TEXT, OTHER_RECORDS).
+- Compliance blocker: completeAccess refuses unless every category withheld now has a reason and a count that covers
+  the live count. Art 22 wording qualified; retention text when the firm has no privacy notice.
+- Q24: per-firm daily cap of 50 public submissions; unverified requests purged 7 days after their link expired (in the
+  deadline job); expired unverified requests left out of the admin list.
+- Q25: every staff-logged erasure waits 24 hours after the warning. Extensions count from the start of the clock.
+- Audits: the staff export audit is awaited (retried once), and public export downloads are audited.
+- Appointment location is kept on erasure: it is the firm's meeting place, not booker text.
+- Codex (D12 round): withheld counts must cover the live count; the dialog no longer invents a reason for a blank
+  one (refused with field focus); a contact merge locks both rows before reading their addresses, so a racing
+  address change cannot leave the survivor unrestricted (real-DB race test, RED first).
+- Codex (HIGH): the insight job reads each queued deal as it is now (`currentDeals`: current name and contact), so a
+  queued name of a person who is no longer the deal's contact never reaches the model.
+- Codex (HIGH): a prediction about no one now (a deal whose contact was removed) still checks a queued context's
+  address. Codex (HIGH, deal names and task titles in the export): owner ruling Q23, waived with that reason; it
+  shares fingerprint 02b088e4 with the #1010 waiver, and the waiver now states both.
+- Codex (HIGH): a reply draft checks every address its queued thread names (From and To), not only the contact's
+  current address. AI-task copies (17e93f53) and the completed-export note (10bd40e1): #1010 and #1020, waived.
+- Codex (HIGH): queued addresses (reply threads, prediction contexts) are checked with `queuedAddressBlocked`:
+  restricted, erased, or the subject of a completed erasure, since erasure leaves no marker on the original address.
+- Codex (HIGH): a reply draft re-checks the thread's other participants inside the locked write, each under its
+  address lock. Codex (MEDIUM): booking title, description, notes and cancellation reason are withheld and counted
+  (STAFF_TEXT), as the erasure clears them.
+- Codex (HIGH): the export reads everything from one repeatable-read snapshot, so a record whose address changes
+  mid-export cannot put another person's data in the file. The sonar guard's two findings (dialog validation
+  complexity, the status region as `<output>`) are fixed.
+- Codex (HIGH): the erasure takes the person's address lock (`dsar_subject_lock`) after its row locks, so an AI write
+  that checked the address either commits first or waits for the erasure.
+- Codex (deadlock, then race): the locked write takes the contact's address lock and the thread participants'
+  (`alsoLock`) in one sorted order, then re-checks them; two drafts on one thread cannot deadlock, and a
+  participant restricted meanwhile stops the draft.
+- Codex (MEDIUM): the lead export includes `clickId`, which the erasure clears. #1020 waived a third time.
+- Codex (MEDIUM): the reply-draft participant check leaves out the contact's own current address (checked as a
+  contact), so a person who came back after an old erasure can still get a draft.
+- Codex (LOW, MEDIUM): thread addresses are also found in comment, `mailto:`, quoted and trailing-full-stop forms,
+  and an apostrophe inside an address (o'neil@) is kept. The per-firm IP cap is by design (waived with reason).
+- Codex (MEDIUM): a failed restriction lift after a committed rejection no longer throws; the restriction stays
+  (restrictionKept) and the rejection notice still goes. The shared-restriction lifting notice (LOW): #1027, waived.
 - Tests: `apps/api/src/modules/privacy/__tests__/dsar-sla-scheduler.test.ts` (fake clock, fake store, recording
   client), `dsar-sla-deps.test.ts`, `apps/api/src/__tests__/http-server.dsar-sla.test.ts`, `main.test.ts`, and
   four real-database tests in `tests/integration/dsar.test.ts` (due, overdue, 3-day repeat, extension window,

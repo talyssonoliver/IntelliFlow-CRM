@@ -5,7 +5,7 @@
  */
 import * as React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import axe from 'axe-core';
 
 const h = vi.hoisted(() => ({ download: { mutateAsync: vi.fn(), isPending: false } }));
@@ -84,6 +84,28 @@ describe('DsarExportContent', () => {
     setItem.mockRestore();
   });
 
+  it('labels every withheld category in plain words, including deals, AI and staff text', async () => {
+    h.download.mutateAsync.mockResolvedValue({
+      ...EXPORT,
+      withheld: [
+        { category: 'DESCRIPTIONS' as const, count: 2, note: 'Under review.' },
+        { category: 'AI_TEXT' as const, count: 3, note: 'Under review.' },
+        { category: 'STAFF_TEXT' as const, count: 1, note: 'Under review.' },
+        { category: 'OTHER_RECORDS' as const, count: 4, note: 'Under review.' },
+      ],
+    });
+    render(<DsarExportContent />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Get my data' }));
+    expect(await screen.findByText('Deal and task descriptions: 2')).toBeTruthy();
+    expect(
+      screen.getByText('Text written by AI, such as insights and recommendations: 3')
+    ).toBeTruthy();
+    expect(screen.getByText('Tags, qualification notes and booking answers: 1')).toBeTruthy();
+    expect(
+      screen.getByText('Calendar events, notifications and experiment records: 4')
+    ).toBeTruthy();
+  });
+
   it('saves the file from memory', async () => {
     const create = vi.fn(() => 'blob:dsar');
     const revoke = vi.fn();
@@ -109,11 +131,42 @@ describe('DsarExportContent', () => {
     );
     render(<DsarExportContent />);
     fireEvent.click(await screen.findByRole('button', { name: 'Get my data' }));
-    expect(await screen.findByRole('alert')).toBeTruthy();
-    expect(screen.getByText(/used too many times/)).toBeTruthy();
+    expect(await screen.findByText(/used too many times/)).toBeTruthy();
     expect(downloadErrorMessage(new Error('raw'))).toBe(
       'This link is invalid or has expired. Contact the firm for a new one.'
     );
+  });
+
+  it('keeps the button focusable while pending and ignores clicks', async () => {
+    h.download.isPending = true;
+    render(<DsarExportContent />);
+    const button = await screen.findByRole('button', { name: 'Preparing…' });
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(button);
+    expect(h.download.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('has a status region mounted before any result and moves focus to the heading on load', async () => {
+    render(<DsarExportContent />);
+    const button = await screen.findByRole('button', { name: 'Get my data' });
+    const region = screen.getByRole('status');
+    expect(region.textContent).toBe('');
+    fireEvent.click(button);
+    const heading = await screen.findByRole('heading', { name: 'Your personal data' });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+    expect(screen.getByRole('status')).toBe(region);
+  });
+
+  it('announces a failure in the status region that was already mounted', async () => {
+    h.download.mutateAsync.mockRejectedValueOnce(new Error('raw'));
+    render(<DsarExportContent />);
+    const button = await screen.findByRole('button', { name: 'Get my data' });
+    const region = screen.getByRole('status');
+    fireEvent.click(button);
+    await waitFor(() => expect(region.textContent).toMatch(/invalid or has expired/));
+    expect(screen.getByRole('status')).toBe(region);
   });
 
   it('explains a link without its fragment', async () => {

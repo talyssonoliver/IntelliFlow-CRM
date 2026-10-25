@@ -54,6 +54,10 @@ export const WITHHELD_LABELS: Record<WithheldCategory, string> = {
   TICKET_SUBJECTS: 'Ticket subjects',
   MESSAGE_BODIES: 'Email and chat messages',
   DOCUMENTS: 'Documents',
+  DESCRIPTIONS: 'Deal and task descriptions',
+  AI_TEXT: 'AI-written text',
+  STAFF_TEXT: 'Staff tags, qualification notes and booking answers',
+  OTHER_RECORDS: 'Calendar events, notifications and experiment records',
   EXCESS_ROWS: 'Records beyond the automatic file limit',
 };
 
@@ -68,7 +72,32 @@ export const CHECKLIST_LABELS: Record<string, string> = {
   calendarEvents: 'Calendar events',
   experimentAssignments: 'Experiment assignments',
   storedLeadFiles: 'Stored files',
+  deals: 'Deals',
+  tasks: 'Tasks',
 };
+
+// Minimum lengths the server enforces (packages/validators/src/dsar.ts): reasons are 10
+// characters, the marketing stop method is DSAR_LIMITS.marketingStopMethodMin (10).
+const REASON_MIN = 10;
+const STOP_METHOD_MIN = 10;
+
+type ProblemField = 'text' | 'stop' | 'confirm' | 'withheld';
+
+interface Problem {
+  field: ProblemField;
+  message: string;
+  /** The exact control to focus, when the field is one of several (a withheld category). */
+  targetId?: string;
+}
+
+const FIELD_IDS: Record<ProblemField, string> = {
+  text: 'request-action-text',
+  stop: 'request-action-stop',
+  confirm: 'request-action-confirm',
+  withheld: 'request-action-withheld',
+};
+
+const ERROR_ID = 'request-action-error';
 
 /** The free-text field each action asks for (null: none), and what happens to the text. */
 const TEXT_FIELD: Record<RequestAction, { label: string; hint: string; min: number } | null> = {
@@ -82,13 +111,13 @@ const TEXT_FIELD: Record<RequestAction, { label: string; hint: string; min: numb
     hint: 'Kept on the request; not sent to the person.',
     min: 1,
   },
-  extend: { label: 'Reason', hint: 'Sent to the person with the new date.', min: 10 },
+  extend: { label: 'Reason', hint: 'Sent to the person with the new date.', min: REASON_MIN },
   reject: {
     label: 'Reason',
     hint: 'Sent to the person, with their right to complain to the ICO.',
-    min: 10,
+    min: REASON_MIN,
   },
-  cancelErasure: { label: 'Reason', hint: 'Sent to the person.', min: 10 },
+  cancelErasure: { label: 'Reason', hint: 'Sent to the person.', min: REASON_MIN },
   revokeExport: null,
 };
 
@@ -112,6 +141,54 @@ export interface RequestActionDialogProps {
   error: string | null;
   onSubmit: (input: ActionInput) => void;
   onClose: () => void;
+  /** Lets the page decide where focus goes when the dialog closes. */
+  onCloseAutoFocus?: (event: Event) => void;
+}
+
+/** The first thing the admin must fix before the action can be sent, or null. */
+function actionProblem(input: {
+  action: RequestAction;
+  text: string;
+  isErasure: boolean;
+  isMarketing: boolean;
+  confirmed: boolean;
+  stopMethod: string;
+  withheld: WithheldRows;
+}): Problem | null {
+  const field = TEXT_FIELD[input.action];
+  if (field && input.text.trim().length < field.min) {
+    return {
+      field: 'text',
+      message:
+        field.min === 1 ? 'Add a note.' : `Give a reason of at least ${field.min} characters.`,
+    };
+  }
+  if (input.isErasure && !input.confirmed) {
+    return { field: 'confirm', message: 'Confirm that no legal hold or retention duty applies.' };
+  }
+  if (input.isMarketing && input.stopMethod.trim().length < STOP_METHOD_MIN) {
+    return {
+      field: 'stop',
+      message: `Say how marketing was stopped (at least ${STOP_METHOD_MIN} characters).`,
+    };
+  }
+  if (input.isMarketing && !input.confirmed) {
+    return { field: 'confirm', message: 'Confirm that marketing to this person has stopped.' };
+  }
+  if (input.action === 'completeAccess') {
+    // Every count needs the admin's own reason: it is emailed to the person (codex).
+    const missing = (
+      Object.entries(input.withheld) as Array<[WithheldCategory, { count: string; reason: string }]>
+    ).find(([, row]) => Number(row.count) > 0 && row.reason.trim() === '');
+    if (missing) {
+      return {
+        field: 'withheld',
+        targetId: `withheld-reason-${missing[0]}`,
+        message: 'Give a reason for each category you withhold.',
+      };
+    }
+  }
+  return null;
 }
 
 function CountList({
@@ -137,13 +214,14 @@ export function RequestActionDialog({
   error,
   onSubmit,
   onClose,
+  onCloseAutoFocus,
 }: Readonly<RequestActionDialogProps>) {
   const [text, setText] = useState('');
   const [months, setMonths] = useState<1 | 2>(1);
   const [confirmed, setConfirmed] = useState(false);
   const [stopMethod, setStopMethod] = useState('');
   const [withheld, setWithheld] = useState<WithheldRows>({});
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [problem, setProblem] = useState<Problem | null>(null);
 
   useEffect(() => {
     // A fresh form each time the dialog opens.
@@ -152,8 +230,14 @@ export function RequestActionDialog({
     setConfirmed(false);
     setStopMethod('');
     setWithheld({});
-    setLocalError(null);
+    setProblem(null);
   }, [action, request?.id]);
+
+  // Move focus to the field that needs fixing (WCAG 3.3.1, 2.4.3); a new object per
+  // attempt, so pressing the button again with the same problem focuses it again.
+  useEffect(() => {
+    if (problem) document.getElementById(problem.targetId ?? FIELD_IDS[problem.field])?.focus();
+  }, [problem]);
 
   if (!action || !request) return null;
 
@@ -162,20 +246,22 @@ export function RequestActionDialog({
     action === 'complete' && request.type === 'OBJECTION' && request.objectionScope === 'MARKETING';
   const field = TEXT_FIELD[action];
 
+  const invalid = (name: ProblemField) => (problem?.field === name ? true : undefined);
+  const describedBy = (name: ProblemField, ...ids: string[]) =>
+    [...ids, ...(problem?.field === name ? [ERROR_ID] : [])].join(' ') || undefined;
+
   const submit = () => {
-    setLocalError(null);
-    if (field && text.trim().length < field.min) {
-      setLocalError(field.min === 1 ? 'Add a note.' : 'Give a reason of at least 10 characters.');
-      return;
-    }
-    if (isErasure && !confirmed) {
-      setLocalError('Confirm that no legal hold or retention duty applies.');
-      return;
-    }
-    if (isMarketing && (!confirmed || stopMethod.trim().length < 10)) {
-      setLocalError('Confirm marketing has stopped and say how (at least 10 characters).');
-      return;
-    }
+    const found = actionProblem({
+      action,
+      text,
+      isErasure,
+      isMarketing,
+      confirmed,
+      stopMethod,
+      withheld,
+    });
+    setProblem(found);
+    if (found) return;
     switch (action) {
       case 'extend':
         onSubmit({ months, reason: text.trim() });
@@ -197,7 +283,7 @@ export function RequestActionDialog({
             .map(([category, row]) => ({
               category,
               count: Number(row.count),
-              reason: row.reason.trim() || 'Withheld after review',
+              reason: row.reason.trim(),
             })),
         });
         return;
@@ -212,10 +298,10 @@ export function RequestActionDialog({
     }
   };
 
-  const shownError = localError ?? error;
+  const shownError = problem?.message ?? error;
   return (
     <Dialog open onOpenChange={(open) => (open ? null : onClose())}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-h-[90vh] overflow-y-auto" onCloseAutoFocus={onCloseAutoFocus}>
         <DialogHeader>
           <DialogTitle>{TITLES[action]}</DialogTitle>
           <DialogDescription>{`${request.subjectEmail}, received ${request.receivedOn}`}</DialogDescription>
@@ -276,7 +362,9 @@ export function RequestActionDialog({
           {action === 'completeAccess' && (
             <div className="space-y-3">
               <p className="text-sm text-foreground">
-                Record what you send separately or withhold (for example, privileged notes).
+                Record what you send separately or withhold (for example, privileged notes). Give a
+                count and a reason for every category the export withholds; the request cannot be
+                completed until each one is covered.
               </p>
               {(Object.keys(WITHHELD_LABELS) as WithheldCategory[]).map((category) => (
                 <div key={category} className="grid grid-cols-[1fr_5rem] gap-2">
@@ -299,8 +387,19 @@ export function RequestActionDialog({
                   />
                   {Number(withheld[category]?.count) > 0 && (
                     <Input
+                      id={`withheld-reason-${category}`}
                       className="col-span-2"
                       aria-label={`Why ${WITHHELD_LABELS[category].toLowerCase()} are withheld`}
+                      aria-invalid={
+                        problem?.field === 'withheld' && !withheld[category]?.reason.trim()
+                          ? true
+                          : undefined
+                      }
+                      aria-describedby={
+                        problem?.field === 'withheld' && !withheld[category]?.reason.trim()
+                          ? ERROR_ID
+                          : undefined
+                      }
                       placeholder="Why (for example, legal professional privilege)"
                       maxLength={500}
                       value={withheld[category]?.reason ?? ''}
@@ -325,13 +424,15 @@ export function RequestActionDialog({
               <Label htmlFor="request-action-text">{field.label}</Label>
               <p id="request-action-hint" className="text-xs text-muted-foreground">
                 {field.hint}
+                {field.min > 1 && ` At least ${field.min} characters.`}
               </p>
               <Textarea
                 id="request-action-text"
                 rows={3}
                 maxLength={2000}
                 value={text}
-                aria-describedby="request-action-hint"
+                aria-invalid={invalid('text')}
+                aria-describedby={describedBy('text', 'request-action-hint')}
                 onChange={(e) => setText(e.target.value)}
               />
             </div>
@@ -340,9 +441,14 @@ export function RequestActionDialog({
           {isMarketing && (
             <div className="space-y-1.5">
               <Label htmlFor="request-action-stop">How marketing was stopped</Label>
+              <p id="request-action-stop-hint" className="text-xs text-muted-foreground">
+                {`At least ${STOP_METHOD_MIN} characters`}
+              </p>
               <Input
                 id="request-action-stop"
                 maxLength={500}
+                aria-invalid={invalid('stop')}
+                aria-describedby={describedBy('stop', 'request-action-stop-hint')}
                 placeholder="For example: removed from the newsletter list"
                 value={stopMethod}
                 onChange={(e) => setStopMethod(e.target.value)}
@@ -354,6 +460,8 @@ export function RequestActionDialog({
             <div className="flex items-start gap-2">
               <Checkbox
                 id="request-action-confirm"
+                aria-invalid={invalid('confirm')}
+                aria-describedby={describedBy('confirm')}
                 checked={confirmed}
                 onCheckedChange={(checked) => setConfirmed(checked === true)}
               />
@@ -366,7 +474,7 @@ export function RequestActionDialog({
           )}
 
           {shownError && (
-            <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+            <p id={ERROR_ID} role="alert" className="text-sm text-red-700 dark:text-red-300">
               {shownError}
             </p>
           )}

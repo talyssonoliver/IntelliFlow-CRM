@@ -1211,6 +1211,26 @@ alongside the communications. None is silently omitted.
   `tests/architecture/tenant-procedure-enforcement.test.ts`. It then either removes the stale entry or adds
   `privacy-public.router.ts`, whichever that test requires.
 
+### D12 review amendments (owner Q23-Q26, 2026-10-25)
+
+After the D12 compliance (FAIL), security-lead (PASS WITH MINOR) and a11y-expert (PASS WITH MINOR) reviews:
+
+- **Q23 — deals and tasks.** The export includes the person's deals (through their contacts) and tasks (through
+  their leads and contacts): names or titles, values, stages, statuses and dates. Descriptions are withheld and
+  counted. Erasure counts both on the manual checklist; it does not change them (consistent with Q19).
+- **Q24 — public form flooding.** A per-firm daily cap on public submissions (50, same generic reply); the deadline
+  job deletes unverified requests 7 days after their link expired; the admin list leaves expired unverified requests
+  out.
+- **Q25 — staff-logged erasure.** Always waits 24 hours after the warning email; with two or more admins it also
+  needs an admin other than the one who logged it.
+- **Q26 — free text in the export.** AI free text, staff tags and other staff free text, and booking answers are
+  withheld and counted like notes, and released by the firm when it completes the request. Structured scores still
+  export.
+- Without an owner choice (the review findings themselves): completing an access request must give a reason for
+  every category the live export withholds; an extension counts from the start of the clock (one month plus the
+  extension in one step); the staff export audit is awaited; public export downloads are audited; the Art 22
+  wording in the processing information is qualified.
+
 ### Addendum A sign-off (2026-10-22)
 
 | Reviewer | R1 | R2 | R3 | R4 |

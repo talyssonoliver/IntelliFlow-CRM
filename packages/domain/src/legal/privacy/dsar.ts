@@ -43,6 +43,13 @@ export type RestrictionKind = (typeof RESTRICTION_KINDS)[number];
  * What the automatic export withholds until the firm has reviewed it: free text (legal
  * privilege, third parties; only types, dates, statuses and counts are exported) and any
  * rows past the per-category cap, which are counted rather than silently dropped.
+ *
+ * - DESCRIPTIONS: the descriptions of the person's deals and tasks (owner Q23).
+ * - AI_TEXT: AI-written free text: insight titles, descriptions, recommendations, next best
+ *   action and score reasoning (owner Q26).
+ * - STAFF_TEXT: staff-written tags and qualification text, and booking answers (owner Q26).
+ * - OTHER_RECORDS: calendar events, notifications and experiment records, which are on the
+ *   erasure checklist and so are counted here, never left out silently.
  */
 export const DSAR_WITHHELD_CATEGORIES = [
   'NOTES',
@@ -50,6 +57,10 @@ export const DSAR_WITHHELD_CATEGORIES = [
   'TICKET_SUBJECTS',
   'MESSAGE_BODIES',
   'DOCUMENTS',
+  'DESCRIPTIONS',
+  'AI_TEXT',
+  'STAFF_TEXT',
+  'OTHER_RECORDS',
   'EXCESS_ROWS',
 ] as const;
 export type DsarWithheldCategory = (typeof DSAR_WITHHELD_CATEGORIES)[number];
@@ -61,8 +72,12 @@ export const DSAR_LIMITS = {
   capPerTenantEmailPerDay: 3,
   capPerIpPerHour: 10,
   capGlobalEmailPerDay: 3,
+  /** Public submissions to one firm per 24 h, whatever the address or IP (owner Q24). */
+  capPerTenantPerDay: 50,
+  /** Unverified requests are deleted this many days after their link expired (owner Q24). */
+  pendingPurgeDays: 7,
   resendCooldownMinutes: 60,
-  singleAdminErasureDelayHours: 24,
+  staffErasureDelayHours: 24,
   overdueRepeatDays: 3,
   slaWarnDays: 7,
   maxBackdateDays: 30,
@@ -139,6 +154,14 @@ export function isTerminalDsarStatus(status: DsarStatus): boolean {
   return status === 'COMPLETED' || status === 'REJECTED';
 }
 
+/**
+ * The deadline after an extension: the start of the clock plus one month plus the extension,
+ * counted in one step so a clamped first month (31 Jan → 28 Feb) does not shorten it.
+ */
+export function extendedDeadline(clockStart: Date, months: number): Date {
+  return addCalendarMonths(clockStart, 1 + months);
+}
+
 /** One extension of 1-2 months, only while VERIFIED and before the original deadline. */
 export function canExtend(
   request: DeadlineFields & { status: DsarStatus },
@@ -174,9 +197,10 @@ export type StaffErasureDecision =
   | { allowed: false; reason: 'SECOND_ADMIN_REQUIRED' | 'WAIT_24H' };
 
 /**
- * A staff-logged erasure skips email verification, so it needs a second admin or, where the
- * firm has a single admin, a 24-hour cancellable pause. A deleted creator (NULL) counts as
- * another person only when two or more admins exist, so the check can never be skipped.
+ * A staff-logged erasure skips email verification. It always waits 24 hours after the person
+ * was warned, so they can object (owner Q25), and where the firm has two or more admins it also
+ * needs one other than the admin who logged it. A deleted creator (NULL) counts as another
+ * person only when two or more admins exist, so the check can never be skipped.
  */
 export function staffErasureMayRun(input: {
   adminCount: number;
@@ -185,13 +209,10 @@ export function staffErasureMayRun(input: {
   createdAt: Date;
   now: Date;
 }): StaffErasureDecision {
-  if (input.adminCount >= 2) {
-    return input.createdById === input.resolvedById
-      ? { allowed: false, reason: 'SECOND_ADMIN_REQUIRED' }
-      : { allowed: true };
+  if (input.adminCount >= 2 && input.createdById === input.resolvedById) {
+    return { allowed: false, reason: 'SECOND_ADMIN_REQUIRED' };
   }
-  const readyAt =
-    input.createdAt.getTime() + DSAR_LIMITS.singleAdminErasureDelayHours * MS_PER_HOUR;
+  const readyAt = input.createdAt.getTime() + DSAR_LIMITS.staffErasureDelayHours * MS_PER_HOUR;
   return input.now.getTime() >= readyAt
     ? { allowed: true }
     : { allowed: false, reason: 'WAIT_24H' };

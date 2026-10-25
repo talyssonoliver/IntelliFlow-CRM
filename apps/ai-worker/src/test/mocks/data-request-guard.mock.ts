@@ -24,6 +24,8 @@ export function passThroughGuard<T extends object>(actual: T) {
   return {
     ...actual,
     eligibleSubjectEmail: vi.fn(async () => SUBJECT_EMAIL),
+    isRestrictedOrErased: vi.fn(async () => false),
+    queuedAddressBlocked: vi.fn(async () => false),
     eligibleSubjects: vi.fn(
       async (
         _prisma: unknown,
@@ -33,6 +35,11 @@ export function passThroughGuard<T extends object>(actual: T) {
         leads: new Map(ids.leadIds.map((id) => [id, SUBJECT_EMAIL])),
         contacts: new Map(ids.contactIds.map((id) => [id, SUBJECT_EMAIL])),
       })
+    ),
+    // Every queued deal exists as queued and has no contact, so none is dropped or renamed.
+    currentDeals: vi.fn(
+      async (_prisma: unknown, _tenantId: string, queued: Array<{ id: string; name: string }>) =>
+        queued.map((d) => ({ id: d.id, name: d.name, contactId: null }))
     ),
     // Every deal exists and has no contact, so none is dropped.
     dealContactIds: vi.fn(

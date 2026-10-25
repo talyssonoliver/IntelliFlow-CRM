@@ -44,6 +44,7 @@ import { isAiFeatureEnabled } from '../lib/feature-flags';
 import {
   dealContactIds,
   eligibleSubjectEmail,
+  queuedAddressBlocked,
   SUBJECT_NOT_PROCESSABLE,
   writeSubjectIfStillEligible,
   type SubjectKind,
@@ -152,7 +153,13 @@ export async function processPredictionJob(
         subject !== null &&
         queuedEmail !== null &&
         normalizeSubjectEmail(queuedEmail) !== normalizeSubjectEmail(subjectEmail);
-      if (subjectEmail === null || staleContext) {
+      // About no one now (a deal whose contact was removed), but the queued context still names
+      // someone: that address must not be restricted or erased either (codex).
+      const unlinkedPerson =
+        subject === null &&
+        queuedEmail !== null &&
+        (await queuedContextBlocked(tenantId, queuedEmail));
+      if (subjectEmail === null || staleContext || unlinkedPerson) {
         logger.info(
           { jobId: job.id, tenantId, entityType, entityId, predictionType },
           'AI prediction job skipped — erased or restricted data subject'
@@ -397,6 +404,12 @@ async function predictionSubject(
   if (!contacts.has(entityId)) return 'MISSING';
   const contactId = contacts.get(entityId);
   return contactId ? { kind: 'contact', id: contactId } : null;
+}
+
+/** A queued context's address: restricted, erased, or the subject of a completed erasure. */
+async function queuedContextBlocked(tenantId: string, email: string): Promise<boolean> {
+  const { prisma } = await import('@intelliflow/db');
+  return queuedAddressBlocked(prisma as never, tenantId, email);
 }
 
 /**

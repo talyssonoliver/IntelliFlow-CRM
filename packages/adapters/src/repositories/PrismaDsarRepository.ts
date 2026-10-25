@@ -19,12 +19,15 @@ import type {
   SubmitCaps,
   TransitionCondition,
 } from '@intelliflow/application';
-import type { DsarStatus } from '@intelliflow/domain';
+import { DSAR_LIMITS, type DsarStatus } from '@intelliflow/domain';
 import { upsertActiveRestriction } from './PrismaProcessingRestrictionRepository';
 
 const HOUR_MS = 3_600_000;
 const DAY_MS = 24 * HOUR_MS;
 const LIST_LIMIT = 200;
+/** Rows one purge statement deletes, and the most statements one purge call runs. */
+const PURGE_BATCH = 500;
+const PURGE_MAX_BATCHES = 50;
 
 /** Columns of DsarRecord; the token hashes stay server-side but the service needs them. */
 const RECORD = {
@@ -135,6 +138,13 @@ export class PrismaDsarRepository implements DsarRepositoryPort {
         });
         if (global >= caps.globalEmailPerDay) return { outcome: 'CAPPED' as const };
 
+        // Owner Q24: a flood of rotating addresses and IPs is stopped per firm, under the
+        // tenant lock taken above. Same generic reply as the other caps.
+        const perTenant = await tx.dsarRequest.count({
+          where: { tenantId: record.tenantId, source: 'PUBLIC_FORM', createdAt: { gt: dayAgo } },
+        });
+        if (perTenant >= caps.perTenantPerDay) return { outcome: 'CAPPED' as const };
+
         const created = await tx.dsarRequest.create({
           data: {
             tenantId: record.tenantId,
@@ -214,9 +224,17 @@ export class PrismaDsarRepository implements DsarRepositoryPort {
    */
   async list(tenantId: string, status?: DsarStatus): Promise<DsarRecord[]> {
     const open = (s: DsarStatus) => s === 'PENDING_VERIFICATION' || s === 'VERIFIED';
+    // Owner Q24: a request nobody confirmed in time is not work for staff; it is purged later.
+    const notExpired = {
+      OR: [
+        { status: { not: 'PENDING_VERIFICATION' as const } },
+        { verificationExpiresAt: null },
+        { verificationExpiresAt: { gt: new Date() } },
+      ],
+    };
     const query = (statuses: DsarStatus[], bounded: boolean) =>
       this.prisma.dsarRequest.findMany({
-        where: { tenantId, status: { in: statuses } },
+        where: { tenantId, status: { in: statuses }, ...notExpired },
         select: RECORD,
         orderBy: { receivedAt: 'desc' },
         ...(bounded ? { take: LIST_LIMIT } : {}),
@@ -227,6 +245,31 @@ export class PrismaDsarRepository implements DsarRepositoryPort {
       query(['COMPLETED', 'REJECTED'], true),
     ]);
     return [...openRows, ...closedRows].map(toRecord);
+  }
+
+  /**
+   * Owner Q24: delete requests that were never confirmed, once the link has been expired for
+   * `DSAR_LIMITS.pendingPurgeDays`. Runs across firms (the caller uses the unscoped client), in
+   * batches of `batchSize` that skip rows another replica holds, and stops after a bounded
+   * number of batches. Verified, completed and staff-logged requests are never touched.
+   */
+  async purgeExpiredUnverified(now: Date, batchSize: number = PURGE_BATCH): Promise<number> {
+    const cutoff = new Date(now.getTime() - DSAR_LIMITS.pendingPurgeDays * DAY_MS);
+    let purged = 0;
+    for (let i = 0; i < PURGE_MAX_BATCHES; i += 1) {
+      const deleted = await this.prisma.$executeRaw`
+        DELETE FROM dsar_requests
+         WHERE id IN (
+           SELECT id FROM dsar_requests
+            WHERE status = 'PENDING_VERIFICATION'
+              AND "verificationExpiresAt" < ${cutoff}
+            ORDER BY id
+            LIMIT ${batchSize}
+              FOR UPDATE SKIP LOCKED)`;
+      purged += deleted;
+      if (deleted < batchSize) break;
+    }
+    return purged;
   }
 
   async transition(

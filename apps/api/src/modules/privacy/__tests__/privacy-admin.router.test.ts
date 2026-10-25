@@ -347,6 +347,18 @@ describe('complete', () => {
   });
 });
 
+describe('completeAccess refusal', () => {
+  it('says every withheld category needs a count and a reason', async () => {
+    service.completeAccess.mockResolvedValue({ outcome: 'INVALID', field: 'withheld' });
+    await expect(
+      adminCaller().completeAccess({ id: ID, note: 'Sent the rest by post', withheld: [] })
+    ).rejects.toMatchObject({
+      code: 'BAD_REQUEST',
+      message: 'Give a count and a reason for everything the export withholds.',
+    });
+  });
+});
+
 describe('the remaining admin actions', () => {
   it('extend, completeAccess, cancelErasure and revokeExport call the service for the tenant and audit', async () => {
     const c = adminCaller();
@@ -417,6 +429,43 @@ describe('the remaining admin actions', () => {
       code: 'BAD_REQUEST',
       message: 'This action does not apply to this type of request.',
     });
+  });
+
+  it('awaits the staff export audit row before returning the data (L2)', async () => {
+    const exported = { generatedAt: NOW.toISOString(), data: {}, withheld: [] };
+    service.exportData.mockResolvedValue({ outcome: 'OK', export: exported });
+    let auditDone = false;
+    auditLog.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 5));
+      auditDone = true;
+      return 'audit-1';
+    });
+    await adminCaller().exportData({ id: ID });
+    expect(auditDone).toBe(true);
+  });
+
+  it('retries a failed staff export audit row once', async () => {
+    const exported = { generatedAt: NOW.toISOString(), data: {}, withheld: [] };
+    service.exportData.mockResolvedValue({ outcome: 'OK', export: exported });
+    auditLog.mockRejectedValueOnce(new Error('audit store down')).mockResolvedValue('audit-1');
+    await expect(adminCaller().exportData({ id: ID })).resolves.toEqual(exported);
+    expect(auditLog).toHaveBeenCalledTimes(2);
+  });
+
+  it('still returns the export when its audit row cannot be written, logging ids and error class only (L2)', async () => {
+    const exported = { generatedAt: NOW.toISOString(), data: {}, withheld: [] };
+    service.exportData.mockResolvedValue({ outcome: 'OK', export: exported });
+    auditLog.mockRejectedValue(new Error('audit store down for ada@example.invalid'));
+    const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await expect(adminCaller().exportData({ id: ID })).resolves.toEqual(exported);
+    expect(auditLog).toHaveBeenCalledTimes(2);
+    expect(error).toHaveBeenCalledWith('[privacy] Export audit row not written', {
+      requestId: ID,
+      tenantId: TENANT,
+      error: 'Error',
+    });
+    expect(JSON.stringify(error.mock.calls)).not.toContain('ada@example.invalid');
+    error.mockRestore();
   });
 
   it('logs a failed non-erasure audit write without failing the action', async () => {

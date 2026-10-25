@@ -150,6 +150,7 @@ const CAPS = {
   perTenantEmailPerDay: 3,
   perIpPerHour: 10,
   globalEmailPerDay: 3,
+  perTenantPerDay: 50,
   resendCooldownMinutes: 60,
 };
 
@@ -769,6 +770,48 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       });
       expect(carried?.dsarRequestIds).toEqual(['req-m']);
     });
+
+    it('a merge racing an address change carries the restriction to the new address (codex)', async () => {
+      const secondaryEmail = `${RUN}-mr-sec@example.invalid`;
+      const before = `${RUN}-mr-old@example.invalid`;
+      const after = `${RUN}-mr-new@example.invalid`;
+      await restrict(secondaryEmail, 'req-mr');
+      const primary = await prisma.contact.create({ data: person(before) });
+      const secondary = await prisma.contact.create({ data: person(secondaryEmail) });
+
+      let release: () => void = () => undefined;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      let ready: () => void = () => undefined;
+      const changing = new Promise<void>((resolve) => (ready = resolve));
+      // Someone corrects the primary's address; the change is in flight when the merge starts.
+      const edit = prisma.$transaction(
+        async (tx: any) => {
+          await tx.contact.update({ where: { id: primary.id }, data: { email: after } });
+          ready();
+          await gate;
+        },
+        { timeout: 30_000 }
+      );
+      await changing;
+      const merge = new PrismaContactRepository(prisma).mergeInTransaction({
+        primaryId: primary.id,
+        secondaryId: secondary.id,
+        tenantId: TENANT_A,
+        mergedBy: ADMIN_A,
+        mergeFields: {},
+      });
+      await new Promise((resolve) => setTimeout(resolve, 300));
+      release();
+      await edit;
+      await merge;
+
+      const active = await prisma.processingRestriction.findMany({
+        where: { tenantId: TENANT_A, dsarRequestIds: { has: 'req-mr' }, liftedAt: null },
+        select: { subjectEmail: true },
+      });
+      expect(active.map((r: { subjectEmail: string }) => r.subjectEmail)).toContain(after);
+      expect(active.map((r: { subjectEmail: string }) => r.subjectEmail)).not.toContain(before);
+    });
   });
 
   describe('PrismaSubjectDataRepository', () => {
@@ -1313,6 +1356,159 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
         await prisma.aIInsight.deleteMany({ where: { tenantId: TENANT_A, entityId: deal.id } });
         await prisma.opportunity.delete({ where: { id: deal.id } });
         await prisma.account.delete({ where: { id: account.id } });
+      }
+    });
+
+    it('exports deals, tasks and counted records, withholds their text, and erases none of them (Q23, Q26, L5)', async () => {
+      const gwen = `${RUN}-gwen@example.invalid`;
+      const lead = await prisma.lead.create({
+        data: {
+          tenantId: TENANT_A,
+          ownerId: ADMIN_A,
+          email: gwen,
+          firstName: 'Gwen',
+          tags: ['difficult client'],
+          need: 'Needs a divorce lawyer',
+          score: 60,
+        },
+      });
+      const contact = await prisma.contact.create({
+        data: {
+          tenantId: TENANT_A,
+          ownerId: ADMIN_A,
+          email: gwen,
+          firstName: 'Gwen',
+          lastName: 'Deal',
+        },
+      });
+      const account = await prisma.account.create({
+        data: { tenantId: TENANT_A, ownerId: ADMIN_A, name: `${RUN} Gwen Co` },
+      });
+      const deal = await prisma.opportunity.create({
+        data: {
+          tenantId: TENANT_A,
+          ownerId: ADMIN_A,
+          accountId: account.id,
+          contactId: contact.id,
+          name: 'Gwen renewal',
+          value: 1500,
+          description: 'Gwen is worried about her ex-husband',
+        },
+      });
+      const task = await prisma.task.create({
+        data: {
+          tenantId: TENANT_A,
+          ownerId: ADMIN_A,
+          leadId: lead.id,
+          contactId: contact.id,
+          opportunityId: deal.id,
+          title: 'Call Gwen',
+          description: 'Ask about the custody hearing',
+        },
+      });
+      const event = await prisma.calendarEvent.create({
+        data: {
+          tenantId: TENANT_A,
+          contactId: contact.id,
+          title: 'Meeting with Gwen',
+          description: 'Private matter',
+          startTime: new Date(Date.now() + 10 * 24 * HOUR),
+        },
+      });
+      const start = new Date(Date.now() + 41 * 24 * HOUR);
+      const appointment = await prisma.appointment.create({
+        data: {
+          tenantId: TENANT_A,
+          organizerId: ADMIN_A,
+          title: 'Consultation with Gwen',
+          location: 'Our office, 1 High Street',
+          startTime: start,
+          endTime: new Date(start.getTime() + HOUR / 2),
+          bookerName: 'Gwen Deal',
+          bookerEmail: gwen,
+          bookingAnswers: { matter: 'Custody' },
+        },
+      });
+      const request = await dsars.createStaff({
+        tenantId: TENANT_A,
+        type: 'ERASURE',
+        subjectEmail: gwen,
+        capEmailHash: hex('9'),
+        details: null,
+        objectionScope: null,
+        identityMethod: 'IN_PERSON_ID',
+        identityNote: 'Passport checked at the front desk',
+        receivedAt: new Date(),
+        receivedOnReason: null,
+        verifiedAt: new Date(),
+        slaDeadline: new Date(Date.now() + 30 * 24 * HOUR),
+        createdById: ADMIN_A,
+      });
+      try {
+        const exported = await subjects.buildExport(TENANT_A, gwen);
+        expect(exported.data.deals).toHaveLength(1);
+        expect(exported.data.deals![0]).toMatchObject({
+          name: 'Gwen renewal',
+          stage: 'PROSPECTING',
+        });
+        expect(exported.data.tasks).toHaveLength(1);
+        expect(exported.data.tasks![0]).toMatchObject({ title: 'Call Gwen', status: 'PENDING' });
+        const text = JSON.stringify(exported.data);
+        for (const hidden of [
+          'ex-husband',
+          'custody hearing',
+          'difficult client',
+          'divorce lawyer',
+          'Custody',
+          'Private matter',
+        ]) {
+          expect(text).not.toContain(hidden);
+        }
+        expect(exported.withheld).toMatchObject({
+          DESCRIPTIONS: 2,
+          STAFF_TEXT: 2,
+          OTHER_RECORDS: 1,
+          AI_TEXT: 0,
+        });
+
+        const result = await subjects.erase({
+          tenantId: TENANT_A,
+          requestId: request.id,
+          subjectEmail: gwen,
+          resolvedById: ADMIN_A,
+          note: 'No hold applies',
+          now: new Date(),
+          clockBreached: false,
+        });
+        expect(result).toMatchObject({
+          outcome: 'ERASED',
+          result: { checklist: { deals: 1, tasks: 1, calendarEvents: 1 } },
+        });
+        // Counted for the manual checklist, not touched.
+        await expect(
+          prisma.opportunity.findUnique({ where: { id: deal.id } })
+        ).resolves.toMatchObject({
+          name: 'Gwen renewal',
+          description: 'Gwen is worried about her ex-husband',
+        });
+        await expect(prisma.task.findUnique({ where: { id: task.id } })).resolves.toMatchObject({
+          title: 'Call Gwen',
+        });
+        // The booker's own details go; the firm's meeting place stays (L5).
+        await expect(
+          prisma.appointment.findUnique({ where: { id: appointment.id } })
+        ).resolves.toMatchObject({
+          bookerName: null,
+          bookerEmail: null,
+          bookingAnswers: null,
+          location: 'Our office, 1 High Street',
+        });
+      } finally {
+        await prisma.task.deleteMany({ where: { id: task.id } });
+        await prisma.calendarEvent.deleteMany({ where: { id: event.id } });
+        await prisma.opportunity.deleteMany({ where: { id: deal.id } });
+        await prisma.account.deleteMany({ where: { id: account.id } });
+        await prisma.appointment.deleteMany({ where: { id: appointment.id } });
       }
     });
 

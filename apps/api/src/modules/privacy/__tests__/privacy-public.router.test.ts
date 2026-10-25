@@ -18,6 +18,11 @@ const TOKEN = 'A'.repeat(43);
 const MESSAGE =
   'Thank you. If this address can receive email, a confirmation link is on its way. Your request starts when you confirm it.';
 
+const auditLog = vi.fn();
+vi.mock('../../../security/audit-logger', () => ({
+  getAuditLogger: () => ({ logAction: auditLog }),
+}));
+
 let service: Record<string, ReturnType<typeof vi.fn>>;
 let ctx: ReturnType<typeof createPublicContext>;
 
@@ -205,6 +210,74 @@ describe('downloadExport', () => {
     await expect(caller().downloadExport({ requestId: REQUEST_ID, token: TOKEN })).resolves.toEqual(
       exported
     );
+  });
+
+  describe('audit of a successful download (compliance #6)', () => {
+    const exported = { generatedAt: NOW.toISOString(), data: {}, withheld: [] };
+    const find = () => prismaMock.dsarRequest.findUnique as unknown as ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      service.downloadExport.mockResolvedValue({ outcome: 'OK', export: exported });
+      find().mockResolvedValue({ tenantId: TENANT });
+      auditLog.mockResolvedValue('audit-1');
+    });
+
+    it('writes an EXPORT row for the request and firm, with no actor, address or IP', async () => {
+      await expect(
+        caller().downloadExport({ requestId: REQUEST_ID, token: TOKEN })
+      ).resolves.toEqual(exported);
+      expect(find()).toHaveBeenCalledWith({
+        where: { id: REQUEST_ID },
+        select: { tenantId: true },
+      });
+      expect(auditLog).toHaveBeenCalledTimes(1);
+      expect(auditLog).toHaveBeenCalledWith('EXPORT', 'dsar_request', REQUEST_ID, TENANT, {
+        actorType: 'SYSTEM',
+        metadata: { change: 'EXPORT_DOWNLOADED_BY_SUBJECT' },
+      });
+      const written = JSON.stringify(auditLog.mock.calls);
+      for (const secret of ['example.invalid', TOKEN, '203.0.113.50']) {
+        expect(written).not.toContain(secret);
+      }
+    });
+
+    it('writes nothing when the download is refused', async () => {
+      service.downloadExport.mockResolvedValue({ outcome: 'INVALID' });
+      await caller()
+        .downloadExport({ requestId: REQUEST_ID, token: TOKEN })
+        .catch(() => undefined);
+      service.downloadExport.mockResolvedValue({ outcome: 'LIMIT' });
+      await caller()
+        .downloadExport({ requestId: REQUEST_ID, token: TOKEN })
+        .catch(() => undefined);
+      expect(auditLog).not.toHaveBeenCalled();
+    });
+
+    it('still returns the export when the audit row fails, logging the error class only', async () => {
+      auditLog.mockRejectedValue(new Error('audit store down for ada@example.invalid'));
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      await expect(
+        caller().downloadExport({ requestId: REQUEST_ID, token: TOKEN })
+      ).resolves.toEqual(exported);
+      expect(error).toHaveBeenCalledWith('[privacy] Export download audit row not written', {
+        error: 'Error',
+      });
+      expect(JSON.stringify(error.mock.calls)).not.toContain('ada@example.invalid');
+      error.mockRestore();
+    });
+
+    it('still returns the export when the firm lookup fails', async () => {
+      find().mockRejectedValue(new Error('connection reset'));
+      const error = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      await expect(
+        caller().downloadExport({ requestId: REQUEST_ID, token: TOKEN })
+      ).resolves.toEqual(exported);
+      expect(auditLog).not.toHaveBeenCalled();
+      expect(error).toHaveBeenCalledWith('[privacy] Export download audit row not written', {
+        error: 'Error',
+      });
+      error.mockRestore();
+    });
   });
 
   it('answers TOO_MANY_REQUESTS once the download cap is used', async () => {

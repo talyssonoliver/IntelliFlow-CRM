@@ -177,6 +177,7 @@ export default function DsarRequestContent({ handle }: Readonly<{ handle: string
         noValidate
         onSubmit={(e) => {
           e.preventDefault();
+          if (submitMutation.isPending) return;
           submit().catch(() => setErrors({ form: GENERIC_ERROR }));
         }}
       >
@@ -347,7 +348,7 @@ export default function DsarRequestContent({ handle }: Readonly<{ handle: string
           </p>
         )}
 
-        <Button type="submit" disabled={submitMutation.isPending}>
+        <Button type="submit" aria-disabled={submitMutation.isPending || undefined}>
           {submitMutation.isPending ? 'Sending…' : 'Send request'}
         </Button>
       </form>

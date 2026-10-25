@@ -38,6 +38,10 @@ const WITHHELD_LABELS: Record<DsarWithheldCategory, string> = {
   TICKET_SUBJECTS: 'Support ticket subjects',
   MESSAGE_BODIES: 'Message contents',
   DOCUMENTS: 'Documents',
+  DESCRIPTIONS: 'Deal and task descriptions',
+  AI_TEXT: 'Text written by AI, such as insights and recommendations',
+  STAFF_TEXT: 'Tags, qualification notes and booking answers',
+  OTHER_RECORDS: 'Calendar events, notifications and experiment records',
   EXCESS_ROWS: 'Records beyond the export limit',
 };
 

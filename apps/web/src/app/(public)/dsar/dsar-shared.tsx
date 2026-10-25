@@ -8,6 +8,7 @@
  * bar and history straight away, so it cannot leak through a later navigation, a bookmark or
  * an error report. Imports stay light (types only) so no server code enters the bundle.
  */
+import { useEffect, useRef } from 'react';
 import type { DsarSubmitInput } from '@intelliflow/validators/dsar';
 
 export type DsarRequestType = DsarSubmitInput['type'];
@@ -82,13 +83,40 @@ export function DsarPage({ children }: Readonly<{ children: React.ReactNode }>) 
   return <main className="mx-auto min-h-screen max-w-2xl px-4 py-10">{children}</main>;
 }
 
+/**
+ * A page heading that can take focus. When `active` is true (and each time `changeKey`
+ * changes) focus moves to it, so a state change is announced and keyboard users start at
+ * the result (WCAG 4.1.3, 2.4.3).
+ */
+export function useFocusHeading(
+  active: boolean,
+  changeKey: string = ''
+): React.RefObject<HTMLHeadingElement | null> {
+  const ref = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (active) ref.current?.focus();
+  }, [active, changeKey]);
+  return ref;
+}
+
 export function DsarNotice({
   title,
+  focusOnShow = false,
   children,
-}: Readonly<{ title: string; children: React.ReactNode }>) {
+}: Readonly<{ title: string; focusOnShow?: boolean; children: React.ReactNode }>) {
+  const headingRef = useFocusHeading(focusOnShow, title);
+  useEffect(() => {
+    if (focusOnShow) document.title = title;
+  }, [focusOnShow, title]);
   return (
     <DsarPage>
-      <h1 className="text-2xl font-semibold text-foreground">{title}</h1>
+      <h1
+        ref={headingRef}
+        tabIndex={focusOnShow ? -1 : undefined}
+        className="text-2xl font-semibold text-foreground focus:outline-none"
+      >
+        {title}
+      </h1>
       <div className="mt-3 space-y-2 text-muted-foreground">{children}</div>
     </DsarPage>
   );

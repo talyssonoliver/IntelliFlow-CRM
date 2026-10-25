@@ -44,6 +44,37 @@ export async function isRestrictedOrErased(
   return restriction !== null;
 }
 
+/**
+ * An address from a queued snapshot (an email thread, a prediction context) rather than a CRM
+ * row: restricted or erased as above, or the subject of a completed erasure. Erasure rewrites
+ * the CRM rows but leaves no marker on the original address, so the request itself is the
+ * evidence (codex).
+ */
+export async function queuedAddressBlocked(
+  prisma: Pick<GuardPrisma, 'processingRestriction'> & {
+    dsarRequest: {
+      findFirst(args: {
+        where: { tenantId: string; type: 'ERASURE'; status: 'COMPLETED'; subjectEmail: string };
+        select: { id: true };
+      }): Promise<{ id: string } | null>;
+    };
+  },
+  tenantId: string,
+  rawEmail: string
+): Promise<boolean> {
+  if (await isRestrictedOrErased(prisma, tenantId, rawEmail)) return true;
+  const erasure = await prisma.dsarRequest.findFirst({
+    where: {
+      tenantId,
+      type: 'ERASURE',
+      status: 'COMPLETED',
+      subjectEmail: normalizeSubjectEmail(rawEmail),
+    },
+    select: { id: true },
+  });
+  return erasure !== null;
+}
+
 /** Why this job must not be scored, or null when it may. */
 export async function scoringBlockedBy(
   prisma: GuardPrisma,
@@ -77,7 +108,7 @@ type LockedWrite<T> = { written: true; value: T } | { written: false; reason: Sc
 async function writeIfEligibleRow<T>(
   tx: LockingTx,
   row: { email: string } | undefined,
-  job: { tenantId: string; email: string },
+  job: { tenantId: string; email: string; alsoLock?: readonly string[] },
   write: (tx: LockingTx) => Promise<T>
 ): Promise<LockedWrite<T>> {
   if (!row) return { written: false, reason: 'LEAD_MISSING' };
@@ -88,7 +119,14 @@ async function writeIfEligibleRow<T>(
   // The person's address lock (dsar_subject_lock), held to commit: a restriction being written
   // for this address either committed before (and is seen below) or waits until this write is
   // done (codex). Order: entity row, then address, as in the address-change trigger.
-  await tx.$queryRaw`SELECT 1 AS locked FROM (SELECT dsar_subject_lock(${job.tenantId}, ${email})) AS l`;
+  // Other addresses the write carries (a reply thread's participants) are locked with it, all
+  // in one sorted order, so two writes sharing addresses never wait on each other (codex).
+  const addresses = [
+    ...new Set([email, ...(job.alsoLock ?? []).map((a) => normalizeSubjectEmail(a))]),
+  ].sort();
+  for (const address of addresses) {
+    await tx.$queryRaw`SELECT 1 AS locked FROM (SELECT dsar_subject_lock(${job.tenantId}, ${address})) AS l`;
+  }
   if (await isRestrictedOrErased(tx, job.tenantId, email)) {
     return { written: false, reason: 'RESTRICTED' };
   }
@@ -97,7 +135,7 @@ async function writeIfEligibleRow<T>(
 
 export async function writeIfStillEligible<T>(
   prisma: { $transaction<R>(fn: (tx: LockingTx) => Promise<R>): Promise<R> },
-  job: { leadId: string; tenantId: string; email: string },
+  job: { leadId: string; tenantId: string; email: string; alsoLock?: readonly string[] },
   write: (tx: LockingTx) => Promise<T>
 ): Promise<LockedWrite<T>> {
   return prisma.$transaction(async (tx) => {
@@ -114,7 +152,7 @@ export async function writeIfStillEligible<T>(
  */
 export async function writeContactIfStillEligible<T>(
   prisma: { $transaction<R>(fn: (tx: LockingTx) => Promise<R>): Promise<R> },
-  job: { contactId: string; tenantId: string; email: string },
+  job: { contactId: string; tenantId: string; email: string; alsoLock?: readonly string[] },
   write: (tx: LockingTx) => Promise<T>
 ): Promise<LockedWrite<T>> {
   return prisma.$transaction(async (tx) => {
@@ -220,16 +258,50 @@ export async function dealContactIds(
   return new Map(deals.map((d) => [d.id, d.contactId]));
 }
 
+/**
+ * The queued deals as they are now: each one's current name and contact, dropping deals that
+ * no longer exist. A queued snapshot can name a person who is no longer the deal's contact,
+ * so only the current row may reach a model (codex).
+ */
+export async function currentDeals(
+  prisma: {
+    opportunity: {
+      findMany(args: {
+        where: { id: { in: string[] }; tenantId: string };
+        select: { id: true; contactId: true; name: true };
+      }): Promise<Array<{ id: string; contactId: string | null; name: string }>>;
+    };
+  },
+  tenantId: string,
+  queued: ReadonlyArray<{ id: string; name: string }>
+): Promise<Array<{ id: string; contactId: string | null; name: string }>> {
+  if (queued.length === 0) return [];
+  return prisma.opportunity.findMany({
+    where: { id: { in: queued.map((d) => d.id) }, tenantId },
+    select: { id: true, contactId: true, name: true },
+  });
+}
+
 /** The locked write for either kind of subject (lead or contact row lock, then address). */
 export function writeSubjectIfStillEligible<T>(
   prisma: { $transaction<R>(fn: (tx: LockingTx) => Promise<R>): Promise<R> },
-  subject: { kind: SubjectKind; id: string; tenantId: string; email: string },
+  subject: {
+    kind: SubjectKind;
+    id: string;
+    tenantId: string;
+    email: string;
+    alsoLock?: readonly string[];
+  },
   write: (tx: LockingTx) => Promise<T>
 ): Promise<LockedWrite<T>> {
-  const { tenantId, email } = subject;
+  const { tenantId, email, alsoLock } = subject;
   return subject.kind === 'lead'
-    ? writeIfStillEligible(prisma, { leadId: subject.id, tenantId, email }, write)
-    : writeContactIfStillEligible(prisma, { contactId: subject.id, tenantId, email }, write);
+    ? writeIfStillEligible(prisma, { leadId: subject.id, tenantId, email, alsoLock }, write)
+    : writeContactIfStillEligible(
+        prisma,
+        { contactId: subject.id, tenantId, email, alsoLock },
+        write
+      );
 }
 
 /** A client that can run a raw query (the dispatcher's candidate read). */

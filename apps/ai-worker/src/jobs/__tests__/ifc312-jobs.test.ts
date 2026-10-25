@@ -34,6 +34,8 @@ vi.mock('@intelliflow/db', async () => {
       account: { findUnique: prismaAccountMock.findUnique, update: vi.fn().mockResolvedValue({}) },
       opportunity: { count: prismaOpportunityMock.count },
       contactReplyDraft: prismaReplyDraftMock,
+      // PG-203: the reply-draft write takes each thread participant's address lock.
+      $queryRaw: vi.fn().mockResolvedValue([{ locked: 1 }]),
       contactAIInsight: { upsert: vi.fn().mockResolvedValue({}) },
       accountAIInsight: { upsert: vi.fn().mockResolvedValue({}) },
       accountIndustryOption: { findMany: vi.fn().mockResolvedValue([]) },

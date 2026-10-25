@@ -18,6 +18,7 @@ import {
   DsarPage,
   errorCode,
   takeDsarFragment,
+  useFocusHeading,
   type DsarLink,
 } from '../../dsar-shared';
 
@@ -46,6 +47,10 @@ const WITHHELD_LABELS: Record<WithheldCategory, string> = {
   TICKET_SUBJECTS: 'Support ticket subjects',
   MESSAGE_BODIES: 'Email and chat messages',
   DOCUMENTS: 'Documents',
+  DESCRIPTIONS: 'Deal and task descriptions',
+  AI_TEXT: 'Text written by AI, such as insights and recommendations',
+  STAFF_TEXT: 'Tags, qualification notes and booking answers',
+  OTHER_RECORDS: 'Calendar events, notifications and experiment records',
   EXCESS_ROWS: 'Records beyond the automatic file limit',
 };
 
@@ -143,6 +148,8 @@ export default function DsarExportContent() {
   const [data, setData] = useState<DsarExportDto | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const headingRef = useFocusHeading(data !== null);
+
   useEffect(() => {
     if (taken.current === undefined) taken.current = takeDsarFragment();
     setLink(taken.current);
@@ -157,7 +164,7 @@ export default function DsarExportContent() {
   }
   if (!link) {
     return (
-      <DsarNotice title="This link is incomplete">
+      <DsarNotice title="This link is incomplete" focusOnShow>
         <p>Open the link from the email again, in full.</p>
       </DsarNotice>
     );
@@ -174,7 +181,13 @@ export default function DsarExportContent() {
 
   return (
     <DsarPage>
-      <h1 className="text-2xl font-semibold text-foreground">Your personal data</h1>
+      <h1
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-2xl font-semibold text-foreground focus:outline-none"
+      >
+        Your personal data
+      </h1>
       {data ? (
         <>
           <p className="mt-3 text-foreground">
@@ -195,8 +208,9 @@ export default function DsarExportContent() {
           <Button
             type="button"
             className="mt-4"
-            disabled={download.isPending}
+            aria-disabled={download.isPending || undefined}
             onClick={() => {
+              if (download.isPending) return;
               fetchData(link).catch(() => setError(downloadErrorMessage(null)));
             }}
           >
@@ -204,11 +218,7 @@ export default function DsarExportContent() {
           </Button>
         </>
       )}
-      {error && (
-        <p role="alert" className="mt-4 text-sm text-red-700 dark:text-red-300">
-          {error}
-        </p>
-      )}
+      <output className="mt-4 block text-sm text-red-700 dark:text-red-300">{error}</output>
     </DsarPage>
   );
 }

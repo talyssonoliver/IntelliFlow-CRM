@@ -100,6 +100,17 @@ describe('DsarRequestContent', () => {
     await axeClean(container);
   });
 
+  it('keeps the pending submit button focusable and ignores a second press', () => {
+    h.submit.isPending = true;
+    renderForm();
+    fillValid();
+    const button = screen.getByRole('button', { name: 'Sending…' });
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(button);
+    expect(h.submit.mutateAsync).not.toHaveBeenCalled();
+  });
+
   it('asks what an objection is about, and sends the scope', async () => {
     renderForm();
     fillValid('Object to the use of my data');

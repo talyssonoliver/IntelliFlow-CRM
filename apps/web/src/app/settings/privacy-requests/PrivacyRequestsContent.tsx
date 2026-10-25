@@ -8,7 +8,7 @@
  * person, and lift restrictions after telling the person. The server owns every rule; the
  * page explains and shows the server's answer. Only administrators can see it.
  */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Badge,
   Button,
@@ -34,6 +34,17 @@ import {
   type RequestAction,
 } from './components/RequestActionDialog';
 import { LogRequestDialog, TYPE_LABELS } from './components/LogRequestDialog';
+
+const OPEN_TITLE_ID = 'open-requests-title';
+// The server requires a reason of at least 10 characters to lift a restriction.
+const LIFT_NOTE_MIN = 10;
+
+/** The problem with a lift reason and the field it belongs to, or null. */
+export function liftProblem(note: string): { field: 'note'; message: string } | null {
+  return note.trim().length < LIFT_NOTE_MIN
+    ? { field: 'note', message: `Give a reason of at least ${LIFT_NOTE_MIN} characters.` }
+    : null;
+}
 
 const STATUS_LABELS: Record<DsarRequestDto['status'], string> = {
   PENDING_VERIFICATION: 'Awaiting confirmation',
@@ -135,7 +146,13 @@ function RequestRow({
       </div>
       <div className="flex flex-wrap gap-2 sm:justify-end">
         {isExport && request.status === 'VERIFIED' && (
-          <Button type="button" size="sm" variant="outline" onClick={() => onExport(request)}>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => onExport(request)}
+            aria-label={`Download data: ${TYPE_LABELS[request.type]} for ${request.subjectEmail}`}
+          >
             Download data
           </Button>
         )}
@@ -176,6 +193,16 @@ export default function PrivacyRequestsContent() {
   const [lifting, setLifting] = useState<{ id: string; email: string } | null>(null);
   const [liftNote, setLiftNote] = useState('');
   const [liftError, setLiftError] = useState<string | null>(null);
+  const [liftInvalid, setLiftInvalid] = useState(false);
+  // Set when a dialog closes after it succeeded, so focus goes to the list rather than to
+  // a row button that may be gone (WCAG 2.4.3).
+  const focusListOnClose = useRef(false);
+  const onDialogCloseAutoFocus = (event: Event) => {
+    if (!focusListOnClose.current) return;
+    focusListOnClose.current = false;
+    event.preventDefault();
+    document.getElementById(OPEN_TITLE_ID)?.focus();
+  };
 
   const preview = trpc.privacy.admin.previewErasure.useQuery(
     { id: active?.request.id ?? '' },
@@ -261,6 +288,7 @@ export default function PrivacyRequestsContent() {
           done = 'Download link revoked';
       }
       toast({ title: done });
+      focusListOnClose.current = true;
       setActive(null);
     } catch (error) {
       setActionError(errorMessage(error));
@@ -301,6 +329,8 @@ export default function PrivacyRequestsContent() {
           iconBg="bg-blue-100 dark:bg-blue-900/30"
           iconFg="text-blue-600 dark:text-blue-400"
           title="Open requests"
+          titleId={OPEN_TITLE_ID}
+          focusableTitle
           headingLevel={2}
           description="Overdue first, then the nearest deadline."
         />
@@ -359,6 +389,7 @@ export default function PrivacyRequestsContent() {
                   onClick={() => {
                     setLiftNote('');
                     setLiftError(null);
+                    setLiftInvalid(false);
                     setLifting({ id: row.id, email: row.subjectEmail });
                   }}
                 >
@@ -406,6 +437,7 @@ export default function PrivacyRequestsContent() {
           runAction(input).catch(() => setActionError('Please try again.'));
         }}
         onClose={() => setActive(null)}
+        onCloseAutoFocus={onDialogCloseAutoFocus}
       />
 
       <LogRequestDialog
@@ -413,12 +445,14 @@ export default function PrivacyRequestsContent() {
         pending={logRequest.isPending}
         error={logError}
         onClose={() => setLogOpen(false)}
+        onCloseAutoFocus={onDialogCloseAutoFocus}
         onSubmit={(input) => {
           setLogError(null);
           logRequest
             .mutateAsync(input)
             .then(() => {
               toast({ title: 'Request logged' });
+              focusListOnClose.current = true;
               setLogOpen(false);
             })
             .catch((error: unknown) => setLogError(errorMessage(error)));
@@ -426,7 +460,7 @@ export default function PrivacyRequestsContent() {
       />
 
       <Dialog open={lifting !== null} onOpenChange={(next) => (next ? null : setLifting(null))}>
-        <DialogContent>
+        <DialogContent onCloseAutoFocus={onDialogCloseAutoFocus}>
           <DialogHeader>
             <DialogTitle>Lift restriction</DialogTitle>
             <DialogDescription>
@@ -435,16 +469,21 @@ export default function PrivacyRequestsContent() {
           </DialogHeader>
           <div className="space-y-1.5">
             <Label htmlFor="lift-note">Reason</Label>
+            <p id="lift-note-hint" className="text-xs text-muted-foreground">
+              {`At least ${LIFT_NOTE_MIN} characters`}
+            </p>
             <Textarea
               id="lift-note"
               rows={3}
               maxLength={500}
+              aria-invalid={liftInvalid ? true : undefined}
+              aria-describedby={liftInvalid ? 'lift-note-hint lift-error' : 'lift-note-hint'}
               value={liftNote}
               onChange={(e) => setLiftNote(e.target.value)}
             />
           </div>
           {liftError && (
-            <p role="alert" className="text-sm text-red-700 dark:text-red-300">
+            <p id="lift-error" role="alert" className="text-sm text-red-700 dark:text-red-300">
               {liftError}
             </p>
           )}
@@ -457,14 +496,19 @@ export default function PrivacyRequestsContent() {
               disabled={liftRestriction.isPending}
               onClick={() => {
                 if (!lifting) return;
-                if (liftNote.trim().length < 10) {
-                  setLiftError('Give a reason of at least 10 characters.');
+                const found = liftProblem(liftNote);
+                if (found) {
+                  setLiftError(found.message);
+                  setLiftInvalid(true);
+                  document.getElementById('lift-note')?.focus();
                   return;
                 }
+                setLiftInvalid(false);
                 liftRestriction
                   .mutateAsync({ restrictionId: lifting.id, note: liftNote.trim() })
                   .then(() => {
                     toast({ title: 'Restriction lifted and the person told' });
+                    focusListOnClose.current = true;
                     setLifting(null);
                   })
                   .catch((error: unknown) => setLiftError(errorMessage(error)));

@@ -5,12 +5,16 @@
  * One person inside one firm, matched by dsar_normalise_email(email) = the exact normalised address
  * (existing rows are not guaranteed lowercase; no +tag folding). The export is an explicit
  * allowlist per category, capped at DSAR_LIMITS.exportRowCap rows (rows past the cap are
- * counted as EXCESS_ROWS so the request stays open), with free text withheld for firm review. The erasure anonymises the CRM core in ONE transaction, after re-reading
+ * counted as EXCESS_ROWS so the request stays open), with free text withheld for firm review:
+ * notes, message bodies, deal and task descriptions (Q23), AI free text and staff-written
+ * tags, qualification text and booking answers (Q26). Records the export only counts
+ * (calendar events, notifications, experiment records) are OTHER_RECORDS, so an export is
+ * never complete while leaving out something on the erasure checklist. The erasure anonymises the CRM core in ONE transaction, after re-reading
  * the request FOR UPDATE, and leaves communications as a counted manual checklist.
  * PublicFeedback is Aurora's own product feedback (no tenant) and is out of scope.
  */
 import { Prisma, type PrismaClient } from '@intelliflow/db';
-import { DSAR_LIMITS, ERASED_EMAIL_DOMAIN } from '@intelliflow/domain';
+import { DSAR_LIMITS, ERASED_EMAIL_DOMAIN, normalizeSubjectEmail } from '@intelliflow/domain';
 import type {
   ErasureOutcome,
   ErasureResult,
@@ -80,6 +84,64 @@ async function subjectInsightWhere(db: Db, tenantId: string, ids: SubjectIds) {
       { entityType: 'opportunity', entityId: { in: dealIds } },
     ],
   };
+}
+
+/** The person's tasks: linked to their leads or contacts, or to a deal of their contact (Q23). */
+function subjectTaskWhere(tenantId: string, ids: SubjectIds, dealIds: string[]) {
+  return {
+    tenantId,
+    OR: [
+      { leadId: { in: ids.leadIds } },
+      { contactId: { in: ids.contactIds } },
+      { opportunityId: { in: dealIds } },
+    ],
+  };
+}
+
+/** Sent to the person by address, or about them (AI insight and churn alerts to staff). */
+function subjectNotificationWhere(
+  tenantId: string,
+  notificationIds: string[],
+  ids: SubjectIds,
+  dealIds: string[]
+) {
+  return {
+    tenantId,
+    OR: [
+      { id: { in: notificationIds } },
+      { sourceId: { in: [...ids.leadIds, ...ids.contactIds, ...dealIds] } },
+    ],
+  };
+}
+
+function hasText(value: unknown): boolean {
+  if (value === null || value === undefined) return false;
+  if (typeof value === 'string') return value.trim().length > 0;
+  if (Array.isArray(value)) return value.length > 0;
+  if (typeof value === 'object') return Object.keys(value).length > 0;
+  return true;
+}
+
+/**
+ * Take the free-text fields out of rows that are exported, and count the rows that had any
+ * (the firm reviews that text before the person gets it, Art 15(4)). Structured fields stay.
+ */
+function withholdText<T extends object>(
+  rows: T[],
+  fields: readonly string[]
+): { rows: Array<Record<string, unknown>>; withheld: number } {
+  let withheld = 0;
+  const kept = rows.map((row) => {
+    const copy: Record<string, unknown> = Object.fromEntries(Object.entries(row));
+    let had = false;
+    for (const field of fields) {
+      if (hasText(copy[field])) had = true;
+      delete copy[field];
+    }
+    if (had) withheld += 1;
+    return copy;
+  });
+  return { rows: kept, withheld };
 }
 
 async function bookedAppointmentIds(
@@ -180,6 +242,8 @@ async function checklist(
     calendarEvents,
     experimentAssignments,
     storedLeadFiles,
+    deals,
+    tasks,
   ] = await Promise.all([
     db.emailRecord.count({
       where: {
@@ -202,16 +266,10 @@ async function checklist(
         OR: [{ contactId: { in: contactIds } }, { id: { in: byAddress.feedback } }],
       },
     }),
-    // Sent to the person by address, or about them: AI insight and churn alerts to staff
-    // carry the lead, contact or (for their deals) opportunity id as their source (codex).
+    // AI insight and churn alerts to staff carry the lead, contact or (for their deals)
+    // opportunity id as their source (codex).
     db.notification.count({
-      where: {
-        tenantId,
-        OR: [
-          { id: { in: byAddress.notifications } },
-          { sourceId: { in: [...leadIds, ...contactIds, ...dealIds] } },
-        ],
-      },
+      where: subjectNotificationWhere(tenantId, byAddress.notifications, ids, dealIds),
     }),
     db.autoResponseDraft.count({
       where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
@@ -220,6 +278,9 @@ async function checklist(
     db.calendarEvent.count({ where: { tenantId, contactId: { in: contactIds } } }),
     db.experimentAssignment.count({ where: { leadId: { in: leadIds } } }),
     db.leadFile.count({ where: { tenantId, leadId: { in: leadIds }, url: { not: null } } }),
+    // Deals and tasks are exported (descriptions withheld) and counted here, not erased (Q23).
+    db.opportunity.count({ where: { tenantId, contactId: { in: contactIds } } }),
+    db.task.count({ where: subjectTaskWhere(tenantId, ids, dealIds) }),
   ]);
   return {
     emailRecords,
@@ -232,14 +293,28 @@ async function checklist(
     calendarEvents,
     experimentAssignments,
     storedLeadFiles,
+    deals,
+    tasks,
   };
 }
 
 export class PrismaSubjectDataRepository implements SubjectDataPort {
   constructor(private readonly prisma: PrismaClient) {}
 
+  /**
+   * Every read comes from one repeatable-read snapshot: the ids matched by address and the rows
+   * read by id cannot disagree, so a record whose address changes mid-export never puts another
+   * person's data in this person's file (codex).
+   */
   async buildExport(tenantId: string, subjectEmail: string): Promise<SubjectExport> {
-    const db = this.prisma;
+    return this.prisma.$transaction((tx) => this.exportFrom(tx as Db, tenantId, subjectEmail), {
+      isolationLevel: 'RepeatableRead',
+      maxWait: 10_000,
+      timeout: 60_000,
+    });
+  }
+
+  private async exportFrom(db: Db, tenantId: string, subjectEmail: string): Promise<SubjectExport> {
     const ids = await subjectIds(db, tenantId, subjectEmail);
     const { leadIds, contactIds } = ids;
     const appointmentIds = await bookedAppointmentIds(db, tenantId, subjectEmail);
@@ -262,6 +337,9 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
     };
     const LIMIT = TAKE + 1;
     const insightOwned = await subjectInsightWhere(db, tenantId, { leadIds, contactIds });
+    const dealIds = await subjectDealIds(db, tenantId, contactIds);
+    const dealWhere = { tenantId, contactId: { in: contactIds } };
+    const taskWhere = subjectTaskWhere(tenantId, ids, dealIds);
 
     const [
       leads,
@@ -284,6 +362,11 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
       leadFiles,
       contactReplyDrafts,
       autoResponseDrafts,
+      deals,
+      tasks,
+      calendarEvents,
+      notifications,
+      experimentAssignments,
     ] = await Promise.all([
       upTo(
         db.lead.findMany({
@@ -313,6 +396,7 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             utmCampaign: true,
             utmContent: true,
             utmTerm: true,
+            clickId: true,
             referrer: true,
             landingPath: true,
             lastContactedAt: true,
@@ -392,6 +476,11 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
             bookerName: true,
             bookerEmail: true,
             bookingAnswers: true,
+            // Free text the erasure also clears: withheld and counted below (codex).
+            title: true,
+            description: true,
+            notes: true,
+            cancellationReason: true,
             bookingConsentAt: true,
             bookingConsentVersion: true,
           },
@@ -498,7 +587,68 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
       db.autoResponseDraft.count({
         where: { tenantId, OR: [{ leadId: { in: leadIds } }, { id: { in: byAddress.drafts } }] },
       }),
+      // Deals of the person's contacts: name, value, stage and dates; the description is withheld.
+      upTo(
+        db.opportunity.findMany({
+          where: dealWhere,
+          select: {
+            name: true,
+            value: true,
+            stage: true,
+            expectedCloseDate: true,
+            createdAt: true,
+            updatedAt: true,
+            closedAt: true,
+            description: true,
+          },
+          take: LIMIT,
+        }),
+        () => db.opportunity.count({ where: dealWhere })
+      ),
+      // Tasks on the person's leads, contacts or deals: title, status and dates; description withheld.
+      upTo(
+        db.task.findMany({
+          where: taskWhere,
+          select: {
+            title: true,
+            status: true,
+            priority: true,
+            dueDate: true,
+            createdAt: true,
+            completedAt: true,
+            description: true,
+          },
+          take: LIMIT,
+        }),
+        () => db.task.count({ where: taskWhere })
+      ),
+      // Counted, not exported: they are on the erasure checklist, so the export must say so.
+      db.calendarEvent.count({ where: { tenantId, contactId: { in: contactIds } } }),
+      db.notification.count({
+        where: subjectNotificationWhere(tenantId, byAddress.notifications, ids, dealIds),
+      }),
+      db.experimentAssignment.count({ where: { leadId: { in: leadIds } } }),
     ]);
+
+    // Free text out of the exported rows (the firm reviews it first); structured fields stay.
+    const leadRows = withholdText(leads.rows, ['tags', 'budget', 'authority', 'need', 'timeline']);
+    const contactRows = withholdText(contacts.rows, ['tags']);
+    const bookingRows = withholdText(bookings.rows, [
+      'bookingAnswers',
+      'title',
+      'description',
+      'notes',
+      'cancellationReason',
+    ]);
+    const scoreRows = withholdText(leadScores.rows, ['factors']);
+    const leadInsightRows = withholdText(leadInsights.rows, ['nextBestAction', 'recommendations']);
+    const contactInsightRows = withholdText(contactInsights.rows, [
+      'nextBestAction',
+      'recommendations',
+    ]);
+    const aiInsightRows = withholdText(aiInsights.rows, ['title', 'description']);
+    const dealRows = withholdText(deals.rows, ['description']);
+    const taskRows = withholdText(tasks.rows, ['description']);
 
     const lists = [
       leads,
@@ -515,24 +665,29 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
       leadInsights,
       contactInsights,
       aiInsights,
+      deals,
+      tasks,
     ];
     return {
       data: {
-        leads: leads.rows,
-        leadScores: leadScores.rows,
+        leads: leadRows.rows,
+        leadScores: scoreRows.rows,
         leadActivities: leadActivities.rows,
-        contacts: contacts.rows,
+        contacts: contactRows.rows,
         contactActivities: contactActivities.rows,
-        bookings: bookings.rows,
+        bookings: bookingRows.rows,
         emailRecords: emailRecords.rows,
         tickets: tickets.rows,
         chats: chats.rows,
+        // The person's own words (their survey comment) are not staff or AI text: they stay.
         feedback: feedback.rows,
         dataRequests: dsarRequests.rows,
         // Derived data: generated by AI from the person's data (labelled in the export).
-        leadInsights: leadInsights.rows,
-        contactInsights: contactInsights.rows,
-        aiInsights: aiInsights.rows,
+        leadInsights: leadInsightRows.rows,
+        contactInsights: contactInsightRows.rows,
+        aiInsights: aiInsightRows.rows,
+        deals: dealRows.rows,
+        tasks: taskRows.rows,
       },
       withheld: {
         NOTES: leadNotes + contactNotes + inlineContactNotes,
@@ -540,6 +695,14 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         TICKET_SUBJECTS: tickets.total,
         MESSAGE_BODIES: emailRecords.total + chats.total + contactReplyDrafts + autoResponseDrafts,
         DOCUMENTS: leadFiles,
+        DESCRIPTIONS: dealRows.withheld + taskRows.withheld,
+        AI_TEXT:
+          scoreRows.withheld +
+          leadInsightRows.withheld +
+          contactInsightRows.withheld +
+          aiInsightRows.withheld,
+        STAFF_TEXT: leadRows.withheld + contactRows.withheld + bookingRows.withheld,
+        OTHER_RECORDS: calendarEvents + notifications + experimentAssignments,
         EXCESS_ROWS: lists.reduce((sum, list) => sum + list.total - list.rows.length, 0),
       },
     };
@@ -580,6 +743,10 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
         const ids = await subjectIds(tx, tenantId, subjectEmail, true);
         const { leadIds, contactIds } = ids;
         const appointmentIds = await bookedAppointmentIds(tx, tenantId, subjectEmail, true);
+        // The person's address lock, after the row locks (the order every writer uses): an AI
+        // write that checked this address waits for the erasure to commit, or committed
+        // before it (codex).
+        await tx.$executeRaw`SELECT dsar_subject_lock(${tenantId}, ${normalizeSubjectEmail(subjectEmail)})`;
         const manual = await checklist(tx, tenantId, subjectEmail, ids);
 
         // Leads: a per-row placeholder keeps @@unique([email, tenantId]) satisfied.

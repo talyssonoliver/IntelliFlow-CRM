@@ -60,19 +60,19 @@ export default function DsarVerifyContent() {
       );
     case 'missing':
       return (
-        <DsarNotice title="This link is incomplete">
+        <DsarNotice title="This link is incomplete" focusOnShow>
           <p>Open the link from the email again, in full, or make a new request.</p>
         </DsarNotice>
       );
     case 'busy':
       return (
-        <DsarNotice title="Please try again shortly">
+        <DsarNotice title="Please try again shortly" focusOnShow>
           <p>Too many attempts from here just now. Open the link from the email again later.</p>
         </DsarNotice>
       );
     case 'invalid':
       return (
-        <DsarNotice title="This link is invalid or has expired">
+        <DsarNotice title="This link is invalid or has expired" focusOnShow>
           <p>
             Links work once, for 24 hours. If you still need the firm to act, make a new request.
           </p>
@@ -81,7 +81,7 @@ export default function DsarVerifyContent() {
     case 'done': {
       const { result } = state;
       return (
-        <DsarNotice title="Your request is confirmed">
+        <DsarNotice title="Your request is confirmed" focusOnShow>
           <p className="text-foreground">{DSAR_TYPE_COPY[result.type].label}</p>
           <p>{`The firm must respond by ${dueDateLabel(result.dueDate)}.`}</p>
           {result.exportEmailed && (

@@ -281,6 +281,14 @@ export class PrismaContactRepository implements ContactRepository {
     const { primaryId, secondaryId, tenantId, mergeFields } = input;
 
     return this.prisma.$transaction(async (tx) => {
+      // Lock both rows (in id order) before reading their addresses: an address change in
+      // flight finishes first, so the restriction is carried to the address the survivor really
+      // has (PG-203, codex). Reads below then see the committed values.
+      await tx.$queryRaw`
+        SELECT id FROM contacts
+         WHERE "tenantId" = ${tenantId} AND id IN (${primaryId}, ${secondaryId})
+         ORDER BY id
+           FOR UPDATE`;
       const [primary, secondary] = await Promise.all([
         tx.contact.findFirst({ where: { id: primaryId, tenantId } }),
         tx.contact.findFirst({ where: { id: secondaryId, tenantId } }),

@@ -40,6 +40,7 @@ const UNAVAILABLE = 'Data requests are temporarily unavailable.';
 
 const INVALID_MESSAGES: Record<string, string> = {
   receivedOn: 'The received date must be today or within the last 30 days.',
+  withheld: 'Give a count and a reason for everything the export withholds.',
   receivedOnReason: 'Say why the request is logged after the day it was received.',
   noHoldConfirmed:
     'Confirm that no legal hold or retention duty (SRA, anti-money-laundering, legal claims) applies.',
@@ -55,7 +56,7 @@ const REFUSED_MESSAGES: Record<string, string> = {
     'A request can be extended once, by one or two months, before its original deadline.',
   SECOND_ADMIN_REQUIRED: 'Another administrator must carry out an erasure you logged yourself.',
   WAIT_24H:
-    'An erasure logged by staff can run 24 hours after it was logged, so the person can object.',
+    'An erasure logged by staff can run 24 hours after the person was warned, so they can object.',
   ERASURE_NOTICE_NOT_SENT:
     'The person must be emailed about this erasure before it can run, and the email could not be sent. Try again later.',
   NOTICE_NOT_SENT:
@@ -382,7 +383,18 @@ export const privacyAdminRouter = createTRPCRouter({
         now: new Date(),
       });
       assertOk(result);
-      await audit(ctx, 'EXPORT', input.id, { change: 'EXPORTED_BY_STAFF' });
+      // The data has already left, so the audit row is awaited and retried once, and a failure
+      // does not throw: ids and the error class go to the log instead (same as erasure).
+      const metadata = { change: 'EXPORTED_BY_STAFF' };
+      await audit(ctx, 'EXPORT', input.id, metadata, true)
+        .catch(() => audit(ctx, 'EXPORT', input.id, metadata, true))
+        .catch((error: unknown) => {
+          console.error('[privacy] Export audit row not written', {
+            requestId: input.id,
+            tenantId: ctx.tenant.tenantId,
+            error: error instanceof Error ? error.name : 'unknown',
+          });
+        });
       return result.export;
     }),
 });

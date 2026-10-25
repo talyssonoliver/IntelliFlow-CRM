@@ -113,6 +113,7 @@ function fakeStore(rows: DueDsarRequest[], recipients: Record<string, string[]> 
     markAlerted: vi.fn<DsarSlaTx['markAlerted']>(async (id) => {
       marked.add(id);
     }),
+    purgeExpiredPending: vi.fn<DsarSlaTx['purgeExpiredPending']>(async () => 0),
   };
   let freeTransactions = Number.POSITIVE_INFINITY;
   let lockCalls = 0;
@@ -163,12 +164,12 @@ describe('runDsarSlaSweep', () => {
   });
 
   it('claims nothing when no email sender is configured', async () => {
-    const { store } = fakeStore([due()]);
+    const { store, tx } = fakeStore([due()]);
     const { value, log } = deps(store);
     await expect(runDsarSlaSweep({ ...value, sender: undefined })).resolves.toEqual({
       skipped: 'NO_SENDER',
     });
-    expect(store.lockCalls()).toBe(0);
+    expect(tx.claimDue).not.toHaveBeenCalled();
     expect(log.warn).toHaveBeenCalledWith('[dsar-sla] No email sender configured');
   });
 
@@ -183,6 +184,7 @@ describe('runDsarSlaSweep', () => {
       alerted: 1,
       failed: 0,
       noRecipient: 0,
+      purged: 0,
     });
 
     // One request per transaction: its marker commits before the next send (codex).
@@ -254,6 +256,7 @@ describe('runDsarSlaSweep', () => {
       alerted: 0,
       failed: 0,
       noRecipient: 2,
+      purged: 0,
     });
     expect(sendEmail).not.toHaveBeenCalled();
     expect(tx.markAlerted).not.toHaveBeenCalled();
@@ -295,6 +298,7 @@ describe('runDsarSlaSweep', () => {
       alerted: 2,
       failed: 0,
       noRecipient: 0,
+      purged: 0,
     });
   });
 
@@ -328,6 +332,70 @@ describe('runDsarSlaSweep', () => {
     const before = tx.claimDue.mock.calls.length;
     await runDsarSlaSweep({ ...value, now: () => new Date(retryAt) });
     expect(tx.claimDue.mock.calls[before]).toEqual([new Date(retryAt), 1, []]);
+  });
+});
+
+describe('runDsarSlaSweep: purging unverified requests (Q24)', () => {
+  const sevenDaysAgo = new Date(NOW.getTime() - 7 * DAY);
+
+  it('deletes expired unverified requests after the alerts, 7 days past expiry, in batches until a short one', async () => {
+    const { store, tx } = fakeStore([due()], { 'tenant-a': ['admin@example.invalid'] });
+    tx.purgeExpiredPending
+      .mockResolvedValueOnce(500)
+      .mockResolvedValueOnce(500)
+      .mockResolvedValueOnce(7);
+    const { value, log } = deps(store);
+    await expect(runDsarSlaSweep(value)).resolves.toMatchObject({ alerted: 1, purged: 1007 });
+    expect(tx.purgeExpiredPending).toHaveBeenCalledTimes(3);
+    expect(tx.purgeExpiredPending).toHaveBeenCalledWith(sevenDaysAgo, 500);
+    expect(tx.claimDue.mock.invocationCallOrder[0]).toBeLessThan(
+      tx.purgeExpiredPending.mock.invocationCallOrder[0]!
+    );
+    expect(log.info).toHaveBeenCalledWith('[dsar-sla] purged 1007 expired unverified requests');
+  });
+
+  it('stays quiet and runs one batch when there is nothing to purge', async () => {
+    const { store, tx } = fakeStore([], {});
+    const { value, log } = deps(store);
+    await expect(runDsarSlaSweep(value)).resolves.toMatchObject({ purged: 0 });
+    expect(tx.purgeExpiredPending).toHaveBeenCalledTimes(1);
+    expect(log.info).not.toHaveBeenCalled();
+  });
+
+  it('is bounded: stops after 20 full batches in one tick', async () => {
+    const { store, tx } = fakeStore([], {});
+    tx.purgeExpiredPending.mockResolvedValue(500);
+    await expect(runDsarSlaSweep(deps(store).value)).resolves.toMatchObject({ purged: 10_000 });
+    expect(tx.purgeExpiredPending).toHaveBeenCalledTimes(20);
+  });
+
+  it('purges even when no email sender is configured', async () => {
+    const { store, tx } = fakeStore([due()]);
+    tx.purgeExpiredPending.mockResolvedValueOnce(3);
+    const { value } = deps(store);
+    await expect(runDsarSlaSweep({ ...value, sender: undefined })).resolves.toEqual({
+      skipped: 'NO_SENDER',
+    });
+    expect(tx.purgeExpiredPending).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not purge while another replica holds the sweep lock', async () => {
+    const { store, tx } = fakeStore([due()]);
+    store.holdLockElsewhere();
+    await runDsarSlaSweep(deps(store).value);
+    expect(tx.purgeExpiredPending).not.toHaveBeenCalled();
+  });
+
+  it('a purge failure never fails the tick or the alerts, and logs the error class only', async () => {
+    const { store, tx } = fakeStore([due()], { 'tenant-a': ['admin@example.invalid'] });
+    const failure = Object.assign(new Error('relation for ada@example.invalid is gone'), {
+      name: 'PrismaClientKnownRequestError',
+    });
+    tx.purgeExpiredPending.mockRejectedValueOnce(failure);
+    const { value, log } = deps(store);
+    await expect(runDsarSlaSweep(value)).resolves.toMatchObject({ alerted: 1, purged: 0 });
+    expect(log.warn).toHaveBeenCalledWith('[dsar-sla] purge failed: PrismaClientKnownRequestError');
+    expect(JSON.stringify(log.warn.mock.calls)).not.toContain('ada@example.invalid');
   });
 });
 
@@ -406,6 +474,19 @@ describe('createPrismaDsarSlaStore', () => {
       maxWait: 10_000,
       timeout: 60_000,
     });
+  });
+
+  it('purges one batch of PENDING_VERIFICATION rows expired before the cutoff, skipping locked rows', async () => {
+    const { prisma, sql, values } = recordingPrisma({ locked: true });
+    const deleted = await createPrismaDsarSlaStore(prisma).withSweepLock((tx) =>
+      tx.purgeExpiredPending(new Date(NOW.getTime() - 7 * DAY), 500)
+    );
+    expect(deleted).toBe(1);
+    expect(sql[1]).toContain('DELETE FROM dsar_requests');
+    expect(sql[1]).toContain("status = 'PENDING_VERIFICATION'");
+    expect(sql[1]).toContain('"verificationExpiresAt" <');
+    expect(sql[1]).toContain('FOR UPDATE SKIP LOCKED');
+    expect(values[1]).toEqual([new Date(NOW.getTime() - 7 * DAY), 500]);
   });
 
   it('marks a request alerted without touching anything else', async () => {

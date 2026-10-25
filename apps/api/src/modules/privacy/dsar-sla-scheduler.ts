@@ -21,8 +21,14 @@
  *   fresh alert in its new window.
  *
  * The email carries the type, deadline, request reference and page link: no personal data.
+ *
+ * After the alerts, the same tick purges (owner Q24) public requests that were never confirmed:
+ * PENDING_VERIFICATION rows whose link expired more than `DSAR_LIMITS.pendingPurgeDays` days ago
+ * are deleted across firms, 500 per transaction under the same advisory lock, at most 20
+ * transactions a tick. A purge failure never fails the tick or the alerts; it is logged by error
+ * class only (the rows hold email addresses).
  */
-import type { DsarRequestType } from '@intelliflow/domain';
+import { DSAR_LIMITS, type DsarRequestType } from '@intelliflow/domain';
 import { buildAdminSlaEmail, deliverDsarEmail, type EmailSender } from './dsar-email';
 
 export const DEFAULT_DSAR_SLA_INTERVAL_MS = 3_600_000;
@@ -36,6 +42,9 @@ export const DSAR_SLA_REPEAT_DAYS = 3;
 export const DSAR_SLA_RETRY_MS = 6 * 3_600_000;
 const DAY_MS = 86_400_000;
 const PAGE_PATH = '/settings/privacy-requests';
+/** Rows one purge transaction deletes, and the most purge transactions one tick runs. */
+export const DSAR_PURGE_BATCH = 500;
+export const DSAR_PURGE_MAX_BATCHES = 20;
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let running = false;
@@ -109,6 +118,8 @@ export interface DsarSlaTx {
   /** Admin addresses, else the owner's, else none. */
   recipients(tenantId: string): Promise<string[]>;
   markAlerted(id: string, at: Date): Promise<void>;
+  /** Delete up to `limit` PENDING_VERIFICATION rows whose link expired before `cutoff`; the count. */
+  purgeExpiredPending(cutoff: Date, limit: number): Promise<number>;
 }
 
 export interface DsarSlaStore {
@@ -128,13 +139,14 @@ export interface DsarSlaDeps {
 
 export type DsarSlaReport =
   | { skipped: 'LOCKED' | 'NO_SENDER' }
-  | { claimed: number; alerted: number; failed: number; noRecipient: number };
+  | { claimed: number; alerted: number; failed: number; noRecipient: number; purged: number };
 
 export async function runDsarSlaSweep(deps: DsarSlaDeps): Promise<DsarSlaReport> {
   const { sender, log } = deps;
   if (!sender) {
     // Claiming without a way to send would only hold row locks for nothing.
     log.warn('[dsar-sla] No email sender configured');
+    await purgeUnverified(deps, deps.now());
     return { skipped: 'NO_SENDER' };
   }
   const now = deps.now();
@@ -192,7 +204,33 @@ export async function runDsarSlaSweep(deps: DsarSlaDeps): Promise<DsarSlaReport>
     }
     if (outcome === 'EMPTY') break;
   }
-  return counts;
+  const purged = await purgeUnverified(deps, now);
+  return { ...counts, purged };
+}
+
+/**
+ * Owner Q24: delete requests nobody confirmed. Non-fatal by design: a failure is logged by
+ * error class (never the message, which may quote a row) and the tick carries on.
+ */
+async function purgeUnverified(deps: DsarSlaDeps, now: Date): Promise<number> {
+  const cutoff = new Date(now.getTime() - DSAR_LIMITS.pendingPurgeDays * DAY_MS);
+  let purged = 0;
+  try {
+    for (let i = 0; i < DSAR_PURGE_MAX_BATCHES; i += 1) {
+      const deleted = await deps.store.withSweepLock((tx) =>
+        tx.purgeExpiredPending(cutoff, DSAR_PURGE_BATCH)
+      );
+      if (deleted === null) break; // another replica holds the lock
+      purged += deleted;
+      if (deleted < DSAR_PURGE_BATCH) break;
+    }
+  } catch (error) {
+    deps.log.warn(`[dsar-sla] purge failed: ${error instanceof Error ? error.name : 'unknown'}`);
+  }
+  if (purged > 0) {
+    deps.log.info(`[dsar-sla] purged ${String(purged)} expired unverified requests`);
+  }
+  return purged;
 }
 
 // ── The Prisma store ─────────────────────────────────────────────────────────
@@ -268,6 +306,17 @@ function prismaSlaTx(tx: DsarSlaPrismaTx): DsarSlaTx {
     },
     async markAlerted(id, at) {
       await tx.$executeRaw`UPDATE dsar_requests SET "slaAlertedAt" = ${at} WHERE id = ${id}`;
+    },
+    purgeExpiredPending(cutoff, limit) {
+      return tx.$executeRaw`
+        DELETE FROM dsar_requests
+         WHERE id IN (
+           SELECT id FROM dsar_requests
+            WHERE status = 'PENDING_VERIFICATION'
+              AND "verificationExpiresAt" < ${cutoff}
+            ORDER BY id
+            LIMIT ${limit}
+              FOR UPDATE SKIP LOCKED)`;
     },
   };
 }

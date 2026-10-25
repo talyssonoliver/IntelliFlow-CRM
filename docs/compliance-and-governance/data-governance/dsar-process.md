@@ -90,6 +90,12 @@ firm's data.
 - At most 10 per firm and client address per hour.
 - At most 3 per email address per 24 hours across all firms (this one also
   ignores `+tag` variants).
+- At most 50 public submissions per firm per 24 hours, whatever the address or
+  IP (owner Q24); the 51st gets the same generic reply.
+- Public requests that were never confirmed are deleted 7 days after their link
+  expired, by the hourly deadline job under its advisory lock. Verified,
+  completed and staff-logged requests are never purged. Expired unconfirmed
+  requests no longer appear in the admin list.
 - If the same type and email already has a request awaiting confirmation that is
   less than an hour old, no new email is sent. The reply is unchanged.
 - A filled honeypot gets the normal reply and no database work.
@@ -141,18 +147,36 @@ firm's data.
    privacy notice, purposes, categories, recipients, sources, rights, AI use,
    and the right to complain to the ICO) and the data: leads, lead scores, lead
    and contact insights, contacts, activities, bookings (including booker fields
-   and consent time), email records, tickets, chats, feedback, AI insights and
-   the person's own data request history.
+   and consent time), email records, tickets, chats, feedback, AI insights, the
+   person's deals (name, value, stage and dates; deals of their contacts), tasks
+   linked to their leads, contacts or deals (title, status, priority and dates)
+   and the person's own data request history. Their own survey comments are
+   exported because they are the person's words.
 3. **Free text is withheld and counted** (owner Q17, compliance review). The
    automatic file leaves out staff notes, activity titles and descriptions,
    ticket subjects, email and chat bodies, reply drafts and documents, because
-   they may be legally privileged or name other people. It lists each withheld
-   category with a count, says the firm is reviewing it, and never says that an
-   exemption applies. Rows past the 500 cap are counted as well.
+   they may be legally privileged or name other people. Owner Q23 and Q26 add:
+   - `DESCRIPTIONS`: the descriptions of deals and tasks.
+   - `AI_TEXT`: text written by AI (insight titles and descriptions,
+     recommendations, next best action, score reasoning). Scores, stages and
+     other structured values still export.
+   - `STAFF_TEXT`: staff-written tags, lead qualification text (budget,
+     authority, need, timeline) and booking answers.
+   - `OTHER_RECORDS`: calendar events, notifications and experiment records.
+     They are on the erasure checklist, so the file counts them rather than
+     leaving them out silently.
+
+   The file lists each withheld category with a count, says the firm is
+   reviewing it, and never says that an exemption applies. Rows past the 500 cap
+   are counted as well.
+
 4. When nothing at all is withheld the request completes at once. Otherwise it
    stays open. The admin reviews what was withheld and finishes it with
-   **Complete**, giving a note and, per category, a reason. The person is then
-   emailed what was withheld and why.
+   **Complete**, giving a note and, per category, a reason. The system recounts
+   what is withheld at that moment and refuses to complete (the admin sees "give
+   a count and a reason for everything the export withholds") unless every
+   category that still has a count above zero is covered with a count above zero
+   and a reason. The person is then emailed what was withheld and why.
 5. An admin can revoke a link sent to the wrong address, and can export the same
    file for a staff-handled request.
 6. A person with no data still gets an answer: an empty file with the processing
@@ -199,6 +223,10 @@ hand):
 - contact reply drafts
 - calendar events linked to the contact
 - experiment assignments
+- deals of the person's contacts (exported with their descriptions withheld; not
+  erased, because the firm may need them for its own records, and the admin
+  decides)
+- tasks linked to the person's leads, contacts or deals (same)
 - stored lead files (the objects behind the cleared file rows)
 
 **Kept on purpose**: audit log entries (legal obligation). The erasure audit row
@@ -265,7 +293,10 @@ outreach suppression is not built (see Known gaps).
   right to a judicial remedy: "If you are not satisfied, you can complain to the
   Information Commissioner's Office (ico.org.uk) and you can seek a judicial
   remedy."
-- Emails use fixed text. They never repeat what the person typed.
+- Emails use fixed text. They never repeat what the person who made the request
+  typed. They do include the reasons an admin typed when completing or refusing
+  a request (for example, why a category was withheld), with line breaks removed
+  and the text escaped in the HTML part.
 
 ### Grounds for refusal
 
@@ -301,7 +332,11 @@ request, extend, complete, refuse, cancel an erasure, revoke an export link,
 export for a staff-handled request, and lift a restriction.
 
 Every change is tenant scoped and audit logged. The audit rows hold the request
-id and the action, never the person's data.
+id and the action, never the person's data. A staff export and a completed
+erasure are audited before the result is returned; the write is retried once
+and, if it still fails, logged by request id, firm and error class. Each
+successful public export download writes a system-actor `EXPORT` row for the
+request and firm, with no address, token or IP.
 
 ## Record keeping
 
@@ -325,21 +360,21 @@ track training. The previous training record was fabricated and was removed (see
 
 ## Known gaps
 
-| Gap                                                                                                                          | Issue or status     |
-| ---------------------------------------------------------------------------------------------------------------------------- | ------------------- |
-| A rejected restriction can survive on an address changed during the rejection (fails safe: stays restricted).                | #1007               |
-| The erasure cleanup checklist is not stored. After the dialog closes, the admin loses the real counts.                       | #1009               |
-| AI-created tasks keep insight text about an erased person (tasks made before the erasure).                                   | #1010               |
-| A failed rejection, completion or extension email is not retried and the admin is not told.                                  | #1014               |
-| Conversations and messages carry no person key, so RAG, export and erasure cannot reach them.                                | #1015               |
-| An access request completed at verification can later withhold data added before the download, with the wrong note.          | #1020               |
-| AI search can return too few results when many matches are restricted (filtered after the row limit; fail-safe).             | #1021               |
-| Email suppressions and bounce receipts are not in the export or the erasure checklist.                                       | #956                |
-| Outreach and marketing suppression is manual. The system only records a restriction that blocks marketing.                   | IFC-315 (Sprint 19) |
-| Erasure of communications (emails, tickets, chats, feedback, notifications, drafts) and stored files is manual.              | IFC-316 (Sprint 19) |
-| No CSV export and no direct transfer to another controller (Article 20(2)).                                                  | IFC-317 (Sprint 19) |
-| No Article 19 notice to recipients of erased, corrected or restricted data.                                                  | IFC-318 (Sprint 19) |
-| The firm's retention period and transfer safeguards are not stated by Aurora. The export links to the firm's privacy notice. | By design           |
+| Gap                                                                                                                                                                                                     | Issue or status     |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- |
+| A rejected restriction can survive on an address changed during the rejection (fails safe: stays restricted).                                                                                           | #1007               |
+| The erasure cleanup checklist is not stored. After the dialog closes, the admin loses the real counts.                                                                                                  | #1009               |
+| AI-created tasks keep insight text about an erased person (tasks made before the erasure).                                                                                                              | #1010               |
+| A failed rejection, completion or extension email is not retried and the admin is not told.                                                                                                             | #1014               |
+| Conversations and messages carry no person key, so RAG, export and erasure cannot reach them.                                                                                                           | #1015               |
+| An access request completed at verification can later withhold data added before the download, with the wrong note.                                                                                     | #1020               |
+| AI search can return too few results when many matches are restricted (filtered after the row limit; fail-safe).                                                                                        | #1021               |
+| Email suppressions and bounce receipts are not in the export or the erasure checklist.                                                                                                                  | #956                |
+| Outreach and marketing suppression is manual. The system only records a restriction that blocks marketing.                                                                                              | IFC-315 (Sprint 19) |
+| Erasure of communications (emails, tickets, chats, feedback, notifications, drafts) and stored files is manual.                                                                                         | IFC-316 (Sprint 19) |
+| No CSV export and no direct transfer to another controller (Article 20(2)).                                                                                                                             | IFC-317 (Sprint 19) |
+| No Article 19 notice to recipients of erased, corrected or restricted data.                                                                                                                             | IFC-318 (Sprint 19) |
+| The firm's retention period and transfer safeguards are not stated by Aurora. The export links to the firm's privacy notice, or says the firm has not published one and the person may ask it directly. | By design           |
 
 ---
 

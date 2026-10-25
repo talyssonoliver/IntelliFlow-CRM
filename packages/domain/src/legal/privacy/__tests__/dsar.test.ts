@@ -48,8 +48,10 @@ describe('constants', () => {
       capPerTenantEmailPerDay: 3,
       capPerIpPerHour: 10,
       capGlobalEmailPerDay: 3,
+      capPerTenantPerDay: 50,
+      pendingPurgeDays: 7,
       resendCooldownMinutes: 60,
-      singleAdminErasureDelayHours: 24,
+      staffErasureDelayHours: 24,
       overdueRepeatDays: 3,
       slaWarnDays: 7,
       maxBackdateDays: 30,
@@ -67,6 +69,12 @@ describe('constants', () => {
       'TICKET_SUBJECTS',
       'MESSAGE_BODIES',
       'DOCUMENTS',
+      // Owner Q23/Q26 and the compliance review: descriptions of deals and tasks, AI and staff
+      // free text, and records the export only counts.
+      'DESCRIPTIONS',
+      'AI_TEXT',
+      'STAFF_TEXT',
+      'OTHER_RECORDS',
       'EXCESS_ROWS',
     ]);
   });
@@ -166,7 +174,7 @@ describe('staffErasureMayRun (security R3 S5; R4)', () => {
   const createdAt = new Date('2026-10-22T09:00:00Z');
 
   it('with two or more admins, needs a different resolver', () => {
-    const base = { adminCount: 2, createdAt, now: new Date(createdAt.getTime() + HOUR) };
+    const base = { adminCount: 2, createdAt, now: new Date(createdAt.getTime() + 24 * HOUR) };
     expect(staffErasureMayRun({ ...base, createdById: 'u1', resolvedById: 'u2' })).toEqual({
       allowed: true,
     });
@@ -191,6 +199,16 @@ describe('staffErasureMayRun (security R3 S5; R4)', () => {
     );
   });
 
+  it('always waits 24 hours from the warning, even with a second admin (owner Q25)', () => {
+    const base = { adminCount: 3, createdAt, createdById: 'u1', resolvedById: 'u2' };
+    expect(staffErasureMayRun({ ...base, now: new Date(createdAt.getTime() + 23 * HOUR) })).toEqual(
+      { allowed: false, reason: 'WAIT_24H' }
+    );
+    expect(staffErasureMayRun({ ...base, now: new Date(createdAt.getTime() + 24 * HOUR) })).toEqual(
+      { allowed: true }
+    );
+  });
+
   it('with a deleted creator, counts as another person only when there are two or more admins', () => {
     expect(
       staffErasureMayRun({
@@ -198,7 +216,7 @@ describe('staffErasureMayRun (security R3 S5; R4)', () => {
         createdAt,
         createdById: null,
         resolvedById: 'u2',
-        now: new Date(createdAt.getTime() + HOUR),
+        now: new Date(createdAt.getTime() + 24 * HOUR),
       })
     ).toEqual({ allowed: true });
     expect(

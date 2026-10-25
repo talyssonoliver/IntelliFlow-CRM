@@ -18,6 +18,7 @@ const CAPS = {
   perTenantEmailPerDay: 3,
   perIpPerHour: 10,
   globalEmailPerDay: 3,
+  perTenantPerDay: 50,
   resendCooldownMinutes: 60,
 };
 const NOW = new Date('2026-10-22T12:00:00.000Z');
@@ -101,17 +102,18 @@ describe('PrismaDsarRepository', () => {
   });
 
   it('counts only public submissions toward the caps, never requests staff logged (codex)', async () => {
-    const { prisma, repo } = setup([0, 0, 0]);
+    const { prisma, repo } = setup([0, 0, 0, 0]);
     await repo.reserveSubmission(submission(), CAPS, NOW);
     const wheres = prisma.dsarRequest.count.mock.calls.map((c: [{ where: object }]) => c[0].where);
-    expect(wheres).toHaveLength(3);
+    // Per person, per IP, folded email, and per firm (owner Q24).
+    expect(wheres).toHaveLength(4);
     for (const where of wheres) expect(where).toMatchObject({ source: 'PUBLIC_FORM' });
   });
 
   it('skips the IP cap when the IP is unknown', async () => {
-    const { prisma, repo } = setup([0, 0]);
+    const { prisma, repo } = setup([0, 0, 0]);
     await repo.reserveSubmission(submission({ ipHash: null }), CAPS, NOW);
-    expect(prisma.dsarRequest.count).toHaveBeenCalledTimes(2);
+    expect(prisma.dsarRequest.count).toHaveBeenCalledTimes(3);
     expect(prisma.dsarRequest.create).toHaveBeenCalled();
   });
 
@@ -565,9 +567,20 @@ describe('PrismaSubjectDataRepository', () => {
       'contactAIInsight',
       'aIInsight',
       'opportunity',
+      'task',
     ];
     return mockPrisma(Object.fromEntries(names.map((n) => [n, empty()])));
   }
+
+  it('reads the whole export from one repeatable-read snapshot (codex: no mixed reads)', async () => {
+    const prisma = subjectPrisma();
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    await repo.buildExport('t1', 'ada@example.invalid');
+    expect(prisma.$transaction).toHaveBeenCalledWith(
+      expect.any(Function),
+      expect.objectContaining({ isolationLevel: 'RepeatableRead' })
+    );
+  });
 
   it('builds the export from the matched ids and counts what it withholds', async () => {
     const prisma = subjectPrisma();
@@ -607,6 +620,10 @@ describe('PrismaSubjectDataRepository', () => {
       TICKET_SUBJECTS: 1,
       MESSAGE_BODIES: 6,
       DOCUMENTS: 4,
+      DESCRIPTIONS: 0,
+      AI_TEXT: 0,
+      STAFF_TEXT: 0,
+      OTHER_RECORDS: 0,
       EXCESS_ROWS: 0,
     });
     expect(prisma.contactReplyDraft.count).toHaveBeenCalledWith({
@@ -616,6 +633,8 @@ describe('PrismaSubjectDataRepository', () => {
       tenantId: 't1',
       OR: [{ leadId: { in: ['l1'] } }, { id: { in: expect.any(Array) } }],
     });
+    // Attribution the erasure clears is exported too, the click id included (codex).
+    expect(prisma.lead.findMany.mock.calls[0][0].select).toMatchObject({ clickId: true });
     expect(prisma.lead.findMany.mock.calls[0][0].where).toEqual({
       tenantId: 't1',
       id: { in: ['l1'] },
@@ -629,6 +648,148 @@ describe('PrismaSubjectDataRepository', () => {
       type: true,
       timestamp: true,
     });
+  });
+
+  it('exports deals and tasks but withholds and counts their descriptions (Q23)', async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw
+      .mockResolvedValueOnce([{ id: 'l1' }])
+      .mockResolvedValueOnce([{ id: 'c1' }])
+      .mockResolvedValueOnce([]);
+    const deal = {
+      id: 'o1',
+      name: 'Ada Lovelace retainer',
+      value: '1200',
+      stage: 'PROPOSAL',
+      expectedCloseDate: null,
+      createdAt: NOW,
+      closedAt: null,
+    };
+    prisma.opportunity.findMany.mockResolvedValue([
+      { ...deal, description: 'Ada wants a fixed fee' },
+      { ...deal, id: 'o2', description: null },
+    ]);
+    prisma.task.findMany.mockResolvedValue([
+      { title: 'Call Ada', status: 'PENDING', dueDate: NOW, description: 'Ask about her sister' },
+      { title: 'Send terms', status: 'PENDING', dueDate: null, description: '' },
+    ]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const exported = await repo.buildExport('t1', 'ada@example.invalid');
+    expect(exported.data.deals).toHaveLength(2);
+    expect(exported.data.deals![0]).toMatchObject({
+      name: 'Ada Lovelace retainer',
+      stage: 'PROPOSAL',
+    });
+    expect(JSON.stringify(exported.data)).not.toContain('fixed fee');
+    expect(JSON.stringify(exported.data)).not.toContain('her sister');
+    expect(exported.data.tasks!.map((t) => t.title)).toEqual(['Call Ada', 'Send terms']);
+    // One deal and one task have a description; empty and missing ones are not counted.
+    expect(exported.withheld.DESCRIPTIONS).toBe(2);
+    expect(prisma.task.findMany.mock.calls[0][0].where).toEqual({
+      tenantId: 't1',
+      OR: [
+        { leadId: { in: ['l1'] } },
+        { contactId: { in: ['c1'] } },
+        { opportunityId: { in: ['o1', 'o2'] } },
+      ],
+    });
+    expect(
+      prisma.opportunity.findMany.mock.calls.some(
+        ([arg]) => arg.where.contactId?.in?.[0] === 'c1' && 'name' in (arg.select ?? {})
+      )
+    ).toBe(true);
+  });
+
+  it('withholds AI and staff free text but keeps structured scores (Q26)', async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw
+      .mockResolvedValueOnce([{ id: 'l1' }])
+      .mockResolvedValueOnce([{ id: 'c1' }])
+      .mockResolvedValueOnce([{ id: 'a1' }]);
+    prisma.aIScore.findMany.mockResolvedValue([
+      { score: 70, confidence: 0.8, factors: [{ reasoning: 'Mentions her employer' }] },
+    ]);
+    prisma.leadAIInsight.findMany.mockResolvedValue([
+      { churnRisk: 12, nextBestAction: 'Call her mother', recommendations: ['Offer a discount'] },
+    ]);
+    prisma.contactAIInsight.findMany.mockResolvedValue([
+      { churnRisk: 3, nextBestAction: null, recommendations: [] },
+    ]);
+    prisma.aIInsight.findMany.mockResolvedValue([
+      { type: 'risk', category: 'sales', title: 'Ada may leave', description: 'Her boss said so' },
+    ]);
+    prisma.lead.findMany.mockResolvedValue([
+      { firstName: 'Ada', score: 70, tags: ['difficult'], need: 'Divorce', authority: null },
+      { firstName: 'Bo', score: 5, tags: [], need: null, authority: '', budget: null },
+    ]);
+    prisma.contact.findMany.mockResolvedValue([{ firstName: 'Ada', tags: [] }]);
+    prisma.appointment.findMany.mockResolvedValue([
+      { status: 'SCHEDULED', bookerName: 'Ada', bookingAnswers: { reason: 'Private matter' } },
+      { status: 'SCHEDULED', bookerName: 'Ada', bookingAnswers: null },
+    ]);
+    // A person's own words stay: feedback.comment is theirs (see the adapter's comment).
+    prisma.feedbackSurvey.findMany.mockResolvedValue([{ score: 9, comment: 'Lovely service' }]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const exported = await repo.buildExport('t1', 'ada@example.invalid');
+    const json = JSON.stringify(exported.data);
+    for (const text of [
+      'Mentions her employer',
+      'Call her mother',
+      'Offer a discount',
+      'Ada may leave',
+      'Her boss said so',
+      'difficult',
+      'Divorce',
+      'Private matter',
+    ]) {
+      expect(json).not.toContain(text);
+    }
+    // Structured values and the person's own comment still export.
+    expect(exported.data.leadScores).toEqual([{ score: 70, confidence: 0.8 }]);
+    expect(exported.data.leadInsights).toEqual([{ churnRisk: 12 }]);
+    expect(exported.data.aiInsights).toEqual([{ type: 'risk', category: 'sales' }]);
+    expect(exported.data.feedback).toEqual([{ score: 9, comment: 'Lovely service' }]);
+    // Rows that carried text: score 1 + lead insight 1 + ai insight 1; lead tags/need 1 + booking answers 1.
+    expect(exported.withheld.AI_TEXT).toBe(3);
+    expect(exported.withheld.STAFF_TEXT).toBe(2);
+  });
+
+  it('withholds and counts booking notes, description, title and cancellation reason (codex)', async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw
+      .mockResolvedValueOnce([{ id: 'l1' }])
+      .mockResolvedValueOnce([{ id: 'c1' }])
+      .mockResolvedValueOnce([{ id: 'a1' }]);
+    prisma.appointment.findMany.mockResolvedValue([
+      {
+        status: 'CANCELLED',
+        title: 'Intro call with Ada',
+        notes: 'Asked about her divorce',
+        description: null,
+        cancellationReason: 'Ill',
+        bookingAnswers: null,
+      },
+    ]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const exported = await repo.buildExport('t1', 'ada@example.invalid');
+    expect(exported.data.bookings).toEqual([{ status: 'CANCELLED' }]);
+    expect(exported.withheld.STAFF_TEXT).toBe(1);
+    expect(prisma.appointment.findMany.mock.calls[0][0].select).toMatchObject({
+      title: true,
+      notes: true,
+      description: true,
+      cancellationReason: true,
+    });
+  });
+
+  it('counts calendar events, notifications and experiment records as withheld (compliance)', async () => {
+    const prisma = subjectPrisma();
+    prisma.calendarEvent.count.mockResolvedValue(2);
+    prisma.notification.count.mockResolvedValue(3);
+    prisma.experimentAssignment.count.mockResolvedValue(1);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const exported = await repo.buildExport('t1', 'ada@example.invalid');
+    expect(exported.withheld.OTHER_RECORDS).toBe(6);
   });
 
   it('counts rows past the cap as EXCESS_ROWS instead of dropping them (codex)', async () => {
@@ -661,6 +822,73 @@ describe('PrismaSubjectDataRepository', () => {
     const preview = await repo.previewErasure('t1', 'ada@example.invalid');
     expect(preview.counts).toEqual({ leads: 2, contacts: 0, bookings: 1 });
     expect(preview.checklist).toMatchObject({ tickets: 2, emailRecords: 0 });
+  });
+
+  it('puts deals and tasks on the manual checklist, not in the erasure (Q23)', async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw
+      .mockResolvedValueOnce([{ id: 'l1' }])
+      .mockResolvedValueOnce([{ id: 'c1' }])
+      .mockResolvedValueOnce([]);
+    prisma.opportunity.count.mockResolvedValue(3);
+    prisma.opportunity.findMany.mockResolvedValue([{ id: 'o1' }]);
+    prisma.task.count.mockResolvedValue(2);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const preview = await repo.previewErasure('t1', 'ada@example.invalid');
+    expect(preview.checklist).toMatchObject({ deals: 3, tasks: 2 });
+    expect(prisma.opportunity.count.mock.calls[0][0].where).toEqual({
+      tenantId: 't1',
+      contactId: { in: ['c1'] },
+    });
+    expect(prisma.task.count.mock.calls[0][0].where).toEqual({
+      tenantId: 't1',
+      OR: [
+        { leadId: { in: ['l1'] } },
+        { contactId: { in: ['c1'] } },
+        { opportunityId: { in: ['o1'] } },
+      ],
+    });
+  });
+
+  it('leaves deals and tasks untouched when erasing', async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw.mockResolvedValueOnce([{ status: 'VERIFIED' }]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const result = await repo.erase(eraseInput);
+    expect(result.outcome).toBe('ERASED');
+    for (const model of [prisma.opportunity, prisma.task] as Array<Record<string, unknown>>) {
+      expect(model.updateMany).not.toHaveBeenCalled();
+      expect(model.deleteMany).not.toHaveBeenCalled();
+    }
+  });
+
+  it("takes the person's address lock after the row locks, before erasing (codex)", async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw.mockResolvedValueOnce([{ status: 'VERIFIED' }]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    await repo.erase({ ...eraseInput, subjectEmail: ' Ada@Example.invalid ' });
+    const calls = prisma.$executeRaw.mock.calls.map(([strings, ...values]) => ({
+      sql: (strings as string[]).join('?'),
+      values,
+    }));
+    const lock = calls.findIndex((c) => c.sql.includes('dsar_subject_lock'));
+    const firstUpdate = calls.findIndex((c) => c.sql.includes('UPDATE leads'));
+    expect(lock).toBeGreaterThanOrEqual(0);
+    expect(calls[lock]!.values).toEqual(['t1', 'ada@example.invalid']);
+    expect(lock).toBeLessThan(firstUpdate);
+  });
+
+  it("keeps the appointment location: it is the firm's meeting place, not the booker's text (L5)", async () => {
+    const prisma = subjectPrisma();
+    prisma.$queryRaw.mockResolvedValueOnce([{ status: 'VERIFIED' }]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    await repo.erase(eraseInput);
+    const sql = prisma.$executeRaw.mock.calls
+      .map(([strings]) => (strings as string[]).join('?'))
+      .find((text) => text.includes('UPDATE appointments'));
+    expect(sql).toBeDefined();
+    expect(sql).toContain('"bookerName" = NULL');
+    expect(sql).not.toContain('location');
   });
 
   const eraseInput = {

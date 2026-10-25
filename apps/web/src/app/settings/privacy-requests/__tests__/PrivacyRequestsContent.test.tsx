@@ -233,6 +233,78 @@ describe('PrivacyRequestsContent', () => {
     );
   });
 
+  it('never invents a reason: a withheld count without one is refused in the dialog (codex)', async () => {
+    h.list.data = [
+      request({
+        type: 'ACCESS',
+        exportIssuedAt: '2026-10-02T09:00:00.000Z',
+        exportLinkActive: true,
+      }),
+    ];
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Access/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Staff notes withheld'), {
+      target: { value: '2' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
+      target: { value: 'Sent separately' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Complete access request' }));
+    await waitFor(() =>
+      expect(within(dialog).getByRole('alert').textContent).toMatch(/reason for each/i)
+    );
+    expect(h.mutations.completeAccess!.mutateAsync).not.toHaveBeenCalled();
+    const reason = within(dialog).getByLabelText('Why staff notes are withheld');
+    expect(reason.getAttribute('aria-invalid')).toBe('true');
+    expect(document.activeElement).toBe(reason);
+  });
+
+  it('offers the new withheld categories and shows the server refusal when one is missing (Q23, Q26)', async () => {
+    h.list.data = [
+      request({
+        type: 'ACCESS',
+        exportIssuedAt: '2026-10-02T09:00:00.000Z',
+        exportLinkActive: true,
+      }),
+    ];
+    h.mutations.completeAccess!.mutateAsync.mockRejectedValue(
+      new Error('Give a count and a reason for everything the export withholds.')
+    );
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Access/ }));
+    const dialog = await screen.findByRole('dialog');
+    for (const label of [
+      'Deal and task descriptions withheld',
+      'AI-written text withheld',
+      'Staff tags, qualification notes and booking answers withheld',
+      'Calendar events, notifications and experiment records withheld',
+    ]) {
+      expect(within(dialog).getByLabelText(label)).toBeTruthy();
+    }
+    expect(within(dialog).getByText(/every category the export withholds/i)).toBeTruthy();
+    fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
+      target: { value: 'Sent separately' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Complete access request' }));
+    expect(
+      await within(dialog).findByText(
+        'Give a count and a reason for everything the export withholds.'
+      )
+    ).toBeTruthy();
+  });
+
+  it('lists deals and tasks on the erasure checklist (Q23)', async () => {
+    h.preview = {
+      data: { counts: { leads: 1 }, checklist: { deals: 3, tasks: 2, tickets: 0 } },
+    };
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Erasure/ }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText('Deals: 3')).toBeTruthy();
+    expect(within(dialog).getByText('Tasks: 2')).toBeTruthy();
+  });
+
   it('lifts a restriction only with a reason', async () => {
     h.restrictions = {
       data: [
@@ -279,6 +351,184 @@ describe('PrivacyRequestsContent', () => {
   });
 });
 
+describe('accessibility of validation and focus', () => {
+  const describedBy = (el: HTMLElement) => (el.getAttribute('aria-describedby') ?? '').split(' ');
+  const describedText = (el: HTMLElement) =>
+    describedBy(el)
+      .map((id) => document.getElementById(id)?.textContent ?? '')
+      .join(' ');
+
+  function expectFieldError(field: HTMLElement, alert: HTMLElement) {
+    expect(field.getAttribute('aria-invalid')).toBe('true');
+    expect(alert.id).not.toBe('');
+    expect(describedBy(field)).toContain(alert.id);
+    expect(document.activeElement).toBe(field);
+  }
+
+  const restriction = (blocksMarketing: boolean) => ({
+    data: [
+      {
+        id: 'clhrestrict0000000',
+        subjectEmail: 'bob@example.invalid',
+        blocksMarketing,
+        requestCount: 1,
+        since: '2026-10-01T00:00:00.000Z',
+      },
+    ],
+  });
+
+  async function openLog() {
+    fireEvent.click(screen.getByRole('button', { name: 'Log a request' }));
+    return screen.findByRole('dialog');
+  }
+
+  function fillLog(dialog: HTMLElement) {
+    fireEvent.change(within(dialog).getByLabelText('Their email address'), {
+      target: { value: 'ada@example.invalid' },
+    });
+    fireEvent.change(within(dialog).getByLabelText('Identity check details'), {
+      target: { value: 'Passport checked at the front desk' },
+    });
+  }
+
+  it('names the offending field in the log dialog, focuses it and keeps the summary alert', async () => {
+    render(<PrivacyRequestsContent />);
+    const dialog = await openLog();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Log request' }));
+    const email = within(dialog).getByLabelText('Their email address');
+    await waitFor(() => expect(document.activeElement).toBe(email));
+    expectFieldError(email, within(dialog).getByRole('alert'));
+    expect(within(dialog).getByRole('alert').textContent).toBe('Enter a valid email address.');
+
+    fireEvent.change(email, { target: { value: 'ada@example.invalid' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Log request' }));
+    const note = within(dialog).getByLabelText('Identity check details');
+    await waitFor(() => expect(document.activeElement).toBe(note));
+    expectFieldError(note, within(dialog).getByRole('alert'));
+    expect(email.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('gives the identity note a minimum-length hint of 20 characters', async () => {
+    render(<PrivacyRequestsContent />);
+    const dialog = await openLog();
+    expect(describedText(within(dialog).getByLabelText('Identity check details'))).toContain(
+      'At least 20 characters'
+    );
+  });
+
+  it('shows a 10 character hint on reasons and points the field at its error', async () => {
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Refuse: Erasure/ }));
+    const dialog = await screen.findByRole('dialog');
+    const reason = within(dialog).getByLabelText('Reason');
+    expect(describedText(reason)).toContain('At least 10 characters');
+    expect(reason.getAttribute('aria-invalid')).toBeNull();
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Refuse request' }));
+    await waitFor(() => expect(document.activeElement).toBe(reason));
+    expectFieldError(reason, within(dialog).getByRole('alert'));
+    expect(h.mutations.reject!.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('flags the marketing stop method and the confirmation separately', async () => {
+    h.list.data = [request({ type: 'OBJECTION', objectionScope: 'MARKETING' })];
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Complete: Objection/ }));
+    const dialog = await screen.findByRole('dialog');
+    const stop = within(dialog).getByLabelText('How marketing was stopped');
+    expect(describedText(stop)).toContain('At least 10 characters');
+    fireEvent.change(within(dialog).getByLabelText('Note for the record'), {
+      target: { value: 'Done' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
+    await waitFor(() => expect(document.activeElement).toBe(stop));
+    expectFieldError(stop, within(dialog).getByRole('alert'));
+
+    fireEvent.change(stop, { target: { value: 'Removed from the newsletter list' } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Complete request' }));
+    const box = within(dialog).getByRole('checkbox');
+    await waitFor(() => expect(document.activeElement).toBe(box));
+    expectFieldError(box, within(dialog).getByRole('alert'));
+    expect(stop.getAttribute('aria-invalid')).toBeNull();
+  });
+
+  it('flags the reason field in the lift dialog', async () => {
+    h.restrictions = restriction(false);
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Lift the restriction for bob@example.invalid' })
+    );
+    const dialog = await screen.findByRole('dialog');
+    const reason = within(dialog).getByLabelText('Reason');
+    expect(describedText(reason)).toContain('At least 10 characters');
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Lift restriction' }));
+    await waitFor(() => expect(document.activeElement).toBe(reason));
+    expectFieldError(reason, within(dialog).getByRole('alert'));
+  });
+
+  it('moves focus to the Open requests heading after a successful action', async () => {
+    h.mutations.reject!.mutateAsync.mockResolvedValue({ restrictionKept: false });
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Refuse: Erasure/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Reason'), {
+      target: { value: 'Retention duty under SRA rules' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Refuse request' }));
+    const heading = screen.getByRole('heading', { name: 'Open requests', hidden: true });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+    expect(heading.getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('moves focus to the Open requests heading after lifting a restriction', async () => {
+    h.restrictions = restriction(false);
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Lift the restriction for bob@example.invalid' })
+    );
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.change(within(dialog).getByLabelText('Reason'), {
+      target: { value: 'Accuracy confirmed with the client' },
+    });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Lift restriction' }));
+    const heading = screen.getByRole('heading', { name: 'Open requests', hidden: true });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
+
+  it('moves focus to the Open requests heading after logging a request', async () => {
+    render(<PrivacyRequestsContent />);
+    const dialog = await openLog();
+    fillLog(dialog);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Log request' }));
+    const heading = screen.getByRole('heading', { name: 'Open requests', hidden: true });
+    await waitFor(() => expect(document.activeElement).toBe(heading));
+  });
+
+  it('keeps the pending log button focusable and ignores presses', async () => {
+    h.mutations.logRequest!.isPending = true;
+    render(<PrivacyRequestsContent />);
+    const dialog = await openLog();
+    fillLog(dialog);
+    const button = within(dialog).getByRole('button', { name: 'Saving…' });
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.hasAttribute('disabled')).toBe(false);
+    fireEvent.click(button);
+    expect(h.mutations.logRequest!.mutateAsync).not.toHaveBeenCalled();
+  });
+
+  it('names each Download data button after its request', () => {
+    h.list.data = [
+      request({ type: 'ACCESS', subjectEmail: 'ada@example.invalid' }),
+      request({ id: 'clhsecond0000000000', type: 'ACCESS', subjectEmail: 'bob@example.invalid' }),
+    ];
+    render(<PrivacyRequestsContent />);
+    const buttons = screen.getAllByRole('button', { name: /^Download data: / });
+    expect(buttons.map((b) => b.getAttribute('aria-label'))).toEqual([
+      'Download data: Access (a copy of their data) for ada@example.invalid',
+      'Download data: Access (a copy of their data) for bob@example.invalid',
+    ]);
+  });
+});
+
 describe('helpers', () => {
   it('offers only the actions that apply', () => {
     expect(actionsFor(request({ status: 'COMPLETED' }) as never)).toEqual([]);
@@ -318,8 +568,18 @@ describe('helpers', () => {
       details: '',
     };
     expect(logRequestProblem(draft)).toBeNull();
-    expect(logRequestProblem({ ...draft, identityNote: 'short' })).toMatch(/at least 20/);
-    expect(logRequestProblem({ ...draft, receivedOn: '2026-01-01' })).toMatch(/logged after/);
+    expect(logRequestProblem({ ...draft, email: 'nope' })).toMatchObject({ field: 'email' });
+    expect(logRequestProblem({ ...draft, identityNote: 'short' })).toMatchObject({
+      field: 'identityNote',
+      message: expect.stringMatching(/at least 20/),
+    });
+    expect(logRequestProblem({ ...draft, receivedOn: '2026-01-01' })).toMatchObject({
+      field: 'receivedOnReason',
+      message: expect.stringMatching(/logged after/),
+    });
+    expect(logRequestProblem({ ...draft, receivedOn: '2999-01-01' })).toMatchObject({
+      field: 'receivedOn',
+    });
     expect(toLogRequestInput(draft)).toEqual({
       type: 'OBJECTION',
       email: 'ada@example.invalid',

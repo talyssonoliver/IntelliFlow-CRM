@@ -34,7 +34,11 @@ export function RestrictionBanner({
     ? 'Do not send marketing (data request)'
     : 'Processing restricted (data request)';
   return (
-    <output className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100">
+    <div
+      role="note"
+      aria-label="Processing restriction"
+      className="mb-4 flex items-start gap-3 rounded-lg border border-amber-300 bg-amber-50 px-4 py-3 text-amber-900 dark:border-amber-700 dark:bg-amber-950/40 dark:text-amber-100"
+    >
       <span className="material-symbols-outlined text-xl" aria-hidden="true">
         block
       </span>
@@ -45,6 +49,6 @@ export function RestrictionBanner({
           Privacy requests.
         </p>
       </div>
-    </output>
+    </div>
   );
 }

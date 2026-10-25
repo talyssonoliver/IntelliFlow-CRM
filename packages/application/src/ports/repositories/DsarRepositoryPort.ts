@@ -63,6 +63,8 @@ export interface SubmitCaps {
   perIpPerHour: number;
   /** Any tenant + same +tag-folded email hash, last 24 h. */
   globalEmailPerDay: number;
+  /** Same tenant, any email or IP, last 24 h (owner Q24: a flood of rotating addresses). */
+  perTenantPerDay: number;
   /** A PENDING request of the same tenant, type and email younger than this sends no new email. */
   resendCooldownMinutes: number;
 }
@@ -137,6 +139,13 @@ export interface DsarRepositoryPort {
   findForTenant(tenantId: string, id: string): Promise<DsarRecord | null>;
 
   list(tenantId: string, status?: DsarStatus): Promise<DsarRecord[]>;
+
+  /**
+   * Owner Q24: delete PENDING_VERIFICATION requests whose link expired more than
+   * `DSAR_LIMITS.pendingPurgeDays` ago, across firms, in bounded batches. Returns the count.
+   * Needs the unscoped client; called by the scheduled sweep.
+   */
+  purgeExpiredUnverified(now: Date, batchSize?: number): Promise<number>;
 
   /**
    * Apply `patch` only if the row is still in `expectedStatus` (single-use / no double run),

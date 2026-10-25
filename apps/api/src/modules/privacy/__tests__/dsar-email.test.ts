@@ -111,6 +111,31 @@ describe('buildDsarEmail', () => {
     expect(email.htmlBody).not.toContain('<b>');
   });
 
+  it('names every new withheld category in plain words, with the admin reason escaped (Q23, Q26)', () => {
+    const email = buildDsarEmail({
+      kind: 'COMPLETED',
+      to: 'ada@example.invalid',
+      firmName,
+      type: 'ACCESS',
+      marketingStopped: false,
+      withheld: [
+        { category: 'DESCRIPTIONS', count: 2, reason: 'Names <i>a third party</i>' },
+        { category: 'AI_TEXT', count: 3, reason: 'Reviewed by staff' },
+        { category: 'STAFF_TEXT', count: 1, reason: 'Internal opinion' },
+        { category: 'OTHER_RECORDS', count: 4, reason: 'Calendar entries of staff' },
+      ],
+    });
+    expect(email.textBody).toContain('Deal and task descriptions (2): Names <i>a third party</i>');
+    expect(email.textBody).toContain(
+      'Text written by AI, such as insights and recommendations (3)'
+    );
+    expect(email.textBody).toContain('Tags, qualification notes and booking answers (1)');
+    expect(email.textBody).toContain('Calendar events, notifications and experiment records (4)');
+    // The reason the admin typed is shown to the person, escaped in the HTML part.
+    expect(email.htmlBody).toContain('Names &lt;i&gt;a third party&lt;/i&gt;');
+    expect(email.htmlBody).not.toContain('<i>');
+  });
+
   it('adds no withholding lines when nothing was withheld', () => {
     const email = buildDsarEmail(notices.find((n) => n.kind === 'COMPLETED')!);
     expect(email.textBody).not.toContain('withheld');

@@ -28,7 +28,7 @@ import { getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
 // PG-203 #1002: erased and restricted people get no insight
 import {
-  dealContactIds,
+  currentDeals,
   eligibleSubjects,
   writeSubjectIfStillEligible,
   type SubjectPrisma,
@@ -922,11 +922,9 @@ async function processableJobData(
   prisma: any,
   data: InsightJobData
 ): Promise<{ data: InsightJobData; eligible: EligibleSubjects }> {
-  const dealContact = await dealContactIds(
-    prisma,
-    data.tenantId,
-    data.dealsAtRisk.map((d) => d.id)
-  );
+  const deals = await currentDeals(prisma, data.tenantId, data.dealsAtRisk);
+  const dealContact = new Map(deals.map((d) => [d.id, d.contactId]));
+  const dealName = new Map(deals.map((d) => [d.id, d.name]));
   const people = await eligibleSubjects(prisma as SubjectPrisma, data.tenantId, {
     leadIds: data.hotLeads.map((l) => l.id),
     contactIds: [
@@ -935,13 +933,16 @@ async function processableJobData(
     ],
   });
   const dealContacts = new Map<string, string>();
-  const keptDeals = data.dealsAtRisk.filter((d) => {
-    const contactId = dealContact.get(d.id);
-    if (!contactId) return dealContact.has(d.id);
-    if (!people.contacts.has(contactId)) return false;
-    dealContacts.set(d.id, contactId);
-    return true;
-  });
+  const keptDeals = data.dealsAtRisk
+    .filter((d) => {
+      const contactId = dealContact.get(d.id);
+      if (!contactId) return dealContact.has(d.id);
+      if (!people.contacts.has(contactId)) return false;
+      dealContacts.set(d.id, contactId);
+      return true;
+    })
+    // The model gets the deal's current name, never the queued one (codex).
+    .map((d) => ({ ...d, name: dealName.get(d.id) ?? d.name }));
   return {
     data: {
       ...data,
