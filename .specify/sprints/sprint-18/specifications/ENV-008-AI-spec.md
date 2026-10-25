@@ -228,6 +228,9 @@ N/A (no UI).
   workflow-level no-cancel concurrency, the extended `paths:`
   filter, `timeout-minutes: 12`, `environment: Production` and `contents: read`. There is no
   `pull_request` or `pull_request_target` trigger.
+  2026-10-25 exec amendment (plan r4/A2): delivered as three independent workflows
+  (`grafana-alert-rules.yml`, `grafana-slos.yml`, `grafana-dashboard.yml`) instead of three jobs in one
+  workflow, so SLO-only or dashboard-only changes never re-apply the alert rules.
 - **AC-007.** `apply-railway-self-healing.mjs` reads the four fields for api and ai-worker,
   writes only differing `DESIRED` fields and only with `--apply`, verifies by read-back, and
   fails closed. It applies the ai-worker health-check guard and logs only the allow-listed

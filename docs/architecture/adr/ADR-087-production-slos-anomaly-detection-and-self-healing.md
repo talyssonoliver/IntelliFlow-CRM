@@ -69,11 +69,17 @@ A).
   slow burn), which warn before the error budget runs out.
 - **Self-healing** = Railway `restartPolicyType: ON_FAILURE` (a crashed process
   is restarted) and a deploy-time health check on the api (a failing deployment
-  never takes traffic). A CI job reads and sets these through the Railway API
-  with the existing `RAILWAY_TOKEN` secret. Railway's health check is a deploy
-  gate, not a continuous liveness probe, and the docs say so.
+  never takes traffic). A CI job (`railway-self-healing.yml`) reads and sets
+  these through the Railway API with the existing `RAILWAY_TOKEN` secret.
+  Railway's health check is a deploy gate, not a continuous liveness probe, and
+  the docs say so. The job sets the api health check only after the live api
+  answers 200 on `/api/health/live`, because a wrong path would fail the next
+  production deploy; a failed probe still sets the restart policy and fails the
+  run (lane-lead guard, 2026-10-25).
 - **SLOs and the dashboard** live under `infra/monitoring/grafana/cloud/` and
-  are applied by CI on merge, like the alert rules.
+  are applied by CI on merge, like the alert rules. Each Grafana resource has
+  its own workflow: `grafana-alert-rules.yml`, `grafana-slos.yml` and
+  `grafana-dashboard.yml`.
 
 ### Positive Consequences
 
@@ -102,11 +108,19 @@ A).
 - The SLO window is 28 days rolling, against the 30 days calendar in
   `slo-definitions.md`. The 3x/2h burn rule and the 75%-budget rule are not
   built.
-- Every edit to any Grafana-as-code file re-applies alert rules, SLOs and the
-  dashboard. All three applies are idempotent.
+- Each Grafana resource applies only when its own files change. A change to the
+  shared client (`tools/scripts/lib/grafana-provisioning.mjs`) re-applies the
+  SLOs and the dashboard, not the alert rules. All three applies are idempotent.
+- Latency and LLM-success SLOs ship without burn-rate alerting: their budgets
+  are already spent in production (#1001, #1029).
 
 ## Links
 
 - `docs/operations/slo-definitions.md` (IFC-142), source of the targets
 - `.specify/sprints/sprint-18/context/ENV-008-AI/ENV-008-AI-owner-ruling.md`
 - ADR-086, observability log pipeline (IFC-074)
+- Follow-up issues: #1028 (IFC-032 rules watch a span production never emits),
+  #1029 (ai-worker `llm.invoke` fails in production), #1030 (public detailed
+  health endpoints), #1031 (account-wide `RAILWAY_TOKEN`, unpinned Railway CLI),
+  #1001 (api p95 latency)
+- `.specify/sprints/sprint-18/findings/ENV-008-AI-findings.md`

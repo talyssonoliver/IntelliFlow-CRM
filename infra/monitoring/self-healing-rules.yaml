@@ -1,41 +1,41 @@
-# IntelliFlow CRM - Self-healing playbooks (Sprint 0)
+# IntelliFlow CRM - production self-healing (ENV-008-AI, ADR-087)
 #
-# Sprint 0 scope:
-# - Document deterministic "if/then" remediation playbooks.
-# - Do NOT execute remediation automatically in CI.
-# - Operators may wire these into their runtime platform (K8s, Nomad, etc).
+# A DESCRIPTIVE RECORD. No system reads this file. It says what self-healing
+# exists in production and where it is really set. The values below are a copy
+# of DESIRED in the script named in source_of_truth; a test
+# (tools/scripts/__tests__/env008-monitoring-content.test.ts) keeps them equal.
 #
-# Advanced / predictive remediation is tracked as tech debt (ENV-008-AI).
+# The Sprint-0 operator playbooks that lived here were never wired to anything
+# and are gone. Self-healing is now two Railway settings, applied by CI on merge
+# (owner ruling 2, 2026-10-22).
 
-version: 1
+version: 2
 taskId: ENV-008-AI
-playbooks:
-  - id: restart-service
-    title: Restart unhealthy service instance
-    trigger:
-      alert: IntelliFlowServiceDown
-    steps:
-      - type: operator_action
-        description: 'Restart the affected service (Docker/K8s) and confirm health endpoint is green.'
-      - type: verify
-        description: 'Confirm traces/metrics resume and error rate returns to baseline.'
+mode: descriptive
+applied_by: .github/workflows/railway-self-healing.yml
+source_of_truth: tools/scripts/observability/apply-railway-self-healing.mjs (DESIRED)
+platform: Railway (production environment)
 
-  - id: scale-up-api
-    title: Scale API replicas when latency budget exceeded
-    trigger:
-      alert: IntelliFlowP99LatencyBudgetExceeded
-    steps:
-      - type: operator_action
-        description: 'Increase API replicas (or CPU limit) and confirm p99 latency returns under 200ms.'
-      - type: verify
-        description: 'Record before/after in artifacts/performance/ and update optimization-log.csv.'
+services:
+  api:
+    restartPolicyType: ON_FAILURE
+    restartPolicyMaxRetries: 10
+    healthcheckPath: /api/health/live
+    healthcheckTimeout: 120
+  ai-worker:
+    restartPolicyType: ON_FAILURE
+    restartPolicyMaxRetries: 10
 
-  - id: shed-load-ai
-    title: Shed AI load during cost spike
-    trigger:
-      anomalyRule: ai_cost_spike
-    steps:
-      - type: operator_action
-        description: 'Enable AI feature flag kill-switch (see ENV-015-AI) or reduce concurrency on ai-worker.'
-      - type: verify
-        description: 'Confirm cost metric returns to baseline and no core CRM flows are impacted.'
+conditions:
+  - 'ai-worker also gets healthcheckPath /health/live, but only when its PORT equals its HEALTH_PORT (default 5000). Railway probes PORT, and ai-worker serves health on HEALTH_PORT.'
+  - 'The api health check is set only after the live api answers 200 on /api/health/live. If the probe fails, the restart policy is still set and the CI run fails.'
+
+limits:
+  - 'Restart is crash-only: ON_FAILURE restarts a process that exits with an error, not one that hangs.'
+  - 'The health check is a deploy gate, not a liveness probe: Railway checks it when a deployment starts, then stops checking.'
+  - 'Changed settings take effect from the next deployment; the CI job never deploys or redeploys.'
+  - 'ws, events-worker, ingestion-worker and notifications-worker are not covered (EP-001-AI).'
+
+drift_check: 'Run .github/workflows/railway-self-healing.yml by hand without "apply" after any change made in the Railway dashboard; it prints before and after for every setting and changes nothing.'
+see_also:
+  - docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md
