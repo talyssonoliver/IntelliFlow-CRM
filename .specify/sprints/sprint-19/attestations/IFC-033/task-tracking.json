@@ -6,30 +6,59 @@
       "status": "IN_PROGRESS",
       "at": "2026-10-05T23:30:00Z",
       "note": "Reopened from Completed by the honest-status audit: the evidence fails the task's own criteria. See blockers."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-23T00:09:13.281Z",
+      "note": "Exec session (reconcile-and-attest, owner ruling 2026-10-22): audit found the only DoD gap is a deployed-environment run; k6 against production in a dedicated tenant."
+    },
+    {
+      "status": "Completed",
+      "at": "2026-10-23T15:23:04.739Z",
+      "note": "Owner ruling 2026-10-22: closes on the throughput KPI (5,435 leads/hour in production). p95 1,137 ms recorded as a measured FAIL under the ADR-018 waiver, tracked in #1001. Attestation run-20261022-reopen-prod."
     }
   ],
   "blockers": [
     {
       "description": "Reopen evidence: `artifacts/reports/load-test-report.html` is real k6 output, but its target was `http://localhost:4000`, a local dev server. The DoD \"System handles 5000 leads/hour\" is about the deployed system, and no deployed environment was load-tested.",
       "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-10-22T23:13:00Z",
+      "resolution": "Resolved: k6 ran against the deployed production API (https://api-production-e9c1.up.railway.app), 2026-10-22 23:06:36Z to 23:08:54Z, in a dedicated tenant, on owner rulings. Output: artifacts/benchmarks/ifc-033-deployed/k6-run-output.txt."
     },
     {
       "description": "Reopen evidence: `artifacts/misc/grafana-load-test.png` came from a local Grafana stack that was never connected to production.",
       "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-10-22T23:13:00Z",
+      "resolution": "Resolved: artifacts/misc/grafana-load-test.png is now rendered by Grafana Cloud (stack graysushi1880, the hosted backend production api exports to) from dashboard ifc033-prod-api-load over the run window."
     },
     {
       "description": "To close: (1) Run the k6 scenario against a deployed, non-production environment (or production, with the owner's approval), and record the target URL and the run output. (2) Take the load-test dashboard from the hosted backend that production reports to (IFC-032), not from a local stack.",
       "raised_at": "2026-10-05T23:30:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-10-22T23:13:00Z",
+      "resolution": "Resolved: (1) deployed run done with owner approval, target URL and output recorded; (2) dashboard taken from the hosted backend. p95 failed (1,137 ms against 200 ms); the owner ruled the task closes on throughput, with p95 tracked in #1001."
     },
     {
       "description": "Re-plan 2026-10-16 (owner ruling \"Fix the 15 tasks\"): not Completed, no exemption. Stays in its sprint, which is not gated yet. Needs a k6 run against a deployed environment, run with the owner approval; the nightly k6 job from #887 has produced no report in the repo yet. Verified 2026-10-16: Railway production api and ai-worker have OTEL_ENABLED=true and export to the Grafana Cloud gb-south-1 gateway; ws, events-worker and ingestion-worker do not (events-worker and ingestion-worker OTEL_ENABLED=false, ws has no OTel variables). Grafana holds span metrics for api and ai-worker and ai-worker pino log lines carrying trace_id/span_id; no api pino log line has reached Loki yet.",
       "raised_at": "2026-10-16T14:00:00Z",
-      "resolved_at": null
+      "resolved_at": "2026-10-22T23:13:00Z",
+      "resolution": "Resolved: the k6 run against a deployed environment was done with owner approval on 2026-10-22 (the #887 nightly is still not producing reports; that is IFC-007/#318 scope, not this task)."
     }
   ],
-  "percent_complete": 50,
-  "updated_at": "2026-10-05T23:30:00Z"
+  "percent_complete": 100,
+  "updated_at": "2026-10-23T15:23:04.739Z",
+  "started_at": "2026-10-22T22:39:25Z",
+  "execution": {
+    "started_at": "2026-10-22T22:39:25Z",
+    "executor": "Claude Code /exec",
+    "agents": [
+      "STOA-Quality",
+      "STOA-Foundation",
+      "STOA-Security"
+    ],
+    "completed_at": "2026-10-23T15:23:04.739Z",
+    "duration_minutes": 1004,
+    "last_error": null
+  },
+  "completed_at": "2026-10-23T15:23:04.739Z",
+  "actual_duration_minutes": 1004
 }
