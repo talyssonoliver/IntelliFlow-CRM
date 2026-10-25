@@ -1,6 +1,8 @@
 # ADR-088: AI model monitoring through OpenTelemetry export
 
-**Status:** Proposed
+**Status:** Accepted (2026-10-25, after the IFC-117 validation matrix passed).
+Production verification of the decision (spec evidence N1-N7) is NEEDS_HUMAN
+until ai-worker is promoted.
 
 **Date:** 2026-10-25
 

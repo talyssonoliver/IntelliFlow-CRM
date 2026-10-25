@@ -270,7 +270,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-082](./ADR-082-tenant-model-config.md)                                  | Tenant model configuration per AI purpose (catalog pins, price-ranked never-downgrade, ceilings)    | 📝 Proposed | 2026-10-19 | PG-199                      |
 | [ADR-083](./ADR-083-event-types-public-booking.md)                           | Tenant event types and an unauthenticated public booking endpoint                                   | Accepted    | 2026-10-21 | PG-203                      |
 | [ADR-085](./ADR-085-user-mailbox-sending-and-bounce-reading.md)              | User mail leaves from the user's own mailbox (SMTP / Gmail / Microsoft); bounces read back from it  | Accepted    | 2026-10-21 | PG-207                      |
-| [ADR-088](./ADR-088-ai-model-monitoring-otel-export.md)                      | AI model metrics leave ai-worker by OTLP on the NodeSDK meter; scheduled, corrected drift detection | 📝 Proposed | 2026-10-25 | IFC-117                     |
+| [ADR-088](./ADR-088-ai-model-monitoring-otel-export.md)                      | AI model metrics leave ai-worker by OTLP on the NodeSDK meter; scheduled, corrected drift detection | ✅ Accepted | 2026-10-25 | IFC-117                     |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**

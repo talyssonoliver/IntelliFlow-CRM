@@ -109,6 +109,41 @@ describe('instrument definitions', () => {
     expect(byName['intelliflow.ai.drift.last_check']).toMatchObject({ type: 'gauge', unit: '' });
   });
 
+  // The tools asset test (ai-monitoring-assets.test.ts) checks dashboards and rules against
+  // AI_METRIC_DEFINITIONS; this proves those definitions are what the recorders really emit.
+  it('emits exactly the declared instruments (name, type, unit) once every recorder has run', async () => {
+    recordInference({
+      model: 'scoring-free',
+      chain: 'lead_scoring',
+      outcome: 'success',
+      latencyMs: 10,
+    });
+    recordConfidence({ model: 'scoring-free', chain: 'lead_scoring', confidence: 0.5 });
+    recordCost({ model: 'scoring-free', chain: 'lead_scoring', usd: 0.001 });
+    recordEstimatedValue({ chain: 'lead_scoring', valueType: 'lead_scored', usd: 0.5 });
+    recordHallucination({
+      model: 'scoring-free',
+      chain: 'lead_scoring',
+      outcome: { status: 'checked', hallucinated: true, types: ['fabricated_entity'] },
+    });
+    recordHallucination({
+      model: 'scoring-free',
+      chain: 'lead_scoring',
+      outcome: { status: 'skipped', reason: 'too_short' },
+    });
+    recordDriftTick([drift({ detectedTick: true, onset: true, inEvent: true, severity: 'high' })]);
+    recordRetrainingTrigger({ urgency: 'high' });
+    const collected = (await collectMetrics(reader))
+      .map((m) => ({ name: m.name, type: m.type, unit: m.unit }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const declared = AI_METRIC_DEFINITIONS.map((d) => ({
+      name: d.name,
+      type: d.type,
+      unit: d.unit,
+    })).sort((a, b) => a.name.localeCompare(b.name));
+    expect(collected).toEqual(declared);
+  });
+
   it('records latency into the explicit bucket boundaries, including 2000 ms', async () => {
     recordInference({
       model: 'scoring-free',

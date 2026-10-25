@@ -170,4 +170,22 @@ describe('DriftDetectionScheduler', () => {
     expect(out).not.toContain('"recommendations"');
     expect(out).toContain('scoring-free');
   });
+
+  it('runs with its production defaults (pino logger, OTel facade recorder) without throwing', async () => {
+    const detector = new DriftDetector(defaultDriftConfig);
+    const detect = vi
+      .spyOn(detector, 'detectAllDrift')
+      .mockReturnValueOnce([evaluatedResult()])
+      .mockImplementationOnce(() => {
+        throw new Error('boom');
+      });
+    scheduler = new DriftDetectionScheduler(detector);
+    scheduler.start();
+    expect(scheduler.isRunning).toBe(true);
+    await expect(scheduler.tick()).resolves.toBeUndefined(); // info + warn (onset)
+    await expect(scheduler.tick()).resolves.toBeUndefined(); // error, swallowed
+    expect(detect).toHaveBeenCalledTimes(2);
+    scheduler.stop();
+    expect(scheduler.isRunning).toBe(false);
+  });
 });
