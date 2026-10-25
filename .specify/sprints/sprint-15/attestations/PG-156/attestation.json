@@ -16,10 +16,10 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/components/home/GoalSettingsModal.tsx": "0c0973ef01750dcc527f465fab6cdcc761d510bf63ecc69c2383f7f0b576f57d",
-    "apps/api/src/modules/home/home.router.ts": "5c8a0cffe4cbc2181e2d5e9da5edc67e7c6f241fe0b865ab44e68e843467e80f",
-    "packages/validators/src/home.ts": "e2294c6cc8ee5011cd7d8385ce4141eec00202119fc44f175dac315799c95f86",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "f163fea7402ba00fbb6214b91cfa0cb2fbae4f33f5952f030f0266556b2f430c"
+    "apps/web/src/components/home/GoalSettingsModal.tsx": "sha256:0c0973ef01750dcc527f465fab6cdcc761d510bf63ecc69c2383f7f0b576f57d",
+    "apps/api/src/modules/home/home.router.ts": "sha256:5c8a0cffe4cbc2181e2d5e9da5edc67e7c6f241fe0b865ab44e68e843467e80f",
+    "packages/validators/src/home.ts": "sha256:e2294c6cc8ee5011cd7d8385ce4141eec00202119fc44f175dac315799c95f86",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:f163fea7402ba00fbb6214b91cfa0cb2fbae4f33f5952f030f0266556b2f430c"
   },
   "validation_results": [
     {

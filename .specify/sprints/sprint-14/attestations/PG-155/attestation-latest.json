@@ -17,8 +17,8 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/components/home/PinnedItemsSheet.tsx": "14a508bce7b32027cc3a0d0483a9eae8a8dd0b15149813dedd93a6ac5a26c42e",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "b2a1271d8d7b0880e19f61a840dc82ff4231e03f8d2dbf5f2a328d2b620f992a"
+    "apps/web/src/components/home/PinnedItemsSheet.tsx": "sha256:14a508bce7b32027cc3a0d0483a9eae8a8dd0b15149813dedd93a6ac5a26c42e",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:b2a1271d8d7b0880e19f61a840dc82ff4231e03f8d2dbf5f2a328d2b620f992a"
   },
   "validation_results": [
     {

@@ -102,15 +102,15 @@
     "PG-007"
   ],
   "artifact_hashes": {
-    "apps/web/src/app/(public)/press/[id]/page.tsx": "065f9b648124101e2eb9c5309b5329282e56aee4a53659a34afe57b354f5f7dc",
-    "apps/web/src/components/press/PressReleaseDetail.tsx": "e0d49a9d9f615de5b161c1d74ef114b93fba2bf85b6a243551664be52c687c30",
-    "apps/web/src/components/press/__tests__/PressReleaseDetail.test.tsx": "d3f3f410eb90a7bc0e0a8a78e153dca7731beccb567d461bbeea3dcb3ffdb923",
-    "apps/web/src/data/press-releases.json": "e3d4ad7fc3ebe4cfc47b2589855efd8e1d7f1a762335bfc854e4f333f76e4076",
-    "apps/web/src/components/blog/share-buttons.tsx": "35ae677f5a2b0d9f59a740fee4929c77e2eeb82f1e03d5eecc2ed5b1fab38628",
-    "docs/design/sitemap.md": "2baa4ea76e2551deec974f3075bde7c214a9f70f6197bcff288216346947fe9d",
-    "docs/design/PAGE_MAP_AND_FLOWS.md": "fd695bbf99b7ed2b5490d25dd765587dac2905a537898137c20adabaf7c230b9",
-    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "ab48808fe7b31102649913c6062bf2277b6ed8893fffb88aa3608e80cfb209c6",
-    "docs/planning/prd-marketing-content-pages.md": "70eab3b50a20f1d8f2346aa2d028e2e36fd4548e5872e5ee59ee552a78a503f6"
+    "apps/web/src/app/(public)/press/[id]/page.tsx": "sha256:065f9b648124101e2eb9c5309b5329282e56aee4a53659a34afe57b354f5f7dc",
+    "apps/web/src/components/press/PressReleaseDetail.tsx": "sha256:e0d49a9d9f615de5b161c1d74ef114b93fba2bf85b6a243551664be52c687c30",
+    "apps/web/src/components/press/__tests__/PressReleaseDetail.test.tsx": "sha256:d3f3f410eb90a7bc0e0a8a78e153dca7731beccb567d461bbeea3dcb3ffdb923",
+    "apps/web/src/data/press-releases.json": "sha256:e3d4ad7fc3ebe4cfc47b2589855efd8e1d7f1a762335bfc854e4f333f76e4076",
+    "apps/web/src/components/blog/share-buttons.tsx": "sha256:35ae677f5a2b0d9f59a740fee4929c77e2eeb82f1e03d5eecc2ed5b1fab38628",
+    "docs/design/sitemap.md": "sha256:2baa4ea76e2551deec974f3075bde7c214a9f70f6197bcff288216346947fe9d",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "sha256:fd695bbf99b7ed2b5490d25dd765587dac2905a537898137c20adabaf7c230b9",
+    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "sha256:ab48808fe7b31102649913c6062bf2277b6ed8893fffb88aa3608e80cfb209c6",
+    "docs/planning/prd-marketing-content-pages.md": "sha256:70eab3b50a20f1d8f2346aa2d028e2e36fd4548e5872e5ee59ee552a78a503f6"
   },
   "environment": {
     "os": "Windows 11 Pro",
