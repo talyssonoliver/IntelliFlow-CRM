@@ -65,6 +65,8 @@ type FakeConfig = {
   ) => Array<{ metric: Record<string, string>; values: Array<[number, string]> }>;
   /** Grafana ruler status (/api/prometheus/grafana/api/v1/rules) rules. */
   ruleStatus?: Array<{ uid: string; health: string; state: string; lastError?: string }>;
+  /** Any-level log lines with their stream labels (for the miss probe). */
+  probeLogs?: Array<{ t: number; labels: Record<string, string> }>;
   /** Error-level log line times (epoch s) by service. */
   errorLogs?: Record<string, number[]>;
   /** Repo alert-rules.json contents; defaults to REPO_RULES. */
@@ -95,57 +97,7 @@ function fakeGrafana(cfg: FakeConfig) {
     if (path === '/api/v1/provisioning/alert-rules') return reply(200, cfg.rules ?? []);
     if (path.startsWith('/api/v1/provisioning/folder/'))
       return reply(200, { interval: cfg.groupInterval ?? 60 });
-    if (path.endsWith('/loki/api/v1/query_range')) {
-      const q = u.searchParams.get('query') ?? '';
-      const start = Number(u.searchParams.get('start')) / 1e9;
-      const end = Number(u.searchParams.get('end')) / 1e9;
-      if (q.includes('state-history')) {
-        const lines = (cfg.history ?? [])
-          .filter((h) => h.t >= start && h.t < end)
-          .map((h) => ({
-            stream: { from: 'state-history' },
-            values: [
-              [
-                String(BigInt(Math.round(h.t * 1000)) * 1000000n),
-                JSON.stringify({
-                  ruleUID: h.ruleUID,
-                  ruleTitle: h.alertname,
-                  previous: h.previous,
-                  current: h.current,
-                  fingerprint: h.fingerprint ?? 'f0',
-                  labels: {
-                    alertname: h.alertname,
-                    ...(h.service ? { service: h.service } : {}),
-                    ...(h.extraLabels ?? {}),
-                  },
-                }),
-              ],
-            ],
-          }));
-        return reply(200, { data: { result: lines } });
-      }
-      const svc = /service_name="([^"]+)"/.exec(q)?.[1] ?? '';
-      if (q.includes('detected_level')) return reply(200, errorLogBody(cfg, svc, start, end));
-      const entries = (cfg.logs?.[svc] ?? []).filter((e) => e.t >= start && e.t <= end);
-      return reply(200, {
-        data: {
-          result: entries.map((e) => ({
-            stream: {
-              service_name: svc,
-              trace_id: e.trace_id,
-              span_id: e.span_id,
-              host_name: 'h.example.invalid',
-            },
-            values: [
-              [
-                String(BigInt(Math.round(e.t * 1000)) * 1000000n),
-                'raw line with person@example.invalid',
-              ],
-            ],
-          })),
-        },
-      });
-    }
+    if (path.endsWith('/loki/api/v1/query_range')) return reply(200, lokiBody(cfg, u));
     if (path.includes('/api/v2/traces/')) {
       const id = path.split('/').pop() as string;
       const t = cfg.traces?.[id];
@@ -208,6 +160,63 @@ function fakeGrafana(cfg: FakeConfig) {
   return { calls, fetchImpl };
 }
 
+/** Loki query_range: alert state history, error-level lines, probes, or trace-carrying logs. */
+function lokiBody(cfg: FakeConfig, u: URL) {
+  const q = u.searchParams.get('query') ?? '';
+  const start = Number(u.searchParams.get('start')) / 1e9;
+  const end = Number(u.searchParams.get('end')) / 1e9;
+  if (q.includes('state-history')) return historyBody(cfg, start, end);
+  const svc = /service_name="([^"]+)"/.exec(q)?.[1] ?? '';
+  if (q.includes('detected_level')) return errorLogBody(cfg, svc, start, end);
+  if (q.includes('trace_id="') || !q.includes('|')) return probeLogBody(cfg, q, start, end);
+  const entries = (cfg.logs?.[svc] ?? []).filter((e) => e.t >= start && e.t <= end);
+  return {
+    data: {
+      result: entries.map((e) => ({
+        stream: {
+          service_name: svc,
+          trace_id: e.trace_id,
+          span_id: e.span_id,
+          host_name: 'h.example.invalid',
+        },
+        values: [
+          [
+            String(BigInt(Math.round(e.t * 1000)) * 1000000n),
+            'raw line with person@example.invalid',
+          ],
+        ],
+      })),
+    },
+  };
+}
+
+/** Alert state-history lines in [start, end). */
+function historyBody(cfg: FakeConfig, start: number, end: number) {
+  const lines = (cfg.history ?? [])
+    .filter((h) => h.t >= start && h.t < end)
+    .map((h) => ({
+      stream: { from: 'state-history' },
+      values: [
+        [
+          String(BigInt(Math.round(h.t * 1000)) * 1000000n),
+          JSON.stringify({
+            ruleUID: h.ruleUID,
+            ruleTitle: h.alertname,
+            previous: h.previous,
+            current: h.current,
+            fingerprint: h.fingerprint ?? 'f0',
+            labels: {
+              alertname: h.alertname,
+              ...(h.service ? { service: h.service } : {}),
+              ...(h.extraLabels ?? {}),
+            },
+          }),
+        ],
+      ],
+    }));
+  return { data: { result: lines } };
+}
+
 /** Error-level Loki lines for a service between start and end (epoch s). */
 function errorLogBody(cfg: FakeConfig, svc: string, start: number, end: number) {
   const times = (cfg.errorLogs?.[svc] ?? []).filter((t) => t >= start && t <= end);
@@ -224,6 +233,29 @@ function errorLogBody(cfg: FakeConfig, svc: string, start: number, end: number) 
             },
           ]
         : [],
+    },
+  };
+}
+
+/** Any-level Loki lines for a service selector or a trace_id filter. */
+function probeLogBody(cfg: FakeConfig, q: string, start: number, end: number) {
+  const svc = /service_name="([^"]+)"/.exec(q)?.[1];
+  const trace = /trace_id="([0-9a-f]+)"/.exec(q)?.[1];
+  const hits = (cfg.probeLogs ?? []).filter(
+    (l) =>
+      l.t >= start &&
+      l.t <= end &&
+      (svc === undefined || l.labels.service_name === svc) &&
+      (trace === undefined || l.labels.trace_id === trace)
+  );
+  return {
+    data: {
+      result: hits.map((l) => ({
+        stream: l.labels,
+        values: [
+          [String(BigInt(Math.round(l.t * 1000)) * 1000000n), 'raw line person@example.invalid'],
+        ],
+      })),
     },
   };
 }
@@ -758,7 +790,7 @@ describe('collect-observability-evidence: MTTD', () => {
         mttd_s: 70,
         incidents: 2,
         rule_uids: ['r-fast', 'r-err'],
-        error_log: { lines: 0, first_offset_s: null },
+        error_log: expect.objectContaining({ lines: 0, first_offset_s: null }),
       },
     ]);
     expect(json.episode_aggregates).toMatchObject({ n_episodes: 1, mean_s: 70 });
@@ -1038,7 +1070,7 @@ describe('collect-observability-evidence: MTTD', () => {
     expect(code).toBe(0);
     expect(json.episodes.map((e: { error_log: unknown }) => e.error_log)).toEqual([
       { lines: 1, first_offset_s: -5 },
-      { lines: 0, first_offset_s: null },
+      expect.objectContaining({ lines: 0, first_offset_s: null }),
     ]);
     expect(json.log_coverage).toEqual({
       window_s: 60,
@@ -1052,6 +1084,72 @@ describe('collect-observability-evidence: MTTD', () => {
       .map((c) => decodeURIComponent(c.path))
       .find((p) => p.includes('detected_level'));
     expect(query).toContain('{service_name="ai-worker"}');
+  });
+
+  it('probes an episode with no error-level line: labels and levels around it, never text', async () => {
+    const cfg = healthy();
+    const e1 = NOW_S - 7290; // the healthy() first error span, trace ERR_TRACE
+    cfg.errorLogs = {};
+    cfg.probeLogs = [
+      // Same service, logged at warn, not error.
+      {
+        t: e1 + 1,
+        labels: {
+          service_name: 'ai-worker',
+          detected_level: 'warn',
+          severity_text: 'WARN',
+          trace_id: ERR_TRACE,
+          host_name: 'h.example.invalid',
+        },
+      },
+      // The same trace logged by another service name at error.
+      {
+        t: e1 + 2,
+        labels: {
+          service_name: 'intelliflow-ai-worker',
+          detected_level: 'error',
+          trace_id: ERR_TRACE,
+        },
+      },
+      // Another service and another trace, inside the window: excluded.
+      { t: e1 + 3, labels: { service_name: 'api', detected_level: 'error', trace_id: TRACE_A } },
+      // Unrelated line far outside both windows.
+      { t: e1 + 900, labels: { service_name: 'ai-worker', detected_level: 'error' } },
+    ];
+    const { code, json } = await baseline(cfg);
+    expect(code).toBe(0);
+    expect(json.episodes[0].error_log).toEqual({
+      lines: 0,
+      first_offset_s: null,
+      probe: {
+        same_service: {
+          lines: 1,
+          levels: [{ detected_level: 'warn', severity_text: 'WARN', count: 1 }],
+          label_names: ['detected_level', 'host_name', 'service_name', 'severity_text', 'trace_id'],
+        },
+        by_trace: {
+          lines: 2,
+          services: ['ai-worker', 'intelliflow-ai-worker'],
+          levels: [
+            { detected_level: 'error', severity_text: null, count: 1 },
+            { detected_level: 'warn', severity_text: 'WARN', count: 1 },
+          ],
+        },
+      },
+    });
+    const text = JSON.stringify(json);
+    expect(text).not.toContain('person@');
+    expect(text).not.toContain('example.invalid');
+  });
+
+  it('does not probe episodes that already have an error-level line', async () => {
+    const cfg = healthy();
+    cfg.errorLogs = { 'ai-worker': [NOW_S - 7290] };
+    const { json, h } = await baseline(cfg);
+    expect(json.episodes[0].error_log).toEqual({ lines: 1, first_offset_s: 0 });
+    expect(h.grafana.calls.some((c) => decodeURIComponent(c.path).includes('trace_id="'))).toBe(
+      false
+    );
   });
 
   it('refuses a committed rule whose operator or threshold it cannot read', async () => {

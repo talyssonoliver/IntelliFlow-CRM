@@ -752,6 +752,86 @@ async function checkRepoRules(get, window, repo, all, transitions, episodes) {
   return checks;
 }
 
+const LABEL_KEY = /^[a-z_][a-z0-9_]{0,40}$/;
+const LEVEL_VALUE = /^[A-Za-z0-9_-]{1,20}$/;
+const levelValue = (v) =>
+  v === undefined ? null : LEVEL_VALUE.test(String(v)) ? String(v) : 'other';
+const PROBE_TRACE_WINDOW_S = 120;
+const PROBE_LIMIT = 200;
+
+async function lokiStreams(get, query, from, to) {
+  const res = await lokiQueryRange(get, DS.logs, {
+    query,
+    start: ns(from),
+    end: ns(to),
+    limit: PROBE_LIMIT,
+    direction: 'forward',
+  });
+  return res?.data?.result ?? [];
+}
+
+/** Line counts per (detected_level, severity_text) pair across streams. */
+function levelCounts(streams) {
+  const counts = new Map();
+  for (const s of streams) {
+    const level = levelValue(s.stream?.detected_level);
+    const severity = levelValue(s.stream?.severity_text);
+    const key = `${level}|${severity}`;
+    const n = (s.values ?? []).length;
+    counts.set(key, {
+      detected_level: level,
+      severity_text: severity,
+      count: (counts.get(key)?.count ?? 0) + n,
+    });
+  }
+  return [...counts.values()].sort((a, b) =>
+    `${a.detected_level}|${a.severity_text}`.localeCompare(`${b.detected_level}|${b.severity_text}`)
+  );
+}
+
+const lineCount = (streams) => streams.reduce((n, s) => n + (s.values ?? []).length, 0);
+
+/**
+ * Why an episode has no error-level line: the same service's lines at any
+ * level around the first error span, and every line carrying the episode's
+ * first error trace id, whatever service it was logged under. Keeps label
+ * keys, level values and service names only, never text or other values.
+ */
+async function probeMissingErrorLog(get, episode, t0) {
+  const sameService = await lokiStreams(
+    get,
+    `{service_name="${assertService(episode.service)}"}`,
+    t0 - LOG_COVERAGE_WINDOW_S,
+    t0 + LOG_COVERAGE_WINDOW_S
+  );
+  const byTrace = await lokiStreams(
+    get,
+    `{service_name=~".+"} | trace_id="${check('trace', episode.first_error_trace_id)}"`,
+    t0 - PROBE_TRACE_WINDOW_S,
+    t0 + PROBE_TRACE_WINDOW_S
+  );
+  const keys = new Set(
+    sameService.flatMap((s) => Object.keys(s.stream ?? {})).filter((k) => LABEL_KEY.test(k))
+  );
+  const services = new Set(
+    byTrace
+      .map((s) => String(s.stream?.service_name ?? 'unknown'))
+      .map((v) => (RE.service.test(v) ? v : 'other'))
+  );
+  return {
+    same_service: {
+      lines: lineCount(sameService),
+      levels: levelCounts(sameService),
+      label_names: [...keys].sort(),
+    },
+    by_trace: {
+      lines: lineCount(byTrace),
+      services: [...services].sort(),
+      levels: levelCounts(byTrace),
+    },
+  };
+}
+
 /**
  * Would a log-based rule see each episode? Counts error-level Loki lines of
  * the episode's service within ±60 s of its first error span, and the offset
@@ -776,6 +856,7 @@ async function checkLogCoverage(get, episodes) {
     episode.error_log = {
       lines: times.length,
       first_offset_s: times.length ? check('signedNum', round3(times[0] - t0)) : null,
+      ...(times.length ? {} : { probe: await probeMissingErrorLog(get, episode, t0) }),
     };
   }
   const n = episodes.length;
