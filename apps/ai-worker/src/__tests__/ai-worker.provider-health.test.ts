@@ -38,8 +38,18 @@ describe('AIWorker provider health', () => {
     expect(health.message).toContain('openrouter');
   });
 
-  it('openrouter is ok with only a base URL', async () => {
+  it('openrouter is an error with only a base URL (the key is always required)', async () => {
     vi.stubEnv('OPENROUTER_API_KEY', '');
+    vi.stubEnv('OPENROUTER_BASE_URL', 'https://openrouter.example.invalid/api/v1');
+
+    const health = await healthFor('openrouter');
+
+    expect(health.status).toBe('error');
+    expect(health.message).toContain('OPENROUTER_API_KEY');
+  });
+
+  it('openrouter reports a custom base URL when the key is set', async () => {
+    vi.stubEnv('OPENROUTER_API_KEY', 'k'.repeat(12));
     vi.stubEnv('OPENROUTER_BASE_URL', 'https://openrouter.example.invalid/api/v1');
 
     const health = await healthFor('openrouter');
@@ -48,7 +58,7 @@ describe('AIWorker provider health', () => {
     expect(health.message).toContain('openrouter.example.invalid');
   });
 
-  it('openrouter is an error when neither key nor base URL is configured', async () => {
+  it('openrouter is an error when nothing is configured', async () => {
     vi.stubEnv('OPENROUTER_API_KEY', '');
     vi.stubEnv('OPENROUTER_BASE_URL', '');
 
