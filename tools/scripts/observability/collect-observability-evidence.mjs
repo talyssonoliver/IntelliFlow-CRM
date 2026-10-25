@@ -832,6 +832,57 @@ async function probeMissingErrorLog(get, episode, t0) {
   };
 }
 
+// The services a log-based error rule would watch, and its window.
+const LOG_RULE_SERVICES = 'ai-worker|intelliflow-ai-worker|api';
+const LOG_NOISE_BUCKET_S = 120;
+// A bucket (t - 120, t] matches an episode of its service whose first error
+// span is within 60 s of the bucket.
+const LOG_NOISE_MATCH_S = 60;
+
+/**
+ * How noisy would a log-based error rule be? Counts 2-minute buckets with
+ * error-level lines per service over the alert window, and how many of them
+ * fall on no MTTD episode: those would be alerts with no failing span behind
+ * them. One Loki metric query; only counts are kept.
+ */
+async function checkLogNoise(get, window, episodes) {
+  const res = await lokiQueryRange(get, DS.logs, {
+    query:
+      `sum by (service_name) (count_over_time({service_name=~"${LOG_RULE_SERVICES}"} ` +
+      `| ${ERROR_LEVEL_FILTER} [2m]))`,
+    start: ns(window.start),
+    end: ns(window.end),
+    step: LOG_NOISE_BUCKET_S,
+  });
+  const byService = [];
+  for (const series of res?.data?.result ?? []) {
+    const raw = String(series.metric?.service_name ?? 'unknown');
+    const service = RE.service.test(raw) ? raw : 'other';
+    const starts = episodes
+      .filter((e) => e.service === service)
+      .map((e) => Date.parse(e.t_first_error) / 1000);
+    let withLines = 0;
+    let matched = 0;
+    for (const [t, value] of series.values ?? []) {
+      if (!(Number(value) > 0)) continue;
+      withLines++;
+      const end = Number(t);
+      const hit = starts.some(
+        (t0) => t0 >= end - LOG_NOISE_BUCKET_S - LOG_NOISE_MATCH_S && t0 <= end + LOG_NOISE_MATCH_S
+      );
+      if (hit) matched++;
+    }
+    byService.push({
+      service,
+      buckets_with_error_lines: withLines,
+      matched_to_episode: matched,
+      unmatched: withLines - matched,
+    });
+  }
+  byService.sort((a, b) => a.service.localeCompare(b.service));
+  return { bucket_s: LOG_NOISE_BUCKET_S, by_service: byService };
+}
+
 /**
  * Would a log-based rule see each episode? Counts error-level Loki lines of
  * the episode's service within ±60 s of its first error span, and the offset
@@ -992,6 +1043,7 @@ async function collectMttd(get, window, repo) {
   const episodes = allEpisodes.filter((e) => Date.parse(e.t_first_error) / 1000 >= window.start);
   const repoRuleChecks = await checkRepoRules(get, window, repo, all, transitions, episodes);
   const logCoverage = await checkLogCoverage(get, episodes);
+  const logNoise = await checkLogNoise(get, window, episodes);
   const episodeValues = episodes.map((e) => e.mttd_s).sort((a, b) => a - b);
   const m = episodeValues.length;
   const episodeMean = m ? round3(episodeValues.reduce((a, b) => a + b, 0) / m) : null;
@@ -1021,6 +1073,7 @@ async function collectMttd(get, window, repo) {
     },
     repo_rule_checks: repoRuleChecks,
     log_coverage: logCoverage,
+    log_noise: logNoise,
     episodes,
     episode_aggregates: {
       n_episodes: m,

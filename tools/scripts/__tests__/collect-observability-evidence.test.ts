@@ -65,6 +65,8 @@ type FakeConfig = {
   ) => Array<{ metric: Record<string, string>; values: Array<[number, string]> }>;
   /** Grafana ruler status (/api/prometheus/grafana/api/v1/rules) rules. */
   ruleStatus?: Array<{ uid: string; health: string; state: string; lastError?: string }>;
+  /** Error-level line counts per 2-minute bucket start (epoch s), by service. */
+  errorLogBuckets?: Record<string, Record<number, number>>;
   /** Any-level log lines with their stream labels (for the miss probe). */
   probeLogs?: Array<{ t: number; labels: Record<string, string> }>;
   /** Error-level log line times (epoch s) by service. */
@@ -166,6 +168,7 @@ function lokiBody(cfg: FakeConfig, u: URL) {
   const start = Number(u.searchParams.get('start')) / 1e9;
   const end = Number(u.searchParams.get('end')) / 1e9;
   if (q.includes('state-history')) return historyBody(cfg, start, end);
+  if (q.startsWith('sum by (service_name)')) return bucketBody(cfg, start, end);
   const svc = /service_name="([^"]+)"/.exec(q)?.[1] ?? '';
   if (q.includes('detected_level')) return errorLogBody(cfg, svc, start, end);
   if (q.includes('trace_id="') || !q.includes('|')) return probeLogBody(cfg, q, start, end);
@@ -185,6 +188,21 @@ function lokiBody(cfg: FakeConfig, u: URL) {
             'raw line with person@example.invalid',
           ],
         ],
+      })),
+    },
+  };
+}
+
+/** Loki metric query: error-line counts per service per 2-minute bucket. */
+function bucketBody(cfg: FakeConfig, start: number, end: number) {
+  return {
+    data: {
+      resultType: 'matrix',
+      result: Object.entries(cfg.errorLogBuckets ?? {}).map(([service, buckets]) => ({
+        metric: { service_name: service },
+        values: Object.entries(buckets)
+          .filter(([t]) => Number(t) >= start && Number(t) <= end)
+          .map(([t, n]) => [Number(t), String(n)]),
       })),
     },
   };
@@ -1140,6 +1158,34 @@ describe('collect-observability-evidence: MTTD', () => {
     const text = JSON.stringify(json);
     expect(text).not.toContain('person@');
     expect(text).not.toContain('example.invalid');
+  });
+
+  it('counts 2-minute buckets with error-level lines that match no episode', async () => {
+    // healthy(): one ai-worker episode, first error at NOW_S - 7290.
+    const cfg = healthy();
+    const e1 = NOW_S - 7290;
+    cfg.errorLogs = { 'ai-worker': [e1 + 1] };
+    cfg.errorLogBuckets = {
+      // One bucket at the episode (matched), two far from it (noise), and one
+      // empty bucket that must not count.
+      'ai-worker': { [e1 + 60]: 3, [e1 + 3600]: 1, [e1 + 5400]: 2, [e1 + 600]: 0 },
+      // api has error lines but no episode at all: all noise.
+      api: { [e1 + 120]: 5 },
+    };
+    const { code, json, h } = await baseline(cfg);
+    expect(code).toBe(0);
+    expect(json.log_noise).toEqual({
+      bucket_s: 120,
+      by_service: [
+        { service: 'ai-worker', buckets_with_error_lines: 3, matched_to_episode: 1, unmatched: 2 },
+        { service: 'api', buckets_with_error_lines: 1, matched_to_episode: 0, unmatched: 1 },
+      ],
+    });
+    const q = h.grafana.calls
+      .map((c) => new URL(c.path, GRAFANA_URL).searchParams.get('query') ?? '')
+      .find((p) => p.includes('sum by (service_name)'));
+    expect(q).toContain('count_over_time');
+    expect(q).toContain('[2m]');
   });
 
   it('does not probe episodes that already have an error-level line', async () => {
