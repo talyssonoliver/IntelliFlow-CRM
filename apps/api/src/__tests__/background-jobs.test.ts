@@ -15,6 +15,7 @@ const m = vi.hoisted(() => ({
   startBounceScanner: vi.fn((_options: SchedulerOptions) => true),
   stopBounceScanner: vi.fn<() => Promise<void>>(async () => undefined),
   checkBackgroundJobsHeartbeat: vi.fn(async () => ({ status: 'ok' })),
+  closeHeartbeatStore: vi.fn<() => Promise<void>>(async () => undefined),
   bounceScanIntervalFromEnv: vi.fn(() => 222),
   runBounceScan: vi.fn().mockResolvedValue({ mailboxesScanned: 0 }),
   createBounceReaderDeps: vi.fn().mockResolvedValue({ marker: 'bounce-deps' }),
@@ -40,6 +41,7 @@ vi.mock('../modules/email/bounce-reader', () => ({
 }));
 vi.mock('../background-jobs-heartbeat', () => ({
   checkBackgroundJobsHeartbeat: m.checkBackgroundJobsHeartbeat,
+  closeHeartbeatStore: m.closeHeartbeatStore,
   getHeartbeatStore: () => null,
 }));
 vi.mock('../container', () => ({ containerReady: Promise.resolve('container') }));
@@ -66,6 +68,7 @@ beforeEach(() => {
   m.stopApprovalSweep.mockResolvedValue(undefined);
   m.stopBounceScanner.mockResolvedValue(undefined);
   m.checkBackgroundJobsHeartbeat.mockResolvedValue({ status: 'ok' });
+  m.closeHeartbeatStore.mockResolvedValue(undefined);
 });
 
 describe('backgroundJobsFlagEnabled', () => {
@@ -152,9 +155,17 @@ describe('startBackgroundJobs / stopBackgroundJobs', () => {
     expect(m.stopBounceScanner).toHaveBeenCalledTimes(1);
     expect(done).toBe(false);
 
+    expect(m.closeHeartbeatStore).not.toHaveBeenCalled(); // only after the ticks drained
+
     finishSweep();
     await stopping;
     expect(done).toBe(true);
+    expect(m.closeHeartbeatStore).toHaveBeenCalledTimes(1);
+  });
+
+  it('still resolves when closing the heartbeat connection fails', async () => {
+    m.closeHeartbeatStore.mockRejectedValue(new Error('boom'));
+    await expect(stopBackgroundJobs()).resolves.toBeUndefined();
   });
 });
 
@@ -162,6 +173,7 @@ describe('heartbeat', () => {
   const store = () => ({
     record: vi.fn(async (_job: string, _at: number) => undefined),
     read: vi.fn(),
+    close: vi.fn(async () => undefined),
   });
 
   it('each finished tick records its own heartbeat, after the job completed', async () => {

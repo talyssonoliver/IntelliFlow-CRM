@@ -34,13 +34,16 @@ export interface HeartbeatStore {
   record(job: HeartbeatJob, at: number): Promise<void>;
   /** Last tick per job (epoch ms), null when never recorded. */
   read(): Promise<HeartbeatReads>;
+  /** Closes the connection, if one is open. Safe to call twice; a later call reconnects. */
+  close(): Promise<void>;
 }
 
 /** The slice of ioredis used here. */
 export interface HeartbeatRedis {
   set(key: string, value: string, mode: 'EX', seconds: number): Promise<unknown>;
   mget(...keys: string[]): Promise<Array<string | null>>;
-  on(event: 'error', listener: (error: unknown) => void): unknown;
+  on(event: 'error' | 'end', listener: (error?: unknown) => void): unknown;
+  disconnect(): void;
 }
 
 export type CreateHeartbeatRedis = (env: NodeJS.ProcessEnv) => Promise<HeartbeatRedis>;
@@ -60,6 +63,10 @@ async function defaultCreateRedis(env: NodeJS.ProcessEnv): Promise<HeartbeatRedi
     enableOfflineQueue: true,
     maxRetriesPerRequest: 1,
     connectTimeout: 2000,
+    // Never reconnect on its own: with Redis down, ioredis would otherwise dial
+    // forever after a single health request and keep an idle api awake. The
+    // store builds a fresh client on the next read or record instead.
+    retryStrategy: () => null,
   });
   // Without a listener an ioredis connection error would crash the process.
   client.on('error', () => undefined);
@@ -77,14 +84,42 @@ export function createRedisHeartbeatStore(
 ): HeartbeatStore | null {
   if (!env.REDIS_HOST) return null;
   let client: Promise<HeartbeatRedis> | undefined;
-  const redis = () => (client ??= createRedis(env));
+  const redis = () => {
+    if (!client) {
+      const created = createRedis(env);
+      client = created;
+      // A dropped connection is not revived by ioredis (retryStrategy is null);
+      // forget it so the next call builds a fresh one.
+      created.then((c) => c.on('end', () => forget(created))).catch(() => forget(created));
+    }
+    return client;
+  };
+  const forget = (which: Promise<HeartbeatRedis>) => {
+    if (client === which) client = undefined;
+  };
+  /** Run `op` on the client; on failure drop and disconnect it so nothing keeps dialling. */
+  const use = async <T>(op: (c: HeartbeatRedis) => Promise<T>): Promise<T> => {
+    const which = redis();
+    try {
+      return await op(await which);
+    } catch (error) {
+      forget(which);
+      (await which.catch(() => undefined))?.disconnect();
+      throw error;
+    }
+  };
 
   return {
+    async close() {
+      const which = client;
+      client = undefined;
+      (await which?.catch(() => undefined))?.disconnect();
+    },
     async record(job, at) {
-      await (await redis()).set(`${KEY_PREFIX}${job}`, String(at), 'EX', KEY_TTL_SECONDS);
+      await use((c) => c.set(`${KEY_PREFIX}${job}`, String(at), 'EX', KEY_TTL_SECONDS));
     },
     async read() {
-      const values = await (await redis()).mget(...HEARTBEAT_JOBS.map((j) => KEY_PREFIX + j));
+      const values = await use((c) => c.mget(...HEARTBEAT_JOBS.map((j) => KEY_PREFIX + j)));
       const reads = {} as HeartbeatReads;
       HEARTBEAT_JOBS.forEach((job, i) => {
         const parsed = Number(values[i]);
@@ -101,6 +136,11 @@ let sharedStore: HeartbeatStore | null | undefined;
 export function getHeartbeatStore(env: NodeJS.ProcessEnv = process.env): HeartbeatStore | null {
   if (sharedStore === undefined) sharedStore = createRedisHeartbeatStore(env);
   return sharedStore;
+}
+
+/** Closes the shared store's connection (shutdown). A later use reconnects. */
+export async function closeHeartbeatStore(): Promise<void> {
+  await sharedStore?.close();
 }
 
 /** Test hook: forget the shared store. */

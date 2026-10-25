@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   HEARTBEAT_STALE_FACTOR,
+  closeHeartbeatStore,
   checkBackgroundJobsHeartbeat,
   createRedisHeartbeatStore,
   evaluateHeartbeats,
@@ -27,6 +28,7 @@ function fakeRedis(values: Array<string | null> = [null, null]) {
     set: vi.fn(async () => 'OK'),
     mget: vi.fn(async () => values),
     on: vi.fn(),
+    disconnect: vi.fn(),
   };
   return redis satisfies HeartbeatRedis;
 }
@@ -82,6 +84,76 @@ describe('createRedisHeartbeatStore', () => {
   });
 });
 
+describe('connection lifecycle', () => {
+  const env = { REDIS_HOST: 'redis.example.invalid' };
+
+  it('builds a fresh client after the connection ended', async () => {
+    const clients = [fakeRedis(), fakeRedis()];
+    const create = vi.fn(async () => clients[create.mock.calls.length - 1]!);
+    const store = createRedisHeartbeatStore(env, create)!;
+
+    await store.record('approvalSweep', 1);
+    // ioredis emits "end" once it gives up (retryStrategy returns null).
+    const onEnd = clients[0]!.on.mock.calls.find(([event]) => event === 'end')![1] as () => void;
+    onEnd();
+    await store.record('approvalSweep', 2);
+
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(clients[1]!.set).toHaveBeenCalledTimes(1);
+  });
+
+  it('disconnects and forgets a client whose command failed, then reconnects', async () => {
+    const dead = fakeRedis();
+    dead.set.mockRejectedValue(new Error('Connection is closed'));
+    const live = fakeRedis();
+    const clients = [dead, live];
+    const create = vi.fn(async () => clients[create.mock.calls.length - 1]!);
+    const store = createRedisHeartbeatStore(env, create)!;
+
+    await expect(store.record('approvalSweep', 1)).rejects.toThrow('Connection is closed');
+    expect(dead.disconnect).toHaveBeenCalledTimes(1);
+
+    await store.record('approvalSweep', 2);
+    expect(create).toHaveBeenCalledTimes(2);
+    expect(live.set).toHaveBeenCalledTimes(1);
+  });
+
+  it('forgets a client that failed to build, so the next call retries', async () => {
+    const create = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('import failed'))
+      .mockResolvedValue(fakeRedis());
+    const store = createRedisHeartbeatStore(env, create)!;
+
+    await expect(store.read()).rejects.toThrow('import failed');
+    await expect(store.read()).resolves.toEqual({ approvalSweep: null, bounceScan: null });
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it('close disconnects the open client, is safe when none is open, and reconnects on next use', async () => {
+    const redis = fakeRedis();
+    const create = vi.fn(async () => redis);
+    const store = createRedisHeartbeatStore(env, create)!;
+
+    await expect(store.close()).resolves.toBeUndefined(); // nothing open yet
+    expect(create).not.toHaveBeenCalled();
+
+    await store.record('bounceScan', 1);
+    await store.close();
+    expect(redis.disconnect).toHaveBeenCalledTimes(1);
+
+    await store.record('bounceScan', 2);
+    expect(create).toHaveBeenCalledTimes(2);
+  });
+
+  it('closeHeartbeatStore closes the shared store, and is a no-op without one', async () => {
+    await expect(closeHeartbeatStore()).resolves.toBeUndefined();
+    resetHeartbeatStore();
+    expect(getHeartbeatStore({})).toBeNull();
+    await expect(closeHeartbeatStore()).resolves.toBeUndefined();
+  });
+});
+
 describe('default redis client', () => {
   it('is built from the REDIS_* env, with an error listener', async () => {
     const instances: Array<{ options: Record<string, unknown>; on: ReturnType<typeof vi.fn> }> = [];
@@ -107,6 +179,9 @@ describe('default redis client', () => {
     await store.record('approvalSweep', 1);
 
     expect(instances).toHaveLength(1);
+    // Never reconnect on its own: a dead Redis must not keep an idle api dialling.
+    const retry = instances[0]!.options.retryStrategy as () => unknown;
+    expect(retry()).toBeNull();
     expect(instances[0]!.options).toMatchObject({
       host: 'redis.example.invalid',
       port: 6380,
@@ -178,6 +253,7 @@ describe('checkBackgroundJobsHeartbeat', () => {
   const env = {} as NodeJS.ProcessEnv;
   const store = (read: HeartbeatStore['read']): HeartbeatStore => ({
     record: vi.fn(),
+    close: vi.fn(async () => undefined),
     read,
   });
 

@@ -89,4 +89,77 @@ describe('api main entry point', () => {
     );
     expect(exitSpy).toHaveBeenCalledWith(0);
   });
+
+  describe('a job tick that never finishes', () => {
+    async function sigterm(): Promise<() => Promise<void>> {
+      mocks.startApiServer.mockResolvedValue(undefined);
+      mocks.shutdownAllQueues.mockResolvedValue(undefined);
+      mocks.disconnectPrisma.mockResolvedValue(undefined);
+      vi.spyOn(console, 'log').mockImplementation(() => undefined);
+      await import('./main.js');
+      return onSpy.mock.calls.find((c: unknown[]) => c[0] === 'SIGTERM')![1] as () => Promise<void>;
+    }
+
+    afterEach(() => {
+      vi.useRealTimers();
+      vi.unstubAllEnvs();
+    });
+
+    it('does not block the queues, Prisma or the exit past the default 10s cap', async () => {
+      vi.useFakeTimers();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      mocks.stopBackgroundJobs.mockReturnValue(new Promise<void>(() => undefined));
+      const handler = await sigterm();
+
+      const done = handler();
+      await vi.advanceTimersByTimeAsync(9_999);
+      expect(mocks.shutdownAllQueues).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(1);
+      await done;
+
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('still running after 10000ms'));
+      expect(mocks.shutdownAllQueues).toHaveBeenCalledTimes(1);
+      expect(mocks.disconnectPrisma).toHaveBeenCalledTimes(1);
+      expect(exitSpy).toHaveBeenCalledWith(0);
+    });
+
+    it('honours API_SHUTDOWN_JOBS_TIMEOUT_MS and ignores an invalid value', async () => {
+      vi.useFakeTimers();
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      mocks.stopBackgroundJobs.mockReturnValue(new Promise<void>(() => undefined));
+      vi.stubEnv('API_SHUTDOWN_JOBS_TIMEOUT_MS', '250');
+      const handler = await sigterm();
+
+      const done = handler();
+      await vi.advanceTimersByTimeAsync(250);
+      await done;
+      expect(mocks.shutdownAllQueues).toHaveBeenCalledTimes(1);
+    });
+
+    it('falls back to 10s for a non-numeric timeout', async () => {
+      vi.useFakeTimers();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      mocks.stopBackgroundJobs.mockReturnValue(new Promise<void>(() => undefined));
+      vi.stubEnv('API_SHUTDOWN_JOBS_TIMEOUT_MS', 'soon');
+      const handler = await sigterm();
+
+      const done = handler();
+      await vi.advanceTimersByTimeAsync(10_000);
+      await done;
+      expect(warn).toHaveBeenCalledWith(expect.stringContaining('10000ms'));
+    });
+
+    it('a tick that finishes in time wins the race and logs no warning', async () => {
+      vi.useFakeTimers();
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      mocks.stopBackgroundJobs.mockResolvedValue(undefined);
+      const handler = await sigterm();
+
+      await handler();
+
+      expect(warn).not.toHaveBeenCalled();
+      expect(vi.getTimerCount()).toBe(0); // the cap timer was cleared
+    });
+  });
 });

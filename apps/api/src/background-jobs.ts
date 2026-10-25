@@ -29,6 +29,7 @@ import {
 import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
 import {
   checkBackgroundJobsHeartbeat,
+  closeHeartbeatStore,
   getHeartbeatStore,
   type BackgroundJobsHeartbeatCheck,
   type HeartbeatJob,
@@ -129,6 +130,8 @@ export function startBackgroundJobs({
  */
 export async function stopBackgroundJobs(): Promise<void> {
   await Promise.all([stopApprovalSweep(), stopBounceScanner()]);
+  // After the ticks drained, so their final heartbeat write is not cut off.
+  await closeHeartbeatStore().catch(() => undefined);
 }
 
 /** Heartbeat health for /health/detailed and the combined worker. Read-only, on request. */

@@ -23,9 +23,34 @@ initializeSentry()
     process.exit(1);
   });
 
+/** Longest the SIGTERM handler waits for an in-flight job tick (API_SHUTDOWN_JOBS_TIMEOUT_MS). */
+function jobsDrainTimeoutMs(env: NodeJS.ProcessEnv): number {
+  const value = Number(env.API_SHUTDOWN_JOBS_TIMEOUT_MS);
+  return Number.isFinite(value) && value > 0 ? value : 10_000;
+}
+
+/** Resolves when `work` does, or after `ms`, so a hung tick cannot block shutdown. */
+async function withCap(work: Promise<unknown>, ms: number): Promise<void> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const cap = new Promise<void>((resolve) => {
+    timer = setTimeout(() => {
+      console.warn(`[API] background job tick still running after ${String(ms)}ms; continuing`);
+      resolve();
+    }, ms);
+    timer.unref?.();
+  });
+  try {
+    await Promise.race([work, cap]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
-  await stopBackgroundJobs();
+  // Let a mid-flight tick finish, but never past the cap: the queues and Prisma
+  // below must still close before Railway's SIGKILL.
+  await withCap(stopBackgroundJobs(), jobsDrainTimeoutMs(process.env));
   await shutdownAllQueues();
   await disconnectPrisma();
   process.exit(0);
