@@ -500,7 +500,8 @@ export class DataSubjectRequestService {
               liftedById: input.actorId,
               note: `Request rejected: ${input.reason}`.slice(0, 500),
             })
-            .then(() => true)
+            // null: nothing was lifted (another request still holds the restriction).
+            .then((row) => row !== null)
             .catch(() => false)
         : false;
       restrictionKept = !lifted;

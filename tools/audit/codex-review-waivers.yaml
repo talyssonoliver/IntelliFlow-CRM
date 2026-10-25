@@ -1399,3 +1399,12 @@ waivers:
     author: PG-203 lane
     date: '2026-10-25'
     expires: '2026-11-24'
+  - fingerprint: 1cf9b7a151fed56e7b69ae347b861726a983b09802ea344618d977d72b12eceb
+    reason: >-
+      LOW, fail-safe: with several restriction rows for one request (an address change carries
+      the ids), lifting one row still reports restrictionKept false while another stays active.
+      Processing stays restricted. Tracked in #1027 (comment added): the port should report
+      whether any row is still held, for both the notice and restrictionKept.
+    author: PG-203 lane
+    date: '2026-10-25'
+    expires: '2026-11-24'

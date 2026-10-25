@@ -1305,6 +1305,9 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
   and an apostrophe inside an address (o'neil@) is kept. The per-firm IP cap is by design (waived with reason).
 - Codex (MEDIUM): a failed restriction lift after a committed rejection no longer throws; the restriction stays
   (restrictionKept) and the rejection notice still goes. The shared-restriction lifting notice (LOW): #1027, waived.
+- Codex (MEDIUM): `restrictionKept` follows what the lift actually did (null: another request still holds it).
+  Process note: 0a5eb7549 was committed after the first codex pass on its tree had FAILED (a stale second-pass
+  file read as PASS); this finding is the one it missed, fixed in the next commit with two fresh PASS runs.
 - Tests: `apps/api/src/modules/privacy/__tests__/dsar-sla-scheduler.test.ts` (fake clock, fake store, recording
   client), `dsar-sla-deps.test.ts`, `apps/api/src/__tests__/http-server.dsar-sla.test.ts`, `main.test.ts`, and
   four real-database tests in `tests/integration/dsar.test.ts` (due, overdue, 3-day repeat, extension window,

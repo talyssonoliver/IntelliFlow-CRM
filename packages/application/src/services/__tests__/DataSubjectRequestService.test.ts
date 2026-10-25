@@ -928,6 +928,20 @@ describe('complete (D-AC-06/08)', () => {
     lift.mockRestore();
   });
 
+  it('reports the restriction as kept when the lift lifted nothing (shared restriction, codex)', async () => {
+    const id = await verified('RESTRICTION');
+    const lift = vi.spyOn(restrictions, 'liftForRequest').mockResolvedValue(null);
+    const result = await service.reject({
+      tenantId: 'tenant-a',
+      id,
+      actorId: ADMIN,
+      reason: 'The data is accurate as recorded',
+      now: NOW,
+    });
+    expect(result).toEqual({ outcome: 'OK', restrictionKept: true });
+    lift.mockRestore();
+  });
+
   it('keeps the restriction when the lifting notice could not be sent (codex)', async () => {
     const id = await verified('RESTRICTION');
     refusedKinds.add('RESTRICTION_LIFTING');
