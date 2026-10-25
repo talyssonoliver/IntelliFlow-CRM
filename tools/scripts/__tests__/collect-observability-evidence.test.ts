@@ -65,6 +65,8 @@ type FakeConfig = {
   ) => Array<{ metric: Record<string, string>; values: Array<[number, string]> }>;
   /** Grafana ruler status (/api/prometheus/grafana/api/v1/rules) rules. */
   ruleStatus?: Array<{ uid: string; health: string; state: string; lastError?: string }>;
+  /** Error-level log line times (epoch s) by service. */
+  errorLogs?: Record<string, number[]>;
   /** Repo alert-rules.json contents; defaults to REPO_RULES. */
   repoRules?: string;
 };
@@ -123,6 +125,7 @@ function fakeGrafana(cfg: FakeConfig) {
         return reply(200, { data: { result: lines } });
       }
       const svc = /service_name="([^"]+)"/.exec(q)?.[1] ?? '';
+      if (q.includes('detected_level')) return reply(200, errorLogBody(cfg, svc, start, end));
       const entries = (cfg.logs?.[svc] ?? []).filter((e) => e.t >= start && e.t <= end);
       return reply(200, {
         data: {
@@ -203,6 +206,26 @@ function fakeGrafana(cfg: FakeConfig) {
     return prom === undefined ? reply(404) : reply(200, prom);
   };
   return { calls, fetchImpl };
+}
+
+/** Error-level Loki lines for a service between start and end (epoch s). */
+function errorLogBody(cfg: FakeConfig, svc: string, start: number, end: number) {
+  const times = (cfg.errorLogs?.[svc] ?? []).filter((t) => t >= start && t <= end);
+  return {
+    data: {
+      result: times.length
+        ? [
+            {
+              stream: { service_name: svc, detected_level: 'error' },
+              values: times.map((t) => [
+                String(BigInt(Math.round(t * 1000)) * 1000000n),
+                'raw error line with person@example.invalid',
+              ]),
+            },
+          ]
+        : [],
+    },
+  };
 }
 
 /** Ruler status and Prometheus answers; undefined for any other path. */
@@ -735,6 +758,7 @@ describe('collect-observability-evidence: MTTD', () => {
         mttd_s: 70,
         incidents: 2,
         rule_uids: ['r-fast', 'r-err'],
+        error_log: { lines: 0, first_offset_s: null },
       },
     ]);
     expect(json.episode_aggregates).toMatchObject({ n_episodes: 1, mean_s: 70 });
@@ -984,6 +1008,50 @@ describe('collect-observability-evidence: MTTD', () => {
     expect(json.episodes[0].repo_rule_timeline).toEqual([
       { uid: 'ifc074-error-spans-direct', first_true_s: 60, last_true_s: 75, n_true_steps: 2 },
     ]);
+  });
+
+  it('measures how many episodes have an error-level log line within 60 s of the first error span', async () => {
+    // Two episodes: the first has an error log 5 s before (and one 70 s after,
+    // outside the window) its first error span; the second's only error log is
+    // 90 s after, also outside the ±60 s window.
+    const cfg = healthy();
+    const e1 = NOW_S - 7290;
+    const e2 = NOW_S - 3000;
+    cfg.errorSpans = {
+      'ai-worker': [
+        { traceId: ERR_TRACE, spanId: SPAN_B, start: e1 },
+        { traceId: TRACE_B, spanId: SPAN_B, start: e2 },
+      ],
+    };
+    cfg.traces = { ...cfg.traces, [TRACE_B]: { service: 'ai-worker', spans: [] } };
+    const alerting = (t: number): Transition => ({
+      t,
+      ruleUID: 'r-err',
+      alertname: 'ErrorRatioBreach',
+      service: 'ai-worker',
+      previous: 'Normal',
+      current: 'Alerting',
+    });
+    cfg.history = [alerting(e1 + 180), alerting(e2 + 180)];
+    cfg.errorLogs = { 'ai-worker': [e1 - 5, e1 + 70, e2 + 90] };
+    const { code, json, h } = await baseline(cfg);
+    expect(code).toBe(0);
+    expect(json.episodes.map((e: { error_log: unknown }) => e.error_log)).toEqual([
+      { lines: 1, first_offset_s: -5 },
+      { lines: 0, first_offset_s: null },
+    ]);
+    expect(json.log_coverage).toEqual({
+      window_s: 60,
+      n_episodes: 2,
+      with_error_log: 1,
+      share: 0.5,
+    });
+    // Log text never reaches the output.
+    expect(JSON.stringify(json)).not.toContain('person@');
+    const query = h.grafana.calls
+      .map((c) => decodeURIComponent(c.path))
+      .find((p) => p.includes('detected_level'));
+    expect(query).toContain('{service_name="ai-worker"}');
   });
 
   it('refuses a committed rule whose operator or threshold it cannot read', async () => {

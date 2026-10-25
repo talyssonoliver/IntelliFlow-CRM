@@ -62,6 +62,11 @@ const CONDITION_STEP_S = 60;
 const CONDITION_PROBE_S = 120;
 const TIMELINE_S = 600;
 const TIMELINE_STEP_S = 15;
+// Error-level log lines counted around each episode's first error span.
+const LOG_COVERAGE_WINDOW_S = 60;
+const LOG_COVERAGE_LIMIT = 100;
+const ERROR_LEVEL_FILTER =
+  'detected_level=~"(?i)error|fatal|critical" or severity_text=~"(?i)error|fatal|critical"';
 // The source label apply-grafana-alert-rules.mjs gives the repo's rules.
 const REPO_RULE_SOURCE = 'ifc-032';
 const COMPARATORS = {
@@ -98,6 +103,7 @@ const RE = {
   span: /^[0-9a-f]{16}$/,
   ts: /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(\.\d{1,9})?Z$/,
   num: /^\d{1,12}(\.\d{1,3})?$/,
+  signedNum: /^-?\d{1,12}(\.\d{1,3})?$/,
   bool: /^(true|false)$/,
   status: /^(PASS|FAIL|NOT_OBSERVED)$/,
   testId: /^\d{3}$/,
@@ -159,6 +165,7 @@ const LIMITATIONS = [
   'Incidents are runs of Alerting transitions per rule and service split by a gap of 30 minutes or more.',
   "The KPI is judged per error episode: anchored incidents of one service whose first error spans start within 10 minutes of the episode's first error are one episode, detected by the earliest alert from any rule.",
   'Only episodes whose first error is inside the alert window count; with --since the window starts at --since.',
+  'Log coverage counts error-level Loki lines (by detected level or severity text) of the same service within 60 s of the first error span, at most 100 per episode; it does not prove a line describes the same error.',
   "The repo rule checks re-evaluate each committed rule's query in Prometheus at 60 s steps; it shows whether the condition held, not how Grafana evaluated it.",
 ];
 const TRUNCATION_LIMITATION =
@@ -745,6 +752,41 @@ async function checkRepoRules(get, window, repo, all, transitions, episodes) {
   return checks;
 }
 
+/**
+ * Would a log-based rule see each episode? Counts error-level Loki lines of
+ * the episode's service within ±60 s of its first error span, and the offset
+ * of the earliest one (negative = the log came before the span). Only counts
+ * and offsets are kept; no log text.
+ */
+async function checkLogCoverage(get, episodes) {
+  let withErrorLog = 0;
+  for (const episode of episodes) {
+    const t0 = Date.parse(episode.t_first_error) / 1000;
+    const res = await lokiQueryRange(get, DS.logs, {
+      query: `{service_name="${assertService(episode.service)}"} | ${ERROR_LEVEL_FILTER}`,
+      start: ns(t0 - LOG_COVERAGE_WINDOW_S),
+      end: ns(t0 + LOG_COVERAGE_WINDOW_S),
+      limit: LOG_COVERAGE_LIMIT,
+      direction: 'forward',
+    });
+    const times = (res?.data?.result ?? [])
+      .flatMap((stream) => (stream.values ?? []).map(([tsNs]) => nsToSeconds(tsNs)))
+      .sort((a, b) => a - b);
+    if (times.length) withErrorLog++;
+    episode.error_log = {
+      lines: times.length,
+      first_offset_s: times.length ? check('signedNum', round3(times[0] - t0)) : null,
+    };
+  }
+  const n = episodes.length;
+  return {
+    window_s: LOG_COVERAGE_WINDOW_S,
+    n_episodes: n,
+    with_error_log: withErrorLog,
+    share: n ? round3(withErrorLog / n) : null,
+  };
+}
+
 async function collectMttd(get, window, repo) {
   const { transitions, truncated } = await fetchTransitions(get, window);
   const intoAlerting = transitions.filter(
@@ -868,6 +910,7 @@ async function collectMttd(get, window, repo) {
   const allEpisodes = groupEpisodes(incidents);
   const episodes = allEpisodes.filter((e) => Date.parse(e.t_first_error) / 1000 >= window.start);
   const repoRuleChecks = await checkRepoRules(get, window, repo, all, transitions, episodes);
+  const logCoverage = await checkLogCoverage(get, episodes);
   const episodeValues = episodes.map((e) => e.mttd_s).sort((a, b) => a - b);
   const m = episodeValues.length;
   const episodeMean = m ? round3(episodeValues.reduce((a, b) => a + b, 0) / m) : null;
@@ -896,6 +939,7 @@ async function collectMttd(get, window, repo) {
       share_lt_120s: n ? round3(anchoredValues.filter((v) => v < KPI_TARGET_S).length / n) : null,
     },
     repo_rule_checks: repoRuleChecks,
+    log_coverage: logCoverage,
     episodes,
     episode_aggregates: {
       n_episodes: m,

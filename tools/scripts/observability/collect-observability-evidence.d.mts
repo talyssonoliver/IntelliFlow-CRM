@@ -39,6 +39,15 @@ export interface ErrorEpisode {
   rule_uids: string[];
   /** Committed rules whose query was true 120 s after the first error (set by run). */
   repo_rules_true_at_120s?: string[];
+  /** Committed rules' condition timing after the first error (set by run). */
+  repo_rule_timeline?: Array<{
+    uid: string;
+    first_true_s: number | null;
+    last_true_s: number | null;
+    n_true_steps: number;
+  }>;
+  /** Error-level log lines within ±60 s of the first error span (set by run). */
+  error_log?: { lines: number; first_offset_s: number | null };
 }
 export interface QueryShape {
   is_paused: boolean;
