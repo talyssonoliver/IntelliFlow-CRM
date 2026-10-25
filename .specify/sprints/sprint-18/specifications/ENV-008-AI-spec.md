@@ -29,7 +29,7 @@ DoD item maps to something that runs in production and leaves production evidenc
 |---|---|---|---|
 | PRD | N/A | — | Infrastructure task, no user-facing feature |
 | ADR | `docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md` | Proposed, becomes Accepted at consensus | Created |
-| ADR | `docs/architecture/adr/ADR-086-observability-log-pipeline-and-evidence.md` (IFC-074 lane, not on main yet) | Accepted, on its branch | Referenced, not modified |
+| ADR | ADR-086, observability log pipeline and evidence (IFC-074 lane; the file exists only on that branch, not on main) | Accepted, on its branch | Referenced, not modified |
 | SLO doc | `docs/operations/slo-definitions.md` (IFC-142) | Existing | Source of targets, not modified |
 
 ## Dependency Verification
@@ -99,7 +99,7 @@ DoD item maps to something that runs in production and leaves production evidenc
 | `.github/workflows/railway-self-healing.yml` | new | DevOps, Security |
 | `infra/monitoring/self-healing-rules.yaml`, `anomaly-detection.json`, `otel-config.yaml` | rewrite in place | Domain, Security |
 | `docs/architecture/observability/{implementation-guide,correlation-patterns,instrumentation-checklist}.md` | add a section | DevOps |
-| `docs/architecture/adr/ADR-087-*.md`, `docs/architecture/adr/README.md` | new / one row | all |
+| `docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md`, `docs/architecture/adr/README.md` | new / one row | all |
 | Tests: see Test Requirements | new / extend | Test |
 
 ## Interfaces & Contracts

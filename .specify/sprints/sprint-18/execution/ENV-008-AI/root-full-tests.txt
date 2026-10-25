@@ -1,11 +1,12 @@
+# HEAD e0b478906, 2026-10-25T16:47:43Z
 [test-slot] slot2 taken for ENV-008-AI@feat/env-008-ai-env008: pnpm exec vitest run --project root
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/env-008-ai
 
 
  Test Files  121 passed (121)
-      Tests  2768 passed | 2 skipped (2770)
-   Start at  16:26:52
-   Duration  70.19s (transform 6.97s, setup 38.62s, import 10.00s, tests 165.83s, environment 4.35s)
+      Tests  2777 passed | 2 skipped (2779)
+   Start at  16:47:45
+   Duration  73.08s (transform 7.69s, setup 44.14s, import 16.72s, tests 163.30s, environment 17.18s)
 
 root exit=0

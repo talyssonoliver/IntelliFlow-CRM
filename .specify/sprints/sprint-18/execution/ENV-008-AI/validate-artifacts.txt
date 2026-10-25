@@ -3,7 +3,7 @@
   ARTIFACT RECONCILIATION — Task: ENV-008-AI
 ======================================================================
 
-  CSV Artifacts:  7
+  CSV Artifacts:  40
   Plan Artifacts: 40
   Plan File:      C:\Users\talys\projects\intelliFlow-CRM-worktrees\env-008-ai\.specify\sprints\sprint-18\planning\ENV-008-AI-plan.md
 
@@ -15,81 +15,43 @@
   | Both   | docs/architecture/observability/correlation-patterns.md | YES     | YES     | YES    |
   | Both   | docs/architecture/observability/implementation-guide.md | YES     | YES     | YES    |
   | Both   | docs/architecture/observability/instrumentation-checklist.md | YES     | YES     | YES    |
-  | Both   | .specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json | NO      | YES     | YES    |
-  | Plan   | tools/scripts/__tests__/apply-grafana-slos.test.ts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/__tests__/apply-grafana-dashboard.test.ts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/__tests__/apply-railway-self-healing.test.ts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/__tests__/env008-workflows.test.ts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/__tests__/env008-monitoring-content.test.ts | YES     | YES     | NO     |
-  | Plan   | .specify/sprints/sprint-18/findings/ENV-008-AI-findings.md | YES     | YES     | NO     |
-  | Plan   | infra/monitoring/grafana/cloud/slos.json | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-grafana-slos.mjs | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-grafana-slos.d.mts | YES     | YES     | NO     |
-  | Plan   | infra/monitoring/grafana/cloud/dashboard-production.json | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-grafana-dashboard.mjs | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-grafana-dashboard.d.mts | YES     | YES     | NO     |
-  | Plan   | .github/workflows/grafana-slos.yml | YES     | YES     | NO     |
-  | Plan   | .github/workflows/grafana-dashboard.yml | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-railway-self-healing.mjs | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-railway-self-healing.d.mts | YES     | YES     | NO     |
-  | Plan   | .github/workflows/railway-self-healing.yml | YES     | YES     | NO     |
-  | Plan   | tools/scripts/lib/grafana-provisioning.test.ts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/__tests__/apply-grafana-alert-rules.test.ts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/__tests__/apply-synthetic-monitoring.test.ts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/lib/grafana-provisioning.mjs | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-grafana-alert-rules.mjs | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-grafana-alert-rules.d.mts | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-synthetic-monitoring.mjs | YES     | YES     | NO     |
-  | Plan   | tools/scripts/observability/apply-synthetic-monitoring.d.mts | YES     | YES     | NO     |
-  | Plan   | artifacts/metrics/debt-ledger.yaml | YES     | YES     | NO     |
-  | Plan   | .github/workflows/grafana-alert-rules.yml | YES     | YES     | NO     |
-  | Plan   | docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md | YES     | YES     | NO     |
-  | Plan   | .specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md | YES     | YES     | NO     |
-  | Plan   | docs/architecture/diagrams/complete-dependency-chains.md | YES     | YES     | NO     |
-  | Plan   | docs/architecture/diagrams/integrations-dependency-chain.md | YES     | YES     | NO     |
-  | Plan   | apps/project-tracker/docs/metrics/_global/Sprint_plan.csv | YES     | YES     | NO     |
-  | Plan   | apps/project-tracker/docs/metrics/_global/Sprint_plan_A.csv | YES     | YES     | NO     |
+  | Both   | .specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json | YES     | YES     | YES    |
+  | Both   | tools/scripts/__tests__/apply-grafana-slos.test.ts | YES     | YES     | YES    |
+  | Both   | tools/scripts/__tests__/apply-grafana-dashboard.test.ts | YES     | YES     | YES    |
+  | Both   | tools/scripts/__tests__/apply-railway-self-healing.test.ts | YES     | YES     | YES    |
+  | Both   | tools/scripts/__tests__/env008-workflows.test.ts | YES     | YES     | YES    |
+  | Both   | tools/scripts/__tests__/env008-monitoring-content.test.ts | YES     | YES     | YES    |
+  | Both   | .specify/sprints/sprint-18/findings/ENV-008-AI-findings.md | YES     | YES     | YES    |
+  | Both   | infra/monitoring/grafana/cloud/slos.json | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-grafana-slos.mjs | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-grafana-slos.d.mts | YES     | YES     | YES    |
+  | Both   | infra/monitoring/grafana/cloud/dashboard-production.json | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-grafana-dashboard.mjs | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-grafana-dashboard.d.mts | YES     | YES     | YES    |
+  | Both   | .github/workflows/grafana-slos.yml | YES     | YES     | YES    |
+  | Both   | .github/workflows/grafana-dashboard.yml | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-railway-self-healing.mjs | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-railway-self-healing.d.mts | YES     | YES     | YES    |
+  | Both   | .github/workflows/railway-self-healing.yml | YES     | YES     | YES    |
+  | Both   | tools/scripts/lib/grafana-provisioning.test.ts | YES     | YES     | YES    |
+  | Both   | tools/scripts/__tests__/apply-grafana-alert-rules.test.ts | YES     | YES     | YES    |
+  | Both   | tools/scripts/__tests__/apply-synthetic-monitoring.test.ts | YES     | YES     | YES    |
+  | Both   | tools/scripts/lib/grafana-provisioning.mjs | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-grafana-alert-rules.mjs | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-grafana-alert-rules.d.mts | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-synthetic-monitoring.mjs | YES     | YES     | YES    |
+  | Both   | tools/scripts/observability/apply-synthetic-monitoring.d.mts | YES     | YES     | YES    |
+  | Both   | artifacts/metrics/debt-ledger.yaml | YES     | YES     | YES    |
+  | Both   | .github/workflows/grafana-alert-rules.yml | YES     | YES     | YES    |
+  | Both   | docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md | YES     | YES     | YES    |
+  | Both   | .specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md | YES     | YES     | YES    |
+  | Both   | docs/architecture/diagrams/complete-dependency-chains.md | YES     | YES     | YES    |
+  | Both   | docs/architecture/diagrams/integrations-dependency-chain.md | YES     | YES     | YES    |
+  | Both   | apps/project-tracker/docs/metrics/_global/Sprint_plan.csv | YES     | YES     | YES    |
+  | Both   | apps/project-tracker/docs/metrics/_global/Sprint_plan_A.csv | YES     | YES     | YES    |
 
-  Plan-only (in plan but not in CSV):
-    - tools/scripts/__tests__/apply-grafana-slos.test.ts
-    - tools/scripts/__tests__/apply-grafana-dashboard.test.ts
-    - tools/scripts/__tests__/apply-railway-self-healing.test.ts
-    - tools/scripts/__tests__/env008-workflows.test.ts
-    - tools/scripts/__tests__/env008-monitoring-content.test.ts
-    - .specify/sprints/sprint-18/findings/ENV-008-AI-findings.md
-    - infra/monitoring/grafana/cloud/slos.json
-    - tools/scripts/observability/apply-grafana-slos.mjs
-    - tools/scripts/observability/apply-grafana-slos.d.mts
-    - infra/monitoring/grafana/cloud/dashboard-production.json
-    - tools/scripts/observability/apply-grafana-dashboard.mjs
-    - tools/scripts/observability/apply-grafana-dashboard.d.mts
-    - .github/workflows/grafana-slos.yml
-    - .github/workflows/grafana-dashboard.yml
-    - tools/scripts/observability/apply-railway-self-healing.mjs
-    - tools/scripts/observability/apply-railway-self-healing.d.mts
-    - .github/workflows/railway-self-healing.yml
-    - tools/scripts/lib/grafana-provisioning.test.ts
-    - tools/scripts/__tests__/apply-grafana-alert-rules.test.ts
-    - tools/scripts/__tests__/apply-synthetic-monitoring.test.ts
-    - tools/scripts/lib/grafana-provisioning.mjs
-    - tools/scripts/observability/apply-grafana-alert-rules.mjs
-    - tools/scripts/observability/apply-grafana-alert-rules.d.mts
-    - tools/scripts/observability/apply-synthetic-monitoring.mjs
-    - tools/scripts/observability/apply-synthetic-monitoring.d.mts
-    - artifacts/metrics/debt-ledger.yaml
-    - .github/workflows/grafana-alert-rules.yml
-    - docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md
-    - .specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md
-    - docs/architecture/diagrams/complete-dependency-chains.md
-    - docs/architecture/diagrams/integrations-dependency-chain.md
-    - apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
-    - apps/project-tracker/docs/metrics/_global/Sprint_plan_A.csv
+  Fully aligned: 40 artifact(s)
 
-  MISSING ON DISK:
-    - .specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json
-
-  Fully aligned: 6 artifact(s)
-
-  STATUS: MISMATCH — artifacts are not fully reconciled
+  STATUS: PASS — all artifacts aligned across CSV, plan, and disk
 ======================================================================
 

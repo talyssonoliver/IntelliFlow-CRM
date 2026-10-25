@@ -1,0 +1,22 @@
+{
+  "task_id": "ENV-008-AI",
+  "run_id": "env-008-ai-exec-20261025",
+  "stoa": "Security",
+  "verdict": "FAIL",
+  "reviewed_at": "2026-10-25",
+  "reviewed_head": "5162ed721",
+  "agent": "stoa-security subagent (Agent tool)",
+  "gates": [
+    "gitleaks",
+    "workflow-secret-lint",
+    "pnpm-audit-prod"
+  ],
+  "findings": [
+    "pnpm audit --prod: 17 advisories (4 critical) inherited from merge base e7ce625b2; criticals fixed on main by #1008",
+    "MEDIUM: account-scoped RAILWAY_TOKEN (#1031)",
+    "MEDIUM: Production environment branch policy (verified absent; #1032)",
+    "LOW: redactBody gaps, unchecked Railway error code (fixed in e0b478906)",
+    "LOW: actions pinned by tag"
+  ],
+  "source": ".specify/sprints/sprint-18/execution/ENV-008-AI/stoa-verdicts.md"
+}

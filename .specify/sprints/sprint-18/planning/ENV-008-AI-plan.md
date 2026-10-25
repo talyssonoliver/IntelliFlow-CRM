@@ -152,7 +152,7 @@ dirty files are never staged.
 7. [x] `mkdir -p .specify/sprints/sprint-18/execution/ENV-008-AI` (the evidence directory used by Steps 12,
    13 and 20; it does not exist yet).
 
-## Dependency Verification (deep)
+## Dependencies Verified (deep)
 
 | Dependency | Claim | Verified | Method |
 |---|---|---|---|
@@ -845,8 +845,8 @@ Workflow:
   - Use `.txt`, never `*.log`.
 - [x] Diff coverage on the changed `.mjs` lines is at least 80% (NF-003). Result: 92.0% (425/462), execution/ENV-008-AI/diff-coverage.txt.
 - [x] NF-002: `git diff origin/main -- package.json pnpm-lock.yaml` prints nothing. Record the output. Run against the merge base (origin/main moved on since the branch point): empty, execution/ENV-008-AI/nf002-deps.txt.
-- [ ] `npx tsx tools/scripts/validate-artifacts.ts ENV-008-AI` passes, after the EVIDENCE-path change.
-- [ ] Walk every item from AC-001 to AC-012 and NF-001 to NF-003 against the evidence, and record each one
+- [x] `npx tsx tools/scripts/validate-artifacts.ts ENV-008-AI` passes, after the EVIDENCE-path change. PASS, 40/40 aligned, after the 33 plan artifacts were added to the CSV row (Category A).
+- [x] Walk every item from AC-001 to AC-012 and NF-001 to NF-003 against the evidence, and record each one
       in the exec report. Carry four recorded spec deviations into the exec report and the attestation
       notes (AC-012):
   - NF-003 CLI guards: multi-line, with the coverage budget from Step 19.
@@ -854,7 +854,7 @@ Workflow:
   - AC-006: three independent workflows instead of three jobs in one workflow (r4/A2).
   - AC-007: the api health check is set only after a live 200 probe (r4/A1); `grafana-alert-rules.yml`
     timeout 5 → 12 min.
-- [ ] Attestation (AC-012) at `.specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json`:
+- [x] Attestation (AC-012) at `.specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json`:
   - Production items that exist only after merge are `NEEDS_HUMAN`. They are: SLOs present, dashboard
     present, the Railway read-back (including whether the probe let the api health check through), and the
     alert-rules workflow green again. Each names the workflow run to check:

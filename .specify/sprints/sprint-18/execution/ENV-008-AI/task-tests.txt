@@ -1,10 +1,12 @@
+# HEAD e0b478906, 2026-10-25T16:47:13Z
 [test-slot] slot2 taken for ENV-008-AI@feat/env-008-ai-env008: pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts tools/scripts/__tests__/apply-grafana-slos.test.ts tools/scripts/__tests__/apply-grafana-dashboard.test.ts tools/scripts/__tests__/apply-railway-self-healing.test.ts tools/scripts/__tests__/env008-workflows.test.ts tools/scripts/__tests__/env008-monitoring-content.test.ts
 
  RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/env-008-ai
 
 
  Test Files  8 passed (8)
-      Tests  175 passed (175)
-   Start at  16:22:43
-   Duration  1.61s (transform 1.59s, setup 3.63s, import 347ms, tests 465ms, environment 1ms)
+      Tests  188 passed (188)
+   Start at  16:47:16
+   Duration  1.83s (transform 1.77s, setup 4.20s, import 337ms, tests 519ms, environment 1ms)
 
+exit=0
