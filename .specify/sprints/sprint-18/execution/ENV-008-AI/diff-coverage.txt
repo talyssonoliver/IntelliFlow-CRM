@@ -1,0 +1,11 @@
+check-diff-coverage: new-line coverage vs e7ce625b2b5238a9ec3ad55c34046575fb165d15 (floor 80%):
+
+  ✓  87.6%  106/121  tools/scripts/observability/apply-grafana-slos.mjs
+  ✓  90.7%  88/97  tools/scripts/observability/apply-grafana-dashboard.mjs
+  ✓  93.4%  183/196  tools/scripts/observability/apply-railway-self-healing.mjs
+  ✓ 100.0%  27/27  tools/scripts/lib/grafana-provisioning.mjs
+  ✓ 100.0%  11/11  tools/scripts/observability/apply-grafana-alert-rules.mjs
+  ✓ 100.0%  10/10  tools/scripts/observability/apply-synthetic-monitoring.mjs
+
+  TOTAL new_coverage: 92.0%  (425/462 lines + branch conditions)
+✅ Diff coverage meets the 80% floor.

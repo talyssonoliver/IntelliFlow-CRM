@@ -11,7 +11,7 @@ export const DESIRED: {
 };
 export function diffFields(
   current: Partial<Record<string, unknown>> | null | undefined,
-  desired: Record<string, unknown>
+  desired: object
 ): Record<string, unknown>;
 export function aiWorkerHealthcheck(
   vars: { PORT?: string; HEALTH_PORT?: string } | null | undefined

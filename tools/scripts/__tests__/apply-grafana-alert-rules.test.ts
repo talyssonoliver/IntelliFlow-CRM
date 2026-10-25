@@ -217,6 +217,31 @@ describe('run', () => {
     expect(sleeps).toEqual([5000]);
   });
 
+  it.each([
+    [
+      'the folder create',
+      'create folder: HTTP 400',
+      (url: string, method: string) => method === 'POST' && url.endsWith('/api/folders'),
+    ],
+    [
+      'the rule-group update',
+      'rule group interval: HTTP 400',
+      (url: string, method: string) => method === 'PUT' && url.includes('/rule-groups/'),
+    ],
+  ])('does not echo a token from a 400 body at %s', async (_site, expected, matches) => {
+    const leaked = 'gl' + 'sa_' + 'n'.repeat(32);
+    const g = fakeGrafana({ folder: 404 });
+    const fetchImpl: typeof g.fetchImpl = async (url, init) => {
+      if (matches(url, init.method)) {
+        return { status: 400, text: async () => `{"message":"no ${leaked}"}` };
+      }
+      return g.fetchImpl(url, init);
+    };
+    const err = await run({ env, argv: [], fetchImpl, log: quiet }).catch((e: Error) => e);
+    expect((err as Error).message).toContain(expected);
+    expect((err as Error).message).not.toContain(leaked);
+  });
+
   it('does not echo a token from an error response body', async () => {
     const leaked = 'gl' + 'sa_' + 'k'.repeat(32);
     const g = fakeGrafana();
