@@ -129,7 +129,7 @@ dirty files are never staged.
 
 ## Preflight Checks
 
-1. [ ] `git status --short` shows only the known non-task changes.
+1. [x] `git status --short` shows only the known non-task changes.
    - Do not stage:
      - `apps/project-tracker/CLAUDE.md` (written by `next dev`)
      - the `.claude/skills/*` edits
@@ -140,16 +140,16 @@ dirty files are never staged.
    - Later commits stage only this task's row-13 hunks plus the regenerated `Sprint_plan_A.csv`.
      `split-sprint-plan.ts` rewrites only the split that holds the changed row. After each regeneration,
      `git status` should show exactly those two files.
-2. [ ] `node --version` prints v22.x with the PATH prefix above.
-3. [ ] `pnpm install --frozen-lockfile` is a no-op, because NF-002 adds no dependency.
+2. [x] `node --version` prints v22.x with the PATH prefix above.
+3. [x] `pnpm install --frozen-lockfile` is a no-op, because NF-002 adds no dependency.
    - `js-yaml` and `@types/js-yaml` are already root devDependencies (`package.json:174,202,256`).
    - `js-yaml` is declared `^5.2.2`, but the root `pnpm.overrides` entry `"js-yaml": ">=4.3.2 <5"` resolves
      it to 4.3.2. That version has `load`.
-4. [ ] Baseline: the existing suites pass before any change:
+4. [x] Baseline: the existing suites pass before any change:
    `node C:/Users/talys/ops/test-slots/with-slot.mjs --label ENV-008-AI -- pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts tools/scripts/security/__tests__/workflow-secret-lint.test.ts tools/scripts/observability/__tests__/`
-5. [ ] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0 on the base tree.
-6. [ ] `gh run list --workflow ci.yml --branch main --limit 3` shows green runs (ENV-005-AI re-check).
-7. [ ] `mkdir -p .specify/sprints/sprint-18/execution/ENV-008-AI` (the evidence directory used by Steps 12,
+5. [x] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0 on the base tree.
+6. [x] `gh run list --workflow ci.yml --branch main --limit 3` shows green runs (ENV-005-AI re-check).
+7. [x] `mkdir -p .specify/sprints/sprint-18/execution/ENV-008-AI` (the evidence directory used by Steps 12,
    13 and 20; it does not exist yet).
 
 ## Dependency Verification (deep)
@@ -194,21 +194,21 @@ No dependency claim blocks the plan.
 - `tools/scripts/lib/grafana-provisioning.test.ts`
 
 **Acceptance Criteria Addressed:** AC-001, NF-001
-- [ ] A 503 then a 200 returns the 200 result and calls `sleep` once with `RETRY_DELAYS_MS[0]`.
-- [ ] A 503 on every attempt makes exactly 8 fetches and returns the last 503 (the callers throw).
+- [x] A 503 then a 200 returns the 200 result and calls `sleep` once with `RETRY_DELAYS_MS[0]`.
+- [x] A 503 on every attempt makes exactly 8 fetches and returns the last 503 (the callers throw).
   - `sleep` is called 7 times with exactly `RETRY_DELAYS_MS` = `[5000, 10000, 20000, 40000, 60000, 60000, 60000]`.
   - The delays sum to 255000.
-- [ ] A 500, a 401 and a 404 each make exactly 1 fetch (no retry).
-- [ ] The default `sleep` (no option passed) resolves for a 1 ms delay, so the default path is covered.
-- [ ] `redactBody`:
+- [x] A 500, a 401 and a 404 each make exactly 1 fetch (no retry).
+- [x] The default `sleep` (no option passed) resolves for a 1 ms delay, so the default path is covered.
+- [x] `redactBody`:
   - replaces `Bearer <token>`, `glsa_…` and any run of 32 or more base64 or URL-safe characters (each test
     value built at runtime) with `<redacted>`
   - truncates to 200 characters with a marker
   - returns `''` for `undefined` and `null`
-- [ ] The existing `'series check for up: HTTP 500'` test still passes unchanged.
+- [x] The existing `'series check for up: HTTP 500'` test still passes unchanged.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts` fails on the
+- [x] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts` fails on the
       new cases only, because `RETRY_DELAYS_MS` and `redactBody` are not exported yet.
 
 #### Step 2: Extend the alert-rules tests (AC-001, NF-001)
@@ -216,14 +216,14 @@ No dependency claim blocks the plan.
 **Files to Modify:**
 - `tools/scripts/__tests__/apply-grafana-alert-rules.test.ts`
 
-- [ ] A series check that answers 503 and then 200 passes under `run({ sleep: async () => {} })`. This
+- [x] A series check that answers 503 and then 200 passes under `run({ sleep: async () => {} })`. This
       proves that `sleep` is threaded through `run()`.
-- [ ] A 400 on rule POST whose body contains a runtime-built `glsa_` token: the thrown message does not
+- [x] A 400 on rule POST whose body contains a runtime-built `glsa_` token: the thrown message does not
       contain the token.
-- [ ] Across a full successful `run()`, no `log` call contains `env.GRAFANA_SA_TOKEN`.
+- [x] Across a full successful `run()`, no `log` call contains `env.GRAFANA_SA_TOKEN`.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-alert-rules.test.ts`
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-alert-rules.test.ts`
       fails on the new cases.
 
 #### Step 3: Extend the synthetic-monitoring tests (AC-001)
@@ -231,16 +231,16 @@ No dependency claim blocks the plan.
 **Files to Modify:**
 - `tools/scripts/__tests__/apply-synthetic-monitoring.test.ts`
 
-- [ ] A `run({ sleep })` that meets a 503 and then a 200 succeeds (`sleep` is threaded).
-- [ ] A 400 with a token-shaped body at each of the three sites does not echo the token:
+- [x] A `run({ sleep })` that meets a 503 and then a 200 succeeds (`sleep` is threaded).
+- [x] A 400 with a token-shaped body at each of the three sites does not echo the token:
   - the apply-check call (L182)
   - create-folder (L193)
   - the alert-rule PUT/POST (L209)
-- [ ] The existing "only applies on an explicit manual dispatch, never on push" test still passes. Its
+- [x] The existing "only applies on an explicit manual dispatch, never on push" test still passes. Its
       `it.each` over every job's sparse paths also still holds.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-synthetic-monitoring.test.ts`
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-synthetic-monitoring.test.ts`
       fails on the new cases.
 
 #### Step 4: New SLO tests (AC-002, AC-003, AC-004, NF-001)
@@ -248,41 +248,41 @@ No dependency claim blocks the plan.
 **Files to Create:**
 - `tools/scripts/__tests__/apply-grafana-slos.test.ts`
 
-- [ ] The committed `infra/monitoring/grafana/cloud/slos.json` passes `validateConfig` with 0 errors.
-- [ ] It has exactly 3 SLOs with these uuids and objectives:
+- [x] The committed `infra/monitoring/grafana/cloud/slos.json` passes `validateConfig` with 0 errors.
+- [x] It has exactly 3 SLOs with these uuids and objectives:
   - `env008-api-availability`: 0.999 / 28d
   - `env008-api-latency`: 0.95 / 28d
   - `env008-ai-worker-llm-success`: 0.995 / 28d
-- [ ] Availability and LLM use `query.type === 'ratio'`. Latency uses `freeform`, and its query contains
+- [x] Availability and LLM use `query.type === 'ratio'`. Latency uses `freeform`, and its query contains
       `histogram_fraction(0, 0.2,` and `[$__rate_interval]`.
-- [ ] Every API query contains `span_name!~"(GET|HEAD) (/api)?/health(/.*)?"` (the health exclusion) and
+- [x] Every API query contains `span_name!~"(GET|HEAD) (/api)?/health(/.*)?"` (the health exclusion) and
       `span_kind="SPAN_KIND_SERVER"`.
-- [ ] `validateConfig` rejects each of these:
+- [x] `validateConfig` rejects each of these:
   - a query containing `_bucket`
   - a freeform range that is not `[$__rate_interval]` (for example `[5m]`)
   - a duplicate uuid
   - a missing required field (`uuid`, `name`, `description`, `query` or `objectives`)
   - a uuid that is not a path-safe segment
-- [ ] AC-002 caveats appear in the descriptions:
+- [x] AC-002 caveats appear in the descriptions:
   - availability mentions tRPC failures returned as 200 or 4xx, and requests slower than 30 s
   - LLM mentions the low call volume
-- [ ] AC-004:
+- [x] AC-004:
   - availability has `alerting.fastBurn` and `alerting.slowBurn`
   - latency and LLM have no `alerting` key
   - each of those two descriptions names its **own, different** gh issue, matched by `/#\d+/`. The latency
     SLO names issue 5 and the LLM SLO names issue 2 (Step 11). The two numbers must differ.
-- [ ] A missing `GRAFANA_URL` or `GRAFANA_SA_TOKEN` makes `run()` reject with a message naming both, and no
+- [x] A missing `GRAFANA_URL` or `GRAFANA_SA_TOKEN` makes `run()` reject with a message naming both, and no
       fetch is made.
-- [ ] `--dry-run` sends GETs only (every recorded method is `GET`).
-- [ ] A GET returning 404 is followed by a POST to `/api/plugins/grafana-slo-app/resources/v1/slo` carrying the
+- [x] `--dry-run` sends GETs only (every recorded method is `GET`).
+- [x] A GET returning 404 is followed by a POST to `/api/plugins/grafana-slo-app/resources/v1/slo` carrying the
       body's `uuid`. A GET returning 200 is followed by a PUT to
       `/api/plugins/grafana-slo-app/resources/v1/slo/<uuid>`.
-- [ ] A 400 on POST with a token-shaped body produces a redacted thrown message.
-- [ ] No `log` call contains the env token.
-- [ ] A GET that answers 503 and then 200 works with the injected `sleep`.
+- [x] A 400 on POST with a token-shaped body produces a redacted thrown message.
+- [x] No `log` call contains the env token.
+- [x] A GET that answers 503 and then 200 works with the injected `sleep`.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-slos.test.ts` fails
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-slos.test.ts` fails
       (module missing).
 
 #### Step 5: New dashboard tests (AC-005, AC-001, NF-001)
@@ -290,27 +290,27 @@ No dependency claim blocks the plan.
 **Files to Create:**
 - `tools/scripts/__tests__/apply-grafana-dashboard.test.ts`
 
-- [ ] The committed `dashboard-production.json` passes `validateConfig`.
+- [x] The committed `dashboard-production.json` passes `validateConfig`.
   - Its uid is `env008-production` and its folder is `intelliflow-prod`.
   - It has exactly 5 panels.
-- [ ] Metric rule: every panel target `expr` references only `traces_spanmetrics_calls_total` or
+- [x] Metric rule: every panel target `expr` references only `traces_spanmetrics_calls_total` or
       `traces_spanmetrics_latency`, and never `_bucket`.
-- [ ] Service rule: the matcher values are extracted with `/service(=~|=)"([^"]+)"/g`.
+- [x] Service rule: the matcher values are extracted with `/service(=~|=)"([^"]+)"/g`.
   - For `=`, the value must be `api` or `ai-worker`.
   - For `=~`, the value is split on `|`, and every alternative must be `api` or `ai-worker`.
   - Any other operator on `service` (`!=` or `!~`) is rejected.
-- [ ] `validateConfig` rejects each of these: a foreign metric, a foreign service (both `=` and an
+- [x] `validateConfig` rejects each of these: a foreign metric, a foreign service (both `=` and an
       alternative inside `=~`), and a wrong uid.
-- [ ] Missing env is refused, with no fetch.
-- [ ] `--dry-run` sends GETs only: the folder check and `GET /api/dashboards/uid/env008-production`.
-- [ ] Apply sends `POST /api/dashboards/db` with
+- [x] Missing env is refused, with no fetch.
+- [x] `--dry-run` sends GETs only: the folder check and `GET /api/dashboards/uid/env008-production`.
+- [x] Apply sends `POST /api/dashboards/db` with
       `{ dashboard: {uid:'env008-production', …}, folderUid: 'intelliflow-prod', overwrite: true }`.
-- [ ] A GET that answers 503 and then 200 works with the injected `sleep` (AC-001 for this script).
-- [ ] A 412 or 400 response is surfaced as a redacted error.
-- [ ] No `log` call contains the token.
+- [x] A GET that answers 503 and then 200 works with the injected `sleep` (AC-001 for this script).
+- [x] A 412 or 400 response is surfaced as a redacted error.
+- [x] No `log` call contains the token.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-dashboard.test.ts` fails
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-dashboard.test.ts` fails
       (module missing).
 
 #### Step 6: New Railway self-healing tests (AC-007, NF-001)
@@ -320,37 +320,37 @@ No dependency claim blocks the plan.
 
 The tests run against a fake GraphQL `fetchImpl` that dispatches on the operation: project,
 serviceInstance, variables or serviceInstanceUpdate. It follows the D2 introspection shape.
-- [ ] Read-only by default: without `--apply` there are zero `serviceInstanceUpdate` calls, and the
+- [x] Read-only by default: without `--apply` there are zero `serviceInstanceUpdate` calls, and the
       table still prints every `service | field | before | after` row.
-- [ ] `--apply` with every field different sends one mutation per service, and its `input` holds exactly
+- [x] `--apply` with every field different sends one mutation per service, and its `input` holds exactly
       the differing `DESIRED` keys. A second run against the updated fake state sends zero mutations
       (idempotent).
-- [ ] `--apply` with one field already equal leaves that key out of `input`.
-- [ ] ai-worker health-check guard, three cases:
+- [x] `--apply` with one field already equal leaves that key out of `input`.
+- [x] ai-worker health-check guard, three cases:
   - `PORT=5000` with `HEALTH_PORT` unset: the path is set.
   - `PORT=HEALTH_PORT=8080`: the path is set.
   - `PORT=8080, HEALTH_PORT=5000`: the path is skipped and the log says
     `healthcheck skipped: ai-worker serves health on HEALTH_PORT != PORT`.
-- [ ] `variables` unreadable (a GraphQL `Not Authorized` error, or `null`):
+- [x] `variables` unreadable (a GraphQL `Not Authorized` error, or `null`):
   - the log says `healthcheck skipped: variables unreadable`
   - the restart policy is still set
   - `healthcheckPath` is never sent for ai-worker, so no PORT is guessed
-- [ ] A variables payload with a runtime-built token-shaped value (for example `DATABASE_URL` built from
+- [x] A variables payload with a runtime-built token-shaped value (for example `DATABASE_URL` built from
       parts) never appears in any `log` or `writeSummary` call.
-- [ ] On a GraphQL error the log contains `extensions.code` and the message only if it is allow-listed;
+- [x] On a GraphQL error the log contains `extensions.code` and the message only if it is allow-listed;
       otherwise it says `<redacted>`. The raw message never appears.
-- [ ] If service `api` or `ai-worker` is missing from the project, `run()` rejects before any mutation.
-- [ ] A read-back after the mutation that differs from the keys **that were sent** makes `run()` reject
+- [x] If service `api` or `ai-worker` is missing from the project, `run()` rejects before any mutation.
+- [x] A read-back after the mutation that differs from the keys **that were sent** makes `run()` reject
       (fail closed). Keys left out of `input` (a probe skip) are not compared.
-- [ ] A missing `RAILWAY_API_TOKEN` or `RAILWAY_PROJECT_ID` makes `run()` reject with no fetch.
-- [ ] The summary text contains no project, environment or service ID (the fake IDs are built at runtime
+- [x] A missing `RAILWAY_API_TOKEN` or `RAILWAY_PROJECT_ID` makes `run()` reject with no fetch.
+- [x] The summary text contains no project, environment or service ID (the fake IDs are built at runtime
       and asserted absent). It does contain `effective from the next deployment`.
-- [ ] No request to the GraphQL endpoint is a deploy or redeploy mutation: every operation name is in
+- [x] No request to the GraphQL endpoint is a deploy or redeploy mutation: every operation name is in
       `{project, serviceInstance, variables, serviceInstanceUpdate}`.
-- [ ] Every request **to the GraphQL endpoint** carries `User-Agent: ifc-env008/1.0` and
+- [x] Every request **to the GraphQL endpoint** carries `User-Agent: ifc-env008/1.0` and
       `Authorization: Bearer <token>`.
-- [ ] The environment is selected by the name `production`. If it is missing, `run()` rejects.
-- [ ] api live-probe guard (r4/A1). The fake `fetchImpl` routes the probe URL
+- [x] The environment is selected by the name `production`. If it is missing, `run()` rejects.
+- [x] api live-probe guard (r4/A1). The fake `fetchImpl` routes the probe URL
       (`https://api.example.invalid/api/health/live`) separately from GraphQL:
   - Probe 200 under `--apply`: `healthcheckPath` and `healthcheckTimeout` are sent; `run()` resolves.
   - Probe 503 under `--apply`: the api `input` is exactly the differing keys minus `healthcheckPath` and
@@ -375,7 +375,7 @@ serviceInstance, variables or serviceInstanceUpdate. It follows the D2 introspec
     any `log` or `writeSummary` call.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-railway-self-healing.test.ts`
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-railway-self-healing.test.ts`
       fails (module missing).
 
 #### Step 7: New workflow contract tests (AC-006, AC-008)
@@ -388,7 +388,7 @@ All four workflows are parsed with `js-yaml` `load`. The file has four top-level
 `describe('grafana-dashboard.yml', …)` and `describe('railway-self-healing.yml', …)`. Step 14 runs the three
 Grafana blocks alone with `-t "grafana"`. The shared `pull_request*` and `schedule` checks run inside each
 block.
-- [ ] `grafana-alert-rules.yml` (regression guard: today's behaviour is unchanged; only the timeout is RED):
+- [x] `grafana-alert-rules.yml` (regression guard: today's behaviour is unchanged; only the timeout is RED):
   - `on.push.paths` equals exactly `['infra/monitoring/grafana/cloud/alert-rules.json',
     'tools/scripts/observability/apply-grafana-alert-rules.mjs', '.github/workflows/grafana-alert-rules.yml']`,
     so no SLO or dashboard file triggers it.
@@ -398,7 +398,7 @@ block.
     `actions/checkout@v7`, `actions/setup-node@v7` with node `24`.
   - `workflow_dispatch.inputs` are exactly `send_test` and `dry_run`.
   - `timeout-minutes: 12` (RED; today 5).
-- [ ] `grafana-slos.yml` and `grafana-dashboard.yml` (one shared `it.each` over both):
+- [x] `grafana-slos.yml` and `grafana-dashboard.yml` (one shared `it.each` over both):
   - The only job is `slos` or `dashboard` respectively, with no `needs`.
   - `on.push.branches` is `['main']`, and `on.push.paths` equals exactly the workflow's own JSON file,
     its own script, `tools/scripts/lib/grafana-provisioning.mjs` and the workflow file itself.
@@ -408,7 +408,7 @@ block.
   - `GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}` appears only under the step `env`, never in `run`.
   - `workflow_dispatch.inputs.dry_run` is a boolean with default `false`, and `--dry-run` reaches the
     `run` command through `DRY_RUN`.
-- [ ] `railway-self-healing.yml`:
+- [x] `railway-self-healing.yml`:
   - `on.push.branches` is `['main']`.
   - `on.push.paths` is **exactly** `['tools/scripts/observability/apply-railway-self-healing.mjs',
     '.github/workflows/railway-self-healing.yml']`. The script imports nothing from `tools/scripts/lib`.
@@ -421,11 +421,11 @@ block.
   - `RAILWAY_PROJECT_ID` comes from `vars.RAILWAY_PROJECT_ID`.
   - `PRODUCTION_API_URL` comes from `vars.PRODUCTION_API_URL` (r4/A1), under the step `env`.
   - Actions are pinned at `@v7`.
-- [ ] None of the four workflows has a `pull_request` or `pull_request_target` trigger.
-- [ ] None of the four workflows has a `schedule` trigger (Actions budget is $0).
+- [x] None of the four workflows has a `pull_request` or `pull_request_target` trigger.
+- [x] None of the four workflows has a `schedule` trigger (Actions budget is $0).
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-workflows.test.ts` fails on the
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-workflows.test.ts` fails on the
       new workflows and the alert-rules timeout; the alert-rules characterization cases pass.
 
 #### Step 8: New descriptive-content tests (AC-009)
@@ -433,29 +433,29 @@ block.
 **Files to Create:**
 - `tools/scripts/__tests__/env008-monitoring-content.test.ts`
 
-- [ ] `infra/monitoring/self-healing-rules.yaml` parses with js-yaml, and:
+- [x] `infra/monitoring/self-healing-rules.yaml` parses with js-yaml, and:
   - its `mode` is `descriptive`
   - its per-service settings deep-equal `DESIRED`, imported from `apply-railway-self-healing.mjs`
   - it names the workflow `railway-self-healing.yml`
   - it states crash-only restart and the deploy-gate health check
-- [ ] `infra/monitoring/anomaly-detection.json` parses, and:
+- [x] `infra/monitoring/anomaly-detection.json` parses, and:
   - its `mode` is `descriptive`
   - its services equal `['api', 'ai-worker']`
   - it lists the Asserts rules `RequestRateAnomaly`, `ErrorRatioAnomaly` and `LatencyP95Anomaly`
   - its `slos` uuids equal the uuids in `slos.json`
-- [ ] `infra/monitoring/otel-config.yaml` stays a valid collector config and carries the production note
+- [x] `infra/monitoring/otel-config.yaml` stays a valid collector config and carries the production note
       in comments:
   - It still parses with js-yaml.
   - Its top-level keys are exactly `receivers, processors, exporters, extensions, service`.
   - Its **raw text** (comments) contains `Production topology`, `local-stack reference`,
     `Grafana Cloud OTLP gateway`, `no collector`, `api` and `ai-worker`.
-- [ ] Every repo path that any of the three files references exists on disk, and
+- [x] Every repo path that any of the three files references exists on disk, and
       `infra/monitoring/otel-collector.yaml` still exists.
-- [ ] None of the three files contains any of these (patterns built at runtime): an email address, a URL
+- [x] None of the three files contains any of these (patterns built at runtime): an email address, a URL
       with a webhook path, a UUID-shaped Railway ID, `Bearer `, `glsa_`, or a long base64 run.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-monitoring-content.test.ts` fails.
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-monitoring-content.test.ts` fails.
 
 > **Checkpoint (RED):** all 8 files compile and fail only on the new cases; the existing cases stay
 > green. Command:
@@ -468,18 +468,18 @@ block.
 **Files to Modify:**
 - `tools/scripts/lib/grafana-provisioning.mjs`
 
-- [ ] Export `RETRY_DELAYS_MS = [5000, 10000, 20000, 40000, 60000, 60000, 60000]`.
-- [ ] Change the signature to `createApiClient(baseUrl, token, fetchImpl = fetch, { sleep = defaultSleep } = {})`.
+- [x] Export `RETRY_DELAYS_MS = [5000, 10000, 20000, 40000, 60000, 60000, 60000]`.
+- [x] Change the signature to `createApiClient(baseUrl, token, fetchImpl = fetch, { sleep = defaultSleep } = {})`.
   - Retry only when `res.status === 503`, for up to `RETRY_DELAYS_MS.length + 1` attempts, then return the
     last response.
   - Existing three-argument callers are unchanged.
-- [ ] Export `redactBody(text)`: Bearer tokens, `glsa_` tokens and long-token runs become `<redacted>`, and the
+- [x] Export `redactBody(text)`: Bearer tokens, `glsa_` tokens and long-token runs become `<redacted>`, and the
       result is capped at 200 characters.
-- [ ] Update the header comment to name the four callers.
-- [ ] The lib has no `.d.mts` (the test imports the `.mjs` directly), so no type file is added.
+- [x] Update the header comment to name the four callers.
+- [x] The lib has no `.d.mts` (the test imports the `.mjs` directly), so no type file is added.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts` passes.
+- [x] `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts` passes.
 
 #### Step 10: Thread `sleep` and redact in the two existing scripts (AC-001)
 **Type:** implementation
@@ -489,15 +489,15 @@ block.
 - `tools/scripts/observability/apply-synthetic-monitoring.mjs`
 - `tools/scripts/observability/apply-synthetic-monitoring.d.mts`
 
-- [ ] `run({ …, sleep })` passes `{ sleep }` to every `createApiClient` call (alert-rules L106; synthetic
+- [x] `run({ …, sleep })` passes `{ sleep }` to every `createApiClient` call (alert-rules L106; synthetic
       L143-144).
-- [ ] Wrap each `${x.text}` in a thrown message with `redactBody(...)`: alert-rules L127, L141 and L155;
+- [x] Wrap each `${x.text}` in a thrown message with `redactBody(...)`: alert-rules L127, L141 and L155;
       synthetic L182, L193 and L209.
-- [ ] Add `sleep?: (ms: number) => Promise<void>` to the `run` option type in both `.d.mts` files.
+- [x] Add `sleep?: (ms: number) => Promise<void>` to the `run` option type in both `.d.mts` files.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts` passes.
-- [ ] `grep -nE '\$\{[a-zA-Z]+\.text\}' tools/scripts/observability/*.mjs` prints nothing.
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts` passes.
+- [x] `grep -nE '\$\{[a-zA-Z]+\.text\}' tools/scripts/observability/*.mjs` prints nothing.
 
 #### Step 11: File the out-of-scope issues before the SLO config needs their numbers (AC-011, AC-004)
 **Type:** issue tracking + docs (outward-facing: GitHub issues only, no production change)
@@ -507,9 +507,9 @@ block.
 **Files to Modify:**
 - `artifacts/metrics/debt-ledger.yaml`
 
-- [ ] Check for duplicates first: run `gh issue list --state all --search "<keywords>" --limit 20` for each
+- [x] Check for duplicates first: run `gh issue list --state all --search "<keywords>" --limit 20` for each
       item below. If a matching open issue exists, reuse it and record that.
-- [ ] File **5** issues with `gh issue create --title … --body-file <scratchpad file>` (no AI attribution).
+- [x] File **5** issues with `gh issue create --title … --body-file <scratchpad file>` (no AI attribution).
       Issue 5 extends the spec's AC-011 list of 4: AC-004 needs a separate issue for the latency SLO, and
       the findings doc records this extension.
   1. **Dead IFC-032 workflow alert rules.**
@@ -525,12 +525,12 @@ block.
      - Fix: an environment-scoped project token and an exact CLI version.
   5. **api server-side p95 is 2.72 s against the 200 ms objective** (F2; `slo-definitions.md:56`).
      - Acceptance item: "enable `alerting` on SLO `env008-api-latency`".
-- [ ] Findings doc: one section per issue (number, evidence, fix, owner lane). Also record:
+- [x] Findings doc: one section per issue (number, evidence, fix, owner lane). Also record:
   - the spec-citation correction for `artifact-registry.ts` (W8)
   - the stale script path in the `alert-rules.json` `_comment` (`tools/scripts/grafana/apply-alert-rules.mjs`;
     INFO, not fixed)
   - that web, ws, events-worker and ingestion-worker stay under EP-001-AI
-- [ ] Ledger, one item per issue. Keys are `ENV008-DEAD-WORKFLOW-RULES-001`, `ENV008-LLM-INVOKE-ERRORS-001`,
+- [x] Ledger, one item per issue. Keys are `ENV008-DEAD-WORKFLOW-RULES-001`, `ENV008-LLM-INVOKE-ERRORS-001`,
       `ENV008-PUBLIC-HEALTH-DETAIL-001`, `ENV008-RAILWAY-TOKEN-SCOPE-001` and `ENV008-API-P95-LATENCY-001`.
       Each item carries the field set existing items use:
   - `origin_task: ENV-008-AI`
@@ -543,17 +543,17 @@ block.
   - `remediation_sprint: 19`
   - `remediation_plan`
   - `notes`, which holds the issue URL (`https://github.com/<repo>/issues/<n>`)
-- [ ] Resolve `debt_002` (`artifacts/metrics/debt-ledger.yaml:5471`, ENV-008-AI, "predictive monitoring and
+- [x] Resolve `debt_002` (`artifacts/metrics/debt-ledger.yaml:5471`, ENV-008-AI, "predictive monitoring and
       self-healing deferred"):
   - set `status: resolved`
   - add `resolved_at: 2026-10-24T00:00:00.000Z`
   - add `resolution:`, naming this task, the SLO burn alerts, the Railway restart policy and ADR-087, and
     stating that the production proof follows merge (NEEDS_HUMAN in the attestation)
-- [ ] Bump `last_updated` to the edit date.
+- [x] Bump `last_updated` to the edit date.
 
 **Validation:**
-- [ ] `node -e "require('js-yaml').load(require('fs').readFileSync('artifacts/metrics/debt-ledger.yaml','utf8'))"` exits 0.
-- [ ] `gh issue view <n> --json number,state` returns OPEN for all 5 issues.
+- [x] `node -e "require('js-yaml').load(require('fs').readFileSync('artifacts/metrics/debt-ledger.yaml','utf8'))"` exits 0.
+- [x] `gh issue view <n> --json number,state` returns OPEN for all 5 issues.
 
 #### Step 12: SLO config and apply script (AC-002, AC-003, AC-004)
 **Type:** implementation
@@ -562,12 +562,12 @@ block.
 - `tools/scripts/observability/apply-grafana-slos.mjs`
 - `tools/scripts/observability/apply-grafana-slos.d.mts`
 
-- [ ] `slos.json` follows spec §Interfaces exactly:
+- [x] `slos.json` follows spec §Interfaces exactly:
   - `folderUid: intelliflow-prod`
   - `destinationDatasourceUid: grafanacloud-prom`
   - 3 SLOs, with labels `source=env-008-ai` and `team=owner`
   - The latency description names issue 5 and the LLM description names issue 2 (from Step 11).
-- [ ] `apply-grafana-slos.mjs`:
+- [x] `apply-grafana-slos.mjs`:
   - exports `validateConfig(config): string[]` and `run({ env, argv, fetchImpl, log, sleep })`
   - reads the config path relative to the module, using the same `fileURLToPath` pattern as alert-rules
   - sends GET `/v1/slo/<uuid>`, then POST or PUT
@@ -575,10 +575,10 @@ block.
   - applies `redactBody` to errors
   - ends with the same CLI guard pattern as `apply-grafana-alert-rules.mjs:170-175`, logging
     `[grafana-slos] <message>` and exiting 1
-- [ ] The `.d.mts` declares the config types, `validateConfig` and `run`.
+- [x] The `.d.mts` declares the config types, `validateConfig` and `run`.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-slos.test.ts` passes in full.
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-slos.test.ts` passes in full.
 - No production dry run from this machine (r4/A3). After merge, `gh workflow run grafana-slos.yml -f
   dry_run=true` is the read-only check (NEEDS_HUMAN evidence, Step 20).
 
@@ -589,7 +589,7 @@ block.
 - `tools/scripts/observability/apply-grafana-dashboard.mjs`
 - `tools/scripts/observability/apply-grafana-dashboard.d.mts`
 
-- [ ] 5 panels:
+- [x] 5 panels:
   1. request rate by service:
      `sum by (service)(rate(traces_spanmetrics_calls_total{service=~"api|ai-worker", span_kind="SPAN_KIND_SERVER"}[$__rate_interval]))`
   2. error ratio by service
@@ -598,8 +598,8 @@ block.
      (native histogram)
   4. ai-worker `llm.invoke` calls by status
   5. api availability against the 99.9% objective (stat panel)
-- [ ] Datasource uid `grafanacloud-prom`. Panels set no `id` (Grafana assigns them).
-- [ ] The script:
+- [x] Datasource uid `grafanacloud-prom`. Panels set no `id` (Grafana assigns them).
+- [x] The script:
   - GETs the folder but does not create it (`intelliflow-prod` exists, and the alert-rules job owns it)
   - then sends `POST /api/dashboards/db` with `overwrite: true`, `folderUid` and the message
     `ENV-008-AI dashboard as code`
@@ -608,7 +608,7 @@ block.
   - takes `sleep` and passes it to `createApiClient`
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-dashboard.test.ts` passes.
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-dashboard.test.ts` passes.
 - No production dry run from this machine (r4/A3). After merge, `gh workflow run grafana-dashboard.yml -f
   dry_run=true` is the read-only check (NEEDS_HUMAN evidence, Step 20).
 
@@ -621,10 +621,10 @@ block.
 **Files to Modify:**
 - `.github/workflows/grafana-alert-rules.yml`
 
-- [ ] `grafana-alert-rules.yml`: change only `timeout-minutes` (5 → 12) and the header comment (which now
+- [x] `grafana-alert-rules.yml`: change only `timeout-minutes` (5 → 12) and the header comment (which now
       mentions the 503 retry, and that SLOs and the dashboard have their own workflows). Triggers, `paths`,
       job id `apply`, environment, sparse paths, node `24`, inputs and command stay byte-identical.
-- [ ] `grafana-slos.yml` and `grafana-dashboard.yml`, each with:
+- [x] `grafana-slos.yml` and `grafana-dashboard.yml`, each with:
   - `push` to `main` on exactly its own JSON file, its own script, `tools/scripts/lib/grafana-provisioning.mjs`
     and the workflow file itself; `workflow_dispatch` with a boolean `dry_run` (default false)
   - workflow-level `permissions: contents: read`; concurrency group `grafana-slos` / `grafana-dashboard`
@@ -638,9 +638,9 @@ block.
     Production-environment secret, and that it never prints the token
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-workflows.test.ts -t "grafana"` passes (the three Grafana blocks). The Railway block stays red until Step 15 and is judged there.
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-synthetic-monitoring.test.ts` passes (the synthetic sparse-path `it.each` still holds).
-- [ ] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0.
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-workflows.test.ts -t "grafana"` passes (the three Grafana blocks). The Railway block stays red until Step 15 and is judged there.
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-synthetic-monitoring.test.ts` passes (the synthetic sparse-path `it.each` still holds).
+- [x] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0.
 
 #### Step 15: Railway self-healing script and workflow (AC-007, AC-008)
 **Type:** implementation
@@ -651,44 +651,44 @@ block.
 
 Script, following spec §Interfaces exactly. It is self-contained and imports nothing from
 `tools/scripts/lib`:
-- [ ] Exports `DESIRED`, `diffFields`, `aiWorkerHealthcheck` and `run({ env, argv, fetchImpl, log, writeSummary })`.
-- [ ] Sends GraphQL to `https://backboard.railway.com/graphql/v2` with headers
+- [x] Exports `DESIRED`, `diffFields`, `aiWorkerHealthcheck` and `run({ env, argv, fetchImpl, log, writeSummary })`.
+- [x] Sends GraphQL to `https://backboard.railway.com/graphql/v2` with headers
       `User-Agent: ifc-env008/1.0` and `Authorization: Bearer <token>`.
-- [ ] Refuses to run without `RAILWAY_API_TOKEN` or `RAILWAY_PROJECT_ID`, before any fetch.
-- [ ] Selects the environment named `production` from `project.environments`. If it is missing, rejects.
-- [ ] Looks up services `api` and `ai-worker` by name. If either is missing, rejects before any mutation.
-- [ ] From `variables` it reads only `PORT` and `HEALTH_PORT`, and drops the object immediately.
-- [ ] Applies the ai-worker health-check guard, including `healthcheck skipped: variables unreadable`.
-- [ ] Without `--apply` it sends no mutation. With `--apply` it sends one `serviceInstanceUpdate` per
+- [x] Refuses to run without `RAILWAY_API_TOKEN` or `RAILWAY_PROJECT_ID`, before any fetch.
+- [x] Selects the environment named `production` from `project.environments`. If it is missing, rejects.
+- [x] Looks up services `api` and `ai-worker` by name. If either is missing, rejects before any mutation.
+- [x] From `variables` it reads only `PORT` and `HEALTH_PORT`, and drops the object immediately.
+- [x] Applies the ai-worker health-check guard, including `healthcheck skipped: variables unreadable`.
+- [x] Without `--apply` it sends no mutation. With `--apply` it sends one `serviceInstanceUpdate` per
       service, whose `input` holds only the differing `DESIRED` keys.
-- [ ] Reads back after each mutation and rejects on any difference in the keys that were sent (fail
+- [x] Reads back after each mutation and rejects on any difference in the keys that were sent (fail
       closed).
-- [ ] api live-probe guard (r4/A1, the Amendment r4 section is the full contract): an unauthenticated GET of
+- [x] api live-probe guard (r4/A1, the Amendment r4 section is the full contract): an unauthenticated GET of
       `<PRODUCTION_API_URL>/api/health/live` with `redirect: 'manual'` and `AbortSignal.timeout(15000)`,
       only when the api `healthcheckPath` differs. Exactly 200 lets `healthcheckPath` and
       `healthcheckTimeout` through. Anything else drops both from the api `input`, logs the fixed-word reason,
       writes the table and summary, and rejects after every service is processed (read-only mode: logs
       `would be skipped` and resolves).
-- [ ] Never sends a deploy or redeploy mutation. The log and summary say
+- [x] Never sends a deploy or redeploy mutation. The log and summary say
       `effective from the next deployment`.
-- [ ] The error logger prints `extensions.code` and only the allow-listed messages `Not Authorized` and
+- [x] The error logger prints `extensions.code` and only the allow-listed messages `Not Authorized` and
       `Problem processing request`; everything else is `<redacted>`.
-- [ ] The default `writeSummary` appends to `process.env.GITHUB_STEP_SUMMARY` when that is set. The summary
+- [x] The default `writeSummary` appends to `process.env.GITHUB_STEP_SUMMARY` when that is set. The summary
       holds the `service | field | before | after` table and the skip lines, with no IDs.
-- [ ] CLI guard: the same pattern as Step 12.
+- [x] CLI guard: the same pattern as Step 12.
 
 Workflow:
-- [ ] Triggers:
+- [x] Triggers:
   - `push: branches [main], paths [tools/scripts/observability/apply-railway-self-healing.mjs, .github/workflows/railway-self-healing.yml]`
     runs `--apply`
   - dispatch input `apply` (boolean, default false) adds `--apply` only when true
-- [ ] `environment: Production`, `permissions: contents: read`, concurrency `railway-self-healing` with
+- [x] `environment: Production`, `permissions: contents: read`, concurrency `railway-self-healing` with
       cancel-in-progress false, `timeout-minutes: 5`.
-- [ ] Sparse checkout of exactly `tools/scripts/observability`, and setup-node `24`.
-- [ ] Step `env`: `RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_TOKEN }}` and
+- [x] Sparse checkout of exactly `tools/scripts/observability`, and setup-node `24`.
+- [x] Step `env`: `RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_TOKEN }}` and
       `RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}`, and `PRODUCTION_API_URL: ${{ vars.PRODUCTION_API_URL }}`.
       Both repository variables exist (checked with `gh variable list` on 2026-10-24 and 2026-10-25).
-- [ ] The header comment says:
+- [x] The header comment says:
   - CI owns these settings, so changing `DESIRED` changes production on merge.
   - The settings persist if the workflow is deleted.
   - The manual dispatch is the drift check.
@@ -696,8 +696,8 @@ Workflow:
     touching this workflow's two paths or a dispatch with `apply=true` retries it.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-railway-self-healing.test.ts tools/scripts/__tests__/env008-workflows.test.ts` passes.
-- [ ] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0.
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/apply-railway-self-healing.test.ts tools/scripts/__tests__/env008-workflows.test.ts` passes.
+- [x] `node tools/scripts/security/workflow-secret-lint.mjs` exits 0.
 
 #### Step 16: Rewrite the three descriptive infra files in place (AC-009)
 **Type:** implementation
@@ -706,14 +706,14 @@ Workflow:
 - `infra/monitoring/anomaly-detection.json`
 - `infra/monitoring/otel-config.yaml`
 
-- [ ] `self-healing-rules.yaml`:
+- [x] `self-healing-rules.yaml`:
   - `mode: descriptive`
   - `applied_by: .github/workflows/railway-self-healing.yml`
   - `source_of_truth: tools/scripts/observability/apply-railway-self-healing.mjs (DESIRED)`
   - a copy of the per-service values
   - `limits`: restart is crash-only, and the health check is a deploy gate, not a liveness probe
   - The Sprint-0 `operator_action` playbooks are removed.
-- [ ] `anomaly-detection.json`:
+- [x] `anomaly-detection.json`:
   - `mode: descriptive`
   - `engine: grafana-asserts (plugin-managed)`
   - the rule names and source series (`traces_spanmetrics_*`)
@@ -721,7 +721,7 @@ Workflow:
   - an `slos` uuid list
   - the predictive-alerting mapping: the SLO burn rate on availability plus the IFC-032 rules
   - The placeholder `http_request_duration_seconds` and `ai_cost_usd` entries are removed.
-- [ ] `otel-config.yaml`:
+- [x] `otel-config.yaml`:
   - **Comments only. No new keys** (`packages/observability/README.md:138` mounts it as a real collector config).
   - Replace the two-line header with a comment block that contains:
     - `Production topology`
@@ -730,7 +730,7 @@ Workflow:
     - the ai-worker `llm.*` span attributes (`apps/ai-worker/src/tracing/llm-tracer.ts:77-87`)
     - a pointer to ADR-087
   - The keys `receivers`, `processors`, `exporters`, `extensions` and `service` stay unchanged.
-- [ ] The current references to `otel-config.yaml` are all docs or the local docker recipe. Check the list is
+- [x] The current references to `otel-config.yaml` are all docs or the local docker recipe. Check the list is
       unchanged before editing, with
       `grep -rn "otel-config.yaml" --include=*.yml --include=*.yaml --include=*.ts --include=*.mjs --include=*.json --include=*.md . | grep -v node_modules`:
   - `packages/observability/README.md:138` (docker run)
@@ -744,8 +744,8 @@ Workflow:
   No runtime code loads it.
 
 **Validation:**
-- [ ] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-monitoring-content.test.ts` passes.
-- [ ] `pnpm exec vitest run --project root tools/scripts/observability/__tests__/` passes
+- [x] `pnpm exec vitest run --project root tools/scripts/__tests__/env008-monitoring-content.test.ts` passes.
+- [x] `pnpm exec vitest run --project root tools/scripts/observability/__tests__/` passes
       (`sync-collector-artifact` and `lint-alerts` are unaffected).
 
 #### Step 17: Production-topology docs (AC-010)
@@ -755,7 +755,7 @@ Workflow:
 - `docs/architecture/observability/correlation-patterns.md`
 - `docs/architecture/observability/instrumentation-checklist.md`
 
-- [ ] Each doc gets a `## Production topology` section. The existing local-stack text is kept. The section
+- [x] Each doc gets a `## Production topology` section. The existing local-stack text is kept. The section
       covers:
   - SDK → `otlp-gateway-prod-gb-south-1.grafana.net` (Grafana Cloud stack), with no collector in production
   - the emitters, api and ai-worker
@@ -763,9 +763,9 @@ Workflow:
   - links to ADR-087 and the `infra/monitoring/grafana/cloud/` files
 
 **Validation:**
-- [ ] `grep -c "^## Production topology" docs/architecture/observability/{implementation-guide,correlation-patterns,instrumentation-checklist}.md` prints 1 for each file.
-- [ ] `grep -l "ADR-087" docs/architecture/observability/{implementation-guide,correlation-patterns,instrumentation-checklist}.md` lists all 3.
-- [ ] `pnpm exec prettier --check docs/architecture/observability/*.md` passes.
+- [x] `grep -c "^## Production topology" docs/architecture/observability/{implementation-guide,correlation-patterns,instrumentation-checklist}.md` prints 1 for each file.
+- [x] `grep -l "ADR-087" docs/architecture/observability/{implementation-guide,correlation-patterns,instrumentation-checklist}.md` lists all 3.
+- [x] `pnpm exec prettier --check docs/architecture/observability/*.md` passes.
 
 #### Step 18: ADR-087 links (AC-010)
 **Type:** docs
@@ -773,7 +773,7 @@ Workflow:
 - `docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md`
 - `.specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md` (a dated note under AC-006 only, r4/A2)
 
-- [ ] The ADR is already `Accepted` (spec consensus), and its README row exists (`README.md:271`).
+- [x] The ADR is already `Accepted` (spec consensus), and its README row exists (`README.md:271`).
   - Add the 5 issue numbers from Step 11 under Links.
   - Correct any file names that differ from the ADR text.
   - Rewrite the negative consequence at `ADR-087…md:105-106` ("Every edit to any Grafana-as-code file
@@ -783,17 +783,17 @@ Workflow:
   - In "Decision Outcome", name the three Grafana workflows and the api live-probe guard on the Railway
     health check.
   - No status change.
-- [ ] Spec AC-006: append one dated line, "2026-10-25 exec amendment (plan r4/A2): delivered as three
+- [x] Spec AC-006: append one dated line, "2026-10-25 exec amendment (plan r4/A2): delivered as three
       independent workflows (`grafana-alert-rules.yml`, `grafana-slos.yml`, `grafana-dashboard.yml`) instead of
       three jobs in one workflow, so SLO-only or dashboard-only changes never re-apply the alert rules." No
       other spec text changes.
 
 **Validation:**
-- [ ] `grep -n "^\*\*Status:\*\* Accepted" docs/architecture/adr/ADR-087-*.md` matches.
-- [ ] `grep -c "ADR-087" docs/architecture/adr/README.md` prints 1.
-- [ ] `grep -c "re-applies alert rules, SLOs and the" docs/architecture/adr/ADR-087-*.md` prints 0, and
+- [x] `grep -n "^\*\*Status:\*\* Accepted" docs/architecture/adr/ADR-087-*.md` matches.
+- [x] `grep -c "ADR-087" docs/architecture/adr/README.md` prints 1.
+- [x] `grep -c "re-applies alert rules, SLOs and the" docs/architecture/adr/ADR-087-*.md` prints 0, and
       `grep -c "grafana-slos.yml" docs/architecture/adr/ADR-087-*.md` prints at least 1.
-- [ ] `grep -c "2026-10-25 exec amendment" .specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md` prints 1.
+- [x] `grep -c "2026-10-25 exec amendment" .specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md` prints 1.
 
 > **Checkpoint (GREEN):** all 8 test files and the regression suites pass under the slot (Validation Matrix
 > rows "Task tests" and "Regression").
@@ -808,30 +808,30 @@ Workflow:
 - `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
 - `apps/project-tracker/docs/metrics/_global/Sprint_plan_A.csv` (regenerated, never edited by hand)
 
-- [ ] Remove duplication between the SLO and dashboard scripts (folder GET, env check).
+- [x] Remove duplication between the SLO and dashboard scripts (folder GET, env check).
   - Extract to `grafana-provisioning.mjs` only if the same code appears in more than two places.
   - Otherwise leave it inline, as the existing two scripts do.
-- [ ] No `istanbul ignore`.
-- [ ] CLI guards keep the existing multi-line pattern, which prettier formats to 6 lines.
+- [x] No `istanbul ignore`.
+- [x] CLI guards keep the existing multi-line pattern, which prettier formats to 6 lines.
   - The spec's NF-003 "one line" wording cannot survive prettier. It is recorded as a spec deviation in the
     exec report.
   - Coverage budget: the 3 new guards add about 12 uncovered lines (only the guard body is uncovered). The
     changed `.mjs` lines are estimated at about 600, which keeps aggregate diff coverage well above 80%.
-- [ ] Dependency chains, in both files:
+- [x] Dependency chains, in both files:
   - `complete-dependency-chains.md`: L1793, L1829, L2161
   - `integrations-dependency-chain.md`: L98, L109, L148; L170 says "Already complete"
   - Keep `ENV-008-AI ✅` only if the attestation verdict is COMPLETE. Otherwise mark it ⏳ with the note
     "production evidence after merge", and reword L170 to match.
-- [ ] CSV EVIDENCE path (Category A, AC-012):
+- [x] CSV EVIDENCE path (Category A, AC-012):
   - Change it from `.specify/sprints/sprint-0/attestations/ENV-008-AI/attestation.json` to `sprint-18`.
   - Edit only the canonical CSV, then run `npx tsx tools/scripts/split-sprint-plan.ts`.
   - `git status` must then show only `Sprint_plan.csv` and `Sprint_plan_A.csv`.
   - Diff the split files against `origin/main` (memory: a merge can drop split-CSV rows).
-- [ ] Run `pnpm exec eslint` and `pnpm exec prettier --check` on every touched `.mjs`, `.ts`, `.json`,
+- [x] Run `pnpm exec eslint` and `pnpm exec prettier --check` on every touched `.mjs`, `.ts`, `.json`,
       `.yml` and `.md` file.
 
 **Validation:**
-- [ ] The Validation Matrix "Lint/format" row passes.
+- [x] The Validation Matrix "Lint/format" row passes.
 
 ### Phase 4: VALIDATION
 
@@ -843,8 +843,8 @@ Workflow:
 - [ ] Run every row of the Validation Matrix below, each under the slot where marked.
   - Save the logs under `.specify/sprints/sprint-18/execution/ENV-008-AI/`.
   - Use `.txt`, never `*.log`.
-- [ ] Diff coverage on the changed `.mjs` lines is at least 80% (NF-003).
-- [ ] NF-002: `git diff origin/main -- package.json pnpm-lock.yaml` prints nothing. Record the output.
+- [x] Diff coverage on the changed `.mjs` lines is at least 80% (NF-003). Result: 92.0% (425/462), execution/ENV-008-AI/diff-coverage.txt.
+- [x] NF-002: `git diff origin/main -- package.json pnpm-lock.yaml` prints nothing. Record the output. Run against the merge base (origin/main moved on since the branch point): empty, execution/ENV-008-AI/nf002-deps.txt.
 - [ ] `npx tsx tools/scripts/validate-artifacts.ts ENV-008-AI` passes, after the EVIDENCE-path change.
 - [ ] Walk every item from AC-001 to AC-012 and NF-001 to NF-003 against the evidence, and record each one
       in the exec report. Carry four recorded spec deviations into the exec report and the attestation

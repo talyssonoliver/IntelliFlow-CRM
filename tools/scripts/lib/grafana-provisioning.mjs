@@ -1,9 +1,10 @@
-// Shared plumbing for talking to the Grafana Cloud Alerting provisioning API,
-// used by both tools/scripts/observability/apply-grafana-alert-rules.mjs
-// (IFC-032 span-metric rules, #804) and apply-synthetic-monitoring.mjs (the
-// /health/ready uptime probe's alert rule, #811). Extracted so the two
-// scripts' identical HTTP client and alert-rule payload shape live in one
-// place instead of drifting apart as separate copies.
+// Shared plumbing for talking to the Grafana Cloud APIs, used by four scripts
+// in tools/scripts/observability/: apply-grafana-alert-rules.mjs (IFC-032
+// span-metric rules, #804), apply-synthetic-monitoring.mjs (the /health/ready
+// uptime probe's alert rule, #811), apply-grafana-slos.mjs and
+// apply-grafana-dashboard.mjs (the production SLOs and service dashboard,
+// ENV-008-AI). Extracted so their HTTP client, 503 retry, error redaction and
+// alert-rule payload shape live in one place instead of drifting apart.
 
 /**
  * Waits between attempts when Grafana answers 503 (ENV-008-AI AC-001). A
