@@ -164,11 +164,21 @@ export interface BackgroundJobsHeartbeatCheck {
   message?: string;
 }
 
-/** Interval per job; 0 when that job is disabled in this environment. */
+/**
+ * Interval per job; 0 when that job is disabled by its own `*_INTERVAL_MS`.
+ * The interval helpers also return 0 on Vercel/Lambda, but that guard only stops
+ * local timers there: the jobs still run in the external worker, so a check
+ * made from a serverless process must keep watching their heartbeats.
+ */
 export function heartbeatIntervals(env: NodeJS.ProcessEnv): Record<HeartbeatJob, number> {
+  const asScheduled: NodeJS.ProcessEnv = {
+    ...env,
+    VERCEL: undefined,
+    AWS_LAMBDA_FUNCTION_NAME: undefined,
+  };
   return {
-    approvalSweep: approvalSweepIntervalFromEnv(env),
-    bounceScan: bounceScanIntervalFromEnv(env),
+    approvalSweep: approvalSweepIntervalFromEnv(asScheduled),
+    bounceScan: bounceScanIntervalFromEnv(asScheduled),
   };
 }
 

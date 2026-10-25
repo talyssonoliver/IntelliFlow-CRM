@@ -198,6 +198,21 @@ describe('heartbeatIntervals', () => {
       heartbeatIntervals({ APPROVAL_SWEEP_INTERVAL_MS: '5000', EMAIL_BOUNCE_SCAN_INTERVAL_MS: '0' })
     ).toEqual({ approvalSweep: 5000, bounceScan: 0 });
   });
+
+  it('keeps watching on Vercel/Lambda, where only local timers are disabled', () => {
+    const serverless = {
+      APPROVAL_SWEEP_INTERVAL_MS: '5000',
+      EMAIL_BOUNCE_SCAN_INTERVAL_MS: '7000',
+    };
+    expect(heartbeatIntervals({ ...serverless, VERCEL: '1' })).toEqual({
+      approvalSweep: 5000,
+      bounceScan: 7000,
+    });
+    expect(heartbeatIntervals({ ...serverless, AWS_LAMBDA_FUNCTION_NAME: 'fn' })).toEqual({
+      approvalSweep: 5000,
+      bounceScan: 7000,
+    });
+  });
 });
 
 describe('evaluateHeartbeats', () => {
