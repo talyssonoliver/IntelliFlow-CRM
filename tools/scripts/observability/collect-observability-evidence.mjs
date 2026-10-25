@@ -58,6 +58,10 @@ const KPI_TARGET_S = 120;
 const CONDITION_LOOKBACK_MAX_S = 3 * DAY_S;
 const CONDITION_STEP_S = 60;
 const CONDITION_PROBE_S = 120;
+const COMPARATORS = {
+  gt: { promql: '>', holds: (value, threshold) => value > threshold },
+  lt: { promql: '<', holds: (value, threshold) => value < threshold },
+};
 const STATE_WORDS = new Set(['Normal', 'Pending', 'Alerting', 'Recovering', 'NoData', 'Error']);
 const LIVE_HEALTH = new Set(['ok', 'error', 'nodata', 'unknown']);
 const LIVE_STATE = new Set(['inactive', 'pending', 'firing', 'recovering', 'normal', 'alerting']);
@@ -566,7 +570,8 @@ async function checkRepoRules(get, window, repo, transitions, episodes) {
     const held = await promInstantQuery(
       get,
       DS.prom,
-      `count_over_time(((${rule.expr}) > 0)[${lookback}s:${CONDITION_STEP_S}s])`,
+      `count_over_time(((${rule.expr}) ${COMPARATORS[rule.operator].promql} ${rule.threshold})` +
+        `[${lookback}s:${CONDITION_STEP_S}s])`,
       window.end
     );
     checks.push({
@@ -596,7 +601,7 @@ async function checkRepoRules(get, window, repo, transitions, episodes) {
       const hit = (res?.data?.result ?? []).some(
         (series) =>
           (series.metric?.service === undefined || series.metric.service === episode.service) &&
-          Number(series.value?.[1]) > 0
+          COMPARATORS[rule.operator].holds(Number(series.value?.[1]), rule.threshold)
       );
       if (hit) trueRules.push(rule.uid);
     }
@@ -794,7 +799,14 @@ async function loadRepoRules(readFile) {
   const titles = new Map((config.rules ?? []).map((r) => [r.uid, r.title]));
   const rules = (config.rules ?? [])
     .filter((r) => typeof r.expr === 'string' && r.expr !== '')
-    .map((r) => ({ uid: r.uid, expr: r.expr }));
+    .map((r) => {
+      // The condition is the rule's own comparison; checking every rule
+      // with "> 0" would invert an `lt` rule such as telemetry-silent.
+      if (!Object.hasOwn(COMPARATORS, r.operator) || !Number.isFinite(r.threshold)) {
+        throw new Error(`repo rule ${r.uid}: unreadable operator or threshold`);
+      }
+      return { uid: r.uid, expr: r.expr, operator: r.operator, threshold: r.threshold };
+    });
   return { titles, rules, deliveryUid: config.deliveryTest?.uid };
 }
 

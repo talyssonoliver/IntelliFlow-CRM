@@ -819,7 +819,13 @@ describe('collect-observability-evidence: MTTD', () => {
     const cfg = healthy();
     cfg.repoRules = JSON.stringify({
       rules: [
-        { uid: 'ifc074-error-spans-direct', title: 'Error spans (direct)', expr, operator: 'gt' },
+        {
+          uid: 'ifc074-error-spans-direct',
+          title: 'Error spans (direct)',
+          expr,
+          operator: 'gt',
+          threshold: 0,
+        },
       ],
     });
     cfg.history = [
@@ -877,10 +883,48 @@ describe('collect-observability-evidence: MTTD', () => {
     expect(JSON.stringify(json)).not.toContain('failed to query');
   });
 
+  it("tests each rule's condition with its own operator and threshold", async () => {
+    const cfg = healthy();
+    cfg.repoRules = JSON.stringify({
+      rules: [
+        { uid: 'silent', title: 'x', expr: 'rate_ai', operator: 'lt', threshold: 0.001 },
+        { uid: 'err-rate', title: 'y', expr: 'ratio_ai', operator: 'gt', threshold: 0.05 },
+      ],
+    });
+    const queries: string[] = [];
+    const firstError = NOW_S - 7290;
+    cfg.promQuery = (query, time) => {
+      if (!/rate_ai|ratio_ai/.test(query)) return undefined;
+      queries.push(query);
+      if (query.startsWith('count_over_time')) return [];
+      if (time !== firstError + 120) return [];
+      // Both values are above 0, but neither rule's condition holds:
+      // 0.5 is not below 0.001, and 0.02 is not above 0.05.
+      const value = query === 'rate_ai' ? '0.5' : '0.02';
+      return [{ metric: { service: 'ai-worker' }, value: [time, value] }];
+    };
+    const { json } = await baseline(cfg);
+    expect(queries).toContain('count_over_time(((rate_ai) < 0.001)[259200s:60s])');
+    expect(queries).toContain('count_over_time(((ratio_ai) > 0.05)[259200s:60s])');
+    expect(json.episodes[0].repo_rules_true_at_120s).toEqual([]);
+  });
+
+  it('refuses a committed rule whose operator or threshold it cannot read', async () => {
+    const cfg = healthy();
+    cfg.repoRules = JSON.stringify({
+      rules: [{ uid: 'bad', title: 'x', expr: 'up', operator: 'gte', threshold: 1 }],
+    });
+    const { code, h } = await baseline(cfg);
+    expect(code).toBe(1);
+    expect(h.files.size).toBe(0);
+  });
+
   it('records an unknown live state instead of a value Grafana made up', async () => {
     const cfg = healthy();
     cfg.repoRules = JSON.stringify({
-      rules: [{ uid: 'ifc074-error-spans-direct', title: 'x', expr: 'up', operator: 'gt' }],
+      rules: [
+        { uid: 'ifc074-error-spans-direct', title: 'x', expr: 'up', operator: 'gt', threshold: 0 },
+      ],
     });
     cfg.ruleStatus = [{ uid: 'ifc074-error-spans-direct', health: 'weird value', state: 'odd' }];
     const { json } = await baseline(cfg);
@@ -894,7 +938,9 @@ describe('collect-observability-evidence: MTTD', () => {
   it('reports a committed rule Grafana does not have as live: null', async () => {
     const cfg = healthy();
     cfg.repoRules = JSON.stringify({
-      rules: [{ uid: 'ifc074-error-spans-direct', title: 'x', expr: 'up', operator: 'gt' }],
+      rules: [
+        { uid: 'ifc074-error-spans-direct', title: 'x', expr: 'up', operator: 'gt', threshold: 0 },
+      ],
     });
     const { json } = await baseline(cfg);
     expect(json.repo_rule_checks[0]).toMatchObject({ transitions_by_state: {}, live: null });
