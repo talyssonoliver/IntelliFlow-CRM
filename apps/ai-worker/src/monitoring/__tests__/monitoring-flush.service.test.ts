@@ -111,6 +111,52 @@ describe('MonitoringFlushService', () => {
     );
   });
 
+  it('flushNow() writes the drift result model, not the metric name, into model (IFC-117)', async () => {
+    const now = new Date();
+    const window = {
+      startTime: now,
+      endTime: now,
+      sampleCount: 60,
+      mean: 0.5,
+      variance: 0.01,
+      min: 0,
+      max: 1,
+      distribution: [],
+    };
+    vi.mocked(driftDetector.getHistory).mockReturnValue([
+      {
+        model: 'scoring-free',
+        metric: 'score_distribution',
+        status: 'evaluated',
+        detected: true,
+        detectedTick: true,
+        onset: true,
+        inEvent: true,
+        severity: 'high',
+        driftScore: 0.7,
+        pValue: 0.001,
+        timestamp: now,
+        baselineWindow: window,
+        currentWindow: window,
+        recommendations: [],
+      } as any,
+    ]);
+
+    await service.flushNow();
+
+    expect(mockPrisma.aIMonitoringEvent.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            eventType: 'drift',
+            model: 'scoring-free',
+            metric: 'score_distribution',
+          }),
+        ]),
+      })
+    );
+  });
+
   it('flushNow() maps LatencyMeasurement to eventType "latency"', async () => {
     const now = new Date();
     vi.mocked(latencyMonitor.getMeasurementsSince).mockReturnValue([

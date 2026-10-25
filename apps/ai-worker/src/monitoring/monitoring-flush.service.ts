@@ -81,7 +81,7 @@ export class MonitoringFlushService {
       if (dr.timestamp > this.lastFlushedAt.drift) {
         events.push({
           eventType: 'drift',
-          model: dr.metric ?? null,
+          model: dr.model ?? null,
           metric: dr.metric ?? null,
           value: dr.driftScore ?? null,
           flagged: dr.detected,

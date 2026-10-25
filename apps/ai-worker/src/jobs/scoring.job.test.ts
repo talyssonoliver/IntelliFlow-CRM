@@ -27,9 +27,14 @@ import { prisma } from '@intelliflow/db';
 
 // Mock the scoring chain
 const mockScoreLead = vi.fn();
+// IFC-117: constructor options of every LeadScoringChain the job builds (the fallback one included).
+const chainCtorOptions: unknown[] = [];
 
 vi.mock('../chains/scoring.chain', () => {
   class LeadScoringChain {
+    constructor(options?: unknown) {
+      chainCtorOptions.push(options);
+    }
     scoreLead = (input: any) => mockScoreLead(input);
   }
   return {
@@ -817,6 +822,27 @@ describe('ScoringJob', () => {
       expect(result.modelVersion).not.toBe('fallback');
       expect(result.score).toBe(75);
       expect(mockScoreLead).toHaveBeenCalledTimes(2); // primary + fallback
+    });
+
+    it('builds the fallback chain with recordDrift: false so a provider switch is not read as drift (IFC-117)', async () => {
+      mockScoreLead.mockReset();
+      mockScoreLead
+        .mockRejectedValueOnce(new Error('primary provider down (429)'))
+        .mockResolvedValueOnce(mockScoringResult);
+      chainCtorOptions.length = 0;
+
+      const job = createMockJob({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant1,
+        lead: { email: 'test@example.com', source: 'WEBSITE' },
+      });
+      await processScoringJob(job);
+
+      const fallbackOptions = chainCtorOptions.filter(
+        (o) => typeof o === 'object' && o !== null && 'provider' in o
+      );
+      expect(fallbackOptions).toHaveLength(1);
+      expect(fallbackOptions[0]).toMatchObject({ recordDrift: false });
     });
 
     it('falls through to the heuristic when BOTH providers fail', async () => {

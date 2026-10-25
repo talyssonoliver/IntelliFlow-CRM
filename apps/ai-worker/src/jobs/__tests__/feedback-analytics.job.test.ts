@@ -4,7 +4,7 @@
  * Covers:
  * 1. Handler runs the generator (runFeedbackAnalytics is called)
  * 2. Writes AIMonitoringEvent with eventType `retraining_trigger` when threshold is breached
- * 3. Prometheus counter increments on breach
+ * 3. Retraining counter (OTel) increments on breach
  * 4. No monitoring event / no counter increment when retraining is NOT needed
  * 5. DB error is non-fatal — job still completes
  */
@@ -16,8 +16,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // ============================================================================
 
 const mockRunFeedbackAnalytics = vi.hoisted(() => vi.fn());
-const mockIncrementRetrainingTriggers = vi.hoisted(() => vi.fn());
-const mockResetRetrainingTriggerCounters = vi.hoisted(() => vi.fn());
+const mockRecordRetrainingTrigger = vi.hoisted(() => vi.fn());
 const mockAIMonitoringEventCreate = vi.hoisted(() => vi.fn());
 const mockLeadFeedbackFindMany = vi.hoisted(() => vi.fn());
 
@@ -25,9 +24,9 @@ vi.mock('../../analytics/feedback-analytics-generator', () => ({
   runFeedbackAnalytics: mockRunFeedbackAnalytics,
 }));
 
-vi.mock('../../metrics/prometheus-exporter', () => ({
-  incrementRetrainingTriggers: mockIncrementRetrainingTriggers,
-  _resetRetrainingTriggerCounters: mockResetRetrainingTriggerCounters,
+// IFC-117: the retraining counter moved from the deleted Prometheus exporter to the OTel facade.
+vi.mock('../../monitoring/otel-ai-metrics', () => ({
+  recordRetrainingTrigger: mockRecordRetrainingTrigger,
 }));
 
 vi.mock('@intelliflow/db', () => ({
@@ -166,12 +165,12 @@ describe('processFeedbackAnalyticsJob', () => {
       expect(callArg.data.model).toBe('v1.2.0');
     });
 
-    it('increments the Prometheus counter with urgency label', async () => {
+    it('increments the retraining counter with the urgency label', async () => {
       const job = createMockJob();
       await processFeedbackAnalyticsJob(job);
 
-      expect(mockIncrementRetrainingTriggers).toHaveBeenCalledOnce();
-      expect(mockIncrementRetrainingTriggers).toHaveBeenCalledWith({ urgency: 'high' });
+      expect(mockRecordRetrainingTrigger).toHaveBeenCalledOnce();
+      expect(mockRecordRetrainingTrigger).toHaveBeenCalledWith({ urgency: 'high' });
     });
 
     it('returns retrainingNeeded=true and monitoringEventId', async () => {
@@ -203,11 +202,11 @@ describe('processFeedbackAnalyticsJob', () => {
       expect(mockAIMonitoringEventCreate).not.toHaveBeenCalled();
     });
 
-    it('does NOT increment the Prometheus counter', async () => {
+    it('does NOT increment the retraining counter', async () => {
       const job = createMockJob();
       await processFeedbackAnalyticsJob(job);
 
-      expect(mockIncrementRetrainingTriggers).not.toHaveBeenCalled();
+      expect(mockRecordRetrainingTrigger).not.toHaveBeenCalled();
     });
 
     it('returns retrainingNeeded=false and no monitoringEventId', async () => {
@@ -230,7 +229,7 @@ describe('processFeedbackAnalyticsJob', () => {
       // Job should not throw
       expect(result.retrainingNeeded).toBe(true);
       // Counter still increments even when DB write fails
-      expect(mockIncrementRetrainingTriggers).toHaveBeenCalledOnce();
+      expect(mockRecordRetrainingTrigger).toHaveBeenCalledOnce();
       // No monitoringEventId since create failed
       expect(result.monitoringEventId).toBeUndefined();
     });

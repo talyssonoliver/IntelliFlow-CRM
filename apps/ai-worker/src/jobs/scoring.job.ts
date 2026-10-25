@@ -234,6 +234,8 @@ async function generateScoringWithFallback(
         const fallbackChain = new LeadScoringChain({
           tenantId: job.data.tenantId,
           provider: fallbackProvider,
+          // IFC-117: another provider's scores would read as a distribution shift.
+          recordDrift: false,
         });
         const scored = await Promise.race([
           fallbackChain.scoreLead(input),

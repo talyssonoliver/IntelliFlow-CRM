@@ -245,7 +245,9 @@ export class AutoResponseChain {
   async generateResponseWithMonitoring(
     input: AutoResponseInput
   ): Promise<MonitoredResult<AutoResponseOutput>> {
-    return withMonitoring(() => this.generateResponse(input), this.chainMonitor.getConfig());
+    return withMonitoring(() => this.generateResponse(input), this.chainMonitor.getConfig(), {
+      chain: 'auto_response',
+    });
   }
 
   /**

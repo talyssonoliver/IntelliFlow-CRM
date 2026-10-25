@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { aiConfig, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult, MonitoringContext, TokenUsage } from '../monitoring/chain-monitor';
+import { recordInference } from '../monitoring/otel-ai-metrics';
 import { leadScoreSchema } from '@intelliflow/validators';
 import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -89,6 +90,8 @@ export class LeadScoringChain {
   private readonly tenantId?: string;
   /** Optional provider override (job-level fallback, #324). */
   private readonly provider?: AIProvider;
+  /** false on the job-level fallback chain so a provider switch is not read as drift (IFC-117). */
+  private readonly recordDrift: boolean;
 
   /** Default prompt template used when no versioned config is available */
   private static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
@@ -119,9 +122,10 @@ Lead Information:
 
 Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
 
-  constructor(options?: { tenantId?: string; provider?: AIProvider }) {
+  constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;
     this.provider = options?.provider;
+    this.recordDrift = options?.recordDrift ?? true;
 
     // Initialize LLM via factory — provider/tier routing handled centrally
     this.model = createLLM('scoring', 'free', {
@@ -170,6 +174,8 @@ Respond with a structured JSON object containing the score, confidence, factors,
    */
   async scoreLead(lead: LeadInput): Promise<ScoringResult> {
     const startTime = Date.now();
+    // withMonitoring counts its own failures; errors before it are counted in the catch below.
+    let monitoredCallStarted = false;
 
     try {
       logger.info({ leadEmail: lead.email }, 'Starting lead scoring');
@@ -209,10 +215,14 @@ Respond with a structured JSON object containing the score, confidence, factors,
       // Use the logical pricing key (tier-aware) so calculateCost() matches the pricing table
       // (IFC-215 AC-004). The full versioned string is stored in modelVersion for audit tracing.
       const costModelKey = `scoring-${effectiveTierLabel}`;
-      const modelVersion = `${aiConfig.provider}:${costModelKey}:v1`;
+      // The provider that actually served this call (a fallback chain overrides the global one).
+      const modelVersion = `${this.provider ?? aiConfig.provider}:${costModelKey}:v1`;
       const usageHandler = new TokenUsageCallbackHandler(costModelKey);
       const monitoringContext: MonitoringContext = {
         modelName: costModelKey,
+        chain: 'lead_scoring',
+        valueType: 'lead_scored',
+        recordDrift: this.recordDrift,
         getUsage: () => usageHandler.getUsage(),
         inputContext: leadInfo, // sanitized lead text — no raw PII beyond what is already logged
         extractText: (r: unknown): string | null => {
@@ -241,6 +251,7 @@ Respond with a structured JSON object containing the score, confidence, factors,
           return null;
         },
       };
+      monitoredCallStarted = true;
       const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
         async () => {
           // Call the LLM with structured output; usageHandler captures token usage via callback
@@ -283,6 +294,15 @@ Respond with a structured JSON object containing the score, confidence, factors,
 
       return { ...scoringResult, requiresReview: needsReview };
     } catch (error) {
+      if (!monitoredCallStarted) {
+        // Tenant tier, LLM creation or prompt preparation failed before the monitored call.
+        recordInference({
+          model: undefined,
+          chain: 'lead_scoring',
+          outcome: 'error',
+          latencyMs: Date.now() - startTime,
+        });
+      }
       logger.error(
         {
           leadEmail: lead.email,

@@ -1,6 +1,12 @@
 {
   "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
   "task_id": "IFC-117",
+  "started_at": "2026-10-25T16:19:27Z",
+  "execution": {
+    "started_at": "2026-10-25T16:19:27Z",
+    "executor": "Claude Code /exec",
+    "agents": ["stoa-intelligence", "stoa-quality", "stoa-foundation", "stoa-security"]
+  },
   "status_history": [
     {
       "status": "IN_PROGRESS",
@@ -21,6 +27,11 @@
       "status": "In Progress",
       "at": "2026-10-25T16:18:12Z",
       "note": "Plan complete: .specify/sprints/sprint-18/planning/IFC-117-plan.md (28 steps). Plan-reviewer subagent: REVISE, REVISE, then APPROVED_WITH_CHANGES; all fixes applied. The CSV stays In Progress (Planning is not an allowed transition)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T16:19:27Z",
+      "note": "Exec session started (/exec IFC-117, sprint 18)."
     }
   ],
   "blockers": [

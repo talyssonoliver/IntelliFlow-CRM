@@ -7,6 +7,9 @@
  * - ROI tracking (via ROITracker)
  * - Latency monitoring (via LatencyMonitor)
  *
+ * IFC-117: withMonitoring is also the single counting point for the OTel AI metrics
+ * (otel-ai-metrics.ts), so they come from the real chain path and ride the OTLP export.
+ *
  * @module chain-monitor
  * @task IFC-117
  */
@@ -14,14 +17,25 @@
 import pino from 'pino';
 import { DriftDetector, driftDetector } from './drift-detector';
 import { HallucinationChecker, hallucinationChecker } from './hallucination-checker';
-import { ROITracker, roiTracker } from './roi-tracker';
+import { ROITracker, roiTracker, type ValueType } from './roi-tracker';
 import { LatencyMonitor, latencyMonitor } from './latency-monitor';
 import { calculateCost } from '../config/ai.config';
+import {
+  recordConfidence,
+  recordCost,
+  recordEstimatedValue,
+  recordHallucination,
+  recordInference,
+} from './otel-ai-metrics';
+import type { ChainId, HallucinationOutcome } from './otel-ai-types';
 
 const logger = pino({
   name: 'chain-monitor',
   level: process.env.LOG_LEVEL || 'info',
 });
+
+/** Shortest extracted text the hallucination checker is run on. */
+const MIN_CHECKED_TEXT_LENGTH = 10;
 
 /**
  * Configuration for ChainMonitor
@@ -45,7 +59,8 @@ export interface TokenUsage {
 
 /**
  * Optional caller-supplied context for richer monitoring payloads.
- * All fields are optional — omitting the context preserves backward-compatible behaviour.
+ * All fields are optional — omitting the context preserves backward-compatible behaviour,
+ * except that no value is booked without an explicit `valueType` (IFC-117).
  */
 export interface MonitoringContext {
   /** Logical model name used for cost calculation and metric labels, e.g. 'scoring-free' */
@@ -59,6 +74,12 @@ export interface MonitoringContext {
    * Omit when not available — skips context-dependent hallucination checks.
    */
   inputContext?: string;
+  /** Which chain this is, for metric labels (IFC-117). */
+  chain?: ChainId;
+  /** The value booked on success; nothing is booked without it (IFC-117). */
+  valueType?: ValueType;
+  /** false for a job-level fallback-provider call, so a provider switch is not read as drift. */
+  recordDrift?: boolean;
 }
 
 /**
@@ -72,6 +93,8 @@ export interface MonitoredResult<T> {
     tokenCost: number;
     driftScore: number | null;
     hallucinationFlags: string[];
+    /** Checker verdict, or null when the check was skipped or failed. */
+    hallucinated: boolean | null;
     confidenceScore: number;
   };
 }
@@ -126,15 +149,15 @@ export class ChainMonitor {
 /**
  * Compute token cost and record it on the ROI tracker using the same computed value
  * so metrics.tokenCost and the stored cost never diverge (AC-001, AC-004).
- * Returns 0 when usage is unavailable.
+ * Returns null when no usage was captured (distinct from a legitimately free call, 0).
  */
 function computeTokenCost(
   operationId: string,
   config: ChainMonitorConfig,
   context: MonitoringContext | undefined
-): number {
+): { cost: number; model: string } | null {
   const usage = context?.getUsage?.() ?? null;
-  if (usage === null) return 0;
+  if (usage === null) return null;
   // Prefer the caller-supplied modelName; fall back to usage.model so the pricing key is
   // never silently lost when context.modelName is omitted (AC-004).
   const modelName = context?.modelName ?? usage.model ?? 'unknown';
@@ -150,45 +173,97 @@ function computeTokenCost(
       cost,
     });
   }
-  return cost;
+  return { cost, model: modelName };
 }
 
 /**
- * Run the hallucination checker and return type labels.
- * Falls back to [] on any error so chain errors are never suppressed (AC-002, AC-003, AC-007, AC-008).
+ * Run the hallucination checker and report what happened.
+ * Never throws, so chain errors are never suppressed (AC-002, AC-003, AC-007, AC-008).
  * Raw output text is NEVER logged (AC-008 / PII safety).
  *
  * NOTE: We require a non-empty inputContext before calling checkOutput. Passing an empty
  * context string causes HallucinationChecker to flag ALL extracted claims as
  * unsupported_claim and ALL topic overlaps as context_drift — producing false positives.
- * When context is unavailable, we return [] rather than emit misleading flags (AC-003).
+ * When context is unavailable, the check is skipped rather than emitting misleading flags.
  */
-async function computeHallucinationFlags<T>(
+async function checkHallucination<T>(
   operationId: string,
   result: T,
   config: ChainMonitorConfig,
   context: MonitoringContext | undefined
-): Promise<string[]> {
-  if (!context?.extractText) return [];
-  const inputContext = context.inputContext;
-  if (!inputContext || inputContext.trim().length === 0) return []; // skip context-dependent checks
+): Promise<HallucinationOutcome> {
+  const inputContext = context?.inputContext;
+  if (!inputContext || inputContext.trim().length === 0)
+    return { status: 'skipped', reason: 'no_context' };
+  if (!context?.extractText) return { status: 'skipped', reason: 'no_text' };
   try {
     const outputText = context.extractText(result);
-    if (!outputText || outputText.length < 10) return [];
-    const hallucinationResult = await config.hallucinationChecker.checkOutput({
+    if (!outputText) return { status: 'skipped', reason: 'no_text' };
+    if (outputText.length < MIN_CHECKED_TEXT_LENGTH)
+      return { status: 'skipped', reason: 'too_short' };
+    const checked = await config.hallucinationChecker.checkOutput({
       id: operationId,
       model: context.modelName ?? 'unknown',
       inputContext, // non-empty: caller supplies sanitized context (AC-008 — raw PII never logged)
       output: outputText, // NEVER logged — only hallucinationTypes are emitted below
     });
-    return hallucinationResult.hallucinationTypes as string[];
+    return {
+      status: 'checked',
+      hallucinated: checked.hallucinated,
+      types: checked.hallucinationTypes,
+    };
   } catch (err) {
     logger.warn(
       { operationId, error: err instanceof Error ? err.message : String(err) },
       'Hallucination check failed — falling back to empty flags'
     );
-    return [];
+    return { status: 'error' };
   }
+}
+
+/** A finite number in [0, 1], or null. */
+function unitInterval(value: unknown): number | null {
+  return typeof value === 'number' && Number.isFinite(value) && value >= 0 && value <= 1
+    ? value
+    : null;
+}
+
+/**
+ * Record the result's output distributions for drift: the lead score (0-100, normalised by
+ * dividing by 100) and the model-reported confidence. Returns the normalised score.
+ */
+function recordDriftSamples<T>(
+  result: T,
+  config: ChainMonitorConfig,
+  model: string
+): number | null {
+  if (!result || typeof result !== 'object') return null;
+  const timestamp = new Date();
+  let driftScore: number | null = null;
+
+  if ('score' in result) {
+    const score = (result as { score: unknown }).score;
+    if (typeof score === 'number' && Number.isFinite(score)) {
+      driftScore = score / 100;
+      config.driftDetector.recordSample({
+        value: driftScore,
+        timestamp,
+        model,
+        metric: 'score_distribution',
+      });
+    }
+  }
+  const confidence =
+    'confidence' in result ? unitInterval((result as { confidence: unknown }).confidence) : null;
+  if (confidence !== null) {
+    config.driftDetector.recordSample({
+      value: confidence,
+      timestamp,
+      model,
+      metric: 'confidence_level',
+    });
+  }
+  return driftScore;
 }
 
 /**
@@ -201,6 +276,8 @@ export async function withMonitoring<T>(
 ): Promise<MonitoredResult<T>> {
   const operationId = generateOperationId();
   const startTime = Date.now();
+  const model = context?.modelName ?? 'default';
+  const chain: ChainId = context?.chain ?? 'unknown';
 
   // Start latency tracking
   config.latencyMonitor.startOperation(operationId);
@@ -216,54 +293,50 @@ export async function withMonitoring<T>(
     const latencyMs = Date.now() - startTime;
 
     config.latencyMonitor.completeOperation(operationId, {
-      model: context?.modelName ?? 'default',
+      model,
       operationType: 'chain_execution',
       success: true,
     });
+    recordInference({ model, chain, outcome: 'success', latencyMs });
 
-    // Record drift sample if result has a score
-    let driftScore: number | null = null;
-    if (result && typeof result === 'object' && 'score' in result) {
-      const score = (result as { score: number }).score;
-      const normalizedScore = score > 1 ? score / 100 : score; // Normalize 0-100 to 0-1
+    const rawConfidence =
+      result && typeof result === 'object' && 'confidence' in result
+        ? (result as { confidence: unknown }).confidence
+        : undefined;
+    recordConfidence({ model, chain, confidence: rawConfidence });
 
-      config.driftDetector.recordSample({
-        value: normalizedScore,
-        timestamp: new Date(),
-        model: context?.modelName ?? 'default',
-        metric: 'score_distribution',
+    // Record drift samples (score and confidence distributions)
+    const driftScore =
+      context?.recordDrift === false ? null : recordDriftSamples(result, config, model);
+
+    // Record ROI value only for an explicit value type (IFC-117: no blanket lead_scored)
+    if (context?.valueType) {
+      const booked = config.roiTracker.recordValueByType({
+        id: operationId,
+        valueType: context.valueType,
+        relatedCostIds: [operationId],
       });
-
-      driftScore = normalizedScore;
+      recordEstimatedValue({ chain, valueType: booked.valueType, usd: booked.estimatedValue });
+    } else {
+      logger.debug({ operationId, chain }, 'No valueType in monitoring context; no value booked');
     }
 
-    // Record ROI value
-    config.roiTracker.recordValueByType({
-      id: operationId,
-      valueType: 'lead_scored',
-      relatedCostIds: [operationId],
-    });
-
-    // Compute real token cost and hallucination flags via extracted helpers
+    // Compute real token cost and the hallucination outcome via extracted helpers
     const tokenCost = computeTokenCost(operationId, config, context);
-    const hallucinationFlags = await computeHallucinationFlags(
-      operationId,
-      result,
-      config,
-      context
-    );
+    if (tokenCost !== null) recordCost({ model: tokenCost.model, chain, usd: tokenCost.cost });
+
+    const hallucination = await checkHallucination(operationId, result, config, context);
+    recordHallucination({ model, chain, outcome: hallucination });
 
     // Build metrics
     const metrics = {
       operationId,
       latencyMs,
-      tokenCost,
+      tokenCost: tokenCost?.cost ?? 0,
       driftScore,
-      hallucinationFlags,
-      confidenceScore:
-        result && typeof result === 'object' && 'confidence' in result
-          ? (result as { confidence: number }).confidence
-          : 1,
+      hallucinationFlags: hallucination.status === 'checked' ? [...hallucination.types] : [],
+      hallucinated: hallucination.status === 'checked' ? hallucination.hallucinated : null,
+      confidenceScore: typeof rawConfidence === 'number' ? rawConfidence : 1,
     };
 
     logger.info(
@@ -281,11 +354,12 @@ export async function withMonitoring<T>(
     errorType = error instanceof Error ? error.name : 'UnknownError';
 
     config.latencyMonitor.completeOperation(operationId, {
-      model: context?.modelName ?? 'default',
+      model,
       operationType: 'chain_execution',
       success: false,
       errorType,
     });
+    recordInference({ model, chain, outcome: 'error', latencyMs: Date.now() - startTime, error });
 
     logger.error(
       {

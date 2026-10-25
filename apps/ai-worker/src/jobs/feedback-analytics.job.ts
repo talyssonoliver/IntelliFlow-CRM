@@ -7,7 +7,8 @@
  * AIMonitoringEvent with eventType `retraining_trigger` whenever a threshold
  * is breached (ADR-043 pipeline).
  *
- * Prometheus counter: `intelliflow_ai_retraining_triggers_total`
+ * OTel counter: `intelliflow.ai.retraining.triggers` (IFC-117: exported over OTLP; the
+ * Prometheus exporter it used to feed was mounted nowhere and was deleted).
  *
  * @module ai-worker/jobs/feedback-analytics
  */
@@ -19,7 +20,7 @@ import {
   runFeedbackAnalytics,
   type FeedbackRecord,
 } from '../analytics/feedback-analytics-generator';
-import { incrementRetrainingTriggers } from '../metrics/prometheus-exporter';
+import { recordRetrainingTrigger } from '../monitoring/otel-ai-metrics';
 
 const logger = pino({
   name: 'feedback-analytics-job',
@@ -78,7 +79,7 @@ export type FeedbackAnalyticsJobResult = z.infer<typeof FeedbackAnalyticsJobResu
  * 2. Delegates to `runFeedbackAnalytics()` for pure computation.
  * 3. When a retraining threshold is breached:
  *    - Writes an AIMonitoringEvent with eventType `retraining_trigger`.
- *    - Increments the Prometheus counter `intelliflow_ai_retraining_triggers_total`.
+ *    - Increments the OTel counter `intelliflow.ai.retraining.triggers`.
  */
 export async function processFeedbackAnalyticsJob(
   job: Job<FeedbackAnalyticsJobData>
@@ -125,7 +126,7 @@ export async function processFeedbackAnalyticsJob(
   const retrainingNeeded = retrainingStatus.needed;
   let monitoringEventId: string | undefined;
 
-  // ── Persist monitoring event + increment Prometheus counter on breach ───────
+  // ── Persist monitoring event + increment the retraining counter on breach ───
   if (retrainingNeeded && prisma) {
     try {
       const event = await prisma.aIMonitoringEvent.create({
@@ -168,8 +169,8 @@ export async function processFeedbackAnalyticsJob(
       );
     }
 
-    // Increment Prometheus counter regardless of DB write success
-    incrementRetrainingTriggers({ urgency: retrainingStatus.urgency });
+    // Count the breach on the OTel counter regardless of DB write success
+    recordRetrainingTrigger({ urgency: retrainingStatus.urgency });
   }
 
   await job.updateProgress(100);

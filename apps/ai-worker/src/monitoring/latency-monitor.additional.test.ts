@@ -4,7 +4,6 @@
  * Supplements the existing latency-monitor.test.ts with tests for uncovered
  * code paths including:
  * - markPhase with non-existent operation
- * - getLatencyMetrics() Prometheus format
  * - withLatencyTracking() success and error paths
  * - exportReport() model/operation/phase sections
  * - pruneOldData() actually removing old data + alert pruning
@@ -14,13 +13,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  LatencyMonitor,
-  getLatencyMetrics,
-  withLatencyTracking,
-  latencyMonitor,
-  type LatencyMonitorConfig,
-} from './latency-monitor';
+import { LatencyMonitor, withLatencyTracking, type LatencyMonitorConfig } from './latency-monitor';
 
 // Mock pino logger
 vi.mock('pino', () => ({
@@ -745,66 +738,6 @@ describe('LatencyMonitor - Additional Coverage', () => {
       // stdDev of [100,200,300,400,500] = sqrt(20000) ≈ 141.4
       expect(stats.percentiles.stdDev).toBeCloseTo(141.4, 0);
     });
-  });
-});
-
-// ============================================
-// getLatencyMetrics (Prometheus format)
-// ============================================
-
-describe('getLatencyMetrics', () => {
-  it('should return Prometheus-formatted metrics string', () => {
-    // The function uses the global latencyMonitor instance
-    const metrics = getLatencyMetrics();
-
-    expect(typeof metrics).toBe('string');
-    expect(metrics).toContain('# HELP intelliflow_ai_latency_seconds');
-    expect(metrics).toContain('# TYPE intelliflow_ai_latency_seconds histogram');
-    expect(metrics).toContain('intelliflow_ai_latency_seconds_bucket');
-    expect(metrics).toContain('intelliflow_ai_latency_seconds_count');
-    expect(metrics).toContain('intelliflow_ai_latency_seconds_sum');
-    expect(metrics).toContain('# HELP intelliflow_ai_latency_p95_ms');
-    expect(metrics).toContain('# TYPE intelliflow_ai_latency_p95_ms gauge');
-    expect(metrics).toContain('# HELP intelliflow_ai_latency_p99_ms');
-    expect(metrics).toContain('# TYPE intelliflow_ai_latency_p99_ms gauge');
-    expect(metrics).toContain('# HELP intelliflow_ai_slo_compliant');
-    expect(metrics).toContain('intelliflow_ai_slo_compliant{slo="p95"}');
-    expect(metrics).toContain('intelliflow_ai_slo_compliant{slo="p99"}');
-    expect(metrics).toContain('# HELP intelliflow_ai_success_rate');
-    expect(metrics).toContain('intelliflow_ai_success_rate');
-  });
-
-  it('should include +Inf bucket', () => {
-    const metrics = getLatencyMetrics();
-    expect(metrics).toContain('le="+Inf"');
-  });
-
-  it('should include per-model latencies section', () => {
-    // Add data to the global instance to get per-model metrics
-    latencyMonitor.recordMeasurement({
-      id: 'prom-test',
-      model: 'test-model',
-      operationType: 'scoring',
-      phase: 'total',
-      durationMs: 500,
-      success: true,
-    });
-
-    const metrics = getLatencyMetrics();
-    expect(metrics).toContain('# HELP intelliflow_ai_latency_by_model_p95_ms');
-    expect(metrics).toContain('# TYPE intelliflow_ai_latency_by_model_p95_ms gauge');
-  });
-
-  it('should format histogram buckets correctly', () => {
-    const metrics = getLatencyMetrics();
-    // Check that standard buckets are present
-    expect(metrics).toContain('le="0.100"');
-    expect(metrics).toContain('le="0.250"');
-    expect(metrics).toContain('le="0.500"');
-    expect(metrics).toContain('le="1.000"');
-    expect(metrics).toContain('le="2.000"');
-    expect(metrics).toContain('le="5.000"');
-    expect(metrics).toContain('le="10.000"');
   });
 });
 
