@@ -1,0 +1,40 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/task-tracking.schema.json",
+  "task_id": "IFC-117",
+  "status_history": [
+    {
+      "status": "IN_PROGRESS",
+      "at": "2026-10-05T23:30:00Z",
+      "note": "Reopened from Completed by the honest-status audit; see .specify/sprints/sprint-6/attestations/IFC-117/task-tracking.json (kept as history)."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T15:25:06Z",
+      "note": "Spec session started in a fresh sprint-18 structure (coordinator GO 2026-10-24/25). The CSV stays 'In Progress', because tools/scripts/lib/workflow/config.ts does not allow In Progress -> Specifying."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-25T16:03:11Z",
+      "note": "Spec complete. Consensus 5/5 APPROVED (IFC-117-spec-consensus.json). Spec: .specify/sprints/sprint-18/specifications/IFC-117-spec.md. ADR-088 proposed."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Reopen evidence (2026-10-05): prometheus-exporter.ts exposes metrics that nothing scrapes, and ai-grafana-dashboard.json / ai-prometheus-rules.yaml are not loaded anywhere.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "To close: AI metrics reach the hosted backend from production over OTLP (IFC-032), the AI dashboard and alert rules are loaded there, and one alert is proven by a received test notification.",
+      "raised_at": "2026-10-05T23:30:00Z",
+      "resolved_at": null
+    },
+    {
+      "description": "Spec finding (2026-10-25): drift detection never runs in production. detectAllDrift has no non-test caller, and its statistics cannot see a pure shift. The fix is in scope (spec R-1).",
+      "raised_at": "2026-10-25T16:03:11Z",
+      "resolved_at": null
+    }
+  ],
+  "percent_complete": 50,
+  "updated_at": "2026-10-25T16:03:11Z"
+}
