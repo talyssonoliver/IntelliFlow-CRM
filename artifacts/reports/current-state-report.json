@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-21T15:27:39.009Z",
+  "generatedAt": "2026-10-23T15:36:43.476Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -543,14 +543,14 @@
   "overview": {
     "numberedSprintCount": 30,
     "numberedSprintRange": "0-29",
-    "totalTasks": 619,
-    "totalNumberedSprintTasks": 613,
+    "totalTasks": 622,
+    "totalNumberedSprintTasks": 616,
     "continuousTaskCount": 6,
-    "completedTasks": 438,
-    "backlogTasks": 163,
+    "completedTasks": 439,
+    "backlogTasks": 164,
     "blockedTasks": 0,
-    "completionPercentage": 70.76,
-    "inProgressTasks": 18,
+    "completionPercentage": 70.58,
+    "inProgressTasks": 19,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -575,12 +575,6 @@
         "status": "In Progress",
         "sprint": 15,
         "attestationPath": ".specify/sprints/sprint-15/attestations/IFC-027/attestation.json"
-      },
-      {
-        "taskId": "IFC-033",
-        "status": "In Progress",
-        "sprint": 19,
-        "attestationPath": ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json"
       },
       {
         "taskId": "IFC-056",
@@ -650,13 +644,13 @@
       },
       {
         "taskId": "PG-199",
-        "status": "Backlog",
+        "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/PG-199/attestation.json"
       },
       {
         "taskId": "PG-203",
-        "status": "Backlog",
+        "status": "In Progress",
         "sprint": 18,
         "attestationPath": ".specify/sprints/sprint-18/attestations/PG-203/attestation.json"
       },
@@ -1018,73 +1012,6 @@
         }
       },
       {
-        "taskId": "PG-199",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Model Config (/agent-approvals/model-config)",
-        "description": "Module Settings - Model Config (/agent-approvals/model-config)",
-        "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /agent-approvals/model-config renders; Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented;...",
-        "definitionOfDone": "Model config at /agent-approvals/model-config (per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings). Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate agent keys; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Route /agent-approvals/model-config renders; Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented; Never-Downgrade rule respected; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
-        "dependencies": [
-          "PG-178",
-          "PG-152",
-          "PG-192"
-        ],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/PG-199/attestation.json",
-          "verdict": "INCOMPLETE",
-          "timestamp": "2026-07-25T17:18:29Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "PG-203",
-        "sprint": 18,
-        "status": "Backlog",
-        "section": "Settings",
-        "title": "Module Settings - Event Types (/calendar/event-types)",
-        "description": "Module Settings - Event Types (/calendar/event-types)",
-        "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /calendar/event-types renders; Meeting type definitions:...",
-        "definitionOfDone": "Event types at /calendar/event-types (meeting type definitions: duration, color, default description, booking link slug, required form fields, location type). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate booking slugs; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in calendar automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-        "definitionOfDoneSnapshot": "Route /calendar/event-types renders; Meeting type definitions: duration, color, default description, booking link slug, required form fields, location type implemented; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
-        "dependencies": [
-          "PG-178",
-          "PG-189"
-        ],
-        "attestation": {
-          "exists": true,
-          "path": ".specify/sprints/sprint-18/attestations/PG-203/attestation.json",
-          "verdict": "INCOMPLETE",
-          "timestamp": "2026-07-25T17:18:29Z",
-          "sprintFolder": 18
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
         "taskId": "PG-206",
         "sprint": 18,
         "status": "Backlog",
@@ -1250,6 +1177,38 @@
         }
       },
       {
+        "taskId": "IFC-034",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "Investment Gate",
+        "title": "PHASE-001: Gate 3 Review - £3000 Investment",
+        "description": "PHASE-001: Gate 3 Review - £3000 Investment",
+        "summary": "Scale decision with modern stack validated",
+        "definitionOfDone": "Scale decision with modern stack validated; artifacts: automation-roi-analysis.xlsx, stability-report.pdf, scale-plan.pptx",
+        "definitionOfDoneSnapshot": "Scale decision with modern stack validated",
+        "dependencies": [
+          "IFC-033"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
         "taskId": "A11Y-REVIEW-001",
         "sprint": 20,
         "status": "Backlog",
@@ -1261,6 +1220,38 @@
         "definitionOfDoneSnapshot": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md",
         "dependencies": [
           "DOC-012"
+        ],
+        "attestation": {
+          "exists": false,
+          "path": null,
+          "verdict": null,
+          "timestamp": null,
+          "sprintFolder": null
+        },
+        "validationSummary": {
+          "total": 0,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
+        "taskId": "IFC-087",
+        "sprint": 20,
+        "status": "Backlog",
+        "section": "Performance",
+        "title": "Edge Functions Optimization",
+        "description": "Edge Functions Optimization",
+        "summary": "Critical paths on edge, <50ms response globally",
+        "definitionOfDone": "Critical paths on edge, <50ms response globally; artifacts: edge-performance-map.json, cost-analysis-edge.xlsx, global-latency.csv",
+        "definitionOfDoneSnapshot": "Critical paths on edge, <50ms response globally",
+        "dependencies": [
+          "IFC-014"
         ],
         "attestation": {
           "exists": false,
@@ -17366,9 +17357,9 @@
       "summarySource": "specify",
       "totalTasks": 78,
       "completedTasks": 59,
-      "backlogTasks": 8,
+      "backlogTasks": 6,
       "blockedTasks": 0,
-      "inProgressTasks": 11,
+      "inProgressTasks": 13,
       "attestedCompletedTasks": 59,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
@@ -19747,13 +19738,13 @@
         {
           "taskId": "PG-199",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Settings",
           "title": "Module Settings - Model Config (/agent-approvals/model-config)",
           "description": "Module Settings - Model Config (/agent-approvals/model-config)",
-          "summary": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed';... Route /agent-approvals/model-config renders; Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented;...",
+          "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Open items: (1) Lighthouse authenticated run. There are no LHCI_TEST_* credentials for a non-production Supabase, and logging in to production is not allowed.... Model config at /agent-approvals/model-config:...",
           "definitionOfDone": "Model config at /agent-approvals/model-config (per-agent model selection, temperature, max tokens, fallback chain, per-agent cost ceilings). Respect Never-Downgrade rule for model IDs (memory/feedback_never_downgrade_without_approval.md). MUST follow docs/planning/module-settings-playbook.md: PageHeader+bento grid; canonical EmptyState (entity + phase=passive); system-compliant CTAs; TagsTab via forwardRef; $transaction on all destructive writes; no skipDuplicates; Zod superRefine for duplicate agent keys; colorToken CHECK constraint; AI defaults FALSE; wire every Boolean toggle in agent-approval automation OR declare as category-2 follow-up under IFC-310/311/312; include cross-tenant negative test; Lighthouse >=90; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Route /agent-approvals/model-config renders; Per-agent model selection, temperature, max tokens, fallback chain, cost ceilings implemented; Never-Downgrade rule respected; PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction;...",
+          "definitionOfDoneSnapshot": "Model config at /agent-approvals/model-config: per-agent (per-purpose, owner Q1) model selection, temperature, max tokens, fallback chain, cost ceilings; Never-Downgrade for model ids; PageHeader + bento grid",
           "dependencies": [
             "PG-178",
             "PG-152",
@@ -19762,20 +19753,20 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/PG-199/attestation.json",
-            "verdict": "INCOMPLETE",
-            "timestamp": "2026-07-25T17:18:29Z",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-10-21T01:41:24Z",
             "sprintFolder": 18
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 5,
+            "met": 4,
+            "missed": 1
           }
         },
         {
@@ -19880,7 +19871,7 @@
         {
           "taskId": "PG-203",
           "sprint": 18,
-          "status": "Backlog",
+          "status": "In Progress",
           "section": "Settings",
           "title": "Module Settings - Event Types (/calendar/event-types)",
           "description": "Module Settings - Event Types (/calendar/event-types)",
@@ -20027,7 +20018,7 @@
             "exists": true,
             "path": ".specify/sprints/sprint-18/attestations/PG-207/attestation.json",
             "verdict": "NEEDS_HUMAN",
-            "timestamp": "2026-10-21T15:27:33Z",
+            "timestamp": "2026-10-22T11:56:35Z",
             "sprintFolder": 18
           },
           "validationSummary": {
@@ -20334,14 +20325,47 @@
       "name": "Sprint 19",
       "summarySource": "specify",
       "totalTasks": 19,
-      "completedTasks": 11,
+      "completedTasks": 12,
       "backlogTasks": 4,
       "blockedTasks": 0,
-      "inProgressTasks": 4,
-      "attestedCompletedTasks": 11,
+      "inProgressTasks": 3,
+      "attestedCompletedTasks": 12,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).",
       "notableCompleted": [
+        {
+          "taskId": "IFC-033",
+          "sprint": 19,
+          "status": "Completed",
+          "section": "Automation",
+          "title": "PHASE-005: Load Testing with k6",
+          "description": "PHASE-005: Load Testing with k6",
+          "summary": "Reopened by #795 (the July run targeted localhost). On owner rulings of 2026-10-22 (no staging API/DB exists) the k6 run targeted the production API in a dedicated load-test tenant, sized down to cap the per-lead AI scoring cost.......",
+          "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+          "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation",
+          "dependencies": [
+            "IFC-030",
+            "IFC-032"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
+            "verdict": "COMPLETE",
+            "timestamp": "2026-10-23T15:23:37.923Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 4,
+            "passed": 4,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 5,
+            "met": 4,
+            "missed": 1
+          }
+        },
         {
           "taskId": "ENG-OPS-002.R10",
           "sprint": 19,
@@ -20471,74 +20495,9 @@
             "met": 0,
             "missed": 0
           }
-        },
-        {
-          "taskId": "PG-065",
-          "sprint": 19,
-          "status": "Completed",
-          "section": "Core CRM",
-          "title": "Contact 360",
-          "description": "Contact 360",
-          "summary": "RECONCILE via full pipeline (spec-session + plan-session + exec). The Contact 360 view already existed on main (route-registry Status=Implemented), implemented inline in the 2576-line Contact360Page.... response under 200ms, Lighthouse 90, data complete",
-          "definitionOfDone": "Response <200ms, Lighthouse ≥90, data complete; artifacts: page.tsx, contact-360.tsx, contact-insights.tsx",
-          "definitionOfDoneSnapshot": "response under 200ms, Lighthouse 90, data complete",
-          "dependencies": [
-            "IFC-090"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/PG-065/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-07-25T00:55:00.000Z",
-            "sprintFolder": 19
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 4,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 1,
-            "met": 0,
-            "missed": 0
-          }
         }
       ],
       "openTasks": [
-        {
-          "taskId": "IFC-033",
-          "sprint": 19,
-          "status": "In Progress",
-          "section": "Automation",
-          "title": "PHASE-005: Load Testing with k6",
-          "description": "PHASE-005: Load Testing with k6",
-          "summary": "5,000 leads/hour was validated against the ADR-018 MVP budget; the aspirational 1,000-VU/p99<100ms target remains IFC-047 (Sprint 22). Target ran under tsx (dev) — a compiled build would only be faster.... System handles 5000 leads/hour with automation;...",
-          "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
-          "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
-          "dependencies": [
-            "IFC-030",
-            "IFC-032"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
-            "verdict": "PARTIAL",
-            "timestamp": null,
-            "sprintFolder": 19
-          },
-          "validationSummary": {
-            "total": 0,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
-          }
-        },
         {
           "taskId": "IFC-304",
           "sprint": 19,
@@ -20668,6 +20627,38 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "ENG-OPS-002.R03",
+          "sprint": 19,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json",
+          "description": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json",
+          "summary": "Scope delivered: STALE-001 (CLAUDE.md root anchor no longer misleads on sprint/task-count; now points to the regenerated docs/SESSION_CONTEXT.md).... CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md",
+          "definitionOfDone": "CLAUDE.md no longer claims Sprint 6/316 tasks; sprint-18 _summary.json reflects reality or is removed with consumers repointed; verified by: pnpm validate:docs-integrity",
+          "definitionOfDoneSnapshot": "CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md",
+          "dependencies": [
+            "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": true,
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json",
+            "verdict": "PARTIAL",
+            "timestamp": "2026-07-22T13:05:00Z",
+            "sprintFolder": 19
+          },
+          "validationSummary": {
+            "total": 1,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
@@ -20692,8 +20683,8 @@
         {
           "section": "Automation",
           "total": 1,
-          "completed": 0,
-          "open": 1
+          "completed": 1,
+          "open": 0
         },
         {
           "section": "AUTOMATION",
@@ -20730,13 +20721,13 @@
         {
           "taskId": "IFC-033",
           "sprint": 19,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "Automation",
           "title": "PHASE-005: Load Testing with k6",
           "description": "PHASE-005: Load Testing with k6",
-          "summary": "5,000 leads/hour was validated against the ADR-018 MVP budget; the aspirational 1,000-VU/p99<100ms target remains IFC-047 (Sprint 22). Target ran under tsx (dev) — a compiled build would only be faster.... System handles 5000 leads/hour with automation;...",
+          "summary": "Reopened by #795 (the July run targeted localhost). On owner rulings of 2026-10-22 (no staging API/DB exists) the k6 run targeted the production API in a dedicated load-test tenant, sized down to cap the per-lead AI scoring cost.......",
           "definitionOfDone": "System handles 5000 leads/hour with automation; artifacts: load-test-report.html, bottleneck-analysis.md, grafana-load-test.png; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
-          "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report",
+          "definitionOfDoneSnapshot": "System handles 5000 leads/hour with automation",
           "dependencies": [
             "IFC-030",
             "IFC-032"
@@ -20744,20 +20735,20 @@
           "attestation": {
             "exists": true,
             "path": ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
-            "verdict": "PARTIAL",
-            "timestamp": null,
+            "verdict": "COMPLETE",
+            "timestamp": "2026-10-23T15:23:37.923Z",
             "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 0,
-            "passed": 0,
+            "total": 4,
+            "passed": 4,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
-            "missed": 0
+            "total": 5,
+            "met": 4,
+            "missed": 1
           }
         },
         {
@@ -21347,14 +21338,14 @@
       "sprint": 20,
       "name": "Sprint 20",
       "summarySource": "specify",
-      "totalTasks": 51,
+      "totalTasks": 54,
       "completedTasks": 0,
-      "backlogTasks": 51,
+      "backlogTasks": 54,
       "blockedTasks": 0,
       "inProgressTasks": 0,
       "attestedCompletedTasks": 0,
       "missingCompletedAttestations": [],
-      "context": "Primary focus areas: Core CRM (30), Engineering Operations (11), AI Foundation (2).",
+      "context": "Primary focus areas: Core CRM (30), Engineering Operations (11), Settings (3).",
       "notableCompleted": [],
       "openTasks": [
         {
@@ -21530,6 +21521,12 @@
           "total": 11,
           "completed": 0,
           "open": 11
+        },
+        {
+          "section": "Settings",
+          "total": 3,
+          "completed": 0,
+          "open": 3
         },
         {
           "section": "AI Foundation",
@@ -23179,6 +23176,103 @@
           "definitionOfDoneSnapshot": "All 39 Medium findings triaged and bucketed",
           "dependencies": [
             "ENG-OPS-002"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-211",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Public booking: booker self-service cancel/reschedule. A signed, single-purpose, expiring link in the PG-203 booking confirmation email lets the booker cancel or move a /book/<handle>/<slug> appointment without contacting the firm. The move goes through the same per-tenant booking advisory lock, availability re-check, notice/horizon and daily cap as publicBooking.book (ADR-083); tokens are stored only as HMACs and travel in the URL fragment (PG-203 DSAR pattern); the host is notified. Origin: PG-203 follow-up (spec Risks; PRD addendum).",
+          "description": "Public booking: booker self-service cancel/reschedule. A signed, single-purpose, expiring link in the PG-203 booking confirmation email lets the booker cancel or move a /book/<handle>/<slug> appointment without contacting the firm. The move goes through the same per-tenant booking advisory lock, availability re-check, notice/horizon and daily cap as publicBooking.book (ADR-083); tokens are stored only as HMACs and travel in the URL fragment (PG-203 DSAR pattern); the host is notified. Origin: PG-203 follow-up (spec Risks; PRD addendum).",
+          "summary": "A booker can cancel or reschedule their own public booking from the confirmation-email link until the notice cutoff; reschedule re-checks availability under the booking lock and returns CONFLICT when the slot is gone;...",
+          "definitionOfDone": "A booker can cancel or reschedule their own public booking from the confirmation-email link until the notice cutoff; reschedule re-checks availability under the booking lock and returns CONFLICT when the slot is gone; the token is single-purpose, expiring and HMAC-stored; the host gets an email; cross-tenant and replay negative tests pass; Lighthouse >=90 on the manage page",
+          "definitionOfDoneSnapshot": "A booker can cancel or reschedule their own public booking from the confirmation-email link until the notice cutoff; reschedule re-checks availability under the booking lock and returns CONFLICT when the slot is gone;...",
+          "dependencies": [
+            "PG-203"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-212",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Event types: per-type minimum notice and booking horizon. Replace the fixed BOOKING_MIN_NOTICE_MINUTES (60) and BOOKING_HORIZON_DAYS (60) constants (packages/domain/src/legal/appointments/event-types.ts) with per-event-type fields on event_types (Class A migration, named CHECKs, defaults 60 min / 60 days), editable in the /calendar/event-types dialog and honoured by listOpenSlots and the public booking re-check. Origin: PG-203 follow-up (PRD addendum).",
+          "description": "Event types: per-type minimum notice and booking horizon. Replace the fixed BOOKING_MIN_NOTICE_MINUTES (60) and BOOKING_HORIZON_DAYS (60) constants (packages/domain/src/legal/appointments/event-types.ts) with per-event-type fields on event_types (Class A migration, named CHECKs, defaults 60 min / 60 days), editable in the /calendar/event-types dialog and honoured by listOpenSlots and the public booking re-check. Origin: PG-203 follow-up (PRD addendum).",
+          "summary": "event_types gains minNoticeMinutes and horizonDays (Class A migration, CHECK-bounded, defaults equal to today's constants so behaviour is unchanged until edited); the dialog edits both with validation;...",
+          "definitionOfDone": "event_types gains minNoticeMinutes and horizonDays (Class A migration, CHECK-bounded, defaults equal to today's constants so behaviour is unchanged until edited); the dialog edits both with validation; listSlots and book use the per-type values; real-DB migration test and unit tests pass; Lighthouse >=90 on /calendar/event-types",
+          "definitionOfDoneSnapshot": "event_types gains minNoticeMinutes and horizonDays (Class A migration, CHECK-bounded, defaults equal to today's constants so behaviour is unchanged until edited); the dialog edits both with validation;...",
+          "dependencies": [
+            "PG-203"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
+        },
+        {
+          "taskId": "PG-213",
+          "sprint": 20,
+          "status": "Backlog",
+          "section": "Settings",
+          "title": "Retention: purge public-booking PII after a firm-set period. Under the PG-206 retention policies, appointments.bookerName/bookerEmail/bookingAnswers/bookingConsentAt/bookingConsentVersion are cleared for public bookings older than a firm-configured retention period (the booking_attempts 48 h prune from PG-203 stays); the run is replica-safe and audit-logged with counts only. Origin: PG-203 follow-up (spec AC-022; PRD addendum).",
+          "description": "Retention: purge public-booking PII after a firm-set period. Under the PG-206 retention policies, appointments.bookerName/bookerEmail/bookingAnswers/bookingConsentAt/bookingConsentVersion are cleared for public bookings older than a firm-configured retention period (the booking_attempts 48 h prune from PG-203 stays); the run is replica-safe and audit-logged with counts only. Origin: PG-203 follow-up (spec AC-022; PRD addendum).",
+          "summary": "A firm sets a booker-PII retention period; a scheduled, advisory-locked job clears the five booker fields on public bookings past it, leaving the appointment itself; audit records counts only;...",
+          "definitionOfDone": "A firm sets a booker-PII retention period; a scheduled, advisory-locked job clears the five booker fields on public bookings past it, leaving the appointment itself; audit records counts only; real-DB test proves only expired rows of that tenant are cleared; the setting is reachable from the retention settings UI",
+          "definitionOfDoneSnapshot": "A firm sets a booker-PII retention period; a scheduled, advisory-locked job clears the five booker fields on public bookings past it, leaving the appointment itself; audit records counts only;...",
+          "dependencies": [
+            "PG-203",
+            "PG-206"
           ],
           "attestation": {
             "exists": false,

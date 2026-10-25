@@ -1,0 +1,22 @@
+{
+  "stoa": "Security",
+  "task_id": "IFC-033",
+  "run_id": "run-20261022-reopen-prod",
+  "verdict": "PASS",
+  "gates": [
+    {"gate": "gitleaks (origin/main..HEAD, 2 commits, redacted)", "result": "PASS", "evidence": "no leaks found, exit 0"},
+    {"gate": "manual credential scan of added diff lines (JWT, Bearer, postgres URL, ghp_/sk-/AKIA/ntn_, private key, neon/supabase hosts, gmail, long tokens) plus both commit messages", "result": "PASS", "evidence": "no credential-shaped strings; tests use example.invalid and runtime-built passwords; Bearer only appears as a template reading __ENV.K6_AUTH_TOKEN"},
+    {"gate": ".env.k6.local and k6/.data gitignored and untracked", "result": "PASS", "evidence": "git check-ignore: .gitignore:99 (.env*.local), .gitignore:394 (tools/scripts/k6/.data/); git ls-files returns nothing"},
+    {"gate": "token/password disclosure in new script", "result": "PASS", "evidence": "stdout shows only baseUrl, seed lead id, counts; errors embed only proc, HTTP status and server error message (success bodies carrying tokens are never in error strings); handleSummary emits only aggregate metrics and BASE_URL; k6 command line in committed output has no token"},
+    {"gate": "tenant isolation of production run", "result": "PASS", "evidence": "all writes via tRPC API; dedicated tenant from auth.signup; bottleneck-analysis section 0 records 21 leads all @loadtest.example.com before load; harness has a single BASE_URL and a single tenant token, no tenant-id parameter; lead ids come from that tenant's own pool file"},
+    {"gate": "dependency audit impact", "result": "PASS", "evidence": "no package.json or pnpm-lock.yaml in git diff origin/main...HEAD; pnpm audit not re-run (no dependency change)"},
+    {"gate": "snyk / semgrep / trivy", "result": "NOT_RUN", "evidence": "not run: read-only review constraint; no result produced, not counted as pass"}
+  ],
+  "findings": [
+    {"severity": "LOW", "file": "tools/scripts/k6/prepare-ifc-033-tenant.mjs", "line": 155, "issue": "mode 0o600 is POSIX-only; on Windows/NTFS the env file is created with default ACLs (observed -rw-r--r--). The file holds a plaintext password and a live production access token. It is gitignored but not access-restricted, and the token has not been shown to be revoked.", "fix": "Revoke or let the Supabase access token expire, and rotate or disable the dedicated production load-test account's password now that the run is finished. Optionally restrict the ACL (icacls) or delete .env.k6.local."},
+    {"severity": "LOW", "file": "tools/scripts/k6/prepare-ifc-033-tenant.mjs", "line": 120, "issue": "signup failures other than verification are swallowed and fall through to login; a failed login error then reports only the login message. Not a leak, but a misleading error path.", "fix": "Optional: log the signup error class (not the body) before falling back."},
+    {"severity": "INFO", "file": "docs/shared/bottleneck-analysis.md", "line": 26, "issue": "The production API hostname (api-production-e9c1.up.railway.app) is committed in the report, summary json, ruling and tracking json. It is a public endpoint, not a credential.", "fix": "None required."},
+    {"severity": "INFO", "file": "tools/scripts/k6/prepare-ifc-033-tenant.mjs", "line": 168, "issue": "The production account uses a plus-address of the owner's own Gmail. The address is not committed (grep clean), but it is a real inbox bound to a production account with a known-at-rest password. Signup created a real tenant and user in prod data (owner-approved).", "fix": "After the run, disable or delete the load-test user and tenant if the owner wants no standing prod account; confirm the plus-address is not reused for other logins."}
+  ],
+  "reviewed_at": "2026-10-23T01:35:00Z"
+}
