@@ -171,6 +171,14 @@ describe('DriftDetectionScheduler', () => {
     expect(out).toContain('scoring-free');
   });
 
+  it('logs an unexpected tick rejection from the interval instead of leaving it unhandled', async () => {
+    const { log } = build();
+    vi.spyOn(scheduler!, 'tick').mockRejectedValueOnce(new TypeError('boom'));
+    scheduler!.start();
+    await vi.advanceTimersByTimeAsync(INTERVAL);
+    expect(log.error).toHaveBeenCalledWith({ err: 'TypeError' }, 'Drift detection tick rejected');
+  });
+
   it('runs with its production defaults (pino logger, OTel facade recorder) without throwing', async () => {
     const detector = new DriftDetector(defaultDriftConfig);
     const detect = vi

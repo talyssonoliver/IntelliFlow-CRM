@@ -56,7 +56,13 @@ export class DriftDetectionScheduler {
   start(): void {
     if (this.timer) return;
     const timer = setInterval(() => {
-      void this.tick();
+      // tick() catches its own errors; this only guards an unexpected rejection.
+      this.tick().catch((err: unknown) =>
+        this.log.error(
+          { err: err instanceof Error ? err.name : typeof err },
+          'Drift detection tick rejected'
+        )
+      );
     }, this.intervalMs);
     timer.unref?.();
     this.timer = timer;

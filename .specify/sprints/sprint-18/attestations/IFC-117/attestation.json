@@ -4,13 +4,13 @@
   "task_id": "IFC-117",
   "run_id": "run-20261025-exec",
   "attestor": "Claude Code",
-  "attestation_timestamp": "2026-10-25T20:01:53Z",
+  "attestation_timestamp": "2026-10-25T20:41:47Z",
   "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
     "artifacts_verified": 98,
     "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 16,
+    "gates_passed": 17,
     "gates_failed": 2,
     "kpis_met": 2,
     "kpis_missed": 3,
@@ -174,6 +174,13 @@
       "exit_code": 1,
       "detail": "Expected exit 1 (plan S25; no gate requires it). Matches the expected set except 3 CSV-only entries explained in the delivery report: two plan paths the parser skips after wrapped bullets, and the new sprint-18 EVIDENCE entry. Missing on disk: none.",
       "timestamp": "2026-10-25T19:59:33Z"
+    },
+    {
+      "gate_id": "preship-lint-promises",
+      "passed": true,
+      "exit_code": 0,
+      "detail": "The first pre-ship run on 93332a247 failed lint-promises (no-floating-promises at drift-scheduler.ts:59, 'void this.tick()'); fixed with an explicit .catch that logs, covered by a new scheduler test, and node scripts/lint-promises.mjs re-run: exit 0. The full pre-ship re-runs on the push.",
+      "timestamp": "2026-10-25T20:41:46Z"
     }
   ],
   "kpi_results": [
@@ -320,7 +327,7 @@
     "apps/ai-worker/src/monitoring/__tests__/chain-monitor.otel.test.ts": "682e4096d2b74c233fad79c1e8c732da99ef18fab29250b9e19301e6f6870591",
     "apps/ai-worker/src/monitoring/__tests__/chain-monitor.test.ts": "71f3a83cf912a9ee3a78e7d6ae6ef3e583aff09feac71208e834ad62d065e189",
     "apps/ai-worker/src/monitoring/__tests__/drift-detector.shift.test.ts": "18ea128a0312c74f483d95384b40c8311a42c12c3ed24bec33189a9dc81b112e",
-    "apps/ai-worker/src/monitoring/__tests__/drift-scheduler.test.ts": "ed79ae5c55ee67e47318d19bd47abf70097ea797d436dadfdc947556fecb7ad0",
+    "apps/ai-worker/src/monitoring/__tests__/drift-scheduler.test.ts": "a7e5401d1e58f10456b73c439b0d165785a6a927b622f4cd3e88e74731d34e6b",
     "apps/ai-worker/src/monitoring/__tests__/hallucination-checker.test.ts": "32764dc26198fb97375eed0ca28c2e90252e6f5e412107c83a88c06d49aa67d4",
     "apps/ai-worker/src/monitoring/__tests__/index.test.ts": "d4c93f1c492a47965feafb4395650c699e3645c2d3ee7404a85c25cbd604ec93",
     "apps/ai-worker/src/monitoring/__tests__/monitoring-flush.service.test.ts": "48bd92a35b5b41d5aadd2d28c4526ebb22d77532c7bd8fe4f9d433359828a591",
@@ -332,7 +339,7 @@
     "apps/ai-worker/src/monitoring/drift-detector.additional.test.ts": "6ec136b63f122bba317402d3bb94445370a607c2c2ccf1364a56a5ca3a4c7515",
     "apps/ai-worker/src/monitoring/drift-detector.test.ts": "42064bd22db22a50040359b9860798c86db1b0b2757763526892e6daa891e99f",
     "apps/ai-worker/src/monitoring/drift-detector.ts": "e961d91525681121eef852f001b0575a240b21666e8e6d40dd0e4d78e6b4380b",
-    "apps/ai-worker/src/monitoring/drift-scheduler.ts": "b8d8abc9956db694f5ac9bcf0a73de7a7bab4b237264b3e07adfa4d6ca2f23f6",
+    "apps/ai-worker/src/monitoring/drift-scheduler.ts": "18a0bb245a982e882cebb05f21895fe0b7b6db55d7c2078e401c5c387f32b664",
     "apps/ai-worker/src/monitoring/drift-stats.ts": "f8d5f35be7abd7db12e581e440b779086592b3a9b3557807e77a43cd2bab9dcb",
     "apps/ai-worker/src/monitoring/hallucination-checker.ts": "21630b4289357089b26e9f6880ef8fd72ae08491b3babd330ed384d12d06485e",
     "apps/ai-worker/src/monitoring/index.ts": "1b1589b180583cb1d399fde1b97dcb4db014ea97a95f14aed6e74bc66e834f55",
@@ -375,7 +382,7 @@
   "environment": {
     "os": "win32 (Windows 11 Pro 10.0.26200)",
     "node_version": "v22.14.0",
-    "git_commit": "53a5a6a3e",
+    "git_commit": "93332a247",
     "branch": "feat/IFC-117-ai-model-monitoring"
   },
   "notes": "Verdict NEEDS_HUMAN. The code path is delivered and validated; the production KPIs are the owner's after ai-worker is promoted.\nOpen production evidence (who / query / pass):\nN1 Output-distribution shift detected within 1 day — owner — increase(intelliflow_ai_drift_detections_total[1d]) and intelliflow_ai_drift_checks_total{status=\"evaluated\"} after a natural shift or a seeded replay — pass: onset < 24h after the shift; with no shift, checks every 30 min for 7 days and evaluated after warm-up, else recorded as not exercised\nN2 Hallucination rate < 5% (detected by the heuristic checker; a floor) — owner — sum(increase(intelliflow_ai_hallucination_detected_total[7d])) / sum(increase(intelliflow_ai_hallucination_checks_total[7d])) — pass: < 0.05 with >= 200 checks, else insufficient data\nN3 Dashboard applied — ENV-008-AI follow-up, then owner — ENV-008-AI dashboard job reading dashboard-ai-models.json — pass: dashboard uid ifc117-ai-models live with panels showing data\nN4 AI rules applied and routed — owner — dispatch grafana-ai-alert-rules.yml (dry_run=false); Grafana Preview routing for {source:ifc-117, grafana_folder:intelliflow-ai} — pass: six ifc117-* rules visible; route resolves to the owner contact point\nN5 Metric names and service label verified — owner — dispatch grafana-ai-alert-rules.yml with dry_run=true after a scoring call — pass: non-zero series count for each selector and every expr query succeeds\nN6 ROI (estimated) tracked — owner — increase(intelliflow_ai_cost_usd_total[7d]) and increase(intelliflow_ai_value_estimated_usd_total[7d]) — pass: both non-zero over 7 days\nN7 Latency series — owner — histogram_quantile(0.95, sum by (le)(rate(intelliflow_ai_inference_latency_milliseconds_bucket[1h]))) — pass: a series exists\nPromotion follow-up: owner Talysson; date: the first production promotion of ai-worker after this PR merges (not scheduled yet). N3 also waits for the ENV-008-AI multi-file dashboard job.\nNo unit test is cited as proof of a KPI. The sprint-6 attestations are left untouched as history.\nGate 4b is recorded as failed and disclosed (see gate_results); the pre-ship gate runs on the single push after this attestation.\nDeleted: apps/ai-worker/src/chains/__tests__/scoring-with-monitoring.integration.test.ts, apps/ai-worker/src/metrics/__tests__/prometheus-exporter.test.ts, apps/ai-worker/src/metrics/prometheus-exporter.ts.\nCoverage before/after (touched area): lines 97.51 -> 98.20, branches 85.00 -> 88.49.\nCSV stays In Progress at 90%: validate-sprint-data does not accept the canonical Needs Human status yet (follow-up issue).",
