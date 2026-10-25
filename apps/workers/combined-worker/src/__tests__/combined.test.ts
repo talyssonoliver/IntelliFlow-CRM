@@ -21,6 +21,10 @@ class FakeWorker implements ManagedWorker {
   stop = vi.fn(async () => {
     this.state = 'stopped';
   });
+  checks: Record<string, { status: 'ok' | 'degraded' | 'error'; message?: string }> = {
+    redis: { status: 'ok' },
+  };
+  checkHealth = vi.fn(async () => this.checks);
   getStatus() {
     return { state: this.state };
   }
@@ -147,9 +151,9 @@ describe('startCombinedWorker', () => {
     expect(JSON.parse(ready.body)).toEqual({
       status: 'ok',
       workers: {
-        'ai-worker': { state: 'running' },
-        'events-worker': { state: 'running' },
-        'ingestion-worker': { state: 'running' },
+        'ai-worker': { state: 'running', checks: { redis: { status: 'ok' } } },
+        'events-worker': { state: 'running', checks: { redis: { status: 'ok' } } },
+        'ingestion-worker': { state: 'running', checks: { redis: { status: 'ok' } } },
       },
     });
     expect((await get(handle.healthPort, '/health/ready')).status).toBe(200);
@@ -179,7 +183,7 @@ describe('startCombinedWorker', () => {
     expect(workers['events-worker'].start).toHaveBeenCalledTimes(1);
     expect(workers['ai-worker'].start).not.toHaveBeenCalled();
     expect(workers['ingestion-worker'].start).not.toHaveBeenCalled();
-    expect(Object.keys(handle.getHealth().workers)).toEqual(['events-worker']);
+    expect(Object.keys((await handle.getHealth()).workers)).toEqual(['events-worker']);
   });
 
   it('shuts every worker down once, closes health, and exits 0', async () => {
@@ -210,7 +214,7 @@ describe('startCombinedWorker', () => {
     handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
 
     const done = handle.shutdown('test');
-    expect(handle.getHealth().status).toBe('draining');
+    expect((await handle.getHealth()).status).toBe('draining');
     release();
     await done;
     handle = undefined;
@@ -258,7 +262,7 @@ describe('startCombinedWorker', () => {
       for (const worker of Object.values(workers)) {
         expect(worker.stop).toHaveBeenCalledTimes(1);
       }
-      expect(started.getHealth().status).toBe('draining');
+      expect((await started.getHealth()).status).toBe('draining');
     }
   });
 
@@ -351,9 +355,9 @@ describe('startCombinedWorker', () => {
       expect(JSON.parse(res.body)).toEqual({
         status: 'degraded',
         workers: {
-          'ai-worker': { state: 'running' },
+          'ai-worker': { state: 'running', checks: { redis: { status: 'ok' } } },
           'events-worker': { state: 'failed', error: 'no database' },
-          'ingestion-worker': { state: 'running' },
+          'ingestion-worker': { state: 'running', checks: { redis: { status: 'ok' } } },
         },
       });
 
@@ -383,6 +387,165 @@ describe('startCombinedWorker', () => {
     } finally {
       await new Promise<void>((resolve) => blocker.close(() => resolve()));
     }
+  });
+
+  describe('dependency health', () => {
+    it('includes each worker own dependency checks', async () => {
+      const { loaders } = makeLoaders();
+      handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
+
+      const res = JSON.parse((await get(handle.healthPort, '/health')).body);
+      expect(res.workers['events-worker'].checks).toEqual({ redis: { status: 'ok' } });
+    });
+
+    it('returns 503 when a dependency check errors, e.g. Redis down', async () => {
+      const { workers, loaders } = makeLoaders();
+      handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
+      workers['ai-worker'].checks = { redis: { status: 'error', message: 'ECONNREFUSED' } };
+
+      for (const path of ['/health', '/health/ready', '/health/detailed']) {
+        const res = await get(handle.healthPort, path);
+        expect(res.status).toBe(503);
+        const body = JSON.parse(res.body);
+        expect(body.status).toBe('degraded');
+        expect(body.workers['ai-worker'].state).toBe('unhealthy');
+        expect(body.workers['ai-worker'].checks.redis.message).toBe('ECONNREFUSED');
+        expect(body.workers['events-worker'].state).toBe('running');
+      }
+      // Liveness never depends on dependencies.
+      expect((await get(handle.healthPort, '/health/live')).status).toBe(200);
+    });
+
+    it('treats a degraded dependency as still serving, like the standalone servers', async () => {
+      const { workers, loaders } = makeLoaders();
+      handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
+      workers['ingestion-worker'].checks = { provider: { status: 'degraded' } };
+
+      expect((await get(handle.healthPort, '/health')).status).toBe(200);
+    });
+
+    it('returns 503 when a health check itself throws', async () => {
+      const { workers, loaders } = makeLoaders();
+      handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
+      workers['events-worker'].checkHealth.mockRejectedValue(new Error('probe crashed'));
+
+      const res = await get(handle.healthPort, '/health');
+      expect(res.status).toBe(503);
+      expect(JSON.parse(res.body).workers['events-worker'].checks.health.message).toBe(
+        'probe crashed'
+      );
+    });
+
+    it('works with workers that expose no checkHealth', async () => {
+      const { workers, loaders } = makeLoaders();
+      (workers['ai-worker'] as { checkHealth?: unknown }).checkHealth = undefined;
+      handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
+
+      expect((await get(handle.healthPort, '/health')).status).toBe(200);
+    });
+  });
+
+  describe('signals during startup', () => {
+    it('has the combined handlers installed before any worker is loaded', async () => {
+      const seen: number[] = [];
+      const { loaders } = makeLoaders({
+        'ai-worker': async () => {
+          seen.push(process.listenerCount('SIGTERM'));
+          return new FakeWorker();
+        },
+      });
+      handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
+
+      expect(seen).toEqual([baseline[1] + 1]);
+    });
+
+    it('drops handlers registered while workers load or start, then restores process.on', async () => {
+      const originalOn = process.on;
+      const rogue = vi.fn();
+      const { workers, loaders } = makeLoaders({
+        'ai-worker': async () => {
+          // what ai-worker's OpenTelemetry module does on import
+          process.on('SIGTERM', rogue);
+          process.once('SIGINT', rogue);
+          process.prependListener('uncaughtException', rogue);
+          return workers['ai-worker'];
+        },
+      });
+      handle = await startCombinedWorker({ loaders, env, logger: silent, exit });
+
+      expect(process.listeners('SIGTERM')).not.toContain(rogue);
+      expect(process.listeners('SIGINT')).not.toContain(rogue);
+      expect(process.listeners('uncaughtException')).not.toContain(rogue);
+      expect(process.on).toBe(originalOn);
+      // Unrelated events still register normally.
+      const other = vi.fn();
+      process.on('SIGUSR2', other);
+      expect(process.listeners('SIGUSR2')).toContain(other);
+      process.off('SIGUSR2', other);
+    });
+
+    it('stops started and in-flight workers and skips the rest on SIGTERM mid-startup', async () => {
+      const { workers, loaders } = makeLoaders();
+      let finishStart!: () => void;
+      workers['events-worker'].start.mockImplementation(
+        () => new Promise<void>((resolve) => (finishStart = resolve))
+      );
+
+      const starting = startCombinedWorker({ loaders, env, logger: silent, exit });
+      await vi.waitFor(() => expect(workers['events-worker'].start).toHaveBeenCalled());
+
+      process.emit('SIGTERM');
+      await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+      finishStart();
+      const result = await starting;
+
+      expect(workers['ai-worker'].stop).toHaveBeenCalledTimes(1);
+      expect(workers['events-worker'].stop).toHaveBeenCalledTimes(1);
+      expect(workers['ingestion-worker'].start).not.toHaveBeenCalled();
+      expect(result.healthPort).toBe(0);
+      expect((await result.getHealth()).status).toBe('draining');
+    });
+
+    it('does not report a start failure caused by the interrupting signal', async () => {
+      const { workers, loaders } = makeLoaders();
+      let failStart!: (error: Error) => void;
+      workers['ai-worker'].start.mockImplementation(
+        () => new Promise<void>((_, reject) => (failStart = reject))
+      );
+
+      const starting = startCombinedWorker({ loaders, env, logger: silent, exit });
+      await vi.waitFor(() => expect(workers['ai-worker'].start).toHaveBeenCalled());
+      process.emit('SIGINT');
+      failStart(new Error('connection closed'));
+
+      await expect(starting).resolves.toMatchObject({ healthPort: 0 });
+      expect(exit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('onShutdown hook', () => {
+    it('runs after the workers stopped and before exit', async () => {
+      const { workers, loaders } = makeLoaders();
+      const order: string[] = [];
+      workers['ai-worker'].stop.mockImplementation(async () => void order.push('stop'));
+      exit.mockImplementation(() => order.push('exit'));
+      const onShutdown = vi.fn(async () => void order.push('flush'));
+
+      const started = await startCombinedWorker({ loaders, env, logger: silent, exit, onShutdown });
+      await started.shutdown('test');
+
+      expect(order).toEqual(['stop', 'flush', 'exit']);
+    });
+
+    it('logs a failing hook but still exits cleanly', async () => {
+      const { loaders } = makeLoaders();
+      const onShutdown = vi.fn().mockRejectedValue(new Error('flush failed'));
+
+      const started = await startCombinedWorker({ loaders, env, logger: silent, exit, onShutdown });
+      await started.shutdown('test');
+
+      expect(exit).toHaveBeenCalledWith(0);
+    });
   });
 
   it('uses the default logger and process.exit when none are injected', async () => {

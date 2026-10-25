@@ -28,9 +28,12 @@ export type {
  * others: its entry loads env files and the OpenTelemetry auto-instrumentation,
  * which have to run before BullMQ and the other libraries are required.
  */
+let aiWorkerLoaded = false;
+
 export const defaultLoaders: WorkerLoaders = {
   'ai-worker': async () => {
     const { AIWorker } = await import('@intelliflow/ai-worker');
+    aiWorkerLoaded = true;
     return new AIWorker() as ManagedWorker;
   },
   'events-worker': async () => {
@@ -43,10 +46,20 @@ export const defaultLoaders: WorkerLoaders = {
   },
 };
 
+/**
+ * ai-worker's own SIGTERM handler flushes OpenTelemetry before exiting. The
+ * combined runtime owns the signal handlers, so the flush runs here instead.
+ */
+export async function flushOpenTelemetry(): Promise<void> {
+  if (!aiWorkerLoaded) return;
+  const { getSDKInstance, shutdownOpenTelemetry } = await import('@intelliflow/ai-worker');
+  await shutdownOpenTelemetry(getSDKInstance());
+}
+
 export async function main(): Promise<void> {
   const logger = pino({ name: 'combined-worker-main' });
   try {
-    await startCombinedWorker({ loaders: defaultLoaders });
+    await startCombinedWorker({ loaders: defaultLoaders, onShutdown: flushOpenTelemetry });
     logger.info('Combined worker is running. Press Ctrl+C to stop.');
   } catch (error) {
     logger.error(

@@ -16,10 +16,13 @@
  *    workers on one fixed port would collide, so the per-worker servers are
  *    moved to an ephemeral port (HEALTH_PORT=0) and only the combined server
  *    listens on the real port.
- *  - `BaseWorker.start()` registers its own SIGINT/SIGTERM/uncaught handlers,
- *    and each of them calls `process.exit` as soon as its own cleanup is done,
- *    which would cut the other workers off mid-drain. Those listeners are
- *    removed after start and replaced by the single handler below.
+ *  - `BaseWorker.start()` (and ai-worker's OpenTelemetry module on import)
+ *    register their own SIGINT/SIGTERM/uncaught handlers, and each of them calls
+ *    `process.exit` as soon as its own cleanup is done, which would cut the
+ *    other workers off mid-drain. The combined handlers are installed FIRST,
+ *    before any worker is loaded, and registrations of those events by anything
+ *    else are dropped while the workers start. ai-worker's OpenTelemetry flush
+ *    is therefore run explicitly through the `onShutdown` hook.
  *
  * @module combined-worker/combined
  */
@@ -39,6 +42,13 @@ export interface ManagedWorker {
   start(): Promise<void>;
   stop(): Promise<void>;
   getStatus(): { state: string };
+  /** Same dependency checks the standalone health server reports (Redis, ...). */
+  checkHealth?(): Promise<Record<string, ComponentCheck>>;
+}
+
+export interface ComponentCheck {
+  status: 'ok' | 'degraded' | 'error';
+  message?: string;
 }
 
 export type WorkerLoaders = Record<WorkerName, () => Promise<ManagedWorker>>;
@@ -56,6 +66,8 @@ export interface CombinedWorkerOptions {
   loaders: WorkerLoaders;
   env?: NodeJS.ProcessEnv;
   logger?: pino.Logger;
+  /** Runs after the workers stopped (e.g. flush OpenTelemetry). Errors are logged only. */
+  onShutdown?: () => Promise<void>;
   /** Injected so tests do not terminate the runner. */
   exit?: (code: number) => void;
 }
@@ -64,13 +76,16 @@ export type WorkerHealthState = 'running' | 'failed' | string;
 
 export interface CombinedHealth {
   status: 'ok' | 'degraded' | 'draining';
-  workers: Record<string, { state: WorkerHealthState; error?: string }>;
+  workers: Record<
+    string,
+    { state: WorkerHealthState; error?: string; checks?: Record<string, ComponentCheck> }
+  >;
 }
 
 export interface CombinedWorkerHandle {
   /** Port the combined health server is listening on. */
   readonly healthPort: number;
-  getHealth(): CombinedHealth;
+  getHealth(): Promise<CombinedHealth>;
   /** The single shutdown path; idempotent. Resolves once the process would exit. */
   shutdown(reason: string): Promise<void>;
 }
@@ -143,23 +158,25 @@ const PROCESS_EVENTS = ['SIGINT', 'SIGTERM', 'uncaughtException', 'unhandledReje
 type ProcessEvent = (typeof PROCESS_EVENTS)[number];
 type Listener = (...args: unknown[]) => void;
 
-function snapshotListeners(): Record<ProcessEvent, Listener[]> {
-  const snapshot = {} as Record<ProcessEvent, Listener[]>;
-  for (const event of PROCESS_EVENTS) {
-    snapshot[event] = process.listeners(event) as Listener[];
+/**
+ * Drop every registration of the process events above made by anyone else until
+ * the returned function is called. Call it once the combined handlers are
+ * installed, so no worker (or OpenTelemetry) can add a handler that exits the
+ * process on its own, not even for the instant between registration and removal.
+ */
+function suppressProcessHandlers(): () => void {
+  const target = process as unknown as Record<string, (...args: unknown[]) => unknown>;
+  const methods = ['on', 'addListener', 'once', 'prependListener', 'prependOnceListener'];
+  const originals = methods.map((method) => [method, target[method]] as const);
+  for (const [method, original] of originals) {
+    target[method] = function (event: unknown, ...rest: unknown[]) {
+      if ((PROCESS_EVENTS as readonly unknown[]).includes(event)) return process;
+      return original.call(process, event, ...rest);
+    };
   }
-  return snapshot;
-}
-
-/** Remove every listener that appeared since `before` (i.e. the workers' own). */
-function removeListenersAddedSince(before: Record<ProcessEvent, Listener[]>): void {
-  for (const event of PROCESS_EVENTS) {
-    for (const listener of process.listeners(event) as Listener[]) {
-      if (!before[event].includes(listener)) {
-        process.off(event, listener);
-      }
-    }
-  }
+  return () => {
+    for (const [method, original] of originals) target[method] = original;
+  };
 }
 
 // ============================================================================
@@ -170,8 +187,8 @@ function statusCode(health: CombinedHealth): number {
   return health.status === 'ok' ? 200 : 503;
 }
 
-function createHealthServer(getHealth: () => CombinedHealth): http.Server {
-  return http.createServer((req, res) => {
+function createHealthServer(getHealth: () => Promise<CombinedHealth>): http.Server {
+  return http.createServer(async (req, res) => {
     const path = (req.url ?? '/').split('?')[0];
 
     if (path === '/health/live') {
@@ -181,7 +198,7 @@ function createHealthServer(getHealth: () => CombinedHealth): http.Server {
     }
 
     if (path === '/health' || path === '/health/ready' || path === '/health/detailed') {
-      const health = getHealth();
+      const health = await getHealth();
       res.writeHead(statusCode(health), { 'content-type': 'application/json' });
       res.end(JSON.stringify(health));
       return;
@@ -225,8 +242,10 @@ function errorMessage(error: unknown): string {
 /**
  * Start the configured workers and the combined health server.
  *
- * Rejects (after stopping anything already started) when a worker fails to
- * start, unless COMBINED_ALLOW_PARTIAL=true.
+ * The combined signal handlers are installed before any worker is loaded. A
+ * signal during startup stops whatever has started so far. Rejects (after
+ * stopping anything already started) when a worker fails to start, unless
+ * COMBINED_ALLOW_PARTIAL=true.
  */
 export async function startCombinedWorker(
   options: CombinedWorkerOptions
@@ -241,17 +260,24 @@ export async function startCombinedWorker(
   // events/ingestion build their config at import time.
   env.HEALTH_PORT = '0';
 
-  const listenersBefore = snapshotListeners();
   const running = new Map<WorkerName, ManagedWorker>();
   const failures = new Map<WorkerName, string>();
+  /** Workers whose start() is in flight, so a signal can still stop them. */
+  const starting = new Map<WorkerName, ManagedWorker>();
   let shuttingDown = false;
   let shutdownPromise: Promise<void> | null = null;
   let healthServer: http.Server | null = null;
   const ownListeners: Array<[ProcessEvent, Listener]> = [];
 
+  const removeOwnListeners = () => {
+    for (const [event, listener] of ownListeners) process.off(event, listener);
+    ownListeners.length = 0;
+  };
+
   const stopAll = async (): Promise<boolean> => {
+    const targets = new Map([...starting, ...running]);
     const results = await Promise.allSettled(
-      [...running.entries()].map(async ([name, worker]) => {
+      [...targets.entries()].map(async ([name, worker]) => {
         try {
           await worker.stop();
         } catch (error) {
@@ -263,18 +289,38 @@ export async function startCombinedWorker(
     return results.every((result) => result.status === 'fulfilled');
   };
 
-  const getHealth = (): CombinedHealth => {
-    const workers: CombinedHealth['workers'] = {};
-    for (const name of config.workers) {
-      const failure = failures.get(name);
-      if (failure !== undefined) {
-        workers[name] = { state: 'failed', error: failure };
-        continue;
-      }
-      const worker = running.get(name);
-      workers[name] = { state: worker ? worker.getStatus().state : 'stopped' };
+  const checkWorker = async (worker: ManagedWorker): Promise<Record<string, ComponentCheck>> => {
+    if (!worker.checkHealth) return {};
+    try {
+      return await worker.checkHealth();
+    } catch (error) {
+      return { health: { status: 'error', message: errorMessage(error) } };
     }
-    const allRunning = Object.values(workers).every((entry) => entry.state === 'running');
+  };
+
+  const getHealth = async (): Promise<CombinedHealth> => {
+    const workers: CombinedHealth['workers'] = {};
+    await Promise.all(
+      config.workers.map(async (name) => {
+        const failure = failures.get(name);
+        if (failure !== undefined) {
+          workers[name] = { state: 'failed', error: failure };
+          return;
+        }
+        const worker = running.get(name);
+        if (!worker) {
+          workers[name] = { state: 'stopped' };
+          return;
+        }
+        const checks = await checkWorker(worker);
+        const broken = Object.values(checks).some((check) => check.status === 'error');
+        const state = worker.getStatus().state;
+        // A worker whose Redis/provider check fails is not healthy even though
+        // BaseWorker still reports state 'running'.
+        workers[name] = { state: broken && state === 'running' ? 'unhealthy' : state, checks };
+      })
+    );
+    const allRunning = config.workers.every((name) => workers[name]?.state === 'running');
     let status: CombinedHealth['status'] = allRunning ? 'ok' : 'degraded';
     if (shuttingDown) status = 'draining';
     return { status, workers };
@@ -294,9 +340,14 @@ export async function startCombinedWorker(
 
       const clean = await stopAll();
       if (healthServer) await closeServer(healthServer);
+      try {
+        await options.onShutdown?.();
+      } catch (error) {
+        logger.error({ error: errorMessage(error) }, 'Shutdown hook failed');
+      }
       clearTimeout(forceExit);
 
-      for (const [event, listener] of ownListeners) process.off(event, listener);
+      removeOwnListeners();
       logger.info({ clean }, 'Combined worker stopped');
       exit(clean ? 0 : 1);
     })();
@@ -304,36 +355,13 @@ export async function startCombinedWorker(
   };
 
   const abortStartup = async (): Promise<void> => {
-    removeListenersAddedSince(listenersBefore);
+    removeOwnListeners();
     await stopAll();
     if (healthServer) await closeServer(healthServer);
   };
 
-  for (const name of config.workers) {
-    let worker: ManagedWorker | undefined;
-    try {
-      worker = await options.loaders[name]();
-      await worker.start();
-      running.set(name, worker);
-      logger.info({ worker: name }, 'Worker started');
-    } catch (error) {
-      const message = errorMessage(error);
-      logger.error({ worker: name, error: message }, 'Worker failed to start');
-      failures.set(name, message);
-      // BaseWorker leaves its Redis connection and health server open when
-      // start() throws part-way; release them (best effort).
-      await worker?.stop().catch(() => undefined);
-
-      if (!config.allowPartial) {
-        await abortStartup();
-        throw new Error(`Worker ${name} failed to start: ${message}`, { cause: error });
-      }
-    }
-  }
-
-  // All starts are done: replace the workers' own signal handlers with ours.
-  removeListenersAddedSince(listenersBefore);
-
+  // Install the combined handlers first, then lock everyone else out of these
+  // events while the workers load and start.
   const onSignal = (signal: string) => () => {
     void shutdown(signal);
   };
@@ -351,20 +379,60 @@ export async function startCombinedWorker(
     process.on(event, listener);
     ownListeners.push([event, listener]);
   }
+  const restoreProcessHandlers = suppressProcessHandlers();
+
+  try {
+    for (const name of config.workers) {
+      if (shuttingDown) break;
+      let worker: ManagedWorker | undefined;
+      try {
+        worker = await options.loaders[name]();
+        starting.set(name, worker);
+        await worker.start();
+        starting.delete(name);
+        running.set(name, worker);
+        logger.info({ worker: name }, 'Worker started');
+      } catch (error) {
+        starting.delete(name);
+        // A signal that arrived mid-start already stopped this worker; the
+        // failure is the expected result of that, not a startup error.
+        if (shuttingDown) break;
+        const message = errorMessage(error);
+        logger.error({ worker: name, error: message }, 'Worker failed to start');
+        failures.set(name, message);
+        // BaseWorker leaves its Redis connection and health server open when
+        // start() throws part-way; release them (best effort).
+        await worker?.stop().catch(() => undefined);
+
+        if (!config.allowPartial) {
+          await abortStartup();
+          throw new Error(`Worker ${name} failed to start: ${message}`, { cause: error });
+        }
+      }
+    }
+  } finally {
+    restoreProcessHandlers();
+  }
+
+  if (shuttingDown) {
+    // Interrupted during startup: shutdown() owns the rest, including the exit.
+    await shutdownPromise;
+    return { healthPort: 0, getHealth, shutdown };
+  }
 
   healthServer = createHealthServer(getHealth);
   let healthPort: number;
   try {
     healthPort = await listen(healthServer, config.healthPort);
   } catch (error) {
-    for (const [event, listener] of ownListeners) process.off(event, listener);
+    removeOwnListeners();
     await stopAll();
     throw new Error(`Combined health server failed to listen: ${errorMessage(error)}`, {
       cause: error,
     });
   }
   logger.info(
-    { healthPort, workers: Object.keys(getHealth().workers), failed: [...failures.keys()] },
+    { healthPort, workers: [...config.workers], failed: [...failures.keys()] },
     'Combined worker ready'
   );
 

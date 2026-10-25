@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const startCombinedWorker = vi.hoisted(() => vi.fn());
 const aiStart = vi.hoisted(() => vi.fn());
+const sdk = vi.hoisted(() => ({
+  get: vi.fn(() => 'sdk-instance'),
+  shutdown: vi.fn(async () => undefined),
+}));
 
 vi.mock('../combined', async (importOriginal) => ({
   ...(await importOriginal<typeof import('../combined')>()),
@@ -14,13 +18,15 @@ vi.mock('@intelliflow/ai-worker', () => ({
   AIWorker: class {
     start = aiStart;
   },
+  getSDKInstance: sdk.get,
+  shutdownOpenTelemetry: sdk.shutdown,
 }));
 vi.mock('@intelliflow/events-worker', () => ({ eventsWorker: { name: 'events-instance' } }));
 vi.mock('@intelliflow/ingestion-worker', () => ({
   ingestionWorker: { name: 'ingestion-instance' },
 }));
 
-import { defaultLoaders, main } from '../main';
+import { defaultLoaders, flushOpenTelemetry, main } from '../main';
 
 describe('combined-worker main', () => {
   beforeEach(() => {
@@ -39,7 +45,18 @@ describe('combined-worker main', () => {
 
     await main();
 
-    expect(startCombinedWorker).toHaveBeenCalledWith({ loaders: defaultLoaders });
+    expect(startCombinedWorker).toHaveBeenCalledWith({
+      loaders: defaultLoaders,
+      onShutdown: flushOpenTelemetry,
+    });
+  });
+
+  it('flushes ai-worker OpenTelemetry on shutdown once ai-worker was loaded', async () => {
+    await defaultLoaders['ai-worker']();
+
+    await flushOpenTelemetry();
+
+    expect(sdk.shutdown).toHaveBeenCalledWith('sdk-instance');
   });
 
   it('exits 1 when startup fails', async () => {
