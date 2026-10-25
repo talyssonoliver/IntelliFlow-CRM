@@ -9,24 +9,24 @@
  pre{background:#0d1117;color:#e6edf3;padding:1rem;border-radius:6px;overflow:auto;font-size:.85rem}
 </style></head><body>
 <h1>IFC-033 — k6 Critical-Path Load Test (ADR-018 budget)</h1>
-<p class="meta">Generated 2026-07-24T10:15:37.194Z · Target http://localhost:4000 · Duration 180s ·
+<p class="meta">Generated 2026-10-22T23:08:52.894Z · Target https://api-production-e9c1.up.railway.app · Duration 123s ·
 Real k6 execution output (RISK-S19-02: not a template report).</p>
 <table><thead><tr><th>Metric</th><th>Budget</th><th>Achieved</th><th>Verdict</th></tr></thead>
 <tbody>
-<tr><td>Lead throughput</td><td>≥ 5,000 leads/hour</td><td><strong>1081 leads / 180s ≈ 21,617/hour</strong></td><td class="pass">PASS</td></tr>
-<tr><td>p95 latency (ingestion)</td><td>< 200 ms</td><td><strong>11.6 ms</strong></td><td class="pass">PASS</td></tr>
+<tr><td>Lead throughput</td><td>≥ 5,000 leads/hour</td><td><strong>185 leads / 123s ≈ 5435/hour</strong></td><td class="pass">PASS</td></tr>
+<tr><td>p95 latency (ingestion)</td><td>< 200 ms</td><td><strong>1137.4 ms</strong></td><td class="fail">FAIL</td></tr>
 <tr><td>Error rate</td><td>< 0.1 %</td><td><strong>0 %</strong></td><td class="pass">PASS</td></tr>
-<tr><td>Atomic conversions</td><td>exercised</td><td><strong>180 lead→deal (DDD-001/002)</strong></td><td class="pass">PASS</td></tr>
+<tr><td>Atomic conversions</td><td>exercised</td><td><strong>20 lead→deal (DDD-001/002)</strong></td><td class="pass">PASS</td></tr>
 </tbody></table>
 <h2>k6 summary (verbatim)</h2>
 <pre>
 === IFC-033 critical-path load test (ADR-018 budget) ===
-Target:        http://localhost:4000
-Duration:      180s
-Leads created: 1081  (~21,617/hour, budget >= 5,000)
-Deals converted (atomic): 180
-p95 latency:   11.6 ms   (budget &lt; 200 ms)
+Target:        https://api-production-e9c1.up.railway.app
+Duration:      123s
+Leads created: 185  (~5435/hour, budget >= 5,000)
+Deals converted (atomic): 20
+p95 latency:   1137.4 ms   (budget &lt; 200 ms)
 Error rate:    0 %   (budget &lt; 0.1 %)
-PASS: throughput=true p95=true errorRate=true
+PASS: throughput=true p95=false errorRate=true
 </pre>
 </body></html>

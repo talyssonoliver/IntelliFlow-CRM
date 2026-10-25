@@ -1,0 +1,21 @@
+[test:load] C:/Users/talys/tools/k6/k6-v0.49.0-windows-amd64/k6.exe run --no-color C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-033\tools\scripts\k6\ifc-033-critical-path.js  (target https://api-production-e9c1.up.railway.app)
+          /\      |‾‾| /‾‾/   /‾‾/   
+     /\  /  \     |  |/  /   /  /    
+    /  \/    \    |     (   /   ‾‾\  
+   /          \   |  |\  \ |  (‾)  | 
+  / __________ \  |__| \__\ \_____/ .io
+     execution: local
+        script: C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-033\tools\scripts\k6\ifc-033-critical-path.js
+        output: -
+     scenarios: (100.00%) 2 scenarios, 500 max VUs, 2m30s max duration (incl. graceful stop):
+              * lead_conversion: 0.17 iterations/s for 2m0s (maxVUs: 10-40, exec: convert, gracefulStop: 30s)
+              * lead_ingestion: 1.53 iterations/s for 2m0s (maxVUs: 92-460, exec: ingest, gracefulStop: 30s)
+=== IFC-033 critical-path load test (ADR-018 budget) ===
+Target:        https://api-production-e9c1.up.railway.app
+Duration:      123s
+Leads created: 185  (~5435/hour, budget >= 5,000)
+Deals converted (atomic): 20
+p95 latency:   1137.4 ms   (budget < 200 ms)
+Error rate:    0 %   (budget < 0.1 %)
+PASS: throughput=true p95=false errorRate=true
+time="2026-10-23T00:08:54+01:00" level=error msg="thresholds on metrics 'http_req_duration{scenario:lead_ingestion}, lead_create_latency, lead_read_latency' have been crossed"

@@ -131,6 +131,7 @@ export const LEAD_SOURCE_COLORS: Record<string, string> = {
   COLD_CALL: 'bg-orange-500',
   EVENT: 'bg-cyan-500',
   OTHER: 'bg-gray-500',
+  BOOKING: 'bg-teal-500', // PG-203
 };
 
 /** Ticket status colors */

@@ -6,12 +6,12 @@
   "attestation_timestamp": "2026-02-28T20:16:00Z",
   "verdict": "COMPLETE",
   "artifact_hashes": {
-    "apps/web/src/components/home/DraggablePinnedItem.tsx": "92a8677a7b4450ff16a16786188db792bb6504339930cd2f99a2a426096e5638",
-    "apps/web/src/components/home/__tests__/DraggablePinnedItem.test.tsx": "2fce9a97d8a374ff5947cdd53c4b0ffb34d9870edf5890d3ae5509f02d074105",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "f163fea7402ba00fbb6214b91cfa0cb2fbae4f33f5952f030f0266556b2f430c",
-    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "1eefc1f6d4fb903854dcf769132c305cf259464e4f0604b2e6a4a138cb274135",
-    "docs/design/diagrams/complete-dependency-chains.md": "196a78671147c75a2ccb1e83ff7590872df080b99520b627c6bde86043b7440f",
-    "docs/planning/prd-home-page.md": "65216595cc684a02a25dd39994ca605ccca8fe5ab459d18f0b1ec644fd9e2e96"
+    "apps/web/src/components/home/DraggablePinnedItem.tsx": "sha256:92a8677a7b4450ff16a16786188db792bb6504339930cd2f99a2a426096e5638",
+    "apps/web/src/components/home/__tests__/DraggablePinnedItem.test.tsx": "sha256:2fce9a97d8a374ff5947cdd53c4b0ffb34d9870edf5890d3ae5509f02d074105",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:f163fea7402ba00fbb6214b91cfa0cb2fbae4f33f5952f030f0266556b2f430c",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "sha256:1eefc1f6d4fb903854dcf769132c305cf259464e4f0604b2e6a4a138cb274135",
+    "docs/design/diagrams/complete-dependency-chains.md": "sha256:196a78671147c75a2ccb1e83ff7590872df080b99520b627c6bde86043b7440f",
+    "docs/planning/prd-home-page.md": "sha256:65216595cc684a02a25dd39994ca605ccca8fe5ab459d18f0b1ec644fd9e2e96"
   },
   "validation_results": [
     {

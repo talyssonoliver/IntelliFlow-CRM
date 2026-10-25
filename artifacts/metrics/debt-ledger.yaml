@@ -4930,6 +4930,67 @@ items:
       attendeeId min(1).max(64); durationMinutes int().min(5).max(1440); router test.
     status: open
     notes: 'gh issue #914. Found by the PG-202 STOA-Security review; pre-existing.'
+  PG-207-IFC-144-FALSE-COMPLETION:
+    origin_task: PG-207
+    owner: Tech Lead (STOA-Quality)
+    severity: high
+    description: >-
+      IFC-144 is marked Completed, but production email.sendEmail used a
+      module-level outbound service that fell back to the mock provider without
+      SENDGRID_API_KEY (absent in Railway), so user mail was recorded SENT
+      without being sent. Fixed on feat/pg-207-email-settings (8d9803710):
+      dispatchUserMail is the only send path and arch-guards.test.ts forbids the
+      mock service under modules/email. GitHub issue #955.
+    created_at: 2026-10-21
+    expiry_date: 2026-11-21
+    remediation_sprint: 18
+    remediation_plan: >-
+      When PG-207 merges, correct the IFC-144 attestation (its send claim was
+      false in production) and close #955.
+    status: open
+    notes: 'Kept open until PG-207 is merged; the code fix is in the PG-207 branch.'
+  PG-207-DSAR-EMAIL-COVERAGE:
+    origin_task: PG-207
+    owner: Backend Eng (STOA-Security)
+    severity: medium
+    description: >-
+      DSARWorkflow (apps/api/src/workflow/dsar-workflow.ts:287-335) exports
+      leads, contacts, accounts and opportunities only. EmailRecord, and the
+      PG-207 tables EmailSuppression, EmailBounceReceipt, EmailSignature and
+      EmailMailbox, are not exported or erased for a data subject. GitHub issue
+      #956.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 20
+    remediation_plan: >-
+      Export email records naming the subject's address plus suppressions and
+      receipts for it; on erasure delete receipts, keep the suppression only as
+      a hashed address, redact the address in EmailRecord recipients; DSAR
+      tests.
+    status: open
+    notes: 'Bounce receipts are already purged after 90 days by the bounce reader.'
+  PG-207-OAUTH-LIGHTHOUSE-NEEDS-HUMAN:
+    origin_task: PG-207
+    owner: Product Owner
+    severity: medium
+    description: >-
+      Google and Microsoft OAuth apps are not registered (EMAIL_OAUTH_* env
+      unset), so their Connect buttons stay disabled with the reason shown;
+      gmail.readonly needs Google's restricted-scope security assessment before
+      public launch. The live check that X-IntelliFlow-Record and the Message-ID
+      survive into Gmail / Microsoft DSNs (D5, CA-22) needs those apps.
+      Lighthouse on /email/email-settings and /email/signatures needs
+      LHCI_TEST_EMAIL / LHCI_TEST_PASSWORD.
+    created_at: 2026-10-21
+    expiry_date: 2026-12-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Register both apps with the ADR-085 scopes and the callback
+      EMAIL_OAUTH_REDIRECT_URI; set the env in Railway; run the D5 header spike
+      on one Gmail and one Microsoft mailbox; run the authenticated Lighthouse
+      harness on both pages.
+    status: open
+    notes: 'SMTP sending and IMAP bounce reading work without these.'
   PG-199-F1-CHAINVERSION-MODEL-UNUSED:
     origin_task: PG-199
     owner: AI Team
@@ -5121,15 +5182,105 @@ items:
       then confirms push-to-main and dispatch-from-main runs still work.
     status: open
     notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1032. Raised by the ENV-008-AI STOA-security review; a GitHub settings change, owner-only.'
+  PG-203-OUTBOX-NOT-WIRED-001:
+    origin_task: PG-203
+    owner: Backend Architect
+    severity: high
+    description: >-
+      apps/api/src/container.ts:376 wires InMemoryEventBus, whose publishAll(events, tx)
+      ignores tx, so no API-originated domain event (LeadCreated included) is ever
+      written to the outbox; OutboxEventBusAdapter exists but is never instantiated.
+      Proven by tests/integration/event-types.test.ts (PG-203).
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Wire OutboxEventBusAdapter (or a composite with in-process handlers), pass the
+      Prisma tx through every publishAll, real-DB test of one outbox row per lead create.
+    status: open
+    notes: 'gh issue #966; related #889 and the PG-208 "events never reach the outbox" finding.'
+  PG-203-REMINDERS-NEVER-SCHEDULED-001:
+    origin_task: PG-203
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      AppointmentDomainService.toDomainAppointments (appointment-domain.service.ts:71-126)
+      drops reminderMinutes/timezone, so ReminderSchedulerService returns early and no
+      appointment reminder is scheduled; its recipients are attendee user ids, not emails.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 20
+    remediation_plan: >-
+      Carry reminderMinutes/timezone through the conversion, define recipients
+      (organizer + attendees resolved to stored emails), test against the real adapter.
+    status: open
+    notes: 'gh issue #967. Pre-existing; surfaced by the PG-203 codex review.'
+  PG-203-ICS-FABRICATED-RECIPIENTS-001:
+    origin_task: PG-203
+    owner: Backend Lead
+    severity: high
+    description: >-
+      packages/application/src/services/AppointmentIcsEventHandler.ts:245-258 sends ICS
+      invites to `${organizerId}@intelliflow-crm.com` and to attendee user ids treated as
+      email addresses.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Resolve organizer/attendee ids to stored emails in-tenant; never fabricate an
+      address; test with the real notification adapter contract (shared with #967).
+    status: open
+    notes: 'gh issue #973. PG-203 public bookings pass sendIcs:false to avoid it.'
+  PG-203-PLAYBOOK-AI-DEFAULT-OFF-001:
+    origin_task: PG-203
+    owner: Tech Lead
+    severity: low
+    description: >-
+      docs/planning/module-settings-playbook.md:131-136 mandates AI toggles default false,
+      contradicting the owner's PG-203 ruling Q8 that AI-off defaults are a red flag.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Rewrite the playbook rule (AI on by default; any AI-off default needs a recorded
+      owner decision) and list existing AI-off columns for an owner decision.
+    status: open
+    notes: 'gh issue #972.'
+  PROD-API-DB-CROSS-REGION-LATENCY-001:
+    origin_task: IFC-033
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      Production API p95 misses the ADR-018 budget (200 ms). The IFC-033 k6 run against
+      the production API on 2026-10-22 measured client p95 1,137 ms and server-side p95
+      POST 2,024 ms / GET 701 ms (Grafana Cloud). Throughput passed (5,435 leads/hour) and
+      errors were 0 %. A Tempo trace of lead.create (3fe5f6d158d600bb0d26b4d41c4ae693) shows
+      every Postgres round-trip costing about 147 ms, BEGIN and SET included, so the cost is
+      network RTT between the Railway api service and Supabase eu-central-1, not load.
+      Secondary: lead.create builds a new BullMQ Queue (a new Redis connection) per request
+      for the fire-and-forget score-lead enqueue (apps/api/src/modules/lead/lead.router.ts:533-558).
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-22
+    remediation_sprint: 20
+    remediation_plan: >-
+      Confirm the Railway region of the production api service, move it (and the
+      DB-querying workers) to an EU region next to Supabase eu-central-1 (owner decision:
+      production infra), then re-run pnpm test:load against production with the IFC-033
+      parameters. Separately, reuse one module-level BullMQ Queue per process in lead.create.
+    notes: >-
+      git issue #1001. Owner ruling 2026-10-22: IFC-033 closes on throughput, and the p95
+      gap is tracked here, in #1001 and in docs/shared/bottleneck-analysis.md (production
+      section). Tracked per project Rule 8.
 summary:
-  total_items: 439
+  total_items: 443
   by_severity:
     critical: 241
-    high: 14
-    medium: 162
-    low: 22
+    high: 16
+    medium: 163
+    low: 23
   by_status:
-    open: 423
+    open: 427
     in_progress: 0
     resolved: 16
     wont_fix: 0

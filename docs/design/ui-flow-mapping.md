@@ -2,8 +2,8 @@
 
 > **Location**: `docs/design/ui-flow-mapping.md` **Last Updated**: 2026-05-02
 > **Purpose**: Cross-reference document linking Flows, Sitemap Routes, Style
-> Guide Components **Total Pages**: 214 implemented **Total Flows**: 42 **API
-> Routers**: 71 (415 procedures)
+> Guide Components **Total Pages**: 216 implemented **Total Flows**: 42 **API
+> Routers**: 76 (444 procedures)
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
 > `tools/scripts/content-audit.ts` (each `page.tsx` under `apps/web/src/app/**`
@@ -130,25 +130,28 @@ in `/admin/users` and `/admin/roles`.
 
 ### Public / Marketing Section
 
-| Route           | Task ID | Sprint | Status | Primary Flow | Components Required                        | API Router |
-| --------------- | ------- | ------ | ------ | ------------ | ------------------------------------------ | ---------- |
-| `/`             | -       | 14     | ✅     | -            | hero, card-grid, btn-primary, testimonials | -          |
-| `/about`        | -       | 14     | ✅     | -            | card, team-grid                            | -          |
-| `/blog`         | -       | 14     | ✅     | -            | card-grid, search-input                    | -          |
-| `/blog/[slug]`  | -       | 14     | ✅     | -            | article-content, breadcrumb                | -          |
-| `/careers`      | -       | 14     | ✅     | -            | card-grid, badge                           | -          |
-| `/careers/[id]` | -       | 14     | ✅     | -            | card, btn-primary                          | -          |
-| `/contact`      | -       | 14     | ✅     | -            | input, textarea, btn-primary               | -          |
-| `/features`     | -       | 14     | ✅     | -            | card-grid, hero                            | -          |
-| `/lp/[slug]`    | -       | 14     | ✅     | -            | hero, card, btn-primary                    | -          |
-| `/partners`     | -       | 14     | ✅     | -            | card-grid, logo-grid                       | -          |
-| `/press`        | -       | 14     | ✅     | -            | card-grid, date-badge                      | -          |
-| `/pricing`      | -       | 14     | ✅     | FLOW-010     | pricing-card, toggle-switch, btn-primary   | -          |
-| `/security`     | -       | 14     | ✅     | -            | card, badge                                | -          |
-| `/status`       | -       | 14     | ✅     | -            | metric-card, badge                         | -          |
+| Route                   | Task ID | Sprint | Status | Primary Flow | Components Required                                                                 | API Router        |
+| ----------------------- | ------- | ------ | ------ | ------------ | ----------------------------------------------------------------------------------- | ----------------- |
+| `/`                     | -       | 14     | ✅     | -            | hero, card-grid, btn-primary, testimonials                                          | -                 |
+| `/about`                | -       | 14     | ✅     | -            | card, team-grid                                                                     | -                 |
+| `/blog`                 | -       | 14     | ✅     | -            | card-grid, search-input                                                             | -                 |
+| `/blog/[slug]`          | -       | 14     | ✅     | -            | article-content, breadcrumb                                                         | -                 |
+| `/careers`              | -       | 14     | ✅     | -            | card-grid, badge                                                                    | -                 |
+| `/careers/[id]`         | -       | 14     | ✅     | -            | card, btn-primary                                                                   | -                 |
+| `/contact`              | -       | 14     | ✅     | -            | input, textarea, btn-primary                                                        | -                 |
+| `/features`             | -       | 14     | ✅     | -            | card-grid, hero                                                                     | -                 |
+| `/lp/[slug]`            | -       | 14     | ✅     | -            | hero, card, btn-primary                                                             | -                 |
+| `/partners`             | -       | 14     | ✅     | -            | card-grid, logo-grid                                                                | -                 |
+| `/press`                | -       | 14     | ✅     | -            | card-grid, date-badge                                                               | -                 |
+| `/pricing`              | -       | 14     | ✅     | FLOW-010     | pricing-card, toggle-switch, btn-primary                                            | -                 |
+| `/security`             | -       | 14     | ✅     | -            | card, badge                                                                         | -                 |
+| `/status`               | -       | 14     | ✅     | -            | metric-card, badge                                                                  | -                 |
+| `/book/[handle]/[slug]` | PG-203  | 18     | ✅     | FLOW-019     | booking-form, slot-picker, card, btn-primary (external entry, noindex, chrome-free) | `publicBooking.*` |
 
 **Note**: All public marketing pages are static content. No tRPC backend
-required.
+required. The one exception is `/book/[handle]/[slug]` (PG-203), the
+unauthenticated booking page, which calls the `publicBooking` router (3 public
+procedures: `getEventType`, `listSlots`, `book`; ADR-083).
 
 ---
 
@@ -332,6 +335,7 @@ required.
 | `/calendar/new`          | -       | 14     | ✅     | FLOW-020     | modal, input, select, datetime-picker             | `appointments.*`          |
 | `/calendar/[id]`         | -       | 14     | ✅     | FLOW-020     | card, tab-nav, badge, datetime-picker             | `appointments.*`          |
 | `/calendar/availability` | PG-202  | 18     | ✅     | FLOW-019     | card, switch, input, timezone-select, empty-state | `calendar.availability.*` |
+| `/calendar/event-types`  | PG-203  | 18     | ✅     | FLOW-019     | card, dialog, input, switch, empty-state          | `calendar.eventTypes.*`   |
 
 **Appointments Router Procedures** (19 total):
 
@@ -418,10 +422,13 @@ required.
 
 ### Email Section
 
-| Route         | Task ID | Sprint | Status | Primary Flow | Components Required                          | API Router |
-| ------------- | ------- | ------ | ------ | ------------ | -------------------------------------------- | ---------- |
-| `/email`      | -       | 14     | ✅     | FLOW-016     | data-table, badge, search-input, btn-primary | `email.*`  |
-| `/email/[id]` | -       | 14     | ✅     | FLOW-016     | card, email-viewer, timeline                 | `email.*`  |
+| Route                   | Task ID | Sprint | Status | Primary Flow | Components Required                                    | API Router                          |
+| ----------------------- | ------- | ------ | ------ | ------------ | ------------------------------------------------------ | ----------------------------------- |
+| `/email`                | -       | 14     | ✅     | FLOW-016     | data-table, badge, search-input, btn-primary           | `email.*`                           |
+| `/email/[id]`           | -       | 14     | ✅     | FLOW-016     | card, email-viewer, timeline                           | `email.*`                           |
+| `/email/email-settings` | PG-207  | 18     | ✅     | FLOW-016     | card, switch, radio-group, select, confirmation-dialog | `emailMailbox.*`, `emailSettings.*` |
+| `/email/signatures`     | PG-207  | 18     | ✅     | FLOW-016     | card, dialog, rich-text-editor, empty-state            | `emailSignatures.*`                 |
+| `/email/oauth/callback` | PG-207  | 18     | ✅     | FLOW-016     | status / alert                                         | `emailMailbox.oauthComplete`        |
 
 **Email (Inbound) Router Procedures** (12 total):
 
@@ -732,6 +739,10 @@ data
 | `subscriptions`              | 5          | Real-time WebSocket subscriptions                     | ✅ Active         |
 | `integrations`               | 6          | `/settings/integrations`                              | ✅ Active         |
 | `email`                      | 12         | `/email`, `/email/[id]`                               | ✅ Active         |
+| `emailMailbox`               | 7          | `/email/email-settings`, `/email/oauth/callback`      | ✅ Active         |
+| `emailSettings`              | 6          | `/email/email-settings` (incl. `suppression.*`)       | ✅ Active         |
+| `emailSignatures`            | 6          | `/email/signatures`, `/email/compose`                 | ✅ Active         |
+| `emailAttachments`           | 1          | `/email/compose`                                      | ✅ Active         |
 | `webhooks`                   | 9          | `/docs/webhooks`, webhook management                  | ✅ Active         |
 | `home`                       | 7          | Authenticated home page data (IFC-182)                | ✅ Active         |
 | `notifications`              | 8          | `/notifications`, `/notifications/settings`           | ✅ Active         |
@@ -751,7 +762,9 @@ data
 | `approvalPolicies`           | 7          | `/agent-approvals/approval-policies` (PG-198)         | ✅ Active         |
 | `calendar.availability`      | 3          | `/calendar/availability` (PG-202)                     | ✅ Active         |
 | `modelConfig`                | 3          | `/agent-approvals/model-config` (PG-199)              | ✅ Active         |
-| **Total**                    | **415**    | **49 routers**                                        |                   |
+| `calendar.eventTypes`        | 6          | `/calendar/event-types`, `/calendar/new` (PG-203)     | ✅ Active         |
+| `publicBooking`              | 3          | `/book/[handle]/[slug]` (PG-203, public)              | ✅ Active         |
+| **Total**                    | **444**    | **55 routers**                                        |                   |
 
 ---
 

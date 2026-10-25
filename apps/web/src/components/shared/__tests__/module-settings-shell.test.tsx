@@ -167,4 +167,45 @@ describe('ModuleSettingsShell (PG-191)', () => {
       expect(container.querySelector('.mb-6')).toBeNull();
     });
   });
+
+  describe('error state keeps the page h1 (PG-207)', () => {
+    it('renders the page title as the h1 above the error card', () => {
+      setup({ errorMessage: 'boom' });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Widget Settings' })
+      ).toBeInTheDocument();
+      expect(screen.getByText('Failed to load widget settings')).toBeInTheDocument();
+    });
+  });
+
+  describe('hideActions (PG-207)', () => {
+    it('shows Reset and Save by default', () => {
+      setup();
+      expect(screen.getByRole('button', { name: 'Reset to Defaults' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Save Changes' })).toBeInTheDocument();
+    });
+
+    it('renders the header and sections with no Reset/Save for a read-only viewer', () => {
+      setup({ hideActions: true });
+      expect(
+        screen.getByRole('heading', { level: 1, name: 'Widget Settings' })
+      ).toBeInTheDocument();
+      expect(screen.getByTestId('section')).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Reset to Defaults' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Save Changes' })).not.toBeInTheDocument();
+    });
+  });
+
+  describe('leading (PG-207)', () => {
+    it('renders leading content outside the fieldset that locks while saving', () => {
+      setup({
+        isSaving: true,
+        leading: <button type="button">Connect mailbox</button>,
+      });
+      const leading = screen.getByRole('button', { name: 'Connect mailbox' });
+      expect(leading).toBeEnabled();
+      expect(leading.closest('fieldset')).toBeNull();
+      expect(screen.getByTestId('section').closest('fieldset')).toBeDisabled();
+    });
+  });
 });

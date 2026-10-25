@@ -15,7 +15,7 @@
 
 import { execSync, spawnSync } from 'node:child_process';
 import { existsSync, readFileSync, appendFileSync, mkdirSync } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
 
@@ -194,6 +194,13 @@ function getAttestationHashes(taskId, sprint) {
   return null;
 }
 
+/** artifact_hashes values are `sha256:<hex>` (bare <hex> in older attestations). */
+export function bareDigest(value) {
+  return typeof value === 'string' && value.startsWith('sha256:')
+    ? value.slice('sha256:'.length)
+    : value;
+}
+
 /** Cross-check attestation hashes against master */
 function crossCheckHashes(taskId, sprint) {
   const hashes = getAttestationHashes(taskId, sprint);
@@ -204,7 +211,7 @@ function crossCheckHashes(taskId, sprint) {
     const actualHash = masterFileSha(filePath);
     if (actualHash === null) {
       mismatches.push({ path: filePath, expected: expectedHash, actual: 'NOT_ON_MASTER' });
-    } else if (actualHash !== expectedHash) {
+    } else if (actualHash !== bareDigest(expectedHash)) {
       mismatches.push({ path: filePath, expected: expectedHash, actual: actualHash });
     }
   }
@@ -368,7 +375,10 @@ async function main() {
   }
 }
 
-main().catch((err) => {
-  console.error('Fatal error:', err);
-  process.exit(1);
-});
+// Run only as a script, so the helpers above can be imported by tests.
+if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main().catch((err) => {
+    console.error('Fatal error:', err);
+    process.exit(1);
+  });
+}

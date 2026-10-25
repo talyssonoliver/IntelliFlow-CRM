@@ -89,6 +89,30 @@ IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► web
 
 ---
 
+## 1b. User Mailboxes (PG-207, ADR-085)
+
+User mail leaves from the sender's own mailbox; IntelliFlow's own domain is
+never used for user mail.
+
+| Layer    | Component                                   | Status | Description                                             |
+| -------- | ------------------------------------------- | ------ | ------------------------------------------------------- |
+| Adapters | `SmtpMailboxTransport`                      | ✅     | SMTP submit (465/587/2525), DNS-pinned public host, TLS |
+| Adapters | `OAuthMailboxClient`                        | ✅     | Gmail API / Microsoft Graph send + DSN listing, PKCE    |
+| Adapters | `ImapBounceReader`                          | ✅     | IMAP 993, delivery-status reports only                  |
+| API      | `mailbox-transport.ts` / `dispatchUserMail` | ✅     | Token refresh (CAS), hourly cap, coded failures         |
+| API      | `bounce-reader.ts` + scheduler              | ✅     | Lease-claimed scans, suppression rules                  |
+| External | Google / Microsoft OAuth apps               | ⬜     | NEEDS_HUMAN: registration + restricted-scope review     |
+
+```
+Google OAuth ⬜ ──┐
+Microsoft OAuth ⬜ ┼──► OAuthMailboxClient ✅ ──┐
+SMTP server (user) ─► SmtpMailboxTransport ✅ ──┼──► mailbox-transport.ts ✅ ──► dispatchUserMail ✅ ──► email.sendEmail / forward
+                                               │
+IMAP server (user) ─► ImapBounceReader ✅ ──────┴──► bounce-reader.ts ✅ ──► EmailSuppression / email_bounced notification
+```
+
+---
+
 ## 2. Observability Stack
 
 ### Overview

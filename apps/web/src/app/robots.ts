@@ -40,6 +40,8 @@ export default function robots(): MetadataRoute.Robots {
           // Redirect-only paths
           '/appointments',
           '/home',
+          // Public booking pages are per-firm links, never indexed (PG-203)
+          '/book/',
           // API routes
           '/api/',
         ],

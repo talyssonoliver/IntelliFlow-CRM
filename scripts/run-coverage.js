@@ -54,6 +54,7 @@ const PROJECTS = [
   'worker-shared',
   'events-worker',
   'ingestion-worker',
+  'combined-worker',
   'architecture',
   'a11y',
   'integration',

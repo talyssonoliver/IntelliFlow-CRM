@@ -21,6 +21,11 @@ model Tenant {
   id        String       @id @default(cuid())
   name      String
   slug      String       @unique
+  /// PG-203 — public booking handle (/book/<handle>/<slug>). NULL = public booking off. Never the slug, which
+  /// embeds the admin's auth id. CHECK + CONCURRENTLY unique index are in migrations 20261021120100/120200.
+  bookingHandle     String?      @unique @db.VarChar(40)
+  /// PG-203 — the firm's privacy notice for the booking form (https only); NULL falls back to /privacy.
+  bookingPrivacyUrl String?      @db.VarChar(500)
   status    TenantStatus @default(ACTIVE)
   createdAt DateTime     @default(now())
   updatedAt DateTime     @updatedAt
@@ -156,6 +161,11 @@ model Tenant {
   contactTags            ContactTag[]             @ignore
   contactAutomationSettings ContactAutomationSetting[] @ignore
   contactTypes           ContactType[]            @ignore // PG-205
+  emailMailboxes         EmailMailbox[]           @ignore // PG-207
+  emailOAuthStates       EmailOAuthState[]        @ignore // PG-207
+  emailSettings          TenantEmailSettings?     @ignore // PG-207
+  emailSignatures        EmailSignature[]         @ignore // PG-207
+  emailSuppressions      EmailSuppression[]       @ignore // PG-207
   dealWinLossReasons     DealWinLossReason[]      @ignore
   dealScoringRules       DealScoringRule[]        @ignore
   dealDuplicateRules     DealDuplicateRule[]      @ignore
@@ -191,6 +201,8 @@ model Tenant {
   appointmentSettings       AppointmentSettings[]     @ignore
   availabilityHours              AvailabilityHour[]               @ignore // PG-202
   availabilityClosures           AvailabilityClosure[]            @ignore // PG-202
+  eventTypes                EventType[]               @ignore // PG-203
+  bookingAttempts           BookingAttempt[]          @ignore // PG-203
   reportSettings            ReportSettings[]          @ignore
   reportTemplates           ReportTemplate[]          @ignore
   reportScheduleTags        ReportScheduleTag[]       @ignore
@@ -542,6 +554,8 @@ model User {
   loginGrants         PartnerLoginGrant[]
   accountTerritoryMemberships AccountTerritoryMember[] // PG-197
   approvalPolicyEscalations   ApprovalPolicy[] @relation("ApprovalPolicyEscalationTarget") // PG-198
+  emailMailboxes              EmailMailbox[]   // PG-207
+  emailSignatures             EmailSignature[] // PG-207
 
   @@index([email])
   @@index([role])
@@ -681,6 +695,9 @@ model Lead {
   @@index([tenantId, ownerId, isStarred]) // PG-059: fast "?view=starred" for current user
   @@index([tenantId, utmCampaign]) // ADR-070: campaign attribution reports
   @@index([accountId])
+  // PG-203: composite target for appointments ("tenantId","leadId") (DBA-012); built CONCURRENTLY in
+  // migrations/20261021120300_leads_tenant_id_key.
+  @@unique([tenantId, id])
   @@map("leads")
 }
 
@@ -769,6 +786,7 @@ enum LeadSource {
   COLD_CALL
   EVENT
   OTHER
+  BOOKING // PG-203: created by the public booking page
 }
 
 enum LeadStatus {
@@ -2142,6 +2160,20 @@ model Appointment {
   attendees           AppointmentAttendee[]
   linkedCases         AppointmentCase[]
 
+  // PG-203 — event type + public booking (ADR-083). All nullable; NULL for in-app bookings without a type.
+  /// FK ("tenantId","eventTypeId") -> event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId") is SQL-only (see EventType).
+  eventTypeId           String?
+  /// FK ("tenantId","leadId") -> leads("tenantId","id") ON DELETE SET NULL ("leadId") is SQL-only (see EventType).
+  leadId                String?
+  bookerName            String?   @db.VarChar(200)
+  bookerEmail           String?   @db.VarChar(320)
+  /// Allowlisted keys only (phone, company, notes, phoneRejected); size CHECK in SQL.
+  bookingAnswers        Json?
+  /// 'PUBLIC_LINK' for public bookings (CHECK in SQL); NULL otherwise.
+  bookedVia             String?   @db.VarChar(20)
+  bookingConsentAt      DateTime?
+  bookingConsentVersion String?   @db.VarChar(40)
+
   @@index([tenantId])
   @@index([organizerId])
   @@index([status])
@@ -2451,6 +2483,75 @@ model AvailabilityClosure {
   @@unique([tenantId, startDate, endDate])
   @@index([tenantId, startDate])
   @@map("availability_closures")
+}
+
+// ─── PG-203: Event Types + public booking (ADR-083) ─────────────────────────
+// SQL-only objects (Prisma cannot express them; defined in
+// migrations/20261021120100_event_types and 20261021120400_appointments_lead_fk,
+// asserted by tests/integration/event-types.test.ts — do not drop in a diff):
+//   - event_types_tenant_lower_name_key    UNIQUE ("tenantId", lower("name"))
+//   - event_types_hostUserId_fkey          FOREIGN KEY ("hostUserId") REFERENCES users("id") ON DELETE NO ACTION
+//   - appointments_tenantId_eventTypeId_fkey  FOREIGN KEY ("tenantId","eventTypeId")
+//                                         REFERENCES event_types("tenantId","id") ON DELETE SET NULL ("eventTypeId")
+//   - appointments_tenantId_leadId_fkey    FOREIGN KEY ("tenantId","leadId")
+//                                         REFERENCES leads("tenantId","id") ON DELETE SET NULL ("leadId")
+//   - booking_attempts_tenantId_eventTypeId_fkey  (column-list SET NULL, same reason)
+//     (Prisma cannot model optional relations over the required tenantId, nor SET NULL column lists)
+//   - CHECKs on event_types name/slug/description/duration/colorToken/locationDetails/requiredFields/leadSource,
+//     booking_attempts hashes, tenants bookingHandle/bookingPrivacyUrl, appointments bookedVia/bookingAnswers
+//   - RLS tenant policies on event_types and booking_attempts
+
+/// A tenant-defined meeting type: applied in the New Appointment form and bookable at /book/<handle>/<slug>.
+model EventType {
+  id              String            @id @default(cuid())
+  tenantId        String
+  tenant          Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name            String            @db.VarChar(100)
+  slug            String            @db.VarChar(60)
+  description     String?
+  durationMinutes Int               @default(30)
+  colorToken      String            @default("blue")
+  locationType    EventLocationType @default(VIDEO)
+  locationDetails String?           @db.VarChar(500)
+  appointmentType AppointmentType   @default(MEETING)
+  /// Host user (organizer of public bookings). FK to users is SQL-only (see block above).
+  hostUserId      String
+  requiredFields  String[]          @default([])
+  leadSource      LeadSource        @default(BOOKING)
+  isActive        Boolean           @default(true)
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@unique([tenantId, slug])
+  // DBA-012: composite target for tenant-consistent child FKs
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive])
+  @@index([hostUserId])
+  @@map("event_types")
+}
+
+enum EventLocationType {
+  IN_PERSON
+  PHONE
+  VIDEO
+  CUSTOM
+}
+
+/// Public booking attempts, counted for the abuse caps (salted HMAC hashes only; pruned after 48 h).
+model BookingAttempt {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  /// FK ("tenantId","eventTypeId") -> event_types ON DELETE SET NULL ("eventTypeId") is SQL-only.
+  eventTypeId String?
+  emailHash   String   @db.Char(64)
+  ipHash      String   @db.Char(64)
+  createdAt   DateTime @default(now())
+
+  @@index([tenantId, emailHash, createdAt])
+  @@index([tenantId, ipHash, createdAt])
+  @@index([eventTypeId, createdAt])
+  @@map("booking_attempts")
 }
 
 /// PG-187 — per-tenant report defaults. Landed alongside PG-190 to unblock
@@ -3988,6 +4089,12 @@ model EmailRecord {
   dealId       String?
   userId       String?  // Sender
   metadata     Json?    // Additional tracking data
+  // PG-207: the mailbox it was sent from and the ids used to match bounce reports
+  mailboxId         String?
+  mailbox           EmailMailbox? @relation(fields: [mailboxId], references: [id], onDelete: SetNull)
+  messageIdHeader   String?  @db.VarChar(255)
+  provider          String?  @db.VarChar(12)
+  providerMessageId String?  @db.VarChar(255)
   createdAt    DateTime @default(now())
 
   // IFC-069: Tenant isolation for unified activity feed
@@ -4003,6 +4110,8 @@ model EmailRecord {
   // IFC-069: Composite index for unified activity feed
   @@index([tenantId, createdAt(sort: Desc)])
   @@index([tenantId, isRead])
+  @@index([tenantId, messageIdHeader])
+  @@index([mailboxId])
   @@map("email_records")
 }
 
@@ -4034,6 +4143,163 @@ model EmailAttachment {
   @@index([emailId])
   @@index([tenantId])
   @@map("email_attachments")
+}
+
+// ============================================
+// PG-207 (ADR-085): user mailboxes, email settings, signatures, bounces
+// ============================================
+
+/// A mailbox user mail is sent from: the user's own (scope USER, one per user)
+/// or the company mailbox (scope TENANT, one per tenant). kind SMTP keeps
+/// SMTP (+ optional IMAP for bounce reading) settings; kind GMAIL / MICROSOFT
+/// keeps an OAuth refresh token (access tokens are never persisted).
+/// Secrets are encrypted via ENCRYPTED_FIELDS (packages/db/src/field-encryption.ts).
+/// One-per-user / one-per-tenant and the per-kind required columns are SQL
+/// partial unique indexes and CHECKs (migration 20261020120000_email_mailboxes).
+model EmailMailbox {
+  id              String    @id @default(cuid())
+  tenantId        String
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  scope           String    @db.VarChar(10) // USER | TENANT (SQL CHECK)
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind            String    @db.VarChar(12) // SMTP | GMAIL | MICROSOFT (SQL CHECK)
+  status          String    @default("ACTIVE") @db.VarChar(14) // ACTIVE | ERROR | DISCONNECTED
+  lastErrorCode   String?   @db.VarChar(32)
+  fromAddress     String    @db.VarChar(320)
+  fromName        String?   @db.VarChar(100)
+  smtpHost        String?   @db.VarChar(253)
+  smtpPort        Int?
+  smtpSecurity    String?   @db.VarChar(10) // SSL | STARTTLS
+  smtpUsername    String?   @db.VarChar(320)
+  /// @encrypted
+  smtpPassword    String?   @db.Text
+  imapHost        String?   @db.VarChar(253)
+  imapPort        Int?
+  imapUsername    String?   @db.VarChar(320)
+  /// @encrypted
+  imapPassword    String?   @db.Text
+  accountAddress  String?   @db.VarChar(320)
+  /// @encrypted
+  refreshToken    String?   @db.Text
+  grantedScopes   String[]  @default([])
+  tokenVersion    Int       @default(0)
+  imapUidValidity BigInt?
+  imapLastUid     BigInt?
+  scanCursorAt    DateTime?
+  nextScanAt      DateTime  @default(now())
+  lockedUntil     DateTime?
+  failureCount    Int       @default(0)
+  sendWindowStart DateTime?
+  sendWindowCount Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  emailRecords   EmailRecord[]
+  bounceReceipts EmailBounceReceipt[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, scope])
+  @@index([status, nextScanAt])
+  @@map("email_mailboxes")
+}
+
+/// Single-use OAuth connect state (PKCE). Only the sha256 of the state is
+/// stored; the verifier is encrypted. Expires after 10 minutes.
+model EmailOAuthState {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  userId       String
+  scope        String   @db.VarChar(10)
+  provider     String   @db.VarChar(12)
+  stateHash    String   @unique @db.VarChar(64)
+  /// @encrypted
+  codeVerifier String   @db.Text
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([expiresAt])
+  @@map("email_oauth_states")
+}
+
+/// Tenant email settings (singleton per tenant; a missing row means defaults).
+model TenantEmailSettings {
+  id                         String   @id @default(cuid())
+  tenantId                   String   @unique
+  tenant                     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  allowTenantMailboxFallback Boolean  @default(false)
+  replyToAddress             String?  @db.VarChar(320)
+  trackOpens                 Boolean  @default(false)
+  trackClicks                Boolean  @default(false)
+  hardBounceAction           String   @default("SUPPRESS") @db.VarChar(10) // SUPPRESS | NONE
+  softBounceThreshold        Int      @default(3)
+  notifySenderOnBounce       Boolean  @default(false)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  @@map("tenant_email_settings")
+}
+
+/// A signature owned by a user (scope USER) or the organisation (scope ORG).
+/// Names are unique per owner scope (lower(name), SQL); one default per user
+/// and one per organisation (SQL partial unique indexes). HTML is sanitised
+/// server-side before it is stored.
+model EmailSignature {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  scope     String   @db.VarChar(10) // USER | ORG
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String   @db.VarChar(100)
+  html      String   @db.Text
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, scope, userId])
+  @@map("email_signatures")
+}
+
+/// An address user mail is no longer sent to. Stored lower-cased (SQL CHECK).
+model EmailSuppression {
+  id            String   @id @default(cuid())
+  tenantId      String
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  email         String   @db.VarChar(320)
+  reason        String   @db.VarChar(20) // HARD_BOUNCE | SOFT_BOUNCE_LIMIT | MANUAL
+  source        String   @db.VarChar(10) // DSN | MANUAL
+  emailRecordId String?
+  createdById   String?
+  createdAt     DateTime @default(now())
+
+  @@unique([tenantId, email])
+  @@map("email_suppressions")
+}
+
+/// One per (bounce report, recipient): idempotency for the bounce reader and
+/// the source of the 30-day soft-bounce count. No mail content is stored —
+/// only the status code and a truncated, address-redacted diagnostic.
+model EmailBounceReceipt {
+  id                String       @id @default(cuid())
+  tenantId          String
+  mailboxId         String
+  mailbox           EmailMailbox @relation(fields: [tenantId, mailboxId], references: [tenantId, id], onDelete: Cascade)
+  dsnKey            String       @db.VarChar(255)
+  recipient         String       @db.VarChar(320)
+  emailRecordId     String?
+  kind              String       @db.VarChar(10) // HARD | SOFT | DELAYED | UNMATCHED
+  statusCode        String?      @db.VarChar(16)
+  diagnostic        String?      @db.VarChar(200)
+  matchConfidence   String       @db.VarChar(6) // HIGH | LOW
+  excludedFromCount Boolean      @default(false)
+  receivedAt        DateTime
+  createdAt         DateTime     @default(now())
+
+  @@unique([mailboxId, dsnKey, recipient])
+  @@index([tenantId, recipient, receivedAt])
+  @@map("email_bounce_receipts")
 }
 
 // ============================================

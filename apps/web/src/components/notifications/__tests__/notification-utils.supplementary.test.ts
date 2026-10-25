@@ -23,6 +23,7 @@ describe('notification-utils', () => {
       ['system_alert', 'System'],
       ['document_shared', 'Document'],
       ['email_received', 'Email'],
+      ['email_bounced', 'Email'],
     ] as [NotificationType, string][])(
       'returns correct config for %s (group: %s)',
       (type, expectedGroup) => {
@@ -44,6 +45,11 @@ describe('notification-utils', () => {
         expect(config.icon).toBeTruthy();
         expect(config.group).toBeTruthy();
       }
+    });
+
+    it('labels a bounce for the sender (PG-207)', () => {
+      const config = getTypeConfig('email_bounced' as NotificationType);
+      expect(config).toMatchObject({ label: 'Bounced', group: 'Email', icon: 'error' });
     });
 
     it('returns default config for unknown type', () => {
@@ -150,12 +156,12 @@ describe('notification-utils', () => {
       expect(groupNames).toContain('Case');
     });
 
-    it('contains all 42 types across all groups', () => {
-      // 2 types were added post-baseline (42 = previous 40 + 2 new).
+    it('contains all 43 types across all groups', () => {
+      // Types added post-baseline (40): 2, then email_bounced (PG-207).
       // Bump when new notification types are registered.
       const groups = getTypesByGroup();
       const allTypes = Object.values(groups).flat();
-      expect(allTypes).toHaveLength(42);
+      expect(allTypes).toHaveLength(43);
     });
 
     it('places lead types in Lead group', () => {

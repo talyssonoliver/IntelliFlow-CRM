@@ -158,7 +158,7 @@ Create the directory if needed. The attestation MUST contain:
     }
   ],
   "artifact_hashes": {
-    "<path>": "<SHA256 from certutil -hashfile>"
+    "<path>": "sha256:<SHA256 from certutil -hashfile>"
   },
   "notes": "<what was fixed/verified>"
 }

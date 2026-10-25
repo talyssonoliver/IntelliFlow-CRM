@@ -36,6 +36,10 @@ export const planReviewerVerdictSchema = z.enum(['APPROVED', 'APPROVED_WITH_CHAN
 // SHA256 hash pattern
 const sha256Pattern = /^[a-f0-9]{64}$/;
 
+// artifact_hashes value: `sha256:<hex>` (current) or bare `<hex>` (attestations written
+// before the prefix existed). See tools/scripts/lib/artifact-hash.ts for why.
+const artifactHashPattern = /^(?:sha256:)?[a-f0-9]{64}$/;
+
 // File read entry
 export const fileReadSchema = z.object({
   path: z.string().describe('File path relative to repo root'),
@@ -169,9 +173,9 @@ export const attestationSchema = z.object({
     .optional()
     .describe('Summary counts of verification evidence'),
   artifact_hashes: z
-    .record(z.string(), z.string().regex(sha256Pattern))
+    .record(z.string(), z.string().regex(artifactHashPattern))
     .optional()
-    .describe('Map of artifact paths to their SHA256 hashes'),
+    .describe('Map of artifact paths to their SHA256 hashes, as sha256:<hex> (bare hex accepted)'),
   validation_results: z
     .array(validationResultSchema)
     .optional()

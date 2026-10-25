@@ -123,7 +123,11 @@ both in sync.
 
 Use `certutil -hashfile <path> SHA256` on Windows (not `Get-FileHash`, which
 formats differently). Lowercase 64-hex output is required by the schema
-patterns.
+patterns. In `attestation.json` `artifact_hashes` write it as `sha256:<hex>`
+(`context_acknowledgment.files_read[].sha256` stays bare hex): a bare digest
+beside a path containing auth/secret/token/credential is flagged by GitGuardian.
+`tsx tools/scripts/format-attestation-hashes.ts <attestation.json>` converts a
+finished file without touching any path or digest.
 
 ## App Layout
 

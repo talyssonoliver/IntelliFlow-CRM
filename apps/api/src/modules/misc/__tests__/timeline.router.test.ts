@@ -309,6 +309,15 @@ describe('Timeline Router', () => {
         cancellationReason: null,
         notes: null,
         calendarId: null,
+        // PG-203 booking columns
+        eventTypeId: null,
+        leadId: null,
+        bookerName: null,
+        bookerEmail: null,
+        bookingAnswers: null,
+        bookedVia: null,
+        bookingConsentAt: null,
+        bookingConsentVersion: null,
       };
 
       prismaMock.task.findMany.mockResolvedValue([]);

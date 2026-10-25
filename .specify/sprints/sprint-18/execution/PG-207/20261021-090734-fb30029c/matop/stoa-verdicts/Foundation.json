@@ -1,0 +1,84 @@
+{
+  "stoa": "Foundation",
+  "task_id": "PG-207",
+  "run_id": "20261021-090734-fb30029c",
+  "verdict": "PASS",
+  "produced_by": "stoa-foundation sub-agent",
+  "produced_at": "2026-10-21T09:36:03Z",
+  "head": "a46aa9f7aa29e829040136cfe8eb42014327f5ce",
+  "gates": [
+    {
+      "gate": "typecheck",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/typecheck-r14.txt",
+      "notes": "Read log: turbo 38/38 successful, exit=0, zero 'error TS' matches. Log read, not re-run."
+    },
+    {
+      "gate": "build",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/build-final.txt",
+      "notes": "Read log: turbo 20/20 successful, exit=0, Next.js route table emitted. Only a turbo 'no output files' warning for workers#build (pre-existing config, not a failure)."
+    },
+    {
+      "gate": "lint",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/eslint.log",
+      "notes": "Read eslint.log and code-review-quick.txt (26 packages, typecheck 164.75s, lint 154.39s, completed). No eslint errors; only a Node 'type: module' warning in apps/project-tracker, unrelated to PG-207."
+    },
+    {
+      "gate": "sonar-guard",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/sonar-guard-r14.txt",
+      "notes": "Read log: checked 4 changed TS/TSX files, no violations reported."
+    },
+    {
+      "gate": "knip-dead-code",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-knip.txt",
+      "notes": "grep of log for email|nodemailer|imapflow|sanitize-html: 0 matches. Listed unused files are pre-existing and outside PG-207."
+    },
+    {
+      "gate": "material-symbols",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/material-symbols-verify.txt",
+      "notes": "Read log: audit OK, 370 icons, 1336 files scanned."
+    },
+    {
+      "gate": "osv-new-deps",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/osv-new-deps.txt",
+      "notes": "nodemailer@10.0.15, imapflow@2.2.6, sanitize-html@2.18.0, @types/nodemailer@8.0.2, @types/sanitize-html@2.16.2 each map to {} (no advisories)."
+    },
+    {
+      "gate": "dependency-pinning-and-lockfile",
+      "result": "PASS",
+      "evidence_log": "packages/adapters/package.json",
+      "notes": "Ran grep: adapters imapflow 2.2.6, nodemailer 10.0.15, @types/nodemailer 8.0.2; api sanitize-html 2.18.0, @types/sanitize-html 2.16.2, all exact (no ^ or ~). pnpm-lock.yaml differs from origin/main and contains imapflow, nodemailer, sanitize-html in both packages and snapshots sections."
+    },
+    {
+      "gate": "tracked-artifacts",
+      "result": "PASS",
+      "evidence_log": "git ls-files",
+      "notes": "Ran git ls-files | grep -cE '\\.(log|coverage|tsbuildinfo)$' = 0."
+    },
+    {
+      "gate": "hexagonal-direction",
+      "result": "PASS",
+      "evidence_log": "packages/domain/src/email",
+      "notes": "Ran grep over non-test imports in packages/domain/src/email: only relative domain imports; no adapters/db/apps/prisma/nodemailer/imapflow imports."
+    },
+    {
+      "gate": "gate-check-scripts",
+      "result": "PASS",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-check-exec-readiness.txt",
+      "notes": "Read tails of attestation-phrases, attestation-provenance, exec-readiness (0 WARN, 0 BLOCK), lighthouse-evidence, lighthouse-waiver, nav-wiring, page-doc-cochange, plan-reviewer-subagent: all OK/PASS."
+    },
+    {
+      "gate": "gate-4b-worktree-landed",
+      "result": "WARN",
+      "evidence_log": ".specify/sprints/sprint-18/execution/PG-207/20261021-090734-fb30029c/matop/gates/gate-check-worktree-landed.txt",
+      "notes": "Log shows BLOCK for uncommitted generated files, branch name not agent/<TASK_ID>, and not pushed. These are runner/ship concerns (commit, push) outside Foundation scope per the task brief; not counted against the verdict."
+    }
+  ],
+  "summary": "Tier 1 gates (typecheck 38/38, build 20/20, lint, sonar-guard) are evidenced as passing in logs read this session; they were not re-run, per instructions. New deps are exactly pinned, the lockfile is updated, OSV is clean, no log/coverage/tsbuildinfo files are tracked, and domain email code has no infra imports. The prettier format:check log was not among the supplied evidence and was not separately verified. The gate-4b items (uncommitted files, branch name, unpushed) belong to the runner."
+}

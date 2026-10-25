@@ -1,0 +1,5 @@
+typecheck exit=0
+lint exit=0
+build exit=0
+root-tests run 1 @02023bf9d: exit=1 (1 failure: canonical-domain-guard, a real finding in the owner-ruling note, fixed in fed314f7a)
+root-tests run 2 @fed314f7a: exit=0, 117 files passed, 2654 tests passed, 2 skipped, 0 failed (see root-tests.txt)

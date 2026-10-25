@@ -1,0 +1,32 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 206 files total
+[codex-review] in scope : 157 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T14:28:58.386Z
+Base ref  : origin/main
+Files in scope : 157
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [HIGH] packages/adapters/src/messaging/email/dsn-parser.ts:114-123 — sender-authentication-is-not-bounce-authority
+    Issue    : A recipient controlling a domain can forge authenticated bounce reports that suppress other recipients across the tenant.
+    Evidence : The parser accepts From postmaster@<any-domain> when clausePasses(clause, domain) succeeds. A malicious recipient can send a genuinely DKIM-signed report from postmaster@their-domain, copying Message-ID and X-IntelliFlow-Record from the received message and naming a visible co-recipient as failed with status 5.1.1. bounce-reader.ts checks only those IDs, mailbox, tenant, age and recipient membership before applying the report; evaluateBounce then suppresses the victim under the default SUPPRESS setting. The parser tests explicitly accept authentication for the sender's own arbitrary domain, encoding the same mistaken trust assumption.
+    Fix      : Require trusted delivery-provider evidence authorizing the report for the claimed failed recipient; DKIM/SPF alignment with an arbitrary report sender is insufficient. Keep reports without that evidence unmatched and prevent them from changing delivery status or suppression.
+    Fingerprint: 027390a4506d696fae7aac1d148a6871f6c7adc4ed29cffdacad29f2fa47f6f4
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+exit=1

@@ -17,10 +17,10 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/auth/callback/page.tsx": "d89f2379e175fe5c7d1abf65f79758a543e3642d28a30dff56d6833157a468a2",
-    "apps/web/src/components/shared/oauth-callback.tsx": "dea6217125b3917ca29ebf046459e8545afb3c4cd66ac2a26b899e417f9166be",
-    "apps/web/src/lib/shared/token-exchange.ts": "94dc5a382dcbe26595efb36d92334ab9cf07d685a4e56fb185c7295ca4a53019",
-    ".specify/sprints/sprint-13/attestations/PG-024/attestation.json": "dd1b9be2a0a3fd43ca774e0cc0dd4c081e0e167663e1ed9727613513567e3c7a"
+    "apps/web/src/app/(public)/auth/callback/page.tsx": "sha256:d89f2379e175fe5c7d1abf65f79758a543e3642d28a30dff56d6833157a468a2",
+    "apps/web/src/components/shared/oauth-callback.tsx": "sha256:dea6217125b3917ca29ebf046459e8545afb3c4cd66ac2a26b899e417f9166be",
+    "apps/web/src/lib/shared/token-exchange.ts": "sha256:94dc5a382dcbe26595efb36d92334ab9cf07d685a4e56fb185c7295ca4a53019",
+    ".specify/sprints/sprint-13/attestations/PG-024/attestation.json": "sha256:dd1b9be2a0a3fd43ca774e0cc0dd4c081e0e167663e1ed9727613513567e3c7a"
   },
   "validation_results": [
     {
