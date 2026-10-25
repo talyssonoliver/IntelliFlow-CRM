@@ -50,6 +50,15 @@ type FakeConfig = {
   groupInterval?: number;
   status?: (path: string) => number | undefined;
   tempoTraceIdHex?: boolean;
+  /** Prometheus answers by query; undefined falls back to metricValue. */
+  promQuery?: (
+    query: string,
+    time: number
+  ) => Array<{ metric: Record<string, string>; value: [number, string] }> | undefined;
+  /** Grafana ruler status (/api/prometheus/grafana/api/v1/rules) rules. */
+  ruleStatus?: Array<{ uid: string; health: string; state: string; lastError?: string }>;
+  /** Repo alert-rules.json contents; defaults to REPO_RULES. */
+  repoRules?: string;
 };
 
 function fakeGrafana(cfg: FakeConfig) {
@@ -182,16 +191,28 @@ function fakeGrafana(cfg: FakeConfig) {
         })),
       });
     }
-    if (path.endsWith('/api/v1/query')) {
-      return reply(200, {
-        data: {
-          result: cfg.metricValue === 0 ? [] : [{ value: [0, String(cfg.metricValue ?? 3)] }],
-        },
-      });
-    }
-    return reply(404);
+    const prom = promBody(cfg, u);
+    return prom === undefined ? reply(404) : reply(200, prom);
   };
   return { calls, fetchImpl };
+}
+
+/** Ruler status and Prometheus answers; undefined for any other path. */
+function promBody(cfg: FakeConfig, u: URL) {
+  if (u.pathname === '/api/prometheus/grafana/api/v1/rules') {
+    return { data: { groups: [{ name: 'g', rules: cfg.ruleStatus ?? [] }] } };
+  }
+  if (!u.pathname.endsWith('/api/v1/query')) return undefined;
+  const answer = cfg.promQuery?.(
+    u.searchParams.get('query') ?? '',
+    Number(u.searchParams.get('time'))
+  );
+  if (answer) return { data: { result: answer } };
+  return {
+    data: {
+      result: cfg.metricValue === 0 ? [] : [{ value: [0, String(cfg.metricValue ?? 3)] }],
+    },
+  };
 }
 
 const REPO_RULES = JSON.stringify({
@@ -217,7 +238,7 @@ function harness(cfg: FakeConfig, argv: string[] = []) {
     sleep: async (ms: number) => {
       waits.push(ms);
     },
-    readFile: async () => REPO_RULES,
+    readFile: async () => cfg.repoRules ?? REPO_RULES,
     writeFile: async (p: string, data: string) => {
       files.set(p.replace(/\\/g, '/'), data);
     },
@@ -685,7 +706,7 @@ describe('collect-observability-evidence: MTTD', () => {
       { uid: 'r-fast', title: 'ErrorSpansDirect', for: '0s', folderUID: 'ip', ruleGroup: 'prod' },
     ];
     const { json, h } = await baseline(cfg);
-    expect(json.schema_version).toBe('2.1.0');
+    expect(json.schema_version).toBe('2.2.0');
     expect(json.incidents.map((i: { mttd_s: number }) => i.mttd_s)).toEqual([70, 300]);
     expect(json.aggregates.mean_s).toBe(185);
     expect(json.episodes).toEqual([
@@ -733,6 +754,150 @@ describe('collect-observability-evidence: MTTD', () => {
     const text = JSON.stringify(json);
     expect(text).not.toContain('pooler');
     expect(json.rules[0].title).toBeUndefined();
+  });
+
+  it("names a repo rule's alerts by uid, because repo titles are free text", async () => {
+    const cfg = healthy();
+    cfg.history = [
+      {
+        t: NOW_S - 7200,
+        ruleUID: 'ifc032-api-error-rate',
+        alertname: 'API error rate above 5%',
+        service: 'ai-worker',
+        previous: 'Normal',
+        current: 'Alerting',
+      },
+    ];
+    const { code, json } = await baseline(cfg);
+    expect(code).toBe(0);
+    expect(json.incidents[0]).toMatchObject({
+      rule_uid: 'ifc032-api-error-rate',
+      alertname: 'ifc032-api-error-rate',
+      mttd_s: 90,
+    });
+    expect(json.rules[0].title).toBe('API error rate above 5%');
+  });
+
+  it('--since starts the alert window and keeps only episodes whose first error is after it', async () => {
+    const since = NOW_S - 7000;
+    const cfg = healthy();
+    // Episode 1: errors start 100 s before --since and alert 50 s after it.
+    // Episode 2: entirely after --since.
+    cfg.errorSpans = {
+      'ai-worker': [
+        { traceId: ERR_TRACE, spanId: SPAN_B, start: since - 100 },
+        { traceId: TRACE_B, spanId: SPAN_B, start: since + 3000 },
+      ],
+    };
+    cfg.traces = { ...cfg.traces, [TRACE_B]: { service: 'ai-worker', spans: [] } };
+    const alerting = (t: number): Transition => ({
+      t,
+      ruleUID: 'r-err',
+      alertname: 'ErrorRatioBreach',
+      service: 'ai-worker',
+      previous: 'Normal',
+      current: 'Alerting',
+    });
+    cfg.history = [alerting(NOW_S - 7200), alerting(since + 50), alerting(since + 3180)];
+    const { json } = await baseline(cfg, ['--since', new Date(since * 1000).toISOString()]);
+    expect(json.windows.alert_window_start).toBe(new Date(since * 1000).toISOString());
+    expect(json.incidents.map((i: { t_alerting: string }) => i.t_alerting)).toEqual([
+      new Date((since + 50) * 1000).toISOString(),
+      new Date((since + 3180) * 1000).toISOString(),
+    ]);
+    expect(json.episodes).toHaveLength(1);
+    expect(json.episodes[0]).toMatchObject({ mttd_s: 180 });
+    expect(json.episode_aggregates).toMatchObject({
+      n_episodes: 1,
+      n_before_window: 1,
+      mean_s: 180,
+    });
+  });
+
+  it('checks every committed rule: transitions by state, live health and whether its condition held', async () => {
+    const expr = 'sum by (service) (increase(errors_total[2m]))';
+    const cfg = healthy();
+    cfg.repoRules = JSON.stringify({
+      rules: [
+        { uid: 'ifc074-error-spans-direct', title: 'Error spans (direct)', expr, operator: 'gt' },
+      ],
+    });
+    cfg.history = [
+      ...(cfg.history as Transition[]),
+      {
+        t: NOW_S - 7100,
+        ruleUID: 'ifc074-error-spans-direct',
+        alertname: 'Error spans (direct)',
+        previous: 'Normal',
+        current: 'Error',
+      },
+      {
+        t: NOW_S - 7040,
+        ruleUID: 'ifc074-error-spans-direct',
+        alertname: 'Error spans (direct)',
+        previous: 'Error',
+        current: 'Normal (Error)',
+      },
+    ];
+    cfg.ruleStatus = [
+      {
+        uid: 'ifc074-error-spans-direct',
+        health: 'error',
+        state: 'inactive',
+        lastError: `failed to query ${GRAFANA_URL}`,
+      },
+    ];
+    const queries: Array<{ query: string; time: number }> = [];
+    const firstError = NOW_S - 7290;
+    cfg.promQuery = (query, time) => {
+      if (!query.includes('errors_total')) return undefined;
+      queries.push({ query, time });
+      if (query.startsWith('count_over_time'))
+        return [{ metric: { service: 'ai-worker' }, value: [time, '3'] }];
+      return time === firstError + 120
+        ? [{ metric: { service: 'ai-worker' }, value: [time, '2'] }]
+        : [];
+    };
+    const { code, json } = await baseline(cfg);
+    expect(code).toBe(0);
+    expect(json.repo_rule_checks).toEqual([
+      {
+        uid: 'ifc074-error-spans-direct',
+        transitions_by_state: { Error: 1, Normal: 1 },
+        live: { health: 'error', state: 'inactive', has_last_error: true },
+        condition: {
+          lookback_s: 259200,
+          steps_true_by_service: [{ service: 'ai-worker', steps: 3 }],
+        },
+      },
+    ]);
+    expect(queries[0].query).toBe(`count_over_time(((${expr}) > 0)[259200s:60s])`);
+    expect(json.episodes[0].repo_rules_true_at_120s).toEqual(['ifc074-error-spans-direct']);
+    // No free text from Grafana: the lastError message never reaches the output.
+    expect(JSON.stringify(json)).not.toContain('failed to query');
+  });
+
+  it('records an unknown live state instead of a value Grafana made up', async () => {
+    const cfg = healthy();
+    cfg.repoRules = JSON.stringify({
+      rules: [{ uid: 'ifc074-error-spans-direct', title: 'x', expr: 'up', operator: 'gt' }],
+    });
+    cfg.ruleStatus = [{ uid: 'ifc074-error-spans-direct', health: 'weird value', state: 'odd' }];
+    const { json } = await baseline(cfg);
+    expect(json.repo_rule_checks[0].live).toEqual({
+      health: 'other',
+      state: 'other',
+      has_last_error: false,
+    });
+  });
+
+  it('reports a committed rule Grafana does not have as live: null', async () => {
+    const cfg = healthy();
+    cfg.repoRules = JSON.stringify({
+      rules: [{ uid: 'ifc074-error-spans-direct', title: 'x', expr: 'up', operator: 'gt' }],
+    });
+    const { json } = await baseline(cfg);
+    expect(json.repo_rule_checks[0]).toMatchObject({ transitions_by_state: {}, live: null });
   });
 });
 

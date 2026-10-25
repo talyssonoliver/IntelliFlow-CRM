@@ -255,6 +255,9 @@ export async function tempoTrace(get, uid, traceId) {
 export const promInstantQuery = (get, uid, query, time) =>
   get('prometheus query', `${datasourceProxy(uid)}/api/v1/query?${queryString({ query, time })}`);
 
+/** Live evaluation status (health, state, last error) of every Grafana-managed rule. */
+export const ruleStatus = (get) => get('rule status', '/api/prometheus/grafana/api/v1/rules');
+
 /** All alert rules from the Grafana provisioning API. */
 export const listAlertRules = (get) => get('alert rules', '/api/v1/provisioning/alert-rules');
 

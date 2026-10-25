@@ -32,6 +32,7 @@ import {
   listAlertRules,
   lokiQueryRange,
   promInstantQuery,
+  ruleStatus,
   tempoSearch,
   tempoTrace,
 } from '../lib/grafana-provisioning.mjs';
@@ -51,6 +52,15 @@ const SEARCH_PAGE = 50;
 const MAX_NARROWING = 20;
 const HISTORY_LINE_LIMIT = 5000;
 const KPI_TARGET_S = 120;
+// How a committed rule is checked against its own query: over at most this
+// much of the alert window at 60 s steps, and once per episode at this offset
+// after the first error (span metrics land about 60 s after the span).
+const CONDITION_LOOKBACK_MAX_S = 3 * DAY_S;
+const CONDITION_STEP_S = 60;
+const CONDITION_PROBE_S = 120;
+const STATE_WORDS = new Set(['Normal', 'Pending', 'Alerting', 'Recovering', 'NoData', 'Error']);
+const LIVE_HEALTH = new Set(['ok', 'error', 'nodata', 'unknown']);
+const LIVE_STATE = new Set(['inactive', 'pending', 'firing', 'recovering', 'normal', 'alerting']);
 const REQUIRED_SERVICE = 'ai-worker';
 const REPO_RULES_FILE = 'infra/monitoring/grafana/cloud/alert-rules.json';
 
@@ -138,6 +148,8 @@ const LIMITATIONS = [
   'Auto-resolve time is the Alerting to Normal transition of the rule, not a human resolution time.',
   'Incidents are runs of Alerting transitions per rule and service split by a gap of 30 minutes or more.',
   "The KPI is judged per error episode: anchored incidents of one service whose first error spans start within 10 minutes of the episode's first error are one episode, detected by the earliest alert from any rule.",
+  'Only episodes whose first error is inside the alert window count; with --since the window starts at --since.',
+  "The repo rule checks re-evaluate each committed rule's query in Prometheus at 60 s steps; it shows whether the condition held, not how Grafana evaluated it.",
 ];
 const TRUNCATION_LIMITATION =
   'An alert-history slice returned the Loki line limit; some transitions may be missing.';
@@ -518,6 +530,81 @@ async function describeRules(get, ruleUids, repoTitles) {
   }));
 }
 
+const stateWord = (state) => {
+  const word = /^[A-Za-z]+/.exec(state)?.[0];
+  return STATE_WORDS.has(word) ? word : 'Other';
+};
+const enumOr = (allowed, value) =>
+  allowed.has(String(value).toLowerCase()) ? String(value).toLowerCase() : 'other';
+const seriesService = (series) => assertService(series.metric?.service ?? 'unknown');
+
+/**
+ * Check each committed rule that has a query, so a rule that never alerts can
+ * be told apart from one that cannot: its state-history transitions by state,
+ * its live health from the ruler, and how many 60 s steps its condition held.
+ * Each episode also records which committed rules were true 120 s after its
+ * first error. Only enums, counts and uids are kept; Grafana's free-text
+ * lastError is reduced to a boolean.
+ */
+async function checkRepoRules(get, window, repo, transitions, episodes) {
+  if (repo.rules.length === 0) return [];
+  const status = await ruleStatus(get);
+  const live = new Map(
+    (status?.data?.groups ?? []).flatMap((g) => (g.rules ?? []).map((r) => [r.uid, r]))
+  );
+  const lookback = Math.min(window.end - window.start, CONDITION_LOOKBACK_MAX_S);
+  const checks = [];
+  for (const rule of repo.rules) {
+    check('uid', rule.uid);
+    const byState = {};
+    for (const t of transitions) {
+      if (t.ruleUID !== rule.uid) continue;
+      const word = stateWord(t.current);
+      byState[word] = (byState[word] ?? 0) + 1;
+    }
+    const status = live.get(rule.uid);
+    const held = await promInstantQuery(
+      get,
+      DS.prom,
+      `count_over_time(((${rule.expr}) > 0)[${lookback}s:${CONDITION_STEP_S}s])`,
+      window.end
+    );
+    checks.push({
+      uid: rule.uid,
+      transitions_by_state: byState,
+      live: status
+        ? {
+            health: enumOr(LIVE_HEALTH, status.health),
+            state: enumOr(LIVE_STATE, status.state),
+            has_last_error: Boolean(status.lastError),
+          }
+        : null,
+      condition: {
+        lookback_s: lookback,
+        steps_true_by_service: (held?.data?.result ?? []).map((series) => ({
+          service: seriesService(series),
+          steps: check('num', Number(series.value?.[1] ?? 0)),
+        })),
+      },
+    });
+  }
+  for (const episode of episodes) {
+    const at = Date.parse(episode.t_first_error) / 1000 + CONDITION_PROBE_S;
+    const trueRules = [];
+    for (const rule of repo.rules) {
+      const res = await promInstantQuery(get, DS.prom, rule.expr, Math.floor(at));
+      const hit = (res?.data?.result ?? []).some(
+        (series) =>
+          (series.metric?.service === undefined || series.metric.service === episode.service) &&
+          Number(series.value?.[1]) > 0
+      );
+      if (hit) trueRules.push(rule.uid);
+    }
+    episode.repo_rules_true_at_120s = trueRules;
+  }
+  return checks;
+}
+
 async function collectMttd(get, window, repo) {
   const { transitions, truncated } = await fetchTransitions(get, window);
   const intoAlerting = transitions.filter(
@@ -541,8 +628,14 @@ async function collectMttd(get, window, repo) {
       continue;
     }
     check('uid', t.ruleUID);
-    check('alertname', t.alertname);
     assertService(t.service);
+    // Repo rule titles are free text ("API error rate above 5%"), so a
+    // committed rule is named by its uid; its title comes from the repo.
+    if (repo.titles.has(t.ruleUID)) {
+      considered.push({ ...t, alertname: t.ruleUID });
+      continue;
+    }
+    check('alertname', t.alertname);
     considered.push(t);
   }
 
@@ -629,8 +722,11 @@ async function collectMttd(get, window, repo) {
   const ruleUids = [...new Set(incidents.map((i) => i.rule_uid))];
   const rules = await describeRules(get, ruleUids, repo.titles);
 
-  // The KPI is judged per error episode (first alert from any rule).
-  const episodes = groupEpisodes(incidents);
+  // The KPI is judged per error episode (first alert from any rule), counting
+  // only episodes whose errors began inside the window.
+  const allEpisodes = groupEpisodes(incidents);
+  const episodes = allEpisodes.filter((e) => Date.parse(e.t_first_error) / 1000 >= window.start);
+  const repoRuleChecks = await checkRepoRules(get, window, repo, transitions, episodes);
   const episodeValues = episodes.map((e) => e.mttd_s).sort((a, b) => a - b);
   const m = episodeValues.length;
   const episodeMean = m ? round3(episodeValues.reduce((a, b) => a + b, 0) / m) : null;
@@ -658,9 +754,11 @@ async function collectMttd(get, window, repo) {
       p90_s: n ? round3(nearestRank(anchoredValues, 0.9)) : null,
       share_lt_120s: n ? round3(anchoredValues.filter((v) => v < KPI_TARGET_S).length / n) : null,
     },
+    repo_rule_checks: repoRuleChecks,
     episodes,
     episode_aggregates: {
       n_episodes: m,
+      n_before_window: allEpisodes.length - m,
       mean_s: episodeMean,
       median_s: m ? round3(median(episodeValues)) : null,
       p90_s: m ? round3(nearestRank(episodeValues, 0.9)) : null,
@@ -694,7 +792,10 @@ function assertSafeKeys(value) {
 async function loadRepoRules(readFile) {
   const config = JSON.parse(await readFile(REPO_RULES_FILE, 'utf8'));
   const titles = new Map((config.rules ?? []).map((r) => [r.uid, r.title]));
-  return { titles, deliveryUid: config.deliveryTest?.uid };
+  const rules = (config.rules ?? [])
+    .filter((r) => typeof r.expr === 'string' && r.expr !== '')
+    .map((r) => ({ uid: r.uid, expr: r.expr }));
+  return { titles, rules, deliveryUid: config.deliveryTest?.uid };
 }
 
 async function writeAtomically(outputs, { writeFile, rename, unlink }) {
@@ -745,10 +846,9 @@ export async function run({
     await grafanaHealth(get);
     const repo = await loadRepoRules(readFile);
 
+    const sinceS = opts.since ? Math.floor(opts.since.getTime() / 1000) : undefined;
     const logWindow = {
-      start: opts.since
-        ? Math.floor(opts.since.getTime() / 1000)
-        : nowS - opts.logWindowDays * DAY_S,
+      start: sinceS ?? nowS - opts.logWindowDays * DAY_S,
       end: nowS,
     };
     const rows = [];
@@ -757,10 +857,12 @@ export async function run({
     }
     const csv = renderCsv(rows, collectedAt);
 
-    const alertWindow = { start: nowS - opts.alertWindowDays * DAY_S, end: nowS };
+    // --since bounds the alert window too: a re-measure after a rule change
+    // must not mix in episodes from before the change.
+    const alertWindow = { start: sinceS ?? nowS - opts.alertWindowDays * DAY_S, end: nowS };
     const mttd = await collectMttd(get, alertWindow, repo);
     const baseline = {
-      schema_version: '2.1.0',
+      schema_version: '2.2.0',
       task_id: 'IFC-074',
       generated_at: collectedAt,
       measurement_method: 'grafana-cloud-readonly-collector',

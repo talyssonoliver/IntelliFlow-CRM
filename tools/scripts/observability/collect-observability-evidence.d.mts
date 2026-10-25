@@ -37,6 +37,17 @@ export interface ErrorEpisode {
   mttd_s: number;
   incidents: number;
   rule_uids: string[];
+  /** Committed rules whose query was true 120 s after the first error (set by run). */
+  repo_rules_true_at_120s?: string[];
+}
+export interface RepoRuleCheck {
+  uid: string;
+  transitions_by_state: Record<string, number>;
+  live: { health: string; state: string; has_last_error: boolean } | null;
+  condition: {
+    lookback_s: number;
+    steps_true_by_service: Array<{ service: string; steps: number }>;
+  };
 }
 export function groupEpisodes(incidents: EpisodeIncident[]): ErrorEpisode[];
 export function run(options?: {
