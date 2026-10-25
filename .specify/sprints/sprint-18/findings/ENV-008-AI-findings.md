@@ -10,6 +10,8 @@ These are red flags and out-of-scope defects found while making the production S
 | F2 | Grafana scripts echoed raw response bodies into thrown errors, so into CI logs (`${res.text}` at 6 sites). | old `apply-grafana-alert-rules.mjs` and `apply-synthetic-monitoring.mjs` error messages | `redactBody` in the shared lib, applied at every site, including the new scripts (NF-001) |
 | F3 | No running system loads `self-healing-rules.yaml` or `anomaly-detection.json`, yet both read as configuration. | code audit, Lens 7 | Both rewritten as descriptive records, pinned by tests to `DESIRED` and `slos.json` (AC-009) |
 
+| F4 | Review hardening (STOA-security and STOA-automation, 2026-10-25): `redactBody` missed `Basic` credentials and short prefixed tokens; the Railway error code was printed unchecked; Railway GraphQL calls had no timeout; the new workflows kept the checkout token in `.git/config`. | STOA verdicts in `execution/ENV-008-AI/stoa-verdicts.md` | Two more redaction patterns, an enum-shape check on the error code, a 30 s GraphQL timeout, `persist-credentials: false` on the three new workflows; each with a test |
+
 ## Tracked (out of scope)
 
 | # | Finding | gh issue | Debt ledger | Owner lane |
@@ -20,9 +22,18 @@ These are red flags and out-of-scope defects found while making the production S
 | T4 | `RAILWAY_TOKEN` is an account-wide repository secret, and the Railway CLI is pinned only to `@railway/cli@4` (`promote-production.yml:178-181,194`). | #1031 | `ENV008-RAILWAY-TOKEN-SCOPE-001` | DevOps Lead + owner |
 | T5 | api server-side p95 was 2.72 s against the 200 ms objective (`slo-definitions.md:56`). | #1001 (existing, reused; acceptance item added as a comment) | `ENV008-API-P95-LATENCY-001` | Backend Lead |
 
+| T6 | The GitHub environment `Production` has no deployment branch policy or protection rules, so a dispatch of a modified workflow from any branch gets the Production secrets. Raised by the STOA-security review. | #1032 | `ENV008-PROD-ENV-BRANCH-POLICY-001` | DevOps Lead + owner (GitHub settings) |
+
 T1 to T5 extend the spec's AC-011 list of four to five. AC-004 needs a separate issue for the latency SLO, and an open one already existed (#1001), so it is reused rather than duplicated.
 
 ## Notes (no defect, recorded on purpose)
+
+- **Host header on Railway's deploy health check (review note, checked).** Railway probes the container with
+  Host `healthcheck.railway.app`. `apps/api/src/http-server.ts:476-498` answers `/api/health/live` before any
+  router and checks no Host, so the live 200 that the guard requires predicts the deploy check.
+- **SLO uuid on create (residual risk).** The apply fails if Grafana stores a created SLO under a different
+  uuid. If the API echoes no uuid at all, only the post-merge `grafana-slos.yml` dry run (all three uuids
+  `present`) proves there are no duplicates. That check is NEEDS_HUMAN in the attestation.
 
 - **Spec citation corrected.** `apps/project-tracker/lib/artifact-registry.ts:1210-1220` does **not** name the three infra files; they fall to its EP-001-AI fallback. The files are referenced by path from the CSV `Artifacts To Track`, `apps/project-tracker/docs/metrics/plan-overrides.yaml:1670` and the docs.
 - **Stale script path (INFO, not fixed).** The `_comment` in `infra/monitoring/grafana/cloud/alert-rules.json` names `tools/scripts/grafana/apply-alert-rules.mjs`. The real script is `tools/scripts/observability/apply-grafana-alert-rules.mjs`. The file belongs to IFC-074-B2, so it is left alone.

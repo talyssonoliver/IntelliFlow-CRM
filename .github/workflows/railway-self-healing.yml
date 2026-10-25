@@ -55,6 +55,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           sparse-checkout: |
             tools/scripts/observability
       - uses: actions/setup-node@v7

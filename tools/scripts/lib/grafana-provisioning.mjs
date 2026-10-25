@@ -57,7 +57,10 @@ export function createApiClient(baseUrl, token, fetchImpl = fetch, { sleep = def
 
 const REDACTION_PATTERNS = [
   /Bearer\s+\S+/gi,
+  /Basic\s+\S+/gi,
   /glsa_\w+/g,
+  // Prefixed API tokens shorter than the long-run rule below (sk_live_…, ghp_…).
+  /\b[A-Za-z]{2,10}_(?:[A-Za-z]{2,10}_)?[A-Za-z0-9]{16,}/g,
   // Any long base64 or URL-safe run: tokens, signatures, session ids.
   /[A-Za-z0-9+/_-]{32,}={0,2}/g,
 ];

@@ -29,7 +29,9 @@ const GRAPHQL_URL = 'https://backboard.railway.com/graphql/v2';
 const USER_AGENT = 'ifc-env008/1.0';
 const PROBE_PATH = '/api/health/live';
 const PROBE_TIMEOUT_MS = 15000;
+const GRAPHQL_TIMEOUT_MS = 30000;
 const ALLOWED_ERROR_MESSAGES = new Set(['Not Authorized', 'Problem processing request']);
+const ERROR_CODE_SHAPE = /^[A-Z_]{1,40}$/;
 
 /** The settings CI owns. Changing a value here changes production on merge. */
 export const DESIRED = {
@@ -84,7 +86,10 @@ const QUERIES = {
 
 /** A GraphQL error reduced to its code and, if allow-listed, its message. */
 function describeError(op, error) {
-  const code = error?.extensions?.code ?? 'UNKNOWN';
+  // Railway codes are enum-like (FORBIDDEN, INTERNAL_SERVER_ERROR); anything
+  // else could carry free text, so it is not printed.
+  const raw = error?.extensions?.code;
+  const code = typeof raw === 'string' && ERROR_CODE_SHAPE.test(raw) ? raw : 'UNKNOWN';
   const message = ALLOWED_ERROR_MESSAGES.has(error?.message) ? error.message : '<redacted>';
   return `railway ${op}: ${code} ${message}`;
 }
@@ -99,6 +104,7 @@ function createGraphqlClient(token, fetchImpl) {
         'User-Agent': USER_AGENT,
       },
       body: JSON.stringify({ query: QUERIES[op], variables }),
+      signal: AbortSignal.timeout(GRAPHQL_TIMEOUT_MS),
     });
     let json;
     try {

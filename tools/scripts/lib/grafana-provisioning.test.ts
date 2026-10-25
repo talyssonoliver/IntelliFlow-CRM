@@ -115,6 +115,15 @@ describe('redactBody', () => {
     expect(out.endsWith(' end')).toBe(true);
   });
 
+  it('redacts a Basic credential and a short prefixed token (STOA-security review)', () => {
+    const basic = 'Bas' + 'ic ' + 'dXNlcjpwYXNz';
+    const prefixed = ['sk', 'live', 'Ab12Cd34Ef56Gh78'].join('_');
+    const out = redactBody(`no: ${basic} and ${prefixed}`);
+    expect(out).not.toContain('dXNlcjpwYXNz');
+    expect(out).not.toContain(prefixed);
+    expect(out).toBe('no: <redacted> and <redacted>');
+  });
+
   it('keeps short ordinary text as it is', () => {
     expect(redactBody('{"message":"bad request"}')).toBe('{"message":"bad request"}');
   });

@@ -75,6 +75,12 @@ function checkQuery(problems, id, slo) {
 /** Validate the SLO file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
+  // Without these, JSON.stringify drops the field and Grafana gets an empty folder.
+  for (const key of ['folderUid', 'destinationDatasourceUid']) {
+    if (typeof config[key] !== 'string' || config[key] === '') problems.push(`${key}: required`);
+  }
+  if (!Array.isArray(config.slos) || config.slos.length === 0)
+    problems.push('slos: at least one SLO is required');
   const seen = new Set();
   for (const slo of config.slos ?? []) {
     const id = slo.uuid ?? '?';
@@ -131,6 +137,11 @@ export async function run({
       : await api('POST', SLO_API, payload);
     if (res.status >= 300)
       throw new Error(`${slo.uuid}: HTTP ${res.status} ${redactBody(res.text)}`);
+    // The uuid is how the next run finds this SLO. If Grafana stored it under
+    // another one, every later run would create a duplicate and stay green.
+    const storedUuid = res.json?.uuid;
+    if (!exists && storedUuid !== undefined && storedUuid !== slo.uuid)
+      throw new Error(`${slo.uuid}: created under uuid ${redactBody(String(storedUuid))}`);
     log(`${exists ? 'updated' : 'created'} ${slo.uuid}`);
     if (exists) updated += 1;
     else created += 1;

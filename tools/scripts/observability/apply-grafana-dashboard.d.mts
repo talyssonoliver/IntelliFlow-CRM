@@ -18,7 +18,13 @@ export interface DashboardConfig {
 }
 export function validateConfig(config: {
   folderUid?: string;
-  dashboard?: { uid?: string; panels?: Array<{ targets?: Array<{ expr?: string }> }> };
+  dashboard?: {
+    uid?: string;
+    panels?: Array<{
+      targets?: Array<{ expr?: string }>;
+      panels?: Array<{ targets?: Array<{ expr?: string }> }>;
+    }>;
+  };
 }): string[];
 export function run(options?: {
   env?: Record<string, string | undefined>;

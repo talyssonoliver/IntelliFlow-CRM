@@ -51,7 +51,8 @@ function checkExpr(problems, label, expr) {
   for (const metric of metricNames(expr)) {
     if (!ALLOWED_METRICS.has(metric)) problems.push(`${label}: metric ${metric} is not emitted`);
   }
-  const matchers = [...expr.matchAll(/service(=~|!~|!=|=)"([^"]*)"/g)];
+  // (?<!\w): a label that merely ends in `service` (peer_service) is not it.
+  const matchers = [...expr.matchAll(/(?<!\w)service(=~|!~|!=|=)"([^"]*)"/g)];
   if (matchers.length === 0) problems.push(`${label}: no service matcher`);
   for (const [, op, value] of matchers) {
     if (op === '!=' || op === '!~') {
@@ -68,7 +69,11 @@ function checkExpr(problems, label, expr) {
 /** Validate the dashboard file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
-  const panels = config.dashboard?.panels ?? [];
+  // Panels inside a collapsed row sit in row.panels; check those as well.
+  const panels = (config.dashboard?.panels ?? []).flatMap((panel) => [
+    panel,
+    ...(panel.panels ?? []),
+  ]);
   panels.forEach((panel, p) => {
     (panel.targets ?? []).forEach((target, t) => {
       checkExpr(problems, `panel ${p + 1} target ${t + 1}`, target.expr ?? '');

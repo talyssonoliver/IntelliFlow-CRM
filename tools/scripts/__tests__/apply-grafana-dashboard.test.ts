@@ -144,6 +144,34 @@ describe('validateConfig', () => {
     ]);
   });
 
+  it('checks panels nested inside a row too', () => {
+    const bad = JSON.parse(JSON.stringify(CONFIG));
+    bad.dashboard.panels.push({
+      type: 'row',
+      title: 'row',
+      panels: [
+        {
+          type: 'timeseries',
+          title: 'nested',
+          targets: [
+            { refId: 'A', expr: 'up{service="ws"}', datasource: { uid: 'grafanacloud-prom' } },
+          ],
+        },
+      ],
+    });
+    expect(validateConfig(bad)).toEqual(
+      expect.arrayContaining([expect.stringContaining('up'), expect.stringContaining('ws')])
+    );
+  });
+
+  it('does not read a label that only ends in "service" as the service matcher', () => {
+    expect(
+      validateConfig(
+        withExpr('sum(rate(traces_spanmetrics_calls_total{peer_service="ws", service="api"}[5m]))')
+      )
+    ).toEqual([]);
+  });
+
   it('rejects a wrong uid or folder', () => {
     const bad = JSON.parse(JSON.stringify(CONFIG));
     bad.dashboard.uid = 'other';

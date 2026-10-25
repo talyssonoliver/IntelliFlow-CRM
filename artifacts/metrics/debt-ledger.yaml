@@ -5104,6 +5104,23 @@ items:
       env008-api-latency in infra/monitoring/grafana/cloud/slos.json.
     status: open
     notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1001 (existing issue reused; ENV-008-AI acceptance item added as a comment).'
+  ENV008-PROD-ENV-BRANCH-POLICY-001:
+    origin_task: ENV-008-AI
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      The GitHub environment Production has no deployment branch policy and no protection rules
+      (deployment_branch_policy null, read 2026-10-25), so a workflow_dispatch of a modified
+      workflow from any branch runs with the Production secrets (GRAFANA_SA_TOKEN and the
+      secrets of the five Production-environment workflows).
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Owner restricts Production to deployments from main (and optionally a required reviewer),
+      then confirms push-to-main and dispatch-from-main runs still work.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1032. Raised by the ENV-008-AI STOA-security review; a GitHub settings change, owner-only.'
 summary:
   total_items: 439
   by_severity:

@@ -60,6 +60,12 @@ function expectPinnedActions(job: Job, nodeVersion = '24') {
   expect(String(setupNode?.with?.['node-version'])).toBe(nodeVersion);
 }
 
+/** The checkout leaves no GITHUB_TOKEN in .git/config for later steps to read (STOA-security review). */
+function expectNoPersistedCredentials(job: Job) {
+  const checkout = job.steps.find((s) => s.uses === 'actions/checkout@v7');
+  expect(checkout?.with?.['persist-credentials']).toBe(false);
+}
+
 /** A secret may only reach the job through a step's env, never inline in a run script. */
 function expectSecretOnlyInEnv(job: Job, envKey: string, expression: string) {
   const envStep = job.steps.find((s) => s.env?.[envKey] !== undefined);
@@ -139,6 +145,7 @@ describe.each([
     expect(job['timeout-minutes']).toBe(12);
     expect(sparsePaths(job)).toEqual(GRAFANA_SPARSE);
     expectPinnedActions(job);
+    expectNoPersistedCredentials(job);
   });
 
   it('reads only, never cancels a running apply, and uses its own concurrency group', () => {
@@ -218,6 +225,7 @@ describe('railway-self-healing.yml', () => {
     expect(wf.permissions).toEqual({ contents: 'read' });
     expect(wf.concurrency).toEqual({ group: 'railway-self-healing', 'cancel-in-progress': false });
     expectPinnedActions(job);
+    expectNoPersistedCredentials(job);
   });
 
   it('passes the token, project and api URL only through the step env', () => {

@@ -358,9 +358,32 @@ describe('run --apply', () => {
     expect((err as Error).message).toBe('railway serviceInstance: INTERNAL <redacted>');
   });
 
+  it('prints an error code only if it looks like an enum code (STOA-security review)', async () => {
+    const r = fakeRailway({
+      graphqlError: { op: 'project', message: 'Not Authorized', code: `x ${PROJECT_ID}` },
+    });
+    const err = await run({ env, argv: [], fetchImpl: r.fetchImpl, ...capture() }).catch(
+      (e: Error) => e
+    );
+    expect((err as Error).message).toBe('railway project: UNKNOWN Not Authorized');
+  });
+
+  it('gives every GraphQL request a timeout, so a hung Railway API cannot stall the job', async () => {
+    const r = fakeRailway();
+    const signals: unknown[] = [];
+    const fetchImpl: typeof r.fetchImpl = async (url, init) => {
+      if (url.includes('backboard')) signals.push(init.signal);
+      return r.fetchImpl(url, init);
+    };
+    await run({ env, argv: [], fetchImpl, ...capture() });
+    expect(signals.length).toBeGreaterThan(0);
+    for (const signal of signals) expect(signal).toBeInstanceOf(AbortSignal);
+  });
+
   it('only ever reads instances and updates settings: no deploy or redeploy operation', async () => {
     const r = fakeRailway();
     await run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...capture() });
+    expect(r.mutations().length).toBeGreaterThan(0);
     for (const call of r.graphql) {
       expect(['project', 'serviceInstance', 'variables', 'serviceInstanceUpdate']).toContain(
         call.op

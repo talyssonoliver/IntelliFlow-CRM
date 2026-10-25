@@ -41,6 +41,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          persist-credentials: false
           sparse-checkout: |
             infra/monitoring/grafana/cloud
             tools/scripts/observability

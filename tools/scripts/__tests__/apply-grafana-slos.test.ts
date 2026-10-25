@@ -29,7 +29,9 @@ function queriesOf(slo: Slo): string[] {
 type Call = { method: string; path: string; body?: Record<string, unknown> };
 
 /** Fake Grafana SLO plugin API: `existing` uuids answer 200 on GET, the rest 404. */
-function fakeSloApi(opts: { existing?: string[]; writeStatus?: number; writeBody?: string } = {}) {
+function fakeSloApi(
+  opts: { existing?: string[]; writeStatus?: number; writeBody?: string; assignUuid?: string } = {}
+) {
   const calls: Call[] = [];
   const fetchImpl = async (
     url: string,
@@ -44,7 +46,12 @@ function fakeSloApi(opts: { existing?: string[]; writeStatus?: number; writeBody
       return { status: found ? 200 : 404, text: async () => (found ? '{"uuid":"x"}' : '') };
     }
     const status = opts.writeStatus ?? (init.method === 'POST' ? 202 : 200);
-    return { status, text: async () => opts.writeBody ?? '{"message":"ok"}' };
+    // A create answers with the uuid the SLO was stored under.
+    const sent = init.body ? (JSON.parse(init.body) as { uuid?: string }).uuid : undefined;
+    const stored = opts.assignUuid ?? sent;
+    const reply =
+      init.method === 'POST' ? JSON.stringify({ uuid: stored, message: 'ok' }) : '{"message":"ok"}';
+    return { status, text: async () => opts.writeBody ?? reply };
   };
   return { calls, fetchImpl };
 }
@@ -71,6 +78,7 @@ describe('slos.json', () => {
   });
 
   it('labels every SLO with its source and owner', () => {
+    expect(CONFIG.slos).toHaveLength(3);
     for (const slo of CONFIG.slos) {
       expect(slo.labels).toEqual(
         expect.arrayContaining([
@@ -103,7 +111,9 @@ describe('slos.json', () => {
   });
 
   it('counts llm.invoke spans of ai-worker for LLM success', () => {
-    for (const q of queriesOf(byUuid('env008-ai-worker-llm-success'))) {
+    const queries = queriesOf(byUuid('env008-ai-worker-llm-success'));
+    expect(queries).toHaveLength(2);
+    for (const q of queries) {
       expect(q).toContain('service="ai-worker"');
       expect(q).toContain('span_name="llm.invoke"');
     }
@@ -119,8 +129,15 @@ describe('slos.json', () => {
 
   it('alerts on availability burn only; latency and LLM each name their own issue (AC-004)', () => {
     const availability = byUuid('env008-api-availability');
-    expect(availability.alerting.fastBurn).toBeDefined();
-    expect(availability.alerting.slowBurn).toBeDefined();
+    // Grafana derives the burn-rate windows itself; the committed blocks carry
+    // the severity that routes them and a summary, so neither may be empty.
+    expect(availability.alerting.fastBurn.labels).toEqual([{ key: 'severity', value: 'critical' }]);
+    expect(availability.alerting.slowBurn.labels).toEqual([{ key: 'severity', value: 'warning' }]);
+    for (const burn of [availability.alerting.fastBurn, availability.alerting.slowBurn]) {
+      expect(burn.annotations).toEqual([
+        { key: 'summary', value: expect.stringMatching(/budget/) },
+      ]);
+    }
     const issues = ['env008-api-latency', 'env008-ai-worker-llm-success'].map((uuid) => {
       const slo = byUuid(uuid);
       expect(slo.alerting).toBeUndefined();
@@ -149,6 +166,32 @@ describe('validateConfig', () => {
       '[5m]'
     );
     expect(validateConfig(bad)).toEqual([expect.stringContaining('$__rate_interval')]);
+  });
+
+  it('rejects a query type other than ratio or freeform', () => {
+    const bad = clone();
+    bad.slos[0].query = { type: 'threshold' };
+    expect(validateConfig(bad)).toEqual([
+      expect.stringContaining('query.type must be ratio or freeform'),
+    ]);
+  });
+
+  it('rejects an empty ratio metric', () => {
+    const bad = clone();
+    bad.slos[0].query.ratio.totalMetric.prometheusMetric = '';
+    expect(validateConfig(bad)).toEqual([expect.stringContaining('empty query')]);
+  });
+
+  it('rejects a config without its folder, datasource or any SLO', () => {
+    expect(
+      validateConfig({ ...clone(), folderUid: '', destinationDatasourceUid: undefined })
+    ).toEqual([
+      expect.stringContaining('folderUid'),
+      expect.stringContaining('destinationDatasourceUid'),
+    ]);
+    expect(validateConfig({ ...clone(), slos: [] })).toEqual([
+      expect.stringContaining('at least one SLO'),
+    ]);
   });
 
   it('rejects a duplicate uuid', () => {
@@ -218,6 +261,13 @@ describe('run', () => {
       destinationDatasource: { uid: 'grafanacloud-prom' },
     });
     expect(result).toEqual({ created: 2, updated: 1, dryRun: false });
+  });
+
+  it('fails when Grafana stores a created SLO under a different uuid (no silent duplicates)', async () => {
+    const api = fakeSloApi({ assignUuid: 'generated-elsewhere' });
+    await expect(
+      run({ env, argv: [], fetchImpl: api.fetchImpl, log: quiet, sleep: noSleep })
+    ).rejects.toThrow('env008-api-availability: created under uuid generated-elsewhere');
   });
 
   it('throws a redacted error when a write is rejected', async () => {

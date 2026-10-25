@@ -29,7 +29,11 @@ export interface SlosConfig {
   destinationDatasourceUid: string;
   slos: SloEntry[];
 }
-export function validateConfig(config: { slos?: Array<Partial<SloEntry>> }): string[];
+export function validateConfig(config: {
+  folderUid?: string;
+  destinationDatasourceUid?: string;
+  slos?: Array<Partial<SloEntry>>;
+}): string[];
 export function run(options?: {
   env?: Record<string, string | undefined>;
   argv?: string[];
