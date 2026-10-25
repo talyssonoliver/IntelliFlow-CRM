@@ -90,4 +90,4 @@
 WARN, with no blocking item (`compliance-check.md`).
 
 ## Task Status
-**Status Change**: Plan Complete → In Progress (exec) → **Needs Human**, with production evidence after merge. See the attestation notes.
+**Status Change**: Plan Complete → **In Progress**. The attestation verdict is NEEDS_HUMAN, with production evidence after merge (see the attestation notes). The CSV stays In Progress because `validate-sprint-data` (a required pre-ship step) accepts no "Needs Human" status; this follows the PG-199 precedent.

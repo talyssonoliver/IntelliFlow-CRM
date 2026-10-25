@@ -76,6 +76,11 @@
             "status": "Needs Human",
             "at": "2026-10-25T16:54:34.773Z",
             "note": "/exec ENV-008-AI end: everything buildable before merge is done and tested; verdict NEEDS_HUMAN because production evidence exists only after merge (owner ruling 2) and the runner owns pre-ship, push and PR. See attestation notes."
+        },
+        {
+            "status": "In Progress",
+            "at": "2026-10-25T19:59:25.698Z",
+            "note": "CSV status set to In Progress: validate-sprint-data (required pre-ship step) rejects \"Needs Human\". Attestation verdict stays NEEDS_HUMAN (PG-199 precedent)."
         }
     ],
     "blockers": [
