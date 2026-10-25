@@ -459,7 +459,7 @@ describe('startCombinedWorker', () => {
       expect(seen).toEqual([baseline[1] + 1]);
     });
 
-    it('drops handlers registered while workers load or start, then restores process.on', async () => {
+    it('keeps dropping handlers for the life of the process and restores process.on on exit', async () => {
       const originalOn = process.on;
       const rogue = vi.fn();
       const { workers, loaders } = makeLoaders({
@@ -476,12 +476,23 @@ describe('startCombinedWorker', () => {
       expect(process.listeners('SIGTERM')).not.toContain(rogue);
       expect(process.listeners('SIGINT')).not.toContain(rogue);
       expect(process.listeners('uncaughtException')).not.toContain(rogue);
-      expect(process.on).toBe(originalOn);
+      // A lazy import after startup (ingestion-worker loading ai-worker on its
+      // first job) registers OpenTelemetry's handlers; they must still be dropped.
+      process.on('SIGTERM', rogue);
+      process.addListener('SIGINT', rogue);
+      process.on('beforeExit', rogue);
+      expect(process.listeners('SIGTERM')).not.toContain(rogue);
+      expect(process.listeners('SIGINT')).not.toContain(rogue);
+      expect(process.listeners('beforeExit')).not.toContain(rogue);
       // Unrelated events still register normally.
       const other = vi.fn();
       process.on('SIGUSR2', other);
       expect(process.listeners('SIGUSR2')).toContain(other);
       process.off('SIGUSR2', other);
+
+      await handle.shutdown('test');
+      handle = undefined;
+      expect(process.on).toBe(originalOn);
     });
 
     it('stops started and in-flight workers and skips the rest on SIGTERM mid-startup', async () => {
@@ -495,12 +506,20 @@ describe('startCombinedWorker', () => {
       await vi.waitFor(() => expect(workers['events-worker'].start).toHaveBeenCalled());
 
       process.emit('SIGTERM');
-      await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+      // Shutdown waits for the in-flight start instead of racing it.
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(workers['events-worker'].stop).not.toHaveBeenCalled();
+      expect(exit).not.toHaveBeenCalled();
+
       finishStart();
       const result = await starting;
+      await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
 
       expect(workers['ai-worker'].stop).toHaveBeenCalledTimes(1);
       expect(workers['events-worker'].stop).toHaveBeenCalledTimes(1);
+      expect(workers['events-worker'].stop.mock.invocationCallOrder[0]).toBeGreaterThan(
+        workers['events-worker'].start.mock.invocationCallOrder[0]
+      );
       expect(workers['ingestion-worker'].start).not.toHaveBeenCalled();
       expect(result.healthPort).toBe(0);
       expect((await result.getHealth()).status).toBe('draining');
@@ -520,6 +539,86 @@ describe('startCombinedWorker', () => {
 
       await expect(starting).resolves.toMatchObject({ healthPort: 0 });
       expect(exit).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('signal during a loader', () => {
+    it('waits for the load, never starts that worker, and skips the rest', async () => {
+      const { workers, loaders } = makeLoaders();
+      let finishLoad!: () => void;
+      const gated = new FakeWorker();
+      loaders['events-worker'] = () =>
+        new Promise<ManagedWorker>((resolve) => (finishLoad = () => resolve(gated)));
+
+      const starting = startCombinedWorker({ loaders, env, logger: silent, exit });
+      await vi.waitFor(() => expect(finishLoad).toBeDefined());
+
+      process.emit('SIGTERM');
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(exit).not.toHaveBeenCalled();
+
+      finishLoad();
+      await starting;
+      await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(0));
+
+      expect(gated.start).not.toHaveBeenCalled();
+      expect(workers['ai-worker'].stop).toHaveBeenCalledTimes(1);
+      expect(workers['ingestion-worker'].start).not.toHaveBeenCalled();
+    });
+
+    it('still exits after the shutdown timeout if the load never finishes', async () => {
+      const { loaders } = makeLoaders({ 'ai-worker': () => new Promise<ManagedWorker>(() => {}) });
+      env.COMBINED_SHUTDOWN_TIMEOUT_MS = '20';
+
+      void startCombinedWorker({ loaders, env, logger: silent, exit });
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      process.emit('SIGTERM');
+
+      await vi.waitFor(() => expect(exit).toHaveBeenCalledWith(1));
+      expect(listenerCounts()).toEqual(baseline);
+    });
+  });
+
+  describe('shutdown hook on startup-abort paths', () => {
+    it('runs onShutdown when a worker fails to start (fail-fast)', async () => {
+      const { workers, loaders } = makeLoaders();
+      workers['events-worker'].start.mockRejectedValue(new Error('no database'));
+      const onShutdown = vi.fn(async () => undefined);
+
+      await expect(
+        startCombinedWorker({ loaders, env, logger: silent, exit, onShutdown })
+      ).rejects.toThrow(/events-worker failed to start/);
+
+      expect(onShutdown).toHaveBeenCalledTimes(1);
+      expect(exit).not.toHaveBeenCalled();
+    });
+
+    it('runs onShutdown when the health port is taken', async () => {
+      const blocker = http.createServer();
+      await new Promise<void>((resolve) => blocker.listen(0, resolve));
+      env.COMBINED_HEALTH_PORT = String((blocker.address() as { port: number }).port);
+      const { loaders } = makeLoaders();
+      const onShutdown = vi.fn(async () => undefined);
+
+      try {
+        await expect(
+          startCombinedWorker({ loaders, env, logger: silent, exit, onShutdown })
+        ).rejects.toThrow(/health server failed to listen/);
+        expect(onShutdown).toHaveBeenCalledTimes(1);
+      } finally {
+        await new Promise<void>((resolve) => blocker.close(() => resolve()));
+      }
+    });
+
+    it('gives the process events back after an aborted startup', async () => {
+      const originalOn = process.on;
+      const { workers, loaders } = makeLoaders();
+      workers['ai-worker'].start.mockRejectedValue(new Error('boom'));
+
+      await expect(startCombinedWorker({ loaders, env, logger: silent, exit })).rejects.toThrow();
+
+      expect(process.on).toBe(originalOn);
+      expect(listenerCounts()).toEqual(baseline);
     });
   });
 

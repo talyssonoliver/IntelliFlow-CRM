@@ -26,7 +26,7 @@ vi.mock('@intelliflow/ingestion-worker', () => ({
   ingestionWorker: { name: 'ingestion-instance' },
 }));
 
-import { defaultLoaders, flushOpenTelemetry, main } from '../main';
+import { defaultLoaders, flushOpenTelemetry, isAiWorkerLoaded, main } from '../main';
 
 describe('combined-worker main', () => {
   beforeEach(() => {
@@ -57,6 +57,36 @@ describe('combined-worker main', () => {
     await flushOpenTelemetry();
 
     expect(sdk.shutdown).toHaveBeenCalledWith('sdk-instance');
+  });
+
+  it('flushes whenever an SDK exists, even if only another worker lazily loaded ai-worker', async () => {
+    await flushOpenTelemetry(() => true);
+
+    expect(sdk.shutdown).toHaveBeenCalledWith('sdk-instance');
+  });
+
+  it('does nothing when ai-worker was never loaded', async () => {
+    await flushOpenTelemetry(() => false);
+
+    expect(sdk.shutdown).not.toHaveBeenCalled();
+  });
+
+  it('does nothing when ai-worker has no SDK instance', async () => {
+    sdk.get.mockReturnValue(null as never);
+
+    await flushOpenTelemetry(() => true);
+
+    expect(sdk.shutdown).not.toHaveBeenCalled();
+  });
+
+  it('detects ai-worker through the loader flag, and reports false on a fresh process', async () => {
+    vi.resetModules();
+    const fresh = await import('../main');
+    expect(fresh.isAiWorkerLoaded()).toBe(false);
+
+    await fresh.defaultLoaders['ai-worker']();
+    expect(fresh.isAiWorkerLoaded()).toBe(true);
+    expect(isAiWorkerLoaded).toBeTypeOf('function');
   });
 
   it('exits 1 when startup fails', async () => {

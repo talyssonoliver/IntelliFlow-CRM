@@ -157,12 +157,15 @@ export function loadCombinedConfig(env: NodeJS.ProcessEnv): CombinedWorkerConfig
 const PROCESS_EVENTS = ['SIGINT', 'SIGTERM', 'uncaughtException', 'unhandledRejection'] as const;
 type ProcessEvent = (typeof PROCESS_EVENTS)[number];
 type Listener = (...args: unknown[]) => void;
+/** Events only the combined runtime may handle (beforeExit: OTel-style exit hooks). */
+const FILTERED_EVENTS: readonly unknown[] = [...PROCESS_EVENTS, 'beforeExit'];
 
 /**
- * Drop every registration of the process events above made by anyone else until
- * the returned function is called. Call it once the combined handlers are
- * installed, so no worker (or OpenTelemetry) can add a handler that exits the
- * process on its own, not even for the instant between registration and removal.
+ * Drop every registration of the filtered events made by anyone else until the
+ * returned function is called. Call it once the combined handlers are installed
+ * and keep it for the whole life of the process: workers import libraries
+ * lazily (ingestion-worker loads ai-worker on its first job, which registers
+ * OpenTelemetry's SIGTERM handler), so a startup-only filter is not enough.
  */
 function suppressProcessHandlers(): () => void {
   const target = process as unknown as Record<string, (...args: unknown[]) => unknown>;
@@ -170,7 +173,7 @@ function suppressProcessHandlers(): () => void {
   const originals = methods.map((method) => [method, target[method]] as const);
   for (const [method, original] of originals) {
     target[method] = function (event: unknown, ...rest: unknown[]) {
-      if ((PROCESS_EVENTS as readonly unknown[]).includes(event)) return process;
+      if (FILTERED_EVENTS.includes(event)) return process;
       return original.call(process, event, ...rest);
     };
   }
@@ -262,22 +265,35 @@ export async function startCombinedWorker(
 
   const running = new Map<WorkerName, ManagedWorker>();
   const failures = new Map<WorkerName, string>();
-  /** Workers whose start() is in flight, so a signal can still stop them. */
-  const starting = new Map<WorkerName, ManagedWorker>();
+  /** The load+start of the worker being started; never rejects. */
+  let inflight: Promise<void> | null = null;
+  /** Loaded and being started (or failed to start) but not in `running`. */
+  let pending: { name: WorkerName; worker: ManagedWorker } | null = null;
   let shuttingDown = false;
   let shutdownPromise: Promise<void> | null = null;
   let healthServer: http.Server | null = null;
+  let restoreProcessHandlers: (() => void) | null = null;
   const ownListeners: Array<[ProcessEvent, Listener]> = [];
 
-  const removeOwnListeners = () => {
+  /** Give the process-level events back; runs on every exit path. */
+  const release = () => {
     for (const [event, listener] of ownListeners) process.off(event, listener);
     ownListeners.length = 0;
+    restoreProcessHandlers?.();
+    restoreProcessHandlers = null;
+  };
+
+  const runShutdownHook = async () => {
+    try {
+      await options.onShutdown?.();
+    } catch (error) {
+      logger.error({ error: errorMessage(error) }, 'Shutdown hook failed');
+    }
   };
 
   const stopAll = async (): Promise<boolean> => {
-    const targets = new Map([...starting, ...running]);
     const results = await Promise.allSettled(
-      [...targets.entries()].map(async ([name, worker]) => {
+      [...running.entries()].map(async ([name, worker]) => {
         try {
           await worker.stop();
         } catch (error) {
@@ -334,20 +350,27 @@ export async function startCombinedWorker(
     shutdownPromise = (async () => {
       const forceExit = setTimeout(() => {
         logger.error({ timeoutMs: config.shutdownTimeoutMs }, 'Shutdown timeout, forcing exit');
+        release();
         exit(1);
       }, config.shutdownTimeoutMs);
       forceExit.unref?.();
 
+      // A signal during startup: let the in-flight load/start finish (it cannot
+      // be cancelled, and would otherwise create consumers after we stopped),
+      // then stop everything that started, including that worker. The timer
+      // above caps the wait.
+      await inflight;
+      if (pending) {
+        // It loaded but did not finish starting; release what it opened.
+        await pending.worker.stop().catch(() => undefined);
+        pending = null;
+      }
       const clean = await stopAll();
       if (healthServer) await closeServer(healthServer);
-      try {
-        await options.onShutdown?.();
-      } catch (error) {
-        logger.error({ error: errorMessage(error) }, 'Shutdown hook failed');
-      }
+      await runShutdownHook();
       clearTimeout(forceExit);
 
-      removeOwnListeners();
+      release();
       logger.info({ clean }, 'Combined worker stopped');
       exit(clean ? 0 : 1);
     })();
@@ -355,9 +378,10 @@ export async function startCombinedWorker(
   };
 
   const abortStartup = async (): Promise<void> => {
-    removeOwnListeners();
     await stopAll();
     if (healthServer) await closeServer(healthServer);
+    await runShutdownHook();
+    release();
   };
 
   // Install the combined handlers first, then lock everyone else out of these
@@ -379,39 +403,46 @@ export async function startCombinedWorker(
     process.on(event, listener);
     ownListeners.push([event, listener]);
   }
-  const restoreProcessHandlers = suppressProcessHandlers();
+  restoreProcessHandlers = suppressProcessHandlers();
 
-  try {
-    for (const name of config.workers) {
-      if (shuttingDown) break;
-      let worker: ManagedWorker | undefined;
-      try {
-        worker = await options.loaders[name]();
-        starting.set(name, worker);
-        await worker.start();
-        starting.delete(name);
-        running.set(name, worker);
-        logger.info({ worker: name }, 'Worker started');
-      } catch (error) {
-        starting.delete(name);
-        // A signal that arrived mid-start already stopped this worker; the
-        // failure is the expected result of that, not a startup error.
-        if (shuttingDown) break;
-        const message = errorMessage(error);
-        logger.error({ worker: name, error: message }, 'Worker failed to start');
-        failures.set(name, message);
-        // BaseWorker leaves its Redis connection and health server open when
-        // start() throws part-way; release them (best effort).
-        await worker?.stop().catch(() => undefined);
-
-        if (!config.allowPartial) {
-          await abortStartup();
-          throw new Error(`Worker ${name} failed to start: ${message}`, { cause: error });
-        }
+  for (const name of config.workers) {
+    if (shuttingDown) break;
+    const outcome: { failed: boolean; error?: unknown } = { failed: false };
+    const run = (async () => {
+      const worker = await options.loaders[name]();
+      // A signal during the load: do not start what would only be torn down.
+      if (shuttingDown) return;
+      pending = { name, worker };
+      await worker.start();
+      running.set(name, worker);
+      pending = null;
+      logger.info({ worker: name }, 'Worker started');
+    })();
+    inflight = run.then(
+      () => undefined,
+      (error: unknown) => {
+        outcome.failed = true;
+        outcome.error = error;
       }
+    );
+    await inflight;
+    if (!outcome.failed) continue;
+
+    // A signal that arrived mid-start: shutdown() releases the half-started
+    // worker; the failure is the expected result, not a startup error.
+    if (shuttingDown) break;
+    const message = errorMessage(outcome.error);
+    logger.error({ worker: name, error: message }, 'Worker failed to start');
+    failures.set(name, message);
+    // BaseWorker leaves its Redis connection and health server open when
+    // start() throws part-way; release them (best effort).
+    await (pending as { worker: ManagedWorker } | null)?.worker.stop().catch(() => undefined);
+    pending = null;
+
+    if (!config.allowPartial) {
+      await abortStartup();
+      throw new Error(`Worker ${name} failed to start: ${message}`, { cause: outcome.error });
     }
-  } finally {
-    restoreProcessHandlers();
   }
 
   if (shuttingDown) {
@@ -425,8 +456,7 @@ export async function startCombinedWorker(
   try {
     healthPort = await listen(healthServer, config.healthPort);
   } catch (error) {
-    removeOwnListeners();
-    await stopAll();
+    await abortStartup();
     throw new Error(`Combined health server failed to listen: ${errorMessage(error)}`, {
       cause: error,
     });

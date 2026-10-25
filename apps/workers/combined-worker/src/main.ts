@@ -50,10 +50,27 @@ export const defaultLoaders: WorkerLoaders = {
  * ai-worker's own SIGTERM handler flushes OpenTelemetry before exiting. The
  * combined runtime owns the signal handlers, so the flush runs here instead.
  */
-export async function flushOpenTelemetry(): Promise<void> {
-  if (!aiWorkerLoaded) return;
+export async function flushOpenTelemetry(
+  isLoaded: () => boolean = isAiWorkerLoaded
+): Promise<void> {
+  // Importing ai-worker only to find out whether it ran would start OpenTelemetry
+  // just to shut it down, so check the module cache first.
+  if (!isLoaded()) return;
   const { getSDKInstance, shutdownOpenTelemetry } = await import('@intelliflow/ai-worker');
-  await shutdownOpenTelemetry(getSDKInstance());
+  // Whenever an SDK exists, however ai-worker got loaded (ingestion-worker
+  // imports it lazily on its first job, even without the ai-worker loader).
+  if (getSDKInstance()) await shutdownOpenTelemetry(getSDKInstance());
+}
+
+/** True when ai-worker was loaded by our loader or by another worker's lazy import. */
+export function isAiWorkerLoaded(): boolean {
+  if (aiWorkerLoaded) return true;
+  if (typeof require === 'undefined') return false;
+  try {
+    return require.resolve('@intelliflow/ai-worker') in require.cache;
+  } catch {
+    return false;
+  }
 }
 
 export async function main(): Promise<void> {
