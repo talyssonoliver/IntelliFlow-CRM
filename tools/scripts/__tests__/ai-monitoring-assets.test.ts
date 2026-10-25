@@ -151,11 +151,17 @@ describe('dashboard shape (ENV-008-AI dashboard job config shape)', () => {
     const roi = panels.find((p) => /roi/i.test(p.title));
     expect(roi?.title.toLowerCase()).toContain('estimated');
     expect(JSON.stringify(roi)).toContain('n/a');
+    // The denominator is filtered to > 0, so no cost gives no value (shown as n/a), never Inf.
+    const roiExpr = (roi?.targets?.[0]?.expr ?? '').replaceAll(' ', '');
+    // The division operator sits between the two sums: `...))/(sum(...`.
+    const denominator = roiExpr.slice(roiExpr.indexOf('))/(') + 3);
+    expect(denominator).toContain('intelliflow_ai_cost_usd_total');
+    expect(denominator.endsWith('>0)')).toBe(true);
     const hallucination = panels.find((p) => /hallucination rate/i.test(p.title));
     expect(`${hallucination?.title} ${hallucination?.description}`.toLowerCase()).toContain(
       'detected by heuristic checker'
     );
-    expect(text).toContain('timeout');
+    expect(text).toMatch(/timeouts?[^.]*(twice|double-count)/);
     expect(text).toContain('auto-response is not monitored in production');
   });
 });

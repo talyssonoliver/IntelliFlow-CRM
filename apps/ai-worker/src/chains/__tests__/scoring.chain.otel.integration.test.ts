@@ -90,7 +90,8 @@ afterAll(async () => {
   metrics.disable();
 });
 
-async function loadChain(options: { recordDrift?: boolean } = {}) {
+async function loadChain(options: { recordDrift?: boolean; aiProvider?: string } = {}) {
+  const { aiProvider = 'mock', ...chainOptions } = options;
   vi.resetModules();
   vi.doMock('../../utils/cost-tracker', () => ({
     costTracker: { recordUsage: vi.fn(), assertWithinDailyLimit: vi.fn(), addListener: vi.fn() },
@@ -102,7 +103,7 @@ async function loadChain(options: { recordDrift?: boolean } = {}) {
       ...actual,
       aiConfig: {
         ...actual.aiConfig,
-        provider: 'mock',
+        provider: aiProvider,
         costTracking: { ...actual.aiConfig.costTracking, enabled: false },
       },
     };
@@ -124,7 +125,7 @@ async function loadChain(options: { recordDrift?: boolean } = {}) {
   vi.spyOn(monitoring.chainMonitor, 'getConfig').mockReturnValue(fresh.getConfig());
   const { LeadScoringChain } = await import('../scoring.chain');
   return {
-    chain: new LeadScoringChain({ provider: 'mock', ...options }),
+    chain: new LeadScoringChain({ provider: 'mock', ...chainOptions }),
     config: fresh.getConfig(),
   };
 }
@@ -154,6 +155,14 @@ function assertNoLeaks(all: CollectedMetric[]): void {
 }
 
 describe('LeadScoringChain -> OTel (real chain, fake network)', () => {
+  it('stamps modelVersion with the chain own provider, not the global aiConfig.provider', async () => {
+    const { chain } = await loadChain({ aiProvider: 'ollama' });
+    const result = await chain.scoreLead(LEAD);
+    expect(result.modelVersion).not.toBe('error:v1');
+    expect(result.modelVersion.startsWith('mock:')).toBe(true);
+    expect(result.modelVersion.startsWith('ollama:')).toBe(false);
+  });
+
   it('records latency, count, cost, estimated value, confidence and a hallucination check', async () => {
     const { chain } = await loadChain();
     const result = await chain.scoreLead(LEAD);

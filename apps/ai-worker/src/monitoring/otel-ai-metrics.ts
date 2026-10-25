@@ -126,7 +126,11 @@ function getInstruments(): Instruments {
     }
   };
   const observeLastCheck = (result: ObservableResult): void => {
-    if (lastCheckSeconds !== null) result.observe(lastCheckSeconds);
+    try {
+      if (lastCheckSeconds !== null) result.observe(lastCheckSeconds);
+    } catch (err) {
+      logger.debug({ err: errorName(err) }, 'drift last-check gauge callback failed');
+    }
   };
   scoreGauge.addCallback(observeScores);
   lastCheckGauge.addCallback(observeLastCheck);

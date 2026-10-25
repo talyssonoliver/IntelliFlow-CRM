@@ -346,6 +346,27 @@ describe('DriftDetector — scope, retention and history', () => {
     }
     capped.pruneOnTick(NOW);
     expect(capped.getStatus().totalSamples).toBe(100);
+    // The NEWEST samples survive: the oldest kept value is 150/250, not 0.
+    const current = capped.detectDrift('scoring-free', 'score_distribution', NOW).currentWindow;
+    expect(current?.min).toBeCloseTo(150 / 250);
+
+    expect(defaultDriftConfig.retentionDays).toBe(8);
+    expect(defaultDriftConfig.maxSamplesPerKey).toBe(50_000);
+  });
+
+  it('trims a key on record, amortised: only once it passes 1.25x the cap', () => {
+    const d = new DriftDetector({ ...defaultDriftConfig, maxSamplesPerKey: 100 });
+    const add = (i: number) =>
+      d.recordSample({
+        value: 0.5,
+        timestamp: new Date(NOW - 1000 + i),
+        model: 'scoring-free',
+        metric: 'score_distribution',
+      });
+    for (let i = 0; i < 125; i++) add(i);
+    expect(d.getStatus().totalSamples).toBe(125); // no trim yet: each record stays O(1)
+    add(125);
+    expect(d.getStatus().totalSamples).toBe(100); // one slice back to the cap
   });
 
   it('caps drift history at 7 days', () => {

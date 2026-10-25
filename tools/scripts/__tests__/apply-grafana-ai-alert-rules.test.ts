@@ -224,6 +224,14 @@ describe('run()', () => {
       '/api/v1/provisioning/folder/intelliflow-ai/rule-groups/intelliflow-ai',
     ]);
     expect(g.calls.some((c) => c.method === 'DELETE')).toBe(false);
+    // No delivery test either: every call is a folder, rule, rule-group or query call.
+    const allowed = [
+      '/api/folders',
+      '/api/v1/provisioning/alert-rules',
+      '/api/v1/provisioning/folder/',
+      '/api/datasources/proxy/',
+    ];
+    expect(g.calls.filter((c) => !allowed.some((p) => c.path.startsWith(p)))).toEqual([]);
   });
 
   it('updates rules that already exist', async () => {
@@ -265,6 +273,24 @@ describe('run()', () => {
     ).rejects.toThrow('ifc117-drift-shift');
   });
 
+  it.each([
+    [
+      'an HTTP 200 whose body says status:error',
+      { status: 200, body: { status: 'error', error: 'bad data' } },
+    ],
+    ['an HTTP 500 with no body', { status: 500 }],
+  ])('dry run also fails on %s', async (_label, reply) => {
+    const g = fakeGrafana({
+      exprStatus: (q) =>
+        q.includes('hallucination_detected')
+          ? reply
+          : { status: 200, body: { status: 'success', data: { result: [] } } },
+    });
+    await expect(
+      run({ env, argv: ['--dry-run'], fetchImpl: g.fetchImpl, log: quiet })
+    ).rejects.toThrow('ifc117-hallucination-rate');
+  });
+
   it('rejects an invalid rules file before calling Grafana', async () => {
     const file = withConfig((c) => (c.group.name = IFC032.group.name));
     const g = fakeGrafana();
@@ -278,6 +304,15 @@ describe('run()', () => {
     await expect(
       run({ env: { GRAFANA_URL: HOST }, argv: [], fetchImpl: fakeGrafana().fetchImpl, log: quiet })
     ).rejects.toThrow('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
+    // With the token set but the URL missing, the message must not carry the token.
+    const err = await run({
+      env: { GRAFANA_SA_TOKEN: TOKEN },
+      argv: [],
+      fetchImpl: fakeGrafana().fetchImpl,
+      log: quiet,
+    }).catch((e: Error) => e);
+    expect((err as Error).message).toContain('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
+    expect((err as Error).message).not.toContain(TOKEN);
   });
 
   it('a 401 with an echoing body leaks neither the token nor the Authorization header, and is truncated', async () => {
@@ -293,7 +328,18 @@ describe('run()', () => {
     const text = `${(err as Error).message}\n${lines.join('\n')}`;
     expect(text).not.toContain(TOKEN);
     expect(text).not.toMatch(/Authorization/i);
-    expect((err as Error).message.length).toBeLessThan(400);
+    // The Grafana text in the message is capped at 200 characters after the fixed prefix.
+    expect((err as Error).message.length).toBeLessThanOrEqual(
+      'read folder: HTTP 401 '.length + 200
+    );
+  });
+
+  it('keeps its own redaction: it does not import redactBody from another lane', () => {
+    const source = readFileSync(
+      join(REPO, 'tools/scripts/observability/apply-grafana-ai-alert-rules.mjs'),
+      'utf8'
+    );
+    expect(source).not.toMatch(/import[^;]*redactBody/);
   });
 
   it('redactText removes bearer values and truncates', () => {

@@ -81,32 +81,25 @@ function drift(overrides: Partial<DriftTickResult> = {}): DriftTickResult {
 
 describe('instrument definitions', () => {
   it('declares exactly the spec instruments with their types and units', () => {
-    const byName = Object.fromEntries(AI_METRIC_DEFINITIONS.map((d) => [d.name, d]));
-    expect(Object.keys(byName).sort()).toEqual(
-      [
-        'intelliflow.ai.inference.latency',
-        'intelliflow.ai.inference.count',
-        'intelliflow.ai.confidence',
-        'intelliflow.ai.cost.usd',
-        'intelliflow.ai.value.estimated.usd',
-        'intelliflow.ai.hallucination.checks',
-        'intelliflow.ai.hallucination.detected',
-        'intelliflow.ai.hallucination.types',
-        'intelliflow.ai.hallucination.skipped',
-        'intelliflow.ai.drift.score',
-        'intelliflow.ai.drift.detections',
-        'intelliflow.ai.drift.checks',
-        'intelliflow.ai.drift.last_check',
-        'intelliflow.ai.retraining.triggers',
-      ].sort()
-    );
-    expect(byName['intelliflow.ai.inference.latency']).toMatchObject({
-      type: 'histogram',
-      unit: 'ms',
-    });
-    expect(byName['intelliflow.ai.cost.usd']).toMatchObject({ type: 'counter', unit: '' });
-    expect(byName['intelliflow.ai.drift.score']).toMatchObject({ type: 'gauge', unit: '' });
-    expect(byName['intelliflow.ai.drift.last_check']).toMatchObject({ type: 'gauge', unit: '' });
+    // Written out from the spec's instrument table on purpose, so a wrong definition fails here.
+    const spec: Array<[string, string, string]> = [
+      ['intelliflow.ai.inference.latency', 'histogram', 'ms'],
+      ['intelliflow.ai.inference.count', 'counter', '1'],
+      ['intelliflow.ai.confidence', 'histogram', ''],
+      ['intelliflow.ai.cost.usd', 'counter', ''],
+      ['intelliflow.ai.value.estimated.usd', 'counter', ''],
+      ['intelliflow.ai.hallucination.checks', 'counter', '1'],
+      ['intelliflow.ai.hallucination.detected', 'counter', '1'],
+      ['intelliflow.ai.hallucination.types', 'counter', '1'],
+      ['intelliflow.ai.hallucination.skipped', 'counter', '1'],
+      ['intelliflow.ai.drift.score', 'gauge', ''],
+      ['intelliflow.ai.drift.detections', 'counter', '1'],
+      ['intelliflow.ai.drift.checks', 'counter', '1'],
+      ['intelliflow.ai.drift.last_check', 'gauge', ''],
+      ['intelliflow.ai.retraining.triggers', 'counter', '1'],
+    ];
+    const declared = AI_METRIC_DEFINITIONS.map((d) => [d.name, d.type, d.unit]);
+    expect(declared.sort()).toEqual(spec.sort());
   });
 
   // The tools asset test (ai-monitoring-assets.test.ts) checks dashboards and rules against
@@ -207,7 +200,15 @@ describe('attribute allowlist', () => {
     recordDriftTick([
       drift({ metric: 'mystery', status: 'weird' as never, onset: true, severity: 'odd' as never }),
     ]);
+    recordHallucination({
+      model: 'scoring-free',
+      chain: 'lead_scoring',
+      outcome: { status: 'skipped', reason: 'made_up_reason' as never },
+    });
     const all = await collectMetrics(reader);
+    expect(
+      pointsWhere(all, 'intelliflow.ai.hallucination.skipped', { reason: 'other' })
+    ).toHaveLength(1);
     expect(pointsWhere(all, 'intelliflow.ai.inference.count', { chain: 'unknown' })).toHaveLength(
       1
     );
@@ -302,10 +303,45 @@ describe('cardinality', () => {
         outcome: { status: 'checked', hallucinated: true, types: [s as HallucinationType] },
       });
       recordRetrainingTrigger({ urgency: s });
+      recordInference({
+        model: s,
+        chain: s as never,
+        outcome: s as never,
+        latencyMs: i,
+        error: Object.assign(new Error(s), { name: s }),
+      });
+      recordInference({
+        model: s,
+        chain: s as never,
+        outcome: 'error',
+        latencyMs: i,
+        error: Object.assign(new Error(s), { name: s, status: s }),
+      });
+      recordConfidence({ model: s, chain: s as never, confidence: 0.5 });
+      recordHallucination({
+        model: s,
+        chain: s as never,
+        outcome: { status: 'skipped', reason: s as never },
+      });
+      recordDriftTick([
+        drift({
+          model: s,
+          metric: s,
+          status: s as never,
+          severity: s as never,
+          detectedTick: true,
+          onset: true,
+          inEvent: true,
+        }),
+      ]);
     }
     const all = await collectMetrics(reader);
-    // Every random string collapses to other/unknown, so each instrument has a single series.
-    for (const m of all) expect(m.points.length).toBeLessThanOrEqual(1);
+    // Every random string collapses to a closed-set value: inference splits only by outcome
+    // (success, an unknown outcome as other, error) and nothing else gains a series.
+    expect(seriesCount(all)).toBeLessThanOrEqual(seededSeriesBound());
+    for (const m of all) expect(m.points.length).toBeLessThanOrEqual(3);
+    expect(pointsWhere(all, 'intelliflow.ai.inference.count')).toHaveLength(3);
+    expect(attributeValues(all).some((v) => v.startsWith('rnd-'))).toBe(false);
   });
 
   it('pre-seeds exactly the computed bound of series and no more', async () => {
@@ -468,6 +504,86 @@ describe('recorders never throw', () => {
     ).not.toThrow();
     expect(() => recordDriftTick([drift()])).not.toThrow();
     expect(() => recordRetrainingTrigger({ urgency: 'low' })).not.toThrow();
+  });
+
+  it('swallows add/record failures on instruments that were created fine', () => {
+    const throwingInstrument = {
+      add: () => {
+        throw new Error('add boom');
+      },
+      record: () => {
+        throw new Error('record boom');
+      },
+    };
+    const meter = {
+      createCounter: () => throwingInstrument,
+      createHistogram: () => throwingInstrument,
+      createObservableGauge: () => ({ addCallback: () => {}, removeCallback: () => {} }),
+    };
+    __setMeterForTests(meter as never);
+    expect(() => registerAiMetrics()).not.toThrow();
+    expect(() =>
+      recordInference({
+        model: 'scoring-free',
+        chain: 'lead_scoring',
+        outcome: 'error',
+        latencyMs: 1,
+      })
+    ).not.toThrow();
+    expect(() =>
+      recordConfidence({ model: 'scoring-free', chain: 'lead_scoring', confidence: 0.5 })
+    ).not.toThrow();
+    expect(() =>
+      recordCost({ model: 'scoring-free', chain: 'lead_scoring', usd: 1 })
+    ).not.toThrow();
+    expect(() =>
+      recordEstimatedValue({ chain: 'lead_scoring', valueType: 'lead_scored', usd: 1 })
+    ).not.toThrow();
+    expect(() =>
+      recordHallucination({
+        model: 'scoring-free',
+        chain: 'lead_scoring',
+        outcome: { status: 'checked', hallucinated: true, types: ['factual_error'] },
+      })
+    ).not.toThrow();
+    expect(() => recordDriftTick([drift({ onset: true })])).not.toThrow();
+    expect(() => recordRetrainingTrigger({ urgency: 'low' })).not.toThrow();
+  });
+
+  it('gauge callbacks whose observe throws do not abort collection of other instruments', async () => {
+    const real = provider.getMeter('ifc-117-throwing-gauges');
+    const throwingResult = {
+      observe: () => {
+        throw new Error('observe boom');
+      },
+    };
+    const meter = new Proxy(real, {
+      get(target, prop) {
+        if (prop === 'createObservableGauge') {
+          return (name: string, options: object) => {
+            const gauge = target.createObservableGauge(name, options);
+            return {
+              addCallback: (cb: (r: unknown) => void) =>
+                gauge.addCallback(() => cb(throwingResult)),
+              removeCallback: () => {},
+            };
+          };
+        }
+        const value = Reflect.get(target, prop);
+        return typeof value === 'function' ? value.bind(target) : value;
+      },
+    });
+    __setMeterForTests(meter as never);
+    recordDriftTick([drift({ driftScore: 0.4 })]); // populates both gauges' snapshots
+    recordInference({
+      model: 'scoring-free',
+      chain: 'lead_scoring',
+      outcome: 'success',
+      latencyMs: 3,
+    });
+    const all = await collectMetrics(reader); // throws if any callback error escaped
+    expect(total(all, 'intelliflow.ai.inference.count')).toBe(1);
+    expect(total(all, 'intelliflow.ai.drift.checks')).toBe(1);
   });
 
   it('a throwing gauge snapshot does not abort collection', async () => {

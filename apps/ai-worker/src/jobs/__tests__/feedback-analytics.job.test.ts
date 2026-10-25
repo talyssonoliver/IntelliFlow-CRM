@@ -173,6 +173,15 @@ describe('processFeedbackAnalyticsJob', () => {
       expect(mockRecordRetrainingTrigger).toHaveBeenCalledWith({ urgency: 'high' });
     });
 
+    it('passes an unknown urgency through unchanged (the facade clamps it, not the job)', async () => {
+      mockRunFeedbackAnalytics.mockResolvedValue(makeAnalytics(true, 'unheard_of'));
+      const job = createMockJob();
+      await processFeedbackAnalyticsJob(job);
+
+      expect(mockRecordRetrainingTrigger).toHaveBeenCalledOnce();
+      expect(mockRecordRetrainingTrigger).toHaveBeenCalledWith({ urgency: 'unheard_of' });
+    });
+
     it('returns retrainingNeeded=true and monitoringEventId', async () => {
       const job = createMockJob();
       const result = await processFeedbackAnalyticsJob(job);
