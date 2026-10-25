@@ -25,6 +25,7 @@ import {
 } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { getRelativeSchemaPath } from './lib/schema-paths';
+import { parseArtifactHash } from './lib/artifact-hash';
 import { OUTPUT_PATHS } from './lib/workflow/config.js';
 
 // Get repo root - handle Windows path conversion
@@ -187,7 +188,8 @@ function convertOldAttestationToNew(
       })) ||
       Object.entries(old.artifact_hashes || {}).map(([path, hash]) => ({
         path,
-        sha256: hash,
+        // files_read[].sha256 is a bare digest; artifact_hashes may carry the sha256: prefix.
+        sha256: parseArtifactHash(hash) ?? hash,
       }));
 
     newAttestation.context_acknowledgment = {

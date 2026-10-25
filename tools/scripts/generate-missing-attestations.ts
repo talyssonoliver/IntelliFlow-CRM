@@ -10,6 +10,7 @@
 import { readdirSync, existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { getRelativeSchemaPath } from './lib/schema-paths';
+import { prefixArtifactHash } from './lib/artifact-hash';
 import { OUTPUT_PATHS } from './lib/workflow/config.js';
 
 const REPO_ROOT = process.cwd();
@@ -163,7 +164,7 @@ function transformContextAckToAttestation(contextAck: ContextAck, outputDir: str
   // Build artifact hashes
   const artifactHashes: Record<string, string> = {};
   (contextAck.artifacts?.created || []).forEach((a) => {
-    artifactHashes[a.path] = a.sha256 || 'pending_verification';
+    artifactHashes[a.path] = a.sha256 ? prefixArtifactHash(a.sha256) : 'pending_verification';
   });
 
   // Build KPI results

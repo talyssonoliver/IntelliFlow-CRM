@@ -777,7 +777,7 @@ function addUniquePath(arr: string[], path: string): void {
 /**
  * Extract file paths from attestation.json artifact_hashes
  */
-function enrichFromAttestationFile(
+export function enrichFromAttestationFile(
   taskMap: TaskFileMap,
   taskId: string,
   attestationPath: string
@@ -789,9 +789,9 @@ function enrichFromAttestationFile(
   if (hashes && typeof hashes === 'object' && !Array.isArray(hashes)) {
     ensureTaskEntry(taskMap, taskId);
     for (const [filePath, hashValue] of Object.entries(hashes as Record<string, string>)) {
-      // Only trust entries with real SHA256 hashes (40-128 hex chars),
-      // skip phantom values like "verified", "pending_verification", etc.
-      if (typeof hashValue === 'string' && /^[0-9a-fA-F]{40,128}$/.test(hashValue)) {
+      // Only trust entries with real SHA256 hashes (40-128 hex chars, optionally
+      // prefixed `sha256:`), skip phantom values like "verified", "pending_verification".
+      if (typeof hashValue === 'string' && /^(?:sha256:)?[0-9a-fA-F]{40,128}$/.test(hashValue)) {
         addUniquePath(taskMap[taskId].expectedArtifacts, filePath);
       }
     }

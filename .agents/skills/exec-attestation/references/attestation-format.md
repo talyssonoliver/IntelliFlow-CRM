@@ -72,7 +72,7 @@
     "invariants_acknowledged": ["<invariants>"]
   },
   "artifact_hashes": {
-    "<file-path>": "<64-char hex SHA256>"
+    "<file-path>": "sha256:<64-char hex SHA256>"
   },
   "environment": {
     "os": "<platform>",
@@ -112,6 +112,12 @@ additionalProperties is false
 Hash calculation:
 
 - Windows: `certutil -hashfile <path> SHA256`
+- In `artifact_hashes` write the digest as `sha256:<hex>` (bare hex is still
+  accepted by the schema but is flagged by GitGuardian when the path contains
+  auth/secret/token/credential).
+  `tsx tools/scripts/format-attestation-hashes.ts <attestation.json>` converts a
+  finished file; `--verify` re-hashes every listed file from the tree.
+  `files_read[].sha256` stays bare hex.
 - Linux/Mac: `sha256sum <path> | cut -d' ' -f1`
 
 ### `verdict` Field
