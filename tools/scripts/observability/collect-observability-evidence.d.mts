@@ -40,6 +40,24 @@ export interface ErrorEpisode {
   /** Committed rules whose query was true 120 s after the first error (set by run). */
   repo_rules_true_at_120s?: string[];
 }
+export interface QueryShape {
+  is_paused: boolean;
+  condition: string;
+  queries: Array<{
+    ref_id: string;
+    relative_from_s: number | null;
+    relative_to_s: number | null;
+    instant: boolean | null;
+    reducer: string | null;
+    evaluator: { type: string; threshold: number | null } | null;
+  }>;
+}
+/** A Grafana provisioning alert rule (stored or as built by buildAlertRulePayload). */
+export type AlertRuleLike = Record<string, unknown> & {
+  data?: Array<Record<string, unknown> & { refId: string }>;
+};
+export function queryShape(rule: AlertRuleLike): QueryShape;
+export function storedRuleDifferences(stored: AlertRuleLike, expected: AlertRuleLike): string[];
 export interface RepoRuleCheck {
   uid: string;
   transitions_by_state: Record<string, number>;

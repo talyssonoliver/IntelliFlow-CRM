@@ -27,11 +27,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   createReadOnlyClient,
+  buildAlertRulePayload,
   getRuleGroup,
   grafanaHealth,
   listAlertRules,
   lokiQueryRange,
   promInstantQuery,
+  promRangeQuery,
   ruleStatus,
   tempoSearch,
   tempoTrace,
@@ -58,6 +60,10 @@ const KPI_TARGET_S = 120;
 const CONDITION_LOOKBACK_MAX_S = 3 * DAY_S;
 const CONDITION_STEP_S = 60;
 const CONDITION_PROBE_S = 120;
+const TIMELINE_S = 600;
+const TIMELINE_STEP_S = 15;
+// The source label apply-grafana-alert-rules.mjs gives the repo's rules.
+const REPO_RULE_SOURCE = 'ifc-032';
 const COMPARATORS = {
   gt: { promql: '>', holds: (value, threshold) => value > threshold },
   lt: { promql: '<', holds: (value, threshold) => value < threshold },
@@ -518,8 +524,75 @@ export function groupEpisodes(incidents) {
   });
 }
 
-async function describeRules(get, ruleUids, repoTitles) {
-  const all = (await listAlertRules(get)) ?? [];
+const REF_ID = /^[A-Za-z0-9]{1,8}$/;
+const REDUCERS = new Set(['last', 'mean', 'max', 'min', 'sum', 'count']);
+const EVALUATORS = new Set(['gt', 'lt', 'within_range', 'outside_range']);
+const numOrNull = (v) => (Number.isFinite(v) ? v : null);
+
+/**
+ * The parts of a Grafana alert rule that decide when it can fire, as numbers
+ * and enums only: pause flag, condition refId, and per query its time range,
+ * instant flag, reducer and threshold. Same shape for a stored rule and for
+ * the payload the repo would send, so the two can be compared.
+ */
+export function queryShape(rule) {
+  const ref = (id) => (REF_ID.test(String(id)) ? String(id) : 'other');
+  return {
+    is_paused: Boolean(rule.isPaused),
+    condition: ref(rule.condition),
+    queries: (rule.data ?? []).map((d) => {
+      const model = d.model ?? {};
+      const evaluator = model.conditions?.[0]?.evaluator;
+      return {
+        ref_id: ref(d.refId),
+        relative_from_s: numOrNull(d.relativeTimeRange?.from),
+        relative_to_s: numOrNull(d.relativeTimeRange?.to),
+        instant: typeof model.instant === 'boolean' ? model.instant : null,
+        reducer: model.reducer === undefined ? null : enumOr(REDUCERS, model.reducer),
+        evaluator: evaluator
+          ? {
+              type: enumOr(EVALUATORS, evaluator.type),
+              threshold: numOrNull(evaluator.params?.[0]),
+            }
+          : null,
+      };
+    }),
+  };
+}
+
+/**
+ * Field names where a stored rule differs from the payload the repo builds.
+ * Compares the query shape plus, per refId, the expression text and data
+ * source (as equal/not equal, never the values themselves).
+ */
+const RULE_FIELDS = ['isPaused', 'condition', 'for', 'noDataState', 'execErrState'];
+const SHAPE_FIELDS = ['relative_from_s', 'relative_to_s', 'instant', 'reducer', 'evaluator'];
+const same = (a, b) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+function queryDifferences(want, got, wantData, gotData) {
+  const fields = SHAPE_FIELDS.filter((field) => !same(want[field], got[field]));
+  if (!same(wantData.model?.expr, gotData.model?.expr)) fields.push('expr');
+  if (!same(wantData.datasourceUid, gotData.datasourceUid)) fields.push('datasourceUid');
+  return fields.map((field) => `${want.ref_id}.${field}`);
+}
+
+export function storedRuleDifferences(stored, expected) {
+  const differences = RULE_FIELDS.filter((key) => !same(stored[key], expected[key]));
+  const storedData = new Map((stored.data ?? []).map((d) => [String(d.refId), d]));
+  const have = new Map(queryShape(stored).queries.map((q) => [q.ref_id, q]));
+  for (const want of queryShape(expected).queries) {
+    const got = have.get(want.ref_id);
+    if (!got) {
+      differences.push(`${want.ref_id}.missing`);
+      continue;
+    }
+    const wantData = expected.data.find((d) => d.refId === want.ref_id);
+    differences.push(...queryDifferences(want, got, wantData, storedData.get(want.ref_id)));
+  }
+  return differences;
+}
+
+async function describeRules(get, all, ruleUids, repoTitles) {
   const rules = [];
   for (const uid of ruleUids) {
     const rule = all.find((r) => r.uid === uid);
@@ -531,6 +604,7 @@ async function describeRules(get, ruleUids, repoTitles) {
     ...(repoTitles.has(uid) ? { title: repoTitles.get(uid) } : {}),
     for: rule ? check('duration', rule.for) : null,
     interval_s: intervalS === undefined ? null : check('num', intervalS),
+    query_shape: rule ? queryShape(rule) : null,
   }));
 }
 
@@ -542,70 +616,131 @@ const enumOr = (allowed, value) =>
   allowed.has(String(value).toLowerCase()) ? String(value).toLowerCase() : 'other';
 const seriesService = (series) => assertService(series.metric?.service ?? 'unknown');
 
+const conditionExpr = (rule) =>
+  `(${rule.expr}) ${COMPARATORS[rule.operator].promql} ${rule.threshold}`;
+const sameService = (series, service) =>
+  series.metric?.service === undefined || series.metric.service === service;
+
+function transitionsByState(transitions, uid) {
+  const byState = {};
+  for (const t of transitions) {
+    if (t.ruleUID !== uid) continue;
+    const word = stateWord(t.current);
+    byState[word] = (byState[word] ?? 0) + 1;
+  }
+  return byState;
+}
+
+function liveStatus(status) {
+  if (!status) return null;
+  return {
+    health: enumOr(LIVE_HEALTH, status.health),
+    state: enumOr(LIVE_STATE, status.state),
+    has_last_error: Boolean(status.lastError),
+  };
+}
+
+/** The rule as Grafana stores it, compared with the payload the repo builds. */
+function storedCheck(all, repo, rule) {
+  const stored = all.find((r) => r.uid === rule.uid);
+  if (!stored) return { found: false, differences: [], query_shape: null };
+  const expected = buildAlertRulePayload(rule.entry, repo.config, REPO_RULE_SOURCE);
+  return {
+    found: true,
+    differences: storedRuleDifferences(stored, expected),
+    query_shape: queryShape(stored),
+  };
+}
+
+async function conditionHeld(get, window, rule) {
+  const lookback = Math.min(window.end - window.start, CONDITION_LOOKBACK_MAX_S);
+  const held = await promInstantQuery(
+    get,
+    DS.prom,
+    `count_over_time((${conditionExpr(rule)})[${lookback}s:${CONDITION_STEP_S}s])`,
+    window.end
+  );
+  return {
+    lookback_s: lookback,
+    steps_true_by_service: (held?.data?.result ?? []).map((series) => ({
+      service: seriesService(series),
+      steps: check('num', Number(series.value?.[1] ?? 0)),
+    })),
+  };
+}
+
+/**
+ * When, after an episode's first error, the rule's condition held in
+ * Prometheus: one range query at 15 s steps over the next 10 minutes. A
+ * comparison drops the samples where it is false, so every returned sample
+ * is a step where the condition held.
+ */
+async function conditionTimeline(get, episode, rule) {
+  const t0 = Math.ceil(Date.parse(episode.t_first_error) / 1000);
+  const res = await promRangeQuery(
+    get,
+    DS.prom,
+    conditionExpr(rule),
+    t0,
+    t0 + TIMELINE_S,
+    TIMELINE_STEP_S
+  );
+  const offsets = (res?.data?.result ?? [])
+    .filter((series) => sameService(series, episode.service))
+    .flatMap((series) => (series.values ?? []).map(([t]) => Number(t) - t0))
+    .sort((a, b) => a - b);
+  return {
+    uid: rule.uid,
+    first_true_s: offsets.length ? check('num', offsets[0]) : null,
+    last_true_s: offsets.length ? check('num', offsets.at(-1)) : null,
+    n_true_steps: new Set(offsets).size,
+  };
+}
+
+async function trueAtProbe(get, episode, rule) {
+  const at = Math.floor(Date.parse(episode.t_first_error) / 1000 + CONDITION_PROBE_S);
+  const res = await promInstantQuery(get, DS.prom, rule.expr, at);
+  return (res?.data?.result ?? []).some(
+    (series) =>
+      sameService(series, episode.service) &&
+      COMPARATORS[rule.operator].holds(Number(series.value?.[1]), rule.threshold)
+  );
+}
+
 /**
  * Check each committed rule that has a query, so a rule that never alerts can
  * be told apart from one that cannot: its state-history transitions by state,
- * its live health from the ruler, and how many 60 s steps its condition held.
- * Each episode also records which committed rules were true 120 s after its
- * first error. Only enums, counts and uids are kept; Grafana's free-text
- * lastError is reduced to a boolean.
+ * its live health from the ruler, how it is stored against the payload the
+ * repo builds, and how many 60 s steps its condition held. Each episode also
+ * records, per committed rule, whether it was true 120 s after the first
+ * error and when in the next 10 minutes its condition held. Only enums,
+ * numbers and uids are kept; Grafana's free-text lastError becomes a boolean.
  */
-async function checkRepoRules(get, window, repo, transitions, episodes) {
+async function checkRepoRules(get, window, repo, all, transitions, episodes) {
   if (repo.rules.length === 0) return [];
   const status = await ruleStatus(get);
   const live = new Map(
     (status?.data?.groups ?? []).flatMap((g) => (g.rules ?? []).map((r) => [r.uid, r]))
   );
-  const lookback = Math.min(window.end - window.start, CONDITION_LOOKBACK_MAX_S);
   const checks = [];
   for (const rule of repo.rules) {
-    check('uid', rule.uid);
-    const byState = {};
-    for (const t of transitions) {
-      if (t.ruleUID !== rule.uid) continue;
-      const word = stateWord(t.current);
-      byState[word] = (byState[word] ?? 0) + 1;
-    }
-    const status = live.get(rule.uid);
-    const held = await promInstantQuery(
-      get,
-      DS.prom,
-      `count_over_time(((${rule.expr}) ${COMPARATORS[rule.operator].promql} ${rule.threshold})` +
-        `[${lookback}s:${CONDITION_STEP_S}s])`,
-      window.end
-    );
     checks.push({
-      uid: rule.uid,
-      transitions_by_state: byState,
-      live: status
-        ? {
-            health: enumOr(LIVE_HEALTH, status.health),
-            state: enumOr(LIVE_STATE, status.state),
-            has_last_error: Boolean(status.lastError),
-          }
-        : null,
-      condition: {
-        lookback_s: lookback,
-        steps_true_by_service: (held?.data?.result ?? []).map((series) => ({
-          service: seriesService(series),
-          steps: check('num', Number(series.value?.[1] ?? 0)),
-        })),
-      },
+      uid: check('uid', rule.uid),
+      transitions_by_state: transitionsByState(transitions, rule.uid),
+      live: liveStatus(live.get(rule.uid)),
+      stored: storedCheck(all, repo, rule),
+      condition: await conditionHeld(get, window, rule),
     });
   }
   for (const episode of episodes) {
-    const at = Date.parse(episode.t_first_error) / 1000 + CONDITION_PROBE_S;
     const trueRules = [];
+    const timeline = [];
     for (const rule of repo.rules) {
-      const res = await promInstantQuery(get, DS.prom, rule.expr, Math.floor(at));
-      const hit = (res?.data?.result ?? []).some(
-        (series) =>
-          (series.metric?.service === undefined || series.metric.service === episode.service) &&
-          COMPARATORS[rule.operator].holds(Number(series.value?.[1]), rule.threshold)
-      );
-      if (hit) trueRules.push(rule.uid);
+      if (await trueAtProbe(get, episode, rule)) trueRules.push(rule.uid);
+      timeline.push(await conditionTimeline(get, episode, rule));
     }
     episode.repo_rules_true_at_120s = trueRules;
+    episode.repo_rule_timeline = timeline;
   }
   return checks;
 }
@@ -725,13 +860,14 @@ async function collectMttd(get, window, repo) {
   const n = anchoredValues.length;
   const mean = n ? round3(anchoredValues.reduce((a, b) => a + b, 0) / n) : null;
   const ruleUids = [...new Set(incidents.map((i) => i.rule_uid))];
-  const rules = await describeRules(get, ruleUids, repo.titles);
+  const all = (await listAlertRules(get)) ?? [];
+  const rules = await describeRules(get, all, ruleUids, repo.titles);
 
   // The KPI is judged per error episode (first alert from any rule), counting
   // only episodes whose errors began inside the window.
   const allEpisodes = groupEpisodes(incidents);
   const episodes = allEpisodes.filter((e) => Date.parse(e.t_first_error) / 1000 >= window.start);
-  const repoRuleChecks = await checkRepoRules(get, window, repo, transitions, episodes);
+  const repoRuleChecks = await checkRepoRules(get, window, repo, all, transitions, episodes);
   const episodeValues = episodes.map((e) => e.mttd_s).sort((a, b) => a - b);
   const m = episodeValues.length;
   const episodeMean = m ? round3(episodeValues.reduce((a, b) => a + b, 0) / m) : null;
@@ -805,9 +941,9 @@ async function loadRepoRules(readFile) {
       if (!Object.hasOwn(COMPARATORS, r.operator) || !Number.isFinite(r.threshold)) {
         throw new Error(`repo rule ${r.uid}: unreadable operator or threshold`);
       }
-      return { uid: r.uid, expr: r.expr, operator: r.operator, threshold: r.threshold };
+      return { uid: r.uid, expr: r.expr, operator: r.operator, threshold: r.threshold, entry: r };
     });
-  return { titles, rules, deliveryUid: config.deliveryTest?.uid };
+  return { titles, rules, config, deliveryUid: config.deliveryTest?.uid };
 }
 
 async function writeAtomically(outputs, { writeFile, rename, unlink }) {

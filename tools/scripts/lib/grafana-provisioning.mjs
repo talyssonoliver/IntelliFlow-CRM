@@ -255,6 +255,13 @@ export async function tempoTrace(get, uid, traceId) {
 export const promInstantQuery = (get, uid, query, time) =>
   get('prometheus query', `${datasourceProxy(uid)}/api/v1/query?${queryString({ query, time })}`);
 
+/** Prometheus range query via the datasource proxy (start/end in epoch seconds, step in s). */
+export const promRangeQuery = (get, uid, query, start, end, step) =>
+  get(
+    'prometheus query_range',
+    `${datasourceProxy(uid)}/api/v1/query_range?${queryString({ query, start, end, step })}`
+  );
+
 /** Live evaluation status (health, state, last error) of every Grafana-managed rule. */
 export const ruleStatus = (get) => get('rule status', '/api/prometheus/grafana/api/v1/rules');
 

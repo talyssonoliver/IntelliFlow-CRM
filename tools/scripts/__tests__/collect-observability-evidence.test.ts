@@ -1,11 +1,13 @@
 import { createHash } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
+import { buildAlertRulePayload } from '../lib/grafana-provisioning.mjs';
 import {
   groupEpisodes,
   parseArgs,
   run,
   sanitizeSpanName,
   splitIncidents,
+  storedRuleDifferences,
 } from '../observability/collect-observability-evidence.mjs';
 
 // Fakes only: hosts use the reserved .invalid TLD, tokens are repeated chars.
@@ -55,6 +57,12 @@ type FakeConfig = {
     query: string,
     time: number
   ) => Array<{ metric: Record<string, string>; value: [number, string] }> | undefined;
+  /** Prometheus range answers by query (start/end epoch s); default empty. */
+  promRange?: (
+    query: string,
+    start: number,
+    end: number
+  ) => Array<{ metric: Record<string, string>; values: Array<[number, string]> }>;
   /** Grafana ruler status (/api/prometheus/grafana/api/v1/rules) rules. */
   ruleStatus?: Array<{ uid: string; health: string; state: string; lastError?: string }>;
   /** Repo alert-rules.json contents; defaults to REPO_RULES. */
@@ -201,6 +209,14 @@ function fakeGrafana(cfg: FakeConfig) {
 function promBody(cfg: FakeConfig, u: URL) {
   if (u.pathname === '/api/prometheus/grafana/api/v1/rules') {
     return { data: { groups: [{ name: 'g', rules: cfg.ruleStatus ?? [] }] } };
+  }
+  if (u.pathname.endsWith('/api/v1/query_range')) {
+    const p = (k: string) => Number(u.searchParams.get(k));
+    return {
+      data: {
+        result: cfg.promRange?.(u.searchParams.get('query') ?? '', p('start'), p('end')) ?? [],
+      },
+    };
   }
   if (!u.pathname.endsWith('/api/v1/query')) return undefined;
   const answer = cfg.promQuery?.(
@@ -871,6 +887,7 @@ describe('collect-observability-evidence: MTTD', () => {
         uid: 'ifc074-error-spans-direct',
         transitions_by_state: { Error: 1, Normal: 1 },
         live: { health: 'error', state: 'inactive', has_last_error: true },
+        stored: { found: false, differences: [], query_shape: null },
         condition: {
           lookback_s: 259200,
           steps_true_by_service: [{ service: 'ai-worker', steps: 3 }],
@@ -907,6 +924,66 @@ describe('collect-observability-evidence: MTTD', () => {
     expect(queries).toContain('count_over_time(((rate_ai) < 0.001)[259200s:60s])');
     expect(queries).toContain('count_over_time(((ratio_ai) > 0.05)[259200s:60s])');
     expect(json.episodes[0].repo_rules_true_at_120s).toEqual([]);
+  });
+
+  it('compares the stored rule with the repo payload and times the condition after each first error', async () => {
+    const entry = {
+      uid: 'ifc074-error-spans-direct',
+      title: 'Error spans (direct)',
+      expr: 'sum by (service) (increase(errors_total[2m]))',
+      operator: 'gt',
+      threshold: 0,
+      for: '0s',
+      noData: 'OK',
+      severity: 'high',
+      summary: 's',
+    };
+    const config = {
+      folder: { uid: 'intelliflow-prod' },
+      group: { name: 'intelliflow-prod', intervalSeconds: 60 },
+      datasourceUid: 'grafanacloud-prom',
+      rules: [entry],
+    };
+    const payload = buildAlertRulePayload(entry, config, 'ifc-032');
+    // Stored as the repo sends it, except Grafana evaluates query A 60 s back.
+    const stored = structuredClone(payload);
+    stored.data[0].relativeTimeRange.to = 60;
+    const cfg = healthy();
+    cfg.repoRules = JSON.stringify(config);
+    cfg.rules = [...(cfg.rules ?? []), stored];
+    const t0 = Math.ceil(NOW_S - 7290);
+    cfg.promRange = (query, start, end) => {
+      if (!query.includes('errors_total')) return [];
+      expect([start, end]).toEqual([t0, t0 + 600]);
+      return [
+        {
+          metric: { service: 'ai-worker' },
+          values: [
+            [t0 + 60, '1'],
+            [t0 + 75, '1'],
+          ],
+        },
+        { metric: { service: 'api' }, values: [[t0 + 15, '1']] },
+      ];
+    };
+    const { code, json } = await baseline(cfg);
+    expect(code).toBe(0);
+    expect(json.repo_rule_checks[0].stored).toMatchObject({
+      found: true,
+      differences: ['A.relative_to_s'],
+      query_shape: { is_paused: false, condition: 'C' },
+    });
+    expect(json.repo_rule_checks[0].stored.query_shape.queries[0]).toEqual({
+      ref_id: 'A',
+      relative_from_s: 900,
+      relative_to_s: 60,
+      instant: true,
+      reducer: null,
+      evaluator: null,
+    });
+    expect(json.episodes[0].repo_rule_timeline).toEqual([
+      { uid: 'ifc074-error-spans-direct', first_true_s: 60, last_true_s: 75, n_true_steps: 2 },
+    ]);
   });
 
   it('refuses a committed rule whose operator or threshold it cannot read', async () => {
@@ -1019,6 +1096,43 @@ describe('collect-observability-evidence: output hygiene', () => {
     for (const l of json.limitations) expect(l).toMatch(/^[A-Za-z0-9 ,.;:()'%/<>=-]+$/);
     const keys = JSON.stringify(json).match(/"([a-z_]+)":/g) ?? [];
     for (const k of keys) expect(k).not.toMatch(/key|token|auth|secret|api/);
+  });
+});
+
+describe('storedRuleDifferences', () => {
+  const entry = {
+    uid: 'r',
+    title: 't',
+    expr: 'up',
+    operator: 'gt',
+    threshold: 0,
+    for: '0s',
+    noData: 'OK',
+    severity: 'high',
+    summary: 's',
+  };
+  const config = {
+    folder: { uid: 'f' },
+    group: { name: 'g', intervalSeconds: 60 },
+    datasourceUid: 'grafanacloud-prom',
+  };
+
+  it('finds no difference between a payload and an identical stored rule', () => {
+    const payload = buildAlertRulePayload(entry, config, 'ifc-032');
+    expect(storedRuleDifferences(structuredClone(payload), payload)).toEqual([]);
+  });
+
+  it('names each field that differs, without copying any value', () => {
+    const payload = buildAlertRulePayload(entry, config, 'ifc-032');
+    const stored = structuredClone(payload);
+    stored.isPaused = true;
+    stored.data[0].model.expr = 'secret-looking expr';
+    stored.data[0].datasourceUid = 'other-ds';
+    stored.data[2].model.conditions[0].evaluator.params = [5];
+    stored.data = stored.data.filter((d: { refId: string }) => d.refId !== 'B');
+    const diff = storedRuleDifferences(stored, payload);
+    expect(diff).toEqual(['isPaused', 'A.expr', 'A.datasourceUid', 'B.missing', 'C.evaluator']);
+    expect(JSON.stringify(diff)).not.toContain('secret');
   });
 });
 
