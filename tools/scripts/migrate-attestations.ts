@@ -23,7 +23,7 @@ import {
   copyFileSync,
   rmSync,
 } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { getRelativeSchemaPath } from './lib/schema-paths';
 import { parseArtifactHash } from './lib/artifact-hash';
 import { OUTPUT_PATHS } from './lib/workflow/config.js';
@@ -239,7 +239,7 @@ function migrateAttestations(): void {
 }
 
 /** The old context ack for a task, if one exists and parses. */
-function readOldContextAck(taskId: string): OldContextAck | undefined {
+export function readOldContextAck(taskId: string): OldContextAck | undefined {
   const contextAckPath = join(OLD_CONTEXT_DIR, taskId, 'context_ack.json');
   if (!existsSync(contextAckPath)) return undefined;
   try {
@@ -340,7 +340,7 @@ function moveContextPacks(): void {
 }
 
 /** Copy one task's context pack files; extracted from moveContextPacks() unchanged. */
-function moveTaskContextPackFiles(
+export function moveTaskContextPackFiles(
   taskId: string,
   sourceDir: string,
   targetDir: string
@@ -381,7 +381,7 @@ function cleanupOldDirectories(): void {
 }
 
 /** Remove one deprecated directory (dry run: only report); extracted unchanged. */
-function removeDeprecatedDir(dir: string, label: string, shownPath: string): void {
+export function removeDeprecatedDir(dir: string, label: string, shownPath: string): void {
   if (!existsSync(dir)) {
     log(`${shownPath} already removed`);
     return;
@@ -435,4 +435,5 @@ function main(): void {
   console.log('='.repeat(60));
 }
 
-main();
+// Run only from the CLI, so tests can import the helpers without migrating anything.
+if (process.argv[1] && resolve(process.argv[1]) === resolve(scriptPath)) main();

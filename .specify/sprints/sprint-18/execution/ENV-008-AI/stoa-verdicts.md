@@ -41,3 +41,13 @@ On 2026-10-25, four STOA subagents ran in parallel (Agent tool: `stoa-foundation
 4. **Low, `apply-grafana-dashboard.mjs`:** panels nested in a row were not checked, and a `peer_service` label could be read as the service matcher. Fixed (recursion plus `(?<!\w)`), with tests.
 5. **Note:** the branch is behind origin/main. The diff shows main-only changes (combined-worker workflow edits, the `ifc074-error-spans-direct` rule) as reverts. They come in when origin/main is merged at ship, after the lane lead clears the merge; `alert-rules.json` is not edited by this task.
 6. **Note:** the GitHub Actions expressions were traced by hand and are correct: `--apply` on push and only on a ticked dispatch, and no `--dry-run` on push.
+
+## After merging origin/main (2026-10-25)
+
+- **Security, re-checked after merging origin/main at `96ab7881d`:** `pnpm audit --prod --audit-level=critical` exits 0. The 4 critical advisories (next, @sentry/nextjs, dompurify) are fixed by #1008. 3 high remain (zod, body-parser, undici), plus 9 moderate and 2 low; #1016 tracks the highs. No dependency is changed by this task (NF-002). Log: `pnpm-audit.txt`. The Security STOA's only blocking item is resolved; the highs stay with #1016.
+- **Inherited from main (#1018):** the merge commit's local sonar guard flagged 4 existing violations in `tools/scripts/generate-missing-attestations.ts` and `tools/scripts/migrate-attestations.ts`. With the lane lead's approval they were fixed narrowly, behaviour unchanged:
+  - one nested ternary folded;
+  - three per-item helpers extracted;
+  - the CLI entry now runs `main()` only when executed directly, so the helpers can be tested;
+  - new test `tools/scripts/__tests__/migrate-attestations.test.ts` (7 tests, temp dirs, a dry-run CLI check).
+- **Diff coverage after the merge:** 84.6% (493/583) against origin/main. `migrate-attestations.ts` alone is 38.5%: its untested `migrateOneAttestation` path needs the repo's deprecated `artifacts/attestations/` folder. `generate-missing-attestations.ts` cannot be imported in a test, because it calls `process.exit(0)` at import time when its input file is missing.
