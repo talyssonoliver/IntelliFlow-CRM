@@ -82,6 +82,10 @@ export function validateConfig(config) {
       problems.push(`${entry.uid}: threshold must be a number`);
     if (!['OK', 'Alerting', 'NoData'].includes(entry.noData))
       problems.push(`${entry.uid}: bad noData`);
+    // Must stay inside the query's 900 s relative range, with room for its window.
+    const offset = entry.queryOffsetSeconds;
+    if (offset !== undefined && !(Number.isInteger(offset) && offset >= 0 && offset <= 600))
+      problems.push(`${entry.uid}: queryOffsetSeconds must be a whole number from 0 to 600`);
     if (seen.has(entry.uid)) problems.push(`${entry.uid}: duplicate uid`);
     seen.add(entry.uid);
   }

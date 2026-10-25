@@ -79,23 +79,68 @@ describe('alert rules config', () => {
     });
   });
 
-  // IFC-074: Asserts' ErrorRatioBreach fires 180-360 s after the first error
-  // (recording rule + 60 s look-back). This rule exists to detect in under
-  // 120 s, so pin what that depends on: raw span metrics, no offset, a short
-  // window, no pending period, the stack's minimum 60 s interval.
-  it('the fast error rule reads span metrics directly with no delay built in', () => {
+  // IFC-074: Asserts' ErrorRatioBreach fires 180-360 s after the first error.
+  // The first version of this rule (2m window, evaluated at "now") never
+  // fired in 24 h of production: span metrics land 60-120 s after the error
+  // and reach the ruler more than 60 s later still, by which time a 2m
+  // increase was already back to 0. A 5m window read 60 s back (like Asserts'
+  // own rules) fires on every replayed episode across 60-120 s of ingest lag.
+  // Pin what that depends on.
+  it('the fast error rule reads span metrics over 5m, 60 s back, with no pending period', () => {
     const entry = CONFIG.rules.find((r: { uid: string }) => r.uid === 'ifc074-error-spans-direct');
     expect(entry.expr).toMatch(/^sum by \(service\) \(increase\(traces_spanmetrics_calls_total\{/);
     expect(entry.expr).toContain('status_code="STATUS_CODE_ERROR"');
-    expect(entry.expr).toContain('[2m]');
+    expect(entry.expr).toContain('[5m]');
     expect(entry.expr).not.toMatch(/asserts:|offset/);
-    expect(entry).toMatchObject({ operator: 'gt', threshold: 0, for: '0s', noData: 'OK' });
+    expect(entry).toMatchObject({
+      operator: 'gt',
+      threshold: 0,
+      for: '0s',
+      noData: 'OK',
+      queryOffsetSeconds: 60,
+    });
     expect(CONFIG.group.intervalSeconds).toBe(60);
 
     const rule = buildRule(entry, CONFIG);
     expect(rule.for).toBe('0s');
-    expect(rule.data[0].relativeTimeRange.to).toBe(0);
+    expect(rule.data[0].relativeTimeRange).toEqual({ from: 900, to: 60 });
     expect(rule.data[0].model.instant).toBe(true);
+  });
+
+  // The combined worker reports as intelliflow-ai-worker. Both rules that
+  // watch ai-worker must see it, and telemetry-silent must stay quiet while
+  // either name still sends spans, so it sums across both (no `by`).
+  it('the ai-worker rules cover the combined worker without a false "silent" at cutover', () => {
+    const byUid = (uid: string) => CONFIG.rules.find((r: { uid: string }) => r.uid === uid);
+    const fast = byUid('ifc074-error-spans-direct');
+    expect(fast.expr).toContain('service=~"ai-worker|intelliflow-ai-worker|api"');
+    expect(fast.selector).toContain('service=~"ai-worker|intelliflow-ai-worker|api"');
+
+    const silent = byUid('ifc032-telemetry-silent');
+    expect(silent.expr).toBe(
+      'sum(rate(traces_spanmetrics_calls_total{service=~"ai-worker|intelliflow-ai-worker"}[15m]))'
+    );
+    expect(silent.selector).toBe(
+      'traces_spanmetrics_calls_total{service=~"ai-worker|intelliflow-ai-worker"}'
+    );
+    expect(silent).toMatchObject({ operator: 'lt', threshold: 0.001, for: '15m' });
+  });
+
+  it('the other rules keep evaluating at "now"', () => {
+    for (const entry of CONFIG.rules.filter(
+      (r: { uid: string }) => r.uid !== 'ifc074-error-spans-direct'
+    )) {
+      expect(buildRule(entry, CONFIG).data[0].relativeTimeRange).toEqual({ from: 900, to: 0 });
+    }
+  });
+
+  it('rejects a query offset that is not a whole number of seconds below the 900 s range', () => {
+    for (const queryOffsetSeconds of [-1, 1.5, 900, '60']) {
+      const bad = { ...CONFIG, rules: [{ ...CONFIG.rules[0], queryOffsetSeconds }] };
+      expect(validateConfig(bad)).toEqual([
+        'ifc032-telemetry-silent: queryOffsetSeconds must be a whole number from 0 to 600',
+      ]);
+    }
   });
 
   it('reports missing fields, bad operators, bad thresholds and duplicates', () => {
