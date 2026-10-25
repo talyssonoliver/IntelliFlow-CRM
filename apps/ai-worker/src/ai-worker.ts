@@ -1334,12 +1334,33 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     };
   }
 
+  /**
+   * OpenRouter is configured through env vars read by llm-factory.ts
+   * (OPENROUTER_API_KEY, OPENROUTER_BASE_URL defaulting to openrouter.ai), not
+   * through aiConfig. Configuration check only, no network call. OpenRouter
+   * always authenticates with an API key, so a base URL alone is not enough.
+   */
+  private getOpenRouterProviderHealth(lastCheck: string): ComponentHealth {
+    const baseUrl = process.env['OPENROUTER_BASE_URL'];
+    const hasApiKey = Boolean(process.env['OPENROUTER_API_KEY']);
+
+    return {
+      status: hasApiKey ? 'ok' : 'error',
+      latency: 0,
+      lastCheck,
+      message: hasApiKey
+        ? `provider=openrouter (${baseUrl || 'https://openrouter.ai/api/v1'})`
+        : 'OPENROUTER_API_KEY is missing',
+    };
+  }
+
   private getConfiguredProviderHealth(
     lastCheck: string
   ): Promise<ComponentHealth> | ComponentHealth {
     if (aiConfig.provider === 'mock') return this.getMockProviderHealth(lastCheck);
     if (aiConfig.provider === 'litellm') return this.getOpenAIProviderHealth(lastCheck); // LiteLLM uses same OpenAI-compat check
     if (aiConfig.provider === 'openai') return this.getOpenAIProviderHealth(lastCheck);
+    if (aiConfig.provider === 'openrouter') return this.getOpenRouterProviderHealth(lastCheck);
     if (aiConfig.provider === 'ollama') return this.checkOllamaHealth(lastCheck);
     return {
       status: 'error',
