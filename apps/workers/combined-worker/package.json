@@ -1,0 +1,33 @@
+{
+  "name": "@intelliflow/combined-worker",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Runs ai-worker, events-worker and ingestion-worker in one Node process (single Railway service)",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
+  "scripts": {
+    "build": "tsup src/main.ts --format cjs,esm --dts",
+    "dev": "dotenv -e ../../../.env.local -e ../../../.env -- tsx watch src/main.ts",
+    "start": "node dist/main.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "@intelliflow/ai-worker": "workspace:*",
+    "@intelliflow/events-worker": "workspace:*",
+    "@intelliflow/ingestion-worker": "workspace:*",
+    "pino": "^10.3.1"
+  },
+  "devDependencies": {
+    "@intelliflow/typescript-config": "workspace:*",
+    "@types/node": "^25.9.2",
+    "@vitest/coverage-v8": "^4.1.11",
+    "tsup": "^8.0.1",
+    "tsx": "^4.22.4",
+    "typescript": "^5.3.3",
+    "vitest": "^4.1.11"
+  }
+}

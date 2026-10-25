@@ -117,6 +117,7 @@ export default defineConfig({
       'apps/workers/shared/vitest.config.ts',
       'apps/workers/events-worker/vitest.config.ts',
       'apps/workers/ingestion-worker/vitest.config.ts',
+      'apps/workers/combined-worker/vitest.config.ts',
       'packages/ui/vitest.config.ts',
       'packages/observability/vitest.config.ts',
       'tests/architecture/vitest.config.ts',
