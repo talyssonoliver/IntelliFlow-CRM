@@ -19,6 +19,7 @@ tracked separately.
 | ------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------------- |
 | `events-worker/`    | `@intelliflow/events-worker`    | Outbox dispatch + subscription bridge + scheduled maintenance jobs                                       |
 | `ingestion-worker/` | `@intelliflow/ingestion-worker` | Document/text ingestion jobs (`jobs/extractText.job.ts`)                                                 |
+| `combined-worker/`  | `@intelliflow/combined-worker`  | Runs ai-worker + events-worker + ingestion-worker in ONE process: one health endpoint, one shutdown path |
 | `shared/`           | (shared lib)                    | Cross-worker runtime: `base-worker.ts`, `graceful-shutdown.ts`, `health-server.ts`, `queue-connector.ts` |
 
 ## Entry Points
@@ -32,6 +33,19 @@ tracked separately.
 - New workers extend `shared/src/base-worker.ts` and reuse `graceful-shutdown`,
   `health-server`, and `queue-connector` rather than re-implementing lifecycle.
 - Queue transport is BullMQ (see `packages/platform` queues primitives).
+
+## Combined worker
+
+`combined-worker/` imports the existing worker instances (`AIWorker`,
+`eventsWorker`, `ingestionWorker`) and starts them in one process so production
+can run a single Railway service. Each worker still runs alone via its own
+`main`. Rules it enforces: per-worker health servers move to `HEALTH_PORT=0` and
+only the combined server (`COMBINED_HEALTH_PORT` > `HEALTH_PORT` > `PORT`,
+default 3100) listens on the real port; the workers' own SIGINT/SIGTERM handlers
+are removed after start and replaced by one that stops all three, then exits. A
+worker that fails to start aborts the process (exit 1) unless
+`COMBINED_ALLOW_PARTIAL=true`. `COMBINED_WORKERS` selects a subset. Image:
+`combined-worker/Dockerfile`, published as `intelliflow-crm-combined-worker`.
 
 ## Pitfalls
 

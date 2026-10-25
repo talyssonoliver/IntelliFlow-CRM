@@ -127,6 +127,9 @@ export {
 
 // Export worker and jobs (IFC-168)
 export { AIWorker, createAIWorker } from './ai-worker';
+
+// Lets a host process (apps/workers/combined-worker) flush OpenTelemetry on shutdown.
+export { getSDKInstance, shutdownOpenTelemetry } from './tracing/otel.js';
 export {
   AI_WORKER_QUEUES,
   SCORING_QUEUE,
