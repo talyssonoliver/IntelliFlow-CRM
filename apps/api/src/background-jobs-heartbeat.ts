@@ -63,6 +63,9 @@ async function defaultCreateRedis(env: NodeJS.ProcessEnv): Promise<HeartbeatRedi
     enableOfflineQueue: true,
     maxRetriesPerRequest: 1,
     connectTimeout: 2000,
+    // connectTimeout stops applying once TCP is up; bound each command too, so a
+    // Redis that accepts the connection but never answers cannot hang a write.
+    commandTimeout: 2000,
     // Never reconnect on its own: with Redis down, ioredis would otherwise dial
     // forever after a single health request and keep an idle api awake. The
     // store builds a fresh client on the next read or record instead.

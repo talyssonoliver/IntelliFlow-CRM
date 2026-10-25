@@ -51,6 +51,7 @@ import {
   apiBackgroundJobsEnabled,
   backgroundJobsFlagEnabled,
   checkBackgroundJobsHealth,
+  HEARTBEAT_WRITE_TIMEOUT_MS,
   startBackgroundJobs,
   stopBackgroundJobs,
 } from '../background-jobs';
@@ -217,6 +218,26 @@ describe('heartbeat', () => {
     });
     expect(log.warn).toHaveBeenCalledWith('[background-jobs] heartbeat write failed: redis down');
     expect(log.warn).toHaveBeenCalledWith('[background-jobs] heartbeat write failed: plain');
+  });
+
+  it('a heartbeat write that never settles cannot hold the tick past the cap', async () => {
+    vi.useFakeTimers();
+    try {
+      const heartbeat = store();
+      heartbeat.record.mockImplementation(() => new Promise<undefined>(() => undefined));
+      const log = { warn: vi.fn(), info: vi.fn() };
+      startBackgroundJobs({ env: {}, ready: async () => undefined, heartbeat, log });
+
+      const tick = m.startApprovalSweep.mock.calls[0]![0].run();
+      await vi.advanceTimersByTimeAsync(HEARTBEAT_WRITE_TIMEOUT_MS);
+
+      await expect(tick).resolves.toEqual({ locked: true });
+      expect(log.warn).toHaveBeenCalledWith(
+        `[background-jobs] heartbeat write failed: timed out after ${HEARTBEAT_WRITE_TIMEOUT_MS}ms`
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('runs fine with no heartbeat store (no Redis configured)', async () => {

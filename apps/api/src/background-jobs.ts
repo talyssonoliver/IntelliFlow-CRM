@@ -41,6 +41,9 @@ export const API_BACKGROUND_JOBS_ENV = 'API_BACKGROUND_JOBS';
 
 const OFF_VALUES = new Set(['off', 'false', '0', 'no', 'disabled']);
 
+/** Longest a tick waits for its heartbeat write before giving up on it. */
+export const HEARTBEAT_WRITE_TIMEOUT_MS = 3000;
+
 /**
  * Whether a flag value means "on". Unset or empty is ON (default behaviour);
  * only an explicit off-ish value disables.
@@ -86,14 +89,30 @@ export function startBackgroundJobs({
   log = console,
   heartbeat = getHeartbeatStore(env),
 }: StartBackgroundJobsOptions = {}): StartedBackgroundJobs {
-  // Best effort: a heartbeat failure must never fail a tick.
+  // Best effort: a heartbeat failure must never fail a tick, and a heartbeat
+  // write that stalls must never hold the scheduler (it would block every later
+  // sweep), so the wait is capped regardless of the Redis client's own timeouts.
   const beat = async (job: HeartbeatJob): Promise<void> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
     try {
-      await heartbeat?.record(job, Date.now());
+      const write = heartbeat?.record(job, Date.now());
+      if (!write) return;
+      await Promise.race([
+        write,
+        new Promise<never>((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error(`timed out after ${HEARTBEAT_WRITE_TIMEOUT_MS}ms`)),
+            HEARTBEAT_WRITE_TIMEOUT_MS
+          );
+          timer.unref?.();
+        }),
+      ]);
     } catch (error) {
       log.warn(
         `[background-jobs] heartbeat write failed: ${error instanceof Error ? error.message : String(error)}`
       );
+    } finally {
+      if (timer) clearTimeout(timer);
     }
   };
 
