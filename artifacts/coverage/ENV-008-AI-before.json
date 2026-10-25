@@ -1,0 +1,64 @@
+{
+  "task_id": "ENV-008-AI",
+  "phase": "before",
+  "captured_at": "2026-10-25T15:00:29.945Z",
+  "scope": "tools/scripts/lib/grafana-provisioning.mjs + tools/scripts/observability/*.mjs (the .mjs files this task touches)",
+  "tests": {
+    "files": 6,
+    "passed": 61,
+    "failed": 0
+  },
+  "note": "Existing suites before any change. vitest exited 1 only on the repo-wide global coverage threshold applied to this narrow include; all 61 tests passed.",
+  "total": {
+    "lines": {
+      "total": 168,
+      "covered": 149,
+      "skipped": 0,
+      "pct": 88.69
+    },
+    "statements": {
+      "total": 187,
+      "covered": 160,
+      "skipped": 0,
+      "pct": 85.56
+    },
+    "functions": {
+      "total": 17,
+      "covered": 15,
+      "skipped": 0,
+      "pct": 88.23
+    },
+    "branches": {
+      "total": 192,
+      "covered": 148,
+      "skipped": 0,
+      "pct": 77.08
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "files": {
+    "tools/scripts/lib/grafana-provisioning.mjs": {
+      "lines": 92.3,
+      "branches": 100,
+      "functions": 100,
+      "statements": 92.85
+    },
+    "tools/scripts/observability/apply-grafana-alert-rules.mjs": {
+      "lines": 91.17,
+      "branches": 78.78,
+      "functions": 83.33,
+      "statements": 88
+    },
+    "tools/scripts/observability/apply-synthetic-monitoring.mjs": {
+      "lines": 86.2,
+      "branches": 74.35,
+      "functions": 85.71,
+      "statements": 82.65
+    }
+  }
+}
