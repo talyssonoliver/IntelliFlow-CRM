@@ -283,12 +283,44 @@ export async function startCombinedWorker(
     restoreProcessHandlers = null;
   };
 
-  const runShutdownHook = async () => {
-    try {
-      await options.onShutdown?.();
-    } catch (error) {
-      logger.error({ error: errorMessage(error) }, 'Shutdown hook failed');
-    }
+  let hookPromise: Promise<void> | null = null;
+  /** Memoised: the hook runs once however many exit paths reach it. */
+  const runShutdownHook = (): Promise<void> => {
+    hookPromise ??= (async () => {
+      try {
+        await options.onShutdown?.();
+      } catch (error) {
+        logger.error({ error: errorMessage(error) }, 'Shutdown hook failed');
+      }
+    })();
+    return hookPromise;
+  };
+
+  /** The stop of a worker that failed to start, so cleanup can wait for it. */
+  let failedStop: Promise<void> | null = null;
+  let cleanupPromise: Promise<boolean> | null = null;
+  /**
+   * The one place workers are stopped. Startup-abort and signal shutdown both go
+   * through it, so whichever starts first owns the cleanup and the other awaits
+   * the same promise: every worker is stopped once, and nothing exits or flushes
+   * before those stops finish (BaseWorker.stop() returns at once while draining).
+   * It first waits for the in-flight load/start, which cannot be cancelled.
+   */
+  const cleanup = (): Promise<boolean> => {
+    cleanupPromise ??= (async () => {
+      await inflight;
+      await failedStop;
+      if (pending) {
+        // Loaded but did not finish starting; release what it opened.
+        const stranded = pending;
+        pending = null;
+        await stranded.worker.stop().catch(() => undefined);
+      }
+      const clean = await stopAll();
+      if (healthServer) await closeServer(healthServer);
+      return clean;
+    })();
+    return cleanupPromise;
   };
 
   const stopAll = async (): Promise<boolean> => {
@@ -359,14 +391,7 @@ export async function startCombinedWorker(
       // be cancelled, and would otherwise create consumers after we stopped),
       // then stop everything that started, including that worker. The timer
       // above caps the wait.
-      await inflight;
-      if (pending) {
-        // It loaded but did not finish starting; release what it opened.
-        await pending.worker.stop().catch(() => undefined);
-        pending = null;
-      }
-      const clean = await stopAll();
-      if (healthServer) await closeServer(healthServer);
+      const clean = await cleanup();
       await runShutdownHook();
       clearTimeout(forceExit);
 
@@ -378,8 +403,7 @@ export async function startCombinedWorker(
   };
 
   const abortStartup = async (): Promise<void> => {
-    await stopAll();
-    if (healthServer) await closeServer(healthServer);
+    await cleanup();
     await runShutdownHook();
     release();
   };
@@ -436,8 +460,12 @@ export async function startCombinedWorker(
     failures.set(name, message);
     // BaseWorker leaves its Redis connection and health server open when
     // start() throws part-way; release them (best effort).
-    await (pending as { worker: ManagedWorker } | null)?.worker.stop().catch(() => undefined);
+    const stranded = pending as { worker: ManagedWorker } | null;
     pending = null;
+    if (stranded) {
+      failedStop = stranded.worker.stop().catch(() => undefined);
+      await failedStop;
+    }
 
     if (!config.allowPartial) {
       await abortStartup();

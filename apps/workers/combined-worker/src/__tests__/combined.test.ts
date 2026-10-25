@@ -579,6 +579,65 @@ describe('startCombinedWorker', () => {
     });
   });
 
+  describe('signal while a startup-abort cleanup is stopping workers', () => {
+    it('stops each worker once and exits only after the stops resolve (failed worker stop)', async () => {
+      const { workers, loaders } = makeLoaders();
+      workers['events-worker'].start.mockRejectedValue(new Error('no database'));
+      let finishStop!: () => void;
+      workers['events-worker'].stop.mockImplementation(
+        () => new Promise<void>((resolve) => (finishStop = resolve))
+      );
+      const order: string[] = [];
+      const onShutdown = vi.fn(async () => void order.push('hook'));
+      exit.mockImplementation(() => order.push('exit'));
+
+      const starting = startCombinedWorker({ loaders, env, logger: silent, exit, onShutdown });
+      const rejected = expect(starting).rejects.toThrow(/events-worker failed to start/);
+      await vi.waitFor(() => expect(workers['events-worker'].stop).toHaveBeenCalled());
+
+      process.emit('SIGTERM');
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(order).toEqual([]);
+
+      finishStop();
+      await rejected;
+      await vi.waitFor(() => expect(order).toContain('exit'));
+
+      expect(order).toEqual(['hook', 'exit']);
+      expect(workers['events-worker'].stop).toHaveBeenCalledTimes(1);
+      expect(workers['ai-worker'].stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('stops each worker once and exits only after the stops resolve (running workers)', async () => {
+      const { workers, loaders } = makeLoaders();
+      workers['events-worker'].start.mockRejectedValue(new Error('no database'));
+      let finishStop!: () => void;
+      workers['ai-worker'].stop.mockImplementation(
+        () => new Promise<void>((resolve) => (finishStop = resolve))
+      );
+      const order: string[] = [];
+      const onShutdown = vi.fn(async () => void order.push('hook'));
+      exit.mockImplementation(() => order.push('exit'));
+
+      const starting = startCombinedWorker({ loaders, env, logger: silent, exit, onShutdown });
+      const rejected = expect(starting).rejects.toThrow(/events-worker failed to start/);
+      await vi.waitFor(() => expect(workers['ai-worker'].stop).toHaveBeenCalled());
+
+      process.emit('SIGTERM');
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(order).toEqual([]);
+      expect(onShutdown).not.toHaveBeenCalled();
+
+      finishStop();
+      await rejected;
+      await vi.waitFor(() => expect(order).toContain('exit'));
+
+      expect(order).toEqual(['hook', 'exit']);
+      expect(workers['ai-worker'].stop).toHaveBeenCalledTimes(1);
+      expect(workers['events-worker'].stop).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('shutdown hook on startup-abort paths', () => {
     it('runs onShutdown when a worker fails to start (fail-fast)', async () => {
       const { workers, loaders } = makeLoaders();
