@@ -99,6 +99,16 @@ describe('TokenUsageCallbackHandler (IFC-215)', () => {
       expect(handler.getUsage()).toMatchObject({ model: 'scoring-premium', free: false });
     });
 
+    it.each([
+      ['gpt-4-turbo', 'gpt-4-turbo'],
+      ['openai/gpt-4-turbo', 'gpt-4-turbo'],
+    ])('prices a served name that is itself a pricing key (%s)', (servedName, key) => {
+      const handler = new TokenUsageCallbackHandler('scoring-free', 'openrouter');
+      invoke(handler, servedName);
+      handler.handleLLMEnd(served(servedName));
+      expect(handler.getUsage()).toMatchObject({ model: key, free: false });
+    });
+
     it('keeps the alias when the response names no model', () => {
       const handler = new TokenUsageCallbackHandler('scoring-free', 'litellm');
       handler.handleLLMEnd(makeOutput({ promptTokens: 10, completionTokens: 5 }));

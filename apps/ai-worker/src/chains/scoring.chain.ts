@@ -46,6 +46,15 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  * compute a real tokenCost (IFC-215). Usage metadata lives in the callback
  * because withStructuredOutput().invoke() returns only the parsed output.
  */
+/** A served name that is itself a MODEL_PRICING key, with or without a `vendor/` prefix. */
+function directPricingKey(served: string | undefined): string | undefined {
+  const name = served?.trim().toLowerCase();
+  if (!name) return undefined;
+  return [name, name.split('/').slice(1).join('/')].find(
+    (candidate) => candidate !== '' && Object.hasOwn(MODEL_PRICING, candidate)
+  );
+}
+
 export class TokenUsageCallbackHandler extends BaseCallbackHandler {
   name = 'TokenUsageCallbackHandler';
   private captured: TokenUsage | null = null;
@@ -82,7 +91,7 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
   private pricingFor(served: string | undefined): Pick<TokenUsage, 'model' | 'free'> {
     const isFreeModel = [served, this.invokedModel].some((name) => name?.endsWith(':free'));
     if (this.provider === 'ollama' || isFreeModel) return { model: this.modelName, free: true };
-    const key = servedPricingKey(served);
+    const key = directPricingKey(served) ?? servedPricingKey(served);
     if (key && Object.hasOwn(MODEL_PRICING, key)) return { model: key, free: false };
     return { model: this.modelName, free: false };
   }

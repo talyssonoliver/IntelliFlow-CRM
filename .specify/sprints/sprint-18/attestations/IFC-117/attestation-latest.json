@@ -319,7 +319,7 @@
     "apps/ai-worker/src/ai-worker.ts": "0bb8203681fc17e0c163de005430bef6916dca5436e03e6b5bbd878ec3d2d920",
     "apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts": "f9107ce6c551be38a5665dc4127c5141657b6e210aa011dc80c7a00541d7bdb5",
     "apps/ai-worker/src/chains/auto-response.chain.ts": "9180c0670a31680b114703b14d3f8baab571171d04b2b9a3495e2a5549f0bd8a",
-    "apps/ai-worker/src/chains/scoring.chain.ts": "9a7a98ea0ca1c87286370ea8cc3591035f7f59ea2311990e1e80fec49bcf7560",
+    "apps/ai-worker/src/chains/scoring.chain.ts": "ca9345f918beac05e66e5dacbff445fafda15e187becc24d1a9f61928caa4e18",
     "apps/ai-worker/src/jobs/__tests__/feedback-analytics.job.test.ts": "ecc9cd2cb04078c47543503e3a4da08b6972a2da57ae0fed333274d422ea7241",
     "apps/ai-worker/src/jobs/feedback-analytics.job.ts": "02619bc7c72eb406fa2c917add05c8b047d64a5da28e29e2a1dd5e4b5a87c06d",
     "apps/ai-worker/src/jobs/scoring.job.test.ts": "7421e5275b360eb278389a86517629f8720fed2dfb4e8390aafb79045b69d672",
