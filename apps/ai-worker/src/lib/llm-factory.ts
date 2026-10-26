@@ -47,7 +47,8 @@ function openRouterModelForTier(tier: LLMTier): string {
  * unset uses the default, empty disables it. The primary is never repeated. Only `:free`
  * models are sent: OpenRouter bills a fallback at its own price, but metering prices the
  * call as the primary, so a paid fallback would be charged while recorded as $0 (and slip
- * past the spend limits). A paid id is dropped with a warning.
+ * past the spend limits). A paid id is dropped with a warning. The caller sends the list
+ * only for a `:free` primary.
  */
 function openRouterFallbackModels(primary: string): string[] {
   const raw = process.env['OPENROUTER_FALLBACK_MODELS'] ?? DEFAULT_OPENROUTER_FALLBACK_MODELS;
@@ -556,7 +557,12 @@ function createOpenRouterModel(
   params: { temperature: number; maxTokens: number; timeout: number }
 ): BaseChatModel {
   // A tenant pin keeps its own model; its fallbacks are the tenant chain (createLLMForTenant).
-  const fallbackModels = pinned?.providers.openrouter ? [] : openRouterFallbackModels(modelName);
+  // A paid primary gets no env fallbacks: metering prices the call as the primary, so a free
+  // fallback answer would be recorded at the paid rate.
+  const fallbackModels =
+    pinned?.providers.openrouter || !modelName.endsWith(':free')
+      ? []
+      : openRouterFallbackModels(modelName);
   const model = new ChatOpenAI({
     apiKey: process.env['OPENROUTER_API_KEY'] || '',
     modelName,

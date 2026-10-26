@@ -47,7 +47,8 @@ model is `nvidia/nemotron-3-ultra-550b-a55b:free`, with
 - **Free models get withdrawn.** `openai/gpt-oss-120b:free` disappeared in
   October 2026 and every call returned 404. The fallback list accepts only
   `:free` ids (a paid one is dropped with a warning): OpenRouter bills a
-  fallback at its own price, while metering prices the call as the primary.
+  fallback at its own price, while metering prices the call as the primary. For
+  the same reason the list is sent only when the primary is itself `:free`.
 
 ### Cost Optimization
 

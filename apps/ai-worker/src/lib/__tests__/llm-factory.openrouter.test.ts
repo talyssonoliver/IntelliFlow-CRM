@@ -153,6 +153,23 @@ describe('createLLM() on OpenRouter', () => {
     expect(requests[0]).not.toHaveProperty('models');
   });
 
+  it('an explicit :free OPENROUTER_MODEL still gets the env fallback list', async () => {
+    vi.stubEnv('OPENROUTER_MODEL', 'vendor/explicit-model:free');
+    const { createLLM } = await importFactory('openrouter');
+    await createLLM('scoring', 'free').invoke('hi');
+
+    expect(requests[0]?.models).toEqual([LIGHTNING]);
+  });
+
+  it('a paid primary gets no env fallback list, which metering would price at the paid rate', async () => {
+    vi.stubEnv('OPENROUTER_MODEL', 'vendor/paid-model');
+    const { createLLM } = await importFactory('openrouter');
+    await createLLM('scoring', 'free').invoke('hi');
+
+    expect(requests[0]?.model).toBe('vendor/paid-model');
+    expect(requests[0]).not.toHaveProperty('models');
+  });
+
   it('an empty OPENROUTER_FALLBACK_MODELS sends no `models` list', async () => {
     vi.stubEnv('OPENROUTER_FALLBACK_MODELS', '');
     const { createLLM } = await importFactory('openrouter');
