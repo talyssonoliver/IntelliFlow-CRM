@@ -30,6 +30,7 @@ import {
   DRIFT_METRICS,
   DRIFT_SEVERITIES,
   DRIFT_STATUSES,
+  ERROR_CLASSES,
   HALLUCINATION_SKIP_REASONS,
   HALLUCINATION_TYPES,
   OUTCOMES,
@@ -210,12 +211,22 @@ export function seededSeriesBound(): number {
   const models = known + 1; // + other
   const chains = CHAIN_IDS.length;
   return (
-    models * chains + // inference.count (outcome=success)
+    models * chains * (1 + ERROR_CLASSES.length) + // inference.count (success, error per class)
     models * chains * 2 + // hallucination.checks + hallucination.detected
     models * DRIFT_METRICS.length * SEEDED_DRIFT_SEVERITIES.length + // drift.detections
     DRIFT_STATUSES.length + // drift.checks
     known * chains // cost.usd (known models only: unknown models never record cost)
   );
+}
+
+/** Zero points for one (model, chain): success and every error class, hallucination, cost. */
+function seedChain(i: Instruments, model: string, chain: string): void {
+  i.count.add(0, { model, chain, outcome: 'success' });
+  for (const errorClass of ERROR_CLASSES)
+    i.count.add(0, { model, chain, outcome: 'error', error_class: errorClass });
+  i.hallucinationChecks.add(0, { model, chain });
+  i.hallucinationDetected.add(0, { model, chain });
+  if (model !== OTHER) i.cost.add(0, { model, chain });
 }
 
 /**
@@ -228,12 +239,7 @@ export function registerAiMetrics(): void {
     if (seeded) return;
     const models = [...knownModels(), OTHER];
     for (const model of models) {
-      for (const chain of CHAIN_IDS) {
-        i.count.add(0, { model, chain, outcome: 'success' });
-        i.hallucinationChecks.add(0, { model, chain });
-        i.hallucinationDetected.add(0, { model, chain });
-        if (model !== OTHER) i.cost.add(0, { model, chain });
-      }
+      for (const chain of CHAIN_IDS) seedChain(i, model, chain);
       for (const metric of DRIFT_METRICS) {
         for (const severity of SEEDED_DRIFT_SEVERITIES)
           i.driftDetections.add(0, { model, metric, severity });

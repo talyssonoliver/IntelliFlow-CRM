@@ -351,6 +351,15 @@ describe('cardinality', () => {
     const models = Object.keys(MODEL_PRICING).length + 1;
     expect(total(all, 'intelliflow.ai.drift.detections')).toBe(0);
     expect(pointsWhere(all, 'intelliflow.ai.drift.detections')).toHaveLength(models * 2 * 2);
+    // Error series get a zero point too, so increase() counts the first batch of failures.
+    for (const errorClass of ['timeout', 'rate_limited', 'parse', 'other']) {
+      const errors = pointsWhere(all, 'intelliflow.ai.inference.count', {
+        outcome: 'error',
+        error_class: errorClass,
+      });
+      expect(errors).toHaveLength(models * 3);
+      expect(errors.every((p) => p.value === 0)).toBe(true);
+    }
   });
 
   it('registerAiMetrics is idempotent', async () => {
