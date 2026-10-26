@@ -24,6 +24,7 @@ import {
 import {
   CHAIN_IDS,
   HALLUCINATION_TYPES,
+  URGENCIES,
   VALUE_TYPES,
   type DriftTickResult,
 } from '../otel-ai-types';
@@ -360,6 +361,13 @@ describe('cardinality', () => {
       expect(errors).toHaveLength(models * 3);
       expect(errors.every((p) => p.value === 0)).toBe(true);
     }
+    // Value and retraining counters too, so increase() keeps the first batch after a restart.
+    const values = pointsWhere(all, 'intelliflow.ai.value.estimated.usd');
+    expect(values).toHaveLength(CHAIN_IDS.length * VALUE_TYPES.length);
+    expect(values.every((p) => p.value === 0)).toBe(true);
+    const triggers = pointsWhere(all, 'intelliflow.ai.retraining.triggers');
+    expect(triggers.map((p) => p.attributes.urgency).sort()).toEqual([...URGENCIES].sort());
+    expect(triggers.every((p) => p.value === 0)).toBe(true);
   });
 
   it('registerAiMetrics is idempotent', async () => {

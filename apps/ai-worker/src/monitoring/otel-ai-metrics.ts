@@ -215,7 +215,9 @@ export function seededSeriesBound(): number {
     models * chains * 2 + // hallucination.checks + hallucination.detected
     models * DRIFT_METRICS.length * SEEDED_DRIFT_SEVERITIES.length + // drift.detections
     DRIFT_STATUSES.length + // drift.checks
-    known * chains // cost.usd (known models only: unknown models never record cost)
+    known * chains + // cost.usd (known models only: unknown models never record cost)
+    chains * VALUE_TYPES.length + // value.estimated.usd
+    URGENCIES.length // retraining.triggers
   );
 }
 
@@ -246,6 +248,10 @@ export function registerAiMetrics(): void {
       }
     }
     for (const status of DRIFT_STATUSES) i.driftChecks.add(0, { status });
+    for (const chain of CHAIN_IDS) {
+      for (const valueType of VALUE_TYPES) i.value.add(0, { chain, value_type: valueType });
+    }
+    for (const urgency of URGENCIES) i.retrainingTriggers.add(0, { urgency });
     seeded = true;
   });
 }
