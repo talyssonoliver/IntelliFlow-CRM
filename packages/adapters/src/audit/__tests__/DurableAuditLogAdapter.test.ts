@@ -10,6 +10,10 @@
  * - Decision 5: GDPR-compliant retention
  * - Decision 6: Comprehensive test coverage
  * - Decision 7: Cross-tenant isolation
+ *
+ * The adapter writes `audit_log_entries` only (security_events has no columns for
+ * AI events). tests/integration/ai-security-audit.test.ts proves the rows land in
+ * the real schema; these tests pin the mapping and the hash chain.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -17,23 +21,43 @@ import { DurableAuditLogAdapter } from '../DurableAuditLogAdapter';
 import { CrossTenantViolationError } from '../errors';
 import type { AISecurityEventInput, TenantContext } from '@intelliflow/application';
 
-// Mock Prisma client
-const mockPrismaClient = () => ({
-  securityEvent: {
-    create: vi.fn(),
-    findUnique: vi.fn(),
-    update: vi.fn(),
-  },
-  auditLogEntry: {
-    create: vi.fn(),
-  },
-  $transaction: vi.fn((callback: (tx: any) => Promise<any>) =>
-    callback({
-      securityEvent: { create: vi.fn().mockResolvedValue({}) },
-      auditLogEntry: { create: vi.fn().mockResolvedValue({}) },
-    })
-  ),
-});
+/**
+ * Mock Prisma client that records every auditLogEntry write and serves them back
+ * from findFirst, with jsonb's key reordering simulated on metadata.
+ */
+const mockPrismaClient = () => {
+  const writes: any[] = [];
+  const reorderKeys = (value: unknown): unknown =>
+    value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)
+      ? Object.fromEntries(
+          Object.keys(value as Record<string, unknown>)
+            .reverse()
+            .map((k) => [k, reorderKeys((value as Record<string, unknown>)[k])])
+        )
+      : value;
+  const tx = {
+    auditLogEntry: {
+      create: vi.fn(async (args: { data: any }) => {
+        writes.push(args.data);
+        return args.data;
+      }),
+    },
+  };
+  return {
+    writes,
+    tx,
+    auditLogEntry: {
+      create: vi.fn(),
+      findFirst: vi.fn(async ({ where }: { where: { eventId: string } }) => {
+        const row = writes.find((w) => w.eventId === where.eventId);
+        return row
+          ? { ...row, metadata: reorderKeys(JSON.parse(JSON.stringify(row.metadata))) }
+          : null;
+      }),
+    },
+    $transaction: vi.fn((callback: (t: any) => Promise<any>) => callback(tx)),
+  };
+};
 
 describe('DurableAuditLogAdapter', () => {
   let prisma: ReturnType<typeof mockPrismaClient>;
@@ -77,56 +101,132 @@ describe('DurableAuditLogAdapter', () => {
 
   describe('Core functionality', () => {
     it('persists security event to database', async () => {
-      const event = createValidEvent();
-      const context = createValidTenantContext();
-
-      const result = await adapter.logSecurityEvent(event, context);
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
 
       expect(result.status).toBe('PERSISTED');
       expect(prisma.$transaction).toHaveBeenCalled();
+      expect(prisma.writes).toHaveLength(1);
     });
 
     it('returns eventId and integrityHash on success', async () => {
-      const event = createValidEvent();
-      const context = createValidTenantContext();
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
 
-      const result = await adapter.logSecurityEvent(event, context);
-
-      expect(result.eventId).toBeDefined();
       expect(typeof result.eventId).toBe('string');
-      expect(result.integrityHash).toBeDefined();
       expect(typeof result.integrityHash).toBe('string');
+      expect(prisma.writes[0].eventId).toBe(result.eventId);
     });
 
-    it('writes to both SecurityEvent and AuditLogEntry tables', async () => {
+    it('writes only audit_log_entries, with the AI event type and real columns', async () => {
+      await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+
+      const [row] = prisma.writes;
+      expect(row).toMatchObject({
+        tenantId: 'tenant-123',
+        eventType: 'AI_GUARDRAIL_TRIGGERED',
+        resourceType: 'AI_GUARDRAIL',
+        resourceId: 'guardrail-789',
+        actionReason: 'Guardrail triggered during lead scoring',
+        dataClassification: 'INTERNAL',
+      });
+      // No security_events-only fields leak onto the audit row.
+      for (const field of [
+        'severity',
+        'userId',
+        'description',
+        'integrityHash',
+        'signature',
+        'previousHash',
+      ]) {
+        expect(row).not.toHaveProperty(field);
+      }
+      expect(row.metadata.audit).toMatchObject({
+        severity: 'HIGH',
+        userId: 'user-456',
+        description: 'Guardrail triggered during lead scoring',
+      });
+    });
+
+    it('defaults resourceType and resourceId when the event has none', async () => {
+      const event = { ...createValidEvent(), resourceType: undefined, resourceId: undefined };
+      const result = await adapter.logSecurityEvent(event, createValidTenantContext());
+
+      expect(prisma.writes[0]).toMatchObject({
+        resourceType: 'AI_GUARDRAIL',
+        resourceId: result.eventId,
+      });
+    });
+  });
+
+  describe('Actor, action and result mapping', () => {
+    it.each([
+      ['a real user id', 'user-456', { actorType: 'USER', actorId: 'user-456' }],
+      ['the system actor', 'system', { actorType: 'SYSTEM', actorId: null }],
+      ['no user (an ai-worker agent)', undefined, { actorType: 'AI_AGENT', actorId: null }],
+    ])('records %s', async (_label, userId, expected) => {
+      await adapter.logSecurityEvent({ ...createValidEvent(), userId }, createValidTenantContext());
+      expect(prisma.writes[0]).toMatchObject(expected);
+    });
+
+    it.each([
+      [{ action: 'CREATE' }, 'CREATE'],
+      [{ action: 'UPSERT' }, 'UPDATE'],
+      [{ action: 'DELETE' }, 'DELETE'],
+      [{ operation: 'scoreLead' }, 'AI_SCORE'],
+      [{ operation: 'qualifyLead' }, 'AI_PREDICT'],
+      [{ operation: 'generateEmail' }, 'AI_GENERATE'],
+      [{}, 'CONFIGURE'],
+    ])('maps details %j to the %s AuditAction', async (details, action) => {
       const event = createValidEvent();
-      const context = createValidTenantContext();
-
-      let securityEventCreated = false;
-      let auditLogCreated = false;
-
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation(() => {
-              securityEventCreated = true;
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockImplementation(() => {
-              auditLogCreated = true;
-              return Promise.resolve({});
-            }),
-          },
-        })
+      await adapter.logSecurityEvent(
+        { ...event, metadata: { ...event.metadata, details } },
+        createValidTenantContext()
       );
+      expect(prisma.writes[0].action).toBe(action);
+    });
 
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-      await adapter.logSecurityEvent(event, context);
+    it.each([
+      ['AI_CHAIN_FAILURE', 'FAILURE'],
+      ['AI_PROMPT_INJECTION_DETECTED', 'DENIED'],
+      ['AI_PII_EXPOSURE_BLOCKED', 'DENIED'],
+      ['AI_GUARDRAIL_TRIGGERED', 'SUCCESS'],
+    ] as const)('records %s as %s', async (eventType, actionResult) => {
+      await adapter.logSecurityEvent(
+        { ...createValidEvent(), eventType },
+        createValidTenantContext()
+      );
+      expect(prisma.writes[0].actionResult).toBe(actionResult);
+    });
+  });
 
-      expect(securityEventCreated).toBe(true);
-      expect(auditLogCreated).toBe(true);
+  describe('Fallback tenants', () => {
+    it.each(['default', 'system', ''])(
+      "skips the write for the fallback tenant '%s' and warns",
+      async (tenantId) => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const result = await adapter.logSecurityEvent(
+          { ...createValidEvent(), tenantId },
+          { ...createValidTenantContext(), tenantId }
+        );
+
+        expect(result.status).toBe('SKIPPED');
+        expect(prisma.writes).toHaveLength(0);
+        expect(warn).toHaveBeenCalledWith(
+          expect.stringContaining('not persisted'),
+          expect.objectContaining({ tenantId, eventType: 'AI_GUARDRAIL_TRIGGERED' })
+        );
+        warn.mockRestore();
+      }
+    );
+
+    it('does not advance the hash chain for a skipped event', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await adapter.logSecurityEvent(
+        { ...createValidEvent(), tenantId: 'default' },
+        { ...createValidTenantContext(), tenantId: 'default' }
+      );
+      await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+
+      expect(prisma.writes[0].metadata.audit.previousHash).toBe('GENESIS');
     });
   });
 
@@ -138,32 +238,13 @@ describe('DurableAuditLogAdapter', () => {
       await expect(adapter.logSecurityEvent(event, context)).rejects.toThrow(
         CrossTenantViolationError
       );
+      expect(prisma.writes).toHaveLength(0);
     });
 
     it('includes tenantId in all persisted records', async () => {
-      const event = createValidEvent();
-      const context = createValidTenantContext();
+      await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
 
-      let persistedTenantId: string | undefined;
-
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation((args: any) => {
-              persistedTenantId = args.data.tenantId;
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
-      );
-
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-      await adapter.logSecurityEvent(event, context);
-
-      expect(persistedTenantId).toBe('tenant-123');
+      expect(prisma.writes[0].tenantId).toBe('tenant-123');
     });
 
     it('throws CrossTenantViolationError with correct tenant IDs', async () => {
@@ -185,100 +266,55 @@ describe('DurableAuditLogAdapter', () => {
 
   describe('Hash chain integrity (Decision 4)', () => {
     it('links events via previousHash', async () => {
-      const event1 = createValidEvent();
-      const event2 = { ...createValidEvent(), description: 'Second event' };
       const context = createValidTenantContext();
-
-      let firstEventHash: string | undefined;
-      let secondEventPreviousHash: string | undefined;
-
-      // Track hashes across calls
-      let callCount = 0;
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation((args: any) => {
-              if (callCount === 0) {
-                firstEventHash = args.data.integrityHash;
-              } else {
-                secondEventPreviousHash = args.data.previousHash;
-              }
-              callCount++;
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
+      const first = await adapter.logSecurityEvent(createValidEvent(), context);
+      await adapter.logSecurityEvent(
+        { ...createValidEvent(), description: 'Second event' },
+        context
       );
 
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-
-      await adapter.logSecurityEvent(event1, context);
-      await adapter.logSecurityEvent(event2, context);
-
-      expect(secondEventPreviousHash).toBe(firstEventHash);
+      expect(prisma.writes[1].metadata.audit.previousHash).toBe(first.integrityHash);
     });
 
     it('computes HMAC-SHA256 integrity hash', async () => {
-      const event = createValidEvent();
-      const context = createValidTenantContext();
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
 
-      const result = await adapter.logSecurityEvent(event, context);
-
-      // HMAC-SHA256 produces 64 hex characters
-      expect(result.integrityHash).toBeDefined();
-      expect(result.integrityHash!.length).toBe(64);
       expect(/^[a-f0-9]{64}$/.test(result.integrityHash!)).toBe(true);
+      expect(prisma.writes[0].metadata.audit.integrityHash).toBe(result.integrityHash);
+      expect(/^[a-f0-9]{64}$/.test(prisma.writes[0].metadata.audit.signature)).toBe(true);
     });
 
     it('verifyLogIntegrity detects tampered entries', async () => {
-      const eventId = 'event-123';
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      prisma.writes[0].metadata.audit.severity = 'LOW'; // TAMPERED: was originally HIGH
 
-      // Mock finding a tampered entry (hash mismatch)
-      prisma.securityEvent.findUnique = vi.fn().mockResolvedValue({
-        eventId,
-        eventType: 'AI_GUARDRAIL_TRIGGERED',
-        severity: 'LOW', // TAMPERED: was originally HIGH
-        tenantId: 'tenant-123',
-        timestamp: new Date(),
-        previousHash: 'GENESIS',
-        metadata: {},
-        integrityHash: 'original-hash-before-tampering',
-        signature: 'original-signature',
-      });
-
-      const verification = await adapter.verifyLogIntegrity(eventId);
+      const verification = await adapter.verifyLogIntegrity(result.eventId);
 
       expect(verification.valid).toBe(false);
+      expect(verification.reason).toBe('SIGNATURE_INVALID');
     });
 
-    it('verifyLogIntegrity returns valid=true for untampered entries', async () => {
-      // First create an entry
+    it('verifyLogIntegrity reports a hash mismatch when metadata is altered', async () => {
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      prisma.writes[0].metadata.modelId = 'forged';
+
+      const verification = await adapter.verifyLogIntegrity(result.eventId);
+
+      expect(verification).toMatchObject({ valid: false, reason: 'HASH_MISMATCH' });
+    });
+
+    it('verifyLogIntegrity returns valid=true for untampered entries, whatever the key order', async () => {
       const event = createValidEvent();
-      const context = createValidTenantContext();
-
-      let storedEntry: any;
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation((args: any) => {
-              storedEntry = args.data;
-              return Promise.resolve(args.data);
-            }),
+      const result = await adapter.logSecurityEvent(
+        {
+          ...event,
+          metadata: {
+            ...event.metadata,
+            details: { operation: 'scoreLead', nested: { b: 1, a: 2 } },
           },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
+        },
+        createValidTenantContext()
       );
-
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-      const result = await adapter.logSecurityEvent(event, context);
-
-      // Now verify it
-      prisma.securityEvent.findUnique = vi.fn().mockResolvedValue(storedEntry);
 
       const verification = await adapter.verifyLogIntegrity(result.eventId);
 
@@ -287,219 +323,111 @@ describe('DurableAuditLogAdapter', () => {
     });
 
     it('starts hash chain with GENESIS', async () => {
-      const event = createValidEvent();
-      const context = createValidTenantContext();
-
-      let firstPreviousHash: string | undefined;
-
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation((args: any) => {
-              firstPreviousHash = args.data.previousHash;
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
-      );
-
-      // Create a fresh adapter instance
       const freshAdapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-      await freshAdapter.logSecurityEvent(event, context);
+      await freshAdapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
 
-      expect(firstPreviousHash).toBe('GENESIS');
+      expect(prisma.writes[0].metadata.audit.previousHash).toBe('GENESIS');
+    });
+
+    it('does not advance the chain when the write fails', async () => {
+      prisma.tx.auditLogEntry.create.mockRejectedValueOnce(new Error('db down'));
+      await expect(
+        adapter.logSecurityEvent(createValidEvent(), createValidTenantContext())
+      ).rejects.toThrow('db down');
+
+      await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      expect(prisma.writes[0].metadata.audit.previousHash).toBe('GENESIS');
     });
   });
 
   describe('GDPR retention (Decision 5)', () => {
     it('calculates 7-year retention for EU jurisdiction', async () => {
-      const event = createValidEvent();
       const context = { ...createValidTenantContext(), jurisdiction: 'EU' as const };
+      await adapter.logSecurityEvent(createValidEvent(), context);
 
-      let retentionExpiresAt: Date | undefined;
-
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation((args: any) => {
-              retentionExpiresAt = args.data.retentionExpiresAt;
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
-      );
-
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-      await adapter.logSecurityEvent(event, context);
-
-      expect(retentionExpiresAt).toBeDefined();
-      const now = new Date();
-      const sevenYearsFromNow = new Date(now);
-      sevenYearsFromNow.setFullYear(sevenYearsFromNow.getFullYear() + 7);
+      const retentionExpiresAt: Date = prisma.writes[0].retentionExpiresAt;
+      const sevenYearsFromNow = new Date();
+      sevenYearsFromNow.setUTCFullYear(sevenYearsFromNow.getUTCFullYear() + 7);
 
       // Allow 1 day tolerance
-      const diff = Math.abs(retentionExpiresAt!.getTime() - sevenYearsFromNow.getTime());
+      const diff = Math.abs(retentionExpiresAt.getTime() - sevenYearsFromNow.getTime());
       expect(diff).toBeLessThan(24 * 60 * 60 * 1000);
     });
 
     it('calculates retention based on jurisdiction', async () => {
       const jurisdictions = ['EU', 'UK', 'US', 'GLOBAL'] as const;
 
-      for (const jurisdiction of jurisdictions) {
-        const event = createValidEvent();
-        const context = { ...createValidTenantContext(), jurisdiction };
+      for (const [i, jurisdiction] of jurisdictions.entries()) {
+        await adapter.logSecurityEvent(createValidEvent(), {
+          ...createValidTenantContext(),
+          jurisdiction,
+        });
 
-        let retentionExpiresAt: Date | undefined;
-
-        prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-          callback({
-            securityEvent: {
-              create: vi.fn().mockImplementation((args: any) => {
-                retentionExpiresAt = args.data.retentionExpiresAt;
-                return Promise.resolve({});
-              }),
-            },
-            auditLogEntry: {
-              create: vi.fn().mockResolvedValue({}),
-            },
-          })
-        );
-
-        const jurisdictionAdapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-        await jurisdictionAdapter.logSecurityEvent(event, context);
-
-        expect(retentionExpiresAt).toBeDefined();
         // All jurisdictions should use 7-year retention for security events
-        const now = new Date();
-        const expectedYear = now.getFullYear() + 7;
-        expect(retentionExpiresAt!.getFullYear()).toBe(expectedYear);
+        expect(prisma.writes[i].retentionExpiresAt.getUTCFullYear()).toBe(
+          new Date().getUTCFullYear() + 7
+        );
       }
     });
 
     it('encrypts PII fields before persistence', async () => {
       const event = {
         ...createValidEvent(),
-        metadata: {
-          ...createValidEvent().metadata,
-          dataSubjectId: 'sensitive-subject-id-123',
-        },
+        metadata: { ...createValidEvent().metadata, dataSubjectId: 'sensitive-subject-id-123' },
       };
-      const context = createValidTenantContext();
-
-      let persistedMetadata: any;
-
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation((args: any) => {
-              persistedMetadata = args.data.metadata;
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
-      );
-
       adapter = new DurableAuditLogAdapter(prisma as any, signingKey, { encryptPII: true });
-      await adapter.logSecurityEvent(event, context);
+      await adapter.logSecurityEvent(event, createValidTenantContext());
 
-      // If dataSubjectId is present, it should be encrypted (not in plain text)
-      if (persistedMetadata?.dataSubjectId) {
-        expect(persistedMetadata.dataSubjectId).not.toBe('sensitive-subject-id-123');
-      }
+      expect(prisma.writes[0].metadata.dataSubjectId).toBeDefined();
+      expect(prisma.writes[0].metadata.dataSubjectId).not.toBe('sensitive-subject-id-123');
     });
   });
 
   describe('Concurrent safety', () => {
     it('handles concurrent events without data loss', async () => {
       const context = createValidTenantContext();
-      const events = Array(10)
-        .fill(null)
-        .map((_, i) => ({
-          ...createValidEvent(),
-          description: `Event ${i}`,
-        }));
-
-      let persistedCount = 0;
-
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation(() => {
-              persistedCount++;
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
-      );
-
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
+      const events = Array.from({ length: 10 }, (_, i) => ({
+        ...createValidEvent(),
+        description: `Event ${i}`,
+      }));
 
       const results = await Promise.all(events.map((e) => adapter.logSecurityEvent(e, context)));
 
       expect(results.filter((r) => r.status === 'PERSISTED')).toHaveLength(10);
-      expect(persistedCount).toBe(10);
+      expect(prisma.writes).toHaveLength(10);
     });
 
-    it('maintains hash chain under concurrent writes', async () => {
+    it('maintains an unforked hash chain under concurrent writes', async () => {
       const context = createValidTenantContext();
-      const events = Array(5)
-        .fill(null)
-        .map((_, i) => ({
-          ...createValidEvent(),
-          description: `Event ${i}`,
-        }));
+      const events = Array.from({ length: 5 }, (_, i) => ({
+        ...createValidEvent(),
+        description: `Event ${i}`,
+      }));
 
-      const previousHashes: string[] = [];
+      await Promise.all(events.map((e) => adapter.logSecurityEvent(e, context)));
 
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) =>
-        callback({
-          securityEvent: {
-            create: vi.fn().mockImplementation((args: any) => {
-              previousHashes.push(args.data.previousHash);
-              return Promise.resolve({});
-            }),
-          },
-          auditLogEntry: {
-            create: vi.fn().mockResolvedValue({}),
-          },
-        })
-      );
-
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-
-      // Sequential writes to ensure proper chain
-      for (const event of events) {
-        await adapter.logSecurityEvent(event, context);
-      }
-
-      // First should be GENESIS, rest should be previous hashes
-      expect(previousHashes[0]).toBe('GENESIS');
-      // Subsequent entries should have non-GENESIS previous hashes
-      for (let i = 1; i < previousHashes.length; i++) {
-        expect(previousHashes[i]).not.toBe('GENESIS');
+      const previous = prisma.writes.map((w) => w.metadata.audit.previousHash);
+      const hashes = prisma.writes.map((w) => w.metadata.audit.integrityHash);
+      expect(previous[0]).toBe('GENESIS');
+      for (let i = 1; i < previous.length; i++) {
+        expect(previous[i]).toBe(hashes[i - 1]);
       }
     });
   });
 
   describe('Error handling', () => {
-    it('throws error when event not found in verifyLogIntegrity', async () => {
-      prisma.securityEvent.findUnique = vi.fn().mockResolvedValue(null);
-
+    it('returns EVENT_NOT_FOUND when the event is missing in verifyLogIntegrity', async () => {
       const verification = await adapter.verifyLogIntegrity('non-existent-event');
 
       expect(verification.valid).toBe(false);
+      expect(verification.reason).toBe('EVENT_NOT_FOUND');
+    });
+
+    it('returns EVENT_NOT_FOUND for an audit row this adapter did not write', async () => {
+      prisma.auditLogEntry.findFirst.mockResolvedValueOnce({ eventId: 'e', metadata: {} });
+
+      const verification = await adapter.verifyLogIntegrity('e');
+
       expect(verification.reason).toBe('EVENT_NOT_FOUND');
     });
   });
@@ -507,26 +435,40 @@ describe('DurableAuditLogAdapter', () => {
   describe('Batch operations', () => {
     it('logBatchEvents persists all events in single transaction', async () => {
       const events = [createValidEvent(), createValidEvent(), createValidEvent()];
-      const context = createValidTenantContext();
 
-      let transactionCallCount = 0;
-
-      prisma.$transaction = vi.fn((callback: (tx: any) => Promise<any>) => {
-        transactionCallCount++;
-        return callback({
-          securityEvent: { create: vi.fn().mockResolvedValue({}) },
-          auditLogEntry: { create: vi.fn().mockResolvedValue({}) },
-        });
-      });
-
-      adapter = new DurableAuditLogAdapter(prisma as any, signingKey);
-
-      const result = await adapter.logBatchEvents(events, context);
+      const result = await adapter.logBatchEvents(events, createValidTenantContext());
 
       // Batch should use a single transaction
-      expect(transactionCallCount).toBe(1);
+      expect(prisma.$transaction).toHaveBeenCalledTimes(1);
       expect(result.totalEvents).toBe(3);
       expect(result.successCount).toBe(3);
+      expect(prisma.writes.map((w) => w.metadata.audit.previousHash)[1]).toBe(
+        prisma.writes[0].metadata.audit.integrityHash
+      );
+    });
+
+    it('counts a cross-tenant event as a failure', async () => {
+      const result = await adapter.logBatchEvents(
+        [createValidEvent(), { ...createValidEvent(), tenantId: 'tenant-other' }],
+        createValidTenantContext()
+      );
+
+      expect(result).toMatchObject({ totalEvents: 2, successCount: 1, failureCount: 1 });
+      expect(result.results.map((r) => r.status)).toEqual(['PERSISTED', 'FAILED']);
+      expect(prisma.writes).toHaveLength(1);
+    });
+
+    it('skips a batch for a fallback tenant without failing it', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const event = { ...createValidEvent(), tenantId: 'default' };
+      const result = await adapter.logBatchEvents([event, event], {
+        ...createValidTenantContext(),
+        tenantId: 'default',
+      });
+
+      expect(result).toMatchObject({ totalEvents: 2, successCount: 0, failureCount: 0 });
+      expect(result.results.map((r) => r.status)).toEqual(['SKIPPED', 'SKIPPED']);
+      expect(prisma.writes).toHaveLength(0);
     });
   });
 });
