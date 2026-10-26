@@ -2,17 +2,23 @@ import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
 import {
   aiWorkerHealthcheck,
+  combinedWorkerHealthcheck,
   DESIRED,
   diffFields,
+  EXPECTED_API_HOST,
+  probeTarget,
   run,
 } from '../observability/apply-railway-self-healing.mjs';
 
 // ENV-008-AI AC-007 (owner ruling 2: set by CI on merge) plus the lane-lead
 // guard of 2026-10-25 (plan r5/A1): the api health check is only set after the
-// live api answers 200 on /api/health/live.
+// live api answers 200 on /api/health/live. The #1045 review bound that probe
+// to the api's own Railway host and added combined-worker (the 2026-10-25
+// cutover); the stopped ai-worker, events-worker and ingestion-worker services
+// never fail the run.
 
 const GRAPHQL = 'https://backboard.railway.com/graphql/v2';
-const API_URL = 'https://api.example.invalid';
+const API_URL = `https://${EXPECTED_API_HOST}`;
 const PROBE_URL = `${API_URL}/api/health/live`;
 // IDs and the token are built at runtime so nothing secret- or ID-shaped is
 // committed, and so the tests can prove none of them reaches the log.
@@ -21,6 +27,7 @@ const PROJECT_ID = randomUUID();
 const ENV_ID = randomUUID();
 const API_ID = randomUUID();
 const WORKER_ID = randomUUID();
+const COMBINED_ID = randomUUID();
 
 type Fields = {
   restartPolicyType: string | null;
@@ -41,7 +48,7 @@ type ProbeBehaviour =
   | ((url: string, init: Record<string, unknown>) => Promise<{ status: number }>);
 
 type FakeOpts = {
-  instances?: Partial<Record<'api' | 'ai-worker', Partial<Fields>>>;
+  instances?: Partial<Record<'api' | 'ai-worker' | 'combined-worker', Partial<Fields>>>;
   variables?: Record<string, string> | null | 'denied';
   services?: string[];
   environments?: string[];
@@ -73,11 +80,20 @@ async function fakeProbe(
     err.name = 'TimeoutError';
     throw err;
   }
-  throw new Error('fetch failed: getaddrinfo ENOTFOUND api.example.invalid');
+  throw new Error(`fetch failed: getaddrinfo ENOTFOUND ${EXPECTED_API_HOST}`);
 }
 
 function projectReply(opts: FakeOpts, ids: Record<string, string>): Reply {
-  const services = (opts.services ?? ['api', 'ai-worker', 'ws']).map((name) => ({
+  const services = (
+    opts.services ?? [
+      'api',
+      'combined-worker',
+      'ai-worker',
+      'events-worker',
+      'ingestion-worker',
+      'ws',
+    ]
+  ).map((name) => ({
     node: { id: ids[name] ?? randomUUID(), name },
   }));
   const environments = (opts.environments ?? ['production', 'staging']).map((name) => ({
@@ -101,10 +117,15 @@ function variablesReply(opts: FakeOpts): Reply {
 
 /** Fake Railway GraphQL API plus the live api health endpoint, routed by URL. */
 function fakeRailway(opts: FakeOpts = {}) {
-  const ids: Record<string, string> = { api: API_ID, 'ai-worker': WORKER_ID };
+  const ids: Record<string, string> = {
+    api: API_ID,
+    'ai-worker': WORKER_ID,
+    'combined-worker': COMBINED_ID,
+  };
   const state: Record<string, Fields> = {
     [API_ID]: { ...EMPTY, ...opts.instances?.api },
     [WORKER_ID]: { ...EMPTY, ...opts.instances?.['ai-worker'] },
+    [COMBINED_ID]: { ...EMPTY, ...opts.instances?.['combined-worker'] },
   };
   const graphql: GraphqlCall[] = [];
   const probes: ProbeCall[] = [];
@@ -139,6 +160,9 @@ function fakeRailway(opts: FakeOpts = {}) {
     }
     const handler = handlers[op];
     if (!handler) throw new Error(`unexpected GraphQL operation ${op}`);
+    if (op !== 'project' && !Object.values(ids).includes(body.variables.serviceId as string)) {
+      throw new Error('a stopped or unmanaged service was touched');
+    }
     return handler(body.variables);
   };
   const mutations = () => graphql.filter((c) => c.op === 'serviceInstanceUpdate');
@@ -174,7 +198,8 @@ function expectNoSecretsOrIds(text: string) {
     ENV_ID,
     API_ID,
     WORKER_ID,
-    'api.example.invalid',
+    COMBINED_ID,
+    EXPECTED_API_HOST,
     'post' + 'gres://',
   ]) {
     expect(text).not.toContain(secret);
@@ -189,6 +214,11 @@ describe('DESIRED, diffFields and aiWorkerHealthcheck', () => {
         restartPolicyMaxRetries: 10,
         healthcheckPath: '/api/health/live',
         healthcheckTimeout: 120,
+      },
+      'combined-worker': {
+        restartPolicyType: 'ON_FAILURE',
+        restartPolicyMaxRetries: 10,
+        healthcheckPath: '/health',
       },
       'ai-worker': { restartPolicyType: 'ON_FAILURE', restartPolicyMaxRetries: 10 },
     });
@@ -217,6 +247,41 @@ describe('DESIRED, diffFields and aiWorkerHealthcheck', () => {
   it('skips the ai-worker health check when variables are unreadable', () => {
     expect(aiWorkerHealthcheck(null)).toEqual({ set: false, reason: 'variables unreadable' });
   });
+
+  it.each([
+    [{ PORT: '8080' }, true],
+    [{}, true],
+    [{ PORT: '8080', HEALTH_PORT: '8080' }, true],
+    [{ PORT: '8080', COMBINED_HEALTH_PORT: '8080', HEALTH_PORT: '9000' }, true],
+    [{ PORT: '8080', HEALTH_PORT: '9000' }, false],
+    [{ PORT: '8080', COMBINED_HEALTH_PORT: '7000' }, false],
+    [{ HEALTH_PORT: '9000' }, false],
+  ])('combined-worker health check for %j -> %s', (vars, set) => {
+    expect(combinedWorkerHealthcheck(vars).set).toBe(set);
+  });
+});
+
+describe('probeTarget: the probe is bound to the api host (#1045 review, P1)', () => {
+  it.each([[API_URL], [`${API_URL}/`], [`${API_URL}//`]])('accepts %s', (url) => {
+    expect(probeTarget(url)).toEqual({ url: PROBE_URL });
+  });
+
+  it.each([
+    ['another healthy host', 'https://other-service.example.invalid'],
+    ['a look-alike subdomain', `https://${EXPECTED_API_HOST}.example.invalid`],
+    ['plain http', `http://${EXPECTED_API_HOST}`],
+    ['another port', `https://${EXPECTED_API_HOST}:8443`],
+    ['credentials', `https://u:p@${EXPECTED_API_HOST}`],
+    ['a path', `https://${EXPECTED_API_HOST}/elsewhere`],
+    ['a query', `https://${EXPECTED_API_HOST}/?to=elsewhere`],
+  ])('refuses %s as "wrong host"', (_label, url) => {
+    expect(probeTarget(url)).toEqual({ reason: 'wrong host' });
+  });
+
+  it('refuses an unparsable or missing URL', () => {
+    expect(probeTarget('not a url')).toEqual({ reason: 'bad url' });
+    expect(probeTarget(undefined)).toEqual({ reason: 'no url' });
+  });
 });
 
 describe('run: read-only by default', () => {
@@ -228,8 +293,10 @@ describe('run: read-only by default', () => {
     for (const field of Object.keys(DESIRED.api)) {
       expect(out.lines.some((l) => l.startsWith(`api | ${field} | `))).toBe(true);
     }
-    for (const field of Object.keys(DESIRED['ai-worker'])) {
-      expect(out.lines.some((l) => l.startsWith(`ai-worker | ${field} | `))).toBe(true);
+    for (const name of ['ai-worker', 'combined-worker'] as const) {
+      for (const field of Object.keys(DESIRED[name])) {
+        expect(out.lines.some((l) => l.startsWith(`${name} | ${field} | `))).toBe(true);
+      }
     }
     expect(out.lines).toContain('api | restartPolicyType | ALWAYS | ON_FAILURE');
     expect(out.lines).toContain('api | healthcheckPath | none | /api/health/live');
@@ -241,8 +308,9 @@ describe('run --apply', () => {
   it('sends one mutation per service with exactly the differing keys, then is idempotent', async () => {
     const r = fakeRailway();
     await run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...capture() });
-    expect(r.mutations()).toHaveLength(2);
+    expect(r.mutations()).toHaveLength(3);
     expect(r.inputFor(API_ID)).toEqual(DESIRED.api);
+    expect(r.inputFor(COMBINED_ID)).toEqual(DESIRED['combined-worker']);
     expect(r.inputFor(WORKER_ID)).toEqual({
       ...DESIRED['ai-worker'],
       healthcheckPath: '/health/live',
@@ -271,18 +339,69 @@ describe('run --apply', () => {
   });
 
   it.each([
-    ['a Not Authorized error', 'denied' as const],
-    ['null', null],
+    ['a Not Authorized error', 'denied' as const, 'railway variables: FORBIDDEN Not Authorized'],
+    ['null', null, 'railway variables: unreadable'],
   ])(
-    'treats variables answered with %s as unreadable and guesses no port',
-    async (_label, variables) => {
+    'fails the run loudly when variables are answered with %s (#1045 review, P2)',
+    async (_label, variables, message) => {
       const r = fakeRailway({ variables });
-      const out = capture();
-      await run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...out });
-      expect(out.lines).toContain('healthcheck skipped: variables unreadable');
-      expect(r.inputFor(WORKER_ID)).toEqual(DESIRED['ai-worker']);
+      await expect(
+        run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...capture() })
+      ).rejects.toThrow(message);
+      expect(r.inputFor(COMBINED_ID)).toBeUndefined();
+      expect(r.inputFor(WORKER_ID)).toBeUndefined();
     }
   );
+
+  it('fails loudly in read-only mode too when variables are unreadable', async () => {
+    const r = fakeRailway({ variables: 'denied' });
+    await expect(run({ env, argv: [], fetchImpl: r.fetchImpl, ...capture() })).rejects.toThrow(
+      'railway variables: FORBIDDEN Not Authorized'
+    );
+  });
+
+  it('leaves the combined-worker /health check alone when Railway already has it', async () => {
+    const r = fakeRailway({
+      instances: { 'combined-worker': { healthcheckPath: '/health' } },
+      variables: 'denied',
+      services: ['api', 'combined-worker'],
+    });
+    await run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...capture() });
+    expect(r.inputFor(COMBINED_ID)).toEqual({
+      restartPolicyType: 'ON_FAILURE',
+      restartPolicyMaxRetries: 10,
+    });
+    expect(r.graphql.some((c) => c.op === 'variables')).toBe(false);
+  });
+
+  it('skips the combined-worker health check when it serves health on another port', async () => {
+    const r = fakeRailway({ variables: { PORT: '8080', COMBINED_HEALTH_PORT: '7000' } });
+    const out = capture();
+    await run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...out });
+    expect(r.inputFor(COMBINED_ID)).toEqual({
+      restartPolicyType: 'ON_FAILURE',
+      restartPolicyMaxRetries: 10,
+    });
+    expect(out.lines).toContain(
+      'healthcheck skipped: combined-worker serves health on another port than PORT'
+    );
+  });
+
+  it('skips a gone ai-worker and never touches the stopped events and ingestion workers', async () => {
+    const r = fakeRailway({
+      services: ['api', 'combined-worker', 'events-worker', 'ingestion-worker'],
+    });
+    const out = capture();
+    const result = await run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...out });
+    expect(out.lines).toContain('ai-worker not found: skipped');
+    expect(
+      r
+        .mutations()
+        .map((c) => c.variables.serviceId)
+        .sort()
+    ).toEqual([API_ID, COMBINED_ID].sort());
+    expect(result.applied).toBe(true);
+  });
 
   it('never logs a variable value, an ID, the token or the api host', async () => {
     const r = fakeRailway();
@@ -300,10 +419,12 @@ describe('run --apply', () => {
     ).rejects.toThrow('read-back mismatch: api.restartPolicyType');
   });
 
-  it.each([['api'], ['ai-worker']])(
+  it.each([['api'], ['combined-worker']])(
     'rejects before any mutation when service %s is missing',
     async (missing) => {
-      const r = fakeRailway({ services: ['api', 'ai-worker'].filter((s) => s !== missing) });
+      const r = fakeRailway({
+        services: ['api', 'combined-worker', 'ai-worker'].filter((s) => s !== missing),
+      });
       await expect(
         run({ env, argv: ['--apply'], fetchImpl: r.fetchImpl, ...capture() })
       ).rejects.toThrow(`service ${missing} not found`);
@@ -471,6 +592,29 @@ describe('run --apply: api live-probe guard (r5/A1)', () => {
     expect(r.probes).toEqual([]);
     expect(r.inputFor(API_ID)).toEqual(skippedApiInput);
   });
+
+  it.each([
+    ['another healthy host', 'https://other-service.example.invalid'],
+    ['plain http', `http://${EXPECTED_API_HOST}`],
+  ])(
+    'refuses a PRODUCTION_API_URL naming %s: no probe, no health check, run fails',
+    async (_label, url) => {
+      const r = fakeRailway();
+      const out = capture();
+      const err = await run({
+        env: { ...env, PRODUCTION_API_URL: url },
+        argv: ['--apply'],
+        fetchImpl: r.fetchImpl,
+        ...out,
+      }).catch((e: Error) => e);
+      expect((err as Error).message).toBe(
+        'healthcheck skipped: api /api/health/live probe returned wrong host'
+      );
+      expect(r.probes).toEqual([]);
+      expect(r.inputFor(API_ID)).toEqual(skippedApiInput);
+      expect(out.all()).not.toContain('other-service');
+    }
+  );
 
   it('probes /api/health/live once, without a double slash, for a URL with a trailing slash', async () => {
     const r = fakeRailway();

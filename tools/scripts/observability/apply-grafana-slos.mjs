@@ -142,6 +142,14 @@ export async function run({
     const storedUuid = res.json?.uuid;
     if (!exists && storedUuid !== undefined && storedUuid !== slo.uuid)
       throw new Error(`${slo.uuid}: created under uuid ${redactBody(String(storedUuid))}`);
+    // A reply may name no uuid at all, so read the SLO back by the one we sent.
+    if (!exists) {
+      const readBack = await api('GET', `${SLO_API}/${slo.uuid}`);
+      if (readBack.status !== 200)
+        throw new Error(
+          `${slo.uuid}: not found under its uuid after create (HTTP ${readBack.status})`
+        );
+    }
     log(`${exists ? 'updated' : 'created'} ${slo.uuid}`);
     if (exists) updated += 1;
     else created += 1;

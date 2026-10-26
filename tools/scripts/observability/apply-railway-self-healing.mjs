@@ -1,7 +1,10 @@
 #!/usr/bin/env node
 // Read, and with --apply set, the self-healing settings of the Railway
-// production services api and ai-worker (ENV-008-AI, ADR-087, owner ruling 2:
-// applied by CI on merge).
+// production services api and combined-worker, plus ai-worker while it still
+// exists (ENV-008-AI, ADR-087, owner ruling 2: applied by CI on merge). Since
+// 2026-10-25 combined-worker runs the ai, events and ingestion workers in one
+// process; the stopped ai-worker, events-worker and ingestion-worker services
+// are never a reason to fail, and nothing here deploys any of them.
 //
 // Self-healing here means two Railway settings, nothing more:
 //   - restartPolicyType ON_FAILURE: Railway restarts a process that crashes
@@ -11,8 +14,11 @@
 //
 // The script never deploys or redeploys. Changed settings take effect from the
 // next deployment. Before it sets the api health check it requires a live 200
-// from <PRODUCTION_API_URL>/api/health/live, because a wrong path would make
-// the next production deploy fail (lane-lead guard, 2026-10-25).
+// from https://<EXPECTED_API_HOST>/api/health/live, because a wrong path would
+// make the next production deploy fail (lane-lead guard, 2026-10-25). The
+// probe is bound to the api service's own Railway host: PRODUCTION_API_URL must
+// name exactly that host, or the probe is refused, so a healthy unrelated host
+// can never vouch for the api (#1045 review).
 //
 // Self-contained on purpose (no tools/scripts/lib import), so its workflow can
 // sparse-check-out this folder only.
@@ -28,6 +34,8 @@ import { fileURLToPath } from 'node:url';
 const GRAPHQL_URL = 'https://backboard.railway.com/graphql/v2';
 const USER_AGENT = 'ifc-env008/1.0';
 const PROBE_PATH = '/api/health/live';
+/** The api service's Railway domain; the only host the probe will call. */
+export const EXPECTED_API_HOST = 'api-production-e9c1.up.railway.app';
 const PROBE_TIMEOUT_MS = 15000;
 const GRAPHQL_TIMEOUT_MS = 30000;
 const ALLOWED_ERROR_MESSAGES = new Set(['Not Authorized', 'Problem processing request']);
@@ -41,8 +49,15 @@ export const DESIRED = {
     healthcheckPath: '/api/health/live',
     healthcheckTimeout: 120,
   },
+  'combined-worker': {
+    restartPolicyType: 'ON_FAILURE',
+    restartPolicyMaxRetries: 10,
+    healthcheckPath: '/health',
+  },
   'ai-worker': { restartPolicyType: 'ON_FAILURE', restartPolicyMaxRetries: 10 },
 };
+/** Stopped since the combined-worker cutover: handled if present, skipped if gone. */
+const OPTIONAL_SERVICES = new Set(['ai-worker']);
 const AI_WORKER_HEALTHCHECK_PATH = '/health/live';
 const AI_WORKER_DEFAULT_HEALTH_PORT = '5000';
 
@@ -62,6 +77,39 @@ export function aiWorkerHealthcheck(vars) {
   const healthPort = vars.HEALTH_PORT ?? AI_WORKER_DEFAULT_HEALTH_PORT;
   if (vars.PORT !== undefined && vars.PORT === healthPort) return { set: true };
   return { set: false, reason: 'ai-worker serves health on HEALTH_PORT != PORT' };
+}
+
+/**
+ * combined-worker serves /health on COMBINED_HEALTH_PORT, else HEALTH_PORT,
+ * else PORT. Railway probes PORT, so the path is only safe when they agree.
+ */
+export function combinedWorkerHealthcheck(vars) {
+  const healthPort = vars.COMBINED_HEALTH_PORT ?? vars.HEALTH_PORT;
+  if (healthPort === undefined) return { set: true };
+  if (vars.PORT !== undefined && vars.PORT === healthPort) return { set: true };
+  return { set: false, reason: 'combined-worker serves health on another port than PORT' };
+}
+
+/** The probe URL for PRODUCTION_API_URL, or a fixed-word reason to refuse it. */
+export function probeTarget(baseUrl) {
+  if (!baseUrl) return { reason: 'no url' };
+  let url;
+  try {
+    url = new URL(baseUrl);
+  } catch {
+    return { reason: 'bad url' };
+  }
+  const bare = [...url.pathname].every((c) => c === '/') && !url.search && !url.hash;
+  if (
+    url.protocol !== 'https:' ||
+    url.host !== EXPECTED_API_HOST ||
+    url.username ||
+    url.password ||
+    !bare
+  ) {
+    return { reason: 'wrong host' };
+  }
+  return { url: `https://${EXPECTED_API_HOST}${PROBE_PATH}` };
 }
 
 const QUERIES = {
@@ -95,7 +143,7 @@ function describeError(op, error) {
 }
 
 function createGraphqlClient(token, fetchImpl) {
-  return async (op, variables, { soft = false } = {}) => {
+  return async (op, variables) => {
     const res = await fetchImpl(GRAPHQL_URL, {
       method: 'POST',
       headers: {
@@ -114,7 +162,6 @@ function createGraphqlClient(token, fetchImpl) {
     }
     const error = json?.errors?.[0];
     if (res.status === 200 && !error && json?.data) return json.data[op];
-    if (soft) return null;
     if (error) throw new Error(describeError(op, error));
     throw new Error(`railway ${op}: HTTP ${res.status}`);
   };
@@ -122,11 +169,10 @@ function createGraphqlClient(token, fetchImpl) {
 
 /** GET the live api health path; resolves to null on a 200, else a fixed-word reason. */
 async function probeApi(baseUrl, fetchImpl) {
-  if (!baseUrl) return 'no url';
-  let end = baseUrl.length;
-  while (end > 0 && baseUrl[end - 1] === '/') end -= 1;
+  const target = probeTarget(baseUrl);
+  if (target.reason) return target.reason;
   try {
-    const res = await fetchImpl(`${baseUrl.slice(0, end)}${PROBE_PATH}`, {
+    const res = await fetchImpl(target.url, {
       method: 'GET',
       redirect: 'manual',
       signal: AbortSignal.timeout(PROBE_TIMEOUT_MS),
@@ -145,11 +191,18 @@ function defaultWriteSummary(text) {
   if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, text);
 }
 
-/** Only PORT and HEALTH_PORT are kept; every other variable is dropped unread. */
+/**
+ * Only the port variables are kept; every other variable is dropped unread.
+ * An unreadable answer fails the run: a port guard must never pass on a guess.
+ */
 async function readPorts(gql, projectId, environmentId, serviceId) {
-  const vars = await gql('variables', { projectId, environmentId, serviceId }, { soft: true });
-  if (!vars || typeof vars !== 'object') return null;
-  return { PORT: vars.PORT, HEALTH_PORT: vars.HEALTH_PORT };
+  const vars = await gql('variables', { projectId, environmentId, serviceId });
+  if (!vars || typeof vars !== 'object') throw new Error('railway variables: unreadable');
+  return {
+    PORT: vars.PORT,
+    HEALTH_PORT: vars.HEALTH_PORT,
+    COMBINED_HEALTH_PORT: vars.COMBINED_HEALTH_PORT,
+  };
 }
 
 function findByName(edges, name, kind) {
@@ -173,20 +226,22 @@ export async function run({
 
   const project = await gql('project', { id: env.RAILWAY_PROJECT_ID });
   const environmentId = findByName(project?.environments?.edges, 'production', 'environment');
-  // Resolve both services before any write, so a missing one changes nothing.
-  const serviceIds = Object.fromEntries(
-    Object.keys(DESIRED).map((name) => [
-      name,
-      findByName(project?.services?.edges, name, 'service'),
-    ])
-  );
-
   const rows = [];
   const notes = [];
   const note = (line) => {
     notes.push(line);
     log(line);
   };
+  // Resolve every service before any write, so a missing one changes nothing.
+  const edges = project?.services?.edges;
+  const serviceIds = {};
+  for (const name of Object.keys(DESIRED)) {
+    if (OPTIONAL_SERVICES.has(name) && !(edges ?? []).some((e) => e.node?.name === name)) {
+      note(`${name} not found: skipped`);
+      continue;
+    }
+    serviceIds[name] = findByName(edges, name, 'service');
+  }
   let probeFailure = null;
   log(`mode: ${apply ? 'apply' : 'read-only'}`);
   log('service | field | before | after');
@@ -201,6 +256,14 @@ export async function run({
       else note(`healthcheck skipped: ${check.reason}`);
     }
     const diff = diffFields(current, desired);
+    if (name === 'combined-worker' && 'healthcheckPath' in diff) {
+      const ports = await readPorts(gql, env.RAILWAY_PROJECT_ID, environmentId, serviceId);
+      const check = combinedWorkerHealthcheck(ports);
+      if (!check.set) {
+        delete diff.healthcheckPath;
+        note(`healthcheck skipped: ${check.reason}`);
+      }
+    }
 
     if (name === 'api' && 'healthcheckPath' in diff) {
       const reason = await probeApi(env.PRODUCTION_API_URL, fetchImpl);

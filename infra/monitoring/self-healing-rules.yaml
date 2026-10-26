@@ -22,19 +22,26 @@ services:
     restartPolicyMaxRetries: 10
     healthcheckPath: /api/health/live
     healthcheckTimeout: 120
+  combined-worker:
+    restartPolicyType: ON_FAILURE
+    restartPolicyMaxRetries: 10
+    healthcheckPath: /health
   ai-worker:
     restartPolicyType: ON_FAILURE
     restartPolicyMaxRetries: 10
 
 conditions:
+  - 'combined-worker has run the ai, events and ingestion workers in one process since 2026-10-25. Its /health check is set only when it serves health on PORT (no COMBINED_HEALTH_PORT or HEALTH_PORT, or one equal to PORT); a value Railway already has is left alone.'
+  - 'ai-worker, events-worker and ingestion-worker are stopped since that cutover. ai-worker keeps its settings while the service exists and is skipped once it is gone; events-worker and ingestion-worker are never touched.'
   - 'ai-worker also gets healthcheckPath /health/live, but only when its PORT equals its HEALTH_PORT (default 5000). Railway probes PORT, and ai-worker serves health on HEALTH_PORT.'
-  - 'The api health check is set only after the live api answers 200 on /api/health/live. If the probe fails, the restart policy is still set and the CI run fails.'
+  - "The api health check is set only after the live api answers 200 on /api/health/live, probed on the api service's own Railway host (EXPECTED_API_HOST in the script); a PRODUCTION_API_URL naming any other host is refused. If the probe fails or is refused, the restart policy is still set and the CI run fails."
+  - 'An unreadable variables answer (auth or API error) fails the run; a port guard never passes on a guess.'
 
 limits:
   - 'Restart is crash-only: ON_FAILURE restarts a process that exits with an error, not one that hangs.'
   - 'The health check is a deploy gate, not a liveness probe: Railway checks it when a deployment starts, then stops checking.'
   - 'Changed settings take effect from the next deployment; the CI job never deploys or redeploys.'
-  - 'ws, events-worker, ingestion-worker and notifications-worker are not covered (EP-001-AI).'
+  - 'ws and notifications-worker are not covered (EP-001-AI).'
 
 drift_check: 'Run .github/workflows/railway-self-healing.yml by hand without "apply" after any change made in the Railway dashboard; it prints before and after for every setting and changes nothing.'
 see_also:

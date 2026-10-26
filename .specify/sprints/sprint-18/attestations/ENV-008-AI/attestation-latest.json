@@ -4,14 +4,14 @@
   "task_id": "ENV-008-AI",
   "run_id": "env-008-ai-exec-20261025",
   "attestor": "Claude Code /exec (lane env-008-ai, runner Aurora)",
-  "attestation_timestamp": "2026-10-25T19:59:36Z",
+  "attestation_timestamp": "2026-10-26T09:04:55Z",
   "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
     "artifacts_verified": 80,
     "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 7,
-    "gates_failed": 4,
+    "gates_passed": 8,
+    "gates_failed": 3,
     "kpis_met": 1,
     "kpis_missed": 4,
     "placeholders_found": 0
@@ -55,9 +55,9 @@
     },
     {
       "gate_id": "plan_checkboxes",
-      "passed": false,
-      "exit_code": 1,
-      "score": 99,
+      "passed": true,
+      "exit_code": 0,
+      "score": 100,
       "log_path": ".specify/sprints/sprint-18/planning/ENV-008-AI-plan.md"
     },
     {
@@ -180,7 +180,7 @@
     "ENV-005-AI"
   ],
   "context_acknowledgment": {
-    "acknowledged_at": "2026-10-25T19:59:36Z",
+    "acknowledged_at": "2026-10-26T09:04:55Z",
     "files_read": [
       {
         "path": ".specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md",
@@ -188,7 +188,7 @@
       },
       {
         "path": ".specify/sprints/sprint-18/planning/ENV-008-AI-plan.md",
-        "sha256": "2c2743817d3acec00b24ef73ee9130a6d8bbf1761ac4f5abbf28027d8a051239"
+        "sha256": "22a703603c501fd967047d611746c865daa11de38c00f2c8a4614e5bde35efa5"
       },
       {
         "path": ".specify/sprints/sprint-18/context/ENV-008-AI/ENV-008-AI-owner-ruling.md",
@@ -200,7 +200,7 @@
       },
       {
         "path": "docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md",
-        "sha256": "96041bed7f2d5f7e9eeb296da0847447324cc26364d0c3201ec5fbf20d7e82b2"
+        "sha256": "dcf83118025b78b092be57c269d4364d58ad195a03d13defea69acea148a75b4"
       }
     ],
     "invariants_acknowledged": [
@@ -216,7 +216,7 @@
     ".github/workflows/grafana-alert-rules.yml": "sha256:af14c52a4c32d6b2d41f60436b20364415b1f6ffe0c1a70df39688acb820ee90",
     ".github/workflows/grafana-dashboard.yml": "sha256:4c65e63e93de544c8a1f3688f3dd1eaa32cb46cebe7d0d8716950b1e30f44e75",
     ".github/workflows/grafana-slos.yml": "sha256:b628fb90d0980668f51cd7c130aa5098d2c5fb7903cf4c4fb86611a7f50db5fa",
-    ".github/workflows/railway-self-healing.yml": "sha256:cfe46e3f131e7273a0bf79e6d42b4d3117c0b143189e7c2da5b8fdb7f8849a76",
+    ".github/workflows/railway-self-healing.yml": "sha256:accc7ea030404188d5b8844fe08195742dc82ac1968fbd298b2942628a12a705",
     ".specify/sprints/sprint-18/attestations/ENV-008-AI/task-tracking.json": "sha256:9d1be5216007812c7228d55257416c8884d5d25e8193d6391d6da6db1ac203e2",
     ".specify/sprints/sprint-18/context/ENV-008-AI/ENV-008-AI-agent-selection.json": "sha256:cd0df098996f50b14dd05a4ca7122807b713d336cc5370be1ca40ce862537387",
     ".specify/sprints/sprint-18/context/ENV-008-AI/ENV-008-AI-owner-ruling.md": "sha256:37d7aa0a0a9e8f3d748a86f0235ee32beae565ed9d19f2bf0266ef6898b15f98",
@@ -228,12 +228,12 @@
     ".specify/sprints/sprint-18/execution/ENV-008-AI/compliance-check.md": "sha256:70dfddd10368ff35c866148bf4d14d327048f1e02bf27d67c9948eb3097cf8bd",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/coverage-run.txt": "sha256:2ab6cb2eff8dffd45c86e5a3d10a6f347e038af03feac773d82f31c3fcf83241",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/diff-coverage.txt": "sha256:27bf64cce9f26cb025ff4e177372e570c7941be3c6ec95425414d3839b028455",
-    ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/ENV-008-AI-delivery.md": "sha256:1762c6802ab1254e915885b8513973e14cf32c1cc25bb7e0ecbc927e48e9d15d",
+    ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/ENV-008-AI-delivery.md": "sha256:4fab828ba77455bc9d0d41c5aab2e8e46f28b2c19eb2eb73d4379fde06215f05",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/matop/gate-selection.json": "sha256:0e2c1210aa417453420dd2625280de33b8c2dd0d9c07f8acf2aad2ada04135e3",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/matop/stoa-verdicts/Automation.json": "sha256:a088ffe7c0487c2f642cd94d5c518ab3d97390a61d82401597211d98ce5b24d3",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/matop/stoa-verdicts/Foundation.json": "sha256:68d5c5018df77ef31f1befed9a941a81388fdc7d06b3e18c8761c27858bc0c6f",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/matop/stoa-verdicts/Quality.json": "sha256:80bc623f43356fc11d4f6fafaccba2644621b68fb54fcce16c0200d237f4f59e",
-    ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/matop/stoa-verdicts/Security.json": "sha256:4c7f53e57d5419f304353a5b44b7dd62fd81e5973b31ea407814f803afe2ff96",
+    ".specify/sprints/sprint-18/execution/ENV-008-AI/env-008-ai-exec-20261025/matop/stoa-verdicts/Security.json": "sha256:94603d2c6d1ff5855c104db633cd5017f85c4a352aca23d07847b992d5077775",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/final-report.txt": "sha256:698a861e0cb3b0627e340c8be264ab86637e5ac7e4df3aeff0dce3a4fd9064c6",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/lint-format.txt": "sha256:2ac12f17ca180a03121944cf7b669c2fe969d5e2185b5ad90b83c72b639606b3",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/lint-repo.txt": "sha256:29ed32d2a8a33d9875388fb7f14bc870e022f49ca12f2b168fbd8c37993be11e",
@@ -245,21 +245,21 @@
     ".specify/sprints/sprint-18/execution/ENV-008-AI/red-checkpoint.txt": "sha256:2b827da109103de9762d386b3f819cb39a96d87049c80abe50c6d8bf0f3af7bb",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/regression-tests.txt": "sha256:609d55afa66ec3e07cae6970dc367b2dc8b975d83791b44d8837755dd5523680",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/root-full-tests.txt": "sha256:5bbfdf0c6f3ec212125f985be8248d11bb5079824e267ad7b5e174531100a0d8",
-    ".specify/sprints/sprint-18/execution/ENV-008-AI/stoa-verdicts.md": "sha256:8f1cc0078be18d506724688099c2905eb4fef322153eac550a5f8cf25a723662",
+    ".specify/sprints/sprint-18/execution/ENV-008-AI/stoa-verdicts.md": "sha256:c8ad9cf075c2e75e89970ed5058ff04ac6ee57fa3b6603069799c86d7a1a9604",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/task-tests.txt": "sha256:a028d243d36af359d250af7865be11203380c3a7b8aa0e29d6f0eba84f352be6",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/tsc-test-files.txt": "sha256:174fb8fe814f97e9597f7cc565b15b88ed2b64542654e868e352259e8e1563f9",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/typecheck.txt": "sha256:dbd81b056167ea5deee2e08a52898fc9eb56e833db73b67a0df7e9fb21870c0c",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/validate-artifacts.txt": "sha256:4c1f0a44beae8a05af14dbcaef5021247c441da9ee272a07f5c23c8be104defc",
     ".specify/sprints/sprint-18/execution/ENV-008-AI/validate-schemas.txt": "sha256:0ae280dc2b157d989f8a6cf34977f87277e9609bd41b2081bfa79709fc944aed",
     ".specify/sprints/sprint-18/findings/ENV-008-AI-findings.md": "sha256:645d4db3a887008166bb136f0fa1ce5d90b1ef39687034adcec28bc23f1d8b44",
-    ".specify/sprints/sprint-18/planning/ENV-008-AI-plan.md": "sha256:2c2743817d3acec00b24ef73ee9130a6d8bbf1761ac4f5abbf28027d8a051239",
+    ".specify/sprints/sprint-18/planning/ENV-008-AI-plan.md": "sha256:22a703603c501fd967047d611746c865daa11de38c00f2c8a4614e5bde35efa5",
     ".specify/sprints/sprint-18/specifications/ENV-008-AI-discussion.md": "sha256:2ea4e2afb51cfc32a73e27a6151a0351e5e015bdcdbc910a91d29da7653fdd36",
     ".specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md": "sha256:61acb36cc942aa2c9c753d3fe00c7b12719152f8584ae5f5832af67cff526f1c",
     "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "sha256:5e0232e6670ba6fa7b083dc104febfe5dee4e77aa632ed56b484ee42af736f3e",
     "apps/project-tracker/docs/metrics/_global/Sprint_plan_A.csv": "sha256:600b9b63413ff3efebef4ffc2e30702e4826ffc1a8cfef65ee90b2aab5f4a860",
     "artifacts/coverage/ENV-008-AI-before.json": "sha256:e7cf6d4cb5636fc91c6fc10cda5930ec105078438c5f7cc7d38c9b96ae90f61c",
     "artifacts/metrics/debt-ledger.yaml": "sha256:4de3ddf229a59011572505aee7f810cdc4e95ab0671ca0821a4683019abdd9dc",
-    "docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md": "sha256:96041bed7f2d5f7e9eeb296da0847447324cc26364d0c3201ec5fbf20d7e82b2",
+    "docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md": "sha256:dcf83118025b78b092be57c269d4364d58ad195a03d13defea69acea148a75b4",
     "docs/architecture/adr/README.md": "sha256:38cbe764e1e7fb4635dd6ffa7b67ceaa64211fe5253b357ba4316d864b0cef6d",
     "docs/architecture/diagrams/complete-dependency-chains.md": "sha256:6d2d84afc757a3403ee8d79484a4316b1c8c435f544cf57329f930256b74c339",
     "docs/architecture/diagrams/integrations-dependency-chain.md": "sha256:3e784f854590e38566ac47a288b3bc7a41e48ba2d9db513224dcffb0e3ee4048",
@@ -270,11 +270,11 @@
     "infra/monitoring/grafana/cloud/dashboard-production.json": "sha256:0bcb3f3d4c2c53d6bb1febd97f1499c9cbfa51b7789ef167720f4fd44f53346f",
     "infra/monitoring/grafana/cloud/slos.json": "sha256:ea5aa82c01e600f6a786cb8c52834afe3cb41bd2d3e8fefd68fe07e42e5852d5",
     "infra/monitoring/otel-config.yaml": "sha256:e30970454640586f68b1bf07ef512f3d0a6ac3ad67dafa37c9cbe9854cab639c",
-    "infra/monitoring/self-healing-rules.yaml": "sha256:29554c5db6f9d45143c533843d18307801e100cea962a2877f38ab96de610571",
+    "infra/monitoring/self-healing-rules.yaml": "sha256:766add09f0d52dec59bf2c381df7c080175a752fb286f57b8bf9f8fee4c5c848",
     "tools/scripts/__tests__/apply-grafana-alert-rules.test.ts": "sha256:c18fd51dd3416aa0722c7744265d5b76274550a66d1f59abc3e82883db42ba0d",
     "tools/scripts/__tests__/apply-grafana-dashboard.test.ts": "sha256:b5f2b9e5d5aea651a97b099a9e895074c9f25df164c15b2dc7e123ecb96aca61",
-    "tools/scripts/__tests__/apply-grafana-slos.test.ts": "sha256:eb29ac85979f7610236627fa16f30f78e19cd217bcc3325c8575a8afa4c19bf2",
-    "tools/scripts/__tests__/apply-railway-self-healing.test.ts": "sha256:374796dd5bd021849926eb7e46bf6de1f7ba2763ff8ece4cfeb4ddfa5c1e5482",
+    "tools/scripts/__tests__/apply-grafana-slos.test.ts": "sha256:10df93b096341c5c4517452695b8807f5d9280ac4080287b3a793861065040be",
+    "tools/scripts/__tests__/apply-railway-self-healing.test.ts": "sha256:e82d3c59f9bc4cedbf01773c0d68da1cf135e1a77631d7ed3458d414bc0272c1",
     "tools/scripts/__tests__/apply-synthetic-monitoring.test.ts": "sha256:ee921efed1708ab65448d537cc5aefdf7d22a84116a9a012b7fb7bd8d77e7cd3",
     "tools/scripts/__tests__/env008-monitoring-content.test.ts": "sha256:fc9b026ba0bb1e8d9c510100b2f5b3cf0b52287ce27b5074899f08bdedec5ab2",
     "tools/scripts/__tests__/env008-workflows.test.ts": "sha256:5792fe749a6e293daf3101e81b070e3b1f3d6c6b77c84fcec27f8bc0af87d744",
@@ -288,19 +288,19 @@
     "tools/scripts/observability/apply-grafana-dashboard.d.mts": "sha256:73087978c13c7a56e0c1d346cdc700765b0488db918fd51f9299de621d38e7c2",
     "tools/scripts/observability/apply-grafana-dashboard.mjs": "sha256:fa114183b0aa82800ff5fe26bd27d65f0c2115d94e35f8e55673cf3347636514",
     "tools/scripts/observability/apply-grafana-slos.d.mts": "sha256:77578195774fcde145589a0b6d7cd2a34851b3b04ee982869641df8782d4a13d",
-    "tools/scripts/observability/apply-grafana-slos.mjs": "sha256:b315409e4717639b881805d0c1b58dc55b53b6277076b8e00be3a3752f4aa5e0",
-    "tools/scripts/observability/apply-railway-self-healing.d.mts": "sha256:48d5183249848d7ca7f16ae95a72b8b68c40b5018c4fb221dcaaa945d13a91c1",
-    "tools/scripts/observability/apply-railway-self-healing.mjs": "sha256:e812131547be5dc6130c652b7fe10f87df60d6c0d91ab7453dc11f74dbb2b422",
+    "tools/scripts/observability/apply-grafana-slos.mjs": "sha256:122b441219d936bfd3388062cc2815568292faa73800f12f0c42d5678d97544d",
+    "tools/scripts/observability/apply-railway-self-healing.d.mts": "sha256:b36b628b182b9a651432d6d8e2b0e3c35f661559f3c94f14d71b28959e5072d1",
+    "tools/scripts/observability/apply-railway-self-healing.mjs": "sha256:7a0e528101293a2dd050ec7b9e7e4e30ff604b6674300df7a96aaba7ed397b7b",
     "tools/scripts/observability/apply-synthetic-monitoring.d.mts": "sha256:d607b615dfb427702d38e630720b60a4b837f1f391a0be5f9310d9122f50c7e8",
     "tools/scripts/observability/apply-synthetic-monitoring.mjs": "sha256:3a521a48bf5188d389bee8576c26da47fbc58a8a7d702b614cf0974bf15ad7e4"
   },
   "environment": {
     "os": "win32 (Windows 11 Pro 10.0.26200)",
     "node_version": "v22.14.0",
-    "git_commit": "48ca32e25",
+    "git_commit": "795096b16",
     "branch": "feat/env-008-ai-env008"
   },
-  "notes": "Verdict NEEDS_HUMAN, not COMPLETE.\nEverything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's.\nOpen items, each with the check that closes it:\n(1) Production evidence after merge (owner ruling 2: applied by CI on merge, never from a developer machine):\n  (a) grafana-alert-rules.yml goes green on main (it has been red since 2026-10-06 on HTTP 503);\n  (b) grafana-slos.yml push run green, then a dry_run=true dispatch reports all three SLO uuids from slos.json \"present\". This also proves no duplicate SLOs (the residual SLO-uuid risk);\n  (c) grafana-dashboard.yml push run green, then a dry_run=true dispatch reports env008-production \"present\";\n  (d) railway-self-healing.yml push run log shows before and after per service, and records whether the live probe let the api health check through; a later dispatch without apply shows no drift.\n(2) Gate 4b (worktree landed): the runner runs pre-ship once, pushes once and opens the PR. This attestation is therefore written before the push, which is acceptable only because the verdict is not COMPLETE (PG-198, PG-199, PG-205 precedent).\n(3) Security STOA: its only blocking item was pnpm audit advisories inherited from merge base e7ce625b2. After merging origin/main (96ab7881d), pnpm audit --prod --audit-level=critical exits 0: #1008 fixed the 4 criticals. 3 highs remain (zod, body-parser, undici), tracked in #1016; this task changes no dependency.\n(3b) Inherited from main (#1018): the merge commit's sonar guard flagged 4 existing violations in tools/scripts/generate-missing-attestations.ts and migrate-attestations.ts. With the lane lead's approval they were fixed narrowly, behaviour unchanged, and tested (migrate-attestations.test.ts).\n(4) Plan Step 20 rows still open: pre-ship (run once at ship by the runner) and the post-merge production row.\nSpec deviations (exec report and stoa-verdicts.md):\n  NF-003: CLI guards stay multi-line (prettier).\n  AC-011: 5 issues; #1001 reused, plus #1032 from the security review.\n  AC-006: three independent workflows instead of three jobs, so SLO-only or dashboard-only changes never re-apply the alert rules (lane-lead constraint 2026-10-25, plan r4/A2).\n  AC-007: the api health check is set only after a live 200 from /api/health/live (lane-lead guard 2026-10-25, plan r4/A1).\n  grafana-alert-rules.yml timeout goes from 5 to 12 minutes.\nReviews:\n  plan-reviewer subagent approved r3, then r5 after a REVISE on the r4 amendment;\n  STOA foundation PASS, automation PASS, quality WARN, security FAIL (inherited audit);\n  the codex gate saw 0 in-scope files (it excludes tools/ and infra/), so it reviewed none of this task's code;\n  a direct Codex review hit the usage limit; an independent Claude reviewer found no high-severity problems, and its 2 medium and 2 low findings are fixed or verified (stoa-verdicts.md).\nCompliance check: WARN, no blocking item (.specify/sprints/sprint-18/execution/ENV-008-AI/compliance-check.md): CSV-vs-plan tracking reconciled, 40/40 artifacts aligned; inherited audit; the repo-wide 90% coverage threshold is not met by the tooling scope, while the diff-coverage gate passes.\nCeremony: full (spec consensus 4/4, plan-reviewer subagent, STOAs, independent review). No light tier.\nFinal matrix at e0b478906 (root project, typecheck, build, lint); after merging origin/main at 48ca32e25: 227 task and regression tests, diff coverage and the audit re-run. Pre-ship runs once at the final SHA. One process at a time via the slot wrapper; logs in .specify/sprints/sprint-18/execution/ENV-008-AI/.\nartifact_hashes use the sha256:<hex> form (#1018/#1034).",
+  "notes": "Verdict NEEDS_HUMAN, not COMPLETE.\nEverything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's.\nOpen items, each with the check that closes it:\n(1) Production evidence after merge (owner ruling 2: applied by CI on merge, never from a developer machine):\n  (a) grafana-alert-rules.yml goes green on main (it has been red since 2026-10-06 on HTTP 503);\n  (b) grafana-slos.yml push run green, then a dry_run=true dispatch reports all three SLO uuids from slos.json \"present\". This also proves no duplicate SLOs (the residual SLO-uuid risk);\n  (c) grafana-dashboard.yml push run green, then a dry_run=true dispatch reports env008-production \"present\";\n  (d) railway-self-healing.yml push run log shows before and after for api and combined-worker (ai-worker while it exists), and records whether the live probe let the api health check through; a later dispatch without apply shows no drift. BLOCKER: the repository secret RAILWAY_TOKEN is still the expired token, so this job fails on merge until the owner updates the secret.\n(2) Gate 4b (worktree landed): the branch is pushed and open as PR #1045. This refresh, for the #1045 review fixes, is written before the fix commit is pushed, which is acceptable only because the verdict is not COMPLETE (PG-198, PG-199, PG-205 precedent).\n(3) Security STOA: PASS after merge (FAIL at 5162ed721; matop/stoa-verdicts/Security.json records both). Its only blocking item was pnpm audit advisories inherited from merge base e7ce625b2. After merging origin/main (96ab7881d), pnpm audit --prod --audit-level=critical exits 0: #1008 fixed the 4 criticals. 3 highs remain (zod, body-parser, undici), tracked in #1016; this task changes no dependency.\n(3b) Inherited from main (#1018): the merge commit's sonar guard flagged 4 existing violations in tools/scripts/generate-missing-attestations.ts and migrate-attestations.ts. With the lane lead's approval they were fixed narrowly, behaviour unchanged, and tested (migrate-attestations.test.ts).\n(3c) #1045 review fixes (lane lead; Codex P1 and P2s, adversarial P2), each with tests: the api live probe is bound to the api service Railway host and refuses any other host; combined-worker is in DESIRED (ON_FAILURE, /health left alone when already set) and the stopped ai-worker, events-worker and ingestion-worker never fail the run; an unreadable Railway variables answer fails the run; a created SLO is read back by its uuid and the run fails if it is absent.\n(4) Plan Step 20: every pre-merge matrix row ran (box ticked with an annotation); only the post-merge production row remains, as item (1).\nSpec deviations (exec report and stoa-verdicts.md):\n  NF-003: CLI guards stay multi-line (prettier).\n  AC-011: 5 issues; #1001 reused, plus #1032 from the security review.\n  AC-006: three independent workflows instead of three jobs, so SLO-only or dashboard-only changes never re-apply the alert rules (lane-lead constraint 2026-10-25, plan r4/A2).\n  AC-007: the api health check is set only after a live 200 from /api/health/live (lane-lead guard 2026-10-25, plan r4/A1).\n  grafana-alert-rules.yml timeout goes from 5 to 12 minutes.\nReviews:\n  plan-reviewer subagent approved r3, then r5 after a REVISE on the r4 amendment;\n  STOA foundation PASS, automation PASS, quality WARN, security PASS after merge (FAIL before it, on the inherited audit alone);\n  the codex gate saw 0 in-scope files (it excludes tools/ and infra/), so it reviewed none of this task's code;\n  a direct Codex review hit the usage limit; an independent Claude reviewer found no high-severity problems, and its 2 medium and 2 low findings are fixed or verified (stoa-verdicts.md).\nCompliance check: WARN, no blocking item (.specify/sprints/sprint-18/execution/ENV-008-AI/compliance-check.md): CSV-vs-plan tracking reconciled, 40/40 artifacts aligned; inherited audit; the repo-wide 90% coverage threshold is not met by the tooling scope, while the diff-coverage gate passes.\nCeremony: full (spec consensus 4/4, plan-reviewer subagent, STOAs, independent review). No light tier.\nFinal matrix at e0b478906 (root project, typecheck, build, lint); after merging origin/main at 48ca32e25: 227 task and regression tests, diff coverage and the audit re-run. Pre-ship PASS at 795096b16 (pushed as PR #1045); it runs once more at the review-fix SHA. One process at a time via the slot wrapper; logs in .specify/sprints/sprint-18/execution/ENV-008-AI/.\nartifact_hashes use the sha256:<hex> form (#1018/#1034).",
   "nav_wiring_confirmed": false,
   "spec_session_consensus": "APPROVED 4/4 in /spec-consensus round 4 (DevOps-Lead, Security-Lead, Domain-Expert, Test-Engineer); evidence specifications/ENV-008-AI-discussion.md",
   "plan_reviewer_verdict": "APPROVED",

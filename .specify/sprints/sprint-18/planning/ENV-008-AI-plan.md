@@ -840,9 +840,10 @@ Workflow:
 **Files to Create:**
 - `.specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json` (via `/exec-attestation`)
 
-- [ ] Run every row of the Validation Matrix below, each under the slot where marked.
+- [x] Run every row of the Validation Matrix below, each under the slot where marked.
   - Save the logs under `.specify/sprints/sprint-18/execution/ENV-008-AI/`.
   - Use `.txt`, never `*.log`.
+  - Annotation (2026-10-26): every pre-merge row ran; logs in that folder. Pre-ship ran under the slot with a fresh seeded DB (PASS at `795096b16`, re-run at the #1045 review-fix HEAD). The post-merge production row cannot run before merge (owner ruling 2); it is NEEDS_HUMAN in the attestation and the PR body.
 - [x] Diff coverage on the changed `.mjs` lines is at least 80% (NF-003). Result: 92.0% (425/462), execution/ENV-008-AI/diff-coverage.txt.
 - [x] NF-002: `git diff origin/main -- package.json pnpm-lock.yaml` prints nothing. Record the output. Run against the merge base (origin/main moved on since the branch point): empty, execution/ENV-008-AI/nf002-deps.txt.
 - [x] `npx tsx tools/scripts/validate-artifacts.ts ENV-008-AI` passes, after the EVIDENCE-path change. PASS, 40/40 aligned, after the 33 plan artifacts were added to the CSV row (Category A).

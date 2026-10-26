@@ -7,8 +7,10 @@ export interface SelfHealingSettings {
 }
 export const DESIRED: {
   api: Required<SelfHealingSettings>;
+  'combined-worker': SelfHealingSettings;
   'ai-worker': SelfHealingSettings;
 };
+export const EXPECTED_API_HOST: string;
 export function diffFields(
   current: Partial<Record<string, unknown>> | null | undefined,
   desired: object
@@ -16,6 +18,14 @@ export function diffFields(
 export function aiWorkerHealthcheck(
   vars: { PORT?: string; HEALTH_PORT?: string } | null | undefined
 ): { set: true } | { set: false; reason: string };
+export function combinedWorkerHealthcheck(vars: {
+  PORT?: string;
+  HEALTH_PORT?: string;
+  COMBINED_HEALTH_PORT?: string;
+}): { set: true } | { set: false; reason: string };
+export function probeTarget(
+  baseUrl: string | undefined
+): { url: string; reason?: undefined } | { reason: string; url?: undefined };
 export function run(options?: {
   env?: Record<string, string | undefined>;
   argv?: string[];

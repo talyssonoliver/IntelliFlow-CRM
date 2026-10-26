@@ -75,7 +75,14 @@ A).
   the docs say so. The job sets the api health check only after the live api
   answers 200 on `/api/health/live`, because a wrong path would fail the next
   production deploy; a failed probe still sets the restart policy and fails the
-  run (lane-lead guard, 2026-10-25).
+  run (lane-lead guard, 2026-10-25). The probe only ever calls the api service's
+  own Railway host; a `PRODUCTION_API_URL` naming another host is refused, so an
+  unrelated healthy host cannot vouch for the api. The job also covers
+  `combined-worker` (restart policy and its existing `/health` check), which has
+  run the ai, events and ingestion workers in one process since 2026-10-25; the
+  stopped `ai-worker`, `events-worker` and `ingestion-worker` services never
+  fail the run. An unreadable Railway variables answer fails the run (#1045
+  review).
 - **SLOs and the dashboard** live under `infra/monitoring/grafana/cloud/` and
   are applied by CI on merge, like the alert rules. Each Grafana resource has
   its own workflow: `grafana-alert-rules.yml`, `grafana-slos.yml` and

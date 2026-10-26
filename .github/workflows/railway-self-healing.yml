@@ -1,8 +1,10 @@
 name: Railway Self-Healing
 
 # Reads, and on merge sets, the self-healing settings of the Railway production
-# services api and ai-worker (ENV-008-AI, ADR-087; owner ruling 2: set by CI on
-# merge, never from a developer machine):
+# services api and combined-worker, plus ai-worker while it exists (ENV-008-AI,
+# ADR-087; owner ruling 2: set by CI on merge, never from a developer machine).
+# The stopped ai-worker, events-worker and ingestion-worker services never fail
+# the run and are never deployed:
 #   - restartPolicyType ON_FAILURE (Railway restarts a process that crashes,
 #     not one that hangs);
 #   - a deploy health check (a deployment whose health path does not answer
@@ -14,8 +16,11 @@ name: Railway Self-Healing
 # job never deploys or redeploys; changes take effect from the next deployment.
 #
 # The api health check is only set after a live 200 from
-# $PRODUCTION_API_URL/api/health/live. If the probe fails, the restart policy is
-# still set, the health check is not, and the run fails so the skip is seen.
+# https://<api host>/api/health/live. The probe is bound to the api service's own
+# Railway host (EXPECTED_API_HOST in the script): if PRODUCTION_API_URL names any
+# other host, the probe is refused. If the probe fails or is refused, the restart
+# policy is still set, the health check is not, and the run fails so the skip is
+# seen. An unreadable variables answer (auth or API error) also fails the run.
 # After a skip, only a push touching this workflow or its script, or a manual
 # run with "apply" ticked, retries it.
 #

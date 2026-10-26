@@ -14,7 +14,7 @@
 | `tools/scripts/observability/apply-grafana-slos.mjs` (+ `.d.mts`) | applies the SLOs by fixed uuid (GET, then POST or PUT); fails on a uuid mismatch |
 | `infra/monitoring/grafana/cloud/dashboard-production.json` | service dashboard, uid `env008-production`, 5 panels |
 | `tools/scripts/observability/apply-grafana-dashboard.mjs` (+ `.d.mts`) | saves the dashboard into the production folder |
-| `tools/scripts/observability/apply-railway-self-healing.mjs` (+ `.d.mts`) | reads and sets the Railway restart policy and health checks; the api live-probe guard |
+| `tools/scripts/observability/apply-railway-self-healing.mjs` (+ `.d.mts`) | reads and sets the Railway restart policy and health checks for api and combined-worker (ai-worker while it exists); the api live-probe guard, bound to the api's Railway host |
 | `.github/workflows/grafana-slos.yml`, `grafana-dashboard.yml`, `railway-self-healing.yml` | CI apply on merge, one workflow per resource |
 | 5 test files under `tools/scripts/__tests__/` | SLO, dashboard, Railway, workflow-contract and descriptive-content tests |
 | `.specify/sprints/sprint-18/findings/ENV-008-AI-findings.md` | fixed and tracked findings |
@@ -82,9 +82,9 @@
 | Foundation | PASS | |
 | Automation | PASS | |
 | Quality | WARN | gaps closed in `e0b478906`; logs re-run at HEAD |
-| Security | FAIL | inherited `pnpm audit` only (fixed on main by #1008, highs in #1016) |
+| Security | PASS after merge (FAIL at `5162ed721`) | the only blocker was the inherited `pnpm audit`; after merging origin/main the criticals are gone (#1008), highs in #1016 |
 
-**Consensus Verdict**: FAIL (inherited audit). See `stoa-verdicts.md`.
+**Consensus Verdict**: WARN after the merge (FAIL before it, on the inherited audit alone). See `stoa-verdicts.md`.
 
 ## Compliance Check Results
 WARN, with no blocking item (`compliance-check.md`).

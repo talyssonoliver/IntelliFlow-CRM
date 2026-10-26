@@ -28,11 +28,21 @@ function queriesOf(slo: Slo): string[] {
 
 type Call = { method: string; path: string; body?: Record<string, unknown> };
 
-/** Fake Grafana SLO plugin API: `existing` uuids answer 200 on GET, the rest 404. */
+/**
+ * Fake Grafana SLO plugin API: `existing` uuids answer 200 on GET, the rest 404.
+ * A POST stores the SLO under the uuid it answers with, unless `dropCreated`.
+ */
 function fakeSloApi(
-  opts: { existing?: string[]; writeStatus?: number; writeBody?: string; assignUuid?: string } = {}
+  opts: {
+    existing?: string[];
+    writeStatus?: number;
+    writeBody?: string;
+    assignUuid?: string;
+    dropCreated?: boolean;
+  } = {}
 ) {
   const calls: Call[] = [];
+  const stored = new Set(opts.existing ?? []);
   const fetchImpl = async (
     url: string,
     init: { method: string; headers: Record<string, string>; body?: string }
@@ -42,15 +52,19 @@ function fakeSloApi(
     expect(init.headers.Authorization).toBe(`Bearer ${TOKEN}`);
     if (init.method === 'GET') {
       const uuid = path.slice(`${SLO_API}/`.length);
-      const found = opts.existing?.includes(uuid);
+      const found = stored.has(uuid);
       return { status: found ? 200 : 404, text: async () => (found ? '{"uuid":"x"}' : '') };
     }
     const status = opts.writeStatus ?? (init.method === 'POST' ? 202 : 200);
     // A create answers with the uuid the SLO was stored under.
     const sent = init.body ? (JSON.parse(init.body) as { uuid?: string }).uuid : undefined;
-    const stored = opts.assignUuid ?? sent;
+    const storedUuid = opts.assignUuid ?? sent;
+    if (init.method === 'POST' && status < 300 && storedUuid && !opts.dropCreated)
+      stored.add(storedUuid);
     const reply =
-      init.method === 'POST' ? JSON.stringify({ uuid: stored, message: 'ok' }) : '{"message":"ok"}';
+      init.method === 'POST'
+        ? JSON.stringify({ uuid: storedUuid, message: 'ok' })
+        : '{"message":"ok"}';
     return { status, text: async () => opts.writeBody ?? reply };
   };
   return { calls, fetchImpl };
@@ -268,6 +282,21 @@ describe('run', () => {
     await expect(
       run({ env, argv: [], fetchImpl: api.fetchImpl, log: quiet, sleep: noSleep })
     ).rejects.toThrow('env008-api-availability: created under uuid generated-elsewhere');
+  });
+
+  it('reads a created SLO back by its uuid after the POST', async () => {
+    const api = fakeSloApi({ existing: ['env008-api-latency'] });
+    await run({ env, argv: [], fetchImpl: api.fetchImpl, log: quiet, sleep: noSleep });
+    const created = 'env008-api-availability';
+    const after = api.calls.findIndex((c) => c.method === 'POST');
+    expect(api.calls[after + 1]).toMatchObject({ method: 'GET', path: `${SLO_API}/${created}` });
+  });
+
+  it('fails when a created SLO cannot be read back under its uuid, even if the reply names none', async () => {
+    const api = fakeSloApi({ dropCreated: true, writeBody: '{"message":"ok"}' });
+    await expect(
+      run({ env, argv: [], fetchImpl: api.fetchImpl, log: quiet, sleep: noSleep })
+    ).rejects.toThrow('env008-api-availability: not found under its uuid after create (HTTP 404)');
   });
 
   it('throws a redacted error when a write is rejected', async () => {
