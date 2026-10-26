@@ -17,7 +17,7 @@
    hallucination checks/detections/types/skips, drift samples (score/100 and confidence). The success and error paths
    both record; the scoring chain's outer catch records an error that happens before monitoring starts.
 3. **Drift** (`drift-stats.ts`, `drift-detector.ts`, new `drift-scheduler.ts`): fixed 10 bins, excess PSI, tie-aware KS
-   with real n/m, gate p<0.01 and (excess PSI ≥ 0.1 or D ≥ 0.1), 3-tick persistence with onset counted once,
+   with real n/m, gate p<0.01 and (excess PSI ≥ 0.1 or D ≥ 0.1), 3-tick persistence with onset counted (and each severity escalation),
    time-of-day reference (same 6h slice on days −1..−7), 8-day retention and a 50,000-sample cap. The scheduler is the
    first production caller of `detectAllDrift`: every 30 min, unref'd, re-entrancy guarded, started in
    `AIWorker.onStart` right after the config loads and stopped before the flush.
@@ -154,6 +154,12 @@ and go to the coordinator for a restore. IFC-033 (#1013) used the same disclosur
 - The feature-matrix edit re-pads the whole table (prettier widens the status column for `in_progress`).
 - `validate-artifacts.ts IFC-117` is expected to exit 1 with a fixed set (plan S25); its output is in
   `validation/validate-artifacts.txt` and compared below.
+- Codex review at push time found three drift defects, fixed in follow-up commits on this branch:
+  a pinned baseline from `computeBaseline()` was re-binned on its extrema (windows now carry
+  `binEdges`); the health summary and the persisted `flagged` counted single ticks instead of
+  confirmed events; and an event that escalated after onset never reached the high/critical alert.
+  `drift.detections` now also counts each escalation, which departs from the spec's "once per
+  onset" (spec lines 114 and 192).
 
 ## Follow-ups (filed at PR time, after an `gh issue list --search` check)
 

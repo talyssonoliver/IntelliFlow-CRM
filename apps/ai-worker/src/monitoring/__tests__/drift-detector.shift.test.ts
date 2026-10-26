@@ -4,7 +4,7 @@
  * Deterministic: a seeded mulberry32 generator (never Math.random) and a pinned clock.
  * Proves what the old detector could not: a pure shift is detected, the KS test uses the real
  * sample sizes and handles ties, the PSI null bias is corrected, the false-positive rate is
- * bounded, and a drift event is counted once per onset against a time-of-day-matched reference.
+ * bounded, and a drift event is counted at onset and on each escalation against a time-of-day-matched reference.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { DriftDetector, defaultDriftConfig, type DriftResult } from '../drift-detector';
@@ -16,6 +16,7 @@ import {
   isDetectedTick,
   ksTwoSample,
   severityFrom,
+  type Severity,
 } from '../drift-stats';
 import type { DriftTickResult } from '../otel-ai-types';
 
@@ -289,6 +290,38 @@ describe('DriftDetector — persistence and events', () => {
       results.push(d.applyPersistence('scoring-free', 'score_distribution', detected).onset);
     }
     expect(results).toEqual([false, false, true, false, false, false, false, false, true]);
+  });
+
+  it('flags an escalation once when an open event rises to a higher severity', () => {
+    const d = new DriftDetector(defaultDriftConfig);
+    const step = (detected: boolean, severity: Severity) =>
+      d.applyPersistence('scoring-free', 'score_distribution', detected, severity);
+
+    step(true, 'low');
+    step(true, 'low');
+    expect(step(true, 'low')).toMatchObject({ onset: true, escalated: false });
+    expect(d.getStatus().highSeverityCount).toBe(0);
+
+    expect(step(true, 'critical')).toMatchObject({ onset: false, escalated: true });
+    expect(step(true, 'high')).toMatchObject({ escalated: false });
+    expect(step(true, 'critical')).toMatchObject({ escalated: false });
+    expect(d.getStatus().highSeverityCount).toBe(1);
+  });
+
+  it('clears high-severity health once the event closes, without waiting 24 hours', () => {
+    const d = new DriftDetector(defaultDriftConfig);
+    const step = (detected: boolean, severity: Severity) =>
+      d.applyPersistence('scoring-free', 'score_distribution', detected, severity);
+
+    for (let i = 0; i < 3; i++) step(true, 'critical');
+    expect(d.getStatus()).toMatchObject({ driftDetected: true, highSeverityCount: 1 });
+
+    for (let i = 0; i < 3; i++) step(false, 'none');
+    expect(d.getStatus()).toMatchObject({ driftDetected: false, highSeverityCount: 0 });
+
+    // A new event starts from its own onset severity, not the closed event's peak.
+    for (let i = 0; i < 3; i++) step(true, 'low');
+    expect(d.getStatus()).toMatchObject({ driftDetected: true, highSeverityCount: 0 });
   });
 
   it('insufficient-data ticks do not advance persistence', () => {

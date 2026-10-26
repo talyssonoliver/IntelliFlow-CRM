@@ -334,7 +334,11 @@ export function recordHallucination(input: {
   });
 }
 
-/** One scheduled drift tick: checks per status, detections once per event onset, gauge snapshot. */
+/**
+ * One scheduled drift tick: checks per status, detections at event onset and on each severity
+ * escalation (so an event that opens low and turns critical still reaches the high/critical
+ * alert), gauge snapshot.
+ */
 export function recordDriftTick(results: readonly DriftTickResult[]): void {
   safely('drift', () => {
     const i = getInstruments();
@@ -342,7 +346,7 @@ export function recordDriftTick(results: readonly DriftTickResult[]): void {
       const model = normalizeModel(r.model);
       const metric = oneOf(DRIFT_METRICS, r.metric);
       i.driftChecks.add(1, { status: oneOf(DRIFT_STATUSES, r.status) });
-      if (r.onset)
+      if (r.onset || r.escalated)
         i.driftDetections.add(1, { model, metric, severity: oneOf(DRIFT_SEVERITIES, r.severity) });
       if (r.status === 'evaluated' && Number.isFinite(r.driftScore)) {
         driftScores.set(`${model}|${metric}`, { model, metric, score: r.driftScore });

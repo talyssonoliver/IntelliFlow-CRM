@@ -17,7 +17,7 @@
       "unit": "hours",
       "status": "NEEDS_HUMAN",
       "description": "Time from an output-distribution shift (lead score or confidence) to its detection",
-      "measurement_method": "Every 30 min, the last 6h of samples are compared with the same 6h slice on days -1..-7: two-sample Kolmogorov-Smirnov (tie-aware, p < 0.01) AND (excess PSI >= 0.1 OR KS D >= 0.1) on 10 fixed bins over [0,1]; a detection needs 3 consecutive detected ticks and is counted once at onset. Minimum 50 reference and 25 current samples, else insufficient_data.",
+      "measurement_method": "Every 30 min, the last 6h of samples are compared with the same 6h slice on days -1..-7: two-sample Kolmogorov-Smirnov (tie-aware, p < 0.01) AND (excess PSI >= 0.1 OR KS D >= 0.1) on 10 fixed bins over [0,1]; a detection needs 3 consecutive detected ticks and is counted at onset and again on each severity escalation of the open event. Minimum 50 reference and 25 current samples, else insufficient_data.",
       "configuration": {
         "window_size_hours": 6,
         "sliding_interval_minutes": 30,

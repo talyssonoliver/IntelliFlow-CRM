@@ -422,6 +422,17 @@ describe('recorder semantics', () => {
     expect(total(all, 'intelliflow.ai.hallucination.skipped', { reason: 'error' })).toBe(1);
   });
 
+  it('counts a detection again when an open event escalates, at the new severity', async () => {
+    recordDriftTick([drift({ detectedTick: true, onset: true, inEvent: true, severity: 'low' })]);
+    recordDriftTick([
+      drift({ detectedTick: true, inEvent: true, escalated: true, severity: 'critical' }),
+    ]);
+    recordDriftTick([drift({ detectedTick: true, inEvent: true, severity: 'critical' })]);
+    const all = await collectMetrics(reader);
+    expect(total(all, 'intelliflow.ai.drift.detections')).toBe(2);
+    expect(total(all, 'intelliflow.ai.drift.detections', { severity: 'critical' })).toBe(1);
+  });
+
   it('counts drift checks per tick and detections only at event onset', async () => {
     recordDriftTick([
       drift({ status: 'insufficient_data' }),

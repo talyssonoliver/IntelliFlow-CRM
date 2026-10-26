@@ -22,6 +22,7 @@ import {
   ksFromCounts,
   ksTwoSample,
   severityFrom,
+  type Severity,
 } from './drift-stats';
 import type { DriftStatus, DriftTickResult } from './otel-ai-types';
 
@@ -129,6 +130,14 @@ interface PersistenceState {
   consecutiveDetected: number;
   consecutiveClear: number;
   inEvent: boolean;
+  /** Highest severity the open event has reached; 'none' outside an event. */
+  peakSeverity: Severity;
+}
+
+const SEVERITY_ORDER: readonly Severity[] = ['none', 'low', 'medium', 'high', 'critical'];
+
+function isHighSeverity(severity: Severity): boolean {
+  return severity === 'high' || severity === 'critical';
 }
 
 function seriesKey(model: string, metric: string): string {
@@ -291,9 +300,15 @@ export class DriftDetector {
       if (options.metrics && !options.metrics.includes(entry.metric)) continue;
       const result = this.detectDrift(entry.model, entry.metric, now);
       if (result.status === 'evaluated') {
-        const step = this.applyPersistence(entry.model, entry.metric, result.detectedTick);
+        const step = this.applyPersistence(
+          entry.model,
+          entry.metric,
+          result.detectedTick,
+          result.severity
+        );
         result.onset = step.onset;
         result.inEvent = step.inEvent;
+        result.escalated = step.escalated;
       }
       results.push(result);
     }
@@ -304,38 +319,51 @@ export class DriftDetector {
 
   /**
    * Advance the event state machine for one evaluated tick: an event opens on the third
-   * consecutive detected tick (the onset) and closes after three consecutive clear ticks.
+   * consecutive detected tick (the onset) and closes after three consecutive clear ticks. A
+   * detected tick that lifts an open event above the highest severity it had reached is an
+   * escalation.
    */
   applyPersistence(
     model: string,
     metric: string,
-    detected: boolean
-  ): { onset: boolean; inEvent: boolean } {
+    detected: boolean,
+    severity: Severity = 'none'
+  ): { onset: boolean; inEvent: boolean; escalated: boolean } {
     const key = seriesKey(model, metric);
     const state = this.persistence.get(key) ?? {
       consecutiveDetected: 0,
       consecutiveClear: 0,
       inEvent: false,
+      peakSeverity: 'none',
     };
     let onset = false;
+    let escalated = false;
 
     if (detected) {
       state.consecutiveDetected++;
       state.consecutiveClear = 0;
       if (!state.inEvent && state.consecutiveDetected >= PERSISTENCE_TICKS) {
         state.inEvent = true;
+        state.peakSeverity = severity;
         onset = true;
+      } else if (
+        state.inEvent &&
+        SEVERITY_ORDER.indexOf(severity) > SEVERITY_ORDER.indexOf(state.peakSeverity)
+      ) {
+        state.peakSeverity = severity;
+        escalated = true;
       }
     } else {
       state.consecutiveClear++;
       state.consecutiveDetected = 0;
       if (state.inEvent && state.consecutiveClear >= PERSISTENCE_TICKS) {
         state.inEvent = false;
+        state.peakSeverity = 'none';
       }
     }
 
     this.persistence.set(key, state);
-    return { onset, inEvent: state.inEvent };
+    return { onset, inEvent: state.inEvent, escalated };
   }
 
   /**
@@ -380,22 +408,15 @@ export class DriftDetector {
       totalSamples += entry.samples.length;
     }
 
-    const recentDrift = this.driftHistory.filter(
-      (d) => d.timestamp > new Date(Date.now() - DAY_MS)
-    );
-
-    // Health follows confirmed events (3 consecutive ticks), never a single detected tick.
-    const highSeverity = recentDrift.filter(
-      (d) => d.inEvent && (d.severity === 'high' || d.severity === 'critical')
-    );
-
-    const openEvent = [...this.persistence.values()].some((s) => s.inEvent);
+    // Health follows the events open now (3 consecutive ticks), never a single detected tick
+    // and never a snapshot from an event that has since closed.
+    const openEvents = [...this.persistence.values()].filter((s) => s.inEvent);
 
     return {
       trackedMetrics: this.series.size,
       totalSamples,
-      driftDetected: openEvent,
-      highSeverityCount: highSeverity.length,
+      driftDetected: openEvents.length > 0,
+      highSeverityCount: openEvents.filter((s) => isHighSeverity(s.peakSeverity)).length,
       lastCheck:
         this.lastTickAt ??
         (this.driftHistory.length > 0 ? this.driftHistory.at(-1)!.timestamp : null),

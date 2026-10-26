@@ -109,6 +109,8 @@ export interface DriftTickResult {
   onset: boolean;
   /** A drift event is open after this tick. */
   inEvent: boolean;
+  /** This tick raised an already-open event to a higher severity than it had reached. */
+  escalated?: boolean;
   severity: DriftSeverity;
   driftScore: number;
   pValue: number;
@@ -197,7 +199,8 @@ export const AI_METRIC_DEFINITIONS: readonly AiMetricDefinition[] = [
     name: 'intelliflow.ai.drift.detections',
     type: 'counter',
     unit: '1',
-    description: 'Output-distribution shift events (counted once at onset)',
+    description:
+      'Output-distribution shift events (counted at onset and again on each severity escalation)',
   },
   {
     name: 'intelliflow.ai.drift.checks',

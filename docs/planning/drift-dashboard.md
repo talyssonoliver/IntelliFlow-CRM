@@ -89,9 +89,11 @@ A tick is _detected_ when the two-sample Kolmogorov-Smirnov test gives p < 0.01
 **and** either the excess PSI (PSI minus its small-sample bias, over 10 fixed
 bins on [0,1]) or the KS statistic D is at least 0.1. Severity is the higher of
 the PSI bands (0.1 / 0.2 / 0.25 / 0.5) and the D bands (0.1 / 0.2 / 0.3 / 0.5).
-A detection is counted once, at onset, after 3 consecutive detected ticks. With
-fewer than 50 reference or 25 current samples the tick is `insufficient_data`,
-not "no drift".
+A detection is counted at onset, after 3 consecutive detected ticks, and again
+each time the open event escalates to a higher severity than it had reached, so
+an event that opens low and turns critical still reaches the high/critical
+alert. The health summary reports only events open now. With fewer than 50
+reference or 25 current samples the tick is `insufficient_data`, not "no drift".
 
 Samples are kept for 8 days, capped at 50,000 per key, in memory: a restart
 starts a new warm-up of up to 7 days.
