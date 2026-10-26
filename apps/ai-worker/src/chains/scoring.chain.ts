@@ -3,7 +3,7 @@ import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { LLMResult } from '@langchain/core/outputs';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
-import { aiConfig, type AIProvider } from '../config/ai.config';
+import { MODEL_PRICING, aiConfig, servedPricingKey, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult, MonitoringContext, TokenUsage } from '../monitoring/chain-monitor';
 import { recordInference } from '../monitoring/otel-ai-metrics';
@@ -50,10 +50,41 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
   name = 'TokenUsageCallbackHandler';
   private captured: TokenUsage | null = null;
   private readonly modelName: string;
+  private readonly provider: AIProvider | undefined;
+  private invokedModel: string | undefined;
 
-  constructor(modelName: string) {
+  /**
+   * @param modelName The pricing alias (`scoring-<tier>`) used when the served model is unknown.
+   * @param provider  The provider serving the call; Ollama runs locally and costs nothing.
+   */
+  constructor(modelName: string, provider?: AIProvider) {
     super();
     this.modelName = modelName;
+    this.provider = provider;
+  }
+
+  handleChatModelStart(
+    _llm: unknown,
+    _messages: unknown,
+    _runId: string,
+    _parentRunId?: string,
+    extraParams?: Record<string, unknown>
+  ): void {
+    const params = extraParams?.['invocation_params'] as { model?: unknown } | undefined;
+    if (typeof params?.model === 'string') this.invokedModel = params.model;
+  }
+
+  /**
+   * Price what actually served the call, like usage-metering.ts: a free model costs 0 and a known
+   * served deployment uses its own pricing key. The label stays bounded: a MODEL_PRICING key or
+   * the alias, never the raw served name.
+   */
+  private pricingFor(served: string | undefined): Pick<TokenUsage, 'model' | 'free'> {
+    const isFreeModel = [served, this.invokedModel].some((name) => name?.endsWith(':free'));
+    if (this.provider === 'ollama' || isFreeModel) return { model: this.modelName, free: true };
+    const key = servedPricingKey(served);
+    if (key && Object.hasOwn(MODEL_PRICING, key)) return { model: key, free: false };
+    return { model: this.modelName, free: false };
   }
 
   handleLLMEnd(output: LLMResult): void {
@@ -64,10 +95,14 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
       (output.llmOutput?.tokenUsage as TokenCounts | undefined) ??
       (output.llmOutput?.estimatedTokenUsage as TokenCounts | undefined);
     if (usage) {
+      const generation = output.generations?.[0]?.[0] as
+        | { message?: { response_metadata?: { model_name?: unknown } } }
+        | undefined;
+      const served = generation?.message?.response_metadata?.model_name;
       this.captured = {
         inputTokens: usage.promptTokens ?? 0,
         outputTokens: usage.completionTokens ?? 0,
-        model: this.modelName,
+        ...this.pricingFor(typeof served === 'string' ? served : undefined),
       };
     }
   }
@@ -217,7 +252,10 @@ Respond with a structured JSON object containing the score, confidence, factors,
       const costModelKey = `scoring-${effectiveTierLabel}`;
       // The provider that actually served this call (a fallback chain overrides the global one).
       const modelVersion = `${this.provider ?? aiConfig.provider}:${costModelKey}:v1`;
-      const usageHandler = new TokenUsageCallbackHandler(costModelKey);
+      const usageHandler = new TokenUsageCallbackHandler(
+        costModelKey,
+        this.provider ?? aiConfig.provider
+      );
       const monitoringContext: MonitoringContext = {
         modelName: costModelKey,
         chain: 'lead_scoring',

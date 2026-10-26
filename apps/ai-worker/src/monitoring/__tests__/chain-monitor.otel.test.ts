@@ -233,6 +233,29 @@ describe('error path', () => {
   });
 });
 
+describe('cost of the model that served the call', () => {
+  it('records no spend for a free served model', async () => {
+    const recordCost = vi.spyOn(config.roiTracker, 'recordCost');
+    await withMonitoring(async () => ({ score: 70 }), config, {
+      ...FULL_CONTEXT,
+      getUsage: () => ({ inputTokens: 2000, outputTokens: 500, model: 'scoring-free', free: true }),
+    });
+    const all = await collectMetrics(reader);
+    expect(total(all, 'intelliflow.ai.cost.usd')).toBe(0);
+    expect(recordCost).not.toHaveBeenCalled();
+  });
+
+  it('prices the served model key over the caller alias', async () => {
+    await withMonitoring(async () => ({ score: 70 }), config, {
+      ...FULL_CONTEXT,
+      getUsage: () => ({ inputTokens: 2000, outputTokens: 500, model: 'scoring-premium' }),
+    });
+    const all = await collectMetrics(reader);
+    const [point] = pointsWhere(all, 'intelliflow.ai.cost.usd');
+    expect(point.attributes.model).toBe('scoring-premium');
+  });
+});
+
 describe('cost of a failed call', () => {
   it('records the captured cost once when parsing fails after a paid call, and rethrows', async () => {
     const recordCost = vi.spyOn(config.roiTracker, 'recordCost');

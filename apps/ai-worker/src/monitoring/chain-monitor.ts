@@ -54,7 +54,10 @@ export interface ChainMonitorConfig {
 export interface TokenUsage {
   inputTokens: number;
   outputTokens: number;
+  /** A MODEL_PRICING key or the caller's alias: a bounded value, never a raw served name. */
   model: string;
+  /** The model that served the call costs nothing (an OpenRouter `:free` model, local Ollama). */
+  free?: boolean;
 }
 
 /**
@@ -158,10 +161,10 @@ function computeTokenCost(
 ): { cost: number; model: string } | null {
   const usage = context?.getUsage?.() ?? null;
   if (usage === null) return null;
-  // Prefer the caller-supplied modelName; fall back to usage.model so the pricing key is
-  // never silently lost when context.modelName is omitted (AC-004).
-  const modelName = context?.modelName ?? usage.model ?? 'unknown';
-  const cost = calculateCost(modelName, usage.inputTokens, usage.outputTokens);
+  // Price what served the call (IFC-117): usage.model is the served model's pricing key when it
+  // is known, else the caller's alias; context.modelName only covers usage without a model.
+  const modelName = usage.model || context?.modelName || 'unknown';
+  const cost = usage.free ? 0 : calculateCost(modelName, usage.inputTokens, usage.outputTokens);
   if (cost > 0) {
     // Pass the pre-computed cost so ROI tracker and metrics.tokenCost use the same value.
     config.roiTracker.recordCost({

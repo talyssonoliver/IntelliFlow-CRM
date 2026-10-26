@@ -173,6 +173,10 @@ and go to the coordinator for a restore. IFC-033 (#1013) used the same disclosur
   stopped being evaluated) was fixed: any non-evaluated result removes that series' score. Pruning
   series absent from a tick was considered and rejected, because `detectAllDrift({ metrics })` may
   evaluate only a subset.
+- An exhaustive codex pass found that cost was priced by the scoring alias even when a free model
+  served the call. Fixed on the coordinator's ruling: the usage callback prices the served model
+  (`:free` and Ollama cost 0; a known deployment uses its own key; else the alias), with the label
+  bounded to a pricing key or the alias. This corrects IFC-215's ROI cost for free providers too.
 
 ## Follow-ups (filed at PR time, after an `gh issue list --search` check)
 
