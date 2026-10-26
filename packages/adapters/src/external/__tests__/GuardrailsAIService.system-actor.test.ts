@@ -220,6 +220,68 @@ describe('GuardrailsAIService with the container config', () => {
     );
   });
 
+  describe('the requesting user as the actor', () => {
+    const USER_ID = 'cmh3k2x9a0000useractor001';
+
+    it("audits a user-triggered failure under that user, in the lead's tenant", async () => {
+      const { inner, audit, service } = build();
+      vi.mocked(inner.scoreLead).mockRejectedValueOnce(new Error('provider down'));
+
+      await service.scoreLead(lead(), { tenantId: LEAD_TENANT, leadId: LEAD_ID, userId: USER_ID });
+
+      const [event, ctx] = auditCall(audit);
+      expect(event.userId).toBe(USER_ID);
+      expect(ctx.userId).toBe(USER_ID);
+      expect(event.tenantId).toBe(LEAD_TENANT);
+    });
+
+    it('keeps the system actor for a call that carries no user', async () => {
+      const { inner, audit, service } = build();
+      vi.mocked(inner.scoreLead).mockRejectedValueOnce(new Error('provider down'));
+
+      await service.scoreLead(lead(), { tenantId: LEAD_TENANT, leadId: LEAD_ID });
+
+      expect(auditCall(audit)[0].userId).toBe('system');
+    });
+
+    it('audits a PII redaction under the requesting user', async () => {
+      const { inner, audit, service } = build();
+      vi.mocked(inner.scoreLead).mockResolvedValueOnce(
+        Result.ok({
+          score: 50,
+          confidence: 0.6,
+          modelVersion: 'm1',
+          reasoning: 'Contact jane@acme.example.invalid looks engaged',
+        } as LeadScoringResult)
+      );
+
+      await service.scoreLead(lead(), { tenantId: LEAD_TENANT, leadId: LEAD_ID, userId: USER_ID });
+      await vi.waitFor(() => expect(audit.logSecurityEvent).toHaveBeenCalled());
+
+      expect(auditCall(audit)[0].userId).toBe(USER_ID);
+    });
+
+    it('rejects an unsafe user id before calling the model', async () => {
+      const { inner, service } = build();
+      const result = await service.scoreLead(lead(), {
+        tenantId: LEAD_TENANT,
+        userId: 'not a/safe id',
+      });
+
+      expect(result.isFailure).toBe(true);
+      expect(inner.scoreLead).not.toHaveBeenCalled();
+    });
+
+    it('still rate-limits per tenant, whichever users make the calls', async () => {
+      const { service } = build({ ...CONTAINER_CONFIG, rateLimit: 2 });
+      await service.scoreLead(lead(), { tenantId: 'tenant-a', userId: 'user-1' });
+      await service.scoreLead(lead(), { tenantId: 'tenant-a', userId: 'user-2' });
+
+      const limited = await service.scoreLead(lead(), { tenantId: 'tenant-a', userId: 'user-3' });
+      expect(limited.error.code).toBe('AI_RATE_LIMITED');
+    });
+  });
+
   it('rate-limits per tenant, so one tenant cannot block scoring for another', async () => {
     const { service } = build({ ...CONTAINER_CONFIG, rateLimit: 2 });
     await service.scoreLead(lead(), { tenantId: 'tenant-a' });

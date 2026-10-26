@@ -154,6 +154,8 @@ interface LogSecurityEventOptions {
   detectionConfidence?: number;
   /** The call's real tenant (opts.tenantId); falls back to config.tenantId. */
   tenantId?: string;
+  /** The requesting user (opts.userId); falls back to the configured system actor. */
+  userId?: string;
 }
 
 /** Generic message per operation; the distinct code says what actually failed. */
@@ -446,6 +448,7 @@ export class GuardrailsAIService implements AIServicePort {
       { error: message, errorCode, operation, ...extra },
       {
         tenantId: opts?.tenantId,
+        userId: opts?.userId,
         resourceType: opts?.leadId ? 'lead' : undefined,
         resourceId: opts?.leadId,
       }
@@ -474,13 +477,14 @@ export class GuardrailsAIService implements AIServicePort {
     const severity = isAISecurityEventType(eventType) ? AI_EVENT_SEVERITY_MAP[eventType] : 'MEDIUM';
 
     const tenantId = options.tenantId ?? this.config.tenantId;
+    const userId = options.userId ?? this.config.userId;
 
     // Build the event input for AuditLogPort
     const event: AISecurityEventInput = {
       eventType,
       severity,
       tenantId,
-      userId: this.config.userId,
+      userId,
       resourceType: options.resourceType,
       resourceId: options.resourceId,
       description: this.buildDescription(eventType, details),
@@ -500,7 +504,7 @@ export class GuardrailsAIService implements AIServicePort {
     // Build tenant context
     const tenantContext: TenantContext = {
       tenantId,
-      userId: this.config.userId,
+      userId,
       jurisdiction: this.config.jurisdiction,
     };
 
@@ -534,13 +538,13 @@ export class GuardrailsAIService implements AIServicePort {
     // Build prompt from input
     const promptText = this.buildPromptFromInput(input);
 
-    // Sanitize the prompt. The rate-limit bucket is per tenant and actor: the
-    // container's single system actor would otherwise share one bucket across
-    // every tenant.
+    // Sanitize the prompt as the requesting user (else the system actor). The
+    // rate-limit bucket stays per tenant: keyed on the configured actor, not the
+    // user, so a tenant's budget is shared by its users.
     const tenantId = opts?.tenantId ?? this.config.tenantId;
     await sanitizationPipeline({
       text: promptText,
-      userId: this.config.userId,
+      userId: opts?.userId ?? this.config.userId,
       context: { operation: 'lead_scoring', leadEmail: input.email },
       rateLimitKey: `${tenantId}:${this.config.userId}`,
       maxRequestsPerMinute: this.config.rateLimit,
@@ -628,6 +632,7 @@ export class GuardrailsAIService implements AIServicePort {
         { context, redactionCount: (text.match(/@/g) || []).length },
         {
           tenantId: opts?.tenantId,
+          userId: opts?.userId,
           resourceType: opts?.leadId ? 'lead' : undefined,
           resourceId: opts?.leadId,
         }
