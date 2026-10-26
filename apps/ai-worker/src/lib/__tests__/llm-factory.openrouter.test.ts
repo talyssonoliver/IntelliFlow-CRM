@@ -134,6 +134,25 @@ describe('createLLM() on OpenRouter', () => {
     expect(requests[0]?.models).toEqual(['a/one:free', 'b/two:free']);
   });
 
+  it('drops a paid fallback, which OpenRouter would bill while metering prices it as $0', async () => {
+    vi.stubEnv('OPENROUTER_FALLBACK_MODELS', 'vendor/paid-model,b/two:free');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { createLLM } = await importFactory('openrouter');
+    await createLLM('scoring', 'free').invoke('hi');
+
+    expect(requests[0]?.models).toEqual(['b/two:free']);
+    expect(warn.mock.calls.some((c) => String(c[0]).includes('vendor/paid-model'))).toBe(true);
+  });
+
+  it('only paid fallbacks → no `models` list at all', async () => {
+    vi.stubEnv('OPENROUTER_FALLBACK_MODELS', 'vendor/paid-model');
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { createLLM } = await importFactory('openrouter');
+    await createLLM('scoring', 'free').invoke('hi');
+
+    expect(requests[0]).not.toHaveProperty('models');
+  });
+
   it('an empty OPENROUTER_FALLBACK_MODELS sends no `models` list', async () => {
     vi.stubEnv('OPENROUTER_FALLBACK_MODELS', '');
     const { createLLM } = await importFactory('openrouter');

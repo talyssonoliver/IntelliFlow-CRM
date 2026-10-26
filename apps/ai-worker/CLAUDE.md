@@ -45,9 +45,9 @@ model is `nvidia/nemotron-3-ultra-550b-a55b:free`, with
   can handle the requested parameters". Don't pass `method: 'jsonSchema'` at a
   call site.
 - **Free models get withdrawn.** `openai/gpt-oss-120b:free` disappeared in
-  October 2026 and every call returned 404. Keep only `:free` models in the
-  fallback list: OpenRouter bills a fallback at its own price, while metering
-  prices the call as the primary.
+  October 2026 and every call returned 404. The fallback list accepts only
+  `:free` ids (a paid one is dropped with a warning): OpenRouter bills a
+  fallback at its own price, while metering prices the call as the primary.
 
 ### Cost Optimization
 

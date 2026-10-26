@@ -44,8 +44,10 @@ function openRouterModelForTier(tier: LLMTier): string {
 /**
  * OpenRouter's `models` list: the models OpenRouter itself tries, in order, when the
  * primary errors (404 withdrawn, 429, 5xx). `OPENROUTER_FALLBACK_MODELS` is a comma list;
- * unset uses the default, empty disables it. The primary is never repeated. List only
- * `:free` models: OpenRouter bills a fallback at its own price.
+ * unset uses the default, empty disables it. The primary is never repeated. Only `:free`
+ * models are sent: OpenRouter bills a fallback at its own price, but metering prices the
+ * call as the primary, so a paid fallback would be charged while recorded as $0 (and slip
+ * past the spend limits). A paid id is dropped with a warning.
  */
 function openRouterFallbackModels(primary: string): string[] {
   const raw = process.env['OPENROUTER_FALLBACK_MODELS'] ?? DEFAULT_OPENROUTER_FALLBACK_MODELS;
@@ -53,7 +55,12 @@ function openRouterFallbackModels(primary: string): string[] {
     .split(',')
     .map((id) => id.trim())
     .filter((id) => id && id !== primary);
-  return [...new Set(models)];
+  for (const id of models.filter((m) => !m.endsWith(':free'))) {
+    console.warn(
+      `[llm-factory] OPENROUTER_FALLBACK_MODELS: dropping "${id}" — only :free fallbacks are allowed (a paid fallback would be metered as $0)`
+    );
+  }
+  return [...new Set(models.filter((m) => m.endsWith(':free')))];
 }
 
 /**
