@@ -46,6 +46,8 @@ export async function querySeriesCount(api, datasourceUid, selector) {
  * `source` is the only thing that differs between this repo's two callers —
  * each passes its own fixed label so the two scripts' rules stay
  * distinguishable in Grafana even though the payload shape is identical.
+ * The query is evaluated at "now" unless the entry sets `queryOffsetSeconds`,
+ * which reads it that many seconds back so late-arriving samples are counted.
  */
 export function buildAlertRulePayload(entry, config, source) {
   return {
@@ -63,7 +65,7 @@ export function buildAlertRulePayload(entry, config, source) {
     data: [
       {
         refId: 'A',
-        relativeTimeRange: { from: 900, to: 0 },
+        relativeTimeRange: { from: 900, to: entry.queryOffsetSeconds ?? 0 },
         datasourceUid: config.datasourceUid,
         model: {
           refId: 'A',
