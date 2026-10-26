@@ -56,11 +56,9 @@ RUN pnpm --filter application build
 RUN pnpm --filter adapters build
 RUN pnpm --filter ai-worker build
 
-# Build the events and ingestion workers, then the combined entrypoint that
-# imports all three
+# Build the events and ingestion workers (the combined entrypoint comes last)
 RUN pnpm --filter events-worker build
 RUN pnpm --filter ingestion-worker build
-RUN pnpm --filter combined-worker build
 
 # COMBINED_BACKGROUND_JOBS=on runs the api's timer jobs (approval sweep, bounce
 # scan) from apps/api/dist/background-jobs.js, so the api and every workspace
@@ -68,6 +66,10 @@ RUN pnpm --filter combined-worker build
 RUN pnpm --filter "@intelliflow/api^..." --workspace-concurrency=1 run build
 ENV NODE_OPTIONS="--max-old-space-size=4096"
 RUN pnpm --filter api build
+
+# The combined entrypoint imports all three workers and the api's
+# dist/background-jobs.js (its types too, for the dts build), so it builds last.
+RUN pnpm --filter combined-worker build
 
 # Stage 3: Runner
 FROM node:24-alpine AS production
