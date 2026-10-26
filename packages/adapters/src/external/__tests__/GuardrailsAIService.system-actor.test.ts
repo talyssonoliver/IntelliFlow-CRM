@@ -146,6 +146,28 @@ describe('GuardrailsAIService with the container config', () => {
     errorSpy.mockRestore();
   });
 
+  it("audits a PII redaction in the score reasoning under the lead's tenant", async () => {
+    const { inner, audit, service } = build();
+    vi.mocked(inner.scoreLead).mockResolvedValueOnce(
+      Result.ok({
+        score: 50,
+        confidence: 0.6,
+        modelVersion: 'm1',
+        reasoning: 'Contact jane@acme.example.invalid looks engaged',
+      } as LeadScoringResult)
+    );
+
+    const result = await service.scoreLead(lead(), { tenantId: LEAD_TENANT, leadId: LEAD_ID });
+    await vi.waitFor(() => expect(audit.logSecurityEvent).toHaveBeenCalled());
+
+    expect(result.value.reasoning).toContain('[EMAIL_REDACTED]');
+    const [event, ctx] = auditCall(audit);
+    expect(event.eventType).toBe('AI_PII_EXPOSURE_BLOCKED');
+    expect(event.tenantId).toBe(LEAD_TENANT);
+    expect(ctx.tenantId).toBe(LEAD_TENANT);
+    expect(event.resourceId).toBe(LEAD_ID);
+  });
+
   it('rate-limits per tenant, so one tenant cannot block scoring for another', async () => {
     const { service } = build({ ...CONTAINER_CONFIG, rateLimit: 2 });
     await service.scoreLead(lead(), { tenantId: 'tenant-a' });

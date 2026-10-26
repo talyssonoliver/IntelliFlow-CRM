@@ -239,7 +239,7 @@ export class GuardrailsAIService implements AIServicePort {
       }
 
       // Step 3: Redact PII from output
-      const safeResult = this.sanitizeOutput(result.value);
+      const safeResult = this.sanitizeOutput(result.value, opts);
 
       // Step 4: Collect bias metrics (if enabled)
       if (this.config.enableBiasDetection) {
@@ -531,11 +531,14 @@ export class GuardrailsAIService implements AIServicePort {
   /**
    * Sanitize AI output
    */
-  private sanitizeOutput(result: LeadScoringResult): LeadScoringResult {
+  private sanitizeOutput(
+    result: LeadScoringResult,
+    opts?: AIServiceCallOptions
+  ): LeadScoringResult {
     // For numeric outputs, no sanitization needed
     // But we redact PII from reasoning if present
     if (result.reasoning) {
-      const sanitized = this.sanitizeText(result.reasoning, 'reasoning');
+      const sanitized = this.sanitizeText(result.reasoning, 'reasoning', opts);
       return {
         ...result,
         reasoning: sanitized,
@@ -557,7 +560,7 @@ export class GuardrailsAIService implements AIServicePort {
    *  - NHS numbers (UK) — only when preceded by keyword context
    *  - Brazilian CPF numbers
    */
-  private sanitizeText(text: string, context: string): string {
+  private sanitizeText(text: string, context: string, opts?: AIServiceCallOptions): string {
     // 1. Email
     let result = text.replaceAll(
       /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
@@ -596,10 +599,15 @@ export class GuardrailsAIService implements AIServicePort {
     if (result !== text) {
       // sanitizeText is synchronous, so the audit write is fire-and-forget; a rejection
       // (e.g. while building the event, before the port call) is reported like any audit failure.
-      this.logSecurityEvent('AI_PII_EXPOSURE_BLOCKED', {
-        context,
-        redactionCount: (text.match(/@/g) || []).length,
-      }).catch((error: unknown) => this.reportAuditLogFailure(error));
+      this.logSecurityEvent(
+        'AI_PII_EXPOSURE_BLOCKED',
+        { context, redactionCount: (text.match(/@/g) || []).length },
+        {
+          tenantId: opts?.tenantId,
+          resourceType: opts?.leadId ? 'lead' : undefined,
+          resourceId: opts?.leadId,
+        }
+      ).catch((error: unknown) => this.reportAuditLogFailure(error));
     }
 
     return result;

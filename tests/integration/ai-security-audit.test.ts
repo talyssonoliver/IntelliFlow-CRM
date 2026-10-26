@@ -165,6 +165,76 @@ describeDb('AI security audit persistence', () => {
     });
   });
 
+  it('detects a tampered column, not only tampered metadata', async () => {
+    const resourceId = `${TAG}_tamper_col`;
+    await adapter.logSecurityEvent(
+      {
+        eventType: 'AI_PROMPT_INJECTION_DETECTED',
+        severity: 'CRITICAL',
+        tenantId,
+        userId: 'system',
+        resourceId,
+        description: 'blocked',
+        metadata: {
+          modelId: 'm',
+          modelVersion: '1',
+          guardrailId: 'g',
+          guardrailVersion: '1',
+          processingPurpose: 'test',
+          legalBasis: 'test',
+        },
+      },
+      { tenantId }
+    );
+    const [row] = await rows({ resourceId });
+    expect(row.actionResult).toBe('DENIED');
+    await prisma.auditLogEntry.update({ where: { id: row.id }, data: { actionResult: 'SUCCESS' } });
+
+    await expect(adapter.verifyLogIntegrity(row.eventId)).resolves.toMatchObject({
+      valid: false,
+      reason: 'SIGNATURE_INVALID',
+    });
+  });
+
+  it('commits a batch as one chained unit, and rolls the whole batch back on a failed insert', async () => {
+    const event = (resourceId: string, userId = 'system') => ({
+      eventType: 'AI_GUARDRAIL_TRIGGERED' as const,
+      severity: 'LOW' as const,
+      tenantId,
+      userId,
+      resourceId,
+      description: 'batch',
+      metadata: {
+        modelId: 'm',
+        modelVersion: '1',
+        guardrailId: 'g',
+        guardrailVersion: '1',
+        processingPurpose: 'test',
+        legalBasis: 'test',
+      },
+    });
+
+    const ok = await adapter.logBatchEvents([event(`${TAG}_b1`), event(`${TAG}_b2`)], { tenantId });
+    expect(ok).toMatchObject({ successCount: 2, failureCount: 0 });
+    const [b2] = await rows({ resourceId: `${TAG}_b2` });
+    expect(b2.metadata.audit.previousHash).toBe(ok.results[0].integrityHash);
+
+    // A userId with no users row fails the actorId FK and aborts the transaction:
+    // the event before it must not be reported, or stored, as persisted.
+    const bad = await adapter.logBatchEvents(
+      [event(`${TAG}_b3`), event(`${TAG}_b4`, `${TAG}nouser`)],
+      { tenantId }
+    );
+    expect(bad).toMatchObject({ successCount: 0, failureCount: 2 });
+    expect(await rows({ resourceId: `${TAG}_b3` })).toHaveLength(0);
+
+    // The chain continues from the last committed row.
+    const next = await adapter.logSecurityEvent(event(`${TAG}_b5`), { tenantId });
+    const [b5] = await rows({ resourceId: `${TAG}_b5` });
+    expect(next.status).toBe('PERSISTED');
+    expect(b5.metadata.audit.previousHash).toBe(ok.results[1].integrityHash);
+  });
+
   it("skips the write for the 'default' fallback tenant instead of failing", async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const before = await prisma.auditLogEntry.count();

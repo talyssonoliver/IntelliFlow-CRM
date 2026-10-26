@@ -142,7 +142,7 @@ describe('DurableAuditLogAdapter', () => {
       expect(row.metadata.audit).toMatchObject({
         severity: 'HIGH',
         userId: 'user-456',
-        description: 'Guardrail triggered during lead scoring',
+        previousHash: 'GENESIS',
       });
     });
 
@@ -292,6 +292,44 @@ describe('DurableAuditLogAdapter', () => {
 
       expect(verification.valid).toBe(false);
       expect(verification.reason).toBe('SIGNATURE_INVALID');
+    });
+
+    it.each([
+      ['actionResult', 'SUCCESS'],
+      ['action', 'READ'],
+      ['actorType', 'SYSTEM'],
+      ['resourceId', 'another-resource'],
+      ['actionReason', 'rewritten'],
+      ['dataClassification', 'PUBLIC'],
+    ])('verifyLogIntegrity detects a tampered %s column', async (column, value) => {
+      const result = await adapter.logSecurityEvent(
+        { ...createValidEvent(), eventType: 'AI_PROMPT_INJECTION_DETECTED' },
+        createValidTenantContext()
+      );
+      prisma.writes[0][column] = value;
+
+      const verification = await adapter.verifyLogIntegrity(result.eventId);
+
+      expect(verification).toMatchObject({ valid: false, reason: 'SIGNATURE_INVALID' });
+    });
+
+    it('verifyLogIntegrity detects an actorId swapped to another user', async () => {
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      prisma.writes[0].actorId = 'someone-else';
+
+      await expect(adapter.verifyLogIntegrity(result.eventId)).resolves.toMatchObject({
+        valid: false,
+        signatureValid: false,
+      });
+    });
+
+    it('verifyLogIntegrity accepts an actorId nulled by the users FK (ON DELETE SET NULL)', async () => {
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      prisma.writes[0].actorId = null;
+
+      await expect(adapter.verifyLogIntegrity(result.eventId)).resolves.toMatchObject({
+        valid: true,
+      });
     });
 
     it('verifyLogIntegrity reports a hash mismatch when metadata is altered', async () => {
@@ -456,6 +494,28 @@ describe('DurableAuditLogAdapter', () => {
       expect(result).toMatchObject({ totalEvents: 2, successCount: 1, failureCount: 1 });
       expect(result.results.map((r) => r.status)).toEqual(['PERSISTED', 'FAILED']);
       expect(prisma.writes).toHaveLength(1);
+    });
+
+    it('reports every event FAILED and keeps the chain head when the batch rolls back', async () => {
+      // A failed statement aborts the whole Postgres transaction, so rows written
+      // before it are rolled back too and must not be reported as persisted.
+      prisma.tx.auditLogEntry.create
+        .mockImplementationOnce(async (args: { data: any }) => args.data)
+        .mockRejectedValueOnce(new Error('insert failed'));
+      prisma.$transaction.mockImplementationOnce(async (callback: (t: any) => Promise<any>) => {
+        await callback(prisma.tx); // rejects on the second insert, like a rolled-back tx
+      });
+
+      const result = await adapter.logBatchEvents(
+        [createValidEvent(), createValidEvent(), createValidEvent()],
+        createValidTenantContext()
+      );
+
+      expect(result).toMatchObject({ totalEvents: 3, successCount: 0, failureCount: 3 });
+      expect(result.results.every((r) => r.status === 'FAILED')).toBe(true);
+
+      await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      expect(prisma.writes.at(-1).metadata.audit.previousHash).toBe('GENESIS');
     });
 
     it('skips a batch for a fallback tenant without failing it', async () => {
