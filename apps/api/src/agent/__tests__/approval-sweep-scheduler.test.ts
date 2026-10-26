@@ -70,6 +70,40 @@ describe('startApprovalSweep / stopApprovalSweep', () => {
     expect(run).toHaveBeenCalledTimes(2);
   });
 
+  it('stop waits for a tick that is mid-flight and starts no new tick afterwards', async () => {
+    vi.useFakeTimers();
+    let release!: () => void;
+    const run = vi.fn(() => new Promise<void>((resolve) => (release = resolve)));
+    startApprovalSweep({ intervalMs: 1000, run, log: quiet() });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(run).toHaveBeenCalledTimes(1);
+
+    let stopped = false;
+    const stopping = stopApprovalSweep().then(() => (stopped = true));
+    await vi.advanceTimersByTimeAsync(5000); // the tick is still running
+    expect(stopped).toBe(false);
+    expect(run).toHaveBeenCalledTimes(1); // and nothing new was started
+
+    release();
+    await stopping;
+    expect(stopped).toBe(true);
+  });
+
+  it('stop resolves even when the in-flight tick fails, and when nothing runs', async () => {
+    vi.useFakeTimers();
+    let fail!: (error: Error) => void;
+    startApprovalSweep({
+      intervalMs: 1000,
+      run: () => new Promise<void>((_, reject) => (fail = reject)),
+      log: quiet(),
+    });
+    await vi.advanceTimersByTimeAsync(1000);
+    const stopping = stopApprovalSweep();
+    fail(new Error('boom'));
+    await expect(stopping).resolves.toBeUndefined();
+    await expect(stopApprovalSweep()).resolves.toBeUndefined();
+  });
+
   it('unrefs its timer so it never keeps the process alive', () => {
     const unref = vi.fn();
     const spy = vi

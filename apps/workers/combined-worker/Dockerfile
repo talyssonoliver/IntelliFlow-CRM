@@ -62,6 +62,13 @@ RUN pnpm --filter events-worker build
 RUN pnpm --filter ingestion-worker build
 RUN pnpm --filter combined-worker build
 
+# COMBINED_BACKGROUND_JOBS=on runs the api's timer jobs (approval sweep, bounce
+# scan) from apps/api/dist/background-jobs.js, so the api and every workspace
+# package it depends on must be built too (same chain as infra/docker/Dockerfile.api).
+RUN pnpm --filter "@intelliflow/api^..." --workspace-concurrency=1 run build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN pnpm --filter api build
+
 # Stage 3: Runner
 FROM node:24-alpine AS production
 
@@ -108,6 +115,9 @@ COPY --from=builder --chown=worker:nodejs /app/apps/workers/ingestion-worker/pac
 COPY --from=builder --chown=worker:nodejs /app/apps/ai-worker/dist ./apps/ai-worker/dist
 COPY --from=builder --chown=worker:nodejs /app/apps/ai-worker/node_modules ./apps/ai-worker/node_modules
 COPY --from=builder --chown=worker:nodejs /app/apps/ai-worker/package.json ./apps/ai-worker/
+COPY --from=builder --chown=worker:nodejs /app/apps/api/dist ./apps/api/dist
+COPY --from=builder --chown=worker:nodejs /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/api/package.json ./apps/api/
 COPY --from=builder --chown=worker:nodejs /app/package.json ./
 
 # Switch to non-root user
