@@ -7,7 +7,11 @@
  * and the failure was audited under the 'default' tenant instead of the lead's.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { GuardrailsAIService, type GuardrailsConfig } from '../GuardrailsAIService';
+import {
+  DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN,
+  GuardrailsAIService,
+  type GuardrailsConfig,
+} from '../GuardrailsAIService';
 import { Result, resetRateLimit } from '@intelliflow/domain';
 import type {
   AIServicePort,
@@ -166,6 +170,54 @@ describe('GuardrailsAIService with the container config', () => {
     expect(event.tenantId).toBe(LEAD_TENANT);
     expect(ctx.tenantId).toBe(LEAD_TENANT);
     expect(event.resourceId).toBe(LEAD_ID);
+  });
+
+  describe('per-tenant rate limit as the container configures it', () => {
+    // container.ts passes Number(process.env.AI_GUARDRAILS_RATE_LIMIT_PER_MIN).
+    const fromEnv = (raw: string | undefined) =>
+      build({ ...CONTAINER_CONFIG, rateLimit: Number(raw) });
+    const scoreMany = async (service: GuardrailsAIService, n: number) => {
+      const results = [];
+      for (let i = 0; i < n; i++) {
+        results.push(
+          await service.scoreLead(lead(), { tenantId: LEAD_TENANT, leadId: `lead-${i}` })
+        );
+      }
+      return results;
+    };
+
+    it('does not limit a 50-lead bulk score in one tenant with the variable unset', async () => {
+      const { inner, service } = fromEnv(undefined);
+      const results = await scoreMany(service, 50);
+
+      expect(results.every((r) => r.isSuccess)).toBe(true);
+      expect(inner.scoreLead).toHaveBeenCalledTimes(50);
+    });
+
+    it(`still limits past ${DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN} calls a minute`, async () => {
+      const { service } = fromEnv(undefined);
+      const results = await scoreMany(service, DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN + 1);
+
+      expect(results.slice(0, -1).every((r) => r.isSuccess)).toBe(true);
+      expect(results.at(-1)!.error.code).toBe('AI_RATE_LIMITED');
+    });
+
+    it('uses AI_GUARDRAILS_RATE_LIMIT_PER_MIN when it is a positive integer', async () => {
+      const { service } = fromEnv('5');
+      const results = await scoreMany(service, 6);
+
+      expect(results.slice(0, 5).every((r) => r.isSuccess)).toBe(true);
+      expect(results[5].error.code).toBe('AI_RATE_LIMITED');
+    });
+
+    it.each(['', 'abc', '0', '-5', '1.5'])(
+      "falls back to the default for an invalid value '%s' instead of blocking every call",
+      async (raw) => {
+        const { service } = fromEnv(raw);
+        const results = await scoreMany(service, 50);
+        expect(results.every((r) => r.isSuccess)).toBe(true);
+      }
+    );
   });
 
   it('rate-limits per tenant, so one tenant cannot block scoring for another', async () => {

@@ -93,7 +93,10 @@ export interface GuardrailsConfig {
   /** Enable bias detection and metrics collection */
   enableBiasDetection?: boolean;
 
-  /** Maximum requests per minute (default: 10) */
+  /**
+   * Maximum requests per minute per tenant and actor
+   * (default: DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN)
+   */
   rateLimit?: number;
 
   /** Log all security events */
@@ -104,6 +107,27 @@ export interface GuardrailsConfig {
 
   /** Model version for ISO 42001 traceability */
   modelVersion?: string;
+}
+
+/**
+ * Per-tenant AI requests per minute when the deployment sets no limit. The API
+ * runs every call as the system actor, so this bucket is shared by every user of
+ * a tenant: it must sit above a normal bulk action (bulk scoring, an import),
+ * or that action fails with AI_RATE_LIMITED. 120 is a starting point; the right
+ * number should come from real usage (#1043).
+ */
+export const DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN = 120;
+
+/**
+ * A configured limit (the API passes Number(AI_GUARDRAILS_RATE_LIMIT_PER_MIN)).
+ * Anything but a positive integer (unset, NaN, 0, negative, fractional) falls
+ * back to the default: a bad value must neither disable the limit nor block
+ * every call.
+ */
+function rateLimitOrDefault(value: number | undefined): number {
+  return Number.isInteger(value) && (value as number) > 0
+    ? (value as number)
+    : DEFAULT_GUARDRAILS_RATE_LIMIT_PER_MIN;
 }
 
 /**
@@ -205,7 +229,7 @@ export class GuardrailsAIService implements AIServicePort {
 
     this.config = {
       enableBiasDetection: config.enableBiasDetection ?? true,
-      rateLimit: config.rateLimit ?? 10,
+      rateLimit: rateLimitOrDefault(config.rateLimit),
       enableLogging: config.enableLogging ?? true,
       userId: config.userId,
       tenantId: config.tenantId,
