@@ -49,6 +49,8 @@ export interface DriftWindow {
   min: number;
   max: number;
   distribution: number[];
+  /** The `distribution.length + 1` edges it was binned on, so a pinned window keeps its bins. */
+  binEdges?: number[];
 }
 
 /**
@@ -455,6 +457,17 @@ export class DriftDetector {
     });
   }
 
+  /**
+   * The edges a pinned window was binned on. Windows from computeBaseline() carry them; a
+   * legacy window without them falls back to [0, 1] for bounded metrics, else its extrema.
+   */
+  private pinnedEdges(metric: string, pinned: DriftWindow): number[] {
+    const bins = pinned.distribution.length;
+    if (pinned.binEdges?.length === bins + 1) return pinned.binEdges;
+    if (BOUNDED_METRICS.has(metric)) return fixedEdges(0, 1, bins);
+    return fixedEdges(pinned.min, pinned.max, bins);
+  }
+
   private evaluateAgainstPinned(
     model: string,
     metric: string,
@@ -472,7 +485,7 @@ export class DriftDetector {
       return this.insufficient(model, metric, [], [], curValues, current, now, pinned);
     }
 
-    const edges = fixedEdges(pinned.min, pinned.max, pinned.distribution.length);
+    const edges = this.pinnedEdges(metric, pinned);
     const refCounts = pinned.distribution.map((p) => p * pinned.sampleCount);
     const curCounts = binCounts(curValues, edges);
     return this.buildResult(model, metric, {
@@ -584,6 +597,7 @@ export class DriftDetector {
       min: Math.min(...values),
       max: Math.max(...values),
       distribution: binCounts(values, edges).map((count) => count / n),
+      binEdges: [...edges],
     };
   }
 

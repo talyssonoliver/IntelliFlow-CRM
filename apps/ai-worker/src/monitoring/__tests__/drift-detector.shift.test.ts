@@ -398,4 +398,29 @@ describe('DriftDetector — scope, retention and history', () => {
     expect(r.status).toBe('evaluated');
     expect(r.detectedTick).toBe(true);
   });
+
+  it.each([
+    ['score_distribution', 0.5],
+    ['latency', 850],
+  ])(
+    'pins a computed %s baseline without changing its bins, so an unchanged series is not drift',
+    (metric, value) => {
+      const d = new DriftDetector(defaultDriftConfig);
+      for (let day = 1; day <= 7; day++) {
+        const end = NOW - day * 24 * HOUR;
+        addSamples(d, new Array(15).fill(value), end - 6 * HOUR, end, metric);
+      }
+      addSamples(d, new Array(100).fill(value), NOW - 6 * HOUR + 1, NOW, metric);
+      expect(d.detectDrift('scoring-free', metric, NOW).detectedTick).toBe(false);
+
+      const baseline = d.computeBaseline('scoring-free', metric, NOW);
+      expect(baseline).not.toBeNull();
+      d.setBaseline('scoring-free', metric, baseline!);
+
+      const pinned = d.detectDrift('scoring-free', metric, NOW);
+      expect(pinned.status).toBe('evaluated');
+      expect(pinned.detectedTick).toBe(false);
+      expect(pinned.driftScore).toBe(0);
+    }
+  );
 });
