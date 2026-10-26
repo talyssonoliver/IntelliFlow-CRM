@@ -128,6 +128,32 @@ interface LogSecurityEventOptions {
   resourceId?: string;
   inputHash?: string;
   detectionConfidence?: number;
+  /** The call's real tenant (opts.tenantId); falls back to config.tenantId. */
+  tenantId?: string;
+}
+
+/** Generic message per operation; the distinct code says what actually failed. */
+const GENERIC_FAILURE_MESSAGE = {
+  scoreLead: 'AI service request failed security validation',
+  qualifyLead: 'AI qualification failed security validation',
+  generateEmail: 'Email generation failed security validation',
+} as const;
+
+const PROMPT_GUARD_CODES = new Set([
+  'AI_PROMPT_STRUCTURE_INVALID',
+  'AI_PROMPT_REJECTED',
+  'AI_RATE_LIMITED',
+]);
+
+/**
+ * Map a caught error to a failure code. An invalid prompt structure is a bug in
+ * our own call (e.g. a bad configured actor id), not an attack, so it gets its
+ * own code and a console error instead of hiding behind the generic one.
+ */
+function failureCodeFor(error: unknown): string {
+  const code = (error as { code?: unknown } | null)?.code;
+  if (typeof code !== 'string' || !PROMPT_GUARD_CODES.has(code)) return 'AI_GUARDRAILS_ERROR';
+  return code === 'AI_PROMPT_STRUCTURE_INVALID' ? 'AI_GUARDRAILS_CONFIG_ERROR' : code;
 }
 
 /**
@@ -202,7 +228,7 @@ export class GuardrailsAIService implements AIServicePort {
   ): Promise<Result<LeadScoringResult, DomainError>> {
     try {
       // Step 1: Sanitize input
-      const sanitizedInput = await this.sanitizeInput(input);
+      const sanitizedInput = await this.sanitizeInput(input, opts);
 
       // Step 2: Call underlying AI service (forward opts so queue adapters
       //         receive the real tenantId / leadId).
@@ -222,17 +248,9 @@ export class GuardrailsAIService implements AIServicePort {
 
       return Result.ok(safeResult);
     } catch (error) {
-      // Log to AuditLogPort instead of just console
-      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
-        error: error instanceof Error ? error.message : String(error),
+      return this.failCall('scoreLead', error, opts, {
         input: this.sanitizeInputForLogging(input),
-        operation: 'scoreLead',
       });
-
-      return Result.fail({
-        message: 'AI service request failed security validation',
-        code: 'AI_GUARDRAILS_ERROR',
-      } as DomainError);
     }
   }
 
@@ -246,22 +264,14 @@ export class GuardrailsAIService implements AIServicePort {
   ): Promise<Result<boolean, DomainError>> {
     try {
       // Step 1: Sanitize input
-      const sanitizedInput = await this.sanitizeInput(input);
+      const sanitizedInput = await this.sanitizeInput(input, opts);
 
       // Step 2: Call underlying AI service (forward opts).
       const result = await this.innerService.qualifyLead(sanitizedInput, opts);
 
       return result;
     } catch (error) {
-      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
-        error: error instanceof Error ? error.message : String(error),
-        operation: 'qualifyLead',
-      });
-
-      return Result.fail({
-        message: 'AI qualification failed security validation',
-        code: 'AI_GUARDRAILS_ERROR',
-      } as DomainError);
+      return this.failCall('qualifyLead', error, opts);
     }
   }
 
@@ -285,16 +295,7 @@ export class GuardrailsAIService implements AIServicePort {
 
       return Result.ok(safeEmail);
     } catch (error) {
-      await this.logSecurityEvent('AI_CHAIN_FAILURE', {
-        error: error instanceof Error ? error.message : String(error),
-        operation: 'generateEmail',
-        leadId,
-      });
-
-      return Result.fail({
-        message: 'Email generation failed security validation',
-        code: 'AI_GUARDRAILS_ERROR',
-      } as DomainError);
+      return this.failCall('generateEmail', error, undefined, { leadId });
     }
   }
 
@@ -400,6 +401,39 @@ export class GuardrailsAIService implements AIServicePort {
   }
 
   /**
+   * Audit a failed call (under the call's real tenant) and return the generic
+   * user-facing message with a distinct code. The real error stays in the audit
+   * details, and a config error is also written to the console.
+   */
+  private async failCall<T>(
+    operation: keyof typeof GENERIC_FAILURE_MESSAGE,
+    error: unknown,
+    opts: AIServiceCallOptions | undefined,
+    extra: Record<string, unknown> = {}
+  ): Promise<Result<T, DomainError>> {
+    const errorCode = failureCodeFor(error);
+    const message = error instanceof Error ? error.message : String(error);
+    if (errorCode === 'AI_GUARDRAILS_CONFIG_ERROR') {
+      console.error(`[GUARDRAILS] ${errorCode} in ${operation}:`, message);
+    }
+
+    await this.logSecurityEvent(
+      'AI_CHAIN_FAILURE',
+      { error: message, errorCode, operation, ...extra },
+      {
+        tenantId: opts?.tenantId,
+        resourceType: opts?.leadId ? 'lead' : undefined,
+        resourceId: opts?.leadId,
+      }
+    );
+
+    return Result.fail({
+      message: GENERIC_FAILURE_MESSAGE[operation],
+      code: errorCode,
+    } as DomainError);
+  }
+
+  /**
    * Log security event to AuditLogPort
    *
    * Replaces the previous console-only logging with proper audit trail persistence.
@@ -415,11 +449,13 @@ export class GuardrailsAIService implements AIServicePort {
     // Get severity from domain constants
     const severity = isAISecurityEventType(eventType) ? AI_EVENT_SEVERITY_MAP[eventType] : 'MEDIUM';
 
+    const tenantId = options.tenantId ?? this.config.tenantId;
+
     // Build the event input for AuditLogPort
     const event: AISecurityEventInput = {
       eventType,
       severity,
-      tenantId: this.config.tenantId,
+      tenantId,
       userId: this.config.userId,
       resourceType: options.resourceType,
       resourceId: options.resourceId,
@@ -439,7 +475,7 @@ export class GuardrailsAIService implements AIServicePort {
 
     // Build tenant context
     const tenantContext: TenantContext = {
-      tenantId: this.config.tenantId,
+      tenantId,
       userId: this.config.userId,
       jurisdiction: this.config.jurisdiction,
     };
@@ -462,7 +498,10 @@ export class GuardrailsAIService implements AIServicePort {
   /**
    * Sanitize lead scoring input
    */
-  private async sanitizeInput(input: LeadScoringInput): Promise<LeadScoringInput> {
+  private async sanitizeInput(
+    input: LeadScoringInput,
+    opts?: AIServiceCallOptions
+  ): Promise<LeadScoringInput> {
     // Import sanitizer from the canonical domain module (QUAL-015: was a
     // locally-duplicated ../shared/prompt-sanitizer.js that had diverged
     // from apps/api's copy; both now live in @intelliflow/domain).
@@ -471,11 +510,16 @@ export class GuardrailsAIService implements AIServicePort {
     // Build prompt from input
     const promptText = this.buildPromptFromInput(input);
 
-    // Sanitize the prompt
-    const sanitized = await sanitizationPipeline({
+    // Sanitize the prompt. The rate-limit bucket is per tenant and actor: the
+    // container's single system actor would otherwise share one bucket across
+    // every tenant.
+    const tenantId = opts?.tenantId ?? this.config.tenantId;
+    await sanitizationPipeline({
       text: promptText,
       userId: this.config.userId,
       context: { operation: 'lead_scoring', leadEmail: input.email },
+      rateLimitKey: `${tenantId}:${this.config.userId}`,
+      maxRequestsPerMinute: this.config.rateLimit,
     });
 
     // Return original input (sanitization validated it's safe)
