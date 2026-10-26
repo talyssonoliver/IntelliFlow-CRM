@@ -384,8 +384,9 @@ export class DriftDetector {
       (d) => d.timestamp > new Date(Date.now() - DAY_MS)
     );
 
+    // Health follows confirmed events (3 consecutive ticks), never a single detected tick.
     const highSeverity = recentDrift.filter(
-      (d) => d.severity === 'high' || d.severity === 'critical'
+      (d) => d.inEvent && (d.severity === 'high' || d.severity === 'critical')
     );
 
     const openEvent = [...this.persistence.values()].some((s) => s.inEvent);
@@ -393,7 +394,7 @@ export class DriftDetector {
     return {
       trackedMetrics: this.series.size,
       totalSamples,
-      driftDetected: openEvent || recentDrift.some((d) => d.detected),
+      driftDetected: openEvent,
       highSeverityCount: highSeverity.length,
       lastCheck:
         this.lastTickAt ??

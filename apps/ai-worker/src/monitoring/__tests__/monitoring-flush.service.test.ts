@@ -65,6 +65,7 @@ describe('MonitoringFlushService', () => {
     vi.mocked(driftDetector.getHistory).mockReturnValue([
       {
         detected: true,
+        inEvent: true,
         severity: 'high',
         metric: 'accuracy',
         driftScore: 0.85,
@@ -153,6 +154,52 @@ describe('MonitoringFlushService', () => {
             metric: 'score_distribution',
           }),
         ]),
+      })
+    );
+  });
+
+  it('flushNow() flags only ticks inside a confirmed drift event, keeping the raw tick in the payload', async () => {
+    const now = new Date();
+    const window = {
+      startTime: now,
+      endTime: now,
+      sampleCount: 60,
+      mean: 0.5,
+      variance: 0.01,
+      min: 0,
+      max: 1,
+      distribution: [],
+    };
+    vi.mocked(driftDetector.getHistory).mockReturnValue([
+      {
+        model: 'scoring-free',
+        metric: 'score_distribution',
+        status: 'evaluated',
+        detected: true,
+        detectedTick: true,
+        onset: false,
+        inEvent: false,
+        severity: 'high',
+        driftScore: 0.7,
+        pValue: 0.001,
+        timestamp: now,
+        baselineWindow: window,
+        currentWindow: window,
+        recommendations: [],
+      } as any,
+    ]);
+
+    await service.flushNow();
+
+    expect(mockPrisma.aIMonitoringEvent.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: [
+          expect.objectContaining({
+            eventType: 'drift',
+            flagged: false,
+            payload: expect.objectContaining({ detectedTick: true, inEvent: false }),
+          }),
+        ],
       })
     );
   });

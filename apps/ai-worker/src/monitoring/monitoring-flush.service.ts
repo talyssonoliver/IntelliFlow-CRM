@@ -84,10 +84,13 @@ export class MonitoringFlushService {
           model: dr.model ?? null,
           metric: dr.metric ?? null,
           value: dr.driftScore ?? null,
-          flagged: dr.detected,
+          // Flag confirmed events only; the raw tick stays in the payload for diagnostics.
+          flagged: dr.inEvent ?? false,
           severity: dr.severity ?? 'none',
           payload: {
             pValue: dr.pValue,
+            detectedTick: dr.detectedTick ?? dr.detected,
+            inEvent: dr.inEvent ?? false,
             baselineWindow: dr.baselineWindow,
             currentWindow: dr.currentWindow,
             recommendations: dr.recommendations,

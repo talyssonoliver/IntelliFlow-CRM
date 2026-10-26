@@ -380,6 +380,24 @@ describe('DriftDetector — scope, retention and history', () => {
     expect(d.getHistory()).toHaveLength(0);
   });
 
+  it('reports drift in the health status only once an event opens, not on one detected tick', () => {
+    const rand = mulberry32(81);
+    const d = new DriftDetector(defaultDriftConfig);
+    addReference(d, rand, 15, 0.2, 0.03);
+    addCurrent(d, rand, 100, 0.8, 0.03);
+
+    const [first] = d.detectAllDrift({ now: NOW });
+    expect(first.detectedTick).toBe(true);
+    expect(first.inEvent).toBe(false);
+    expect(d.getStatus()).toMatchObject({ driftDetected: false, highSeverityCount: 0 });
+
+    d.detectAllDrift({ now: NOW });
+    const [third] = d.detectAllDrift({ now: NOW });
+    expect(third.onset).toBe(true);
+    expect(d.getStatus().driftDetected).toBe(true);
+    expect(d.getStatus().highSeverityCount).toBeGreaterThan(0);
+  });
+
   it('keeps legacy pinned baselines working, compared on shared bins with real sample counts', () => {
     const rand = mulberry32(71);
     const d = new DriftDetector(defaultDriftConfig);

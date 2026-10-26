@@ -318,7 +318,7 @@ describe('DriftDetector - Additional Coverage', () => {
       expect(detector.getStatus().lastCheck).toBeNull();
     });
 
-    it('should report drift detected after a detection that found drift', () => {
+    it('should report drift detected once three detected ticks open an event', () => {
       detector.setBaseline(
         'gpt-4',
         'score_distribution',
@@ -326,14 +326,17 @@ describe('DriftDetector - Additional Coverage', () => {
       );
       current('score_distribution', range(20, 0.9, 1.0));
 
-      detector.detectDrift('gpt-4', 'score_distribution');
+      detector.detectAllDrift();
+      expect(detector.getStatus().driftDetected).toBe(false);
+      detector.detectAllDrift();
+      detector.detectAllDrift();
       const status = detector.getStatus();
 
       expect(status.lastCheck).toBeInstanceOf(Date);
       expect(status.driftDetected).toBe(true);
     });
 
-    it('should count high and critical detections in the last 24h', () => {
+    it('should count high and critical ticks inside events in the last 24h', () => {
       for (const metric of ['score_distribution', 'confidence_level']) {
         detector.setBaseline(
           'gpt-4',
@@ -341,9 +344,14 @@ describe('DriftDetector - Additional Coverage', () => {
           pinned({ distribution: [0, 0.9, 0.1, 0, 0, 0, 0, 0, 0, 0] })
         );
         current(metric, range(20, 0.9, 1.0));
-        detector.detectDrift('gpt-4', metric);
       }
 
+      detector.detectAllDrift();
+      expect(detector.getStatus().highSeverityCount).toBe(0);
+      detector.detectAllDrift();
+      detector.detectAllDrift();
+
+      // The third tick opens an event on each metric.
       expect(detector.getStatus().highSeverityCount).toBe(2);
     });
   });
