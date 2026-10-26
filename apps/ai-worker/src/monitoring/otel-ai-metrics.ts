@@ -354,8 +354,14 @@ export function recordDriftTick(results: readonly DriftTickResult[]): void {
       i.driftChecks.add(1, { status: oneOf(DRIFT_STATUSES, r.status) });
       if (r.onset || r.escalated)
         i.driftDetections.add(1, { model, metric, severity: oneOf(DRIFT_SEVERITIES, r.severity) });
+      // A series that can no longer be evaluated stops exporting its last score, so the
+      // dashboard never shows a stale value as live. Series absent from this tick are kept:
+      // detectAllDrift({ metrics }) may evaluate only a subset.
+      const key = `${model}|${metric}`;
       if (r.status === 'evaluated' && Number.isFinite(r.driftScore)) {
-        driftScores.set(`${model}|${metric}`, { model, metric, score: r.driftScore });
+        driftScores.set(key, { model, metric, score: r.driftScore });
+      } else {
+        driftScores.delete(key);
       }
     }
     lastCheckSeconds = Math.floor(Date.now() / 1000);

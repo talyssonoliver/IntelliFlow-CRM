@@ -169,6 +169,10 @@ and go to the coordinator for a restore. IFC-033 (#1013) used the same disclosur
   on the coordinator's ruling: spend is recorded exactly once per invocation through one flagged
   path on success and failure, and a throw while recording is logged without changing the outcome
   or masking the original error.
+- A seventh codex finding (the drift-score gauge kept exporting a series' last score after it
+  stopped being evaluated) was fixed: any non-evaluated result removes that series' score. Pruning
+  series absent from a tick was considered and rejected, because `detectAllDrift({ metrics })` may
+  evaluate only a subset.
 
 ## Follow-ups (filed at PR time, after an `gh issue list --search` check)
 

@@ -442,6 +442,27 @@ describe('recorder semantics', () => {
     expect(total(all, 'intelliflow.ai.drift.detections', { severity: 'critical' })).toBe(1);
   });
 
+  it('stops exporting a drift score once its series can no longer be evaluated', async () => {
+    recordDriftTick([
+      drift({ status: 'evaluated', driftScore: 0.6 }),
+      drift({ metric: 'confidence_level', status: 'evaluated', driftScore: 0.3 }),
+    ]);
+    let all = await collectMetrics(reader);
+    expect(
+      pointsWhere(all, 'intelliflow.ai.drift.score', { metric: 'score_distribution' })[0].value
+    ).toBeCloseTo(0.6);
+
+    recordDriftTick([drift({ status: 'insufficient_data', driftScore: 0 })]);
+    all = await collectMetrics(reader);
+    expect(
+      pointsWhere(all, 'intelliflow.ai.drift.score', { metric: 'score_distribution' })
+    ).toHaveLength(0);
+    // Another series, not part of this tick, keeps its score.
+    expect(
+      pointsWhere(all, 'intelliflow.ai.drift.score', { metric: 'confidence_level' })[0].value
+    ).toBeCloseTo(0.3);
+  });
+
   it('counts drift checks per tick and detections only at event onset', async () => {
     recordDriftTick([
       drift({ status: 'insufficient_data' }),
