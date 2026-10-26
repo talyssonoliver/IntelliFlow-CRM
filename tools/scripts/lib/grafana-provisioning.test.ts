@@ -257,6 +257,15 @@ describe('buildAlertRulePayload', () => {
     expect(rule.data[2].model.conditions).toEqual([{ evaluator: { type: 'lt', params: [1] } }]);
   });
 
+  it('evaluates the query at "now" unless the entry sets queryOffsetSeconds', () => {
+    expect(buildAlertRulePayload(entry, config, 'x').data[0].relativeTimeRange).toEqual({
+      from: 900,
+      to: 0,
+    });
+    const late = buildAlertRulePayload({ ...entry, queryOffsetSeconds: 60 }, config, 'x');
+    expect(late.data[0].relativeTimeRange).toEqual({ from: 900, to: 60 });
+  });
+
   it('gives the two callers distinct source labels from the same shape', () => {
     const a = buildAlertRulePayload(entry, config, 'ifc-032');
     const b = buildAlertRulePayload(entry, config, 'ifc-811');
