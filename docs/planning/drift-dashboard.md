@@ -95,8 +95,11 @@ an event that opens low and turns critical still reaches the high/critical
 alert. The health summary reports only events open now. With fewer than 50
 reference or 25 current samples the tick is `insufficient_data`, not "no drift".
 
-Samples are kept for 8 days, capped at 50,000 per key, in memory: a restart
-starts a new warm-up of up to 7 days.
+Samples are kept for 8 days, capped at 50,000 per key, in memory. The cap is
+split evenly over the 9 UTC days a retention window touches (5,555 a day), and a
+full day keeps a uniform reservoir sample of that day, so one busy day never
+evicts the previous days' reference. A restart starts a new warm-up of up to 7
+days.
 
 ---
 

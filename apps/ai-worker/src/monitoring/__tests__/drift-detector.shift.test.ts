@@ -351,7 +351,7 @@ describe('DriftDetector — scope, retention and history', () => {
     expect(results.map((r) => r.metric)).toEqual(['score_distribution']);
   });
 
-  it('prunes samples older than 8 days on tick and caps each key at the newest 50,000', () => {
+  it('prunes samples older than 8 days on tick', () => {
     const d = new DriftDetector(defaultDriftConfig);
     d.recordSample({
       value: 0.5,
@@ -368,38 +368,64 @@ describe('DriftDetector — scope, retention and history', () => {
     d.pruneOnTick(NOW);
     expect(d.getStatus().totalSamples).toBe(1);
 
-    const capped = new DriftDetector({ ...defaultDriftConfig, maxSamplesPerKey: 100 });
+    expect(defaultDriftConfig.retentionDays).toBe(8);
+    expect(defaultDriftConfig.maxSamplesPerKey).toBe(50_000);
+  });
+
+  it('caps each UTC day at maxSamplesPerKey / (retentionDays + 1) by reservoir sampling', () => {
+    // retentionDays 8 spans 9 UTC days, so 100 / 9 = 11 samples a day.
+    const picks: number[] = [];
+    const d = new DriftDetector({ ...defaultDriftConfig, maxSamplesPerKey: 100 }, (n) => {
+      picks.push(n);
+      return n - 1; // never replace: the first 11 of the day stay
+    });
     for (let i = 0; i < 250; i++) {
-      capped.recordSample({
+      d.recordSample({
         value: i / 250,
         timestamp: new Date(NOW - 250 + i),
         model: 'scoring-free',
         metric: 'score_distribution',
       });
     }
-    capped.pruneOnTick(NOW);
-    expect(capped.getStatus().totalSamples).toBe(100);
-    // The NEWEST samples survive: the oldest kept value is 150/250, not 0.
-    const current = capped.detectDrift('scoring-free', 'score_distribution', NOW).currentWindow;
-    expect(current?.min).toBeCloseTo(150 / 250);
-
-    expect(defaultDriftConfig.retentionDays).toBe(8);
-    expect(defaultDriftConfig.maxSamplesPerKey).toBe(50_000);
+    expect(d.getStatus().totalSamples).toBe(11);
+    // Algorithm R draws over everything seen so far: 12, 13, ... 250.
+    expect(picks[0]).toBe(12);
+    expect(picks.at(-1)).toBe(250);
+    const current = d.detectDrift('scoring-free', 'score_distribution', NOW).currentWindow;
+    expect(current.max).toBeCloseTo(10 / 250);
   });
 
-  it('trims a key on record, amortised: only once it passes 1.25x the cap', () => {
-    const d = new DriftDetector({ ...defaultDriftConfig, maxSamplesPerKey: 100 });
-    const add = (i: number) =>
-      d.recordSample({
-        value: 0.5,
-        timestamp: new Date(NOW - 1000 + i),
-        model: 'scoring-free',
-        metric: 'score_distribution',
-      });
-    for (let i = 0; i < 125; i++) add(i);
-    expect(d.getStatus().totalSamples).toBe(125); // no trim yet: each record stays O(1)
-    add(125);
-    expect(d.getStatus().totalSamples).toBe(100); // one slice back to the cap
+  it('keeps the previous days intact when one day passes the whole cap', () => {
+    const rand = mulberry32(91);
+    const d = new DriftDetector(defaultDriftConfig, (n) => Math.floor(rand() * n));
+    addReference(d, rand, 15, 0.2, 0.03);
+    const before = d.computeBaseline('scoring-free', 'score_distribution', NOW)!.sampleCount;
+
+    addSamples(d, normals(rand, 60_000, 0.8, 0.03), NOW - 6 * HOUR + 1, NOW);
+    d.pruneOnTick(NOW);
+
+    expect(d.computeBaseline('scoring-free', 'score_distribution', NOW)!.sampleCount).toBe(before);
+    const r = d.detectDrift('scoring-free', 'score_distribution', NOW);
+    expect(r.status).toBe('evaluated');
+    expect(r.detectedTick).toBe(true);
+  });
+
+  it('never holds more than maxSamplesPerKey samples for a key, even with every day full', () => {
+    const d = new DriftDetector(defaultDriftConfig, (n) => n - 1);
+    for (let day = 0; day <= 8; day++) {
+      const dayStart = Math.floor(NOW / (24 * HOUR)) * 24 * HOUR - day * 24 * HOUR;
+      for (let i = 0; i < 6_000; i++) {
+        d.recordSample({
+          value: 0.5,
+          timestamp: new Date(Math.min(dayStart + i * 1000, NOW)),
+          model: 'scoring-free',
+          metric: 'score_distribution',
+        });
+      }
+    }
+    d.pruneOnTick(NOW);
+    expect(d.getStatus().totalSamples).toBeLessThanOrEqual(50_000);
+    expect(d.getStatus().totalSamples).toBeGreaterThan(40_000);
   });
 
   it('caps drift history at 7 days', () => {

@@ -12,6 +12,7 @@
  * @task IFC-117
  */
 
+import { randomInt } from 'node:crypto';
 import pino from 'pino';
 import {
   binCounts,
@@ -80,7 +81,11 @@ export interface DriftDetectorConfig {
   referenceDays: number;
   /** How long samples are kept (must exceed referenceDays + window). */
   retentionDays: number;
-  /** Newest samples kept per (model, metric). */
+  /**
+   * Most samples kept per (model, metric). Split evenly over the UTC days a retention window
+   * touches (retentionDays + 1), each day reservoir-sampled, so one busy day never evicts the
+   * previous days' reference.
+   */
   maxSamplesPerKey: number;
   binCount: number;
 }
@@ -120,10 +125,24 @@ export interface FeedbackDriftSignal {
   modelVersion: string;
 }
 
+/** One UTC day of a series: a uniform reservoir of the `seen` samples recorded that day. */
+interface DayBucket {
+  samples: DriftSample[];
+  seen: number;
+}
+
 interface SeriesEntry {
   model: string;
   metric: string;
-  samples: DriftSample[];
+  days: Map<number, DayBucket>;
+}
+
+function utcDay(timestamp: Date): number {
+  return Math.floor(timestamp.getTime() / DAY_MS);
+}
+
+function allSamples(entry: SeriesEntry | undefined): DriftSample[] {
+  return entry ? [...entry.days.values()].flatMap((bucket) => bucket.samples) : [];
 }
 
 interface PersistenceState {
@@ -154,27 +173,46 @@ export class DriftDetector {
   private driftHistory: DriftResult[] = [];
   private lastTickAt: Date | null = null;
 
-  constructor(private readonly config: DriftDetectorConfig) {
+  /**
+   * @param randomIndex Uniform integer in [0, n) for reservoir sampling; injectable for tests.
+   */
+  constructor(
+    private readonly config: DriftDetectorConfig,
+    private readonly randomIndex: (n: number) => number = randomInt
+  ) {
     logger.info({ config }, 'DriftDetector initialized');
   }
 
+  /** Samples kept per UTC day: a retention window touches retentionDays + 1 of them. */
+  private perDayCap(): number {
+    return Math.max(1, Math.floor(this.config.maxSamplesPerKey / (this.config.retentionDays + 1)));
+  }
+
   /**
-   * Record a new sample for drift monitoring. O(1) amortised: pruning by age happens on the
-   * scheduled tick, and the per-key cap trims only once the series is 25% over it.
+   * Record a new sample for drift monitoring. O(1): it goes into its UTC day's bucket, and a full
+   * bucket keeps a uniform sample of the day (Algorithm R) instead of dropping older samples.
+   * Pruning by age happens on the scheduled tick.
    */
   recordSample(sample: DriftSample): void {
     const key = seriesKey(sample.model, sample.metric);
     let entry = this.series.get(key);
     if (!entry) {
-      entry = { model: sample.model, metric: sample.metric, samples: [] };
+      entry = { model: sample.model, metric: sample.metric, days: new Map() };
       this.series.set(key, entry);
     }
-    entry.samples.push(sample);
-
-    const cap = this.config.maxSamplesPerKey;
-    if (entry.samples.length > cap * 1.25) {
-      entry.samples = entry.samples.slice(-cap);
+    const day = utcDay(sample.timestamp);
+    let bucket = entry.days.get(day);
+    if (!bucket) {
+      bucket = { samples: [], seen: 0 };
+      entry.days.set(day, bucket);
     }
+    bucket.seen++;
+    if (bucket.samples.length < this.perDayCap()) {
+      bucket.samples.push(sample);
+      return;
+    }
+    const slot = this.randomIndex(bucket.seen);
+    if (slot < bucket.samples.length) bucket.samples[slot] = sample;
   }
 
   /**
@@ -238,8 +276,10 @@ export class DriftDetector {
    * The time-of-day-matched reference window for a metric, or null when it has too few samples.
    */
   computeBaseline(model: string, metric: string, now: number = Date.now()): DriftWindow | null {
-    const entry = this.series.get(seriesKey(model, metric));
-    const reference = entry ? this.referenceSamples(entry.samples, now) : [];
+    const reference = this.referenceSamples(
+      allSamples(this.series.get(seriesKey(model, metric))),
+      now
+    );
     if (reference.length < this.config.minSamplesRequired) {
       logger.warn(
         { model, metric, sampleCount: reference.length, required: this.config.minSamplesRequired },
@@ -257,7 +297,7 @@ export class DriftDetector {
    */
   detectDrift(model: string, metric: string, now: number = Date.now()): DriftResult {
     const key = seriesKey(model, metric);
-    const samples = this.series.get(key)?.samples ?? [];
+    const samples = allSamples(this.series.get(key));
     const current = samples.filter(
       (s) => s.timestamp.getTime() > now - this.windowMs() && s.timestamp.getTime() <= now
     );
@@ -367,18 +407,18 @@ export class DriftDetector {
   }
 
   /**
-   * Drop samples older than the retention window, enforce the per-key cap, and age out history.
+   * Drop samples older than the retention window (whole day buckets, and the older part of the
+   * boundary day) and age out history. The per-day caps already bound each key.
    */
   pruneOnTick(now: number = Date.now()): void {
     const cutoff = now - this.config.retentionDays * DAY_MS;
+    const cutoffDay = Math.floor(cutoff / DAY_MS);
     for (const entry of this.series.values()) {
-      let kept = entry.samples.filter((s) => s.timestamp.getTime() >= cutoff);
-      if (kept.length > this.config.maxSamplesPerKey) {
-        kept = [...kept]
-          .sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime())
-          .slice(-this.config.maxSamplesPerKey);
+      for (const [day, bucket] of entry.days) {
+        if (day < cutoffDay) entry.days.delete(day);
+        else if (day === cutoffDay)
+          bucket.samples = bucket.samples.filter((s) => s.timestamp.getTime() >= cutoff);
       }
-      entry.samples = kept;
     }
     this.pruneHistory(now);
   }
@@ -405,7 +445,7 @@ export class DriftDetector {
   } {
     let totalSamples = 0;
     for (const entry of this.series.values()) {
-      totalSamples += entry.samples.length;
+      for (const bucket of entry.days.values()) totalSamples += bucket.samples.length;
     }
 
     // Health follows the events open now (3 consecutive ticks), never a single detected tick

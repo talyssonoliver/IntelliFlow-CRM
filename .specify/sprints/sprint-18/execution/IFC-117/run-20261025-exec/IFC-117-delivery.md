@@ -18,7 +18,7 @@
    both record; the scoring chain's outer catch records an error that happens before monitoring starts.
 3. **Drift** (`drift-stats.ts`, `drift-detector.ts`, new `drift-scheduler.ts`): fixed 10 bins, excess PSI, tie-aware KS
    with real n/m, gate p<0.01 and (excess PSI ≥ 0.1 or D ≥ 0.1), 3-tick persistence with onset counted (and each severity escalation),
-   time-of-day reference (same 6h slice on days −1..−7), 8-day retention and a 50,000-sample cap. The scheduler is the
+   time-of-day reference (same 6h slice on days −1..−7), 8-day retention and a 50,000-sample cap (per UTC day buckets, reservoir-sampled). The scheduler is the
    first production caller of `detectAllDrift`: every 30 min, unref'd, re-entrancy guarded, started in
    `AIWorker.onStart` right after the config loads and stopped before the flush.
 4. **Exporter deleted**: `apps/ai-worker/src/metrics/prometheus-exporter.ts` and its test, the text builders and
@@ -160,6 +160,11 @@ and go to the coordinator for a restore. IFC-033 (#1013) used the same disclosur
   confirmed events; and an event that escalated after onset never reached the high/critical alert.
   `drift.detections` now also counts each escalation, which departs from the spec's "once per
   onset" (spec lines 114 and 192).
+- A fifth codex finding (the newest-50,000 cap could evict every previous-day reference sample under
+  sustained traffic, leaving detection at insufficient_data with no signal) was fixed on the
+  coordinator's ruling: same 50,000 cap, split over the 9 UTC days a retention window touches and
+  reservoir-sampled per day (Algorithm R) instead of truncated. Implementation note, not a spec
+  deviation.
 
 ## Follow-ups (filed at PR time, after an `gh issue list --search` check)
 
