@@ -53,6 +53,41 @@ function checkPathSegment(problems, label, value) {
     problems.push(`${label}: must match ${SAFE_PATH_SEGMENT} (got ${JSON.stringify(value)})`);
 }
 
+const REQUIRED_RULE_KEYS = [
+  'uid',
+  'title',
+  'expr',
+  'selector',
+  'operator',
+  'for',
+  'noData',
+  'severity',
+  'summary',
+];
+
+// Must stay inside the query's 900 s relative range, with room for its window.
+function isValidQueryOffset(offset) {
+  return offset === undefined || (Number.isInteger(offset) && offset >= 0 && offset <= 600);
+}
+
+function validateRuleEntry(entry, seen, problems) {
+  for (const key of REQUIRED_RULE_KEYS) {
+    if (entry[key] === undefined || entry[key] === '')
+      problems.push(`${entry.uid ?? '?'}: missing ${key}`);
+  }
+  checkPathSegment(problems, `${entry.uid ?? '?'}: uid`, entry.uid);
+  if (!['gt', 'lt'].includes(entry.operator))
+    problems.push(`${entry.uid}: operator must be gt or lt`);
+  if (typeof entry.threshold !== 'number')
+    problems.push(`${entry.uid}: threshold must be a number`);
+  if (!['OK', 'Alerting', 'NoData'].includes(entry.noData))
+    problems.push(`${entry.uid}: bad noData`);
+  if (!isValidQueryOffset(entry.queryOffsetSeconds))
+    problems.push(`${entry.uid}: queryOffsetSeconds must be a whole number from 0 to 600`);
+  if (seen.has(entry.uid)) problems.push(`${entry.uid}: duplicate uid`);
+  seen.add(entry.uid);
+}
+
 /** Validate the rules file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
@@ -60,35 +95,7 @@ export function validateConfig(config) {
   checkPathSegment(problems, 'folder.uid', config.folder?.uid);
   checkPathSegment(problems, 'group.name', config.group?.name);
   if (config.deliveryTest) checkPathSegment(problems, 'deliveryTest.uid', config.deliveryTest.uid);
-  for (const entry of config.rules) {
-    for (const key of [
-      'uid',
-      'title',
-      'expr',
-      'selector',
-      'operator',
-      'for',
-      'noData',
-      'severity',
-      'summary',
-    ]) {
-      if (entry[key] === undefined || entry[key] === '')
-        problems.push(`${entry.uid ?? '?'}: missing ${key}`);
-    }
-    checkPathSegment(problems, `${entry.uid ?? '?'}: uid`, entry.uid);
-    if (!['gt', 'lt'].includes(entry.operator))
-      problems.push(`${entry.uid}: operator must be gt or lt`);
-    if (typeof entry.threshold !== 'number')
-      problems.push(`${entry.uid}: threshold must be a number`);
-    if (!['OK', 'Alerting', 'NoData'].includes(entry.noData))
-      problems.push(`${entry.uid}: bad noData`);
-    // Must stay inside the query's 900 s relative range, with room for its window.
-    const offset = entry.queryOffsetSeconds;
-    if (offset !== undefined && !(Number.isInteger(offset) && offset >= 0 && offset <= 600))
-      problems.push(`${entry.uid}: queryOffsetSeconds must be a whole number from 0 to 600`);
-    if (seen.has(entry.uid)) problems.push(`${entry.uid}: duplicate uid`);
-    seen.add(entry.uid);
-  }
+  for (const entry of config.rules) validateRuleEntry(entry, seen, problems);
   return problems;
 }
 
