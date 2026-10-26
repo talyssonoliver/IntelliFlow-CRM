@@ -14,6 +14,7 @@
 
 import pino from 'pino';
 import { startCombinedWorker, type ManagedWorker, type WorkerLoaders } from './combined';
+import { createBackgroundJobsWorker, type ApiBackgroundJobsModule } from './background-jobs';
 
 export { startCombinedWorker, loadCombinedConfig, WORKER_NAMES } from './combined';
 export type {
@@ -44,6 +45,11 @@ export const defaultLoaders: WorkerLoaders = {
     const { ingestionWorker } = await import('@intelliflow/ingestion-worker');
     return ingestionWorker as ManagedWorker;
   },
+  // Only loaded when COMBINED_BACKGROUND_JOBS=on (see loadCombinedConfig).
+  'background-jobs': async () =>
+    createBackgroundJobsWorker(
+      () => import('@intelliflow/api/dist/background-jobs.js') as Promise<ApiBackgroundJobsModule>
+    ),
 };
 
 /**

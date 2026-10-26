@@ -26,6 +26,7 @@ import {
   SCORING_QUEUE,
   PREDICTION_QUEUE,
   INSIGHT_QUEUE,
+  SCHEDULED_INSIGHT_JOB_NAME,
   SUMMARIZE_QUEUE,
   FEEDBACK_ANALYTICS_QUEUE,
   MEMORY_RETENTION_QUEUE,
@@ -125,6 +126,16 @@ type AIJobResult =
   | SummarizeConversationJobResult
   | FeedbackAnalyticsJobResult
   | MemoryRetentionJobResult;
+
+/**
+ * A job registered by registerScheduledJobs() (named `scheduled-*`) or a
+ * fan-out sentinel ('__scheduled__' tenant). These dispatch per-tenant work
+ * rather than doing agent work for a tenant of their own (#805).
+ */
+function isScheduledDispatchJob(job: Job<AIJobData>): boolean {
+  const tenantId = (job.data as { tenantId?: unknown } | undefined)?.tenantId;
+  return Boolean(job.name?.startsWith('scheduled-')) || tenantId === '__scheduled__';
+}
 
 // ============================================================================
 // AI Worker
@@ -726,17 +737,19 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     const insightsCron = process.env.AI_INSIGHTS_CRON || '0 */6 * * *'; // every 6 hours
     const scoringCron = process.env.AI_SCORING_CRON || '0 */4 * * *'; // every 4 hours
 
-    // Use a real tenant ID so agent-status tracking writes ConversationRecord rows
+    // #805: these jobs only dispatch. _processJobImpl skips agent bookkeeping for
+    // `scheduled-*` jobs, and the scoring and insight handlers fan out per
+    // tenant, so nothing is written under this tenant.
     const systemTenantId = process.env.SYSTEM_TENANT_ID || '00000000-0000-4000-8000-000000000001';
     const systemUserId = process.env.SYSTEM_USER_ID || '00000000-0000-4000-8000-000000000101';
 
     try {
       const insightQueue = this.getQueue(INSIGHT_QUEUE);
       await insightQueue.upsertJobScheduler(
-        'scheduled-insight-refresh',
+        SCHEDULED_INSIGHT_JOB_NAME,
         { pattern: insightsCron },
         {
-          name: 'scheduled-insight-refresh',
+          name: SCHEDULED_INSIGHT_JOB_NAME,
           data: {
             tenantId: systemTenantId,
             userId: systemUserId,
@@ -1072,7 +1085,11 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
   }
 
   private async _processJobImpl(job: Job<AIJobData>): Promise<AIJobResult> {
-    const ctx = extractJobContext(job.queueName, job.data);
+    // #805: a scheduled dispatch job only fans out per-tenant work, which is
+    // tracked under its real tenant. Tracking the dispatch itself wrote agent
+    // rows for the seed system tenant (or '__scheduled__'), which production
+    // does not have, so every run failed the tenant foreign key.
+    const ctx = isScheduledDispatchJob(job) ? null : extractJobContext(job.queueName, job.data);
     const startMs = Date.now();
 
     if (ctx) {

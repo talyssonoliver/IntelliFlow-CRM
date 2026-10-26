@@ -827,6 +827,9 @@ importers:
       '@intelliflow/ai-worker':
         specifier: workspace:*
         version: link:../../ai-worker
+      '@intelliflow/api':
+        specifier: workspace:*
+        version: link:../../api
       '@intelliflow/events-worker':
         specifier: workspace:*
         version: link:../events-worker
