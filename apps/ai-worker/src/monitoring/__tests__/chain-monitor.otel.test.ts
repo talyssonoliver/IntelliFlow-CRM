@@ -233,6 +233,61 @@ describe('error path', () => {
   });
 });
 
+describe('cost of a failed call', () => {
+  it('records the captured cost once when parsing fails after a paid call, and rethrows', async () => {
+    const recordCost = vi.spyOn(config.roiTracker, 'recordCost');
+    const err = new SyntaxError('Unexpected token in structured output');
+    await expect(
+      withMonitoring(async () => Promise.reject(err), config, FULL_CONTEXT)
+    ).rejects.toBe(err);
+    const all = await collectMetrics(reader);
+    expect(
+      total(all, 'intelliflow.ai.inference.count', { outcome: 'error', error_class: 'parse' })
+    ).toBe(1);
+    expect(recordCost).toHaveBeenCalledTimes(1);
+    expect(pointsWhere(all, 'intelliflow.ai.cost.usd')).toHaveLength(1);
+    expect(pointsWhere(all, 'intelliflow.ai.cost.usd')[0].value).toBeCloseTo(0.00014, 9);
+  });
+
+  it('records no cost for a failed call when usage was not captured', async () => {
+    const err = new Error('connection reset');
+    await expect(
+      withMonitoring(async () => Promise.reject(err), config, {
+        ...FULL_CONTEXT,
+        getUsage: () => null,
+      })
+    ).rejects.toBe(err);
+    const all = await collectMetrics(reader);
+    expect(pointsWhere(all, 'intelliflow.ai.cost.usd')).toHaveLength(0);
+  });
+
+  it('surfaces the original error when recording the cost throws during a failed call', async () => {
+    vi.spyOn(config.roiTracker, 'recordCost').mockImplementation(() => {
+      throw new Error('roi tracker broken');
+    });
+    const err = new SyntaxError('Unexpected token in structured output');
+    await expect(
+      withMonitoring(async () => Promise.reject(err), config, FULL_CONTEXT)
+    ).rejects.toBe(err);
+  });
+
+  it('keeps the result and counts the cost attempt once when recording throws on success', async () => {
+    const recordCost = vi.spyOn(config.roiTracker, 'recordCost').mockImplementation(() => {
+      throw new Error('roi tracker broken');
+    });
+    const { result } = await withMonitoring(
+      async () => ({ score: 70, confidence: 0.8 }),
+      config,
+      FULL_CONTEXT
+    );
+    expect(result).toEqual({ score: 70, confidence: 0.8 });
+    expect(recordCost).toHaveBeenCalledTimes(1);
+    const all = await collectMetrics(reader);
+    expect(total(all, 'intelliflow.ai.inference.count', { outcome: 'success' })).toBe(1);
+    expect(total(all, 'intelliflow.ai.inference.count', { outcome: 'error' })).toBe(0);
+  });
+});
+
 describe('recording never changes the chain result', () => {
   it('a throwing meter leaves the result intact', async () => {
     const throwing = new Proxy(

@@ -165,6 +165,10 @@ and go to the coordinator for a restore. IFC-033 (#1013) used the same disclosur
   coordinator's ruling: same 50,000 cap, split over the 9 UTC days a retention window touches and
   reservoir-sampled per day (Algorithm R) instead of truncated. Implementation note, not a spec
   deviation.
+- A sixth codex finding (a paid call that fails structured-output parsing recorded no cost) was fixed
+  on the coordinator's ruling: spend is recorded exactly once per invocation through one flagged
+  path on success and failure, and a throw while recording is logged without changing the outcome
+  or masking the original error.
 
 ## Follow-ups (filed at PR time, after an `gh issue list --search` check)
 

@@ -285,6 +285,29 @@ export async function withMonitoring<T>(
   let result: T;
   let errorType: string | undefined;
 
+  // Spend is recorded exactly once per invocation, on success or failure: a paid call can still
+  // fail (e.g. structured-output parsing after handleLLMEnd captured the usage). The flag is set
+  // before recording, so a throw inside it can neither double-count nor change the outcome.
+  let spendRecorded = false;
+  let tokenCost: { cost: number; model: string } | null = null;
+  const recordSpendOnce = (): { cost: number; model: string } | null => {
+    if (spendRecorded) return tokenCost;
+    spendRecorded = true;
+    try {
+      tokenCost = computeTokenCost(operationId, config, context);
+      if (tokenCost !== null) recordCost({ model: tokenCost.model, chain, usd: tokenCost.cost });
+    } catch (costError) {
+      logger.error(
+        {
+          operationId,
+          error: costError instanceof Error ? costError.message : String(costError),
+        },
+        'Recording AI spend failed'
+      );
+    }
+    return tokenCost;
+  };
+
   try {
     // Execute the wrapped function
     result = await fn();
@@ -322,8 +345,7 @@ export async function withMonitoring<T>(
     }
 
     // Compute real token cost and the hallucination outcome via extracted helpers
-    const tokenCost = computeTokenCost(operationId, config, context);
-    if (tokenCost !== null) recordCost({ model: tokenCost.model, chain, usd: tokenCost.cost });
+    const spend = recordSpendOnce();
 
     const hallucination = await checkHallucination(operationId, result, config, context);
     recordHallucination({ model, chain, outcome: hallucination });
@@ -332,7 +354,7 @@ export async function withMonitoring<T>(
     const metrics = {
       operationId,
       latencyMs,
-      tokenCost: tokenCost?.cost ?? 0,
+      tokenCost: spend?.cost ?? 0,
       driftScore,
       hallucinationFlags: hallucination.status === 'checked' ? [...hallucination.types] : [],
       hallucinated: hallucination.status === 'checked' ? hallucination.hallucinated : null,
@@ -371,6 +393,8 @@ export async function withMonitoring<T>(
     );
 
     throw error;
+  } finally {
+    recordSpendOnce();
   }
 }
 
