@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@intelliflow/ai-worker": "workspace:*",
+    "@intelliflow/api": "workspace:*",
     "@intelliflow/events-worker": "workspace:*",
     "@intelliflow/ingestion-worker": "workspace:*",
     "pino": "^10.3.1"

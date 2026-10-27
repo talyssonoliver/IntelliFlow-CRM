@@ -13,6 +13,8 @@ export const DEFAULT_APPROVAL_SWEEP_INTERVAL_MS = 60_000;
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let running = false;
+/** The tick in flight, so stop() can wait for it to finish. */
+let active: Promise<unknown> | null = null;
 
 /** The interval to use, or 0 when the sweep must not run in this process. */
 export function approvalSweepIntervalFromEnv(env: NodeJS.ProcessEnv): number {
@@ -39,16 +41,17 @@ export function startApprovalSweep({
 }: StartApprovalSweepOptions): boolean {
   if (intervalMs <= 0 || timer !== null) return false;
   timer = setInterval(() => {
-    // Skip a tick while the previous one is still running.
-    if (running) return;
+    // No new tick once stopped; skip a tick while the previous one is running.
+    if (timer === null || running) return;
     running = true;
-    run()
+    active = run()
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
         log.warn(`[approval-sweep] tick failed: ${message}`);
       })
       .finally(() => {
         running = false;
+        active = null;
       });
   }, intervalMs);
   timer.unref?.();
@@ -56,8 +59,13 @@ export function startApprovalSweep({
   return true;
 }
 
-export function stopApprovalSweep(): void {
+export async function stopApprovalSweep(): Promise<void> {
   if (timer !== null) clearInterval(timer);
   timer = null;
+  const inflight = active;
   running = false;
+  // Let a tick that is mid-flight finish (its commit, notification and audit)
+  // before the process exits; the caller's shutdown timeout still caps the wait.
+  // run() failures are already logged by the tick itself.
+  await inflight?.catch(() => undefined);
 }

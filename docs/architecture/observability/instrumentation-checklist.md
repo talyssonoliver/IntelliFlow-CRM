@@ -3,6 +3,35 @@
 This checklist ensures comprehensive observability coverage when adding
 OpenTelemetry instrumentation to a new or existing service in IntelliFlow CRM.
 
+## Production topology
+
+The rest of this page describes the local stack (collector, Jaeger, Prometheus,
+Loki in Docker). Production is simpler, and differs from it (ENV-008-AI,
+[ADR-087](../adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md)):
+
+- **No collector.** The api and ai-worker OpenTelemetry SDKs export OTLP
+  straight to the Grafana Cloud OTLP gateway
+  (`otlp-gateway-prod-gb-south-1.grafana.net`, endpoint set in
+  `infra/terraform/environments/production/terraform.tfvars`).
+- **Emitters: api and ai-worker only.** web, ws, events-worker and
+  ingestion-worker export nothing yet (EP-001-AI).
+- **Metrics come from traces.** Grafana Cloud derives span metrics:
+  `traces_spanmetrics_calls_total` and the native histogram
+  `traces_spanmetrics_latency` (there is no `_bucket` series).
+- **Logs.** Loki receives ai-worker logs only; the api log pipeline belongs to
+  IFC-074 (ADR-086).
+- **As code, applied by CI on merge**, from `infra/monitoring/grafana/cloud/`:
+  - `alert-rules.json` (IFC-032 alert rules, `grafana-alert-rules.yml`)
+  - `slos.json` (three SLOs; burn-rate alerts on api availability,
+    `grafana-slos.yml`)
+  - `dashboard-production.json` (the service dashboard, uid `env008-production`,
+    `grafana-dashboard.yml`)
+- **Anomaly detection** is Grafana Asserts on the span metrics (plugin-managed;
+  recorded in `infra/monitoring/anomaly-detection.json`).
+- **Self-healing** is the Railway `ON_FAILURE` restart policy plus deploy health
+  checks, set by `.github/workflows/railway-self-healing.yml` (recorded in
+  `infra/monitoring/self-healing-rules.yaml`).
+
 ## Pre-Instrumentation
 
 ### [ ] 1. Dependencies Installed

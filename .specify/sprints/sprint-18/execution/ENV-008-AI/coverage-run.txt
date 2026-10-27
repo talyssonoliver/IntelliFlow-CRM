@@ -1,0 +1,35 @@
+# HEAD e0b478906, 2026-10-25T16:47:18Z
+[test-slot] slot2 taken for ENV-008-AI@feat/env-008-ai-env008: pnpm exec vitest run --project root --coverage.enabled --coverage.reportsDirectory=artifacts/coverage-env008 --coverage.reporter=lcov --coverage.reporter=json-summary --coverage.reporter=text --coverage.include=tools/scripts/lib/grafana-provisioning.mjs --coverage.include=tools/scripts/observability/*.mjs tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts tools/scripts/__tests__/apply-grafana-slos.test.ts tools/scripts/__tests__/apply-grafana-dashboard.test.ts tools/scripts/__tests__/apply-railway-self-healing.test.ts tools/scripts/__tests__/env008-workflows.test.ts tools/scripts/__tests__/env008-monitoring-content.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/env-008-ai
+      Coverage enabled with istanbul
+
+
+ Test Files  8 passed (8)
+      Tests  188 passed (188)
+   Start at  16:47:20
+   Duration  3.36s (transform 5.28s, setup 4.54s, import 4.49s, tests 621ms, environment 1ms)
+
+ % Coverage report from istanbul
+-------------------|---------|----------|---------|---------|-------------------
+File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
+-------------------|---------|----------|---------|---------|-------------------
+All files          |   92.69 |    82.94 |   89.47 |   93.71 |                   
+ lib               |   97.22 |      100 |     100 |   96.42 |                   
+  ...visioning.mjs |   97.22 |      100 |     100 |   96.42 | 52                
+ observability     |   92.32 |    82.06 |   87.23 |   93.52 |                   
+  ...ert-rules.mjs |   91.89 |    82.25 |   83.33 |   92.75 | 86,132,174-176    
+  ...dashboard.mjs |   93.93 |    78.43 |    87.5 |   94.54 | 129-131           
+  ...fana-slos.mjs |   93.02 |    82.05 |   88.88 |   94.44 | 46,154-156        
+  ...f-healing.mjs |   94.21 |    88.78 |   88.23 |   94.23 | ...19,145,269-271 
+  ...onitoring.mjs |   88.54 |    77.06 |   85.71 |   91.86 | ...96,196,240-242 
+-------------------|---------|----------|---------|---------|-------------------
+
+=============================== Coverage summary ===============================
+Statements   : 92.69% ( 444/479 )
+Branches     : 82.94% ( 355/428 )
+Functions    : 89.47% ( 51/57 )
+Lines        : 93.71% ( 388/414 )
+================================================================================
+ERROR: Coverage for functions (89.47%) does not meet global threshold (90%)
+exit=1 (non-zero only from the repo-wide global threshold applied to this narrow include)

@@ -10,6 +10,10 @@ export default defineConfig({
   resolve: {
     alias: [
       {
+        find: '@intelliflow/api/dist/background-jobs.js',
+        replacement: path.resolve(monorepoRoot, 'apps/api/src/background-jobs.ts'),
+      },
+      {
         find: '@intelliflow/ai-worker',
         replacement: path.resolve(monorepoRoot, 'apps/ai-worker/src/index.ts'),
       },
