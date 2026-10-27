@@ -46,6 +46,12 @@ export function passThroughGuard<T extends object>(actual: T) {
       async (_prisma: unknown, _tenantId: string, dealIds: string[]) =>
         new Map<string, string | null>(dealIds.map((id) => [id, null]))
     ),
+    writeIfQueuedAddressStillClear: vi.fn(
+      async (prisma: unknown, _job: unknown, write: (tx: unknown) => Promise<unknown>) => ({
+        written: true as const,
+        value: await write(prisma),
+      })
+    ),
     writeSubjectIfStillEligible: vi.fn(
       async (prisma: unknown, _subject: unknown, write: (tx: unknown) => Promise<unknown>) => ({
         written: true as const,

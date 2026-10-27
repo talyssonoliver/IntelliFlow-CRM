@@ -1315,6 +1315,14 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
   one of the 5 downloads; a request already at the cap is refused before anything is built. The finding first
   showed as waived only because its source-anchored fingerprint matched waiver 24c6b825 (the completion email);
   it was not treated as waived.
+- Codex (HIGH): a deal with no contact whose queued context names a person re-checks that address under its
+  address lock (`writeIfQueuedAddressStillClear`) before the result is kept and before the churn alert, so a
+  restriction or erasure that lands while the model runs wins, as it does for a linked contact.
+- Codex (MEDIUM): the access export carries the person's own request text (`details`); the staff notes on their
+  requests (identity check, late-receipt and extension reasons, resolution note, marketing stop) are withheld and
+  counted as `STAFF_TEXT` (Q26), so completion needs a reason for them.
+- Codex (LOW): the action dialog holds each note or reason to the server's maximum (500 for an extension or an
+  erasure cancellation, 2000 otherwise), so the admin is told before sending instead of getting a server error.
 - Tests: `apps/api/src/modules/privacy/__tests__/dsar-sla-scheduler.test.ts` (fake clock, fake store, recording
   client), `dsar-sla-deps.test.ts`, `apps/api/src/__tests__/http-server.dsar-sla.test.ts`, `main.test.ts`, and
   four real-database tests in `tests/integration/dsar.test.ts` (due, overdue, 3-day repeat, extension window,

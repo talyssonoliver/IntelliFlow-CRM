@@ -189,6 +189,21 @@ describe('PrivacyRequestsContent', () => {
     );
   });
 
+  it('holds an extension reason to the 500 characters the server accepts (codex)', async () => {
+    h.list.data = [request({ type: 'ACCESS' })];
+    render(<PrivacyRequestsContent />);
+    fireEvent.click(screen.getByRole('button', { name: /^Extend: Access/ }));
+    const dialog = await screen.findByRole('dialog');
+    const reason = within(dialog).getByLabelText('Reason');
+    expect(reason.getAttribute('maxlength')).toBe('500');
+    fireEvent.change(reason, { target: { value: 'x'.repeat(501) } });
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Extend the deadline' }));
+    expect(
+      await within(dialog).findByText('Keep the reason to 500 characters or fewer.')
+    ).toBeTruthy();
+    expect(h.mutations.extend!.mutateAsync).not.toHaveBeenCalled();
+  });
+
   it('extends and records withheld categories on an access request', async () => {
     h.list.data = [
       request({
@@ -277,7 +292,7 @@ describe('PrivacyRequestsContent', () => {
     for (const label of [
       'Deal and task descriptions withheld',
       'AI-written text withheld',
-      'Staff tags, qualification notes and booking answers withheld',
+      'Staff tags, qualification notes, booking answers and request notes withheld',
       'Calendar events, notifications and experiment records withheld',
     ]) {
       expect(within(dialog).getByLabelText(label)).toBeTruthy();

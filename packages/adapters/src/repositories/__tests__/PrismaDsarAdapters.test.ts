@@ -782,6 +782,37 @@ describe('PrismaSubjectDataRepository', () => {
     });
   });
 
+  it("exports the person's own request text; withholds and counts staff notes on requests (codex)", async () => {
+    const prisma = subjectPrisma();
+    prisma.dsarRequest.findMany.mockResolvedValue([
+      {
+        type: 'ACCESS',
+        status: 'COMPLETED',
+        details: 'Everything you hold about me',
+        identityNote: 'Checked her passport',
+        resolutionNote: null,
+      },
+      { type: 'ERASURE', status: 'REJECTED', details: null, resolutionNote: 'Legal hold' },
+      { type: 'OBJECTION', status: 'VERIFIED', details: null },
+    ]);
+    const repo = new PrismaSubjectDataRepository(asClient(prisma));
+    const exported = await repo.buildExport('t1', 'ada@example.invalid');
+    expect(exported.data.dataRequests).toEqual([
+      { type: 'ACCESS', status: 'COMPLETED', details: 'Everything you hold about me' },
+      { type: 'ERASURE', status: 'REJECTED', details: null },
+      { type: 'OBJECTION', status: 'VERIFIED', details: null },
+    ]);
+    expect(exported.withheld.STAFF_TEXT).toBe(2);
+    expect(prisma.dsarRequest.findMany.mock.calls[0][0].select).toMatchObject({
+      details: true,
+      identityNote: true,
+      receivedOnReason: true,
+      extensionReason: true,
+      resolutionNote: true,
+      marketingStopMethod: true,
+    });
+  });
+
   it('counts calendar events, notifications and experiment records as withheld (compliance)', async () => {
     const prisma = subjectPrisma();
     prisma.calendarEvent.count.mockResolvedValue(2);

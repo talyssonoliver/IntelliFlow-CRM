@@ -1461,12 +1461,15 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
           'divorce lawyer',
           'Custody',
           'Private matter',
+          // The staff note on the person's own request (Q26, codex).
+          'Passport checked',
         ]) {
           expect(text).not.toContain(hidden);
         }
         expect(exported.withheld).toMatchObject({
           DESCRIPTIONS: 2,
-          STAFF_TEXT: 2,
+          // Two staff-written rows, plus the identity note on the request.
+          STAFF_TEXT: 3,
           OTHER_RECORDS: 1,
           AI_TEXT: 0,
         });

@@ -49,7 +49,7 @@ const WITHHELD_LABELS: Record<WithheldCategory, string> = {
   DOCUMENTS: 'Documents',
   DESCRIPTIONS: 'Deal and task descriptions',
   AI_TEXT: 'Text written by AI, such as insights and recommendations',
-  STAFF_TEXT: 'Tags, qualification notes and booking answers',
+  STAFF_TEXT: 'Tags, qualification notes, booking answers and staff notes on your requests',
   OTHER_RECORDS: 'Calendar events, notifications and experiment records',
   EXCESS_ROWS: 'Records beyond the automatic file limit',
 };

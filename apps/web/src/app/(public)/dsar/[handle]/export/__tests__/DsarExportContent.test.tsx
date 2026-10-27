@@ -100,7 +100,11 @@ describe('DsarExportContent', () => {
     expect(
       screen.getByText('Text written by AI, such as insights and recommendations: 3')
     ).toBeTruthy();
-    expect(screen.getByText('Tags, qualification notes and booking answers: 1')).toBeTruthy();
+    expect(
+      screen.getByText(
+        'Tags, qualification notes, booking answers and staff notes on your requests: 1'
+      )
+    ).toBeTruthy();
     expect(
       screen.getByText('Calendar events, notifications and experiment records: 4')
     ).toBeTruthy();

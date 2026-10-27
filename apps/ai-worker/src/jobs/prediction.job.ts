@@ -46,6 +46,7 @@ import {
   eligibleSubjectEmail,
   queuedAddressBlocked,
   SUBJECT_NOT_PROCESSABLE,
+  writeIfQueuedAddressStillClear,
   writeSubjectIfStillEligible,
   type SubjectKind,
   type SubjectPrisma,
@@ -147,7 +148,7 @@ export async function processPredictionJob(
       const subjectEmail = await processableSubjectEmail(subject, tenantId);
       // The queued context goes to the model as it is: it must name the person just checked,
       // not an address they have since moved from (codex).
-      const queuedEmail = typeof context?.['email'] === 'string' ? context['email'] : null;
+      const queuedEmail = queuedContextEmail(context);
       const staleContext =
         subjectEmail !== null &&
         subject !== null &&
@@ -227,7 +228,8 @@ export async function processPredictionJob(
         prediction,
         recommendations,
         subject,
-        subjectEmail
+        subjectEmail,
+        queuedEmail
       );
 
       // Erased or restricted while the model ran: nothing about the person survives, not even
@@ -406,6 +408,11 @@ async function predictionSubject(
   return contactId ? { kind: 'contact', id: contactId } : null;
 }
 
+/** The person a queued context names, if any. */
+function queuedContextEmail(context: Record<string, unknown> | undefined): string | null {
+  return typeof context?.['email'] === 'string' ? context['email'] : null;
+}
+
 /** A queued context's address: restricted, erased, or the subject of a completed erasure. */
 async function queuedContextBlocked(tenantId: string, email: string): Promise<boolean> {
   const { prisma } = await import('@intelliflow/db');
@@ -427,6 +434,35 @@ async function processableSubjectEmail(
 }
 
 /**
+ * Whether a deal's result may be kept: its contact is re-checked under the contact's locks, or,
+ * for a deal with no contact, the person its queued context named is re-checked under their
+ * address lock (codex HIGH). A deal about no one at all is always allowed.
+ */
+async function dealResultStillAllowed(
+  tenantId: string,
+  subject: PredictionSubject,
+  subjectEmail: string,
+  queuedEmail: string | null
+): Promise<boolean> {
+  const { prisma } = await import('@intelliflow/db');
+  if (subject && subject !== 'MISSING') {
+    const outcome = await writeSubjectIfStillEligible(
+      prisma as never,
+      { ...subject, tenantId, email: subjectEmail },
+      async () => undefined
+    );
+    return outcome.written;
+  }
+  if (queuedEmail === null) return true;
+  const outcome = await writeIfQueuedAddressStillClear(
+    prisma as never,
+    { tenantId, email: queuedEmail },
+    async () => undefined
+  );
+  return outcome.written;
+}
+
+/**
  * Persist prediction results to entity-level insight tables.
  * Uses the same LeadAIInsight / ContactAIInsight tables as the insight job,
  * closing the loop so entity 360 pages show prediction data. The write happens under the
@@ -441,20 +477,15 @@ async function persistPredictionResult(
   prediction: PredictionJobResult['prediction'],
   recommendations: string[],
   subject: PredictionSubject,
-  subjectEmail: string
+  subjectEmail: string,
+  queuedEmail: string | null
 ): Promise<'written' | 'blocked' | 'skipped' | 'failed'> {
   const kind = entityType === 'lead' || entityType === 'contact' ? entityType : null;
   if (!kind) {
-    // A deal's result is kept in the job result: it is dropped too if its contact was erased or
-    // restricted while the model ran (the re-check under the contact's locks).
-    if (subject && subject !== 'MISSING') {
-      const { prisma } = await import('@intelliflow/db');
-      const outcome = await writeSubjectIfStillEligible(
-        prisma as never,
-        { ...subject, tenantId, email: subjectEmail },
-        async () => undefined
-      );
-      if (!outcome.written) return 'blocked';
+    // A deal's result is kept in the job result: it is dropped too if its person was erased or
+    // restricted while the model ran.
+    if (!(await dealResultStillAllowed(tenantId, subject, subjectEmail, queuedEmail))) {
+      return 'blocked';
     }
     logger.info(
       { entityType, entityId, predictionType },
@@ -555,7 +586,18 @@ async function notifyHighChurnRisk(
         },
       });
     if (subject === null || subject === 'MISSING') {
-      await notify(prisma);
+      // A deal with no contact: the person its queued context names is re-checked under their
+      // address lock, as the result was (codex HIGH).
+      const queuedEmail = queuedContextEmail(context);
+      if (queuedEmail === null) {
+        await notify(prisma);
+        return;
+      }
+      await writeIfQueuedAddressStillClear(
+        prisma as never,
+        { tenantId, email: queuedEmail },
+        (tx) => notify(tx as unknown as typeof prisma)
+      );
       return;
     }
     // The alert repeats the prediction about a person: it takes the person's locks and

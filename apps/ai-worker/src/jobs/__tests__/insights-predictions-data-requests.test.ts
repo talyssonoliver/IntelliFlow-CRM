@@ -334,6 +334,61 @@ describe('prediction job', () => {
     expect(mockPredictChurnRisk).not.toHaveBeenCalled();
   });
 
+  describe('a deal with no contact whose queued context names a person (codex HIGH)', () => {
+    const unlinkedJob = () => {
+      db.deals.set(DEAL, null);
+      const queued = churnJob('opportunity', DEAL);
+      queued.data.context = { userId: 'user-1', email: ' Ada@Example.invalid ', name: 'Ada' };
+      return queued;
+    };
+
+    it.each([
+      ['restricted', () => db.restricted.add(ADA)],
+      ['erased', () => db.erasedSubjects.add(ADA)],
+    ])('keeps nothing and sends no alert when %s during the model call', async (_label, change) => {
+      const queued = unlinkedJob();
+      mockPredictChurnRisk.mockImplementation(async () => {
+        change();
+        return HIGH_CHURN;
+      });
+
+      const result = await processPredictionJob(queued);
+
+      expect(result).toEqual({ skipped: true, reason: 'data-subject-request' });
+      expect(JSON.stringify(result)).not.toContain('Call them');
+      expect(mockNotificationCreate).not.toHaveBeenCalled();
+    });
+
+    it('keeps the result and alerts while the address is clear, under its address lock', async () => {
+      const { prisma } = (await import('@intelliflow/db')) as any;
+      const queued = unlinkedJob();
+
+      const result = await processPredictionJob(queued);
+
+      expect(result).not.toHaveProperty('skipped');
+      expect(mockNotificationCreate).toHaveBeenCalledOnce();
+      const locks = prisma.$queryRaw.mock.calls.filter(([sql]: [TemplateStringsArray]) =>
+        sql.join('?').includes('dsar_subject_lock(')
+      );
+      expect(locks.length).toBeGreaterThan(0);
+      expect(locks.every((call: unknown[]) => call[2] === ADA)).toBe(true);
+    });
+
+    it('sends no alert when the address is restricted after the result was re-checked', async () => {
+      const { prisma } = (await import('@intelliflow/db')) as any;
+      const queued = unlinkedJob();
+      prisma.$transaction.mockImplementationOnce(async (fn: (tx: unknown) => Promise<unknown>) => {
+        const value = await fn(prisma);
+        db.restricted.add(ADA); // commits between the result re-check and the alert
+        return value;
+      });
+
+      await processPredictionJob(queued);
+
+      expect(mockNotificationCreate).not.toHaveBeenCalled();
+    });
+  });
+
   it('applies the same guard to a contact', async () => {
     db.contacts.set(CONTACT, ADA);
     await processPredictionJob(churnJob('contact', CONTACT));

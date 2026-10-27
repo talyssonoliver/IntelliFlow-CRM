@@ -9,6 +9,7 @@ import {
   scorableLeads,
   scoringBlockedBy,
   writeContactIfStillEligible,
+  writeIfQueuedAddressStillClear,
   writeIfStillEligible,
   writeSubjectIfStillEligible,
 } from '../data-request-guard';
@@ -109,6 +110,51 @@ describe('writeIfStillEligible (codex: no insight written after an erasure)', ()
     await expect(writeIfStillEligible(prisma, job, write)).resolves.toEqual({
       written: false,
       reason,
+    });
+    expect(write).not.toHaveBeenCalled();
+  });
+});
+
+describe('writeIfQueuedAddressStillClear (codex HIGH: a deal with no contact)', () => {
+  function addressTx(opts: { restricted?: boolean; erasureCompleted?: boolean } = {}) {
+    const tx = {
+      $queryRaw: vi.fn(async () => [{ locked: 1 }]),
+      processingRestriction: {
+        findFirst: vi.fn().mockResolvedValue(opts.restricted ? { id: 'r1' } : null),
+      },
+      dsarRequest: {
+        findFirst: vi.fn().mockResolvedValue(opts.erasureCompleted ? { id: 'd1' } : null),
+      },
+    };
+    return { tx, prisma: { $transaction: vi.fn(async (fn: any) => fn(tx)) } };
+  }
+  const queued = { tenantId: 't1', email: ' Ada@Example.invalid ' };
+
+  it('takes the address lock, then re-checks, then writes', async () => {
+    const { tx, prisma } = addressTx();
+    const write = vi.fn().mockResolvedValue('kept');
+    await expect(writeIfQueuedAddressStillClear(prisma, queued, write)).resolves.toEqual({
+      written: true,
+      value: 'kept',
+    });
+    expect(write).toHaveBeenCalledWith(tx);
+    const [lockSql, ...lockArgs] = tx.$queryRaw.mock.calls[0] as any[];
+    expect(lockSql.join('?')).toContain('dsar_subject_lock(');
+    expect(lockArgs).toEqual(['t1', 'ada@example.invalid']);
+    expect(tx.$queryRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      tx.processingRestriction.findFirst.mock.invocationCallOrder[0]!
+    );
+  });
+
+  it.each([
+    ['restricted', { restricted: true }],
+    ['the subject of a completed erasure', { erasureCompleted: true }],
+  ])('writes nothing when the address is %s', async (_label, opts) => {
+    const { prisma } = addressTx(opts);
+    const write = vi.fn();
+    await expect(writeIfQueuedAddressStillClear(prisma, queued, write)).resolves.toEqual({
+      written: false,
+      reason: 'RESTRICTED',
     });
     expect(write).not.toHaveBeenCalled();
   });

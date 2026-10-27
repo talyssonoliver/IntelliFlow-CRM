@@ -56,7 +56,7 @@ export const WITHHELD_LABELS: Record<WithheldCategory, string> = {
   DOCUMENTS: 'Documents',
   DESCRIPTIONS: 'Deal and task descriptions',
   AI_TEXT: 'AI-written text',
-  STAFF_TEXT: 'Staff tags, qualification notes and booking answers',
+  STAFF_TEXT: 'Staff tags, qualification notes, booking answers and request notes',
   OTHER_RECORDS: 'Calendar events, notifications and experiment records',
   EXCESS_ROWS: 'Records beyond the automatic file limit',
 };
@@ -76,10 +76,14 @@ export const CHECKLIST_LABELS: Record<string, string> = {
   tasks: 'Tasks',
 };
 
-// Minimum lengths the server enforces (packages/validators/src/dsar.ts): reasons are 10
-// characters, the marketing stop method is DSAR_LIMITS.marketingStopMethodMin (10).
+// Lengths the server enforces (packages/validators/src/dsar.ts): reasons are at least 10
+// characters, the marketing stop method is DSAR_LIMITS.marketingStopMethodMin (10). Notes and
+// refusal reasons are at most DSAR_LIMITS.noteMax (2000); extension and erasure-cancellation
+// reasons at most 500 (codex: the dialog must not accept what the server refuses).
 const REASON_MIN = 10;
 const STOP_METHOD_MIN = 10;
+const NOTE_MAX = 2000;
+const SHORT_REASON_MAX = 500;
 
 type ProblemField = 'text' | 'stop' | 'confirm' | 'withheld';
 
@@ -100,24 +104,40 @@ const FIELD_IDS: Record<ProblemField, string> = {
 const ERROR_ID = 'request-action-error';
 
 /** The free-text field each action asks for (null: none), and what happens to the text. */
-const TEXT_FIELD: Record<RequestAction, { label: string; hint: string; min: number } | null> = {
+const TEXT_FIELD: Record<
+  RequestAction,
+  { label: string; hint: string; min: number; max: number } | null
+> = {
   complete: {
     label: 'Note for the record',
     hint: 'Kept on the request; not sent to the person.',
     min: 1,
+    max: NOTE_MAX,
   },
   completeAccess: {
     label: 'Note for the record',
     hint: 'Kept on the request; not sent to the person.',
     min: 1,
+    max: NOTE_MAX,
   },
-  extend: { label: 'Reason', hint: 'Sent to the person with the new date.', min: REASON_MIN },
+  extend: {
+    label: 'Reason',
+    hint: 'Sent to the person with the new date.',
+    min: REASON_MIN,
+    max: SHORT_REASON_MAX,
+  },
   reject: {
     label: 'Reason',
     hint: 'Sent to the person, with their right to complain to the ICO.',
     min: REASON_MIN,
+    max: NOTE_MAX,
   },
-  cancelErasure: { label: 'Reason', hint: 'Sent to the person.', min: REASON_MIN },
+  cancelErasure: {
+    label: 'Reason',
+    hint: 'Sent to the person.',
+    min: REASON_MIN,
+    max: SHORT_REASON_MAX,
+  },
   revokeExport: null,
 };
 
@@ -145,6 +165,25 @@ export interface RequestActionDialogProps {
   onCloseAutoFocus?: (event: Event) => void;
 }
 
+/** The note or reason is shorter or longer than the server accepts, or null. */
+function textProblem(action: RequestAction, text: string): Problem | null {
+  const field = TEXT_FIELD[action];
+  if (!field) return null;
+  const length = text.trim().length;
+  if (length < field.min) {
+    return {
+      field: 'text',
+      message:
+        field.min === 1 ? 'Add a note.' : `Give a reason of at least ${field.min} characters.`,
+    };
+  }
+  if (length > field.max) {
+    const noun = field.min === 1 ? 'note' : 'reason';
+    return { field: 'text', message: `Keep the ${noun} to ${field.max} characters or fewer.` };
+  }
+  return null;
+}
+
 /** The first thing the admin must fix before the action can be sent, or null. */
 function actionProblem(input: {
   action: RequestAction;
@@ -155,14 +194,8 @@ function actionProblem(input: {
   stopMethod: string;
   withheld: WithheldRows;
 }): Problem | null {
-  const field = TEXT_FIELD[input.action];
-  if (field && input.text.trim().length < field.min) {
-    return {
-      field: 'text',
-      message:
-        field.min === 1 ? 'Add a note.' : `Give a reason of at least ${field.min} characters.`,
-    };
-  }
+  const tooShortOrLong = textProblem(input.action, input.text);
+  if (tooShortOrLong) return tooShortOrLong;
   if (input.isErasure && !input.confirmed) {
     return { field: 'confirm', message: 'Confirm that no legal hold or retention duty applies.' };
   }
@@ -429,7 +462,7 @@ export function RequestActionDialog({
               <Textarea
                 id="request-action-text"
                 rows={3}
-                maxLength={2000}
+                maxLength={field.max}
                 value={text}
                 aria-invalid={invalid('text')}
                 aria-describedby={describedBy('text', 'request-action-hint')}

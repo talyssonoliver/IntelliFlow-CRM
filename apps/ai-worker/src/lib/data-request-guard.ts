@@ -163,6 +163,30 @@ export async function writeContactIfStillEligible<T>(
   });
 }
 
+/** The slice of a transaction client the queued-address re-check needs. */
+export type QueuedAddressTx = LockingTx & Parameters<typeof queuedAddressBlocked>[0];
+
+/**
+ * Run `write` only while a queued address is still clear: an address from a queued snapshot
+ * with no CRM row to lock (a deal with no contact whose context names a person). The person's
+ * address lock is held to commit, so a restriction or erasure being written for it either
+ * committed before (and is seen below) or waits until this write is done (codex).
+ */
+export async function writeIfQueuedAddressStillClear<T>(
+  prisma: { $transaction<R>(fn: (tx: QueuedAddressTx) => Promise<R>): Promise<R> },
+  job: { tenantId: string; email: string },
+  write: (tx: QueuedAddressTx) => Promise<T>
+): Promise<LockedWrite<T>> {
+  const address = normalizeSubjectEmail(job.email);
+  return prisma.$transaction(async (tx) => {
+    await tx.$queryRaw`SELECT 1 AS locked FROM (SELECT dsar_subject_lock(${job.tenantId}, ${address})) AS l`;
+    if (await queuedAddressBlocked(tx, job.tenantId, address)) {
+      return { written: false, reason: 'RESTRICTED' };
+    }
+    return { written: true, value: await write(tx) };
+  });
+}
+
 /** A lead or a contact: the people insights and predictions are written about. */
 export type SubjectKind = 'lead' | 'contact';
 

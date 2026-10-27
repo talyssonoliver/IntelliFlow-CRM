@@ -129,7 +129,9 @@ describe('buildDsarEmail', () => {
     expect(email.textBody).toContain(
       'Text written by AI, such as insights and recommendations (3)'
     );
-    expect(email.textBody).toContain('Tags, qualification notes and booking answers (1)');
+    expect(email.textBody).toContain(
+      'Tags, qualification notes, booking answers and staff notes on your requests (1)'
+    );
     expect(email.textBody).toContain('Calendar events, notifications and experiment records (4)');
     // The reason the admin typed is shown to the person, escaped in the HTML part.
     expect(email.htmlBody).toContain('Names &lt;i&gt;a third party&lt;/i&gt;');
