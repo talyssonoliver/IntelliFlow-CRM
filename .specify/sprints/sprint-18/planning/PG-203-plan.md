@@ -1308,6 +1308,13 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
 - Codex (MEDIUM): `restrictionKept` follows what the lift actually did (null: another request still holds it).
   Process note: 0a5eb7549 was committed after the first codex pass on its tree had FAILED (a stale second-pass
   file read as PASS); this finding is the one it missed, fixed in the next commit with two fresh PASS runs.
+- Main merge (2026-10-27): main moved the api's timer jobs into `background-jobs.ts` behind
+  `API_BACKGROUND_JOBS` (#1046). The alerts now start there, write a `dsarSla` heartbeat, run in the combined
+  worker when the api sleeps, and a stop waits for a tick in flight.
+- Codex (MEDIUM): a public download is counted only after its export is built, so a failed build does not use up
+  one of the 5 downloads; a request already at the cap is refused before anything is built. The finding first
+  showed as waived only because its source-anchored fingerprint matched waiver 24c6b825 (the completion email);
+  it was not treated as waived.
 - Tests: `apps/api/src/modules/privacy/__tests__/dsar-sla-scheduler.test.ts` (fake clock, fake store, recording
   client), `dsar-sla-deps.test.ts`, `apps/api/src/__tests__/http-server.dsar-sla.test.ts`, `main.test.ts`, and
   four real-database tests in `tests/integration/dsar.test.ts` (due, overdue, 3-day repeat, extension window,

@@ -139,10 +139,10 @@ firm's data.
 ### Access and portability (Articles 15 and 20)
 
 1. After confirmation the person is emailed a download link. It works for 72
-   hours and at most 5 downloads. The file is built live from the CRM, scoped to
-   the firm and the exact email address, with a fixed list of fields per
-   category and at most 500 rows each. The link is a POST download, not a URL
-   that carries data.
+   hours and at most 5 downloads. A download that fails to build does not count.
+   The file is built live from the CRM, scoped to the firm and the exact email
+   address, with a fixed list of fields per category and at most 500 rows each.
+   The link is a POST download, not a URL that carries data.
 2. The file is JSON. It holds the processing information (controller and its
    privacy notice, purposes, categories, recipients, sources, rights, AI use,
    and the right to complain to the ICO) and the data: leads, lead scores, lead
@@ -161,7 +161,10 @@ firm's data.
      recommendations, next best action, score reasoning). Scores, stages and
      other structured values still export.
    - `STAFF_TEXT`: staff-written tags, lead qualification text (budget,
-     authority, need, timeline) and booking answers.
+     authority, need, timeline), booking answers, and the staff notes on the
+     person's own requests (identity check, late-receipt reason, extension
+     reason, resolution note, marketing stop). The person's own request text is
+     exported.
    - `OTHER_RECORDS`: calendar events, notifications and experiment records.
      They are on the erasure checklist, so the file counts them rather than
      leaving them out silently.

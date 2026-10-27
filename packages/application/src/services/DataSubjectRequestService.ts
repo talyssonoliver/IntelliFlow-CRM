@@ -235,6 +235,11 @@ export class DataSubjectRequestService {
     ) {
       return { outcome: 'INVALID' };
     }
+    // Over the cap already: refuse before building anything.
+    if (record.exportDownloads >= DSAR_LIMITS.maxExportDownloads) return { outcome: 'LIMIT' };
+    // Build first, then count: a build that fails must not use up a download (codex).
+    // The count below is still the atomic check, and a refused count returns nothing.
+    const built = await this.buildExport(record, input.now);
     const counted = await this.deps.repo.recordDownload({
       id: record.id,
       tokenHash: record.exportTokenHash!,
@@ -248,7 +253,7 @@ export class DataSubjectRequestService {
         ? { outcome: 'LIMIT' }
         : { outcome: 'INVALID' };
     }
-    return { outcome: 'OK', export: await this.buildExport(record, input.now) };
+    return { outcome: 'OK', export: built };
   }
 
   /** The link still matches and has not expired (re-read after a refused count). */

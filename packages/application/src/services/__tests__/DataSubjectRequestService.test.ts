@@ -454,8 +454,10 @@ describe('downloadExport (D-AC-04)', () => {
 
   it('returns the live export with processing information', async () => {
     const id = await issuedExport();
+    const builtBefore = subjectData.buildExport.mock.calls.length;
     const result = await service.downloadExport({ requestId: id, token: 'token-2', now: NOW });
     expect(result.outcome).toBe('OK');
+    expect(subjectData.buildExport.mock.calls.length).toBe(builtBefore + 1); // built once
     if (result.outcome !== 'OK') return;
     expect(result.export.processingInformation.controller).toEqual({
       name: 'Smith Law',
@@ -494,11 +496,34 @@ describe('downloadExport (D-AC-04)', () => {
       const row = repo.rows.get(id)!;
       repo.rows.set(id, { ...row, exportTokenHash: null, exportExpiresAt: null });
     };
-    const builtBefore = subjectData.buildExport.mock.calls.length;
+    // The export is built before the count, but a refused count never returns it.
     expect(await service.downloadExport({ requestId: id, token: 'token-2', now: NOW })).toEqual({
       outcome: 'INVALID',
     });
-    expect(subjectData.buildExport.mock.calls.length).toBe(builtBefore); // no data built
+  });
+
+  it('a failed export build does not use up one of the downloads (codex)', async () => {
+    const id = await issuedExport();
+    subjectData.buildExport.mockRejectedValueOnce(new Error('db down'));
+    await expect(
+      service.downloadExport({ requestId: id, token: 'token-2', now: NOW })
+    ).rejects.toThrow('db down');
+    expect(repo.rows.get(id)!.exportDownloads).toBe(0);
+    for (let i = 0; i < 5; i++) {
+      expect(
+        (await service.downloadExport({ requestId: id, token: 'token-2', now: NOW })).outcome
+      ).toBe('OK');
+    }
+  });
+
+  it('once the cap is reached, refuses without building the export again', async () => {
+    const id = await issuedExport();
+    repo.rows.set(id, { ...repo.rows.get(id)!, exportDownloads: 5 });
+    const builtBefore = subjectData.buildExport.mock.calls.length;
+    expect(await service.downloadExport({ requestId: id, token: 'token-2', now: NOW })).toEqual({
+      outcome: 'LIMIT',
+    });
+    expect(subjectData.buildExport.mock.calls.length).toBe(builtBefore);
   });
 
   it('a rejected request takes its emailed export link with it (codex HIGH)', async () => {
