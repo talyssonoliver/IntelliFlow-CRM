@@ -214,8 +214,10 @@ describe('createLLMForTenant()', () => {
     mockResolveEffectiveTier.mockResolvedValue({ tier: 'free', fallbackModelIds: [] });
     const { createLLMForTenant } = await importFactory('openrouter');
     await createLLMForTenant('qualification', 'free', { tenantId: 'tenant-or3' });
-    expect(lastChatArgs().modelName).toBe('openai/gpt-oss-120b:free');
-    expect(await lastTraceMeta()).toMatchObject({ pricingKey: 'openai/gpt-oss-120b:free' });
+    expect(lastChatArgs().modelName).toBe('nvidia/nemotron-3-ultra-550b-a55b:free');
+    expect(await lastTraceMeta()).toMatchObject({
+      pricingKey: 'nvidia/nemotron-3-ultra-550b-a55b:free',
+    });
   });
 
   it('pin without an OpenRouter mapping → tier default plus a pin_unavailable_for_provider warning', async () => {
@@ -229,10 +231,10 @@ describe('createLLMForTenant()', () => {
     const { createLLMForTenant } = await importFactory('openrouter');
     await createLLMForTenant('scoring', 'standard', { tenantId: 'tenant-or2' });
 
-    expect(lastChatArgs().modelName).toBe('openai/gpt-oss-120b:free');
+    expect(lastChatArgs().modelName).toBe('nvidia/nemotron-3-ultra-550b-a55b:free');
     // The pin did not run, so spend is priced as the model that ran, not as mistral-small.
     expect((await lastTraceMeta()).modelId).toBeUndefined();
-    expect((await lastTraceMeta()).pricingKey).toBe('openai/gpt-oss-120b:free');
+    expect((await lastTraceMeta()).pricingKey).toBe('nvidia/nemotron-3-ultra-550b-a55b:free');
     expect(warn.mock.calls.some((c) => String(c[0]).includes('pin_unavailable_for_provider'))).toBe(
       true
     );

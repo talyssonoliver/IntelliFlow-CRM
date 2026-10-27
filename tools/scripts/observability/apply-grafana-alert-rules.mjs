@@ -21,6 +21,8 @@ import {
   buildAlertRulePayload,
   createApiClient,
   querySeriesCount,
+  redactBody,
+  requireEnv,
 } from '../lib/grafana-provisioning.mjs';
 
 const RULES_PATH = join(
@@ -104,6 +106,7 @@ export async function run({
   argv = process.argv,
   fetchImpl = fetch,
   log = console.log,
+  sleep,
 } = {}) {
   const dryRun = argv.includes('--dry-run');
   const sendTest = argv.includes('--send-test');
@@ -111,10 +114,8 @@ export async function run({
 
   const problems = validateConfig(config);
   if (problems.length) throw new Error(`rules file invalid:\n  ${problems.join('\n  ')}`);
-  if (!env.GRAFANA_URL || !env.GRAFANA_SA_TOKEN) {
-    throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
-  }
-  const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl);
+  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
+  const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
 
   // Every rule must watch metrics that exist, or it silently never fires.
   const empty = [];
@@ -135,7 +136,8 @@ export async function run({
       uid: config.folder.uid,
       title: config.folder.title,
     });
-    if (made.status >= 300) throw new Error(`create folder: HTTP ${made.status} ${made.text}`);
+    if (made.status >= 300)
+      throw new Error(`create folder: HTTP ${made.status} ${redactBody(made.text)}`);
     log(`created folder ${config.folder.uid}`);
   } else if (folder.status !== 200) {
     throw new Error(`read folder: HTTP ${folder.status}`);
@@ -149,7 +151,8 @@ export async function run({
       existing.status === 200
         ? await api('PUT', `/api/v1/provisioning/alert-rules/${entry.uid}`, rule)
         : await api('POST', '/api/v1/provisioning/alert-rules', rule);
-    if (res.status >= 300) throw new Error(`${entry.uid}: HTTP ${res.status} ${res.text}`);
+    if (res.status >= 300)
+      throw new Error(`${entry.uid}: HTTP ${res.status} ${redactBody(res.text)}`);
     log(`${existing.status === 200 ? 'updated' : 'created'} ${entry.uid}`);
   }
 
@@ -163,7 +166,7 @@ export async function run({
     }
   );
   if (group.status >= 300)
-    throw new Error(`rule group interval: HTTP ${group.status} ${group.text}`);
+    throw new Error(`rule group interval: HTTP ${group.status} ${redactBody(group.text)}`);
 
   if (!sendTest) {
     const del = await api('DELETE', `/api/v1/provisioning/alert-rules/${config.deliveryTest.uid}`);
