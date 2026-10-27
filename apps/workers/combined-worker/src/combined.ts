@@ -35,7 +35,15 @@ import pino from 'pino';
 // ============================================================================
 
 export const WORKER_NAMES = ['ai-worker', 'events-worker', 'ingestion-worker'] as const;
-export type WorkerName = (typeof WORKER_NAMES)[number];
+export type CoreWorkerName = (typeof WORKER_NAMES)[number];
+
+/**
+ * The api's timer jobs (approval sweep, email bounce scan), run here so the api
+ * service can sleep. Not a BullMQ worker and not in COMBINED_WORKERS: it is
+ * added only by COMBINED_BACKGROUND_JOBS=on.
+ */
+export const BACKGROUND_JOBS_NAME = 'background-jobs' as const;
+export type WorkerName = CoreWorkerName | typeof BACKGROUND_JOBS_NAME;
 
 /** The slice of `BaseWorker` the combined runtime depends on. */
 export interface ManagedWorker {
@@ -51,7 +59,8 @@ export interface ComponentCheck {
   message?: string;
 }
 
-export type WorkerLoaders = Record<WorkerName, () => Promise<ManagedWorker>>;
+export type WorkerLoaders = Record<CoreWorkerName, () => Promise<ManagedWorker>> &
+  Partial<Record<typeof BACKGROUND_JOBS_NAME, () => Promise<ManagedWorker>>>;
 
 export interface CombinedWorkerConfig {
   workers: WorkerName[];
@@ -106,11 +115,19 @@ function parsePositiveInt(raw: string | undefined, fallback: number, allowZero =
   return value;
 }
 
+/** COMBINED_BACKGROUND_JOBS is opt-in: only an explicit on-ish value enables it. */
+export function backgroundJobsRequested(raw: string | undefined): boolean {
+  return ['on', 'true', '1', 'yes'].includes(raw?.trim().toLowerCase() ?? '');
+}
+
 /**
  * Read the combined-worker settings from the environment.
  *
  * - COMBINED_WORKERS: comma list of workers to run (default: all three)
  * - COMBINED_HEALTH_PORT / HEALTH_PORT / PORT: combined health port (default 3100)
+ * - COMBINED_BACKGROUND_JOBS: on/true/1/yes also runs the api's timer jobs
+ *   (approval sweep, bounce scan). Default off. Pair with API_BACKGROUND_JOBS=off
+ *   on the api service; both on is safe (DB advisory lock / mailbox lease).
  * - COMBINED_ALLOW_PARTIAL=true: keep running if one worker fails to start
  * - COMBINED_SHUTDOWN_TIMEOUT_MS: hard cap on graceful shutdown (default 30000)
  */
@@ -139,8 +156,11 @@ export function loadCombinedConfig(env: NodeJS.ProcessEnv): CombinedWorkerConfig
     true
   );
 
+  const selected = [...new Set(workers)] as WorkerName[];
+  if (backgroundJobsRequested(env.COMBINED_BACKGROUND_JOBS)) selected.push(BACKGROUND_JOBS_NAME);
+
   return {
-    workers: [...new Set(workers)] as WorkerName[],
+    workers: selected,
     healthPort,
     allowPartial: env.COMBINED_ALLOW_PARTIAL === 'true',
     shutdownTimeoutMs: parsePositiveInt(
@@ -433,7 +453,9 @@ export async function startCombinedWorker(
     if (shuttingDown) break;
     const outcome: { failed: boolean; error?: unknown } = { failed: false };
     const run = (async () => {
-      const worker = await options.loaders[name]();
+      const load = options.loaders[name];
+      if (!load) throw new Error(`No loader registered for ${name}`);
+      const worker = await load();
       // A signal during the load: do not start what would only be torn down.
       if (shuttingDown) return;
       pending = { name, worker };
