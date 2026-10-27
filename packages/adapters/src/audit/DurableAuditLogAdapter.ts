@@ -58,8 +58,8 @@ export interface AuditPrismaClient {
     findFirst: (args: { where: { eventId: string } }) => Promise<any>;
   };
   user: {
-    findFirst: (args: {
-      where: { id: string; tenantId: string };
+    findUnique: (args: {
+      where: { id: string };
       select: { id: true };
     }) => Promise<{ id: string } | null>;
   };
@@ -402,14 +402,16 @@ export class DurableAuditLogAdapter implements AuditLogPort {
   /**
    * actorId is not signed (users FK is ON DELETE SET NULL): it must be the actor
    * the signed userId implies. A null on a USER row is accepted only once that
-   * user no longer exists in the row's tenant, so nulling it by hand is caught.
+   * user no longer exists, so nulling it by hand is caught. The lookup is by id
+   * alone, like the FK: a user can act outside their home tenant (ADR-071), and it
+   * returns only whether the user exists.
    */
   private async actorIdValid(entry: AuditRow, signedUserId?: string): Promise<boolean> {
     const expected = this.actorFor(signedUserId).actorId;
     if (entry.actorId === expected) return true;
     if (entry.actorId !== null || expected === null) return false;
-    const user = await this.prisma.user.findFirst({
-      where: { id: expected, tenantId: entry.tenantId },
+    const user = await this.prisma.user.findUnique({
+      where: { id: expected },
       select: { id: true },
     });
     return user === null;
