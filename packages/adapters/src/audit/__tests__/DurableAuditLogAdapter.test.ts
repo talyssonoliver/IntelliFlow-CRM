@@ -16,6 +16,7 @@
  * the real schema; these tests pin the mapping and the hash chain.
  */
 
+import { createHmac } from 'node:crypto';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { DurableAuditLogAdapter } from '../DurableAuditLogAdapter';
 import { CrossTenantViolationError } from '../errors';
@@ -374,6 +375,56 @@ describe('DurableAuditLogAdapter', () => {
       const verification = await adapter.verifyLogIntegrity(result.eventId);
 
       expect(verification).toMatchObject({ valid: false, reason: 'HASH_MISMATCH' });
+    });
+
+    it('hashes mixed-case and unicode keys byte-identically to the default sort order', () => {
+      // Stored chains were hashed with keys in a default sort() order: UTF-16 code
+      // units, not locale and not code points (so the emoji's surrogate sorts before
+      // U+FB00). The explicit comparator must reproduce that order exactly.
+      const defaultSortOrder = [
+        'A',
+        'B',
+        'Z',
+        '_x',
+        'a',
+        'b',
+        'e',
+        'z1',
+        'z10',
+        'z2',
+        '\u00c4',
+        '\u00c9',
+        '\u00df',
+        '\u00e4',
+        '\u00e9',
+        '\u4e2d',
+        '\ud83d\ude00',
+        '\ufb00',
+      ];
+      const scrambled = [...defaultSortOrder].reverse();
+      const valueOf = (k: string) => defaultSortOrder.indexOf(k);
+      const build = (order: string[]) => Object.fromEntries(order.map((k) => [k, valueOf(k)]));
+      const ordered = build(defaultSortOrder);
+      const row = {
+        eventType: 'AI_GUARDRAIL_TRIGGERED',
+        tenantId: 'tenant-123',
+        timestamp: '2026-10-27T00:00:00.000Z',
+        metadata: { ...build(scrambled), inner: build(scrambled), audit: { previousHash: 'p' } },
+      };
+
+      // The canonical bytes, written out in the stored order (no sort involved);
+      // 'inner' falls between 'e' and 'z1'.
+      const [beforeInner, afterInner] = [defaultSortOrder.slice(0, 7), defaultSortOrder.slice(7)];
+      const canonical = JSON.stringify({
+        eventType: row.eventType,
+        metadata: { ...build(beforeInner), inner: ordered, ...build(afterInner) },
+        previousHash: 'p',
+        tenantId: row.tenantId,
+        timestamp: row.timestamp,
+      });
+      const expected = createHmac('sha256', signingKey).update(canonical).digest('hex');
+
+      expect((adapter as any).computeHash(row)).toBe(expected);
     });
 
     it('verifyLogIntegrity returns valid=true for untampered entries, whatever the key order', async () => {

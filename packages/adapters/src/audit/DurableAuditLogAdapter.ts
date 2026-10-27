@@ -106,6 +106,15 @@ const DENIED_EVENTS = new Set([
 ]);
 
 /**
+ * UTF-16 code-unit order, the same order as a default sort(). Locale-independent
+ * on purpose: changing it would invalidate every stored hash and signature.
+ */
+function byCodeUnit(a: string, b: string): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
+}
+
+/**
  * JSON with object keys sorted at every level. Postgres jsonb does not keep key
  * order, so hashes and signatures over stored metadata must not depend on it.
  */
@@ -114,7 +123,7 @@ function canonicalJson(value: unknown): string {
     v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)
       ? Object.fromEntries(
           Object.keys(v as Record<string, unknown>)
-            .sort()
+            .sort(byCodeUnit)
             .map((k) => [k, (v as Record<string, unknown>)[k]])
         )
       : v
