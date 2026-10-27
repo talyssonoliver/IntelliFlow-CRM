@@ -57,6 +57,12 @@ export interface AuditPrismaClient {
     create: (args: { data: any }) => Promise<any>;
     findFirst: (args: { where: { eventId: string } }) => Promise<any>;
   };
+  user: {
+    findFirst: (args: {
+      where: { id: string; tenantId: string };
+      select: { id: true };
+    }) => Promise<{ id: string } | null>;
+  };
   $transaction: <T>(callback: (tx: any) => Promise<T>) => Promise<T>;
 }
 
@@ -366,10 +372,7 @@ export class DurableAuditLogAdapter implements AuditLogPort {
     const computedHash = this.computeHash(entry);
     const hashMatch = safeEqualHex(computedHash, audit.integrityHash);
 
-    // actorId is not signed (users FK is ON DELETE SET NULL): it must be the actor
-    // the signed userId implies, or null after the user was deleted.
-    const actorValid =
-      entry.actorId === null || entry.actorId === this.actorFor(audit.userId).actorId;
+    const actorValid = await this.actorIdValid(entry, audit.userId);
     const signatureValid = safeEqualHex(this.sign(entry), audit.signature) && actorValid;
 
     const invalidReason = hashMatch ? 'SIGNATURE_INVALID' : 'HASH_MISMATCH';
@@ -381,6 +384,22 @@ export class DurableAuditLogAdapter implements AuditLogPort {
       signatureValid,
       verifiedAt: new Date(),
     };
+  }
+
+  /**
+   * actorId is not signed (users FK is ON DELETE SET NULL): it must be the actor
+   * the signed userId implies. A null on a USER row is accepted only once that
+   * user no longer exists in the row's tenant, so nulling it by hand is caught.
+   */
+  private async actorIdValid(entry: AuditRow, signedUserId?: string): Promise<boolean> {
+    const expected = this.actorFor(signedUserId).actorId;
+    if (entry.actorId === expected) return true;
+    if (entry.actorId !== null || expected === null) return false;
+    const user = await this.prisma.user.findFirst({
+      where: { id: expected, tenantId: entry.tenantId },
+      select: { id: true },
+    });
+    return user === null;
   }
 
   /** A fallback tenant has no tenants row; writing it would fail the FK. */

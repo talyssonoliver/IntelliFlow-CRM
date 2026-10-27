@@ -23,10 +23,12 @@ import type { AISecurityEventInput, TenantContext } from '@intelliflow/applicati
 
 /**
  * Mock Prisma client that records every auditLogEntry write and serves them back
- * from findFirst, with jsonb's key reordering simulated on metadata.
+ * from findFirst, with jsonb's key reordering simulated on metadata. `users` holds
+ * the `tenantId:id` pairs of users that still exist.
  */
 const mockPrismaClient = () => {
   const writes: any[] = [];
+  const users = new Set<string>(['tenant-123:user-456']);
   const reorderKeys = (value: unknown): unknown =>
     value && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date)
       ? Object.fromEntries(
@@ -45,7 +47,13 @@ const mockPrismaClient = () => {
   };
   return {
     writes,
+    users,
     tx,
+    user: {
+      findFirst: vi.fn(async ({ where }: { where: { id: string; tenantId: string } }) =>
+        users.has(`${where.tenantId}:${where.id}`) ? { id: where.id } : null
+      ),
+    },
     auditLogEntry: {
       create: vi.fn(),
       findFirst: vi.fn(async ({ where }: { where: { eventId: string } }) => {
@@ -325,11 +333,38 @@ describe('DurableAuditLogAdapter', () => {
 
     it('verifyLogIntegrity accepts an actorId nulled by the users FK (ON DELETE SET NULL)', async () => {
       const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      prisma.users.delete('tenant-123:user-456');
       prisma.writes[0].actorId = null;
 
       await expect(adapter.verifyLogIntegrity(result.eventId)).resolves.toMatchObject({
         valid: true,
       });
+    });
+
+    it('verifyLogIntegrity detects a user actorId nulled while that user still exists', async () => {
+      const result = await adapter.logSecurityEvent(createValidEvent(), createValidTenantContext());
+      prisma.writes[0].actorId = null;
+
+      await expect(adapter.verifyLogIntegrity(result.eventId)).resolves.toMatchObject({
+        valid: false,
+        signatureValid: false,
+      });
+      expect(prisma.user.findFirst).toHaveBeenCalledWith({
+        where: { id: 'user-456', tenantId: 'tenant-123' },
+        select: { id: true },
+      });
+    });
+
+    it('verifyLogIntegrity accepts a null actorId on a system row without a users lookup', async () => {
+      const result = await adapter.logSecurityEvent(
+        { ...createValidEvent(), userId: 'system' },
+        createValidTenantContext()
+      );
+
+      await expect(adapter.verifyLogIntegrity(result.eventId)).resolves.toMatchObject({
+        valid: true,
+      });
+      expect(prisma.user.findFirst).not.toHaveBeenCalled();
     });
 
     it('verifyLogIntegrity reports a hash mismatch when metadata is altered', async () => {

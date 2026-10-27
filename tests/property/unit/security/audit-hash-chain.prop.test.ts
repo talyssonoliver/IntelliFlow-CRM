@@ -129,6 +129,8 @@ function makeMockPrisma(): {
       findFirst: async (args: { where: { eventId: string } }) =>
         entries.find((e) => e.eventId === args.where.eventId) ?? null,
     },
+    // Every recorded user still exists.
+    user: { findFirst: async (args: { where: { id: string } }) => ({ id: args.where.id }) },
     // Inline transaction: forward to the same in-memory store
     $transaction: async <T>(callback: (tx: any) => Promise<T>): Promise<T> =>
       callback({ auditLogEntry: { create } }),
