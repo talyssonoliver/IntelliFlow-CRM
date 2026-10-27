@@ -1,7 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildAlertRulePayload,
   createApiClient,
+  createGrafanaClient,
+  loadValidConfig,
   querySeriesCount,
   redactBody,
   requireEnv,
@@ -97,6 +102,56 @@ describe('requireEnv', () => {
 
   it('passes when every variable is set', () => {
     expect(() => requireEnv({ A: 'x', B: 'y' }, ['A', 'B'])).not.toThrow();
+  });
+});
+
+describe('loadValidConfig', () => {
+  let dir: string;
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'grafana-config-'));
+  });
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true });
+  });
+
+  it('returns the parsed config when the validator finds no problem', () => {
+    const path = join(dir, 'ok.json');
+    writeFileSync(path, JSON.stringify({ uid: 'a' }));
+    const validate = vi.fn(() => []);
+    expect(loadValidConfig(path, validate, 'thing')).toEqual({ uid: 'a' });
+    expect(validate).toHaveBeenCalledWith({ uid: 'a' });
+  });
+
+  it('throws "<label> invalid:" with one problem per line', () => {
+    const path = join(dir, 'bad.json');
+    writeFileSync(path, '{}');
+    expect(() => loadValidConfig(path, () => ['x: required', 'y: required'], 'SLO file')).toThrow(
+      'SLO file invalid:\n  x: required\n  y: required'
+    );
+  });
+});
+
+describe('createGrafanaClient', () => {
+  it('refuses to start without GRAFANA_URL and GRAFANA_SA_TOKEN, before any request', () => {
+    const fetchImpl = vi.fn();
+    expect(() => createGrafanaClient({ GRAFANA_URL: BASE_URL }, fetchImpl, vi.fn())).toThrow(
+      'GRAFANA_URL and GRAFANA_SA_TOKEN are required'
+    );
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it('talks to GRAFANA_URL with the service-account token and the given sleep', async () => {
+    const { calls, fetchImpl } = scriptedFetch([503, 200]);
+    const sleep = vi.fn(async () => {});
+    const api = createGrafanaClient(
+      { GRAFANA_URL: BASE_URL, GRAFANA_SA_TOKEN: TOKEN },
+      fetchImpl as unknown as typeof fetch,
+      sleep
+    );
+    const res = await api('GET', '/api/health');
+    expect(res.status).toBe(200);
+    expect(calls).toEqual([`${BASE_URL}/api/health`, `${BASE_URL}/api/health`]);
+    expect(sleep).toHaveBeenCalledTimes(1);
   });
 });
 

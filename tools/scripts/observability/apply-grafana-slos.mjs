@@ -11,10 +11,9 @@
 //   GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=<service account token> \
 //     node tools/scripts/observability/apply-grafana-slos.mjs [--dry-run]
 // The token is read from the environment only and is never printed.
-import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createApiClient, redactBody, requireEnv } from '../lib/grafana-provisioning.mjs';
+import { createGrafanaClient, loadValidConfig, redactBody } from '../lib/grafana-provisioning.mjs';
 
 const CONFIG_PATH = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -112,12 +111,8 @@ export async function run({
   sleep,
 } = {}) {
   const dryRun = argv.includes('--dry-run');
-  const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
-
-  const problems = validateConfig(config);
-  if (problems.length) throw new Error(`SLO file invalid:\n  ${problems.join('\n  ')}`);
-  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
-  const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
+  const config = loadValidConfig(CONFIG_PATH, validateConfig, 'SLO file');
+  const api = createGrafanaClient(env, fetchImpl, sleep);
 
   let created = 0;
   let updated = 0;

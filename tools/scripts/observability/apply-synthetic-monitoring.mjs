@@ -35,12 +35,13 @@
 //   GRAFANA_URL=https://<stack>.grafana.net GRAFANA_SA_TOKEN=<service account token> \
 //     node tools/scripts/observability/apply-synthetic-monitoring.mjs [--dry-run]
 // Neither token is ever printed.
-import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
   buildAlertRulePayload,
   createApiClient,
+  createGrafanaClient,
+  loadValidConfig,
   querySeriesCount,
   redactBody,
   requireEnv,
@@ -132,15 +133,10 @@ export async function run({
   sleep,
 } = {}) {
   const dryRun = argv.includes('--dry-run');
-  const config = JSON.parse(readFileSync(CONFIG_PATH, 'utf8'));
-
-  const problems = validateConfig(config);
-  if (problems.length) throw new Error(`config invalid:\n  ${problems.join('\n  ')}`);
+  const config = loadValidConfig(CONFIG_PATH, validateConfig, 'config');
   requireEnv(env, ['SM_API_URL', 'SM_ACCESS_TOKEN']);
-  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
-
   const sm = createApiClient(env.SM_API_URL, env.SM_ACCESS_TOKEN, fetchImpl, { sleep });
-  const grafana = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
+  const grafana = createGrafanaClient(env, fetchImpl, sleep);
 
   // Resolve probe location names to ids. Fail loud rather than silently
   // creating a check that watches from nowhere.

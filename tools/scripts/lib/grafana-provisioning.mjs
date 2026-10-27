@@ -5,6 +5,7 @@
 // apply-grafana-dashboard.mjs (the production SLOs and service dashboard,
 // ENV-008-AI). Extracted so their HTTP client, 503 retry, error redaction and
 // alert-rule payload shape live in one place instead of drifting apart.
+import { readFileSync } from 'node:fs';
 
 /**
  * Waits between attempts when Grafana answers 503 (ENV-008-AI AC-001). A
@@ -22,6 +23,23 @@ const defaultSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
  */
 export function requireEnv(env, names) {
   if (names.some((name) => !env[name])) throw new Error(`${names.join(' and ')} are required`);
+}
+
+/**
+ * Reads a committed JSON config and validates it before any request, throwing
+ * `<label> invalid:` with one problem per line when validateConfig finds any.
+ */
+export function loadValidConfig(path, validateConfig, label) {
+  const config = JSON.parse(readFileSync(path, 'utf8'));
+  const problems = validateConfig(config);
+  if (problems.length) throw new Error(`${label} invalid:\n  ${problems.join('\n  ')}`);
+  return config;
+}
+
+/** The Grafana stack client from GRAFANA_URL and GRAFANA_SA_TOKEN, refusing to start without them. */
+export function createGrafanaClient(env, fetchImpl, sleep) {
+  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
+  return createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
 }
 
 /** Minimal bearer-token JSON client shared by every Grafana-shaped API this repo talks to. */
