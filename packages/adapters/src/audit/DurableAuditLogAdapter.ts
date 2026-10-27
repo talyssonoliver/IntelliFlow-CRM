@@ -171,8 +171,12 @@ function signablePayload(row: AuditRow): Record<string, unknown> {
 }
 
 function safeEqualHex(a: unknown, b: unknown): boolean {
-  if (typeof a !== 'string' || typeof b !== 'string' || a.length !== b.length) return false;
-  return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  // Compare byte lengths: a multibyte string can match in characters but not bytes,
+  // and timingSafeEqual throws on unequal lengths.
+  const [bytesA, bytesB] = [Buffer.from(a), Buffer.from(b)];
+  if (bytesA.length !== bytesB.length) return false;
+  return timingSafeEqual(bytesA, bytesB);
 }
 
 /**

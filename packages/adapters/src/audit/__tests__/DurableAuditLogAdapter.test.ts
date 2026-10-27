@@ -377,6 +377,22 @@ describe('DurableAuditLogAdapter', () => {
       expect(verification).toMatchObject({ valid: false, reason: 'HASH_MISMATCH' });
     });
 
+    it.each(['integrityHash', 'signature'])(
+      'verifyLogIntegrity reports a multibyte %s of the right length as invalid, not a throw',
+      async (field) => {
+        const result = await adapter.logSecurityEvent(
+          createValidEvent(),
+          createValidTenantContext()
+        );
+        // 64 characters, like a hex digest, but 128 UTF-8 bytes.
+        prisma.writes[0].metadata.audit[field] = 'é'.repeat(64);
+
+        await expect(adapter.verifyLogIntegrity(result.eventId)).resolves.toMatchObject({
+          valid: false,
+        });
+      }
+    );
+
     it('hashes mixed-case and unicode keys byte-identically to the default sort order', () => {
       // Stored chains were hashed with keys in a default sort() order: UTF-16 code
       // units, not locale and not code points (so the emoji's surrogate sorts before
