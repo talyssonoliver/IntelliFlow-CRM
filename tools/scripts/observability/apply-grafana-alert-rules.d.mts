@@ -37,6 +37,7 @@ export interface GrafanaAlertRule {
     };
   }>;
 }
+export function liveSeriesSelector(selector: string): string;
 export function buildRule(entry: AlertRuleEntry, config: AlertRulesConfig): GrafanaAlertRule;
 export function validateConfig(
   config: Partial<Omit<AlertRulesConfig, 'rules'>> & { rules: Partial<AlertRuleEntry>[] }

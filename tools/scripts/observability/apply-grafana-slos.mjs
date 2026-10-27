@@ -31,6 +31,9 @@ const SLO_API = '/api/plugins/grafana-slo-app/resources/v1/slo';
 // Each uuid becomes a URL path segment (see run()); this charset keeps a
 // slash, dot-dot or query string from retargeting the request.
 const SAFE_PATH_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
+// Grafana answers HTTP 400 "SLO ID ... is too long" above this, so the run
+// would apply nothing; catch it here, before any request.
+const MAX_SLO_ID_LENGTH = 21;
 const REQUIRED = ['uuid', 'name', 'description', 'query', 'objectives'];
 
 /** Every PromQL string an SLO carries, whatever its query type. */
@@ -87,6 +90,10 @@ export function validateConfig(config) {
     for (const key of missing) problems.push(`${id}: missing ${key}`);
     if (slo.uuid !== undefined && !SAFE_PATH_SEGMENT.test(slo.uuid))
       problems.push(`uuid: must match ${SAFE_PATH_SEGMENT} (got ${JSON.stringify(slo.uuid)})`);
+    if (typeof slo.uuid === 'string' && slo.uuid.length > MAX_SLO_ID_LENGTH)
+      problems.push(
+        `${id}: uuid must be ${MAX_SLO_ID_LENGTH} characters or less (Grafana's limit)`
+      );
     if (slo.query) checkQuery(problems, id, slo);
     if (seen.has(slo.uuid)) problems.push(`${id}: duplicate uuid`);
     seen.add(slo.uuid);

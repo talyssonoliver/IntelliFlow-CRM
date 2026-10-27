@@ -85,9 +85,9 @@ describe('slos.json', () => {
     expect(
       CONFIG.slos.map((s: Slo) => [s.uuid, s.objectives[0].value, s.objectives[0].window])
     ).toEqual([
-      ['env008-api-availability', 0.999, '28d'],
-      ['env008-api-latency', 0.95, '28d'],
-      ['env008-ai-worker-llm-success', 0.995, '28d'],
+      ['env008-api-avail', 0.999, '28d'],
+      ['env008-api-p95', 0.95, '28d'],
+      ['env008-llm-success', 0.995, '28d'],
     ]);
   });
 
@@ -104,9 +104,9 @@ describe('slos.json', () => {
   });
 
   it('uses ratio queries for availability and LLM success, and a native-histogram freeform query for latency', () => {
-    expect(byUuid('env008-api-availability').query.type).toBe('ratio');
-    expect(byUuid('env008-ai-worker-llm-success').query.type).toBe('ratio');
-    const latency = byUuid('env008-api-latency');
+    expect(byUuid('env008-api-avail').query.type).toBe('ratio');
+    expect(byUuid('env008-llm-success').query.type).toBe('ratio');
+    const latency = byUuid('env008-api-p95');
     expect(latency.query.type).toBe('freeform');
     expect(latency.query.freeform.query).toContain('histogram_fraction(0, 0.2,');
     expect(latency.query.freeform.query).toContain('[$__rate_interval]');
@@ -125,7 +125,7 @@ describe('slos.json', () => {
   });
 
   it('counts llm.invoke spans of ai-worker for LLM success', () => {
-    const queries = queriesOf(byUuid('env008-ai-worker-llm-success'));
+    const queries = queriesOf(byUuid('env008-llm-success'));
     expect(queries).toHaveLength(2);
     for (const q of queries) {
       expect(q).toContain('service="ai-worker"');
@@ -134,15 +134,15 @@ describe('slos.json', () => {
   });
 
   it('states in each description what its SLI does not count (AC-002)', () => {
-    const availability = byUuid('env008-api-availability').description;
+    const availability = byUuid('env008-api-avail').description;
     expect(availability).toMatch(/tRPC/);
     expect(availability).toMatch(/200 or 4xx/);
     expect(availability).toMatch(/30 s/);
-    expect(byUuid('env008-ai-worker-llm-success').description).toMatch(/low call volume/i);
+    expect(byUuid('env008-llm-success').description).toMatch(/low call volume/i);
   });
 
   it('alerts on availability burn only; latency and LLM each name their own issue (AC-004)', () => {
-    const availability = byUuid('env008-api-availability');
+    const availability = byUuid('env008-api-avail');
     // Grafana derives the burn-rate windows itself; the committed blocks carry
     // the severity that routes them and a summary, so neither may be empty.
     expect(availability.alerting.fastBurn.labels).toEqual([{ key: 'severity', value: 'critical' }]);
@@ -152,7 +152,7 @@ describe('slos.json', () => {
         { key: 'summary', value: expect.stringMatching(/budget/) },
       ]);
     }
-    const issues = ['env008-api-latency', 'env008-ai-worker-llm-success'].map((uuid) => {
+    const issues = ['env008-api-p95', 'env008-llm-success'].map((uuid) => {
       const slo = byUuid(uuid);
       expect(slo.alerting).toBeUndefined();
       const match = /#(\d+)/.exec(slo.description);
@@ -230,6 +230,22 @@ describe('validateConfig', () => {
     bad.slos[0].uuid = 'a/../b';
     expect(validateConfig(bad)).toEqual([expect.stringContaining('a/../b')]);
   });
+
+  // Grafana refused env008-api-availability (23 chars) with HTTP 400 on the
+  // first apply, so no SLO was created. The limit is checked before any request.
+  it('rejects a uuid longer than the 21 characters Grafana accepts, and allows exactly 21', () => {
+    const bad = clone();
+    bad.slos[0].uuid = 'a'.repeat(22);
+    expect(validateConfig(bad)).toEqual([
+      `${'a'.repeat(22)}: uuid must be 21 characters or less (Grafana's limit)`,
+    ]);
+    bad.slos[0].uuid = 'a'.repeat(21);
+    expect(validateConfig(bad)).toEqual([]);
+  });
+
+  it('every committed uuid fits the Grafana limit', () => {
+    for (const slo of CONFIG.slos) expect(slo.uuid.length, slo.uuid).toBeLessThanOrEqual(21);
+  });
 });
 
 describe('run', () => {
@@ -242,7 +258,7 @@ describe('run', () => {
   });
 
   it('dry run only reads', async () => {
-    const api = fakeSloApi({ existing: ['env008-api-latency'] });
+    const api = fakeSloApi({ existing: ['env008-api-p95'] });
     const result = await run({
       env,
       argv: ['--dry-run'],
@@ -255,7 +271,7 @@ describe('run', () => {
   });
 
   it('creates a missing SLO by POST with its uuid, and updates an existing one by PUT', async () => {
-    const api = fakeSloApi({ existing: ['env008-api-latency'] });
+    const api = fakeSloApi({ existing: ['env008-api-p95'] });
     const result = await run({
       env,
       argv: [],
@@ -266,11 +282,11 @@ describe('run', () => {
     const writes = api.calls.filter((c) => c.method !== 'GET');
     expect(writes.map((c) => `${c.method} ${c.path}`)).toEqual([
       `POST ${SLO_API}`,
-      `PUT ${SLO_API}/env008-api-latency`,
+      `PUT ${SLO_API}/env008-api-p95`,
       `POST ${SLO_API}`,
     ]);
     expect(writes[0].body).toMatchObject({
-      uuid: 'env008-api-availability',
+      uuid: 'env008-api-avail',
       folder: { uid: 'intelliflow-prod' },
       destinationDatasource: { uid: 'grafanacloud-prom' },
     });
@@ -281,13 +297,13 @@ describe('run', () => {
     const api = fakeSloApi({ assignUuid: 'generated-elsewhere' });
     await expect(
       run({ env, argv: [], fetchImpl: api.fetchImpl, log: quiet, sleep: noSleep })
-    ).rejects.toThrow('env008-api-availability: created under uuid generated-elsewhere');
+    ).rejects.toThrow('env008-api-avail: created under uuid generated-elsewhere');
   });
 
   it('reads a created SLO back by its uuid after the POST', async () => {
-    const api = fakeSloApi({ existing: ['env008-api-latency'] });
+    const api = fakeSloApi({ existing: ['env008-api-p95'] });
     await run({ env, argv: [], fetchImpl: api.fetchImpl, log: quiet, sleep: noSleep });
-    const created = 'env008-api-availability';
+    const created = 'env008-api-avail';
     const after = api.calls.findIndex((c) => c.method === 'POST');
     expect(api.calls[after + 1]).toMatchObject({ method: 'GET', path: `${SLO_API}/${created}` });
   });
@@ -296,7 +312,7 @@ describe('run', () => {
     const api = fakeSloApi({ dropCreated: true, writeBody: '{"message":"ok"}' });
     await expect(
       run({ env, argv: [], fetchImpl: api.fetchImpl, log: quiet, sleep: noSleep })
-    ).rejects.toThrow('env008-api-availability: not found under its uuid after create (HTTP 404)');
+    ).rejects.toThrow('env008-api-avail: not found under its uuid after create (HTTP 404)');
   });
 
   it('throws a redacted error when a write is rejected', async () => {
@@ -309,7 +325,7 @@ describe('run', () => {
       log: quiet,
       sleep: noSleep,
     }).catch((e: Error) => e);
-    expect((err as Error).message).toContain('env008-api-availability: HTTP 400');
+    expect((err as Error).message).toContain('env008-api-avail: HTTP 400');
     expect((err as Error).message).not.toContain(leaked);
   });
 
@@ -317,7 +333,7 @@ describe('run', () => {
     const api = fakeSloApi();
     const fetchImpl: typeof api.fetchImpl = async () => ({ status: 403, text: async () => '' });
     await expect(run({ env, argv: [], fetchImpl, log: quiet, sleep: noSleep })).rejects.toThrow(
-      'read env008-api-availability: HTTP 403'
+      'read env008-api-avail: HTTP 403'
     );
   });
 
