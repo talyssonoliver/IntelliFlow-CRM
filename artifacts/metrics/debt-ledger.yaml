@@ -5107,13 +5107,13 @@ items:
     description: >-
       Every ai-worker llm.invoke span in production ends with status ERROR (Grafana span metrics,
       read 2026-10-22), alongside about 140 failed Postgres INSERTs in the ai-worker logs. SLO
-      env008-ai-worker-llm-success therefore ships without burn-rate alerting.
+      env008-llm-success therefore ships without burn-rate alerting.
     created_at: 2026-10-25
     expiry_date: 2027-01-24
     remediation_sprint: 19
     remediation_plan: >-
       Find the llm.invoke failure from a trace's exception events, fix it, confirm OK spans, then
-      enable alerting on SLO env008-ai-worker-llm-success in infra/monitoring/grafana/cloud/slos.json.
+      enable alerting on SLO env008-llm-success in infra/monitoring/grafana/cloud/slos.json.
     status: open
     notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1029 (related #805).'
   ENV008-PUBLIC-HEALTH-DETAIL-001:
@@ -5155,14 +5155,14 @@ items:
     severity: medium
     description: >-
       Production api server-side p95 was 2.72 s over a day (2026-10-22) against the 200 ms
-      objective (docs/operations/slo-definitions.md:56), so SLO env008-api-latency ships without
+      objective (docs/operations/slo-definitions.md:56), so SLO env008-api-p95 ships without
       burn-rate alerting.
     created_at: 2026-10-25
     expiry_date: 2027-01-24
     remediation_sprint: 19
     remediation_plan: >-
       Fix the cross-region database round-trip tracked in #1001, then enable alerting on SLO
-      env008-api-latency in infra/monitoring/grafana/cloud/slos.json.
+      env008-api-p95 in infra/monitoring/grafana/cloud/slos.json.
     status: open
     notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1001 (existing issue reused; ENV-008-AI acceptance item added as a comment).'
   ENV008-PROD-ENV-BRANCH-POLICY-001:
@@ -5731,7 +5731,7 @@ alerts:
     remediation_plan: '1. Implement anomaly detection rules 2. Configure predictive alerting 3. Set up self-healing automation 4. Create monitoring runbooks'
     notes: 'Basic OTEL config sufficient for Sprint 0. Predictive features are Sprint 2+.'
     resolved_at: 2026-10-25T00:00:00.000Z
-    resolution: 'Resolved by ENV-008-AI (Sprint 18, ADR-087): anomaly detection is Grafana Asserts on the api and ai-worker span metrics; predictive alerting is the IFC-032 rules plus fast/slow burn-rate alerts on SLO env008-api-availability (infra/monitoring/grafana/cloud/slos.json); self-healing is the Railway ON_FAILURE restart policy plus a probe-gated api deploy health check (railway-self-healing.yml). Production proof follows merge and is recorded as NEEDS_HUMAN in the ENV-008-AI attestation.'
+    resolution: 'Resolved by ENV-008-AI (Sprint 18, ADR-087): anomaly detection is Grafana Asserts on the api and ai-worker span metrics; predictive alerting is the IFC-032 rules plus fast/slow burn-rate alerts on SLO env008-api-avail (infra/monitoring/grafana/cloud/slos.json); self-healing is the Railway ON_FAILURE restart policy plus a probe-gated api deploy health check (railway-self-healing.yml). Production proof follows merge and is recorded as NEEDS_HUMAN in the ENV-008-AI attestation.'
   debt_003:
     origin_task: ENV-010-AI
     owner: QA Lead

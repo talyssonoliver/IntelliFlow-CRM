@@ -6,7 +6,8 @@
 //   1. ensures the folder exists;
 //   2. checks that every rule's metric selector has live series, and FAILS
 //      on any rule that would watch nothing (a rule over a wrong metric name
-//      never fires and looks exactly like a healthy system);
+//      never fires and looks exactly like a healthy system). An error-only
+//      matcher is left out of that check: no errors is not a wrong name;
 //   3. creates or updates each rule by uid;
 //   4. deletes the delivery-test rule, unless --send-test asks for it.
 //
@@ -90,6 +91,49 @@ function validateRuleEntry(entry, seen, problems) {
   seen.add(entry.uid);
 }
 
+const METRIC_NAME = /^[A-Za-z_:][\w:]*$/;
+const ERROR_ONLY_MATCHER = 'status_code="STATUS_CODE_ERROR"';
+
+/** The matchers inside a selector's braces, split on commas outside quoted values. */
+function splitMatchers(body) {
+  const matchers = [];
+  let current = '';
+  let quoted = false;
+  for (let i = 0; i < body.length; i += 1) {
+    const ch = body[i];
+    if (quoted && ch === '\\') {
+      current += ch + (body[i + 1] ?? '');
+      i += 1;
+      continue;
+    }
+    if (ch === '"') quoted = !quoted;
+    if (ch === ',' && !quoted) {
+      matchers.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) matchers.push(current.trim());
+  return matchers;
+}
+
+/**
+ * The selector the live-series check queries. An error-only matcher
+ * (status_code="STATUS_CODE_ERROR") matches nothing while there are no errors,
+ * which is the healthy state, so it is dropped: the check then proves the base
+ * metric exists for the same services, which is what catches a wrong name.
+ */
+export function liveSeriesSelector(selector) {
+  const open = selector.indexOf('{');
+  const name = selector.slice(0, open);
+  if (open === -1 || !selector.endsWith('}') || !METRIC_NAME.test(name)) return selector;
+  const kept = splitMatchers(selector.slice(open + 1, -1)).filter(
+    (matcher) => matcher.replaceAll(' ', '') !== ERROR_ONLY_MATCHER
+  );
+  return kept.length ? `${name}{${kept.join(', ')}}` : name;
+}
+
 /** Validate the rules file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
@@ -120,8 +164,9 @@ export async function run({
   // Every rule must watch metrics that exist, or it silently never fires.
   const empty = [];
   for (const entry of config.rules) {
-    const n = await querySeriesCount(api, config.datasourceUid, entry.selector);
-    log(`series ${String(n).padStart(4)}  ${entry.uid}  ${entry.selector}`);
+    const selector = liveSeriesSelector(entry.selector);
+    const n = await querySeriesCount(api, config.datasourceUid, selector);
+    log(`series ${String(n).padStart(4)}  ${entry.uid}  ${selector}`);
     if (n === 0 && entry.requireSeries !== false) empty.push(entry.uid);
   }
 
