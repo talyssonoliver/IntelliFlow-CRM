@@ -471,6 +471,9 @@ const createAdapters = async (prismaClient: PrismaClient) => {
     tenantId: process.env.DEFAULT_TENANT_ID || 'default',
     enableBiasDetection: true,
     enableLogging: true,
+    // Per tenant: every API call runs as the system actor, so a bulk score or an
+    // import shares this bucket. Unset or invalid falls back to the 120/min default.
+    rateLimit: Number(process.env.AI_GUARDRAILS_RATE_LIMIT_PER_MIN),
   });
 
   return {
