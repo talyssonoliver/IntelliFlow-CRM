@@ -1182,7 +1182,7 @@ export const leadRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);
 
-      const result = await leadService.scoreLead(input.leadId);
+      const result = await leadService.scoreLead(input.leadId, typedCtx.tenant.userId);
 
       if (result.isFailure) {
         if (result.error.message.includes('not found')) {
@@ -1408,7 +1408,7 @@ export const leadRouter = createTRPCRouter({
       const typedCtx = getTenantContext(ctx);
       const leadService = getLeadService(ctx);
 
-      const result = await leadService.bulkScoreLeads(input.leadIds);
+      const result = await leadService.bulkScoreLeads(input.leadIds, typedCtx.tenant.userId);
 
       // IFC-125: run bias detection on scored leads in active request flow.
       await runBiasDetectionForScoredLeads(typedCtx, result.successful);
