@@ -36,12 +36,12 @@ description:
 
 ## Critical Field Rules (Quick Reference)
 
-| Field                                        | Rule                                                          |
-| -------------------------------------------- | ------------------------------------------------------------- |
-| `validation_results[].name`                  | REQUIRED. Use EXACTLY: "TypeScript", "Tests", "Lint", "Build" |
-| `context_acknowledgment.files_read[].sha256` | Use `sha256` key (NOT `hash`). Real 64-char hex.              |
-| `verdict`                                    | Must be `"COMPLETE"` to allow task completion                 |
-| `artifact_hashes`                            | Use this (NOT `files_created` or `files_modified`)            |
+| Field                                        | Rule                                                                                                                                                                                                                                                                                                                                                                                  |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validation_results[].name`                  | REQUIRED. Use EXACTLY: "TypeScript", "Tests", "Lint", "Build"                                                                                                                                                                                                                                                                                                                         |
+| `context_acknowledgment.files_read[].sha256` | Use `sha256` key (NOT `hash`). Real 64-char hex.                                                                                                                                                                                                                                                                                                                                      |
+| `verdict`                                    | Must be `"COMPLETE"` to allow task completion                                                                                                                                                                                                                                                                                                                                         |
+| `artifact_hashes`                            | Use this (NOT `files_created` or `files_modified`). Write each value as `sha256:<64 hex>`. A bare 64-hex value beside a path containing auth/secret/token/credential (`SecretField.tsx`, `oauth/...`) is flagged by GitGuardian and by the pre-commit secret scan. Already have bare hex? `tsx tools/scripts/format-attestation-hashes.ts <attestation.json>` rewrites it losslessly. |
 
 **See references/attestation-format.md** for the full JSON template, all field
 rules, forbidden fields, and verdict value table.

@@ -54,6 +54,7 @@ describe('alert rules config', () => {
       'ifc032-workflow-error-rate',
       'ifc032-workflow-p95-latency',
       'ifc032-api-error-rate',
+      'ifc074-error-spans-direct',
     ]);
   });
 
@@ -62,8 +63,9 @@ describe('alert rules config', () => {
   // check if it ever goes quiet. The other four watch traffic that does not
   // exist yet (workflow.lead.route has no callers; #802 hasn't promoted the
   // api SERVER spans) and opt out with requireSeries:false so the script can
-  // report them without failing the run.
-  it('the four traffic-less rules opt out of the live-series requirement; the safety check does not', () => {
+  // report them without failing the run. ifc074-error-spans-direct watches
+  // ai-worker error spans, which exist today, so it keeps the check too.
+  it('the four traffic-less rules opt out of the live-series requirement; the others do not', () => {
     const byUid = Object.fromEntries(
       CONFIG.rules.map((r: { uid: string; requireSeries?: boolean }) => [r.uid, r.requireSeries])
     );
@@ -73,7 +75,72 @@ describe('alert rules config', () => {
       'ifc032-workflow-error-rate': false,
       'ifc032-workflow-p95-latency': false,
       'ifc032-api-error-rate': false,
+      'ifc074-error-spans-direct': undefined,
     });
+  });
+
+  // IFC-074: Asserts' ErrorRatioBreach fires 180-360 s after the first error.
+  // The first version of this rule (2m window, evaluated at "now") never
+  // fired in 24 h of production: span metrics land 60-120 s after the error
+  // and reach the ruler more than 60 s later still, by which time a 2m
+  // increase was already back to 0. A 5m window read 60 s back (like Asserts'
+  // own rules) fires on every replayed episode across 60-120 s of ingest lag.
+  // Pin what that depends on.
+  it('the fast error rule reads span metrics over 5m, 60 s back, with no pending period', () => {
+    const entry = CONFIG.rules.find((r: { uid: string }) => r.uid === 'ifc074-error-spans-direct');
+    expect(entry.expr).toMatch(/^sum by \(service\) \(increase\(traces_spanmetrics_calls_total\{/);
+    expect(entry.expr).toContain('status_code="STATUS_CODE_ERROR"');
+    expect(entry.expr).toContain('[5m]');
+    expect(entry.expr).not.toMatch(/asserts:|offset/);
+    expect(entry).toMatchObject({
+      operator: 'gt',
+      threshold: 0,
+      for: '0s',
+      noData: 'OK',
+      queryOffsetSeconds: 60,
+    });
+    expect(CONFIG.group.intervalSeconds).toBe(60);
+
+    const rule = buildRule(entry, CONFIG);
+    expect(rule.for).toBe('0s');
+    expect(rule.data[0].relativeTimeRange).toEqual({ from: 900, to: 60 });
+    expect(rule.data[0].model.instant).toBe(true);
+  });
+
+  // The combined worker reports as intelliflow-ai-worker. Both rules that
+  // watch ai-worker must see it, and telemetry-silent must stay quiet while
+  // either name still sends spans, so it sums across both (no `by`).
+  it('the ai-worker rules cover the combined worker without a false "silent" at cutover', () => {
+    const byUid = (uid: string) => CONFIG.rules.find((r: { uid: string }) => r.uid === uid);
+    const fast = byUid('ifc074-error-spans-direct');
+    expect(fast.expr).toContain('service=~"ai-worker|intelliflow-ai-worker|api"');
+    expect(fast.selector).toContain('service=~"ai-worker|intelliflow-ai-worker|api"');
+
+    const silent = byUid('ifc032-telemetry-silent');
+    expect(silent.expr).toBe(
+      'sum(rate(traces_spanmetrics_calls_total{service=~"ai-worker|intelliflow-ai-worker"}[15m]))'
+    );
+    expect(silent.selector).toBe(
+      'traces_spanmetrics_calls_total{service=~"ai-worker|intelliflow-ai-worker"}'
+    );
+    expect(silent).toMatchObject({ operator: 'lt', threshold: 0.001, for: '15m' });
+  });
+
+  it('the other rules keep evaluating at "now"', () => {
+    for (const entry of CONFIG.rules.filter(
+      (r: { uid: string }) => r.uid !== 'ifc074-error-spans-direct'
+    )) {
+      expect(buildRule(entry, CONFIG).data[0].relativeTimeRange).toEqual({ from: 900, to: 0 });
+    }
+  });
+
+  it('rejects a query offset that is not a whole number of seconds below the 900 s range', () => {
+    for (const queryOffsetSeconds of [-1, 1.5, 900, '60']) {
+      const bad = { ...CONFIG, rules: [{ ...CONFIG.rules[0], queryOffsetSeconds }] };
+      expect(validateConfig(bad)).toEqual([
+        'ifc032-telemetry-silent: queryOffsetSeconds must be a whole number from 0 to 600',
+      ]);
+    }
   });
 
   it('reports missing fields, bad operators, bad thresholds and duplicates', () => {
@@ -144,11 +211,11 @@ describe('run', () => {
   it('creates missing rules, updates existing ones, sets the group interval and removes the test rule', async () => {
     const g = fakeGrafana({ existing: ['ifc032-api-error-rate'], folder: 404 });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(5);
+    expect(result.applied).toBe(6);
     const writes = g.calls.filter((c) => c.method !== 'GET').map((c) => `${c.method} ${c.path}`);
     expect(writes).toContain('POST /api/folders');
     expect(writes).toContain('PUT /api/v1/provisioning/alert-rules/ifc032-api-error-rate');
-    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(4);
+    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(5);
     expect(writes).toContain(
       'PUT /api/v1/provisioning/folder/intelliflow-prod/rule-groups/intelliflow-prod'
     );
@@ -158,7 +225,7 @@ describe('run', () => {
   it('with --send-test also applies the always-firing delivery rule and keeps it', async () => {
     const g = fakeGrafana();
     const result = await run({ env, argv: ['--send-test'], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(6);
+    expect(result.applied).toBe(7);
     const posted = g.calls
       .filter((c) => c.method === 'POST')
       .map((c) => (c.body as { uid?: string }).uid);
@@ -167,20 +234,20 @@ describe('run', () => {
   });
 
   it('fails loudly when a rule watches a metric with no live series', async () => {
-    // ifc032-telemetry-silent is the one rule that still requires series (#812);
-    // the other four opted out with requireSeries:false, so forcing 0 series on
-    // one of THOSE (e.g. latency) must NOT fail the run — only telemetry-silent's
-    // selector (the only one matching "ai-worker") can trigger this failure.
+    // ifc032-telemetry-silent and ifc074-error-spans-direct still require series
+    // (#812); the other four opted out with requireSeries:false, so forcing 0
+    // series on one of THOSE (e.g. latency) must NOT fail the run — only the two
+    // selectors matching "ai-worker" can trigger this failure.
     const g = fakeGrafana({ series: (q) => (q.includes('ai-worker') ? 0 : 2) });
     await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
-      'match no live series (check metric names): ifc032-telemetry-silent'
+      'match no live series (check metric names): ifc032-telemetry-silent, ifc074-error-spans-direct'
     );
   });
 
   it('does not fail the run when a requireSeries:false rule has no live series (#812)', async () => {
     const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(5);
+    expect(result.applied).toBe(6);
     expect(result.empty).toEqual([]);
   });
 
@@ -189,5 +256,71 @@ describe('run', () => {
     const g = fakeGrafana();
     await run({ env, argv: [], fetchImpl: g.fetchImpl, log: (l: string) => lines.push(l) });
     expect(lines.join('\n')).not.toContain(TOKEN);
+  });
+
+  // ENV-008-AI AC-001: the workflow was red from 2026-10-06 on HTTP 503 while
+  // the Grafana Cloud instance woke up. run() must pass its sleep to the client.
+  it('retries a 503 on the series check through the injected sleep', async () => {
+    const g = fakeGrafana();
+    let first = true;
+    const sleeps: number[] = [];
+    const fetchImpl: typeof g.fetchImpl = async (url, init) => {
+      if (first && url.includes('/api/v1/query')) {
+        first = false;
+        return { status: 503, text: async () => 'waking up' };
+      }
+      return g.fetchImpl(url, init);
+    };
+    const result = await run({
+      env,
+      argv: ['--dry-run'],
+      fetchImpl,
+      log: quiet,
+      sleep: async (ms: number) => {
+        sleeps.push(ms);
+      },
+    });
+    expect(result).toEqual({ applied: 0, empty: [] });
+    expect(sleeps).toEqual([5000]);
+  });
+
+  it.each([
+    [
+      'the folder create',
+      'create folder: HTTP 400',
+      (url: string, method: string) => method === 'POST' && url.endsWith('/api/folders'),
+    ],
+    [
+      'the rule-group update',
+      'rule group interval: HTTP 400',
+      (url: string, method: string) => method === 'PUT' && url.includes('/rule-groups/'),
+    ],
+  ])('does not echo a token from a 400 body at %s', async (_site, expected, matches) => {
+    const leaked = 'gl' + 'sa_' + 'n'.repeat(32);
+    const g = fakeGrafana({ folder: 404 });
+    const fetchImpl: typeof g.fetchImpl = async (url, init) => {
+      if (matches(url, init.method)) {
+        return { status: 400, text: async () => `{"message":"no ${leaked}"}` };
+      }
+      return g.fetchImpl(url, init);
+    };
+    const err = await run({ env, argv: [], fetchImpl, log: quiet }).catch((e: Error) => e);
+    expect((err as Error).message).toContain(expected);
+    expect((err as Error).message).not.toContain(leaked);
+  });
+
+  it('does not echo a token from an error response body', async () => {
+    const leaked = 'gl' + 'sa_' + 'k'.repeat(32);
+    const g = fakeGrafana();
+    const fetchImpl: typeof g.fetchImpl = async (url, init) => {
+      if (init.method === 'POST' && url.endsWith('/api/v1/provisioning/alert-rules')) {
+        return { status: 400, text: async () => `{"message":"bad token ${leaked}"}` };
+      }
+      return g.fetchImpl(url, init);
+    };
+    const err = await run({ env, argv: [], fetchImpl, log: quiet }).catch((e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toContain('HTTP 400');
+    expect((err as Error).message).not.toContain(leaked);
   });
 });

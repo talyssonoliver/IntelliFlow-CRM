@@ -5,10 +5,10 @@
   "verdict": "COMPLETE",
   "completed_at": "2026-03-11T20:33:00Z",
   "artifact_hashes": {
-    "apps/web/src/components/home/NotificationsSummaryWidget.tsx": "ef3426bd5f29002a3babac2e4a765d7279d49832f2ffcb72fd336cee0897eb26",
-    "apps/web/src/components/home/__tests__/NotificationsSummaryWidget.test.tsx": "754b07b19365a0463017d481c8a0e9a28df218cb58cd626105a221c9fda9c06e",
-    "apps/web/src/components/notifications/__tests__/NotificationBell.test.tsx": "c4157a37b50a0bb27893d7a864c05ed8b40d69341430755353608724fa5a6899",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "6a673141c496c44a6e92b8e4b9995f3d09bbd4d6b947366010481833f14b5e99"
+    "apps/web/src/components/home/NotificationsSummaryWidget.tsx": "sha256:ef3426bd5f29002a3babac2e4a765d7279d49832f2ffcb72fd336cee0897eb26",
+    "apps/web/src/components/home/__tests__/NotificationsSummaryWidget.test.tsx": "sha256:754b07b19365a0463017d481c8a0e9a28df218cb58cd626105a221c9fda9c06e",
+    "apps/web/src/components/notifications/__tests__/NotificationBell.test.tsx": "sha256:c4157a37b50a0bb27893d7a864c05ed8b40d69341430755353608724fa5a6899",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:6a673141c496c44a6e92b8e4b9995f3d09bbd4d6b947366010481833f14b5e99"
   },
   "dependencies_verified": {
     "PG-129": { "status": "Completed", "verified": true },

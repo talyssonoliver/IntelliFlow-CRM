@@ -48,6 +48,8 @@ export const DSAR_PURGE_MAX_BATCHES = 20;
 
 let timer: ReturnType<typeof setInterval> | null = null;
 let running = false;
+/** The tick in flight, so a stop can wait for it. */
+let active: Promise<unknown> | null = null;
 /** Request id → time (ms) before which this process does not try it again. */
 const deferredRequests = new Map<string, number>();
 
@@ -76,16 +78,17 @@ export function startDsarSlaScheduler({
 }: StartDsarSlaSchedulerOptions): boolean {
   if (intervalMs <= 0 || timer !== null) return false;
   timer = setInterval(() => {
-    // Skip a tick while the previous one is still running.
-    if (running) return;
+    // No new tick once stopped; skip a tick while the previous one is still running.
+    if (timer === null || running) return;
     running = true;
-    run()
+    active = run()
       .catch((error: unknown) => {
         const message = error instanceof Error ? error.message : String(error);
         log.warn(`[dsar-sla] tick failed: ${message}`);
       })
       .finally(() => {
         running = false;
+        active = null;
       });
   }, intervalMs);
   timer.unref?.();
@@ -93,12 +96,18 @@ export function startDsarSlaScheduler({
   return true;
 }
 
-/** Stops the alerts (SIGTERM, tests). */
-export function stopDsarSlaScheduler(): void {
+/**
+ * Stops the alerts and waits for a tick in flight (SIGTERM, tests), so its alert
+ * email and audit finish before exit; the caller's shutdown timeout caps the wait.
+ */
+export async function stopDsarSlaScheduler(): Promise<void> {
   if (timer !== null) clearInterval(timer);
   timer = null;
+  const inflight = active;
   running = false;
   deferredRequests.clear();
+  // run() failures are already logged by the tick itself.
+  await inflight?.catch(() => undefined);
 }
 
 // ── The sweep ────────────────────────────────────────────────────────────────

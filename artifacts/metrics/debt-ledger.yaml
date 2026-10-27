@@ -1,5 +1,5 @@
 schema_version: 1.0.0
-last_updated: 2026-10-21
+last_updated: 2026-10-25
 maintainer: Tech Lead
 items:
   LEGAL-MERGED-LCOV-DEADZONE-001:
@@ -5082,6 +5082,106 @@ items:
       Forward aria-label/aria-labelledby to SliderPrimitive.Thumb; axe test in packages/ui.
     status: open
     notes: 'gh issue #929. Found during PG-199; pre-existing, out of scope.'
+  ENV008-DEAD-WORKFLOW-RULES-001:
+    origin_task: ENV-008-AI
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      Three IFC-032 alert rules (ifc032-lead-routing-failures, ifc032-workflow-error-rate,
+      ifc032-workflow-p95-latency) watch the workflow.lead.route span, which production never
+      emits: only tools/scripts/observability/capture-trace-examples.ts calls setWorkflowTracer
+      (apps/api/src/services/LeadRoutingService.ts:167-171). The p95 rule also queries the absent
+      traces_spanmetrics_latency_bucket series (alert-rules.json:49-50).
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Wire setWorkflowTracer in the production api container, rewrite the p95 rule on the native
+      histogram traces_spanmetrics_latency, then drop requireSeries:false from the three rules.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1028. Found during ENV-008-AI; alert-rules.json is not edited by that task.'
+  ENV008-LLM-INVOKE-ERRORS-001:
+    origin_task: ENV-008-AI
+    owner: AI Specialist
+    severity: high
+    description: >-
+      Every ai-worker llm.invoke span in production ends with status ERROR (Grafana span metrics,
+      read 2026-10-22), alongside about 140 failed Postgres INSERTs in the ai-worker logs. SLO
+      env008-ai-worker-llm-success therefore ships without burn-rate alerting.
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Find the llm.invoke failure from a trace's exception events, fix it, confirm OK spans, then
+      enable alerting on SLO env008-ai-worker-llm-success in infra/monitoring/grafana/cloud/slos.json.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1029 (related #805).'
+  ENV008-PUBLIC-HEALTH-DETAIL-001:
+    origin_task: ENV-008-AI
+    owner: Security Lead
+    severity: medium
+    description: >-
+      /health/detailed, /health/db (apps/api/src/http-server.ts:346-368) and the publicProcedure
+      health.dbStats (apps/api/src/modules/misc/health.router.ts:87) return database and component
+      detail to unauthenticated callers in production.
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Keep /health/live and /health/ready public and minimal; put the detailed endpoints and
+      dbStats behind an admin or service role; add negative auth tests.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1030.'
+  ENV008-RAILWAY-TOKEN-SCOPE-001:
+    origin_task: ENV-008-AI
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      RAILWAY_TOKEN is an account-wide token stored as a repository secret, read by
+      promote-production.yml (no environment) and now railway-self-healing.yml; the Railway CLI is
+      pinned only to @railway/cli@4 (promote-production.yml:194).
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Owner creates a production-scoped Railway project token as a Production environment secret,
+      both workflows use environment Production, the account token is revoked, and the CLI is
+      pinned to an exact version.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1031. Needs the owner (secret store at its cap).'
+  ENV008-API-P95-LATENCY-001:
+    origin_task: ENV-008-AI
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Production api server-side p95 was 2.72 s over a day (2026-10-22) against the 200 ms
+      objective (docs/operations/slo-definitions.md:56), so SLO env008-api-latency ships without
+      burn-rate alerting.
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Fix the cross-region database round-trip tracked in #1001, then enable alerting on SLO
+      env008-api-latency in infra/monitoring/grafana/cloud/slos.json.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1001 (existing issue reused; ENV-008-AI acceptance item added as a comment).'
+  ENV008-PROD-ENV-BRANCH-POLICY-001:
+    origin_task: ENV-008-AI
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      The GitHub environment Production has no deployment branch policy and no protection rules
+      (deployment_branch_policy null, read 2026-10-25), so a workflow_dispatch of a modified
+      workflow from any branch runs with the Production secrets (GRAFANA_SA_TOKEN and the
+      secrets of the five Production-environment workflows).
+    created_at: 2026-10-25
+    expiry_date: 2027-01-24
+    remediation_sprint: 19
+    remediation_plan: >-
+      Owner restricts Production to deployments from main (and optionally a required reviewer),
+      then confirms push-to-main and dispatch-from-main runs still work.
+    status: open
+    notes: 'gh issue https://github.com/talyssonoliver/IntelliFlow-CRM/issues/1032. Raised by the ENV-008-AI STOA-security review; a GitHub settings change, owner-only.'
   PG-203-OUTBOX-NOT-WIRED-001:
     origin_task: PG-203
     owner: Backend Architect
@@ -5146,6 +5246,32 @@ items:
       owner decision) and list existing AI-off columns for an owner decision.
     status: open
     notes: 'gh issue #972.'
+  PROD-API-DB-CROSS-REGION-LATENCY-001:
+    origin_task: IFC-033
+    owner: DevOps Lead
+    severity: high
+    description: >-
+      Production API p95 misses the ADR-018 budget (200 ms). The IFC-033 k6 run against
+      the production API on 2026-10-22 measured client p95 1,137 ms and server-side p95
+      POST 2,024 ms / GET 701 ms (Grafana Cloud). Throughput passed (5,435 leads/hour) and
+      errors were 0 %. A Tempo trace of lead.create (3fe5f6d158d600bb0d26b4d41c4ae693) shows
+      every Postgres round-trip costing about 147 ms, BEGIN and SET included, so the cost is
+      network RTT between the Railway api service and Supabase eu-central-1, not load.
+      Secondary: lead.create builds a new BullMQ Queue (a new Redis connection) per request
+      for the fire-and-forget score-lead enqueue (apps/api/src/modules/lead/lead.router.ts:533-558).
+    created_at: 2026-10-22
+    status: open
+    expiry_date: 2027-01-22
+    remediation_sprint: 20
+    remediation_plan: >-
+      Confirm the Railway region of the production api service, move it (and the
+      DB-querying workers) to an EU region next to Supabase eu-central-1 (owner decision:
+      production infra), then re-run pnpm test:load against production with the IFC-033
+      parameters. Separately, reuse one module-level BullMQ Queue per process in lead.create.
+    notes: >-
+      git issue #1001. Owner ruling 2026-10-22: IFC-033 closes on throughput, and the p95
+      gap is tracked here, in #1001 and in docs/shared/bottleneck-analysis.md (production
+      section). Tracked per project Rule 8.
 summary:
   total_items: 443
   by_severity:
@@ -5599,11 +5725,13 @@ alerts:
     severity: medium
     description: 'Predictive monitoring and self-healing features deferred. Basic OpenTelemetry configuration in place, advanced features pending.'
     created_at: 2025-12-17
-    status: open
+    status: resolved
     expiry_date: 2026-02-28
     remediation_sprint: 3
     remediation_plan: '1. Implement anomaly detection rules 2. Configure predictive alerting 3. Set up self-healing automation 4. Create monitoring runbooks'
     notes: 'Basic OTEL config sufficient for Sprint 0. Predictive features are Sprint 2+.'
+    resolved_at: 2026-10-25T00:00:00.000Z
+    resolution: 'Resolved by ENV-008-AI (Sprint 18, ADR-087): anomaly detection is Grafana Asserts on the api and ai-worker span metrics; predictive alerting is the IFC-032 rules plus fast/slow burn-rate alerts on SLO env008-api-availability (infra/monitoring/grafana/cloud/slos.json); self-healing is the Railway ON_FAILURE restart policy plus a probe-gated api deploy health check (railway-self-healing.yml). Production proof follows merge and is recorded as NEEDS_HUMAN in the ENV-008-AI attestation.'
   debt_003:
     origin_task: ENV-010-AI
     owner: QA Lead

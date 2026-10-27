@@ -53,6 +53,9 @@ const logger = pino({
 /** Queue name for insight generation jobs */
 export const INSIGHT_QUEUE = 'ai-insights';
 
+/** Name of the 6-hourly cron job that fans insight refresh out per tenant */
+export const SCHEDULED_INSIGHT_JOB_NAME = 'scheduled-insight-refresh';
+
 /** Schema for insight job data */
 export const InsightJobDataSchema = z.object({
   tenantId: z.string().uuid('tenantId must be a valid UUID'),
@@ -1058,8 +1061,12 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       userId,
     },
     async () => {
-      // Scheduled cron sentinel — enumerate active tenants and enqueue real per-tenant jobs
-      if (tenantId === '__scheduled__') {
+      // Scheduled cron sentinel — enumerate active tenants and enqueue real per-tenant jobs.
+      // #805: the 6-hourly cron (registerScheduledJobs) carries the seed system
+      // tenant, not '__scheduled__', so it is recognised by name too. Run as a
+      // tenant, it wrote AIInsight, audit, notification and task rows for a
+      // tenant production does not have.
+      if (tenantId === '__scheduled__' || job.name === SCHEDULED_INSIGHT_JOB_NAME) {
         return dispatchScheduledInsights(job, startTime);
       }
 

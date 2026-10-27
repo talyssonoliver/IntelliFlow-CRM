@@ -239,6 +239,17 @@ export abstract class BaseWorker<TJobData = unknown, TJobResult = unknown> {
   }
 
   /**
+   * Run the dependency checks the standalone health server reports (Redis plus
+   * the subclass's own). Public so a host process that composes several workers
+   * can aggregate the same checks.
+   */
+  async checkHealth(): Promise<Record<string, ComponentHealth>> {
+    const redisHealth = await this.queueConnector.checkHealth();
+    const customHealth = await this.getDependencyHealth();
+    return { redis: redisHealth, ...customHealth };
+  }
+
+  /**
    * Get current worker status
    */
   getStatus(): WorkerStatus {
@@ -323,15 +334,7 @@ export abstract class BaseWorker<TJobData = unknown, TJobResult = unknown> {
     return createDefaultHealthProvider(
       this.name,
       this.config.version,
-      async () => {
-        const redisHealth = await this.queueConnector.checkHealth();
-        const customHealth = await this.getDependencyHealth();
-
-        return {
-          redis: redisHealth,
-          ...customHealth,
-        };
-      },
+      () => this.checkHealth(),
       async () => {
         return this.queueConnector.getAllQueueStats();
       }

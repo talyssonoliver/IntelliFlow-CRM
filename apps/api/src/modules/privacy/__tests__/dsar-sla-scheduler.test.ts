@@ -27,8 +27,8 @@ const DAY = 86_400_000;
 const APP_URL = 'https://app.example.invalid';
 const PAGE = `${APP_URL}/settings/privacy-requests`;
 
-afterEach(() => {
-  stopDsarSlaScheduler();
+afterEach(async () => {
+  await stopDsarSlaScheduler();
   vi.useRealTimers();
 });
 
@@ -84,9 +84,28 @@ describe('startDsarSlaScheduler', () => {
     vi.useFakeTimers();
     const run = vi.fn(async () => null);
     startDsarSlaScheduler({ intervalMs: 1000, run, log });
-    stopDsarSlaScheduler();
+    await stopDsarSlaScheduler();
     await vi.advanceTimersByTimeAsync(5000);
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it('on stop, waits for a tick in flight so its alert and audit finish before exit', async () => {
+    vi.useFakeTimers();
+    let finishTick: () => void = () => undefined;
+    const run = vi.fn(() => new Promise<void>((resolve) => (finishTick = resolve)));
+    startDsarSlaScheduler({ intervalMs: 1000, run, log });
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(run).toHaveBeenCalledTimes(1);
+
+    let stopped = false;
+    const stopping = stopDsarSlaScheduler().then(() => (stopped = true));
+    await vi.advanceTimersByTimeAsync(5000);
+    expect(stopped).toBe(false);
+    expect(run).toHaveBeenCalledTimes(1);
+
+    finishTick();
+    await stopping;
+    expect(stopped).toBe(true);
   });
 });
 

@@ -16,16 +16,11 @@ import {
   getReadinessHealth,
 } from './modules/misc/health.service';
 import { container, containerReady } from './container';
-import { approvalSweepIntervalFromEnv, startApprovalSweep } from './agent/approval-sweep-scheduler';
-import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
-import { bounceScanIntervalFromEnv, startBounceScanner } from './modules/email/bounce-scheduler';
-import { createBounceReaderDeps, runBounceScan } from './modules/email/bounce-reader';
 import {
-  createDsarSlaDeps,
-  dsarSlaIntervalFromEnv,
-  runDsarSlaSweep,
-  startDsarSlaScheduler,
-} from './modules/privacy/dsar-sla-scheduler';
+  API_BACKGROUND_JOBS_ENV,
+  apiBackgroundJobsEnabled,
+  startBackgroundJobs,
+} from './background-jobs';
 import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
@@ -566,32 +561,19 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
     console.log(`[API] HTTP server listening on http://localhost:${port}`);
   });
 
-  // PG-198: approval escalation/expiry sweep — long-lived server process only.
-  startApprovalSweep({
-    intervalMs: approvalSweepIntervalFromEnv(process.env),
-    run: async () => {
-      await containerReady;
-      return runApprovalSweep(await createDefaultSweepDeps());
-    },
-  });
-
-  // PG-207: bounce scanner — reads delivery reports from connected mailboxes.
-  startBounceScanner({
-    intervalMs: bounceScanIntervalFromEnv(process.env),
-    run: async () => {
-      await containerReady;
-      return runBounceScan(await createBounceReaderDeps());
-    },
-  });
-
-  // PG-203 D8: DSAR deadline alerts to the firm's admins — its own interval.
-  startDsarSlaScheduler({
-    intervalMs: dsarSlaIntervalFromEnv(process.env),
-    run: async () => {
-      await containerReady;
-      return runDsarSlaSweep(await createDsarSlaDeps());
-    },
-  });
+  // PG-198 / PG-207 / PG-203: approval sweep, bounce scanner and DSAR deadline
+  // alerts — long-lived server
+  // process only. API_BACKGROUND_JOBS=off keeps an idle api free of outbound
+  // traffic so Railway can sleep it; the combined worker runs them instead.
+  if (apiBackgroundJobsEnabled(process.env)) {
+    startBackgroundJobs({ ready: () => containerReady });
+  } else {
+    console.warn(
+      `[API] WARN background jobs disabled (${API_BACKGROUND_JOBS_ENV}=off): the approval sweep, ` +
+        'email bounce scan and DSAR deadline alerts run only if the combined worker has COMBINED_BACKGROUND_JOBS=on. ' +
+        'If neither is set nothing runs them; /health/detailed reports degraded after 3x the interval.'
+    );
+  }
 
   return server;
 }

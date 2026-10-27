@@ -26,6 +26,7 @@ const mockTaskCount = vi.hoisted(() => vi.fn());
 const mockContactFindMany = vi.hoisted(() => vi.fn());
 const mockQueueAdd = vi.hoisted(() => vi.fn());
 const mockQueueClose = vi.hoisted(() => vi.fn());
+const mockLogAIAgentAction = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
 // PG-203 #1002: every person eligible here; the blocked paths have their own tests.
 vi.mock('../../lib/data-request-guard', async (importOriginal) =>
@@ -90,8 +91,13 @@ vi.mock('@intelliflow/db', () => ({
   },
 }));
 
+vi.mock('../../utils/audit-log', () => ({
+  logAIAgentAction: (...args: any[]) => mockLogAIAgentAction(...args),
+}));
+
 import {
   processInsightJob,
+  SCHEDULED_INSIGHT_JOB_NAME,
   InsightJobDataSchema,
   type InsightJobData,
 } from '../insight-generation.job';
@@ -527,5 +533,80 @@ describe('dispatchScheduledInsights — batched user fetch (NP-005/006)', () => 
     expect(mockUserFindMany).toHaveBeenCalledTimes(1);
     // All 5 tenants enqueued
     expect(mockQueueAdd).toHaveBeenCalledTimes(5);
+  });
+});
+
+// ============================================================================
+// #805: the 6-hourly cron carries the seed system tenant, not '__scheduled__'
+// ============================================================================
+describe('scheduled insight refresh with the system tenant (#805)', () => {
+  const SYSTEM_TENANT = '00000000-0000-4000-8000-000000000001';
+  const TENANT_A = '00000000-0000-4000-a000-000000000011';
+
+  // The job exactly as registerScheduledJobs() enqueues it.
+  function createCronJob(name: string) {
+    return {
+      id: 'repeat:scheduled-insight-refresh:1',
+      name,
+      data: {
+        tenantId: SYSTEM_TENANT,
+        userId: '00000000-0000-4000-8000-000000000101',
+        dealsAtRisk: [],
+        hotLeads: [],
+        overdueTasksCount: 0,
+        staleContacts: [],
+        correlationId: 'scheduled-insights-1',
+      },
+      updateProgress: vi.fn(),
+      extendLock: vi.fn().mockResolvedValue(undefined),
+      token: 'mock-lock-token',
+      queueName: 'ai-insights',
+    } as any;
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockQueueAdd.mockResolvedValue(undefined);
+    mockQueueClose.mockResolvedValue(undefined);
+    mockOpportunityFindMany.mockResolvedValue([]);
+    mockLeadFindMany.mockResolvedValue([]);
+    mockTaskCount.mockResolvedValue(0);
+    mockContactFindMany.mockResolvedValue([]);
+    mockLeadGroupBy.mockResolvedValue([{ tenantId: TENANT_A, _count: 2 }]);
+    mockUserFindMany.mockResolvedValueOnce([{ id: 'admin-a', tenantId: TENANT_A }]);
+
+    // If the job ran as a tenant, this insight would be persisted.
+    mockGenerateInsightsWithMeta.mockResolvedValue({
+      insights: [createInsight({ entityId: undefined, entityType: undefined, priority: 'high' })],
+      source: 'llm',
+      executionTimeMs: 5,
+    });
+  });
+
+  it('fans out per tenant and makes no tenant-scoped write for the system tenant', async () => {
+    const result = await processInsightJob(createCronJob(SCHEDULED_INSIGHT_JOB_NAME));
+
+    expect(mockGenerateInsightsWithMeta).not.toHaveBeenCalled();
+    expect(mockCreate).not.toHaveBeenCalled();
+    expect(mockNotificationCreate).not.toHaveBeenCalled();
+    expect(mockTaskCreate).not.toHaveBeenCalled();
+    expect(mockLeadAIInsightUpsert).not.toHaveBeenCalled();
+    expect(mockContactAIInsightUpsert).not.toHaveBeenCalled();
+    expect(mockLogAIAgentAction).not.toHaveBeenCalled();
+
+    expect(mockQueueAdd).toHaveBeenCalledTimes(1);
+    const [jobName, payload] = mockQueueAdd.mock.calls[0];
+    expect(jobName).toBe('generate-insights');
+    expect(payload.tenantId).toBe(TENANT_A);
+    expect(JSON.stringify(mockQueueAdd.mock.calls)).not.toContain(SYSTEM_TENANT);
+    expect((result as any).insightsCreated).toBe(1);
+  });
+
+  it('still processes a system-tenant job under any other name as a tenant job', async () => {
+    await processInsightJob(createCronJob('generate-insights'));
+
+    expect(mockLeadGroupBy).not.toHaveBeenCalled();
+    expect(mockGenerateInsightsWithMeta).toHaveBeenCalledTimes(1);
+    expect(mockCreate).toHaveBeenCalledTimes(1);
   });
 });

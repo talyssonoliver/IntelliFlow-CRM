@@ -320,7 +320,10 @@ page link. It holds no personal data.
 
 The job runs hourly by default. `DSAR_SLA_INTERVAL_MS` changes the interval, and
 `0` turns it off. It does not run in tests or on serverless hosts. Only one
-server instance sends at a time.
+server instance sends at a time. It is one of the api's background jobs: with
+`API_BACKGROUND_JOBS=off` on the api, the combined worker runs it
+(`COMBINED_BACKGROUND_JOBS=on`). If neither runs it, `/health/detailed` reports
+`degraded` once it has not ticked for three intervals.
 
 Admins also get an email, with no personal data, when a request is confirmed.
 

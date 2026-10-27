@@ -1,0 +1,57 @@
+name: Grafana SLOs
+
+# Applies infra/monitoring/grafana/cloud/slos.json (the production SLOs and the
+# availability burn-rate alerts) to the Grafana Cloud stack (ENV-008-AI,
+# ADR-087). The JSON is the source of truth; this job only pushes it. Runs on
+# merge when the SLOs, their script, the shared Grafana client or this file
+# change, or by hand. Its own workflow, so editing the SLOs never re-applies
+# the alert rules or the dashboard.
+#
+# Needs GRAFANA_SA_TOKEN as a secret of the Production environment (the same
+# one grafana-alert-rules.yml uses). Without it the job fails, saying so; it
+# never prints the token. "dry_run" only reads which SLOs exist.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'infra/monitoring/grafana/cloud/slos.json'
+      - 'tools/scripts/observability/apply-grafana-slos.mjs'
+      - 'tools/scripts/lib/grafana-provisioning.mjs'
+      - '.github/workflows/grafana-slos.yml'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only validate the SLOs and report which exist'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: grafana-slos
+  cancel-in-progress: false
+
+jobs:
+  slos:
+    name: Apply SLOs to Grafana Cloud
+    runs-on: ubuntu-latest
+    environment: Production
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            infra/monitoring/grafana/cloud
+            tools/scripts/observability
+            tools/scripts/lib
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Apply
+        env:
+          GRAFANA_URL: https://graysushi1880.grafana.net
+          GRAFANA_SA_TOKEN: ${{ secrets.GRAFANA_SA_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run && '--dry-run' || '' }}
+        run: node tools/scripts/observability/apply-grafana-slos.mjs $DRY_RUN

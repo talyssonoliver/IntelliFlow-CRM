@@ -21,6 +21,8 @@ import {
   buildAlertRulePayload,
   createApiClient,
   querySeriesCount,
+  redactBody,
+  requireEnv,
 } from '../lib/grafana-provisioning.mjs';
 
 const RULES_PATH = join(
@@ -53,6 +55,41 @@ function checkPathSegment(problems, label, value) {
     problems.push(`${label}: must match ${SAFE_PATH_SEGMENT} (got ${JSON.stringify(value)})`);
 }
 
+const REQUIRED_RULE_KEYS = [
+  'uid',
+  'title',
+  'expr',
+  'selector',
+  'operator',
+  'for',
+  'noData',
+  'severity',
+  'summary',
+];
+
+// Must stay inside the query's 900 s relative range, with room for its window.
+function isValidQueryOffset(offset) {
+  return offset === undefined || (Number.isInteger(offset) && offset >= 0 && offset <= 600);
+}
+
+function validateRuleEntry(entry, seen, problems) {
+  for (const key of REQUIRED_RULE_KEYS) {
+    if (entry[key] === undefined || entry[key] === '')
+      problems.push(`${entry.uid ?? '?'}: missing ${key}`);
+  }
+  checkPathSegment(problems, `${entry.uid ?? '?'}: uid`, entry.uid);
+  if (!['gt', 'lt'].includes(entry.operator))
+    problems.push(`${entry.uid}: operator must be gt or lt`);
+  if (typeof entry.threshold !== 'number')
+    problems.push(`${entry.uid}: threshold must be a number`);
+  if (!['OK', 'Alerting', 'NoData'].includes(entry.noData))
+    problems.push(`${entry.uid}: bad noData`);
+  if (!isValidQueryOffset(entry.queryOffsetSeconds))
+    problems.push(`${entry.uid}: queryOffsetSeconds must be a whole number from 0 to 600`);
+  if (seen.has(entry.uid)) problems.push(`${entry.uid}: duplicate uid`);
+  seen.add(entry.uid);
+}
+
 /** Validate the rules file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
@@ -60,31 +97,7 @@ export function validateConfig(config) {
   checkPathSegment(problems, 'folder.uid', config.folder?.uid);
   checkPathSegment(problems, 'group.name', config.group?.name);
   if (config.deliveryTest) checkPathSegment(problems, 'deliveryTest.uid', config.deliveryTest.uid);
-  for (const entry of config.rules) {
-    for (const key of [
-      'uid',
-      'title',
-      'expr',
-      'selector',
-      'operator',
-      'for',
-      'noData',
-      'severity',
-      'summary',
-    ]) {
-      if (entry[key] === undefined || entry[key] === '')
-        problems.push(`${entry.uid ?? '?'}: missing ${key}`);
-    }
-    checkPathSegment(problems, `${entry.uid ?? '?'}: uid`, entry.uid);
-    if (!['gt', 'lt'].includes(entry.operator))
-      problems.push(`${entry.uid}: operator must be gt or lt`);
-    if (typeof entry.threshold !== 'number')
-      problems.push(`${entry.uid}: threshold must be a number`);
-    if (!['OK', 'Alerting', 'NoData'].includes(entry.noData))
-      problems.push(`${entry.uid}: bad noData`);
-    if (seen.has(entry.uid)) problems.push(`${entry.uid}: duplicate uid`);
-    seen.add(entry.uid);
-  }
+  for (const entry of config.rules) validateRuleEntry(entry, seen, problems);
   return problems;
 }
 
@@ -93,6 +106,7 @@ export async function run({
   argv = process.argv,
   fetchImpl = fetch,
   log = console.log,
+  sleep,
 } = {}) {
   const dryRun = argv.includes('--dry-run');
   const sendTest = argv.includes('--send-test');
@@ -100,10 +114,8 @@ export async function run({
 
   const problems = validateConfig(config);
   if (problems.length) throw new Error(`rules file invalid:\n  ${problems.join('\n  ')}`);
-  if (!env.GRAFANA_URL || !env.GRAFANA_SA_TOKEN) {
-    throw new Error('GRAFANA_URL and GRAFANA_SA_TOKEN are required');
-  }
-  const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl);
+  requireEnv(env, ['GRAFANA_URL', 'GRAFANA_SA_TOKEN']);
+  const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
 
   // Every rule must watch metrics that exist, or it silently never fires.
   const empty = [];
@@ -124,7 +136,8 @@ export async function run({
       uid: config.folder.uid,
       title: config.folder.title,
     });
-    if (made.status >= 300) throw new Error(`create folder: HTTP ${made.status} ${made.text}`);
+    if (made.status >= 300)
+      throw new Error(`create folder: HTTP ${made.status} ${redactBody(made.text)}`);
     log(`created folder ${config.folder.uid}`);
   } else if (folder.status !== 200) {
     throw new Error(`read folder: HTTP ${folder.status}`);
@@ -138,7 +151,8 @@ export async function run({
       existing.status === 200
         ? await api('PUT', `/api/v1/provisioning/alert-rules/${entry.uid}`, rule)
         : await api('POST', '/api/v1/provisioning/alert-rules', rule);
-    if (res.status >= 300) throw new Error(`${entry.uid}: HTTP ${res.status} ${res.text}`);
+    if (res.status >= 300)
+      throw new Error(`${entry.uid}: HTTP ${res.status} ${redactBody(res.text)}`);
     log(`${existing.status === 200 ? 'updated' : 'created'} ${entry.uid}`);
   }
 
@@ -152,7 +166,7 @@ export async function run({
     }
   );
   if (group.status >= 300)
-    throw new Error(`rule group interval: HTTP ${group.status} ${group.text}`);
+    throw new Error(`rule group interval: HTTP ${group.status} ${redactBody(group.text)}`);
 
   if (!sendTest) {
     const del = await api('DELETE', `/api/v1/provisioning/alert-rules/${config.deliveryTest.uid}`);

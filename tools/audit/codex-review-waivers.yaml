@@ -1408,3 +1408,12 @@ waivers:
     author: PG-203 lane
     date: '2026-10-25'
     expires: '2026-11-24'
+  - fingerprint: 05d1fa75998a9bc306ef96f9a9043f8f8fe665513525f74d8323540b224f43bc
+    reason: >-
+      Same fire-and-forget notice gap as 1536a6ef, 0d03e2fa and 24c6b825, reworded after the
+      main merge: a refused completion or refusal email is not retried. Delivery reliability,
+      not a security, data-loss or regression finding (codex spiral rule). Tracked in #1014,
+      which already proposes the durable outbox retried by the D8 sweep.
+    author: PG-203 lane
+    date: '2026-10-27'
+    expires: '2026-11-26'

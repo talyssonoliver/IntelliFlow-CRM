@@ -1,10 +1,12 @@
 /**
- * startApiServer starts the PG-203 DSAR deadline alerts; createApiServer does not.
+ * startApiServer starts the PG-203 DSAR deadline alerts through the shared
+ * background jobs (API_BACKGROUND_JOBS); createApiServer does not.
  */
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
 const sla = vi.hoisted(() => ({
   startDsarSlaScheduler: vi.fn(),
+  stopDsarSlaScheduler: vi.fn(async () => undefined),
   dsarSlaIntervalFromEnv: vi.fn(() => 98_765),
   runDsarSlaSweep: vi.fn(),
   createDsarSlaDeps: vi.fn(),
@@ -21,6 +23,19 @@ describe('DSAR deadline alert wiring', () => {
     if (server) await new Promise<void>((resolve) => server!.close(() => resolve()));
     server = undefined;
     vi.clearAllMocks();
+  });
+
+  it('API_BACKGROUND_JOBS=off starts no alerts, so an idle api can sleep', async () => {
+    vi.stubEnv('API_BACKGROUND_JOBS', 'off');
+    const log = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    try {
+      server = startApiServer({ port: 0 });
+      await new Promise<void>((resolve) => server!.once('listening', () => resolve()));
+      expect(sla.startDsarSlaScheduler).not.toHaveBeenCalled();
+    } finally {
+      log.mockRestore();
+      vi.unstubAllEnvs();
+    }
   });
 
   it('createApiServer never starts the alerts', () => {

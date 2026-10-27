@@ -691,7 +691,9 @@ show a "Processing restricted" banner. Plan Addendum B lists every path.
 
 The migration is Class A. It is applied through the gated
 `prisma migrate deploy` workflow before the API that reads the tables is
-promoted. The SLA job (`dsar-sla-scheduler.ts`) is its own module. It is
+promoted. The SLA job (`dsar-sla-scheduler.ts`) is its own module, started with
+the api's other timer jobs in `background-jobs.ts` (so `API_BACKGROUND_JOBS` and
+the combined worker's `COMBINED_BACKGROUND_JOBS` decide where it runs). It is
 disabled under test, on serverless runtimes, and with `DSAR_SLA_INTERVAL_MS=0`.
 It takes `pg_try_advisory_xact_lock`, so one replica runs each tick.
 

@@ -17,12 +17,12 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/contact/page.tsx": "d9550242dc70b37831eeba1a15a5886e1738fdb68318ab5e204cba306d9bc7be",
-    "apps/web/src/components/shared/contact-form.tsx": "f06fe3a3bccc81f35d504e3066eb4c038c5612e9241de04b51fc9b30feaab534",
-    "apps/web/src/lib/shared/email-handler.ts": "5b99bd64a974d30803ce0313eb30150bbbe3891e37f92f6338531ffb885d24da",
-    ".specify/sprints/sprint-11/attestations/PG-005/context_ack.json": "fe421c06bfa8189e0dfa25390b75bbc439cf40259a55514b78bdf108947f2abf",
-    "docs/planning/adr/ADR-020-public-site-auth.md": "bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
-    "docs/planning/prd-public-site-auth.md": "a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
+    "apps/web/src/app/(public)/contact/page.tsx": "sha256:d9550242dc70b37831eeba1a15a5886e1738fdb68318ab5e204cba306d9bc7be",
+    "apps/web/src/components/shared/contact-form.tsx": "sha256:f06fe3a3bccc81f35d504e3066eb4c038c5612e9241de04b51fc9b30feaab534",
+    "apps/web/src/lib/shared/email-handler.ts": "sha256:5b99bd64a974d30803ce0313eb30150bbbe3891e37f92f6338531ffb885d24da",
+    ".specify/sprints/sprint-11/attestations/PG-005/context_ack.json": "sha256:fe421c06bfa8189e0dfa25390b75bbc439cf40259a55514b78bdf108947f2abf",
+    "docs/planning/adr/ADR-020-public-site-auth.md": "sha256:bb5cb864b162207db2656abcba4637eb189ed515134f3b0e0d6c5d12212e9c27",
+    "docs/planning/prd-public-site-auth.md": "sha256:a858df0521ee9c76415a5fa3b40ab462f383bbd45ef6ae846cd18edec444bead"
   },
   "validation_results": [
     {

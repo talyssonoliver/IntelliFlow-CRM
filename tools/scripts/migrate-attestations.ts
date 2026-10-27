@@ -23,8 +23,9 @@ import {
   copyFileSync,
   rmSync,
 } from 'node:fs';
-import { join, dirname } from 'node:path';
+import { join, dirname, resolve } from 'node:path';
 import { getRelativeSchemaPath } from './lib/schema-paths';
+import { parseArtifactHash } from './lib/artifact-hash';
 import { OUTPUT_PATHS } from './lib/workflow/config.js';
 
 // Get repo root - handle Windows path conversion
@@ -187,7 +188,8 @@ function convertOldAttestationToNew(
       })) ||
       Object.entries(old.artifact_hashes || {}).map(([path, hash]) => ({
         path,
-        sha256: hash,
+        // files_read[].sha256 is a bare digest; artifact_hashes may carry the sha256: prefix.
+        sha256: parseArtifactHash(hash) ?? hash,
       }));
 
     newAttestation.context_acknowledgment = {
@@ -228,65 +230,73 @@ function migrateAttestations(): void {
     .map((d) => d.name);
 
   for (const taskId of taskDirs) {
-    const oldTaskDir = join(OLD_ATTESTATIONS_DIR, taskId);
-    const oldPath = join(oldTaskDir, 'context_ack.json');
-    // NEW: Write to canonical sprint-based location
-    const newTaskDir = getTaskOutputDir(taskId);
-    const newPath = join(newTaskDir, 'attestation.json');
-
-    // Skip if already migrated
-    if (existsSync(newPath)) {
-      log(`  Skipped ${taskId}: attestation.json already exists`);
-      skippedCount++;
-      continue;
-    }
-
-    if (!existsSync(oldPath)) {
-      log(`  Skipped ${taskId}: no context_ack.json found`);
-      skippedCount++;
-      continue;
-    }
-
-    try {
-      const oldContent = readFileSync(oldPath, 'utf-8');
-      const oldData: OldAttestation = JSON.parse(oldContent);
-
-      // Check if this is already the new format (has $schema)
-      if ('$schema' in oldData) {
-        log(`  Skipped ${taskId}: already in new format`);
-        skippedCount++;
-        continue;
-      }
-
-      // Try to load context ack from old context directory
-      let contextAck: OldContextAck | undefined;
-      const contextAckPath = join(OLD_CONTEXT_DIR, taskId, 'context_ack.json');
-      if (existsSync(contextAckPath)) {
-        try {
-          contextAck = JSON.parse(readFileSync(contextAckPath, 'utf-8'));
-        } catch {
-          // Ignore context ack errors
-        }
-      }
-
-      const newData = convertOldAttestationToNew(oldData, taskId, newTaskDir, contextAck);
-
-      if (!isDryRun) {
-        // Ensure target directory exists
-        mkdirSync(newTaskDir, { recursive: true });
-        writeFileSync(newPath, JSON.stringify(newData, null, 2), 'utf-8');
-      }
-      const sprintNum = taskSprintMap?.get(taskId) ?? 0;
-      log(
-        `  Migrated ${taskId}: context_ack.json → .specify/sprints/sprint-${sprintNum}/attestations/${taskId}/attestation.json`
-      );
-      migratedCount++;
-    } catch (error) {
-      log(`  Error migrating ${taskId}: ${error}`);
-    }
+    const outcome = migrateOneAttestation(taskId);
+    if (outcome === 'migrated') migratedCount++;
+    else if (outcome === 'skipped') skippedCount++;
   }
 
   log(`\nAttestation migration complete: ${migratedCount} migrated, ${skippedCount} skipped`);
+}
+
+/** The old context ack for a task, if one exists and parses. */
+export function readOldContextAck(taskId: string): OldContextAck | undefined {
+  const contextAckPath = join(OLD_CONTEXT_DIR, taskId, 'context_ack.json');
+  if (!existsSync(contextAckPath)) return undefined;
+  try {
+    return JSON.parse(readFileSync(contextAckPath, 'utf-8'));
+  } catch {
+    // Ignore context ack errors
+    return undefined;
+  }
+}
+
+/** Migrate one task's attestation; extracted from migrateAttestations() unchanged. */
+function migrateOneAttestation(taskId: string): 'migrated' | 'skipped' | 'error' {
+  const oldTaskDir = join(OLD_ATTESTATIONS_DIR, taskId);
+  const oldPath = join(oldTaskDir, 'context_ack.json');
+  // NEW: Write to canonical sprint-based location
+  const newTaskDir = getTaskOutputDir(taskId);
+  const newPath = join(newTaskDir, 'attestation.json');
+
+  // Skip if already migrated
+  if (existsSync(newPath)) {
+    log(`  Skipped ${taskId}: attestation.json already exists`);
+    return 'skipped';
+  }
+
+  if (!existsSync(oldPath)) {
+    log(`  Skipped ${taskId}: no context_ack.json found`);
+    return 'skipped';
+  }
+
+  try {
+    const oldContent = readFileSync(oldPath, 'utf-8');
+    const oldData: OldAttestation = JSON.parse(oldContent);
+
+    // Check if this is already the new format (has $schema)
+    if ('$schema' in oldData) {
+      log(`  Skipped ${taskId}: already in new format`);
+      return 'skipped';
+    }
+
+    // Try to load context ack from old context directory
+    const contextAck = readOldContextAck(taskId);
+    const newData = convertOldAttestationToNew(oldData, taskId, newTaskDir, contextAck);
+
+    if (!isDryRun) {
+      // Ensure target directory exists
+      mkdirSync(newTaskDir, { recursive: true });
+      writeFileSync(newPath, JSON.stringify(newData, null, 2), 'utf-8');
+    }
+    const sprintNum = taskSprintMap?.get(taskId) ?? 0;
+    log(
+      `  Migrated ${taskId}: context_ack.json → .specify/sprints/sprint-${sprintNum}/attestations/${taskId}/attestation.json`
+    );
+    return 'migrated';
+  } catch (error) {
+    log(`  Error migrating ${taskId}: ${error}`);
+    return 'error';
+  }
 }
 
 function moveContextPacks(): void {
@@ -321,64 +331,70 @@ function moveContextPacks(): void {
     }
 
     // Move context pack files
-    const filesToMove = ['context_pack.md', 'context_pack.manifest.json'];
-    for (const filename of filesToMove) {
-      const sourcePath = join(sourceDir, filename);
-      const targetPath = join(targetDir, filename);
-
-      if (!existsSync(sourcePath)) continue;
-
-      if (existsSync(targetPath)) {
-        log(`  Skipped ${taskId}/${filename}: already exists in target`);
-        skippedCount++;
-        continue;
-      }
-
-      if (!isDryRun) {
-        copyFileSync(sourcePath, targetPath);
-      }
-      const sprintNum = taskSprintMap?.get(taskId) ?? 0;
-      log(`  Moved ${taskId}/${filename} → sprint-${sprintNum}`);
-      movedCount++;
-    }
+    const counts = moveTaskContextPackFiles(taskId, sourceDir, targetDir);
+    movedCount += counts.moved;
+    skippedCount += counts.skipped;
   }
 
   log(`\nContext pack migration complete: ${movedCount} files moved, ${skippedCount} skipped`);
+}
+
+/** Copy one task's context pack files; extracted from moveContextPacks() unchanged. */
+export function moveTaskContextPackFiles(
+  taskId: string,
+  sourceDir: string,
+  targetDir: string
+): { moved: number; skipped: number } {
+  let moved = 0;
+  let skipped = 0;
+  const filesToMove = ['context_pack.md', 'context_pack.manifest.json'];
+  for (const filename of filesToMove) {
+    const sourcePath = join(sourceDir, filename);
+    const targetPath = join(targetDir, filename);
+
+    if (!existsSync(sourcePath)) continue;
+
+    if (existsSync(targetPath)) {
+      log(`  Skipped ${taskId}/${filename}: already exists in target`);
+      skipped++;
+      continue;
+    }
+
+    if (!isDryRun) {
+      copyFileSync(sourcePath, targetPath);
+    }
+    const sprintNum = taskSprintMap?.get(taskId) ?? 0;
+    log(`  Moved ${taskId}/${filename} → sprint-${sprintNum}`);
+    moved++;
+  }
+  return { moved, skipped };
 }
 
 function cleanupOldDirectories(): void {
   log('\nCleaning up deprecated directories...');
 
   // Clean up artifacts/context/
-  if (existsSync(OLD_CONTEXT_DIR)) {
-    if (isDryRun) {
-      log(`Would remove: ${OLD_CONTEXT_DIR}`);
-    } else {
-      try {
-        rmSync(OLD_CONTEXT_DIR, { recursive: true, force: true });
-        log(`Removed: ${OLD_CONTEXT_DIR}`);
-      } catch (error) {
-        log(`Error removing context directory: ${error}`);
-      }
-    }
-  } else {
-    log('artifacts/context/ already removed');
-  }
+  removeDeprecatedDir(OLD_CONTEXT_DIR, 'context', 'artifacts/context/');
 
   // Clean up artifacts/attestations/
-  if (existsSync(OLD_ATTESTATIONS_DIR)) {
-    if (isDryRun) {
-      log(`Would remove: ${OLD_ATTESTATIONS_DIR}`);
-    } else {
-      try {
-        rmSync(OLD_ATTESTATIONS_DIR, { recursive: true, force: true });
-        log(`Removed: ${OLD_ATTESTATIONS_DIR}`);
-      } catch (error) {
-        log(`Error removing attestations directory: ${error}`);
-      }
-    }
-  } else {
-    log('artifacts/attestations/ already removed');
+  removeDeprecatedDir(OLD_ATTESTATIONS_DIR, 'attestations', 'artifacts/attestations/');
+}
+
+/** Remove one deprecated directory (dry run: only report); extracted unchanged. */
+export function removeDeprecatedDir(dir: string, label: string, shownPath: string): void {
+  if (!existsSync(dir)) {
+    log(`${shownPath} already removed`);
+    return;
+  }
+  if (isDryRun) {
+    log(`Would remove: ${dir}`);
+    return;
+  }
+  try {
+    rmSync(dir, { recursive: true, force: true });
+    log(`Removed: ${dir}`);
+  } catch (error) {
+    log(`Error removing ${label} directory: ${error}`);
   }
 }
 
@@ -419,4 +435,5 @@ function main(): void {
   console.log('='.repeat(60));
 }
 
-main();
+// Run only from the CLI, so tests can import the helpers without migrating anything.
+if (process.argv[1] && resolve(process.argv[1]) === resolve(scriptPath)) main();

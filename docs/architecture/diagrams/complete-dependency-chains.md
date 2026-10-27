@@ -1826,7 +1826,7 @@ Dependency Chain:
               └──────────────────┘              └──────────────────┘
 
 Dependency Chain:
-  ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
+  ENV-008-AI (OTel) ⏳ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
                          ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ✅
                          └──► traces.ts (Val) ⬜ ───────────────────────────────────────────────────────┘
 ```
@@ -2158,7 +2158,7 @@ Security Dash:    EXC-SEC-001 ✅ ──► TRACK-005 (Security Dashboard UI) �
 Release Gov:      IFC-130 ⬜ ──► IFC-132 ⬜ ──► IFC-133 ⬜ ──► IFC-134 ⬜ ──► IFC-112 ⬜
 Caching/Perf:     IFC-007 ⬜ ──► IFC-123 ⬜ ──► IFC-033 ✅ ──► Performance Dashboard ⬜
 External APIs:    IFC-099 ⬜ ──► IFC-114 ⬜ ──► IFC-036 ⬜ ──► webhooks.router ⬜ ──► PG-114/115 ⬜ | PG-171 ✅
-Observability:    ENV-008-AI ✅ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ──► Grafana ⬜ ──► TRACK-001 ✅ / TRACK-006 ✅
+Observability:    ENV-008-AI ⏳ ──► IFC-116 ⬜ ──► IFC-142 ⬜ ──► Grafana ⬜ ──► TRACK-001 ✅ / TRACK-006 ✅
 ```
 
 ## Business Workflow Chains - 4 Total

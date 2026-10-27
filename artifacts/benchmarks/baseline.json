@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-23T16:46:37.659Z",
+  "timestamp": "2026-10-25T10:51:15.360Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -3068,9 +3068,15 @@
     ]
   },
   "workers_inventory": {
-    "total_workers": 2,
+    "total_workers": 3,
     "total_jobs": 3,
     "workers": [
+      {
+        "name": "combined",
+        "type": "other",
+        "jobs": [],
+        "description": "Background job processing"
+      },
       {
         "name": "events",
         "type": "events",
