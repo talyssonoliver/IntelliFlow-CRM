@@ -1,0 +1,22 @@
+{
+  "task_id": "ENV-008-AI",
+  "run_id": "env-008-ai-exec-20261025",
+  "stoa": "Quality",
+  "verdict": "WARN",
+  "reviewed_at": "2026-10-25",
+  "reviewed_head": "5162ed721",
+  "agent": "stoa-quality subagent (Agent tool)",
+  "gates": [
+    "assertion-reality",
+    "no-time-bombs",
+    "diff-coverage-honest",
+    "regression-in-evidence",
+    "red-log-genuine"
+  ],
+  "findings": [
+    "loop guards and burn-rate assertions weak (fixed in e0b478906)",
+    "repo-wide 90% global threshold not met for tooling scope (diff-coverage gate met)",
+    "logs predated 3f799b94f (re-run at e0b478906)"
+  ],
+  "source": ".specify/sprints/sprint-18/execution/ENV-008-AI/stoa-verdicts.md"
+}

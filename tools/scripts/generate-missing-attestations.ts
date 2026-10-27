@@ -193,11 +193,9 @@ function transformContextAckToAttestation(contextAck: ContextAck, outputDir: str
     attestation_timestamp:
       contextAck.attestation?.attested_at || contextAck.execution?.completed_at || now,
     verdict:
-      contextAck.attestation?.verdict === 'APPROVED'
+      contextAck.attestation?.verdict === 'APPROVED' || contextAck.status === 'completed'
         ? 'COMPLETE'
-        : contextAck.status === 'completed'
-          ? 'COMPLETE'
-          : 'INCOMPLETE',
+        : 'INCOMPLETE',
     context_acknowledgment: {
       files_read: filesRead,
       invariants_acknowledged: invariants,

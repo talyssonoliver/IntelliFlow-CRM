@@ -257,4 +257,70 @@ describe('run', () => {
     await run({ env, argv: [], fetchImpl: g.fetchImpl, log: (l: string) => lines.push(l) });
     expect(lines.join('\n')).not.toContain(TOKEN);
   });
+
+  // ENV-008-AI AC-001: the workflow was red from 2026-10-06 on HTTP 503 while
+  // the Grafana Cloud instance woke up. run() must pass its sleep to the client.
+  it('retries a 503 on the series check through the injected sleep', async () => {
+    const g = fakeGrafana();
+    let first = true;
+    const sleeps: number[] = [];
+    const fetchImpl: typeof g.fetchImpl = async (url, init) => {
+      if (first && url.includes('/api/v1/query')) {
+        first = false;
+        return { status: 503, text: async () => 'waking up' };
+      }
+      return g.fetchImpl(url, init);
+    };
+    const result = await run({
+      env,
+      argv: ['--dry-run'],
+      fetchImpl,
+      log: quiet,
+      sleep: async (ms: number) => {
+        sleeps.push(ms);
+      },
+    });
+    expect(result).toEqual({ applied: 0, empty: [] });
+    expect(sleeps).toEqual([5000]);
+  });
+
+  it.each([
+    [
+      'the folder create',
+      'create folder: HTTP 400',
+      (url: string, method: string) => method === 'POST' && url.endsWith('/api/folders'),
+    ],
+    [
+      'the rule-group update',
+      'rule group interval: HTTP 400',
+      (url: string, method: string) => method === 'PUT' && url.includes('/rule-groups/'),
+    ],
+  ])('does not echo a token from a 400 body at %s', async (_site, expected, matches) => {
+    const leaked = 'gl' + 'sa_' + 'n'.repeat(32);
+    const g = fakeGrafana({ folder: 404 });
+    const fetchImpl: typeof g.fetchImpl = async (url, init) => {
+      if (matches(url, init.method)) {
+        return { status: 400, text: async () => `{"message":"no ${leaked}"}` };
+      }
+      return g.fetchImpl(url, init);
+    };
+    const err = await run({ env, argv: [], fetchImpl, log: quiet }).catch((e: Error) => e);
+    expect((err as Error).message).toContain(expected);
+    expect((err as Error).message).not.toContain(leaked);
+  });
+
+  it('does not echo a token from an error response body', async () => {
+    const leaked = 'gl' + 'sa_' + 'k'.repeat(32);
+    const g = fakeGrafana();
+    const fetchImpl: typeof g.fetchImpl = async (url, init) => {
+      if (init.method === 'POST' && url.endsWith('/api/v1/provisioning/alert-rules')) {
+        return { status: 400, text: async () => `{"message":"bad token ${leaked}"}` };
+      }
+      return g.fetchImpl(url, init);
+    };
+    const err = await run({ env, argv: [], fetchImpl, log: quiet }).catch((e: Error) => e);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).toContain('HTTP 400');
+    expect((err as Error).message).not.toContain(leaked);
+  });
 });

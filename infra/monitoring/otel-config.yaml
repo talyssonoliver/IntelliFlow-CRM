@@ -1,5 +1,21 @@
 # OpenTelemetry Collector Configuration for IntelliFlow CRM
-# This configuration enables distributed tracing, metrics collection, and log aggregation
+#
+# This file is the local-stack reference: a real collector config for local
+# development (mounted by the docker run in packages/observability/README.md).
+# It is not what production runs.
+#
+# Production topology (ENV-008-AI, ADR-087):
+# - Production has no collector. The api and ai-worker OpenTelemetry SDKs export
+#   OTLP straight to the Grafana Cloud OTLP gateway.
+# - Grafana Cloud derives span metrics from those traces
+#   (traces_spanmetrics_calls_total and the native histogram
+#   traces_spanmetrics_latency). The production SLOs, the service dashboard and
+#   the Grafana Asserts anomaly rules all read those series.
+# - ai-worker logs reach Loki over the same OTLP export; ai-worker LLM calls are
+#   llm.invoke spans carrying llm.purpose, llm.tier, llm.provider and
+#   llm.model_name (apps/ai-worker/src/tracing/llm-tracer.ts).
+# - web, ws, events-worker and ingestion-worker export nothing yet (EP-001-AI).
+# See docs/architecture/adr/ADR-087-production-slos-anomaly-detection-and-self-healing.md.
 
 # Receivers define how telemetry data is collected
 receivers:

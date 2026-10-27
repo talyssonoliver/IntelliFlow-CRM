@@ -1,0 +1,11 @@
+{
+  "task_id": "ENV-008-AI",
+  "selected": [
+    "Foundation",
+    "Security",
+    "Quality",
+    "Automation"
+  ],
+  "reason": "infrastructure/CI task: Foundation always; Security for production tokens in workflows; Quality for tests and coverage; Automation for CI/CD workflows. Domain and Intelligence not selected: no domain, API or AI code changed.",
+  "aggregate": "FAIL (Security, inherited pnpm audit only)"
+}
