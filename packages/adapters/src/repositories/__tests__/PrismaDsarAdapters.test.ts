@@ -474,6 +474,21 @@ describe('PrismaProcessingRestrictionRepository', () => {
       expect(calls[2].data.liftedById).toBe('u1');
     });
 
+    it('takes the address locks the request holds, in byte order, before any row (codex)', async () => {
+      const prisma = mockPrisma({ processingRestriction: { update: vi.fn() } });
+      const repo = new PrismaProcessingRestrictionRepository(asClient(prisma));
+      await repo.liftForRequest(input);
+      const [lockSql, ...lockArgs] = prisma.$executeRaw.mock.calls[0] as any[];
+      const sql = lockSql.join('?');
+      expect(sql).toContain('dsar_subject_lock(');
+      expect(sql).toContain('COLLATE "C"');
+      expect(sql).toContain('ORDER BY');
+      expect(lockArgs).toEqual(expect.arrayContaining(['t1', 'r1']));
+      expect(prisma.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+        prisma.$queryRaw.mock.invocationCallOrder[0]!
+      );
+    });
+
     it('lifts the row when the request was its last reason', async () => {
       const prisma = mockPrisma({
         processingRestriction: { update: vi.fn().mockResolvedValue(row) },
@@ -512,6 +527,14 @@ describe('PrismaProcessingRestrictionRepository', () => {
       // Only the requests the admin reviewed (codex).
       dsarRequestIds: { equals: ['r1'] },
     });
+    // The person's address lock first, in the same transaction, as restrict() takes it (codex).
+    expect(prisma.$transaction).toHaveBeenCalledTimes(2);
+    const [lockSql, ...lockArgs] = prisma.$executeRaw.mock.calls[0] as any[];
+    expect(lockSql.join('?')).toContain('dsar_subject_lock(');
+    expect(lockArgs).toEqual(expect.arrayContaining(['t1', 'p1']));
+    expect(prisma.$executeRaw.mock.invocationCallOrder[0]).toBeLessThan(
+      prisma.processingRestriction.updateMany.mock.invocationCallOrder[0]!
+    );
   });
 
   describe('followEmail', () => {

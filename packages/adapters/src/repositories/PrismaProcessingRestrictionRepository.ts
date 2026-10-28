@@ -100,6 +100,16 @@ export class PrismaProcessingRestrictionRepository implements ProcessingRestrict
     note: string;
   }): Promise<ActiveRestriction | null> {
     return this.prisma.$transaction(async (tx) => {
+      // The address locks first, as restrict() and the address carry take them (codex): a carry
+      // to a new address either commits before (and its copy is lifted below) or waits until
+      // this lift commits (and finds nothing active to copy). Byte order, the order the AI write
+      // guard sorts its addresses in, so the two never wait on each other.
+      await tx.$executeRaw`
+        SELECT dsar_subject_lock(${input.tenantId}, held.email) FROM (
+          SELECT DISTINCT "subjectEmail" COLLATE "C" AS email FROM processing_restrictions
+          WHERE "tenantId" = ${input.tenantId} AND "liftedAt" IS NULL
+            AND ${input.dsarRequestId} = ANY("dsarRequestIds")
+          ORDER BY 1) AS held`;
       const rows = await tx.$queryRaw<Array<{ id: string; dsarRequestIds: string[] }>>`
         SELECT id, "dsarRequestIds" FROM processing_restrictions
         WHERE "tenantId" = ${input.tenantId} AND "liftedAt" IS NULL
@@ -134,19 +144,25 @@ export class PrismaProcessingRestrictionRepository implements ProcessingRestrict
     liftedById: string;
     note: string;
   }): Promise<ActiveRestriction | null> {
-    const updated = await this.prisma.processingRestriction.updateMany({
-      where: {
-        id: input.restrictionId,
-        tenantId: input.tenantId,
-        liftedAt: null,
-        dsarRequestIds: { equals: input.expectedRequestIds },
-      },
-      data: { liftedAt: new Date(), liftedById: input.liftedById, liftNote: input.note },
-    });
-    if (updated.count === 0) return null;
-    return this.prisma.processingRestriction.findFirst({
-      where: { id: input.restrictionId, tenantId: input.tenantId },
-      select: ACTIVE_SELECT,
+    return this.prisma.$transaction(async (tx) => {
+      // The person's address lock first, as in liftForRequest (codex).
+      await tx.$executeRaw`
+        SELECT dsar_subject_lock(${input.tenantId}, "subjectEmail") FROM processing_restrictions
+        WHERE id = ${input.restrictionId} AND "tenantId" = ${input.tenantId} AND "liftedAt" IS NULL`;
+      const updated = await tx.processingRestriction.updateMany({
+        where: {
+          id: input.restrictionId,
+          tenantId: input.tenantId,
+          liftedAt: null,
+          dsarRequestIds: { equals: input.expectedRequestIds },
+        },
+        data: { liftedAt: new Date(), liftedById: input.liftedById, liftNote: input.note },
+      });
+      if (updated.count === 0) return null;
+      return tx.processingRestriction.findFirst({
+        where: { id: input.restrictionId, tenantId: input.tenantId },
+        select: ACTIVE_SELECT,
+      });
     });
   }
 
