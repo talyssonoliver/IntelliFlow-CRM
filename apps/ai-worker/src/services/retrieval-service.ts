@@ -617,7 +617,7 @@ export class RetrievalService {
       erasedSubjectEmails(this.prisma as never, tenantId),
     ]);
     // Restrictions and completed erasures are keyed on the normalised address.
-    const restricted = new Set([...restrictions, ...erasures].map(normalizeSubjectEmail));
+    const restricted = new Set([...restrictions, ...erasures].map((e) => normalizeSubjectEmail(e)));
     const blocked = (raw: string | undefined) => {
       const email = normalizeSubjectEmail(raw ?? '');
       return isErasedEmail(email) || restricted.has(email);

@@ -99,6 +99,14 @@ describe('writeIfStillEligible (codex: no insight written after an erasure)', ()
     );
   });
 
+  it('locks every address the write carries once, in code-unit order', async () => {
+    const { tx, prisma } = locking('ada@example.invalid');
+    const alsoLock = ['zed@example.invalid', ' Bob@Example.invalid ', 'ada@example.invalid'];
+    await writeIfStillEligible(prisma, { ...job, alsoLock }, vi.fn());
+    const locked = tx.$queryRaw.mock.calls.slice(1).map((call: any[]) => call[2]);
+    expect(locked).toEqual(['ada@example.invalid', 'bob@example.invalid', 'zed@example.invalid']);
+  });
+
   it.each([
     ['LEAD_MISSING', null, false],
     ['ERASED', 'erased-l1@erased.invalid', false],

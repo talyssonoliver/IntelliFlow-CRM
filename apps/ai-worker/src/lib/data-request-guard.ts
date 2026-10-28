@@ -104,6 +104,11 @@ export interface LockingTx extends Pick<GuardPrisma, 'processingRestriction'> {
  */
 type LockedWrite<T> = { written: true; value: T } | { written: false; reason: ScoringBlock };
 
+/** Plain code-unit order, so every write takes the same addresses in the same sequence. */
+function byCodeUnit(a: string, b: string): number {
+  return Number(a > b) - Number(a < b);
+}
+
 /** The checks on a locked row's current email, then the write. */
 async function writeIfEligibleRow<T>(
   tx: LockingTx,
@@ -123,7 +128,7 @@ async function writeIfEligibleRow<T>(
   // in one sorted order, so two writes sharing addresses never wait on each other (codex).
   const addresses = [
     ...new Set([email, ...(job.alsoLock ?? []).map((a) => normalizeSubjectEmail(a))]),
-  ].sort();
+  ].sort(byCodeUnit);
   for (const address of addresses) {
     await tx.$queryRaw`SELECT 1 AS locked FROM (SELECT dsar_subject_lock(${job.tenantId}, ${address})) AS l`;
   }
