@@ -170,12 +170,14 @@ describe('alert rules config', () => {
   // error-level log lines from the same services on the logs datasource.
   it('the fast log rule counts error-level lines over 2m on Loki, at "now", with no pending period', () => {
     const entry = CONFIG.rules.find((r: { uid: string }) => r.uid === 'ifc074-error-logs-direct');
-    const services = 'service_name=~"ai-worker|intelliflow-ai-worker|api"';
+    // Only ai-worker ships logs to Loki: the combined worker logs as ai-worker
+    // (OTEL_SERVICE_NAME) and the api ships none.
+    const services = 'service_name="ai-worker"';
     const levels = '"(?i)error|fatal|critical"';
     expect(entry.datasourceUid).toBe('grafanacloud-logs');
     expect(entry.selector).toBe(`{${services}}`);
     expect(entry.expr).toBe(
-      `sum by (service_name) (count_over_time({${services}} | detected_level=~${levels} or severity_text=~${levels} [2m]))`
+      `sum by (service_name) (count_over_time({${services}} != "Latency alert generated" | detected_level=~${levels} or severity_text=~${levels} [2m]))`
     );
     expect(entry).toMatchObject({ operator: 'gt', threshold: 0, for: '0s', noData: 'OK' });
     expect(entry.queryOffsetSeconds).toBeUndefined();
@@ -356,7 +358,7 @@ describe('run', () => {
     const end = now / 1000;
     expect(loki.map((c) => c.path)).toEqual([
       '/api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/series?match%5B%5D=' +
-        encodeURIComponent('{service_name=~"ai-worker|intelliflow-ai-worker|api"}') +
+        encodeURIComponent('{service_name="ai-worker"}') +
         `&start=${end - 7 * 86400}&end=${end}`,
     ]);
     const prom = g.calls.filter((c) => c.path.includes('/api/v1/query'));
