@@ -24,7 +24,7 @@ import {
   type DsarSlaDeps,
   type DsarSlaPrisma,
 } from '../../apps/api/src/modules/privacy/dsar-sla-scheduler';
-import { applySchemaSql } from './schema-lock';
+import { DSAR_PURGE_SUITE_LOCK_KEY, applySchemaSql, holdSuiteLock } from './schema-lock';
 
 const MIGRATION = join(
   __dirname,
@@ -241,6 +241,15 @@ describeDb('PG-203 DSAR abuse limits (real DB)', () => {
   });
 
   describe('purge of unverified requests (Q24)', () => {
+    // dsar.test.ts runs the same cross-firm purge through the deadline sweep in another fork.
+    let releasePurgeLock: (() => Promise<void>) | undefined;
+    beforeAll(async () => {
+      if (dbReady) releasePurgeLock = await holdSuiteLock(DB_URL!, DSAR_PURGE_SUITE_LOCK_KEY);
+    });
+    afterAll(async () => {
+      await releasePurgeLock?.();
+    });
+
     const now = () => new Date();
     const expiredDaysAgo = (days: number) => new Date(Date.now() - days * DAY);
 

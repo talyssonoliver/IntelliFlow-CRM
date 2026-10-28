@@ -36,7 +36,7 @@ import {
   type DsarSlaDeps,
   type DsarSlaPrisma,
 } from '../../apps/api/src/modules/privacy/dsar-sla-scheduler';
-import { applySchemaSql, sqlState } from './schema-lock';
+import { DSAR_PURGE_SUITE_LOCK_KEY, applySchemaSql, holdSuiteLock, sqlState } from './schema-lock';
 
 const MIGRATION = join(
   __dirname,
@@ -1725,6 +1725,15 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
   });
   describe('DSAR deadline alerts (plan D8, real locks)', () => {
     type Sent = { to: string[]; textBody: string };
+
+    // The sweep purges expired unverified requests across firms, as dsar-abuse.test.ts does.
+    let releasePurgeLock: (() => Promise<void>) | undefined;
+    beforeAll(async () => {
+      if (dbReady) releasePurgeLock = await holdSuiteLock(DB_URL!, DSAR_PURGE_SUITE_LOCK_KEY);
+    });
+    afterAll(async () => {
+      await releasePurgeLock?.();
+    });
 
     /** A fake provider that records every message; the sweep runs on this suite's client. */
     function sweepWith(now: Date, accept = true, deferred = new Map<string, number>()) {
