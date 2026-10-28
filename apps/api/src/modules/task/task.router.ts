@@ -197,6 +197,42 @@ function buildTaskListWhere(filters: {
   return where;
 }
 
+/**
+ * PG-208 owner ruling 6: a non-admin sees tasks they own OR are assigned to.
+ * `createTenantWhereClause` narrows non-admins to `ownerId`; widen that one
+ * clause to "owner or assignee" (tenant filter untouched). Combined through
+ * `AND` so a search `OR` on the same where keeps working.
+ */
+export function withAssigneeVisibility<T extends Record<string, unknown>>(
+  where: T & { ownerId?: string | { in: string[] } },
+  userId: string
+): Record<string, unknown> {
+  if (where.ownerId === undefined) return where;
+  const { ownerId, ...rest } = where;
+  return { ...rest, AND: [...andList(rest.AND), { OR: [{ ownerId }, { assigneeId: userId }] }] };
+}
+
+/** Prisma accepts `AND` as one condition or a list; keep either. */
+function andList(value: unknown): unknown[] {
+  if (value === undefined) return [];
+  return Array.isArray(value) ? value : [value];
+}
+
+/**
+ * List visibility: the tenant scope (owner or assignee for non-admins), then the
+ * caller's own owner filter as a plain filter. The filter must not pass through
+ * `withAssigneeVisibility`, or "owned by X" would widen to "or assigned to me".
+ */
+export function taskListWhere<T extends Record<string, unknown>>(
+  tenant: Parameters<typeof createTenantWhereClause>[0],
+  where: T & { ownerId?: string }
+): Record<string, unknown> {
+  const { ownerId: ownerFilter, ...rest } = where;
+  const scoped = withAssigneeVisibility(createTenantWhereClause(tenant, rest), tenant.userId);
+  // Top-level fields and `AND` are conjunctive: visibility still applies, and the filter narrows it.
+  return ownerFilter === undefined ? scoped : { ...scoped, ownerId: ownerFilter };
+}
+
 export const taskRouter = createTRPCRouter({
   /**
    * Create a new task
@@ -279,7 +315,10 @@ export const taskRouter = createTRPCRouter({
   getById: tenantProcedure.input(z.object({ id: taskIdSchema })).query(async ({ ctx, input }) => {
     const typedCtx = getTenantContext(ctx);
 
-    const where = createTenantWhereClause(typedCtx.tenant, { id: input.id });
+    const where = withAssigneeVisibility(
+      createTenantWhereClause(typedCtx.tenant, { id: input.id }),
+      typedCtx.tenant.userId
+    );
     const task = await typedCtx.prismaWithTenant.task.findFirst({
       where,
       include: {
@@ -338,8 +377,8 @@ export const taskRouter = createTRPCRouter({
       overdue,
     });
 
-    // Apply tenant filtering
-    const where = createTenantWhereClause(typedCtx.tenant, baseWhere);
+    // Apply tenant filtering (owner or assignee for non-admins — PG-208 ruling 6)
+    const where = taskListWhere(typedCtx.tenant, baseWhere);
 
     // Execute queries in parallel
     const [tasks, total] = await Promise.all([

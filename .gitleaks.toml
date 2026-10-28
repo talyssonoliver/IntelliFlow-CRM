@@ -58,6 +58,8 @@ paths = [
   '''^\.specify/sprints/sprint\-18/attestations/PG\-058/attestation\.json$''',
   '''^\.specify/sprints/sprint\-18/attestations/PG\-198/attestation\-latest\.json$''',
   '''^\.specify/sprints/sprint\-18/attestations/PG\-198/attestation\.json$''',
+  '''^\.specify/sprints/sprint\-18/attestations/PG\-208/attestation\-latest\.json$''',
+  '''^\.specify/sprints/sprint\-18/attestations/PG\-208/attestation\.json$''',
   '''^\.specify/sprints/sprint\-18/attestations/PG\-207/attestation\.json$''',
   '''^\.specify/sprints/sprint\-19/attestations/PG\-166/attestation\.json$''',
   '''^\.specify/sprints/sprint\-19/attestations/SEC\-643/attestation\.json$''',
@@ -68,7 +70,11 @@ paths = [
 [[allowlists]]
 description = "Generated attestation evidence: file-hash map entry whose repo path contains the word sentry (path is a file name, value is a hex digest)."
 targetRules = ["sentry-access-token"]
-paths = ['''^\.specify/sprints/sprint-1/attestations/IFC-074/attestation-latest\.json$''']
+paths = [
+  '''^\.specify/sprints/sprint-1/attestations/IFC-074/attestation-latest\.json$''',
+  '''^\.specify/sprints/sprint-18/attestations/PG-208/attestation-latest\.json$''',
+  '''^\.specify/sprints/sprint-18/attestations/PG-208/attestation\.json$''',
+]
 
 [[allowlists]]
 description = "Vendored SonarQube rule corpus (rule metadata and UUID rule keys), generated third-party data, not credentials."

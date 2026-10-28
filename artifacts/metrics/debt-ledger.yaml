@@ -5272,6 +5272,439 @@ items:
       git issue #1001. Owner ruling 2026-10-22: IFC-033 closes on throughput, and the p95
       gap is tracked here, in #1001 and in docs/shared/bottleneck-analysis.md (production
       section). Tracked per project Rule 8.
+  PG-208-HTTP-BODY-NO-CAP-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: medium
+    description: >-
+      apps/api/src/http-server.ts:84-95 (called at :521): readRequestBody
+      concatenates every chunk into memory for all non-GET/HEAD routes (Stripe
+      webhook, pm-events, tRPC) with no maximum size and no read timeout. One
+      large or slow-drip request can exhaust memory or hold a socket indefinitely.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Enforce a per-route byte cap (for example 1 MiB default, larger for the
+      Stripe route) and a read timeout; reject with 413 / 408 and destroy the
+      request. Add tests for oversize and stalled bodies.
+    status: open
+    notes: 'gh issue #937. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-HTTP-500-ECHOES-MESSAGE-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      apps/api/src/http-server.ts:286-301 (message at :299): The 500 response body
+      includes error.message verbatim, which can leak internal details (SQL, file
+      paths, upstream hosts) to unauthenticated callers.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Return a generic message plus the correlation id already set by
+      applyCorrelationHeaders; log the real error server-side only.
+    status: open
+    notes: 'gh issue #938. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-PM-EVENT-SECRET-COMPARE-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/pm-events/process-pm-event.ts:50 (parts[1] !== secret):
+      The bearer token is compared with !==, which short-circuits on the first
+      differing byte and leaks timing information about the shared
+      server-to-server secret.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Hash both sides (sha256) and compare with crypto.timingSafeEqual, or reuse
+      an existing constant-time helper. Add a test for equal-length and
+      different-length tokens.
+    status: open
+    notes: 'gh issue #939. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-STRIPE-VERIFY-NAN-TIMESTAMP-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      packages/webhooks/src/framework.ts:172 (stripeVerify) and
+      apps/api/src/webhooks/handler.ts:133 (StripeSignatureVerifier.verify): A
+      missing t= is rejected, but a present, garbled t= (for example t=abc) parses
+      to NaN, and Math.abs(now - NaN) > tolerance is false, so the replay-window
+      check is skipped. Forging a valid v1 still needs the secret, so this weakens
+      replay protection rather than authentication. framework.ts also calls
+      Number.parseInt without a radix.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Parse with Number.parseInt(t, 10), reject when !Number.isFinite(result), in
+      both verifiers (or delete the duplicate and share one). Add tests for t=abc
+      and t=.
+    status: open
+    notes: 'gh issue #940. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-WEBHOOK-DEADLETTER-NO-ADMIN-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/webhooks/webhooks.router.ts:226 (getDeadLetterEntries),
+      :244 (reprocessDeadLetter); same gate on :206 processRetries and :272
+      cleanup: These procedures use protectedProcedure, so any logged-in user can
+      list failed webhook payloads and re-run them.
+      registerSource/unregisterSource in the same file already use adminProcedure
+      (:118, :147) and the comment at :116 states the intent.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Switch the dead-letter, processRetries and cleanup procedures to
+      adminProcedure (confirm getSources/getMetrics intent), and add FORBIDDEN
+      tests for a non-admin caller.
+    status: open
+    notes: 'gh issue #941. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TERRITORY-ADMIN-DENIAL-NOT-AUDITED-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/account/account-territories.router.ts:32-38 (used at
+      :235, :282, :319, :335): A non-admin attempting to create, update, delete or
+      reorder territories gets FORBIDDEN, but no audit record is written, so
+      privilege-probing is invisible.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Write an audit entry (actor, procedure, tenant) before throwing, using the
+      same audit logger as the successful writes.
+    status: open
+    notes: 'gh issue #942. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-BULK-OPS-BYPASS-DOMAIN-EVENTS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/opportunity/opportunity.router.ts:1608-1617
+      (bulkUpdateStage, updateMany) and
+      apps/api/src/modules/lead/lead.router.ts:1539-1589 (bulkConvert,
+      createMany): Both mutations write with Prisma updateMany/createMany
+      directly. No OpportunityStageChanged/Won/Lost or lead-converted events are
+      published, so event consumers (including PG-208 task automation rules) never
+      fire for bulk changes, and domain rules (closed deals cannot change) are
+      skipped. Related but distinct from #908 item 3 (skipDuplicates).
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Route each row through the services (or emit the same events after the bulk
+      write, in the same transaction/outbox) and cover with tests that assert
+      events.
+    status: open
+    notes: 'gh issue #943. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-CHANGESTAGE-CLOSES-WITHOUT-EVENTS-001:
+    origin_task: PG-208
+    owner: Domain Lead
+    severity: medium
+    description: >-
+      packages/domain/src/crm/opportunity/Opportunity.ts:267-288 (changeStage) vs
+      :401-440 (markAsWon / markAsLost): changeStage accepts any target stage,
+      including the closing stages, and emits only OpportunityStageChangedEvent.
+      markAsWon/markAsLost are the only paths that emit
+      OpportunityWonEvent/OpportunityLostEvent (and set lost reason, close date).
+      PG-208 works around this by mapping closing stage changes to won/lost
+      triggers.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Reject CLOSED_WON/CLOSED_LOST in changeStage (force markAsWon/markAsLost) or
+      have it delegate to them; update callers and tests, then drop the PG-208
+      mapping workaround.
+    status: open
+    notes: 'gh issue #944. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TASK-SETTINGS-NEVER-READ-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      apps/api/src/modules/task/task-settings.router.ts (settings CRUD) vs
+      apps/api/src/modules/task/task.router.ts:247 (create path):
+      dueDateOffsetDays and reminderDefaults are saved per tenant, but no other
+      code reads task settings (grep finds only task-settings.router.ts and
+      router.ts), so the settings page changes nothing.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Read the tenant settings in task creation (default due date when none is
+      given, default reminder) with tests; or remove the controls until wired.
+    status: open
+    notes: 'gh issue #945. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TASK-ASSIGNEE-ACCESS-GAPS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task.router.ts:213 (assignee widening), :423
+      (update), :770 (stats), :929-936 (getReminders), :951 (getByEntity): PG-208
+      ruling 6 lets an assignee see tasks assigned to them, but update stays
+      owner-scoped, and getReminders (overdue/due soon), stats and getByEntity do
+      not include assigned tasks, so round-robin assignees are not reminded about
+      work assigned to them.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Decide the assignee permission set (edit status/notes at least), widen the
+      same way as the list query, and add tests per procedure.
+    status: open
+    notes: 'gh issue #946. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-MEMBER-MULTISELECT-LABEL-IN-NAME-001:
+    origin_task: PG-208
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      apps/web/src/components/shared/member-multi-select.tsx:68; caller
+      apps/web/src/app/tasks/(list)/automation/components/ActionFields.tsx:170-176:
+      The trigger button uses aria-label={`${label}, ${count} selected`}. When the
+      caller shows a different visible Label (ActionFields shows "Assign in turn
+      to" but passes label="Round-robin group"), the accessible name omits the
+      visible text, so speech-input users cannot activate it by name.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Make the visible label the start of the accessible name (use aria-labelledby
+      on the visible label plus the count, or require label to equal the visible
+      text) and add an axe/RTL test.
+    status: open
+    notes: 'gh issue #947. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-SETTINGS-TAGS-ROUTER-DUPLICATION-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task-automation.router.ts:541 and
+      apps/api/src/modules/analytics/scheduled-reports.router.ts:465: Both define
+      a near-identical tagsRouter (list/create/update/delete plus rename
+      rewrites). The web TagsTab was already shared in PG-208; the API side was
+      not, so fixes must be made twice.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Extract createSettingsTagsRouter(config) (model delegate, rewrite callback,
+      role gate) and use it from both routers, keeping the existing tests green.
+    status: open
+    notes: 'gh issue #948. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-LEAD-CREATED-SOURCE-FILTER-001:
+    origin_task: PG-208
+    owner: Product Owner
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task-automation.router.ts:296-300 (event trigger
+      columns carry only a toStage filter);
+      apps/api/src/modules/task/automation/task-automation-event-intake.ts: A
+      lead.created rule fires for every new lead regardless of how it was created.
+      Owner deferred a source filter (web form, import, manual) during PG-208.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add an optional filter.source to the trigger schema, persist it with the
+      event filter, evaluate it in the engine/intake, and expose it in the rule
+      form.
+    status: open
+    notes: 'gh issue #949. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-INTERVAL-RUNNER-DUPLICATION-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-runner.ts:15-64 and
+      apps/api/src/agent/approval-sweep-scheduler.ts:14-63: Both files hand-roll
+      the same module-level timer plus running flag, skip-while-running tick,
+      unref and stop logic.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add createIntervalJob({ name, intervalMs, run }) returning start/stop,
+      migrate both callers, keep their tests.
+    status: open
+    notes: 'gh issue #950. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-SCHEDULE-COLUMNS-NOT-CLEARED-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/task-automation.router.ts:282-310 (triggerColumns;
+      day fields at :307-308): The SCHEDULE branch persists dayOfWeek/dayOfMonth
+      whenever supplied, even for cadences that do not use them, leaving stale
+      values. scheduled-reports has buildScheduleColumns
+      (scheduled-reports.schedule.ts:112) which clears inapplicable day fields.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Reuse buildScheduleColumns (or extract it to a shared module) in
+      triggerColumns and add a test that switching cadence clears the day fields.
+    status: open
+    notes: 'gh issue #951. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TASK-REPOSITORY-FINDBYID-NO-TENANT-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      packages/domain/src/crm/task/TaskRepository.ts:23;
+      packages/application/src/services/TaskService.ts:696-712 (only assignTask
+      compares tenantId): findById(id) is not tenant-scoped, so every mutator must
+      remember to compare the loaded task tenant. Only assignTask does.
+      OpportunityRepository.findById(id, tenantId?) already shows the pattern.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Add an optional tenantId to TaskRepository.findById (as
+      OpportunityRepository), pass it from all TaskService mutators and the Prisma
+      adapter, and add cross-tenant tests.
+    status: open
+    notes: 'gh issue #952. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-PRISMA-SCHEMA-MIGRATION-DRIFT-001:
+    origin_task: PG-208
+    owner: Data Engineer
+    severity: medium
+    description: >-
+      packages/db/prisma/schema.prisma vs packages/db/prisma/migrations (found
+      with prisma migrate diff from a freshly migrated DB to schema.prisma): Four
+      differences: (1) cases FK (tenantId, caseTypeId) exists in the DB but is
+      missing from schema.prisma; (2) document_type_definitions.updatedAt default
+      differs; (3) report_templates index (tenantId, name) differs; (4)
+      users.locale default is en-GB in the DB but en-US in the schema.
+      Pre-existing on main, not caused by PG-208.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Decide the intended state for each, then reconcile with one additive Class A
+      migration or a schema update (never db push); add a CI step that fails on
+      migrate diff drift.
+    status: open
+    notes: 'gh issue #953. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-ONE-BY-ONE-WRITES-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-store.ts:390-405
+      (claimPendingRuns);
+      apps/api/src/modules/task/task-automation.router.ts:521-537
+      (rewriteRuleTags): claimPendingRuns issues one updateMany per candidate run,
+      and rewriteRuleTags issues one updateMany per rule. Both are bounded (run
+      batch size, 50 rules per tenant) so impact is small.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Claim with a single updateMany on the candidate ids (status guard kept) and
+      re-read, and batch the tag rewrites in one statement or a Promise.all inside
+      the transaction.
+    status: open
+    notes: 'gh issue #954. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-TENANT-WHERE-ADMIN-ONLY-001:
+    origin_task: PG-208
+    owner: Security Lead
+    severity: medium
+    description: >-
+      apps/api/src/security/tenant-context.ts:359 (createTenantWhereClause): only
+      role ADMIN is tenant-wide; OWNER and SUPER_ADMIN get owner scope on every
+      router using the helper (e.g. task.list), while module gates treat them as
+      admins. Pre-existing; found by the PG-208 security review.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Derive the tenant-wide role set from one shared domain constant, decide the
+      MANAGER scope explicitly, add per-role tests and re-check every caller.
+    status: open
+    notes: 'gh issue #959. Out of PG-208 scope. Tracked per project Rule 8.'
+  PG-208-REVIEW-MINOR-FOLLOWUPS-001:
+    origin_task: PG-208
+    owner: Frontend Lead
+    severity: low
+    description: >-
+      Minor items from the PG-208 a11y-expert and security-lead reviews not fixed
+      on the branch: Priority caption not a real label, VariablePicker raw
+      textarea, focus loss when controls disable, toast plus live-region double
+      speech, webhook trusted-proxy hop config, db crypto helpers as root exports,
+      optional actions jsonb CHECK.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Work through the seven items listed in the issue; each is independent and
+      small.
+    status: open
+    notes: 'gh issue #960. Tracked per project Rule 8.'
+  PG-208-CONVERSION-EXISTING-ACCOUNT-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-event-intake.ts:148: a lead
+      converted into an existing account marks that account conversion-born, so its
+      buffered account.created rules are skipped.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Carry an "account created by this conversion" flag on lead.converted and correlate
+      only those accounts; add the existing-account test.
+    status: open
+    notes: 'gh issue #968. Codex waiver per owner ruling 9. Tracked per project Rule 8.'
+  PG-208-RUN-PURGE-THROUGHPUT-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      apps/api/src/modules/task/automation/task-automation-engine.ts maintenance(): run
+      retention purges at most 500 expired rows per hour globally, which sustained high
+      run volume can outpace.
+    created_at: 2026-10-21
+    expiry_date: 2027-01-21
+    remediation_sprint: 19
+    remediation_plan: >-
+      Drain expired rows in bounded batches each tick until none remain; test a backlog
+      larger than one batch.
+    status: open
+    notes: 'gh issue #969. Codex waiver per owner ruling 9. Tracked per project Rule 8.'
+  PG-208-AUTOMATION-OFF-IN-PROD-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Task automation ships OFF in production (owner ruling 2026-10-28,
+      TASK_AUTOMATION_INTERVAL_MS=0). The runner's 15 s tick queries the database, so
+      it would keep an idle api awake when API_BACKGROUND_JOBS=off lets Railway sleep
+      it (#1046). It cannot move to the combined worker today: its event intake
+      listens on the api's InMemoryEventBus (apps/api/src/http-server.ts runner start,
+      task-automation-runtime.ts), so entity-event rules only see events published in
+      the api process. While it is off, rules can still be created and webhook calls
+      are still admitted, but no run executes.
+    created_at: 2026-10-28
+    expiry_date: 2027-01-28
+    remediation_sprint: 19
+    remediation_plan: >-
+      Route the nine v1 automation events through the outbox (shared with
+      PG-203-OUTBOX-NOT-WIRED-001 / gh #966), run the automation tick from
+      startBackgroundJobs so the combined worker can own it, and only then set
+      TASK_AUTOMATION_INTERVAL_MS above 0 in production. Until then, consider telling
+      admins on /tasks/automation that rules are paused.
+    status: open
+    notes: 'Owner ruling relayed by Aurora 2026-10-28. Blocks switching automation on in production.'
 summary:
   total_items: 443
   by_severity:

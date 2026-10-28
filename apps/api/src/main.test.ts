@@ -7,6 +7,7 @@ const mocks = vi.hoisted(() => ({
   disconnectPrisma: vi.fn(),
   shutdownAllQueues: vi.fn(),
   stopBackgroundJobs: vi.fn(),
+  stopTaskAutomationRunner: vi.fn(),
 }));
 
 vi.mock('./tracing/otel', () => ({ startTracing: mocks.startTracing }));
@@ -16,6 +17,9 @@ vi.mock('@intelliflow/platform/queues', () => ({ shutdownAllQueues: mocks.shutdo
 vi.mock('./http-server', () => ({ startApiServer: mocks.startApiServer }));
 vi.mock('./background-jobs', () => ({
   stopBackgroundJobs: mocks.stopBackgroundJobs,
+}));
+vi.mock('./modules/task/automation/task-automation-runner', () => ({
+  stopTaskAutomationRunner: mocks.stopTaskAutomationRunner,
 }));
 
 describe('api main entry point', () => {
@@ -83,6 +87,11 @@ describe('api main entry point', () => {
     )![1] as () => Promise<void>;
     await handler();
 
+    // PG-208: the task-automation runner stops before queues and Prisma close.
+    expect(mocks.stopTaskAutomationRunner).toHaveBeenCalledTimes(1);
+    expect(mocks.stopTaskAutomationRunner.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.shutdownAllQueues.mock.invocationCallOrder[0]!
+    );
     expect(mocks.stopBackgroundJobs).toHaveBeenCalledTimes(1);
     expect(mocks.stopBackgroundJobs.mock.invocationCallOrder[0]).toBeLessThan(
       mocks.shutdownAllQueues.mock.invocationCallOrder[0]!

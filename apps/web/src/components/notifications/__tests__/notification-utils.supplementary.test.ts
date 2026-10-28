@@ -17,6 +17,7 @@ describe('notification-utils', () => {
       ['lead_assigned', 'Lead'],
       ['deal_stage_changed', 'Deal'],
       ['task_assigned', 'Task'],
+      ['task_automation', 'Task'],
       ['appointment_scheduled', 'Calendar'],
       ['ai_insight', 'AI'],
       ['team_mention', 'Team'],
@@ -156,12 +157,13 @@ describe('notification-utils', () => {
       expect(groupNames).toContain('Case');
     });
 
-    it('contains all 43 types across all groups', () => {
-      // Types added post-baseline (40): 2, then email_bounced (PG-207).
+    it('contains all 44 types across all groups', () => {
+      // Types added post-baseline (40): 2, then email_bounced (PG-207) and
+      // task_automation (PG-208) = 44.
       // Bump when new notification types are registered.
       const groups = getTypesByGroup();
       const allTypes = Object.values(groups).flat();
-      expect(allTypes).toHaveLength(43);
+      expect(allTypes).toHaveLength(44);
     });
 
     it('places lead types in Lead group', () => {

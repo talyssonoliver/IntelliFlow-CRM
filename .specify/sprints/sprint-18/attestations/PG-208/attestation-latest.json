@@ -1,0 +1,543 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "PG-208",
+  "run_id": "20261020231931-3d9aa8b9",
+  "attestor": "Claude Code /exec (claude-opus-5-5, batch-2 lane PG-208, session 100745b3)",
+  "attestation_timestamp": "2026-10-22T02:30:00Z",
+  "verdict": "COMPLETE",
+  "evidence_summary": {
+    "artifacts_verified": 206,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 13,
+    "gates_failed": 0,
+    "kpis_met": 6,
+    "kpis_missed": 0,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-22T01:40:00Z",
+      "duration_ms": 155000
+    },
+    {
+      "name": "Tests",
+      "command": "pnpm test:coverage (17 projects) at 5f11ac307; web suites re-run after the IA fix; node scripts/check-diff-coverage.mjs",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-22T01:40:00Z",
+      "duration_ms": 1064000
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-22T01:40:00Z",
+      "duration_ms": 44000
+    },
+    {
+      "name": "Build",
+      "command": "pnpm --filter ./apps/web build && pnpm --filter ./apps/api build",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-22T01:40:00Z",
+      "duration_ms": 207000
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "preflights (plan-reviewer-subagent, page-doc-cochange, nav-wiring)",
+      "passed": true,
+      "log_path": "compliance-check.md sections 4, 12",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "gate-0 context-ack",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/attestations/PG-208/context_ack.json (8 files)",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "gate-1 plan checkboxes",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/planning/PG-208-plan.md: 123/123 ticked, deviations annotated",
+      "timestamp": "2026-10-22T02:30:00Z",
+      "score": 100
+    },
+    {
+      "gate_id": "gate-2 artifact hashes",
+      "passed": true,
+      "log_path": "206 files hashed; all 20 CSV Artifacts To Track exist",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "gate-3 build validation (merged tree)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-SUMMARY.txt; turbo build api+web 14/14",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "gate-3a integration (real DB, main migrations)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-07-integration.txt (46/46)",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "gate-3b migration Class A + migrate diff",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/sql-review.md, .specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-08-migrate-diff.txt (no PG-208 drift; #953 pre-existing)",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "gate-7 diff coverage",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-04-diff-coverage.txt",
+      "timestamp": "2026-10-22T02:30:00Z",
+      "score": 95.6
+    },
+    {
+      "gate_id": "stoa-foundation",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/stoa-verdicts/foundation.json (PASS)",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "stoa-domain",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/stoa-verdicts/domain.json (PASS, re-run at 5f11ac307)",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "stoa-security",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/stoa-verdicts/security.json (PASS, re-run at 5f11ac307 after #975)",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "compliance-check",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/compliance-check.md (PASS)",
+      "timestamp": "2026-10-22T02:30:00Z"
+    },
+    {
+      "gate_id": "lighthouse-gte-90",
+      "passed": true,
+      "log_path": "artifacts/lighthouse/PG-208/tasks-automation-auth.report.json (median of auth-kpi/): authenticated /tasks/automation, perf 0.93, a11y 0.93",
+      "timestamp": "2026-10-22T02:30:00Z",
+      "score": 93
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Diff coverage on changed lines (Sonar new_coverage mirror)",
+      "target": ">= 80%",
+      "actual": "TOTAL 95.6% (2517/2633 lines + branch conditions) at 416b2a253",
+      "met": true
+    },
+    {
+      "kpi": "Changed source files coverage",
+      "target": ">= 90% lines",
+      "actual": "94.5% lines, 93.91% statements, 93.72% functions, 86.48% branches (45 files, artifacts/coverage/PG-208-after.json)",
+      "met": true
+    },
+    {
+      "kpi": "Domain coverage",
+      "target": "> 95%",
+      "actual": "domain package Lines 95.43%, Statements 95.4%, Branches 92.13%, Functions 93.13% (3151 tests)",
+      "met": true
+    },
+    {
+      "kpi": "Full suites of touched packages",
+      "target": "all green",
+      "actual": "pnpm test:coverage 17/17 projects: web 13252, api 8180, domain 3151, adapters 3000, validators 2809, root 2571, ai-worker 2245, application 1499, ui 1252, integration 507 (+50 skipped), db 237 (+5 skipped), others 270",
+      "met": true
+    },
+    {
+      "kpi": "Integration on a real Postgres",
+      "target": "all green",
+      "actual": "50/50 (tests/integration/task-automation.test.ts, ephemeral DB; .specify/sprints/sprint-18/attestations/PG-208/red-green/25-admission-current-actions-integration.green.txt)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse (performance/accessibility) on /tasks/automation",
+      "target": ">= 90",
+      "actual": "authenticated LHCI (lighthouserc.authenticated.js + lhci-auth.js, seeded admin, local Supabase auth, ephemeral DB, 3 real rules), final URL /tasks/automation. KPI pass (performance + accessibility only, PG-198 precedent), 3 runs: performance 0.93/0.93/0.95, accessibility 0.93/0.93/0.93; median report artifacts/lighthouse/PG-208/tasks-automation-auth.report.json, all runs auth-kpi/. All-category pass in auth/: performance 0.93/0.94/0.93, accessibility 0.93 x3",
+      "met": true
+    }
+  ],
+  "definition_of_done_items": [
+    {
+      "criterion": "Rule builder at /tasks/(list)/automation: trigger types entity event / schedule / webhook",
+      "met": true,
+      "evidence": "AutomationRuleDialog.tsx + TriggerFields.tsx; validators task-automation.ts; engine/store/webhook all three execute (integration 46/46)"
+    },
+    {
+      "criterion": "Actions: create task, assign by round-robin, notify",
+      "met": true,
+      "evidence": "ActionFields.tsx; task-automation-engine.ts runActions; pickRoundRobinAssignee (domain); TaskService.assignTask"
+    },
+    {
+      "criterion": "PageHeader + bento grid",
+      "met": true,
+      "evidence": "TaskAutomationContent.tsx (lg:grid-cols-12, 8/4)"
+    },
+    {
+      "criterion": "Canonical EmptyState (entity + phase=passive)",
+      "met": true,
+      "evidence": "AutomationRuleList.tsx:309 EmptyState entity=\"rules\" phase=\"passive\""
+    },
+    {
+      "criterion": "System-compliant CTAs",
+      "met": true,
+      "evidence": "PageHeader actions + design-check.md; a11y-expert PASS WITH FIXES (fixed 79cb2fcf8)"
+    },
+    {
+      "criterion": "TagsTab via forwardRef",
+      "met": true,
+      "evidence": "components/TagsTab.tsx over shared tags-tab.tsx (forwardRef, openCreate handle)"
+    },
+    {
+      "criterion": "$transaction on all destructive writes",
+      "met": true,
+      "evidence": "task-automation.router.ts (11 $transaction sites); store admitRun / claimSlotAndAdmit"
+    },
+    {
+      "criterion": "No skipDuplicates",
+      "met": true,
+      "evidence": "git diff origin/main...HEAD: no code use (docs mentions only)"
+    },
+    {
+      "criterion": "Zod superRefine for duplicate (trigger, action) pairs",
+      "met": true,
+      "evidence": "packages/validators/src/task-automation.ts superRefine + findDuplicateTriggerActionRules"
+    },
+    {
+      "criterion": "colorToken CHECK constraint",
+      "met": true,
+      "evidence": "migration 20261020120000_task_automation (task_automation_tags colorToken CHECK, 18 tokens = validator constant)"
+    },
+    {
+      "criterion": "AI defaults FALSE",
+      "met": true,
+      "evidence": "N/A: no AI toggle in task automation"
+    },
+    {
+      "criterion": "Every Boolean toggle wired or declared category-2",
+      "met": true,
+      "evidence": "plan \"Boolean toggles\": 7 toggles, all category 1 wired with tests"
+    },
+    {
+      "criterion": "Cross-tenant negative test",
+      "met": true,
+      "evidence": "task-automation.router.test.ts (every mutation) + integration tenant isolation"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
+      "met": true,
+      "evidence": "authenticated /tasks/automation: performance 0.93-0.94, accessibility 0.93 (artifacts/lighthouse/PG-208/auth/)"
+    },
+    {
+      "criterion": "Verified by pnpm test",
+      "met": true,
+      "evidence": ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-03-coverage.txt"
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-191"
+  ],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-10-20T23:21:19Z",
+    "files_read": [
+      {
+        "path": "apps/web/src/components/sidebar/configs/tasks.ts",
+        "sha256": "7b5eae2b337198c73fc922ff4bc3011baf3acf25b1f3aaae8a485eeea8c0718d",
+        "read_at": "2026-10-20T23:21:19Z"
+      },
+      {
+        "path": "apps/web/src/app/tasks/(list)/task-settings/page.tsx",
+        "sha256": "0be3cbd2258063c6e5342cf568d0e1b2c41e3a8e8e06a2d81dd6857cc4a0bfc0",
+        "read_at": "2026-10-20T23:21:19Z"
+      },
+      {
+        "path": "docs/planning/module-settings-playbook.md",
+        "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+        "read_at": "2026-10-20T23:21:19Z"
+      },
+      {
+        "path": "docs/planning/prd-module-settings.md",
+        "sha256": "ce436b84c811e661855aa2d5aa8504336d4626b23ad9dd95fb36e6963249de35",
+        "read_at": "2026-10-20T23:21:19Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-208-spec.md",
+        "sha256": "764b9a8972784a4273c7c9c75011ebd9fc6a8e22f28c72dc183d8174645b1206",
+        "read_at": "2026-10-20T23:21:19Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/PG-208-plan.md",
+        "sha256": "fd45db3afd69e83ff32ae9889ae5d7e79177da60c15ce8e89bcba2e0a6ecc387",
+        "read_at": "2026-10-20T23:21:19Z"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/context/PG-208/PG-208-owner-ruling.md",
+        "sha256": "fbfc61a66ce44b7ce5674f7d6129c70442ede33226bac801ef227620398aab7e",
+        "read_at": "2026-10-20T23:21:19Z"
+      },
+      {
+        "path": "docs/architecture/adr/ADR-084-task-automation-engine.md",
+        "sha256": "897607afc01a06dcf66f06b82bcb12eb848ed546508631eddc835930431a56d3",
+        "read_at": "2026-10-20T23:21:19Z"
+      }
+    ],
+    "invariants_acknowledged": [
+      "All three trigger types (entity event, schedule, webhook) must execute in this PR; no trigger type may be saved without a runtime that acts on it (owner ruling 1).",
+      "Rules execute inside the API process: in-process bus intake buffers only and never throws, a locked interval runner executes durable run rows (owner ruling 2, ADR-084).",
+      "Every query passes tenantId explicitly; the engine takes the tenant only from the record, schedule or webhook-token row; foreign ids give NOT_FOUND with no write.",
+      "Webhook signing secrets are encrypted at rest and URL tokens stored only as SHA-256; neither appears in outputs, logs, audit entries, run rows or Sentry events.",
+      "Destructive and multi-row writes run in $transaction; never skipDuplicates; P2002 -> CONFLICT; P2025 -> NOT_FOUND (playbook section 5).",
+      "Page follows the module-settings playbook: PageHeader + 12-col bento, shared SectionHeader action slot, passive EmptyState entity=rules, Button size=sm Title Case, TagsTab via forwardRef.",
+      "Every Boolean toggle is category 1 (wired now); no AI toggles exist (AI defaults FALSE = N/A).",
+      "The one Prisma migration is additive Class A with no backfill; it is applied to production only by the runner after merge (L13).",
+      "Lead conversion fires lead.converted rules only; task events are never triggers; assignees see owned or assigned tasks (owner rulings 4, 6, 7)."
+    ]
+  },
+  "artifact_hashes": {
+    ".env.example": "sha256:34016059a6bfaf1bf444d8a9adb2aecd36ed5840e7db834ad3aa39319d8f83b9",
+    ".gitleaks.toml": "sha256:8b7948ac06dd2934ec0331767a0b959e85cbba426b690f38fab2b5f01956f7e6",
+    ".husky/pre-commit": "sha256:609cb70cb359348eead27c2cda27a91bf44cc7174f14982a3d2507dd4c1d2e03",
+    ".specify/sprints/sprint-18/attestations/PG-208/context_ack.json": "sha256:95a45fec19670d66eb0461a66283be2bb0dad91ef2233daba2b9e903a7431f4e",
+    ".specify/sprints/sprint-18/attestations/PG-208/context_pack.manifest.json": "sha256:03990276623045f8e6704236d2846fcd04e2ef9abcff9e4130f6bd50f7224404",
+    ".specify/sprints/sprint-18/attestations/PG-208/context_pack.md": "sha256:f592033d92c287758b2d68c0ac206d46d5fbe2c45efab6362cdf297dc77ab7e5",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/01-domain.red.txt": "sha256:93f1ef80d480c479004b1ff366d598f5f6dfcec28699b1f67d07161154edbf28",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/02-validators.red.txt": "sha256:ee8f96a232287fc5b320024c82cde73bc85c75a28a3dbca0fba188ba4e00e2c9",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/03-db.red.txt": "sha256:c055339c2e2e50982fd81ac73f0c742c6616774a0daadf9149c0bbd0aa6bcceb",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/04-adapters-application.red.txt": "sha256:90155387c602d5406ab744036c32ad74e615d86507001a7f426a002b246b44fd",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/05-api.red.txt": "sha256:2a871e17c814d29320ef73dbde69f704126df42a4693153f9e538a6f88716556",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/06-runtime.red.txt": "sha256:e43b8fcac59d300b7e8a1ae531d712aaa4f834592985d17b7579904408618e8b",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/07-web.red.txt": "sha256:d1adc8745062882c20d80c157d769e80fa1010b1ee9b18e760f1c7c3f0bd1da8",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/08-domain.green.txt": "sha256:a8ffd1d4c918269d4d2ff8910b7bbeb18bd67bce4c4e86316a1785b420a9b285",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/09-validators.green.txt": "sha256:10ed3c8092acf2c86301cdfa1501424a4f7626eaf84b5eaf41b21ab80d63afcb",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/10-db.green.txt": "sha256:76b3313226278be535f7be4e920382aa281525c16e12c95ac361138e1f46def5",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/11-adapters-application.green.txt": "sha256:e602e961ecfd47dc084ab084dc6fb9d6682f11c409e9780c8a72e1a386b3eea5",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/12-api.green.txt": "sha256:fdcb2318f1617ef478ba9a78102a2818364548858345517078dcf2cd9faf6ae5",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/13-14-runtime.green.txt": "sha256:0f0db78da4b0be86f8c9e2540f4a47d42c61369dc1eebf082c3e5e73fbfe9e67",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/16-web.green.txt": "sha256:ffb305e35b36b4df6fbe035764250914309bd32647f6c9471858db0cbdc4303f",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/18-registries.txt": "sha256:93cd52573eebecaf61fd1e91b81242ba8a11d8f27353359938d62d639cfc7a9b",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/22-integration.txt": "sha256:07d99820acfc2a53ae15dc81b2f5a7de088c30a37153ebf27857d727d7ca6826",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/23-dbnull.green.txt": "sha256:6a352e9eeaff11a103e7fcb9368cfb230c55280b17750d3157e1f21633f893d1",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/23-dbnull.red.txt": "sha256:f6c700598a6da86be223f3734cd93c3a0234f8638b977b2e7b8b61a6d2624cd1",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/23-ruling9-schedule.green.txt": "sha256:826b72055786483ee70e778c539d2bdefd8d7717f5a1a195e07a90facd2c3fd6",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/23-ruling9-schedule.red.txt": "sha256:6e81ffbeedf9694ae711015e3d71ccd775f674189be5deb4aa020215810e1454",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/23-ruling9.green.txt": "sha256:5793cbe6e888d671dbbbe3c28c01093c521eaaf947071bb4192ad7d04f6d0142",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/23-ruling9.red.txt": "sha256:5381c08619b6abb4c635fc1b6b82cc968925452f138b92df44a34bb0e9084c44",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/24-stale-schedule-actions-integration.green.txt": "sha256:29afce3ae7a9be834b8e5582128f92d68642b2c45dd6883ef1ac52cc0dee89d3",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/24-stale-schedule-actions-integration.red.txt": "sha256:b7c104cc927209e9d606f72e6e67538ed05bfea1914cadb2c54ad5e9cf792c91",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/24-stale-schedule-actions.green.txt": "sha256:419ade700013ffd86c802b6320bc0cd3fa0beb47dcb8d79bd9e4ccca617a2aa1",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/24-stale-schedule-actions.red.txt": "sha256:b37362d38e8aae8fe91e85f43350e52298557672c25829805a491ced6cad8f8f",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/25-admission-current-actions-integration.green.txt": "sha256:a28e151f83055fb6ee0133397838248992f9c525aefcd51a01467b188b17181a",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/25-admission-current-actions-integration.red.txt": "sha256:10b59c2035becb009513b7d332d22ebe95c663c114c439fc4a5d876a70ca57e9",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/25-admission-current-actions.green.txt": "sha256:1cc816c54a4e139ae9dbcec8948e103ea84698165e2bf95a37b6535bfee13df2",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/25-admission-current-actions.red.txt": "sha256:762a1585d928be91fadd5e88565b4a9d4089dbcc9ae2fb82164ab4512c432db6",
+    ".specify/sprints/sprint-18/attestations/PG-208/red-green/red-green-index.md": "sha256:3c53b82925acd2b0589e1ed3de2c28d37181116242178b5540fc040c75961eee",
+    ".specify/sprints/sprint-18/context/PG-208/PG-208-agent-selection.json": "sha256:4aea71bbc50686aba53563dbb3cc7beed24b42761c3bfdcb3f61b3357cc252a0",
+    ".specify/sprints/sprint-18/context/PG-208/PG-208-hydrated-context.json": "sha256:59d3b0b0f147064b25ce3ab1bbba4f97c84e7388bfec5b15017b5c37e2e71ed6",
+    ".specify/sprints/sprint-18/context/PG-208/PG-208-hydrated-context.md": "sha256:02b22833d38520f4d0c27ba7bc5926a286d79716ac9fd815f8048a4bce9c609f",
+    ".specify/sprints/sprint-18/context/PG-208/PG-208-owner-ruling.md": "sha256:3a2d00ed0ab61e19e9c049b76f71cebca51e8b9e8c2ff45a22450fa43e18c5cd",
+    ".specify/sprints/sprint-18/context/PG-208/PG-208-plan-session.json": "sha256:3571ee79367574c17fc69e6f33ae033fba434839a609e0e014e768b4e5d1ac47",
+    ".specify/sprints/sprint-18/context/PG-208/PG-208-spec-exploration.md": "sha256:e3c33f7f8160c9903d3df06816ddb9b110bdd7051b32eba1bdfb664c81999ac5",
+    ".specify/sprints/sprint-18/context/PG-208/hydrated-context.json": "sha256:74bde36baa0a7171ab4c52a59e6b49329d8e75af73455b168492f6c13a2e88d4",
+    ".specify/sprints/sprint-18/context/PG-208/hydrated-context.md": "sha256:02b22833d38520f4d0c27ba7bc5926a286d79716ac9fd815f8048a4bce9c609f",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/PG-208-delivery.md": "sha256:f38cc3bb8a53e2b30b8cbb384661c288591f7c7c2c83f7b818ead1d9df58b0f9",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/compliance-check.md": "sha256:f61c221ea85aabc8eb759d50f5936f15f9113f2e60ab7a004a0f70274e72c665",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/design-check.md": "sha256:f4b71bbc499d8ae707787191943caf5c5b15844d2f11ef277e88b7f2828c7575",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-01-typecheck.txt": "sha256:405534dc275470d8b8a522c72e2e92057ca8bc0ff838334b6c9b6b1eb22e8a7a",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-02-lint.txt": "sha256:b1db64fd7dbf7c8e1aa6039c4a1237863f52f38619a74a89ba9ea46322433133",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-03-coverage.txt": "sha256:4c48e6da5c9216496e282e35b2c90c183c4daeddc9f31261b43797456feef79b",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-04-diff-coverage.txt": "sha256:6aa5a6a149196baf7283468c2e376a7ca2edf0ea9782c88caee65f0b2c90aa06",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-05-web-build.txt": "sha256:f8938fb87ad7e39180ecf10d2fa0fa35895c22131d351d075ef7f3f9f764dd13",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-06-api-build.txt": "sha256:27946ab33dd5907c23eac47dddd06af11b52ff77cf756bb0890e03c52a38ddc1",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-07-integration.txt": "sha256:7ff3e4dde8ba6b8522cebb40010c5fbab46f3bc36a7ebe18b623f448c849a5aa",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-08-migrate-diff.txt": "sha256:96641f3a67c9f675d6f6175035b59d4c3208871ffb9ced7280f3e241f378733c",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-09-sonar-guard-branch.txt": "sha256:5caf20fe2e79d7958c688a87cb7ff38671cd7b580edb7056c156080c2a033a33",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-10-audit-after-merge.txt": "sha256:1219a1f58e0db7181ea8599c000603ca8b2b1ed70ca12cd7861a0912624d2ade",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/final-SUMMARY.txt": "sha256:b0b245fc2e6e846151de76fdd467766c25bfe6a5d732f904958a0de381cd276b",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-01-typecheck.txt": "sha256:a180777d8b0b40730e8bc2d5c0199c44a34810917c6b37a171a25d13e1bf576c",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-02-lint.txt": "sha256:20fa00590b9bab503d3a24e74fcc8b3d8f80ce41219bd6b1f5cd719e95bd0ad5",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-03b-coverage.txt": "sha256:e1b7e0cfc62310e056a6e36709af4ba237a9dec5ab99c18d6c36cd44ae254b9e",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-03c-web-suites.txt": "sha256:1ed2c7adc098456b3fe9ca4b2a34f57f1418bd9896c3de3b5b1f9109d3639b51",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-04-diff-coverage.txt": "sha256:41cc19d6822b69ef0be123ec4a83adcdaa2c8f8c676fbe6e22bf98b78d5079ee",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-07-integration.txt": "sha256:72caf09a7570d2042ece50fb29c4d9759b6fb4f6993cb93d580e7aa42258fcdd",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-08-migrate-diff.txt": "sha256:995707543e23740fb782a080fa8b19edf056148f5ba341614d4d6ff4264f9a71",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/merge-SUMMARY.txt": "sha256:92b5514e255532cf1106eb7c6403030aeb1a3d66bd9e6dabd04c4129cd920423",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/gates/migrate-diff.txt": "sha256:7249b769ed4e270a267000689e69a23517db5727beca0da5b21c10eb4c9eba44",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/stoa-verdicts/domain.json": "sha256:e3eabea7054a0b5ed151695cb5caccff16958985ac4f8d7aae64ec8160d26536",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/stoa-verdicts/foundation.json": "sha256:8638826f287ecbc1b21ceb0ec57f0d5c388ae8fe9d6719d6b76bc3fedcbd4bf1",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/stoa-verdicts/security.json": "sha256:b8bb44a29d4e0bede8528c0ca8da64c1d2616e22241f2f7f0f0fe433d6b79749",
+    ".specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/summary.md": "sha256:a4e268cf228550895b34e03a0acbd2e4295c054a2dd28999bc288310d5f0ef67",
+    ".specify/sprints/sprint-18/findings/PG-208-findings.md": "sha256:4a3d9281b5ab0601676dfbcd893fad56b613a39d620fd834028ed13fa993b0be",
+    ".specify/sprints/sprint-18/planning/PG-208-plan.md": "sha256:8c411cc46d3d8b726d1ef431885d1ff76c753f74fea01061dc1304e32afe982f",
+    ".specify/sprints/sprint-18/specifications/PG-208-discussion.md": "sha256:02da76be891c341051de6e7dfa8383deccdad78510c6df3a2872c4096e31144a",
+    ".specify/sprints/sprint-18/specifications/PG-208-spec.md": "sha256:764b9a8972784a4273c7c9c75011ebd9fc6a8e22f28c72dc183d8174645b1206",
+    "apps/api/src/__tests__/app-router.smoke.test.ts": "sha256:7cdfec112f78631ec9960690438b1bad30682943a6fa25aef85a304fb539b904",
+    "apps/api/src/__tests__/http-server.task-automation-runner.test.ts": "sha256:8af2bab757e659b60fe7b06552a33baa3206a53816a09e7622de1b6d69203e72",
+    "apps/api/src/__tests__/http-server.task-automation-webhook.test.ts": "sha256:8b35ad40b6e42c1a806727d3ceeb71be03a3c17bcf2cc95284ffeef37e0c483a",
+    "apps/api/src/http-server.ts": "sha256:331a479a1c769b9776eec781cd553863a5f3ba5f766493fe917a3f670ef4ec9b",
+    "apps/api/src/main.test.ts": "sha256:a4d4d71bfc77a623d64595b3031791f5197487afa3f86bfcda89b1540cb9117f",
+    "apps/api/src/main.ts": "sha256:2cb76f0cb03f21ed579c779e8ae3e5ea2fc0a4f833a0529819c955866fe94c89",
+    "apps/api/src/modules/task/__tests__/task-automation.router.test.ts": "sha256:cab02be940093af6180acbf71124bc8054595763597c287dd4b0fb5f22115f74",
+    "apps/api/src/modules/task/__tests__/task.router.test.ts": "sha256:aebad98bbdbf8bb971e80b39260d19d606f7c52d1fbaaf28ae023cd76cc47cf3",
+    "apps/api/src/modules/task/automation/__tests__/fake-task-automation-store.ts": "sha256:6a438f30a1845934e74e4757e3482af4171b57c30828c6c6adec72995c292b37",
+    "apps/api/src/modules/task/automation/__tests__/task-automation-admin.test.ts": "sha256:f50a740bbb93530f81ed3d21d1e342a9b3d7aee6e74100d95aeb3a7a0edea292",
+    "apps/api/src/modules/task/automation/__tests__/task-automation-engine.test.ts": "sha256:f41ec5d23f0c89d6f36ab434771795b3586eab7a3af1ec000240edbdcd9d1f40",
+    "apps/api/src/modules/task/automation/__tests__/task-automation-event-intake.test.ts": "sha256:91bf38e0079860dbc9a8f0ef2ae440e05fae6a1a9d3972ee4d9e0ec7a3d50a2c",
+    "apps/api/src/modules/task/automation/__tests__/task-automation-runner.test.ts": "sha256:3b6bf2d50c88a927d1d57faea0dfc3f264201e142626fc25db2d50dc555d0060",
+    "apps/api/src/modules/task/automation/__tests__/task-automation-runtime.test.ts": "sha256:0773d430c9909bba7468c669e3d5b61565b7419a5b062c3c60612a30d8c9674c",
+    "apps/api/src/modules/task/automation/__tests__/task-automation-store.test.ts": "sha256:843ba877122971aad85b383cb67cc0350f04bfeed546fd3b4445e793674d370b",
+    "apps/api/src/modules/task/automation/__tests__/task-automation-webhook.test.ts": "sha256:46ff0612f5a05b2861024ae53e45b87b060548bbff85ad9c504886b114290381",
+    "apps/api/src/modules/task/automation/task-automation-admin.ts": "sha256:fc803b47f61749d2f2f0efbd98bfee978e865ff302227a902aea325053b118f9",
+    "apps/api/src/modules/task/automation/task-automation-engine.ts": "sha256:64ae23397aa7eee44df94359fd41bac7312f5303924f51f8ac4b6cb7513521b1",
+    "apps/api/src/modules/task/automation/task-automation-event-intake.ts": "sha256:f6b8cc213359e79b164746e6af65e8047a66982c5f2049f78a8d4111a73a5a8f",
+    "apps/api/src/modules/task/automation/task-automation-runner.ts": "sha256:6cbbfd4a2a563b4f771af7bb453e0ccd1c972080ee9a28006ca3d98362564f29",
+    "apps/api/src/modules/task/automation/task-automation-runtime.ts": "sha256:0e226c837a3c55b88dba7ab8d13f4aea0139d14a5f810737e51514849948eb39",
+    "apps/api/src/modules/task/automation/task-automation-store.ts": "sha256:a516bafe91ac4ba340e15509f38fac93e46519cffba59f58f0511754f5903f33",
+    "apps/api/src/modules/task/automation/task-automation-webhook.ts": "sha256:ee99d5e826034618d3af34782e1b8fc52bc1542207643a424105f61547d7ec68",
+    "apps/api/src/modules/task/task-automation.router.ts": "sha256:eaf4d5d1f05ffd25cbbe9b2ccd5cc7723abb089d0ad3e977a46bb7b1ce784481",
+    "apps/api/src/modules/task/task.router.ts": "sha256:554bb6643b2b73979321cf7b959b03336077d17247fd2a10e86d30b87bbe7035",
+    "apps/api/src/router.ts": "sha256:f54789e5c342642d6220ccfa009201cb5393e921e8f4181ba8c515b47afb0dda",
+    "apps/api/src/tracing/sentry.test.ts": "sha256:75b75e824129c07d158e186afd16c726bc7f94deac3ada98e580bd6e26db9eb2",
+    "apps/api/src/tracing/sentry.ts": "sha256:8798e868d04ccf43a1dd276c893019b23c96ffdad456ae9acf368be4190790fb",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan.csv": "sha256:cc151a4ac0ad04c689aba09789f0425b7fe9ffb3b5e8ae72b6b8b306a743a05e",
+    "apps/project-tracker/docs/metrics/_global/Sprint_plan_J.csv": "sha256:1a8c90e45452da7a09aa9cec20e00eea2bdfe4b899061497d0d3f5690d35bc1e",
+    "apps/web/src/app/accounts/(list)/territory-mapping/components/TerritoryDialog.tsx": "sha256:7babc2f4bd4ae28b8527bb08dc7861f7d5b5adcc56729035a067eeb9164a659a",
+    "apps/web/src/app/accounts/(list)/territory-mapping/components/TerritoryList.tsx": "sha256:f8966ca3f8eead3a3ff86814ed49df6c24b44c6d48edce6ae107fc4ec7c83d8a",
+    "apps/web/src/app/accounts/(list)/territory-mapping/components/__tests__/TerritoryDialog.test.tsx": "sha256:d75db7d31a7ebe0a437b0d2da1103e385e371d1bd3022fedcfc0a2e359edb238",
+    "apps/web/src/app/analytics/scheduled-reports/components/ScheduleDialog.tsx": "sha256:2f65b030b75e2d4c297aef0f5a7f364b0d1a798366b7684cb226d0683b2f1612",
+    "apps/web/src/app/analytics/scheduled-reports/components/TagsTab.tsx": "sha256:5307e132ce4d6d349405243265356330b7a6bb07a82d3df187f85f987716dc8d",
+    "apps/web/src/app/analytics/scheduled-reports/components/schedule-colors.ts": "sha256:92f211b1d4a44ab8107565cc8555a1b70145f83e7f5cd392320514de55262e7e",
+    "apps/web/src/app/tasks/(list)/automation/TaskAutomationContent.tsx": "sha256:48203c848b9340d8dbe515cf5eae40b2e600a2a1c4ff0f489c8b90512e204958",
+    "apps/web/src/app/tasks/(list)/automation/TaskAutomationLoading.tsx": "sha256:ac0fd8bf13029dc7a8e11712f586401ae65bceedc445bf0ef1eec58515297dd3",
+    "apps/web/src/app/tasks/(list)/automation/__tests__/TaskAutomationContent.test.tsx": "sha256:791ad889621302218138dc56373c96268afdaab346fb7d2ca0f5f3955cb4e290",
+    "apps/web/src/app/tasks/(list)/automation/__tests__/TaskAutomationLoading.test.tsx": "sha256:f31ada17165e1609f162d1c788247290acbdafb0da25c7c4329bb9eb196cb3c5",
+    "apps/web/src/app/tasks/(list)/automation/__tests__/page.test.tsx": "sha256:15e47eb8d25cfc1a553199f6c4beefe191e7e5a272ed50e7d61a2d93a205f487",
+    "apps/web/src/app/tasks/(list)/automation/__tests__/task-automation-labels.test.ts": "sha256:6b42c38df04740610b12f15732a5a1f5b6efe252fdeae27f51d97845bf54cf15",
+    "apps/web/src/app/tasks/(list)/automation/components/ActionFields.tsx": "sha256:147ef489984cebddaa401a59d76a24e52f9f23f6703a7d6f0e53920a41f4db81",
+    "apps/web/src/app/tasks/(list)/automation/components/AutomationRuleDialog.tsx": "sha256:561505c114ada8f793921a6c17e0d89e477eda1c33235f8a08cca06a661272b1",
+    "apps/web/src/app/tasks/(list)/automation/components/AutomationRuleList.tsx": "sha256:05bed71163bffc05aa7d78175e29c24c067442ecbfe1e026856d049aa903ad12",
+    "apps/web/src/app/tasks/(list)/automation/components/AutomationSettingsCard.tsx": "sha256:8c672ab67d5b30a8dded1c9d44bf9c4541a82691f67a071e911ca1374b0237aa",
+    "apps/web/src/app/tasks/(list)/automation/components/DeleteAutomationRuleDialog.tsx": "sha256:df3056534121ecbb4cfefa359ceef8ae60a0975928e5d07c168c5889b81231e5",
+    "apps/web/src/app/tasks/(list)/automation/components/RecentRunsDialog.tsx": "sha256:645cb3340fd8f150b9d66e07d7ca868fe682a1cf614db899b359ecf24281f93b",
+    "apps/web/src/app/tasks/(list)/automation/components/TagsTab.tsx": "sha256:3549bbde6abc5dc72dcb6b74d39765cdb134b14606ca18d210d68dd6fa0aeaa9",
+    "apps/web/src/app/tasks/(list)/automation/components/TriggerFields.tsx": "sha256:1232cd9e61ba4bdec8c82c0251bce61152d59f3f1dc31769e9bcbd2f06f238ac",
+    "apps/web/src/app/tasks/(list)/automation/components/WebhookSecretDialog.tsx": "sha256:28f0c99d1f449234789384d5bf33d0e9fec25e552b1ab835ee3880935bd609c6",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/AutomationRuleDialog.test.tsx": "sha256:47d41ffdeb74c78dafb06583786e1461a5503236a4ce7f52f803a084560f56f8",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/AutomationRuleList.test.tsx": "sha256:0fca56cdfbf5ef20a0301fdd75dc9ca2e3f69a99aa69075a9a0672d06cb7b0e9",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/AutomationSettingsCard.test.tsx": "sha256:e2a778ece69ebd2f2193bb8f80b14c8577240dff803c0705ca83f569de3afbea",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/DeleteAutomationRuleDialog.test.tsx": "sha256:3ba07204524d2cc8b8a5bb60e9fcb5951aeee5d39f32351443a53cf77f264101",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/RecentRunsDialog.test.tsx": "sha256:768b9b33ee3984176e5f25c754630e0e2a9ba78baf91ee8099b71aa363b83555",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/TagsTab.test.tsx": "sha256:de8bbeabc71aba882011aa260bc8acfc11dc12a00d2de4c8c300d8f46961ac3b",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/WebhookSecretDialog.test.tsx": "sha256:f86a87f8af451b57f88366113051244342d15a2c1a98cefab0153967a0f49012",
+    "apps/web/src/app/tasks/(list)/automation/components/__tests__/rule-form.test.ts": "sha256:57ef3eb4105a56a4780eec3c0dde8fadc5d67ef9658f90dfd6add11100c3690f",
+    "apps/web/src/app/tasks/(list)/automation/components/rule-form.ts": "sha256:81a2decfaa4b302d8d583c84376a9e87700c7f490f6c50332a00db139ee79dee",
+    "apps/web/src/app/tasks/(list)/automation/loading.tsx": "sha256:b791eb0a82bd89b498ae708732a984c1ff2a6d5ccdebb53bd48f10b6d54c0483",
+    "apps/web/src/app/tasks/(list)/automation/page.tsx": "sha256:e914bd5f87d5603aeaee81f2d41e7bbbd7c700b555e92f09f162aeecc2eff9ce",
+    "apps/web/src/app/tasks/(list)/automation/task-automation-labels.ts": "sha256:8e8315d8ca561b7f064c8a9b08f03df7b52ccce6bfa388c29ab532fc8e484ec8",
+    "apps/web/src/components/notifications/__tests__/notification-utils.supplementary.test.ts": "sha256:cf30ab51352d12f722c885f270565fc826f2ee05dad45070d6b7e766d64af3e3",
+    "apps/web/src/components/notifications/notification-utils.ts": "sha256:d7aa8f77c7fcc0f2f8510e673b1fe70712660679c09b5c9d41f449a7bf710d8f",
+    "apps/web/src/components/shared/__tests__/copy-field.test.tsx": "sha256:1250643e886e42f60568909b6747e5b052c81780430fc701df3038763e8e571e",
+    "apps/web/src/components/shared/__tests__/member-multi-select.test.tsx": "sha256:8726323b0affc0589c276ae1cc809abd3b45f5d1c8fb9650552d07db48090e3c",
+    "apps/web/src/components/shared/__tests__/schedule-cadence-fields.test.tsx": "sha256:141045d8c8911421102369c1a37c01e9376a9ea5378aea2719bbad7af0defae9",
+    "apps/web/src/components/shared/__tests__/tags-tab.test.tsx": "sha256:f365cf121f2ad8d454b5b6b1ee319a9e5254910f59d109bb40c80707abaf0ae4",
+    "apps/web/src/components/shared/__tests__/variable-picker.test.tsx": "sha256:e4c7152b46b170e657647e9b583ebd9857505be909480bdf51d1ef7448d54f4f",
+    "apps/web/src/components/shared/copy-field.tsx": "sha256:dbb1417c83eb47832cc18a7e637e3200eac0fb57c73a8bd0bbd224e7244bddc1",
+    "apps/web/src/components/shared/field-error.tsx": "sha256:c6e1c8303d2848290819eec607da4e37e80d0b88fccd6300b4bdeaa11f7289c6",
+    "apps/web/src/components/shared/member-multi-select.tsx": "sha256:f480094cbcdb82b7a4b753cac333b297f115623d68d4d5d524b76218efc1d5c9",
+    "apps/web/src/components/shared/schedule-cadence-fields.tsx": "sha256:c9b5960c035cb0c9e4b58c448228afc754908a1f59bc2634d74f507c03e66aa5",
+    "apps/web/src/components/shared/tags-tab.tsx": "sha256:7b9a71efb415d34f3ad27a9c9b759915e9b446c4e2b9243c42787e3fd45ff9ca",
+    "apps/web/src/components/shared/variable-picker.tsx": "sha256:80132b755e459423be97cb6386c947cdfb241678c9aba3bd5f41b505132ac0ed",
+    "apps/web/src/components/sidebar/__tests__/tasks-config.test.ts": "sha256:dab9cb5fc23c6cfd978f797f2991b55ecebde6ef18bc2d1b4ac177c0385fe889",
+    "apps/web/src/components/tasks/TaskSettingsPanel.tsx": "sha256:8f4ea764bf64ee988af56a439e1423d60840364ea913f9ce7ec6094485c4fb1c",
+    "apps/web/src/lib/color-tokens.ts": "sha256:61059434ecb365796997f82bf5b8686f0874ce88ce965a29abbf43ddd4cd78f2",
+    "apps/web/src/lib/shared/__tests__/settings-search.test.ts": "sha256:13601633fea279a1cda052f07f167b6fde52209fb8e946e109a5f13614fa15ad",
+    "apps/web/src/lib/shared/settings-search.ts": "sha256:b6f3baf456605b160906d9c0f0e25a0ee16429fa31aa258512d78e6405eb77a0",
+    "apps/workers/CLAUDE.md": "sha256:e84b52a74f24865348e55327d30c957b0aa31dc2a17f95a4f1cf8ac052c4b432",
+    "artifacts/benchmarks/baseline.json": "sha256:58d1a79e70d53924aebca5a16e839ac3996330023c6d5f30c33fdc3a76e8b25e",
+    "artifacts/coverage/PG-208-after.json": "sha256:ab765b251e5901cf12bd06af731f7622fb318e5ba2e8fa61887ad13a1dd29f34",
+    "artifacts/coverage/PG-208-before.json": "sha256:9e4cf21eedb80c96b3642415b5f14dc2a47c23df3df9c817d1ffb46d9d373244",
+    "artifacts/lighthouse/PG-208/auth-kpi/manifest.json": "sha256:2206f21c94bff772441e0cdeb1dfa8a54d66cbe7442f4ee5c742e200cb23cade",
+    "artifacts/lighthouse/PG-208/auth-kpi\\localhost-tasks_automation-2026_10_22_00_07_27.report.json": "sha256:0eafeb400828b4de3b3ae3e77ce499c1391929ef24c6591d8b4a34911fa40f61",
+    "artifacts/lighthouse/PG-208/auth-kpi\\localhost-tasks_automation-2026_10_22_00_07_49.report.json": "sha256:28d36e881465956e89028f0884a5fa084289d380030e59547e0e85f8e7ece2c7",
+    "artifacts/lighthouse/PG-208/auth-kpi\\localhost-tasks_automation-2026_10_22_00_08_10.report.json": "sha256:12246be991c410fc6ee677a0efaf1afd866f7a3e6f90610a7473285337a577a7",
+    "artifacts/lighthouse/PG-208/auth/manifest.json": "sha256:f7af3ff9a311c67d0eb35756f7d2eb22b3dfec1a27d5c7a0b6990b081531a63c",
+    "artifacts/lighthouse/PG-208/auth\\localhost-tasks_automation-2026_10_21_23_36_58.report.json": "sha256:6b8b818e99b4658453ca3e37babc7c6d635824b51a1c96058cf51aeff0261cab",
+    "artifacts/lighthouse/PG-208/auth\\localhost-tasks_automation-2026_10_21_23_37_13.report.json": "sha256:d8c72049b5adcb9672d172921afe022e8684797919baf7bf8cdd4372a880542b",
+    "artifacts/lighthouse/PG-208/auth\\localhost-tasks_automation-2026_10_21_23_37_28.report.json": "sha256:b98c33bb3d465bbb6357cdc02b6509df1f10b2869647e3af99c75041dd904650",
+    "artifacts/lighthouse/PG-208/tasks-automation-auth.report.json": "sha256:28d36e881465956e89028f0884a5fa084289d380030e59547e0e85f8e7ece2c7",
+    "artifacts/lighthouse/PG-208/tasks-automation-r1.report.json": "sha256:f91267472cc3a4dc7d627a4a11a7c225195d170056b1f732f0d7663972a40c24",
+    "artifacts/lighthouse/PG-208/waiver-evidence.md": "sha256:a7b0b2ea69e6acf635829fb6d15d1eb7e1f852aee7165bc63c774b2a8e251ea8",
+    "artifacts/metrics/debt-ledger.yaml": "sha256:61eb4277eef957df5ec59a293f1d4cf3f48b7077f9cf756fcea16b8500bedfa5",
+    "artifacts/reports/current-state-report.json": "sha256:25fff0f5f171db38c51fdf327073eb1f1a3cde5b1253c41ec7ed0e4ab8f2e030",
+    "artifacts/screenshots/PG-208\\tasks-automation-lg.png": "sha256:782d664418a7ca5a16c0caf88c967d25fdf1b1072555e0cdeb988dd32d0ba3a7",
+    "artifacts/screenshots/PG-208\\tasks-automation-mobile.png": "sha256:9658ec776810185a384d30bbd4fd5bd115935133ea879fd5e51218873b7f47c7",
+    "artifacts/screenshots/PG-208\\tasks-automation-rule-dialog-lg.png": "sha256:96092d4d4a67922767c0de9100353100a6cc3d89ec9702b8db302e188d34d70b",
+    "artifacts/screenshots/PG-208\\tasks-automation-rule-dialog-trigger-zoom.png": "sha256:52d4824cc23c1cc3658b50354e2b0f75d976056a134d30809294e7dfb01b7f82",
+    "docs/CURRENT_STATE_REPORT.md": "sha256:f5df60b9988c5d3250e6ae7e79409a06c4906877d78fea449fb8593b50462ad6",
+    "docs/SESSION_CONTEXT.md": "sha256:5704ecd0eaff36bc1b4c4e11e1f2ad0d5356e6c3733944f17fc0e8a723451f9f",
+    "docs/architecture/adr/ADR-084-task-automation-engine.md": "sha256:1f6565c60bc3a713d4c8e5e62738e77d6c0716055070a6746378a1b96487d0d4",
+    "docs/architecture/adr/README.md": "sha256:6a9d8a4b81efc27b07e9c16535a5c5b319201b9cc42b989a1b9bb7810b036b8c",
+    "docs/architecture/diagrams/complete-dependency-chains.md": "sha256:857030069ee98c1f7acb347300dd96641a7eb67685d618b6bea742269455ff07",
+    "docs/architecture/diagrams/core-crm-dependency-chain.md": "sha256:393bbc7daa38ee968f570faf6cd239835699d543bb133e2901b7ee29620c9cc7",
+    "docs/design/PAGE_MAP_AND_FLOWS.md": "sha256:a0e0cf1bb29a7c2ab4156331a1d4c7ef3c328d10facf21e84f64467777354781",
+    "docs/design/information-architecture.md": "sha256:b653b027e7e7a54d551ea8f6dfe05c186cd631bc1f1c42e9fcadf9bf127873b4",
+    "docs/design/navigation-reachability-audit.md": "sha256:a720a6c28c7b3c864b7a64def1e568ccd4be5d6e2cc90e3b5aca15ddf4bcb8c6",
+    "docs/design/page-registry.md": "sha256:ee0af29c188d5d33cced735bd80a389fa57621b1d60a8fcc83a878090c56274f",
+    "docs/design/sitemap.md": "sha256:85223e7453421efcce1528033aa00e4155b88d1219332505f48c2c708b4bb7e0",
+    "docs/design/ui-flow-mapping.md": "sha256:c42768d301418947fc7ed4e39500778803d65fc7508bb1a622605484a3f8801f",
+    "docs/planning/prd-module-settings.md": "sha256:661eb9280c8bc444f1f006d7ef701764065b9d4f376d4fb0e0e3745db27c386b",
+    "packages/adapters/src/repositories/PrismaTaskRepository.ts": "sha256:f67ecc690701fd9d2ca20027984640c7607edf07bb4898e660ef8d9b3ea8dd4b",
+    "packages/adapters/src/repositories/__tests__/PrismaTaskRepository.test.ts": "sha256:7b8724daff47967afd5cecc3050e42d21a180f9c82e45e10f4c7084844589270",
+    "packages/application/src/services/TaskService.ts": "sha256:b54af24dc64db9a7d65a8d6563bbf110b905c2cacd34555224fb5c91b88553ac",
+    "packages/application/src/services/__tests__/TaskService.test.ts": "sha256:35fa4f20c9a82014e4298424f8eaf42cbc94623e9e0897066270946fbabe5877",
+    "packages/db/prisma/migrations/20261020120000_task_automation/migration.sql": "sha256:1e6dbf1979f411e83e72098a510554a3c62547c19763d491c44b985773b2b3f7",
+    "packages/db/prisma/schema.prisma": "sha256:b9fee3303d98b629939df89f61872c3813a7dcaaa098ad5c0385be474315bfa2",
+    "packages/db/src/__tests__/field-encryption-extension.test.ts": "sha256:20302f05822c7fd918251b890b2ac38c497209a2858d80497eef3e47c67d2997",
+    "packages/db/src/__tests__/field-encryption.test.ts": "sha256:fb34aefbf1bd52802ec56e2a2f1c60af50c2ee83e1e2ac6186e469363ab8cc5e",
+    "packages/db/src/client.ts": "sha256:6659728b7ff3e667485531b79b5e843d6454c87445f90fac7c9e2b550f7657d7",
+    "packages/db/src/field-encryption.ts": "sha256:02268600b2364a73ae58650758f60890a7743c3a65b3e01ab3f98d889ec76df0",
+    "packages/db/src/index.ts": "sha256:530c1b851dc604b89e6017b7336baf10efa48b5f082e95afcc081f54dbd9cfbf",
+    "packages/domain/src/crm/task/automation/__tests__/task-automation-constants.test.ts": "sha256:6883478ccf03e4c79f86f6cc31cdb96e541c3dfa09717a8f1865c104675ad5c9",
+    "packages/domain/src/crm/task/automation/index.ts": "sha256:e869f82a1961ade9c43a1345d022046af48c4c98ba93ceb84efb54b00d7b8ec2",
+    "packages/domain/src/crm/task/automation/task-automation-constants.ts": "sha256:2ac88d0a38d92955bbaca775edb47696ab4c31232ebebaaaac07440e1fc3ed80",
+    "packages/domain/src/index.ts": "sha256:b619818934bf4a9167e61a15c4728dc8dbdc4fb2dcb931c76865857be4d04b87",
+    "packages/observability/src/node-instrumentations.test.ts": "sha256:a22493251aaa4c54fddd42ade1a734b55902762e620bdfaa7e3e42ed082d6d92",
+    "packages/observability/src/node-instrumentations.ts": "sha256:6b5b7eb69946bdb5da13dba23485ac46a29155501ef254b7a6660e8306e0d0d3",
+    "packages/validators/src/__tests__/notifications.test.ts": "sha256:f8ecbe5f05035c8ec022b371d6a38daa6d5fa4bd8710ac43004a1ba801147121",
+    "packages/validators/src/__tests__/task-automation.test.ts": "sha256:c2870238c21971d3f4cb6bfd76f53ca447c4cb8f589eaf8824cf4246fd97dd25",
+    "packages/validators/src/index.ts": "sha256:f2062438d416b8aa931036de301f0e5a0eb9e95700c5e0d5b6d86beac1ac14f4",
+    "packages/validators/src/notifications.ts": "sha256:ae7380b8bb31b1ad1cf578145c394ecb494de306ba68bb3e34886acf17a302b7",
+    "packages/validators/src/scheduled-reports.ts": "sha256:b2d44bc6e6c4600422e04744bab29b14b81ec1e7c73570a847a1cee37b006e2d",
+    "packages/validators/src/task-automation.ts": "sha256:7c85d63bbdec9b0d6ad32eccbf389591e4d17deafeaf8162904cba4831556c2c",
+    "tests/integration/task-automation.test.ts": "sha256:921d68726879505e3b41a32e2a1d14805ac07c97638dcd0722e5aae67aa68d88",
+    "tools/audit/codex-review-waivers.yaml": "sha256:a767248db9ee86218376559c4e1578570ae6a78415c7b26dda5ddf4731ed254d"
+  },
+  "nav_wiring_confirmed": true,
+  "environment": {
+    "os": "Windows 11",
+    "node_version": "v22.14.0 (validation chain; Node 24.21.0 first on PATH for tooling)",
+    "git_commit": "416b2a25387f0430b60f5905859bddc4efde58ca",
+    "branch": "feat/pg-208-task-automation"
+  },
+  "spec_session_consensus": "UNANIMOUS: /spec-consensus 5/5 APPROVED in 1 round (backend-architect, security-lead, frontend-lead, domain-expert, test-engineer); owner rulings 1-7",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer subagent (.claude/agents/plan-reviewer.md), 2 iterations, session 100745b3-8c4a-4bcb-9515-686bce1662d6",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-208-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-208-plan.md",
+  "notes": "Complete at 416b2a253 (merge of origin/main 5f11ac307 plus the rule-row layout fix and the IA router count). Merged tree: typecheck and lint pass; pnpm test:coverage green except the IA router-count test, fixed and re-run (25 files / 312 tests); diff coverage 95.6%; integration 46/46 on an ephemeral DB with main migrations; web and API builds pass. Compliance check PASS (matop/compliance-check.md); STOA foundation, domain and security all PASS (domain and security re-run after the merge). Page wired from sidebar/configs/tasks.ts, TaskSettingsPanel and the settings search (nav_wiring_confirmed). Authenticated Lighthouse on /tasks/automation: performance 0.93-0.94, accessibility 0.93; the harness extra contrast/TTI assertions fail on shared nodes identical to PG-198 (#871, #540). Screenshots in artifacts/screenshots/PG-208 found and fixed a rule-row layout defect; pre-existing clipped icons filed as #978. Migration 20261020120000_task_automation is Class A (4 new tables; runs index, automationEnabledAt, effectiveFrom, actions added after the SQL review and approved by the runner); it follows main 20261019120000/120100. Event triggers run in-process on the container InMemoryEventBus, independent of #966/#889 (ADR-084 at-most-once window). #974 fixed on main (#975, owner ruling 10 follow-up); moderate advisories tracked in #876 and #979. Delivery report: .specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/PG-208-delivery.md. Merge of origin/main 4f93b7b28 (2026-10-28): 22 conflicts resolved (SIGTERM stops the automation runner, then awaits main's capped stopBackgroundJobs; the runner stays outside API_BACKGROUND_JOBS because its intake is the api's in-process event bus; encrypted fields, relations, validators exports and notification types merged as unions). Owner ruling 2026-10-28: automation ships OFF in production (TASK_AUTOMATION_INTERVAL_MS=0, .env.example) until it moves to the outbox (debt-ledger PG-208-AUTOMATION-OFF-IN-PROD-001). Re-verified on the merged tree: typecheck of db, validators, domain, api and web pass (18/18 turbo tasks); the conflict-touched unit suites pass (707 tests, 3 failures traced to a reverted local prisma format and re-run green); two standalone codex reviews of the resolution and of semantic merge conflicts found no defects. artifact_hashes re-computed for the merged tree (sha256: format, #1018). Pre-ship runs at the merge head. Squash (2026-10-28, before the first push): the branch was squashed into one commit on origin/main 4f93b7b28 so that no commit with the old raw-hex artifact_hashes reaches the remote (#1018 / GitGuardian rule). The squashed tree is identical to the pre-squash merge 72b6d118e except this note and the baseline.json hash. The commit SHAs cited in this attestation (416b2a253, 5f11ac307, 79cb2fcf8, 72b6d118e) and the other 38 pre-squash commits are local pre-squash history, not on origin; they are kept on the local ref pg-208-presquash."
+}

@@ -1,0 +1,42 @@
+{
+  "taskId": "PG-208",
+  "runId": "20261020231931-3d9aa8b9",
+  "createdAt": "2026-10-20T23:21:07.234Z",
+  "repoRoot": "C:\\Users\\talys\\projects\\intelliFlow-CRM-worktrees\\pg-208",
+  "files": [
+    {
+      "path": "apps/web/src/components/sidebar/configs/tasks.ts",
+      "sha256": "7b5eae2b337198c73fc922ff4bc3011baf3acf25b1f3aaae8a485eeea8c0718d",
+      "totalLines": 90,
+      "excerptLines": 90,
+      "truncated": false,
+      "included": true
+    },
+    {
+      "path": "apps/web/src/app/tasks/(list)/task-settings/page.tsx",
+      "sha256": "0be3cbd2258063c6e5342cf568d0e1b2c41e3a8e8e06a2d81dd6857cc4a0bfc0",
+      "totalLines": 21,
+      "excerptLines": 21,
+      "truncated": false,
+      "included": true
+    },
+    {
+      "path": "docs/planning/module-settings-playbook.md",
+      "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3",
+      "totalLines": 252,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    },
+    {
+      "path": "docs/planning/prd-module-settings.md",
+      "sha256": "ce436b84c811e661855aa2d5aa8504336d4626b23ad9dd95fb36e6963249de35",
+      "totalLines": 1122,
+      "excerptLines": 120,
+      "truncated": true,
+      "included": true
+    }
+  ],
+  "totalSizeBytes": 16161,
+  "truncatedDueToSize": false
+}

@@ -161,6 +161,10 @@ model Tenant {
   contactTags            ContactTag[]             @ignore
   contactAutomationSettings ContactAutomationSetting[] @ignore
   contactTypes           ContactType[]            @ignore // PG-205
+  taskAutomationSettings TaskAutomationSetting[]  @ignore // PG-208
+  taskAutomationRules    TaskAutomationRule[]     @ignore // PG-208
+  taskAutomationRuns     TaskAutomationRun[]      @ignore // PG-208
+  taskAutomationTags     TaskAutomationTag[]      @ignore // PG-208
   emailMailboxes         EmailMailbox[]           @ignore // PG-207
   emailOAuthStates       EmailOAuthState[]        @ignore // PG-207
   emailSettings          TenantEmailSettings?     @ignore // PG-207
@@ -554,6 +558,7 @@ model User {
   loginGrants         PartnerLoginGrant[]
   accountTerritoryMemberships AccountTerritoryMember[] // PG-197
   approvalPolicyEscalations   ApprovalPolicy[] @relation("ApprovalPolicyEscalationTarget") // PG-198
+  taskAutomationRulesCreated  TaskAutomationRule[] @relation("TaskAutomationRuleCreator") @ignore // PG-208
   emailMailboxes              EmailMailbox[]   // PG-207
   emailSignatures             EmailSignature[] // PG-207
 
@@ -2585,6 +2590,137 @@ model TaskSettings {
   updatedAt         DateTime @updatedAt
 
   @@map("task_settings")
+}
+
+/// PG-208 — task automation (ADR-084). Rules run inside the API process: an
+/// in-process event intake, a locked interval runner and a signed webhook route
+/// write `task_automation_runs`, which the runner executes.
+/// SQL-only objects (migration 20261020120000_task_automation; Prisma cannot
+/// express them): CHECKs on triggerType / eventType / scheduleCadence /
+/// lastRunStatus / name / sortOrder / tags cardinality / schedule ranges /
+/// trigger-column consistency, runs.status, settings.maxRunsPerRulePerHour and tags.colorToken;
+/// UNIQUE (tenantId, lower(name)) on rules and tags; partial UNIQUE
+/// (tenantId, ruleKey) WHERE isActive AND ruleKey IS NOT NULL; partial index
+/// (nextRunAt) WHERE isActive AND triggerType = 'SCHEDULE'; RLS policies.
+model TaskAutomationSetting {
+  id                       String   @id @default(cuid())
+  tenantId                 String   @unique
+  tenant                   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  automationEnabled        Boolean  @default(true)
+  maxRunsPerRulePerHour    Int      @default(60)
+  notifyRuleOwnerOnFailure Boolean  @default(false)
+  /// When automation was last turned back on: events that occurred before it
+  /// (while it was off) are never run later.
+  automationEnabledAt      DateTime?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  @@map("task_automation_settings")
+}
+
+model TaskAutomationRule {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String   @db.VarChar(80)
+  description String?  @db.VarChar(500)
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  tags        String[] @default([])
+
+  triggerType      String  // ENTITY_EVENT | SCHEDULE | WEBHOOK (SQL CHECK)
+  eventType        String? // v1 event list (SQL CHECK)
+  eventFilter      Json?
+  scheduleCadence  String? // daily | weekly | monthly | quarterly | custom (SQL CHECK)
+  scheduleDayOfWeek  Int?
+  scheduleDayOfMonth Int?
+  scheduleTimeOfDay  String? @db.VarChar(5)
+  scheduleCron     String? @db.VarChar(100)
+  scheduleTimezone String? @db.VarChar(64)
+  nextRunAt        DateTime?
+
+  /// SHA-256 of the URL token; the token itself is never stored.
+  webhookTokenHash               String?   @unique @db.Char(64)
+  webhookTokenPrefix             String?   @db.VarChar(12)
+  /// @encrypted (packages/db/src/field-encryption.ts ENCRYPTED_FIELDS)
+  webhookSecret                  String?
+  /// @encrypted (packages/db/src/field-encryption.ts ENCRYPTED_FIELDS)
+  webhookSecretPrevious          String?
+  webhookSecretPreviousExpiresAt DateTime?
+
+  actions         Json
+  /// SHA-256 of canonicalRuleKey(trigger, actions); NULL for webhook rules.
+  ruleKey         String?   @db.Char(64)
+  rrCursor        Int       @default(0)
+  createdBy       String?
+  creator         User?     @relation("TaskAutomationRuleCreator", fields: [createdBy], references: [id], onDelete: SetNull)
+  /// Events that occurred before this never run the rule ("rules apply to events
+  /// after you save"): set on create, every edit and every reactivation.
+  effectiveFrom   DateTime  @default(now())
+  lastRunAt       DateTime?
+  lastRunStatus   String?
+  lastRunOutcome  String?   @db.VarChar(60)
+  suppressedCount Int       @default(0)
+  lastSuppressedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  runs TaskAutomationRun[]
+
+  @@unique([tenantId, id])
+  @@index([tenantId, isActive, triggerType, eventType])
+  @@map("task_automation_rules")
+}
+
+model TaskAutomationRun {
+  id             String             @id @default(cuid())
+  tenantId       String
+  tenant         Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  ruleId         String
+  rule           TaskAutomationRule @relation(fields: [tenantId, ruleId], references: [tenantId, id], onDelete: Cascade)
+  triggerType    String
+  idempotencyKey String             @db.VarChar(160)
+  /// SHA-256 of the webhook body (webhook runs only).
+  payloadHash    String?            @db.Char(64)
+  status         String             @default("PENDING") // PENDING | RUNNING | SUCCEEDED | FAILED | SKIPPED
+  /// Entity/event ids, schedule slot, or only the webhook variables the rule's
+  /// templates reference (<= 4 KB). Never the raw body, headers or secrets.
+  /// The rule's actions when the run was admitted: edits apply to new events only.
+  actions        Json?
+  context        Json               @default("{}")
+  taskId         String?
+  assigneeId     String?
+  outcome        String?            @db.VarChar(60)
+  errorCode      String?            @db.VarChar(60)
+  createdAt      DateTime           @default(now())
+  startedAt      DateTime?
+  finishedAt     DateTime?
+
+  @@unique([ruleId, idempotencyKey])
+  @@index([status, createdAt])
+  @@index([tenantId, ruleId, createdAt(sort: Desc)])
+  /// Tenant-wide hourly cap count (webhook route, tick, Test Rule).
+  @@index([tenantId, createdAt(sort: Desc)])
+  @@map("task_automation_runs")
+}
+
+/// PG-208 — per-tenant tag catalogue for automation rules (PG-201 ReportScheduleTag
+/// shape). Rules store catalogue tag names in task_automation_rules.tags.
+model TaskAutomationTag {
+  id          String   @id @default(cuid())
+  tenantId    String
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  name        String   @db.VarChar(50)
+  colorToken  String   @default("slate")
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+  @@map("task_automation_tags")
 }
 
 /// PG-200 — per-tenant saveable report layouts (filter set + columns + chart +

@@ -10,9 +10,16 @@ import {
 
 describe('settings-search', () => {
   describe('SETTINGS_ITEMS', () => {
-    it('contains 14 settings items', () => {
+    it('contains 15 settings items', () => {
       // Item count tracked against SETTINGS_ITEMS source; bump when adding/removing hubs.
-      expect(SETTINGS_ITEMS).toHaveLength(14);
+      expect(SETTINGS_ITEMS).toHaveLength(15);
+    });
+
+    it('includes Task Automation in AI & Automation (PG-208)', () => {
+      const item = SETTINGS_ITEMS.find((i) => i.id === 'task-automation');
+      expect(item?.href).toBe('/tasks/automation');
+      const category = SETTINGS_CATEGORIES.find((c) => c.id === 'ai-automation');
+      expect(category?.itemIds).toContain('task-automation');
     });
 
     it('includes Model Configuration under AI & Automation (PG-199)', () => {

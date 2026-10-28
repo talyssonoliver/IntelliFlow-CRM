@@ -1,0 +1,130 @@
+{
+  "stoa": "security",
+  "task_id": "PG-208",
+  "verdict": "PASS",
+  "git_commit": "5f11ac307ae54493d1a88142f0853adcde772e04",
+  "timestamp": "2026-10-21T23:40:04.413Z",
+  "checks": [
+    {
+      "name": "gitleaks range origin/main HEAD (bash .gitleaks/scan.sh range origin/main HEAD)",
+      "passed": true,
+      "evidence": "exit 0, no findings, re-run at 5f11ac307"
+    },
+    {
+      "name": "secret-shaped strings in diff (grep: postgres://u:p@, Bearer, sk-, ghp_, AKIA, JWT eyJ, private key, supabase.co, neon.tech)",
+      "passed": true,
+      "evidence": "git diff origin/main...HEAD added lines: 0 matches"
+    },
+    {
+      "name": "pnpm audit --prod --audit-level high",
+      "passed": true,
+      "evidence": "exit 0 at 5f11ac307; \"2 vulnerabilities found, Severity: 2 moderate\", 0 high/critical. Moderates (both inherited, transitive, not in PG-208 diff): GHSA-hp3w-g68c-fv3c sprintf-js via apps/ai-worker>mammoth>argparse; GHSA-5r4p-p66f-jhc7 hono via apps/web>@prisma/client>prisma>@prisma/dev. See finding DEP-2."
+    },
+    {
+      "name": "constant-time signature compare",
+      "passed": true,
+      "evidence": "task-automation-webhook.ts:131-135 timingSafeEqual on equal-length buffers; strict SIGNATURE_PATTERN (line 44) rejects malformed before compare"
+    },
+    {
+      "name": "HMAC t=<unix>,v1= signs t.key.body, replay window, key bound to signature",
+      "passed": true,
+      "evidence": "webhook.ts:119-128 signWebhookPayload; :149-151 skew check vs webhookSkewSeconds; :153-158 previous secret only inside grace window; idempotency conflict 409 on differing payload hash (:259-262)"
+    },
+    {
+      "name": "token hashing and tenant isolation of lookup",
+      "passed": true,
+      "evidence": "only sha256 of token stored (router:777 webhookTokenHash; schema.prisma:2532 @unique); store.loadWebhookRule findUnique by hash (store:621-635); tenantId comes from the matched rule and drives settings/admitRun; token = 32 random bytes (router:88); TOKEN_PATTERN webhook.ts:43"
+    },
+    {
+      "name": "uniform error responses, no leaks",
+      "passed": true,
+      "evidence": "unknown/inactive/disabled -> same 404, sig/key failure -> same 401 (webhook.ts:55-57,214-225); route catch returns generic 500 and logs only err.name (:370-376); body/token/secret never logged"
+    },
+    {
+      "name": "body size/time limits and IP failure limiter",
+      "passed": true,
+      "evidence": "64KB bounded read + 10s timeout (webhook.ts:296-325, route :355-367), content-length precheck, failure-only per-IP limiter 120/min with bounded map 10k and eviction (:62-92), socket address fallback (:105-113); per-rule perMinute/perHour caps under admission lock (:243-255)"
+    },
+    {
+      "name": "secrets never returned by list/listRuns",
+      "passed": true,
+      "evidence": "RULE_SELECT (router:155-181) omits webhookTokenHash/webhookSecret*; exposes only webhookTokenPrefix; listRuns select (router:727-737) has no secrets; secret/URL returned only once from create/rotate/regenerate (router:790,960,978)"
+    },
+    {
+      "name": "webhook URL from API_PUBLIC_URL, never Host header",
+      "passed": true,
+      "evidence": "router:103-123 getApiPublicUrl reads env.API_PUBLIC_URL, https-only in production, returns url.origin; webhookUrl() router:137"
+    },
+    {
+      "name": "secret encryption at rest and fail-closed",
+      "passed": true,
+      "evidence": "packages/db/src/client.ts:154-166 field-encryption covers webhookSecret/webhookSecretPrevious; webhook.ts:124-127 + :228 returns 503 when key missing outside tests; router assertWebhookEncryptionReady"
+    },
+    {
+      "name": "RLS tenant isolation (A01)",
+      "passed": true,
+      "evidence": "migration 20261020120000_task_automation lines 220-250: ENABLE RLS + tenant_isolation policies USING/WITH CHECK on settings, rules, runs, tags. Not FORCEd (project-wide convention, stated in migration line 220); webhook reads as API role by design"
+    },
+    {
+      "name": "admin role gates and rate limits (A01/A07)",
+      "passed": true,
+      "evidence": "admin.ts:30-61 assertTaskAutomationAdmin with audit-logged denial, narrower webhook-admin scope (no MANAGER); applied on every write incl. listRuns (router:724) and secret ops (:748,930,966); sensitiveProcedure 10/min/user on create/rotate/regenerate/runNow (router:145-150)"
+    },
+    {
+      "name": "token not leaked to traces/Sentry (A09)",
+      "passed": true,
+      "evidence": "observability node-instrumentations.ts:30-47 isSecretBearingPath + ignoreIncomingRequestHook; apps/api/src/tracing/sentry.ts:135-153 scrubs /webhooks/task-automation/<token> to ***"
+    },
+    {
+      "name": "template injection (A03)",
+      "passed": true,
+      "evidence": "webhookVariables uses Object.hasOwn + key pattern + scalar-only + length caps (webhook.ts:177-190); bidi/zero-width/control stripping in packages/domain task-automation-constants.ts:300-320"
+    },
+    {
+      "name": "merge delta on PG-208 security surfaces (git diff 22e3f2202 HEAD)",
+      "passed": true,
+      "evidence": "apps/api/src/modules/task, apps/api/src/http-server.ts, packages/observability, packages/domain/src/crm/task, apps/api/src/tracing: 0 changes. packages/db/prisma: only PG-199 migrations 20261019120000_tenant_model_config and 20261019120100_tenant_ai_config_rls plus the TenantAiConfig model change in schema.prisma; no PG-208 table/policy touched (task_automation migration unchanged). Earlier webhook/limiter/scrub/RLS checks therefore hold unchanged; spot-verified at HEAD: task-automation-webhook.ts:35 SIGNATURE_PATTERN, :133 timingSafeEqual, :151 skew check, :236 503 fail-closed, :274 409 idempotency conflict; packages/observability/src/node-instrumentations.ts:32 isSecretBearingPath; apps/api/src/tracing/sentry.ts:139,153 token scrub. (Line numbers in earlier checks are from 743586efe and may drift by a few lines; the files are byte-identical between 22e3f2202 and HEAD.)"
+    },
+    {
+      "name": ".husky/pre-commit merge-aware silencer check (PG-203 #977)",
+      "passed": true,
+      "evidence": "git diff 22e3f2202 HEAD -- .husky/pre-commit: +14 lines only, inside the eslint-disable/@ts-ignore/@ts-expect-error/@ts-nocheck scan. When MERGE_HEAD exists, a hit is kept only if the same added line is also added relative to MERGE_HEAD (new against both parents); non-merge commits take the unchanged path. Same pattern list, same files, no other hook step touched, no env bypass added (ESCAPE_LINT_SILENCER gate pre-existing). Narrowing is correct, not a weakening."
+    }
+  ],
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "id": "DEP-2",
+      "title": "pnpm audit reports 2 moderate advisories (sprintf-js GHSA-hp3w-g68c-fv3c, hono GHSA-5r4p-p66f-jhc7)",
+      "attribution": "inherited from main via transitive deps (ai-worker>mammoth>argparse; web>@prisma/client>prisma>@prisma/dev); below the --audit-level=high gate; not introduced by PG-208",
+      "action": "No tracking issue verified. Under the no-silent-pass policy the lead should file/confirm a main-level issue or ADR acceptance; not a PG-208 defect."
+    },
+    {
+      "severity": "LOW",
+      "id": "L8",
+      "title": "Rightmost X-Forwarded-For hop trust for the failure limiter",
+      "attribution": "tracked #960",
+      "action": "tracked"
+    },
+    {
+      "severity": "LOW",
+      "id": "OBS-1",
+      "title": "404 (unknown token) vs 401 (bad signature) are distinguishable",
+      "attribution": "by design; token is 256-bit random, hash-looked-up, so enumeration is infeasible",
+      "action": "none"
+    }
+  ],
+  "tracked_issues": [
+    "#959",
+    "#960",
+    "#968",
+    "#969"
+  ],
+  "notes": "Re-run at merge HEAD 5f11ac307. Tools run: gitleaks range scan (exit 0), pnpm audit --prod --audit-level high (exit 0, 2 moderate), git diff review of merge delta and .husky/pre-commit. Not run (unavailable/not permitted): snyk, semgrep, trivy; no tests/builds run per instruction. The single prior FAIL cause (3 HIGH advisories, #974) is resolved by #975. Verdict PASS is on the defined gates; the 2 inherited moderate advisories are disclosed as DEP-2 and need a main-level tracking decision. No open code-level finding in PG-208 beyond tracked #959/#960/#968/#969.",
+  "supersedes": {
+    "previous_verdict": "FAIL",
+    "previous_commit": "743586efe1a1545e6f96d76f7bd344ebab30b250",
+    "reason": "pnpm audit --prod --audit-level high exited 1 with 3 HIGH advisories (follow-redirects x2, launch-editor/vite GHSA-587h-7wmj-h5pm) inherited from main (#974)",
+    "why_no_longer_applies": "Main fixed them in #975 (e7ce625b2), which HEAD 5f11ac307 merges. Re-run at HEAD: pnpm audit --prod --audit-level high exit 0, 2 vulnerabilities, both moderate. PG-208 still touches no package.json/pnpm-lock.yaml vs origin/main."
+  }
+}

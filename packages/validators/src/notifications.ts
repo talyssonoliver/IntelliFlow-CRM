@@ -51,6 +51,8 @@ export const NOTIFICATION_TYPES = [
   'task_overdue',
   'task_completed',
   'task_comment',
+  // PG-208 task automation (rule-created tasks, rule failures)
+  'task_automation',
   // Appointment notifications
   'appointment_scheduled',
   'appointment_reminder',

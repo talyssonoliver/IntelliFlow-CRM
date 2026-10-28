@@ -55,6 +55,7 @@ export * from './crm/task/Task';
 export * from './crm/task/TaskId';
 export * from './crm/task/TaskEvents';
 export * from './crm/task/TaskRepository';
+export * from './crm/task/automation';
 
 // Legal Domain - Cases/Matters
 export * from './legal/cases/Case';

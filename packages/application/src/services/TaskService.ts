@@ -693,6 +693,43 @@ export class TaskService {
   }
 
   /**
+   * Assign a task to a user (PG-208 round-robin). The repository has no tenant
+   * filter, so the loaded task's tenant is compared with the caller's; another
+   * tenant's task reads as not found. Same assignee → no change, no event.
+   */
+  async assignTask(
+    taskId: string,
+    assigneeId: string | null,
+    assignedBy: string,
+    tenantId: string
+  ): Promise<Result<Task, DomainError>> {
+    const taskIdResult = TaskId.create(taskId);
+    if (taskIdResult.isFailure) {
+      return Result.fail(taskIdResult.error);
+    }
+
+    const task = await this.taskRepository.findById(taskIdResult.value);
+    if (task?.tenantId !== tenantId) {
+      return Result.fail(new NotFoundError(`Task not found: ${taskId}`));
+    }
+    if (task.assigneeId === assigneeId) {
+      return Result.ok(task);
+    }
+
+    task.assignTo(assigneeId, assignedBy);
+
+    try {
+      await this.taskRepository.save(task);
+    } catch {
+      return Result.fail(new PersistenceError('Failed to save task'));
+    }
+
+    await this.publishEvents(task);
+
+    return Result.ok(task);
+  }
+
+  /**
    * Delete task with business rules
    */
   async deleteTask(taskId: string): Promise<Result<void, DomainError>> {

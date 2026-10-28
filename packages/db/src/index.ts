@@ -95,6 +95,10 @@ export type {
   ReportSchedule, // PG-201
   ReportScheduleTag,
   TaskSettings,
+  TaskAutomationSetting, // PG-208
+  TaskAutomationRule,
+  TaskAutomationRun,
+  TaskAutomationTag,
   Case,
   CaseTask,
   CaseSettings,
@@ -112,6 +116,9 @@ export type {
   PublicFeedback,
   LeadCustomField,
 } from '../generated/prisma/client';
+
+// PG-208: field-encryption primitives (webhook signing secrets; tests round-trip them).
+export { encryptField, decryptField, isEncrypted, deriveKey } from './field-encryption';
 
 // Re-export performance tracking utilities
 export {

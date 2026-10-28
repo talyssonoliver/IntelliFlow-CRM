@@ -1128,7 +1128,7 @@ Each route entry uses this standard table format:
 
 ---
 
-## Section 11: Tasks (2 routes)
+## Section 11: Tasks (3 routes)
 
 ### Tasks List (`/tasks`)
 
@@ -1159,6 +1159,21 @@ Each route entry uses this standard table format:
 | **Status**     | Implemented                                                           |
 | **RACI**       | R: Frontend / A: Product / C: Backend / I: QA                         |
 | **Components** | "use client", TaskDetail, TaskForm, PageHeader, toast, useRequireAuth |
+
+### Task Automation (`/tasks/automation`)
+
+| Field          | Value                                                                                                                                                                                                                                                                  |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Task ID**    | PG-208                                                                                                                                                                                                                                                                 |
+| **File Path**  | `apps/web/src/app/tasks/(list)/automation/page.tsx`                                                                                                                                                                                                                    |
+| **Layout**     | `apps/web/src/app/tasks/(list)/layout.tsx`                                                                                                                                                                                                                             |
+| **API Router** | `apps/api/src/modules/task/task-automation.router.ts` (`taskAutomation.*`); runtime `apps/api/src/modules/task/automation/` (ADR-084)                                                                                                                                  |
+| **E2E Test**   | None                                                                                                                                                                                                                                                                   |
+| **Unit Tests** | `apps/web/src/app/tasks/(list)/automation/__tests__/`, `apps/web/src/app/tasks/(list)/automation/components/__tests__/`                                                                                                                                                |
+| **KPI**        | Lighthouse >=90; FCP <1s; LCP <2.5s; TBT <300ms                                                                                                                                                                                                                        |
+| **Status**     | Implemented                                                                                                                                                                                                                                                            |
+| **RACI**       | R: Frontend / A: Product / C: Backend, Security / I: QA                                                                                                                                                                                                                |
+| **Components** | TaskAutomationContent, AutomationRuleList (forwardRef), AutomationRuleDialog, AutomationSettingsCard, TagsTab (shared, forwardRef), WebhookSecretDialog, RecentRunsDialog, CopyField, VariablePicker, ScheduleCadenceFields, MemberMultiSelect, PageHeader, EmptyState |
 
 ---
 

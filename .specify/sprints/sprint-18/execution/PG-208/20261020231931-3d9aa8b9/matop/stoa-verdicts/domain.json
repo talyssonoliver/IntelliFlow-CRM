@@ -1,0 +1,100 @@
+{
+  "stoa": "domain",
+  "task_id": "PG-208",
+  "verdict": "PASS",
+  "git_commit": "5f11ac307ae54493d1a88142f0853adcde772e04",
+  "timestamp": "2026-10-22T00:00:00Z",
+  "supersedes": {
+    "verdict": "NEEDS_HUMAN",
+    "git_commit": "743586efe1a1545e6f96d76f7bd344ebab30b250",
+    "timestamp": "2026-10-21T00:00:00Z",
+    "reasons": [
+      "F1: final 03-coverage rc=1 with no log, so coverage and the cause of the failure were unconfirmed",
+      "F2: AC-TA-019 Lighthouse >= 90 on /tasks/automation was not measured (only /login)"
+    ],
+    "resolution": "F1 resolved by the post-merge logs in scratchpad step21d (03b-coverage.txt names the single failure; 03c-web-suites.txt shows it fixed). F2 resolved by three authenticated Lighthouse reports whose finalDisplayedUrl is /tasks/automation. Details in checks below."
+  },
+  "checks": [
+    {
+      "name": "hexagonal boundary: domain has zero infra imports",
+      "passed": true,
+      "evidence": "Re-checked at HEAD: packages/domain/src/crm/task/automation/task-automation-constants.ts:11-14 imports only type-only domain modules (Lead, OpportunityEvents, TaskEvents) and ../../account/territory/territory-constants. No adapters/apps/prisma imports. depcruise not re-run (read-only rule)."
+    },
+    {
+      "name": "every tRPC procedure validates input with Zod from @intelliflow/validators",
+      "passed": true,
+      "evidence": "Unchanged by the merge (see merge check). task-automation.router.ts imports schemas from @intelliflow/validators and uses tenantProcedure (line 50); .input(...) on all mutations and parameterised queries as in the earlier review (544..983). No-arg procedures unchanged."
+    },
+    {
+      "name": "tenant isolation (router, store, DB)",
+      "passed": true,
+      "evidence": "Router uses tenantProcedure + prismaWithTenant (task-automation.router.ts:50,75). Migration 20261020120000_task_automation still has 4 ENABLE ROW LEVEL SECURITY statements. Store and router files are byte-identical to the previously reviewed commit (merge touched none). Integration suite 07-integration.txt: 46/46 passed on an ephemeral DB with main's migrations (includes TENANT_A/B cross-tenant cases)."
+    },
+    {
+      "name": "runtime path wired in production (no stub-only surface)",
+      "passed": true,
+      "evidence": "apps/api/src/router.ts:23,161 registers taskAutomation; apps/api/src/http-server.ts:25,29,497,601 imports and uses handleTaskAutomationWebhookRoute and createTaskAutomationRuntime. The merge changed apps/api/src/container.ts and context.ts, but only for main's model-config work: the diff 22e3f2202..5f11ac307 for those two files has no added or removed line mentioning automation, so the PG-208 runtime wiring (which lives in task-automation-runtime.ts, not container.ts) is untouched."
+    },
+    {
+      "name": "single locked admission used by every run path",
+      "passed": true,
+      "evidence": "pg_advisory_xact_lock still at task-automation-store.ts:235 and task-automation.router.ts:463,468 (runNow). Files unchanged by the merge. Real-DB race tests pass inside the 46/46 integration run."
+    },
+    {
+      "name": "the merge did not alter PG-208 code",
+      "passed": true,
+      "evidence": "git diff 22e3f2202 5f11ac307 --name-only filtered for task-automation, tasks/(list)/automation and packages/domain/src/crm/task returns 0 files (204 files changed in total, all main's). Overlapping shared files: apps/web/src/lib/shared/settings-search.ts still contains both id 'model-config' (line 57) and id 'task-automation' (line 188, href /tasks/automation), and both are listed in the 'ai-automation' group (lines 213, 221); no conflict markers. packages/validators/src/index.ts changed only for model-config exports."
+    },
+    {
+      "name": "gate evidence at merged HEAD 5f11ac307: typecheck, lint, integration, diff coverage",
+      "passed": true,
+      "evidence": "SUMMARY.txt: 01-typecheck rc=0 (36/36 turbo tasks), 02-lint rc=0, 04-diff-coverage rc=0 (new_coverage 95.6%, 2517/2633, 80% floor), 07-integration rc=0 (46 passed). Logs read from disk, not re-run."
+    },
+    {
+      "name": "full coverage run (03b) and domain coverage > 95%",
+      "passed": true,
+      "evidence": "03b-coverage.txt (pnpm test:coverage at 5f11ac307): 856 of 857 test files and 13328 of 13329 tests passed. The single failure is web src/app/__tests__/ia-reconciliation.test.ts 'API Router count matches router.ts registrations' (rc=1 comes from that one test). The IA doc now says API Routers: 72 (uncommitted edit, git diff shows 71 -> 72). 03c-web-suites.txt reran after the fix: 25 files / 312 tests passed, including all src/app/__tests__ reconciliation suites. Caveat: the fix was verified by that targeted rerun, not by a second full coverage run. Per-file coverage from artifacts/coverage/coverage-summary.json (pre-merge run, PG-208 files unchanged since): packages/domain task-automation-constants.ts 97.67% lines, packages/validators task-automation.ts 97.43%, api router 98.58%, engine 99.6%, store/webhook/admin/runner/intake 100% (runtime.ts 93.1%)."
+    },
+    {
+      "name": "migration drift (08-migrate-diff rc=1)",
+      "passed": true,
+      "evidence": "08-migrate-diff.txt lists only cases FK, document_type_definitions.updatedAt default, report_templates index and users.locale default. No task_automation table in the diff. These are the pre-existing drift (issue #953) on unrelated tables; rc=1 is the --exit-code drift signal."
+    },
+    {
+      "name": "AC-TA-019 Lighthouse >= 90 on /tasks/automation",
+      "passed": true,
+      "evidence": "Parsed artifacts/lighthouse/PG-208/auth/*.report.json (3 runs, utf-8): finalDisplayedUrl is http://localhost:3400/tasks/automation in all three, no runtimeError. Performance 93/94/93, accessibility 93/93/93. Same-method comparison: PG-198 authenticated reports on main score perf 93-95, a11y 96. waiver-evidence.md documents the setup (seeded admin, local Supabase, ephemeral DB, three real rules) and that the failing LHCI assertions (color-contrast on global header nav link and shared primary Button, interactive < 1000 ms from PG-166's home-page DoD) are shared and also fail on PG-198. Disclosed: best-practices is 0.74 and SEO 0.69 in all runs (best-practices is a warn-level LHCI assertion); the KPI wording and the convention used by sibling settings pages treat performance and accessibility as the gate."
+    }
+  ],
+  "ac_traceability": [
+    {"ac": "AC-TA-001", "evidence": "apps/web/src/app/tasks/(list)/automation/__tests__/TaskAutomationContent.test.tsx; TaskAutomationLoading.test.tsx; 03c-web-suites 25 files pass; design-check.md and screenshots tasks-automation-lg.png / -mobile.png", "met": true},
+    {"ac": "AC-TA-002", "evidence": "AutomationRuleList.test.tsx; task-automation.router.test.ts:191,221 (FORBIDDEN for non-admin)", "met": true},
+    {"ac": "AC-TA-003", "evidence": "AutomationRuleDialog.test.tsx; packages/validators/src/__tests__/task-automation.test.ts; router.test.ts:449 (P2002 -> CONFLICT)", "met": true},
+    {"ac": "AC-TA-004", "evidence": "task-automation-engine.test.ts:174-178; task-automation-event-intake.test.ts", "met": true},
+    {"ac": "AC-TA-005", "evidence": "task-automation-engine.test.ts:420,432; tests/integration/task-automation.test.ts (46/46 at HEAD)", "met": true},
+    {"ac": "AC-TA-006", "evidence": "task-automation-webhook.test.ts; http-server.task-automation-webhook.test.ts; WebhookSecretDialog.test.tsx", "met": true},
+    {"ac": "AC-TA-007", "evidence": "task-automation-engine.test.ts; task-automation-constants.test.ts", "met": true},
+    {"ac": "AC-TA-008", "evidence": "task-automation-engine.test.ts:569-589", "met": true},
+    {"ac": "AC-TA-009", "evidence": "task.router.test.ts:330-335", "met": true},
+    {"ac": "AC-TA-010", "evidence": "task-automation-engine.test.ts:40,110", "met": true},
+    {"ac": "AC-TA-011", "evidence": "task-automation-engine.test.ts:332-333", "met": true},
+    {"ac": "AC-TA-012", "evidence": "task-automation-engine.test.ts:889-923; RecentRunsDialog.test.tsx", "met": true},
+    {"ac": "AC-TA-013", "evidence": "task-automation-engine.test.ts:337,496; integration test", "met": true},
+    {"ac": "AC-TA-014", "evidence": "AutomationSettingsCard.test.tsx", "met": true},
+    {"ac": "AC-TA-015", "evidence": "TagsTab.test.tsx; migration CHECK tested in integration suite", "met": true},
+    {"ac": "AC-TA-016", "evidence": "task-automation.router.test.ts:467-510; integration TENANT_A/B", "met": true},
+    {"ac": "AC-TA-017", "evidence": "task-automation.router.test.ts; task-automation-webhook.test.ts", "met": true},
+    {"ac": "AC-TA-018", "evidence": "task-automation.router.test.ts:449-454", "met": true},
+    {"ac": "AC-TA-019", "evidence": "Three authenticated Lighthouse reports on /tasks/automation: performance 93-94, accessibility 93 (>= 90). See check above for the disclosed best-practices 0.74 and shared contrast/interactive LHCI assertion failures.", "met": true},
+    {"ac": "AC-TA-020", "evidence": "ADR-084 commit 743586efe; migration 20261020120000_task_automation; registries in commits 1ef8ad24f/743586efe (not individually reopened)", "met": true}
+  ],
+  "findings": [
+    {"severity": "low", "id": "F1", "text": "Resolved: the earlier rc=1 on 03-coverage. At 5f11ac307 the only failing test was ia-reconciliation 'API Router count' (main's new model-config router made the count 72). The IA doc edit fixes it; verified by a targeted 25-file rerun, not a second full coverage run."},
+    {"severity": "low", "id": "F2", "text": "Resolved: AC-TA-019 measured on the real authenticated page. Residual: best-practices 0.74 (warn) and the shared color-contrast / interactive LHCI errors are app-wide, tracked in #871 and #540, and fail identically on PG-198."},
+    {"severity": "low", "id": "F3", "text": "runNow (task-automation.router.ts:982-1020) re-implements cap checks instead of calling store.admitRun; same advisory lock key so serialisation holds, but the two cap implementations can drift. Unchanged from the earlier review."},
+    {"severity": "info", "id": "F4", "text": "Two working-tree edits are uncommitted at review time (AutomationRuleList.tsx layout classes, information-architecture.md 71 -> 72). They must be committed for the evidence to describe HEAD."},
+    {"severity": "info", "id": "F5", "text": "AC mappings are by test name/line, not by AC tag; this STOA executed no tests."}
+  ],
+  "notes": "Read-only re-run at 5f11ac307 plus two uncommitted fixes; no tests, builds, coverage or typecheck were run by this STOA, all gate results come from logs on disk. Supersedes the 2026-10-21 NEEDS_HUMAN (unconfirmed coverage, unmeasured Lighthouse). Hexagonal, Zod, tenant-scope, runtime wiring and single-admission findings re-verified by file:line spot-check; the merge touched no PG-208 domain, validator, router, store or runtime file. No boundary or business-rule violations.",
+  "domainMetrics": {"entitiesValidated": 4, "aggregatesChecked": 0, "boundaryViolations": 0}
+}

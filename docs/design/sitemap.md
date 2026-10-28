@@ -197,7 +197,7 @@ intelliflow.com
 │   ├── /tasks/[id]                       Task detail
 │   ├── /tasks/task-types                 Custom task type labels and icons
 │   ├── /tasks/task-settings              Tenant task defaults (due-date, assignee)
-│   └── /tasks/automation                 Automation rules on task status/priority
+│   └── /tasks/automation                 Task automation rules: event, schedule, webhook (PG-208)
 │
 ├── CALENDAR ────────────────────────────── Layout: calendar/(list)
 │   │

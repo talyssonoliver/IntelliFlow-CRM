@@ -2570,6 +2570,45 @@ Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:15-17
 
 ---
 
+### Task Automation (PG-208 — rules executed inside the API, ADR-084)
+
+```
+PG-178 ✅ + PG-191 ✅ ──► PG-208 ✅ (Task Automation, feat/pg-208-task-automation; Lighthouse NEEDS_HUMAN)
+
+Domain:  packages/domain/src/crm/task/automation/task-automation-constants.ts
+           TASK_AUTOMATION_EVENTS (9 v1 events) · renderTaskTemplate · computeAutomationDueDate
+           pickRoundRobinAssignee · canonicalRuleKey · TASK_AUTOMATION_LIMITS · admin role sets
+Validators: packages/validators/src/task-automation.ts (trigger/action unions, superRefine on actions)
+
+Prisma models (tenant-scoped, RLS on):
+  TaskAutomationSetting  @@map "task_automation_settings"  (one row per tenant)
+  TaskAutomationRule     @@map "task_automation_rules"     (0..50 per tenant; webhookSecret* encrypted)
+  TaskAutomationRun      @@map "task_automation_runs"      (unique ruleId + idempotencyKey; 30-day retention)
+    └─ FK (tenantId, ruleId) → task_automation_rules(tenantId, id) (CASCADE)
+  TaskAutomationTag      @@map "task_automation_tags"      (colorToken CHECK, 18 tokens)
+
+Migration (Class A, manual prod apply BEFORE the API ships — L13):
+  20261020120000_task_automation/migration.sql
+
+appRouter.taskAutomation: list / listRuns / create / update / delete / setActive / reorder /
+  rotateWebhookSecret / regenerateWebhookUrl / runNow / settings.* / tags.* / resetToDefaults
+
+Runtime (apps/api/src/modules/task/automation/):
+  container eventBus (in-memory) ──► task-automation-event-intake (buffer only, never throws)
+  startApiServer ──► task-automation-runner (15 s tick):
+    drainEvents ──► task_automation_runs (PENDING)
+    enqueueDueSchedules ──► task_automation_runs (PENDING)
+    executePendingRuns ──► TaskService.createTask / assignTask ──► createNotification
+  POST /api/webhooks/task-automation/<token> (http-server.ts, raw body, signed) ──► task_automation_runs
+
+Task fixes: PrismaTaskRepository maps assigneeId on every read; task.list / task.getById show
+  owned OR assigned tasks (owner ruling 6)
+
+/tasks/(list)/automation/page.tsx → TaskAutomationContent → trpc.taskAutomation.*
+Sidebar entry: apps/web/src/components/sidebar/configs/tasks.ts:7
+Parent hub:    apps/web/src/components/tasks/TaskSettingsPanel.tsx:23-29
+```
+
 ### Event Types + Public Booking (PG-203 — in progress, ADR-083)
 
 ```

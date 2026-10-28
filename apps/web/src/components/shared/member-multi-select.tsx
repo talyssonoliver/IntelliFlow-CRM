@@ -1,11 +1,13 @@
 'use client';
 
 /**
- * Multi-select of assignable users for a territory (PG-197). `AssignSheet` is
+ * Multi-select of assignable users (PG-197 territories; shared with PG-208
+ * task-automation round-robin pools). `AssignSheet` is
  * single-select, so this composes Popover + a labelled group of checkboxes —
  * native multi-selection semantics (the Sonar a11y guard prefers native
- * controls over an ARIA listbox). The trigger's accessible name carries the
- * selected count.
+ * controls over an ARIA listbox). The trigger's accessible name is
+ * "<label>: <visible summary>", so it contains both the visible field label
+ * and the button's own text (WCAG 2.5.3).
  */
 import { useState } from 'react';
 import { Button, Checkbox, Popover, PopoverContent, PopoverTrigger } from '@intelliflow/ui';
@@ -24,6 +26,13 @@ export interface MemberMultiSelectProps {
   isLoading?: boolean;
   isError?: boolean;
   disabled?: boolean;
+  /** Accessible name of the option group (visually hidden). */
+  legend?: string;
+  /** The field's visible label text; the trigger is named "<label>: <summary>". */
+  label?: string;
+  /** Marks the trigger invalid and points it at the error message. */
+  invalid?: boolean;
+  describedBy?: string;
 }
 
 export function MemberMultiSelect({
@@ -34,6 +43,10 @@ export function MemberMultiSelect({
   isLoading,
   isError,
   disabled,
+  legend = 'Members',
+  label = 'Members',
+  invalid,
+  describedBy,
 }: Readonly<MemberMultiSelectProps>) {
   const [open, setOpen] = useState(false);
   const selected = new Set(selectedIds);
@@ -46,7 +59,9 @@ export function MemberMultiSelect({
         : [...selectedIds, memberId]
     );
 
-  const names = options.filter((o) => selected.has(o.id)).map((o) => o.name);
+  // Names in picked order, the order the summary promises (round-robin order).
+  const nameById = new Map(options.map((o) => [o.id, o.name]));
+  const names = selectedIds.flatMap((selectedId) => nameById.get(selectedId) ?? []);
   const count = selectedIds.length;
   const summary = count === 0 ? 'No members' : names.join(', ') || `${count} selected`;
 
@@ -58,7 +73,9 @@ export function MemberMultiSelect({
           type="button"
           variant="outline"
           className="w-full justify-between font-normal"
-          aria-label={`Members, ${count} selected`}
+          aria-label={`${label}: ${summary}`}
+          aria-invalid={invalid ? true : undefined}
+          aria-describedby={describedBy}
           disabled={disabled}
         >
           <span className="truncate">{summary}</span>
@@ -77,7 +94,7 @@ export function MemberMultiSelect({
         )}
         {options.length > 0 && (
           <fieldset className="max-h-64 overflow-y-auto py-1">
-            <legend className="sr-only">Territory members</legend>
+            <legend className="sr-only">{legend}</legend>
             {options.map((option) => {
               const optionId = `member-option-${option.id}`;
               return (
