@@ -74,6 +74,17 @@ export interface ModuleSettingsShellProps {
   saveAction?: Partial<PageAction>;
   /** Class for the PageHeader; defaults to 'mb-6'. */
   headerClassName?: string;
+  /**
+   * Hides the Reset/Save header actions — for a viewer who may read but not
+   * change the settings (PG-207: members on the email settings page).
+   */
+  hideActions?: boolean;
+  /**
+   * Content between the header and the section grid, outside the fieldset
+   * that locks while saving — for controls with their own immediate actions
+   * (PG-207: the user's mailbox connection is not part of the settings save).
+   */
+  leading?: ReactNode;
   /** The module's section cards. */
   children: ReactNode;
 }
@@ -100,6 +111,8 @@ export function ModuleSettingsShell({
   resetAction,
   saveAction,
   headerClassName = 'mb-6',
+  hideActions = false,
+  leading,
   children,
 }: Readonly<ModuleSettingsShellProps>) {
   if (isLoading) {
@@ -128,6 +141,13 @@ export function ModuleSettingsShell({
   if (errorMessage) {
     return (
       <div className="w-full">
+        {/* The page keeps its h1 when it fails to load (one h1 per page). */}
+        <PageHeader
+          breadcrumbs={breadcrumbs}
+          title={title}
+          description={description}
+          className={headerClassName}
+        />
         <Card className="p-6 text-center">
           <h2 className="text-lg font-semibold">{errorTitle}</h2>
           <p className="text-sm text-muted-foreground mt-2">{errorMessage}</p>
@@ -160,9 +180,11 @@ export function ModuleSettingsShell({
         breadcrumbs={breadcrumbs}
         title={title}
         description={description}
-        actions={actions}
+        actions={hideActions ? undefined : actions}
         className={headerClassName}
       />
+
+      {leading && <div className="mb-4 sm:mb-5 space-y-4">{leading}</div>}
 
       {/* Lock every section input while a save/reset is in flight, so the
           post-save refetch cannot clobber a concurrent edit. */}

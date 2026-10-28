@@ -111,6 +111,12 @@ describe('root proxy.ts', () => {
   });
 
   describe('protected routes', () => {
+    it('lets an anonymous visitor reach a public booking page (PG-203, AC-021)', async () => {
+      await proxy(mkReq('/book/smith-law/initial-consultation'));
+      expect(mockRedirect).not.toHaveBeenCalled();
+      expect(mockNextFn).toHaveBeenCalled();
+    });
+
     it('redirects to login when no auth', async () => {
       await proxy(mkReq('/dashboard'));
       expect(mockRedirect).toHaveBeenCalled();

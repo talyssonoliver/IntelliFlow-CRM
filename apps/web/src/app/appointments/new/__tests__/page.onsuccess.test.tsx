@@ -81,4 +81,18 @@ describe('NewAppointmentPage create onSuccess', () => {
     expect(h.formProps).not.toBeNull();
     expect(h.formProps?.defaultBuffers).toBeUndefined();
   });
+
+  it("passes the firm's active event types to the form (PG-203, AC-010)", () => {
+    const types = [
+      { id: 'clhevent00000000000', name: 'Initial consultation', durationMinutes: 45 },
+    ];
+    capture.queryData['calendar.eventTypes.listActive'] = types;
+    render(<NewAppointmentPage />);
+    expect(h.formProps?.eventTypes).toEqual(types);
+  });
+
+  it('offers no event types when they cannot be read', () => {
+    render(<NewAppointmentPage />);
+    expect(h.formProps?.eventTypes).toEqual([]);
+  });
 });

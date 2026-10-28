@@ -17,14 +17,14 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/api/src/lib/supabase.ts": "4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c",
-    "apps/api/src/shared/auth-flow.test.ts": "7d012cd91919312847e3e0eecd14ad636d05a65250159085b3a9727ceea7c2e1",
-    "apps/api/src/shared/vector-search.test.ts": "1f3c384e918ee4fee27836d3a9a11e69cd19cfdaefda8adbc60a3e588cc4cdba",
-    "apps/web/proxy.ts": "822f012df3531b9fb9c412317f57ce1d84a8bed083bfb6b6ebcd9c56a4e89d59",
-    "apps/web/src/lib/session.ts": "ddb539035c7d756afc5e28584ccd336b37f541e4256809fb7c6dd71dfca2bfdd",
-    "apps/api/src/middleware/auth.ts": "d45f12e054ea091a6a080521f1e564f3788e60cfc761e10b0fbf7457153dc663",
-    "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md": "33cdb7801eb479cd028b460206464339d6ffea7bfbfdcf8e9577c4a3fc6692ea",
-    ".specify/sprints/sprint-3/attestations/IFC-006/context_ack.json": "6a6473981423c8602c12377fc88bc0798fc4a2a097d297d1d196ccdafba00086"
+    "apps/api/src/lib/supabase.ts": "sha256:4cf216fc73e3223ee5676565f0b39a9e8dbfe29d162ec001dac3f274700ecb9c",
+    "apps/api/src/shared/auth-flow.test.ts": "sha256:7d012cd91919312847e3e0eecd14ad636d05a65250159085b3a9727ceea7c2e1",
+    "apps/api/src/shared/vector-search.test.ts": "sha256:1f3c384e918ee4fee27836d3a9a11e69cd19cfdaefda8adbc60a3e588cc4cdba",
+    "apps/web/proxy.ts": "sha256:822f012df3531b9fb9c412317f57ce1d84a8bed083bfb6b6ebcd9c56a4e89d59",
+    "apps/web/src/lib/session.ts": "sha256:ddb539035c7d756afc5e28584ccd336b37f541e4256809fb7c6dd71dfca2bfdd",
+    "apps/api/src/middleware/auth.ts": "sha256:d45f12e054ea091a6a080521f1e564f3788e60cfc761e10b0fbf7457153dc663",
+    "apps/project-tracker/docs/metrics/_global/flows/FLOW-001.md": "sha256:33cdb7801eb479cd028b460206464339d6ffea7bfbfdcf8e9577c4a3fc6692ea",
+    ".specify/sprints/sprint-3/attestations/IFC-006/context_ack.json": "sha256:6a6473981423c8602c12377fc88bc0798fc4a2a097d297d1d196ccdafba00086"
   },
   "validation_results": [
     {

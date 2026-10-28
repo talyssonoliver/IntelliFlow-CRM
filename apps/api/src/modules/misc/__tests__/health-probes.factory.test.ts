@@ -66,6 +66,20 @@ describe('getHealthProbes', () => {
     expect(Object.values(counts).every((n) => n === 1)).toBe(true);
   });
 
+  it('reads the background jobs heartbeat only when the probe is called', async () => {
+    const check = vi.fn(async () => ({ status: 'ok' as const }));
+    vi.doMock('../../../background-jobs-heartbeat.js', () => ({
+      checkBackgroundJobsHeartbeat: check,
+    }));
+    const { getHealthProbes } = await import('../health-probes.js');
+    const probes = getHealthProbes();
+    expect(check).not.toHaveBeenCalled();
+
+    await expect(probes.backgroundJobs!()).resolves.toEqual({ status: 'ok' });
+    expect(check).toHaveBeenCalledTimes(1);
+    vi.doUnmock('../../../background-jobs-heartbeat.js');
+  });
+
   it('logs client errors, at most once a minute per client', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { getHealthProbes } = await import('../health-probes.js');

@@ -63,12 +63,12 @@
     "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/(public)/mfa/verify/page.tsx": "41698b26b8d9d4e2377955203b65c4c97a2cddabd6a0f57246aedc8606113619",
-    "apps/web/src/app/(public)/mfa/verify/mfa-verify-loading.tsx": "b87a7d7a47ae3861c2cc5e9e63b318a21f8eaa610c16d68a889da2d86ad15413",
-    "apps/web/src/app/(public)/mfa/verify/__tests__/page.test.tsx": "a2e237e2562fa39ef65c3de33ed4ec40e8cb69fc9f197966fb222354600d8f63",
-    "apps/web/src/app/(public)/layout.tsx": "21007f8c05334d6f87b3035d213780f70bde8b623255653f4b80a07e8cbe8041",
-    "apps/web/src/lib/session.ts": "ddb539035c7d756afc5e28584ccd336b37f541e4256809fb7c6dd71dfca2bfdd",
-    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "133bba33dc6ef378961d47561faa86b238b7fee1703fe91748318c2841582352"
+    "apps/web/src/app/(public)/mfa/verify/page.tsx": "sha256:41698b26b8d9d4e2377955203b65c4c97a2cddabd6a0f57246aedc8606113619",
+    "apps/web/src/app/(public)/mfa/verify/mfa-verify-loading.tsx": "sha256:b87a7d7a47ae3861c2cc5e9e63b318a21f8eaa610c16d68a889da2d86ad15413",
+    "apps/web/src/app/(public)/mfa/verify/__tests__/page.test.tsx": "sha256:a2e237e2562fa39ef65c3de33ed4ec40e8cb69fc9f197966fb222354600d8f63",
+    "apps/web/src/app/(public)/layout.tsx": "sha256:21007f8c05334d6f87b3035d213780f70bde8b623255653f4b80a07e8cbe8041",
+    "apps/web/src/lib/session.ts": "sha256:ddb539035c7d756afc5e28584ccd336b37f541e4256809fb7c6dd71dfca2bfdd",
+    "docs/design/diagrams/auth-public-pages-dependency-chain.md": "sha256:133bba33dc6ef378961d47561faa86b238b7fee1703fe91748318c2841582352"
   },
   "validation_results": [
     {

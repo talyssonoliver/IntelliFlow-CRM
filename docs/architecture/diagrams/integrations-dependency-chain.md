@@ -89,13 +89,37 @@ IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► web
 
 ---
 
+## 1b. User Mailboxes (PG-207, ADR-085)
+
+User mail leaves from the sender's own mailbox; IntelliFlow's own domain is
+never used for user mail.
+
+| Layer    | Component                                   | Status | Description                                             |
+| -------- | ------------------------------------------- | ------ | ------------------------------------------------------- |
+| Adapters | `SmtpMailboxTransport`                      | ✅     | SMTP submit (465/587/2525), DNS-pinned public host, TLS |
+| Adapters | `OAuthMailboxClient`                        | ✅     | Gmail API / Microsoft Graph send + DSN listing, PKCE    |
+| Adapters | `ImapBounceReader`                          | ✅     | IMAP 993, delivery-status reports only                  |
+| API      | `mailbox-transport.ts` / `dispatchUserMail` | ✅     | Token refresh (CAS), hourly cap, coded failures         |
+| API      | `bounce-reader.ts` + scheduler              | ✅     | Lease-claimed scans, suppression rules                  |
+| External | Google / Microsoft OAuth apps               | ⬜     | NEEDS_HUMAN: registration + restricted-scope review     |
+
+```
+Google OAuth ⬜ ──┐
+Microsoft OAuth ⬜ ┼──► OAuthMailboxClient ✅ ──┐
+SMTP server (user) ─► SmtpMailboxTransport ✅ ──┼──► mailbox-transport.ts ✅ ──► dispatchUserMail ✅ ──► email.sendEmail / forward
+                                               │
+IMAP server (user) ─► ImapBounceReader ✅ ──────┴──► bounce-reader.ts ✅ ──► EmailSuppression / email_bounced notification
+```
+
+---
+
 ## 2. Observability Stack
 
 ### Overview
 
 | Layer       | Task ID              | Status | Description                     |
 | ----------- | -------------------- | ------ | ------------------------------- |
-| Domain      | ENV-008-AI           | ✅     | OpenTelemetry Setup             |
+| Domain      | ENV-008-AI           | ⏳     | OpenTelemetry Setup             |
 | Validators  | traces.ts            | ⬜     | Trace schemas                   |
 | Application | IFC-116              | ⬜     | Metrics Collection              |
 | Adapters    | IFC-142              | ⬜     | Alerting & SLOs                 |
@@ -145,7 +169,7 @@ IFC-099 (Webhooks) ⬜ ──┬──► IFC-114 (Rate Limit) ⬜ ──► web
 ### Dependency Chain
 
 ```
-ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
+ENV-008-AI (OTel) ⏳ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
                        ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ⬜
                        └──► traces.ts (Val) ⬜ ───────────────────────────────────────────────────────┘
 ```
@@ -167,6 +191,7 @@ ENV-008-AI (OTel) ✅ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana
    - IFC-036: WhatsApp Business API integration
 
 2. **Observability Stack**:
-   - ENV-008-AI: ✅ Already complete
+   - ENV-008-AI: ⏳ SLOs, dashboard and Railway self-healing built as code
+     (ADR-087); production evidence after merge
    - IFC-116: Metrics collection implementation
    - IFC-142: Alerting rules and SLO definitions

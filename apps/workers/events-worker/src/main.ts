@@ -962,6 +962,9 @@ if (require.main === module) {
     });
 }
 
+// The configured instance, for in-process composition (apps/workers/combined-worker).
+export { worker as eventsWorker };
+
 // Exports - EventsWorker is already exported at class declaration
 export { EventDispatcher, DOMAIN_EVENT_TYPES } from './outbox/event-dispatcher';
 export { OutboxPoller, InMemoryOutboxRepository } from './outbox/pollOutbox';

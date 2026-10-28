@@ -16,8 +16,11 @@ import {
   getReadinessHealth,
 } from './modules/misc/health.service';
 import { container, containerReady } from './container';
-import { approvalSweepIntervalFromEnv, startApprovalSweep } from './agent/approval-sweep-scheduler';
-import { createDefaultSweepDeps, runApprovalSweep } from './agent/approval-escalation-sweep';
+import {
+  API_BACKGROUND_JOBS_ENV,
+  apiBackgroundJobsEnabled,
+  startBackgroundJobs,
+} from './background-jobs';
 import { getHealthProbes } from './modules/misc/health-probes';
 import { processStripeWebhook } from './webhooks/stripe-webhook';
 import { handlePmEventsRoute } from './modules/pm-events/handle-pm-events-route';
@@ -558,14 +561,18 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
     console.log(`[API] HTTP server listening on http://localhost:${port}`);
   });
 
-  // PG-198: approval escalation/expiry sweep — long-lived server process only.
-  startApprovalSweep({
-    intervalMs: approvalSweepIntervalFromEnv(process.env),
-    run: async () => {
-      await containerReady;
-      return runApprovalSweep(await createDefaultSweepDeps());
-    },
-  });
+  // PG-198 / PG-207: approval sweep and bounce scanner — long-lived server
+  // process only. API_BACKGROUND_JOBS=off keeps an idle api free of outbound
+  // traffic so Railway can sleep it; the combined worker runs them instead.
+  if (apiBackgroundJobsEnabled(process.env)) {
+    startBackgroundJobs({ ready: () => containerReady });
+  } else {
+    console.warn(
+      `[API] WARN background jobs disabled (${API_BACKGROUND_JOBS_ENV}=off): the approval sweep and ` +
+        'email bounce scan run only if the combined worker has COMBINED_BACKGROUND_JOBS=on. ' +
+        'If neither is set nothing runs them; /health/detailed reports degraded after 3x the interval.'
+    );
+  }
 
   return server;
 }

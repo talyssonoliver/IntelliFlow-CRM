@@ -31,6 +31,7 @@ export const LEAD_SOURCES = [
   'COLD_CALL',
   'EVENT',
   'OTHER',
+  'BOOKING', // PG-203: leads created by the public booking page
 ] as const;
 
 // Derive types from const arrays

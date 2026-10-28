@@ -6,7 +6,7 @@
 > typing the URL directly.
 
 > **Canonical counts**: All "page.tsx" file-count references in this document
-> reflect the filesystem total (Total Pages: 214) emitted by
+> reflect the filesystem total (Total Pages: 216) emitted by
 > `tools/scripts/content-audit.ts` — each `page.tsx` under `apps/web/src/app/**`
 > counts once; route groups stripped; `[id]` collapses; `app/api/` excluded. See
 > `docs/design/content-audit.md` for the full counting rule. Verified:
@@ -116,30 +116,33 @@ Legend:
 - **UM** = User menu dropdown
 - **SB** = Sidebar config entry
 - **IP** = In-page link (breadcrumb, button, data table row)
+- **EXT** = External entry (reached from a link shared outside the app, such as
+  a booking link; deliberately not linked from in-app navigation)
 - **--** = No entry (unreachable from that layer)
 
-### Public Pages (32 routes) — All reachable via PublicHeader/PublicFooter
+### Public Pages (33 routes) — All reachable via PublicHeader/PublicFooter, except the external-entry booking page
 
-| Route                                                     | Status | Notes                                       |
-| --------------------------------------------------------- | ------ | ------------------------------------------- |
-| `/` (public)                                              | OK     | Public home                                 |
-| `/about`                                                  | OK     | Footer link                                 |
-| `/aup`                                                    | OK     | Footer link (Acceptable Use Policy)         |
-| `/blog`, `/blog/[slug]`                                   | OK     | Header/footer links                         |
-| `/careers`, `/careers/[id]`                               | OK     | Footer link                                 |
-| `/contact`                                                | OK     | Header/footer link                          |
-| `/features`                                               | OK     | Header link                                 |
-| `/privacy`                                                | OK     | Footer, signup, home, cookie banner         |
-| `/terms`                                                  | OK     | Footer, signup, registration, welcome email |
-| `/cookies`                                                | OK     | Footer (2x), cookie banner                  |
-| `/dpa`                                                    | OK     | Footer (legal list)                         |
-| `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA                                  |
-| `/forgot-password`, `/reset-password/*`                   | OK     | Login page link                             |
-| `/mfa/verify`                                             | OK     | Login flow                                  |
-| `/verify-email/*`                                         | OK     | Signup flow                                 |
-| `/logout`                                                 | OK     | Auth flow                                   |
-| `/lp/[slug]`                                              | OK     | Marketing campaign links                    |
-| `/partners`, `/press`, `/pricing`, `/security`, `/status` | OK     | Footer links                                |
+| Route                                                     | Status | Notes                                                                                                                                                                                                              |
+| --------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/` (public)                                              | OK     | Public home                                                                                                                                                                                                        |
+| `/about`                                                  | OK     | Footer link                                                                                                                                                                                                        |
+| `/aup`                                                    | OK     | Footer link (Acceptable Use Policy)                                                                                                                                                                                |
+| `/blog`, `/blog/[slug]`                                   | OK     | Header/footer links                                                                                                                                                                                                |
+| `/careers`, `/careers/[id]`                               | OK     | Footer link                                                                                                                                                                                                        |
+| `/contact`                                                | OK     | Header/footer link                                                                                                                                                                                                 |
+| `/features`                                               | OK     | Header link                                                                                                                                                                                                        |
+| `/privacy`                                                | OK     | Footer, signup, home, cookie banner                                                                                                                                                                                |
+| `/terms`                                                  | OK     | Footer, signup, registration, welcome email                                                                                                                                                                        |
+| `/cookies`                                                | OK     | Footer (2x), cookie banner                                                                                                                                                                                         |
+| `/dpa`                                                    | OK     | Footer (legal list)                                                                                                                                                                                                |
+| `/login`, `/signup`, `/signup/success`                    | OK     | Header CTA                                                                                                                                                                                                         |
+| `/forgot-password`, `/reset-password/*`                   | OK     | Login page link                                                                                                                                                                                                    |
+| `/mfa/verify`                                             | OK     | Login flow                                                                                                                                                                                                         |
+| `/verify-email/*`                                         | OK     | Signup flow                                                                                                                                                                                                        |
+| `/logout`                                                 | OK     | Auth flow                                                                                                                                                                                                          |
+| `/lp/[slug]`                                              | OK     | Marketing campaign links                                                                                                                                                                                           |
+| `/partners`, `/press`, `/pricing`, `/security`, `/status` | OK     | Footer links                                                                                                                                                                                                       |
+| `/book/[handle]/[slug]`                                   | OK     | External entry (PG-203): booking link built by `BookingLinkCard.tsx` (`<origin>/book/<handle>/<slug>`) and shared with clients. Chrome-free, `noindex`, disallowed in `robots.ts`, no sidebar entry. Not a waiver. |
 
 ### Dashboard (3 routes)
 
@@ -226,12 +229,12 @@ Legend:
 
 ### Calendar (4 routes)
 
-| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                                               |
-| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------------------------------- |
-| `/calendar`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) + appointments sidebar link   |
-| `/calendar/availability`      | --  | --  | SB  | IP  |    YES     | Calendar sidebar + Calendar Settings links (PG-202) |
-| `/calendar/event-types`       | --  | --  | SB  | --  |    YES     | Calendar sidebar                                    |
-| `/calendar/calendar-settings` | --  | --  | SB  | --  |    YES     | Calendar sidebar                                    |
+| Route                         |  H  | UM  | SB  | IP  | Reachable? | Notes                                                    |
+| ----------------------------- | :-: | :-: | :-: | :-: | :--------: | -------------------------------------------------------- |
+| `/calendar`                   | YES | --  | SB  | --  |    YES     | Header nav (CORE_CRM) + appointments sidebar link        |
+| `/calendar/availability`      | --  | --  | SB  | IP  |    YES     | Calendar sidebar + Calendar Settings links (PG-202)      |
+| `/calendar/event-types`       | --  | --  | SB  | IP  |    YES     | Calendar sidebar (`configs/calendar.ts` line 12); PG-203 |
+| `/calendar/calendar-settings` | --  | --  | SB  | --  |    YES     | Calendar sidebar                                         |
 
 ### Cases (9 routes)
 
@@ -287,14 +290,15 @@ Legend:
 
 ### Email (6 routes)
 
-| Route                   |  H  | UM  | SB  | IP  | Reachable? | Notes                       |
-| ----------------------- | :-: | :-: | :-: | :-: | :--------: | --------------------------- |
-| `/email`                | YES | --  | SB  | --  |    YES     | Header nav + sidebar wired  |
-| `/email/[id]`           | --  | --  | --  | IP  |     OK     | From inbox rows             |
-| `/email/compose`        | --  | --  | --  | IP  |     OK     | Compose button in email app |
-| `/email/templates`      | --  | --  | SB  | --  |    YES     | Email sidebar               |
-| `/email/signatures`     | --  | --  | SB  | --  |    YES     | Email sidebar               |
-| `/email/email-settings` | --  | --  | SB  | --  |    YES     | Email sidebar               |
+| Route                   |  H  | UM  | SB  | IP  | Reachable? | Notes                                                                                                                          |
+| ----------------------- | :-: | :-: | :-: | :-: | :--------: | ------------------------------------------------------------------------------------------------------------------------------ |
+| `/email`                | YES | --  | SB  | --  |    YES     | Header nav + sidebar wired                                                                                                     |
+| `/email/[id]`           | --  | --  | --  | IP  |     OK     | From inbox rows                                                                                                                |
+| `/email/compose`        | --  | --  | --  | IP  |     OK     | Compose button in email app                                                                                                    |
+| `/email/templates`      | --  | --  | SB  | --  |    YES     | Email sidebar                                                                                                                  |
+| `/email/signatures`     | --  | --  | SB  | --  |    YES     | Email sidebar                                                                                                                  |
+| `/email/email-settings` | --  | --  | SB  | IP  |    YES     | Email sidebar; compose "Open Email Settings" link                                                                              |
+| `/email/oauth/callback` | --  | --  | --  | --  |    N/A     | Redirect target of the Google / Microsoft mailbox sign-in (`EMAIL_OAUTH_REDIRECT_URI`); no navigation entry by design (PG-207) |
 
 ### Governance (10 routes)
 
@@ -522,7 +526,8 @@ updated at ship time):
 - Contacts: `contact-types`, `contact-settings`, `import-export`
 - Deals: `deal-stages`, `deal-settings`, `deal-automation`
 - Documents: `document-types`, `storage-policies`, `document-settings`
-- Email: `compose`, `templates`, `signatures`, `email-settings`
+- Email: `compose`, `templates`, `signatures`, `email-settings`,
+  `oauth/callback` (redirect target)
 - Governance: `quality-reports/trpc-benchmark`
 - Leads: `pipeline`, `routing`, `lead-settings`
 - Tasks: `task-types`, `task-settings`, `automation`

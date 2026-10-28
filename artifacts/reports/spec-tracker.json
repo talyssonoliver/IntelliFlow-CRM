@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-10-22T14:15:41.915Z",
+  "generated_at": "2026-10-28T22:10:26.756Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 527,
-    "completed": 441,
-    "partially_done": 23,
+    "completed": 442,
+    "partially_done": 22,
     "spec_only": 55,
     "uncertain": 8
   },
@@ -250,22 +250,10 @@
       "recommendation": "Update CSV to 100% to match attestation and metric evidence."
     },
     {
-      "task_id": "PG-203",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-203 when ready for implementation."
-    },
-    {
       "task_id": "PG-206",
       "severity": "MEDIUM",
       "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
       "recommendation": "Run /exec PG-206 when ready for implementation."
-    },
-    {
-      "task_id": "PG-207",
-      "severity": "MEDIUM",
-      "issue": "Has attestation directory but CSV status is Backlog. Attestation may be from planning phase only.",
-      "recommendation": "Run /exec PG-207 when ready for implementation."
     },
     {
       "task_id": "PG-208",
@@ -1011,9 +999,9 @@
       "task_id": "ENV-008-AI",
       "title": "Automated Observability with Predictive Monitoring",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/ENV-008-AI-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
       "csv_status": "In Progress",
       "metric_status": "IN_PROGRESS",
@@ -1968,14 +1956,14 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "In Progress",
-      "metric_status": "IN_PROGRESS",
+      "csv_status": "Completed",
+      "metric_status": "DONE",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "IFC-030",
         "IFC-032"
       ],
-      "real_status": "PARTIALLY_DONE"
+      "real_status": "COMPLETED"
     },
     {
       "task_id": "IFC-039",
@@ -4826,7 +4814,7 @@
     },
     {
       "task_id": "IFC-221",
-      "title": "Email Open Tracking Integration  -  Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1  -  infra-only). Resolves WIRE-IFC-099-001.",
+      "title": "Email Open Tracking Integration  -  Real email open/click tracking. Backend: tracking pixel endpoint recording opens; click-through URL wrapper; EmailTracking model. Frontend: replace activity-derived open rate with real data on Lead and Contact detail. Inject pixel + wrap links on outbound send. Follows IFC-144 and IFC-099 (Pattern 1  -  infra-only). Resolves WIRE-IFC-099-001. Broadened 2026-10-21 (PG-207): the pixel and link wrapping apply to mail sent through every user mailbox kind (SMTP/Gmail/Microsoft via dispatchUserMail; ADR-085) and honour the PG-207 Email Settings trackOpens/trackClicks toggles (category 2 until this ships).",
       "sprint": 22,
       "spec_path": null,
       "has_spec": false,
@@ -8573,12 +8561,12 @@
       "task_id": "PG-203",
       "title": "Module Settings - Event Types (/calendar/event-types)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-203-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
@@ -8641,12 +8629,12 @@
       "task_id": "PG-207",
       "title": "Module Settings - Email (/email/email-settings)",
       "sprint": 18,
-      "spec_path": null,
-      "has_spec": false,
-      "has_plan": false,
+      "spec_path": ".specify/sprints/sprint-18/specifications/PG-207-spec.md",
+      "has_spec": true,
+      "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Backlog",
-      "metric_status": "BACKLOG",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",

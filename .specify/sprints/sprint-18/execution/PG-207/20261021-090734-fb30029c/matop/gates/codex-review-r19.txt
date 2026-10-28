@@ -1,0 +1,38 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 209 files total
+[codex-review] in scope : 157 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T14:59:52.317Z
+Base ref  : origin/main
+Files in scope : 157
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/app/email/email-settings/components/MyMailboxCard.tsx:177 — smtp-reconnect-unreachable
+    Issue    : Disconnecting an SMTP mailbox removes every UI control for reconnecting it through SMTP.
+    Evidence : The setup button requires `!editing && mailbox?.kind !== 'SMTP'`, while the edit button is inside `{connected && (...)}`. The disconnect endpoint preserves the mailbox row and its SMTP kind but sets status to DISCONNECTED, making connected false. Consequently, neither button appears after disconnecting, including when OAuth providers are unavailable. Existing disconnect tests mock success without supplying the resulting disconnected row.
+    Fix      : Show SMTP setup or reconnection whenever the mailbox is disconnected, including when its retained kind is SMTP.
+    Fingerprint: 9b29193a4e862c8c5654d8c03ed147b8d5194f2f3cf8259181fa31247e0e40e5
+
+  [MEDIUM] packages/adapters/src/messaging/email/oauth-mailbox.ts:172-175 — transient-oauth-error-disables-mailbox
+    Issue    : A temporary OAuth token endpoint failure is classified as an authentication failure and disables an otherwise valid mailbox.
+    Evidence : `data.error === 'invalid_grant' ? 'TOKEN_REVOKED' : 'AUTH_FAILED'` maps every other non-success response, including HTTP 429 and 503, to AUTH_FAILED. During sending, mailbox-sender.ts recordFailure handles that code by persisting `status: 'ERROR'`; resolveSendingMailbox then refuses subsequent sends, and the bounce scheduler selects only ACTIVE mailboxes. Thus a temporary provider outage requires manual recovery even after the provider recovers.
+    Fix      : Map token endpoint throttling and server errors to RATE_LIMITED and CONNECT_FAILED before classifying credential failures; reserve AUTH_FAILED and TOKEN_REVOKED for actual authentication errors.
+    Fingerprint: 2fd67c2d89b09a75f6cf001552565a4a9a22ec89b96c6ee0bb22daff9a781ca9
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.
+exit=1

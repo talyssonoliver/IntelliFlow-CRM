@@ -11,6 +11,8 @@ export interface AlertRuleEntry {
   severity: string;
   summary: string;
   requireSeries?: boolean;
+  /** false skips the series check entirely (rules that alert on silence). */
+  liveSeriesCheck?: boolean;
 }
 export interface AlertRulesConfig {
   folder: { uid: string; title: string };
@@ -37,6 +39,7 @@ export interface GrafanaAlertRule {
     };
   }>;
 }
+export function liveSeriesSelector(selector: string): string;
 export function buildRule(entry: AlertRuleEntry, config: AlertRulesConfig): GrafanaAlertRule;
 export function validateConfig(
   config: Partial<Omit<AlertRulesConfig, 'rules'>> & { rules: Partial<AlertRuleEntry>[] }
@@ -49,4 +52,6 @@ export function run(options?: {
     init: { method: string; headers: Record<string, string>; body?: string }
   ) => Promise<{ status: number; text(): Promise<string> }>;
   log?: (line: string) => void;
+  /** Wait between 503 retries; tests pass a no-op (ENV-008-AI AC-001). */
+  sleep?: (ms: number) => Promise<void>;
 }): Promise<{ applied: number; empty: string[] }>;

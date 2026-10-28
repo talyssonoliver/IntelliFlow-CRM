@@ -49,6 +49,13 @@ export default function NewAppointmentPage() {
     ? { before: firm.defaultBufferBeforeMinutes, after: firm.defaultBufferAfterMinutes }
     : undefined;
 
+  // PG-203: active event types are templates for the form; it waits for them like the
+  // settings above, so the picker never pops in after the user started typing.
+  const eventTypesQuery = api.calendar.eventTypes.listActive.useQuery(undefined, {
+    enabled: isAuthenticated,
+  });
+  const eventTypes = eventTypesQuery.data ?? [];
+
   const createMutation = api.appointments.create.useMutation({
     onSuccess: () => {
       router.push('/appointments');
@@ -76,7 +83,7 @@ export default function NewAppointmentPage() {
     router.push('/appointments');
   }, [router]);
 
-  if (authLoading || !isAuthenticated || settingsQuery.isLoading) {
+  if (authLoading || !isAuthenticated || settingsQuery.isLoading || eventTypesQuery.isLoading) {
     return (
       <>
         <Skeleton className="h-6 w-64 mb-4" />
@@ -100,6 +107,7 @@ export default function NewAppointmentPage() {
         defaultStartTime={defaultStartTime}
         defaultEndTime={defaultEndTime}
         defaultBuffers={defaultBuffers}
+        eventTypes={eventTypes}
         onSubmit={handleSubmit}
         onCancel={handleCancel}
         isSubmitting={createMutation.isPending}

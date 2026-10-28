@@ -34,7 +34,8 @@ export type LeadSource =
   | 'EMAIL'
   | 'COLD_CALL'
   | 'EVENT'
-  | 'OTHER';
+  | 'OTHER'
+  | 'BOOKING'; // PG-203: created by the public booking page
 export type LeadTemperature = 'hot' | 'warm' | 'cold';
 
 // ─── Badges ─────────────────────────────────────────────────────────────────
@@ -136,6 +137,7 @@ export function SourceBadge({ source }: Readonly<{ source: LeadSource }>) {
     COLD_CALL: { label: 'Cold Call', className: 'bg-slate-100 text-slate-700 border-slate-200' },
     EVENT: { label: 'Event', className: 'bg-pink-50 text-pink-700 border-pink-200' },
     OTHER: { label: 'Other', className: 'bg-slate-100 text-slate-600 border-slate-200' },
+    BOOKING: { label: 'Booking', className: 'bg-teal-50 text-teal-700 border-teal-200' },
   };
 
   const config = sourceConfig[source];

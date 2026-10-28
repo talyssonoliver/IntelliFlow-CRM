@@ -2,7 +2,7 @@
   "benchmark_id": "ENV-015-AI-performance-baseline",
   "title": "IntelliFlow CRM - Performance Baseline",
   "description": "Real performance baseline with all infrastructure available",
-  "timestamp": "2026-10-20T21:56:14.021Z",
+  "timestamp": "2026-10-25T10:51:15.360Z",
   "status": "COMPLETED",
   "environment": {
     "node": "v25.2.1",
@@ -1015,10 +1015,10 @@
     ]
   },
   "api_inventory": {
-    "total_routers": 73,
-    "total_endpoints": 576,
-    "total_queries": 246,
-    "total_mutations": 330,
+    "total_routers": 78,
+    "total_endpoints": 599,
+    "total_queries": 255,
+    "total_mutations": 344,
     "routers": [
       {
         "name": "contact",
@@ -1255,7 +1255,25 @@
         "mutations": 4
       },
       {
+        "name": "eventTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
         "name": "contactTypes",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "emailSettings",
+        "endpoints": 6,
+        "queries": 2,
+        "mutations": 4
+      },
+      {
+        "name": "emailSignatures",
         "endpoints": 6,
         "queries": 2,
         "mutations": 4
@@ -1363,6 +1381,12 @@
         "mutations": 1
       },
       {
+        "name": "publicBooking",
+        "endpoints": 3,
+        "queries": 2,
+        "mutations": 1
+      },
+      {
         "name": "appointmentSettings",
         "endpoints": 3,
         "queries": 1,
@@ -1394,6 +1418,12 @@
       },
       {
         "name": "upload",
+        "endpoints": 2,
+        "queries": 1,
+        "mutations": 1
+      },
+      {
+        "name": "emailMailbox",
         "endpoints": 2,
         "queries": 1,
         "mutations": 1
@@ -1461,32 +1491,39 @@
     ]
   },
   "database_inventory": {
-    "total_tables": 201,
-    "total_fields": 2892,
-    "total_indexes": 906,
-    "total_relations": 284,
+    "total_tables": 209,
+    "total_fields": 3032,
+    "total_indexes": 935,
+    "total_relations": 295,
     "tables_with_embeddings": 4,
-    "enums": 78,
+    "enums": 79,
     "tables": [
       {
         "name": "Tenant",
-        "fields": 176,
-        "indexes": 6,
+        "fields": 185,
+        "indexes": 7,
         "relations": 3,
         "hasEmbedding": false
       },
       {
         "name": "Lead",
         "fields": 49,
-        "indexes": 14,
+        "indexes": 15,
         "relations": 3,
         "hasEmbedding": true
       },
       {
         "name": "User",
-        "fields": 46,
+        "fields": 48,
         "indexes": 7,
         "relations": 8,
+        "hasEmbedding": false
+      },
+      {
+        "name": "Appointment",
+        "fields": 38,
+        "indexes": 10,
+        "relations": 4,
         "hasEmbedding": false
       },
       {
@@ -1500,6 +1537,13 @@
         "name": "ConversationRecord",
         "fields": 36,
         "indexes": 7,
+        "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailMailbox",
+        "fields": 36,
+        "indexes": 4,
         "relations": 2,
         "hasEmbedding": false
       },
@@ -1532,10 +1576,10 @@
         "hasEmbedding": false
       },
       {
-        "name": "Appointment",
-        "fields": 30,
-        "indexes": 10,
-        "relations": 4,
+        "name": "EmailRecord",
+        "fields": 31,
+        "indexes": 9,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -1570,13 +1614,6 @@
         "name": "Notification",
         "fields": 28,
         "indexes": 10,
-        "relations": 1,
-        "hasEmbedding": false
-      },
-      {
-        "name": "EmailRecord",
-        "fields": 26,
-        "indexes": 7,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -1732,6 +1769,13 @@
         "fields": 17,
         "indexes": 3,
         "relations": 2,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EventType",
+        "fields": 17,
+        "indexes": 5,
+        "relations": 1,
         "hasEmbedding": false
       },
       {
@@ -1966,6 +2010,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailBounceReceipt",
+        "fields": 14,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "ChatMessage",
         "fields": 14,
         "indexes": 4,
@@ -2134,6 +2185,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "TenantEmailSettings",
+        "fields": 12,
+        "indexes": 2,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "KPIDefinition",
         "fields": 12,
         "indexes": 3,
@@ -2229,6 +2287,13 @@
         "fields": 11,
         "indexes": 6,
         "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSignature",
+        "fields": 11,
+        "indexes": 2,
+        "relations": 2,
         "hasEmbedding": false
       },
       {
@@ -2414,6 +2479,13 @@
         "hasEmbedding": false
       },
       {
+        "name": "EmailOAuthState",
+        "fields": 10,
+        "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
         "name": "PerformanceMetric",
         "fields": 10,
         "indexes": 6,
@@ -2515,6 +2587,13 @@
         "name": "PipelineSnapshot",
         "fields": 9,
         "indexes": 4,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "EmailSuppression",
+        "fields": 9,
+        "indexes": 2,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2739,6 +2818,13 @@
         "name": "AvailabilityClosure",
         "fields": 7,
         "indexes": 3,
+        "relations": 1,
+        "hasEmbedding": false
+      },
+      {
+        "name": "BookingAttempt",
+        "fields": 7,
+        "indexes": 4,
         "relations": 1,
         "hasEmbedding": false
       },
@@ -2974,9 +3060,15 @@
     ]
   },
   "workers_inventory": {
-    "total_workers": 2,
+    "total_workers": 3,
     "total_jobs": 3,
     "workers": [
+      {
+        "name": "combined",
+        "type": "other",
+        "jobs": [],
+        "description": "Background job processing"
+      },
       {
         "name": "events",
         "type": "events",
@@ -3234,11 +3326,11 @@
     ]
   },
   "validators_inventory": {
-    "total_validators": 60,
-    "total_schemas": 644,
+    "total_validators": 64,
+    "total_schemas": 671,
     "by_complexity": {
-      "complex": 35,
-      "moderate": 21,
+      "complex": 37,
+      "moderate": 23,
       "simple": 4
     },
     "validators": [
@@ -3411,10 +3503,22 @@
         "complexity": "complex"
       },
       {
+        "name": "event-types",
+        "file": "event-types.ts",
+        "schemas": 9,
+        "complexity": "complex"
+      },
+      {
         "name": "ticket-settings",
         "file": "ticket-settings.ts",
         "schemas": 9,
         "complexity": "complex"
+      },
+      {
+        "name": "email-mailbox",
+        "file": "email-mailbox.ts",
+        "schemas": 8,
+        "complexity": "moderate"
       },
       {
         "name": "help-article",
@@ -3467,6 +3571,18 @@
       {
         "name": "case-types",
         "file": "case-types.ts",
+        "schemas": 5,
+        "complexity": "moderate"
+      },
+      {
+        "name": "email-settings",
+        "file": "email-settings.ts",
+        "schemas": 5,
+        "complexity": "complex"
+      },
+      {
+        "name": "email-signatures",
+        "file": "email-signatures.ts",
         "schemas": 5,
         "complexity": "moderate"
       },
@@ -4522,6 +4638,55 @@
         "description": "Delete calendar"
       }
     ],
+    "eventTypes": [
+      {
+        "name": "eventTypes.list",
+        "method": "GET",
+        "description": "List eventTypess with pagination"
+      },
+      {
+        "name": "eventTypes.listActive",
+        "method": "GET",
+        "description": "List active"
+      },
+      {
+        "name": "eventTypes.create",
+        "method": "POST",
+        "description": "Create new eventTypes"
+      },
+      {
+        "name": "eventTypes.update",
+        "method": "POST",
+        "description": "Update eventTypes"
+      },
+      {
+        "name": "eventTypes.delete",
+        "method": "POST",
+        "description": "Delete eventTypes"
+      },
+      {
+        "name": "eventTypes.setBookingLink",
+        "method": "POST",
+        "description": "Set booking link"
+      }
+    ],
+    "publicBooking": [
+      {
+        "name": "publicBooking.getEventType",
+        "method": "GET",
+        "description": "Get event type"
+      },
+      {
+        "name": "publicBooking.listSlots",
+        "method": "GET",
+        "description": "List slots"
+      },
+      {
+        "name": "publicBooking.book",
+        "method": "POST",
+        "description": "Book"
+      }
+    ],
     "chainVersion": [
       {
         "name": "chainVersion.create",
@@ -4850,6 +5015,82 @@
         "name": "upload.getUploadStatus",
         "method": "GET",
         "description": "Get upload status"
+      }
+    ],
+    "emailMailbox": [
+      {
+        "name": "emailMailbox.getMine",
+        "method": "GET",
+        "description": "Get mine"
+      },
+      {
+        "name": "emailMailbox.getTenant",
+        "method": "POST",
+        "description": "Get tenant"
+      }
+    ],
+    "emailSettings": [
+      {
+        "name": "emailSettings.list",
+        "method": "GET",
+        "description": "List emailSettingss with pagination"
+      },
+      {
+        "name": "emailSettings.add",
+        "method": "POST",
+        "description": "Add"
+      },
+      {
+        "name": "emailSettings.remove",
+        "method": "POST",
+        "description": "Remove"
+      },
+      {
+        "name": "emailSettings.get",
+        "method": "GET",
+        "description": "Get"
+      },
+      {
+        "name": "emailSettings.update",
+        "method": "POST",
+        "description": "Update emailSettings"
+      },
+      {
+        "name": "emailSettings.resetToDefaults",
+        "method": "POST",
+        "description": "Reset to defaults"
+      }
+    ],
+    "emailSignatures": [
+      {
+        "name": "emailSignatures.list",
+        "method": "GET",
+        "description": "List emailSignaturess with pagination"
+      },
+      {
+        "name": "emailSignatures.create",
+        "method": "POST",
+        "description": "Create new emailSignatures"
+      },
+      {
+        "name": "emailSignatures.update",
+        "method": "POST",
+        "description": "Update emailSignatures"
+      },
+      {
+        "name": "emailSignatures.delete",
+        "method": "POST",
+        "description": "Delete emailSignatures"
+      },
+      {
+        "name": "emailSignatures.setDefault",
+        "method": "POST",
+        "description": "Set default"
+      },
+      {
+        "name": "emailSignatures.resolveDefault",
+        "method": "GET",
+        "description": "Resolve default"
       }
     ],
     "inbound": [

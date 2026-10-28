@@ -1,0 +1,75 @@
+name: Railway Self-Healing
+
+# Reads, and on merge sets, the self-healing settings of the Railway production
+# services api and combined-worker, plus ai-worker while it exists (ENV-008-AI,
+# ADR-087; owner ruling 2: set by CI on merge, never from a developer machine).
+# The stopped ai-worker, events-worker and ingestion-worker services never fail
+# the run and are never deployed:
+#   - restartPolicyType ON_FAILURE (Railway restarts a process that crashes,
+#     not one that hangs);
+#   - a deploy health check (a deployment whose health path does not answer
+#     never takes traffic; it is a deploy gate, not a liveness probe).
+#
+# CI owns these settings: changing DESIRED in
+# tools/scripts/observability/apply-railway-self-healing.mjs changes production
+# on merge. The settings stay in Railway even if this workflow is deleted. The
+# job never deploys or redeploys; changes take effect from the next deployment.
+#
+# The api health check is only set after a live 200 from
+# https://<api host>/api/health/live. The probe is bound to the api service's own
+# Railway host (EXPECTED_API_HOST in the script): if PRODUCTION_API_URL names any
+# other host, the probe is refused. If the probe fails or is refused, the restart
+# policy is still set, the health check is not, and the run fails so the skip is
+# seen. An unreadable variables answer (auth or API error) also fails the run.
+# After a skip, only a push touching this workflow or its script, or a manual
+# run with "apply" ticked, retries it.
+#
+# A manual run without "apply" is the drift check: it prints before/after for
+# every setting and changes nothing. Run it after any change made in the
+# Railway dashboard. No schedule (Actions budget).
+#
+# Uses the repository secret RAILWAY_TOKEN (an account token, so the CLI and
+# API expect it as RAILWAY_API_TOKEN; scoping it down is #1031). The script
+# never prints the token, an ID, a variable value or the api host.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'tools/scripts/observability/apply-railway-self-healing.mjs'
+      - '.github/workflows/railway-self-healing.yml'
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Write the differing settings (unticked: read-only drift check)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: railway-self-healing
+  cancel-in-progress: false
+
+jobs:
+  self-healing:
+    name: Railway restart policy and health checks
+    runs-on: ubuntu-latest
+    environment: Production
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          sparse-checkout: |
+            tools/scripts/observability
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+      - name: Read or apply
+        env:
+          RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_PROJECT_ID }}
+          PRODUCTION_API_URL: ${{ vars.PRODUCTION_API_URL }}
+          APPLY: ${{ (github.event_name == 'push' || inputs.apply) && '--apply' || '' }}
+        run: node tools/scripts/observability/apply-railway-self-healing.mjs $APPLY

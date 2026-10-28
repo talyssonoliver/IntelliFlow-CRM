@@ -60,13 +60,17 @@ const CHECK_NAMES = [
   'appointment_settings_maxDailyBookings_check',
 ];
 
+/** Already exists (constraint, policy), duplicate column, duplicate relation (index). */
+const ALREADY_THERE = ['42710', '42701', '42P07'];
+
 /**
  * CI builds its test database with `prisma db push`, which creates the tables and
  * columns from schema.prisma but never runs migration SQL: the named CHECKs and the
- * RLS policies are absent there. When either probe constraint is missing, add the
- * shared-table columns in place (never dropped) and rebuild the two availability
- * tables (they hold only this suite's rows) from the migration's own SQL. The DDL runs
- * under the shared schema lock: other suites write these tables' parents concurrently.
+ * RLS policies are absent there. When either probe constraint is missing, add them in
+ * place from the migration's own SQL, tolerating what db push already created. The
+ * tables are never dropped: other suites (PG-203 public booking) hold availability rows
+ * while this one runs, and a rebuild would delete them mid-test. The DDL runs under the
+ * shared schema lock: other suites write these tables' parents concurrently.
  */
 async function ensureMigrationSql(client: any): Promise<void> {
   const shared = [
@@ -84,10 +88,7 @@ async function ensureMigrationSql(client: any): Promise<void> {
   const settingsCheck = present.some(
     (row) => row.conname === 'appointment_settings_maxDailyBookings_check'
   );
-  const statements = [
-    ...shared,
-    'DROP TABLE IF EXISTS "availability_hours", "availability_closures" CASCADE',
-  ];
+  const statements = [...shared];
   for (const stmt of splitStatements(migrationSql())) {
     if (/^ALTER TABLE "appointment_settings" ADD COLUMN/.test(stmt)) continue;
     if (
@@ -96,9 +97,23 @@ async function ensureMigrationSql(client: any): Promise<void> {
     ) {
       continue;
     }
-    statements.push(stmt);
+    statements.push(...inPlace(stmt));
   }
-  await applySchemaSql(DB_URL!, statements);
+  await applySchemaSql(DB_URL!, statements, { tolerate: ALREADY_THERE });
+}
+
+/** db push already made the table: turn its inline named CHECKs into ADD CONSTRAINTs. */
+function inPlace(stmt: string): string[] {
+  const table = /^CREATE TABLE ("[^"]+")/.exec(stmt);
+  if (!table) return [stmt];
+  return stmt
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.startsWith('CONSTRAINT "') && line.includes('" CHECK ('))
+    .map((line) => {
+      const body = line.endsWith(',') ? line.slice(0, -1) : line;
+      return `ALTER TABLE ${table[1]} ADD ${body}`;
+    });
 }
 
 const DB_URL = process.env.DATABASE_URL;

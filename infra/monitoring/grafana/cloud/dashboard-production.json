@@ -1,0 +1,117 @@
+{
+  "_comment": "ENV-008-AI production service dashboard (ADR-087). Applied by .github/workflows/grafana-dashboard.yml with tools/scripts/observability/apply-grafana-dashboard.mjs. Only api and ai-worker emit telemetry today; queries use the span-metric series production has (traces_spanmetrics_calls_total and the native histogram traces_spanmetrics_latency).",
+  "folderUid": "intelliflow-prod",
+  "dashboard": {
+    "uid": "env008-production",
+    "title": "IntelliFlow production services",
+    "tags": ["env-008-ai", "production"],
+    "timezone": "utc",
+    "schemaVersion": 39,
+    "refresh": "1m",
+    "time": { "from": "now-24h", "to": "now" },
+    "panels": [
+      {
+        "type": "timeseries",
+        "title": "Request rate by service",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+        "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+            "expr": "sum by (service) (rate(traces_spanmetrics_calls_total{service=~\"api|ai-worker\", span_kind=\"SPAN_KIND_SERVER\"}[$__rate_interval]))",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "Error ratio by service",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+        "fieldConfig": {
+          "defaults": { "unit": "percentunit", "min": 0 },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+            "expr": "sum by (service) (rate(traces_spanmetrics_calls_total{service=~\"api|ai-worker\", status_code=\"STATUS_CODE_ERROR\"}[$__rate_interval])) / sum by (service) (rate(traces_spanmetrics_calls_total{service=~\"api|ai-worker\"}[$__rate_interval]))",
+            "legendFormat": "{{service}}"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "api p95 latency (server, health probes excluded)",
+        "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "s",
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "green", "value": null },
+                { "color": "red", "value": 0.2 }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+            "expr": "histogram_quantile(0.95, sum(rate(traces_spanmetrics_latency{service=\"api\", span_kind=\"SPAN_KIND_SERVER\", span_name!~\"(GET|HEAD) (/api)?/health(/.*)?\"}[$__rate_interval])))",
+            "legendFormat": "p95"
+          }
+        ]
+      },
+      {
+        "type": "timeseries",
+        "title": "ai-worker llm.invoke calls by status",
+        "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+        "fieldConfig": { "defaults": { "unit": "reqps" }, "overrides": [] },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+            "expr": "sum by (status_code) (rate(traces_spanmetrics_calls_total{service=\"ai-worker\", span_name=\"llm.invoke\"}[$__rate_interval]))",
+            "legendFormat": "{{status_code}}"
+          }
+        ]
+      },
+      {
+        "type": "stat",
+        "title": "api availability over the range (objective 99.9%)",
+        "gridPos": { "h": 6, "w": 24, "x": 0, "y": 16 },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percentunit",
+            "decimals": 3,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                { "color": "red", "value": null },
+                { "color": "green", "value": 0.999 }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "options": {
+          "reduceOptions": { "calcs": ["lastNotNull"] },
+          "colorMode": "background"
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+            "expr": "sum(increase(traces_spanmetrics_calls_total{service=\"api\", span_kind=\"SPAN_KIND_SERVER\", span_name!~\"(GET|HEAD) (/api)?/health(/.*)?\", status_code!=\"STATUS_CODE_ERROR\"}[$__range])) / sum(increase(traces_spanmetrics_calls_total{service=\"api\", span_kind=\"SPAN_KIND_SERVER\", span_name!~\"(GET|HEAD) (/api)?/health(/.*)?\"}[$__range]))",
+            "instant": true
+          }
+        ]
+      }
+    ]
+  }
+}

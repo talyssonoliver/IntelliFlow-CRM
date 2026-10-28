@@ -52,6 +52,12 @@ export type {
   ContactAutomationSetting,
   ContactType,
   ContactTypeDefaultTag,
+  EmailMailbox,
+  EmailOAuthState,
+  TenantEmailSettings,
+  EmailSignature,
+  EmailSuppression,
+  EmailBounceReceipt,
   ContactReplyDraft,
   AccountAIInsight,
   AccountHierarchyConfig,
@@ -101,6 +107,8 @@ export type {
   AppointmentSettings,
   AvailabilityHour, // PG-202
   AvailabilityClosure,
+  EventType, // PG-203
+  BookingAttempt, // PG-203
   PublicFeedback,
   LeadCustomField,
 } from '../generated/prisma/client';

@@ -15,9 +15,16 @@
  * - Decision 4: Hash chain signing
  * - Decision 5: GDPR retention with jurisdictional variance
  * - Decision 7: Cross-tenant isolation
+ *
+ * Storage: AI security events are written to `audit_log_entries` only. The
+ * adapter used to also write `security_events`, whose columns and
+ * SecurityEventType enum have no place for AI events, so every write failed
+ * with a PrismaClientValidationError and no AI security event was ever stored.
+ * The event's severity, actor and hash chain (previousHash,
+ * integrityHash, signature) live in `metadata.audit`.
  */
 
-import { createHmac, randomUUID, createCipheriv } from 'node:crypto';
+import { createHmac, randomUUID, createCipheriv, timingSafeEqual } from 'node:crypto';
 import type {
   AuditLogPort,
   AISecurityEventInput,
@@ -46,15 +53,130 @@ export interface DurableAuditConfig {
  * Prisma-like interface for the adapter (to avoid direct Prisma dependency)
  */
 export interface AuditPrismaClient {
-  securityEvent: {
-    create: (args: { data: any }) => Promise<any>;
-    findUnique: (args: { where: { eventId: string } }) => Promise<any>;
-    update: (args: { where: { eventId: string }; data: any }) => Promise<any>;
-  };
   auditLogEntry: {
     create: (args: { data: any }) => Promise<any>;
+    findFirst: (args: { where: { eventId: string } }) => Promise<any>;
+  };
+  user: {
+    findUnique: (args: {
+      where: { id: string };
+      select: { id: true };
+    }) => Promise<{ id: string } | null>;
   };
   $transaction: <T>(callback: (tx: any) => Promise<T>) => Promise<T>;
+}
+
+/** The actor id the API container uses for system-initiated AI calls. */
+const SYSTEM_ACTOR_ID = 'system';
+
+/**
+ * Tenant ids that callers use as fallbacks when they have no real tenant. They
+ * have no tenants row, so a write would fail the tenant FK; such events are
+ * skipped with a warning instead.
+ */
+const FALLBACK_TENANT_IDS = new Set(['', 'default', SYSTEM_ACTOR_ID]);
+
+const CRUD_ACTIONS: Record<string, string> = {
+  CREATE: 'CREATE',
+  UPDATE: 'UPDATE',
+  UPSERT: 'UPDATE',
+  DELETE: 'DELETE',
+};
+
+const OPERATION_ACTIONS: Record<string, string> = {
+  scoreLead: 'AI_SCORE',
+  qualifyLead: 'AI_PREDICT',
+  generateEmail: 'AI_GENERATE',
+};
+
+const FAILURE_EVENTS = new Set([
+  'AI_CHAIN_FAILURE',
+  'AI_OUTPUT_VALIDATION_FAILED',
+  'AI_CONSENT_VALIDATION_FAILED',
+  'AI_GUARDRAIL_TIMEOUT',
+  'AI_MODEL_VERSION_MISMATCH',
+]);
+
+const DENIED_EVENTS = new Set([
+  'AI_PROMPT_INJECTION_DETECTED',
+  'AI_PII_EXPOSURE_BLOCKED',
+  'AI_TOXIC_CONTENT_BLOCKED',
+  'AI_CROSS_TENANT_ACCESS_ATTEMPT',
+  'AI_RATE_LIMIT_TRIGGERED',
+]);
+
+/**
+ * UTF-16 code-unit order, the same order as a default sort(). Locale-independent
+ * on purpose: changing it would invalidate every stored hash and signature.
+ */
+function byCodeUnit(a: string, b: string): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
+}
+
+/**
+ * JSON with object keys sorted at every level. Postgres jsonb does not keep key
+ * order, so hashes and signatures over stored metadata must not depend on it.
+ */
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(value, (_key, v: unknown) =>
+    v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)
+      ? Object.fromEntries(
+          Object.keys(v as Record<string, unknown>)
+            .sort(byCodeUnit)
+            .map((k) => [k, (v as Record<string, unknown>)[k]])
+        )
+      : v
+  );
+}
+
+/**
+ * audit_log_entries columns covered by the signature, so editing any of them
+ * (actor type, resource, action, result, reason...) fails verification. actorId
+ * is checked separately: its users FK is ON DELETE SET NULL, so a deleted user
+ * legitimately nulls it.
+ */
+const SIGNED_COLUMNS = [
+  'tenantId',
+  'eventType',
+  'eventId',
+  'timestamp',
+  'actorType',
+  'resourceType',
+  'resourceId',
+  'action',
+  'actionResult',
+  'actionReason',
+  'dataClassification',
+  'retentionExpiresAt',
+] as const;
+
+/** An audit_log_entries row as written by, or read back for, this adapter. */
+type AuditRow = Record<string, any>;
+
+const isoOrValue = (v: unknown) => (v instanceof Date ? v.toISOString() : v);
+
+/** Metadata without the chain block: what the integrity hash covers. */
+function eventMetadata(row: AuditRow): Record<string, unknown> {
+  const { audit: _audit, ...metadata } = row.metadata;
+  return metadata;
+}
+
+/** The signed payload: every signed column plus metadata, minus the hash and signature. */
+function signablePayload(row: AuditRow): Record<string, unknown> {
+  const { integrityHash: _hash, signature: _signature, ...chain } = row.metadata.audit;
+  const payload: Record<string, unknown> = { metadata: { ...row.metadata, audit: chain } };
+  for (const column of SIGNED_COLUMNS) payload[column] = isoOrValue(row[column]);
+  return payload;
+}
+
+function safeEqualHex(a: unknown, b: unknown): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') return false;
+  // Compare byte lengths: a multibyte string can match in characters but not bytes,
+  // and timingSafeEqual throws on unequal lengths.
+  const [bytesA, bytesB] = [Buffer.from(a), Buffer.from(b)];
+  if (bytesA.length !== bytesB.length) return false;
+  return timingSafeEqual(bytesA, bytesB);
 }
 
 /**
@@ -121,68 +243,17 @@ export class DurableAuditLogAdapter implements AuditLogPort {
     if (event.tenantId !== tenantContext.tenantId) {
       throw new CrossTenantViolationError(event.tenantId, tenantContext.tenantId);
     }
+    if (this.isFallbackTenant(event)) return this.skipped(event);
 
-    const eventId = randomUUID();
-    const timestamp = new Date();
-
-    // Build the entry for persistence
-    const entry = {
-      eventId,
-      eventType: event.eventType,
-      severity: event.severity,
-      tenantId: event.tenantId,
-      userId: event.userId,
-      resourceType: event.resourceType,
-      resourceId: event.resourceId,
-      description: event.description,
-      metadata: this.processMetadata(event.metadata, tenantContext.tenantId),
-      timestamp,
-      previousHash: this.previousHash,
-      retentionExpiresAt: this.calculateRetention(tenantContext.jurisdiction),
-      dataClassification: this.classifyData(event),
-    };
-
-    // Compute integrity hash (Decision 4)
-    const integrityHash = this.computeHash(entry);
-    const signature = this.sign(entry);
-
+    let result!: AuditLogResult;
     // Persist with transaction (Decision 3: WAL-like durability)
     await this.prisma.$transaction(async (tx) => {
-      // Write to SecurityEvent table
-      await tx.securityEvent.create({
-        data: {
-          ...entry,
-          integrityHash,
-          signature,
-        },
-      });
-
-      // Also write to comprehensive AuditLogEntry table
-      await tx.auditLogEntry.create({
-        data: {
-          eventId,
-          action: event.eventType,
-          resourceType: event.resourceType ?? 'AI_GUARDRAIL',
-          resourceId: event.resourceId ?? eventId,
-          tenantId: event.tenantId,
-          actorId: event.userId,
-          actorType: 'USER',
-          timestamp,
-          metadata: entry.metadata,
-          integrityHash,
-        },
-      });
+      result = await this.writeEntry(tx, event, tenantContext);
     });
 
-    // Update hash chain
-    this.previousHash = integrityHash;
-
-    return {
-      eventId,
-      persistedAt: timestamp,
-      status: 'PERSISTED',
-      integrityHash,
-    };
+    // Update hash chain only once the row is committed
+    this.previousHash = result.integrityHash!;
+    return result;
   }
 
   /**
@@ -201,84 +272,95 @@ export class DurableAuditLogAdapter implements AuditLogPort {
     events: AISecurityEventInput[],
     tenantContext: TenantContext
   ): Promise<BatchAuditResult> {
-    const results: AuditLogResult[] = [];
-    let successCount = 0;
-    let failureCount = 0;
-
-    await this.prisma.$transaction(async (tx) => {
-      for (const event of events) {
-        try {
-          // Verify tenant isolation
-          if (event.tenantId !== tenantContext.tenantId) {
-            throw new CrossTenantViolationError(event.tenantId, tenantContext.tenantId);
-          }
-
-          const eventId = randomUUID();
-          const timestamp = new Date();
-
-          const entry = {
-            eventId,
-            eventType: event.eventType,
-            severity: event.severity,
-            tenantId: event.tenantId,
-            userId: event.userId,
-            resourceType: event.resourceType,
-            resourceId: event.resourceId,
-            description: event.description,
-            metadata: this.processMetadata(event.metadata, tenantContext.tenantId),
-            timestamp,
-            previousHash: this.previousHash,
-            retentionExpiresAt: this.calculateRetention(tenantContext.jurisdiction),
-            dataClassification: this.classifyData(event),
-          };
-
-          const integrityHash = this.computeHash(entry);
-          const signature = this.sign(entry);
-
-          await tx.securityEvent.create({
-            data: { ...entry, integrityHash, signature },
-          });
-
-          await tx.auditLogEntry.create({
-            data: {
-              eventId,
-              action: event.eventType,
-              resourceType: event.resourceType ?? 'AI_GUARDRAIL',
-              resourceId: event.resourceId ?? eventId,
-              tenantId: event.tenantId,
-              actorId: event.userId,
-              actorType: 'USER',
-              timestamp,
-              metadata: entry.metadata,
-              integrityHash,
-            },
-          });
-
-          this.previousHash = integrityHash;
-
-          results.push({
-            eventId,
-            persistedAt: timestamp,
-            status: 'PERSISTED',
-            integrityHash,
-          });
-          successCount++;
-        } catch {
-          failureCount++;
-          results.push({
-            eventId: randomUUID(),
-            persistedAt: new Date(),
-            status: 'FAILED',
-          });
-        }
-      }
+    const results: AuditLogResult[] = new Array(events.length);
+    const failed = (): AuditLogResult => ({
+      eventId: randomUUID(),
+      persistedAt: new Date(),
+      status: 'FAILED',
     });
+
+    // Reject cross-tenant events and skip fallback tenants before the transaction:
+    // a failed statement aborts the whole Postgres transaction, so only events
+    // that can be written go into it.
+    const toWrite: number[] = [];
+    events.forEach((event, i) => {
+      if (event.tenantId !== tenantContext.tenantId) results[i] = failed();
+      else if (this.isFallbackTenant(event)) results[i] = this.skipped(event);
+      else toWrite.push(i);
+    });
+
+    if (toWrite.length > 0) {
+      const written: AuditLogResult[] = [];
+      let head = this.previousHash;
+      try {
+        await this.prisma.$transaction(async (tx) => {
+          for (const i of toWrite) {
+            const result = await this.writeEntry(tx, events[i], tenantContext, head);
+            head = result.integrityHash!;
+            written.push(result);
+          }
+        });
+        // All or nothing: the chain head moves only once the batch is committed.
+        this.previousHash = head;
+        toWrite.forEach((i, n) => (results[i] = written[n]));
+      } catch {
+        for (const i of toWrite) results[i] = failed();
+      }
+    }
 
     return {
       totalEvents: events.length,
-      successCount,
-      failureCount,
+      successCount: results.filter((r) => r.status === 'PERSISTED').length,
+      failureCount: results.filter((r) => r.status === 'FAILED').length,
       results,
+    };
+  }
+
+  /**
+   * Build, hash, sign and write one `audit_log_entries` row inside `tx`, chained
+   * to `previousHash`. Does not advance the chain head: the caller does that once
+   * the write is committed.
+   */
+  private async writeEntry(
+    tx: any,
+    event: AISecurityEventInput,
+    tenantContext: TenantContext,
+    previousHash: string = this.previousHash
+  ): Promise<AuditLogResult> {
+    const eventId = randomUUID();
+    const actor = this.actorFor(event.userId);
+    const row: AuditRow = {
+      tenantId: event.tenantId,
+      eventType: event.eventType,
+      eventId,
+      timestamp: new Date(),
+      actorType: actor.actorType,
+      actorId: actor.actorId,
+      resourceType: event.resourceType ?? 'AI_GUARDRAIL',
+      resourceId: event.resourceId ?? eventId,
+      action: this.actionFor(event),
+      actionResult: this.actionResultFor(event),
+      actionReason: event.description,
+      dataClassification: this.classifyData(event),
+      retentionExpiresAt: this.calculateRetention(tenantContext.jurisdiction),
+      metadata: {
+        ...this.processMetadata(event.metadata, tenantContext.tenantId),
+        audit: { severity: event.severity, userId: event.userId, previousHash },
+      },
+    };
+
+    // Compute integrity hash (Decision 4), then sign the persisted columns
+    const integrityHash = this.computeHash(row);
+    row.metadata.audit.integrityHash = integrityHash;
+    row.metadata.audit.signature = this.sign(row);
+
+    await tx.auditLogEntry.create({ data: row });
+
+    return {
+      eventId,
+      persistedAt: row.timestamp,
+      status: 'PERSISTED',
+      integrityHash,
     };
   }
 
@@ -286,11 +368,12 @@ export class DurableAuditLogAdapter implements AuditLogPort {
    * Verify the integrity of a logged event.
    */
   async verifyLogIntegrity(eventId: string): Promise<IntegrityVerification> {
-    const entry = await this.prisma.securityEvent.findUnique({
+    const entry = await this.prisma.auditLogEntry.findFirst({
       where: { eventId },
     });
 
-    if (!entry) {
+    const audit = entry?.metadata?.audit;
+    if (!audit?.integrityHash || !audit?.signature) {
       return {
         valid: false,
         reason: 'EVENT_NOT_FOUND',
@@ -299,62 +382,105 @@ export class DurableAuditLogAdapter implements AuditLogPort {
     }
 
     // Recompute hash from stored data
-    const computedHash = this.computeHash({
-      eventType: entry.eventType,
-      tenantId: entry.tenantId,
-      timestamp: entry.timestamp,
-      previousHash: entry.previousHash,
-      metadata: entry.metadata,
-    });
+    const computedHash = this.computeHash(entry);
+    const hashMatch = safeEqualHex(computedHash, audit.integrityHash);
 
-    const hashMatch = computedHash === entry.integrityHash;
-    const signatureValid = this.verifySignature(entry);
+    const actorValid = await this.actorIdValid(entry, audit.userId);
+    const signatureValid = safeEqualHex(this.sign(entry), audit.signature) && actorValid;
 
     const invalidReason = hashMatch ? 'SIGNATURE_INVALID' : 'HASH_MISMATCH';
     return {
       valid: hashMatch && signatureValid,
       reason: hashMatch && signatureValid ? undefined : invalidReason,
       computedHash,
-      storedHash: entry.integrityHash,
+      storedHash: audit.integrityHash,
       signatureValid,
       verifiedAt: new Date(),
     };
   }
 
   /**
+   * actorId is not signed (users FK is ON DELETE SET NULL): it must be the actor
+   * the signed userId implies. A null on a USER row is accepted only once that
+   * user no longer exists, so nulling it by hand is caught. The lookup is by id
+   * alone, like the FK: a user can act outside their home tenant (ADR-071), and it
+   * returns only whether the user exists.
+   */
+  private async actorIdValid(entry: AuditRow, signedUserId?: string): Promise<boolean> {
+    const expected = this.actorFor(signedUserId).actorId;
+    if (entry.actorId === expected) return true;
+    if (entry.actorId !== null || expected === null) return false;
+    const user = await this.prisma.user.findUnique({
+      where: { id: expected },
+      select: { id: true },
+    });
+    return user === null;
+  }
+
+  /** A fallback tenant has no tenants row; writing it would fail the FK. */
+  private isFallbackTenant(event: AISecurityEventInput): boolean {
+    return FALLBACK_TENANT_IDS.has(event.tenantId);
+  }
+
+  private skipped(event: AISecurityEventInput): AuditLogResult {
+    console.warn('[AUDIT] AI security event not persisted: no real tenant', {
+      eventType: event.eventType,
+      severity: event.severity,
+      tenantId: event.tenantId,
+      resourceType: event.resourceType,
+      resourceId: event.resourceId,
+    });
+    return { eventId: randomUUID(), persistedAt: new Date(), status: 'SKIPPED' };
+  }
+
+  /**
+   * actorId references users.id, so only a real user id goes there. The system
+   * actor and ai-worker agents (no userId; the agent name is metadata.modelId)
+   * are recorded by actorType with a null actorId.
+   */
+  private actorFor(userId?: string): { actorType: string; actorId: string | null } {
+    if (!userId) return { actorType: 'AI_AGENT', actorId: null };
+    if (userId === SYSTEM_ACTOR_ID) return { actorType: 'SYSTEM', actorId: null };
+    return { actorType: 'USER', actorId: userId };
+  }
+
+  /** Map to the AuditAction enum: the write ai-worker made, else the AI operation. */
+  private actionFor(event: AISecurityEventInput): string {
+    const details = (event.metadata.details ?? {}) as Record<string, unknown>;
+    const action = String(details.action);
+    if (Object.hasOwn(CRUD_ACTIONS, action)) return CRUD_ACTIONS[action];
+    const operation = String(details.operation);
+    return Object.hasOwn(OPERATION_ACTIONS, operation) ? OPERATION_ACTIONS[operation] : 'CONFIGURE';
+  }
+
+  private actionResultFor(event: AISecurityEventInput): string {
+    if (FAILURE_EVENTS.has(event.eventType)) return 'FAILURE';
+    if (DENIED_EVENTS.has(event.eventType)) return 'DENIED';
+    return 'SUCCESS';
+  }
+
+  /**
    * Compute HMAC-SHA256 hash for integrity verification.
    */
-  private computeHash(entry: Record<string, unknown>): string {
-    const payload = JSON.stringify({
-      eventType: entry.eventType,
-      tenantId: entry.tenantId,
-      timestamp: entry.timestamp instanceof Date ? entry.timestamp.toISOString() : entry.timestamp,
-      previousHash: entry.previousHash,
-      metadata: entry.metadata,
+  private computeHash(row: AuditRow): string {
+    const payload = canonicalJson({
+      eventType: row.eventType,
+      tenantId: row.tenantId,
+      timestamp: isoOrValue(row.timestamp),
+      previousHash: row.metadata.audit.previousHash,
+      metadata: eventMetadata(row),
     });
 
     return createHmac('sha256', this.signingKey).update(payload).digest('hex');
   }
 
   /**
-   * Sign entry for cryptographic verification.
+   * Sign the persisted row for cryptographic verification.
    */
-  private sign(entry: Record<string, unknown>): string {
-    const payload = JSON.stringify(entry);
-    return createHmac('sha256', this.signingKey).update(payload).digest('hex');
-  }
-
-  /**
-   * Verify signature of an entry.
-   */
-  private verifySignature(entry: any): boolean {
-    const storedSignature = entry.signature;
-    const entryWithoutSignature = { ...entry };
-    delete entryWithoutSignature.signature;
-    delete entryWithoutSignature.integrityHash;
-
-    const computedSignature = this.sign(entryWithoutSignature);
-    return storedSignature === computedSignature;
+  private sign(row: AuditRow): string {
+    return createHmac('sha256', this.signingKey)
+      .update(canonicalJson(signablePayload(row)))
+      .digest('hex');
   }
 
   /**
@@ -368,7 +494,8 @@ export class DurableAuditLogAdapter implements AuditLogPort {
       processed.dataSubjectId = this.encryptPII(metadata.dataSubjectId, tenantId);
     }
 
-    return processed;
+    // Drop undefined fields: jsonb does not store them, so they must not be hashed.
+    return JSON.parse(JSON.stringify(processed));
   }
 
   /**

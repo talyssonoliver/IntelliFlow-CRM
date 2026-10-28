@@ -151,16 +151,16 @@
     ]
   },
   "artifact_hashes": {
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "64646d31364465c7f86f245c8df49412dcf82b9f3de2a780ecf008fd9a8d1b34",
-    "apps/web/src/components/home/HomePageContent.tsx": "ed5c8906883fbb8a065d79a480eec87707a86f35e76175ad9b260d3ba72dc7b5",
-    "apps/web/src/components/home/PublicHomePage.tsx": "2f69dd56085acbef56ddd84f54cc7129b1624ad7a31c7e2878501559886110f1",
-    "apps/web/src/components/home/PinnedItemsSheet.tsx": "1ec1c3da6701835237127dbf9e7bc7abd88b2b0f16db62e9858c6e1db2b0510b",
-    "apps/web/src/components/home/index.ts": "823e1af5f4b8adda3eefa3353129bab1a855f79ba2d8cc8e01ddd938445e9400",
-    "apps/web/src/app/(public)/page.tsx": "33c8b8d562ee91cf00e51f01c7a15228d1d3277617a71e927de810802d3d2207",
-    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "b6d74f405b49a866225906423c950b9149d714b3c7af98723eefbdf13439fd6a",
-    "apps/web/src/components/home/__tests__/HomePageContent.test.tsx": "e19fc4ac09e4aeab1063dab92e4477ceeac067891313852ea3f642743a97ec40",
-    "docs/planning/prd-home-page.md": "045f1ac69dd8a4d3813f57773b3bf4f7a360fa611794f48f087758bfd8aeff74",
-    "docs/specs/HOME-PAGE-SPEC.md": "d290b73fa6e1bcfb650cc64a3603884084a1471b5169ad7d546321c4e97b425e"
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:64646d31364465c7f86f245c8df49412dcf82b9f3de2a780ecf008fd9a8d1b34",
+    "apps/web/src/components/home/HomePageContent.tsx": "sha256:ed5c8906883fbb8a065d79a480eec87707a86f35e76175ad9b260d3ba72dc7b5",
+    "apps/web/src/components/home/PublicHomePage.tsx": "sha256:2f69dd56085acbef56ddd84f54cc7129b1624ad7a31c7e2878501559886110f1",
+    "apps/web/src/components/home/PinnedItemsSheet.tsx": "sha256:1ec1c3da6701835237127dbf9e7bc7abd88b2b0f16db62e9858c6e1db2b0510b",
+    "apps/web/src/components/home/index.ts": "sha256:823e1af5f4b8adda3eefa3353129bab1a855f79ba2d8cc8e01ddd938445e9400",
+    "apps/web/src/app/(public)/page.tsx": "sha256:33c8b8d562ee91cf00e51f01c7a15228d1d3277617a71e927de810802d3d2207",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "sha256:b6d74f405b49a866225906423c950b9149d714b3c7af98723eefbdf13439fd6a",
+    "apps/web/src/components/home/__tests__/HomePageContent.test.tsx": "sha256:e19fc4ac09e4aeab1063dab92e4477ceeac067891313852ea3f642743a97ec40",
+    "docs/planning/prd-home-page.md": "sha256:045f1ac69dd8a4d3813f57773b3bf4f7a360fa611794f48f087758bfd8aeff74",
+    "docs/specs/HOME-PAGE-SPEC.md": "sha256:d290b73fa6e1bcfb650cc64a3603884084a1471b5169ad7d546321c4e97b425e"
   },
   "environment": {
     "os": "win32",

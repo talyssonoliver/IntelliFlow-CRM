@@ -9,7 +9,10 @@ import { TEST_UUIDS } from '../../../test/setup';
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { TRPCError } from '@trpc/server';
+vi.mock('../lead-scoring-enqueue', () => ({ enqueueLeadScoring: vi.fn(async () => undefined) }));
+
 import { leadRouter } from '../lead.router';
+import { enqueueLeadScoring } from '../lead-scoring-enqueue';
 import {
   prismaMock,
   createTestContext,
@@ -71,6 +74,53 @@ describe('Lead Router', () => {
       expect(result.email).toBe(input.email);
       expect(result.firstName).toBe(input.firstName);
       expect(ctx.services!.lead!.createLead).toHaveBeenCalled();
+    });
+
+    it('queues AI scoring for the new lead through the shared helper (PG-203 regression)', async () => {
+      const ctx = createTestContext();
+      ctx.services!.lead!.createLead = vi.fn().mockResolvedValue({
+        isSuccess: true,
+        isFailure: false,
+        value: {
+          id: { value: TEST_UUIDS.lead1 },
+          email: { value: 'scored@example.com' },
+          firstName: 'Sam',
+          lastName: 'Score',
+          company: null,
+          title: null,
+          phone: null,
+          source: 'REFERRAL',
+          status: 'NEW',
+          score: { value: 0, confidence: 0, tier: 'cold' },
+          ownerId: TEST_UUIDS.user1,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      });
+      vi.mocked(enqueueLeadScoring).mockClear();
+
+      await leadRouter.createCaller(ctx).create({
+        email: 'scored@example.com',
+        firstName: 'Sam',
+        lastName: 'Score',
+        source: 'REFERRAL' as const,
+      });
+
+      expect(enqueueLeadScoring).toHaveBeenCalledTimes(1);
+      expect(enqueueLeadScoring).toHaveBeenCalledWith({
+        leadId: TEST_UUIDS.lead1,
+        tenantId: TEST_UUIDS.tenant,
+        lead: {
+          email: 'scored@example.com',
+          source: 'REFERRAL',
+          firstName: 'Sam',
+          lastName: 'Score',
+          company: undefined,
+          title: undefined,
+          phone: undefined,
+        },
+        correlationId: `lead-create-${TEST_UUIDS.lead1}`,
+      });
     });
 
     it('passes the qualificationNote to the service for atomic persistence', async () => {
@@ -800,7 +850,10 @@ describe('Lead Router', () => {
       expect(result.leadId).toBe(TEST_UUIDS.lead1);
       expect(result.score).toBe(80);
       expect(result.confidence).toBe(0.85);
-      expect(ctx.services!.lead!.scoreLead).toHaveBeenCalledWith(TEST_UUIDS.lead1);
+      expect(ctx.services!.lead!.scoreLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        TEST_UUIDS.user1
+      );
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
@@ -979,10 +1032,10 @@ describe('Lead Router', () => {
 
       expect(result.successful).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.lead2]);
       expect(result.failed).toEqual([]);
-      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith([
-        TEST_UUIDS.lead1,
-        TEST_UUIDS.lead2,
-      ]);
+      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith(
+        [TEST_UUIDS.lead1, TEST_UUIDS.lead2],
+        TEST_UUIDS.user1
+      );
     });
   });
 

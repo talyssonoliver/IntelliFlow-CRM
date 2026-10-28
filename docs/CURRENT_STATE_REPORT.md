@@ -1,22 +1,22 @@
 # Current State Report
-_Generated: 2026-10-22T14:15:12.678Z_
+_Generated: 2026-10-28T22:10:08.530Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
 ## Current State
 
 - Numbered sprint scope: 30 sprints (0-29) plus 6 continuous tasks.
-- Overall progress: 441/619 tasks completed (71.24%), 162 backlog, 0 blocked, 16 in progress.
-- Numbered sprint progress alone: 436/613 tasks completed or attested inside numbered sprints.
+- Overall progress: 442/622 tasks completed (71.06%), 163 backlog, 0 blocked, 17 in progress.
+- Numbered sprint progress alone: 437/616 tasks completed or attested inside numbered sprints.
 - Blocking issue: none currently marked `Blocked` in the sprint plan.
-- Ready-to-start work: IFC-056 (Sprint 18), IFC-234 (Sprint 18), PG-203 (Sprint 18), PG-206 (Sprint 18), PG-207 (Sprint 18).
+- Ready-to-start work: IFC-056 (Sprint 18), IFC-234 (Sprint 18), PG-206 (Sprint 18), PG-208 (Sprint 18), PG-209 (Sprint 18).
 - Active focus band: Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
 
 ## Source Health
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
-- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-033 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-203 (Backlog), PG-206 (Backlog), PG-207 (Backlog), PG-208 (Backlog), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002.R03 (Backlog).
-- Sprint mismatches (attestation in different sprint than CSV Target Sprint): ENV-008-AI (CSV sprint 18, attested in sprint 0), EP-001-AI (CSV sprint 18, attested in sprint 0), IFC-056 (CSV sprint 18, attested in sprint 9), IFC-074 (CSV sprint 18, attested in sprint 1), IFC-097 (CSV sprint 18, attested in sprint 9), PG-014 (CSV sprint 18, attested in sprint 12), SALES-001 (CSV sprint 18, attested in sprint 1), IFC-116 (CSV sprint 18, attested in sprint 9), IFC-117 (CSV sprint 18, attested in sprint 6), IFC-142 (CSV sprint 18, attested in sprint 8), IFC-151 (CSV sprint 18, attested in sprint 6).
+- Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-203 (In Progress), PG-206 (Backlog), PG-207 (In Progress), PG-208 (Backlog), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002.R03 (Backlog).
+- Sprint mismatches (attestation in different sprint than CSV Target Sprint): EP-001-AI (CSV sprint 18, attested in sprint 0), IFC-056 (CSV sprint 18, attested in sprint 9), IFC-074 (CSV sprint 18, attested in sprint 1), IFC-097 (CSV sprint 18, attested in sprint 9), PG-014 (CSV sprint 18, attested in sprint 12), SALES-001 (CSV sprint 18, attested in sprint 1), IFC-116 (CSV sprint 18, attested in sprint 9), IFC-117 (CSV sprint 18, attested in sprint 6), IFC-142 (CSV sprint 18, attested in sprint 8), IFC-151 (CSV sprint 18, attested in sprint 6).
 
 ## Continuous Work
 
@@ -267,7 +267,7 @@ _Generated: 2026-10-22T14:15:12.678Z_
 
 ## Sprint 18 - Sprint 18
 
-- Status: 60/78 completed, 8 backlog, 0 blocked, 10 in progress.
+- Status: 60/78 completed, 6 backlog, 0 blocked, 12 in progress.
 - Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).
 - Evidence coverage: 60/60 completed tasks have canonical `attestation.json` evidence.
 
@@ -279,7 +279,7 @@ _Generated: 2026-10-22T14:15:12.678Z_
 - **IFC-265** — Contact Detail Page Tests. (1) Contact detail page (2242 lines) has ZERO page-level tests (T-01). (2) Tenant isolation NEVER tested in 2878 lines of router tests (T-04). (3) logActivity missing activity type coverage in tests (T-06). (4) getById relations (activities, notes, opportunities, aiInsight) not asserted (T-07). (5) Tab content rendering not verified in component tests (T-08). Audit: docs/audit/contact-detail-wiring-audit.md §19.. Compliance-check: PASS — test-only change; no PII/secret/data-retention/migration/auth surface. Findings L? no — test-gap findings T-01/T-04/T-06/T-07/T-08 closed (audit §19 was stale; scoped to genuine gaps).... Contact detail page test file with >=20 tests;...
 
 **Open Work**
-- **ENV-008-AI** — Automated Observability with Predictive Monitoring. OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled
+- **ENV-008-AI** — Automated Observability with Predictive Monitoring. OpenTelemetry AI-configured (ruling A: api and ai-worker export OTLP to Grafana Cloud; llm.* attributes documented); Anomaly detection active (ruling A: Grafana Asserts rules on span metrics);...
 - **EP-001-AI** — EasyPanel Internal Tools Deployment (Push-based OTLP Pipeline). OTel Collector + Prometheus + Grafana deployed; Loki + Tempo deployed with trace-to-log correlation; All configs git-versioned
 - **IFC-074** — PHASE-040: Full Stack Observability. Traces, metrics, logs unified with context; Root cause identifiable
 - **IFC-097** — Distributed Tracing & Logging. 99% of requests traced; Dashboards available; Trace coverage report created
@@ -287,28 +287,28 @@ _Generated: 2026-10-22T14:15:12.678Z_
 
 ## Sprint 19 - Sprint 19
 
-- Status: 13/19 completed, 3 backlog, 0 blocked, 3 in progress.
+- Status: 14/19 completed, 3 backlog, 0 blocked, 2 in progress.
 - Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).
-- Evidence coverage: 13/13 completed tasks have canonical `attestation.json` evidence.
+- Evidence coverage: 14/14 completed tasks have canonical `attestation.json` evidence.
 
 **Accomplished**
+- **IFC-033** — PHASE-005: Load Testing with k6. Reopened by #795 (the July run targeted localhost). On owner rulings of 2026-10-22 (no staging API/DB exists) the k6 run targeted the production API in a dedicated load-test tenant, sized down to cap the per-lead AI scoring cost.......
 - **ENG-OPS-002.R10** — Remediation R10 [High/QUAL-001+002]: ticket + task aggregate state-machine transition guards, un-skip the property tests. Scope: QUAL-001 (5 ticket state-machine bugs — changePriority/assign/unassign now guard closed+terminal via isClosed||isTerminalStatus; resumeSla clamps negative pause duration) FULLY fixed.... ticket+task terminal-state guards; property tests un-skipped
 - **IFC-312** — AI chains for contacts + accounts (PG-182/PG-183 follow-up) — wire the remaining AI toggles on both entities to real LLM/embedding consumers: aiEnrichment (external enrichment API + provider adapter, shared across entities), aiTagSuggestions (LLM prompt + surface on detail pages), aiInsightGeneration (LLM chain writing to {Contact,Account}AIInsight + surface), aiAutoReplyDrafting (contact inbox), aiIndustryInference (account-only LLM classifier that picks the best AccountIndustryOption), aiAccountScoring (account-only LLM scorer that writes to the Account score field).. Originally attested 2026-04-22 with verdict COMPLETE, but a 2026-04-24 code audit (/task-code-audit) identified 7 findings (2 High, 4 Medium, 1 Low) that contradicted the attestation......
 - **PG-064** — Contacts List. PG-064 (Contacts List) reconcile. RECON-FIRST (3rd attempt; prior two slipped on data-model assumptions and spec ambiguity): read the actual code before scoping. Finding... Contacts listed; Search working; Segments functional
 - **ENG-OPS-002** — Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan). AUDIT ONLY — no correction code. Reconciliation self-corrected a 12-task phantom false-positive (PG-196..208 pages verified present under apps/web/src/app) => 0 true phantom completions. Real problem is evidence:... Verifiable baseline of S1-18 delivered state;...
-- **ENG-OPS-003** — Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634). RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings:......
 
 **Open Work**
-- **IFC-033** — PHASE-005: Load Testing with k6. System handles 5000 leads/hour with automation; load-test-report.html must show actual k6 execution output with real timestamps, not template report
 - **IFC-304** — Article Analytics Dashboard — PR A: analytics foundation + instrumentation. Analytics in help article admin; views, feedback stats, most/least helpful, search terms; helpArticle.getAnalytics tRPC; coverage >=90%
 - **AUTOMATION-004** — Task-contract JSON schema + dispatch-binding enforcement (ADR-072). 20-field JSON Schema at tools/scripts/orchestration/schemas/task-contract.schema.json; runtime validator rejecting missing/wrong-type fields + duplicate agentLeaseId; verify-dispatch-binding.ts CLI guard (4-way binding:...
 - **IFC-034** — PHASE-001: Gate 3 Review - £3000 Investment. Scale decision with modern stack validated
 - **ENG-OPS-002.R03** — Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json. CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md
+- **ENG-OPS-002.R13** — Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests. Skips blocked by lint unless issue-linked; existing 21 reconciled
 
 ## Sprint 20 - Sprint 20
 
-- Status: 0/51 completed, 51 backlog, 0 blocked.
-- Primary focus areas: Core CRM (30), Engineering Operations (11), AI Foundation (2).
+- Status: 0/54 completed, 54 backlog, 0 blocked.
+- Primary focus areas: Core CRM (30), Engineering Operations (11), Settings (3).
 - Evidence coverage: 0/0 completed tasks have canonical `attestation.json` evidence.
 
 **Open Work**

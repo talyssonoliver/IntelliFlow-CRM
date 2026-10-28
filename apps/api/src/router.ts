@@ -50,6 +50,10 @@ import { chainVersionRouter } from './modules/chain-version';
 import { zepBudgetRouter } from './modules/zep/zep-budget.router';
 import { intelligenceRouter } from './modules/intelligence/intelligence.router';
 import { inboundEmailRouter } from './modules/email/inbound.router';
+import { emailMailboxRouter } from './modules/email/email-mailbox.router';
+import { emailSettingsRouter } from './modules/email/email-settings.router';
+import { emailSignaturesRouter } from './modules/email/email-signatures.router';
+import { emailAttachmentsRouter } from './modules/email/email-attachments.router';
 import { autoResponseRouter } from './modules/autoresponse';
 import { aiMonitoringRouter } from './modules/ai-monitoring/ai-monitoring.router';
 import { aiReviewRouter } from './modules/ai-review/ai-review.router';
@@ -65,6 +69,7 @@ import { experimentRouter } from './modules/experiment';
 import { routingRouter } from './modules/routing';
 import { feedbackSurveyRouter } from './modules/feedback/feedbackSurvey.router';
 import { publicFeedbackRouter } from './modules/public-feedback/public-feedback.router';
+import { publicBookingRouter } from './modules/calendar/public-booking.router';
 import { userRouter } from './modules/user/user.router';
 import { teamRouter } from './modules/team/team.router';
 import { calendarRouter } from './modules/calendar/calendar.router';
@@ -198,6 +203,11 @@ export const appRouter = createTRPCRouter({
 
   // Email Infrastructure (IFC-144)
   email: inboundEmailRouter,
+  // PG-207 (ADR-085): user mailboxes, email settings, signatures, attachments
+  emailMailbox: emailMailboxRouter,
+  emailSettings: emailSettingsRouter,
+  emailSignatures: emailSignaturesRouter,
+  emailAttachments: emailAttachmentsRouter,
 
   // Webhook Infrastructure (IFC-144)
   webhooks: webhooksRouter,
@@ -231,6 +241,7 @@ export const appRouter = createTRPCRouter({
 
   // Anonymous Public Feedback Widget (PG-126)
   publicFeedback: publicFeedbackRouter,
+  publicBooking: publicBookingRouter, // PG-203: unauthenticated booking page (ADR-083)
 
   // User Profile & Timezone (IFC-191)
   user: userRouter,

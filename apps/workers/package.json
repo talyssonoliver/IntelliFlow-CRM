@@ -6,13 +6,13 @@
   "scripts": {
     "build": "echo 'Workers meta-package - sub-workers built by root turbo'",
     "dev": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run dev",
-    "typecheck": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run typecheck",
-    "lint": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker run lint",
+    "typecheck": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker run typecheck",
+    "lint": "pnpm --filter @intelliflow/events-worker --filter @intelliflow/ingestion-worker --filter @intelliflow/combined-worker run lint",
     "clean": "rimraf .turbo dist"
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
     "typescript": "^5.3.3",
-    "vitest": "^4.1.11"
+    "vitest": "^4.1.12"
   }
 }

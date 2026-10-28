@@ -1,0 +1,137 @@
+# Combined Worker Dockerfile
+# Runs ai-worker + events-worker + ingestion-worker in ONE process/service
+# (apps/workers/combined-worker). Same build chain as the ingestion-worker
+# image, plus events-worker, and tsx at runtime like the ai-worker image.
+# @task IFC-163
+# syntax=docker/dockerfile:1.7-labs
+
+# Stage 1: Dependencies
+FROM node:24-alpine AS deps
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+
+WORKDIR /app
+
+# One COPY --parents per glob: empty glob fails with a clear error, not a hash miss
+COPY --parents package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY --parents apps/*/package.json           ./
+COPY --parents apps/workers/*/package.json   ./
+COPY --parents packages/*/package.json       ./
+COPY --parents tools/*/package.json          ./
+
+# Install all dependencies (populates virtual store, skip lifecycle scripts)
+RUN pnpm install --frozen-lockfile --ignore-scripts
+
+# Stage 2: Builder
+FROM node:24-alpine AS builder
+RUN corepack enable && corepack prepare pnpm@10.33.0 --activate
+
+# Install Python for AI dependencies (ai-worker dependency)
+RUN apk add --no-cache python3 py3-pip build-base
+
+WORKDIR /app
+
+# Copy full virtual store + per-app/per-pkg symlink layer from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app/apps ./apps
+COPY --from=deps /app/packages ./packages
+
+# Copy full source tree (.dockerignore excludes node_modules, dist, etc.)
+COPY . .
+
+# Re-link workspace symlinks against the copied virtual store
+RUN pnpm install --frozen-lockfile --offline --ignore-scripts
+
+# Generate Prisma client (requires schema to be present)
+RUN pnpm --filter db db:generate
+
+# Build workspace packages in dependency order
+RUN pnpm --filter domain build
+RUN pnpm --filter validators build
+RUN pnpm --filter webhooks build
+RUN pnpm --filter platform build
+RUN pnpm --filter db build
+RUN pnpm --filter observability build
+RUN pnpm --filter worker-shared build
+RUN pnpm --filter application build
+RUN pnpm --filter adapters build
+RUN pnpm --filter ai-worker build
+
+# Build the events and ingestion workers (the combined entrypoint comes last)
+RUN pnpm --filter events-worker build
+RUN pnpm --filter ingestion-worker build
+
+# COMBINED_BACKGROUND_JOBS=on runs the api's timer jobs (approval sweep, bounce
+# scan) from apps/api/dist/background-jobs.js, so the api and every workspace
+# package it depends on must be built too (same chain as infra/docker/Dockerfile.api).
+RUN pnpm --filter "@intelliflow/api^..." --workspace-concurrency=1 run build
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+RUN pnpm --filter api build
+
+# The combined entrypoint imports all three workers and the api's
+# dist/background-jobs.js (its types too, for the dts build), so it builds last.
+RUN pnpm --filter combined-worker build
+
+# Stage 3: Runner
+FROM node:24-alpine AS production
+
+# Install system dependencies for OCR (if enabled)
+RUN apk add --no-cache tesseract-ocr python3 py3-pip
+
+# Patch OS packages flagged by image scanning: zlib 1.3.2-r0 -> 1.3.2-r1
+# (CVE-2026-85091). Runs as root, before the USER switch below.
+RUN apk add --no-cache --upgrade zlib
+
+# Drop the npm CLI bundled by the base image — never invoked at runtime (the
+# worker starts via `tsx`; builds use pnpm/corepack in earlier stages) but
+# its own vendored deps (undici, ip-address, brace-expansion, etc.) carry
+# known CVEs. corepack lives in a separate tree and is untouched.
+RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx
+
+# Set environment
+ENV NODE_ENV=production
+ENV LOG_LEVEL=info
+ENV ENABLE_TEXT_EXTRACTION=true
+ENV ENABLE_OCR=false
+ENV ENABLE_EMBEDDINGS=false
+ENV PYTHONUNBUFFERED=1
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 worker
+
+WORKDIR /app
+
+# Copy necessary files from builder
+COPY --from=builder --chown=worker:nodejs /app/node_modules ./node_modules
+COPY --from=builder --chown=worker:nodejs /app/packages ./packages
+COPY --from=builder --chown=worker:nodejs /app/apps/workers ./apps/workers
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/combined-worker/dist ./apps/workers/combined-worker/dist
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/combined-worker/node_modules ./apps/workers/combined-worker/node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/combined-worker/package.json ./apps/workers/combined-worker/
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/events-worker/dist ./apps/workers/events-worker/dist
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/events-worker/node_modules ./apps/workers/events-worker/node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/events-worker/package.json ./apps/workers/events-worker/
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/ingestion-worker/dist ./apps/workers/ingestion-worker/dist
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/ingestion-worker/node_modules ./apps/workers/ingestion-worker/node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/workers/ingestion-worker/package.json ./apps/workers/ingestion-worker/
+COPY --from=builder --chown=worker:nodejs /app/apps/ai-worker/dist ./apps/ai-worker/dist
+COPY --from=builder --chown=worker:nodejs /app/apps/ai-worker/node_modules ./apps/ai-worker/node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/ai-worker/package.json ./apps/ai-worker/
+COPY --from=builder --chown=worker:nodejs /app/apps/api/dist ./apps/api/dist
+COPY --from=builder --chown=worker:nodejs /app/apps/api/node_modules ./apps/api/node_modules
+COPY --from=builder --chown=worker:nodejs /app/apps/api/package.json ./apps/api/
+COPY --from=builder --chown=worker:nodejs /app/package.json ./
+
+# Switch to non-root user
+USER worker
+
+# Health check port
+EXPOSE 3100
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:3100/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})" || exit 1
+
+# Run all three workers via tsx (Prisma 7 shims import .ts at runtime; see
+# infra/docker/Dockerfile.ai-worker)
+CMD ["./node_modules/.bin/tsx", "apps/workers/combined-worker/dist/main.js"]

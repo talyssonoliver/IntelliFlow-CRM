@@ -81,6 +81,8 @@ export * from './legal/appointments/Buffer';
 export * from './legal/appointments/ConflictDetector';
 export * from './legal/appointments/AvailabilityPolicy'; // PG-202
 export * from './legal/appointments/availability-roles'; // PG-202
+export * from './legal/appointments/event-types'; // PG-203
+export * from './legal/appointments/listOpenSlots'; // PG-203
 
 // Legal Domain - Terms Acceptance (IFC-309)
 export * from './legal/TermsAcceptance';
@@ -171,3 +173,6 @@ export * from './automation/RoutingConstants';
 // server-side steps[].config validation) and the React workflow builder
 // (for palette entries + per-type config forms).
 export * from './workflow/node-catalog';
+
+// PG-207 (ADR-085): user mailbox sending, bounce rules and signature defaults.
+export * from './email';

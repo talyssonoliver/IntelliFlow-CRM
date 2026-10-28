@@ -137,15 +137,40 @@ export class LeadService {
     // transaction, so a crash can never leave a persisted lead with no
     // LeadCreated event (ADR-011 zero-lost-events).
     try {
-      await this.transactionManager.run(async (tx) => {
-        await this.leadRepository.save(lead, opts, tx);
-        await this.publishEvents(lead, tx);
-      });
+      await this.transactionManager.run((tx) => this.persistNewLead(lead, tx, opts));
     } catch {
       return Result.fail(new PersistenceError('Failed to save lead'));
     }
 
     return Result.ok(lead);
+  }
+
+  /**
+   * PG-203: create a lead on the CALLER's transaction (public booking, ADR-083).
+   * The aggregate save and the LeadCreated outbox write share `tx`; there is no
+   * duplicate pre-check (the caller resolves existing records itself, under its
+   * own lock) and persistence errors propagate so the caller's transaction
+   * rolls back.
+   */
+  async createLeadInTransaction(
+    props: CreateLeadProps,
+    tx: RepositoryTransaction
+  ): Promise<Result<Lead, DomainError>> {
+    const leadResult = Lead.create(props);
+    if (leadResult.isFailure) {
+      return Result.fail(leadResult.error);
+    }
+    await this.persistNewLead(leadResult.value, tx);
+    return Result.ok(leadResult.value);
+  }
+
+  private async persistNewLead(
+    lead: Lead,
+    tx: RepositoryTransaction,
+    opts?: { note?: { content: string; author: string } }
+  ): Promise<void> {
+    await this.leadRepository.save(lead, opts, tx);
+    await this.publishEvents(lead, tx);
   }
 
   /**
@@ -194,9 +219,16 @@ export class LeadService {
   }
 
   /**
-   * Score a lead using AI service
+   * Score a lead using AI service.
+   *
+   * @param actorUserId authenticated user requesting the score; forwarded to the
+   *   AI service so guardrails sanitize and audit under the real actor. Omit for
+   *   system-initiated scoring.
    */
-  async scoreLead(leadId: string): Promise<Result<LeadScoreUpdateResult, DomainError>> {
+  async scoreLead(
+    leadId: string,
+    actorUserId?: string
+  ): Promise<Result<LeadScoreUpdateResult, DomainError>> {
     const leadIdResult = LeadId.create(leadId);
     if (leadIdResult.isFailure) {
       return Result.fail(leadIdResult.error);
@@ -224,7 +256,7 @@ export class LeadService {
         phone: lead.phone?.value,
         source: lead.source,
       },
-      { tenantId: lead.tenantId, leadId: lead.id.value }
+      { tenantId: lead.tenantId, leadId: lead.id.value, userId: actorUserId }
     );
 
     if (scoringResult.isFailure) {
@@ -438,7 +470,7 @@ export class LeadService {
   /**
    * Bulk score leads
    */
-  async bulkScoreLeads(leadIds: string[]): Promise<BulkOperationResult> {
+  async bulkScoreLeads(leadIds: string[], actorUserId?: string): Promise<BulkOperationResult> {
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
 
@@ -451,7 +483,7 @@ export class LeadService {
     for (let i = 0; i < leadIds.length; i += CONCURRENCY) {
       const chunk = leadIds.slice(i, i + CONCURRENCY);
       const settled = await Promise.all(
-        chunk.map(async (leadId) => ({ leadId, result: await this.scoreLead(leadId) }))
+        chunk.map(async (leadId) => ({ leadId, result: await this.scoreLead(leadId, actorUserId) }))
       );
       for (const { leadId, result } of settled) {
         if (result.isSuccess) {

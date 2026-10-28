@@ -1,0 +1,23 @@
+[test-slot] slot1 taken for ENV-008-AI@feat/env-008-ai-env008: pnpm exec vitest run --project root --coverage.enabled --coverage.reportsDirectory=artifacts/coverage-env008-before --coverage.reporter=json-summary --coverage.reporter=text-summary --coverage.include=tools/scripts/lib/grafana-provisioning.mjs --coverage.include=tools/scripts/observability/*.mjs tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-synthetic-monitoring.test.ts tools/scripts/security/__tests__/workflow-secret-lint.test.ts tools/scripts/observability/__tests__/
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/env-008-ai
+      Coverage enabled with istanbul
+
+
+ Test Files  6 passed (6)
+      Tests  61 passed (61)
+   Start at  14:59:59
+   Duration  5.25s (transform 6.75s, setup 5.02s, import 4.27s, tests 3.07s, environment 4ms)
+
+ % Coverage report from istanbul
+
+=============================== Coverage summary ===============================
+Statements   : 85.56% ( 160/187 )
+Branches     : 77.08% ( 148/192 )
+Functions    : 88.23% ( 15/17 )
+Lines        : 88.69% ( 149/168 )
+================================================================================
+ERROR: Coverage for lines (88.69%) does not meet global threshold (90%)
+ERROR: Coverage for functions (88.23%) does not meet global threshold (90%)
+ERROR: Coverage for statements (85.56%) does not meet global threshold (90%)
+ERROR: Coverage for branches (77.08%) does not meet global threshold (80%)
