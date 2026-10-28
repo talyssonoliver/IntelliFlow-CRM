@@ -1,17 +1,17 @@
 # Session Context Snapshot
-_Generated: 2026-10-28T22:10:08.671Z • Branch: chore/tracker-reconcile-20261022_
+_Generated: 2026-10-28T22:19:44.255Z • Branch: chore/tracker-reconcile-20261022_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 17 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 3s ago; 622 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 622 total tasks across the project.
 
 ## Project Health
 
-- **Progress:** 442/622 tasks completed (71.06%) — 163 backlog, 0 blocked, 17 in progress.
+- **Progress:** 441/622 tasks completed (70.9%) — 163 backlog, 0 blocked, 18 in progress.
 - **Focus band:** Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
-- **Evidence issues:** 21 attested but CSV not updated; 10 sprint path mismatches.
+- **Evidence issues:** 22 attested but CSV not updated; 10 sprint path mismatches.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
@@ -35,19 +35,19 @@ Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 17 task(
 
 ## Git Activity
 
-- **Branch:** `chore/tracker-reconcile-20261022` (697 dirty file(s))
-- **Dirty preview:** `.agents/skills/exec-attestation/SKILL.md`, `.agents/skills/exec-attestation/references/attestation-format.md`, `.agents/skills/fix-incomplete-tasks/references/repair-steps.md`, `.claude/skills/exec-attestation/SKILL.md`, `.env.example` …
+- **Branch:** `chore/tracker-reconcile-20261022` (5 dirty file(s))
+- **Dirty preview:** `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`, `apps/project-tracker/docs/metrics/_global/Sprint_plan_I.csv`, `artifacts/reports/current-state-report.json`, `artifacts/reports/spec-tracker.json`, `docs/CURRENT_STATE_REPORT.md`
 - **Last 10 commits:**
-  - `e53b340d8` chore(tracker): mark pg-199, eng-ops-002 and eng-ops-002.r16 completed — Talysson Oliveira, 6 days ago
-  - `e7ce625b2` fix(deps): raise follow-redirects and vite floors to patched versions (#975) — Talysson Oliveira, 7 days ago
-  - `dc58e7358` feat(workflow): add ceremony tier detector for template-class tasks (#903) — Talysson Oliveira, 8 days ago
-  - `729ce393f` feat(agent-approvals): model configuration per ai purpose with never-downgrade (PG-199) (#935) — Talysson Oliveira, 8 days ago
-  - `a2d9d6f0b` chore(governance): update metrics artifacts (#919) — github-actions[bot], 8 days ago
-  - `df67f60c3` chore(ci)(deps): bump google/osv-scanner-action from 2.6.0 to 2.7.0 in the actions-all group (#918) — dependabot[bot], 8 days ago
-  - `76a9ad252` chore(deps-dev)(deps-dev): bump storybook from 10.6.1 to 10.6.2 in the storybook group (#917) — dependabot[bot], 8 days ago
-  - `3d285c261` fix(agent): real rollbacks for approved actions and authenticated lighthouse for pg-198 (#934) — Talysson Oliveira, 9 days ago
-  - `21c334952` fix(test): serialise integration-suite ddl to stop the 40P01 deadlock (#930) — Talysson Oliveira, 9 days ago
-  - `a6edc3074` fix(tenancy): scope agent actions, appointments and approver drafts by tenant (#923) — Talysson Oliveira, 9 days ago
+  - `96874ff91` chore(tracker): merge main and re-apply the pg-199, eng-ops-002 and r16 flips — Talysson Oliveira, 9 minutes ago
+  - `be2be4075` fix(env-008-ai): use lower-case alphanumeric SLO ids and a 7-day series check (#1057) — Talysson Oliveira, 12 minutes ago
+  - `fd7966add` fix(env-008-ai): fit SLO ids to Grafana's limit and stop failing on no error spans (#1055) — Talysson Oliveira, 25 hours ago
+  - `960691c0f` fix(ai): unblock lead AI analysis and persist guardrail audit events (#1052) — Talysson Oliveira, 26 hours ago
+  - `376068804` fix(deps): clear the high-severity audit advisories from #1016 (#1053) — Talysson Oliveira, 27 hours ago
+  - `1c10dd7a5` feat(env-008-ai): production slos, service dashboard and railway self-healing as code (#1045) — Talysson Oliveira, 2 days ago
+  - `1351dbf7c` fix(ai-worker): run OpenRouter chat on Nemotron with tool-call structured output (#1051) — Talysson Oliveira, 2 days ago
+  - `0466087ed` fix(combined-worker): build the image's entrypoint after the api (#1047) — Talysson Oliveira, 2 days ago
+  - `01416e2ca` chore(api): let the idle api sleep by moving timer jobs to combined-worker (#1046) — Talysson Oliveira, 2 days ago
+  - `5432f5f93` fix(monitoring): make the direct error rule fire on late span metrics (#1040) — Talysson Oliveira, 3 days ago
 
 ## Key File References
 

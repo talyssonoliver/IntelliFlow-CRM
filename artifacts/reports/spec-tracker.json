@@ -1,10 +1,10 @@
 {
-  "generated_at": "2026-10-28T22:10:26.756Z",
+  "generated_at": "2026-10-28T22:19:50.780Z",
   "description": "Consolidated spec tracker — cross-references spec files, attestations, plans, metric JSONs, and CSV status to determine real completion status of all specified tasks.",
   "summary": {
     "total_specs_analyzed": 527,
-    "completed": 442,
-    "partially_done": 22,
+    "completed": 441,
+    "partially_done": 23,
     "spec_only": 55,
     "uncertain": 8
   },
@@ -8496,15 +8496,15 @@
       "has_spec": true,
       "has_plan": true,
       "has_attestation": true,
-      "csv_status": "Completed",
-      "metric_status": "DONE",
+      "csv_status": "In Progress",
+      "metric_status": "IN_PROGRESS",
       "acceptance_criteria_count": 0,
       "dependencies": [
         "PG-178",
         "PG-152",
         "PG-192"
       ],
-      "real_status": "COMPLETED"
+      "real_status": "PARTIALLY_DONE"
     },
     {
       "task_id": "PG-200",

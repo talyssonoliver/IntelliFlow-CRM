@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T22:10:08.530Z",
+  "generatedAt": "2026-10-28T22:19:44.145Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -547,11 +547,11 @@
     "totalTasks": 622,
     "totalNumberedSprintTasks": 616,
     "continuousTaskCount": 6,
-    "completedTasks": 442,
+    "completedTasks": 441,
     "backlogTasks": 163,
     "blockedTasks": 0,
-    "completionPercentage": 71.06,
-    "inProgressTasks": 17,
+    "completionPercentage": 70.9,
+    "inProgressTasks": 18,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -642,6 +642,12 @@
         "status": "In Progress",
         "sprint": 19,
         "attestationPath": ".specify/sprints/sprint-19/attestations/IFC-304/attestation.json"
+      },
+      {
+        "taskId": "PG-199",
+        "status": "In Progress",
+        "sprint": 18,
+        "attestationPath": ".specify/sprints/sprint-18/attestations/PG-199/attestation.json"
       },
       {
         "taskId": "PG-203",
@@ -17342,11 +17348,11 @@
       "name": "Sprint 18",
       "summarySource": "specify",
       "totalTasks": 78,
-      "completedTasks": 60,
+      "completedTasks": 59,
       "backlogTasks": 6,
       "blockedTasks": 0,
-      "inProgressTasks": 12,
-      "attestedCompletedTasks": 60,
+      "inProgressTasks": 13,
+      "attestedCompletedTasks": 59,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Core CRM (27), Settings (19), Infrastructure (6).",
       "notableCompleted": [
@@ -17689,8 +17695,8 @@
         {
           "section": "Settings",
           "total": 19,
-          "completed": 14,
-          "open": 5
+          "completed": 13,
+          "open": 6
         },
         {
           "section": "Infrastructure",
@@ -19724,7 +19730,7 @@
         {
           "taskId": "PG-199",
           "sprint": 18,
-          "status": "Completed",
+          "status": "In Progress",
           "section": "Settings",
           "title": "Module Settings - Model Config (/agent-approvals/model-config)",
           "description": "Module Settings - Model Config (/agent-approvals/model-config)",
