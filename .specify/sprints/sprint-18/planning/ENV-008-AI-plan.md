@@ -250,9 +250,9 @@ No dependency claim blocks the plan.
 
 - [x] The committed `infra/monitoring/grafana/cloud/slos.json` passes `validateConfig` with 0 errors.
 - [x] It has exactly 3 SLOs with these uuids and objectives:
-  - `env008-api-availability`: 0.999 / 28d
-  - `env008-api-latency`: 0.95 / 28d
-  - `env008-ai-worker-llm-success`: 0.995 / 28d
+  - `env008apiavail`: 0.999 / 28d
+  - `env008apip95`: 0.95 / 28d
+  - `env008llmsuccess`: 0.995 / 28d
 - [x] Availability and LLM use `query.type === 'ratio'`. Latency uses `freeform`, and its query contains
       `histogram_fraction(0, 0.2,` and `[$__rate_interval]`.
 - [x] Every API query contains `span_name!~"(GET|HEAD) (/api)?/health(/.*)?"` (the health exclusion) and
@@ -518,13 +518,13 @@ block.
        `traces_spanmetrics_latency_bucket` (`alert-rules.json:49-50`).
      - Fix: wire `setWorkflowTracer` in the production container and query the native histogram.
   2. **ai-worker `llm.invoke` fails 100% in production** (F4; also 140 pg INSERT errors, related to #805).
-     - Acceptance item: "enable `alerting` on SLO `env008-ai-worker-llm-success`".
+     - Acceptance item: "enable `alerting` on SLO `env008llmsuccess`".
   3. **Public `/health/detailed`, `/health/db` and `dbStats`** (`http-server.ts:346-367`, `health.router.ts:87`).
   4. **Account-wide, repository-level `RAILWAY_TOKEN` with no environment, and a CLI pinned only to its
      major version** (`@railway/cli@4`, `promote-production.yml:69-80,194`).
      - Fix: an environment-scoped project token and an exact CLI version.
   5. **api server-side p95 is 2.72 s against the 200 ms objective** (F2; `slo-definitions.md:56`).
-     - Acceptance item: "enable `alerting` on SLO `env008-api-latency`".
+     - Acceptance item: "enable `alerting` on SLO `env008apip95`".
 - [x] Findings doc: one section per issue (number, evidence, fix, owner lane). Also record:
   - the spec-citation correction for `artifact-registry.ts` (W8)
   - the stale script path in the `alert-rules.json` `_comment` (`tools/scripts/grafana/apply-alert-rules.mjs`;
