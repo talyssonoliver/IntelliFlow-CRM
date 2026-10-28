@@ -261,6 +261,16 @@ describe('querySeriesCount', () => {
     ]);
   });
 
+  it('looks back over the range it is given', async () => {
+    const paths: string[] = [];
+    const api = async (_method: string, path: string) => {
+      paths.push(path);
+      return { status: 200, json: { data: { result: [{ value: [0, '1'] }] } } };
+    };
+    await querySeriesCount(api, 'ds', 'up', '7d');
+    expect(paths[0]).toContain(encodeURIComponent('count(last_over_time(up[7d]))'));
+  });
+
   it('returns 0 when the query has no result', async () => {
     const api = async () => ({ status: 200, json: { data: { result: [] } } });
     expect(await querySeriesCount(api, 'ds', 'up')).toBe(0);

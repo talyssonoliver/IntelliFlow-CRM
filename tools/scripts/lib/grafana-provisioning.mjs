@@ -95,9 +95,12 @@ export function redactBody(text) {
   return out.length > REDACT_MAX ? `${out.slice(0, REDACT_MAX)}…[truncated]` : out;
 }
 
-/** Number of live series a selector matches over the last hour, via the datasource proxy. */
-export async function querySeriesCount(api, datasourceUid, selector) {
-  const query = encodeURIComponent(`count(last_over_time(${selector}[1h]))`);
+/**
+ * Number of series a selector matches over `lookback` (a PromQL range,
+ * default the last hour), via the datasource proxy.
+ */
+export async function querySeriesCount(api, datasourceUid, selector, lookback = '1h') {
+  const query = encodeURIComponent(`count(last_over_time(${selector}[${lookback}]))`);
   const res = await api(
     'GET',
     `/api/datasources/proxy/uid/${datasourceUid}/api/v1/query?query=${query}`

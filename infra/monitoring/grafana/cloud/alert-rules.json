@@ -16,7 +16,8 @@
       "for": "15m",
       "noData": "Alerting",
       "severity": "critical",
-      "summary": "Neither ai-worker nor the combined worker (intelliflow-ai-worker) has sent spans for 15 minutes. Either the worker is down (as ai-worker was from June to October 2026) or OTLP export broke."
+      "summary": "Neither ai-worker nor the combined worker (intelliflow-ai-worker) has sent spans for 15 minutes. Either the worker is down (as ai-worker was from June to October 2026) or OTLP export broke.",
+      "liveSeriesCheck": false
     },
     {
       "uid": "ifc032-lead-routing-failures",
