@@ -60,6 +60,13 @@ async function subjectIds(
   return { leadIds: leads.map((r) => r.id), contactIds: contacts.map((r) => r.id) };
 }
 
+const union = (a: string[], b: string[]): string[] => [...new Set([...a, ...b])];
+
+/** Both selections of the person's records, each id once. */
+function unionIds(a: SubjectIds, b: SubjectIds): SubjectIds {
+  return { leadIds: union(a.leadIds, b.leadIds), contactIds: union(a.contactIds, b.contactIds) };
+}
+
 /** The deals whose contact is the person's: AI output about a deal is about its contact (Q22). */
 async function subjectDealIds(db: Db, tenantId: string, contactIds: string[]): Promise<string[]> {
   if (contactIds.length === 0) return [];
@@ -761,13 +768,21 @@ export class PrismaSubjectDataRepository implements SubjectDataPort {
           WHERE id = ${input.requestId} AND "tenantId" = ${tenantId} FOR UPDATE`;
         if (locked[0]?.status !== 'VERIFIED') return { outcome: 'NOT_PENDING' as const };
 
-        const ids = await subjectIds(tx, tenantId, subjectEmail, true);
-        const { leadIds, contactIds } = ids;
-        const appointmentIds = await bookedAppointmentIds(tx, tenantId, subjectEmail, true);
+        const firstIds = await subjectIds(tx, tenantId, subjectEmail, true);
+        const firstAppointments = await bookedAppointmentIds(tx, tenantId, subjectEmail, true);
         // The person's address lock, after the row locks (the order every writer uses): an AI
         // write that checked this address waits for the erasure to commit, or committed
         // before it (codex).
         await tx.$executeRaw`SELECT dsar_subject_lock(${tenantId}, ${normalizeSubjectEmail(subjectEmail)})`;
+        // Selected again under the address lock (codex): a record moved onto this address after
+        // the first selection's snapshot committed before the lock, and is only seen now. A move
+        // that starts later waits for the erasure (the address carry locks the new address).
+        const ids = unionIds(firstIds, await subjectIds(tx, tenantId, subjectEmail, true));
+        const { leadIds, contactIds } = ids;
+        const appointmentIds = union(
+          firstAppointments,
+          await bookedAppointmentIds(tx, tenantId, subjectEmail, true)
+        );
         const manual = await checklist(tx, tenantId, subjectEmail, ids);
 
         // Leads: a per-row placeholder keeps @@unique([email, tenantId]) satisfied.

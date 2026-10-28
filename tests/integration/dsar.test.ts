@@ -1576,6 +1576,78 @@ describeDb('PG-203 DSAR adapters (real DB)', () => {
       }
     });
 
+    it('erases a record moved onto the address after the selection, before the address lock (codex)', async () => {
+      const grace = `${RUN}-grace@example.invalid`;
+      const held = await prisma.lead.create({
+        data: { tenantId: TENANT_A, ownerId: ADMIN_A, email: grace, firstName: 'Grace' },
+      });
+      const moved = await prisma.lead.create({
+        data: {
+          tenantId: TENANT_A,
+          ownerId: ADMIN_A,
+          email: `${RUN}-frank@example.invalid`,
+          firstName: 'Grace',
+        },
+      });
+      const request = await dsars.createStaff({
+        tenantId: TENANT_A,
+        type: 'ERASURE',
+        subjectEmail: grace,
+        capEmailHash: hex('8'),
+        details: null,
+        objectionScope: null,
+        identityMethod: 'IN_PERSON_ID',
+        identityNote: 'Passport checked at the front desk',
+        receivedAt: new Date(),
+        receivedOnReason: null,
+        verifiedAt: new Date(),
+        slaDeadline: new Date(Date.now() + 30 * 24 * HOUR),
+        createdById: ADMIN_A,
+      });
+      let release!: () => void;
+      const gate = new Promise<void>((resolve) => (release = resolve));
+      let lockedYet!: () => void;
+      const holding = new Promise<void>((resolve) => (lockedYet = resolve));
+      try {
+        // Another edit holds Grace's first record, so the erasure's selection waits on it with
+        // its snapshot already taken.
+        const editing = prisma.$transaction(
+          async (tx: any) => {
+            await tx.$queryRaw`SELECT id FROM leads WHERE id = ${held.id} FOR UPDATE`;
+            lockedYet();
+            await gate;
+          },
+          { timeout: 20_000 }
+        );
+        await holding;
+        const erasing = subjects.erase({
+          tenantId: TENANT_A,
+          requestId: request.id,
+          subjectEmail: grace,
+          resolvedById: ADMIN_A,
+          note: 'No hold applies',
+          now: new Date(),
+          clockBreached: false,
+        });
+        await new Promise((resolve) => setTimeout(resolve, 300));
+        // A correction that commits while the selection waits: the record was Grace's too. Typed
+        // in capitals, so it is a second record for her (the unique key is the raw address).
+        await prisma.lead.update({ where: { id: moved.id }, data: { email: grace.toUpperCase() } });
+        release();
+        await editing;
+        const result = await erasing;
+
+        expect(result).toMatchObject({ outcome: 'ERASED', result: { counts: { leads: 2 } } });
+        await expect(prisma.lead.findUnique({ where: { id: moved.id } })).resolves.toMatchObject({
+          email: `erased-${moved.id}@erased.invalid`,
+          firstName: null,
+        });
+      } finally {
+        release();
+        await prisma.lead.deleteMany({ where: { id: { in: [held.id, moved.id] } } });
+      }
+    });
+
     it('a worker write waits for a restriction being written, then writes nothing (Q21/Q22)', async () => {
       // The AI workers' locked write on real locks: the lead row, then the person's address
       // lock (dsar_subject_lock), then the restriction read. A restriction committed while
