@@ -23,10 +23,10 @@
       "detects": "p95 latency outside its learned band"
     }
   ],
-  "slos": ["env008-api-avail", "env008-api-p95", "env008-llm-success"],
+  "slos": ["env008apiavail", "env008apip95", "env008llmsuccess"],
   "predictiveAlerting": {
-    "sloBurnRate": "Fast and slow burn-rate alerts on env008-api-avail warn before the 28-day error budget runs out (infra/monitoring/grafana/cloud/slos.json, applied by .github/workflows/grafana-slos.yml).",
-    "notAlerting": "env008-api-p95 and env008-llm-success have no burn-rate alerts yet: their budgets are already spent in production (#1001, #1029).",
+    "sloBurnRate": "Fast and slow burn-rate alerts on env008apiavail warn before the 28-day error budget runs out (infra/monitoring/grafana/cloud/slos.json, applied by .github/workflows/grafana-slos.yml).",
+    "notAlerting": "env008apip95 and env008llmsuccess have no burn-rate alerts yet: their budgets are already spent in production (#1001, #1029).",
     "thresholdRules": "The IFC-032 alert rules in infra/monitoring/grafana/cloud/alert-rules.json (applied by .github/workflows/grafana-alert-rules.yml)."
   },
   "notCovered": "web, ws, events-worker and ingestion-worker emit no telemetry yet (EP-001-AI), so nothing above watches them.",

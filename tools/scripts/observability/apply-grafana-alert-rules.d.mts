@@ -11,6 +11,8 @@ export interface AlertRuleEntry {
   severity: string;
   summary: string;
   requireSeries?: boolean;
+  /** false skips the series check entirely (rules that alert on silence). */
+  liveSeriesCheck?: boolean;
 }
 export interface AlertRulesConfig {
   folder: { uid: string; title: string };
