@@ -10,7 +10,9 @@
 //      The window is days, not minutes, because a quiet night (the api asleep,
 //      the worker idle) is not a wrong name. An error-only matcher is left out
 //      for the same reason: no errors is not a wrong name. A rule that alerts
-//      on silence opts out with liveSeriesCheck:false;
+//      on silence opts out with liveSeriesCheck:false. A rule on the logs
+//      datasource (datasourceUid grafanacloud-logs) is checked through Loki's
+//      series route instead, which proves its stream selector matches logs;
 //   3. creates or updates each rule by uid;
 //   4. deletes the delivery-test rule, unless --send-test asks for it.
 //
@@ -24,6 +26,8 @@ import { fileURLToPath } from 'node:url';
 import {
   buildAlertRulePayload,
   createApiClient,
+  DATASOURCE_KINDS,
+  queryLokiSeriesCount,
   querySeriesCount,
   redactBody,
   requireEnv,
@@ -90,6 +94,10 @@ function validateRuleEntry(entry, seen, problems) {
     problems.push(`${entry.uid}: bad noData`);
   if (!isValidQueryOffset(entry.queryOffsetSeconds))
     problems.push(`${entry.uid}: queryOffsetSeconds must be a whole number from 0 to 600`);
+  if (entry.datasourceUid !== undefined && !(entry.datasourceUid in DATASOURCE_KINDS))
+    problems.push(
+      `${entry.uid}: datasourceUid must be one of ${Object.keys(DATASOURCE_KINDS).join(', ')}`
+    );
   for (const key of ['requireSeries', 'liveSeriesCheck']) {
     if (entry[key] !== undefined && typeof entry[key] !== 'boolean')
       problems.push(`${entry.uid}: ${key} must be true or false`);
@@ -101,6 +109,7 @@ function validateRuleEntry(entry, seen, problems) {
 // How far back the series check looks. Long enough to cover a night or a
 // weekend with no traffic; a misspelled metric has no series at any range.
 const SERIES_LOOKBACK = '7d';
+const SERIES_LOOKBACK_SECONDS = 7 * 86400;
 const METRIC_NAME = /^[A-Za-z_:][\w:]*$/;
 const ERROR_ONLY_MATCHER = 'status_code="STATUS_CODE_ERROR"';
 
@@ -144,6 +153,18 @@ export function liveSeriesSelector(selector) {
   return kept.length ? `${name}{${kept.join(', ')}}` : name;
 }
 
+/**
+ * Series a rule's selector has had over the lookback, asked of the rule's own
+ * datasource: a Loki rule through the Loki series route (its selector is a
+ * stream selector, not PromQL), every other rule through a PromQL count.
+ */
+function ruleSeriesCount(api, entry, config, nowMs) {
+  const datasourceUid = entry.datasourceUid ?? config.datasourceUid;
+  if (DATASOURCE_KINDS[datasourceUid] === 'loki')
+    return queryLokiSeriesCount(api, datasourceUid, entry.selector, SERIES_LOOKBACK_SECONDS, nowMs);
+  return querySeriesCount(api, datasourceUid, liveSeriesSelector(entry.selector), SERIES_LOOKBACK);
+}
+
 /** Validate the rules file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
@@ -161,6 +182,7 @@ export async function run({
   fetchImpl = fetch,
   log = console.log,
   sleep,
+  now = Date.now,
 } = {}) {
   const dryRun = argv.includes('--dry-run');
   const sendTest = argv.includes('--send-test');
@@ -180,9 +202,8 @@ export async function run({
       log(`series skip  ${entry.uid}  (liveSeriesCheck: false)`);
       continue;
     }
-    const selector = liveSeriesSelector(entry.selector);
-    const n = await querySeriesCount(api, config.datasourceUid, selector, SERIES_LOOKBACK);
-    log(`series ${String(n).padStart(4)}  ${entry.uid}  ${selector}`);
+    const n = await ruleSeriesCount(api, entry, config, now());
+    log(`series ${String(n).padStart(4)}  ${entry.uid}  ${liveSeriesSelector(entry.selector)}`);
     if (n === 0 && entry.requireSeries !== false) empty.push(entry.uid);
   }
 

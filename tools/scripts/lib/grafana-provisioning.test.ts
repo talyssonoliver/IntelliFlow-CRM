@@ -6,7 +6,9 @@ import {
   buildAlertRulePayload,
   createApiClient,
   createGrafanaClient,
+  DATASOURCE_KINDS,
   loadValidConfig,
+  queryLokiSeriesCount,
   querySeriesCount,
   redactBody,
   requireEnv,
@@ -284,6 +286,47 @@ describe('querySeriesCount', () => {
   });
 });
 
+describe('queryLokiSeriesCount', () => {
+  const NOW = Date.UTC(2026, 9, 28, 12, 0, 0);
+  const SELECTOR = '{service_name=~"ai-worker|api"}';
+
+  it('lists the streams a selector matches over the lookback via the Loki series route', async () => {
+    const calls: string[] = [];
+    const api = async (method: string, path: string) => {
+      calls.push(`${method} ${path}`);
+      return { status: 200, json: { status: 'success', data: [{ a: '1' }, { a: '2' }] } };
+    };
+    const n = await queryLokiSeriesCount(api, 'grafanacloud-logs', SELECTOR, 7 * 86400, NOW);
+    expect(n).toBe(2);
+    const end = NOW / 1000;
+    expect(calls).toEqual([
+      'GET /api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/series?' +
+        `match%5B%5D=${encodeURIComponent(SELECTOR)}&start=${end - 7 * 86400}&end=${end}`,
+    ]);
+  });
+
+  it('returns 0 when no stream matches', async () => {
+    const api = async () => ({ status: 200, json: { status: 'success', data: [] } });
+    expect(await queryLokiSeriesCount(api, 'ds', SELECTOR, 3600, NOW)).toBe(0);
+  });
+
+  it('throws on a non-200 response', async () => {
+    const api = async () => ({ status: 502, json: undefined });
+    await expect(queryLokiSeriesCount(api, 'ds', SELECTOR, 3600, NOW)).rejects.toThrow(
+      `series check for ${SELECTOR}: HTTP 502`
+    );
+  });
+});
+
+describe('DATASOURCE_KINDS', () => {
+  it('knows the Grafana Cloud metrics and logs datasources', () => {
+    expect(DATASOURCE_KINDS).toEqual({
+      'grafanacloud-prom': 'prometheus',
+      'grafanacloud-logs': 'loki',
+    });
+  });
+});
+
 describe('buildAlertRulePayload', () => {
   const entry = {
     uid: 'r-1',
@@ -329,6 +372,28 @@ describe('buildAlertRulePayload', () => {
     });
     const late = buildAlertRulePayload({ ...entry, queryOffsetSeconds: 60 }, config, 'x');
     expect(late.data[0].relativeTimeRange).toEqual({ from: 900, to: 60 });
+  });
+
+  it('a rule on the logs datasource queries Loki as an instant query', () => {
+    const rule = buildAlertRulePayload(
+      { ...entry, datasourceUid: 'grafanacloud-logs' },
+      { ...config, datasourceUid: 'grafanacloud-prom' },
+      'x'
+    );
+    expect(rule.data[0].datasourceUid).toBe('grafanacloud-logs');
+    expect(rule.data[0].model).toMatchObject({ expr: 'up == 0', queryType: 'instant' });
+    expect(rule.data[0].model).not.toHaveProperty('instant');
+  });
+
+  it('a rule without its own datasourceUid keeps the config datasource and the Prometheus shape', () => {
+    const rule = buildAlertRulePayload(
+      entry,
+      { ...config, datasourceUid: 'grafanacloud-prom' },
+      'x'
+    );
+    expect(rule.data[0].datasourceUid).toBe('grafanacloud-prom');
+    expect(rule.data[0].model).toMatchObject({ instant: true });
+    expect(rule.data[0].model).not.toHaveProperty('queryType');
   });
 
   it('gives the two callers distinct source labels from the same shape', () => {

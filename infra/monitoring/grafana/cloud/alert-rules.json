@@ -1,5 +1,5 @@
 {
-  "_comment": "Production alert rules for the Grafana Cloud stack (IFC-032). Applied by tools/scripts/grafana/apply-alert-rules.mjs through the Grafana provisioning API (workflow: grafana-alert-rules.yml). Metrics are the span metrics Grafana Cloud generates from our OTLP traces: traces_spanmetrics_calls_total{service, span_name, span_kind, status_code} and the traces_spanmetrics_latency histogram (seconds). Routed by the default notification policy to the owner's email contact point.",
+  "_comment": "Production alert rules for the Grafana Cloud stack (IFC-032). Applied by tools/scripts/grafana/apply-alert-rules.mjs through the Grafana provisioning API (workflow: grafana-alert-rules.yml). Metrics are the span metrics Grafana Cloud generates from our OTLP traces: traces_spanmetrics_calls_total{service, span_name, span_kind, status_code} and the traces_spanmetrics_latency histogram (seconds). A rule with its own datasourceUid queries that datasource instead: grafanacloud-logs is Loki (LogQL over our OTLP logs, labelled service_name). Routed by the default notification policy to the owner's email contact point.",
   "folder": { "uid": "intelliflow-prod", "title": "IntelliFlow production" },
   "datasourceUid": "grafanacloud-prom",
   "group": { "name": "intelliflow-prod", "intervalSeconds": 60 },
@@ -84,6 +84,20 @@
       "noData": "OK",
       "severity": "high",
       "summary": "ai-worker, the combined worker or api recorded error spans in the 5 minutes up to 1 minute ago."
+    },
+    {
+      "uid": "ifc074-error-logs-direct",
+      "title": "Error-level logs in ai-worker or api (direct, fast detection)",
+      "why": "IFC-074 MTTD < 120 s. No span-metrics rule can get there: the first sample lands 60-120 s after the error and reaches the ruler more than 60 s later. Loki ingests a log line in seconds. Replayed on run 7 (24-25 Oct 2026, 13 error episodes): every episode that wrote an error-level line (9 of 13) fires, at a modelled mean of 36-61 s for 5-30 s of ingest lag; all 9 two-minute buckets with error lines fell on a real episode (0 false alarms). The other 4 wrote no error-level line and stay with the span rules.",
+      "datasourceUid": "grafanacloud-logs",
+      "expr": "sum by (service_name) (count_over_time({service_name=~\"ai-worker|intelliflow-ai-worker|api\"} | detected_level=~\"(?i)error|fatal|critical\" or severity_text=~\"(?i)error|fatal|critical\" [2m]))",
+      "selector": "{service_name=~\"ai-worker|intelliflow-ai-worker|api\"}",
+      "operator": "gt",
+      "threshold": 0,
+      "for": "0s",
+      "noData": "OK",
+      "severity": "high",
+      "summary": "ai-worker, the combined worker or api logged error-level lines in the last 2 minutes."
     }
   ],
   "deliveryTest": {

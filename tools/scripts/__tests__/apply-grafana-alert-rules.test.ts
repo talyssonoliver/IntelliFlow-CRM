@@ -17,7 +17,12 @@ type Call = { method: string; path: string; body?: unknown };
 
 /** Fake Grafana: records calls; per-path responses with sensible defaults. */
 function fakeGrafana(
-  opts: { series?: (q: string) => number; existing?: string[]; folder?: number } = {}
+  opts: {
+    series?: (q: string) => number;
+    lokiStreams?: (selector: string) => number;
+    existing?: string[];
+    folder?: number;
+  } = {}
 ) {
   const calls: Call[] = [];
   const fetchImpl = async (
@@ -31,6 +36,11 @@ function fakeGrafana(
       status,
       text: async () => (json === undefined ? '' : JSON.stringify(json)),
     });
+    if (path.includes('/loki/api/v1/series')) {
+      const selector = decodeURIComponent(path.split('match%5B%5D=')[1].split('&')[0]);
+      const n = opts.lokiStreams ? opts.lokiStreams(selector) : 2;
+      return reply(200, { status: 'success', data: Array.from({ length: n }, () => ({})) });
+    }
     if (path.includes('/api/v1/query')) {
       const q = decodeURIComponent(path.split('query=')[1]);
       return reply(200, {
@@ -60,6 +70,7 @@ describe('alert rules config', () => {
       'ifc032-workflow-p95-latency',
       'ifc032-api-error-rate',
       'ifc074-error-spans-direct',
+      'ifc074-error-logs-direct',
     ]);
   });
 
@@ -86,6 +97,7 @@ describe('alert rules config', () => {
       'ifc032-workflow-p95-latency': traffic,
       'ifc032-api-error-rate': traffic,
       'ifc074-error-spans-direct': { requireSeries: undefined, liveSeriesCheck: undefined },
+      'ifc074-error-logs-direct': { requireSeries: undefined, liveSeriesCheck: undefined },
     });
   });
 
@@ -150,6 +162,45 @@ describe('alert rules config', () => {
       'traces_spanmetrics_calls_total{service=~"ai-worker|intelliflow-ai-worker"}'
     );
     expect(silent).toMatchObject({ operator: 'lt', threshold: 0.001, for: '15m' });
+  });
+
+  // IFC-074 MTTD < 120 s: no span-metrics rule can get there (the first sample
+  // lands 60-120 s after the error and reaches the ruler more than 60 s
+  // later), while Loki ingests a log line in seconds. This rule reads
+  // error-level log lines from the same services on the logs datasource.
+  it('the fast log rule counts error-level lines over 2m on Loki, at "now", with no pending period', () => {
+    const entry = CONFIG.rules.find((r: { uid: string }) => r.uid === 'ifc074-error-logs-direct');
+    const services = 'service_name=~"ai-worker|intelliflow-ai-worker|api"';
+    const levels = '"(?i)error|fatal|critical"';
+    expect(entry.datasourceUid).toBe('grafanacloud-logs');
+    expect(entry.selector).toBe(`{${services}}`);
+    expect(entry.expr).toBe(
+      `sum by (service_name) (count_over_time({${services}} | detected_level=~${levels} or severity_text=~${levels} [2m]))`
+    );
+    expect(entry).toMatchObject({ operator: 'gt', threshold: 0, for: '0s', noData: 'OK' });
+    expect(entry.queryOffsetSeconds).toBeUndefined();
+
+    const rule = buildRule(entry, CONFIG);
+    expect(rule.data[0].datasourceUid).toBe('grafanacloud-logs');
+    expect(rule.data[0].model.queryType).toBe('instant');
+    expect(rule.data[0].relativeTimeRange).toEqual({ from: 900, to: 0 });
+  });
+
+  it('every other rule stays on the metrics datasource', () => {
+    for (const entry of CONFIG.rules.filter(
+      (r: { uid: string }) => r.uid !== 'ifc074-error-logs-direct'
+    )) {
+      expect(entry.datasourceUid, entry.uid).toBeUndefined();
+      expect(buildRule(entry, CONFIG).data[0].datasourceUid).toBe('grafanacloud-prom');
+    }
+  });
+
+  it('rejects a datasourceUid that is not a known Grafana Cloud datasource', () => {
+    const bad = structuredClone(CONFIG);
+    bad.rules[1].datasourceUid = 'grafanacloud-tempo';
+    expect(validateConfig(bad)).toEqual([
+      'ifc032-lead-routing-failures: datasourceUid must be one of grafanacloud-prom, grafanacloud-logs',
+    ]);
   });
 
   it('the other rules keep evaluating at "now"', () => {
@@ -275,11 +326,11 @@ describe('run', () => {
   it('creates missing rules, updates existing ones, sets the group interval and removes the test rule', async () => {
     const g = fakeGrafana({ existing: ['ifc032-api-error-rate'], folder: 404 });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(6);
+    expect(result.applied).toBe(7);
     const writes = g.calls.filter((c) => c.method !== 'GET').map((c) => `${c.method} ${c.path}`);
     expect(writes).toContain('POST /api/folders');
     expect(writes).toContain('PUT /api/v1/provisioning/alert-rules/ifc032-api-error-rate');
-    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(5);
+    expect(writes.filter((w) => w === 'POST /api/v1/provisioning/alert-rules')).toHaveLength(6);
     expect(writes).toContain(
       'PUT /api/v1/provisioning/folder/intelliflow-prod/rule-groups/intelliflow-prod'
     );
@@ -289,12 +340,37 @@ describe('run', () => {
   it('with --send-test also applies the always-firing delivery rule and keeps it', async () => {
     const g = fakeGrafana();
     const result = await run({ env, argv: ['--send-test'], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(7);
+    expect(result.applied).toBe(8);
     const posted = g.calls
       .filter((c) => c.method === 'POST')
       .map((c) => (c.body as { uid?: string }).uid);
     expect(posted).toContain('ifc032-delivery-test');
     expect(g.calls.some((c) => c.method === 'DELETE')).toBe(false);
+  });
+
+  it('checks the log rule on the Loki series route over the last 7 days, the others on Prometheus', async () => {
+    const g = fakeGrafana();
+    const now = Date.UTC(2026, 9, 28, 12, 0, 0);
+    await run({ env, argv: ['--dry-run'], fetchImpl: g.fetchImpl, log: quiet, now: () => now });
+    const loki = g.calls.filter((c) => c.path.includes('/loki/api/v1/series'));
+    const end = now / 1000;
+    expect(loki.map((c) => c.path)).toEqual([
+      '/api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/series?match%5B%5D=' +
+        encodeURIComponent('{service_name=~"ai-worker|intelliflow-ai-worker|api"}') +
+        `&start=${end - 7 * 86400}&end=${end}`,
+    ]);
+    const prom = g.calls.filter((c) => c.path.includes('/api/v1/query'));
+    expect(prom).toHaveLength(CONFIG.rules.length - 2);
+    expect(
+      prom.every((c) => c.path.startsWith('/api/datasources/proxy/uid/grafanacloud-prom/'))
+    ).toBe(true);
+  });
+
+  it('fails loudly when the log rule matches no log streams (a wrong service_name)', async () => {
+    const g = fakeGrafana({ lokiStreams: () => 0 });
+    await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
+      'match no live series (check metric names): ifc074-error-logs-direct'
+    );
   });
 
   it('fails loudly when a rule watches a metric with no live series', async () => {
@@ -360,7 +436,7 @@ describe('run', () => {
   it('does not fail the run when a requireSeries:false rule has no live series (#812)', async () => {
     const g = fakeGrafana({ series: (q) => (q.includes('latency') ? 0 : 2) });
     const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
-    expect(result.applied).toBe(6);
+    expect(result.applied).toBe(7);
     expect(result.empty).toEqual([]);
   });
 
