@@ -443,6 +443,29 @@ describe('createLLMForTenant()', () => {
       await expect(chained.invoke('x')).resolves.toBe('backup');
     });
 
+    // A connection dropped mid-answer reaches the chain as the OpenAI SDK's
+    // APIConnectionError ("Connection error."), the wrapped form of ECONNRESET.
+    it('moves on when the connection dropped (the SDK reports "Connection error.")', async () => {
+      const { withModelFallbacks } = await importFactory('mock');
+      const primary = fake('p', () => {
+        throw new Error('Connection error.');
+      });
+      const backup = fake('b', () => 'backup');
+      const chained = withModelFallbacks(primary as never, [backup] as never);
+      await expect(chained.invoke('x')).resolves.toBe('backup');
+    });
+
+    it('does not move on for "Body is unusable", a local double read no model can fix', async () => {
+      const { withModelFallbacks } = await importFactory('mock');
+      const primary = fake('p', () => {
+        throw new TypeError('Body is unusable: Body has already been read');
+      });
+      const backup = fake('b', () => 'never');
+      const chained = withModelFallbacks(primary as never, [backup] as never);
+      await expect(chained.invoke('x')).rejects.toThrow('Body is unusable');
+      expect(backup.invoke).not.toHaveBeenCalled();
+    });
+
     it('does not retry errors that another model cannot fix (e.g. 400 or the ceiling)', async () => {
       const { withModelFallbacks } = await importFactory('mock');
       const primary = fake('p', () => {
