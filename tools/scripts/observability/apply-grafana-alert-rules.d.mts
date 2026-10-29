@@ -13,6 +13,9 @@ export interface AlertRuleEntry {
   requireSeries?: boolean;
   /** false skips the series check entirely (rules that alert on silence). */
   liveSeriesCheck?: boolean;
+  /** A datasource other than the config's, e.g. grafanacloud-logs for a Loki rule. */
+  datasourceUid?: string;
+  queryOffsetSeconds?: number;
 }
 export interface AlertRulesConfig {
   folder: { uid: string; title: string };
@@ -54,4 +57,6 @@ export function run(options?: {
   log?: (line: string) => void;
   /** Wait between 503 retries; tests pass a no-op (ENV-008-AI AC-001). */
   sleep?: (ms: number) => Promise<void>;
+  /** Clock for the Loki series check window; tests pin it. */
+  now?: () => number;
 }): Promise<{ applied: number; empty: string[] }>;
