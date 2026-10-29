@@ -6,7 +6,7 @@ import { z } from 'zod';
 import { MODEL_PRICING, aiConfig, servedPricingKey, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult, MonitoringContext, TokenUsage } from '../monitoring/chain-monitor';
-import { recordInference } from '../monitoring/otel-ai-metrics';
+import { classifyError, recordInference } from '../monitoring/otel-ai-metrics';
 import { leadScoreSchema } from '@intelliflow/validators';
 import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -219,13 +219,15 @@ Respond with a structured JSON object containing the score, confidence, factors,
   /**
    * Score a lead and return structured results
    */
-  async scoreLead(lead: LeadInput): Promise<ScoringResult> {
+  async scoreLead(lead: LeadInput, options: { leadId?: string } = {}): Promise<ScoringResult> {
+    // Logs identify the lead by id, never by email or other contact data (IFC-117 NF-002).
+    const { leadId } = options;
     const startTime = Date.now();
     // withMonitoring counts its own failures; errors before it are counted in the catch below.
     let monitoredCallStarted = false;
 
     try {
-      logger.info({ leadEmail: lead.email }, 'Starting lead scoring');
+      logger.info({ leadId }, 'Starting lead scoring');
 
       // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
       // Capture the effective tier so monitoring uses the correct pricing key (IFC-215 AC-004).
@@ -328,7 +330,7 @@ Respond with a structured JSON object containing the score, confidence, factors,
 
       logger.info(
         {
-          leadEmail: lead.email,
+          leadId,
           score: scoringResult.score,
           confidence: scoringResult.confidence,
           requiresHumanReview: needsReview,
@@ -353,13 +355,7 @@ Respond with a structured JSON object containing the score, confidence, factors,
           latencyMs: Date.now() - startTime,
         });
       }
-      logger.error(
-        {
-          leadEmail: lead.email,
-          error: error instanceof Error ? error.message : String(error),
-        },
-        'Lead scoring failed'
-      );
+      logger.error({ leadId, errorClass: classifyError(error) }, 'Lead scoring failed');
 
       // Return a default low-confidence score on error
       return {
@@ -369,7 +365,8 @@ Respond with a structured JSON object containing the score, confidence, factors,
           {
             name: 'error',
             impact: 0,
-            reasoning: `Scoring failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            // The class only: the result is persisted and shown, and an error can echo lead text.
+            reasoning: `Scoring failed (${classifyError(error)})`,
           },
         ],
         modelVersion: 'error:v1',

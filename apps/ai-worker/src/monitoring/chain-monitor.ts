@@ -223,7 +223,7 @@ async function checkHallucination<T>(
     };
   } catch (err) {
     logger.warn(
-      { operationId, error: err instanceof Error ? err.message : String(err) },
+      { operationId, errorClass: classifyError(err) },
       'Hallucination check failed — falling back to empty flags'
     );
     return { status: 'error' };
@@ -403,7 +403,8 @@ export async function withMonitoring<T>(
       {
         operationId,
         errorType,
-        error: error instanceof Error ? error.message : String(error),
+        // The class only: a provider error can echo prompt or lead text (NF-002).
+        errorClass: classifyError(error),
       },
       'Chain execution failed'
     );

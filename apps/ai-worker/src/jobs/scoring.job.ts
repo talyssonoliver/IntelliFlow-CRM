@@ -217,7 +217,7 @@ async function generateScoringWithFallback(
 ): Promise<{ result: ScoringResult; usedFallback: boolean }> {
   try {
     const scored = await Promise.race([
-      breaker.execute(() => chain.scoreLead(input)),
+      breaker.execute(() => chain.scoreLead(input, { leadId: job.data.leadId })),
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error(`LLM scoring timed out after ${timeoutMs}ms`)), timeoutMs)
       ),
@@ -238,7 +238,7 @@ async function generateScoringWithFallback(
           recordDrift: false,
         });
         const scored = await Promise.race([
-          fallbackChain.scoreLead(input),
+          fallbackChain.scoreLead(input, { leadId: job.data.leadId }),
           new Promise<never>((_, reject) =>
             setTimeout(
               () => reject(new Error(`fallback LLM scoring timed out after ${timeoutMs}ms`)),
