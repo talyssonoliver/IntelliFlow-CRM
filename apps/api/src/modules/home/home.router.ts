@@ -30,6 +30,8 @@ import {
   setOrgGoalDefaultInputSchema,
   getAllInsightsQuerySchema,
   GOAL_DEFAULTS,
+  idSchema,
+  recordIdSchema,
   type WelcomeSummary,
   type AIInsightsResponse,
   type GetAllInsightsResponse,
@@ -428,10 +430,11 @@ async function enqueueInsightGeneration(
     staleContacts: Array<{ id: string; name: string; daysSinceContact: number | null }>;
   }
 ): Promise<void> {
-  // Guard: reject non-UUID tenantIds (e.g. test fixtures like "test-tenant-id")
-  // to prevent FK violations when the worker persists insights.
-  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-  if (!uuidRegex.test(tenantId)) return;
+  // Guard: enqueue only for a real record id, a cuid or a seed uuid, within the
+  // job's id bound (#1074: a uuid-only check dropped every real, cuid, tenant).
+  // Fixture ids such as "test-tenant-id" are still skipped, which avoids FK
+  // violations when the worker persists insights.
+  if (!idSchema.safeParse(tenantId).success || !recordIdSchema.safeParse(tenantId).success) return;
 
   try {
     const { Queue } = await loadBullMQ();

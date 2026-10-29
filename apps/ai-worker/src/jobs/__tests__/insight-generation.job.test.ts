@@ -312,9 +312,9 @@ describe('InsightJobDataSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject non-UUID tenantId', () => {
+  it('should reject an unsafe tenantId', () => {
     const result = InsightJobDataSchema.safeParse({
-      tenantId: 'not-a-valid-uuid',
+      tenantId: 'not a/valid id',
       userId: 'user-1',
       dealsAtRisk: [],
       hotLeads: [],

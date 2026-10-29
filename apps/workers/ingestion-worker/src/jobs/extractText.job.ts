@@ -14,6 +14,7 @@
 import { Job } from 'bullmq';
 import pino from 'pino';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { fetchDocument, extractTextFromBuffer, createChunks } from '@intelliflow/worker-shared';
 
 // ============================================================================
@@ -21,7 +22,7 @@ import { fetchDocument, extractTextFromBuffer, createChunks } from '@intelliflow
 // ============================================================================
 
 export const TextExtractionInputSchema = z.object({
-  documentId: z.uuid(),
+  documentId: recordIdSchema,
   sourceUrl: z.url(),
   format: z.enum(['pdf', 'docx', 'txt', 'html', 'rtf', 'md']),
   tenantId: z.string(),
