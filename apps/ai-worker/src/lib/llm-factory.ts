@@ -150,8 +150,14 @@ export interface CreateLLMOptions {
  * has already decompressed the body — the re-wrapped Response must not advertise
  * the original encoding or the SDK would try to decompress again. Streaming
  * (`text/event-stream`) is passed through untouched so we never buffer token
- * streams. Best-effort: if the upstream body was already disturbed, fall back to
- * the original rather than make things worse.
+ * streams. A body something else already read is handed back as it is.
+ *
+ * A failure WHILE reading the body (the request timeout, a dropped connection)
+ * is rethrown. OpenRouter sends headers at once and holds the body open while
+ * the model generates, so that is where its timeouts land. Handing back the
+ * half-read response made the SDK read it again and fail with "Body is unusable:
+ * Body has already been read" (prod, 2026-10-27), which hid the real error from
+ * the SDK's retry and from the tenant fallback chain.
  */
 export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fetch {
   return (async (
@@ -160,23 +166,18 @@ export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fet
   ): Promise<Response> => {
     const response = await baseFetch(input, init);
     const contentType = response.headers.get('content-type') ?? '';
-    if (!response.body || contentType.includes('text/event-stream')) {
+    if (!response.body || response.bodyUsed || contentType.includes('text/event-stream')) {
       return response;
     }
-    try {
-      const buffered = await response.arrayBuffer();
-      const headers = new Headers(response.headers);
-      headers.delete('content-encoding');
-      headers.delete('content-length');
-      return new Response(buffered, {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
-      });
-    } catch {
-      // Upstream body already disturbed — nothing safe left to do; hand it back.
-      return response;
-    }
+    const buffered = await response.arrayBuffer();
+    const headers = new Headers(response.headers);
+    headers.delete('content-encoding');
+    headers.delete('content-length');
+    return new Response(buffered, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   }) as typeof fetch;
 }
 
@@ -326,7 +327,11 @@ export function isRetryableModelError(err: unknown): boolean {
   if (status === 429 || status >= 500) return true;
   const name = String(e?.name ?? '');
   if (name === 'TimeoutError' || name === 'AbortError') return true;
-  return /timed? ?out|ETIMEDOUT|ECONNRESET|ECONNREFUSED|circuit/i.test(String(e?.message ?? ''));
+  // "Connection error." is the OpenAI SDK's APIConnectionError: a dropped or
+  // refused connection, wrapped (the same failures as ECONNRESET/ECONNREFUSED).
+  return /timed? ?out|ETIMEDOUT|ECONNRESET|ECONNREFUSED|connection error|circuit/i.test(
+    String(e?.message ?? '')
+  );
 }
 
 interface Invokable {
