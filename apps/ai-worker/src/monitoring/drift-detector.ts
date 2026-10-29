@@ -304,10 +304,12 @@ export class DriftDetector {
     this.driftHistory.push(result);
 
     if (detected) {
+      // `driftSeverity`, not `severity`: Loki reads a top-level `severity`
+      // field as the line's level, which would index this warn line as critical.
       logger.warn(
         {
           key,
-          severity,
+          driftSeverity: severity,
           driftScore: driftScore.toFixed(4),
           pValue: ksResult.pValue.toFixed(4),
           baselineMean: baselineWindow.mean.toFixed(4),

@@ -15,14 +15,15 @@ import {
   type FeedbackDriftSignal,
 } from './drift-detector';
 
-// Mock pino logger
+// Mock pino logger (one shared instance, so tests can read what was logged)
+const pinoLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
+  error: vi.fn(),
+}));
 vi.mock('pino', () => ({
-  default: () => ({
-    info: vi.fn(),
-    warn: vi.fn(),
-    debug: vi.fn(),
-    error: vi.fn(),
-  }),
+  default: () => pinoLogger,
 }));
 
 describe('DriftDetector', () => {
@@ -288,6 +289,38 @@ describe('DriftDetector', () => {
       // Should detect some level of drift due to mean shift
       expect(result.pValue).toBeDefined();
       expect(result.driftScore).toBeDefined();
+    });
+
+    // Loki reads a top-level `severity` field as the line's level, so a warn
+    // line carrying `severity: 'critical'` would be indexed at that level and
+    // trip the error-log alert (the latency monitor did, 2026-10-28).
+    it('logs detected drift at warn without a top-level severity field that Loki would read as the level', () => {
+      for (let i = 0; i < 15; i++) {
+        detector.recordSample({
+          value: 0.4 + i * 0.01,
+          timestamp: new Date(Date.now() - (30 + i) * 60000),
+          model: 'gpt-4',
+          metric: 'score_distribution',
+        });
+      }
+      detector.computeBaseline('gpt-4', 'score_distribution');
+      for (let i = 0; i < 15; i++) {
+        detector.recordSample({
+          value: 0.9 + i * 0.005,
+          timestamp: new Date(Date.now() - i * 60000),
+          model: 'gpt-4',
+          metric: 'score_distribution',
+        });
+      }
+      pinoLogger.warn.mockClear();
+
+      const result = detector.detectDrift('gpt-4', 'score_distribution');
+
+      expect(result.detected).toBe(true);
+      const call = pinoLogger.warn.mock.calls.find((c) => c[1] === 'Drift detected!');
+      expect(call).toBeDefined();
+      expect(call?.[0]).not.toHaveProperty('severity');
+      expect(call?.[0]).toMatchObject({ driftSeverity: result.severity });
     });
 
     it('should include recommendations for detected drift', () => {
