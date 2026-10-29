@@ -420,7 +420,12 @@ The official KPI path:
 - **AC-012** (pre-merge, replaces the dispatch-workflow AC per ruling 4)
   - `task-status.schema.json` accepts an optional string `source` on a KPI object and still rejects any other extra key and a non-boolean `met` (schema test).
   - `task-tracking.json` IFC-074 validates against it with `traces_correlating.met: false`.
-  - `pnpm generate:metrics` regenerates `apps/project-tracker/docs/metrics/sprint-18/IFC-074.json` with the collector's `mttd_target` (no `actual: null`), and that file validates.
+  - `pnpm generate:metrics` regenerates `apps/project-tracker/docs/metrics/sprint-18/IFC-074.json` with the collector's `mttd_target` (no `actual: null`), and **its `kpis` subtree** validates, with 0 KPI errors under both the JSON schema (Ajv) and `validate-schemas.ts` (Zod).
+  - **Narrowed 2026-10-29 during exec:** the AC does not claim the whole cache validates.
+    - The JSON schema is not met by 277 of 428 generated task caches. Only 30 of those 277 fail on KPIs; the rest fail on `artifacts.created` shape, `validations` keys, `status_history` statuses and similar.
+    - `validate-schemas.ts` already fails at base, on 252 files.
+    - IFC-074's own cache still fails on three `status_history` statuses written on 2026-10-22. That history is append-only, so they are not rewritten.
+    - These are tracked as F17. F18 tracks a related drift: the committed generated schemas no longer match what `generate:schemas` emits after the Zod upgrade. That is why this PR adds only the generator's exact `source` fragment to `task-status.schema.json` and does not regenerate. The coordinator approved this.
   - No workflow, token or secret is added.
 - **AC-013** (NEEDS_HUMAN, post-deploy)
   - The pre-registered episode MTTD is judged only over at least 72 h or at least 10 real error episodes, counted from the later of the api and combined-worker promotions.
@@ -468,6 +473,8 @@ Public, admin, partner and auth procedure records carry no tenantId, so Loki que
 ### New findings (gh issue, debt-ledger and findings doc)
 - **F14:** widen `ifc074-error-logs-direct` to the api after F11.
 - **F15:** there is no Loki volume tripwire, so a free-tier overrun would drop ingestion silently.
+- **F17:** generated task caches against `task-status.schema.json`: 277 of 428 fail it, and `validate-schemas.ts` fails at base.
+- **F18:** the committed generated schemas have drifted from what `pnpm generate:schemas` now emits (Zod 4.6.7); they need a dedicated regeneration PR.
 - **F16 (D9):** `artifacts/reports/*/dora-metrics.json` is not fed from real data. Refresh it from the promotion ledger (deploys), incidents, and time-to-restore with MTTD.
 
 ### Agent sign-offs (2026-10-29)
