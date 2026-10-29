@@ -1,0 +1,21 @@
+{
+  "stoa": "Automation",
+  "task_id": "IFC-074",
+  "run_id": "20261022194925-cdddf208",
+  "verdict": "PASS",
+  "checks": [
+    {"name": "collector GET-only / fail-closed / atomic / token-safe", "result": "PASS", "evidence": "read tools/scripts/observability/collect-observability-evidence.mjs and diff of lib/grafana-provisioning.mjs: createReadOnlyClient hardcodes method GET with no method parameter; missing GRAFANA_URL/TOKEN returns 1 before any request; any error returns 1 with nothing written; writeAtomically writes tmp-<pid> files then renames and unlinks temps on failure; scrub() replaces the token with [REDACTED], errors carry only 'HTTP <status> <name>'; assertSafeKeys rejects key/token/auth/secret/api key names; exit 2 when evidence incomplete"},
+    {"name": "no CI workflow added (local-only)", "result": "PASS", "evidence": "git diff --name-only origin/main...HEAD | grep -c '^.github/workflows' -> 0"},
+    {"name": "regenerated artifacts match collector log sha256", "result": "PASS", "evidence": "certutil -hashfile artifacts/reports/correlation-test.csv SHA256 -> ae9a15d1...ffe8e; mttr-baseline.json -> 3e33b48f...72f88; both equal the hashes in logs/12-collector-run.txt. CSV has 11 data rows (log says rows 11, PASS 10); baseline aggregates n_incidents 66, n_anchored 63, mean_s 268.739, kpi.met false match the log summary"},
+    {"name": "task-tracking.json schema-valid, no fabricated KPI", "result": "PASS", "evidence": "Ajv compile+validate on .specify/sprints/sprint-18/attestations/IFC-074/task-tracking.json -> 'true null'. kpis.mttd_target.actual 4.479 min = 268.739 s / 60, met=false, source cites baseline sha256; traces_correlating.met=null with 'api: NOT_OBSERVED (pending deploy)'; open blockers (api correlation, MTTD KPI) left unresolved; completed_at null"},
+    {"name": "Sprint_plan.csv vs Sprint_plan_B.csv IFC-074 rows", "result": "PASS", "evidence": "diff <(grep '^IFC-074,' Sprint_plan.csv) <(grep '^IFC-074,' Sprint_plan_B.csv) -> ROWS_IDENTICAL; status In Progress, target sprint 18; git diff --stat origin/main...HEAD on _global shows no change (plan not falsely marked Completed)"},
+    {"name": "no tracked log/coverage/tsbuildinfo; no forbidden runtime artifacts", "result": "PASS", "evidence": "git ls-files | grep -cE '[.](log|coverage|tsbuildinfo)$' -> 0; git ls-files for docs *.tmp/*.lock and metrics/.locks, metrics/logs -> empty"}
+  ],
+  "findings": [
+    "INFO: correlation-test.csv row 001 (api) is NOT_OBSERVED; it is recorded honestly rather than faked. AC-002 (api correlation PASS) stays open until the api pino change is deployed and the collector is re-run with --since <deploy time>. This blocks task closure, not the automation mechanics.",
+    "INFO: MTTD KPI measured NOT met (mean 268.739 s vs 120 s target); recorded as such with an owner-decision blocker. No fabricated pass.",
+    "INFO: the old sprint-1 task-tracking.json was deleted and a sprint-18 one added (a move to the active sprint path); no duplicate left behind.",
+    "NOTE: I did not rerun the collector, tests or builds (machine rule); sha256 and consistency checks are against committed artifacts and the lead's logs."
+  ],
+  "timestamp": "2026-10-22T20:53:09Z"
+}

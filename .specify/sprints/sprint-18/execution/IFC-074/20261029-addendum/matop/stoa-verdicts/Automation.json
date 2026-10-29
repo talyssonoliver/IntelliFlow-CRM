@@ -1,0 +1,30 @@
+{
+  "stoa": "Automation",
+  "task_id": "IFC-074",
+  "run_id": "20261029-addendum",
+  "verdict": "PASS",
+  "rationale": "The KPI evidence chain is consistent end to end: the mttr-baseline.json and correlation-test.csv sha256 recorded in task-tracking.json kpis.*.source match the files on disk; both KPIs are met:false in task-tracking.json and in the generated cache with identical values; the attestation validates against attestation.schema.json (Ajv, 0 errors), verdict NEEDS_HUMAN with the same caveated MTTD wording; provenance, plan-reviewer and exec-readiness preflights pass; validate-task-json-schemas.mjs reports 0 broken; Sprint_plan.csv and Sprint_plan_B.csv carry the same IFC-074 row (In Progress, EVIDENCE -> sprint-18 attestation). The red CI check 'Validate Sprint Metrics Consistency' (orphan sprint-0/EP-001-AI.json) is pre-existing on main and unrelated.",
+  "checks": [
+    {"name": "Attestation provenance", "result": "PASS", "evidence": "check-attestation-provenance.mjs IFC-074 -> OK, plan_reviewer_verdict APPROVED, subagent marker present, spec/plan paths exist; exit 0"},
+    {"name": "attestation.json vs attestation.schema.json", "result": "PASS", "evidence": "read-only Ajv 8.20.0 + ajv-formats: valid, errors []; verdict NEEDS_HUMAN; both kpi_results met:false"},
+    {"name": "KPI source field in schemas", "result": "PASS", "evidence": "task-status.schema.json:410 'source' string; task-status.schema.ts:149 z.string().optional(); kpi entry keeps additionalProperties:false"},
+    {"name": "task-tracking.json KPIs", "result": "PASS", "evidence": "mttd_target met:false with the caveated actual and source sha256 3e33b48f...572f88; traces_correlating met:false, actual 'ai-worker: 10/10 PASS; api: NOT_OBSERVED (pending deploy)', source sha256 ae9a15d1...ffeffe8e"},
+    {"name": "Evidence hashes match disk", "result": "PASS", "evidence": "sha256sum artifacts/reports/mttr-baseline.json = 3e33b48f327192362fb4fbb3691ad9eea2d0d55825418ff0c53ac85762572f88; correlation-test.csv = ae9a15d152aa51fba0ff1c7272762c81e0bb265bb15a393b492dd040ffeffe8e; both tracked"},
+    {"name": "Generated cache in sync", "result": "PASS", "evidence": "JSON.stringify(task-tracking.kpis) === JSON.stringify(cache.kpis) -> true; cache is gitignored (ADR-067)"},
+    {"name": "Cache vs task-status.schema.json (full document)", "result": "PASS (caveat F-AUTO-02)", "evidence": "0 errors on /kpis; 8 non-KPI errors (percent_complete, updated_at, execution.notes, validations timestamp, status_history enum, artifacts.created type), the known F17 drift"},
+    {"name": "Sprint_plan rows", "result": "PASS", "evidence": "one IFC-074 row in each of Sprint_plan.csv and Sprint_plan_B.csv, identical; status In Progress; EVIDENCE .specify/sprints/sprint-18/attestations/IFC-074/attestation.json"},
+    {"name": "validate-task-json-schemas.mjs (no --fix)", "result": "PASS", "evidence": "checked 431 files - 0 broken, exit 0"},
+    {"name": "Plan-reviewer and exec-readiness preflights", "result": "PASS", "evidence": "check-plan-reviewer-subagent.mjs OK; check-exec-readiness.mjs 5 checks, 0 WARN, 0 BLOCK"},
+    {"name": "CI orphan EP-001-AI", "result": "PASS (pre-existing, unrelated)", "evidence": "branch does not touch EP-001-AI; validate-sprint-data.yml fails identically on main (runs 40572034417, 40490477651, 40209168943) and other branches; stale gitignored cache sprint-0/EP-001-AI.json beside the real sprint-18 record"}
+  ],
+  "findings": [
+    {"id": "F-AUTO-01", "severity": "low", "status": "open", "scope": "IFC-074 working tree at review time", "summary": "Review-round edits (collector Sonar fix, ADR-086 retention note) uncommitted at review time; the attestation's hashes pin committed artifacts. Commit before merge."},
+    {"id": "F-AUTO-02", "severity": "low", "status": "open", "scope": "tracker tooling, not IFC-074 specific", "summary": "Cache and task-tracking.json do not fully validate against task-status.schema.json on non-KPI fields (F17 #1070)."},
+    {"id": "F-AUTO-03", "severity": "medium", "status": "pre-existing-on-main", "scope": "repo-wide CI", "summary": "'Validate Sprint Metrics Consistency' red on main since at least 2026-10-25 from the orphaned cache sprint-0/EP-001-AI.json; separate PR."},
+    {"id": "F-AUTO-04", "severity": "info", "status": "accepted", "scope": "IFC-074 attestation", "summary": "Both KPIs honestly met:false, verdict NEEDS_HUMAN, no fabricated values."}
+  ],
+  "toolIdsExecuted": ["check-attestation-provenance.mjs", "Ajv one-off (read-only)", "check-plan-reviewer-subagent.mjs", "check-exec-readiness.mjs", "validate-task-json-schemas.mjs (no --fix)", "sha256sum", "git log/diff/ls-files/status", "python csv parity", "gh run list / view --log-failed / pr checks"],
+  "unavailableTools": ["validate-schemas.ts (not confirmed write-free; lane ran it: logs/validate-schemas.txt)", "validate:sprint0 / sync:metrics --check (may write)", "tools/lint/artifact-paths.ts (pre-ship lint-artifacts covers it)"],
+  "stored_by": "IFC-074 lane, from the stoa-automation subagent's returned verdict",
+  "stored_at": "2026-10-29T17:21:32Z"
+}

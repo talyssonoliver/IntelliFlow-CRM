@@ -111,6 +111,42 @@
             "instant": true
           }
         ]
+      },
+      {
+        "type": "timeseries",
+        "title": "MTTD per error episode (live proxy)",
+        "description": "Live proxy, not the KPI (IFC-074). Per step (one minute at the default 24 h range; never shorter): error spans (A), error-level ai-worker log lines (B, the lines ifc074-error-logs-direct alerts on) and first Alerting transitions by rule from the alert state history (C). The gap between an error burst and the first alert bar is the detection delay. The official MTTD (first alert per error episode, mean < 120 s over >= 10 real episodes) is the collector result in artifacts/reports/mttr-baseline.json and the IFC-074 task KPI in the tracker.",
+        "gridPos": { "h": 8, "w": 24, "x": 0, "y": 22 },
+        "interval": "1m",
+        "fieldConfig": {
+          "defaults": { "unit": "short", "min": 0 },
+          "overrides": []
+        },
+        "targets": [
+          {
+            "refId": "A",
+            "datasource": { "type": "prometheus", "uid": "grafanacloud-prom" },
+            "expr": "sum by (service) (increase(traces_spanmetrics_calls_total{service=~\"api|ai-worker\", status_code=\"STATUS_CODE_ERROR\"}[$__interval]))",
+            "legendFormat": "error spans {{service}}"
+          },
+          {
+            "refId": "B",
+            "datasource": { "type": "loki", "uid": "grafanacloud-logs" },
+            "queryType": "range",
+            "expr": "sum by (service_name) (count_over_time({service_name=\"ai-worker\"} != \"Latency alert generated\" | detected_level=~\"(?i)error|fatal|critical\" or severity_text=~\"(?i)error|fatal|critical\" [$__interval]))",
+            "legendFormat": "error logs {{service_name}}"
+          },
+          {
+            "refId": "C",
+            "datasource": {
+              "type": "loki",
+              "uid": "grafanacloud-alert-state-history"
+            },
+            "queryType": "range",
+            "expr": "sum by (ruleUID) (count_over_time({from=\"state-history\"} | json | current=~\"Alerting.*\" and previous!~\"Alerting.*\" [$__interval]))",
+            "legendFormat": "alert fired {{ruleUID}}"
+          }
+        ]
       }
     ]
   }

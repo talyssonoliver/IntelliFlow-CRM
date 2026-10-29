@@ -146,6 +146,7 @@ export const kpiEntrySchema = z.object({
   actual: z.union([z.string(), z.number(), z.boolean()]).describe('Actual measured value'),
   met: z.boolean().describe('Whether target was met'),
   unit: z.string().optional(),
+  source: z.string().optional().describe('Evidence file and SHA-256 behind the actual value'),
 });
 
 // Blocker entry

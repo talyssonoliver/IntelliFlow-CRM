@@ -110,6 +110,36 @@ export async function querySeriesCount(api, datasourceUid, selector, lookback = 
   return value === undefined ? 0 : Number(value);
 }
 
+/** The Grafana Cloud datasources a rule may query, by uid, and the query language each speaks. */
+export const DATASOURCE_KINDS = {
+  'grafanacloud-prom': 'prometheus',
+  'grafanacloud-logs': 'loki',
+};
+
+/**
+ * Number of log streams a LogQL stream selector matches over the last
+ * `lookbackSeconds` up to `nowMs`, via the Loki series route of the
+ * datasource proxy (Loki has no PromQL `count(last_over_time(...))`).
+ */
+export async function queryLokiSeriesCount(api, datasourceUid, selector, lookbackSeconds, nowMs) {
+  const end = nowMs / 1000;
+  const res = await api(
+    'GET',
+    `/api/datasources/proxy/uid/${datasourceUid}/loki/api/v1/series?match%5B%5D=` +
+      `${encodeURIComponent(selector)}&start=${end - lookbackSeconds}&end=${end}`
+  );
+  if (res.status !== 200) throw new Error(`series check for ${selector}: HTTP ${res.status}`);
+  return Array.isArray(res.json?.data) ? res.json.data.length : 0;
+}
+
+/** The query model for refId A: Loki takes queryType, Prometheus takes instant. */
+function queryModel(entry, datasourceUid) {
+  const model = { refId: 'A', expr: entry.expr, intervalMs: 60000, maxDataPoints: 43200 };
+  return DATASOURCE_KINDS[datasourceUid] === 'loki'
+    ? { ...model, queryType: 'instant' }
+    : { ...model, instant: true };
+}
+
 /**
  * Grafana alert rule (provisioning API shape): query -> reduce -> threshold.
  * `source` is the only thing that differs between this repo's two callers —
@@ -117,8 +147,10 @@ export async function querySeriesCount(api, datasourceUid, selector, lookback = 
  * distinguishable in Grafana even though the payload shape is identical.
  * The query is evaluated at "now" unless the entry sets `queryOffsetSeconds`,
  * which reads it that many seconds back so late-arriving samples are counted.
+ * A rule queries the config's datasource unless it names its own `datasourceUid`.
  */
 export function buildAlertRulePayload(entry, config, source) {
+  const datasourceUid = entry.datasourceUid ?? config.datasourceUid;
   return {
     uid: entry.uid,
     title: entry.title,
@@ -135,14 +167,8 @@ export function buildAlertRulePayload(entry, config, source) {
       {
         refId: 'A',
         relativeTimeRange: { from: 900, to: entry.queryOffsetSeconds ?? 0 },
-        datasourceUid: config.datasourceUid,
-        model: {
-          refId: 'A',
-          expr: entry.expr,
-          instant: true,
-          intervalMs: 60000,
-          maxDataPoints: 43200,
-        },
+        datasourceUid,
+        model: queryModel(entry, datasourceUid),
       },
       {
         refId: 'B',
@@ -161,4 +187,128 @@ export function buildAlertRulePayload(entry, config, source) {
       },
     ],
   };
+}
+
+// ---------------------------------------------------------------------------
+// Read-only access (IFC-074 evidence collector,
+// tools/scripts/observability/collect-observability-evidence.mjs).
+// GET only: the client has no method parameter, so a write cannot be expressed.
+// Errors carry `HTTP <status> <name>` and nothing else — no URL, body or token.
+// ---------------------------------------------------------------------------
+
+const RETRYABLE_STATUS = new Set([429, 502, 503, 504]);
+/** Read-only client backoff for a sleeping Grafana Cloud stack ("instance is loading") or rate limits (also 429/502/504, unlike the 503-only RETRY_DELAYS_MS above). */
+export const READ_RETRY_DELAYS_MS = [5000, 10000, 20000, 40000, 60000];
+const MAX_RETRY_AFTER_MS = 60000;
+
+const realSleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+function retryAfterMs(res) {
+  const seconds = Number(res.headers?.get?.('retry-after'));
+  return Number.isFinite(seconds) && seconds > 0
+    ? Math.min(seconds * 1000, MAX_RETRY_AFTER_MS)
+    : undefined;
+}
+
+/**
+ * Run `attempt()` until it returns a non-retryable response, sleeping between
+ * retryable ones (Retry-After when given, otherwise the backoff schedule).
+ */
+export async function withRetry(
+  attempt,
+  { sleep = realSleep, delaysMs = READ_RETRY_DELAYS_MS } = {}
+) {
+  for (let i = 0; ; i++) {
+    const res = await attempt();
+    if (!RETRYABLE_STATUS.has(res.status) || i >= delaysMs.length) return res;
+    await sleep(retryAfterMs(res) ?? delaysMs[i]);
+  }
+}
+
+/** Bearer-token, GET-only JSON client: `get(name, path, { allowNotFound })`. */
+export function createReadOnlyClient(baseUrl, token, { fetchImpl = fetch, sleep } = {}) {
+  const root = baseUrl.replace(/\/$/, '');
+  return async (name, path, { allowNotFound = false } = {}) => {
+    const res = await withRetry(
+      () =>
+        fetchImpl(`${root}${path}`, {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+        }),
+      { sleep }
+    );
+    if (allowNotFound && res.status === 404) return null;
+    if (res.status < 200 || res.status >= 300) throw new Error(`HTTP ${res.status} ${name}`);
+    const text = await res.text();
+    if (!text) return undefined;
+    try {
+      return JSON.parse(text);
+    } catch {
+      throw new Error(`invalid JSON from ${name}`);
+    }
+  };
+}
+
+const DATASOURCE_UID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** The proxy path for a datasource; a uid that could alter the path is refused, unechoed. */
+function datasourceProxy(uid) {
+  if (!DATASOURCE_UID.test(uid)) throw new Error('invalid datasource uid');
+  return `/api/datasources/proxy/uid/${uid}`;
+}
+
+function queryString(params) {
+  const entries = Object.entries(params)
+    .filter(([, value]) => value !== undefined)
+    .map(([key, value]) => [key, String(value)]);
+  return new URLSearchParams(entries).toString();
+}
+
+/** Grafana's own health endpoint; also wakes a sleeping free-tier stack. */
+export const grafanaHealth = (get) => get('grafana health', '/api/health');
+
+/** Loki range query via the datasource proxy (start/end in epoch nanoseconds). */
+export const lokiQueryRange = (get, uid, params) =>
+  get('loki query_range', `${datasourceProxy(uid)}/loki/api/v1/query_range?${queryString(params)}`);
+
+/** Tempo TraceQL search via the datasource proxy (start/end in epoch seconds). */
+export const tempoSearch = (get, uid, params) =>
+  get('tempo search', `${datasourceProxy(uid)}/api/search?${queryString(params)}`);
+
+/** One Tempo trace (v2 JSON) by a 32-hex id; resolves null when Tempo has no such trace. */
+export async function tempoTrace(get, uid, traceId) {
+  if (!/^[0-9a-f]{32}$/.test(traceId)) throw new Error('invalid trace id');
+  return get('tempo trace', `${datasourceProxy(uid)}/api/v2/traces/${traceId}`, {
+    allowNotFound: true,
+  });
+}
+
+/** Prometheus instant query via the datasource proxy at `time` (epoch seconds). */
+export const promInstantQuery = (get, uid, query, time) =>
+  get('prometheus query', `${datasourceProxy(uid)}/api/v1/query?${queryString({ query, time })}`);
+
+/** Prometheus range query via the datasource proxy (start/end in epoch seconds, step in s). */
+export const promRangeQuery = (get, uid, query, start, end, step) =>
+  get(
+    'prometheus query_range',
+    `${datasourceProxy(uid)}/api/v1/query_range?${queryString({ query, start, end, step })}`
+  );
+
+/** Live evaluation status (health, state, last error) of every Grafana-managed rule. */
+export const ruleStatus = (get) => get('rule status', '/api/prometheus/grafana/api/v1/rules');
+
+/** All alert rules from the Grafana provisioning API. */
+export const listAlertRules = (get) => get('alert rules', '/api/v1/provisioning/alert-rules');
+
+/** One alert rule group (for its evaluation interval) from the provisioning API. */
+export async function getRuleGroup(get, folderUid, group) {
+  // Folder uids are slugs; group names may contain spaces. Neither may hold a
+  // slash or dot-dot segment that could leave the provisioning path.
+  const validFolder = /^[A-Za-z0-9_-]{1,128}$/.test(folderUid);
+  const validGroup = /^[A-Za-z0-9_. -]{1,128}$/.test(group) && !group.includes('..');
+  if (!validFolder || !validGroup) throw new Error('invalid rule group');
+  return get(
+    'rule group',
+    `/api/v1/provisioning/folder/${folderUid}/rule-groups/${encodeURIComponent(group)}`
+  );
 }

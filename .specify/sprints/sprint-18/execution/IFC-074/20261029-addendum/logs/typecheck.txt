@@ -1,0 +1,6 @@
+ Tasks:    40 successful, 40 total
+Cached:    40 cached, 40 total
+  Time:    511ms >>> FULL TURBO
+> tsx tools/scripts/lint-sonar-guard.ts
+sonar-guard: no changed TS/TSX files found, skipping.
+exit 0 (node with-slot.mjs --label IFC-074 -- pnpm run typecheck), 2026-10-29T10:38:43Z
