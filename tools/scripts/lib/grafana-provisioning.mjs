@@ -110,6 +110,36 @@ export async function querySeriesCount(api, datasourceUid, selector, lookback = 
   return value === undefined ? 0 : Number(value);
 }
 
+/** The Grafana Cloud datasources a rule may query, by uid, and the query language each speaks. */
+export const DATASOURCE_KINDS = {
+  'grafanacloud-prom': 'prometheus',
+  'grafanacloud-logs': 'loki',
+};
+
+/**
+ * Number of log streams a LogQL stream selector matches over the last
+ * `lookbackSeconds` up to `nowMs`, via the Loki series route of the
+ * datasource proxy (Loki has no PromQL `count(last_over_time(...))`).
+ */
+export async function queryLokiSeriesCount(api, datasourceUid, selector, lookbackSeconds, nowMs) {
+  const end = nowMs / 1000;
+  const res = await api(
+    'GET',
+    `/api/datasources/proxy/uid/${datasourceUid}/loki/api/v1/series?match%5B%5D=` +
+      `${encodeURIComponent(selector)}&start=${end - lookbackSeconds}&end=${end}`
+  );
+  if (res.status !== 200) throw new Error(`series check for ${selector}: HTTP ${res.status}`);
+  return Array.isArray(res.json?.data) ? res.json.data.length : 0;
+}
+
+/** The query model for refId A: Loki takes queryType, Prometheus takes instant. */
+function queryModel(entry, datasourceUid) {
+  const model = { refId: 'A', expr: entry.expr, intervalMs: 60000, maxDataPoints: 43200 };
+  return DATASOURCE_KINDS[datasourceUid] === 'loki'
+    ? { ...model, queryType: 'instant' }
+    : { ...model, instant: true };
+}
+
 /**
  * Grafana alert rule (provisioning API shape): query -> reduce -> threshold.
  * `source` is the only thing that differs between this repo's two callers —
@@ -117,8 +147,10 @@ export async function querySeriesCount(api, datasourceUid, selector, lookback = 
  * distinguishable in Grafana even though the payload shape is identical.
  * The query is evaluated at "now" unless the entry sets `queryOffsetSeconds`,
  * which reads it that many seconds back so late-arriving samples are counted.
+ * A rule queries the config's datasource unless it names its own `datasourceUid`.
  */
 export function buildAlertRulePayload(entry, config, source) {
+  const datasourceUid = entry.datasourceUid ?? config.datasourceUid;
   return {
     uid: entry.uid,
     title: entry.title,
@@ -135,14 +167,8 @@ export function buildAlertRulePayload(entry, config, source) {
       {
         refId: 'A',
         relativeTimeRange: { from: 900, to: entry.queryOffsetSeconds ?? 0 },
-        datasourceUid: config.datasourceUid,
-        model: {
-          refId: 'A',
-          expr: entry.expr,
-          instant: true,
-          intervalMs: 60000,
-          maxDataPoints: 43200,
-        },
+        datasourceUid,
+        model: queryModel(entry, datasourceUid),
       },
       {
         refId: 'B',
