@@ -136,6 +136,32 @@ describe('success path', () => {
     ]);
   });
 
+  it('records neither the confidence histogram nor its drift sample for a placeholder confidence', async () => {
+    const recordSample = vi.spyOn(config.driftDetector, 'recordSample');
+    await withMonitoring(async () => ({ score: 72, confidence: 0 }), config, {
+      ...FULL_CONTEXT,
+      confidenceReported: () => false,
+    });
+    const all = await collectMetrics(reader);
+    expect(total(all, 'intelliflow.ai.confidence')).toBe(0);
+    expect(recordSample.mock.calls.map(([s]) => s.metric)).toEqual(['score_distribution']);
+    expect(total(all, 'intelliflow.ai.inference.count')).toBe(1);
+  });
+
+  it('records a confidence the model reported, including a real 0', async () => {
+    const recordSample = vi.spyOn(config.driftDetector, 'recordSample');
+    await withMonitoring(async () => ({ score: 72, confidence: 0 }), config, {
+      ...FULL_CONTEXT,
+      confidenceReported: () => true,
+    });
+    const all = await collectMetrics(reader);
+    expect(total(all, 'intelliflow.ai.confidence')).toBe(1);
+    expect(recordSample.mock.calls.map(([s]) => s.metric).sort()).toEqual([
+      'confidence_level',
+      'score_distribution',
+    ]);
+  });
+
   it('records no drift sample when recordDrift is false', async () => {
     const recordSample = vi.spyOn(config.driftDetector, 'recordSample');
     await withMonitoring(async () => ({ score: 72, confidence: 0.85 }), config, {

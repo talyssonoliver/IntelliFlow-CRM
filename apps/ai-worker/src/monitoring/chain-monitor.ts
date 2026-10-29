@@ -83,6 +83,11 @@ export interface MonitoringContext {
   valueType?: ValueType;
   /** false for a job-level fallback-provider call, so a provider switch is not read as drift. */
   recordDrift?: boolean;
+  /**
+   * false when the result's confidence is a placeholder the chain set because the model did not
+   * report one. It is then neither a confidence measurement nor a drift sample.
+   */
+  confidenceReported?: (result: unknown) => boolean;
 }
 
 /**
@@ -238,7 +243,8 @@ function unitInterval(value: unknown): number | null {
 function recordDriftSamples<T>(
   result: T,
   config: ChainMonitorConfig,
-  model: string
+  model: string,
+  confidenceReported = true
 ): number | null {
   if (!result || typeof result !== 'object') return null;
   const timestamp = new Date();
@@ -257,7 +263,9 @@ function recordDriftSamples<T>(
     }
   }
   const confidence =
-    'confidence' in result ? unitInterval((result as { confidence: unknown }).confidence) : null;
+    confidenceReported && 'confidence' in result
+      ? unitInterval((result as { confidence: unknown }).confidence)
+      : null;
   if (confidence !== null) {
     config.driftDetector.recordSample({
       value: confidence,
@@ -329,11 +337,14 @@ export async function withMonitoring<T>(
       result && typeof result === 'object' && 'confidence' in result
         ? (result as { confidence: unknown }).confidence
         : undefined;
-    recordConfidence({ model, chain, confidence: rawConfidence });
+    const confidenceReported = context?.confidenceReported?.(result) ?? true;
+    if (confidenceReported) recordConfidence({ model, chain, confidence: rawConfidence });
 
     // Record drift samples (score and confidence distributions)
     const driftScore =
-      context?.recordDrift === false ? null : recordDriftSamples(result, config, model);
+      context?.recordDrift === false
+        ? null
+        : recordDriftSamples(result, config, model, confidenceReported);
 
     // Record ROI value only for an explicit value type (IFC-117: no blanket lead_scored)
     if (context?.valueType) {
