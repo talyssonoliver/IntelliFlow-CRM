@@ -137,12 +137,15 @@ describe('PrismaTaskRepository assigneeId persistence (PG-208)', () => {
     repo = new PrismaTaskRepository(prisma as any);
   });
 
-  it('writes assigneeId on create and update', async () => {
+  it('writes assigneeId on create but never on an ordinary update', async () => {
+    // An edit that read the task before an automatic assignment must not wipe
+    // it with its stale assignee: only saveAssignment changes the assignee.
     const task = await repo.findById({ value: ID_A } as any);
     await repo.save(task!);
     const args = prisma.task.upsert.mock.calls[0][0];
     expect(args.create.assigneeId).toBe('assignee-9');
-    expect(args.update.assigneeId).toBe('assignee-9');
+    expect(args.update).not.toHaveProperty('assigneeId');
+    expect(args.update.title).toBe(args.create.title);
   });
 
   it('saveAssignment writes only the assignee, guarded by tenant and the updatedAt it read', async () => {
@@ -196,6 +199,9 @@ describe('PrismaTaskRepository assigneeId persistence (PG-208)', () => {
   it('keeps the assignee through a load-then-save cycle (bulkComplete path)', async () => {
     const [task] = await repo.findByIds([ID_A]);
     await repo.save(task);
-    expect(prisma.task.upsert.mock.calls[0][0].update.assigneeId).toBe('assignee-9');
+    // The update leaves the stored assignee alone, so it is kept (never nulled).
+    const args = prisma.task.upsert.mock.calls[0][0];
+    expect(args.update).not.toHaveProperty('assigneeId');
+    expect(args.create.assigneeId).toBe('assignee-9');
   });
 });

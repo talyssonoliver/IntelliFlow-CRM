@@ -63,10 +63,13 @@ export class PrismaTaskRepository implements TaskRepository {
       completedAt: task.completedAt ?? null,
     };
 
+    // The assignee is written on create only. Changes go through saveAssignment,
+    // so an edit that read the task before an automatic assignment cannot wipe it.
+    const { assigneeId: _setOnCreate, ...update } = data;
     await this.prisma.task.upsert({
       where: { id: data.id },
       create: data,
-      update: data,
+      update,
     });
   }
 

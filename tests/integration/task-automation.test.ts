@@ -10,7 +10,7 @@
  * Skips only when DATABASE_URL is not set. A setup failure fails the suite (no silent skip).
  */
 
-import { randomBytes } from 'node:crypto';
+import { randomBytes, randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -27,6 +27,7 @@ import {
   signWebhookPayload,
 } from '../../apps/api/src/modules/task/automation/task-automation-webhook';
 import { webhookEncryptionReady } from '../../apps/api/src/modules/task/automation/task-automation-runtime';
+import { PrismaTaskRepository } from '../../packages/adapters/src/repositories/PrismaTaskRepository';
 import { applySchemaSql } from './schema-lock';
 
 const MIGRATION = join(
@@ -770,6 +771,56 @@ describeDb('PG-208 task automation (real DB)', () => {
         where: { ruleId: rule.id, idempotencyKey: 'p-stuck' },
       });
       expect(stuck).toMatchObject({ status: 'FAILED', errorCode: 'interrupted' });
+    });
+  });
+
+  describe('task assignment (PrismaTaskRepository)', () => {
+    const OWNER = `pg208-owner-${randomUUID()}`;
+    const ASSIGNEE = `pg208-assignee-${randomUUID()}`;
+
+    beforeAll(async () => {
+      for (const id of [OWNER, ASSIGNEE]) {
+        await prisma.user.create({
+          data: { id, tenantId: TENANT_A, email: `${id}@example.invalid` },
+        });
+      }
+    });
+
+    afterAll(async () => {
+      await prisma.task.deleteMany({ where: { ownerId: { in: [OWNER, ASSIGNEE] } } });
+      await prisma.user.deleteMany({ where: { id: { in: [OWNER, ASSIGNEE] } } });
+    });
+
+    it('assigns only over the task as it was read, and an ordinary save never wipes the assignee', async () => {
+      const repo = new PrismaTaskRepository(prisma);
+      const id = randomUUID();
+      const ref = { value: id } as never;
+      await prisma.task.create({ data: { id, title: 'Call', tenantId: TENANT_A, ownerId: OWNER } });
+      const assignment = (await repo.findById(ref))!;
+      const edit = (await repo.findById(ref))!; // an edit that read the task first
+      const lateAssignment = (await repo.findById(ref))!;
+
+      // timestamp(3) round-trips exactly, so the guard matches the row it read.
+      const readAt = assignment.updatedAt;
+      assignment.assignTo(ASSIGNEE, 'system:task-automation');
+      await expect(repo.saveAssignment(assignment, readAt)).resolves.toBe(true);
+
+      // A second assignment from a read taken before the first is refused.
+      const lateReadAt = lateAssignment.updatedAt;
+      lateAssignment.assignTo(OWNER, 'system:task-automation');
+      await expect(repo.saveAssignment(lateAssignment, lateReadAt)).resolves.toBe(false);
+
+      // The earlier edit saves afterwards: the assignee is kept.
+      await repo.save(edit);
+      expect((await prisma.task.findUnique({ where: { id } })).assigneeId).toBe(ASSIGNEE);
+
+      // A deleted task is refused and stays deleted.
+      const beforeDelete = (await repo.findById(ref))!;
+      const deletedReadAt = beforeDelete.updatedAt;
+      await prisma.task.delete({ where: { id } });
+      beforeDelete.assignTo(OWNER, 'system:task-automation');
+      await expect(repo.saveAssignment(beforeDelete, deletedReadAt)).resolves.toBe(false);
+      expect(await prisma.task.findUnique({ where: { id } })).toBeNull();
     });
   });
 
