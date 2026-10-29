@@ -1,0 +1,15 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 84 files total
+[codex-review] in scope : 11 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+Semantic Review (codex) — 2026-10-29T10:38:21.844Z
+Base ref  : origin/main
+Files in scope : 11
+Total findings : 0
+  Waived       : 0
+  Unwaived     : 0
+
+Verdict: PASS
+[codex-review] Gate PASS — no unwaived findings.
