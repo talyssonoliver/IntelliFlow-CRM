@@ -303,3 +303,157 @@ Round 2 PROPOSAL → Round 3 CHALLENGE → Round 4 CONSENSUS, all on 2026-10-22.
 | Domain-Expert | APPROVED | task-tracking.json, attestation.json, owner ruling, ADR-017, constitution.md, alert-rules.json | Null the fabricated `execution` block; F8 ranked high |
 
 Approval: 5/5 (100 %) ≥ 66 % threshold; no unresolved critical issue.
+
+---
+
+## Addendum, 2026-10-29: new base, delivered detection rules, post-deploy KPI gate
+
+**Base:** `agent/IFC-074-observability` = origin/main `9e378fbb0` (#1062) plus the 2026-10-22 IFC-074 commits, cherry-picked. The old branch `feat/ifc-074-ifc074` is kept. Everything above this line is the 2026-10-22 spec, and it still stands except where this addendum names a supersession.
+
+**Session:**
+- hydration re-run: `context/IFC-074/IFC-074-hydrated-context-2026-10-29.*`, hash `60942e28…b3ef`;
+- five Explore subagents: exploration and Round 1 ANALYSIS;
+- lead Round 2 draft: `context/IFC-074/round2-lead-draft-2026-10-29.md`;
+- five role subagents: Round 3 CHALLENGE;
+- lead resolutions: `context/IFC-074/round3-resolutions-2026-10-29.md`;
+- Round 4 CONSENSUS by the same five agents: 5/5 APPROVED.
+
+The full log is in `IFC-074-discussion.md`, section "2026-10-29 addendum".
+
+### What changed since 2026-10-22
+- **Delivered detection paths** (`infra/monitoring/grafana/cloud/alert-rules.json:74-101`):
+  - the span rule `ifc074-error-spans-direct` (#1040);
+  - the Loki rule `ifc074-error-logs-direct` (#1062, `datasourceUid: grafanacloud-logs`). It was applied to production on merge: workflow run 40846555065 logged "created ifc074-error-logs-direct".
+- **Owner ruling 3** (`context/IFC-074/IFC-074-owner-ruling.md`): ship the code; the KPI is gated after deploy.
+- **combined-worker runs `sha-9e378fbb0`.** Its monitor lines log `alertSeverity` and `driftSeverity` instead of a top-level `severity`.
+
+### Honest status of the numbers
+- The `why` figures in both rules are modelled replays from the #1040 and #1062 PR bodies. They are **unverified here, and no evidence file is committed**:
+  - span rule: 162-203 s;
+  - Loki rule: 36-61 s for 9 of 13 episodes, with 0 false alarms.
+- `mttr-baseline.json` and `correlation-test.csv` are still the 2026-10-22 run. They predate both rules and are not regenerated in this PR, because that needs a Grafana token.
+- The Loki rule covers ai-worker only. api episodes are left to the span rule, which models above 120 s, so **api episodes are expected to miss** the target until F14 widens the Loki rule.
+
+### Supersession of AC-004's statistic (assumed, pending owner: ruling 3, Q1)
+- **Old:** the mean over Normal/Pending→Alerting incidents per rule (AC-004, with the risk row "do not redefine the metric").
+- **New (primary), pre-registered here before any post-deploy data:**
+  - **episode:** a maximal run of error spans for one service, with no gap above the collector's episode gap constant (commit `7c85d4b2b`);
+  - **episode MTTD:** seconds from the episode's first error span to the first Alerting transition of **any** repo rule for that service;
+  - **KPI:** mean episode MTTD < 120 s.
+- **Co-reported:** the per-incident mean (the old statistic).
+- **Reason for the change:** one error episode raises several rule incidents (Grafana Asserts' ErrorRatioBreach alone fires 180-360 s after the first error), and "time until someone is alerted" is the first alert.
+- **Impact:** the 2026-10-22 value (per-incident mean 268.7 s, n=63) is **not comparable** with the new statistic.
+- If the owner rules option A, AC-013 reverts to AC-004's statistic and this subsection is withdrawn.
+
+### Decisions
+**D1, collector Loki routing**
+- Each repo rule's kind is `DATASOURCE_KINDS[rule.datasourceUid ?? config.datasourceUid]`.
+- Loki rules are evaluated through `lokiQueryRange`:
+  - `step=60`, and the probe uses `start=end`;
+  - the lookback is capped at 6 h and reported as `lookback_s`;
+  - an empty matrix gives `first_true_s: null`.
+- Transitions take `labels.service ?? labels.service_name`.
+- A constant alias `intelliflow-ai-worker` → `ai-worker` is applied to Loki matching and to transition and episode services.
+- Prometheus matching (`sameService`) is unchanged. The new Loki matcher gets its own name, because a local `sameService` at `:801` shadows it.
+- An unknown uid gives `not_checked: "unknown_datasource"` and the run continues.
+- `repo_rule_checks[]` gains `datasource_kind`. The output `schema_version` becomes **2.3.0** (it is already 2.2.0 at `:1191`).
+
+**D2, proxy uid.** `datasourceProxy(uid)` throws `invalid datasource uid` (without echoing the value) unless the uid matches `^[A-Za-z0-9_-]{1,64}$`.
+
+**D3, the Loki rule stays ai-worker only.** Failed procedures log at error, including client errors. Widening the rule is F14, after F11.
+
+**D4, `.github/workflows/observability-evidence.yml`, dispatch-only**
+- `workflow_dispatch` only, with job `if: github.ref == 'refs/heads/main'` and `permissions: contents: read`.
+- `environment: Production`. Verified 2026-10-29: it has no protection rules and no branch policy (ledger ENV008-PROD-ENV-BRANCH-POLICY-001).
+- Token (assumed, pending owner: ruling 3, Q2):
+  - `GRAFANA_VIEWER_TOKEN` is passed as a step env var only;
+  - the job fails closed when that secret is absent and never falls back to the Admin token;
+  - the collector accepts `GRAFANA_VIEWER_TOKEN` (preferred) or `GRAFANA_SA_TOKEN`, and scrubs whichever is set.
+- Sparse checkout, `@v7` actions, `timeout-minutes: 12`, and a concurrency group.
+- Inputs `since` and `services` go through `env:`, are quoted, and are regex-checked.
+- The artifact is uploaded only after `assertSafeKeys`, with `retention-days: 7`. Nothing is committed. The outputs are the same evidence files already committed to this public repo.
+- The collector header changes from "local only, never in CI" to "owner locally, or the dispatch-only workflow; never on push or PR".
+
+**D5, api log keys**
+- Both `tenantId` and `userId` stay, as in the 2026-10-22 spec line "added by the mixin".
+- Only protected and tenant procedures carry them. Public, admin, partner and auth procedures carry neither (`trpc.ts:102,251,271,316,348,575,598`).
+- This is recorded in an ADR-086 amendment: purpose, owner-only access, and Loki retention.
+- Any later minimisation of userId is done once, for every service, in both the mixin and the spans.
+
+**D6, api runtime impact** (stated in the PR body and ADR-086)
+- api log records are written only inside tRPC calls (`middleware.ts:165-222`), 1-2 lines per request.
+- The logs batch timer starts only while records are buffered, and it is unref'd (`@opentelemetry/sdk-logs` 0.219.0 `BatchLogRecordProcessorBase.js:228-257`). Logging therefore creates no idle outbound traffic.
+- The 60 s metrics reader, traces and health probes are pre-existing and separate.
+- Bytes per line are an estimate unless measured from the real-pino test.
+- A volume tripwire is F15.
+
+### New acceptance criteria
+- **AC-010** (pre-merge)
+  - The collector routes `ifc074-error-logs-direct` only to `/api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/query_range`, never to a Prometheus path.
+  - Tests use a fake that is strict per datasource uid, and assert the `grafana.calls` paths, the decoded `query`, and `step=60`.
+  - Prometheus rules still go to the prom proxy.
+  - An unknown uid gives `not_checked`, and the run exits 0.
+- **AC-011** (pre-merge)
+  - A Loki-rule Alerting transition labelled only `service_name="ai-worker"` anchors both to an episode whose span service is `intelliflow-ai-worker` (alias) and to one whose service is `ai-worker`.
+  - A Loki series without `service_name` matches only an episode without a service.
+  - `datasourceProxy` rejects `../x`, `a/b`, `a?b`, `''` and a 65-character uid.
+  - `schema_version` is `2.3.0`, and `datasource_kind` is allowlisted (and in the `.d.mts`).
+- **AC-012** (pre-merge)
+  - `observability-evidence.yml` passes a workflow test that fails on any of these:
+    - a `push`, `pull_request` or `schedule` trigger;
+    - a write permission;
+    - `${{ inputs.* }}` inside `run:`;
+    - any `GRAFANA_SA_TOKEN` reference;
+    - a missing `environment: Production`;
+    - a missing main-only `if`;
+    - `retention-days` other than 7.
+  - A token-shaped sentinel passed through the collector is absent from both outputs and from its log.
+- **AC-013** (NEEDS_HUMAN, post-deploy)
+  - The pre-registered episode MTTD is judged only over at least 72 h or at least 10 real episodes, counted from the later of the api and combined-worker promotions.
+  - The evidence is a dispatch-run artifact whose SHA-256 is recorded in the attestation.
+  - The per-incident mean is co-reported.
+- **AC-014** (pre-merge) This addendum, ADR-086's amendment and the PR body state:
+  - the supersession;
+  - that the 2026-10-22 value is not comparable;
+  - the unverified-model labels;
+  - the expected api miss;
+  - the runtime-impact wording.
+- **AC-015** (pre-merge) A real-pino test under `runWithLogContext` asserts the exact key set of an emitted `trpc.request` record:
+  - with a protected context, it includes `tenantId` and `userId`;
+  - with no context, it includes neither.
+
+AC-002, AC-009 and task-tracking blockers 4 and 5 stay open. Ruling 3 answers only the tuning half of blocker 6.
+
+**Attestation `kpi_results` (planned wording)**
+- MTTD `target`: "< 120 s mean per-episode first alert".
+- `actual`: "NOT MEASURED on the post-#1040/#1062 stack. Last measurement 2026-10-22 (per-incident mean 268.7 s, n=63, not met) predates both rules. Post-deploy per-episode measurement pending (>=72 h or >=10 episodes)."
+- `met: false`, meaning "not demonstrated".
+- Verdict: `NEEDS_HUMAN`.
+
+### Post-deploy runbook (owner)
+1. Merge the PR.
+2. `build-images` produces `sha-<merge>`.
+3. Dispatch `promote-production` with `api`, on the owner's yes.
+4. The uptime check passes, and `OTEL_EXPORTER_OTLP_ENDPOINT` is set on the api.
+5. Make one real tRPC call.
+6. Create `GRAFANA_VIEWER_TOKEN` (owner only).
+7. Dispatch `observability-evidence.yml` with `since=<deploy>`. It can be dispatched only once it is on main.
+8. Repeat until at least 72 h or 10 episodes, then judge AC-013 and AC-002.
+
+Public, admin, partner and auth procedure records carry no tenantId, so Loki queries by tenant will not find them.
+
+### New findings (gh issue, debt-ledger and findings doc)
+- **F14:** widen `ifc074-error-logs-direct` to the api after F11.
+- **F15:** there is no Loki volume tripwire, so a free-tier overrun would drop ingestion silently.
+
+### Agent sign-offs (2026-10-29)
+
+| Agent | Vote | Conditions folded in |
+|-------|------|----------------------|
+| Backend-Architect | APPROVED | alias in transition normalisation, plus an `intelliflow-ai-worker` episode test; regex-only uid check; `lookback_s` on every Loki check |
+| DevOps-Lead | APPROVED | the Viewer token needs the owner; ENV008-PROD-ENV-BRANCH-POLICY-001 stays open; the api promotion is the owner's |
+| Security-Lead | APPROVED (blocking condition folded in) | the collector accepts `GRAFANA_VIEWER_TOKEN`, so the workflow never names `GRAFANA_SA_TOKEN`; the runbook notes which procedures carry no tenantId |
+| Test-Engineer | APPROVED (blocking condition folded in) | `schema_version` 2.3.0 pinned by a test; a `service_name`-aware `seriesService`; a Loki matcher name distinct from the local at `:801`; tests for `not_checked` and `unknown_datasource`; alias and fallback mutations |
+| Domain-Expert | APPROVED | assumptions labelled pending owner; AC-013, AC-014 and AC-015 text included; the per-episode computation and the schema bump in one commit; the alias checked against `LOG_RULE_SERVICES` (`:836`) |
+
+Approval: 5/5 (100%), above the 66% threshold, in the first CONSENSUS round, with no unresolved critical issue. Owner questions Q1 and Q2 are open. AC-012 and AC-013 change if the owner rules otherwise.
