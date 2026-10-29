@@ -249,7 +249,13 @@ export function createReadOnlyClient(baseUrl, token, { fetchImpl = fetch, sleep 
   };
 }
 
-const datasourceProxy = (uid) => `/api/datasources/proxy/uid/${uid}`;
+const DATASOURCE_UID = /^[A-Za-z0-9_-]{1,64}$/;
+
+/** The proxy path for a datasource; a uid that could alter the path is refused, unechoed. */
+function datasourceProxy(uid) {
+  if (!DATASOURCE_UID.test(uid)) throw new Error('invalid datasource uid');
+  return `/api/datasources/proxy/uid/${uid}`;
+}
 
 function queryString(params) {
   const entries = Object.entries(params)

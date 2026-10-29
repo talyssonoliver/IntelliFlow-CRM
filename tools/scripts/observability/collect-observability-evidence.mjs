@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url';
 import {
   createReadOnlyClient,
   buildAlertRulePayload,
+  DATASOURCE_KINDS,
   getRuleGroup,
   grafanaHealth,
   listAlertRules,
@@ -58,6 +59,8 @@ const KPI_TARGET_S = 120;
 // much of the alert window at 60 s steps, and once per episode at this offset
 // after the first error (span metrics land about 60 s after the span).
 const CONDITION_LOOKBACK_MAX_S = 3 * DAY_S;
+// A Loki rule scans log lines at every step, so it looks back less far.
+const LOKI_CONDITION_LOOKBACK_MAX_S = 6 * 3600;
 const CONDITION_STEP_S = 60;
 const CONDITION_PROBE_S = 120;
 const TIMELINE_S = 600;
@@ -446,7 +449,8 @@ async function fetchTransitions(get, window) {
           t: nsToSeconds(tsNs),
           ruleUID: String(parsed.ruleUID ?? ''),
           alertname: String(parsed.labels?.alertname ?? ''),
-          service: parsed.labels?.service === undefined ? 'unknown' : String(parsed.labels.service),
+          // Span-metric rules label the service; a Loki rule's alert carries service_name.
+          service: String(parsed.labels?.service ?? parsed.labels?.service_name ?? 'unknown'),
           fingerprint: String(parsed.fingerprint ?? ''),
           previous: String(parsed.previous ?? ''),
           current: String(parsed.current ?? ''),
@@ -622,11 +626,15 @@ const stateWord = (state) => {
 const enumOr = (allowed, value) =>
   allowed.has(String(value).toLowerCase()) ? String(value).toLowerCase() : 'other';
 const seriesService = (series) => assertService(series.metric?.service ?? 'unknown');
+// Loki series carry the OTel resource as service_name, not service.
+const lokiSeriesService = (series) => assertService(series.metric?.service_name ?? 'unknown');
 
 const conditionExpr = (rule) =>
   `(${rule.expr}) ${COMPARATORS[rule.operator].promql} ${rule.threshold}`;
 const sameService = (series, service) =>
   series.metric?.service === undefined || series.metric.service === service;
+// Unlike sameService, a Loki series without service_name matches only an episode without a service.
+const sameLokiService = (series, service) => (series.metric?.service_name ?? 'unknown') === service;
 
 function transitionsByState(transitions, uid) {
   const byState = {};
@@ -659,7 +667,33 @@ function storedCheck(all, repo, rule) {
   };
 }
 
+/**
+ * A Loki rule's condition over [start, end] at `step` seconds. A comparison
+ * drops the samples where it is false, so every returned value is a step
+ * where the condition held (LogQL has no subquery, so steps are counted here).
+ */
+const lokiCondition = (get, rule, start, end, step) =>
+  lokiQueryRange(get, rule.datasourceUid, {
+    query: conditionExpr(rule),
+    start: ns(start),
+    end: ns(end),
+    step,
+  });
+
+async function lokiConditionHeld(get, window, rule) {
+  const lookback = Math.min(window.end - window.start, LOKI_CONDITION_LOOKBACK_MAX_S);
+  const res = await lokiCondition(get, rule, window.end - lookback, window.end, CONDITION_STEP_S);
+  return {
+    lookback_s: lookback,
+    steps_true_by_service: (res?.data?.result ?? []).map((series) => ({
+      service: lokiSeriesService(series),
+      steps: check('num', (series.values ?? []).length),
+    })),
+  };
+}
+
 async function conditionHeld(get, window, rule) {
+  if (rule.kind === 'loki') return lokiConditionHeld(get, window, rule);
   const lookback = Math.min(window.end - window.start, CONDITION_LOOKBACK_MAX_S);
   const held = await promInstantQuery(
     get,
@@ -684,16 +718,13 @@ async function conditionHeld(get, window, rule) {
  */
 async function conditionTimeline(get, episode, rule) {
   const t0 = Math.ceil(Date.parse(episode.t_first_error) / 1000);
-  const res = await promRangeQuery(
-    get,
-    DS.prom,
-    conditionExpr(rule),
-    t0,
-    t0 + TIMELINE_S,
-    TIMELINE_STEP_S
-  );
+  const loki = rule.kind === 'loki';
+  const res = loki
+    ? await lokiCondition(get, rule, t0, t0 + TIMELINE_S, CONDITION_STEP_S)
+    : await promRangeQuery(get, DS.prom, conditionExpr(rule), t0, t0 + TIMELINE_S, TIMELINE_STEP_S);
+  const matches = loki ? sameLokiService : sameService;
   const offsets = (res?.data?.result ?? [])
-    .filter((series) => sameService(series, episode.service))
+    .filter((series) => matches(series, episode.service))
     .flatMap((series) => (series.values ?? []).map(([t]) => Number(t) - t0))
     .sort((a, b) => a - b);
   return {
@@ -706,6 +737,13 @@ async function conditionTimeline(get, episode, rule) {
 
 async function trueAtProbe(get, episode, rule) {
   const at = Math.floor(Date.parse(episode.t_first_error) / 1000 + CONDITION_PROBE_S);
+  if (rule.kind === 'loki') {
+    // A one-instant range of the condition: any returned sample means it held.
+    const res = await lokiCondition(get, rule, at, at, CONDITION_STEP_S);
+    return (res?.data?.result ?? []).some(
+      (series) => sameLokiService(series, episode.service) && (series.values ?? []).length > 0
+    );
+  }
   const res = await promInstantQuery(get, DS.prom, rule.expr, at);
   return (res?.data?.result ?? []).some(
     (series) =>
@@ -731,18 +769,22 @@ async function checkRepoRules(get, window, repo, all, transitions, episodes) {
   );
   const checks = [];
   for (const rule of repo.rules) {
+    const known = rule.kind !== null;
     checks.push({
       uid: check('uid', rule.uid),
+      datasource_kind: rule.kind,
+      ...(known ? {} : { not_checked: 'unknown_datasource' }),
       transitions_by_state: transitionsByState(transitions, rule.uid),
       live: liveStatus(live.get(rule.uid)),
       stored: storedCheck(all, repo, rule),
-      condition: await conditionHeld(get, window, rule),
+      condition: known ? await conditionHeld(get, window, rule) : null,
     });
   }
+  const checkable = repo.rules.filter((rule) => rule.kind !== null);
   for (const episode of episodes) {
     const trueRules = [];
     const timeline = [];
-    for (const rule of repo.rules) {
+    for (const rule of checkable) {
       if (await trueAtProbe(get, episode, rule)) trueRules.push(rule.uid);
       timeline.push(await conditionTimeline(get, episode, rule));
     }
@@ -1119,7 +1161,19 @@ async function loadRepoRules(readFile) {
       if (!Object.hasOwn(COMPARATORS, r.operator) || !Number.isFinite(r.threshold)) {
         throw new Error(`repo rule ${r.uid}: unreadable operator or threshold`);
       }
-      return { uid: r.uid, expr: r.expr, operator: r.operator, threshold: r.threshold, entry: r };
+      // Each rule is read through its own datasource; an unknown one is reported, not queried.
+      const datasourceUid = r.datasourceUid ?? config.datasourceUid ?? DS.prom;
+      return {
+        uid: r.uid,
+        expr: r.expr,
+        operator: r.operator,
+        threshold: r.threshold,
+        entry: r,
+        datasourceUid,
+        kind: Object.hasOwn(DATASOURCE_KINDS, datasourceUid)
+          ? DATASOURCE_KINDS[datasourceUid]
+          : null,
+      };
     });
   return { titles, rules, config, deliveryUid: config.deliveryTest?.uid };
 }
@@ -1188,7 +1242,7 @@ export async function run({
     const alertWindow = { start: sinceS ?? nowS - opts.alertWindowDays * DAY_S, end: nowS };
     const mttd = await collectMttd(get, alertWindow, repo);
     const baseline = {
-      schema_version: '2.2.0',
+      schema_version: '2.3.0',
       task_id: 'IFC-074',
       generated_at: collectedAt,
       measurement_method: 'grafana-cloud-readonly-collector',

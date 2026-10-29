@@ -73,6 +73,13 @@ type FakeConfig = {
   errorLogs?: Record<string, number[]>;
   /** Repo alert-rules.json contents; defaults to REPO_RULES. */
   repoRules?: string;
+  /** Loki metric answers for a repo Loki rule's condition (start/end epoch s, step s). */
+  lokiMetric?: (
+    query: string,
+    start: number,
+    end: number,
+    step: number
+  ) => Array<{ metric: Record<string, string>; values: Array<[number, string]> }>;
 };
 
 function fakeGrafana(cfg: FakeConfig) {
@@ -95,6 +102,11 @@ function fakeGrafana(cfg: FakeConfig) {
       text: async () => (body === undefined ? '' : JSON.stringify(body)),
     });
     if (forced) return reply(forced, { message: `secret ${TOKEN}` });
+    const uid = /^\/api\/datasources\/proxy\/uid\/([^/]+)\//.exec(path)?.[1];
+    const lokiPath = path.includes('/loki/api/v1/');
+    if (uid === 'grafanacloud-prom' && lokiPath) return reply(404);
+    if ((uid === 'grafanacloud-logs' || uid === 'grafanacloud-alert-state-history') && !lokiPath)
+      return reply(404);
     if (path === '/api/health') return reply(200, { database: 'ok' });
     if (path === '/api/v1/provisioning/alert-rules') return reply(200, cfg.rules ?? []);
     if (path.startsWith('/api/v1/provisioning/folder/'))
@@ -168,6 +180,14 @@ function lokiBody(cfg: FakeConfig, u: URL) {
   const start = Number(u.searchParams.get('start')) / 1e9;
   const end = Number(u.searchParams.get('end')) / 1e9;
   if (q.includes('state-history')) return historyBody(cfg, start, end);
+  if (q.startsWith('(') && cfg.lokiMetric) {
+    return {
+      data: {
+        resultType: 'matrix',
+        result: cfg.lokiMetric(q, start, end, Number(u.searchParams.get('step'))),
+      },
+    };
+  }
   if (q.startsWith('sum by (service_name)')) return bucketBody(cfg, start, end);
   const svc = /service_name="([^"]+)"/.exec(q)?.[1] ?? '';
   if (q.includes('detected_level')) return errorLogBody(cfg, svc, start, end);
@@ -795,7 +815,7 @@ describe('collect-observability-evidence: MTTD', () => {
       { uid: 'r-fast', title: 'ErrorSpansDirect', for: '0s', folderUID: 'ip', ruleGroup: 'prod' },
     ];
     const { json, h } = await baseline(cfg);
-    expect(json.schema_version).toBe('2.2.0');
+    expect(json.schema_version).toBe('2.3.0');
     expect(json.incidents.map((i: { mttd_s: number }) => i.mttd_s)).toEqual([70, 300]);
     expect(json.aggregates.mean_s).toBe(185);
     expect(json.episodes).toEqual([
@@ -959,6 +979,7 @@ describe('collect-observability-evidence: MTTD', () => {
     expect(json.repo_rule_checks).toEqual([
       {
         uid: 'ifc074-error-spans-direct',
+        datasource_kind: 'prometheus',
         transitions_by_state: { Error: 1, Normal: 1 },
         live: { health: 'error', state: 'inactive', has_last_error: true },
         stored: { found: false, differences: [], query_shape: null },
@@ -1058,6 +1079,236 @@ describe('collect-observability-evidence: MTTD', () => {
     expect(json.episodes[0].repo_rule_timeline).toEqual([
       { uid: 'ifc074-error-spans-direct', first_true_s: 60, last_true_s: 75, n_true_steps: 2 },
     ]);
+  });
+
+  describe('a repo rule on the Loki datasource', () => {
+    const LOKI_EXPR =
+      'sum by (service_name) (count_over_time({service_name="ai-worker"} | detected_level=~"error" [2m]))';
+    const lokiRules = (extra: Array<Record<string, unknown>> = []) =>
+      JSON.stringify({
+        datasourceUid: 'grafanacloud-prom',
+        rules: [
+          {
+            uid: 'ifc074-error-logs-direct',
+            title: 'Error-level logs (direct)',
+            datasourceUid: 'grafanacloud-logs',
+            expr: LOKI_EXPR,
+            operator: 'gt',
+            threshold: 0,
+          },
+          ...extra,
+        ],
+      });
+    const firstError = NOW_S - 7290;
+    const lokiCalls = (calls: Array<{ path: string }>) =>
+      calls
+        .map((c) => new URL(c.path, GRAFANA_URL))
+        .filter((u) => (u.searchParams.get('query') ?? '').includes('detected_level=~"error"'));
+
+    it('routes the rule to the logs datasource query_range with step 60, never to Prometheus', async () => {
+      const cfg = healthy();
+      cfg.repoRules = lokiRules();
+      cfg.lokiMetric = () => [];
+      const promQueries: string[] = [];
+      cfg.promQuery = (query) => {
+        promQueries.push(query);
+        return undefined;
+      };
+      const { code, h } = await baseline(cfg);
+      expect(code).toBe(0);
+      const calls = lokiCalls(h.grafana.calls);
+      expect(calls.length).toBeGreaterThan(0);
+      for (const u of calls) {
+        expect(u.pathname).toBe(
+          '/api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/query_range'
+        );
+        expect(u.searchParams.get('query')).toBe(`(${LOKI_EXPR}) > 0`);
+        expect(u.searchParams.get('step')).toBe('60');
+        // LogQL has no Prometheus subquery.
+        expect(u.searchParams.get('query')).not.toContain(':60s]');
+      }
+      expect(promQueries.filter((q) => q.includes('detected_level'))).toEqual([]);
+    });
+
+    it('probes the rule 120 s after the first error with a Loki range of one instant', async () => {
+      const cfg = healthy();
+      cfg.repoRules = lokiRules();
+      const probes: Array<[number, number]> = [];
+      cfg.lokiMetric = (_q, start, end) => {
+        if (start === end) probes.push([start, end]);
+        return start === end && start === firstError + 120
+          ? [{ metric: { service_name: 'ai-worker' }, values: [[start, '2']] }]
+          : [];
+      };
+      const { json } = await baseline(cfg);
+      expect(probes).toContainEqual([firstError + 120, firstError + 120]);
+      expect(json.episodes[0].repo_rules_true_at_120s).toEqual(['ifc074-error-logs-direct']);
+    });
+
+    it("counts the 60 s steps where the rule's condition held, with the Loki lookback capped at 6 h", async () => {
+      const cfg = healthy();
+      cfg.repoRules = lokiRules();
+      cfg.lokiMetric = (_q, start, end, step) =>
+        end - start === 21600 && step === 60
+          ? [
+              {
+                metric: { service_name: 'ai-worker' },
+                values: [
+                  [end - 120, '1'],
+                  [end - 60, '3'],
+                ],
+              },
+            ]
+          : [];
+      const { json } = await baseline(cfg);
+      expect(json.repo_rule_checks[0]).toMatchObject({
+        uid: 'ifc074-error-logs-direct',
+        datasource_kind: 'loki',
+        condition: {
+          lookback_s: 21600,
+          steps_true_by_service: [{ service: 'ai-worker', steps: 2 }],
+        },
+      });
+    });
+
+    it('times the condition after each first error from the Loki matrix, and gives null when empty', async () => {
+      const t0 = Math.ceil(firstError);
+      const cfg = healthy();
+      cfg.repoRules = lokiRules();
+      cfg.lokiMetric = (_q, start, end) =>
+        start === t0 && end === t0 + 600
+          ? [
+              {
+                metric: { service_name: 'ai-worker' },
+                values: [
+                  [t0 + 60, '1'],
+                  [t0 + 120, '1'],
+                ],
+              },
+              { metric: { service_name: 'api' }, values: [[t0, '1']] },
+            ]
+          : [];
+      const { json } = await baseline(cfg);
+      expect(json.episodes[0].repo_rule_timeline).toEqual([
+        { uid: 'ifc074-error-logs-direct', first_true_s: 60, last_true_s: 120, n_true_steps: 2 },
+      ]);
+
+      const empty = healthy();
+      empty.repoRules = lokiRules();
+      empty.lokiMetric = () => [];
+      const { json: none } = await baseline(empty);
+      expect(none.episodes[0].repo_rule_timeline).toEqual([
+        { uid: 'ifc074-error-logs-direct', first_true_s: null, last_true_s: null, n_true_steps: 0 },
+      ]);
+    });
+
+    it('matches a Loki series without service_name only to an episode without a service', async () => {
+      const cfg = healthy();
+      cfg.repoRules = lokiRules();
+      cfg.lokiMetric = (_q, start, end) =>
+        start === end ? [{ metric: {}, values: [[start, '5']] }] : [];
+      const { json } = await baseline(cfg);
+      // The episode is ai-worker's, so an unlabelled Loki series does not make the rule true for it.
+      expect(json.episodes[0].repo_rules_true_at_120s).toEqual([]);
+    });
+
+    it('keeps Prometheus rules on the prom proxy beside a Loki rule', async () => {
+      const cfg = healthy();
+      cfg.repoRules = lokiRules([
+        {
+          uid: 'ifc074-error-spans-direct',
+          title: 'x',
+          expr: 'errors_total',
+          operator: 'gt',
+          threshold: 0,
+        },
+      ]);
+      cfg.lokiMetric = () => [];
+      const { json, h } = await baseline(cfg);
+      const promPaths = h.grafana.calls
+        .map((c) => new URL(c.path, GRAFANA_URL))
+        .filter((u) => (u.searchParams.get('query') ?? '').includes('errors_total'));
+      expect(promPaths.length).toBeGreaterThan(0);
+      for (const u of promPaths)
+        expect(u.pathname).toMatch(
+          /^\/api\/datasources\/proxy\/uid\/grafanacloud-prom\/api\/v1\/query/
+        );
+      expect(
+        json.repo_rule_checks.map((c: { datasource_kind: string }) => c.datasource_kind)
+      ).toEqual(['loki', 'prometheus']);
+    });
+
+    it('reports a rule on an unknown datasource as not_checked and still writes', async () => {
+      const cfg = healthy();
+      cfg.repoRules = JSON.stringify({
+        datasourceUid: 'grafanacloud-prom',
+        rules: [
+          {
+            uid: 'odd',
+            title: 'x',
+            datasourceUid: 'grafanacloud-other',
+            expr: 'up',
+            operator: 'gt',
+            threshold: 0,
+          },
+        ],
+      });
+      const { code, json } = await baseline(cfg);
+      expect(code).toBe(0);
+      expect(json.repo_rule_checks[0]).toMatchObject({
+        uid: 'odd',
+        datasource_kind: null,
+        not_checked: 'unknown_datasource',
+        condition: null,
+      });
+      expect(json.episodes[0].repo_rules_true_at_120s).toEqual([]);
+      expect(json.episodes[0].repo_rule_timeline).toEqual([]);
+    });
+
+    it('anchors a Loki-rule transition labelled only service_name to its episode', async () => {
+      const cfg = healthy();
+      cfg.repoRules = lokiRules();
+      cfg.lokiMetric = () => [];
+      cfg.history = [
+        {
+          t: firstError + 45,
+          ruleUID: 'ifc074-error-logs-direct',
+          alertname: 'Error-level logs (direct)',
+          previous: 'Normal',
+          current: 'Alerting',
+          extraLabels: { service_name: 'ai-worker' },
+        },
+        ...(cfg.history as Transition[]),
+      ];
+      const { json } = await baseline(cfg);
+      expect(json.episodes[0]).toMatchObject({
+        service: 'ai-worker',
+        detected_by: 'ifc074-error-logs-direct',
+        mttd_s: 45,
+      });
+    });
+
+    it('keeps a span-rule transition anchored with its earliest error span (regression)', async () => {
+      const cfg = healthy();
+      const { json } = await baseline(cfg);
+      expect(json.episodes[0]).toMatchObject({
+        service: 'ai-worker',
+        first_error_trace_id: ERR_TRACE,
+        detected_by: 'r-err',
+        mttd_s: 90,
+      });
+    });
+
+    it('writes the 2.3.0 schema, whose new keys pass the output key check', async () => {
+      const cfg = healthy();
+      cfg.repoRules = lokiRules();
+      cfg.lokiMetric = () => [];
+      const { json } = await baseline(cfg);
+      expect(json.schema_version).toBe('2.3.0');
+      expect(Object.keys(json.repo_rule_checks[0])).toEqual(
+        expect.arrayContaining(['datasource_kind', 'condition'])
+      );
+    });
   });
 
   it('measures how many episodes have an error-level log line within 60 s of the first error span', async () => {

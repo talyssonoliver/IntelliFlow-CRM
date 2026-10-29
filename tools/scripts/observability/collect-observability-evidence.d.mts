@@ -69,12 +69,17 @@ export function queryShape(rule: AlertRuleLike): QueryShape;
 export function storedRuleDifferences(stored: AlertRuleLike, expected: AlertRuleLike): string[];
 export interface RepoRuleCheck {
   uid: string;
+  /** The rule's datasource language; null when its datasource uid is not a known one. */
+  datasource_kind: 'prometheus' | 'loki' | null;
+  /** Set only when the rule could not be queried. */
+  not_checked?: 'unknown_datasource';
   transitions_by_state: Record<string, number>;
   live: { health: string; state: string; has_last_error: boolean } | null;
+  /** Null for a rule that was not checked; a Loki rule looks back at most 6 h. */
   condition: {
     lookback_s: number;
     steps_true_by_service: Array<{ service: string; steps: number }>;
-  };
+  } | null;
 }
 export function groupEpisodes(incidents: EpisodeIncident[]): ErrorEpisode[];
 export function run(options?: {

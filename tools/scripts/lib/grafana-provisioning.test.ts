@@ -590,6 +590,34 @@ describe('Grafana read helpers', () => {
     expect(calls[0].name).toBe('loki query_range');
   });
 
+  it('accepts the stack datasource uids in the proxy path', async () => {
+    const { calls, get } = recordingGet();
+    for (const uid of ['grafanacloud-logs', 'grafanacloud-alert-state-history']) {
+      await lokiQueryRange(get, uid, { query: 'q', start: '1', end: '2' });
+    }
+    await promInstantQuery(get, 'grafanacloud-prom', 'up', 1);
+    expect(calls.map((c) => c.path.split('?')[0])).toEqual([
+      '/api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/query_range',
+      '/api/datasources/proxy/uid/grafanacloud-alert-state-history/loki/api/v1/query_range',
+      '/api/datasources/proxy/uid/grafanacloud-prom/api/v1/query',
+    ]);
+  });
+
+  it.each(['../x', 'a/b', 'a?b', '', 'u'.repeat(65)])(
+    'rejects datasource uid %j before any request, without echoing it',
+    async (uid) => {
+      const { calls, get } = recordingGet();
+      const attempt = () => lokiQueryRange(get, uid, { query: 'q', start: '1', end: '2' });
+      expect(attempt).toThrow('invalid datasource uid');
+      try {
+        attempt();
+      } catch (error) {
+        if (uid) expect((error as Error).message).not.toContain(uid);
+      }
+      expect(calls).toEqual([]);
+    }
+  );
+
   it('tempoSearch builds the search path and drops undefined params', async () => {
     const { calls, get } = recordingGet();
     await tempoSearch(get, 'grafanacloud-traces', {
