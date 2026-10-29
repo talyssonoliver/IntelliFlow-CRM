@@ -23,19 +23,44 @@ const entry = path.join(srcDir, 'logging.ts');
 /** `require` resolving from src/ — the same resolution the bundled logging.ts uses. */
 export const requireFromSrc = createRequire(entry);
 
+type LoggingWithContext = Pick<LoggingModule, 'createLogger'> &
+  Pick<typeof import('../log-context'), 'runWithLogContext'>;
+
 /** Bundle src/logging.ts to CommonJS and load it with Node's CJS loader. */
 export function loadLoggingAsCommonJs(): LoggingModule {
+  return loadBundle({ entryPoints: [entry] });
+}
+
+/**
+ * createLogger and runWithLogContext from one bundle. log-context keeps its
+ * AsyncLocalStorage in a module variable, so a test must enter the context
+ * through the bundled copy for the bundled logger's mixin to see it.
+ */
+export function loadLoggingWithContextAsCommonJs(): LoggingWithContext {
+  return loadBundle({
+    stdin: {
+      contents:
+        "export { createLogger } from './logging';\n" +
+        "export { runWithLogContext } from './log-context';\n",
+      resolveDir: srcDir,
+      sourcefile: path.join(srcDir, 'logging-with-context.ts'),
+      loader: 'ts',
+    },
+  }) as unknown as LoggingWithContext;
+}
+
+function loadBundle(input: { entryPoints?: string[]; stdin?: Record<string, string> }) {
   const esbuild = createRequire(requireFromSrc.resolve('tsup'))(
     'esbuild'
   ) as typeof import('esbuild');
   const out = esbuild.buildSync({
-    entryPoints: [entry],
+    ...input,
     bundle: true,
     format: 'cjs',
     platform: 'node',
     write: false,
     external: ['pino', 'pino-pretty', '@opentelemetry/*'],
-  });
+  } as Parameters<typeof esbuild.buildSync>[0]);
   const mod = new Module(entry) as Module & {
     _compile(code: string, filename: string): void;
     paths: string[];

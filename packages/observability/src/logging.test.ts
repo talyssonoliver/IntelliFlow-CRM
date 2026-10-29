@@ -17,7 +17,11 @@ import { InMemorySpanExporter, SimpleSpanProcessor } from '@opentelemetry/sdk-tr
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
 import { trace, SpanKind, context } from '@opentelemetry/api';
 import { runWithLogContext, getCurrentLogContext } from './log-context';
-import { loadLoggingAsCommonJs, requireFromSrc } from './test-utils/load-logging-cjs';
+import {
+  loadLoggingAsCommonJs,
+  loadLoggingWithContextAsCommonJs,
+  requireFromSrc,
+} from './test-utils/load-logging-cjs';
 
 // ---------------------------------------------------------------------------
 // Mixin behaviour under test
@@ -222,6 +226,51 @@ describe('createLogger — real records', () => {
     const [record] = records();
     expect(record['trace_id']).toBeUndefined();
     expect(record['span_id']).toBeUndefined();
+  });
+
+  // IFC-074 AC-015: the exact keys an api request record carries to Loki. The
+  // record is the shape apiLog sends for trpc.request
+  // (apps/api/src/tracing/middleware.ts); tenantId and userId come only from
+  // the log context, which only protected and tenant procedures set.
+  const REQUEST_RECORD = {
+    type: 'trpc.request',
+    correlationId: 'c0rre1at10n',
+    path: 'leads.list',
+    method: 'query',
+    durationMs: 12,
+    status: 'success',
+  };
+  // What the line really carries: pino's level/time/msg plus the record. The
+  // logger's base fields (service, environment, version, pid, hostname, name)
+  // are not written on these lines under this configuration.
+  const BASE_KEYS = ['level', 'time', 'msg', ...Object.keys(REQUEST_RECORD)];
+
+  async function loadWithContext() {
+    await loadCreateLogger();
+    return loadLoggingWithContextAsCommonJs();
+  }
+
+  it('an api request record under a protected log context carries tenantId and userId', async () => {
+    const { createLogger, runWithLogContext } = await loadWithContext();
+    const logger = createLogger({ name: 'intelliflow-api', level: 'info', destination: 'memory' });
+
+    runWithLogContext({ correlationId: 'c0rre1at10n', tenantId: 't-1', userId: 'u-1' }, () =>
+      logger.info(REQUEST_RECORD, 'trpc request')
+    );
+
+    const [record] = records();
+    expect(Object.keys(record).sort()).toEqual([...BASE_KEYS, 'tenantId', 'userId'].sort());
+    expect(record).toMatchObject({ tenantId: 't-1', userId: 'u-1' });
+  });
+
+  it('the same record with no log context has neither tenantId nor userId', async () => {
+    const { createLogger } = await loadWithContext();
+    const logger = createLogger({ name: 'intelliflow-api', level: 'info', destination: 'memory' });
+
+    logger.info(REQUEST_RECORD, 'trpc request');
+
+    const [record] = records();
+    expect(Object.keys(record).sort()).toEqual([...BASE_KEYS].sort());
   });
 
   it.each([
