@@ -269,29 +269,16 @@ describe('DriftDetector', () => {
     // line carrying `severity: 'critical'` would be indexed at that level and
     // trip the error-log alert (the latency monitor did, 2026-10-28).
     it('logs detected drift at warn without a top-level severity field that Loki would read as the level', () => {
-      for (let i = 0; i < 15; i++) {
-        detector.recordSample({
-          value: 0.4 + i * 0.01,
-          timestamp: new Date(Date.now() - (30 + i) * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
-      detector.computeBaseline('gpt-4', 'score_distribution');
-      for (let i = 0; i < 15; i++) {
-        detector.recordSample({
-          value: 0.9 + i * 0.005,
-          timestamp: new Date(Date.now() - i * 60000),
-          model: 'gpt-4',
-          metric: 'score_distribution',
-        });
-      }
+      addReference(10, 0.3);
+      addCurrent(30, 0.85);
       pinoLogger.warn.mockClear();
 
-      const result = detector.detectDrift('gpt-4', 'score_distribution');
+      const result = detector.detectDrift('gpt-4', 'score_distribution', NOW);
 
       expect(result.detected).toBe(true);
-      const call = pinoLogger.warn.mock.calls.find((c) => c[1] === 'Drift detected!');
+      const call = pinoLogger.warn.mock.calls.find(
+        (c) => c[1] === 'Output distribution shift detected on this tick'
+      );
       expect(call).toBeDefined();
       expect(call?.[0]).not.toHaveProperty('severity');
       expect(call?.[0]).toMatchObject({ driftSeverity: result.severity });
