@@ -86,6 +86,16 @@ describe('TokenUsageCallbackHandler (IFC-215)', () => {
       expect(handler.getUsage()).toMatchObject({ model: 'scoring-free', free: true });
     });
 
+    it.each(['openai/gpt-oss-120b:FREE', 'OpenAI/GPT-OSS-120B:Free'])(
+      'marks a :free call as free whatever its case (%s)',
+      (model) => {
+        const handler = new TokenUsageCallbackHandler('scoring-free', 'openrouter');
+        invoke(handler, model);
+        handler.handleLLMEnd(served(model));
+        expect(handler.getUsage()).toMatchObject({ model: 'scoring-free', free: true });
+      }
+    );
+
     it('marks a local Ollama call as free', () => {
       const handler = new TokenUsageCallbackHandler('scoring-free', 'ollama');
       invoke(handler, 'llama3.1');

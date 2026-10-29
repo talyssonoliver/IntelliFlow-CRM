@@ -121,7 +121,7 @@ describe('DriftDetector', () => {
     it('should prune samples beyond retention on the scheduled tick', () => {
       detector.recordSample({
         value: 0.75,
-        timestamp: new Date(NOW - 9 * DAY),
+        timestamp: new Date(NOW - 7.5 * DAY),
         model: 'gpt-4',
         metric: 'score_distribution',
       });
@@ -133,8 +133,108 @@ describe('DriftDetector', () => {
       });
       expect(detector.getStatus().totalSamples).toBe(2);
 
-      detector.pruneOnTick(NOW);
+      detector.pruneOnTick(NOW + DAY);
       expect(detector.getStatus().totalSamples).toBe(1);
+    });
+
+    it('rejects a sample timestamped beyond now plus the clock skew allowance', () => {
+      detector.recordSample({
+        value: 0.75,
+        timestamp: new Date(NOW + 60_000),
+        model: 'gpt-4',
+        metric: 'score_distribution',
+      });
+      detector.recordSample({
+        value: 0.75,
+        timestamp: new Date(NOW + 2 * DAY),
+        model: 'gpt-4',
+        metric: 'score_distribution',
+      });
+
+      // A minute of skew is kept; a future day bucket would never be pruned.
+      expect(detector.getStatus().totalSamples).toBe(1);
+    });
+
+    it('rejects a sample already older than retention', () => {
+      detector.recordSample({
+        value: 0.75,
+        timestamp: new Date(NOW - 9 * DAY),
+        model: 'gpt-4',
+        metric: 'score_distribution',
+      });
+
+      expect(detector.getStatus()).toMatchObject({ trackedMetrics: 0, totalSamples: 0 });
+    });
+
+    it('keeps samples at the window edges and drops an invalid timestamp, warning once', () => {
+      pinoLogger.warn.mockClear();
+      const at = (t: number) =>
+        detector.recordSample({
+          value: 0.5,
+          timestamp: new Date(t),
+          model: 'gpt-4',
+          metric: 'score_distribution',
+        });
+      at(NOW + 5 * 60 * 1000);
+      at(NOW - config.retentionDays * DAY);
+      at(NOW + 5 * 60 * 1000 + 1);
+      at(Number.NaN);
+
+      expect(detector.getStatus().totalSamples).toBe(2);
+      expect(
+        pinoLogger.warn.mock.calls.filter(([, msg]) => String(msg).includes('retention window'))
+      ).toHaveLength(1);
+    });
+
+    it('applies the default series cap when a config leaves maxSeries out', () => {
+      const { maxSeries: _omitted, ...partial } = config;
+      detector = new DriftDetector(partial as DriftDetectorConfig);
+      for (let i = 0; i < defaultDriftConfig.maxSeries + 5; i++) {
+        detector.recordSample({
+          value: 0.5,
+          timestamp: new Date(NOW),
+          model: `model-${i}`,
+          metric: 'score_distribution',
+        });
+      }
+      expect(detector.getStatus().trackedMetrics).toBe(defaultDriftConfig.maxSeries);
+    });
+
+    it('drops a sample whose value is not a finite number', () => {
+      for (const value of [Number.NaN, Number.POSITIVE_INFINITY, 0.5]) {
+        detector.recordSample({
+          value,
+          timestamp: new Date(NOW),
+          model: 'gpt-4',
+          metric: 'user_correction_error',
+        });
+      }
+      expect(detector.getStatus().totalSamples).toBe(1);
+    });
+
+    it('caps the number of series and drops samples for new keys past the cap', () => {
+      detector = new DriftDetector({ ...config, maxSeries: 3 });
+      pinoLogger.warn.mockClear();
+      for (let i = 0; i < 10; i++) {
+        detector.recordSample({
+          value: 0.5,
+          timestamp: new Date(NOW),
+          model: `model-${i}`,
+          metric: 'score_distribution',
+        });
+      }
+      // An existing series still accepts samples at the cap.
+      detector.recordSample({
+        value: 0.6,
+        timestamp: new Date(NOW),
+        model: 'model-0',
+        metric: 'score_distribution',
+      });
+
+      expect(detector.getStatus()).toMatchObject({ trackedMetrics: 3, totalSamples: 4 });
+      expect(
+        pinoLogger.warn.mock.calls.filter(([, msg]) => String(msg).includes('series cap'))
+      ).toHaveLength(1);
     });
 
     it('should include metadata', () => {
@@ -506,6 +606,10 @@ describe('DriftDetector', () => {
       expect(defaultDriftConfig.referenceDays).toBe(7);
       expect(defaultDriftConfig.retentionDays).toBe(8);
       expect(defaultDriftConfig.maxSamplesPerKey).toBe(50_000);
+    });
+
+    it('bounds the number of series', () => {
+      expect(defaultDriftConfig.maxSeries).toBe(64);
     });
   });
 });

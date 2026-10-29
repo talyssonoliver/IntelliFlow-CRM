@@ -89,7 +89,10 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
    * the alias, never the raw served name.
    */
   private pricingFor(served: string | undefined): Pick<TokenUsage, 'model' | 'free'> {
-    const isFreeModel = [served, this.invokedModel].some((name) => name?.endsWith(':free'));
+    // Provider model ids are case-insensitive: `:FREE` is still the free variant.
+    const isFreeModel = [served, this.invokedModel].some((name) =>
+      name?.trim().toLowerCase().endsWith(':free')
+    );
     if (this.provider === 'ollama' || isFreeModel) return { model: this.modelName, free: true };
     const key = directPricingKey(served) ?? servedPricingKey(served);
     if (key && Object.hasOwn(MODEL_PRICING, key)) return { model: key, free: false };

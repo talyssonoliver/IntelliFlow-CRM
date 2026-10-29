@@ -89,6 +89,8 @@ export interface DriftDetectorConfig {
    * previous days' reference.
    */
   maxSamplesPerKey: number;
+  /** Most (model, metric) series kept; samples for a new key past the cap are dropped. */
+  maxSeries: number;
   binCount: number;
 }
 
@@ -161,6 +163,9 @@ function isHighSeverity(severity: Severity): boolean {
   return severity === 'high' || severity === 'critical';
 }
 
+/** Clock skew allowed on a sample's timestamp; a later one would open a day bucket never pruned. */
+const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
+
 function seriesKey(model: string, metric: string): string {
   return JSON.stringify([model, metric]);
 }
@@ -174,6 +179,7 @@ export class DriftDetector {
   private readonly persistence: Map<string, PersistenceState> = new Map();
   private driftHistory: DriftResult[] = [];
   private lastTickAt: Date | null = null;
+  private readonly warned = new Set<'series_cap' | 'out_of_window' | 'non_finite_value'>();
 
   /**
    * @param randomIndex Uniform integer in [0, n) for reservoir sampling; injectable for tests.
@@ -193,12 +199,30 @@ export class DriftDetector {
   /**
    * Record a new sample for drift monitoring. O(1): it goes into its UTC day's bucket, and a full
    * bucket keeps a uniform sample of the day (Algorithm R) instead of dropping older samples.
-   * Pruning by age happens on the scheduled tick.
+   * Pruning by age happens on the scheduled tick. Memory is bounded: a sample outside
+   * [now - retention, now + skew] is dropped, and so is one for a new key past `maxSeries`.
    */
   recordSample(sample: DriftSample): void {
+    if (!Number.isFinite(sample.value)) {
+      this.warnOnce('non_finite_value', 'Drift sample dropped: value is not a finite number');
+      return;
+    }
+    const at = sample.timestamp.getTime();
+    const now = Date.now();
+    if (!(at <= now + MAX_FUTURE_SKEW_MS) || at < now - this.config.retentionDays * DAY_MS) {
+      this.warnOnce(
+        'out_of_window',
+        'Drift sample dropped: timestamp outside the retention window'
+      );
+      return;
+    }
     const key = seriesKey(sample.model, sample.metric);
     let entry = this.series.get(key);
     if (!entry) {
+      if (this.series.size >= (this.config.maxSeries ?? defaultDriftConfig.maxSeries)) {
+        this.warnOnce('series_cap', 'Drift sample dropped: series cap reached');
+        return;
+      }
       entry = { model: sample.model, metric: sample.metric, days: new Map() };
       this.series.set(key, entry);
     }
@@ -215,6 +239,19 @@ export class DriftDetector {
     }
     const slot = this.randomIndex(bucket.seen);
     if (slot < bucket.samples.length) bucket.samples[slot] = sample;
+  }
+
+  /** Log a dropped-sample reason once per detector; the key itself is never logged. */
+  private warnOnce(
+    reason: 'series_cap' | 'out_of_window' | 'non_finite_value',
+    message: string
+  ): void {
+    if (this.warned.has(reason)) return;
+    this.warned.add(reason);
+    logger.warn(
+      { reason, maxSeries: this.config.maxSeries, retentionDays: this.config.retentionDays },
+      message
+    );
   }
 
   /**
@@ -766,6 +803,7 @@ export const defaultDriftConfig: DriftDetectorConfig = {
   referenceDays: 7,
   retentionDays: 8,
   maxSamplesPerKey: 50_000,
+  maxSeries: 64,
   binCount: 10,
 };
 

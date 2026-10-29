@@ -22,6 +22,7 @@ import { LatencyMonitor, latencyMonitor } from './latency-monitor';
 import { calculateCost } from '../config/ai.config';
 import {
   recordConfidence,
+  classifyError,
   recordCost,
   recordEstimatedValue,
   recordHallucination,
@@ -311,7 +312,8 @@ export async function withMonitoring<T>(
       logger.error(
         {
           operationId,
-          error: costError instanceof Error ? costError.message : String(costError),
+          // The class only: a usage or provider error can echo prompt or lead text (NF-002).
+          errorClass: classifyError(costError),
         },
         'Recording AI spend failed'
       );
