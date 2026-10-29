@@ -353,7 +353,7 @@ The full log is in `IFC-074-discussion.md`, section "2026-10-29 addendum".
   - the lookback is capped at 6 h and reported as `lookback_s`;
   - an empty matrix gives `first_true_s: null`.
 - Transitions take `labels.service ?? labels.service_name`.
-- A constant alias `intelliflow-ai-worker` → `ai-worker` is applied to Loki matching and to transition and episode services.
+- ~~A constant alias `intelliflow-ai-worker` → `ai-worker`~~. **Dropped 2026-10-29 (plan review E1/E3):** the coordinator checked production live. The combined worker runs with `OTEL_SERVICE_NAME=ai-worker`, so its spans and logs are both `ai-worker`, and Tempo, span metrics and Loki show only `ai-worker` and `api`. `intelliflow-ai-worker` has no live series. An alias would only add risk: it would break the Tempo search (`earliestErrorSpan`) and the Prometheus matching for that name. Services are matched as they appear.
 - Prometheus matching (`sameService`) is unchanged. The new Loki matcher gets its own name, because a local `sameService` at `:801` shadows it.
 - An unknown uid gives `not_checked: "unknown_datasource"` and the run continues.
 - `repo_rule_checks[]` gains `datasource_kind`. The output `schema_version` becomes **2.3.0** (it is already 2.2.0 at `:1191`).
@@ -378,7 +378,7 @@ The official KPI path:
 
 **D7, task-status schema defect (fixed in this PR).** `apps/project-tracker/docs/metrics/schemas/task-status.schema.json` KPI objects are `additionalProperties: false` and need a boolean `met`.
 - Today's `task-tracking.json` carries `source` on both KPIs and `met: null` on `traces_correlating`, so the generated cache fails its own schema.
-- The fix: add an optional string `source` to the KPI object schema, and set `traces_correlating.met: false`, meaning "not demonstrated" (dated note, append-only history).
+- The fix: add an optional string `source` to the KPI object schema. The JSON is generated: the change goes into Zod `kpiEntrySchema` in `tools/scripts/lib/schemas/task-status.schema.ts:144`, followed by `pnpm generate:schemas`. Also set `traces_correlating.met: false`, meaning "not demonstrated" (dated note, append-only history).
 
 **D8, Grafana panel "MTTD per error episode (live proxy)"** on the ENV-008 dashboard `infra/monitoring/grafana/cloud/dashboard-production.json` (uid `env008-production`), applied on merge by `grafana-dashboard.yml`.
 - Grafana cannot join error signals with alert transitions per episode inside a panel. The panel is therefore an **honest live proxy**, titled and described as one: per minute, it shows the error signals next to the alert firings, so the gap between them is the detection delay. The description names the committed collector result (`artifacts/reports/mttr-baseline.json` and the task KPI) as the official MTTD.
@@ -413,7 +413,7 @@ The official KPI path:
   - Prometheus rules still go to the prom proxy.
   - An unknown uid gives `not_checked`, and the run exits 0.
 - **AC-011** (pre-merge)
-  - A Loki-rule Alerting transition labelled only `service_name="ai-worker"` anchors both to an episode whose span service is `intelliflow-ai-worker` (alias) and to one whose service is `ai-worker`.
+  - A Loki-rule Alerting transition labelled only `service_name="ai-worker"` anchors to an episode whose span service is `ai-worker`. A span-rule episode stays anchored exactly as before (regression). The alias was dropped, see D1.
   - A Loki series without `service_name` matches only an episode without a service.
   - `datasourceProxy` rejects `../x`, `a/b`, `a?b`, `''` and a 65-character uid.
   - `schema_version` is `2.3.0`, and `datasource_kind` is allowlisted (and in the `.d.mts`).

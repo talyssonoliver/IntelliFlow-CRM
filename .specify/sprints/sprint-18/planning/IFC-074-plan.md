@@ -490,3 +490,364 @@ reviewer_subagent: plan-reviewer (`.claude/agents/plan-reviewer.md`, spawned via
 | 3 | APPROVE (0 ERROR, 0 WARN) | all fixes verified; Category Y (UI reachability) N/A — no page/route; CC N/A; traceability complete |
 
 ceremony_tier: full
+
+---
+
+# Addendum plan, 2026-10-29 (spec addendum: D1-D9, AC-010-AC-016)
+
+**Base:** `agent/IFC-074-observability` at `7dea5067e` (origin/main `9e378fbb0` + the 2026-10-22 work + the spec addendum
+commits `5aa92bc64` and `7dea5067e`). Steps 1-20 above are the 2026-10-22 plan, already executed (delivery report
+`execution/IFC-074/20261022194925-cdddf208/`); they are not re-run except where a step below names them. Steps here are
+numbered A1-A14. Every step uses TDD (RED test first, watched failing, then GREEN).
+
+## Addendum Preflight Checks
+- [ ] `git log --oneline -1` shows the addendum spec commit; `git status --porcelain` is empty, or holds only generated
+  leftovers listed for the coordinator.
+- [ ] Node 24 on PATH (`/c/Users/talys/ops/node24/node-v24.21.0-win-x64`), `NODE_OPTIONS=--max-old-space-size=8192`.
+- [ ] Packages built (`pnpm exec turbo build --filter='./packages/*'`, through `with-slot.mjs --label IFC-074`).
+- [ ] `grep -n "schema_version" tools/scripts/observability/collect-observability-evidence.mjs` shows `'2.2.0'`
+  (the base value the bump starts from).
+- [ ] The datasource uid `grafanacloud-alert-state-history` is already used by the collector (`DS.history`, `:46`), so
+  it exists on the stack (the collector read it on 2026-10-22).
+- [ ] Free RAM >= 6 GB before any test run; one test process at a time.
+
+## Addendum Implementation Reality Checks
+- **Runtime consumers:**
+  - the collector's Loki routing is called by `checkRepoRules` → `run()` (`collect-observability-evidence.mjs`), which
+    Aurora runs locally after deploy;
+  - `datasourceProxy`'s uid check sits on every read helper (`lokiQueryRange`, `tempoSearch`, `promInstantQuery`,
+    `promRangeQuery`);
+  - the dashboard panel is applied by `grafana-dashboard.yml` on merge (`apply-grafana-dashboard.mjs run()`);
+  - the KPI `source` field is read by `apps/project-tracker/lib/data-sync/task-json-builder.ts` (`generate:metrics`);
+  - the attestation `kpi_results` are read by `/api/tasks/validation-summary/[taskId]` (TaskModal).
+- **Replacement:** no legacy path is replaced. The dispatch workflow from the consensus draft is **not** built
+  (ruling 4).
+- **No new workflow, token or secret.** The collector header stays "local only, never in CI".
+
+## Addendum Estimated Effort
+
+| Area | Files modified | Files created |
+|------|----------------|---------------|
+| Collector + lib | `collect-observability-evidence.mjs`, `collect-observability-evidence.d.mts`, `grafana-provisioning.mjs` | — |
+| Collector tests | `collect-observability-evidence.test.ts`, `grafana-provisioning.test.ts` | — |
+| Dashboard | `dashboard-production.json`, `apply-grafana-dashboard.mjs`, `apply-grafana-dashboard.test.ts` | — |
+| Schema + KPI record | `task-status.schema.ts` (Zod), `task-status.schema.json` (regenerated), `task-tracking.json` | `tools/scripts/__tests__/task-status-kpi-schema.test.ts` |
+| Logger key set | `packages/observability/src/logging.test.ts` | — |
+| Docs + tracking | `ADR-086-…md`, `debt-ledger.yaml`, `IFC-074-spec.md` (status only), `Sprint_plan.csv` | run dir `execution/IFC-074/20261029-addendum/`: `IFC-074-delivery.md`, `findings.md`, `logs/a-red.txt` |
+| Attestation | — | `attestations/IFC-074/attestation.json`, `attestation-latest.json` |
+
+Total: 16 modified, 6 created (plus the regenerated `docs/metrics/sprint-18/IFC-074.json`, the Sprint_plan splits and
+additional `logs/*.txt` as validation runs).
+Estimate (O/M/P): 4 / 6 / 9 h.
+
+## Addendum Execution Steps
+
+### Phase A1: RED
+
+#### Step A1: Collector Loki routing tests (AC-010, AC-011)
+File: `tools/scripts/__tests__/collect-observability-evidence.test.ts`
+- [ ] Make `fakeGrafana` (`:78-163`) strict per datasource uid:
+  - a Prometheus path (`/api/v1/query`, `/api/v1/query_range`) under `/proxy/uid/grafanacloud-logs/` returns 404;
+  - a Loki path under `/proxy/uid/grafanacloud-prom/` returns 404;
+  - a new `cfg.lokiMetric(query, start, end, step)` hook answers Loki matrix queries.
+- [ ] Add these tests:
+  - `routes a Loki rule to the logs datasource`: `grafana.calls` include
+    `/api/datasources/proxy/uid/grafanacloud-logs/loki/api/v1/query_range`; the decoded `query` equals
+    `(<rule expr>) > 0` and `step` equals `60`; there is no `/api/v1/query*` under `grafanacloud-prom` for that rule.
+  - `Loki probe uses query_range with start equal to end`.
+  - `Loki timeline counts steps meeting the rule's operator and threshold` (includes a value exactly at the threshold,
+    so `gt` is strict).
+  - `Prometheus rules still use the prom proxy` (regression guard).
+  - `an unknown datasource uid is not_checked and the run still writes` (exit 0, `not_checked: "unknown_datasource"`).
+  - `a Loki-rule transition labelled only service_name="ai-worker" anchors to an ai-worker episode`
+    (`fetchTransitions` falls back to `labels.service_name`).
+  - `a span-rule transition still anchors to its episode and keeps its earliest error span` (regression).
+  - `no :60s] subquery is ever sent to the Loki proxy` (I1).
+  - `allowlist accepts datasource_kind, not_checked and lookback_s, and still rejects an unknown key`. This is one case
+    per new field, run at runtime through `assertSafeKeys` (W7).
+  - `a Loki series without service_name matches only an episode without a service`.
+  - `Loki checks report lookback_s capped at 6 h` and `an empty Loki matrix gives first_true_s null`.
+  - `repo_rule_checks carry datasource_kind`, plus an allowlist-rejection case for an unknown key.
+  - `schema_version is 2.3.0` (pins the string).
+- [ ] Run (expect FAIL): `pnpm exec vitest run --project root tools/scripts/__tests__/collect-observability-evidence.test.ts`
+
+#### Step A2: `datasourceProxy` uid tests (AC-011, D2)
+File: `tools/scripts/lib/grafana-provisioning.test.ts`
+- [ ] Add `datasourceProxy accepts grafanacloud-prom, grafanacloud-logs, grafanacloud-alert-state-history` through
+  `lokiQueryRange` and `promInstantQuery` paths.
+- [ ] Add `rejects ../x, a/b, a?b, empty and a 65-char uid with "invalid datasource uid"`. The error text must not
+  contain the uid.
+- [ ] Run (expect FAIL): `pnpm exec vitest run --project root tools/scripts/lib/grafana-provisioning.test.ts`
+
+#### Step A3: Dashboard panel tests (AC-016, D8)
+File: `tools/scripts/__tests__/apply-grafana-dashboard.test.ts`
+- [ ] Change `is valid, with a fixed uid … and five panels` (`:66`) to six panels.
+- [ ] Restrict `queries only the span-metric series…` (`:73`) and `matches only the services that emit telemetry`
+  (`:82`) to Prometheus targets (`datasource.uid === 'grafanacloud-prom'`). Add the Loki counterparts:
+  - every Loki target reads an allowed Loki uid;
+  - every Loki selector is `{service_name="ai-worker"}` or `{from="state-history"}` (E4).
+- [ ] Replace `reads every target from the Grafana Cloud Prometheus datasource` (`:94`) with: every Prometheus target
+  reads `grafanacloud-prom`, and every Loki target reads `grafanacloud-logs` or `grafanacloud-alert-state-history`.
+- [ ] Add `has an "MTTD per error episode (live proxy)" panel`. It has three targets:
+  - A: a prom error-span rate with `status_code="STATUS_CODE_ERROR"`;
+  - B: Loki error-level lines with the same filter text as `ifc074-error-logs-direct`. The test reads the rule's expr
+    from `alert-rules.json` and asserts the panel uses the same stream selector and level filter;
+  - C: state-history Alerting transitions.
+
+  Its `description` names `artifacts/reports/mttr-baseline.json` and the IFC-074 task KPI, and contains "proxy".
+- [ ] Add `validateConfig` cases:
+  - it rejects a Loki target on `grafanacloud-prom` or an unknown uid;
+  - it rejects a Loki selector other than `{service_name="ai-worker"}` or `{from="state-history"}`;
+  - it still rejects a Prometheus target that breaks today's metric and service checks;
+  - it accepts the committed dashboard.
+- [ ] Run (expect FAIL): `pnpm exec vitest run --project root tools/scripts/__tests__/apply-grafana-dashboard.test.ts`
+
+#### Step A4: KPI schema tests (AC-012, D7)
+- [ ] NEW `tools/scripts/__tests__/task-status-kpi-schema.test.ts`. It tests both the Zod `kpiEntrySchema`
+  (`tools/scripts/lib/schemas/task-status.schema.ts:144`) and the generated
+  `apps/project-tracker/docs/metrics/schemas/task-status.schema.json` through Ajv, the same path `generate:metrics`
+  validates with (E2).
+- [ ] Add these cases:
+  - a KPI with a string `source` validates;
+  - a KPI with another extra key fails;
+  - `met: null` fails;
+  - `met: false` validates.
+- [ ] Run (expect FAIL on the `source` case):
+  `pnpm exec vitest run --project root tools/scripts/__tests__/task-status-kpi-schema.test.ts`
+
+#### Step A5: Logger key-set test (AC-015, D5)
+File: `packages/observability/src/logging.test.ts`, using the in-memory destination harness at `:148-218`
+- [ ] Add `an api request record under a protected context carries tenantId and userId`. It calls a real `createLogger`
+  inside `runWithLogContext({ correlationId, tenantId, userId }, …)` and emits the exact record shape
+  `apiLog('info', …)` sends (`type, correlationId, path, method, durationMs, status`; mirrored from
+  `apps/api/src/tracing/middleware.ts:180-191`). It asserts `Object.keys` of the parsed line equals the expected set.
+- [ ] Add `the same record with no log context has neither tenantId nor userId`.
+- [ ] Both may pass at once (they document existing behaviour, D5 keeps both keys). Record this in the delivery report
+  as characterisation tests, not RED. The api half of AC-015 is the existing `middleware.test.ts:83-86,318-348`
+  record-shape assertions, which are unchanged.
+- [ ] Run: `pnpm --filter @intelliflow/observability exec vitest run src/logging.test.ts`
+
+Checkpoint A-RED: the A1-A4 suites fail for the expected reasons only (no import or syntax errors). The failure lines
+are saved to `execution/IFC-074/20261029-addendum/logs/a-red.txt`.
+
+### Phase A2: GREEN
+
+#### Step A6: `datasourceProxy` uid check (D2)
+File: `tools/scripts/lib/grafana-provisioning.mjs:252`
+- [ ] Throw `new Error('invalid datasource uid')` unless the uid matches `/^[A-Za-z0-9_-]{1,64}$/`.
+- [ ] Run A2 (PASS) and the whole of `grafana-provisioning.test.ts`.
+
+#### Step A7: Collector Loki routing (D1)
+File: `tools/scripts/observability/collect-observability-evidence.mjs` (+ `.d.mts`)
+- [ ] Import `DATASOURCE_KINDS` from `../lib/grafana-provisioning.mjs`; `ruleKind(rule, config)` returns
+  `DATASOURCE_KINDS[rule.datasourceUid ?? config.datasourceUid]`.
+- [ ] `conditionHeld`, `conditionTimeline` and `trueAtProbe` branch on the kind:
+  - Prometheus: unchanged;
+  - Loki: `lokiQueryRange` with `step=60` (probe: `start=end`), the lookback capped by
+    `LOKI_CONDITION_LOOKBACK_MAX_S = 6 * 3600`, reading the matrix `values`, and the series service from
+    `metric.service_name` (no alias: the spec's D1 dropped it, because production has only `ai-worker` and `api`,
+    as the coordinator confirmed live 2026-10-29);
+  - the new matcher is `sameLokiService`, distinct from the local `sameService` at `:801`.
+- [ ] `fetchTransitions` (`:423-449`): `service = labels.service ?? labels.service_name ?? 'unknown'`. No
+  normalisation is applied, so `earliestErrorSpan` (`:995`) and the Prometheus `sameService` see the same service
+  strings as today (E1).
+- [ ] An unknown kind gives `{ uid, datasource_kind: null, not_checked: 'unknown_datasource' }`, and the loop continues.
+- [ ] Add `datasource_kind`, `not_checked` and `lookback_s` to the output allowlist and the `.d.mts`, and set
+  `schema_version: '2.3.0'`, all in one commit with the per-episode computation unchanged.
+- [ ] Run A1 (PASS) and the whole collector suite.
+
+#### Step A8: Dashboard panel and validator (D8)
+Files: `infra/monitoring/grafana/cloud/dashboard-production.json`, `tools/scripts/observability/apply-grafana-dashboard.mjs`
+- [ ] Add a `timeseries` panel titled "MTTD per error episode (live proxy)" at `gridPos {x:0,y:22,w:24,h:8}`. Its
+  description: "Live proxy, not the KPI: shows error signals and alert firings per minute; the gap is detection delay.
+  The official MTTD (first alert per error episode) is the collector result in artifacts/reports/mttr-baseline.json and
+  the IFC-074 task KPI." Targets:
+  - A (prom `grafanacloud-prom`):
+    `sum by (service) (increase(traces_spanmetrics_calls_total{service=~"ai-worker|api", status_code="STATUS_CODE_ERROR"}[1m]))`
+  - B (Loki `grafanacloud-logs`): the rule's stream selector and level filter, with `[1m]` and `sum by (service_name)`.
+  - C (Loki `grafanacloud-alert-state-history`):
+    `sum by (ruleUID) (count_over_time({from="state-history"} | json | current=~"Alerting.*" and previous!~"Alerting.*" [1m]))`
+
+  Target A's service regex is limited to `ALLOWED_SERVICES` (`api`, `ai-worker`), as today's validator requires.
+  Resolved (E3): the coordinator checked live on 2026-10-29. The combined worker has `OTEL_SERVICE_NAME=ai-worker`,
+  and Tempo, span metrics and Loki show only `ai-worker` and `api`. `ALLOWED_SERVICES` is therefore unchanged.
+- [ ] Loki targets carry `datasource: { type: "loki", uid }` and `queryType: "range"` (W1). Their LogQL is unproven
+  until the live check after the merge applies it; the delivery report says so.
+- [ ] `validateConfig`:
+  - each target's kind comes from its `datasource.uid` (`grafanacloud-prom` → today's checks);
+  - Loki uids `grafanacloud-logs` and `grafanacloud-alert-state-history` accept only the selectors
+    `{service_name="ai-worker"}` or `{from="state-history"}`;
+  - any other uid is reported as a problem.
+- [ ] Run A3 (PASS).
+
+#### Step A9: KPI schema and task record (D7)
+- [ ] `tools/scripts/lib/schemas/task-status.schema.ts` `kpiEntrySchema`: add
+  `source: z.string().optional().describe('Evidence file and SHA-256 behind the actual value')`. Then run
+  `pnpm generate:schemas` and commit the regenerated `task-status.schema.json`. Never hand-edit the JSON (E2).
+- [ ] `.specify/sprints/sprint-18/attestations/IFC-074/task-tracking.json`:
+  - set `kpis.traces_correlating.met: false`;
+  - append a `status_history` entry dated 2026-10-29 explaining "met:false = not demonstrated (api row NOT_OBSERVED
+    until deploy)" and ruling 4;
+  - set `mttd_target.actual` to the string "4.479 min per-incident mean (2026-10-22, before #1040/#1062; not
+    comparable with the per-episode KPI); post-deploy per-episode measurement pending" with `met: false`. Keep
+    `source` (the 2026-10-22 sha256) and append a history note, so the tracker never shows a bare legacy number as
+    the KPI (W2).
+- [ ] Run A4 (PASS), then `npx tsx tools/scripts/validate-schemas.ts`.
+- [ ] Run `pnpm generate:metrics`, then confirm `apps/project-tracker/docs/metrics/sprint-18/IFC-074.json` carries
+  that `mttd_target.actual` string and validates.
+
+### Phase A3: Docs, findings, tracking
+
+#### Step A10: ADR-086 amendment (AC-014, D5, D6, D8)
+File: `docs/architecture/adr/ADR-086-observability-log-pipeline-and-evidence.md`. It is already **Accepted**
+(2026-10-22, line 3; old plan Step 17). The spec's Related Documents row saying "Proposed" is stale and is corrected
+in A12 (W5). Add a dated "Amendment 2026-10-29" covering:
+- #1040 and #1062 as the detection paths, with the Loki rule covering ai-worker only and the expected api miss;
+- the supersession of the KPI statistic (ruling 4);
+- the evidence path (local collector → task KPI → tracker) and the live-proxy panel;
+- the data in api records: tenantId/userId on protected and tenant procedures only, purpose, owner-only access, Loki
+  retention;
+- runtime impact: log records are tRPC-only, the timer is unref'd and buffered-only, and the 60 s metrics reader is
+  pre-existing.
+
+#### Step A11: Findings F14, F15, F16
+- [ ] For each finding: a gh issue (`gh issue create` with file:line and the proposed fix), a debt-ledger entry in
+  `artifacts/metrics/debt-ledger.yaml` (owner, severity, remediation sprint 19), and a line in the findings doc
+  `execution/IFC-074/20261029-addendum/findings.md`. The findings are:
+  - F14: widen the Loki rule to the api after F11;
+  - F15: no Loki volume tripwire;
+  - F16: DORA metrics from real deploy and incident data.
+- [ ] Validate: `python -c "import yaml;yaml.safe_load(open('artifacts/metrics/debt-ledger.yaml',encoding='utf-8'))"`.
+
+#### Step A12: Delivery report addendum and spec status
+- [ ] New run directory `.specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/` holding `IFC-074-delivery.md`
+  (A1-A14, TDD log with the a-red.txt excerpt, AC-010-AC-016 status, validation commands with exit codes) and
+  `logs/*.txt` (never `.log`).
+- [ ] Mark the spec addendum's `D1`-`D9` as implemented (status line only; history kept), and add a dated note in
+  Related Documents that ADR-086 is Accepted.
+- [ ] The delivery report says the 2026-10-29 sign-offs' alias condition (Backend, Test) was dropped by D1 on later
+  evidence (W9). It cites that evidence: the coordinator's live check on 2026-10-29 (Railway combined-worker
+  `OTEL_SERVICE_NAME=ai-worker`; Tempo, span metrics and Loki list only `ai-worker` and `api`). Method and date are
+  given as relayed; no evidence file is committed (I4).
+
+### Phase A4: REFACTOR and VALIDATION
+
+#### Step A13: Lint, typecheck, review
+- [ ] Lint: `pnpm exec eslint tools/scripts/observability/collect-observability-evidence.mjs tools/scripts/lib/grafana-provisioning.mjs tools/scripts/observability/apply-grafana-dashboard.mjs`
+- [ ] Typecheck: `pnpm --filter @intelliflow/observability typecheck` and `pnpm run typecheck`, through the slot
+  wrapper.
+- [ ] Run `node scripts/codex-review.mjs --base=origin/main` twice, standalone. Any new finding goes to the coordinator
+  first.
+- [ ] Run `/code-review` on the diff; `/sonarqube-fix` on any new Sonar finding.
+- [ ] Live check without a token: dispatch `grafana-dashboard.yml` with `dry_run=true` on the branch (it validates the
+  dashboard config, and its "exists" read uses the CI secret), and record the run id. **Do not** apply to production
+  (the apply happens on merge).
+- [ ] `git ls-files | grep -cE '\.(log|coverage|tsbuildinfo)$'` is `0`.
+
+#### Step A14: Attestation and closing state (AC-013 NEEDS_HUMAN)
+- [ ] Gate 4b (`node tools/scripts/exec-preflight/check-worktree-landed.mjs IFC-074 18`) must pass. That needs the
+  branch pushed, so this step runs after the coordinator's slot GO, the pre-ship and the single push.
+- [ ] `/exec-attestation` writes `attestations/IFC-074/attestation.json` + `attestation-latest.json`:
+  - verdict `NEEDS_HUMAN`;
+  - `kpi_results` MTTD as the spec's planned wording (`met: false`), and traces_correlating `met: false`;
+  - the provenance block (`spec_session_consensus` 5/5 2026-10-29, `plan_reviewer_verdict` from this plan's sign-off);
+  - `validation_results` from the real runs.
+- [ ] Run `npx tsx tools/scripts/validate-schemas.ts` and
+  `node tools/scripts/exec-preflight/check-attestation-provenance.mjs IFC-074` (both exit 0).
+- [ ] Sprint_plan: the row stays **In Progress** (ruling 1). Its evidence path moves from the sprint-1 attestation to
+  `.specify/sprints/sprint-18/attestations/IFC-074/attestation.json` in `Sprint_plan.csv` only. Then run
+  `npx tsx tools/scripts/split-sprint-plan.ts` and the plan validation.
+- [ ] PR body:
+  - runtime impact (D6), with volume as an estimate;
+  - the expected api miss;
+  - ruling 4;
+  - the post-deploy runbook, including a post-merge check that `grafana-dashboard.yml` on main logs
+    `updated dashboard env008-production` with its run id, and `grafana-alert-rules.yml` likewise (W3).
+
+## Addendum Validation Matrix
+
+| What | Command | When |
+|------|---------|------|
+| Collector + lib + dashboard + alert-rules regression | `pnpm exec vitest run --project root tools/scripts/__tests__/collect-observability-evidence.test.ts tools/scripts/__tests__/apply-grafana-dashboard.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/lib/grafana-provisioning.test.ts` | A6-A8 |
+| Schema test | `pnpm exec vitest run --project root tools/scripts/__tests__/task-status-kpi-schema.test.ts` + `npx tsx tools/scripts/validate-schemas.ts` | A4, A9 |
+| Schema regeneration | `pnpm generate:schemas`, then `git diff --stat -- apps/project-tracker/docs/metrics/schemas/` shows only the `source` addition in `task-status.schema.json` | A9 |
+| Observability package (full) | `pnpm --filter @intelliflow/observability test` | A5, A13 |
+| Tracker cache | `pnpm generate:metrics` + schema validate | A9 |
+| Typecheck / lint | as in A13 | A13 |
+| Codex review ×2 | `node scripts/codex-review.mjs --base=origin/main` | A13 |
+| Dashboard live dry run | `gh workflow run grafana-dashboard.yml --ref agent/IFC-074-observability -f dry_run=true` | A13 |
+| Pre-ship (coordinator's GO) | `node C:/Users/talys/ops/test-slots/with-slot.mjs --label IFC-074 --exclusive intelliflow-db -- node scripts/test-db.mjs run --seed -- node scripts/pre-ship.mjs` | before push |
+
+## Addendum Traceability
+
+| Spec item | Plan steps |
+|-----------|-----------|
+| AC-010 | A1, A7 |
+| AC-011 | A1, A2, A6, A7 |
+| AC-012 | A4, A9 |
+| AC-013 | A14 (NEEDS_HUMAN; post-deploy runbook in the PR body) |
+| AC-014 | A10, A14 (PR body) |
+| AC-015 | A5 (+ existing middleware tests) |
+| AC-016 | A3, A8, A13 (dry run) |
+| D9 / F16 | A11 |
+| F14, F15 | A11 |
+
+## Addendum Files Summary
+
+**Modified (16)**
+- Collector and lib (3):
+  - `tools/scripts/observability/collect-observability-evidence.mjs`
+  - `tools/scripts/observability/collect-observability-evidence.d.mts`
+  - `tools/scripts/lib/grafana-provisioning.mjs`
+- Collector tests (2):
+  - `tools/scripts/__tests__/collect-observability-evidence.test.ts`
+  - `tools/scripts/lib/grafana-provisioning.test.ts`
+- Dashboard (3):
+  - `infra/monitoring/grafana/cloud/dashboard-production.json`
+  - `tools/scripts/observability/apply-grafana-dashboard.mjs`
+  - `tools/scripts/__tests__/apply-grafana-dashboard.test.ts`
+- Schema and KPI record (3):
+  - `tools/scripts/lib/schemas/task-status.schema.ts`
+  - `apps/project-tracker/docs/metrics/schemas/task-status.schema.json` (regenerated)
+  - `.specify/sprints/sprint-18/attestations/IFC-074/task-tracking.json`
+- Logger key set (1):
+  - `packages/observability/src/logging.test.ts`
+- Docs and tracking (4):
+  - `docs/architecture/adr/ADR-086-observability-log-pipeline-and-evidence.md`
+  - `artifacts/metrics/debt-ledger.yaml`
+  - `.specify/sprints/sprint-18/specifications/IFC-074-spec.md`
+  - `apps/project-tracker/docs/metrics/_global/Sprint_plan.csv`
+
+These are regenerated and not counted: the Sprint_plan splits and the gitignored
+`apps/project-tracker/docs/metrics/sprint-18/IFC-074.json` cache.
+
+**Created (6)**
+- `tools/scripts/__tests__/task-status-kpi-schema.test.ts`
+- `.specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/IFC-074-delivery.md`
+- `.specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/findings.md`
+- `.specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/logs/a-red.txt`
+- `.specify/sprints/sprint-18/attestations/IFC-074/attestation.json`
+- `.specify/sprints/sprint-18/attestations/IFC-074/attestation-latest.json`
+
+Further `logs/*.txt` files are added as validation runs, never `.log`.
+
+## Addendum CSV Artifact Alignment
+
+The row's artifacts (`infra/monitoring/sentry-project-config.json`, `artifacts/reports/correlation-test.csv`,
+`artifacts/reports/mttr-baseline.json`) are unchanged by this addendum. The two reports are regenerated only by the
+post-deploy collector run (AC-013). The row's evidence moves to the sprint-18 attestation (A14).
+
+## Addendum Plan-Reviewer Sign-off (2026-10-29)
+
+<!-- plan-reviewer: subagent -->
+reviewer_subagent: plan-reviewer (`.claude/agents/plan-reviewer.md`, spawned via the Agent tool and resumed for each
+iteration, 2026-10-29)
+
+| Iteration | Verdict | Summary |
+|-----------|---------|---------|
+| 1 | REVISE (4 ERROR, 7 WARN, 3 INFO) | E1: the alias broke the Tempo and Prometheus episode lookups. E2: `task-status.schema.json` is generated from Zod, and the test file was unnamed. E3: an unexecutable live-data open question. E4: the existing dashboard tests iterate every target. Plus Loki target type/queryType, the legacy KPI number, the post-merge check, counts, ADR status, the alias test and the allowlist test. |
+| 2 | REVISE (1 ERROR, 2 WARN, 3 INFO) | E5: the Files Summary did not match the effort table. W8: the matrix named no test file and had no regeneration check. W9: the dropped-alias provenance was missing. I5: line-ending churn. |
+| 3 | APPROVE (0 ERROR, 0 WARN, 1 INFO) | All fixes verified, and traceability is complete for AC-010 to AC-016 and D1 to D9. I7: the alias removal rests on the coordinator's relayed live check, recorded as relayed. |
+
+E1 and E3 were resolved by new evidence rather than by the reviewer's two-way alias. The coordinator's live check
+(2026-10-29) found only `ai-worker` and `api` in production, so spec D1 drops the alias, with a dated note.
