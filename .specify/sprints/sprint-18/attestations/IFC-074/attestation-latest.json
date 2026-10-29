@@ -1,0 +1,169 @@
+{
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "schema_version": "1.0.0",
+  "task_id": "IFC-074",
+  "run_id": "20261029-addendum",
+  "attestor": "Claude Code",
+  "attestation_timestamp": "2026-10-29T10:44:53Z",
+  "verdict": "NEEDS_HUMAN",
+  "evidence_summary": {
+    "artifacts_verified": 16,
+    "validations_passed": 4,
+    "validations_failed": 0,
+    "gates_passed": 6,
+    "gates_failed": 1,
+    "kpis_met": 0,
+    "kpis_missed": 2,
+    "placeholders_found": 0
+  },
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label IFC-074 -- pnpm run typecheck (40/40 turbo tasks; logs/typecheck.txt)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T10:38:43Z"
+    },
+    {
+      "name": "Tests",
+      "command": "npx vitest run --project root tools/scripts/__tests__/collect-observability-evidence.test.ts tools/scripts/lib/grafana-provisioning.test.ts tools/scripts/__tests__/apply-grafana-alert-rules.test.ts tools/scripts/__tests__/apply-grafana-dashboard.test.ts tools/scripts/__tests__/task-status-kpi-schema.test.ts (215/215) && pnpm --filter @intelliflow/observability test (46/46), both via with-slot; logs/tests.txt",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T10:44:30Z",
+      "duration_ms": 5102
+    },
+    {
+      "name": "Lint",
+      "command": "npx eslint on the 10 changed .mjs/.ts files (0 problems; logs/lint.txt)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T10:44:33Z",
+      "duration_ms": 2806
+    },
+    {
+      "name": "Build",
+      "command": "node C:/Users/talys/ops/test-slots/with-slot.mjs --label IFC-074 -- pnpm exec turbo build --force --filter=@intelliflow/observability --filter=@intelliflow/api (12/12, 0 cached; logs/build.txt)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T10:43:30Z",
+      "duration_ms": 81304
+    }
+  ],
+  "gate_results": [
+    {
+      "gate_id": "plan_reviewer_subagent",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/planning/IFC-074-plan.md"
+    },
+    {
+      "gate_id": "tdd_red_then_green",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/logs/a-red.txt"
+    },
+    {
+      "gate_id": "mutation_checks",
+      "passed": true,
+      "score": 100,
+      "log_path": ".specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/logs/mutations-a1-a2.txt"
+    },
+    {
+      "gate_id": "codex_review_x2",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/logs/codex-review-2.txt"
+    },
+    {
+      "gate_id": "kpi_schema_cache_check",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/logs/a9-cache-kpi-check.txt"
+    },
+    {
+      "gate_id": "build_validation",
+      "passed": true,
+      "exit_code": 0,
+      "log_path": ".specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/logs/build.txt"
+    },
+    {
+      "gate_id": "gate_4b_worktree_landed",
+      "passed": false,
+      "exit_code": 1,
+      "log_path": ".specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/logs/gate-4b-before-push.txt"
+    }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "MTTD (first alert per error episode)",
+      "target": "< 120 s mean per-episode first alert, over >= 72 h or >= 10 real error episodes after deploy",
+      "actual": "NOT MEASURED on the post-#1040/#1062 stack. Last measurement 2026-10-22 (per-incident mean 268.7 s, n=63, not met) predates both rules. Post-deploy per-episode measurement pending (>=72 h or >=10 episodes).",
+      "met": false
+    },
+    {
+      "kpi": "Traces, logs and metrics correlate per service",
+      "target": "PASS rows for ai-worker and api in artifacts/reports/correlation-test.csv",
+      "actual": "ai-worker 10/10 PASS (2026-10-22); api NOT_OBSERVED until the api is deployed with the pino logger",
+      "met": false
+    }
+  ],
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-10-29T10:44:53Z",
+    "files_read": [
+      {
+        "path": ".specify/sprints/sprint-18/specifications/IFC-074-spec.md",
+        "sha256": "c91af3119fd1a7f48a04b9a6c2a8a068ba1e308a50128c0691e1fbb60120f039"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/IFC-074-plan.md",
+        "sha256": "70784037b396c59daaaf7e1d87612cdd929f2489eebb5404713380b970f01129"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/context/IFC-074/IFC-074-owner-ruling.md",
+        "sha256": "1e5b3f3180092b439950910b78540865ffd77957c63070d67dcc0fc3b8082ca2"
+      },
+      {
+        "path": "infra/monitoring/grafana/cloud/alert-rules.json",
+        "sha256": "e77d19fda832ab5e4f25e49c2b31201e959bc6d8fa8a2e592dfbcc44fdad1c17"
+      },
+      {
+        "path": "apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+        "sha256": "fd890b7dddfed167852283216711181135236257eebdc8907975bac4471c17af"
+      }
+    ],
+    "invariants_acknowledged": [
+      "No fabricated values: every KPI actual comes from a real run or is stated as not measured",
+      "Collector is read-only (GET only) and never runs in CI; no new token or secret",
+      "Sprint_plan row stays In Progress until the post-deploy re-run (owner ruling 1)"
+    ]
+  },
+  "artifact_hashes": {
+    "tools/scripts/observability/collect-observability-evidence.mjs": "sha256:2c0611aa53e5b335a8a4e55f637512d85d00bf60cdded8eb31fff3782f831cdd",
+    "tools/scripts/observability/collect-observability-evidence.d.mts": "sha256:a2b07bf38f046cf0228e44f4bbf50ae4bf0ea37aad2b89bcb381451794c4a83a",
+    "tools/scripts/lib/grafana-provisioning.mjs": "sha256:0f22a3bb96179be2b2059f819558c165984e2d2e4c485b1c61e5c209615bde0c",
+    "tools/scripts/observability/apply-grafana-dashboard.mjs": "sha256:1362480852bf0dfffe077855ccf3bdc7533601f09e1f4a1bef868cdc85f5c26e",
+    "infra/monitoring/grafana/cloud/dashboard-production.json": "sha256:60e61df8aec808a75794f109f5874426f71e3a0b01697f82934e777bc167cbdf",
+    "tools/scripts/lib/schemas/task-status.schema.ts": "sha256:be832c06044613629047f0151ed0ef8f145db3577d1f330d422915778e0f6634",
+    "apps/project-tracker/docs/metrics/schemas/task-status.schema.json": "sha256:8f45cf47f5aeb7f154247dd45aff3114ee4763d44db4c613a40c2b7317980e87",
+    "apps/api/src/tracing/logger.ts": "sha256:7f6c1f422f39526e5d71e3249a1da0645aa7a8ef3ff35c1d1ffcf5a7d2708fcc",
+    "apps/api/src/tracing/middleware.ts": "sha256:9b58925b792c487a1ac2a3c52fdb0007f4b75d73b638fb49cf69dd230dc1074c",
+    "packages/observability/src/logging.ts": "sha256:979903661236d26718d52133fb854b64301b6ea2967b40979096b9a969dd218a",
+    "infra/monitoring/sentry-project-config.json": "sha256:afc824f988053cf0438f03884f3568a4f24ac5be167f0cfd9c32f23be56a3b25",
+    "artifacts/reports/correlation-test.csv": "sha256:ae9a15d152aa51fba0ff1c7272762c81e0bb265bb15a393b492dd040ffeffe8e",
+    "artifacts/reports/mttr-baseline.json": "sha256:3e33b48f327192362fb4fbb3691ad9eea2d0d55825418ff0c53ac85762572f88",
+    "docs/architecture/adr/ADR-086-observability-log-pipeline-and-evidence.md": "sha256:aa500938dcb84d4e0023595caf14e53077189d93395135df5dab99f33e29540b",
+    ".specify/sprints/sprint-18/attestations/IFC-074/task-tracking.json": "sha256:89f9bba636f8e7132b8638bf726957655f5e4891cbc7c79be4c53856e20d4eef",
+    ".specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/IFC-074-delivery.md": "sha256:1fcb31b3bad586b5192dd10c1d1a315c7d81bf2f93cde68a44f304306cfcc53d"
+  },
+  "environment": {
+    "os": "win32",
+    "node_version": "v24.21.0",
+    "git_commit": "e7a70213e6ccf32b4f410985df0172054f2a2f6c",
+    "branch": "agent/IFC-074-observability"
+  },
+  "notes": "NEEDS_HUMAN under owner rulings 3 and 4 (ship code, gate the KPI after deploy). Code for spec AC-001, AC-003-AC-008 (2026-10-22) and AC-010-AC-012, AC-014-AC-016 (2026-10-29 addendum) is delivered and validated; AC-002 (api correlation) and AC-013 (per-episode MTTD < 120 s) need the api deploy and Aurora's local collector run. Gate 4b fails only on \"branch not yet pushed\": the single push follows pre-ship, and Gate 4b is re-run after it (result in the PR). codex-review covers 11 of 84 changed files (it skips tools/ and infra/); a separate reviewer covered those. Delivery report: .specify/sprints/sprint-18/execution/IFC-074/20261029-addendum/IFC-074-delivery.md.",
+  "spec_session_consensus": "APPROVED 5/5 (100%) on 2026-10-22 and 5/5 on the 2026-10-29 addendum, first CONSENSUS round each; D4/AC-012 superseded by owner ruling 4 after consensus",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer subagent (.claude/agents/plan-reviewer.md), 2026-10-29, iterations REVISE/REVISE/APPROVE",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/IFC-074-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/IFC-074-plan.md"
+}
