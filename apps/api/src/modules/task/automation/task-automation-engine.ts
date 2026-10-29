@@ -69,7 +69,10 @@ export interface CreateTaskRequest {
   opportunityId?: string;
 }
 
-export type CreateTaskResult = { ok: true; taskId: string } | { ok: false; reason: string };
+export type CreateTaskResult =
+  | { ok: true; taskId: string }
+  /** `linkRejected`: TaskService refused only the record link (gone, converted or closed). */
+  | { ok: false; reason: string; linkRejected?: boolean };
 
 export interface NotifyRequest {
   tenantId: string;
@@ -599,7 +602,11 @@ export class TaskAutomationEngine {
     };
   }
 
-  /** TaskService refused the link (closed or converted by now): keep the task, name the record. */
+  /**
+   * TaskService refused the link (closed or converted by now): keep the task, name the
+   * record. Any other failure (a failed save or lookup) fails the run; retrying it
+   * unlinked would leave an orphan task behind a run marked as succeeded.
+   */
   private async createWithLinkFallback(
     request: CreateTaskRequest,
     linked: boolean,
@@ -609,7 +616,7 @@ export class TaskAutomationEngine {
     outcomes: TaskAutomationOutcome[]
   ): Promise<CreateTaskResult> {
     const created = await this.deps.createTask(request);
-    if (created.ok || !linked) return created;
+    if (created.ok || !linked || !created.linkRejected) return created;
     const { leadId: _l, contactId: _c, opportunityId: _o, ...unlinked } = request;
     const retried = await this.deps.createTask({
       ...unlinked,

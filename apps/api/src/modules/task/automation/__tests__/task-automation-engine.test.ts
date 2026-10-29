@@ -33,7 +33,7 @@ let correlation: ConversionCorrelation;
 let created: CreateTaskRequest[];
 let createResult: (
   r: CreateTaskRequest
-) => { ok: true; taskId: string } | { ok: false; reason: string };
+) => { ok: true; taskId: string } | { ok: false; reason: string; linkRejected?: boolean };
 let assigned: Array<[string, string, string]>;
 let assignResult: boolean;
 let assignThrows: boolean;
@@ -700,7 +700,9 @@ describe('executePendingRuns', () => {
     lead();
     const rule = eventRule();
     createResult = (request) =>
-      request.leadId ? { ok: false, reason: 'converted' } : { ok: true, taskId: 'task-ok' };
+      request.leadId
+        ? { ok: false, reason: 'converted', linkRejected: true }
+        : { ok: true, taskId: 'task-ok' };
     const run = await fire(rule);
     expect(created).toHaveLength(2);
     expect(created[1].leadId).toBeUndefined();
@@ -709,6 +711,32 @@ describe('executePendingRuns', () => {
       taskId: 'task-ok',
       outcome: 'link_fallback_unlinked',
     });
+  });
+
+  it('fails the run when the link is refused and the unlinked retry also fails', async () => {
+    lead();
+    const rule = eventRule();
+    createResult = (request) =>
+      request.leadId
+        ? { ok: false, reason: 'converted', linkRejected: true }
+        : { ok: false, reason: 'Failed to save task' };
+    const run = await fire(rule);
+    expect(created).toHaveLength(2);
+    expect(run).toMatchObject({ status: 'FAILED', errorCode: 'task_create_failed' });
+    expect(run.outcome).not.toBe('link_fallback_unlinked');
+  });
+
+  it('fails the run without an unlinked task when the linked create fails for another reason', async () => {
+    lead();
+    const rule = eventRule();
+    createResult = (request) =>
+      request.leadId
+        ? { ok: false, reason: 'Failed to save task' }
+        : { ok: true, taskId: 'orphan' };
+    const run = await fire(rule);
+    expect(created).toHaveLength(1);
+    expect(created[0].leadId).toBeDefined();
+    expect(run).toMatchObject({ status: 'FAILED', errorCode: 'task_create_failed' });
   });
 
   it('records a failed task creation with a safe code and notifies the creator only when enabled', async () => {

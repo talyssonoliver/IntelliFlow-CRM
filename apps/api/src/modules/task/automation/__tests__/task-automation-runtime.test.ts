@@ -28,6 +28,7 @@ import {
   createTaskAutomationRuntime,
   getTaskAutomationWebhookDeps,
   notificationLink,
+  toCreateTaskResult,
   webhookEncryptionReady,
 } from '../task-automation-runtime';
 
@@ -47,6 +48,32 @@ describe('notificationLink', () => {
     expect(notificationLink({})).toEqual({
       actionUrl: '/tasks/automation',
       actionLabel: 'Open Task Automation',
+    });
+  });
+});
+
+describe('toCreateTaskResult', () => {
+  it('maps a created task to its id', () => {
+    expect(toCreateTaskResult({ isSuccess: true, value: { id: { value: 'task-1' } } })).toEqual({
+      ok: true,
+      taskId: 'task-1',
+    });
+  });
+
+  it('marks only a refused record link as a link rejection', () => {
+    expect(
+      toCreateTaskResult({
+        isSuccess: false,
+        error: { message: 'Lead not found: x', reason: 'TASK_LINK_REJECTED' },
+      })
+    ).toEqual({ ok: false, reason: 'Lead not found: x', linkRejected: true });
+    expect(
+      toCreateTaskResult({ isSuccess: false, error: { message: 'Failed to save task' } })
+    ).toEqual({ ok: false, reason: 'Failed to save task', linkRejected: false });
+    expect(toCreateTaskResult({ isSuccess: false })).toEqual({
+      ok: false,
+      reason: 'create failed',
+      linkRejected: false,
     });
   });
 });

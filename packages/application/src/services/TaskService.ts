@@ -14,7 +14,7 @@ import {
   CreateTaskProps,
 } from '@intelliflow/domain';
 import { EventBusPort } from '../ports/external';
-import { PersistenceError, ValidationError, NotFoundError } from '../errors';
+import { PersistenceError, ValidationError, NotFoundError, TaskLinkRejectedError } from '../errors';
 
 export type TaskEntityType = 'lead' | 'contact' | 'opportunity';
 
@@ -26,6 +26,13 @@ export interface TaskAssignmentValidation {
   entityId: string;
   isValid: boolean;
   reason?: string;
+  /** The check itself failed (lookup threw), so nothing is known about the record. */
+  checkFailed?: boolean;
+}
+
+function assignmentError(validation: TaskAssignmentValidation, fallback: string): ValidationError {
+  const message = validation.reason ?? fallback;
+  return validation.checkFailed ? new ValidationError(message) : new TaskLinkRejectedError(message);
 }
 
 /**
@@ -105,14 +112,14 @@ export class TaskService {
     if (props.leadId) {
       const validation = await this.validateAssignment('lead', props.leadId);
       if (!validation.isValid) {
-        return Result.fail(new ValidationError(validation.reason ?? 'Invalid lead assignment'));
+        return Result.fail(assignmentError(validation, 'Invalid lead assignment'));
       }
     }
 
     if (props.contactId) {
       const validation = await this.validateAssignment('contact', props.contactId);
       if (!validation.isValid) {
-        return Result.fail(new ValidationError(validation.reason ?? 'Invalid contact assignment'));
+        return Result.fail(assignmentError(validation, 'Invalid contact assignment'));
       }
     }
 
@@ -123,9 +130,7 @@ export class TaskService {
         props.tenantId
       );
       if (!validation.isValid) {
-        return Result.fail(
-          new ValidationError(validation.reason ?? 'Invalid opportunity assignment')
-        );
+        return Result.fail(assignmentError(validation, 'Invalid opportunity assignment'));
       }
     }
 
@@ -837,7 +842,13 @@ export class TaskService {
   ): Promise<TaskAssignmentValidation> {
     const validationPromise = this.selectValidationPromise(entityType, entityId, tenantId);
     if (!validationPromise) {
-      return { entityType, entityId, isValid: false, reason: 'Unknown entity type' };
+      return {
+        entityType,
+        entityId,
+        isValid: false,
+        reason: 'Unknown entity type',
+        checkFailed: true,
+      };
     }
     try {
       return await validationPromise;
@@ -847,6 +858,7 @@ export class TaskService {
         entityId,
         isValid: false,
         reason: 'Error validating entity assignment',
+        checkFailed: true,
       };
     }
   }

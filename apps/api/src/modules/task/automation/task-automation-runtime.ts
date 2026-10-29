@@ -14,6 +14,7 @@ import type { PrismaClient } from '@intelliflow/db';
 import type { TaskPriority } from '@intelliflow/domain';
 import {
   TaskAutomationEngine,
+  type CreateTaskResult,
   type NotifyRequest,
   type TickResult,
 } from './task-automation-engine';
@@ -62,7 +63,7 @@ interface TaskServiceLike {
   }): Promise<{
     isSuccess: boolean;
     value?: { id: { value: string } };
-    error?: { message: string };
+    error?: { message: string; reason?: string };
   }>;
   assignTask(
     taskId: string,
@@ -107,11 +108,7 @@ export async function buildTaskAutomationRuntime(
     buffer,
     correlation,
     now,
-    createTask: async (request) => {
-      const result = await deps.taskService.createTask(request);
-      if (result.isSuccess && result.value) return { ok: true, taskId: result.value.id.value };
-      return { ok: false, reason: result.error?.message ?? 'create failed' };
-    },
+    createTask: async (request) => toCreateTaskResult(await deps.taskService.createTask(request)),
     assignTask: async (taskId, assigneeId, tenantId) =>
       (await deps.taskService.assignTask(taskId, assigneeId, AUTOMATION_ACTOR, tenantId)).isSuccess,
     notify: deps.notify,
@@ -125,6 +122,18 @@ export async function buildTaskAutomationRuntime(
       watched = new Set(await store.activeEventTypes());
       return engine.tick();
     },
+  };
+}
+
+/** TaskService's result for the engine; only a refused record link may be retried unlinked. */
+export function toCreateTaskResult(
+  result: Awaited<ReturnType<TaskServiceLike['createTask']>>
+): CreateTaskResult {
+  if (result.isSuccess && result.value) return { ok: true, taskId: result.value.id.value };
+  return {
+    ok: false,
+    reason: result.error?.message ?? 'create failed',
+    linkRejected: result.error?.reason === 'TASK_LINK_REJECTED',
   };
 }
 

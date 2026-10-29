@@ -164,6 +164,7 @@ describe('TaskService', () => {
 
       expect(result.isFailure).toBe(true);
       expect(result.error.message).toContain('converted leads');
+      expect((result.error as { reason?: string }).reason).toBe('TASK_LINK_REJECTED');
     });
 
     it('should fail if assigned to closed opportunity', async () => {

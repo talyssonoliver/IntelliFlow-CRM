@@ -2,129 +2,95 @@
   "stoa": "security",
   "task_id": "PG-208",
   "verdict": "PASS",
-  "git_commit": "5f11ac307ae54493d1a88142f0853adcde772e04",
-  "timestamp": "2026-10-21T23:40:04.413Z",
+  "git_commit": "e6f678441f4fbf9e4f97b06abd8e17b06727d12e",
+  "reviewed_tree": "e6f678441 plus the uncommitted link-fallback fix that the commit after it adds (TaskLinkRejectedError; engine retries unlinked only on TASK_LINK_REJECTED)",
+  "timestamp": "2026-10-29T20:30:25Z",
+  "method": "Read-only claude -p run (Read, Grep, Glob, git diff/show/log only; no builds or tests), whole branch diff origin/main...HEAD plus the working-tree diff. Raw output: session scratchpad 208-stoa-security.out.",
+  "supersedes": {
+    "verdict": "PASS",
+    "git_commit": "5f11ac307ae54493d1a88142f0853adcde772e04",
+    "timestamp": "2026-10-21T23:40:04.413Z",
+    "note": "Local pre-squash commit; its full verdict is in git history of this file. Superseded because the 2026-10-29 security-relevant commits (1d5758f9d, e6f678441) and the link-fallback fix landed after it."
+  },
   "checks": [
     {
-      "name": "gitleaks range origin/main HEAD (bash .gitleaks/scan.sh range origin/main HEAD)",
+      "name": "secret-shaped strings in added lines (postgres://user:pass@, Bearer, sk-, ghp_, AKIA, JWT, private keys, *.supabase.co, *.neon.tech)",
       "passed": true,
-      "evidence": "exit 0, no findings, re-run at 5f11ac307"
+      "evidence": "Ran `git diff origin/main...HEAD -G <pattern set>`. The only file it returned is .specify/sprints/sprint-18/execution/PG-208/20261020231931-3d9aa8b9/matop/stoa-verdicts/security.json, which names the patterns in prose and contains no secret values. Ran `git diff -G` on the uncommitted tree: the hits are the substring 'sk-' inside 'task-automation-...' identifiers in the two test files, not secrets. Grep with the full pattern set over apps/api/src/modules/task returned 0 matches. .gitleaks.toml:61-62 and the second allowlist (lines ~73-77) only add the PG-208 attestation JSON paths, which are generated hash maps scoped to existing rule allowlists. .env.example adds only TASK_AUTOMATION_INTERVAL_MS=15000. Test tokens are built at runtime with 'tat_' + randomBytes(32) (http-server.task-automation-webhook.test.ts, task-automation-webhook.test.ts)."
     },
     {
-      "name": "secret-shaped strings in diff (grep: postgres://u:p@, Bearer, sk-, ghp_, AKIA, JWT eyJ, private key, supabase.co, neon.tech)",
+      "name": "webhook HMAC signing and constant-time compare",
       "passed": true,
-      "evidence": "git diff origin/main...HEAD added lines: 0 matches"
+      "evidence": "task-automation-webhook.ts:122-132 is HMAC-SHA256 over `${t}.${idempotencyKey}.` + raw body bytes. :134-138 compares with timingSafeEqual on equal-length buffers. :36 has a strict SIGNATURE_PATTERN (10-digit t, 64 hex chars) and :151-153 rejects malformed input before any compare. :158-164 allows the previous secret only while webhookSecretPreviousExpiresAt > now."
     },
     {
-      "name": "pnpm audit --prod --audit-level high",
+      "name": "replay window and idempotency",
       "passed": true,
-      "evidence": "exit 0 at 5f11ac307; \"2 vulnerabilities found, Severity: 2 moderate\", 0 high/critical. Moderates (both inherited, transitive, not in PG-208 diff): GHSA-hp3w-g68c-fv3c sprintf-js via apps/ai-worker>mammoth>argparse; GHSA-5r4p-p66f-jhc7 hono via apps/web>@prisma/client>prisma>@prisma/dev. See finding DEP-2."
+      "evidence": "webhook.ts:155-157 enforces the skew window against L.webhookSkewSeconds. The Idempotency-Key is inside the signed string (:129), so a replay cannot change the key. store.ts:311-315 looks up the existing run by the (ruleId, idempotencyKey) unique pair inside the admission transaction. webhook.ts:302-305 returns 202 duplicate when payloadHash matches and 409 idempotency_conflict when it differs."
     },
     {
-      "name": "constant-time signature compare",
+      "name": "token storage (hash only) and tenant isolation of the token lookup",
       "passed": true,
-      "evidence": "task-automation-webhook.ts:131-135 timingSafeEqual on equal-length buffers; strict SIGNATURE_PATTERN (line 44) rejects malformed before compare"
+      "evidence": "task-automation.router.ts:89 makes the token from 32 random bytes. :778-779 store only sha256Hex(token) plus a display prefix. The plaintext is returned once (:791, :979). RULE_SELECT (:156-182) omits the hash and secrets. store.ts:702-717 does loadWebhookRule with findUnique on the globally unique webhookTokenHash; tenantId comes from the matched row and drives settings and admission. Under the lock, store.ts:316-331 re-reads with the tenant-scoped FOR SHARE (:291-295) and webhook.ts:288-290 re-verifies the token hash and signature against the locked credentials."
     },
     {
-      "name": "HMAC t=<unix>,v1= signs t.key.body, replay window, key bound to signature",
+      "name": "webhook failure limiter (per IP and per IP+token hash, before lookup and body read); cross-tenant throttling",
       "passed": true,
-      "evidence": "webhook.ts:119-128 signWebhookPayload; :149-151 skew check vs webhookSkewSeconds; :153-158 previous secret only inside grace window; idempotency conflict 409 on differing payload hash (:259-262)"
+      "evidence": "Route webhook.ts:389-398 checks the bare-IP bucket and, for a well-formed token, the ip|sha256(token) bucket before the content-length check and the bounded body read (:404-415). Handler :246-248 checks the rule key before store.loadWebhookRule. Unknown tokens count against the bare IP (:251). Inactive, disabled and bad-signature failures on a real rule count only against ruleKey (:252,254,258), so one tenant's failing sender no longer fills the shared IP bucket. Test http-server.task-automation-webhook.test.ts (+29 lines in e6f678441) shows tenant-b gets 202 from the same IP and the throttled token gets 429 without any lookup. Map is bounded by MAX_TRACKED_IPS with expired-first eviction (:40, :70-91). Residual bare-IP sharing for unknown tokens is the accepted PG-208-WEBHOOK-UNKNOWN-TOKEN-IP-BUCKET-001."
     },
     {
-      "name": "token hashing and tenant isolation of lookup",
+      "name": "uniform error responses with no leaks",
       "passed": true,
-      "evidence": "only sha256 of token stored (router:777 webhookTokenHash; schema.prisma:2532 @unique); store.loadWebhookRule findUnique by hash (store:621-635); tenantId comes from the matched rule and drives settings/admitRun; token = 32 random bytes (router:88); TOKEN_PATTERN webhook.ts:43"
+      "evidence": "webhook.ts:48-50 defines constant bodies. Unknown, inactive or disabled tokens all get NOT_FOUND (:244,251,252,254,296). Every signature or key failure gets the same 401 (:258). The route catch (:417-421) logs only err.name and returns a generic {error:'internal'}. The test 'returns a generic 500 ... without the error message' is present. Router RULE_SELECT and listRuns select (:731-740) expose no secrets."
     },
     {
-      "name": "uniform error responses, no leaks",
+      "name": "body size and time limits",
       "passed": true,
-      "evidence": "unknown/inactive/disabled -> same 404, sig/key failure -> same 401 (webhook.ts:55-57,214-225); route catch returns generic 500 and logs only err.name (:370-376); body/token/secret never logged"
+      "evidence": "webhook.ts:404-408 pre-checks content-length against L.webhookBodyMaxBytes. readBoundedBody (:318-347) stops buffering past maxBytes and applies a 10 s BODY_READ_TIMEOUT_MS (:39). sendAndClose (:363-368) discards the rest of the upload and destroys the socket after 2 s. Read failures count against the IP (:400-403)."
     },
     {
-      "name": "body size/time limits and IP failure limiter",
+      "name": "secret encryption at rest and rotation/regeneration under the row lock",
       "passed": true,
-      "evidence": "64KB bounded read + 10s timeout (webhook.ts:296-325, route :355-367), content-length precheck, failure-only per-IP limiter 120/min with bounded map 10k and eviction (:62-92), socket address fallback (:105-113); per-rule perMinute/perHour caps under admission lock (:243-255)"
+      "evidence": "webhookEncryptionReady (webhook.ts:111-114) and the 503 fail-closed at :255. assertWebhookEncryptionReady is called in create (router:751) and rotate (:932). rotateWebhookSecret (router:938-957) runs inside $transaction with lockTenantRules and reads the current secret under the lock (keepPrevious :945-953), so concurrent rotations cannot bring back a revoked secret. regenerateWebhookUrl (:970-976) is a single atomic tenant-scoped updateMany, and admission re-checks credentials.webhookTokenHash === tokenHash under FOR SHARE (store.ts:316-331, webhook.ts:288-290), so a request using an old URL loses to a committed regeneration. The tick's clearExpiredPreviousSecrets (store.ts:680-686) is not needed for correctness, because verifySignature checks expiry itself."
     },
     {
-      "name": "secrets never returned by list/listRuns",
+      "name": "RBAC on the taskAutomation router (admin gates, audited denials) and on manager UI controls",
       "passed": true,
-      "evidence": "RULE_SELECT (router:155-181) omits webhookTokenHash/webhookSecret*; exposes only webhookTokenPrefix; listRuns select (router:727-737) has no secrets; secret/URL returned only once from create/rotate/regenerate (router:790,960,978)"
+      "evidence": "task-automation-admin.ts:29-56 gives assertTaskAutomationAdmin a webhook scope narrower than rules (no MANAGER) and audit-logs every denial through logPermissionDenied before FORBIDDEN. Write paths: settings.update :547, tags.* :608/635/671, listRuns :725, create :749 (webhook scope when the trigger is WEBHOOK), update/delete/setActive through findWritableRule (:414-419, which adds the webhook scope for WEBHOOK rules), reorder :903, rotate :931, regenerate :967, runNow :986, resetToDefaults :1031. create, rotate, regenerate and runNow also pass sensitiveProcedure at 10/min (:144-152). UI: AutomationRuleList.tsx:178-180 locks the switch, Edit and Delete on WEBHOOK rules when !canManageWebhooks. canManageWebhooks comes from the server (router:718)."
     },
     {
-      "name": "webhook URL from API_PUBLIC_URL, never Host header",
+      "name": "tenant scoping of every automation query and of task.list/getById/getByEntity (owner ruling 6)",
       "passed": true,
-      "evidence": "router:103-123 getApiPublicUrl reads env.API_PUBLIC_URL, https-only in production, returns url.origin; webhookUrl() router:137"
+      "evidence": "Every router query filters by ctx.tenant.tenantId (router:398-405, 582, 598, 698-708, 728, 764, 819-835, 852-854, 871-889, 905-921, 941, 947, 971). Store tenant filters are at store.ts:294, 450, 458, 471, 479, 486, 492, 585, 632, 643, 657, 665, and the admission advisory lock is per tenant (:275-278). task.router.ts:206-213 withAssigneeVisibility narrows non-admins to owner OR assignee. It is applied to list (taskListWhere :226-234), getById (:318-321) and, new in e6f678441, getByEntity (:981-984). The task.router.test.ts case asserts the `{leadId, tenantId, AND:[{OR:[{ownerId},{assigneeId}]}]}` shape."
     },
     {
-      "name": "secret encryption at rest and fail-closed",
+      "name": "notification links do not point recipients at tasks they cannot open",
       "passed": true,
-      "evidence": "packages/db/src/client.ts:154-166 field-encryption covers webhookSecret/webhookSecretPrevious; webhook.ts:124-127 + :228 returns 503 when key missing outside tests; router assertWebhookEncryptionReady"
+      "evidence": "task-automation-engine.ts:755-763 sets canOpenTask = userId === ownerId || userId === assigneeId, where assigneeId is null when assignment failed (:728-731), which errs on the side of not linking. task-automation-runtime.ts notificationLink returns the deep link /tasks/<id> plus entityId only when canOpenTask is true, /tasks otherwise, and /tasks/automation for failure notices. createTaskAutomationRuntime spreads notificationLink(request) into createNotification. The test 'links the task only for recipients who can open it' covers owner, assignee and a third user."
     },
     {
-      "name": "RLS tenant isolation (A01)",
+      "name": "link-fallback fix (uncommitted) creates no orphan tasks and hides no failures",
       "passed": true,
-      "evidence": "migration 20261020120000_task_automation lines 220-250: ENABLE RLS + tenant_isolation policies USING/WITH CHECK on settings, rules, runs, tags. Not FORCEd (project-wide convention, stated in migration line 220); webhook reads as API role by design"
+      "evidence": "In `git diff`: task-automation-engine.ts:619 now retries unlinked only when created.linkRejected is true. runtime toCreateTaskResult sets linkRejected only when error.reason === 'TASK_LINK_REJECTED'. TaskService.ts assignmentError (lines 33-36) returns TaskLinkRejectedError only when the validation result is not checkFailed. checkFailed is set for an unknown entity type and for a lookup that throws (TaskService.ts:846-861). Not found, malformed id, converted lead and closed opportunity (:866-919) are link rejections. TaskLinkRejectedError (ApplicationErrors.ts) extends ValidationError, so the code, message and tRPC mapping are unchanged. Every refusal happens before the save, so a rejected linked create persisted nothing and the unlinked retry cannot duplicate it. A PersistenceError carries no reason, so it fails the run. The new engine test asserts that a 'Failed to save task' produces exactly one create attempt and status FAILED with errorCode task_create_failed."
     },
     {
-      "name": "admin role gates and rate limits (A01/A07)",
+      "name": "run-history retention (privacy)",
       "passed": true,
-      "evidence": "admin.ts:30-61 assertTaskAutomationAdmin with audit-logged denial, narrower webhook-admin scope (no MANAGER); applied on every write incl. listRuns (router:724) and secret ops (:748,930,966); sensitiveProcedure 10/min/user on create/rotate/regenerate/runNow (router:145-150)"
-    },
-    {
-      "name": "token not leaked to traces/Sentry (A09)",
-      "passed": true,
-      "evidence": "observability node-instrumentations.ts:30-47 isSecretBearingPath + ignoreIncomingRequestHook; apps/api/src/tracing/sentry.ts:135-153 scrubs /webhooks/task-automation/<token> to ***"
-    },
-    {
-      "name": "template injection (A03)",
-      "passed": true,
-      "evidence": "webhookVariables uses Object.hasOwn + key pattern + scalar-only + length caps (webhook.ts:177-190); bidi/zero-width/control stripping in packages/domain task-automation-constants.ts:300-320"
-    },
-    {
-      "name": "merge delta on PG-208 security surfaces (git diff 22e3f2202 HEAD)",
-      "passed": true,
-      "evidence": "apps/api/src/modules/task, apps/api/src/http-server.ts, packages/observability, packages/domain/src/crm/task, apps/api/src/tracing: 0 changes. packages/db/prisma: only PG-199 migrations 20261019120000_tenant_model_config and 20261019120100_tenant_ai_config_rls plus the TenantAiConfig model change in schema.prisma; no PG-208 table/policy touched (task_automation migration unchanged). Earlier webhook/limiter/scrub/RLS checks therefore hold unchanged; spot-verified at HEAD: task-automation-webhook.ts:35 SIGNATURE_PATTERN, :133 timingSafeEqual, :151 skew check, :236 503 fail-closed, :274 409 idempotency conflict; packages/observability/src/node-instrumentations.ts:32 isSecretBearingPath; apps/api/src/tracing/sentry.ts:139,153 token scrub. (Line numbers in earlier checks are from 743586efe and may drift by a few lines; the files are byte-identical between 22e3f2202 and HEAD.)"
-    },
-    {
-      "name": ".husky/pre-commit merge-aware silencer check (PG-203 #977)",
-      "passed": true,
-      "evidence": "git diff 22e3f2202 HEAD -- .husky/pre-commit: +14 lines only, inside the eslint-disable/@ts-ignore/@ts-expect-error/@ts-nocheck scan. When MERGE_HEAD exists, a hit is kept only if the same added line is also added relative to MERGE_HEAD (new against both parents); non-merge commits take the unchanged path. Same pattern list, same files, no other hook step touched, no env bypass added (ESCAPE_LINT_SILENCER gate pre-existing). Narrowing is correct, not a weakening."
+      "evidence": "engine.ts:812-822 purges runs older than L.runRetentionDays in batches and keeps purgeBacklog set until a short batch shows it has caught up (456c86583). store.ts:688-700 purges terminal runs (SUCCEEDED/FAILED/SKIPPED, :245). reapStaleRuns (:673-676) turns stuck RUNNING runs into FAILED so they become purgeable. Stored webhook context is limited to template-referenced own scalar keys, capped in length and count (webhook.ts:190-211). listRuns returns no context or payload (router:731-740)."
     }
   ],
   "findings": [
     {
-      "severity": "MEDIUM",
-      "id": "DEP-2",
-      "title": "pnpm audit reports 2 moderate advisories (sprintf-js GHSA-hp3w-g68c-fv3c, hono GHSA-5r4p-p66f-jhc7)",
-      "attribution": "inherited from main via transitive deps (ai-worker>mammoth>argparse; web>@prisma/client>prisma>@prisma/dev); below the --audit-level=high gate; not introduced by PG-208",
-      "action": "No tracking issue verified. Under the no-silent-pass policy the lead should file/confirm a main-level issue or ADR acceptance; not a PG-208 defect."
+      "severity": "LOW",
+      "file": "apps/api/src/http-server.ts:497",
+      "scenario": "In production TASK_AUTOMATION_INTERVAL_MS=0, so the tick that claims, reaps and purges runs never runs, but the webhook route is still mounted unconditionally. A tenant that enables automation and creates a webhook rule can have runs admitted (202). Those runs stay PENDING with their webhook context (capped scalar payload values) and are never purged, because purgeRunsBefore (task-automation-store.ts:688-700) only removes terminal statuses and only runs from the tick. Per-rule and per-tenant hourly caps bound the volume. Automation being off in production is accepted until #966, so this is a retention note, not a blocker.",
+      "fix": "While the runner interval is 0, answer the webhook route with the same 503 'unavailable' used for missing encryption (or 404), or let purge/expiry cover non-terminal runs older than the retention window. Alternatively, record this on PG-208-AUTOMATION-OFF-IN-PROD-001 so the outbox move (#966) closes it."
     },
     {
       "severity": "LOW",
-      "id": "L8",
-      "title": "Rightmost X-Forwarded-For hop trust for the failure limiter",
-      "attribution": "tracked #960",
-      "action": "tracked"
-    },
-    {
-      "severity": "LOW",
-      "id": "OBS-1",
-      "title": "404 (unknown token) vs 401 (bad signature) are distinguishable",
-      "attribution": "by design; token is 256-bit random, hash-looked-up, so enumeration is infeasible",
-      "action": "none"
+      "file": "apps/api/src/modules/task/automation/task-automation-engine.ts:762",
+      "scenario": "canOpenTask is true only for the task owner and the assignee. An admin or a manager whose team scope covers the task's owner can open the task, but gets the generic /tasks link. This errs on the safe side (no wrong deep links, no information leak) and is only a UX gap, consistent with the accepted PG-208-ASSIGNEE-REMINDERS-001 scope.",
+      "fix": "Optional: resolve visibility through the same predicate as task.getById (role-aware) before choosing the link. No security change is needed."
     }
-  ],
-  "tracked_issues": [
-    "#959",
-    "#960",
-    "#968",
-    "#969"
-  ],
-  "notes": "Re-run at merge HEAD 5f11ac307. Tools run: gitleaks range scan (exit 0), pnpm audit --prod --audit-level high (exit 0, 2 moderate), git diff review of merge delta and .husky/pre-commit. Not run (unavailable/not permitted): snyk, semgrep, trivy; no tests/builds run per instruction. The single prior FAIL cause (3 HIGH advisories, #974) is resolved by #975. Verdict PASS is on the defined gates; the 2 inherited moderate advisories are disclosed as DEP-2 and need a main-level tracking decision. No open code-level finding in PG-208 beyond tracked #959/#960/#968/#969.",
-  "supersedes": {
-    "previous_verdict": "FAIL",
-    "previous_commit": "743586efe1a1545e6f96d76f7bd344ebab30b250",
-    "reason": "pnpm audit --prod --audit-level high exited 1 with 3 HIGH advisories (follow-redirects x2, launch-editor/vite GHSA-587h-7wmj-h5pm) inherited from main (#974)",
-    "why_no_longer_applies": "Main fixed them in #975 (e7ce625b2), which HEAD 5f11ac307 merges. Re-run at HEAD: pnpm audit --prod --audit-level high exit 0, 2 vulnerabilities, both moderate. PG-208 still touches no package.json/pnpm-lock.yaml vs origin/main."
-  }
+  ]
 }
