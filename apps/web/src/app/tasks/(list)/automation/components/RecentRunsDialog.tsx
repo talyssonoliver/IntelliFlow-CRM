@@ -52,25 +52,29 @@ function RunsBody({ ruleId }: Readonly<{ ruleId: string }>) {
   }
   return (
     <ul className="divide-y divide-border" aria-label="Recent runs">
-      {runs.map((run) => (
-        <li key={run.id} className="space-y-0.5 py-2 text-sm">
-          <p>
-            <span className={`font-medium ${STATUS_CLASS[run.status] ?? 'text-foreground'}`}>
-              {RUN_STATUS_LABELS[run.status] ?? run.status}
-            </span>
-            <span className="text-muted-foreground"> · {formatDateTime(run.createdAt)}</span>
-          </p>
-          {run.outcome && <p className="text-muted-foreground">{outcomeLabel(run.outcome)}</p>}
-          {run.taskId && (
-            <Link
-              href={`/tasks/${run.taskId}`}
-              className="text-primary underline-offset-2 hover:underline"
-            >
-              Open the task
-            </Link>
-          )}
-        </li>
-      ))}
+      {runs.map((run) => {
+        // A failed run carries its reason in errorCode, not outcome.
+        const reason = outcomeLabel(run.outcome ?? run.errorCode);
+        return (
+          <li key={run.id} className="space-y-0.5 py-2 text-sm">
+            <p>
+              <span className={`font-medium ${STATUS_CLASS[run.status] ?? 'text-foreground'}`}>
+                {RUN_STATUS_LABELS[run.status] ?? run.status}
+              </span>
+              <span className="text-muted-foreground"> · {formatDateTime(run.createdAt)}</span>
+            </p>
+            {reason && <p className="text-muted-foreground">{reason}</p>}
+            {run.taskId && (
+              <Link
+                href={`/tasks/${run.taskId}`}
+                className="text-primary underline-offset-2 hover:underline"
+              >
+                Open the task
+              </Link>
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }

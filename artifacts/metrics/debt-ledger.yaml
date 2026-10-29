@@ -5732,7 +5732,7 @@ items:
       stopTaskAutomationRunner on shutdown, before automation is switched on in
       production (or as part of moving it to the combined worker).
     status: open
-    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR. Codex waiver 041c5b04 (expires with this entry).'
   PG-208-CONVERSION-SKIP-BYPASSES-CAPS-001:
     origin_task: PG-208
     owner: Backend Lead

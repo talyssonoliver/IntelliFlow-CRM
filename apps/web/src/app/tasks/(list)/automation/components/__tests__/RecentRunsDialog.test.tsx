@@ -90,6 +90,39 @@ describe('RecentRunsDialog', () => {
     );
   });
 
+  it('shows why a failed or interrupted run did not finish', () => {
+    runs.mockReturnValue({
+      isLoading: false,
+      error: null,
+      data: [
+        {
+          id: 'f',
+          status: 'FAILED',
+          triggerType: 'ENTITY_EVENT',
+          outcome: null,
+          errorCode: 'task_create_failed',
+          taskId: null,
+          createdAt: '2026-10-20T10:00:00.000Z',
+          finishedAt: '2026-10-20T10:00:01.000Z',
+        },
+        {
+          id: 'i',
+          status: 'FAILED',
+          triggerType: 'SCHEDULE',
+          outcome: null,
+          errorCode: 'interrupted',
+          taskId: null,
+          createdAt: '2026-10-20T09:00:00.000Z',
+          finishedAt: '2026-10-20T09:20:00.000Z',
+        },
+      ],
+    });
+    const list = within(renderDialog()).getByRole('list', { name: 'Recent runs' });
+    const [failed, interrupted] = within(list).getAllByRole('listitem');
+    expect(failed).toHaveTextContent('The task could not be created');
+    expect(interrupted).toHaveTextContent('Interrupted before it finished');
+  });
+
   it('renders nothing without a rule', () => {
     render(<RecentRunsDialog rule={null} onClose={vi.fn()} />);
     expect(screen.queryByRole('dialog')).toBeNull();

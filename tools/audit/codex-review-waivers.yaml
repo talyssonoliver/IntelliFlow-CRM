@@ -1265,3 +1265,15 @@ waivers:
     author: talyssonoliver (approved in the PG-207 modal, 2026-10-22)
     date: '2026-10-22'
     expires: '2026-11-21'
+  - fingerprint: 041c5b04af2f7f81a29177fcd91252d5abbdae23ef255be5afbc3dc5cb2e3637
+    reason: >-
+      PG-208 Codex finding automation-startup-never-recovers (MEDIUM, apps/api/src/http-server.ts):
+      if the first database read in buildTaskAutomationRuntime fails at boot, task automation is
+      not retried until the api restarts. Accepted follow-up, tracked in debt-ledger
+      PG-208-RUNTIME-INIT-NO-RETRY-001 (retry with bounded backoff, cancelled on shutdown). The
+      code path does not run in production: owner ruling 2026-10-28 ships task automation OFF
+      there (TASK_AUTOMATION_INTERVAL_MS=0, debt-ledger PG-208-AUTOMATION-OFF-IN-PROD-001) until it
+      moves to the combined worker through the outbox. The waiver expires with the debt entry.
+    author: talyssonoliver (owner ruling 2026-10-28, automation off in production; waiver ruled by the orchestrator Aurora, 2026-10-29)
+    date: '2026-10-29'
+    expires: '2027-01-29'
