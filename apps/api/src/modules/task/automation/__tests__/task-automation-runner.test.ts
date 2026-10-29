@@ -11,8 +11,8 @@ import {
 
 const quiet = () => ({ warn: vi.fn(), info: vi.fn() });
 
-afterEach(() => {
-  stopTaskAutomationRunner();
+afterEach(async () => {
+  await stopTaskAutomationRunner();
   vi.useRealTimers();
 });
 
@@ -72,9 +72,10 @@ describe('startTaskAutomationRunner / stopTaskAutomationRunner', () => {
     release();
     await vi.advanceTimersByTimeAsync(1000);
     expect(run).toHaveBeenCalledTimes(2);
+    release(); // stop waits for the tick in flight
   });
 
-  it('unrefs its timer so it never keeps the process alive', () => {
+  it('unrefs its timer so it never keeps the process alive', async () => {
     const unref = vi.fn();
     const spy = vi
       .spyOn(globalThis, 'setInterval')
@@ -86,7 +87,7 @@ describe('startTaskAutomationRunner / stopTaskAutomationRunner', () => {
       );
       expect(unref).toHaveBeenCalledTimes(1);
     } finally {
-      stopTaskAutomationRunner();
+      await stopTaskAutomationRunner();
       spy.mockRestore();
       clear.mockRestore();
     }
@@ -113,10 +114,54 @@ describe('startTaskAutomationRunner / stopTaskAutomationRunner', () => {
     vi.useFakeTimers();
     const run = vi.fn().mockResolvedValue(undefined);
     startTaskAutomationRunner({ intervalMs: 100, run, log: quiet() });
-    stopTaskAutomationRunner();
+    await stopTaskAutomationRunner();
     await vi.advanceTimersByTimeAsync(500);
     expect(run).not.toHaveBeenCalled();
-    stopTaskAutomationRunner(); // idempotent
+    await stopTaskAutomationRunner(); // idempotent
     expect(startTaskAutomationRunner({ intervalMs: 100, run, log: quiet() })).toBe(true);
+  });
+
+  it('waits on stop for a tick that is in flight', async () => {
+    vi.useFakeTimers();
+    let release!: () => void;
+    const run = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          release = resolve;
+        })
+    );
+    startTaskAutomationRunner({ intervalMs: 100, run, log: quiet() });
+    await vi.advanceTimersByTimeAsync(100);
+    expect(run).toHaveBeenCalledTimes(1);
+
+    let stopped = false;
+    const stopping = stopTaskAutomationRunner().then(() => {
+      stopped = true;
+    });
+    await vi.advanceTimersByTimeAsync(500);
+    expect(stopped).toBe(false);
+    expect(run).toHaveBeenCalledTimes(1); // no new tick once stopped
+
+    release();
+    await stopping;
+    expect(stopped).toBe(true);
+  });
+
+  it('resolves on stop even when the in-flight tick fails', async () => {
+    vi.useFakeTimers();
+    let fail!: (error: Error) => void;
+    const run = vi.fn(
+      () =>
+        new Promise<void>((_, reject) => {
+          fail = reject;
+        })
+    );
+    const log = quiet();
+    startTaskAutomationRunner({ intervalMs: 100, run, log });
+    await vi.advanceTimersByTimeAsync(100);
+    const stopping = stopTaskAutomationRunner();
+    fail(new Error('db down'));
+    await expect(stopping).resolves.toBeUndefined();
+    expect(log.warn).toHaveBeenCalledWith('[task-automation] tick failed: db down');
   });
 });

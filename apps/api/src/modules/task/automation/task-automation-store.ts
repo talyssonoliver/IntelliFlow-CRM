@@ -100,6 +100,11 @@ export interface NewRun {
   finishedAt?: Date | null;
   /** The rule's actions at admission; the run executes these. */
   actions?: Prisma.JsonValue;
+  /**
+   * Builds the run's context from the actions read under the admission lock,
+   * when the context depends on them (webhook variables); replaces `context`.
+   */
+  contextFor?: (actions: Prisma.JsonValue) => Prisma.InputJsonValue;
 }
 
 export type InsertRunResult =
@@ -292,7 +297,11 @@ async function admitInTransaction(
   });
   if (exceedsHourlyRunCaps(lastHour, tenantHour, caps.perHour)) return { capped: true };
   const created = await tx.taskAutomationRun.create({
-    data: runCreateData({ ...run, actions: rule.actions }),
+    data: runCreateData({
+      ...run,
+      actions: rule.actions,
+      context: run.contextFor ? run.contextFor(rule.actions) : run.context,
+    }),
     select: { id: true },
   });
   return { created: true, runId: created.id };

@@ -133,6 +133,23 @@ describe('api main entry point', () => {
       expect(exitSpy).toHaveBeenCalledWith(0);
     });
 
+    it('caps a task-automation tick that never finishes the same way (PG-208)', async () => {
+      vi.useFakeTimers();
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      mocks.stopBackgroundJobs.mockResolvedValue(undefined);
+      mocks.stopTaskAutomationRunner.mockReturnValueOnce(new Promise<void>(() => undefined));
+      const handler = await sigterm();
+
+      const done = handler();
+      await vi.advanceTimersByTimeAsync(9_999);
+      expect(mocks.shutdownAllQueues).not.toHaveBeenCalled();
+
+      await vi.advanceTimersByTimeAsync(1);
+      await done;
+      expect(mocks.shutdownAllQueues).toHaveBeenCalledTimes(1);
+      expect(exitSpy).toHaveBeenCalledWith(0);
+    });
+
     it('honours API_SHUTDOWN_JOBS_TIMEOUT_MS and ignores an invalid value', async () => {
       vi.useFakeTimers();
       vi.spyOn(console, 'warn').mockImplementation(() => undefined);

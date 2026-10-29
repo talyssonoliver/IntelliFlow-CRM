@@ -258,6 +258,11 @@ export async function handleTaskAutomationWebhook(
       idempotencyKey: `webhook:${verified.idempotencyKey}`,
       payloadHash,
       context: { webhook: webhookVariables(payload as Record<string, unknown>, rule.actions) },
+      // Admission stores the actions re-read under its lock; take the variables
+      // those actions reference, not the ones read with the token.
+      contextFor: (actions) => ({
+        webhook: webhookVariables(payload as Record<string, unknown>, actions),
+      }),
       actions: rule.actions,
     },
     { perMinute: L.webhookPerMinuteCap, perHour: settings.maxRunsPerRulePerHour },

@@ -172,7 +172,11 @@ export class FakeTaskAutomationStore implements TaskAutomationStore {
       this.countRunsSince(run.tenantId, null, hourAgo),
     ]);
     if (exceedsHourlyRunCaps(lastHour, tenantHour, caps.perHour)) return { capped: true };
-    return this.insertRunIfAbsent({ ...run, actions: rule.actions });
+    return this.insertRunIfAbsent({
+      ...run,
+      actions: rule.actions,
+      context: run.contextFor ? run.contextFor(rule.actions) : run.context,
+    });
   }
 
   async insertRunIfAbsent(run: NewRun): Promise<InsertRunResult> {

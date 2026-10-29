@@ -117,6 +117,27 @@ describe('handleTaskAutomationWebhook', () => {
     expect(store.runs[0].actions).toEqual(edited);
   });
 
+  it('takes the webhook variables the admitted actions reference, not the looked-up ones', async () => {
+    const edited = [
+      {
+        type: 'CREATE_TASK',
+        titleTemplate: 'Order {{webhook.orderId}} for {{webhook.amount}}',
+        priority: 'HIGH',
+        dueInDays: null,
+        linkToRecord: false,
+      },
+    ];
+    changeRuleAfterLookup((stored) => {
+      stored.actions = edited;
+    });
+    const raw = body();
+    await expect(call(raw, signed(raw))).resolves.toMatchObject({ status: 202 });
+    expect(store.runs).toHaveLength(1);
+    expect(store.runs[0].actions).toEqual(edited);
+    // `amount` is only in the edited template; `urgent` only in the looked-up one.
+    expect(store.runs[0].context).toEqual({ webhook: { orderId: 'A-17', amount: 42 } });
+  });
+
   it('answers 404 and queues nothing for a rule deactivated after the lookup', async () => {
     changeRuleAfterLookup((stored) => {
       stored.isActive = false;

@@ -49,10 +49,12 @@ async function withCap(work: Promise<unknown>, ms: number): Promise<void> {
 
 process.on('SIGTERM', async () => {
   console.log('[API] SIGTERM received — shutting down gracefully');
-  stopTaskAutomationRunner();
   // Let a mid-flight tick finish, but never past the cap: the queues and Prisma
   // below must still close before Railway's SIGKILL.
-  await withCap(stopBackgroundJobs(), jobsDrainTimeoutMs(process.env));
+  await withCap(
+    Promise.all([stopTaskAutomationRunner(), stopBackgroundJobs()]),
+    jobsDrainTimeoutMs(process.env)
+  );
   await shutdownAllQueues();
   await disconnectPrisma();
   process.exit(0);

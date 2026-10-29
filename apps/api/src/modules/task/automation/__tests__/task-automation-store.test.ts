@@ -376,6 +376,18 @@ describe('createTaskAutomationStore (PG-208)', () => {
       });
     });
 
+    it('builds the context from the locked actions when the run asks for it', async () => {
+      m.taskAutomationRun.count.mockResolvedValue(0);
+      m.taskAutomationRun.findUnique.mockResolvedValueOnce(null);
+      m.taskAutomationRun.create.mockResolvedValueOnce({ id: 'run-ctx' });
+      const contextFor = vi.fn((actions: unknown) => ({ seen: actions as never }));
+      await store.admitRun({ ...run, context: { stale: true }, contextFor }, caps, NOW);
+      expect(contextFor).toHaveBeenCalledWith(current);
+      const data = m.taskAutomationRun.create.mock.calls.at(-1)[0].data;
+      expect(data.context).toEqual({ seen: current });
+      expect(data).not.toHaveProperty('contextFor');
+    });
+
     it('writes nothing when a cap is reached', async () => {
       m.taskAutomationRun.create.mockClear();
       m.taskAutomationRun.count
