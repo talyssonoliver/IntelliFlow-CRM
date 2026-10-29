@@ -62,6 +62,8 @@ export interface DriftResult extends DriftTickResult {
   /** Same as detectedTick; kept for the persisted drift events and in-app consumers. */
   detected: boolean;
   severity: 'none' | 'low' | 'medium' | 'high' | 'critical';
+  /** Highest severity the open event has reached after this tick; 'none' outside an event. */
+  eventSeverity?: Severity;
   baselineWindow: DriftWindow;
   currentWindow: DriftWindow;
   timestamp: Date;
@@ -309,6 +311,7 @@ export class DriftDetector {
       ? this.evaluateAgainstPinned(model, metric, pinned, current, minCurrent, now)
       : this.evaluateAgainstReference(model, metric, samples, current, minCurrent, now);
     result.inEvent = state?.inEvent ?? false;
+    result.eventSeverity = state?.inEvent ? state.peakSeverity : 'none';
 
     if (result.status === 'evaluated') {
       this.pushHistory(result, now);
@@ -351,6 +354,7 @@ export class DriftDetector {
         result.onset = step.onset;
         result.inEvent = step.inEvent;
         result.escalated = step.escalated;
+        result.eventSeverity = step.eventSeverity;
       }
       results.push(result);
     }
@@ -370,7 +374,7 @@ export class DriftDetector {
     metric: string,
     detected: boolean,
     severity: Severity = 'none'
-  ): { onset: boolean; inEvent: boolean; escalated: boolean } {
+  ): { onset: boolean; inEvent: boolean; escalated: boolean; eventSeverity: Severity } {
     const key = seriesKey(model, metric);
     const state = this.persistence.get(key) ?? {
       consecutiveDetected: 0,
@@ -405,7 +409,7 @@ export class DriftDetector {
     }
 
     this.persistence.set(key, state);
-    return { onset, inEvent: state.inEvent, escalated };
+    return { onset, inEvent: state.inEvent, escalated, eventSeverity: state.peakSeverity };
   }
 
   /**

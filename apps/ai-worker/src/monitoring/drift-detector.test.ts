@@ -396,6 +396,24 @@ describe('DriftDetector', () => {
       });
     });
 
+    it('carries the open event severity on a clear tick inside the event', () => {
+      for (let tick = 0; tick < 3; tick++) {
+        detector.applyPersistence('gpt-4', 'score_distribution', true, 'critical');
+      }
+      addReference(10, 0.3);
+      addCurrent(30, 0.3);
+
+      const [result] = detector.detectAllDrift({ now: NOW });
+
+      expect(result).toMatchObject({
+        status: 'evaluated',
+        detectedTick: false,
+        severity: 'none',
+        inEvent: true,
+        eventSeverity: 'critical',
+      });
+    });
+
     it('should track the last scheduled check time', () => {
       expect(detector.getStatus().lastCheck).toBeNull();
 
