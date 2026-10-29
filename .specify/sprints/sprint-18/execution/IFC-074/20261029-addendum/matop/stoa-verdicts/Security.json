@@ -3,27 +3,95 @@
   "task_id": "IFC-074",
   "run_id": "20261029-addendum",
   "verdict": "FAIL",
-  "rationale": "The only failing gate is `pnpm audit --prod --audit-level=high` (exit 1): 1 high advisory, systeminformation <5.33.16 (GHSA-3f7j-7jwc-fxfj), reachable only via apps/ai-worker > @opentelemetry/auto-instrumentations-node > @opentelemetry/instrumentation-host-metrics. It is pre-existing on origin/main and not introduced by this branch, which adds only two exact-pinned devDependencies (@opentelemetry/instrumentation-pino 0.68.0, @opentelemetry/sdk-logs 0.219.0), on no advisory path. Under the no-WARN rule the gate stays FAIL until fixed or accepted via ADR. Every gate covering the addendum's own code passed: gitleaks over the branch range, the added-line credential grep, semgrep p/security-audit (0 findings), and manual review of the uid guard, query construction, token handling and redaction. userId/tenantId export was not re-litigated (spec D5, ADR-086, AC-015).",
+  "rationale": "The only failing gate is `pnpm audit --prod --audit-level=high` (exit 1): 1 high advisory, systeminformation <5.33.16 (GHSA-3f7j-7jwc-fxfj), reachable only via apps/ai-worker > @opentelemetry/auto-instrumentations-node > @opentelemetry/instrumentation-host-metrics. It is pre-existing on origin/main and not introduced by this branch, which adds only two exact-pinned devDependencies (@opentelemetry/instrumentation-pino 0.68.0, @opentelemetry/sdk-logs 0.219.0), on no advisory path. Under the no-WARN rule the gate stays FAIL until fixed or accepted via ADR. Every gate covering the addendum's own code passed: gitleaks over the branch range, the added-line credential grep, semgrep p/security-audit (0 findings), and manual review of the uid guard, query construction, token handling and redaction. userId/tenantId export was not re-litigated (spec D5, ADR-086, AC-015). Coordinator ruling 2026-10-29: pre-existing main dependency advisory, tracked in #1065, not introduced or changed by this PR; it does not block #1073 and gets its own deps PR (no override here).",
   "checks": [
-    {"name": "gitleaks (branch range)", "result": "PASS", "evidence": ".gitleaks/scan.sh range 9e378fbb0338009edd892339e45d47df0bb17069 HEAD -> exit 0, no findings (101 changed files)"},
-    {"name": "Added-line credential grep", "result": "PASS", "evidence": "git diff origin/main...HEAD with token/key/JWT/PEM/userinfo patterns: 2 prose lines inside a prior attestation describing the grep itself, no credential"},
-    {"name": "pnpm audit --prod --audit-level=high", "result": "FAIL", "evidence": "exit 1; 8 vulnerabilities (1 low, 6 moderate, 1 high); high = systeminformation <5.33.16 via apps__ai-worker>@opentelemetry/auto-instrumentations-node>@opentelemetry/instrumentation-host-metrics; no path through packages/observability or the two new devDependencies; pre-existing on origin/main"},
-    {"name": "Dependency delta", "result": "PASS", "evidence": "packages/observability/package.json +2 (exact-pinned devDependencies), pnpm-lock.yaml +6; on no advisory path"},
-    {"name": "semgrep p/security-audit (scoped)", "result": "PASS", "evidence": "8 changed source files (collector, grafana-provisioning, apply-grafana-dashboard, task-status.schema.ts, logging.ts, load-logging-cjs.ts, api logger.ts, middleware.ts): exit 0, 0 findings"},
-    {"name": "Datasource uid and path-injection guards", "result": "PASS", "evidence": "datasourceProxy requires /^[A-Za-z0-9_-]{1,64}$/ and throws a fixed message without the value; tempoTrace hex-32; getRuleGroup slug + no '..' + encodeURIComponent; URLSearchParams; GET-only client"},
-    {"name": "LogQL/PromQL construction", "result": "PASS", "evidence": "rule.expr from the checked-in rules file; operator from a fixed table via Object.hasOwn; threshold Number.isFinite; dashboard validator allows only the three datasources and their fixed stream selectors, fails closed"},
-    {"name": "Token handling and error scrubbing", "result": "PASS", "evidence": "token only in the Authorization header; errors carry status/name only; run() scrubs the token; the review fix's entry-point handler prints a fixed line, never error text"},
-    {"name": "Redaction and allowlist (D5/AC-015 as decided)", "result": "PASS", "evidence": "pino redact covers credential and email fields top-level and one level down; api records are a fixed field allowlist with safePath/safeErrorName; residual: '*.x' redaction is one level deep (no current caller logs nested objects)"},
-    {"name": "snyk", "result": "UNAVAILABLE", "evidence": "SNYK_TOKEN unset; not run; no waiver claimed"}
+    {
+      "name": "gitleaks (branch range)",
+      "result": "PASS",
+      "evidence": ".gitleaks/scan.sh range 9e378fbb0338009edd892339e45d47df0bb17069 HEAD -> exit 0, no findings (101 changed files)"
+    },
+    {
+      "name": "Added-line credential grep",
+      "result": "PASS",
+      "evidence": "git diff origin/main...HEAD with token/key/JWT/PEM/userinfo patterns: 2 prose lines inside a prior attestation describing the grep itself, no credential"
+    },
+    {
+      "name": "pnpm audit --prod --audit-level=high",
+      "result": "FAIL",
+      "evidence": "exit 1; 8 vulnerabilities (1 low, 6 moderate, 1 high); high = systeminformation <5.33.16 via apps__ai-worker>@opentelemetry/auto-instrumentations-node>@opentelemetry/instrumentation-host-metrics; no path through packages/observability or the two new devDependencies; pre-existing on origin/main"
+    },
+    {
+      "name": "Dependency delta",
+      "result": "PASS",
+      "evidence": "packages/observability/package.json +2 (exact-pinned devDependencies), pnpm-lock.yaml +6; on no advisory path"
+    },
+    {
+      "name": "semgrep p/security-audit (scoped)",
+      "result": "PASS",
+      "evidence": "8 changed source files (collector, grafana-provisioning, apply-grafana-dashboard, task-status.schema.ts, logging.ts, load-logging-cjs.ts, api logger.ts, middleware.ts): exit 0, 0 findings"
+    },
+    {
+      "name": "Datasource uid and path-injection guards",
+      "result": "PASS",
+      "evidence": "datasourceProxy requires /^[A-Za-z0-9_-]{1,64}$/ and throws a fixed message without the value; tempoTrace hex-32; getRuleGroup slug + no '..' + encodeURIComponent; URLSearchParams; GET-only client"
+    },
+    {
+      "name": "LogQL/PromQL construction",
+      "result": "PASS",
+      "evidence": "rule.expr from the checked-in rules file; operator from a fixed table via Object.hasOwn; threshold Number.isFinite; dashboard validator allows only the three datasources and their fixed stream selectors, fails closed"
+    },
+    {
+      "name": "Token handling and error scrubbing",
+      "result": "PASS",
+      "evidence": "token only in the Authorization header; errors carry status/name only; run() scrubs the token; the review fix's entry-point handler prints a fixed line, never error text"
+    },
+    {
+      "name": "Redaction and allowlist (D5/AC-015 as decided)",
+      "result": "PASS",
+      "evidence": "pino redact covers credential and email fields top-level and one level down; api records are a fixed field allowlist with safePath/safeErrorName; residual: '*.x' redaction is one level deep (no current caller logs nested objects)"
+    },
+    {
+      "name": "snyk",
+      "result": "UNAVAILABLE",
+      "evidence": "SNYK_TOKEN unset; not run; no waiver claimed"
+    }
   ],
   "findings": [
-    {"id": "SEC-ADD-001", "severity": "HIGH", "status": "OPEN", "scope": "PRE-EXISTING on origin/main, not introduced by IFC-074", "summary": "pnpm audit --prod --audit-level=high exits 1 on systeminformation <5.33.16 (GHSA-3f7j-7jwc-fxfj) via apps/ai-worker OTel host-metrics; needs an override/bump (>=5.33.16) or an ADR-accepted risk."},
-    {"id": "SEC-ADD-002", "severity": "MEDIUM", "status": "OPEN", "scope": "PRE-EXISTING on origin/main", "summary": "6 moderate advisories: nodemailer x3 (packages/adapters), systeminformation, @hono/node-server (via prisma @prisma/dev), qs (via @lhci/cli)."},
-    {"id": "SEC-ADD-003", "severity": "LOW", "status": "OPEN", "scope": "PRE-EXISTING on origin/main", "summary": "1 low advisory on systeminformation, same ai-worker path."}
+    {
+      "id": "SEC-ADD-001",
+      "severity": "HIGH",
+      "status": "OPEN",
+      "scope": "pre-existing main dependency advisory, tracked in #1065, not introduced or changed by this PR. PRE-EXISTING on origin/main, not introduced by IFC-074",
+      "summary": "pnpm audit --prod --audit-level=high exits 1 on systeminformation <5.33.16 (GHSA-3f7j-7jwc-fxfj) via apps/ai-worker OTel host-metrics; needs an override/bump (>=5.33.16) or an ADR-accepted risk."
+    },
+    {
+      "id": "SEC-ADD-002",
+      "severity": "MEDIUM",
+      "status": "OPEN",
+      "scope": "pre-existing main dependency advisory, tracked in #1065, not introduced or changed by this PR. PRE-EXISTING on origin/main",
+      "summary": "6 moderate advisories: nodemailer x3 (packages/adapters), systeminformation, @hono/node-server (via prisma @prisma/dev), qs (via @lhci/cli)."
+    },
+    {
+      "id": "SEC-ADD-003",
+      "severity": "LOW",
+      "status": "OPEN",
+      "scope": "pre-existing main dependency advisory, tracked in #1065, not introduced or changed by this PR. PRE-EXISTING on origin/main",
+      "summary": "1 low advisory on systeminformation, same ai-worker path."
+    }
   ],
-  "toolIdsExecuted": ["gitleaks scan.sh range", "credential grep", "pnpm audit (--prod --audit-level=high, full --json)", "semgrep p/security-audit", "manual code review"],
-  "unavailableTools": ["snyk (SNYK_TOKEN unset)", "trivy (not required: no container/IaC change)"],
+  "toolIdsExecuted": [
+    "gitleaks scan.sh range",
+    "credential grep",
+    "pnpm audit (--prod --audit-level=high, full --json)",
+    "semgrep p/security-audit",
+    "manual code review"
+  ],
+  "unavailableTools": [
+    "snyk (SNYK_TOKEN unset)",
+    "trivy (not required: no container/IaC change)"
+  ],
   "timestamp": "2026-10-29T17:19:17Z",
   "stored_by": "IFC-074 lane, from the stoa-security subagent's returned verdict",
-  "stored_at": "2026-10-29T17:21:32Z"
+  "stored_at": "2026-10-29T17:21:32Z",
+  "coordinator_ruling": "Coordinator ruling 2026-10-29: pre-existing main dependency advisory, tracked in #1065, not introduced or changed by this PR; it does not block #1073 and gets its own deps PR (no override here)."
 }

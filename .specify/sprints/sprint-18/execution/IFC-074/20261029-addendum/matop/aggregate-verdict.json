@@ -2,8 +2,13 @@
   "task_id": "IFC-074",
   "run_id": "20261029-addendum",
   "aggregated_at": "2026-10-29T17:21:32Z",
-  "verdicts": { "Automation": "PASS", "Foundation": "FAIL", "Quality": "PASS", "Security": "FAIL" },
+  "verdicts": {
+    "Automation": "PASS",
+    "Foundation": "FAIL",
+    "Quality": "PASS",
+    "Security": "FAIL"
+  },
   "aggregate": "FAIL",
-  "reason": "Foundation FAIL: the required SonarCloud check on PR #1073 head 27ff7e70d is red (D reliability, 4 bugs in collect-observability-evidence.mjs); the fix is in the review commit that follows this verdict. Security FAIL: only `pnpm audit --prod --audit-level=high` (systeminformation <5.33.16 via apps/ai-worker OTel host-metrics), pre-existing on origin/main and on no path this branch touches; every IFC-074-specific security check passed. Supersedes the stale 2026-10-22 aggregate (20261022194925-cdddf208), whose only FAIL was the earlier #1000 advisories.",
-  "clears_when": "Foundation: the review commit is pushed and SonarCloud is green on the new head. Security: systeminformation >= 5.33.16 lands on main (override or upstream bump) or the risk is accepted via ADR (coordinator/owner decision), and IFC-074 merges main."
+  "reason": "Foundation FAIL: the required SonarCloud check on PR #1073 head 27ff7e70d is red (D reliability, 4 bugs in collect-observability-evidence.mjs); the fix is in the review commit that follows this verdict. Security FAIL: only `pnpm audit --prod --audit-level=high` (systeminformation <5.33.16 via apps/ai-worker OTel host-metrics), pre-existing on origin/main and on no path this branch touches; every IFC-074-specific security check passed. Supersedes the stale 2026-10-22 aggregate (20261022194925-cdddf208), whose only FAIL was the earlier #1000 advisories. Coordinator ruling 2026-10-29: pre-existing main dependency advisory, tracked in #1065, not introduced or changed by this PR; it does not block #1073 and gets its own deps PR (no override here).",
+  "clears_when": "Foundation: the review commit is pushed and SonarCloud is green on the new head. Security: by coordinator ruling the systeminformation advisory (#1065) is pre-existing on main and does not block #1073; it clears on main through its own deps PR."
 }
