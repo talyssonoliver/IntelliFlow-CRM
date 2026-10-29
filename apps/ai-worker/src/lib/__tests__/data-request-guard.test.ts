@@ -9,6 +9,7 @@ import {
   scorableLeads,
   scoringBlockedBy,
   writeContactIfStillEligible,
+  writeIfAddressesStillClear,
   writeIfQueuedAddressStillClear,
   writeIfStillEligible,
   writeSubjectIfStillEligible,
@@ -164,6 +165,47 @@ describe('writeIfQueuedAddressStillClear (codex HIGH: a deal with no contact)', 
       written: false,
       reason: 'RESTRICTED',
     });
+    expect(write).not.toHaveBeenCalled();
+  });
+});
+
+describe('writeIfAddressesStillClear (codex HIGH: an insight built from the whole batch)', () => {
+  function batchTx(blocked: string[] = []) {
+    const tx = {
+      $queryRaw: vi.fn(async () => [{ locked: 1 }]),
+      processingRestriction: {
+        findFirst: vi.fn(async ({ where }: any) =>
+          blocked.includes(where.subjectEmail) ? { id: 'r1' } : null
+        ),
+      },
+      dsarRequest: { findFirst: vi.fn().mockResolvedValue(null) },
+    };
+    return { tx, prisma: { $transaction: vi.fn(async (fn: any) => fn(tx)) } };
+  }
+  const emails = ['zed@example.invalid', ' Bob@Example.invalid ', 'bob@example.invalid'];
+
+  it('locks every address once, in code-unit order, before any re-check, then writes', async () => {
+    const { tx, prisma } = batchTx();
+    const write = vi.fn().mockResolvedValue('kept');
+    await expect(
+      writeIfAddressesStillClear(prisma, { tenantId: 't1', emails }, write)
+    ).resolves.toEqual({ written: true, value: 'kept' });
+    expect(tx.$queryRaw.mock.calls.map((call: any[]) => call[2])).toEqual([
+      'bob@example.invalid',
+      'zed@example.invalid',
+    ]);
+    expect(tx.$queryRaw.mock.invocationCallOrder[1]).toBeLessThan(
+      tx.processingRestriction.findFirst.mock.invocationCallOrder[0]!
+    );
+    expect(write).toHaveBeenCalledWith(tx);
+  });
+
+  it('writes nothing when any one of the addresses is blocked', async () => {
+    const { prisma } = batchTx(['zed@example.invalid']);
+    const write = vi.fn();
+    await expect(
+      writeIfAddressesStillClear(prisma, { tenantId: 't1', emails }, write)
+    ).resolves.toEqual({ written: false, reason: 'RESTRICTED' });
     expect(write).not.toHaveBeenCalled();
   });
 });

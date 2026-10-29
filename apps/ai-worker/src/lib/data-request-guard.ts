@@ -182,11 +182,29 @@ export async function writeIfQueuedAddressStillClear<T>(
   job: { tenantId: string; email: string },
   write: (tx: QueuedAddressTx) => Promise<T>
 ): Promise<LockedWrite<T>> {
-  const address = normalizeSubjectEmail(job.email);
+  return writeIfAddressesStillClear(prisma, { tenantId: job.tenantId, emails: [job.email] }, write);
+}
+
+/**
+ * Run `write` only while every address is still clear: output built from several people at
+ * once with no one subject (an insight summarising the whole batch). Every address lock is
+ * taken first, in code-unit order like the row-locked writes, and held to commit; one
+ * restricted or erased address cancels the write (codex).
+ */
+export async function writeIfAddressesStillClear<T>(
+  prisma: { $transaction<R>(fn: (tx: QueuedAddressTx) => Promise<R>): Promise<R> },
+  job: { tenantId: string; emails: readonly string[] },
+  write: (tx: QueuedAddressTx) => Promise<T>
+): Promise<LockedWrite<T>> {
+  const addresses = [...new Set(job.emails.map((e) => normalizeSubjectEmail(e)))].sort(byCodeUnit);
   return prisma.$transaction(async (tx) => {
-    await tx.$queryRaw`SELECT 1 AS locked FROM (SELECT dsar_subject_lock(${job.tenantId}, ${address})) AS l`;
-    if (await queuedAddressBlocked(tx, job.tenantId, address)) {
-      return { written: false, reason: 'RESTRICTED' };
+    for (const address of addresses) {
+      await tx.$queryRaw`SELECT 1 AS locked FROM (SELECT dsar_subject_lock(${job.tenantId}, ${address})) AS l`;
+    }
+    for (const address of addresses) {
+      if (await queuedAddressBlocked(tx, job.tenantId, address)) {
+        return { written: false, reason: 'RESTRICTED' };
+      }
     }
     return { written: true, value: await write(tx) };
   });
@@ -260,6 +278,70 @@ export async function eligibleSubjects(
       rows.filter((r) => eligibleAddress(r.email, restricted)).map((r) => [r.id, r.email ?? ''])
     );
   return { leads: eligible(leads), contacts: eligible(contacts) };
+}
+
+type NamedRow = SubjectRow & {
+  firstName: string | null;
+  lastName: string | null;
+  company?: string | null;
+};
+type NamedFind = {
+  findMany(args: {
+    where: { id: { in: string[] }; tenantId: string };
+    select: Record<string, true>;
+  }): Promise<NamedRow[]>;
+};
+
+/** A kept person: the stored address the locked write checks, and the name they have now. */
+export interface NamedSubject {
+  email: string;
+  name: string;
+  company: string | undefined;
+}
+
+const fullName = (row: NamedRow) => `${row.firstName ?? ''} ${row.lastName ?? ''}`.trim();
+
+/**
+ * The leads and contacts of a batch that may be processed, with their current name read in the
+ * same row as the address the check uses. A queued name can belong to whoever had the record
+ * before its address changed, so the model gets this one instead (codex). A lead with no name
+ * goes by its company, as on the home page.
+ */
+export async function eligibleNamedSubjects(
+  prisma: Pick<GuardPrisma, 'processingRestriction'> & { lead: NamedFind; contact: NamedFind },
+  tenantId: string,
+  ids: { leadIds: string[]; contactIds: string[] }
+): Promise<{ leads: Map<string, NamedSubject>; contacts: Map<string, NamedSubject> }> {
+  const restricted = new Set(await restrictedEmails(prisma, tenantId));
+  const person = { id: true, email: true, firstName: true, lastName: true } as const;
+  const [leads, contacts] = await Promise.all([
+    ids.leadIds.length
+      ? prisma.lead.findMany({
+          where: { id: { in: ids.leadIds }, tenantId },
+          select: { ...person, company: true },
+        })
+      : [],
+    ids.contactIds.length
+      ? prisma.contact.findMany({ where: { id: { in: ids.contactIds }, tenantId }, select: person })
+      : [],
+  ]);
+  const kept = (rows: NamedRow[], unnamed: (row: NamedRow) => string) =>
+    new Map(
+      rows
+        .filter((r) => eligibleAddress(r.email, restricted))
+        .map((r) => [
+          r.id,
+          {
+            email: r.email ?? '',
+            name: fullName(r) || unnamed(r),
+            company: r.company ?? undefined,
+          },
+        ])
+    );
+  return {
+    leads: kept(leads, (r) => r.company || 'Lead'),
+    contacts: kept(contacts, () => 'Contact'),
+  };
 }
 
 /**
@@ -367,7 +449,10 @@ export async function dispatchCandidateIds(
 }
 
 /** The firm's restricted addresses (normalised), for the dispatcher's query and filter. */
-export async function restrictedEmails(prisma: GuardPrisma, tenantId: string): Promise<string[]> {
+export async function restrictedEmails(
+  prisma: Pick<GuardPrisma, 'processingRestriction'>,
+  tenantId: string
+): Promise<string[]> {
   const rows = await prisma.processingRestriction.findMany({
     where: { tenantId, liftedAt: null },
     select: { subjectEmail: true },

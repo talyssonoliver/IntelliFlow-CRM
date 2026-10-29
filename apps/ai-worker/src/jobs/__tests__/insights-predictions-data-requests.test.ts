@@ -20,6 +20,8 @@ const db = vi.hoisted(() => ({
   erasedSubjects: new Set<string>(),
   /** Opportunity id -> its current name (default: `<id> renewal`). */
   dealNames: new Map<string, string>(),
+  /** Lead or contact id -> its current first name and company (default: none). */
+  names: new Map<string, { firstName: string; company?: string }>(),
 }));
 const mockPredictChurnRisk = vi.hoisted(() => vi.fn());
 const mockNBAExecute = vi.hoisted(() => vi.fn());
@@ -94,7 +96,15 @@ vi.mock('@intelliflow/db', () => {
       rows.has(where.id) ? { email: rows.get(where.id) ?? null } : null
     ),
     findMany: vi.fn(async ({ where }: { where: { id: { in: string[] } } }) =>
-      where.id.in.filter((id) => rows.has(id)).map((id) => ({ id, email: rows.get(id) ?? null }))
+      where.id.in
+        .filter((id) => rows.has(id))
+        .map((id) => ({
+          id,
+          email: rows.get(id) ?? null,
+          firstName: db.names.get(id)?.firstName ?? null,
+          lastName: null,
+          company: db.names.get(id)?.company ?? null,
+        }))
     ),
   });
   const prisma: Record<string, unknown> = {
@@ -219,6 +229,7 @@ beforeEach(() => {
   db.restricted.clear();
   db.deals.clear();
   db.dealNames.clear();
+  db.names.clear();
   db.erasedSubjects.clear();
   mockPredictChurnRisk.mockResolvedValue(HIGH_CHURN);
   mockGenerateInsightsWithMeta.mockResolvedValue({ insights: [], source: 'llm' });
@@ -507,6 +518,21 @@ describe('insight generation job', () => {
     db.contacts.set(CONTACT, erased(CONTACT));
   });
 
+  it('sends each kept person under the name they have now, never the queued one (codex HIGH)', async () => {
+    // The record changed hands after the job was queued: the queued name is someone else's.
+    db.names.set(LEAD, { firstName: 'Carla', company: 'Carla Ltd' });
+    db.contacts.set(CONTACT, ADA);
+    db.names.set(CONTACT, { firstName: 'Dana' });
+
+    await processInsightJob(insightJob());
+
+    const [input] = mockGenerateInsightsWithMeta.mock.calls[0]!;
+    expect(input.hotLeads).toEqual([
+      expect.objectContaining({ id: LEAD, name: 'Carla', company: 'Carla Ltd' }),
+    ]);
+    expect(input.staleContacts).toEqual([expect.objectContaining({ id: CONTACT, name: 'Dana' })]);
+  });
+
   it('never sends an erased or restricted person to the model', async () => {
     await processInsightJob(insightJob());
 
@@ -558,6 +584,28 @@ describe('insight generation job', () => {
       expect.objectContaining({ resourceType: 'AIInsight', resourceId: 'ins-1' })
     );
     expect(openAtAudit[0]).toBe(0);
+  });
+
+  describe('an insight about no one person, built from the whole batch (codex HIGH)', () => {
+    const summary = () => ({ ...about('lead', LEAD), entityId: null, entityType: null });
+
+    it('is written while everyone the model saw is still clear', async () => {
+      mockGenerateInsightsWithMeta.mockResolvedValue({ insights: [summary()], source: 'llm' });
+      mockAIInsightCreate.mockResolvedValue({ id: 'ins-1' });
+
+      await expect(processInsightJob(insightJob())).resolves.toMatchObject({ insightsCreated: 1 });
+      expect(mockAIInsightCreate).toHaveBeenCalledOnce();
+    });
+
+    it('is not written when a person the model saw is restricted while it ran', async () => {
+      mockGenerateInsightsWithMeta.mockImplementation(async () => {
+        db.restricted.add(ADA);
+        return { insights: [summary()], source: 'llm' };
+      });
+
+      await expect(processInsightJob(insightJob())).resolves.toMatchObject({ insightsCreated: 0 });
+      expect(mockAIInsightCreate).not.toHaveBeenCalled();
+    });
   });
 
   it('writes nothing about a kept person restricted while the model ran', async () => {

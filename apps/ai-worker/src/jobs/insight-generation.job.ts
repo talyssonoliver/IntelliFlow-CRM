@@ -29,15 +29,21 @@ import { isAiFeatureEnabled } from '../lib/feature-flags';
 // PG-203 #1002: erased and restricted people get no insight
 import {
   currentDeals,
-  eligibleSubjects,
+  eligibleNamedSubjects,
+  type NamedSubject,
+  writeIfAddressesStillClear,
   writeSubjectIfStillEligible,
-  type SubjectPrisma,
 } from '../lib/data-request-guard';
 
 /** Kept people with their stored addresses, plus each kept deal's contact (if it has one). */
-type EligibleSubjects = Awaited<ReturnType<typeof eligibleSubjects>> & {
+type EligibleSubjects = {
+  leads: Map<string, string>;
+  contacts: Map<string, string>;
   dealContacts: Map<string, string>;
 };
+
+const addresses = (people: Map<string, NamedSubject>) =>
+  new Map([...people].map(([id, person]) => [id, person.email]));
 import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
 
 const logger = pino({
@@ -928,13 +934,14 @@ async function processableJobData(
   const deals = await currentDeals(prisma, data.tenantId, data.dealsAtRisk);
   const dealContact = new Map(deals.map((d) => [d.id, d.contactId]));
   const dealName = new Map(deals.map((d) => [d.id, d.name]));
-  const people = await eligibleSubjects(prisma as SubjectPrisma, data.tenantId, {
+  const named = await eligibleNamedSubjects(prisma, data.tenantId, {
     leadIds: data.hotLeads.map((l) => l.id),
     contactIds: [
       ...data.staleContacts.map((c) => c.id),
       ...[...dealContact.values()].filter((id): id is string => !!id),
     ],
   });
+  const people = { leads: addresses(named.leads), contacts: addresses(named.contacts) };
   const dealContacts = new Map<string, string>();
   const keptDeals = data.dealsAtRisk
     .filter((d) => {
@@ -950,8 +957,15 @@ async function processableJobData(
     data: {
       ...data,
       dealsAtRisk: keptDeals,
-      hotLeads: data.hotLeads.filter((l) => people.leads.has(l.id)),
-      staleContacts: data.staleContacts.filter((c) => people.contacts.has(c.id)),
+      // Each person under the name the record has now, never the queued one (codex).
+      hotLeads: data.hotLeads.flatMap((l) => {
+        const now = named.leads.get(l.id);
+        return now ? [{ ...l, name: now.name, company: now.company }] : [];
+      }),
+      staleContacts: data.staleContacts.flatMap((c) => {
+        const now = named.contacts.get(c.id);
+        return now ? [{ ...c, name: now.name }] : [];
+      }),
     },
     eligible: { ...people, dealContacts },
   };
@@ -983,7 +997,15 @@ async function persistInsightForSubject(
   persist: (client: any) => Promise<boolean>
 ): Promise<boolean> {
   const subject = insightSubject(insight, eligible);
-  if (!subject) return persist(prisma);
+  if (!subject) {
+    // About no one person, but built from everyone the model saw: written only while all of
+    // them are still clear, under their address locks (codex).
+    const everyone = [...eligible.leads.values(), ...eligible.contacts.values()];
+    const outcome = await writeIfAddressesStillClear(prisma, { tenantId, emails: everyone }, (tx) =>
+      persist(tx)
+    );
+    return outcome.written && outcome.value;
+  }
   // About a person the job did not keep (dropped before the model call): never written.
   const email = (subject.kind === 'lead' ? eligible.leads : eligible.contacts).get(subject.id);
   if (email === undefined) return false;

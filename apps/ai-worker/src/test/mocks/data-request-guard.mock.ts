@@ -26,6 +26,23 @@ export function passThroughGuard<T extends object>(actual: T) {
     eligibleSubjectEmail: vi.fn(async () => SUBJECT_EMAIL),
     isRestrictedOrErased: vi.fn(async () => false),
     queuedAddressBlocked: vi.fn(async () => false),
+    // Every person is kept under a fixed current name.
+    eligibleNamedSubjects: vi.fn(
+      async (
+        _prisma: unknown,
+        _tenantId: string,
+        ids: { leadIds: string[]; contactIds: string[] }
+      ) => {
+        const person = (id: string) => [
+          id,
+          { email: SUBJECT_EMAIL, name: `Current ${id}`, company: undefined },
+        ];
+        return {
+          leads: new Map(ids.leadIds.map(person) as Array<[string, unknown]>),
+          contacts: new Map(ids.contactIds.map(person) as Array<[string, unknown]>),
+        };
+      }
+    ),
     eligibleSubjects: vi.fn(
       async (
         _prisma: unknown,
@@ -45,6 +62,12 @@ export function passThroughGuard<T extends object>(actual: T) {
     dealContactIds: vi.fn(
       async (_prisma: unknown, _tenantId: string, dealIds: string[]) =>
         new Map<string, string | null>(dealIds.map((id) => [id, null]))
+    ),
+    writeIfAddressesStillClear: vi.fn(
+      async (prisma: unknown, _job: unknown, write: (tx: unknown) => Promise<unknown>) => ({
+        written: true as const,
+        value: await write(prisma),
+      })
     ),
     writeIfQueuedAddressStillClear: vi.fn(
       async (prisma: unknown, _job: unknown, write: (tx: unknown) => Promise<unknown>) => ({
