@@ -15,10 +15,30 @@ const TOKEN = 'x'.repeat(24);
 const BASE = 'https://stack.example.invalid';
 const ALLOWED_METRICS = ['traces_spanmetrics_calls_total', 'traces_spanmetrics_latency'];
 const ALLOWED_SERVICES = ['api', 'ai-worker'];
+// IFC-074 D8: the Loki datasources a panel may read, each with the one stream it may select.
+const LOKI_STREAMS: Record<string, string> = {
+  'grafanacloud-logs': '{service_name="ai-worker"}',
+  'grafanacloud-alert-state-history': '{from="state-history"}',
+};
+const RULES = JSON.parse(
+  readFileSync(join(__dirname, '../../../infra/monitoring/grafana/cloud/alert-rules.json'), 'utf8')
+);
 
-type Panel = { title: string; targets: Array<{ expr: string; datasource: { uid: string } }> };
+type Target = {
+  refId: string;
+  expr: string;
+  datasource: { type?: string; uid: string };
+  queryType?: string;
+};
+type Panel = { title: string; description?: string; targets: Target[] };
+const targets = (config: typeof CONFIG): Target[] =>
+  config.dashboard.panels.flatMap((p: Panel) => p.targets);
+const isProm = (t: Target) => t.datasource.uid === 'grafanacloud-prom';
+// Only the Prometheus targets are span-metric queries; Loki targets are checked separately.
 const exprs = (config: typeof CONFIG): string[] =>
-  config.dashboard.panels.flatMap((p: Panel) => p.targets.map((t) => t.expr));
+  targets(config)
+    .filter(isProm)
+    .map((t) => t.expr);
 
 /** The identifier right before each `{` in a PromQL expression: its metric names. */
 function metricNames(expr: string): string[] {
@@ -63,11 +83,11 @@ const quiet = () => {};
 const noSleep = async () => {};
 
 describe('dashboard-production.json', () => {
-  it('is valid, with a fixed uid in the production folder and five panels', () => {
+  it('is valid, with a fixed uid in the production folder and six panels', () => {
     expect(validateConfig(CONFIG)).toEqual([]);
     expect(CONFIG.dashboard.uid).toBe('env008-production');
     expect(CONFIG.folderUid).toBe('intelliflow-prod');
-    expect(CONFIG.dashboard.panels).toHaveLength(5);
+    expect(CONFIG.dashboard.panels).toHaveLength(6);
   });
 
   it('queries only the span-metric series that production emits, never a _bucket series', () => {
@@ -91,11 +111,50 @@ describe('dashboard-production.json', () => {
     }
   });
 
-  it('reads every target from the Grafana Cloud Prometheus datasource and lets Grafana assign panel ids', () => {
+  it('reads each target from a known Grafana Cloud datasource and lets Grafana assign panel ids', () => {
     for (const panel of CONFIG.dashboard.panels as Panel[]) {
       expect(panel).not.toHaveProperty('id');
-      for (const t of panel.targets) expect(t.datasource.uid).toBe('grafanacloud-prom');
+      for (const t of panel.targets) {
+        if (isProm(t)) continue;
+        expect(Object.keys(LOKI_STREAMS)).toContain(t.datasource.uid);
+        expect(t.datasource.type).toBe('loki');
+        expect(t.queryType).toBe('range');
+      }
     }
+  });
+
+  it('selects in each Loki target only the stream its datasource allows', () => {
+    const loki = targets(CONFIG).filter((t) => !isProm(t));
+    expect(loki.length).toBeGreaterThan(0);
+    for (const t of loki) {
+      // Exactly one stream selector, and it is the allowed one.
+      expect(t.expr.split('{').length - 1, t.expr).toBe(1);
+      expect(t.expr).toContain(LOKI_STREAMS[t.datasource.uid]);
+    }
+  });
+
+  it('has an "MTTD per error episode (live proxy)" panel pointing at the official KPI', () => {
+    const panel = (CONFIG.dashboard.panels as Panel[]).find((p) =>
+      p.title.includes('MTTD per error episode')
+    ) as Panel;
+    expect(panel.title).toContain('live proxy');
+    expect(panel.description).toContain('proxy');
+    expect(panel.description).toContain('artifacts/reports/mttr-baseline.json');
+    expect(panel.description).toContain('IFC-074');
+    const [a, b, c] = panel.targets;
+    expect(a.datasource.uid).toBe('grafanacloud-prom');
+    expect(a.expr).toContain('status_code="STATUS_CODE_ERROR"');
+    // Target B counts the very lines ifc074-error-logs-direct alerts on, per minute.
+    const ruleExpr = RULES.rules.find((r: { uid: string }) => r.uid === 'ifc074-error-logs-direct')
+      .expr as string;
+    expect(b.datasource.uid).toBe('grafanacloud-logs');
+    expect(b.expr).toBe(ruleExpr.replace('[2m]', '[$__interval]'));
+    expect(c.datasource.uid).toBe('grafanacloud-alert-state-history');
+    expect(c.expr).toContain('current=~"Alerting.*"');
+    expect(c.expr).toContain('previous!~"Alerting.*"');
+    // Each sample covers its whole step, so wide ranges do not drop bursts or firings.
+    for (const t of [a, b, c]) expect(t.expr).toContain('[$__interval]');
+    expect((panel as Panel & { interval?: string }).interval).toBe('1m');
   });
 });
 
@@ -170,6 +229,67 @@ describe('validateConfig', () => {
         withExpr('sum(rate(traces_spanmetrics_calls_total{peer_service="ws", service="api"}[5m]))')
       )
     ).toEqual([]);
+  });
+
+  const withTarget = (target: Record<string, unknown>) => {
+    const bad = JSON.parse(JSON.stringify(CONFIG));
+    bad.dashboard.panels[0].targets = [target];
+    return bad;
+  };
+
+  it('accepts each allowed Loki stream on its own datasource', () => {
+    for (const [uid, stream] of Object.entries(LOKI_STREAMS)) {
+      expect(
+        validateConfig(
+          withTarget({
+            refId: 'A',
+            datasource: { type: 'loki', uid },
+            expr: `count_over_time(${stream} [1m])`,
+          })
+        )
+      ).toEqual([]);
+    }
+  });
+
+  it('rejects a target on a datasource that is not allowed', () => {
+    expect(
+      validateConfig(
+        withTarget({
+          refId: 'A',
+          datasource: { type: 'loki', uid: 'grafanacloud-other' },
+          expr: 'count_over_time({service_name="ai-worker"} [1m])',
+        })
+      )
+    ).toEqual([expect.stringContaining('datasource grafanacloud-other')]);
+  });
+
+  it('rejects a Loki query on the Prometheus datasource', () => {
+    expect(
+      validateConfig(
+        withTarget({
+          refId: 'A',
+          datasource: { uid: 'grafanacloud-prom' },
+          expr: 'count_over_time({service_name="ai-worker"} [1m])',
+        })
+      )
+    ).not.toEqual([]);
+  });
+
+  it.each([
+    ['grafanacloud-logs', '{service_name="api"}'],
+    ['grafanacloud-logs', '{from="state-history"}'],
+    ['grafanacloud-alert-state-history', '{service_name="ai-worker"}'],
+    ['grafanacloud-logs', '{service_name=~".+"}'],
+  ])('rejects a Loki selector its datasource does not allow (%s %s)', (uid, stream) => {
+    expect(
+      validateConfig(
+        withTarget({
+          refId: 'A',
+          datasource: { type: 'loki', uid },
+          expr: `count_over_time(${stream} [1m])`,
+        })
+      )
+    ).toEqual([expect.stringContaining('stream')]);
   });
 
   it('rejects a wrong uid or folder', () => {

@@ -1,425 +1,1041 @@
 {
-  "version": "1.0.0",
-  "description": "Mean Time To Detect (MTTD) and Mean Time To Resolve (MTTR) baseline metrics for IntelliFlow CRM observability",
-  "metadata": {
-    "created_at": "2025-12-20T00:00:00Z",
-    "created_by": "IFC-074 implementation",
-    "task_id": "IFC-074",
-    "baseline_period": "2025-12-20 to 2026-01-20",
-    "measurement_method": "Manual testing with simulated incidents"
+  "schema_version": "2.0.0",
+  "task_id": "IFC-074",
+  "generated_at": "2026-10-22T20:40:32.000Z",
+  "measurement_method": "grafana-cloud-readonly-collector",
+  "windows": {
+    "log_window_start": "2026-10-15T20:40:32.000Z",
+    "log_window_end": "2026-10-22T20:40:32.000Z",
+    "alert_window_start": "2026-09-22T20:40:32.000Z",
+    "alert_window_end": "2026-10-22T20:40:32.000Z"
   },
-  "targets": {
-    "mttd": {
-      "description": "Mean Time To Detect - Time from incident start to detection",
-      "target_seconds": 120,
-      "target_human": "< 2 minutes",
-      "sla_breach_seconds": 300,
-      "measurement": "Time from error/anomaly occurrence to alert firing"
-    },
-    "mttr": {
-      "description": "Mean Time To Resolve - Time from detection to resolution",
-      "target_seconds": 900,
-      "target_human": "< 15 minutes",
-      "sla_breach_seconds": 3600,
-      "measurement": "Time from alert firing to incident marked resolved"
-    },
-    "mtti": {
-      "description": "Mean Time To Investigate - Time to identify root cause",
-      "target_seconds": 300,
-      "target_human": "< 5 minutes",
-      "measurement": "Time from alert to root cause identified"
-    },
-    "mttf": {
-      "description": "Mean Time To Fix - Time from root cause to fix deployed",
-      "target_seconds": 600,
-      "target_human": "< 10 minutes",
-      "measurement": "Time from root cause identified to fix in production"
-    }
-  },
-  "detection_thresholds": {
-    "api_errors": {
-      "metric": "rate(intelliflow_api_error_count[5m])",
-      "threshold": "> 0.05",
-      "threshold_human": "> 5% error rate",
-      "window": "5m",
-      "evaluation_interval": "30s",
-      "expected_detection_time_seconds": 60,
-      "alert_severity": "critical"
-    },
-    "high_latency": {
-      "metric": "histogram_quantile(0.95, rate(intelliflow_api_request_duration_bucket[5m]))",
-      "threshold": "> 200",
-      "threshold_human": "p95 latency > 200ms",
-      "window": "5m",
-      "evaluation_interval": "30s",
-      "expected_detection_time_seconds": 90,
-      "alert_severity": "warning"
-    },
-    "ai_failures": {
-      "metric": "rate(intelliflow_ai_inference_count{status=\"error\"}[5m])",
-      "threshold": "> 0.1",
-      "threshold_human": "> 10% AI failure rate",
-      "window": "5m",
-      "evaluation_interval": "30s",
-      "expected_detection_time_seconds": 60,
-      "alert_severity": "critical"
-    },
-    "database_errors": {
-      "metric": "rate(intelliflow_db_query_count{status=\"error\"}[5m])",
-      "threshold": "> 0.02",
-      "threshold_human": "> 2% database error rate",
-      "window": "5m",
-      "evaluation_interval": "30s",
-      "expected_detection_time_seconds": 60,
-      "alert_severity": "critical"
-    },
-    "memory_usage": {
-      "metric": "intelliflow_system_memory_usage",
-      "threshold": "> 0.85",
-      "threshold_human": "> 85% memory usage",
-      "window": "2m",
-      "evaluation_interval": "30s",
-      "expected_detection_time_seconds": 120,
-      "alert_severity": "warning"
-    },
-    "cache_miss_rate": {
-      "metric": "rate(intelliflow_cache_miss[5m]) / rate(intelliflow_cache_hit[5m] + intelliflow_cache_miss[5m])",
-      "threshold": "> 0.5",
-      "threshold_human": "> 50% cache miss rate",
-      "window": "5m",
-      "evaluation_interval": "60s",
-      "expected_detection_time_seconds": 120,
-      "alert_severity": "info"
-    },
-    "ai_cost_spike": {
-      "metric": "sum(rate(intelliflow_ai_inference_cost[1h]))",
-      "threshold": "> 5.0",
-      "threshold_human": "> $5/hour AI cost",
-      "window": "1h",
-      "evaluation_interval": "5m",
-      "expected_detection_time_seconds": 300,
-      "alert_severity": "warning"
-    }
-  },
-  "alerting_channels": {
-    "slack": {
-      "enabled": true,
-      "channel": "#alerts-production",
-      "severity_filter": ["critical", "warning"],
-      "expected_latency_seconds": 10
-    },
-    "email": {
-      "enabled": true,
-      "recipients": ["sre-team@example.com"],
-      "severity_filter": ["critical"],
-      "expected_latency_seconds": 30
-    },
-    "pagerduty": {
-      "enabled": false,
-      "severity_filter": ["critical"],
-      "expected_latency_seconds": 5
-    },
-    "sentry": {
-      "enabled": true,
-      "severity_filter": ["critical", "warning"],
-      "expected_latency_seconds": 15
-    }
-  },
-  "baseline_scenarios": [
+  "rules": [
     {
-      "scenario_id": "S001",
-      "name": "API error rate spike",
-      "description": "Simulate 10% error rate on /api/leads endpoint",
-      "incident_type": "application_error",
-      "simulated_at": "2025-12-20T10:00:00Z",
-      "detection": {
-        "method": "Prometheus alert",
-        "detected_at": "2025-12-20T10:01:15Z",
-        "mttd_seconds": 75,
-        "mttd_met": true
-      },
-      "investigation": {
-        "root_cause": "Database connection pool exhausted",
-        "identified_at": "2025-12-20T10:03:45Z",
-        "mtti_seconds": 150,
-        "mtti_met": true,
-        "correlation_path": "Alert → Tempo (trace_id) → Loki (logs) → Root cause"
-      },
-      "resolution": {
-        "fix": "Increased connection pool size",
-        "resolved_at": "2025-12-20T10:12:00Z",
-        "mttr_seconds": 645,
-        "mttr_met": true
-      },
-      "lessons_learned": [
-        "Correlation worked perfectly - jumped from alert to trace to logs in <2 min",
-        "Database connection metrics should be added to dashboard",
-        "Consider auto-scaling connection pool based on load"
-      ]
+      "uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "for": "0s",
+      "interval_s": 60
     },
     {
-      "scenario_id": "S002",
-      "name": "High API latency",
-      "description": "AI worker timeout causing p95 latency > 300ms",
-      "incident_type": "performance_degradation",
-      "simulated_at": "2025-12-20T14:00:00Z",
-      "detection": {
-        "method": "Prometheus alert",
-        "detected_at": "2025-12-20T14:01:30Z",
-        "mttd_seconds": 90,
-        "mttd_met": true
-      },
-      "investigation": {
-        "root_cause": "OpenAI API timeout due to rate limiting",
-        "identified_at": "2025-12-20T14:04:00Z",
-        "mtti_seconds": 150,
-        "mtti_met": true,
-        "correlation_path": "Latency metric → Exemplar → Tempo trace → AI worker span"
-      },
-      "resolution": {
-        "fix": "Implemented request queuing and backoff",
-        "resolved_at": "2025-12-20T14:18:00Z",
-        "mttr_seconds": 990,
-        "mttr_met": false,
-        "mttr_breach_reason": "Required code deployment"
-      },
-      "lessons_learned": [
-        "Exemplar feature worked great - one click from metric to trace",
-        "Need circuit breaker for external API calls",
-        "Add AI API rate limit monitoring"
-      ]
+      "uid": "843e3f6f-faf2-581f-80e9-772850c4e294",
+      "for": "5m",
+      "interval_s": 60
     },
     {
-      "scenario_id": "S003",
-      "name": "Database query performance",
-      "description": "Unoptimized query causing slow lead listing",
-      "incident_type": "performance_degradation",
-      "simulated_at": "2025-12-20T16:00:00Z",
-      "detection": {
-        "method": "User report + Grafana dashboard",
-        "detected_at": "2025-12-20T16:02:00Z",
-        "mttd_seconds": 120,
-        "mttd_met": true
-      },
-      "investigation": {
-        "root_cause": "Missing index on leads.created_at column",
-        "identified_at": "2025-12-20T16:05:30Z",
-        "mtti_seconds": 210,
-        "mtti_met": true,
-        "correlation_path": "Dashboard → Tempo trace → DB span → Slow query log"
-      },
-      "resolution": {
-        "fix": "Added index via Prisma migration",
-        "resolved_at": "2025-12-20T16:13:00Z",
-        "mttr_seconds": 660,
-        "mttr_met": true
-      },
-      "lessons_learned": [
-        "Database auto-instrumentation captured slow query",
-        "Trace showed exact query taking 2.5s",
-        "Should add automated slow query alerts"
-      ]
-    },
-    {
-      "scenario_id": "S004",
-      "name": "Memory leak in AI worker",
-      "description": "Gradual memory increase leading to OOM",
-      "incident_type": "resource_exhaustion",
-      "simulated_at": "2025-12-20T18:00:00Z",
-      "detection": {
-        "method": "Prometheus alert (memory threshold)",
-        "detected_at": "2025-12-20T18:15:00Z",
-        "mttd_seconds": 900,
-        "mttd_met": false,
-        "mttd_breach_reason": "Gradual leak - took 15 min to reach threshold"
-      },
-      "investigation": {
-        "root_cause": "LangChain chain not releasing memory after completion",
-        "identified_at": "2025-12-20T18:22:00Z",
-        "mtti_seconds": 420,
-        "mtti_met": false,
-        "correlation_path": "Memory metric → Loki logs → Heap dump analysis"
-      },
-      "resolution": {
-        "fix": "Added explicit cleanup in AI chain completion",
-        "resolved_at": "2025-12-20T18:35:00Z",
-        "mttr_seconds": 1200,
-        "mttr_met": false,
-        "mttr_breach_reason": "Required code change and restart"
-      },
-      "lessons_learned": [
-        "Memory metrics detected issue, but too slowly",
-        "Need more granular memory tracking per operation",
-        "Add memory profiling to AI worker",
-        "Consider automatic restarts on memory threshold"
-      ]
-    },
-    {
-      "scenario_id": "S005",
-      "name": "Cross-service failure cascade",
-      "description": "Email worker failure preventing lead conversions",
-      "incident_type": "cascading_failure",
-      "simulated_at": "2025-12-21T09:00:00Z",
-      "detection": {
-        "method": "Multiple alerts (email errors + conversion drop)",
-        "detected_at": "2025-12-21T09:01:45Z",
-        "mttd_seconds": 105,
-        "mttd_met": true
-      },
-      "investigation": {
-        "root_cause": "SMTP server authentication failure",
-        "identified_at": "2025-12-21T09:04:00Z",
-        "mtti_seconds": 135,
-        "mtti_met": true,
-        "correlation_path": "Alert → Correlation ID → Multi-service trace → Email worker error"
-      },
-      "resolution": {
-        "fix": "Updated SMTP credentials + retry queued emails",
-        "resolved_at": "2025-12-21T09:11:00Z",
-        "mttr_seconds": 555,
-        "mttr_met": true
-      },
-      "lessons_learned": [
-        "Correlation ID enabled tracking across all 3 services",
-        "Trace showed API → Lead Service (success) → Email Worker (fail)",
-        "Need better external service health checks",
-        "Implement circuit breaker for email service"
-      ]
+      "uid": "8b37b32b-663f-53dc-86a3-4fcd3b6f6fdf",
+      "for": "5m",
+      "interval_s": 60
     }
   ],
-  "aggregated_metrics": {
-    "mttd": {
-      "mean_seconds": 108,
-      "median_seconds": 105,
-      "p95_seconds": 900,
-      "target_seconds": 120,
-      "met_target_percentage": 80,
-      "breaches": 1,
-      "total_incidents": 5
-    },
-    "mtti": {
-      "mean_seconds": 213,
-      "median_seconds": 150,
-      "p95_seconds": 420,
-      "target_seconds": 300,
-      "met_target_percentage": 60,
-      "breaches": 2,
-      "total_incidents": 5
-    },
-    "mttr": {
-      "mean_seconds": 810,
-      "median_seconds": 660,
-      "p95_seconds": 1200,
-      "target_seconds": 900,
-      "met_target_percentage": 60,
-      "breaches": 2,
-      "total_incidents": 5
-    }
-  },
-  "correlation_effectiveness": {
-    "trace_to_log": {
-      "success_rate": 1.0,
-      "average_time_seconds": 5,
-      "notes": "100% success - all logs included trace ID via Pino mixin"
-    },
-    "log_to_trace": {
-      "success_rate": 1.0,
-      "average_time_seconds": 8,
-      "notes": "100% success - Grafana navigation from Loki to Tempo worked perfectly"
-    },
-    "metric_to_trace": {
-      "success_rate": 0.8,
-      "average_time_seconds": 12,
-      "notes": "80% success - exemplars worked when configured, some metrics missing exemplars"
-    },
-    "correlation_id_propagation": {
-      "success_rate": 1.0,
-      "average_time_seconds": 10,
-      "notes": "100% success - correlation ID propagated across all services"
-    },
-    "business_context": {
-      "success_rate": 1.0,
-      "average_time_seconds": 7,
-      "notes": "100% success - lead/user IDs present in traces and logs"
-    }
-  },
-  "improvements_needed": [
+  "incidents": [
     {
-      "priority": "high",
-      "item": "Add automated slow query detection alerts",
-      "reason": "Database performance issues detected manually, should be automatic"
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-07T16:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-07T16:00:00.121Z",
+      "mttd_s": 239.879,
+      "first_error_trace_id": "87c9fcbc3ca969aa7dd66f8df1ab7b61",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
     },
     {
-      "priority": "high",
-      "item": "Implement circuit breakers for external APIs",
-      "reason": "OpenAI timeout caused cascading latency"
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-07T18:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-07T18:00:00.045Z",
+      "mttd_s": 239.955,
+      "first_error_trace_id": "1557cbb5393ebcd16e5ecc8468a6427f",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
     },
     {
-      "priority": "medium",
-      "item": "Add memory profiling to AI worker",
-      "reason": "Memory leak took too long to detect (15 min vs 2 min target)"
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-07T20:06:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-07T20:00:00.107Z",
+      "mttd_s": 359.893,
+      "first_error_trace_id": "72462b09d8b12d2ff99d26a68dd87b59",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
     },
     {
-      "priority": "medium",
-      "item": "Add exemplars to all histogram metrics",
-      "reason": "Only 80% of metrics had exemplars enabled"
+      "rule_uid": "843e3f6f-faf2-581f-80e9-772850c4e294",
+      "alertname": "LatencyP95Anomaly",
+      "service": "api",
+      "t_alerting": "2026-10-07T20:56:00.000Z",
+      "transitions": 1,
+      "anchored": false,
+      "pending_s": 300,
+      "auto_resolve_s": 120
     },
     {
-      "priority": "low",
-      "item": "Create runbooks for common scenarios",
-      "reason": "Investigation time could be reduced with documented procedures"
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T00:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-08T00:00:00.057Z",
+      "mttd_s": 239.943,
+      "first_error_trace_id": "227218d238f90b4d11b6fe161590f879",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
     },
     {
-      "priority": "low",
-      "item": "Add PagerDuty integration",
-      "reason": "Current alerting relies on Slack, need on-call rotation support"
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T04:06:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-08T04:00:00.043Z",
+      "mttd_s": 359.957,
+      "first_error_trace_id": "bb202d8ef843a0f4e7cc27493f3aec41",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T05:04:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 480,
+      "t_first_error": "2026-10-08T05:00:00.056Z",
+      "mttd_s": 239.944,
+      "first_error_trace_id": "a365480c408fc99bba10feb36424e73d",
+      "first_error_span_name": "POST",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T06:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-08T06:00:00.052Z",
+      "mttd_s": 239.948,
+      "first_error_trace_id": "a22ba860b904ae4435286a5c1dcf7b23",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "8b37b32b-663f-53dc-86a3-4fcd3b6f6fdf",
+      "alertname": "LatencyP95Breach",
+      "service": "api",
+      "t_alerting": "2026-10-08T07:13:00.000Z",
+      "transitions": 1,
+      "anchored": false,
+      "pending_s": 300,
+      "auto_resolve_s": 60
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T08:05:00.000Z",
+      "transitions": 1,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-08T08:00:00.059Z",
+      "mttd_s": 299.941,
+      "first_error_trace_id": "6c712bf57324b3f79be20109bf487aaf",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T12:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-08T12:00:00.037Z",
+      "mttd_s": 239.963,
+      "first_error_trace_id": "e4b73e7f3269573bc400b8251b8dd5db",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T16:05:00.000Z",
+      "transitions": 1,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-08T16:00:00.035Z",
+      "mttd_s": 299.965,
+      "first_error_trace_id": "d3cae33290302d8efba2ff700c518ecf",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-08T18:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-08T18:00:00.036Z",
+      "mttd_s": 239.964,
+      "first_error_trace_id": "6772058607072d70a54b378a2a0a4910",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-10T18:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-10T18:00:00.090Z",
+      "mttd_s": 239.91,
+      "first_error_trace_id": "82927ccebc156cc53d0a8a07763503ee",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-10T20:05:00.000Z",
+      "transitions": 1,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-10T20:00:00.690Z",
+      "mttd_s": 299.31,
+      "first_error_trace_id": "eb24f8b77f6cccd1cf0202b678b76d91",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T00:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-11T00:00:00.135Z",
+      "mttd_s": 239.865,
+      "first_error_trace_id": "fda03748f59f97a282d8a515b3ce1b89",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T04:04:00.000Z",
+      "transitions": 4,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-11T04:00:00.052Z",
+      "mttd_s": 239.948,
+      "first_error_trace_id": "6ae80225adce70699d001cb448a59af0",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T05:04:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 480,
+      "t_first_error": "2026-10-11T05:00:00.106Z",
+      "mttd_s": 239.894,
+      "first_error_trace_id": "ed4566fc5ad12d009f914e5099f566b9",
+      "first_error_span_name": "POST",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T06:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-11T06:00:00.076Z",
+      "mttd_s": 239.924,
+      "first_error_trace_id": "5199b0b136efdff57627962271e43c62",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T08:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-11T08:00:00.092Z",
+      "mttd_s": 299.908,
+      "first_error_trace_id": "38b5e09bd7d331aaf77fe630882e7151",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T12:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-11T12:00:00.128Z",
+      "mttd_s": 239.872,
+      "first_error_trace_id": "73a86c6f7ab8a24e1befaa254997c051",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T16:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-11T16:00:00.101Z",
+      "mttd_s": 299.899,
+      "first_error_trace_id": "2b52c86fc712088b39a7e7ab5dbdd346",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T18:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-11T18:00:00.123Z",
+      "mttd_s": 239.877,
+      "first_error_trace_id": "faf4b8c559dc44c547ec5dc99b92030b",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-11T20:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-11T20:00:00.112Z",
+      "mttd_s": 299.888,
+      "first_error_trace_id": "d8b1448151429015703925f3d5cbffe9",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-12T00:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-12T00:00:00.080Z",
+      "mttd_s": 239.92,
+      "first_error_trace_id": "48b0e269af9bc80e8dbb22d560d92e85",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-12T04:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-12T04:00:00.023Z",
+      "mttd_s": 299.977,
+      "first_error_trace_id": "e34e2010dd0d00e98059697cb478afd2",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-12T05:04:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 480,
+      "t_first_error": "2026-10-12T05:00:00.041Z",
+      "mttd_s": 239.959,
+      "first_error_trace_id": "ab225304569e86ba5b2ee94df72c7ff5",
+      "first_error_span_name": "POST",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-12T06:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-12T06:00:00.053Z",
+      "mttd_s": 239.947,
+      "first_error_trace_id": "37d9e3f849117abcc98cd56e729ca3e4",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-13T12:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-13T12:00:00.115Z",
+      "mttd_s": 239.885,
+      "first_error_trace_id": "5df1dc50e7f43e25d72abada63cc0ea6",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-16T13:35:00.000Z",
+      "transitions": 3,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-16T13:29:39.421Z",
+      "mttd_s": 320.579,
+      "first_error_trace_id": "de8c2c9b265005d6a9b448a20bfb2b08",
+      "first_error_span_name": "pg.connect",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-16T16:05:00.000Z",
+      "transitions": 1,
+      "anchored": true,
+      "auto_resolve_s": 420,
+      "t_first_error": "2026-10-16T16:00:00.689Z",
+      "mttd_s": 299.311,
+      "first_error_trace_id": "bd637fb74c95e27a2388cda48d37d1c4",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "8b37b32b-663f-53dc-86a3-4fcd3b6f6fdf",
+      "alertname": "LatencyP95Breach",
+      "service": "api",
+      "t_alerting": "2026-10-16T17:48:00.000Z",
+      "transitions": 1,
+      "anchored": false,
+      "pending_s": 300,
+      "auto_resolve_s": 60
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-16T18:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-16T18:00:00.745Z",
+      "mttd_s": 239.255,
+      "first_error_trace_id": "2fcfa08300bc4e73dd2911e48b9932ac",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-16T20:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-16T20:00:00.671Z",
+      "mttd_s": 299.329,
+      "first_error_trace_id": "a55d170f33f40120678f77e2e5c1a963",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-17T00:06:00.000Z",
+      "transitions": 4,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-17T00:00:00.674Z",
+      "mttd_s": 359.326,
+      "first_error_trace_id": "d2432f7408f0bec5feec5e48dff4fe53",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-17T12:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-17T12:00:00.686Z",
+      "mttd_s": 239.314,
+      "first_error_trace_id": "8e9859e33d7b04aa98717057cb8eb4dd",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-19T16:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-19T16:00:00.693Z",
+      "mttd_s": 299.307,
+      "first_error_trace_id": "7080818d6bc849ddb926f744bd932cde",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-19T18:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-19T18:00:00.679Z",
+      "mttd_s": 239.321,
+      "first_error_trace_id": "ab6e26e84612ce7ee305de1c3d2f6130",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-19T20:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-19T20:00:00.637Z",
+      "mttd_s": 299.363,
+      "first_error_trace_id": "204951bd7960ab1c25fa58f9f2caa95c",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T00:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-20T00:00:00.717Z",
+      "mttd_s": 239.283,
+      "first_error_trace_id": "0d2af19de57b8fcb098d47c34d40cf43",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T04:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-20T04:00:00.658Z",
+      "mttd_s": 299.342,
+      "first_error_trace_id": "b45fe00db27cd1f4931f5f2a8ed1c476",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T05:04:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 480,
+      "t_first_error": "2026-10-20T05:00:00.071Z",
+      "mttd_s": 239.929,
+      "first_error_trace_id": "4284d81b11f4040a86396faae7e440e0",
+      "first_error_span_name": "POST",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T06:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-20T06:00:00.700Z",
+      "mttd_s": 239.3,
+      "first_error_trace_id": "b618c0a2d057c128d000a16ceb5fdbd6",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T08:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-20T08:00:00.707Z",
+      "mttd_s": 299.293,
+      "first_error_trace_id": "3b524e2e905c7f3ebfa198299f518b61",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T12:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 180,
+      "t_first_error": "2026-10-20T12:00:00.743Z",
+      "mttd_s": 239.257,
+      "first_error_trace_id": "82624146805726ebf33583e2036816e0",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T16:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-20T16:00:00.658Z",
+      "mttd_s": 299.342,
+      "first_error_trace_id": "ec0da15e8a4f91618530dfc6bbc1d369",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T18:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-20T18:00:00.655Z",
+      "mttd_s": 239.345,
+      "first_error_trace_id": "dc9a46fdf4bdb6d8dd5f13eae1e98d90",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-20T20:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-20T20:00:00.655Z",
+      "mttd_s": 299.345,
+      "first_error_trace_id": "8c1e028891620d4a8be9572dfdefb1ce",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T00:04:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-21T00:00:00.641Z",
+      "mttd_s": 239.359,
+      "first_error_trace_id": "fe7ad47c144b7a57dfc7206bceb7120a",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T04:05:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-21T04:00:00.684Z",
+      "mttd_s": 299.316,
+      "first_error_trace_id": "b62fcfd07cd0f9b747ab08307a7b6924",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T05:05:00.000Z",
+      "transitions": 1,
+      "anchored": true,
+      "auto_resolve_s": 420,
+      "t_first_error": "2026-10-21T05:00:00.125Z",
+      "mttd_s": 299.875,
+      "first_error_trace_id": "1e89d9b874219dd350db0e745e5d84f5",
+      "first_error_span_name": "POST",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T06:06:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-21T06:00:00.741Z",
+      "mttd_s": 359.259,
+      "first_error_trace_id": "e4d5dc5e9b318c575228dc5b4aa36107",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T08:06:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-21T08:00:00.726Z",
+      "mttd_s": 359.274,
+      "first_error_trace_id": "17b948ec6d36b417266b68b951fbdc35",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T12:03:00.000Z",
+      "transitions": 6,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-21T12:00:00.695Z",
+      "mttd_s": 179.305,
+      "first_error_trace_id": "2ba75a8a272fa4c8236bbe5fc40a4b80",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T16:03:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-21T16:00:00.675Z",
+      "mttd_s": 179.325,
+      "first_error_trace_id": "85dbef5e7d4af4770c9733e8fecbc71e",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T18:03:00.000Z",
+      "transitions": 6,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-21T18:00:00.671Z",
+      "mttd_s": 179.329,
+      "first_error_trace_id": "edbb116f4ab20d648eb43453f630d664",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-21T20:06:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-21T20:00:00.703Z",
+      "mttd_s": 359.297,
+      "first_error_trace_id": "6e75240ee18107a51f16a321fa919008",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T00:03:00.000Z",
+      "transitions": 6,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-22T00:00:00.670Z",
+      "mttd_s": 179.33,
+      "first_error_trace_id": "cda6ac3cc5de707c2fd6d04f7c25d52c",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T04:06:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 120,
+      "t_first_error": "2026-10-22T04:00:00.651Z",
+      "mttd_s": 359.349,
+      "first_error_trace_id": "c84270e14521e202635dd7dc8ce4c355",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T05:03:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 480,
+      "t_first_error": "2026-10-22T05:00:00.086Z",
+      "mttd_s": 179.914,
+      "first_error_trace_id": "bff79875c1bac89736c8be91cc1b9a76",
+      "first_error_span_name": "POST",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T08:06:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-22T08:00:00.725Z",
+      "mttd_s": 359.275,
+      "first_error_trace_id": "ea94355246aa58fa6f927187ba7cf526",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "api",
+      "t_alerting": "2026-10-22T11:54:00.000Z",
+      "transitions": 1,
+      "anchored": true,
+      "auto_resolve_s": 360,
+      "t_first_error": "2026-10-22T11:47:45.585Z",
+      "mttd_s": 374.415,
+      "first_error_trace_id": "35a80772c1db087a12e82bcdcd987c3d",
+      "first_error_span_name": "POST /api/trpc/partner.provisionTenant",
+      "first_error_service": "api",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T12:03:00.000Z",
+      "transitions": 6,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-22T12:00:00.687Z",
+      "mttd_s": 179.313,
+      "first_error_trace_id": "d714136c343f73d686b960cb849fb46c",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T16:06:00.000Z",
+      "transitions": 2,
+      "anchored": true,
+      "auto_resolve_s": 60,
+      "t_first_error": "2026-10-22T16:00:00.762Z",
+      "mttd_s": 359.238,
+      "first_error_trace_id": "450f1413a2fbf69047216f41b636dca7",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T18:03:00.000Z",
+      "transitions": 6,
+      "anchored": true,
+      "auto_resolve_s": 240,
+      "t_first_error": "2026-10-22T18:00:00.728Z",
+      "mttd_s": 179.272,
+      "first_error_trace_id": "f3c4eeef2a791dcb64be76abd088658d",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
+    },
+    {
+      "rule_uid": "681bb3b0-d73c-541c-a4a8-c633c0d1489c",
+      "alertname": "ErrorRatioBreach",
+      "service": "ai-worker",
+      "t_alerting": "2026-10-22T20:03:00.000Z",
+      "transitions": 5,
+      "anchored": true,
+      "auto_resolve_s": 300,
+      "t_first_error": "2026-10-22T20:00:00.755Z",
+      "mttd_s": 179.245,
+      "first_error_trace_id": "b7547f3482b7cbd32ac7e23e1c8f1d69",
+      "first_error_span_name": "pg.query:INSERT postgres",
+      "first_error_service": "ai-worker",
+      "trace_resolves": true
     }
   ],
-  "next_steps": {
-    "short_term": [
-      "Enable exemplars on all histogram metrics",
-      "Create Grafana dashboards for each service",
-      "Document correlation patterns in runbooks",
-      "Add circuit breakers to AI worker"
-    ],
-    "medium_term": [
-      "Implement automated slow query alerts",
-      "Add memory profiling to all services",
-      "Create incident response playbooks",
-      "Set up PagerDuty rotation"
-    ],
-    "long_term": [
-      "Implement predictive alerting (anomaly detection)",
-      "Add distributed tracing to frontend (RUM)",
-      "Build custom Grafana plugins for CRM-specific views",
-      "Implement chaos engineering tests"
-    ]
-  },
-  "success_criteria": {
-    "mttd_below_2min": {
-      "target": true,
-      "current": false,
-      "percentage": 80,
-      "notes": "80% of incidents detected in <2 min, need to improve memory leak detection"
+  "exclusions": [
+    {
+      "rule_uid": "ifc032-delivery-test",
+      "reason": "IFC-032 delivery test rule (vector(1)); proves alert delivery, not detection",
+      "count": 1
     },
-    "root_cause_identifiable": {
-      "target": true,
-      "current": true,
-      "percentage": 100,
-      "notes": "All 5 test scenarios successfully identified root cause via correlation"
-    },
-    "trace_log_metric_unified": {
-      "target": true,
-      "current": true,
-      "percentage": 100,
-      "notes": "All three signals successfully correlated in all test scenarios"
-    },
-    "grafana_navigation_works": {
-      "target": true,
-      "current": true,
-      "percentage": 100,
-      "notes": "Successfully navigated between Tempo, Loki, and Prometheus"
+    {
+      "rule_uid": "e2bd1f12-b2ba-5102-8d55-d0f1a6600891",
+      "reason": "asserts_up detects missing telemetry, not errors",
+      "count": 3
     }
+  ],
+  "aggregates": {
+    "n_transitions": 223,
+    "n_incidents": 66,
+    "n_anchored": 63,
+    "n_unanchored": 3,
+    "mean_s": 268.739,
+    "median_s": 239.955,
+    "p90_s": 359.275,
+    "share_lt_120s": 0
   },
-  "conclusion": "Full stack observability successfully implemented with 80% MTTD compliance and 100% correlation success. Minor improvements needed for memory monitoring and metric exemplars. System is production-ready with documented areas for enhancement."
+  "kpi": {
+    "target_s": 120,
+    "statistic": "mean",
+    "met": false,
+    "cause_if_not_met": "Errors started before the rule condition crossed its threshold"
+  },
+  "limitations": [
+    "Span sampling can make the first recorded error later than the true onset, so MTTD can be understated.",
+    "Span start times use the service clock and alert transitions the Grafana ruler clock; a negative difference is marked unanchored.",
+    "Grafana-managed (App Observability) rules are read live from the provisioning API; their settings are not in the repo.",
+    "Auto-resolve time is the Alerting to Normal transition of the rule, not a human resolution time.",
+    "Incidents are runs of Alerting transitions per rule and service split by a gap of 30 minutes or more."
+  ]
 }

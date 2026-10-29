@@ -65,6 +65,8 @@
   },
   "devDependencies": {
     "@intelliflow/typescript-config": "workspace:*",
+    "@opentelemetry/instrumentation-pino": "0.68.0",
+    "@opentelemetry/sdk-logs": "0.219.0",
     "@types/node": "^25.9.2",
     "@vitest/coverage-v8": "^4.1.12",
     "tsup": "^8.0.0",

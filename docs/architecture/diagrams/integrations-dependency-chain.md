@@ -117,14 +117,15 @@ IMAP server (user) ─► ImapBounceReader ✅ ──────┴──► bo
 
 ### Overview
 
-| Layer       | Task ID              | Status | Description                     |
-| ----------- | -------------------- | ------ | ------------------------------- |
-| Domain      | ENV-008-AI           | ⏳     | OpenTelemetry Setup             |
-| Validators  | traces.ts            | ⬜     | Trace schemas                   |
-| Application | IFC-116              | ⬜     | Metrics Collection              |
-| Adapters    | IFC-142              | ⬜     | Alerting & SLOs                 |
-| API         | -                    | ⬜     | Metrics router                  |
-| UI          | TRACK-001, TRACK-006 | 🔶     | Status ✅ & Build ⬜ Dashboards |
+| Layer       | Task ID              | Status | Description                                                                                                              |
+| ----------- | -------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Domain      | ENV-008-AI           | ⏳     | OpenTelemetry Setup                                                                                                      |
+| Validators  | traces.ts            | ⬜     | Trace schemas                                                                                                            |
+| Application | IFC-116              | ⬜     | Metrics Collection                                                                                                       |
+| Adapters    | IFC-142              | ⬜     | Alerting & SLOs                                                                                                          |
+| API         | -                    | ⬜     | Metrics router                                                                                                           |
+| UI          | TRACK-001, TRACK-006 | 🔶     | Status ✅ & Build ⬜ Dashboards                                                                                          |
+| Cross-cut   | IFC-074              | 🔶     | Log/trace/metric correlation + MTTD evidence (api pino → Loki; read-only collector). In Progress: api row pending deploy |
 
 ### Dependency Diagram
 

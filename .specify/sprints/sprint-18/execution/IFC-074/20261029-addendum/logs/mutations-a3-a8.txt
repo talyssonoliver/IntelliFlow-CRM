@@ -1,0 +1,3 @@
+unknown datasource accepted | KILLED
+any Loki stream accepted | KILLED
+Loki target checked as PromQL | KILLED
