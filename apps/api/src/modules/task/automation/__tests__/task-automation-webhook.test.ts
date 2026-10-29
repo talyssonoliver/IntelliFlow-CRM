@@ -117,6 +117,37 @@ describe('handleTaskAutomationWebhook', () => {
     expect(store.runs[0].actions).toEqual(edited);
   });
 
+  it('admits nothing when the secret is rotated with revocation after the lookup', async () => {
+    changeRuleAfterLookup((stored) => {
+      stored.webhookSecret = randomBytes(32).toString('hex');
+      stored.webhookSecretPrevious = null;
+      stored.webhookSecretPreviousExpiresAt = null;
+    });
+    const raw = body();
+    expect((await call(raw, signed(raw))).status).toBe(404);
+    expect(store.runs).toHaveLength(0);
+  });
+
+  it('admits nothing when the URL is regenerated after the lookup', async () => {
+    changeRuleAfterLookup((stored) => {
+      stored.webhookTokenHash = sha256Hex('tat_' + randomBytes(32).toString('base64url'));
+    });
+    const raw = body();
+    expect((await call(raw, signed(raw))).status).toBe(404);
+    expect(store.runs).toHaveLength(0);
+  });
+
+  it('still admits a request signed with the previous secret kept by a rotation after the lookup', async () => {
+    changeRuleAfterLookup((stored) => {
+      stored.webhookSecretPrevious = stored.webhookSecret;
+      stored.webhookSecretPreviousExpiresAt = new Date(NOW.getTime() + 60_000);
+      stored.webhookSecret = randomBytes(32).toString('hex');
+    });
+    const raw = body();
+    expect((await call(raw, signed(raw))).status).toBe(202);
+    expect(store.runs).toHaveLength(1);
+  });
+
   it('takes the webhook variables the admitted actions reference, not the looked-up ones', async () => {
     const edited = [
       {

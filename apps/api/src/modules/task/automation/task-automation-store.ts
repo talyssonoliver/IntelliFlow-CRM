@@ -88,6 +88,14 @@ export interface WebhookRule {
   webhookSecretPreviousExpiresAt: Date | null;
 }
 
+/** A webhook rule's credentials as they stand under the admission row lock. */
+export interface WebhookCredentials {
+  webhookTokenHash: string | null;
+  webhookSecret: string | null;
+  webhookSecretPrevious: string | null;
+  webhookSecretPreviousExpiresAt: Date | null;
+}
+
 export interface NewRun {
   tenantId: string;
   ruleId: string;
@@ -111,6 +119,12 @@ export interface NewRun {
    * caller read it). A rule that no longer matches admits nothing.
    */
   stillMatches?: (rule: LockedRule) => boolean;
+  /**
+   * Whether the request still verifies against the webhook credentials read
+   * under the admission lock (a URL regeneration or a revoking rotation
+   * committed since the lookup wins). False admits nothing.
+   */
+  stillVerifies?: (credentials: WebhookCredentials) => boolean;
 }
 
 /** The rule as it stands under the admission row lock. */
@@ -301,6 +315,20 @@ async function admitInTransaction(
   if (existing) return { created: false, existingPayloadHash: existing.payloadHash };
   const rule = await lockRuleForAdmission(tx, run.tenantId, run.ruleId);
   if (!rule?.isActive || (run.stillMatches && !run.stillMatches(rule))) return { inactive: true };
+  if (run.stillVerifies) {
+    // Model API so the field-encryption extension decrypts the secrets; the row
+    // is share-locked above, so these are the committed credentials.
+    const credentials = await tx.taskAutomationRule.findUnique({
+      where: { id: run.ruleId },
+      select: {
+        webhookTokenHash: true,
+        webhookSecret: true,
+        webhookSecretPrevious: true,
+        webhookSecretPreviousExpiresAt: true,
+      },
+    });
+    if (!credentials || !run.stillVerifies(credentials)) return { inactive: true };
+  }
   const since = (ms: number) => ({ gte: new Date(now.getTime() - ms) });
   const forRule = { tenantId: run.tenantId, ruleId: run.ruleId };
   if (caps.perMinute !== undefined) {

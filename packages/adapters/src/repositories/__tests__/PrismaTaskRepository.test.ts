@@ -145,6 +145,28 @@ describe('PrismaTaskRepository assigneeId persistence (PG-208)', () => {
     expect(args.update.assigneeId).toBe('assignee-9');
   });
 
+  it('saveAssignment writes only the assignee, guarded by tenant and the updatedAt it read', async () => {
+    prisma.task.updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const task = (await repo.findById({ value: ID_A } as any))!;
+    const readAt = task.updatedAt;
+    task.assignTo('assignee-2', 'system:task-automation');
+    await expect(repo.saveAssignment(task, readAt)).resolves.toBe(true);
+    expect(prisma.task.updateMany).toHaveBeenCalledWith({
+      where: { id: ID_A, tenantId: 'tenant-1', updatedAt: readAt },
+      data: { assigneeId: 'assignee-2', updatedAt: task.updatedAt },
+    });
+    expect(prisma.task.upsert).not.toHaveBeenCalled();
+  });
+
+  it('saveAssignment reports a task edited or deleted since it was read', async () => {
+    prisma.task.updateMany = vi.fn().mockResolvedValue({ count: 0 });
+    const task = (await repo.findById({ value: ID_A } as any))!;
+    const readAt = task.updatedAt;
+    task.assignTo('assignee-2', 'system:task-automation');
+    await expect(repo.saveAssignment(task, readAt)).resolves.toBe(false);
+    expect(prisma.task.upsert).not.toHaveBeenCalled();
+  });
+
   it('writes null for an unassigned task', async () => {
     prisma.task.findUnique.mockResolvedValue(
       makeRecord(ID_A, { assigneeId: null, priority: 'LOW' })

@@ -851,6 +851,44 @@ describe('TaskService assignee (PG-208)', () => {
     expect((await taskRepository.findById(task.id))?.assigneeId).toBe('assignee-1');
   });
 
+  it('assignTask does not bring back a task deleted after it was read', async () => {
+    const task = await created();
+    const read = taskRepository.findById.bind(taskRepository);
+    vi.spyOn(taskRepository, 'findById').mockImplementationOnce(async (id) => {
+      const found = await read(id);
+      await taskRepository.delete(id);
+      return found;
+    });
+    eventBus.clearPublishedEvents();
+    const result = await service.assignTask(
+      task.id.value,
+      'assignee-2',
+      'system:task-automation',
+      'tenant-1'
+    );
+    expect(result.isFailure).toBe(true);
+    expect(await taskRepository.findById(task.id)).toBeNull();
+    expect(eventBus.getPublishedEvents()).toHaveLength(0);
+  });
+
+  it('assignTask saves only the assignment, guarded by the updatedAt it read', async () => {
+    const task = await created();
+    const readAt = task.updatedAt;
+    const save = vi.spyOn(taskRepository, 'save');
+    const saveAssignment = vi.spyOn(taskRepository, 'saveAssignment').mockResolvedValueOnce(false);
+    eventBus.clearPublishedEvents();
+    const result = await service.assignTask(
+      task.id.value,
+      'assignee-2',
+      'system:task-automation',
+      'tenant-1'
+    );
+    expect(saveAssignment).toHaveBeenCalledWith(task, readAt);
+    expect(save).not.toHaveBeenCalled();
+    expect(result.isFailure).toBe(true);
+    expect(eventBus.getPublishedEvents()).toHaveLength(0);
+  });
+
   it('assignTask rejects an invalid id', async () => {
     const result = await service.assignTask(
       'not-a-uuid',

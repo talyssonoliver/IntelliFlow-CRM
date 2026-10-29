@@ -70,6 +70,14 @@ export class PrismaTaskRepository implements TaskRepository {
     });
   }
 
+  async saveAssignment(task: Task, expectedUpdatedAt: Date): Promise<boolean> {
+    const { count } = await this.prisma.task.updateMany({
+      where: { id: task.id.value, tenantId: task.tenantId, updatedAt: expectedUpdatedAt },
+      data: { assigneeId: task.assigneeId, updatedAt: task.updatedAt },
+    });
+    return count === 1;
+  }
+
   async findById(id: TaskId): Promise<Task | null> {
     const record = await this.prisma.task.findUnique({
       where: { id: id.value },

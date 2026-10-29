@@ -229,7 +229,8 @@ export async function handleTaskAutomationWebhook(
   };
 
   if (!TOKEN_PATTERN.test(token)) return fail(NOT_FOUND);
-  const rule = await deps.store.loadWebhookRule(sha256Hex(token));
+  const tokenHash = sha256Hex(token);
+  const rule = await deps.store.loadWebhookRule(tokenHash);
   if (!rule?.isActive || rule.triggerType !== 'WEBHOOK') return fail(NOT_FOUND);
   const settings = await deps.store.settings(rule.tenantId);
   if (!settings.automationEnabled) return fail(NOT_FOUND);
@@ -264,11 +265,16 @@ export async function handleTaskAutomationWebhook(
         webhook: webhookVariables(payload as Record<string, unknown>, actions),
       }),
       actions: rule.actions,
+      // A URL regeneration or a revoking secret rotation committed since the
+      // lookup wins: the request is verified again against the locked row.
+      stillVerifies: (credentials) =>
+        credentials.webhookTokenHash === tokenHash &&
+        verifySignature({ ...rule, ...credentials }, headers, rawBody, now).ok,
     },
     { perMinute: L.webhookPerMinuteCap, perHour: settings.maxRunsPerRulePerHour },
     now
   );
-  // Deactivated or deleted after the lookup: answered like an unknown token.
+  // Deactivated, deleted or re-credentialed after the lookup: answered like an unknown token.
   if ('inactive' in result) return NOT_FOUND;
   if ('capped' in result) {
     await deps.store.recordSuppressed(rule.tenantId, rule.id, now);

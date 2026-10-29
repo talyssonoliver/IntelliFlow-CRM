@@ -716,12 +716,19 @@ export class TaskService {
       return Result.ok(task);
     }
 
+    const readAt = task.updatedAt;
     task.assignTo(assigneeId, assignedBy);
 
+    // Only the assignee is written, and only over the task as it was read: an
+    // edit or a deletion since then wins and nothing is published.
+    let saved: boolean;
     try {
-      await this.taskRepository.save(task);
+      saved = await this.taskRepository.saveAssignment(task, readAt);
     } catch {
       return Result.fail(new PersistenceError('Failed to save task'));
+    }
+    if (!saved) {
+      return Result.fail(new PersistenceError(`Task changed before assignment: ${taskId}`));
     }
 
     await this.publishEvents(task);

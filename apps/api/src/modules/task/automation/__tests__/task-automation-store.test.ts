@@ -484,6 +484,33 @@ describe('createTaskAutomationStore (PG-208)', () => {
       expect(m.taskAutomationRun.create).not.toHaveBeenCalled();
     });
 
+    it('re-checks webhook credentials read under the row lock, and writes nothing when they fail', async () => {
+      m.taskAutomationRun.create.mockClear();
+      m.taskAutomationRun.findUnique.mockResolvedValueOnce(null);
+      const credentials = {
+        webhookTokenHash: 'h'.repeat(64),
+        webhookSecret: 'rotated',
+        webhookSecretPrevious: null,
+        webhookSecretPreviousExpiresAt: null,
+      };
+      m.taskAutomationRule.findUnique.mockResolvedValueOnce(credentials);
+      const stillVerifies = vi.fn(() => false);
+      await expect(store.admitRun({ ...run, stillVerifies }, caps, NOW)).resolves.toEqual({
+        inactive: true,
+      });
+      expect(m.taskAutomationRule.findUnique.mock.calls.at(-1)[0]).toEqual({
+        where: { id: 'r1' },
+        select: {
+          webhookTokenHash: true,
+          webhookSecret: true,
+          webhookSecretPrevious: true,
+          webhookSecretPreviousExpiresAt: true,
+        },
+      });
+      expect(stillVerifies).toHaveBeenCalledWith(credentials);
+      expect(m.taskAutomationRun.create).not.toHaveBeenCalled();
+    });
+
     it('reports an existing idempotency key instead of inserting', async () => {
       m.taskAutomationRun.create.mockClear();
       m.taskAutomationRun.count.mockResolvedValue(0);
