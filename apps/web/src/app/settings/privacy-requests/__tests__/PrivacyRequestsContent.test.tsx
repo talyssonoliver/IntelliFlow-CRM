@@ -364,6 +364,31 @@ describe('PrivacyRequestsContent', () => {
     render(<PrivacyRequestsContent />);
     expect(screen.getByText('Only administrators can see and handle data requests.')).toBeTruthy();
   });
+
+  it('shows the shared empty state for no open requests and no restrictions', async () => {
+    h.list.data = [request({ status: 'COMPLETED' })];
+    const { container } = render(<PrivacyRequestsContent />);
+    const requests = screen.getByRole('region', { name: 'No open requests' });
+    expect(
+      within(requests).getByRole('heading', { level: 3, name: 'No open requests' })
+    ).toBeTruthy();
+    const restrictions = screen.getByRole('region', { name: 'No restrictions in force' });
+    expect(
+      within(restrictions).getByRole('heading', { level: 3, name: 'No restrictions in force' })
+    ).toBeTruthy();
+    await axeClean(container);
+  });
+
+  it('shows no empty state while the requests load or when they fail to load', () => {
+    h.list = { data: undefined, isLoading: true, isError: false, error: null };
+    const { unmount } = render(<PrivacyRequestsContent />);
+    expect(screen.queryByRole('region', { name: 'No open requests' })).toBeNull();
+    unmount();
+    h.list = { data: undefined, isLoading: false, isError: true, error: { data: {} } };
+    render(<PrivacyRequestsContent />);
+    expect(screen.getByRole('alert').textContent).toContain('The requests could not be loaded.');
+    expect(screen.queryByRole('region', { name: 'No open requests' })).toBeNull();
+  });
 });
 
 describe('accessibility of validation and focus', () => {

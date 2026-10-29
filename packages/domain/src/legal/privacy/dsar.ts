@@ -36,9 +36,6 @@ export type DsarIdentityMethod = (typeof DSAR_IDENTITY_METHODS)[number];
 export const DSAR_OBJECTION_SCOPES = ['MARKETING', 'OTHER'] as const;
 export type DsarObjectionScope = (typeof DSAR_OBJECTION_SCOPES)[number];
 
-export const RESTRICTION_KINDS = ['RESTRICTION', 'OBJECTION'] as const;
-export type RestrictionKind = (typeof RESTRICTION_KINDS)[number];
-
 /**
  * What the automatic export withholds until the firm has reviewed it: free text (legal
  * privilege, third parties; only types, dates, statuses and counts are exported) and any

@@ -1,0 +1,6 @@
+domain exit 0
+validators exit 0
+application exit 0
+db exit 0
+api exit 0
+web exit 0

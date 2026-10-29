@@ -293,7 +293,7 @@ _IFC-147 creates timeline UI but no formal PG-_ task exists
 
 ```
     ╔═══════════════════════════════════════════════════════════════════════════════════════════╗
-    ║  EVENT TYPES + PUBLIC BOOKING (tenant event types, /book link)           ⏳ IN PROGRESS  ║
+    ║  EVENT TYPES + PUBLIC BOOKING (tenant event types, /book link)           ✅ COMPLETE     ║
     ╚═══════════════════════════════════════════════════════════════════════════════════════════╝
 
     PG-202 (firm availability) ✅

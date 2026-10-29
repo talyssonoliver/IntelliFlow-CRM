@@ -131,5 +131,181 @@
     }
   ],
   "hydratedAt": "2026-10-20T22:39:06.236Z",
-  "contextHash": "4472bc475784797b73359cb74260c3f84297beccf34920989916399289b34424"
+  "contextHash": "4472bc475784797b73359cb74260c3f84297beccf34920989916399289b34424",
+  "dsar_scope_note": "Scope note (2026-10-29). This hydration ran on 2026-10-20 for PR 1 (event types and public booking). The hydrator takes its scope only from the CSV row (description, definition of done, section; context-hydration.ts:236-240), and the PG-203 row does not mention DSAR, so a re-run would not cover the DSAR scope and was not done. The DSAR context is recorded instead in the spec Addendum A (PG-203-spec.md:614), the owner rulings Q13-Q22 (PG-203-owner-ruling.md) and the plan addenda A and B.",
+  "shared_component_audit": {
+    "performed_at": "2026-10-29",
+    "retrospective": true,
+    "provenance": "Added 2026-10-29 at the D12 close-out, after an adversarial review found these keys missing. They were NOT produced at spec time: tools/scripts/lib/stoa/context-hydration.ts never writes them (spec-session phases 0.76/0.77 add them by hand), and this session skipped that step. PR 1 reuse decisions were made at spec time in the spec \"Components\" table (PG-203-spec.md:376-397); they are transcribed here and checked against the merged code (#1003, 4294419cb). The DSAR (PR 2) audit was performed retrospectively on 2026-10-29 against branch feat/pg-203-dsar at 4db3266f1. Everything above \"shared_component_audit\" is unchanged from the 2026-10-20 hydration; contextHash covers only that content.",
+    "searched_directories": [
+      "apps/web/src/components/shared/",
+      "apps/web/src/components/settings/",
+      "packages/ui/src/components/"
+    ],
+    "components_found": [
+      "PageHeader",
+      "SectionHeader",
+      "ModuleSettingsShell",
+      "DeleteTypeDialog",
+      "TypeSettingsLoading",
+      "EntitySearchField",
+      "EmptyState",
+      "Card",
+      "Button",
+      "Badge",
+      "Dialog",
+      "Input",
+      "Label",
+      "Textarea",
+      "Checkbox",
+      "toast"
+    ],
+    "reuse_decisions": [
+      {
+        "scope": "PR 1",
+        "need": "event types page header and sections",
+        "existing": "PageHeader + SectionHeader + Card",
+        "action": "REUSE",
+        "evidence": "EventTypesContent.tsx imports"
+      },
+      {
+        "scope": "PR 1",
+        "need": "delete confirmation",
+        "existing": "components/settings/DeleteTypeDialog",
+        "action": "REUSE",
+        "evidence": "EventTypesContent.tsx imports (spec table said ConfirmationDialog; the shared settings dialog was used instead)"
+      },
+      {
+        "scope": "PR 1",
+        "need": "loading skeleton",
+        "existing": "components/settings/TypeSettingsLoading",
+        "action": "REUSE",
+        "evidence": "EventTypesLoading.tsx"
+      },
+      {
+        "scope": "PR 1",
+        "need": "zero state",
+        "existing": "EmptyState",
+        "action": "REUSE",
+        "evidence": "EventTypeList.tsx"
+      },
+      {
+        "scope": "PR 1",
+        "need": "host picker",
+        "existing": "components/tasks/EntitySearchField",
+        "action": "REUSE",
+        "evidence": "EventTypeDialog.tsx"
+      },
+      {
+        "scope": "PR 1",
+        "need": "colour swatches",
+        "existing": "lib/color-tokens.ts",
+        "action": "REUSE",
+        "evidence": "components/calendar/event-type-colors.ts"
+      },
+      {
+        "scope": "PR 1",
+        "need": "public booking form",
+        "existing": "@intelliflow/ui Button/Checkbox/Input/Label/Textarea",
+        "action": "COMPOSE",
+        "evidence": "BookingContent.tsx"
+      },
+      {
+        "scope": "PR 2",
+        "need": "privacy requests page header and sections",
+        "existing": "PageHeader + SectionHeader + Card",
+        "action": "REUSE",
+        "evidence": "settings/privacy-requests/PrivacyRequestsContent.tsx:29-30"
+      },
+      {
+        "scope": "PR 2",
+        "need": "log / action dialogs",
+        "existing": "@intelliflow/ui Dialog family + form primitives",
+        "action": "COMPOSE",
+        "evidence": "LogRequestDialog.tsx, RequestActionDialog.tsx"
+      },
+      {
+        "scope": "PR 2",
+        "need": "public request, verify and export forms",
+        "existing": "@intelliflow/ui Button/Checkbox/Input/Label/Textarea",
+        "action": "COMPOSE",
+        "evidence": "DsarRequestContent.tsx, DsarExportContent.tsx"
+      },
+      {
+        "scope": "PR 2",
+        "need": "admin queue empty lists",
+        "existing": "EmptyState (canonical, entity + phase=passive)",
+        "action": "REUSE (after fix)",
+        "evidence": "Found by this audit: PrivacyRequestsContent.tsx rendered plain \"No open requests.\" / \"No restrictions in force.\" lines. Fixed 2026-10-29 in the D12 close-out: <EmptyState entity=\"tickets\"|\"rules\" phase=\"passive\" size=\"sm\"> with the PR 1 EventTypeList pattern (tabIndex -1), hidden while loading or on a load error; tests in __tests__/PrivacyRequestsContent.test.tsx (red first, then 27/27)."
+      }
+    ],
+    "new_components_justified": [
+      {
+        "scope": "PR 1",
+        "name": "EventTypeList / EventTypeDialog / BookingLinkCard",
+        "reason": "entity-specific list and form (ContactTypeList / ContactTypeDialog pattern, spec:381-383)"
+      },
+      {
+        "scope": "PR 1",
+        "name": "(public)/book/[handle]/[slug]/*",
+        "reason": "no public scheduling UI existed (spec:385)"
+      },
+      {
+        "scope": "PR 2",
+        "name": "(public)/dsar/dsar-shared.tsx",
+        "reason": "shared frame and helpers for the three public DSAR pages; no public request UI existed"
+      },
+      {
+        "scope": "PR 2",
+        "name": "LogRequestDialog / RequestActionDialog",
+        "reason": "DSAR-specific forms (identity method, rejection reason, erasure preview); no shared equivalent"
+      },
+      {
+        "scope": "PR 2",
+        "name": "components/privacy/RestrictionBanner.tsx",
+        "reason": "one banner reused by the lead and contact detail pages"
+      }
+    ]
+  },
+  "route_conflict_audit": {
+    "performed_at": "2026-10-29",
+    "retrospective": true,
+    "provenance": "Added 2026-10-29 at the D12 close-out, after an adversarial review found these keys missing. They were NOT produced at spec time: tools/scripts/lib/stoa/context-hydration.ts never writes them (spec-session phases 0.76/0.77 add them by hand), and this session skipped that step. PR 1 reuse decisions were made at spec time in the spec \"Components\" table (PG-203-spec.md:376-397); they are transcribed here and checked against the merged code (#1003, 4294419cb). The DSAR (PR 2) audit was performed retrospectively on 2026-10-29 against branch feat/pg-203-dsar at 4db3266f1. Everything above \"shared_component_audit\" is unchanged from the 2026-10-20 hydration; contextHash covers only that content.",
+    "routes_searched": [
+      "/calendar/**",
+      "/appointments/new",
+      "/book/**",
+      "/dsar/**",
+      "/privacy",
+      "/settings/**",
+      "apps/web/src/app (grep dsar|subject access|data.subject on origin/main)"
+    ],
+    "conflicts_found": [
+      {
+        "scope": "PR 1",
+        "path": "apps/web/src/app/calendar/event-types/page.tsx",
+        "data_source": "stub (\"coming soon\", 16 lines)",
+        "action": "REPLACED in place (no second route)"
+      },
+      {
+        "scope": "PR 1",
+        "path": "apps/web/src/components/appointments/AppointmentForm.tsx",
+        "data_source": "real (no event type field)",
+        "action": "EXTENDED with the event type picker"
+      },
+      {
+        "scope": "PR 2",
+        "path": "apps/api/src/modules/privacy/dsar.router.ts + apps/api/src/workflow/dsar-workflow.ts",
+        "data_source": "broken (non-existent Prisma accessors, nil-UUID subject, GET that erased)",
+        "action": "REMOVED with their tests; replaced by the privacy router"
+      },
+      {
+        "scope": "PR 2",
+        "path": "apps/web/src/app/(public)/privacy/page.tsx",
+        "data_source": "real (platform privacy policy)",
+        "action": "NO CONFLICT: policy text, not a request surface"
+      }
+    ],
+    "result": "origin/main had no DSAR page or admin queue in apps/web; the only overlapping surface was the API router and workflow, removed in PR 2."
+  }
 }

@@ -254,3 +254,17 @@ PG-203 addendum in ADR-007.
 - **Booker data is covered.** The export includes the appointments booked with
   the email, with the booker fields and consent time and version. Erasure clears
   those fields and keeps the slot.
+
+### Where the API database role is set
+
+"The API role, which bypasses RLS" (Decision Outcome above) is the role in the
+API's `DATABASE_URL`. That variable is a Railway service variable, composed from
+the Supabase pooler as the `postgres` user
+(`docs/operations/credential-coverage-remediation-2026-06-07.md`, the
+`local.database_url` block). That file shows the intended composition, not the
+live value. The live value was checked on 2026-10-28 by the PG-203 coordinator
+against production: `prisma migrate deploy` and the API runtime both connect as
+the Supabase `postgres` owner role. So the DSAR functions the migration revokes
+from `PUBLIC` (`dsar_subject_lock`, `dsar_carry_restriction`) stay callable by
+the API. After the migration is applied, confirm it on the API's connection with
+`SELECT has_function_privilege('dsar_subject_lock(text,text)', 'EXECUTE')`.

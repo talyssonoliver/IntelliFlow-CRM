@@ -1,0 +1,34 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 100 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T09:05:08.373Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 2
+  Waived       : 1
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/web/src/app/(public)/book/[handle]/[slug]/BookingContent.tsx:375-381 — unhandled-slot-query-failure
+    Issue    : A failed slot lookup leaves visitors with no times, error message, or retry control.
+    Evidence : The rendering handles only `slotsQuery.isLoading`, a nonempty days array with no open slots, and `firstOpenDay`; it never handles slotsQuery.isError. The query explicitly sets `retry: false`. If the server returns TOO_MANY_REQUESTS, including when another visitor behind the same IP requested slots within the 500 ms limiter window, days remains empty and every displayed-state condition is false.
+    Fix      : Render a slot-query error state with a retry button that calls slotsQuery.refetch(), including an appropriate message for throttling.
+    Fingerprint: 12331e2f991c5c42c95bff27bd84507b9f4c9abf0eb0c6fd68f9ceaa0363a765
+
+WAIVED FINDINGS (suppressed):
+  [HIGH] apps/api/src/modules/calendar/public-booking.router.ts:530 — incomplete-booking-serialization (fp: 283b28bc7d89...)
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

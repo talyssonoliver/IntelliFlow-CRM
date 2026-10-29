@@ -2570,10 +2570,10 @@ Sidebar entry: apps/web/src/components/sidebar/configs/calendar.ts:15-17
 
 ---
 
-### Event Types + Public Booking (PG-203 — in progress, ADR-083)
+### Event Types + Public Booking (PG-203 — complete, ADR-083)
 
 ```
-PG-202 ✅ (Availability) ──► PG-203 (Event Types + public booking) ⏳ in progress
+PG-202 ✅ (Availability) ──► PG-203 (Event Types + public booking, DSAR) ✅
                                ├──► PG-211 (booker self-service cancel/reschedule)  [follow-up, depends on PG-203]
                                ├──► PG-212 (per-type minimum notice and horizon)    [follow-up, depends on PG-203]
                                └──► PG-213 (booker PII purge under PG-206 policies) [follow-up, depends on PG-203]

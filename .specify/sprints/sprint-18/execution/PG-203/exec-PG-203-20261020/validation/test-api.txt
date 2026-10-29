@@ -1,0 +1,16 @@
+[test-slot] slot2 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/api test
+
+> @intelliflow/api@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\apps\api
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api
+
+(node:41452) MaxListenersExceededWarning: Possible EventEmitter memory leak detected. 11 SIGTERM listeners added to [process]. MaxListeners is 10. Use emitter.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+
+ Test Files  318 passed (318)
+      Tests  8043 passed | 18 skipped (8061)
+   Start at  20:52:02
+   Duration  110.98s (transform 12.69s, setup 66.89s, import 205.40s, tests 91.63s, environment 33ms)
+

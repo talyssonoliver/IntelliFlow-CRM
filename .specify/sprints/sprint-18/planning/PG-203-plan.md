@@ -219,6 +219,16 @@ its own, add `components/__tests__/EventTypeList.test.tsx` and update this count
 - [x] Preflight baselines recorded as `characterization-*.txt` with exit 0.
 - [x] Coverage-before captured via `/exec-coverage` (Phase 1.5 of /exec).
 
+*Provenance note (2026-10-29, D12 close-out).* Both Step 1 files were written on 2026-10-20 in the PR 1 worktree
+and were never committed until now: `context_ack.json` at 23:21:27Z (run `20261020232057-32e38201`, 19 files,
+9 invariants) and `artifacts/coverage/PG-203-before.json` at 23:20:29Z. The ack sat under the
+`.specify/sprints/.gitignore` rule `sprint-*/attestations/**`, and the coverage file was left untracked. Both were
+committed on 2026-10-29 byte-for-byte (sha256 `c39e3584…` and `cc7b4cf2…`), with nothing regenerated. All 19 sha256
+values in the ack match `git show d4db133c9:<path>`, the plan commit of 2026-10-20 23:18:49Z. The ack covers PR 1's
+scope only; no DSAR file was added to it after the fact. The before-capture copied the committed coverage-summary
+baseline and was not a fresh run (its `source` field says so). The coverage evidence for the PR is the pre-ship
+`diff-coverage` gate (changed lines ≥80%, PASS at `4db3266f1`).
+
 ### Phase 1 — RED: write failing tests (layer order)
 
 #### Step 2: Domain tests: event-type constants and `listOpenSlots` (AC-011; NF-001)
@@ -418,7 +428,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   - without `eventTypeId`, no extra calls (unchanged path).
 - [x] `onAppointmentCreated` is still invoked on create and reschedule after extraction (ICS + reminder unchanged).
 - [x] `lead.create` enqueues scoring through `enqueueLeadScoring` exactly as before (same payload).
-- [ ] DSAR export includes appointments where `bookerEmail = subjectEmail` (booker fields only). Erasure nulls
+- [x] DSAR export includes appointments where `bookerEmail = subjectEmail` (booker fields only). Erasure nulls *Verified 2026-10-29 at 4db3266f1: export matches appointments on the normalised bookerEmail (PrismaSubjectDataRepository.ts:154-165,476-496); erasure nulls bookerName/bookerEmail/bookingAnswers and consent (:843-846); real-DB tests tests/integration/dsar.test.ts:1022,1250,1500*
   `bookerName/bookerEmail/bookingAnswers` for those rows.
 
 **Validation:**
@@ -463,7 +473,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - [x] `rls-tenant-isolation.test.ts`: add `event_types` and `booking_attempts` to its table list.
 
 **Validation:**
-- [ ] RED: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/event-types.test.ts` → `red-integration.txt` *NOT CAPTURED (2026-10-21): the file was written after the migrations, so no failing run exists; recorded as a deviation in PG-203-findings.md (DB integration test section). The first real run had 4 failures, all in the test's own seeding.*
+- [x] RED: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 --exclusive intelliflow-db -- pnpm exec vitest run --project integration tests/integration/event-types.test.ts` → `red-integration.txt` *NOT CAPTURED (2026-10-21): the file was written after the migrations, so no failing run exists; recorded as a deviation in PG-203-findings.md (DB integration test section). The first real run had 4 failures, all in the test's own seeding.* *Deviation recorded 2026-10-21, not done as written: no RED run exists for this file (see the note above and PG-203-findings.md, DB integration test section)*
 
 #### Step 9: Web tests (AC-001..AC-010, AC-021, AC-025 count, AC-026)
 **Type:** test
@@ -690,7 +700,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 - [x] The public lookup is a single `findFirst` with the allowlist select and the gate fields.
 - [x] The book transaction exactly follows spec step 5.
 - [x] Post-commit work is detached with `void promise.catch(log)` and no PII in logs.
-- [ ] ADR-083 is updated with where the API DB role (BYPASSRLS) is configured: grep `DATABASE_URL` role/`postgres` in
+- [x] ADR-083 is updated with where the API DB role (BYPASSRLS) is configured: grep `DATABASE_URL` role/`postgres` in *Done 2026-10-29 in the D12 close-out: ADR-083 "Where the API database role is set" (Railway DATABASE_URL as the Supabase postgres user, docs/operations/credential-coverage-remediation-2026-06-07.md; live role checked 2026-10-28 by the coordinator; has_function_privilege check after deploy). Until then the Step 18 tick claimed this without the text*
   infra/Railway docs, or `docs/operations/*`, and cite the file.
 
 **Validation:**
@@ -785,9 +795,9 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 
 **Validation:**
-- [ ] `pnpm --filter @intelliflow/api lint`, `pnpm --filter @intelliflow/web lint`,
+- [x] `pnpm --filter @intelliflow/api lint`, `pnpm --filter @intelliflow/web lint`, *Verified at 4db3266f1: the pre-ship lint step (pnpm run lint, 26 packages incl. api/web/domain/validators) PASS, artifacts/preship/logs/lint.log; the four --filter commands were not run one by one*
   `pnpm --filter @intelliflow/domain lint`, `pnpm --filter @intelliflow/validators lint` (slot wrapper)
-- [ ] `pnpm run lint:sonar:guard`
+- [x] `pnpm run lint:sonar:guard` *Verified 2026-10-29 on Node 24: CI=1 SONAR_GUARD_BASE=origin/main, 161 changed TS/TSX files + 31 web a11y files, exit 0 (tdd/d12-closeout/sonar-guard.txt). Inside the pre-ship typecheck the guard had skipped (no uncommitted TS files)*
 
 #### Step 18: Docs, registries, ADR/PRD, dependency chains
 **Type:** docs
@@ -826,7 +836,7 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 - [x] Regenerate content audit: `npx tsx tools/scripts/content-audit.ts`.
 - [x] PRD addendum status → In Progress, then the delivery note. ADR-083 gets the delivery note and the DB-role
   citation. Add the ADR README row.
-- [ ] Dependency chain: PG-203 ⏳ → ✅ at close.
+- [x] Dependency chain: PG-203 ⏳ → ✅ at close. *Done 2026-10-29 at close: complete-dependency-chains.md and legal-scheduling-dependency-chain.md show PG-203 complete*
 - [x] Design mockup check: no mockup for event types exists in `docs/design/` (`grep -ri "event type" docs/design`).
   Record that, and compare against the PG-205 contact-types page as the visual reference.
 
@@ -897,7 +907,7 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 - [ ] `/exec-attestation` writes `attestation.json`. A stale INCOMPLETE verdict is replaced, never left.
 - [ ] CSV: status set only by /exec Phase 5. Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts`.
   Regenerate context: `npx tsx apps/project-tracker/scripts/generate-context.ts`.
-- [ ] Update the CSV artifacts column via Category A (evidence): add the public router/page, the migrations and ADR-083
+- [x] Update the CSV artifacts column via Category A (evidence): add the public router/page, the migrations and ADR-083 *Done 2026-10-29: the PG-203 row adds the public-booking and privacy routers, the /book, /dsar and /settings/privacy-requests pages, the event-types and DSAR migrations and ADR-083; the pre-req now names configs/calendar.ts*
   to "Artifacts To Track". Correct the stale pre-req `FILE:apps/web/src/components/sidebar/configs/appointments.ts`
   to `configs/calendar.ts`.
 
@@ -1046,21 +1056,21 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
 
 ### Preflight
 
-- [ ] The DSAR worktree builds: `pnpm --filter @intelliflow/{domain,validators,application} build`, then
+- [x] The DSAR worktree builds: `pnpm --filter @intelliflow/{domain,validators,application} build`, then *Verified 2026-10-29: packages build and db generate work in this worktree (tdd/dsar/d7-*.txt ran against built dist; the generated client has DsarRequest); no standalone build log, the pre-ship build passed at 4db3266f1*
   `pnpm --filter @intelliflow/db run db:generate`.
-- [ ] Characterisation: run the DSAR tests that exist today
+- [x] Characterisation: run the DSAR tests that exist today *Verified tdd/dsar/characterization-api.txt 88/88; data-governance.spec.ts never ran (excluded, "No test files found", findings "DSAR (PR 2): preflight"); purge assertions ported to tests/integration/dsar.test.ts:1212*
   (`apps/api/src/workflow/__tests__/dsar-workflow.test.ts`, `dsar-search-purge.test.ts`,
   `apps/api/src/modules/privacy/__tests__/dsar.router.test.ts`, `tests/compliance/data-governance.spec.ts`) and keep
   the log as the baseline. Note which assertions in `dsar-search-purge.test.ts` must be ported (embedding and
   search_vector purge).
-- [ ] Read `tests/architecture/tenant-procedure-enforcement.test.ts` and record which allowlist rule applies to a
+- [x] Read `tests/architecture/tenant-procedure-enforcement.test.ts` and record which allowlist rule applies to a *Verified findings preflight (rule quoted, no entry needed, the stale dsar.router.ts entry removed in 3fcafee91)*
   public-only router file (sign-off condition: decide on the `dsar.router.ts` entry from the test itself).
-- [ ] Grep every AI-scoring and embedding caller (`enqueueLeadScoring`, `scoreLead`, `ContactEmbed`,
+- [x] Grep every AI-scoring and embedding caller (`enqueueLeadScoring`, `scoreLead`, `ContactEmbed`, *Verified all six enforcement points exist (Step D7 boxes); the approval sweep creates no drafts (findings preflight); more AI paths in 98d394d3a (Addendum B); no standalone grep log*
   `AutoResponseDraft.create`, `draftMessage`) and confirm the six enforcement points against the code.
 
 ### Step D1: Domain (`packages/domain/src/legal/privacy/`)
 **Files to Create:** `dsar.ts` and `__tests__/dsar.test.ts`
-- [ ] Constants: `DSAR_REQUEST_TYPES`, `DSAR_STATUSES`, `DSAR_SOURCES`, `DSAR_IDENTITY_METHODS`,
+- [x] Constants: `DSAR_REQUEST_TYPES`, `DSAR_STATUSES`, `DSAR_SOURCES`, `DSAR_IDENTITY_METHODS`, *Verified domain legal/privacy/dsar.ts:10-90; dsar.test.ts:43; tdd/dsar/green-domain.txt 17/17*
   `DSAR_OBJECTION_SCOPES`, `RESTRICTION_KINDS`, and `DSAR_LIMITS`:
   - verify 24 h, export 72 h, max downloads 5;
   - caps 3/24 h per tenant+email, 10/h per IP, 3/24 h global;
@@ -1069,23 +1079,23 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
   - overdue repeat 3 d;
   - SLA warn window 7 d;
   - backdate at most 30 d.
-- [ ] `addCalendarMonths(date, n)` with the end-of-month clamp (31 Jan + 1 → 28/29 Feb), and
+- [x] `addCalendarMonths(date, n)` with the end-of-month clamp (31 Jan + 1 → 28/29 Feb), and *Verified dsar.ts:126,149; dsar.test.ts:83-120*
   `effectiveDeadline({slaDeadline, extendedUntil})`.
-- [ ] `normalizeSubjectEmail` (trim + lowercase, exact). `isErasedEmail` (`@erased.invalid`).
-- [ ] State rules as pure functions:
+- [x] `normalizeSubjectEmail` (trim + lowercase, exact). `isErasedEmail` (`@erased.invalid`). *Verified dsar.ts:114,118; dsar.test.ts:234*
+- [x] State rules as pure functions: *Verified dsar.ts:166-205; dsar.test.ts:122-232; the 24 h wait now applies to every staff erasure (owner ruling Q25, 0a5eb7549)*
   - `canExtend`: VERIFIED, before the original deadline, 1 or 2 months;
   - `rejectionIsLate`;
   - `accessCompletesAtVerify(counts)`: true only when every withheld count is 0;
   - `staffErasureMayRun({adminCount, createdById, resolvedById, createdAt, now})`.
-- [ ] RED → GREEN: `pnpm --filter @intelliflow/domain exec vitest run src/legal/privacy`
+- [x] RED → GREEN: `pnpm --filter @intelliflow/domain exec vitest run src/legal/privacy` *Verified red-domain.txt then green-domain.txt 17/17; d7-domain.txt 860 passed*
 
 ### Step D2: Validators (`packages/validators/src/dsar.ts`, plus a subpath export)
-- [ ] Strict public schemas:
+- [x] Strict public schemas: *Verified validators/src/dsar.ts:53-88; dsar.test.ts:26-95; verify and download share dsarTokenInputSchema*
   - `dsarFirmLookupSchema`;
   - `dsarSubmitSchema`: handle, type, email, details ≤ 2000 with control characters stripped, `consent: true`,
     `__honeypot`, and `objectionScope` required when the type is OBJECTION;
   - `dsarVerifySchema` / `dsarDownloadSchema`: requestId cuid, token base64url of 43 characters.
-- [ ] Admin schemas:
+- [x] Admin schemas: *Verified validators/src/dsar.ts:92-190. Deviation (findings, D12 close-out): `complete` is one flat strict schema, and the ERASURE no-hold, marketing-stop and backdate-reason rules are enforced and tested in DataSubjectRequestService.ts:299-307,376-400*
   - `logRequest`: `receivedOn`; `receivedOnReason` required when `receivedOn` is before today; `identityMethod`;
     `identityNote` ≥ 20 characters.
   - `complete`: a discriminated union by type. ERASURE requires `noHoldConfirmed: true`. A MARKETING objection
@@ -1093,23 +1103,23 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
   - `completeAccess`: `withheld[{category, count, reason}]`.
   - `extend`, `reject`, `cancelErasure`, `liftRestriction`, `revokeExport`, `exportData`, `list`.
   - `restrictionFor({entity: 'lead'|'contact', id})`.
-- [ ] An enum-consistency block against Prisma (the PG-203 pattern).
-- [ ] RED → GREEN: `pnpm --filter @intelliflow/validators exec vitest run src/__tests__/dsar.test.ts`
+- [x] An enum-consistency block against Prisma (the PG-203 pattern). *Verified validators __tests__/enum-consistency.spec.ts:215 (domain = validators = Prisma enums)*
+- [x] RED → GREEN: `pnpm --filter @intelliflow/validators exec vitest run src/__tests__/dsar.test.ts` *Verified red-validators.txt then green-validators.txt 11/11; d7-validators.txt 2862 passed*
 
 ### Step D3: DB: schema plus a Class A migration (L13)
 **Files:** `packages/db/prisma/schema.prisma` (no reformat) and `migrations/20261022120000_dsar_requests/migration.sql`
-- [ ] Enums `DsarRequestType` and `DsarRequestStatus`.
-- [ ] `dsar_requests`, with every column in spec R2, R3 and R4 (`capEmailHash`, `exportIssuedAt`,
+- [x] Enums `DsarRequestType` and `DsarRequestStatus`. *Verified migration.sql:37-39; enum-consistency.spec.ts:215*
+- [x] `dsar_requests`, with every column in spec R2, R3 and R4 (`capEmailHash`, `exportIssuedAt`, *Verified migration.sql:42-111 (all R2-R4 columns and CHECKs; receivedOn is stored as receivedAt); constraint tests tests/integration/dsar.test.ts:249-300*
   `exportDownloads`, `receivedOn`, `receivedOnReason`, `identityMethod`, `objectionScope`, `clockBreached`,
   `marketingStopMethod`), named CHECKs, hash CHECKs, and pair CHECKs (export hash with expiry; STAFF requires an
   identity note).
-- [ ] `processing_restrictions`, with `kind`, `blocksMarketing`, `dsarRequestIds TEXT[]`, a partial unique index
+- [x] `processing_restrictions`, with `kind`, `blocksMarketing`, `dsarRequestIds TEXT[]`, a partial unique index *Deviation recorded (findings, D12 close-out): no `kind` column. Verified migration.sql:129-181 (blocksMarketing, dsarRequestIds, active-unique index, RLS USING + WITH CHECK); the restriction type is carried by blocksMarketing + dsarRequestIds (sign-off condition 1), and no behaviour reads a kind*
   `(tenantId, subjectEmail) WHERE liftedAt IS NULL`, and RLS USING + WITH CHECK in the `DO $$` block.
-- [ ] User FKs with SET NULL; the tenant FK with CASCADE; `(tenantId, id)` unique.
-- [ ] Remove the ADR-007 note in `schema.prisma` that claims raw-SQL DSAR tables.
-- [ ] An independent SQL review (a data-engineer subagent, read-only, on an ephemeral DB) that must return APPROVED
+- [x] User FKs with SET NULL; the tenant FK with CASCADE; `(tenantId, id)` unique. *Verified migration.sql:112-126,149-161; prisma-drift-dsar.sql.txt shows only the documented SQL-only user FKs*
+- [x] Remove the ADR-007 note in `schema.prisma` that claims raw-SQL DSAR tables. *Verified schema.prisma:3384-3391 and :2562 rewritten (3fcafee91)*
+- [x] An independent SQL review (a data-engineer subagent, read-only, on an ephemeral DB) that must return APPROVED *Done late, 2026-10-29 (missed at D3): read-only data-engineer review, verdict APPROVED WITH NOTES, no must-fix; kept verbatim in execution/PG-203/PG-203-dsar-sql-review.md. Should-fix 2 fixed (DROP TRIGGER IF EXISTS removed), 3 checked and not changed, 10 applied; see PG-203-findings.md, D12 close-out*
   before Step D5's integration tests are written.
-- [ ] `pnpm --filter @intelliflow/db typecheck`, and `migrate deploy` on an ephemeral DB (log
+- [x] `pnpm --filter @intelliflow/db typecheck`, and `migrate deploy` on an ephemeral DB (log *Verified tdd/dsar/migrate-deploy-and-drift.txt (85 migrations incl. 20261022120000_dsar_requests applied on an ephemeral DB; drift = documented SQL-only FKs). The log name differs from the plan; `db typecheck` was not logged alone and is covered by the pre-ship typecheck at 4db3266f1*
   `tdd/dsar/migrate-deploy.txt`).
 
 ### Step D4: Application (`packages/application/src/`)
@@ -1121,7 +1131,7 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
 - `services/DataSubjectRequestService.ts`, plus tests using in-memory fakes
 
 **Requirements:**
-- [ ] Use cases:
+- [x] Use cases: *Verified DataSubjectRequestService.ts:98-616 (all use cases); 61 service tests; green-application-all-services.txt 1142, d7-application.txt 1162*
   - `submitPublic`: the honeypot never reaches the service; caps; cooldown; send detached on both paths.
   - `verify`: dummy-hash compare; single-use; VERIFIED; deadline; RESTRICTION row at verify; auto-export issue;
     completes only on zero counts.
@@ -1129,17 +1139,17 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
   - The admin use cases: `logRequest`, `extend`, `complete`, `completeAccess`, `reject` (late flag), `cancelErasure`,
     `liftRestriction` (email first), `revokeExport`, `exportData`.
   - `restrictionStatus`.
-- [ ] Restriction upsert and merge (sign-off 1): OR on `blocksMarketing`, append the request id; a RESTRICTION
+- [x] Restriction upsert and merge (sign-off 1): OR on `blocksMarketing`, append the request id; a RESTRICTION *Verified tests/integration/dsar.test.ts:527 (one active row, OR on blocksMarketing, ids appended)*
   followed by an OBJECTION leaves one active row.
-- [ ] `LeadService.scoreLead` checks `ProcessingRestrictionPort.isRestricted(tenantId, email)` and returns a typed
+- [x] `LeadService.scoreLead` checks `ProcessingRestrictionPort.isRestricted(tenantId, email)` and returns a typed *Verified LeadService.restriction.test.ts:57-146 (single, bulk, no-op default); red-leadservice.txt then green in green-application-all-services.txt*
   `ProcessingRestrictedError`. It is wired with a no-op default so existing constructors keep compiling. The bulk
   path is covered.
-- [ ] `pnpm --filter @intelliflow/application exec vitest run src/services/__tests__/DataSubjectRequestService.test.ts src/services/__tests__/LeadService*.test.ts`
+- [x] `pnpm --filter @intelliflow/application exec vitest run src/services/__tests__/DataSubjectRequestService.test.ts src/services/__tests__/LeadService*.test.ts` *Verified red-application.txt, green-application-all-services.txt (src/services 1142, includes LeadService*), d7-application.txt 1162; the exact two-path command was not logged*
 
 ### Step D5: Adapters (`packages/adapters/src/repositories/`)
-- [ ] `PrismaDsarRepository`.
-- [ ] `PrismaProcessingRestrictionRepository`: the upsert merge, and moving a restriction on an email edit.
-- [ ] `PrismaSubjectDataRepository`:
+- [x] `PrismaDsarRepository`. *Verified PrismaDsarRepository.ts; integration dsar.test.ts:357-525*
+- [x] `PrismaProcessingRestrictionRepository`: the upsert merge, and moving a restriction on an email edit. *Verified restriction repository and integration dsar.test.ts:656-815; moveEmail became followEmail (copies, findings "D5-D7 decisions")*
+- [x] `PrismaSubjectDataRepository`: *Verified PrismaSubjectDataRepository.ts:26-872 and integration dsar.test.ts:1018-1285; processingInformation is built in the service (DataSubjectRequestService.ts:73)*
   - **Export.** Per-category allowlists, a 500-row cap, the withheld-category counts, and
     `processingInformation` built from the firm's name and privacy URL.
   - **Erasure.** One `$transaction`. The request is re-read `FOR UPDATE`. Matching is by `lower(btrim(email))` in
@@ -1147,7 +1157,7 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
     `Erased activity`, LeadFile url becomes NULL, and AIInsight, AIScore, LeadAIInsight and ContactAIInsight rows are
     deleted. Embeddings and search vectors are set to NULL. Counts are returned for the checklist (communications,
     ContactReplyDraft, CalendarEvent, ExperimentAssignment).
-- [ ] Real-DB integration tests: `tests/integration/dsar.test.ts`.
+- [x] Real-DB integration tests: `tests/integration/dsar.test.ts`. *Verified tests/integration/dsar.test.ts (42 tests: constraints, RLS, caps, export scope, erasure, rollback, no-op rerun, merge, ported purge); full integration project 615 passed*
   - Migration SQL: the `ensureMigrationSql` pattern.
   - Constraints: CHECKs and the partial unique index.
   - RLS: a non-bypass session cannot see another tenant's rows.
@@ -1156,8 +1166,8 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
   - Erasure: covers every column, rolls back fully on failure, and a second run is a no-op.
   - Restriction merge.
   - Ported assertions from `dsar-search-purge.test.ts`.
-- [ ] Guard test: every Prisma delegate the DSAR adapters use exists on the generated client.
-- [ ] RED → GREEN: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 --exclusive intelliflow-db -- pnpm test:db:run -- pnpm exec vitest run --project integration tests/integration/dsar.test.ts`
+- [x] Guard test: every Prisma delegate the DSAR adapters use exists on the generated client. *Verified PrismaDsarAdapters.test.ts:1009-1028; d7-adapters.txt 1039 passed*
+- [x] RED → GREEN: `node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 --exclusive intelliflow-db -- pnpm test:db:run -- pnpm exec vitest run --project integration tests/integration/dsar.test.ts` *Verified d5-integration-run4.txt 22/22 (this command, ephemeral DB). No RED capture on file; the file has since grown to 42 tests and is covered by the full integration runs (615, and 622 in the pre-ship at 4db3266f1), not by this exact command*
 
 ### Step D6: API (`apps/api/src/modules/privacy/`)
 **Files to Create:**
@@ -1178,29 +1188,29 @@ docs. Each step is RED first; its log goes under `exec-PG-203-20261020/tdd/dsar/
 - the DSAR parts of `tests/compliance/data-governance.spec.ts` (the rest of the file stays)
 
 **Requirements:**
-- [ ] The per-IP limiters `bookingLookupLimiter` and `bookingSubmitLimiter` (from `booking-abuse.ts`), keyed by
+- [x] The per-IP limiters `bookingLookupLimiter` and `bookingSubmitLimiter` (from `booking-abuse.ts`), keyed by *Verified privacy-public.router.ts:117-175 (limiters first on all four); privacy-public.router.test.ts:94,139; booking-abuse.test.ts:209*
   `ipHashOf`, run before any read on all four public procedures.
-- [ ] `getFirm`: the same single handle read, and the same NOT_FOUND for an unknown handle or booking off.
-- [ ] Every admin procedure uses `adminTenantProcedure`. Every `where` uses the context tenantId. A foreign id gives
+- [x] `getFirm`: the same single handle read, and the same NOT_FOUND for an unknown handle or booking off. *Verified privacy-public.router.ts:117; privacy-public.router.test.ts:86,148*
+- [x] Every admin procedure uses `adminTenantProcedure`. Every `where` uses the context tenantId. A foreign id gives *Verified privacy-admin.router.ts:188-380; restrictionFor is tenantProcedure by design (the banner read, :403); privacy-admin.router.test.ts:95-122,505*
   NOT_FOUND.
-- [ ] Audit: awaited for erasure, with counts only. The late-rejection flag is set on `clockBreached`.
-- [ ] A log-capture test: no DSAR mutation body reaches any logger.
-- [ ] Router tests: authz (MANAGER and another tenant's ADMIN), the state machine, honeypot, caps, timing parity,
+- [x] Audit: awaited for erasure, with counts only. The late-rejection flag is set on `clockBreached`. *Verified privacy-admin.router.ts:280 (awaited erasure audit, counts only), service clockBreached :407-664; tests :248-310*
+- [x] A log-capture test: no DSAR mutation body reaches any logger. *Verified privacy-public.router.test.ts:301 (log capture over submit/verify/download); admin audit-failure logging tests :291,455,471*
+- [x] Router tests: authz (MANAGER and another tenant's ADMIN), the state machine, honeypot, caps, timing parity, *Deviation recorded (findings, D12 close-out): no test measures timing parity. Verified authz, honeypot, caps and email tests in apps/api/src/modules/privacy/__tests__/; parity holds by construction (dummy-hash compare dsar-token.ts:35, detached send, identical replies)*
   and the emails (stubbed adapter; Resend is never called).
-- [ ] `pnpm --filter @intelliflow/api exec vitest run src/modules/privacy`
+- [x] `pnpm --filter @intelliflow/api exec vitest run src/modules/privacy` *Verified d6-api-run1.txt (privacy + calendar + lead + container + security) 1418 passed; d7-api.txt 2776 passed*
 
 ### Step D7: Restriction enforcement points (sign-off 7 and 8)
-- [ ] `lead.router.ts` create and `public-booking.router.ts` `afterBooking` check before calling
+- [x] `lead.router.ts` create and `public-booking.router.ts` `afterBooking` check before calling *Verified lead.router.ts:537-552 and public-booking.router.ts:558-573 pass the reader; enqueueLeadScoring skips and fails closed (lead-scoring-enqueue.test.ts:168,181)*
   `enqueueLeadScoring`.
-- [ ] `scoreWithAI`, through `LeadService.scoreLead` (Step D4).
-- [ ] `apps/ai-worker/src/workers/contact-embed-worker.ts` `processForTenant` skips a restricted email.
-- [ ] `apps/ai-worker/src/jobs/scoring.job.ts` `processScoringJob`, after the feature-flag gate. It re-reads the lead
+- [x] `scoreWithAI`, through `LeadService.scoreLead` (Step D4). *Verified lead.router.ts:1194; lead.router.test.ts:1451*
+- [x] `apps/ai-worker/src/workers/contact-embed-worker.ts` `processForTenant` skips a restricted email. *Verified contact-embed-worker.ts:165; contact-embed-worker.test.ts:229,262*
+- [x] `apps/ai-worker/src/jobs/scoring.job.ts` `processScoringJob`, after the feature-flag gate. It re-reads the lead *Verified scoring.job.ts:394,512,610-664; scoring.job.test.ts:809,832; scoring.dispatch-data-requests.test.ts; data-request-guard.test.ts*
   and skips when the lead is missing, erased, has a different email, or is restricted. This covers
   `handleScheduledDispatch`.
-- [ ] Both `AutoResponseDraft.create` sites in `autoresponse.router.ts`.
-- [ ] `apps/api/src/agent/tools/draft-message.ts`.
-- [ ] A test per point, with the AI-worker tests run in the ai-worker project.
-- [ ] The restriction follows the record: the lead and contact update use cases move it. Then check bulk import and
+- [x] Both `AutoResponseDraft.create` sites in `autoresponse.router.ts`. *Verified autoresponse.router.ts:191,262,910; autoresponse.router.policies.test.ts:100-171*
+- [x] `apps/api/src/agent/tools/draft-message.ts`. *Verified draft-message.ts:175; draft-message.test.ts:68,77,90*
+- [x] A test per point, with the AI-worker tests run in the ai-worker project. *Verified a test per point (boxes above); d7-aiworker.txt 660 passed, ai-worker 2545 later*
+- [x] The restriction follows the record: the lead and contact update use cases move it. Then check bulk import and *Verified ContactService.ts:218 and tests; lead email immutable (validators lead.test.ts:183); bulk/sync grep recorded in findings; DB carry in integration dsar.test.ts:702-815*
   sync, and either cover them or document them (sign-off 4).
 
 ### Step D8: SLA scheduler
@@ -1350,10 +1360,10 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
 - the lead and contact detail pages: `RestrictionBanner`
 
 **Requirements:**
-- [ ] The fragment is read once, into a ref, and stripped immediately.
-- [ ] The pages are dynamic.
-- [ ] No token appears in any request URL.
-- [ ] Material Symbols only. Any new glyphs go into the subset regeneration.
+- [x] The fragment is read once, into a ref, and stripped immediately. *Verified: dsar-shared.tsx:29-36 (takeDsarFragment + history.replaceState), DsarVerifyContent.tsx:34, DsarExportContent.tsx:146; dsar-shared.test.tsx:32-45*
+- [x] The pages are dynamic. *Verified: force-dynamic on /dsar/[handle], /verify and /export (page.tsx:11,10,10). /settings/privacy-requests has no explicit export (an authenticated client page; not a token page)*
+- [x] No token appears in any request URL. *Verified in code: the token stays in the fragment and travels only in tRPC mutation bodies; /dsar/* no-referrer + no-store (dsar-headers.test.ts:20-38); Sentry scrub scrub.ts:56. Production log check stays NEEDS_HUMAN 3*
+- [x] Material Symbols only. Any new glyphs go into the subset regeneration. *Verified at 4db3266f1: only add, block and shield_person, all already in the subset audit; pre-ship material-symbols-audit PASS (371 icons); no font regeneration needed*
 
 ### Step D10: Docs and registries
 - [x] Rewrite `docs/compliance-and-governance/data-governance/dsar-process.md`.
@@ -1390,11 +1400,11 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
   `anonymize_record()` / `docs/legal` claims filed as #1019.
 
 ### Step D12: Validation, reviews, close
-- [ ] Every package suite touched (domain, validators, application, adapters, db, api, ai-worker, web), plus
+- [x] Every package suite touched (domain, validators, application, adapters, db, api, ai-worker, web), plus *Verified at 4db3266f1 by the full-scope pre-ship: unit 41195 passed, integration 622 passed/20 skipped, typecheck, lint, lint-promises, build PASS; sonar guard rerun separately (above). The per-package counts in the PR body have no saved raw logs*
   integration on a fresh DB; then typecheck, lint, lint-promises, the sonar guard, and the api and web builds.
-- [ ] Pre-ship subset under `pnpm test:db:run`, coverage and diff-coverage ≥ 80%.
-- [ ] codex review iterated to PASS; `/code-review`.
-- [ ] Implementation reviews:
+- [x] Pre-ship subset under `pnpm test:db:run`, coverage and diff-coverage ≥ 80%. *Verified at 4db3266f1: full pre-ship (not a subset) PASS under test-db run --seed; diff coverage 81.2% (2512/3094), coverage floor lines 86.39%*
+- [x] codex review iterated to PASS; `/code-review`. *Verified: codex PASS at 4db3266f1 (155 files, 0 findings; artifacts/preship/logs/codex-review.log); /code-review ran in quick mode only (2026-10-25: 0 type errors, 0 lint findings), not the full 8-check mode*
+- [x] Implementation reviews: *Done 2026-10-24/25: a11y-expert and security-lead PASS WITH MINOR, compliance FAIL, fixed in 0a5eb7549 and 57659da32 (owner rulings Q23-Q26); no compliance re-review verdict is stored. Later: Aurora's codex and adversarial reviews of #1056 at 4db3266f1 (no code findings)*
   - security-lead adversarial review of the public DSAR flow and erasure;
   - compliance review of emails, export and docs;
   - a11y-expert review of four pages and the banner.
@@ -1530,7 +1540,7 @@ reviewer_subagent: plan-reviewer (PG-203 DSAR addendum, 2026-10-22)
 | Revision 1 | REVISE | lead email sites wrong, contact router site wrong, scoring test path, errors.ts missing from D1 |
 | Revision 2 | **APPROVE** | One non-blocking D7 note: confirm `lead.updateMany` at `lead.router.ts:1563/1684/1754`, `routing.router.ts:422` and `LeadRoutingService.ts:293` never write `email` |
 
-- [ ] D7: confirm the other lead writers listed above never set `email`, and record the grep in the findings.
+- [x] D7: confirm the other lead writers listed above never set `email`, and record the grep in the findings. *Verified at 4db3266f1: no lead update/updateMany/upsert site writes email; grep recorded in PG-203-findings.md (D5-D7 decisions; line numbers have drifted 3-11)*
 
 ## Plan Addendum B: restriction and erasure stop every AI path (owner Q21 and Q22, issue #1002)
 

@@ -23,7 +23,8 @@
 -- deletes the record of requests already handled, which the firm must keep as evidence of compliance.
 -- The address-follow triggers are reversible without data loss: DROP TRIGGER x2 (*_dsar_follow_email)
 -- and DROP FUNCTION x4 (dsar_follow_subject_email, dsar_carry_restriction, dsar_subject_lock,
--- dsar_normalise_email).
+-- dsar_normalise_email). The API calls dsar_subject_lock and dsar_carry_restriction directly, so
+-- drop those functions only after the API is rolled back; until then DROP TRIGGER alone is safe.
 -- The erasure guard alone is reversible without data loss: DROP TRIGGER x4 (the *_dsar_erased_guard
 -- triggers) and DROP FUNCTION x5 (dsar_*), which deletes no row. So is the keep-erased guard:
 -- DROP TRIGGER x2 (*_dsar_keep_erased) and DROP FUNCTION dsar_keep_erased.
@@ -242,20 +243,16 @@ BEGIN
   RETURN NEW;
 END $$;
 
-DROP TRIGGER IF EXISTS "ai_scores_dsar_erased_guard" ON "ai_scores";
 CREATE TRIGGER "ai_scores_dsar_erased_guard" BEFORE INSERT OR UPDATE ON "ai_scores"
   FOR EACH ROW EXECUTE FUNCTION dsar_refuse_erased_lead_write();
 
-DROP TRIGGER IF EXISTS "lead_ai_insights_dsar_erased_guard" ON "lead_ai_insights";
 CREATE TRIGGER "lead_ai_insights_dsar_erased_guard" BEFORE INSERT OR UPDATE ON "lead_ai_insights"
   FOR EACH ROW EXECUTE FUNCTION dsar_refuse_erased_lead_write();
 
-DROP TRIGGER IF EXISTS "contact_ai_insights_dsar_erased_guard" ON "contact_ai_insights";
 CREATE TRIGGER "contact_ai_insights_dsar_erased_guard"
   BEFORE INSERT OR UPDATE ON "contact_ai_insights"
   FOR EACH ROW EXECUTE FUNCTION dsar_refuse_erased_contact_write();
 
-DROP TRIGGER IF EXISTS "ai_insights_dsar_erased_guard" ON "ai_insights";
 CREATE TRIGGER "ai_insights_dsar_erased_guard" BEFORE INSERT OR UPDATE ON "ai_insights"
   FOR EACH ROW EXECUTE FUNCTION dsar_refuse_erased_entity_insight();
 
@@ -276,11 +273,9 @@ BEGIN
   RETURN NEW;
 END $$;
 
-DROP TRIGGER IF EXISTS "leads_dsar_keep_erased" ON "leads";
 CREATE TRIGGER "leads_dsar_keep_erased" BEFORE UPDATE OF "email" ON "leads"
   FOR EACH ROW EXECUTE FUNCTION dsar_keep_erased();
 
-DROP TRIGGER IF EXISTS "contacts_dsar_keep_erased" ON "contacts";
 CREATE TRIGGER "contacts_dsar_keep_erased" BEFORE UPDATE OF "email" ON "contacts"
   FOR EACH ROW EXECUTE FUNCTION dsar_keep_erased();
 
@@ -357,11 +352,9 @@ BEGIN
   RETURN NEW;
 END $$;
 
-DROP TRIGGER IF EXISTS "leads_dsar_follow_email" ON "leads";
 CREATE TRIGGER "leads_dsar_follow_email" AFTER UPDATE OF "email" ON "leads"
   FOR EACH ROW EXECUTE FUNCTION dsar_follow_subject_email();
 
-DROP TRIGGER IF EXISTS "contacts_dsar_follow_email" ON "contacts";
 CREATE TRIGGER "contacts_dsar_follow_email" AFTER UPDATE OF "email" ON "contacts"
   FOR EACH ROW EXECUTE FUNCTION dsar_follow_subject_email();
 

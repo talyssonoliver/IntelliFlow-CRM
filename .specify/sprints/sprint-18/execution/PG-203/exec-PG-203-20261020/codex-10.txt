@@ -1,0 +1,37 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 61 files total
+[codex-review] in scope : 34 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-21T08:00:16.082Z
+Base ref  : origin/main
+Files in scope : 34
+Total findings : 2
+  Waived       : 0
+  Unwaived     : 2
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:516-519 — booking-lock-not-shared-with-internal-writes
+    Issue    : The availability recheck can race with in-app appointment creation and allow bookings beyond the firm's daily cap.
+    Evidence : The transaction calls `computeSlots(tx, current, rules, date, 1, now)` under the `booking:${tenantId}` advisory lock, but appointments.create checks availability separately and ScheduleAppointmentUseCase saves through PrismaAppointmentRepository without acquiring that lock. With maxDailyBookings=1, concurrent public and internal bookings for different organizers can both read zero bookings and commit. The database exclusion constraint only rejects overlapping appointments for the same organizer, so it does not enforce this tenant-wide cap.
+    Fix      : Make public and internal appointment creation and rescheduling acquire the same tenant lock before checking availability and retain it through persistence.
+    Fingerprint: 349b41c39051aea89fbd73014b3d37ad75e7dcb603c1095dbf40a0071c462428
+
+  [MEDIUM] apps/api/src/modules/calendar/public-booking.router.ts:372-387 — scoring-blocks-booking-notifications
+    Issue    : An unavailable Redis connection prevents confirmation emails and subsequent side effects from running for newly created leads.
+    Evidence : `await step('ai-scoring', () => enqueueLeadScoring(...))` precedes lead activity, appointment side effects and emails. enqueueLeadScoring awaits BullMQ queue.add without a readiness deadline. The installed BullMQ implementation waits for Redis readiness while its default retry strategy keeps reconnecting; connection errors alone do not reject that readiness promise. Consequently, the catch wrapper does not release this await during an outage, even though the appointment has already committed and the visitor receives success.
+    Fix      : Run scoring independently of booking notifications, bound Redis readiness and enqueue time, and close or disconnect the queue when that deadline expires.
+    Fingerprint: 02dd4657a05a3f56b3b2087f00c1b0c73e49f5eb88d7a29307eb8c0df919fe14
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 2 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

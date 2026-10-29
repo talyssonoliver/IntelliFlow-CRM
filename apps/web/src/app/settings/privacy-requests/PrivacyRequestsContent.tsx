@@ -19,6 +19,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  EmptyState,
   Label,
   Textarea,
   toast,
@@ -340,8 +341,18 @@ export default function PrivacyRequestsContent() {
             The requests could not be loaded.
           </p>
         )}
-        {!listQuery.isLoading && open.length === 0 && (
-          <p className="mt-2 text-sm text-muted-foreground">No open requests.</p>
+        {!listQuery.isLoading && !listQuery.isError && open.length === 0 && (
+          <EmptyState
+            entity="tickets"
+            phase="passive"
+            size="sm"
+            title="No open requests"
+            description="Requests from the public form and the ones you log appear here until they are closed."
+            aria-label="No open requests"
+            className="py-4 px-3 gap-2"
+            // A11Y-11: a passive region is not an interactive tab stop.
+            tabIndex={-1}
+          />
         )}
         <ul className="divide-y divide-border">
           {open.map((request) => (
@@ -370,7 +381,17 @@ export default function PrivacyRequestsContent() {
           description="While a restriction is in force, the person is not scored, embedded or drafted for by AI. Lifting one emails the person first."
         />
         {restrictions.length === 0 ? (
-          <p className="mt-2 text-sm text-muted-foreground">No restrictions in force.</p>
+          <EmptyState
+            entity="rules"
+            phase="passive"
+            size="sm"
+            title="No restrictions in force"
+            description="A restriction or objection request that you accept appears here until it is lifted."
+            aria-label="No restrictions in force"
+            className="py-4 px-3 gap-2"
+            // A11Y-11: a passive region is not an interactive tab stop.
+            tabIndex={-1}
+          />
         ) : (
           <ul className="divide-y divide-border">
             {restrictions.map((row) => (

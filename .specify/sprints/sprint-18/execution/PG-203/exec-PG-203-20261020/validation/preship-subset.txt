@@ -1,0 +1,25 @@
+pre-ship: fresh run at fc828ec3.
+
+pre-ship: mode standard.
+pre-ship: test scope full — packages/db/prisma/schema.prisma changed — it can affect tests that do not import it.
+
+  required-tokens              - SKIPPED_NOT_SELECTED  (0ms)
+  commit-msg-lint              (node:3596) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+✓ PASS  (1.5s)
+  install                      - SKIPPED_NOT_SELECTED  (0ms)
+  library-build                - SKIPPED_NOT_SELECTED  (0ms)
+  format-check                 ✓ PASS  (1m13s)
+  terraform-fmt                - SKIPPED_NOT_SELECTED  (0ms)
+  actionlint                   - SKIPPED_NOT_SELECTED  (0ms)
+  lint                         - SKIPPED_NOT_SELECTED  (0ms)
+  lint-promises                ✗ FAIL  (2m10s)
+
+  ✗ Required step failed: lint-promises — aborting subsequent steps.
+    Log: artifacts\preship\logs\lint-promises.log
+    (Set PRESHIP_KEEP_GOING=1 to run remaining steps anyway.)
+
+pre-ship: FAIL in 3m25s (2/34 steps passed, 1 failed).
+  Failed required steps:
+    - lint-promises (see artifacts\preship\logs\lint-promises.log)
+  State: artifacts\preship\last-run.json
