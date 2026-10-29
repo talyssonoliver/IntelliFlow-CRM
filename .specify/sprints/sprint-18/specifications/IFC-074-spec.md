@@ -334,7 +334,7 @@ The full log is in `IFC-074-discussion.md`, section "2026-10-29 addendum".
 - `mttr-baseline.json` and `correlation-test.csv` are still the 2026-10-22 run. They predate both rules and are not regenerated in this PR, because that needs a Grafana token.
 - The Loki rule covers ai-worker only. api episodes are left to the span rule, which models above 120 s, so **api episodes are expected to miss** the target until F14 widens the Loki rule.
 
-### Supersession of AC-004's statistic (assumed, pending owner: ruling 3, Q1)
+### Supersession of AC-004's statistic (owner ruling 4, 2026-10-29: Q1 answered B)
 - **Old:** the mean over Normal/Pending→Alerting incidents per rule (AC-004, with the risk row "do not redefine the metric").
 - **New (primary), pre-registered here before any post-deploy data:**
   - **episode:** a maximal run of error spans for one service, with no gap above the collector's episode gap constant (commit `7c85d4b2b`);
@@ -343,7 +343,7 @@ The full log is in `IFC-074-discussion.md`, section "2026-10-29 addendum".
 - **Co-reported:** the per-incident mean (the old statistic).
 - **Reason for the change:** one error episode raises several rule incidents (Grafana Asserts' ErrorRatioBreach alone fires 180-360 s after the first error), and "time until someone is alerted" is the first alert.
 - **Impact:** the 2026-10-22 value (per-incident mean 268.7 s, n=63) is **not comparable** with the new statistic.
-- If the owner rules option A, AC-013 reverts to AC-004's statistic and this subsection is withdrawn.
+- The owner chose this (option B) on 2026-10-29 and confirmed that "10" means 10 real error **episodes** (ruling 4 in `context/IFC-074/IFC-074-owner-ruling.md`).
 
 ### Decisions
 **D1, collector Loki routing**
@@ -362,17 +362,36 @@ The full log is in `IFC-074-discussion.md`, section "2026-10-29 addendum".
 
 **D3, the Loki rule stays ai-worker only.** Failed procedures log at error, including client errors. Widening the rule is F14, after F11.
 
-**D4, `.github/workflows/observability-evidence.yml`, dispatch-only**
-- `workflow_dispatch` only, with job `if: github.ref == 'refs/heads/main'` and `permissions: contents: read`.
-- `environment: Production`. Verified 2026-10-29: it has no protection rules and no branch policy (ledger ENV008-PROD-ENV-BRANCH-POLICY-001).
-- Token (assumed, pending owner: ruling 3, Q2):
-  - `GRAFANA_VIEWER_TOKEN` is passed as a step env var only;
-  - the job fails closed when that secret is absent and never falls back to the Admin token;
-  - the collector accepts `GRAFANA_VIEWER_TOKEN` (preferred) or `GRAFANA_SA_TOKEN`, and scrubs whichever is set.
-- Sparse checkout, `@v7` actions, `timeout-minutes: 12`, and a concurrency group.
-- Inputs `since` and `services` go through `env:`, are quoted, and are regex-checked.
-- The artifact is uploaded only after `assertSafeKeys`, with `retention-days: 7`. Nothing is committed. The outputs are the same evidence files already committed to this public repo.
-- The collector header changes from "local only, never in CI" to "owner locally, or the dispatch-only workflow; never on push or PR".
+**D4, where the post-deploy MTTD lives (owner ruling 4, 2026-10-29: "Grafana panel + task KPI")**
+
+Round 4 approved a dispatch-only workflow on a new Viewer token. The owner **superseded** it the same day. There is no new workflow, token or secret; the collector stays local, read-only and "never in CI", unchanged.
+
+The traced pages show that neither app had an MTTD page:
+- the tracker's views cover k6 load, delivery metrics, deploy health and AI cost, and its only "MTTR" is time to remediate vulnerabilities;
+- the web app's "Data Incidents: 0 Reported" is a hard-coded string on the GDPR breach card (`apps/web/src/app/governance/compliance/page.tsx:313`).
+
+The official KPI path:
+1. After deploy, Aurora runs the collector locally (≥10 real error episodes, per-episode statistic, per-incident mean co-reported). It writes `artifacts/reports/mttr-baseline.json`.
+2. That result goes into `.specify/sprints/sprint-18/attestations/IFC-074/task-tracking.json` `kpis.mttd_target`, with the file's SHA-256 as `source` and an append-only `status_history`.
+3. It then goes into attestation `kpi_results`.
+4. `pnpm generate:metrics` regenerates the cache, and the tracker's task modal shows it (`/api/tasks/validation-summary/IFC-074`).
+
+**D7, task-status schema defect (fixed in this PR).** `apps/project-tracker/docs/metrics/schemas/task-status.schema.json` KPI objects are `additionalProperties: false` and need a boolean `met`.
+- Today's `task-tracking.json` carries `source` on both KPIs and `met: null` on `traces_correlating`, so the generated cache fails its own schema.
+- The fix: add an optional string `source` to the KPI object schema, and set `traces_correlating.met: false`, meaning "not demonstrated" (dated note, append-only history).
+
+**D8, Grafana panel "MTTD per error episode (live proxy)"** on the ENV-008 dashboard `infra/monitoring/grafana/cloud/dashboard-production.json` (uid `env008-production`), applied on merge by `grafana-dashboard.yml`.
+- Grafana cannot join error signals with alert transitions per episode inside a panel. The panel is therefore an **honest live proxy**, titled and described as one: per minute, it shows the error signals next to the alert firings, so the gap between them is the detection delay. The description names the committed collector result (`artifacts/reports/mttr-baseline.json` and the task KPI) as the official MTTD.
+- Targets:
+  - (A) error spans per minute by service, from Prometheus span metrics;
+  - (B) error-level log lines per minute from Loki, with the same filter as `ifc074-error-logs-direct`;
+  - (C) Alerting transitions per minute by rule, from the alert state history (Loki datasource `grafanacloud-alert-state-history`, `{from="state-history"} | json`, the same source the collector reads).
+- `apply-grafana-dashboard.mjs` `validateConfig` learns per-target datasources:
+  - Prometheus targets keep today's metric and service checks;
+  - a Loki target must name `grafanacloud-logs` or `grafanacloud-alert-state-history` and may only select `service_name="ai-worker"` or the state-history stream;
+  - any other datasource uid is rejected.
+
+**D9, follow-up only, not in this PR** (debt ledger): refresh `artifacts/reports/*/dora-metrics.json` from real data now that deploy events exist (the promotion ledger), including incidents and time-to-restore with MTTD.
 
 **D5, api log keys**
 - Both `tenantId` and `userId` stay, as in the 2026-10-22 spec line "added by the mixin".
@@ -398,20 +417,23 @@ The full log is in `IFC-074-discussion.md`, section "2026-10-29 addendum".
   - A Loki series without `service_name` matches only an episode without a service.
   - `datasourceProxy` rejects `../x`, `a/b`, `a?b`, `''` and a 65-character uid.
   - `schema_version` is `2.3.0`, and `datasource_kind` is allowlisted (and in the `.d.mts`).
-- **AC-012** (pre-merge)
-  - `observability-evidence.yml` passes a workflow test that fails on any of these:
-    - a `push`, `pull_request` or `schedule` trigger;
-    - a write permission;
-    - `${{ inputs.* }}` inside `run:`;
-    - any `GRAFANA_SA_TOKEN` reference;
-    - a missing `environment: Production`;
-    - a missing main-only `if`;
-    - `retention-days` other than 7.
-  - A token-shaped sentinel passed through the collector is absent from both outputs and from its log.
+- **AC-012** (pre-merge, replaces the dispatch-workflow AC per ruling 4)
+  - `task-status.schema.json` accepts an optional string `source` on a KPI object and still rejects any other extra key and a non-boolean `met` (schema test).
+  - `task-tracking.json` IFC-074 validates against it with `traces_correlating.met: false`.
+  - `pnpm generate:metrics` regenerates `apps/project-tracker/docs/metrics/sprint-18/IFC-074.json` with the collector's `mttd_target` (no `actual: null`), and that file validates.
+  - No workflow, token or secret is added.
 - **AC-013** (NEEDS_HUMAN, post-deploy)
-  - The pre-registered episode MTTD is judged only over at least 72 h or at least 10 real episodes, counted from the later of the api and combined-worker promotions.
-  - The evidence is a dispatch-run artifact whose SHA-256 is recorded in the attestation.
+  - The pre-registered episode MTTD is judged only over at least 72 h or at least 10 real error episodes, counted from the later of the api and combined-worker promotions.
+  - The evidence is the committed `mttr-baseline.json` from Aurora's local collector run. Its SHA-256 is recorded as `kpis.mttd_target.source` and in the attestation.
   - The per-incident mean is co-reported.
+- **AC-016** (pre-merge; the live check after the merge applies)
+  - `dashboard-production.json` has a panel titled with "live proxy". It has targets A (prom error spans), B (Loki error-level lines, the same filter as the rule) and C (state-history Alerting transitions). Its description names `artifacts/reports/mttr-baseline.json` and the IFC-074 task KPI as the official MTTD.
+  - `validateConfig` accepts it, and rejects:
+    - a Loki target on an unknown datasource uid;
+    - a Loki selector other than `service_name="ai-worker"` or `{from="state-history"}`;
+    - a Prometheus target that breaks today's checks.
+  - The tests follow the existing panel tests in `tools/scripts/__tests__/apply-grafana-dashboard.test.ts`.
+  - After merge, `grafana-dashboard.yml` reports `updated dashboard env008-production`.
 - **AC-014** (pre-merge) This addendum, ADR-086's amendment and the PR body state:
   - the supersession;
   - that the 2026-10-22 value is not comparable;
@@ -436,15 +458,17 @@ AC-002, AC-009 and task-tracking blockers 4 and 5 stay open. Ruling 3 answers on
 3. Dispatch `promote-production` with `api`, on the owner's yes.
 4. The uptime check passes, and `OTEL_EXPORTER_OTLP_ENDPOINT` is set on the api.
 5. Make one real tRPC call.
-6. Create `GRAFANA_VIEWER_TOKEN` (owner only).
-7. Dispatch `observability-evidence.yml` with `since=<deploy>`. It can be dispatched only once it is on main.
-8. Repeat until at least 72 h or 10 episodes, then judge AC-013 and AC-002.
+6. Watch the "MTTD per error episode (live proxy)" panel as errors happen.
+7. Aurora runs `collect-observability-evidence.mjs` locally with `--since <deploy>`, read-only, and commits `mttr-baseline.json` and `correlation-test.csv`.
+8. Update `task-tracking.json` `kpis.mttd_target` (with the SHA-256 `source`), then attestation `kpi_results`, then run `pnpm generate:metrics`.
+9. Repeat until at least 72 h or 10 real error episodes, then judge AC-013 and AC-002.
 
 Public, admin, partner and auth procedure records carry no tenantId, so Loki queries by tenant will not find them.
 
 ### New findings (gh issue, debt-ledger and findings doc)
 - **F14:** widen `ifc074-error-logs-direct` to the api after F11.
 - **F15:** there is no Loki volume tripwire, so a free-tier overrun would drop ingestion silently.
+- **F16 (D9):** `artifacts/reports/*/dora-metrics.json` is not fed from real data. Refresh it from the promotion ledger (deploys), incidents, and time-to-restore with MTTD.
 
 ### Agent sign-offs (2026-10-29)
 
@@ -456,4 +480,9 @@ Public, admin, partner and auth procedure records carry no tenantId, so Loki que
 | Test-Engineer | APPROVED (blocking condition folded in) | `schema_version` 2.3.0 pinned by a test; a `service_name`-aware `seriesService`; a Loki matcher name distinct from the local at `:801`; tests for `not_checked` and `unknown_datasource`; alias and fallback mutations |
 | Domain-Expert | APPROVED | assumptions labelled pending owner; AC-013, AC-014 and AC-015 text included; the per-episode computation and the schema bump in one commit; the alias checked against `LOG_RULE_SERVICES` (`:836`) |
 
-Approval: 5/5 (100%), above the 66% threshold, in the first CONSENSUS round, with no unresolved critical issue. Owner questions Q1 and Q2 are open. AC-012 and AC-013 change if the owner rules otherwise.
+Approval: 5/5 (100%), above the 66% threshold, in the first CONSENSUS round, with no unresolved critical issue.
+
+**After consensus (2026-10-29), owner ruling 4:**
+- Q1 is answered B, as assumed.
+- Q2 supersedes the consensus's D4 and AC-012, so there is no dispatch workflow or Viewer token, and the conditions the consensus attached to D4 are moot.
+- D7, D8, D9, AC-016 and the new AC-012 were added on the owner's instruction, not voted. They are reviewed by the plan-reviewer subagent in plan-session.

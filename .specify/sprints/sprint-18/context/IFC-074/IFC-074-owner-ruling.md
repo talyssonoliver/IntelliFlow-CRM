@@ -55,3 +55,41 @@ lift AC-002 or AC-009. The Sprint_plan row stays In Progress (ruling 1).
   per-incident mean co-reported? The spec addendum works on the second (option B), marked "assumed, pending owner".
 - Q2: the measurement token. The working assumption is a separate Viewer secret, `GRAFANA_VIEWER_TOKEN` (F7). The
   workflow fails closed without it and never falls back to the Admin token.
+
+---
+
+# Owner ruling 4 (2026-10-29): MTTD statistic and where MTTD lives
+
+**Source:** relayed to this lane by the coordinator (Aurora) on 2026-10-29, in two messages. The owner's own words
+were not seen by the lane.
+
+**Q1, the KPI statistic. Answer: B.**
+- Primary statistic: the first alert per error episode, meaning the time from the episode's first error to the first
+  alert from any rule.
+- Co-reported: the per-rule (per-incident) mean.
+- Recorded as a dated supersession of AC-004, with the definition committed before any post-deploy data.
+- "72 h or 10" means 10 real error **episodes**.
+
+**Q2, the measurement path.** The owner rejected the options as written (dispatch workflow; new Viewer token; owner
+runs it locally). He asked first for a trace of the existing tracker and compliance pages. Neither app has an MTTD page.
+The tracker's only "MTTR" is the time to remediate a vulnerability. The web app's "Data Incidents" is a hard-coded
+string on the GDPR card.
+
+**Answer: "Grafana panel + task KPI".**
+1. **No dispatch workflow, Viewer token or new secret.** The collector stays local and read-only. Aurora runs it after
+   deploy, over at least 10 real episodes, using the per-episode statistic with the per-rule mean co-reported.
+2. **The result flows through the existing records,** in this order:
+   1. `mttr-baseline.json`;
+   2. `task-tracking.json` `kpis.mttd_target`, with the SHA-256 and an append-only history;
+   3. attestation `kpi_results`;
+   4. `pnpm generate:metrics`.
+
+   The tracker's task popup then shows it.
+3. **This PR fixes the task-status schema defect:** an optional `source` on the KPI object, and
+   `traces_correlating.met: false`.
+4. **New panel:** add "MTTD per error episode" to the ENV-008 Grafana service dashboard, computed from what Grafana can
+   compute live. If an exact per-episode MTTD cannot be computed inside the panel, show the closest honest live proxy,
+   label it as a proxy, and point to the committed collector result as the official KPI. Add tests like the other
+   panels.
+5. **Debt-ledger follow-up, not in this PR:** refresh `artifacts/reports/*/dora-metrics.json` from real data
+   (promotion-ledger deploys, incidents, time-to-restore including MTTD).
