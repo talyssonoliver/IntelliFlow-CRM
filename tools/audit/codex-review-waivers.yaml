@@ -1140,17 +1140,6 @@ waivers:
     author: talyssonoliver (owner ruling 9 in the PG-208 lane modal, relayed by runner projects-8c, 2026-10-21)
     date: '2026-10-21'
     expires: '2026-12-31'
-  - fingerprint: 28497224cf9b035437ac9193cb14e36199af93aa2f8335672282d3fd4028c87a
-    reason: >-
-      PG-208 Codex finding retention-purge-cannot-keep-up (MEDIUM): run retention deletes at
-      most 500 expired rows per hour, which a tenant sustaining over 500 completed runs/hour
-      for 30 days could outpace. Raised by the single confirming round allowed after owner
-      ruling 9 ("Fix all 3, then stop"; PG-208-owner-ruling.md). Tracked in gh #969 and
-      debt-ledger PG-208-RUN-PURGE-THROUGHPUT-001. Impact: table growth only, no correctness
-      or tenant-isolation effect; no tenant runs at that volume today.
-    author: talyssonoliver (owner ruling 9 in the PG-208 lane modal, relayed by runner projects-8c, 2026-10-21)
-    date: '2026-10-21'
-    expires: '2026-12-31'
   - fingerprint: 283b28bc7d89203adc3672b6d0e2324890e7fe34338adb652ec098b0bef7f0a5
     reason: >-
       PG-203 public booking vs in-app create/reschedule and the firm daily cap. This is the same accepted

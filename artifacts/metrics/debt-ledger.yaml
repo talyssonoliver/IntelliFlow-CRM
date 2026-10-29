@@ -5679,8 +5679,17 @@ items:
     remediation_plan: >-
       Drain expired rows in bounded batches each tick until none remain; test a backlog
       larger than one batch.
-    status: open
-    notes: 'gh issue #969. Codex waiver per owner ruling 9. Tracked per project Rule 8.'
+    status: resolved
+    resolved_at: 2026-10-29
+    resolution: >-
+      Fixed in the PG-208 PR (orchestrator ruling 2026-10-29, raised again by the
+      full-branch codex review). maintenance() purges in batches of purgeBatchSize until
+      one comes back short, at most purgeMaxBatchesPerTick per tick; a backlog left at
+      that cap or by a failed batch continues on the next tick, not the next hour.
+      Tests: a backlog larger than one batch is purged in one tick, the per-tick cap
+      carries over, a failed batch is retried next tick. The codex waiver for this
+      finding is retired in the same change.
+    notes: 'gh issue #969 (closed by the PG-208 PR). Codex waiver per owner ruling 9, now retired. Tracked per project Rule 8.'
   PG-208-AUTOMATION-OFF-IN-PROD-001:
     origin_task: PG-208
     owner: Backend Lead
