@@ -78,6 +78,8 @@ export interface NotifyRequest {
   body: string;
   /** Absent for rule-failure notices (the link opens Task Automation). */
   taskId?: string;
+  /** Whether the recipient may open the task: its owner or assignee (owner ruling 6). */
+  canOpenTask?: boolean;
 }
 
 export interface TaskAutomationEngineDeps {
@@ -744,7 +746,14 @@ export class TaskAutomationEngine {
       if (!live.has(userId)) continue;
       // One failed delivery never stops the other recipients.
       const result = await this.deps
-        .notify({ tenantId: run.tenantId, userId, title: `New task: ${title}`, body, taskId })
+        .notify({
+          tenantId: run.tenantId,
+          userId,
+          title: `New task: ${title}`,
+          body,
+          taskId,
+          canOpenTask: userId === ownerId || userId === assigneeId,
+        })
         .catch(() => 'failed' as const);
       results.push(result);
     }

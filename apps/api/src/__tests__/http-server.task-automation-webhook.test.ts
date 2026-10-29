@@ -185,6 +185,35 @@ describe('task-automation webhook route (PG-208)', () => {
     expect(third.status).toBe(429);
   });
 
+  it("answers 429 to a throttled rule's token before reading the body, without blocking other rules", async () => {
+    holder.deps.limiter = new WebhookFailureLimiter(1);
+    const raw = '{}';
+    const url = `${baseUrl}/api/webhooks/task-automation/${token}`;
+    const badSignature = { ...headersFor(raw), 'x-intelliflow-signature': 't=1,v1=00' };
+    const first = await fetch(url, { method: 'POST', headers: badSignature, body: raw });
+    expect(first.status).toBe(401);
+    const lookup = vi.spyOn(store, 'loadWebhookRule');
+    const second = await fetch(url, { method: 'POST', headers: headersFor(raw), body: raw });
+    expect(second.status).toBe(429);
+    expect(lookup).not.toHaveBeenCalled();
+
+    const otherToken = 'tat_' + randomBytes(32).toString('base64url');
+    store.rule({
+      tenantId: 'tenant-b',
+      triggerType: 'WEBHOOK',
+      eventType: null,
+      webhookTokenHash: sha256Hex(otherToken),
+      webhookSecret: secret,
+      actions: [],
+    });
+    const other = await fetch(`${baseUrl}/api/webhooks/task-automation/${otherToken}`, {
+      method: 'POST',
+      headers: headersFor(raw, 'evt-b'),
+      body: raw,
+    });
+    expect(other.status).toBe(202);
+  });
+
   it('returns a generic 500 when the handler throws, without the error message', async () => {
     vi.spyOn(store, 'loadWebhookRule').mockRejectedValueOnce(new Error('connection string leaked'));
     const raw = '{}';

@@ -1153,6 +1153,17 @@ describe('Task Router assignee visibility (PG-208)', () => {
     });
   });
 
+  it("getByEntity shows a record's tasks the user owns or is assigned to", async () => {
+    prismaMock.task.findMany.mockResolvedValue([]);
+    await caller.getByEntity({ entityType: 'lead', entityId: TEST_UUIDS.lead1 });
+    const where = lastWhere(prismaMock.task.findMany as never);
+    expect(where).toEqual({
+      leadId: TEST_UUIDS.lead1,
+      tenantId,
+      AND: [{ OR: [{ ownerId: userId }, { assigneeId: userId }] }],
+    });
+  });
+
   it('getById of a task neither owned nor assigned is NOT_FOUND', async () => {
     prismaMock.task.findFirst.mockResolvedValue(null);
     await expect(caller.getById({ id: TEST_UUIDS.task2 })).rejects.toMatchObject({

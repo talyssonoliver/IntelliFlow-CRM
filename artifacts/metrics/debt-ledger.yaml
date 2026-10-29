@@ -5772,6 +5772,70 @@ items:
       actions are) and render due dates and schedule variables from that snapshot.
     status: open
     notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
+  PG-208-POSTCONDITION-NOT-COMMIT-EVIDENCE-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Entity events are published inside the writing transaction, so the automation drain
+      (task-automation-engine.ts) uses the record's current state (postconditionHolds) as
+      evidence that the write committed. A lead that is qualified and then moved to LOST,
+      UNQUALIFIED or CONTACTED before the next tick fails the postcondition, is retried for
+      the 30 s grace and then dropped, so its lead.qualified rules never run. Accepted limit
+      of ADR-084 (postcondition grace and the at-most-once intake window). Found by the
+      pre-ship codex gate.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Deliver entity events after commit through the transactional outbox (#966) when
+      automation moves to the combined worker, and process a committed event even when a
+      later status change has happened; drop the postcondition check for those events.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: waived (codex fingerprint 207bcd9f, expires with this entry), fixed with the outbox move (#966, PG-208-AUTOMATION-OFF-IN-PROD-001).'
+  PG-208-WEBHOOK-UNKNOWN-TOKEN-IP-BUCKET-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      The webhook failure limiter (task-automation-webhook.ts) counts failures on a
+      token that names a rule against that token from the caller's IP, but a
+      well-formed token that matches no rule (for example the old URL after "New
+      URL") still counts against the bare IP. A sender stuck on a regenerated URL
+      behind a shared egress IP (Zapier, Make, n8n) can therefore still get that IP
+      throttled for other tenants. Kept on purpose: keying unknown tokens per token
+      would let random tokens dodge the bare-IP guard, and tokens are 256-bit. Found
+      by the pre-ship full-scope review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Remember the hashes of recently replaced webhook tokens for a grace period and
+      count failures on them per token, or give unknown well-formed tokens a separate,
+      higher bare-IP ceiling; test with a regenerated URL called from a shared IP.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: accepted residual of the cross-tenant limiter fix in the PG-208 PR.'
+  PG-208-ASSIGNEE-REMINDERS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Owner ruling 6 lets a non-admin see tasks they own or are assigned to. task.list,
+      task.getById and task.getByEntity apply it, but task.getReminders still reads
+      overdue and due-soon tasks by owner only (getOverdueTasks(ownerId),
+      getTasksDueSoon(ownerId)), so a round-robin assignee gets no reminder for a task
+      automation assigned to them. Nobody is affected while automation is off in
+      production (PG-208-AUTOMATION-OFF-IN-PROD-001). Found by the pre-ship full-scope
+      review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Include assigneeId = userId in the overdue and due-soon repository queries (or
+      add assignee variants) before automation is switched on in production; add a
+      router test for an assignee who does not own the task.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
 summary:
   total_items: 443
   by_severity:

@@ -7,9 +7,10 @@
  *
  * Mounted in `http-server.ts` BEFORE the global body read and the CORS layer.
  * Order: method → per-IP failure limiter → bounded body read (64 KB, 10 s) →
- * token format → rule lookup by token hash → secret encrypted → signature
- * (current secret, then the previous one inside its grace window; the
- * Idempotency-Key is signed, so a replay cannot pick a new key) → per-rule caps
+ * token format → rule lookup by token hash → per-rule failure limiter → secret
+ * encrypted → signature (current secret, then the previous one inside its grace
+ * window; the Idempotency-Key is signed, so a replay cannot pick a new key) →
+ * per-rule caps
  * → JSON object → run insert. Every unknown/inactive/disabled/malformed token
  * gets the same 404, every signature or key failure the same 401, and nothing
  * is written for a rejected request. Never logs the token, secret, signature,
@@ -48,7 +49,10 @@ const NOT_FOUND: WebhookResponse = { status: 404, body: { error: 'not_found' } }
 const INVALID_SIGNATURE: WebhookResponse = { status: 401, body: { error: 'invalid_signature' } };
 const RATE_LIMITED: WebhookResponse = { status: 429, body: { error: 'rate_limited' } };
 
-/** Per-IP limiter that counts FAILED attempts only (a shared edge IP never blocks valid calls). */
+/**
+ * Failure limiter that counts FAILED attempts only, keyed by IP for unknown tokens
+ * and by IP plus rule once the token names a rule.
+ */
 export class WebhookFailureLimiter {
   private readonly windows = new Map<string, { start: number; count: number }>();
 
@@ -214,6 +218,15 @@ export interface WebhookDeps {
   encryptionReady: () => boolean;
 }
 
+/**
+ * Failures on a token that names a rule (paused, automation off, bad signature)
+ * count against that token from this IP, not the bare IP, so one tenant's
+ * misconfigured sender on a shared egress IP never blocks another tenant.
+ */
+function tokenFailureKey(ip: string, tokenHash: string): string {
+  return `${ip}|${tokenHash}`;
+}
+
 /** Steps 4-9 (after the bounded body read). */
 export async function handleTaskAutomationWebhook(
   token: string,
@@ -223,21 +236,26 @@ export async function handleTaskAutomationWebhook(
   deps: WebhookDeps
 ): Promise<WebhookResponse> {
   const now = deps.now();
-  const fail = (response: WebhookResponse): WebhookResponse => {
-    deps.limiter.recordFailure(ip, now.getTime());
+  const fail = (response: WebhookResponse, key = ip): WebhookResponse => {
+    deps.limiter.recordFailure(key, now.getTime());
     return response;
   };
 
   if (!TOKEN_PATTERN.test(token)) return fail(NOT_FOUND);
   const tokenHash = sha256Hex(token);
+  const ruleKey = tokenFailureKey(ip, tokenHash);
+  // Checked before the lookup, so a throttled sender costs no query.
+  if (deps.limiter.isBlocked(ruleKey, now.getTime())) return RATE_LIMITED;
   const rule = await deps.store.loadWebhookRule(tokenHash);
-  if (!rule?.isActive || rule.triggerType !== 'WEBHOOK') return fail(NOT_FOUND);
+  // An unknown token counts against the bare IP: random tokens never get a bucket of their own.
+  if (!rule) return fail(NOT_FOUND);
+  if (!rule.isActive || rule.triggerType !== 'WEBHOOK') return fail(NOT_FOUND, ruleKey);
   const settings = await deps.store.settings(rule.tenantId);
-  if (!settings.automationEnabled) return fail(NOT_FOUND);
+  if (!settings.automationEnabled) return fail(NOT_FOUND, ruleKey);
   if (!deps.encryptionReady()) return { status: 503, body: { error: 'unavailable' } };
 
   const verified = verifySignature(rule, headers, rawBody, now);
-  if (!verified.ok) return fail(INVALID_SIGNATURE);
+  if (!verified.ok) return fail(INVALID_SIGNATURE, ruleKey);
 
   let payload: unknown;
   try {
@@ -369,7 +387,12 @@ export async function handleTaskAutomationWebhookRoute(
       return;
     }
     const ip = webhookClientIp(req.headers, req.socket?.remoteAddress);
-    if (deps.limiter.isBlocked(ip, deps.now().getTime())) {
+    const now = deps.now().getTime();
+    if (
+      deps.limiter.isBlocked(ip, now) ||
+      (TOKEN_PATTERN.test(token) &&
+        deps.limiter.isBlocked(tokenFailureKey(ip, sha256Hex(token)), now))
+    ) {
       send(res, RATE_LIMITED);
       return;
     }

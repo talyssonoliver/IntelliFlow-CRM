@@ -27,10 +27,29 @@ import {
   buildTaskAutomationRuntime,
   createTaskAutomationRuntime,
   getTaskAutomationWebhookDeps,
+  notificationLink,
   webhookEncryptionReady,
 } from '../task-automation-runtime';
 
 const m = prismaMock as any;
+
+describe('notificationLink', () => {
+  it('deep-links the task only for a recipient who can open it', () => {
+    expect(notificationLink({ taskId: 'task-1', canOpenTask: true })).toEqual({
+      entityId: 'task-1',
+      actionUrl: '/tasks/task-1',
+      actionLabel: 'Open task',
+    });
+    expect(notificationLink({ taskId: 'task-1', canOpenTask: false })).toEqual({
+      actionUrl: '/tasks',
+      actionLabel: 'Open tasks',
+    });
+    expect(notificationLink({})).toEqual({
+      actionUrl: '/tasks/automation',
+      actionLabel: 'Open Task Automation',
+    });
+  });
+});
 
 describe('webhookEncryptionReady', () => {
   it('requires the field-encryption key outside tests', () => {

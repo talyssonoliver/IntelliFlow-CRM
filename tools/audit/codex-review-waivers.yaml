@@ -1277,3 +1277,17 @@ waivers:
     author: talyssonoliver (owner ruling 2026-10-28, automation off in production; waiver ruled by the orchestrator Aurora, 2026-10-29)
     date: '2026-10-29'
     expires: '2027-01-29'
+  - fingerprint: 207bcd9f337014fa673c0d308e2a12e2b04f94248cce8a5485817dc5ff168f63
+    reason: >-
+      PG-208 Codex finding mutable-state-is-not-commit-evidence (MEDIUM,
+      task-automation-engine.ts postconditionHolds): events are published inside the writing
+      transaction, so the drain takes the record's current state as evidence the write
+      committed. A lead qualified and then moved to LOST, UNQUALIFIED or CONTACTED before the
+      next tick has its lead.qualified run dropped after the 30 s grace. Accepted design limit of
+      ADR-084 (postcondition grace and the at-most-once intake window); the effect is a missed
+      automation run, with nothing overwritten or lost. The fix is delivery after commit through
+      the outbox (#966), tracked in debt-ledger PG-208-POSTCONDITION-NOT-COMMIT-EVIDENCE-001. The
+      path is off in production (TASK_AUTOMATION_INTERVAL_MS=0, owner ruling 2026-10-28).
+    author: talyssonoliver (owner ruling 2026-10-28, automation off in production; waiver ruled by the orchestrator Aurora, 2026-10-29)
+    date: '2026-10-29'
+    expires: '2027-01-29'

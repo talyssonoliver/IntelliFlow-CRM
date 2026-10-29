@@ -176,20 +176,30 @@ function RowControls({
   const isEvent = rule.trigger.type === 'ENTITY_EVENT';
   const reasonId = `rule-${rule.id}-test-reason`;
   const isWebhook = rule.trigger.type === 'WEBHOOK' && canManageWebhooks;
+  // The server lets only webhook admins change a webhook rule; managers keep Runs, Test and Move.
+  const locked = rule.trigger.type === 'WEBHOOK' && !canManageWebhooks;
   return (
     // A named group, so "Edit", "Runs"… are identifiable out of context (WCAG 2.4.6).
     <fieldset className="m-0 flex min-w-0 flex-wrap items-center gap-1 border-0 p-0 sm:max-w-md sm:justify-end">
       <legend className="sr-only">Actions for {rule.name}</legend>
-      <Switch
-        checked={rule.isActive}
-        disabled={pending}
-        onCheckedChange={(checked) => props.onToggle(rule, checked)}
-        aria-label={`Active: ${rule.name}`}
-        className="mr-2"
-      />
-      <Button size="sm" variant="ghost" onClick={onEdit}>
-        Edit
-      </Button>
+      {locked ? (
+        <span className="mr-2 text-xs text-muted-foreground">
+          Only admins can change webhook rules
+        </span>
+      ) : (
+        <>
+          <Switch
+            checked={rule.isActive}
+            disabled={pending}
+            onCheckedChange={(checked) => props.onToggle(rule, checked)}
+            aria-label={`Active: ${rule.name}`}
+            className="mr-2"
+          />
+          <Button size="sm" variant="ghost" onClick={onEdit}>
+            Edit
+          </Button>
+        </>
+      )}
       <Button size="sm" variant="ghost" onClick={() => props.onShowRuns(rule)}>
         Runs
       </Button>
@@ -240,14 +250,16 @@ function RowControls({
           </Button>
         </>
       )}
-      <Button
-        size="sm"
-        variant="ghost"
-        className="text-red-700 hover:text-red-800 dark:text-red-300"
-        onClick={() => props.onDelete(rule)}
-      >
-        Delete
-      </Button>
+      {!locked && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-red-700 hover:text-red-800 dark:text-red-300"
+          onClick={() => props.onDelete(rule)}
+        >
+          Delete
+        </Button>
+      )}
     </fieldset>
   );
 }

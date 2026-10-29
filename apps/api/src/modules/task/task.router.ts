@@ -977,7 +977,11 @@ export const taskRouter = createTRPCRouter({
       entityFilter = { opportunityId: input.entityId };
     }
 
-    const where = createTenantWhereClause(typedCtx.tenant, entityFilter);
+    // Owner or assignee (owner ruling 6), as in list and getById.
+    const where = withAssigneeVisibility(
+      createTenantWhereClause(typedCtx.tenant, entityFilter),
+      typedCtx.tenant.userId
+    );
     const tasks = await typedCtx.prismaWithTenant.task.findMany({
       where,
       include: {

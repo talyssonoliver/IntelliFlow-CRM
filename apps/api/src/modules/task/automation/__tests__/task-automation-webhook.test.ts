@@ -353,6 +353,40 @@ describe('handleTaskAutomationWebhook', () => {
     expect(fresh.isBlocked(IP, NOW.getTime())).toBe(false);
   });
 
+  it("throttles one tenant's failing rule without blocking another tenant on the same IP", async () => {
+    const otherToken = 'tat_' + randomBytes(32).toString('base64url');
+    const otherSecret = randomBytes(32).toString('hex');
+    store.rule({
+      tenantId: 'tenant-b',
+      triggerType: 'WEBHOOK',
+      eventType: null,
+      webhookTokenHash: sha256Hex(otherToken),
+      webhookSecret: otherSecret,
+      actions: [],
+    });
+    const raw = body();
+    // Tenant A's sender keeps calling with a bad signature, then after the rule is turned off.
+    for (let i = 0; i < 2; i++) await call(raw, signed(raw, `a-${i}`, { secret: 'f'.repeat(64) }));
+    store.rules[0].isActive = false;
+    await call(raw, signed(raw, 'a-off'));
+    expect(limiter.isBlocked(IP, NOW.getTime())).toBe(false);
+
+    // Tenant B's signed request from the same egress IP is still accepted.
+    expect(await call(raw, signed(raw, 'b-1', { secret: otherSecret }), otherToken)).toEqual({
+      status: 202,
+      body: { accepted: true, duplicate: false },
+    });
+    // Tenant A's rule is now throttled on its own, before any lookup.
+    store.rules[0].isActive = true;
+    const lookup = vi.spyOn(store, 'loadWebhookRule');
+    expect(await call(raw, signed(raw, 'a-late'))).toEqual({
+      status: 429,
+      body: { error: 'rate_limited' },
+    });
+    expect(lookup).not.toHaveBeenCalled();
+    expect(store.runs.filter((r) => r.ruleId === ruleId)).toHaveLength(0);
+  });
+
   it('works with a secret round-tripped through field encryption', () => {
     const key = randomBytes(32);
     const stored = encryptField(secret, key);

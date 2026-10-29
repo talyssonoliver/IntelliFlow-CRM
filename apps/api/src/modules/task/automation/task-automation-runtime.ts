@@ -12,7 +12,11 @@
 
 import type { PrismaClient } from '@intelliflow/db';
 import type { TaskPriority } from '@intelliflow/domain';
-import { TaskAutomationEngine, type TickResult } from './task-automation-engine';
+import {
+  TaskAutomationEngine,
+  type NotifyRequest,
+  type TickResult,
+} from './task-automation-engine';
 import {
   ConversionCorrelation,
   TaskAutomationEventBuffer,
@@ -72,13 +76,7 @@ export interface TaskAutomationRuntimeDeps {
   prisma: PrismaClient;
   eventBus: EventSubscriber;
   taskService: TaskServiceLike;
-  notify: (params: {
-    tenantId: string;
-    userId: string;
-    title: string;
-    body: string;
-    taskId?: string;
-  }) => Promise<'sent' | 'filtered'>;
+  notify: (params: NotifyRequest) => Promise<'sent' | 'filtered'>;
   now?: () => Date;
 }
 
@@ -130,6 +128,25 @@ export async function buildTaskAutomationRuntime(
   };
 }
 
+/**
+ * Where a notification points. Only a recipient who can open the task gets its
+ * deep link; another recipient is sent to the task list (the title names the task).
+ */
+export function notificationLink(request: Pick<NotifyRequest, 'taskId' | 'canOpenTask'>): {
+  entityId?: string;
+  actionUrl: string;
+  actionLabel: string;
+} {
+  if (!request.taskId)
+    return { actionUrl: '/tasks/automation', actionLabel: 'Open Task Automation' };
+  if (!request.canOpenTask) return { actionUrl: '/tasks', actionLabel: 'Open tasks' };
+  return {
+    entityId: request.taskId,
+    actionUrl: `/tasks/${request.taskId}`,
+    actionLabel: 'Open task',
+  };
+}
+
 /** Production wiring from the container (call after `containerReady`). */
 export async function createTaskAutomationRuntime(): Promise<TaskAutomationRuntime> {
   const [{ prisma }, { container }, { createNotification }] = await Promise.all([
@@ -142,19 +159,17 @@ export async function createTaskAutomationRuntime(): Promise<TaskAutomationRunti
     prisma: client,
     eventBus: container.adapters.eventBus,
     taskService: container.taskService,
-    notify: async ({ tenantId, userId, title, body, taskId }) => {
+    notify: async (request) => {
       const notification = await createNotification(
         client as never,
         {
-          tenantId,
-          userId,
+          tenantId: request.tenantId,
+          userId: request.userId,
           type: 'task_automation',
-          title,
-          body,
+          title: request.title,
+          body: request.body,
           entityType: 'task',
-          ...(taskId && { entityId: taskId }),
-          actionUrl: taskId ? `/tasks/${taskId}` : '/tasks/automation',
-          actionLabel: taskId ? 'Open task' : 'Open Task Automation',
+          ...notificationLink(request),
         },
         container.notificationOrchestrator
       );

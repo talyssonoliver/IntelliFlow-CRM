@@ -37,7 +37,13 @@ let createResult: (
 let assigned: Array<[string, string, string]>;
 let assignResult: boolean;
 let assignThrows: boolean;
-let notified: Array<{ userId: string; title: string; body: string; taskId?: string }>;
+let notified: Array<{
+  userId: string;
+  title: string;
+  body: string;
+  taskId?: string;
+  canOpenTask?: boolean;
+}>;
 let notifyResult: () => Promise<'sent' | 'filtered'>;
 let engine: TaskAutomationEngine;
 const log = { warn: vi.fn(), info: vi.fn() };
@@ -788,6 +794,30 @@ describe('executePendingRuns', () => {
     const second = await fire(rule);
     expect(second).toMatchObject({ status: 'SUCCEEDED', outcome: 'assign_failed' });
     expect(second.taskId).toBeTruthy();
+  });
+
+  it('links the task only for recipients who can open it (owner or assignee)', async () => {
+    store.users.set('u1', { tenantId: T1, name: 'U1' });
+    store.users.set('u2', { tenantId: T1, name: 'U2' });
+    lead();
+    const rule = eventRule({
+      actions: [
+        createTask(),
+        { type: 'ASSIGN_ROUND_ROBIN', userIds: ['u1'] },
+        {
+          type: 'NOTIFY',
+          recipients: { assignee: true, owner: true, userIds: ['u2'] },
+          message: '',
+        },
+      ],
+    });
+    await fire(rule);
+    const byUser = new Map(notified.map((n) => [n.userId, n]));
+    expect(byUser.get('owner')).toMatchObject({ taskId: 'task-1', canOpenTask: true });
+    expect(byUser.get('u1')).toMatchObject({ taskId: 'task-1', canOpenTask: true });
+    // u2 is neither the owner nor the assignee: task.getById would answer not-found.
+    expect(byUser.get('u2')).toMatchObject({ taskId: 'task-1', canOpenTask: false });
+    expect(byUser.get('u2')?.title).toBe('New task: Call Ada Lovelace');
   });
 
   it('keeps notifying the other recipients after one delivery fails', async () => {

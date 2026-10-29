@@ -193,6 +193,34 @@ describe('AutomationRuleList', () => {
     expect(handlers.onMove).toHaveBeenCalledWith(expect.objectContaining({ id: 'r2' }), 'up');
   });
 
+  it('leaves a manager only Runs, Test Rule and Move on a webhook rule', () => {
+    const handlers = renderList({
+      canManageWebhooks: false,
+      rules: [
+        rule({ id: 'r1', name: 'A', trigger: { type: 'WEBHOOK' } }),
+        rule({ id: 'r2', name: 'B' }),
+      ],
+    });
+    const webhookRow = screen.getByRole('group', { name: 'Actions for A' });
+    for (const name of ['Edit', 'Delete', 'Rotate Secret', 'New URL']) {
+      expect(within(webhookRow).queryByRole('button', { name })).toBeNull();
+    }
+    expect(within(webhookRow).queryByRole('switch')).toBeNull();
+    expect(within(webhookRow).getByText('Only admins can change webhook rules')).toBeVisible();
+    fireEvent.click(within(webhookRow).getByRole('button', { name: 'Runs' }));
+    expect(handlers.onShowRuns).toHaveBeenCalledWith(expect.objectContaining({ id: 'r1' }));
+    fireEvent.click(within(webhookRow).getByRole('button', { name: 'Test Rule' }));
+    expect(handlers.onTest).toHaveBeenCalledWith(expect.objectContaining({ id: 'r1' }));
+    fireEvent.click(within(webhookRow).getByRole('button', { name: 'Move Down: A' }));
+    expect(handlers.onMove).toHaveBeenCalledWith(expect.objectContaining({ id: 'r1' }), 'down');
+
+    // The manager keeps every control on an ordinary rule.
+    const otherRow = screen.getByRole('group', { name: 'Actions for B' });
+    expect(within(otherRow).getByRole('switch', { name: 'Active: B' })).toBeEnabled();
+    expect(within(otherRow).getByRole('button', { name: 'Edit' })).toBeInTheDocument();
+    expect(within(otherRow).getByRole('button', { name: 'Delete' })).toBeInTheDocument();
+  });
+
   it('keeps the switch beside the buttons and disables it while pending', () => {
     renderList({ pendingToggleId: 'r1', isReordering: true });
     const toggle = screen.getByRole('switch', { name: 'Active: Call new leads' });
