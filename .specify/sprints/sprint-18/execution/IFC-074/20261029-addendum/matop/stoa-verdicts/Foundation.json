@@ -1,0 +1,31 @@
+{
+  "stoa": "Foundation",
+  "task_id": "IFC-074",
+  "run_id": "20261029-addendum",
+  "verdict": "FAIL",
+  "rationale": "Tier-1 gates are green on committed head 27ff7e70d (typecheck, lint, format, build, dependency delta, no stray files). FAIL because a required PR check is red on that SHA: 'Unit Tests (sharded) / SonarCloud Scan' (SonarCloud: D Reliability Rating on New Code, required >= A), from 4 bugs in collect-observability-evidence.mjs. The fix was in the working tree only at review time. Local pre-ship has no Sonar step, so its PASS did not catch this. Expected to flip to PASS once the fix is committed, pre-shipped, pushed and the Sonar gate is green on the new head.",
+  "checks": [
+    {"name": "Typecheck", "result": "PASS", "evidence": "logs/typecheck.txt 40/40 (cached); pre-ship typecheck on 27ff7e70d exit 0 (59611 ms, uncached); CI Type Check pass"},
+    {"name": "Build", "result": "PASS", "evidence": "logs/build.txt turbo build --force observability + api, 12/12, 0 cached, 81304 ms; pre-ship build and library-build exit 0; CI Build pass"},
+    {"name": "Lint", "result": "PASS", "evidence": "logs/lint.txt exit 0; pre-ship lint and lint-promises exit 0; CI Lint & Format pass"},
+    {"name": "Format", "result": "PASS", "evidence": "pre-ship format-check exit 0; npx prettier --check on 13 changed tools/scripts + packages/observability/src files: all formatted (incl. the uncommitted collector edit)"},
+    {"name": "ESLint on changed files", "result": "PASS", "evidence": "npx eslint --max-warnings=0 on 13 changed files: exit 0"},
+    {"name": "Dashboard JSON + offline validateConfig", "result": "PASS", "evidence": "JSON.parse ok; exported validateConfig() on dashboard-production.json -> problems: []"},
+    {"name": "No tracked .log/.coverage/.tsbuildinfo", "result": "PASS", "evidence": "git ls-files | grep -cE '\\.(log|coverage|tsbuildinfo)$' -> 0"},
+    {"name": "Dependency delta", "result": "PASS", "evidence": "two exact-pinned devDependencies (@opentelemetry/instrumentation-pino 0.68.0, @opentelemetry/sdk-logs 0.219.0); lockfile +6/-0; install --frozen-lockfile exit 0"},
+    {"name": "Pre-ship record (artifacts/preship/last-run.json)", "result": "PASS", "evidence": "git_head 27ff7e70d, PASS, allow_missing false, 1998085 ms; 31 PASS, 2 advisory FAIL (audit, osv-scan: systeminformation, pre-existing), 2 skipped (actionlint precondition, e2e not full)"},
+    {"name": "Required PR checks on #1073 (head 27ff7e70d)", "result": "FAIL", "evidence": "all pass except 'Unit Tests (sharded) / SonarCloud Scan': Quality Gate failed, D Reliability Rating on New Code"},
+    {"name": "Working tree vs evidence", "result": "FAIL", "evidence": "the Sonar fix (reduce seed, byCodeUnit comparator, entry-point rejection handler) was uncommitted at review time"}
+  ],
+  "findings": [
+    {"id": "F-FND-1", "severity": "high", "status": "open", "scope": "PR #1073 required check SonarCloud Scan", "summary": "Quality Gate D reliability on 27ff7e70d; clears when the review fix is pushed and Sonar is green on the new head."},
+    {"id": "F-FND-2", "severity": "high", "status": "open", "scope": "collect-observability-evidence.mjs (uncommitted at review)", "summary": "Commit the fix, re-run pre-ship on the new head, re-run the collector suite (lane: logs/sonar-fix.txt 79/79)."},
+    {"id": "F-FND-3", "severity": "medium", "status": "open", "scope": "pre-ship vs CI parity", "summary": "Pre-ship has no Sonar step; a reliability-rated Sonar bug on new JS code passes locally and fails CI."},
+    {"id": "F-FND-4", "severity": "low", "status": "open", "scope": "pre-ship advisory steps audit, osv-scan", "summary": "systeminformation <5.33.16 (CVE-2026-116576) via ai-worker OTel host-metrics; pre-existing, tracked by STOA-Security."},
+    {"id": "F-FND-5", "severity": "low", "status": "info", "scope": "evidence provenance", "summary": "typecheck.txt is a cached turbo run (uncached pre-ship and CI cover it); last-run.json holds only the latest (33m18s) pre-ship pass."}
+  ],
+  "toolIdsExecuted": ["git log/status/diff/ls-files", "gh pr checks 1073 --required", "gh run view", "gh api check-runs", "npx eslint", "npx prettier --check", "JSON.parse", "offline validateConfig()", "read last-run.json and logs"],
+  "unavailableTools": ["apply-grafana-dashboard.mjs --dry-run (calls Grafana; CI dry run 40896025096 covers it)", "full typecheck/build/format re-runs (not run by instruction)", "Sonar issue list (lane fetched it: S2871 x2, S6959, S9383)"],
+  "stored_by": "IFC-074 lane, from the stoa-foundation subagent's returned verdict",
+  "stored_at": "2026-10-29T17:21:32Z"
+}

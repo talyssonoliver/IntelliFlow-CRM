@@ -520,7 +520,7 @@ export function groupEpisodes(incidents) {
     episodes.push(episode);
   }
   return episodes.map(({ service, e, members }) => {
-    const first = members.reduce((x, y) => (y.a < x.a ? y : x));
+    const first = members.reduce((x, y) => (y.a < x.a ? y : x), members[0]);
     const origin = members.find((m) => m.e === e);
     return {
       service,
@@ -833,6 +833,12 @@ function levelCounts(streams) {
 
 const lineCount = (streams) => streams.reduce((n, s) => n + (s.values ?? []).length, 0);
 
+/** Code-unit order, the same order a bare `.sort()` gives strings. */
+const byCodeUnit = (a, b) => {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+};
+
 /**
  * Why an episode has no error-level line: the same service's lines at any
  * level around the first error span, and every line carrying the episode's
@@ -864,11 +870,11 @@ async function probeMissingErrorLog(get, episode, t0) {
     same_service: {
       lines: lineCount(sameService),
       levels: levelCounts(sameService),
-      label_names: [...keys].sort(),
+      label_names: [...keys].sort(byCodeUnit),
     },
     by_trace: {
       lines: lineCount(byTrace),
-      services: [...services].sort(),
+      services: [...services].sort(byCodeUnit),
       levels: levelCounts(byTrace),
     },
   };
@@ -1288,5 +1294,13 @@ export async function run({
 }
 
 if (process.argv[1] && fileURLToPath(import.meta.url) === path.resolve(process.argv[1])) {
-  run().then((code) => process.exit(code));
+  // run() reports its own errors (scrubbed); a rejection here is unexpected, so
+  // only a fixed line is printed, never the error text.
+  run().then(
+    (code) => process.exit(code),
+    () => {
+      console.error('[collect-observability-evidence] unexpected failure');
+      process.exit(1);
+    }
+  );
 }

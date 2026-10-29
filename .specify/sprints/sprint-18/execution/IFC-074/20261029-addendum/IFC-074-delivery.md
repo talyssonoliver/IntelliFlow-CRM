@@ -136,3 +136,28 @@ It made two low-severity observations:
 
 ## Findings
 F14-F19: see `.specify/sprints/sprint-18/findings/IFC-074-findings.md`, the "Addendum 2026-10-29" section.
+
+## PR #1073 review round (2026-10-29)
+
+The branch was pushed at `27ff7e70d` and opened as #1073. The review found:
+
+- **SonarCloud (required check) failed on new-code reliability** with 4 bugs in `collect-observability-evidence.mjs`, all fixed and all behaviour-preserving:
+  - S2871 ×2: a code-unit comparator on two string sorts;
+  - S6959: the `reduce` seeded with `members[0]`;
+  - S9383: a rejection handler at the entry point that prints a fixed line.
+
+  The collector suite passes 79/79, and eslint and prettier are clean (`logs/sonar-fix.txt`).
+- **Codex HIGH, userId/tenantId in api Loki records:** judged by design and accepted by the coordinator. The citations are spec D5, ADR-086, AC-015 and `gdpr-compliance.md:89`. ADR-086 now says that retention is bounded by the Grafana Cloud stack's configured log retention, which isn't verified yet (NEEDS_HUMAN).
+- **Adversarial review:** no code findings.
+- **Plan checkboxes:** the open ones are ticked only where a commit or log proves them, each with an evidence line; the rest stay open with a reason.
+- **STOAs re-run, read-only, for the addendum** (`matop/`):
+  - Automation PASS;
+  - Quality PASS;
+  - Foundation FAIL: the SonarCloud check is red on `27ff7e70d`, which this round fixes;
+  - Security FAIL: only on `pnpm audit`, from systeminformation via ai-worker OTel host-metrics. This is pre-existing on main.
+- **Gate 4b after the push** (`logs/gate-4b-after-push.txt`): the name, ahead and pushed checks pass. It blocks only on uncommitted edits, and is re-run after this round's push.
+- **Schema validation:** `validate-schemas` exits 1 repo-wide on pre-existing drift (F17). The IFC-074 attestation itself validates (`logs/validate-schemas.txt`).
+- **Pre-existing red CI checks, outside this PR's diff:**
+  - Validate Sprint Metrics Consistency (an orphan `sprint-0/EP-001-AI.json`);
+  - system-audit (gitleaks on `artifacts/test-failures/web.json`);
+  - NPM Audit and OSV Scanner (systeminformation).

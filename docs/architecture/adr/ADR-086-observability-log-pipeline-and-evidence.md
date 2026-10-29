@@ -138,6 +138,14 @@ wants userId minimised, it is done once, for every service, in both the mixin
 and the spans. The record carries no message, stack, cause, email or request id,
 and its path and errorName are allowlisted.
 
+**Retention bound (2026-10-29, open).** How long these ids are kept is bounded
+by the Grafana Cloud stack's configured log retention. That figure is not
+verified yet: the stack's Loki data only starts recently, so it can't be
+inferred from the data, and the 720h in `infra/monitoring/loki-config.yml`
+applies only to the self-hosted Loki. NEEDS_HUMAN: the owner reads the log
+retention in the Grafana Cloud stack settings, and this ADR is updated with the
+figure.
+
 **Runtime impact on the api.**
 
 - **Log volume.** Log records are written only inside a tRPC call: one `info`
