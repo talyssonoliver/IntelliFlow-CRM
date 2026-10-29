@@ -5705,6 +5705,64 @@ items:
       admins on /tasks/automation that rules are paused.
     status: open
     notes: 'Owner ruling relayed by Aurora 2026-10-28. Blocks switching automation on in production.'
+  PG-208-RUNTIME-INIT-NO-RETRY-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: low
+    description: >-
+      If buildTaskAutomationRuntime's first activeEventTypes() query fails at boot
+      (a transient database error), apps/api/src/http-server.ts logs it and never
+      tries again: no tick runs and no entity event is buffered until the api
+      restarts. Moot while production runs with TASK_AUTOMATION_INTERVAL_MS=0
+      (PG-208-AUTOMATION-OFF-IN-PROD-001). Found by the full-branch codex review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Retry the runtime initialisation with bounded backoff, stopped by
+      stopTaskAutomationRunner on shutdown, before automation is switched on in
+      production (or as part of moving it to the combined worker).
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
+  PG-208-CONVERSION-SKIP-BYPASSES-CAPS-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      Runs recorded as SKIPPED for conversion-born contacts and accounts
+      (covered_by_lead_conversion) are written with insertRunIfAbsent in
+      task-automation-engine.ts, outside the admission lock and the hourly caps. They
+      still count toward the tenant's hourly run cap in admitInTransaction, so a burst
+      of lead conversions can suppress other rules' runs for the rest of the hour
+      without creating any task. Found by the full-branch codex review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Either leave SKIPPED conversion rows out of the cap counts, or write them
+      through the capped admission path so they cannot exceed the caps; add a test
+      with a per-rule cap of one and several conversion-born events.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
+  PG-208-SCHEDULE-TZ-NOT-SNAPSHOTTED-001:
+    origin_task: PG-208
+    owner: Backend Lead
+    severity: medium
+    description: >-
+      A run snapshots its rule's actions at admission but not the schedule time
+      zone. Execution reads the rule's current scheduleTimezone
+      (task-automation-engine.ts), so changing a schedule's time zone after a run is
+      queued moves that run's task due date and its schedule variables (e.g. a
+      dueInDays 0 run admitted at 22:30Z becomes due the next day after a switch to
+      Pacific/Auckland). Found by the full-branch codex review.
+    created_at: 2026-10-29
+    expiry_date: 2027-01-29
+    remediation_sprint: 19
+    remediation_plan: >-
+      Store the schedule time zone in the run's context at admission (as the
+      actions are) and render due dates and schedule variables from that snapshot.
+    status: open
+    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
 summary:
   total_items: 443
   by_severity:

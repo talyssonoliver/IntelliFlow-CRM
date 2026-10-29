@@ -92,6 +92,18 @@ describe('MemberMultiSelect', () => {
         onChange={() => {}}
       />
     );
+    // Loaded list without them: they left the tenant (named, and removable).
+    expect(screen.getByRole('button', { name: 'Members: Former member (left)' })).toBeDefined();
+    // Still loading: membership unknown, so only the count.
+    rerender(
+      <MemberMultiSelect
+        legend="Territory members"
+        options={[]}
+        selectedIds={['gone']}
+        onChange={() => {}}
+        isLoading
+      />
+    );
     expect(screen.getByText('1 selected')).toBeDefined();
     rerender(
       <MemberMultiSelect
@@ -126,6 +138,33 @@ describe('MemberMultiSelect', () => {
       />
     );
     expect(screen.getByText(/Could not load users/)).toBeDefined();
+  });
+
+  it('shows a selected member who has left as a removable "(left)" chip', () => {
+    const onChange = vi.fn();
+    render(
+      <MemberMultiSelect
+        label="Assign in turn to"
+        options={options}
+        selectedIds={['u2', 'gone-1']}
+        onChange={onChange}
+      />
+    );
+    expect(
+      screen.getByRole('button', { name: 'Assign in turn to: Rex, Former member (left)' })
+    ).toBeDefined();
+    expect(screen.getByText('Former member (left)')).toBeDefined();
+    fireEvent.click(screen.getByRole('button', { name: 'Remove former member 1' }));
+    expect(onChange).toHaveBeenCalledWith(['u2']);
+  });
+
+  it('marks nobody as left while the users are loading or failed to load', () => {
+    const { rerender } = render(
+      <MemberMultiSelect options={[]} selectedIds={['u1']} onChange={() => {}} isLoading />
+    );
+    expect(screen.queryByText('Former member (left)')).toBeNull();
+    rerender(<MemberMultiSelect options={[]} selectedIds={['u1']} onChange={() => {}} isError />);
+    expect(screen.queryByText('Former member (left)')).toBeNull();
   });
 
   it('names the option group with the legend prop (default "Members")', () => {

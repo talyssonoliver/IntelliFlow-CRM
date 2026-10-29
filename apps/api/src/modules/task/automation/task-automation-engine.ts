@@ -196,6 +196,8 @@ function resolveOwner(
 
 export class TaskAutomationEngine {
   private lastMaintenance = 0;
+  /** A purge stopped at its per-tick cap: the next tick continues it. */
+  private purgeBacklog = false;
 
   constructor(private readonly deps: TaskAutomationEngineDeps) {}
 
@@ -772,13 +774,35 @@ export class TaskAutomationEngine {
 
   async maintenance(): Promise<void> {
     const now = this.deps.now();
-    if (now.getTime() - this.lastMaintenance < MAINTENANCE_EVERY_MS) return;
-    this.lastMaintenance = now.getTime();
-    await this.deps.store.reapStaleRuns(new Date(now.getTime() - L.staleRunMinutes * 60_000), now);
-    await this.deps.store.clearExpiredPreviousSecrets(now);
-    await this.deps.store.purgeRunsBefore(
-      new Date(now.getTime() - L.runRetentionDays * 24 * HOUR_MS),
-      500
-    );
+    if (now.getTime() - this.lastMaintenance >= MAINTENANCE_EVERY_MS) {
+      this.lastMaintenance = now.getTime();
+      await this.deps.store.reapStaleRuns(
+        new Date(now.getTime() - L.staleRunMinutes * 60_000),
+        now
+      );
+      await this.deps.store.clearExpiredPreviousSecrets(now);
+    } else if (!this.purgeBacklog) {
+      return;
+    }
+    await this.purgeExpiredRuns(now);
+  }
+
+  /**
+   * The 30-day retention (run history holds webhook variables): delete in
+   * bounded batches until one comes back short. At most purgeMaxBatchesPerTick
+   * per tick, so a large backlog drains over the following ticks, not hours.
+   */
+  private async purgeExpiredRuns(now: Date): Promise<void> {
+    const before = new Date(now.getTime() - L.runRetentionDays * 24 * HOUR_MS);
+    // Pending until a short batch proves it caught up: a cap or a failed batch
+    // leaves it set, so the next tick continues.
+    this.purgeBacklog = true;
+    for (let batch = 0; batch < L.purgeMaxBatchesPerTick; batch++) {
+      const purged = await this.deps.store.purgeRunsBefore(before, L.purgeBatchSize);
+      if (purged < L.purgeBatchSize) {
+        this.purgeBacklog = false;
+        return;
+      }
+    }
   }
 }

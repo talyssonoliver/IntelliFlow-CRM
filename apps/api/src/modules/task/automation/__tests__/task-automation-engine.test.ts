@@ -3,6 +3,7 @@
  * The clock is pinned: every time-dependent case sets it explicitly.
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { TASK_AUTOMATION_LIMITS } from '@intelliflow/domain';
 import { TaskAutomationEngine, type CreateTaskRequest } from '../task-automation-engine';
 import {
   ConversionCorrelation,
@@ -980,6 +981,65 @@ describe('maintenance', () => {
     await engine.maintenance();
     expect(reap).toHaveBeenCalledTimes(1);
     expect(clearSecrets).toHaveBeenCalledWith(now);
+  });
+
+  it('purges a backlog bigger than one batch in a single maintenance tick (30-day retention)', async () => {
+    const rule = eventRule();
+    const backlog = TASK_AUTOMATION_LIMITS.purgeBatchSize * 2 + 1;
+    for (let i = 0; i < backlog; i++) {
+      await store.insertRunIfAbsent({
+        tenantId: T1,
+        ruleId: rule.id,
+        triggerType: 'ENTITY_EVENT',
+        idempotencyKey: `old-${i}`,
+        context: {},
+      });
+      store.runs[i].status = 'SUCCEEDED';
+      store.runs[i].createdAt = new Date(START.getTime() - 31 * 86_400_000);
+    }
+    await engine.maintenance();
+    expect(store.runs).toHaveLength(0);
+  });
+
+  it('caps the purge per tick and carries a remaining backlog to the next tick, not the next hour', async () => {
+    const { purgeBatchSize, purgeMaxBatchesPerTick } = TASK_AUTOMATION_LIMITS;
+    const purge = vi.spyOn(store, 'purgeRunsBefore').mockResolvedValue(purgeBatchSize);
+    const reap = vi.spyOn(store, 'reapStaleRuns');
+    await engine.maintenance();
+    expect(purge).toHaveBeenCalledTimes(purgeMaxBatchesPerTick);
+    expect(purge).toHaveBeenLastCalledWith(
+      new Date(START.getTime() - 30 * 86_400_000),
+      purgeBatchSize
+    );
+
+    purge.mockClear();
+    purge.mockResolvedValueOnce(purgeBatchSize).mockResolvedValueOnce(3);
+    now = new Date(START.getTime() + 15_000);
+    await engine.maintenance();
+    expect(purge).toHaveBeenCalledTimes(2);
+    expect(reap).toHaveBeenCalledTimes(1); // the rest of maintenance stays hourly
+
+    purge.mockClear();
+    now = new Date(START.getTime() + 30_000);
+    await engine.maintenance();
+    expect(purge).not.toHaveBeenCalled(); // caught up: back to hourly
+  });
+
+  it('retries a purge that failed after a full batch on the next tick', async () => {
+    const { purgeBatchSize } = TASK_AUTOMATION_LIMITS;
+    const purge = vi
+      .spyOn(store, 'purgeRunsBefore')
+      .mockResolvedValueOnce(purgeBatchSize)
+      .mockRejectedValueOnce(new Error('db down'));
+    const reap = vi.spyOn(store, 'reapStaleRuns');
+    await expect(engine.maintenance()).rejects.toThrow('db down');
+
+    purge.mockClear();
+    purge.mockResolvedValueOnce(0);
+    now = new Date(START.getTime() + 15_000);
+    await engine.maintenance();
+    expect(purge).toHaveBeenCalledTimes(1);
+    expect(reap).toHaveBeenCalledTimes(1);
   });
 
   it('maintenance clears previous signing secrets after their grace period', async () => {

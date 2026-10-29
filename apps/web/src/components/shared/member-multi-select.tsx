@@ -12,6 +12,9 @@
 import { useState } from 'react';
 import { Button, Checkbox, Popover, PopoverContent, PopoverTrigger } from '@intelliflow/ui';
 
+/** A selected user who is no longer in the tenant's user list. */
+const LEFT_LABEL = 'Former member (left)';
+
 export interface MemberOption {
   id: string;
   name: string;
@@ -59,13 +62,23 @@ export function MemberMultiSelect({
         : [...selectedIds, memberId]
     );
 
-  // Names in picked order, the order the summary promises (round-robin order).
+  // A selected user the loaded list no longer has has left the tenant. They
+  // stay removable, or a saved rule holding them could never be saved again.
+  // Unknown while the list is loading or failed, so nobody is marked then.
   const nameById = new Map(options.map((o) => [o.id, o.name]));
-  const names = selectedIds.flatMap((selectedId) => nameById.get(selectedId) ?? []);
+  const listKnown = !isLoading && !isError;
+  const departedIds = listKnown ? selectedIds.filter((s) => !nameById.has(s)) : [];
+  const departed = new Set(departedIds);
+  // Names in picked order, the order the summary promises (round-robin order).
+  const names = selectedIds.flatMap((selectedId) => {
+    const name = nameById.get(selectedId);
+    if (name) return [name];
+    return departed.has(selectedId) ? [LEFT_LABEL] : [];
+  });
   const count = selectedIds.length;
   const summary = count === 0 ? 'No members' : names.join(', ') || `${count} selected`;
 
-  return (
+  const picker = (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
@@ -122,5 +135,33 @@ export function MemberMultiSelect({
         )}
       </PopoverContent>
     </Popover>
+  );
+  if (departedIds.length === 0) return picker;
+
+  return (
+    <div className="space-y-2">
+      {picker}
+      <ul className="flex flex-wrap gap-2" aria-label="Members who have left">
+        {departedIds.map((departedId, index) => (
+          <li
+            key={departedId}
+            className="inline-flex items-center gap-1 rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+          >
+            <span>{LEFT_LABEL}</span>
+            <button
+              type="button"
+              className="inline-flex rounded-full hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label={`Remove former member ${index + 1}`}
+              onClick={() => onChange(selectedIds.filter((existing) => existing !== departedId))}
+              disabled={disabled}
+            >
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                close
+              </span>
+            </button>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

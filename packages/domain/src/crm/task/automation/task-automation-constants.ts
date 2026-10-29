@@ -267,6 +267,9 @@ export const TASK_AUTOMATION_LIMITS = {
   conversionCorrelationMs: 600_000,
   staleRunMinutes: 10,
   runRetentionDays: 30,
+  /** Retention purge: rows per delete, and at most this many deletes per tick (backlog carries over). */
+  purgeBatchSize: 500,
+  purgeMaxBatchesPerTick: 20,
   recentRunsShown: 20,
   dueDateFloorMinutes: 15,
 } as const;
