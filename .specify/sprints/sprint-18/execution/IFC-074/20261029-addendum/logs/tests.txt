@@ -1,0 +1,5 @@
+# tests, finished 2026-10-29T10:44:30Z, duration_ms 5102, exits 0/0
+../t1.txt: Test Files  5 passed (5)
+../t1.txt:      Tests  215 passed (215)
+../t2.txt: Test Files  4 passed (4)
+../t2.txt:      Tests  46 passed (46)

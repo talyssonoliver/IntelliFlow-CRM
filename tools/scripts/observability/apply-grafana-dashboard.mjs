@@ -33,6 +33,13 @@ const FOLDER_UID = 'intelliflow-prod';
 // services that emit telemetry today. Anything else would draw an empty panel.
 const ALLOWED_METRICS = new Set(['traces_spanmetrics_calls_total', 'traces_spanmetrics_latency']);
 const ALLOWED_SERVICES = new Set(['api', 'ai-worker']);
+const PROM_UID = 'grafanacloud-prom';
+// The Loki datasources a panel may read, each with the only stream it may select:
+// ai-worker's logs (the combined worker logs as ai-worker), and the alert state history.
+const LOKI_STREAMS = {
+  'grafanacloud-logs': '{service_name="ai-worker"}',
+  'grafanacloud-alert-state-history': '{from="state-history"}',
+};
 
 /** The identifier right before each `{` in a PromQL expression: its metric names. */
 function metricNames(expr) {
@@ -65,6 +72,24 @@ function checkExpr(problems, label, expr) {
   }
 }
 
+/** Every `{...}` stream selector in a LogQL expression, in order. */
+function streamSelectors(expr) {
+  const selectors = [];
+  for (let i = expr.indexOf('{'); i !== -1; i = expr.indexOf('{', i + 1)) {
+    const end = expr.indexOf('}', i);
+    if (end === -1) break;
+    selectors.push(expr.slice(i, end + 1));
+  }
+  return selectors;
+}
+
+/** A Loki target may select only the one stream its datasource is allowed (IFC-074 D8). */
+function checkLokiExpr(problems, label, stream, expr) {
+  const selectors = streamSelectors(expr);
+  if (selectors.length === 0 || selectors.some((s) => s !== stream))
+    problems.push(`${label}: Loki stream must be ${stream}`);
+}
+
 /** Validate the dashboard file before touching the API. Returns a list of problems. */
 export function validateConfig(config) {
   const problems = [];
@@ -75,7 +100,12 @@ export function validateConfig(config) {
   ]);
   panels.forEach((panel, p) => {
     (panel.targets ?? []).forEach((target, t) => {
-      checkExpr(problems, `panel ${p + 1} target ${t + 1}`, target.expr ?? '');
+      const label = `panel ${p + 1} target ${t + 1}`;
+      const uid = target.datasource?.uid ?? PROM_UID;
+      if (uid === PROM_UID) checkExpr(problems, label, target.expr ?? '');
+      else if (Object.hasOwn(LOKI_STREAMS, uid))
+        checkLokiExpr(problems, label, LOKI_STREAMS[uid], target.expr ?? '');
+      else problems.push(`${label}: datasource ${uid} is not allowed`);
     });
   });
   if (config.dashboard?.uid !== DASHBOARD_UID)

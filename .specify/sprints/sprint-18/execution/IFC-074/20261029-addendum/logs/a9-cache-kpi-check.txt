@@ -1,0 +1,10 @@
+kpis "4.479 min per-incident mean (2026-10-22, before #1040/#1062; not comparable with the per-episode KPI); post-deploy per-episode measurement pending" kpi errors 0 other errors 8
+# npx tsx tools/scripts/validate-schemas.ts (Zod), IFC-074 cache entry, 2026-10-29T10:32:11Z
+  ✗ .\apps\project-tracker\docs\metrics\sprint-18\IFC-074.json
+  - status_history.4.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.5.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+  - status_history.6.status: Invalid option: expected one of "PLANNED"|"Planned"|"BACKLOG"|"Backlog"|"IN_PROGRESS"|"In Progress"|"VALIDATING"|"Validating"|"DONE"|"Completed"|"BLOCKED"|"Blocked"|"FAILED"|"Failed"|"NEEDS_HUMAN"|"Needs Human"|"IN_REVIEW"|"In Review"
+
+❌ Schema validation failed!
+Fix the errors above or update the schema if the structure intentionally changed.
+To regenerate schemas: pnpm run generate:schemas

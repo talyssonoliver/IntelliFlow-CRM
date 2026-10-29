@@ -1830,6 +1830,10 @@ Dependency Chain:
   ENV-008-AI (OTel) ⏳ ──┬──► IFC-116 (Metrics) ⬜ ──► Grafana Dashboards ⬜ ──┬──► TRACK-001 (Status) ✅
                          ├──► IFC-142 (Alerting) ⬜ ────────────────────────────┴──► TRACK-006 (Build) ✅
                          └──► traces.ts (Val) ⬜ ───────────────────────────────────────────────────────┘
+
+  IFC-003 (tRPC) ✅ ──► IFC-074 (Full Stack Observability) 🔶 — api request logs via pino → OTLP → Loki,
+  read-only evidence collector (correlation-test.csv, mttr-baseline.json); builds on IFC-032 ✅ (export + alert
+  delivery). In Progress until the api correlation row passes after deploy (ADR-086).
 ```
 
 ---

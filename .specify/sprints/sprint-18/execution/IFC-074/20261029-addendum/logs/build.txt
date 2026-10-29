@@ -1,0 +1,5 @@
+# node with-slot.mjs --label IFC-074 -- pnpm exec turbo build --force --filter=@intelliflow/observability --filter=@intelliflow/api
+exit 0, duration_ms 81304, 2026-10-29T10:43:30Z
+ Tasks:    12 successful, 12 total
+Cached:    0 cached, 12 total
+  Time:    1m20.035s 
