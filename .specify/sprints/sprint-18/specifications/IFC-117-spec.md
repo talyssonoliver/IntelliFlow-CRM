@@ -46,7 +46,7 @@ text is not edited; rewording it is the owner's call (Category C boundary).
 | Type | Path | Status | Action |
 | --- | --- | --- | --- |
 | PRD | N/A | — | No user-facing feature. The in-app pages already exist (PG-146/152/153). |
-| ADR | `docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md` | Proposed | Created. Covers OTel export of AI metrics, drift statistics, alert delivery and exporter removal. |
+| ADR | `docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md` | Accepted (2026-10-25) | Created. Covers OTel export of AI metrics, drift statistics, alert delivery and exporter removal. |
 | ADR | `docs/architecture/adr/ADR-043-ai-monitoring-data-persistence.md` | Accepted | Referenced. The DB tier is unchanged. |
 | ADR | `docs/architecture/adr/ADR-052-redis-monitoring-snapshot-bridge.md` | Accepted | Referenced. The Redis tier is unchanged. |
 | Chain | `docs/architecture/diagrams/ai-intelligence-dependency-chain.md` | Stale | Corrected (`:23`, `:393-437`, `:546-550` mark IFC-117 complete). |
