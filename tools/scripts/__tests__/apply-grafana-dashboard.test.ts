@@ -148,10 +148,13 @@ describe('dashboard-production.json', () => {
     const ruleExpr = RULES.rules.find((r: { uid: string }) => r.uid === 'ifc074-error-logs-direct')
       .expr as string;
     expect(b.datasource.uid).toBe('grafanacloud-logs');
-    expect(b.expr).toBe(ruleExpr.replace('[2m]', '[1m]'));
+    expect(b.expr).toBe(ruleExpr.replace('[2m]', '[$__interval]'));
     expect(c.datasource.uid).toBe('grafanacloud-alert-state-history');
     expect(c.expr).toContain('current=~"Alerting.*"');
     expect(c.expr).toContain('previous!~"Alerting.*"');
+    // Each sample covers its whole step, so wide ranges do not drop bursts or firings.
+    for (const t of [a, b, c]) expect(t.expr).toContain('[$__interval]');
+    expect((panel as Panel & { interval?: string }).interval).toBe('1m');
   });
 });
 

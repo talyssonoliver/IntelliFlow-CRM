@@ -35,7 +35,7 @@ In Progress until that post-deploy re-run.**
 | Type | Path | Status | Action |
 |------|------|--------|--------|
 | PRD | N/A | — | Backend/infra remediation; no user-facing feature |
-| ADR | `docs/architecture/adr/ADR-086-observability-log-pipeline-and-evidence.md` | Proposed | Created (amends ADR-001 lines 107, 413-429) |
+| ADR | `docs/architecture/adr/ADR-086-observability-log-pipeline-and-evidence.md` | Accepted (row corrected 2026-10-29: the ADR itself says Accepted since 2026-10-22; amended 2026-10-29) | Created (amends ADR-001 lines 107, 413-429) |
 | ADR | `docs/architecture/adr/ADR-001-modern-stack.md` | Accepted | Referenced |
 | ADR | `docs/architecture/adr/ADR-017-workflow-reliability.md` | Accepted | Referenced (real-trace evidence rule) |
 | Ruling | `.specify/sprints/sprint-18/context/IFC-074/IFC-074-owner-ruling.md` | Binding | Referenced |
@@ -326,6 +326,12 @@ The full log is in `IFC-074-discussion.md`, section "2026-10-29 addendum".
   - the Loki rule `ifc074-error-logs-direct` (#1062, `datasourceUid: grafanacloud-logs`). It was applied to production on merge: workflow run 40846555065 logged "created ifc074-error-logs-direct".
 - **Owner ruling 3** (`context/IFC-074/IFC-074-owner-ruling.md`): ship the code; the KPI is gated after deploy.
 - **combined-worker runs `sha-9e378fbb0`.** Its monitor lines log `alertSeverity` and `driftSeverity` instead of a top-level `severity`.
+
+**Implementation status (2026-10-29 exec, run `20261029-addendum`):**
+- D1, D2, D5, D6, D7, D8 and D9 are implemented, in commits `b1ec09b6f`, `63a78bc1a`, `ea2a117b8`, `09efaeaef` and `4e0b81407`. D9 is tracked as F16.
+- D3 needs no change.
+- D4 is the path through the task KPI record.
+- AC-013 stays NEEDS_HUMAN until the post-deploy measurement.
 
 ### Honest status of the numbers
 - The `why` figures in both rules are modelled replays from the #1040 and #1062 PR bodies. They are **unverified here, and no evidence file is committed**:
