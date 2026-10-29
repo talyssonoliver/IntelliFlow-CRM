@@ -139,8 +139,9 @@ rounds, owner rulings 8 and 9) that supersede parts of the text above:
   (`claimSlotAndAdmit`), so a crash can never consume a slot without a run.
 - **Rules apply to later events only:** `task_automation_rules.effectiveFrom`
   (set on create, edit and reactivation) bounds which events a rule runs for;
-  each run stores an `actions` snapshot taken at admission and executes it, so
-  an edit never changes an accepted run (owner ruling 9).
+  each run stores an `actions` snapshot taken at admission and executes it, and
+  a schedule run also stores the schedule's timezone with its slot, so an edit
+  never changes an accepted run (owner ruling 9).
 - **Automation off means off:** `task_automation_settings.automationEnabledAt`
   records when automation was turned back on; events and schedule slots from the
   off period never run.

@@ -113,6 +113,8 @@ export interface RunContext {
   newStage?: string | null;
   linkContactId?: string | null;
   slot?: string;
+  /** The schedule's timezone at admission; runs admitted before it existed use the rule's. */
+  scheduleTimezone?: string;
   manual?: boolean;
   webhook?: Record<string, string | number | boolean>;
 }
@@ -143,6 +145,11 @@ const RECORD_PATHS: Record<TaskAutomationEntity, string> = {
 
 function slotDate(slotIso: string | undefined, timeZone: string): string {
   return slotIso ? formatISODateInTimezone(slotIso, safeTimezone(timeZone)) : '';
+}
+
+/** The timezone a schedule run was admitted under (falls back to the rule's for older runs). */
+function scheduleTimezone(rule: { scheduleTimezone?: string | null }, context: RunContext): string {
+  return context.scheduleTimezone ?? rule.scheduleTimezone ?? 'UTC';
 }
 
 /** Per-tick settings lookups, one query per tenant. */
@@ -429,7 +436,8 @@ export class TaskAutomationEngine {
       ruleId: schedule.id,
       triggerType: 'SCHEDULE',
       idempotencyKey: `schedule:${slot}`,
-      context: { slot },
+      // The timezone is snapshotted with the slot so a later edit cannot move the run.
+      context: { slot, scheduleTimezone: schedule.scheduleTimezone },
       actions: schedule.actions,
     };
     // Claim and admission in one transaction: a slot is never consumed without its run.
@@ -586,7 +594,7 @@ export class TaskAutomationEngine {
     const link = await this.resolveLink(run.tenantId, context, create.linkToRecord);
     if (link.fallback) outcomes.push('link_fallback_unlinked');
     const description = this.description(create.descriptionTemplate ?? '', vars, link.namedRecord);
-    const timeZone = rule.triggerType === 'SCHEDULE' ? (rule.scheduleTimezone ?? 'UTC') : 'UTC';
+    const timeZone = rule.triggerType === 'SCHEDULE' ? scheduleTimezone(rule, context) : 'UTC';
     const dueDate = computeAutomationDueDate(this.deps.now(), create.dueInDays, timeZone);
     return {
       request: {
@@ -650,7 +658,7 @@ export class TaskAutomationEngine {
     if (ownerName) vars.set('record.owner', ownerName);
     if (context.newStage) vars.set('stage.new', context.newStage);
     if (context.slot)
-      vars.set('schedule.date', slotDate(context.slot, rule.scheduleTimezone ?? 'UTC'));
+      vars.set('schedule.date', slotDate(context.slot, scheduleTimezone(rule, context)));
     for (const [key, value] of Object.entries(context.webhook ?? {})) {
       vars.set(`webhook.${key}`, String(value));
     }

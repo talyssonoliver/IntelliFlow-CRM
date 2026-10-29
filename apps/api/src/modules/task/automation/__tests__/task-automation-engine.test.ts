@@ -956,6 +956,7 @@ describe('executePendingRuns', () => {
     expect(store.runs[1]).toMatchObject({ status: 'FAILED', errorCode: 'task_create_failed' });
   });
 
+  // A run admitted before the timezone snapshot existed falls back to the rule's timezone.
   it('renders schedule and webhook variables; schedule due dates use the rule timezone', async () => {
     now = new Date('2026-10-20T22:30:00.000Z'); // 11:30 next day in Auckland
     const rule = store.rule({
@@ -976,6 +977,25 @@ describe('executePendingRuns', () => {
     });
     await engine.executePendingRuns();
     expect(created[0]).toMatchObject({ ownerId: 'creator', title: 'Review 2026-10-21 A-1' });
+    expect(created[0].dueDate?.toISOString()).toBe('2026-10-21T10:59:59.000Z');
+  });
+
+  // Owner ruling 9 (1): a timezone edit after admission does not move an accepted run.
+  it('keeps the admitted timezone for schedule.date and the due date after a timezone edit', async () => {
+    now = new Date('2026-10-20T22:30:00.000Z'); // 11:30 next day in Auckland
+    const rule = store.rule({
+      tenantId: T1,
+      triggerType: 'SCHEDULE',
+      eventType: null,
+      scheduleCron: '0 9 * * *',
+      scheduleTimezone: 'Pacific/Auckland',
+      nextRunAt: new Date('2026-10-20T20:00:00.000Z'),
+      actions: [createTask({ titleTemplate: 'Review {{schedule.date}}', dueInDays: 0 })],
+    });
+    await expect(engine.enqueueDueSchedules()).resolves.toBe(1);
+    rule.scheduleTimezone = 'UTC';
+    await engine.executePendingRuns();
+    expect(created[0]).toMatchObject({ title: 'Review 2026-10-21' });
     expect(created[0].dueDate?.toISOString()).toBe('2026-10-21T10:59:59.000Z');
   });
 
