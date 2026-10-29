@@ -105,6 +105,22 @@ export interface NewRun {
    * when the context depends on them (webhook variables); replaces `context`.
    */
   contextFor?: (actions: Prisma.JsonValue) => Prisma.InputJsonValue;
+  /**
+   * Whether the rule as read under the admission lock still takes this run
+   * (an event run re-checks the trigger, which may have been edited since the
+   * caller read it). A rule that no longer matches admits nothing.
+   */
+  stillMatches?: (rule: LockedRule) => boolean;
+}
+
+/** The rule as it stands under the admission row lock. */
+export interface LockedRule {
+  actions: Prisma.JsonValue;
+  isActive: boolean;
+  triggerType: string;
+  eventType: string | null;
+  eventFilter: Prisma.JsonValue;
+  effectiveFrom: Date;
 }
 
 export type InsertRunResult =
@@ -118,7 +134,10 @@ export interface RunCaps {
   perMinute?: number;
 }
 
-/** `inactive`: the rule was deactivated or deleted after the caller read it; nothing is written. */
+/**
+ * `inactive`: the rule was deactivated or deleted after the caller read it, or
+ * its trigger no longer matches the run; nothing is written.
+ */
 export type AdmitRunResult = InsertRunResult | { capped: true } | { inactive: true };
 
 /** A schedule slot claimed and its run admitted in one transaction, or lost to another runner. */
@@ -254,9 +273,10 @@ export async function lockRuleForAdmission(
   tx: Tx,
   tenantId: string,
   ruleId: string
-): Promise<{ actions: Prisma.JsonValue; isActive: boolean } | undefined> {
-  const rows = await tx.$queryRaw<{ actions: Prisma.JsonValue; isActive: boolean }[]>`
-    SELECT "actions", "isActive" FROM "task_automation_rules"
+): Promise<LockedRule | undefined> {
+  const rows = await tx.$queryRaw<LockedRule[]>`
+    SELECT "actions", "isActive", "triggerType", "eventType", "eventFilter", "effectiveFrom"
+    FROM "task_automation_rules"
     WHERE "id" = ${ruleId} AND "tenantId" = ${tenantId}
     FOR SHARE`;
   return rows[0];
@@ -280,7 +300,7 @@ async function admitInTransaction(
   });
   if (existing) return { created: false, existingPayloadHash: existing.payloadHash };
   const rule = await lockRuleForAdmission(tx, run.tenantId, run.ruleId);
-  if (!rule?.isActive) return { inactive: true };
+  if (!rule?.isActive || (run.stillMatches && !run.stillMatches(rule))) return { inactive: true };
   const since = (ms: number) => ({ gte: new Date(now.getTime() - ms) });
   const forRule = { tenantId: run.tenantId, ruleId: run.ruleId };
   if (caps.perMinute !== undefined) {

@@ -159,7 +159,7 @@ export class FakeTaskAutomationStore implements TaskAutomationStore {
     if (existing) return { created: false, existingPayloadHash: existing.payloadHash };
     // Like the real store: the run snapshots the rule's actions at admission.
     const rule = this.rules.find((r) => r.id === run.ruleId && r.tenantId === run.tenantId);
-    if (!rule?.isActive) return { inactive: true };
+    if (!rule?.isActive || (run.stillMatches && !run.stillMatches(rule))) return { inactive: true };
     const hourAgo = new Date(now.getTime() - 3_600_000);
     if (caps.perMinute !== undefined) {
       const minuteAgo = new Date(now.getTime() - 60_000);

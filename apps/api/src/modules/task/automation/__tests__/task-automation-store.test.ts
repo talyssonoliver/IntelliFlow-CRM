@@ -454,7 +454,9 @@ describe('createTaskAutomationStore (PG-208)', () => {
       const stale = [{ type: 'CREATE_TASK', titleTemplate: 'Read before admission' }];
       await store.admitRun({ ...run, actions: stale }, caps, NOW);
       const [sql, ...values] = m.$queryRaw.mock.calls.at(-1);
-      expect(sql.join('?')).toMatch(/FROM "task_automation_rules"[\s\S]*FOR SHARE/);
+      expect(sql.join('?')).toMatch(
+        /SELECT "actions", "isActive", "triggerType", "eventType", "eventFilter", "effectiveFrom"\s+FROM "task_automation_rules"[\s\S]*FOR SHARE/
+      );
       expect(values).toEqual(['r1', 't1']);
       expect(m.taskAutomationRun.create.mock.calls.at(-1)[0].data.actions).toEqual(current);
     });
@@ -466,6 +468,19 @@ describe('createTaskAutomationStore (PG-208)', () => {
         m.$queryRaw.mockResolvedValueOnce(rows);
         await expect(store.admitRun(run, caps, NOW)).resolves.toEqual({ inactive: true });
       }
+      expect(m.taskAutomationRun.create).not.toHaveBeenCalled();
+    });
+
+    it('writes nothing when the locked rule no longer matches the run', async () => {
+      m.taskAutomationRun.create.mockClear();
+      m.taskAutomationRun.findUnique.mockResolvedValueOnce(null);
+      const locked = { actions: current, isActive: true, eventType: 'lead.converted' };
+      m.$queryRaw.mockResolvedValueOnce([locked]);
+      const stillMatches = vi.fn(() => false);
+      await expect(store.admitRun({ ...run, stillMatches }, caps, NOW)).resolves.toEqual({
+        inactive: true,
+      });
+      expect(stillMatches).toHaveBeenCalledWith(locked);
       expect(m.taskAutomationRun.create).not.toHaveBeenCalled();
     });
 

@@ -172,6 +172,22 @@ describe('drainEvents', () => {
     expect(store.rules[0].suppressedCount).toBe(0);
   });
 
+  it.each<[string, Partial<FakeRule>]>([
+    ['moved to another event', { eventType: 'lead.qualified' }],
+    ['turned into a schedule', { triggerType: 'SCHEDULE', eventType: null }],
+    ['re-saved after the event', { effectiveFrom: new Date(START.getTime() + 1) }],
+  ])('admits nothing for a rule %s after the tick read it', async (_, edit) => {
+    lead();
+    const rule = eventRule();
+    changeRuleAfterTickRead(rule, (stored) => {
+      Object.assign(stored, edit);
+    });
+    buffer.push(event({ occurredAt: START.getTime() }));
+    await engine.drainEvents();
+    expect(store.runs).toHaveLength(0);
+    expect(store.rules[0].suppressedCount).toBe(0);
+  });
+
   it('never matches another tenant’s rule (tenant comes from the record row)', async () => {
     lead();
     store.rule({ tenantId: T2, actions: [createTask()] });

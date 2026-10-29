@@ -156,7 +156,10 @@ function postconditionHolds(effectiveType: string, state: string | null): boolea
   return state !== null && definition.postcondition.anyOf.includes(state);
 }
 
-function ruleMatchesFilter(rule: RuleForRun, event: BufferedTaskAutomationEvent): boolean {
+function ruleMatchesFilter(
+  rule: Pick<RuleForRun, 'eventFilter'>,
+  event: BufferedTaskAutomationEvent
+): boolean {
   const filter = rule.eventFilter;
   if (!filter || typeof filter !== 'object' || Array.isArray(filter)) return true;
   const toStage = (filter as Record<string, unknown>).toStage;
@@ -276,17 +279,22 @@ export class TaskAutomationEngine {
 
     let inserted = 0;
     // A rule runs only for events after it took effect (created, edited or reactivated).
-    const applicable = rules.filter(
-      (r) => ruleMatchesFilter(r, event) && event.occurredAt >= r.effectiveFrom.getTime()
-    );
+    const matches = (r: Pick<RuleForRun, 'eventFilter' | 'effectiveFrom'>) =>
+      ruleMatchesFilter(r, event) && event.occurredAt >= r.effectiveFrom.getTime();
+    const applicable = rules.filter(matches);
     for (const rule of applicable) {
-      const run = {
+      const run: NewRun = {
         tenantId: record.tenantId,
         ruleId: rule.id,
         triggerType: 'ENTITY_EVENT',
         idempotencyKey: `event:${event.eventId}`,
         context: context as Record<string, string | null>,
         actions: rule.actions,
+        // The tick's copy may be stale: the trigger is checked again under the admission lock.
+        stillMatches: (locked) =>
+          locked.triggerType === 'ENTITY_EVENT' &&
+          locked.eventType === effectiveType &&
+          matches(locked),
       };
       if (await this.insertEventRun(run, conversionBorn, settings, now)) inserted++;
     }
