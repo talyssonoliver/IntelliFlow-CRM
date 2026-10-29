@@ -218,6 +218,11 @@ box-by-box check of the plan against the code found more. What was found and wha
   `status(…, tx)` has one caller (`LeadService.ts:313`). The case the migration header already names (an
   insight UPDATE against an erasure) ends with Postgres aborting one transaction; nothing is half-written, and
   the erasure can be run again. A retry on 40P01 was not added.
+- **The edited migration was re-checked on a fresh DB:**
+  - `migrate deploy` applied all 93 migrations (`tdd/d12-closeout/migrate-deploy-run9.txt`, Lighthouse run 9, after which
+    the DSAR end-to-end flow passed);
+  - a `prisma migrate diff` against `schema.prisma` gives exactly the same statements as the 2026-10-22 drift log (the
+    documented SQL-only users FKs and pre-existing drift), so the edit added no drift (`tdd/d12-closeout/migrate-drift-after-edit.txt`).
 - **Item 10 (recovery), applied:** the migration header now says to drop `dsar_subject_lock` and
   `dsar_carry_restriction` only after the API that calls them is rolled back.
 - **Notes left as they are (no change in this PR):** RLS shape matches `event_types` (item 4); tenant
@@ -263,3 +268,23 @@ box-by-box check of the plan against the code found more. What was found and wha
   them). Both added, marked retrospective and dated.
 - The discussion log had no Addendum A rounds. Added from the session transcripts (all 11 verdict texts).
 - This evidence folder was gitignored and never committed; it is committed with the close-out.
+
+### Owner risk acceptance (2026-10-29)
+
+The Security STOA (run `20261029-d12-closeout`) returned FAIL only because its open items had no owner
+acceptance. Talysson was asked through the Aurora coordinator's question on 2026-10-29 and chose "Accept as
+follow-ups". The question and option, verbatim:
+
+> You accept #1010, #1015 and #1063 as known gaps to fix before the first real customer. Your words go into
+> PG-203's attestation and each issue; PG-203 closes COMPLETE. The three issues stay open with that deadline.
+
+- **#1010, #1015, #1063:** accepted, open, deadline "before the first real customer". The acceptance is
+  commented on each issue (issuecomment-6499270540, -6499271213, -6499271702) and recorded in the attestation's
+  `manual_verification`.
+- **LOW, `dsar_normalise_email`:** accepted as documented. It is SECURITY INVOKER `lower(trim(...))` and reads no
+  table, so leaving it executable without a pinned `search_path` exposes nothing.
+- **LOW, RLS coverage of the new tables:** not added to `rls-tenant-isolation.test.ts`. That suite skipped on
+  this host, while `tests/integration/dsar.test.ts` ran the same real-session check as `authenticated` and passed
+  on 2026-10-29T01:01Z for both `dsar_requests` and `processing_restrictions`
+  (`tdd/d12-closeout/rls-session-check.txt`). A second copy would add nothing.
+- **LOW, "DROP TRIGGER remains":** a misread. The remaining matches are header comments.

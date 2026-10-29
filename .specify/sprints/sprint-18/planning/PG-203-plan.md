@@ -419,7 +419,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
 **Files to Modify:**
 - `apps/api/src/modules/legal/__tests__/appointments.router.test.ts`
 - `apps/api/src/modules/lead/__tests__/lead.router.test.ts`
-- `apps/api/src/workflow/__tests__/dsar-workflow.test.ts`
+- `apps/api/src/workflow/__tests__/dsar-workflow.test.ts` *(superseded: Plan Addendum A replaced the broken DSAR workflow; the file and its test were deleted in 3fcafee91, and booker fields are exported and erased by PrismaSubjectDataRepository)*
 
 - [x] `appointments.create` with `eventTypeId`: *Verified tdd/red-api-regression.txt (2 eventTypeId cases fail) then appointments.router.caller 73/73; lead.router 61/61 (enqueue regression)*
   - the `{id, tenantId, isActive}` check comes next to `assertAppointmentRefsInTenant`;
@@ -689,7 +689,7 @@ reject); `enqueueLeadScoring`; `onAppointmentCreated`; `LeadService.createLeadIn
   check + post-write)
 - `apps/api/src/modules/calendar/calendar.router.ts` (nest `eventTypes`)
 - `apps/api/src/router.ts` (`publicBooking`)
-- `apps/api/src/workflow/dsar-workflow.ts` (booker fields export/erase by `subjectEmail`)
+- `apps/api/src/workflow/dsar-workflow.ts` (booker fields export/erase by `subjectEmail`) *(superseded: Plan Addendum A replaced the broken DSAR workflow; the file and its test were deleted in 3fcafee91, and booker fields are exported and erased by PrismaSubjectDataRepository)*
 - `.env.example` (`BOOKING_IP_SALT`)
 
 **Requirements:**
@@ -883,7 +883,7 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
   (runner request). Fix the findings.
 
 **Lighthouse ≥ 90:**
-- [ ] `/calendar/event-types` via `lighthouserc.authenticated.js` + `tools/lighthouse/lhci-auth.js` (PG-198 Path C, *NEEDS_HUMAN 2026-10-21: auth-gated; an anonymous run lands on /login. Path C needs local API + Supabase + seeded admin without production credentials (local-run-note.md)*
+- [x] `/calendar/event-types` via `lighthouserc.authenticated.js` + `tools/lighthouse/lhci-auth.js` (PG-198 Path C, *NEEDS_HUMAN 2026-10-21: auth-gated; an anonymous run lands on /login. Path C needs local API + Supabase + seeded admin without production credentials (local-run-note.md)* *Measured 2026-10-29 run 9 (driver v3, LHCI + lhci-auth.js, signed in, local stack, median of 3): performance 95, accessibility 93, final screenshot shows the event type list; artifacts/lighthouse/PG-203/calendar-event-types.report.json + local-run-note.md. The 2026-10-21 NEEDS_HUMAN no longer applies*
   local stack).
 - [x] `/book/<seeded-handle>/<slug>` via a production build plus a seeded tenant, local test DB only. *Verified 2026-10-21: /book measured on a production build in its not-available state (perf 93, a11y 100); artifacts/lighthouse/PG-203/book.report.json + local-run-note.md. Seeded slot/form states need a reachable API (NEEDS_HUMAN)*
 - [x] Evidence JSON goes under the execution folder. If it cannot be measured → NEEDS_HUMAN with the exact reason. *Done: artifacts/lighthouse/PG-203/ (Gate 14 location) with the run note; NEEDS_HUMAN reasons recorded*
@@ -903,17 +903,17 @@ notice/horizon; a booker-PII purge rule under the PG-206 retention policies.
 - `docs/architecture/diagrams/complete-dependency-chains.md`
 
 **Attestation and tracking:**
-- [ ] `/exec-gates`: every gate PASS, or NEEDS_HUMAN with a reason (Lighthouse if unmeasurable; migration gates 4/10).
-- [ ] `/exec-attestation` writes `attestation.json`. A stale INCOMPLETE verdict is replaced, never left.
-- [ ] CSV: status set only by /exec Phase 5. Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts`.
+- [x] `/exec-gates`: every gate PASS, or NEEDS_HUMAN with a reason (Lighthouse if unmeasurable; migration gates 4/10). *Done 2026-10-29: 14/14 gate_results pass in the attestation; STOA Security PASS on re-run with the owner acceptance, Intelligence PASS, Domain/Foundation/Quality WARN; provenance, phrases, lighthouse-evidence and lighthouse-waiver checkers exit 0. NEEDS_HUMAN: migration gates 4/10 (gated prod migrate deploy after merge). The nav-wiring checker cannot see route-group pages (#877); wiring was confirmed by hand*
+- [x] `/exec-attestation` writes `attestation.json`. A stale INCOMPLETE verdict is replaced, never left. *Done 2026-10-29: verdict COMPLETE, run 20261029-d12-closeout, with the owner acceptance of #1010/#1015/#1063 in manual_verification*
+- [x] CSV: status set only by /exec Phase 5. Regenerate splits: `npx tsx tools/scripts/split-sprint-plan.ts`. *Done 2026-10-29: Completed, 100%; splits regenerated (row in _I); generate-context run*
   Regenerate context: `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 - [x] Update the CSV artifacts column via Category A (evidence): add the public router/page, the migrations and ADR-083 *Done 2026-10-29: the PG-203 row adds the public-booking and privacy routers, the /book, /dsar and /settings/privacy-requests pages, the event-types and DSAR migrations and ADR-083; the pre-req now names configs/calendar.ts*
   to "Artifacts To Track". Correct the stale pre-req `FILE:apps/web/src/components/sidebar/configs/appointments.ts`
   to `configs/calendar.ts`.
 
 **Close:**
-- [ ] Deliverable Verification: every Files Summary path exists; CSV ARTIFACT/EVIDENCE exist; attestation verdict.
-- [ ] SendMessage `projects-8c`: status, last SHA, attestation path, **6 Prisma migrations (L13)**, NEEDS_HUMAN list.
+- [x] Deliverable Verification: every Files Summary path exists; CSV ARTIFACT/EVIDENCE exist; attestation verdict. *Done 2026-10-29: 13/13 CSV paths exist; Files Summary paths exist except dsar-workflow.ts and its test (superseded, deleted in 3fcafee91) and the two conditional files (EventTypeList.test.tsx and navigation.book.test.tsx were not needed: EventTypeList is tested through EventTypesContent, and navigation.tenant.test.tsx expressed the /book case); attestation COMPLETE*
+- [x] SendMessage `projects-8c`: status, last SHA, attestation path, **6 Prisma migrations (L13)**, NEEDS_HUMAN list. *Done 2026-10-29 to Aurora, who coordinates this lane in place of projects-8c: status, HEAD 5c716511a, attestation path, 7 migrations (6 from PR 1 on main, 1 in PR 2), NEEDS_HUMAN list*
 
 ## Validation Matrix
 
@@ -1408,10 +1408,10 @@ rulings Q23-Q26 (2026-10-25) decided the open choices; the fixes:
   - security-lead adversarial review of the public DSAR flow and erasure;
   - compliance review of emails, export and docs;
   - a11y-expert review of four pages and the banner.
-- [ ] Lighthouse on `/dsar/<handle>` (production build, local recipe). The admin page is NEEDS_HUMAN, as for
+- [x] Lighthouse on `/dsar/<handle>` (production build, local recipe). The admin page is NEEDS_HUMAN, as for *Measured 2026-10-29 run 9 (driver v3; every final screenshot checked): /dsar 93/96, verify 93/100, export 93/96, /settings/privacy-requests signed in 92/96 (median of 3), /book 93/96 after the CLS fix (was 81-82). The 2026-10-25 scores measured loading screens (driver v2) and are superseded; local-run-note.md*
   event-types.
-- [ ] Then the main plan's Step 20 for PG-203 as a whole: `/exec-gates`, `/exec-attestation`, CSV, splits,
-  `generate-context`, and `generate-final-report.mjs PG-203`.
+- [x] Then the main plan's Step 20 for PG-203 as a whole: `/exec-gates`, `/exec-attestation`, CSV, splits,
+  `generate-context`, and `generate-final-report.mjs PG-203`. *Done 2026-10-29: gates, attestation COMPLETE, CSV, splits and generate-context as in Step 20. generate-final-report.mjs ran before the close-out commit: preflights 5/5, SPEC and PLAN green, attestation 4/4 and 14/14; its only blocker was this box. It runs again on the pushed head, and that run decides the promise*
 
 
 ### Plan revision 1 (plan-reviewer REVISE, 2026-10-22)
