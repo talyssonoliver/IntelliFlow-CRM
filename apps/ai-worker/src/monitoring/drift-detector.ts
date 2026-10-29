@@ -411,18 +411,41 @@ export class DriftDetector {
   /**
    * Drop samples older than the retention window (whole day buckets, and the older part of the
    * boundary day) and age out history. The per-day caps already bound each key.
+   *
+   * A series with no samples left in retention is retired with its event state. Its ticks are
+   * all insufficient_data, which never advance the state machine, so an event it had open would
+   * otherwise keep health unhealthy forever.
    */
   pruneOnTick(now: number = Date.now()): void {
     const cutoff = now - this.config.retentionDays * DAY_MS;
     const cutoffDay = Math.floor(cutoff / DAY_MS);
-    for (const entry of this.series.values()) {
+    for (const [key, entry] of this.series) {
       for (const [day, bucket] of entry.days) {
         if (day < cutoffDay) entry.days.delete(day);
         else if (day === cutoffDay)
           bucket.samples = bucket.samples.filter((s) => s.timestamp.getTime() >= cutoff);
       }
+      if (allSamples(entry).length === 0) this.retireSeries(key, entry);
     }
     this.pruneHistory(now);
+  }
+
+  private retireSeries(key: string, entry: SeriesEntry): void {
+    const state = this.persistence.get(key);
+    if (state?.inEvent) {
+      // `driftSeverity`, not `severity`: Loki reads a top-level `severity` field as the level.
+      logger.info(
+        {
+          model: entry.model,
+          metric: entry.metric,
+          driftSeverity: state.peakSeverity,
+          retentionDays: this.config.retentionDays,
+        },
+        'Drift event closed: series retired, no samples in retention'
+      );
+    }
+    this.persistence.delete(key);
+    this.series.delete(key);
   }
 
   /**

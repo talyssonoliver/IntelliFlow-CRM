@@ -338,6 +338,64 @@ describe('DriftDetector', () => {
       expect(status.highSeverityCount).toBe(0);
     });
 
+    describe('a series that stops receiving samples', () => {
+      /** Open a critical event on gpt-4 score_distribution through three detected ticks. */
+      function openEvent(): void {
+        for (let tick = 0; tick < 3; tick++) {
+          detector.applyPersistence('gpt-4', 'score_distribution', true, 'critical');
+        }
+        addCurrent(30, 0.85);
+      }
+
+      it('closes its open event once no samples are left in retention', () => {
+        openEvent();
+        expect(detector.getStatus()).toMatchObject({ driftDetected: true, highSeverityCount: 1 });
+
+        const later = NOW + (config.retentionDays + 1) * DAY;
+        detector.pruneOnTick(later);
+        detector.detectAllDrift({ now: later });
+
+        expect(detector.getStatus()).toMatchObject({
+          trackedMetrics: 0,
+          totalSamples: 0,
+          driftDetected: false,
+          highSeverityCount: 0,
+        });
+      });
+
+      it('logs the closed event once, with driftSeverity and the reason', () => {
+        openEvent();
+        pinoLogger.info.mockClear();
+
+        const later = NOW + (config.retentionDays + 1) * DAY;
+        detector.pruneOnTick(later);
+        detector.pruneOnTick(later + HOUR);
+
+        const closed = pinoLogger.info.mock.calls.filter(
+          (c) => c[1] === 'Drift event closed: series retired, no samples in retention'
+        );
+        expect(closed).toHaveLength(1);
+        expect(closed[0][0]).toMatchObject({
+          model: 'gpt-4',
+          metric: 'score_distribution',
+          driftSeverity: 'critical',
+        });
+        expect(closed[0][0]).not.toHaveProperty('severity');
+      });
+
+      it('keeps the open event of a series that still has samples in retention', () => {
+        openEvent();
+
+        detector.pruneOnTick(NOW + DAY);
+
+        expect(detector.getStatus()).toMatchObject({
+          trackedMetrics: 1,
+          driftDetected: true,
+          highSeverityCount: 1,
+        });
+      });
+    });
+
     it('should track the last scheduled check time', () => {
       expect(detector.getStatus().lastCheck).toBeNull();
 
