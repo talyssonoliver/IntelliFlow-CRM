@@ -4,9 +4,13 @@
 //
 // The committed JSON is the source of truth. Each run:
 //   1. ensures the folder exists;
-//   2. checks that every rule's metric selector has live series, and FAILS
-//      on any rule that would watch nothing (a rule over a wrong metric name
-//      never fires and looks exactly like a healthy system);
+//   2. checks that every rule's metric selector has had series in the last
+//      7 days, and FAILS on any rule that would watch nothing (a rule over a
+//      wrong metric name never fires and looks exactly like a healthy system).
+//      The window is days, not minutes, because a quiet night (the api asleep,
+//      the worker idle) is not a wrong name. An error-only matcher is left out
+//      for the same reason: no errors is not a wrong name. A rule that alerts
+//      on silence opts out with liveSeriesCheck:false;
 //   3. creates or updates each rule by uid;
 //   4. deletes the delivery-test rule, unless --send-test asks for it.
 //
@@ -86,8 +90,58 @@ function validateRuleEntry(entry, seen, problems) {
     problems.push(`${entry.uid}: bad noData`);
   if (!isValidQueryOffset(entry.queryOffsetSeconds))
     problems.push(`${entry.uid}: queryOffsetSeconds must be a whole number from 0 to 600`);
+  for (const key of ['requireSeries', 'liveSeriesCheck']) {
+    if (entry[key] !== undefined && typeof entry[key] !== 'boolean')
+      problems.push(`${entry.uid}: ${key} must be true or false`);
+  }
   if (seen.has(entry.uid)) problems.push(`${entry.uid}: duplicate uid`);
   seen.add(entry.uid);
+}
+
+// How far back the series check looks. Long enough to cover a night or a
+// weekend with no traffic; a misspelled metric has no series at any range.
+const SERIES_LOOKBACK = '7d';
+const METRIC_NAME = /^[A-Za-z_:][\w:]*$/;
+const ERROR_ONLY_MATCHER = 'status_code="STATUS_CODE_ERROR"';
+
+/** The matchers inside a selector's braces, split on commas outside quoted values. */
+function splitMatchers(body) {
+  const matchers = [];
+  let current = '';
+  let quoted = false;
+  for (let i = 0; i < body.length; i += 1) {
+    const ch = body[i];
+    if (quoted && ch === '\\') {
+      current += ch + (body[i + 1] ?? '');
+      i += 1;
+      continue;
+    }
+    if (ch === '"') quoted = !quoted;
+    if (ch === ',' && !quoted) {
+      matchers.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  if (current.trim()) matchers.push(current.trim());
+  return matchers;
+}
+
+/**
+ * The selector the live-series check queries. An error-only matcher
+ * (status_code="STATUS_CODE_ERROR") matches nothing while there are no errors,
+ * which is the healthy state, so it is dropped: the check then proves the base
+ * metric exists for the same services, which is what catches a wrong name.
+ */
+export function liveSeriesSelector(selector) {
+  const open = selector.indexOf('{');
+  const name = selector.slice(0, open);
+  if (open === -1 || !selector.endsWith('}') || !METRIC_NAME.test(name)) return selector;
+  const kept = splitMatchers(selector.slice(open + 1, -1)).filter(
+    (matcher) => matcher.replaceAll(' ', '') !== ERROR_ONLY_MATCHER
+  );
+  return kept.length ? `${name}{${kept.join(', ')}}` : name;
 }
 
 /** Validate the rules file before touching the API. Returns a list of problems. */
@@ -118,10 +172,17 @@ export async function run({
   const api = createApiClient(env.GRAFANA_URL, env.GRAFANA_SA_TOKEN, fetchImpl, { sleep });
 
   // Every rule must watch metrics that exist, or it silently never fires.
+  // A silence rule is skipped: it alerts when its series are absent, so a
+  // wrong name there fires at once rather than hiding.
   const empty = [];
   for (const entry of config.rules) {
-    const n = await querySeriesCount(api, config.datasourceUid, entry.selector);
-    log(`series ${String(n).padStart(4)}  ${entry.uid}  ${entry.selector}`);
+    if (entry.liveSeriesCheck === false) {
+      log(`series skip  ${entry.uid}  (liveSeriesCheck: false)`);
+      continue;
+    }
+    const selector = liveSeriesSelector(entry.selector);
+    const n = await querySeriesCount(api, config.datasourceUid, selector, SERIES_LOOKBACK);
+    log(`series ${String(n).padStart(4)}  ${entry.uid}  ${selector}`);
     if (n === 0 && entry.requireSeries !== false) empty.push(entry.uid);
   }
 

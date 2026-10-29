@@ -28,9 +28,14 @@ const CONFIG_PATH = join(
 );
 const SLO_API = '/api/plugins/grafana-slo-app/resources/v1/slo';
 
-// Each uuid becomes a URL path segment (see run()); this charset keeps a
-// slash, dot-dot or query string from retargeting the request.
-const SAFE_PATH_SEGMENT = /^[A-Za-z0-9_-]{1,64}$/;
+// The SLO ids Grafana accepts: lower-case letters and digits only, at most 21.
+// Neither rule is in the API docs or the OpenAPI spec (uuid is a plain
+// string there); both come from the plugin's HTTP 400 replies, "SLO ID ... is
+// too long, must be 21 characters or less" and "SLO ID ... contains invalid
+// characters, must be alphanumeric and lower case". Checking here fails the
+// run before any request. The charset also keeps each uuid a single URL path
+// segment (see run()): no slash, dot-dot or query string.
+const SLO_ID = /^[a-z0-9]{1,21}$/;
 const REQUIRED = ['uuid', 'name', 'description', 'query', 'objectives'];
 
 /** Every PromQL string an SLO carries, whatever its query type. */
@@ -85,8 +90,10 @@ export function validateConfig(config) {
     const id = slo.uuid ?? '?';
     const missing = REQUIRED.filter((key) => slo[key] === undefined || slo[key] === '');
     for (const key of missing) problems.push(`${id}: missing ${key}`);
-    if (slo.uuid !== undefined && !SAFE_PATH_SEGMENT.test(slo.uuid))
-      problems.push(`uuid: must match ${SAFE_PATH_SEGMENT} (got ${JSON.stringify(slo.uuid)})`);
+    if (slo.uuid !== undefined && !SLO_ID.test(slo.uuid))
+      problems.push(
+        `uuid: must be 1-21 lower-case letters or digits, Grafana's rule (got ${JSON.stringify(slo.uuid)})`
+      );
     if (slo.query) checkQuery(problems, id, slo);
     if (seen.has(slo.uuid)) problems.push(`${id}: duplicate uuid`);
     seen.add(slo.uuid);

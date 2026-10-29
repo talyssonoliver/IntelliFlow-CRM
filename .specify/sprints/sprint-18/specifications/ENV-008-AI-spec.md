@@ -108,7 +108,7 @@ DoD item maps to something that runs in production and leaves production evidenc
 
 ```json
 { "folderUid": "intelliflow-prod", "destinationDatasourceUid": "grafanacloud-prom",
-  "slos": [ { "uuid": "env008-api-availability", "name": "...", "description": "...",
+  "slos": [ { "uuid": "env008apiavail", "name": "...", "description": "...",
     "query": { "type": "ratio", "ratio": { "successMetric": {"prometheusMetric": "..."},
                "totalMetric": {"prometheusMetric": "..."} } },
     "objectives": [{ "value": 0.999, "window": "28d" }],
@@ -127,9 +127,9 @@ API = service="api", span_kind="SPAN_KIND_SERVER", span_name!~"(GET|HEAD) (/api)
 
 | uuid | Objective / window | Query | Alerting |
 |---|---|---|---|
-| `env008-api-availability` | 0.999 / 28d (L33) | ratio: success = `traces_spanmetrics_calls_total{API, status_code!="STATUS_CODE_ERROR"}`; total = `traces_spanmetrics_calls_total{API}` | fastBurn and slowBurn ON |
-| `env008-api-latency` | 0.95 / 28d (L56: p95 < 200 ms as a request ratio, L62) | freeform: `histogram_fraction(0, 0.2, sum(rate(traces_spanmetrics_latency{API}[$__rate_interval])))` (native histogram; F2) | none (burning: 2.72 s p95); AC-004 |
-| `env008-ai-worker-llm-success` | 0.995 / 28d (L116) | ratio on `traces_spanmetrics_calls_total{service="ai-worker", span_name="llm.invoke"}` | none (F4: 100% ERROR); AC-004 |
+| `env008apiavail` | 0.999 / 28d (L33) | ratio: success = `traces_spanmetrics_calls_total{API, status_code!="STATUS_CODE_ERROR"}`; total = `traces_spanmetrics_calls_total{API}` | fastBurn and slowBurn ON |
+| `env008apip95` | 0.95 / 28d (L56: p95 < 200 ms as a request ratio, L62) | freeform: `histogram_fraction(0, 0.2, sum(rate(traces_spanmetrics_latency{API}[$__rate_interval])))` (native histogram; F2) | none (burning: 2.72 s p95); AC-004 |
+| `env008llmsuccess` | 0.995 / 28d (L116) | ratio on `traces_spanmetrics_calls_total{service="ai-worker", span_name="llm.invoke"}` | none (F4: 100% ERROR); AC-004 |
 
 Rules:
 

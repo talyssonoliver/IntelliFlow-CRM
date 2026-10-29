@@ -1,7 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildRule, run, validateConfig } from '../observability/apply-grafana-alert-rules.mjs';
+import {
+  buildRule,
+  liveSeriesSelector,
+  run,
+  validateConfig,
+} from '../observability/apply-grafana-alert-rules.mjs';
 
 const CONFIG = JSON.parse(
   readFileSync(join(__dirname, '../../../infra/monitoring/grafana/cloud/alert-rules.json'), 'utf8')
@@ -58,25 +63,46 @@ describe('alert rules config', () => {
     ]);
   });
 
-  // #812: the only live traffic today is ai-worker's own OTel heartbeat spans.
-  // ifc032-telemetry-silent watches that, so it must keep failing the series
-  // check if it ever goes quiet. The other four watch traffic that does not
-  // exist yet (workflow.lead.route has no callers; #802 hasn't promoted the
-  // api SERVER spans) and opt out with requireSeries:false so the script can
-  // report them without failing the run. ifc074-error-spans-direct watches
-  // ai-worker error spans, which exist today, so it keeps the check too.
+  // #812: four rules watch traffic that does not exist yet (workflow.lead.route
+  // has no callers; #802 hasn't promoted the api SERVER spans) and opt out
+  // with requireSeries:false, so the script reports them without failing the
+  // run. ifc074-error-spans-direct keeps the check, made against its base
+  // metric (see liveSeriesSelector), because a period with no error spans is
+  // healthy. ifc032-telemetry-silent skips the check entirely
+  // (liveSeriesCheck:false): it alerts when its series are absent, so the
+  // check contradicts its purpose, and a wrong name there fires at once.
   it('the four traffic-less rules opt out of the live-series requirement; the others do not', () => {
     const byUid = Object.fromEntries(
-      CONFIG.rules.map((r: { uid: string; requireSeries?: boolean }) => [r.uid, r.requireSeries])
+      CONFIG.rules.map((r: { uid: string; requireSeries?: boolean; liveSeriesCheck?: boolean }) => [
+        r.uid,
+        { requireSeries: r.requireSeries, liveSeriesCheck: r.liveSeriesCheck },
+      ])
     );
+    const traffic = { requireSeries: false, liveSeriesCheck: undefined };
     expect(byUid).toEqual({
-      'ifc032-telemetry-silent': undefined,
-      'ifc032-lead-routing-failures': false,
-      'ifc032-workflow-error-rate': false,
-      'ifc032-workflow-p95-latency': false,
-      'ifc032-api-error-rate': false,
-      'ifc074-error-spans-direct': undefined,
+      'ifc032-telemetry-silent': { requireSeries: undefined, liveSeriesCheck: false },
+      'ifc032-lead-routing-failures': traffic,
+      'ifc032-workflow-error-rate': traffic,
+      'ifc032-workflow-p95-latency': traffic,
+      'ifc032-api-error-rate': traffic,
+      'ifc074-error-spans-direct': { requireSeries: undefined, liveSeriesCheck: undefined },
     });
+  });
+
+  it('only a rule that alerts on silence skips the series check', () => {
+    for (const rule of CONFIG.rules) {
+      if (rule.liveSeriesCheck === false) expect(rule.noData, rule.uid).toBe('Alerting');
+    }
+  });
+
+  it('rejects requireSeries or liveSeriesCheck that is not a boolean', () => {
+    const bad = structuredClone(CONFIG);
+    bad.rules[0].liveSeriesCheck = 'no';
+    bad.rules[1].requireSeries = 0;
+    expect(validateConfig(bad)).toEqual([
+      'ifc032-telemetry-silent: liveSeriesCheck must be true or false',
+      'ifc032-lead-routing-failures: requireSeries must be true or false',
+    ]);
   });
 
   // IFC-074: Asserts' ErrorRatioBreach fires 180-360 s after the first error.
@@ -193,6 +219,34 @@ describe('alert rules config', () => {
   });
 });
 
+describe('liveSeriesSelector', () => {
+  it('drops the error-only matcher wherever it sits and keeps the rest', () => {
+    expect(liveSeriesSelector('m{service="api", status_code="STATUS_CODE_ERROR"}')).toBe(
+      'm{service="api"}'
+    );
+    expect(liveSeriesSelector('m{status_code="STATUS_CODE_ERROR", service=~"a|b"}')).toBe(
+      'm{service=~"a|b"}'
+    );
+    expect(liveSeriesSelector('m{status_code="STATUS_CODE_ERROR"}')).toBe('m');
+  });
+
+  it('leaves selectors without it, and other status_code matchers, unchanged', () => {
+    expect(liveSeriesSelector('m{service="api", span_kind="SPAN_KIND_SERVER"}')).toBe(
+      'm{service="api", span_kind="SPAN_KIND_SERVER"}'
+    );
+    expect(liveSeriesSelector('m{status_code!="STATUS_CODE_ERROR"}')).toBe(
+      'm{status_code!="STATUS_CODE_ERROR"}'
+    );
+    expect(liveSeriesSelector('sum(m)')).toBe('sum(m)');
+  });
+
+  it('keeps a quoted comma or escaped quote inside a value intact', () => {
+    expect(liveSeriesSelector('m{span_name="a,b \\"c\\"", status_code="STATUS_CODE_ERROR"}')).toBe(
+      'm{span_name="a,b \\"c\\""}'
+    );
+  });
+});
+
 describe('run', () => {
   it('refuses to start without the URL and token', async () => {
     await expect(run({ env: {}, argv: [], log: quiet })).rejects.toThrow(
@@ -200,12 +254,22 @@ describe('run', () => {
     );
   });
 
-  it('dry run checks every selector and writes nothing', async () => {
+  it('dry run checks every selector except the silence rule and writes nothing', async () => {
     const g = fakeGrafana();
-    const result = await run({ env, argv: ['--dry-run'], fetchImpl: g.fetchImpl, log: quiet });
+    const lines: string[] = [];
+    const result = await run({
+      env,
+      argv: ['--dry-run'],
+      fetchImpl: g.fetchImpl,
+      log: (l: string) => lines.push(l),
+    });
     expect(result).toEqual({ applied: 0, empty: [] });
     expect(g.calls.every((c) => c.method === 'GET')).toBe(true);
-    expect(g.calls).toHaveLength(CONFIG.rules.length);
+    expect(g.calls).toHaveLength(CONFIG.rules.length - 1);
+    // The silence rule's own selector is never queried.
+    const silent = CONFIG.rules[0].selector;
+    expect(g.calls.some((c) => decodeURIComponent(c.path).includes(silent))).toBe(false);
+    expect(lines).toContain('series skip  ifc032-telemetry-silent  (liveSeriesCheck: false)');
   });
 
   it('creates missing rules, updates existing ones, sets the group interval and removes the test rule', async () => {
@@ -234,13 +298,62 @@ describe('run', () => {
   });
 
   it('fails loudly when a rule watches a metric with no live series', async () => {
-    // ifc032-telemetry-silent and ifc074-error-spans-direct still require series
-    // (#812); the other four opted out with requireSeries:false, so forcing 0
-    // series on one of THOSE (e.g. latency) must NOT fail the run — only the two
-    // selectors matching "ai-worker" can trigger this failure.
+    // Only ifc074-error-spans-direct still requires series: the other four
+    // opted out with requireSeries:false and telemetry-silent skips the check,
+    // so of the selectors matching "ai-worker" only ifc074's can fail the run.
     const g = fakeGrafana({ series: (q) => (q.includes('ai-worker') ? 0 : 2) });
     await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
-      'match no live series (check metric names): ifc032-telemetry-silent, ifc074-error-spans-direct'
+      'match no live series (check metric names): ifc074-error-spans-direct'
+    );
+  });
+
+  // The 21:09 run after #1055 failed on ifc032-telemetry-silent and
+  // ifc074-error-spans-direct: at night the api sleeps (#1046) and the worker
+  // is idle, so the last hour had no series. The check now looks back 7 days.
+  it('passes on a quiet night: a metric with no series in the last hour but some this week', async () => {
+    const queries: string[] = [];
+    const g = fakeGrafana({
+      series: (q) => {
+        queries.push(q);
+        return q.endsWith('[7d]))') ? 4 : 0;
+      },
+    });
+    const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
+    expect(result.empty).toEqual([]);
+    expect(queries.length).toBeGreaterThan(0);
+    expect(queries.every((q) => q.endsWith('[7d]))'))).toBe(true);
+  });
+
+  it('still fails a misspelled metric, which has no series at any range', async () => {
+    const g = fakeGrafana({ series: () => 0 });
+    await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
+      'match no live series (check metric names): ifc074-error-spans-direct'
+    );
+  });
+
+  // After #1045 merged, the first apply failed only because there were no error
+  // spans: the rule's status_code="STATUS_CODE_ERROR" selector matched nothing.
+  // The check now proves the base metric exists for the same services.
+  it('checks an error-only rule against its base metric, so no errors is not a failure', async () => {
+    const queries: string[] = [];
+    const g = fakeGrafana({
+      series: (q) => {
+        queries.push(q);
+        return q.includes('STATUS_CODE_ERROR') ? 0 : 2;
+      },
+    });
+    const result = await run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet });
+    expect(result.empty).toEqual([]);
+    expect(queries.some((q) => q.includes('status_code'))).toBe(false);
+    expect(queries).toContain(
+      'count(last_over_time(traces_spanmetrics_calls_total{service=~"ai-worker|intelliflow-ai-worker|api"}[7d]))'
+    );
+  });
+
+  it('still fails an error-only rule whose base metric has no series (a wrong name)', async () => {
+    const g = fakeGrafana({ series: (q) => (q.includes('|api"}') ? 0 : 2) });
+    await expect(run({ env, argv: [], fetchImpl: g.fetchImpl, log: quiet })).rejects.toThrow(
+      'match no live series (check metric names): ifc074-error-spans-direct'
     );
   });
 

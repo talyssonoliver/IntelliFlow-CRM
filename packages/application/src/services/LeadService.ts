@@ -232,9 +232,16 @@ export class LeadService {
   }
 
   /**
-   * Score a lead using AI service
+   * Score a lead using AI service.
+   *
+   * @param actorUserId authenticated user requesting the score; forwarded to the
+   *   AI service so guardrails sanitize and audit under the real actor. Omit for
+   *   system-initiated scoring.
    */
-  async scoreLead(leadId: string): Promise<Result<LeadScoreUpdateResult, DomainError>> {
+  async scoreLead(
+    leadId: string,
+    actorUserId?: string
+  ): Promise<Result<LeadScoreUpdateResult, DomainError>> {
     const leadIdResult = LeadId.create(leadId);
     if (leadIdResult.isFailure) {
       return Result.fail(leadIdResult.error);
@@ -271,7 +278,7 @@ export class LeadService {
         phone: lead.phone?.value,
         source: lead.source,
       },
-      { tenantId: lead.tenantId, leadId: lead.id.value }
+      { tenantId: lead.tenantId, leadId: lead.id.value, userId: actorUserId }
     );
 
     if (scoringResult.isFailure) {
@@ -501,7 +508,7 @@ export class LeadService {
   /**
    * Bulk score leads
    */
-  async bulkScoreLeads(leadIds: string[]): Promise<BulkOperationResult> {
+  async bulkScoreLeads(leadIds: string[], actorUserId?: string): Promise<BulkOperationResult> {
     const successful: string[] = [];
     const failed: Array<{ id: string; error: string }> = [];
 
@@ -514,7 +521,7 @@ export class LeadService {
     for (let i = 0; i < leadIds.length; i += CONCURRENCY) {
       const chunk = leadIds.slice(i, i + CONCURRENCY);
       const settled = await Promise.all(
-        chunk.map(async (leadId) => ({ leadId, result: await this.scoreLead(leadId) }))
+        chunk.map(async (leadId) => ({ leadId, result: await this.scoreLead(leadId, actorUserId) }))
       );
       for (const { leadId, result } of settled) {
         if (result.isSuccess) {

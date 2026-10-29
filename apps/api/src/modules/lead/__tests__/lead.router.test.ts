@@ -865,7 +865,10 @@ describe('Lead Router', () => {
       expect(result.leadId).toBe(TEST_UUIDS.lead1);
       expect(result.score).toBe(80);
       expect(result.confidence).toBe(0.85);
-      expect(ctx.services!.lead!.scoreLead).toHaveBeenCalledWith(TEST_UUIDS.lead1);
+      expect(ctx.services!.lead!.scoreLead).toHaveBeenCalledWith(
+        TEST_UUIDS.lead1,
+        TEST_UUIDS.user1
+      );
     });
 
     it('should throw NOT_FOUND for non-existent lead', async () => {
@@ -1044,10 +1047,10 @@ describe('Lead Router', () => {
 
       expect(result.successful).toEqual([TEST_UUIDS.lead1, TEST_UUIDS.lead2]);
       expect(result.failed).toEqual([]);
-      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith([
-        TEST_UUIDS.lead1,
-        TEST_UUIDS.lead2,
-      ]);
+      expect(ctx.services!.lead!.bulkScoreLeads).toHaveBeenCalledWith(
+        [TEST_UUIDS.lead1, TEST_UUIDS.lead2],
+        TEST_UUIDS.user1
+      );
     });
   });
 

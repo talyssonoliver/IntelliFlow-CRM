@@ -6,7 +6,8 @@
       "dependsOn": [
         "^build",
         "@intelliflow/events-worker#build",
-        "@intelliflow/ingestion-worker#build"
+        "@intelliflow/ingestion-worker#build",
+        "@intelliflow/combined-worker#build"
       ]
     }
   }

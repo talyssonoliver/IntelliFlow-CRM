@@ -4,7 +4,7 @@
   "destinationDatasourceUid": "grafanacloud-prom",
   "slos": [
     {
-      "uuid": "env008-api-availability",
+      "uuid": "env008apiavail",
       "name": "api availability",
       "description": "Share of api server requests (health probes excluded) that do not end in an error span. Target 99.9% over 28 days (slo-definitions.md L33). Not counted: tRPC failures that return 200 or 4xx, because they surface as INTERNAL spans, not server errors; and requests slower than 30 s that did not error.",
       "query": {
@@ -45,7 +45,7 @@
       }
     },
     {
-      "uuid": "env008-api-latency",
+      "uuid": "env008apip95",
       "name": "api latency",
       "description": "Share of api server requests (health probes excluded) that finish within 200 ms, from the native span-latency histogram. Target 95% over 28 days (slo-definitions.md L56, p95 < 200 ms). No burn-rate alerting yet: production p95 was 2.72 s on 2026-10-22, so the budget is already spent. Enable alerting when #1001 is fixed.",
       "query": {
@@ -61,7 +61,7 @@
       ]
     },
     {
-      "uuid": "env008-ai-worker-llm-success",
+      "uuid": "env008llmsuccess",
       "name": "ai-worker LLM success",
       "description": "Share of ai-worker llm.invoke calls that do not end in an error span. Target 99.5% over 28 days (slo-definitions.md L116). Very low call volume (about 10 calls a week), so most evaluation steps have no data. No burn-rate alerting yet: every llm.invoke span failed in production on 2026-10-22. Enable alerting when #1029 is fixed.",
       "query": {
