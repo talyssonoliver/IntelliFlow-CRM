@@ -7,11 +7,11 @@
   "attestation_timestamp": "2026-02-19T23:22:00Z",
   "verdict": "COMPLETE",
   "artifact_hashes": {
-    "apps/web/src/components/home/__tests__/QuickActionHrefs.test.tsx": "0e8b6bb236843488fe5a3dac227d5ff4d93ae6801554236e3d8443807cd7c58b",
-    "apps/web/src/components/home/PinnedItemsSheet.tsx": "ceee973d9cf662dcf573a40e707ce7fa0ab09a95289cef89171f516872e3a278",
-    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "2d1dbd56786d152a1f8d54aabddfc26bb1414890866aec9d277b13093c842012",
-    "apps/web/src/components/home/__tests__/PinnedItemsSheet.supplementary2.test.ts": "ba366c5497cf9a8c040c0c96cadbb8656bdb854967ae0ce71e197f09d05d8de3",
-    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "a6324654971d439c21da745d7c547dede91b7cbd0268c04375b8bee8cf5dad4f"
+    "apps/web/src/components/home/__tests__/QuickActionHrefs.test.tsx": "sha256:0e8b6bb236843488fe5a3dac227d5ff4d93ae6801554236e3d8443807cd7c58b",
+    "apps/web/src/components/home/PinnedItemsSheet.tsx": "sha256:ceee973d9cf662dcf573a40e707ce7fa0ab09a95289cef89171f516872e3a278",
+    "apps/web/src/components/home/AuthenticatedHomePage.tsx": "sha256:2d1dbd56786d152a1f8d54aabddfc26bb1414890866aec9d277b13093c842012",
+    "apps/web/src/components/home/__tests__/PinnedItemsSheet.supplementary2.test.ts": "sha256:ba366c5497cf9a8c040c0c96cadbb8656bdb854967ae0ce71e197f09d05d8de3",
+    "apps/web/src/components/home/__tests__/AuthenticatedHomePage.test.tsx": "sha256:a6324654971d439c21da745d7c547dede91b7cbd0268c04375b8bee8cf5dad4f"
   },
   "validation_results": [
     {

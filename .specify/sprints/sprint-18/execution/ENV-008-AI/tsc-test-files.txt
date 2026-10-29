@@ -1,0 +1,5 @@
+# HEAD e0b478906. Baseline: 3 pre-existing errors at apply-grafana-alert-rules.test.ts:125, apply-synthetic-monitoring.test.ts:188, grafana-provisioning.test.ts:9 (blamed to b50ab0a32e / 4f425b5511, before this task).
+tools/scripts/__tests__/apply-grafana-alert-rules.test.ts(125,12): error TS2532: Object is possibly 'undefined'.
+tools/scripts/__tests__/apply-synthetic-monitoring.test.ts(188,12): error TS2532: Object is possibly 'undefined'.
+tools/scripts/lib/grafana-provisioning.test.ts(9,8): error TS7016: Could not find a declaration file for module './grafana-provisioning.mjs'. 'C:/Users/talys/projects/intelliFlow-CRM-worktrees/env-008-ai/tools/scripts/lib/grafana-provisioning.mjs' implicitly has an 'any' type.
+tsc exit=2

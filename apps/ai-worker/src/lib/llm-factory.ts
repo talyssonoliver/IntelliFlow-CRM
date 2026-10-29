@@ -20,16 +20,69 @@ import {
 const DEV_LITELLM_KEY = ['sk', 'litellm', 'dev', 'change', 'me'].join('-');
 
 /**
+ * Default OpenRouter chat model and its fallbacks (owner ruling 2026-10-26). OpenRouter
+ * withdrew the previous default, `openai/gpt-oss-120b:free`, so every call returned 404.
+ * Nemotron 3 Ultra scored 6/6 valid on the lead-scoring benchmark; Nemotron 3.5 Lightning
+ * 5/6. Both answer tool calls but not strict json_schema (see withFunctionCallingDefault).
+ */
+const DEFAULT_OPENROUTER_MODEL = 'nvidia/nemotron-3-ultra-550b-a55b:free';
+const DEFAULT_OPENROUTER_FALLBACK_MODELS = 'nvidia/nemotron-3.5-lightning:free';
+
+/**
  * Resolve the OpenRouter chat model for a tier. Per-tier overrides via
  * `OPENROUTER_MODEL_{FREE,STANDARD,PREMIUM}`, else the single `OPENROUTER_MODEL`,
- * else cao's proven free default. Lets ops retune models without a deploy.
+ * else the free default above. Lets ops retune models without a deploy.
  */
 function openRouterModelForTier(tier: LLMTier): string {
   return (
     process.env[`OPENROUTER_MODEL_${tier.toUpperCase()}`] ||
     process.env['OPENROUTER_MODEL'] ||
-    'openai/gpt-oss-120b:free'
+    DEFAULT_OPENROUTER_MODEL
   );
+}
+
+/**
+ * OpenRouter's `models` list: the models OpenRouter itself tries, in order, when the
+ * primary errors (404 withdrawn, 429, 5xx). `OPENROUTER_FALLBACK_MODELS` is a comma list;
+ * unset uses the default, empty disables it. The primary is never repeated. Only `:free`
+ * models are sent: OpenRouter bills a fallback at its own price, but metering prices the
+ * call as the primary, so a paid fallback would be charged while recorded as $0 (and slip
+ * past the spend limits). A paid id is dropped with a warning. The caller sends the list
+ * only for a `:free` primary.
+ */
+function openRouterFallbackModels(primary: string): string[] {
+  const raw = process.env['OPENROUTER_FALLBACK_MODELS'] ?? DEFAULT_OPENROUTER_FALLBACK_MODELS;
+  const models = raw
+    .split(',')
+    .map((id) => id.trim())
+    .filter((id) => id && id !== primary);
+  for (const id of models.filter((m) => !m.endsWith(':free'))) {
+    console.warn(
+      `[llm-factory] OPENROUTER_FALLBACK_MODELS: dropping "${id}" — only :free fallbacks are allowed (a paid fallback would be metered as $0)`
+    );
+  }
+  return [...new Set(models.filter((m) => m.endsWith(':free')))];
+}
+
+/**
+ * Make `withStructuredOutput` default to tool calling on this model. @langchain/openai
+ * 1.5 defaults to `jsonSchema` (strict `response_format`), which OpenRouter's free models
+ * reject with 404 "No endpoints found that can handle the requested parameters". A caller
+ * that names a method keeps it. Patched in place, like the tracer, so the fallback and
+ * ceiling proxies and the tracer's metered clones all see it.
+ */
+export function withFunctionCallingDefault(model: BaseChatModel): BaseChatModel {
+  const original = (model as { withStructuredOutput?: unknown }).withStructuredOutput;
+  if (typeof original !== 'function') return model;
+  const bound = original.bind(model) as (
+    schema: unknown,
+    config?: Record<string, unknown>
+  ) => unknown;
+  (model as unknown as Record<string, unknown>)['withStructuredOutput'] = (
+    schema: unknown,
+    config?: Record<string, unknown>
+  ) => bound(schema, { ...config, method: config?.['method'] ?? 'functionCalling' });
+  return model;
 }
 
 // ============================================================================
@@ -97,8 +150,14 @@ export interface CreateLLMOptions {
  * has already decompressed the body — the re-wrapped Response must not advertise
  * the original encoding or the SDK would try to decompress again. Streaming
  * (`text/event-stream`) is passed through untouched so we never buffer token
- * streams. Best-effort: if the upstream body was already disturbed, fall back to
- * the original rather than make things worse.
+ * streams. A body something else already read is handed back as it is.
+ *
+ * A failure WHILE reading the body (the request timeout, a dropped connection)
+ * is rethrown. OpenRouter sends headers at once and holds the body open while
+ * the model generates, so that is where its timeouts land. Handing back the
+ * half-read response made the SDK read it again and fail with "Body is unusable:
+ * Body has already been read" (prod, 2026-10-27), which hid the real error from
+ * the SDK's retry and from the tenant fallback chain.
  */
 export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fetch {
   return (async (
@@ -107,23 +166,18 @@ export function createBodySafeFetch(baseFetch: typeof fetch = fetch): typeof fet
   ): Promise<Response> => {
     const response = await baseFetch(input, init);
     const contentType = response.headers.get('content-type') ?? '';
-    if (!response.body || contentType.includes('text/event-stream')) {
+    if (!response.body || response.bodyUsed || contentType.includes('text/event-stream')) {
       return response;
     }
-    try {
-      const buffered = await response.arrayBuffer();
-      const headers = new Headers(response.headers);
-      headers.delete('content-encoding');
-      headers.delete('content-length');
-      return new Response(buffered, {
-        status: response.status,
-        statusText: response.statusText,
-        headers,
-      });
-    } catch {
-      // Upstream body already disturbed — nothing safe left to do; hand it back.
-      return response;
-    }
+    const buffered = await response.arrayBuffer();
+    const headers = new Headers(response.headers);
+    headers.delete('content-encoding');
+    headers.delete('content-length');
+    return new Response(buffered, {
+      status: response.status,
+      statusText: response.statusText,
+      headers,
+    });
   }) as typeof fetch;
 }
 
@@ -273,7 +327,11 @@ export function isRetryableModelError(err: unknown): boolean {
   if (status === 429 || status >= 500) return true;
   const name = String(e?.name ?? '');
   if (name === 'TimeoutError' || name === 'AbortError') return true;
-  return /timed? ?out|ETIMEDOUT|ECONNRESET|ECONNREFUSED|circuit/i.test(String(e?.message ?? ''));
+  // "Connection error." is the OpenAI SDK's APIConnectionError: a dropped or
+  // refused connection, wrapped (the same failures as ECONNRESET/ECONNREFUSED).
+  return /timed? ?out|ETIMEDOUT|ECONNRESET|ECONNREFUSED|connection error|circuit/i.test(
+    String(e?.message ?? '')
+  );
 }
 
 interface Invokable {
@@ -446,29 +504,8 @@ export function createLLM(
       configuration: { baseURL: 'http://mock-litellm' },
     });
   } else if (provider === 'openrouter') {
-    // OpenRouter is OpenAI-compatible — real model ids (e.g. openai/gpt-oss-120b:free),
-    // NOT the litellm logical `${purpose}-${tier}` aliases. Used for production chat
-    // (free models); dev stays on Ollama. No proxy required.
     openRouterModel = openRouterModelName(tier, pinned);
-    model = new ChatOpenAI({
-      apiKey: process.env['OPENROUTER_API_KEY'] || '',
-      modelName: openRouterModel,
-      temperature,
-      maxTokens,
-      timeout,
-      configuration: {
-        baseURL: process.env['OPENROUTER_BASE_URL'] || 'https://openrouter.ai/api/v1',
-        // OpenRouter attribution headers (recommended, optional).
-        defaultHeaders: {
-          'HTTP-Referer': process.env['OPENROUTER_SITE_URL'] || 'https://intelliflow-crm.app',
-          'X-Title': 'IntelliFlow CRM',
-        },
-        // Body-safe fetch — this is the PRODUCTION path (OpenRouter free models),
-        // so the "Body has already been read" double-read fix must live here too,
-        // not just on the legacy litellm/openai branch below.
-        fetch: bodySafeFetch,
-      },
-    });
+    model = createOpenRouterModel(openRouterModel, pinned, { temperature, maxTokens, timeout });
   } else {
     // Primary path — LiteLLM proxy (covers 'litellm' and legacy 'openai' provider values).
     // LITELLM_BASE_URL is set by Phase B0 infra scaffolding; falls back to local dev default.
@@ -512,6 +549,44 @@ export function createLLM(
   });
   _factoryCache.set(cacheKey, instrumented);
   return instrumented;
+}
+
+/**
+ * OpenRouter is OpenAI-compatible — real model ids (e.g. nvidia/nemotron-3-ultra-550b-a55b:free),
+ * NOT the litellm logical `${purpose}-${tier}` aliases. Used for production chat (free
+ * models); dev stays on Ollama. No proxy required.
+ */
+function createOpenRouterModel(
+  modelName: string,
+  pinned: ModelCatalogEntry | undefined,
+  params: { temperature: number; maxTokens: number; timeout: number }
+): BaseChatModel {
+  // A tenant pin keeps its own model; its fallbacks are the tenant chain (createLLMForTenant).
+  // A paid primary gets no env fallbacks: metering prices the call as the primary, so a free
+  // fallback answer would be recorded at the paid rate.
+  const fallbackModels =
+    pinned?.providers.openrouter || !modelName.endsWith(':free')
+      ? []
+      : openRouterFallbackModels(modelName);
+  const model = new ChatOpenAI({
+    apiKey: process.env['OPENROUTER_API_KEY'] || '',
+    modelName,
+    ...params,
+    ...(fallbackModels.length > 0 ? { modelKwargs: { models: fallbackModels } } : {}),
+    configuration: {
+      baseURL: process.env['OPENROUTER_BASE_URL'] || 'https://openrouter.ai/api/v1',
+      // OpenRouter attribution headers (recommended, optional).
+      defaultHeaders: {
+        'HTTP-Referer': process.env['OPENROUTER_SITE_URL'] || 'https://intelliflow-crm.app',
+        'X-Title': 'IntelliFlow CRM',
+      },
+      // Body-safe fetch — this is the PRODUCTION path (OpenRouter free models),
+      // so the "Body has already been read" double-read fix must live here too,
+      // not just on the legacy litellm/openai branch.
+      fetch: bodySafeFetch,
+    },
+  });
+  return withFunctionCallingDefault(model);
 }
 
 /**

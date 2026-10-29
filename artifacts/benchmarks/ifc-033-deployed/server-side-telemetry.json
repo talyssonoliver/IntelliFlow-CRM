@@ -1,0 +1,96 @@
+{
+  "task": "IFC-033",
+  "source": "Grafana Cloud stack graysushi1880 (the hosted backend production api exports OTLP to)",
+  "runWindowUtc": {
+    "start": "2026-10-22T23:06:36Z",
+    "end": "2026-10-22T23:08:54Z"
+  },
+  "prometheus": {
+    "datasource": "grafanacloud-prom",
+    "metric": "http_server_request_duration_seconds{service_name=\"api\",deployment_environment=\"production\"}",
+    "window": "140s ending 2026-10-22T23:08:54Z",
+    "requests": {
+      "GET": 202,
+      "POST": 235
+    },
+    "p50Ms": {
+      "GET": 389,
+      "POST": 895
+    },
+    "p95Ms": {
+      "GET": 701,
+      "POST": 2024,
+      "all": 1667.1
+    },
+    "note": "histogram_quantile over OTel default buckets (.., 0.5, 0.75, 1, 2.5, 5 s): values are interpolated within buckets. Baseline: 4 api requests in the previous 24h, so no organic comparison exists."
+  },
+  "tempo": {
+    "datasource": "grafanacloud-traces",
+    "query": "lead.create spans, service api, run window",
+    "tracesFound": 200,
+    "medianTrace": {
+      "traceID": "3fe5f6d158d600bb0d26b4d41c4ae693",
+      "spanCount": 135,
+      "serverSideLeadCreateMs": 898,
+      "topSpans": {
+        "prisma:client:operation": {
+          "count": 6,
+          "totalMs": 1051
+        },
+        "prisma:client:db_query": {
+          "count": 7,
+          "totalMs": 1046
+        },
+        "POST": {
+          "count": 1,
+          "totalMs": 901
+        },
+        "trpc.mutation.lead.create": {
+          "count": 1,
+          "totalMs": 898
+        },
+        "pg.query:INSERT postgres": {
+          "count": 3,
+          "totalMs": 455
+        },
+        "prisma:client:transaction": {
+          "count": 1,
+          "totalMs": 449
+        },
+        "pg.query:SELECT postgres": {
+          "count": 2,
+          "totalMs": 295
+        },
+        "prisma:client:commit_transaction": {
+          "count": 1,
+          "totalMs": 148
+        },
+        "pg.query:COMMIT postgres": {
+          "count": 1,
+          "totalMs": 148
+        },
+        "prisma:client:start_transaction": {
+          "count": 1,
+          "totalMs": 148
+        },
+        "pg.query:BEGIN postgres": {
+          "count": 1,
+          "totalMs": 147
+        },
+        "pg.query:SET postgres": {
+          "count": 1,
+          "totalMs": 147
+        },
+        "tcp.connect": {
+          "count": 17,
+          "totalMs": 134
+        },
+        "client": {
+          "count": 34,
+          "totalMs": 130
+        }
+      }
+    },
+    "note": "Whole-trace duration (p50 19219 ms) includes the fire-and-forget BullMQ score-lead enqueue tail; the request itself is the trpc.mutation.lead.create span."
+  }
+}

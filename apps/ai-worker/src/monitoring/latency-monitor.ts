@@ -515,9 +515,11 @@ export class LatencyMonitor {
 
     this.alerts.push(alert);
 
+    // `alertSeverity`, not `severity`: Loki reads a top-level `severity` field
+    // as the line's level, which turned this warn line into detected_level=critical.
     logger.warn(
       {
-        severity,
+        alertSeverity: severity,
         model,
         operationType,
         duration,

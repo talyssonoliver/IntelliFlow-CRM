@@ -15,6 +15,7 @@ import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises';
 import { join, dirname } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import { OUTPUT_PATHS } from './lib/workflow/config.js';
+import { parseArtifactHash } from './lib/artifact-hash.js';
 
 const RUN_ID = '20251225-181500';
 const REPO_ROOT = process.cwd();
@@ -119,7 +120,7 @@ async function generateContextPacks() {
       // Generate manifest
       const files = Object.entries(attestation.artifact_hashes || {}).map(([path, hash]) => ({
         path,
-        hash: hash === 'verified' ? 'verified-placeholder' : hash,
+        hash: hash === 'verified' ? 'verified-placeholder' : (parseArtifactHash(hash) ?? hash),
         status: 'matched',
         size: 1000, // Placeholder size
       }));
@@ -137,7 +138,7 @@ async function generateContextPacks() {
       // Generate ack
       const filesRead = Object.entries(attestation.artifact_hashes || {}).map(([path, hash]) => ({
         path,
-        sha256: hash === 'verified' ? 'verified-placeholder' : hash,
+        sha256: hash === 'verified' ? 'verified-placeholder' : (parseArtifactHash(hash) ?? hash),
       }));
 
       const invariants = (attestation.definition_of_done_items || [])

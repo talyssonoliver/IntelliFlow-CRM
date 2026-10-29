@@ -19,18 +19,16 @@ import { describe, it, expect } from 'vitest';
 import { DurableAuditLogAdapter } from '@intelliflow/adapters/audit/DurableAuditLogAdapter';
 import { runConcurrently, expectNoDuplicates, propertyParams } from '../support';
 
-/** Minimal in-memory AuditPrismaClient that records every persisted entry. */
+/** Minimal in-memory AuditPrismaClient that records every persisted audit_log_entries row. */
 function makeFakePrisma(records: Array<Record<string, unknown>>) {
   const models = {
-    securityEvent: {
+    auditLogEntry: {
       create: async ({ data }: { data: Record<string, unknown> }) => {
         records.push(data);
         return data;
       },
-      findUnique: async () => null,
-      update: async () => ({}),
+      findFirst: async () => null,
     },
-    auditLogEntry: { create: async () => ({}) },
   };
   return {
     ...models,
@@ -74,7 +72,9 @@ describe('DurableAuditLogAdapter hash chain under concurrency (RACE-AUDIT-01)', 
 
         // INVARIANT: a sound hash chain never reuses a previousHash. A fork makes
         // multiple events share the same predecessor (e.g. all 'GENESIS').
-        const previousHashes = records.map((r) => String(r.previousHash));
+        const previousHashes = records.map((r) =>
+          String((r.metadata as { audit: { previousHash: string } }).audit.previousHash)
+        );
         expectNoDuplicates(previousHashes, (h) => h, 'audit chain previousHash');
       }),
       propertyParams()

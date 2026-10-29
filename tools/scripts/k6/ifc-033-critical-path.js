@@ -51,7 +51,15 @@ const TRPC = `${BASE_URL}/api/trpc`;
 // is the identified bottleneck (see docs/shared/bottleneck-analysis.md).
 const INGEST_RPS = Number(__ENV.INGEST_RPS || 6); // 6 create/s + 6 read/s
 const CONVERT_RPS = Number(__ENV.CONVERT_RPS || 1);
+// Arrival-rate period. A deployed run uses e.g. INGEST_RPS=23 INGEST_TIME_UNIT=15s
+// (1.53 creates/s = 5,520 leads/hour, 1.1x budget) to cap production cost.
+const INGEST_TIME_UNIT = __ENV.INGEST_TIME_UNIT || '1s';
+const CONVERT_TIME_UNIT = __ENV.CONVERT_TIME_UNIT || '1s';
 const DURATION = __ENV.DURATION || '3m';
+
+// Deployed targets have no dev-auth fallback: send the test tenant's Supabase access
+// token (tools/scripts/k6/prepare-ifc-033-tenant.mjs). Unset = local dev-auth run.
+const AUTH_HEADERS = __ENV.K6_AUTH_TOKEN ? { Authorization: `Bearer ${__ENV.K6_AUTH_TOKEN}` } : {};
 
 // A known, seeded, same-tenant lead id (Sarah Miller, QUALIFIED) for getById reads.
 const SEED_LEAD_ID = __ENV.SEED_LEAD_ID || '00000000-0000-4000-8000-000000000201';
@@ -72,17 +80,18 @@ const createLatency = new Trend('lead_create_latency', true);
 const readLatency = new Trend('lead_read_latency', true);
 const convertLatency = new Trend('lead_convert_latency', true);
 
-const MUT_HEADERS = {
+// Object.assign, not spread: k6's bundled Babel rejects object spread.
+const MUT_HEADERS = Object.assign({}, AUTH_HEADERS, {
   'Content-Type': 'application/json',
-  // Custom anti-CSRF header satisfies assertMutationCsrfSafe without an
-  // Authorization header (so the dev-auth fallback stays active). See apps/api/src/trpc.ts.
+  // Custom anti-CSRF header satisfies assertMutationCsrfSafe even without an
+  // Authorization header (so the local dev-auth fallback stays active). See apps/api/src/trpc.ts.
   'x-csrf-token': 'k6-load-test',
   Origin: BASE_URL,
-};
+});
 
 function trpcGet(proc, input) {
   const q = encodeURIComponent(JSON.stringify(input));
-  return http.get(`${TRPC}/${proc}?input=${q}`, { tags: { name: proc } });
+  return http.get(`${TRPC}/${proc}?input=${q}`, { headers: AUTH_HEADERS, tags: { name: proc } });
 }
 function trpcPost(proc, input) {
   return http.post(`${TRPC}/${proc}`, JSON.stringify(input), {
@@ -97,7 +106,7 @@ export const options = {
     lead_ingestion: {
       executor: 'constant-arrival-rate',
       rate: INGEST_RPS,
-      timeUnit: '1s',
+      timeUnit: INGEST_TIME_UNIT,
       duration: DURATION,
       preAllocatedVUs: Math.max(20, INGEST_RPS * 4),
       maxVUs: Math.max(100, INGEST_RPS * 20),
@@ -107,7 +116,7 @@ export const options = {
     lead_conversion: {
       executor: 'constant-arrival-rate',
       rate: CONVERT_RPS,
-      timeUnit: '1s',
+      timeUnit: CONVERT_TIME_UNIT,
       duration: DURATION,
       preAllocatedVUs: Math.max(10, CONVERT_RPS * 5),
       maxVUs: Math.max(40, CONVERT_RPS * 20),

@@ -171,6 +171,19 @@ describe('DriftDetectionScheduler', () => {
     expect(out).toContain('scoring-free');
   });
 
+  it('logs the onset severity as driftSeverity, never a top-level severity (#1062)', async () => {
+    // Loki reads a top-level `severity` as the line's level, so a warn line would index as high.
+    const { detector, log } = build();
+    vi.spyOn(detector, 'detectAllDrift').mockReturnValue([evaluatedResult()]);
+    scheduler!.start();
+    await vi.advanceTimersByTimeAsync(INTERVAL);
+    const warn = vi
+      .mocked(log.warn)
+      .mock.calls.find((c) => c[1] === 'Output distribution shift event started');
+    expect(warn?.[0]).toMatchObject({ driftSeverity: 'high', metric: 'score_distribution' });
+    expect(warn?.[0]).not.toHaveProperty('severity');
+  });
+
   it('logs an unexpected tick rejection from the interval instead of leaving it unhandled', async () => {
     const { log } = build();
     vi.spyOn(scheduler!, 'tick').mockRejectedValueOnce(new TypeError('boom'));

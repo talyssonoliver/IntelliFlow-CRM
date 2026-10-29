@@ -111,12 +111,14 @@ export class DriftDetectionScheduler {
     );
     for (const r of results) {
       if (!r.onset) continue;
+      // `driftSeverity`, not `severity`: Loki reads a top-level `severity` field as the
+      // line's level, which would index this warn line as high or critical.
       this.log.warn(
         {
           model: normalizeModel(r.model),
           metric: r.metric,
           status: r.status,
-          severity: r.severity,
+          driftSeverity: r.severity,
           pValue: Number(r.pValue.toFixed(6)),
           score: Number(r.driftScore.toFixed(4)),
         },
