@@ -5571,6 +5571,127 @@ items:
       git issue #999. Found by the IFC-074 spec session (2026-10-22); out
       of scope under the minimal-change rule. Tracked per project Rule 8
       (gh issue + debt ledger + findings doc).
+  IFC074-F14:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      The Loki error-log rule ifc074-error-logs-direct selects
+      {service_name="ai-worker"} only (infra/monitoring/grafana/cloud/alert-rules.json),
+      so once the api ships request logs, api errors still reach only the span
+      rule (modelled 162-203 s) and api episodes are expected to miss MTTD < 120 s.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      After #997 (client TRPC codes at warn), widen the selector to
+      {service_name=~"ai-worker|api"}, dry-run grafana-alert-rules.yml, and check
+      a week of buckets for false alarms first.
+    notes: >-
+      git issue #1067. Found by the IFC-074 addendum spec session (2026-10-29);
+      out of scope under the minimal-change rule. Tracked per project Rule 8.
+  IFC074-F15:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: medium
+    description: >-
+      No tripwire on Loki log volume. IFC-074 adds one Loki line per tRPC call
+      (two when slower than 50 ms); past the free-tier quota ingestion is dropped
+      and the Loki detection rule goes silent without an error.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      Alert on the stack's ingested-log-bytes usage (or a daily api line count)
+      at about 70% of the monthly quota, routed like the other production alerts.
+    notes: >-
+      git issue #1068. Found by the IFC-074 addendum spec session (2026-10-29).
+      Tracked per project Rule 8.
+  IFC074-F16:
+    origin_task: IFC-074
+    owner: SRE Lead
+    severity: low
+    description: >-
+      artifacts/reports/*/dora-metrics.json is not computed from real data,
+      although deploy events (production promotion ledger) and incident and
+      detection times (IFC-074 collector) now exist.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      Generate dora-metrics.json from the promotion ledger (deploy frequency,
+      lead time, change failure rate) and the collector output (incidents, time
+      to restore including MTTD).
+    notes: >-
+      git issue #1069. Owner ruling 4 (2026-10-29): debt-ledger follow-up, not in
+      the IFC-074 PR.
+  IFC074-F17:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      Generated task caches do not match task-status.schema.json: 277 of 428
+      fail it under Ajv (30 on kpis; the rest on artifacts.created shape,
+      validations keys, status_history statuses, started_at format), and
+      tools/scripts/validate-schemas.ts fails at base on 252 files, so neither is
+      a gate. IFC-074's own cache still fails on three status_history statuses
+      written on 2026-10-22 (append-only history).
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      Decide per field whether the generator or the schema is right, fix the
+      generator output (or widen the schema deliberately), then make
+      validate-schemas a gate.
+    notes: >-
+      git issue #1070. Measured during the IFC-074 addendum exec (2026-10-29).
+  IFC074-F18:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      The committed generated schemas (apps/project-tracker/docs/metrics/schemas,
+      last generated 2026-05-10) have drifted from what pnpm generate:schemas now
+      emits with Zod 4.6.7: a regeneration rewrites all 11 files, including key
+      order and the meaning of some date-time patterns.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      One dedicated PR: regenerate all schemas, review the pattern changes, and
+      run the data validators against the result.
+    notes: >-
+      git issue #1071. IFC-074 added only the generator's exact fragment for its
+      new KPI source field instead of regenerating.
+  IFC074-F19:
+    origin_task: IFC-074
+    owner: DevOps Lead
+    severity: low
+    description: >-
+      The api OTel metrics reader could block Railway idle sleep if metrics
+      export is ever enabled: the NodeSDK default OTLP reader (60 s) skips an
+      export only when no instrument has recorded, and under cumulative
+      temporality one recorded instrument is exported every cycle.
+    created_at: 2026-10-29
+    status: open
+    expiry_date: 2027-01-27
+    remediation_sprint: 20
+    remediation_plan: >-
+      If api metrics export is enabled, set OTEL_METRICS_EXPORTER=none on the api
+      service or a delta temporality preference.
+    notes: >-
+      Ledger only, no gh issue (coordinator, 2026-10-29). Evidence: the
+      coordinator's live check on 2026-10-29 found the api deployment SLEEPING
+      (last change 09:28:30Z, after the restart) and no target_info or OTel
+      metric series from service api in Grafana, so the export is not reaching
+      Grafana today. IFC-074's api request logs add no idle traffic (records only
+      inside tRPC calls; the sdk-logs batch timer is armed only while records are
+      buffered and is unref'd).
 summary:
   total_items: 443
   by_severity:

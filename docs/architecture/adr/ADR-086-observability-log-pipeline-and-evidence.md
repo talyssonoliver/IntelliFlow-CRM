@@ -86,6 +86,76 @@ Chosen option: 1.
 - The collector currently uses an Admin service-account token read-only; a
   Viewer token is a follow-up.
 
+## Amendment 2026-10-29: detection paths, KPI evidence, data in api records
+
+**Detection paths.** Two rules in
+`infra/monitoring/grafana/cloud/alert-rules.json` are the delivered
+fast-detection paths:
+
+- `ifc074-error-spans-direct` (#1040), on span metrics;
+- `ifc074-error-logs-direct` (#1062), on Loki error-level lines. It was created
+  in production on merge, in workflow run 40846555065.
+
+The Loki rule selects `{service_name="ai-worker"}` only (the combined worker
+logs as ai-worker). api errors are left to the span rule. Both rules' modelled
+figures come from the #1040 and #1062 PR bodies and are not measured here:
+
+- the span rule, modelled at 162-203 s, which is above the target, so api
+  episodes are expected to miss it;
+- the Loki rule, modelled at 36-61 s for the 9 of 13 replayed episodes that had
+  an error-level line.
+
+Widening the Loki rule to the api waits on the client-error log-level split (F14
+after F11).
+
+**KPI (owner ruling 4, 2026-10-29).** The primary statistic is the first alert
+per error episode; the per-rule mean is co-reported. It is judged after deploy,
+over at least 72 h or at least 10 real error episodes. The 2026-10-22 value
+(per-incident mean 268.7 s, n=63) predates both rules and is not comparable.
+
+**Where the KPI lives.** The collector stays local and read-only, and is never
+run in CI. After deploy, the result flows through this chain, which needs no new
+workflow, token or secret:
+
+1. `artifacts/reports/mttr-baseline.json` (committed);
+2. `task-tracking.json` `kpis.mttd_target`, with the file's SHA-256 as `source`;
+3. attestation `kpi_results`;
+4. `pnpm generate:metrics`, which feeds the tracker's task KPI panel.
+
+The ENV-008 dashboard gains an "MTTD per error episode (live proxy)" panel. It
+shows, per minute, error spans, error-level lines and first Alerting transitions
+(from the alert state history). It is labelled a proxy: Grafana cannot join the
+two per episode inside a panel. The collector checks each repo rule through its
+own datasource (`DATASOURCE_KINDS`), so the Loki rule is read as LogQL, never as
+PromQL.
+
+**Data in api log records.** `tenantId` and `userId` reach Loki through the
+logger mixin, but only on protected and tenant procedures (public, admin,
+partner and auth procedures carry neither). They are pseudonymous ids, and
+`user.id` is already on the Tempo span. The purpose is incident debugging, and
+access is owner-only Grafana under the stack's Loki retention. If the owner
+wants userId minimised, it is done once, for every service, in both the mixin
+and the spans. The record carries no message, stack, cause, email or request id,
+and its path and errorName are allowlisted.
+
+**Runtime impact on the api.**
+
+- **Log volume.** Log records are written only inside a tRPC call: one `info`
+  line per call, plus one `warn` line when the call is slower than 50 ms. The
+  `@opentelemetry/sdk-logs` batch processor starts its export timer only while
+  records are buffered, and unrefs it. So these logs add no outbound traffic
+  while the api is idle.
+- **Metrics exporter.** It is separate and pre-existing. The coordinator's live
+  check on 2026-10-29 found the api deployment SLEEPING (last change at
+  09:28:30Z, after the restart) and no api OTel metric series in Grafana. So the
+  NodeSDK's 60 s metrics export is not reaching Grafana and does not keep the
+  api awake today. If metrics export is ever enabled, the cumulative reader
+  could block idle sleep; then set `OTEL_METRICS_EXPORTER=none` or a delta
+  temporality preference (F19, low).
+- **Cost.** The Loki volume estimate is about 1-2 lines per request at a few
+  hundred bytes each, set against the free tier's 50 GB a month. It is an
+  estimate. There is no volume tripwire yet (F15).
+
 ## Links
 
 - ADR-001 (modern stack), ADR-017 (real trace evidence), IFC-032 (alert

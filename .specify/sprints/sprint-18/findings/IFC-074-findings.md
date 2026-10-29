@@ -40,3 +40,32 @@ this document. None is fixed in IFC-074 (minimal-change rule, L1).
   (ErrorRatioBreach, Grafana-managed) has `for: 0s`; the delay is the rule
   condition crossing its threshold. Whether to tune detection or the target is
   the owner's call; the measurement is in `artifacts/reports/mttr-baseline.json`.
+
+## Addendum 2026-10-29
+
+Found during the 2026-10-29 spec, plan and exec on the new base (after #1040 and #1062). Out of scope under the
+minimal-change rule; each is tracked in `artifacts/metrics/debt-ledger.yaml`.
+
+| # | Severity | Finding | Where | Issue | Ledger |
+|---|----------|---------|-------|-------|--------|
+| F14 | medium | The Loki error-log rule does not cover the api | `infra/monitoring/grafana/cloud/alert-rules.json` (`ifc074-error-logs-direct`) | #1067 | `IFC074-F14` |
+| F15 | medium | No tripwire on Loki log volume | Grafana Cloud usage, no log-volume alert | #1068 | `IFC074-F15` |
+| F16 | low | DORA metrics are not fed from real deploy and incident data | `artifacts/reports/*/dora-metrics.json` | #1069 | `IFC074-F16` |
+| F17 | low | 277 of 428 generated task caches fail `task-status.schema.json`; `validate-schemas.ts` fails at base | `apps/project-tracker/docs/metrics/sprint-*/*.json` | #1070 | `IFC074-F17` |
+| F18 | low | Committed generated schemas drifted from `pnpm generate:schemas` output (Zod 4.6.7) | `apps/project-tracker/docs/metrics/schemas/*.schema.json` | #1071 | `IFC074-F18` |
+| F19 | low | The api OTel metrics reader could block idle sleep if metrics export is ever enabled | `apps/api/src/tracing/otel.ts` (NodeSDK defaults) | ledger only (coordinator) | `IFC074-F19` |
+
+F19 evidence: the coordinator's live check on 2026-10-29 found the api deployment SLEEPING (last change 09:28:30Z)
+and no OTel metric series from service api in Grafana.
+
+F3 note: the 2026-10-29 real-pino key-set test (`packages/observability/src/logging.test.ts`) shows that request
+lines carry no `pid`, `hostname`, `name` or base fields under the current configuration. Re-check F3 (#989)
+against a production line before fixing it.
+
+### Fixed in the addendum
+
+| Finding | Fix |
+|---------|-----|
+| The collector sent every repo rule to Prometheus, including the #1062 Loki rule | Each rule is read through its own datasource (`DATASOURCE_KINDS`); Loki alerts anchor via `service_name` |
+| `datasourceProxy` put any uid into the proxy path | uid checked against `^[A-Za-z0-9_-]{1,64}$`, error does not echo it |
+| `task-tracking.json` KPIs failed the task-status KPI schema (`source` key, `met: null`) | optional `source` in the Zod schema plus the generator's fragment; `met: false` |
