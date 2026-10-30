@@ -5770,8 +5770,15 @@ items:
     remediation_plan: >-
       Store the schedule time zone in the run's context at admission (as the
       actions are) and render due dates and schedule variables from that snapshot.
-    status: open
-    notes: 'Orchestrator ruling 2026-10-29: follow-up, not fixed in the PG-208 PR.'
+    status: resolved
+    resolved_at: 2026-10-30
+    resolution: >-
+      Fixed in the PG-208 PR (orchestrator ruling 2026-10-29, raised again by a
+      standalone codex pass after the merge with main). Admission stores
+      scheduleTimezone in the run context with the slot; due dates and schedule.date
+      read it, falling back to the rule's timezone for runs admitted earlier. Test:
+      a timezone edit after admission keeps the run's date and due date.
+    notes: 'Orchestrator ruling 2026-10-29 kept it as a follow-up; ruling 2026-10-29 (option a) fixed it in the PG-208 PR.'
   PG-208-POSTCONDITION-NOT-COMMIT-EVIDENCE-001:
     origin_task: PG-208
     owner: Backend Lead
