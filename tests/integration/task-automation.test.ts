@@ -82,12 +82,19 @@ function splitStatements(sql: string): string[] {
  * hold only this suite's rows), children first, under the shared schema lock (L14).
  */
 async function ensureMigrationSql(client: any): Promise<void> {
-  // Keyed on the newest object in the migration, so an older local copy is replaced.
-  const present = await client.$queryRawUnsafe(
-    `SELECT 1 FROM information_schema.columns
-      WHERE table_name = 'task_automation_runs' AND column_name = 'actions'`
+  // Keyed on objects only the migration SQL creates (db push makes the tables and the
+  // `actions` column too): a CHECK constraint and RLS on all four tables. The `actions`
+  // column stays in the key so an older local copy of the migration is replaced.
+  const [state] = await client.$queryRawUnsafe(
+    `SELECT EXISTS (SELECT 1 FROM pg_constraint
+                     WHERE conname = 'task_automation_runs_status_check') AS "hasCheck",
+            (SELECT count(*) FROM pg_class
+              WHERE relname = ANY($1::text[]) AND relkind = 'r' AND relrowsecurity)::int AS "rlsTables",
+            EXISTS (SELECT 1 FROM information_schema.columns
+                     WHERE table_name = 'task_automation_runs' AND column_name = 'actions') AS "hasActions"`,
+    TABLES
   );
-  if (present.length > 0) return;
+  if (state.hasCheck && state.rlsTables === TABLES.length && state.hasActions) return;
   await applySchemaSql(DB_URL!, [
     'DROP TABLE IF EXISTS ' + TABLES.map((t) => '"' + t + '"').join(', ') + ' CASCADE',
     ...splitStatements(withoutComments(MIGRATION)),
