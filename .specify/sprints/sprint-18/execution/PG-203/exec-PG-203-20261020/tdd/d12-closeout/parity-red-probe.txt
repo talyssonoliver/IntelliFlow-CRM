@@ -1,0 +1,51 @@
+[test-slot] slot1 taken for PG-203@feat/pg-203-dsar: pnpm --filter @intelliflow/api exec vitest run src/modules/privacy/__tests__/dsar-timing-parity.test.ts
+
+ RUN  v4.1.12 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/api
+
+stdout | src/modules/privacy/__tests__/dsar-timing-parity.test.ts > DSAR links do not reveal whether a request exists > verify: same reads, one compare and identical answers
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"verify","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/privacy/__tests__/dsar-timing-parity.test.ts > DSAR links do not reveal whether a request exists > verify: same reads, one compare and identical answers
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"verify","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/privacy/__tests__/dsar-timing-parity.test.ts > DSAR links do not reveal whether a request exists > downloadExport: same reads, one compare and identical answers
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"downloadExport","method":"mutation","durationMs":0,"status":"success"}
+
+stdout | src/modules/privacy/__tests__/dsar-timing-parity.test.ts > DSAR links do not reveal whether a request exists > downloadExport: same reads, one compare and identical answers
+{"type":"trpc.request","correlationId":"test-correlation-id","path":"downloadExport","method":"mutation","durationMs":0,"status":"success"}
+
+ ❯ |api| src/modules/privacy/__tests__/dsar-timing-parity.test.ts (2 tests | 2 failed) 59ms
+     × verify: same reads, one compare and identical answers 36ms
+     × downloadExport: same reads, one compare and identical answers 6ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |api| src/modules/privacy/__tests__/dsar-timing-parity.test.ts > DSAR links do not reveal whether a request exists > verify: same reads, one compare and identical answers
+ FAIL  |api| src/modules/privacy/__tests__/dsar-timing-parity.test.ts > DSAR links do not reveal whether a request exists > downloadExport: same reads, one compare and identical answers
+AssertionError: expected +0 to be 1 // Object.is equality
+
+- Expected
++ Received
+
+- 1
++ 0
+
+ ❯ src/modules/privacy/__tests__/dsar-timing-parity.test.ts:119:30
+    117|     expect(unknown.reads).toEqual(['findById']);
+    118|     expect(knownWrongToken.reads).toEqual(unknown.reads);
+    119|     expect(unknown.compares).toBe(1);
+       |                              ^
+    120|     expect(knownWrongToken.compares).toBe(1);
+    121|     expect(knownWrongToken.status).toBe(unknown.status);
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  2 failed (2)
+   Start at  09:14:03
+   Duration  2.41s (transform 967ms, setup 1.12s, import 1.04s, tests 59ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\apps\api:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/modules/privacy/__tests__/dsar-timing-parity.test.ts

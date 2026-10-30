@@ -1,0 +1,10 @@
+[test-slot] slot2 taken for PG-203@feat/pg-203-dsar: pnpm exec vitest run src/modules/privacy src/modules/calendar src/modules/lead src/__tests__/container.test.ts src/security
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/api
+
+
+ Test Files  50 passed (50)
+      Tests  1418 passed (1418)
+   Start at  13:18:53
+   Duration  22.35s (transform 9.90s, setup 15.18s, import 31.26s, tests 18.21s, environment 6ms)
+

@@ -99,6 +99,16 @@ export const SETTINGS_ITEMS: SettingItem[] = [
     keywords: ['mfa', '2fa', 'totp', 'sessions', 'password', 'authentication'],
   },
   {
+    // PG-203 DSAR (Security & Compliance)
+    id: 'privacy-requests',
+    title: 'Privacy Requests',
+    description: 'Data subject requests (access, erasure, objection) and processing restrictions',
+    href: '/settings/privacy-requests',
+    icon: 'shield_person',
+    color: 'bg-destructive',
+    keywords: ['gdpr', 'dsar', 'privacy', 'erasure', 'data request', 'restriction', 'compliance'],
+  },
+  {
     id: 'leads',
     title: 'Leads',
     description: 'Configure lead stages, scoring rules, custom fields, and automation',
@@ -229,7 +239,7 @@ export const SETTINGS_CATEGORIES: SettingCategory[] = [
   {
     id: 'security',
     title: 'Security',
-    itemIds: ['security'],
+    itemIds: ['security', 'privacy-requests'],
   },
 ];
 

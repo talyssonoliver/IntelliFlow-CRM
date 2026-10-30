@@ -42,6 +42,8 @@ export default function robots(): MetadataRoute.Robots {
           '/home',
           // Public booking pages are per-firm links, never indexed (PG-203)
           '/book/',
+          // Data request pages: per-firm, and the confirm/export links carry tokens (PG-203)
+          '/dsar/',
           // API routes
           '/api/',
         ],

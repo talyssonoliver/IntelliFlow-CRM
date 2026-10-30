@@ -84,6 +84,8 @@ export * from './legal/appointments/AvailabilityPolicy'; // PG-202
 export * from './legal/appointments/availability-roles'; // PG-202
 export * from './legal/appointments/event-types'; // PG-203
 export * from './legal/appointments/listOpenSlots'; // PG-203
+export * from './legal/privacy/dsar'; // PG-203 DSAR
+export * from './legal/privacy/errors'; // PG-203 DSAR
 
 // Legal Domain - Terms Acceptance (IFC-309)
 export * from './legal/TermsAcceptance';

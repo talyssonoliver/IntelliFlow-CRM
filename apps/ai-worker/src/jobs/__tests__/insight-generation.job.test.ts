@@ -28,6 +28,13 @@ const mockQueueAdd = vi.hoisted(() => vi.fn());
 const mockQueueClose = vi.hoisted(() => vi.fn());
 const mockLogAIAgentAction = vi.hoisted(() => vi.fn(() => Promise.resolve()));
 
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+vi.mock('../../lib/data-request-guard', async (importOriginal) =>
+  (await import('../../test/mocks/data-request-guard.mock')).passThroughGuard(
+    await importOriginal()
+  )
+);
+
 vi.mock('../..//chains/insight-generation.chain', () => {
   class InsightGenerationChain {
     generateInsightsWithMeta = mockGenerateInsightsWithMeta;

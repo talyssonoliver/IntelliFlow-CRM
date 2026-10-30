@@ -17,6 +17,7 @@ const h = vi.hoisted(() => ({
   slots: {
     data: undefined as unknown,
     isLoading: false,
+    isPending: false,
     isError: false,
     error: null as unknown,
   },
@@ -100,7 +101,7 @@ function pickFirstSlotAndFill() {
 beforeEach(() => {
   vi.clearAllMocks();
   h.eventType = { data: EVENT, isLoading: false, error: null };
-  h.slots = { data: SLOTS, isLoading: false, isError: false, error: null };
+  h.slots = { data: SLOTS, isLoading: false, isPending: false, isError: false, error: null };
   h.slotsArgs = [];
   h.book = { mutateAsync: vi.fn(), isPending: false };
 });
@@ -136,6 +137,7 @@ describe('BookingContent', () => {
         ],
       },
       isLoading: false,
+      isPending: false,
       isError: false,
       error: null,
     };
@@ -308,6 +310,7 @@ describe('BookingContent', () => {
     h.slots = {
       data: { timezone: 'Europe/London', days: [{ date: '2026-11-02', slots: [] }] },
       isLoading: false,
+      isPending: false,
       isError: false,
       error: null,
     };
@@ -344,6 +347,7 @@ describe('BookingContent', () => {
     h.slots = {
       data: { timezone: 'Europe/London', days: [{ date: '2026-12-27', slots: [] }] },
       isLoading: false,
+      isPending: false,
       isError: false,
       error: null,
     };
@@ -365,6 +369,7 @@ describe('BookingContent', () => {
     h.slots = {
       data: undefined,
       isLoading: false,
+      isPending: false,
       isError: true,
       error: { message: 'slow down', data: { code: 'TOO_MANY_REQUESTS' } },
     };
@@ -381,7 +386,13 @@ describe('BookingContent', () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     try {
       vi.setSystemTime(new Date('2026-11-01T23:59:00Z')); // 23:59 in London
-      h.slots = { data: undefined, isLoading: false, isError: true, error: { message: 'x' } };
+      h.slots = {
+        data: undefined,
+        isLoading: false,
+        isPending: false,
+        isError: true,
+        error: { message: 'x' },
+      };
       renderFlow();
       expect((h.slotsArgs.at(-1) as { fromDate: string }).fromDate).toBe('2026-11-01');
       vi.setSystemTime(new Date('2026-11-02T00:01:00Z'));
@@ -398,6 +409,51 @@ describe('BookingContent', () => {
     h.eventType = { data: undefined, isLoading: true, error: null };
     renderFlow();
     expect(screen.getByText('Loading booking page')).toBeInTheDocument();
+  });
+
+  // Lighthouse on a real booking page (2026-10-29): the details form and footer rendered under
+  // "Loading available times" and were pushed down about 550px when the times arrived (CLS 0.25).
+  it('holds the details form and footer back until the first times have loaded', () => {
+    h.slots = { data: undefined, isLoading: true, isPending: true, isError: false, error: null };
+    const { rerender } = renderFlow();
+    expect(screen.getByText('Loading available times')).toBeInTheDocument();
+    expect(screen.queryByRole('form', { name: 'Your details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Your personal data' })).not.toBeInTheDocument();
+
+    h.slots = { data: SLOTS, isLoading: false, isPending: false, isError: false, error: null };
+    rerender(<BookingContent handle="smith-law" slug="initial-consultation" />);
+    expect(screen.getByRole('form', { name: 'Your details' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Your personal data' })).toBeInTheDocument();
+  });
+
+  // The times query waits for the event (enabled: Boolean(event)). A disabled query with no data
+  // reports isLoading false but isPending true; the first fix keyed on isLoading and the form still
+  // rendered in that frame (re-measured CLS 0.22).
+  it('holds the details form back while the times query has no data yet, even before it starts', () => {
+    h.slots = { data: undefined, isLoading: false, isPending: true, isError: false, error: null };
+    renderFlow();
+    expect(screen.queryByRole('form', { name: 'Your details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Your personal data' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the details form while later dates load, so typed details stay on screen', () => {
+    const { rerender } = renderFlow();
+    fireEvent.change(screen.getByLabelText('Your name'), { target: { value: 'Ada Lovelace' } });
+    h.slots = { data: undefined, isLoading: true, isPending: true, isError: false, error: null };
+    rerender(<BookingContent handle="smith-law" slug="initial-consultation" />);
+    expect(screen.getByLabelText('Your name')).toHaveValue('Ada Lovelace');
+  });
+
+  it('still offers the details form when the times fail to load', () => {
+    h.slots = {
+      data: undefined,
+      isLoading: false,
+      isPending: false,
+      isError: true,
+      error: { message: 'x' },
+    };
+    renderFlow();
+    expect(screen.getByRole('form', { name: 'Your details' })).toBeInTheDocument();
   });
 });
 
@@ -447,5 +503,16 @@ describe('firstErrorTarget', () => {
     ).toBe('#booking-company');
     expect(firstErrorTarget({ consent: 'x' }, [])).toBe('#booking-consent');
     expect(firstErrorTarget({ form: 'x' }, [])).toBeNull();
+  });
+});
+
+describe('data request link (PG-203 DSAR)', () => {
+  it("links the firm's data request page from the footer", () => {
+    h.eventType = { data: EVENT, isLoading: false, error: null };
+    h.slots = { data: SLOTS, isLoading: false, isPending: false, isError: false, error: null };
+    renderFlow();
+    expect(screen.getByRole('link', { name: 'Your personal data' }).getAttribute('href')).toBe(
+      '/dsar/smith-law'
+    );
   });
 });

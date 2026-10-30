@@ -11,6 +11,7 @@
  */
 
 import { randomUUID } from 'node:crypto';
+import { PrismaProcessingRestrictionRepository } from '@intelliflow/adapters';
 import {
   AgentToolDefinition,
   AgentToolResult,
@@ -158,6 +159,34 @@ function validateDraftMessageGuards(
   return null;
 }
 
+const RESTRICTED = 'Processing is restricted for this person (data request).';
+
+/**
+ * PG-203 (owner Q18; spec enforcement point 6): no draft for a lead or contact whose
+ * processing is restricted. Agent sessions always carry the tenant and Prisma client; a
+ * context without them cannot check, so it is refused rather than let through.
+ */
+async function restrictedRecipient(
+  input: DraftMessageInput,
+  context: AgentAuthContext
+): Promise<string | null> {
+  if (input.recipientType === 'ACCOUNT') return null;
+  const { prisma, tenantId } = context;
+  if (!prisma || !tenantId) return 'Cannot check data-request restrictions without a tenant';
+  const where = { id: input.recipientId, tenantId };
+  const select = { email: true } as const;
+  const recipient =
+    input.recipientType === 'LEAD'
+      ? await prisma.lead.findFirst({ where, select })
+      : await prisma.contact.findFirst({ where, select });
+  if (!recipient) return null; // the approval step reports a missing record
+  const status = await new PrismaProcessingRestrictionRepository(prisma).status(
+    tenantId,
+    recipient.email
+  );
+  return status.restricted ? RESTRICTED : null;
+}
+
 /**
  * Draft Message Tool
  *
@@ -181,7 +210,8 @@ export const draftMessageTool: AgentToolDefinition<DraftMessageInput, DraftedMes
     const startTime = performance.now();
 
     try {
-      const guardError = validateDraftMessageGuards(input, context);
+      const guardError =
+        validateDraftMessageGuards(input, context) ?? (await restrictedRecipient(input, context));
       if (guardError) {
         return {
           success: false,

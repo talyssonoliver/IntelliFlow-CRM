@@ -1,0 +1,31 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 37 files total
+[codex-review] in scope : 12 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] reviewer : codex
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (codex) — 2026-10-20T23:45:24.207Z
+Base ref  : origin/main
+Files in scope : 12
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] packages/validators/src/event-types.ts:210 — privacy-url-check-mismatch
+    Issue    : The privacy URL validator accepts values that the database explicitly rejects.
+    Evidence : `refine(isHttpsUrl, ...)` checks only `new URL(value).protocol === 'https:'` without normalizing the returned string. Consequently, `HTTPS://example.com` and `https:example.com` pass validation unchanged, but migration 20261021120100_event_types defines `tenants_bookingPrivacyUrl_check` as `LIKE 'https://%'`, which rejects both. Saving either accepted input therefore fails at persistence; the tests cover only lowercase URLs with literal https:// prefixes.
+    Fix      : Normalize accepted privacy URLs with `new URL(value).href` before returning them, or require the literal prefix enforced by the database.
+    Fingerprint: 14dc88a3b90da9f56923e9fd0890f9eb477f6081ecf9621d9d9994244d66a741
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

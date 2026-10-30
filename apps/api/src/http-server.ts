@@ -587,15 +587,16 @@ export function startApiServer(options: ApiServerOptions = {}): http.Server {
     console.log(`[API] HTTP server listening on http://localhost:${port}`);
   });
 
-  // PG-198 / PG-207: approval sweep and bounce scanner — long-lived server
+  // PG-198 / PG-207 / PG-203: approval sweep, bounce scanner and DSAR deadline
+  // alerts — long-lived server
   // process only. API_BACKGROUND_JOBS=off keeps an idle api free of outbound
   // traffic so Railway can sleep it; the combined worker runs them instead.
   if (apiBackgroundJobsEnabled(process.env)) {
     startBackgroundJobs({ ready: () => containerReady });
   } else {
     console.warn(
-      `[API] WARN background jobs disabled (${API_BACKGROUND_JOBS_ENV}=off): the approval sweep and ` +
-        'email bounce scan run only if the combined worker has COMBINED_BACKGROUND_JOBS=on. ' +
+      `[API] WARN background jobs disabled (${API_BACKGROUND_JOBS_ENV}=off): the approval sweep, ` +
+        'email bounce scan and DSAR deadline alerts run only if the combined worker has COMBINED_BACKGROUND_JOBS=on. ' +
         'If neither is set nothing runs them; /health/detailed reports degraded after 3x the interval.'
     );
   }

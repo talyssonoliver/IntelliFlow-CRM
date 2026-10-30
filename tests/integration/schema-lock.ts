@@ -33,6 +33,14 @@ import { PrismaClient } from '../../packages/db/generated/prisma/client';
 /** Advisory-lock key shared by every integration suite that changes the schema. */
 export const SCHEMA_LOCK_KEY = 202_610_190;
 
+/**
+ * Advisory-lock key held by the integration blocks that purge expired unverified DSAR
+ * requests. The purge (and the deadline sweep that runs it) works across every firm, so
+ * two suites running it in parallel delete each other's rows and race for the sweep's
+ * own lock.
+ */
+export const DSAR_PURGE_SUITE_LOCK_KEY = 202_610_280;
+
 /** Below the server's 1s deadlock_timeout: a waiting DDL times out before any check. */
 const LOCK_TIMEOUT = '400ms';
 /** Caps the whole up-front LOCK TABLE (it may wait once per table). */
@@ -87,6 +95,48 @@ const TABLES_TO_LOCK = `
   )
   SELECT c.relname AS name FROM pg_class c WHERE c.oid IN (SELECT oid FROM related) ORDER BY 1`;
 
+/** Poll the try-variant of a session advisory lock until it is held or the deadline passes. */
+async function pollAdvisoryLock(session: any, key: number, deadlineMs: number): Promise<void> {
+  const deadline = Date.now() + deadlineMs;
+  for (;;) {
+    const rows: Array<{ locked: boolean }> = await session.$queryRawUnsafe(
+      'SELECT pg_try_advisory_lock($1) AS locked',
+      key
+    );
+    if (rows[0]?.locked) return;
+    if (Date.now() > deadline) {
+      throw new Error(`advisory lock ${key} not acquired in ${deadlineMs}ms`);
+    }
+    await sleep(jitter(50));
+  }
+}
+
+/**
+ * Hold a session advisory lock on its own connection until the returned release runs.
+ * Suites call it in `beforeAll` and release in `afterAll` to keep a block of tests from
+ * overlapping the same block in another file.
+ */
+export async function holdSuiteLock(
+  connectionString: string,
+  key: number,
+  deadlineMs: number = ADVISORY_DEADLINE_MS
+): Promise<() => Promise<void>> {
+  const session = new PrismaClient({ adapter: new PrismaPg({ connectionString, max: 1 }) });
+  try {
+    await pollAdvisoryLock(session, key, deadlineMs);
+  } catch (error) {
+    await session.$disconnect();
+    throw error;
+  }
+  return async () => {
+    try {
+      await session.$queryRawUnsafe('SELECT pg_advisory_unlock($1) AS unlocked', key);
+    } finally {
+      await session.$disconnect();
+    }
+  };
+}
+
 /**
  * Run `fn` on a dedicated single connection that holds the shared advisory lock.
  * The lock is polled with autocommit statements, so no transaction stays open while
@@ -98,18 +148,7 @@ async function withSchemaLock<T>(
 ): Promise<T> {
   const session = new PrismaClient({ adapter: new PrismaPg({ connectionString, max: 1 }) });
   try {
-    const deadline = Date.now() + ADVISORY_DEADLINE_MS;
-    for (;;) {
-      const rows: Array<{ locked: boolean }> = await session.$queryRawUnsafe(
-        'SELECT pg_try_advisory_lock($1) AS locked',
-        SCHEMA_LOCK_KEY
-      );
-      if (rows[0]?.locked) break;
-      if (Date.now() > deadline) {
-        throw new Error(`schema lock ${SCHEMA_LOCK_KEY} not acquired in ${ADVISORY_DEADLINE_MS}ms`);
-      }
-      await sleep(jitter(50));
-    }
+    await pollAdvisoryLock(session, SCHEMA_LOCK_KEY, ADVISORY_DEADLINE_MS);
     try {
       return await fn(session);
     } finally {

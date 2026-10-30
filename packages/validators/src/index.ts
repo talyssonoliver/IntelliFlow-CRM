@@ -131,6 +131,7 @@ export * from './case-types';
 export * from './appointment-settings';
 export * from './availability'; // PG-202
 export * from './event-types'; // PG-203
+export * from './dsar'; // PG-203 DSAR
 
 // Help Article Schemas (IFC-299)
 export * from './help-article';

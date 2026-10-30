@@ -1,0 +1,14 @@
+# 2026-10-21T00:23:48Z
+# 7fd27d0a5180f3eb39cb20d0b2197563171fe92c + staged API slice
+# pnpm --filter @intelliflow/api exec vitest run src/modules/calendar src/modules/lead src/modules/legal src/security
+[test-slot] slot2 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/api exec vitest run src/modules/calendar src/modules/lead src/modules/legal src/security
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/apps/api
+
+
+ Test Files  68 passed (68)
+      Tests  1983 passed (1983)
+   Start at  01:23:50
+   Duration  28.53s (transform 10.15s, setup 18.26s, import 50.03s, tests 20.40s, environment 8ms)
+
+# exit=0

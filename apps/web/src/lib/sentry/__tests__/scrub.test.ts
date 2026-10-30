@@ -53,6 +53,20 @@ describe('scrubEvent', () => {
     expect(result.request?.headers).toEqual({ 'user-agent': 'ua', accept: '*/*' });
   });
 
+  it('never reports a DSAR link token from the URL, transaction or breadcrumbs (PG-203)', () => {
+    const token = 'A'.repeat(43);
+    const link = `https://app.example.invalid/dsar/smith-law/verify#r=clhrequest000000000.${token}`;
+    const event = scrubEvent({
+      type: undefined,
+      request: { url: link },
+      transaction: `/dsar/smith-law/verify#r=clhrequest000000000.${token}`,
+      breadcrumbs: [{ category: 'navigation', data: { from: '/', to: link } }],
+    } as never);
+    expect(JSON.stringify(event)).not.toContain(token);
+    expect(event.request?.url).toBe('https://app.example.invalid/dsar/smith-law/verify');
+    expect(event.transaction).toBe('/dsar/smith-law/verify');
+  });
+
   it('copes with a request that has no url or headers', () => {
     expect(scrubEvent(event({ request: { method: 'GET' } })).request).toEqual({ method: 'GET' });
   });

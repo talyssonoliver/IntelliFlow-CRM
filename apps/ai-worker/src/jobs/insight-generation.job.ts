@@ -27,6 +27,24 @@ import { logAIAgentAction } from '../utils/audit-log';
 import { runWithLogContext } from '../utils/logger';
 import { getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
+// PG-203 #1002: erased and restricted people get no insight
+import {
+  currentDeals,
+  eligibleNamedSubjects,
+  type NamedSubject,
+  writeIfAddressesStillClear,
+  writeSubjectIfStillEligible,
+} from '../lib/data-request-guard';
+
+/** Kept people with their stored addresses, plus each kept deal's contact (if it has one). */
+type EligibleSubjects = {
+  leads: Map<string, string>;
+  contacts: Map<string, string>;
+  dealContacts: Map<string, string>;
+};
+
+const addresses = (people: Map<string, NamedSubject>) =>
+  new Map([...people].map(([id, person]) => [id, person.email]));
 import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
 
 const logger = pino({
@@ -179,32 +197,38 @@ async function upsertLeadInsight(
   prisma: any,
   lead: InsightJobData['hotLeads'][number],
   llm: GeneratedInsight | undefined,
-  tenantId: string
+  tenantId: string,
+  email: string
 ): Promise<boolean> {
   try {
     const score = lead.score;
-    await prisma.leadAIInsight.upsert({
-      where: { leadId_tenantId: { leadId: lead.id, tenantId } },
-      create: {
-        leadId: lead.id,
-        tenantId,
-        engagementScore: Math.min(100, score),
-        conversionProbability: Math.min(100, Math.round(score * 0.8)),
-        estimatedValue: 0,
-        churnRisk: leadChurnRisk(score),
-        nextBestAction: llm?.suggestedActions[0] ?? 'Send personalized follow-up',
-        sentiment: scoreSentiment(score),
-        sentimentTrend: lead.status?.toUpperCase() === 'QUALIFIED' ? 'improving' : 'stable',
-        recommendations: llm?.suggestedActions ?? [
-          'Send personalized follow-up',
-          'Schedule a discovery call',
-        ],
-        lastEngagementDays: 0,
-        icpMatch: leadIcpMatch(score, lead.company),
-      },
-      update: llmUpdateFields(llm),
-    });
-    return true;
+    const outcome = await writeSubjectIfStillEligible(
+      prisma,
+      { kind: 'lead', id: lead.id, tenantId, email },
+      (tx: any) =>
+        tx.leadAIInsight.upsert({
+          where: { leadId_tenantId: { leadId: lead.id, tenantId } },
+          create: {
+            leadId: lead.id,
+            tenantId,
+            engagementScore: Math.min(100, score),
+            conversionProbability: Math.min(100, Math.round(score * 0.8)),
+            estimatedValue: 0,
+            churnRisk: leadChurnRisk(score),
+            nextBestAction: llm?.suggestedActions[0] ?? 'Send personalized follow-up',
+            sentiment: scoreSentiment(score),
+            sentimentTrend: lead.status?.toUpperCase() === 'QUALIFIED' ? 'improving' : 'stable',
+            recommendations: llm?.suggestedActions ?? [
+              'Send personalized follow-up',
+              'Schedule a discovery call',
+            ],
+            lastEngagementDays: 0,
+            icpMatch: leadIcpMatch(score, lead.company),
+          },
+          update: llmUpdateFields(llm),
+        })
+    );
+    return outcome.written;
   } catch {
     // Entity may have been deleted between enqueue and processing
     return false;
@@ -219,37 +243,43 @@ async function upsertContactInsight(
   prisma: any,
   contact: InsightJobData['staleContacts'][number],
   llm: GeneratedInsight | undefined,
-  tenantId: string
+  tenantId: string,
+  email: string
 ): Promise<boolean> {
   try {
     const daysSince = contact.daysSinceContact ?? 90;
     const engScore = Math.max(0, 100 - daysSince * 2);
     const churnRisk = contactChurnRisk(daysSince);
-    await prisma.contactAIInsight.upsert({
-      where: { contactId: contact.id },
-      create: {
-        contactId: contact.id,
-        tenantId,
-        engagementScore: engScore,
-        conversionProbability: contact.hasOpenOpportunities ? Math.max(10, 50 - daysSince) : 10,
-        lifetimeValue: 0,
-        churnRisk,
-        nextBestAction: llm?.suggestedActions[0] ?? 'Schedule a follow-up',
-        sentiment: scoreSentiment(engScore),
-        sentimentTrend: daysSince > 30 ? 'declining' : 'stable',
-        recommendations: llm?.suggestedActions ?? [
-          'Schedule a follow-up',
-          'Review open opportunities',
-        ],
-        lastEngagementDays: daysSince,
-      },
-      update: {
-        lastEngagementDays: daysSince,
-        churnRisk,
-        ...llmUpdateFields(llm),
-      },
-    });
-    return true;
+    const outcome = await writeSubjectIfStillEligible(
+      prisma,
+      { kind: 'contact', id: contact.id, tenantId, email },
+      (tx: any) =>
+        tx.contactAIInsight.upsert({
+          where: { contactId: contact.id },
+          create: {
+            contactId: contact.id,
+            tenantId,
+            engagementScore: engScore,
+            conversionProbability: contact.hasOpenOpportunities ? Math.max(10, 50 - daysSince) : 10,
+            lifetimeValue: 0,
+            churnRisk,
+            nextBestAction: llm?.suggestedActions[0] ?? 'Schedule a follow-up',
+            sentiment: scoreSentiment(engScore),
+            sentimentTrend: daysSince > 30 ? 'declining' : 'stable',
+            recommendations: llm?.suggestedActions ?? [
+              'Schedule a follow-up',
+              'Review open opportunities',
+            ],
+            lastEngagementDays: daysSince,
+          },
+          update: {
+            lastEngagementDays: daysSince,
+            churnRisk,
+            ...llmUpdateFields(llm),
+          },
+        })
+    );
+    return outcome.written;
   } catch {
     // Entity may have been deleted between enqueue and processing
     return false;
@@ -271,28 +301,30 @@ async function populateEntityInsights(
   prisma: any,
   jobData: InsightJobData,
   generatedInsights: GeneratedInsight[],
-  tenantId: string
+  tenantId: string,
+  eligible: EligibleSubjects
 ): Promise<{ leads: number; contacts: number }> {
   const insightMap = new Map<string, GeneratedInsight>();
   for (const insight of generatedInsights) {
     if (insight.entityId) insightMap.set(insight.entityId, insight);
   }
 
-  const leadResults = await Promise.all(
-    jobData.hotLeads.map((lead) =>
-      upsertLeadInsight(prisma, lead, insightMap.get(lead.id), tenantId)
-    )
-  );
-  const contactResults = await Promise.all(
-    jobData.staleContacts.map((contact) =>
-      upsertContactInsight(prisma, contact, insightMap.get(contact.id), tenantId)
-    )
-  );
+  // jobData holds only eligible people (processableJobData), so each has a stored address.
+  // One at a time: each write is a locking transaction holding a pooled connection, and
+  // these lists are not capped like the model input is (plan-reviewer).
+  let leads = 0;
+  for (const lead of jobData.hotLeads) {
+    const email = eligible.leads.get(lead.id) ?? '';
+    if (await upsertLeadInsight(prisma, lead, insightMap.get(lead.id), tenantId, email)) leads++;
+  }
+  let contacts = 0;
+  for (const contact of jobData.staleContacts) {
+    const email = eligible.contacts.get(contact.id) ?? '';
+    const llm = insightMap.get(contact.id);
+    if (await upsertContactInsight(prisma, contact, llm, tenantId, email)) contacts++;
+  }
 
-  return {
-    leads: leadResults.filter(Boolean).length,
-    contacts: contactResults.filter(Boolean).length,
-  };
+  return { leads, contacts };
 }
 
 // ============================================================================
@@ -812,6 +844,7 @@ async function persistEntityActivity(
   }
 }
 
+/** Writes the insight; returns its id, or null when it was a duplicate or its entity is gone. */
 async function persistInsightRecord(
   prisma: any,
   insight: GeneratedInsight,
@@ -820,7 +853,7 @@ async function persistInsightRecord(
   validatedData: InsightJobData,
   now: Date,
   job: Job<InsightJobData>
-): Promise<boolean> {
+): Promise<string | null> {
   const expiresAt = new Date(now.getTime() + getInsightTTL(insight.priority));
 
   const existingInsight = await prisma.aIInsight.findFirst({
@@ -831,7 +864,7 @@ async function persistInsightRecord(
       status: { in: ['NEW', 'VIEWED', 'ACTED_ON'] },
     },
   });
-  if (existingInsight) return false;
+  if (existingInsight) return null;
 
   if (insight.entityId && insight.entityType) {
     const exists = await entityExists(prisma, insight.entityType, insight.entityId, tenantId);
@@ -840,7 +873,7 @@ async function persistInsightRecord(
         { jobId: job.id, entityType: insight.entityType, entityId: insight.entityId },
         'Skipping insight — referenced entity no longer exists'
       );
-      return false;
+      return null;
     }
   }
 
@@ -869,18 +902,123 @@ async function persistInsightRecord(
     },
   });
 
-  // H4: emit AI_AGENT audit entry — non-fatal (warn and continue on failure)
+  return created.id as string;
+}
+
+/**
+ * H4: the AI_AGENT audit entry for a written insight — non-fatal. Called after the locked
+ * write commits: the audit adapter takes its own connection, which a transaction still
+ * holding one could starve on a small pool (codex).
+ */
+async function auditInsightCreated(tenantId: string, insightId: string): Promise<void> {
   await logAIAgentAction({
     tenantId,
     agentName: 'insight-generation-job',
     resourceType: 'AIInsight',
-    resourceId: created.id as string,
+    resourceId: insightId,
     action: 'CREATE',
   }).catch((err: unknown) => {
-    logger.warn({ insightId: created.id, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
+    logger.warn({ insightId, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
   });
+}
 
-  return true;
+/**
+ * PG-203 #1002 (owner ruling): drop erased and restricted people from the job before the
+ * model call, so their data is never sent. Returns the remaining data and each kept
+ * person's stored address for the locked writes afterwards. A deal at risk is a person's
+ * deal when it has a contact (its name can carry theirs), so it follows that contact.
+ */
+async function processableJobData(
+  prisma: any,
+  data: InsightJobData
+): Promise<{ data: InsightJobData; eligible: EligibleSubjects }> {
+  const deals = await currentDeals(prisma, data.tenantId, data.dealsAtRisk);
+  const dealContact = new Map(deals.map((d) => [d.id, d.contactId]));
+  const dealName = new Map(deals.map((d) => [d.id, d.name]));
+  const named = await eligibleNamedSubjects(prisma, data.tenantId, {
+    leadIds: data.hotLeads.map((l) => l.id),
+    contactIds: [
+      ...data.staleContacts.map((c) => c.id),
+      ...[...dealContact.values()].filter((id): id is string => !!id),
+    ],
+  });
+  const people = { leads: addresses(named.leads), contacts: addresses(named.contacts) };
+  const dealContacts = new Map<string, string>();
+  const keptDeals = data.dealsAtRisk
+    .filter((d) => {
+      const contactId = dealContact.get(d.id);
+      if (!contactId) return dealContact.has(d.id);
+      if (!people.contacts.has(contactId)) return false;
+      dealContacts.set(d.id, contactId);
+      return true;
+    })
+    // The model gets the deal's current name, never the queued one (codex).
+    .map((d) => ({ ...d, name: dealName.get(d.id) ?? d.name }));
+  return {
+    data: {
+      ...data,
+      dealsAtRisk: keptDeals,
+      // Each person under the name the record has now, never the queued one (codex).
+      hotLeads: data.hotLeads.flatMap((l) => {
+        const now = named.leads.get(l.id);
+        return now ? [{ ...l, name: now.name, company: now.company }] : [];
+      }),
+      staleContacts: data.staleContacts.flatMap((c) => {
+        const now = named.contacts.get(c.id);
+        return now ? [{ ...c, name: now.name }] : [];
+      }),
+    },
+    eligible: { ...people, dealContacts },
+  };
+}
+
+/** The person an insight is about: a lead, a contact, or a kept deal's contact. */
+function insightSubject(
+  insight: GeneratedInsight,
+  eligible: EligibleSubjects
+): { kind: 'lead' | 'contact'; id: string } | null {
+  const { entityType: kind, entityId } = insight;
+  if (!entityId) return null;
+  if (kind === 'lead' || kind === 'contact') return { kind, id: entityId };
+  const contactId =
+    kind === 'opportunity' || kind === 'deal' ? eligible.dealContacts.get(entityId) : undefined;
+  return contactId ? { kind: 'contact', id: contactId } : null;
+}
+
+/**
+ * Persist one generated insight. One about a lead or contact is written only for a person
+ * kept by processableJobData, under that person's row and address locks after a re-check,
+ * so an erasure or restriction that landed during the model call wins (#1002).
+ */
+async function persistInsightForSubject(
+  prisma: any,
+  insight: GeneratedInsight,
+  tenantId: string,
+  eligible: EligibleSubjects,
+  persist: (client: any) => Promise<boolean>
+): Promise<boolean> {
+  const subject = insightSubject(insight, eligible);
+  if (!subject) {
+    // About no one person, but built from everyone the model saw: written only while all of
+    // them are still clear, under their address locks (codex).
+    const everyone = [...eligible.leads.values(), ...eligible.contacts.values()];
+    const outcome = await writeIfAddressesStillClear(prisma, { tenantId, emails: everyone }, (tx) =>
+      persist(tx)
+    );
+    return outcome.written && outcome.value;
+  }
+  // About a person the job did not keep (dropped before the model call): never written.
+  const email = (subject.kind === 'lead' ? eligible.leads : eligible.contacts).get(subject.id);
+  if (email === undefined) return false;
+  const outcome = await writeSubjectIfStillEligible(prisma, { ...subject, tenantId, email }, (tx) =>
+    persist(tx)
+  );
+  return outcome.written && outcome.value;
+}
+
+/** Only high and critical insights notify, log an activity or (critical) create a task. */
+function isHighPriority(insight: GeneratedInsight): boolean {
+  return insight.priority === 'critical' || insight.priority === 'high';
 }
 
 async function persistHighPriorityInsightSideEffects(
@@ -891,7 +1029,7 @@ async function persistHighPriorityInsightSideEffects(
   now: Date,
   _job: Job<InsightJobData>
 ): Promise<void> {
-  if (insight.priority !== 'critical' && insight.priority !== 'high') return;
+  if (!isHighPriority(insight)) return;
 
   try {
     await persistInsightNotification(prisma, insight, tenantId, userId);
@@ -956,16 +1094,21 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       }
 
       // Validate input (tenantId now confirmed non-sentinel)
-      const validatedData = InsightJobDataSchema.parse(job.data);
+      const parsedData = InsightJobDataSchema.parse(job.data);
 
       // Feature-flag gate — checked after Zod validation, before LLM work
-      if (!isAiFeatureEnabled('ai.insights.enabled', validatedData.tenantId)) {
+      if (!isAiFeatureEnabled('ai.insights.enabled', parsedData.tenantId)) {
         logger.info(
-          { jobId: job.id, tenantId: validatedData.tenantId },
+          { jobId: job.id, tenantId: parsedData.tenantId },
           'AI insights job skipped — feature flag disabled'
         );
         return { skipped: true, reason: 'feature-flag-disabled' } as unknown as InsightJobResult;
       }
+
+      // Dynamic import to avoid circular deps — Prisma client lives in @intelliflow/db
+      const { prisma } = await import('@intelliflow/db');
+      // PG-203 #1002: erased and restricted people never reach the model or the tables.
+      const { data: validatedData, eligible } = await processableJobData(prisma, parsedData);
 
       logger.info(
         {
@@ -1075,8 +1218,6 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       await job.updateProgress(60);
 
       // Persist insights to AIInsight table
-      // Dynamic import to avoid circular deps — Prisma client lives in @intelliflow/db
-      const { prisma } = await import('@intelliflow/db');
 
       // Extend lock again before the DB write loop (many insights = many round-trips)
       await job.extendLock(job.token!, 300_000);
@@ -1086,24 +1227,54 @@ export async function processInsightJob(job: Job<InsightJobData>): Promise<Insig
       let insightsCreated = 0;
 
       for (const insight of insights) {
-        const created = await persistInsightRecord(
+        const record = { id: null as string | null };
+        const created = await persistInsightForSubject(
           prisma,
           insight,
           tenantId,
-          userId,
-          validatedData,
-          now,
-          job
+          eligible,
+          async (db) => {
+            record.id = await persistInsightRecord(
+              db,
+              insight,
+              tenantId,
+              userId,
+              validatedData,
+              now,
+              job
+            );
+            return record.id !== null;
+          }
         );
-        if (!created) continue;
+        if (!created || record.id === null) continue;
+        await auditInsightCreated(tenantId, record.id);
         insightsCreated++;
-        await persistHighPriorityInsightSideEffects(prisma, insight, tenantId, userId, now, job);
+        // The activity, notification and task repeat the insight text, so they take the
+        // person's locks and re-check too: an erasure that committed after the record write
+        // leaves them unwritten (#1002, codex). Their own transaction keeps them non-blocking:
+        // a failed side effect never rolls back the insight above.
+        if (!isHighPriority(insight)) continue;
+        await persistInsightForSubject(prisma, insight, tenantId, eligible, async (db) => {
+          await persistHighPriorityInsightSideEffects(db, insight, tenantId, userId, now, job);
+          return true;
+        }).catch((err: unknown) => {
+          logger.warn(
+            { error: err instanceof Error ? err.message : String(err) },
+            'Insight side effects not written — non-blocking'
+          );
+        });
       }
 
       await job.updateProgress(80);
 
       // Populate entity-level insight tables for lead/contact 360 pages
-      const entityStats = await populateEntityInsights(prisma, validatedData, insights, tenantId);
+      const entityStats = await populateEntityInsights(
+        prisma,
+        validatedData,
+        insights,
+        tenantId,
+        eligible
+      );
 
       await job.updateProgress(100);
 

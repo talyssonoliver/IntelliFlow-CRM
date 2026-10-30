@@ -46,14 +46,14 @@ are removed after start and replaced by one that stops all three, then exits. A
 worker that fails to start aborts the process (exit 1) unless
 `COMBINED_ALLOW_PARTIAL=true`. `COMBINED_WORKERS` selects a subset.
 `COMBINED_BACKGROUND_JOBS=on` also runs the api's timer jobs (approval sweep,
-email bounce scan) from `apps/api/src/background-jobs.ts`; pair it with
-`API_BACKGROUND_JOBS=off` on the api service so an idle api makes no outbound
-traffic and Railway can sleep it (running them in both is safe: advisory lock /
-mailbox lease). The PG-208 task-automation tick is NOT one of these jobs: it
-stays in the api (its intake is the api's in-process event bus), so production
-sets `TASK_AUTOMATION_INTERVAL_MS=0` until it moves to the outbox (debt-ledger
-PG-208-AUTOMATION-OFF-IN-PROD-001). Image: `combined-worker/Dockerfile`,
-published as `intelliflow-crm-combined-worker`.
+email bounce scan, DSAR deadline alerts) from `apps/api/src/background-jobs.ts`;
+pair it with `API_BACKGROUND_JOBS=off` on the api service so an idle api makes
+no outbound traffic and Railway can sleep it (running them in both is safe:
+advisory locks / mailbox lease / SKIP LOCKED). The PG-208 task-automation tick
+is NOT one of these jobs: it stays in the api (its intake is the api's
+in-process event bus), so production sets `TASK_AUTOMATION_INTERVAL_MS=0` until
+it moves to the outbox (debt-ledger PG-208-AUTOMATION-OFF-IN-PROD-001). Image:
+`combined-worker/Dockerfile`, published as `intelliflow-crm-combined-worker`.
 
 ## Pitfalls
 

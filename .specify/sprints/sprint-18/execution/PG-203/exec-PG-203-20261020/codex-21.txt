@@ -1,0 +1,58 @@
+[codex-review] base ref : origin/main
+[codex-review] changed  : 100 files total
+[codex-review] in scope : 70 files
+[codex-review] Preparing diff + review prompt ...
+[codex-review] Running Codex review (headless, OAuth) ...
+[codex-review] WARN: Codex produced no parseable findings (exit 1) — likely the OpenAI usage/tier cap or a transient error. Raw: artifacts/codex-review/codex-raw.txt
+OpenAI Codex v0.163.0
+--------
+workdir: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203
+model: gpt-6.1-sol
+provider: openai
+approval: never
+sandbox: danger-full-access
+reasoning effort: low
+reasoning summaries: none
+session id: 01a15db8-69b5-73a1-af67-276911030402
+--------
+user
+You are an independent code auditor. Your task is to find REAL bugs in the diff below.
+
+Scope: only the following files changed in this PR (diff vs origin/main):
+  - apps/api/src/modules/calendar/__tests__/booking-abuse.test.ts
+  - apps/api/src/modules/calendar/__tests__/booking-email.test.ts
+  - apps/api/src/modules/calendar/__tests__/event-types.router.test.ts
+  - apps/api/src/modules/calendar/__tests__/public-booking.router.test.ts
+  - apps/api/src/modules/calendar/booking-abuse.ts
+  - apps/api/src/modules/calendar/booking-email.ts
+  - apps/api/src/modules/calendar/calendar.router.ts
+  - apps/api/src/modules/calendar/event-types.router.ts
+  - apps/api/src/modules/calendar/public-booking.router.ts
+  -
+[codex-review] Falling back to Claude review (claude -p, local) ...
+[codex-review] reviewer : claude
+[codex-review] WARN: waiver b9825456614f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 99e32e46f9df... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 4c4a5809edce... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 5d4c7e8c847f... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 110835796475... expired 2026-09-27 — treating as not waived
+[codex-review] WARN: waiver 039ddb1c373c... expired 2026-09-28 — treating as not waived
+[codex-review] WARN: waiver 05c405e0642c... expired 2026-09-28 — treating as not waived
+Semantic Review (claude) — 2026-10-21T09:11:04.766Z
+Base ref  : origin/main
+Files in scope : 70
+Total findings : 1
+  Waived       : 0
+  Unwaived     : 1
+
+UNWAIVED FINDINGS (BLOCKING):
+  [MEDIUM] apps/api/src/modules/legal/appointments.router.ts:497 — incomplete-concurrency-guard
+    Issue    : Staff-created appointments never take the per-tenant `booking:<tenantId>` advisory lock that public bookings rely on, so a public booking and an in-app appointment can both take the host's same slot, or both get past the firm's daily cap.
+    Evidence : public-booking.router.ts serialises bookings with `lockTenant(tx, tenantId, 'booking')`, then re-reads host busy time and the tenant-wide daily count inside that lock. Its header claims 'two bookings of one slot (or the last slot under the daily cap) cannot both win'. event-types.router.ts takes the same lock for config writes. The internal `appointments.create` path (this PR adds `assertEventTypeInTenant` at line 497 and `linkEventType` afterwards) runs `assertAppointmentWithinAvailability` and conflict detection through ScheduleAppointmentUseCase. It takes no lock at all (grep finds no `pg_advisory` or `booking:` in appointments.router.ts). Here is the race: a staff member creates an appointment for the host at 10:00 while a visitor books 10:00. The public transaction reads busy time before the staff row commits, and the staff conflict check reads before the public row commits. Both commit. The daily-cap count races the same way. The unit tests only check lock ordering among public bookings and event-type writes, so they can't catch this.
+    Fix      : Take the same lock in the internal create path before its availability, daily-cap and conflict checks. That means `SELECT pg_advisory_xact_lock(hashtextextended('booking:' || tenantId, 0))` inside the transaction that writes the appointment, so ScheduleAppointmentUseCase needs to run on a caller-supplied transaction. Or narrow the router comment and ADR-083 to say the guarantee only holds between public bookings.
+    Fingerprint: 5a87a4758e290d1a1f51eb46ab0ffe9b7e02ddf3351f2dca1861e9a1ddc7e9a8
+
+Verdict: FAIL
+[codex-review] Gate FAIL — 1 unwaived finding(s).
+  To suppress a false-positive, add its fingerprint to tools/audit/codex-review-waivers.yaml
+  with a non-empty reason, author, and date.

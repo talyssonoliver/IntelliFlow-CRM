@@ -7,9 +7,9 @@
 | Metric               | Count |
 | -------------------- | ----- |
 | **Total Routers**    | 62    |
-| **Total Procedures** | 386   |
-| **Queries**          | 192   |
-| **Mutations**        | 189   |
+| **Total Procedures** | 401   |
+| **Queries**          | 196   |
+| **Mutations**        | 200   |
 | **Subscriptions**    | 5     |
 
 ---
@@ -693,12 +693,27 @@ compatibility.
 
 ### 13. Privacy & Compliance
 
-#### `privacy` Router (2 procedures)
+#### `privacy` Router (17 procedures)
 
-| Procedure       | Type | Description                  |
-| --------------- | ---- | ---------------------------- |
-| `submitDSAR`    | M    | Submit a GDPR rights request |
-| `getDSARStatus` | Q    | Check DSAR status            |
+| Procedure               | Type | Description                                        |
+| ----------------------- | ---- | -------------------------------------------------- |
+| `getFirm`               | Q    | Public firm lookup by handle for the request form  |
+| `submit`                | M    | Submit a data subject request (email-verified)     |
+| `verify`                | M    | Verify a request by emailed token                  |
+| `downloadExport`        | M    | Download the access export (token-gated)           |
+| `restrictionFor`        | Q    | Processing-restriction banner status for a record  |
+| `admin.list`            | Q    | List data requests (optional status filter)        |
+| `admin.restrictions`    | Q    | List active processing restrictions                |
+| `admin.logRequest`      | M    | Log a request received outside the form            |
+| `admin.extend`          | M    | Extend the response deadline                       |
+| `admin.previewErasure`  | Q    | Preview what an erasure would remove               |
+| `admin.complete`        | M    | Complete a request (runs erasure where applicable) |
+| `admin.completeAccess`  | M    | Complete an access or portability request          |
+| `admin.reject`          | M    | Reject a request with a reason                     |
+| `admin.cancelErasure`   | M    | Cancel a pending erasure                           |
+| `admin.liftRestriction` | M    | Lift a processing restriction                      |
+| `admin.revokeExport`    | M    | Revoke a generated export link                     |
+| `admin.exportData`      | M    | Generate the data export for a request             |
 
 ---
 
@@ -797,7 +812,7 @@ compatibility.
 | **Org/Mgmt**      | 3       | 11         | User, Team, Module Access                               |
 | **Workflows**     | 4       | 18         | Workflow Engine, Custom Nodes, Queues                   |
 | **Calendar**      | 2       | 7          | Calendar Sync and Webhooks                              |
-| **Total**         | **62**  | **~386**   |                                                         |
+| **Total**         | **62**  | **~401**   |                                                         |
 
 ---
 

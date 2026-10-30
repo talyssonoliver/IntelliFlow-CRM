@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createBackgroundJobsWorker, type ApiBackgroundJobsModule } from '../background-jobs';
 
-function makeModule(started = { approvalSweep: true, bounceScan: true }) {
+function makeModule(started = { approvalSweep: true, bounceScan: true, dsarSla: true }) {
   const mod: ApiBackgroundJobsModule = {
     startBackgroundJobs: vi.fn(() => started),
     stopBackgroundJobs: vi.fn(async () => undefined),
@@ -28,19 +28,23 @@ describe('createBackgroundJobsWorker', () => {
 
     expect(mod.startBackgroundJobs).toHaveBeenCalledTimes(1);
     expect(worker.getStatus()).toEqual({ state: 'running' });
-    expect(info).toHaveBeenCalledWith('[background-jobs] approval-sweep=on email-bounce-scan=on');
+    expect(info).toHaveBeenCalledWith(
+      '[background-jobs] approval-sweep=on email-bounce-scan=on dsar-sla=on'
+    );
   });
 
   it('logs a job its scheduler declined to start (interval 0)', async () => {
     const info = vi.fn();
     const worker = createBackgroundJobsWorker(
-      async () => makeModule({ approvalSweep: false, bounceScan: true }),
+      async () => makeModule({ approvalSweep: false, bounceScan: true, dsarSla: false }),
       { info }
     );
 
     await worker.start();
 
-    expect(info).toHaveBeenCalledWith('[background-jobs] approval-sweep=off email-bounce-scan=on');
+    expect(info).toHaveBeenCalledWith(
+      '[background-jobs] approval-sweep=off email-bounce-scan=on dsar-sla=off'
+    );
   });
 
   it('stop stops the jobs and reports stopped', async () => {

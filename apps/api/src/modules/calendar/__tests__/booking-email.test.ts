@@ -42,6 +42,14 @@ describe('formatBookingTime', () => {
 });
 
 describe('buildBookerConfirmation', () => {
+  it("links the firm's data request page when given, escaped (PG-203 DSAR)", () => {
+    const url = 'https://app.example.invalid/dsar/smith-law';
+    const mail = buildBookerConfirmation(details({ dataRequestUrl: url }));
+    expect(mail.textBody).toContain(`about your personal data: ${url}`);
+    expect(mail.htmlBody).toContain(`<a href="${url}">`);
+    expect(buildBookerConfirmation(details()).textBody).not.toContain('personal data');
+  });
+
   it('goes to the booker with the host as reply-to and a fixed subject', () => {
     const mail = buildBookerConfirmation(details());
     expect(mail.to).toEqual(['ada@example.invalid']);

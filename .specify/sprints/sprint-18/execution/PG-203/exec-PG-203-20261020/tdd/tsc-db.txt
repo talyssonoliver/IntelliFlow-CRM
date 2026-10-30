@@ -1,0 +1,9 @@
+# 2026-10-20T23:44:17Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# pnpm --filter @intelliflow/db typecheck (the package script; bare tsc --noEmit is not the db gate)
+
+> @intelliflow/db@0.1.0 typecheck C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\db
+> node -e "try{require('fs').unlinkSync('generated/prisma/package.json')}catch(e){}" && tsc --noEmit && node scripts/fix-prisma-esm.mjs
+
+[fix-prisma-esm] Created 211 .js shim files in generated/prisma/
+# exit=0
