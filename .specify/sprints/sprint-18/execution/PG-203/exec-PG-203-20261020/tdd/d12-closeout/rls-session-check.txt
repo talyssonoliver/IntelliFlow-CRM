@@ -1,0 +1,6 @@
+integration run started 2026-10-29T01:01:30.228Z source artifacts/coverage-parts/integration/vitest-result.json
+dsar.test.ts passed - enables RLS with USING and WITH CHECK on both tables
+dsar.test.ts passed - hides B's requests and restrictions from a tenant-A session
+event-types.test.ts passed - enables RLS with USING and WITH CHECK on both new tables
+event-types.test.ts passed - hides B's event types and booking attempts from a tenant-A session
+rls-tenant-isolation.test.ts skipped - a tenant-scoped query returns ONLY the active tenant rows

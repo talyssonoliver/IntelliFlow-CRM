@@ -1,0 +1,45 @@
+# 2026-10-20T23:28:22Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# pnpm --filter @intelliflow/validators exec vitest run src/__tests__/event-types.test.ts __tests__/enum-consistency.spec.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/validators
+
+ ❯ |validators| src/__tests__/event-types.test.ts (0 test)
+ ❯ |validators| __tests__/enum-consistency.spec.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |validators| __tests__/enum-consistency.spec.ts [ __tests__/enum-consistency.spec.ts ]
+Error: Cannot find module '../src/event-types' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/validators/__tests__/enum-consistency.spec.ts
+ ❯ __tests__/enum-consistency.spec.ts:35:1
+     33|   EVENT_TYPE_REQUIRED_FIELDS,
+     34| } from '@intelliflow/domain';
+     35| import {
+       | ^
+     36|   EVENT_TYPE_COLOR_TOKENS,
+     37|   eventLocationTypeSchema,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+ FAIL  |validators| src/__tests__/event-types.test.ts [ src/__tests__/event-types.test.ts ]
+Error: Cannot find module '../event-types' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/validators/src/__tests__/event-types.test.ts
+ ❯ src/__tests__/event-types.test.ts:6:1
+      4| import { describe, it, expect } from 'vitest';
+      5| import { TAG_COLOR_TOKENS } from '../contact-settings';
+      6| import {
+       | ^
+      7|   EVENT_TYPE_COLOR_TOKENS,
+      8|   bookingHandleSchema,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  00:28:24
+   Duration  903ms (transform 502ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\validators:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/__tests__/event-types.test.ts __tests__/enum-consistency.spec.ts
+# exit=1

@@ -77,8 +77,27 @@ beforeEach(() => {
   constructorCalls.closed.queue = 0;
 });
 
-function buildPrisma(overrides?: Partial<{ contact: unknown | null }>): any {
-  return {
+function buildPrisma(
+  overrides?: Partial<{
+    contact: unknown | null;
+    restriction: { id: string } | null;
+    /** The email the locked re-read sees (default: the contact's own). */
+    lockedEmail: string | null;
+  }>
+): any {
+  const contactEmail =
+    overrides && 'contact' in overrides
+      ? ((overrides.contact as { email?: string } | null)?.email ?? null)
+      : 'ada@analytical.com';
+  const lockedEmail =
+    overrides && 'lockedEmail' in overrides ? overrides.lockedEmail : contactEmail;
+  const prisma: Record<string, any> = {
+    // PG-203: the locked re-read before the embedding write (SELECT email ... FOR UPDATE).
+    $queryRaw: vi.fn(async () => (lockedEmail ? [{ email: lockedEmail }] : [])),
+    // PG-203: nobody is restricted unless a test says so.
+    processingRestriction: {
+      findFirst: vi.fn(async () => overrides?.restriction ?? null),
+    },
     contact: {
       findFirst: async () =>
         overrides && 'contact' in overrides
@@ -92,6 +111,8 @@ function buildPrisma(overrides?: Partial<{ contact: unknown | null }>): any {
             },
     },
   };
+  prisma.$transaction = vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma));
+  return prisma;
 }
 
 function buildJob(data: unknown): Job<any, any, string> {
@@ -168,6 +189,89 @@ describe('ContactEmbedWorker.process', () => {
     expect(updateEmbed).toHaveBeenCalledWith(expect.anything(), 'c-1', 't-1', [0.1, 0.2, 0.3]);
     expect(result.embedded).toBe(true);
     expect(result.contactId).toBe('c-1');
+  });
+
+  it.each([
+    ['restricted', { restriction: { id: 'r-1' } }],
+    [
+      'erased',
+      {
+        contact: {
+          id: 'c-1',
+          firstName: 'Erased',
+          lastName: 'Erased',
+          email: 'erased-c-1@erased.invalid',
+          company: null,
+        },
+      },
+    ],
+  ])(
+    'never sends a %s person to the embedding model (PG-203, owner Q18)',
+    async (_label, overrides) => {
+      const generate = vi.fn(async () => [0.1]);
+      const updateEmbed = vi.fn(async () => {});
+      const prisma = buildPrisma(overrides);
+      const worker = new ContactEmbedWorker(
+        prisma,
+        { host: 'localhost', port: 6379 },
+        { generateEmbedding: generate },
+        updateEmbed
+      );
+      const result = await worker.process(
+        buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'update' })
+      );
+      expect(result.embedded).toBe(false);
+      expect(generate).not.toHaveBeenCalled();
+      expect(updateEmbed).not.toHaveBeenCalled();
+    }
+  );
+
+  it('discards the embedding when the contact is erased during the embedding call (codex)', async () => {
+    const generate = vi.fn(async () => [0.1, 0.2]);
+    const updateEmbed = vi.fn(async () => {});
+    const prisma = buildPrisma({ lockedEmail: 'erased-c-1@erased.invalid' });
+    const worker = new ContactEmbedWorker(
+      prisma,
+      { host: 'localhost', port: 6379 },
+      { generateEmbedding: generate },
+      updateEmbed
+    );
+    const result = await worker.process(
+      buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'update' })
+    );
+    expect(generate).toHaveBeenCalled();
+    expect(updateEmbed).not.toHaveBeenCalled();
+    expect(result.embedded).toBe(false);
+    expect((prisma.$queryRaw.mock.calls[0][0] as string[]).join('?')).toContain('FOR UPDATE');
+  });
+
+  it('writes through the locked transaction, not the base client', async () => {
+    const updateEmbed = vi.fn(async () => {});
+    const prisma = buildPrisma();
+    const worker = new ContactEmbedWorker(
+      prisma,
+      { host: 'localhost', port: 6379 },
+      { generateEmbedding: vi.fn(async () => [0.1]) },
+      updateEmbed
+    );
+    await worker.process(buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }));
+    expect(prisma.$transaction).toHaveBeenCalledTimes(1);
+    expect(updateEmbed).toHaveBeenCalledWith(prisma, 'c-1', 't-1', [0.1]);
+  });
+
+  it('checks the restriction in the job tenant by normalised email', async () => {
+    const prisma = buildPrisma();
+    const worker = new ContactEmbedWorker(
+      prisma,
+      { host: 'localhost', port: 6379 },
+      { generateEmbedding: vi.fn(async () => [0.1]) },
+      vi.fn(async () => {})
+    );
+    await worker.process(buildJob({ contactId: 'c-1', tenantId: 't-1', reason: 'create' }));
+    expect(prisma.processingRestriction.findFirst).toHaveBeenCalledWith({
+      where: { tenantId: 't-1', subjectEmail: 'ada@analytical.com', liftedAt: null },
+      select: { id: true },
+    });
   });
 
   it('returns embedded=false when contact is missing (no LLM call)', async () => {

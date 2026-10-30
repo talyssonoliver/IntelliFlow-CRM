@@ -1,0 +1,24 @@
+
+> @intelliflow/application@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\application
+> tsup src/index.ts --format cjs,esm --experimental-dts
+
+[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mTSC[39m Build start
+[32mTSC[39m ⚡️ Build success in 3779ms
+[34mDTS[39m Build start
+[34mCLI[39m Target: es2022
+[34mCJS[39m Build start
+[34mESM[39m Build start
+Analysis will use the bundled TypeScript version 5.8.2
+*** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+[36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\application\dist\_tsup-dts-rollup.d.ts[39m
+Analysis will use the bundled TypeScript version 5.8.2
+*** The target project appears to use TypeScript 5.9.3 which is newer than the bundled compiler engine; consider upgrading API Extractor.
+[36mWriting package typings: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\application\dist\_tsup-dts-rollup.d.mts[39m
+[32mDTS[39m ⚡️ Build success in 6610ms
+[32mCJS[39m [1mdist\index.js [22m[32m338.13 KB[39m
+[32mCJS[39m ⚡️ Build success in 6780ms
+[32mESM[39m [1mdist\index.mjs [22m[32m322.54 KB[39m
+[32mESM[39m ⚡️ Build success in 6784ms

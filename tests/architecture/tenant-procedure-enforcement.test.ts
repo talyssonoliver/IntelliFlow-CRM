@@ -34,7 +34,6 @@ const ALLOWLISTED_ROUTERS = new Set([
   'agent.router.ts',
   'conversation.router.ts',
   'calendar-webhook.router.ts',
-  'dsar.router.ts',
   'queues.router.ts',
   // These routers use protectedProcedure legitimately and are tracked
   // for future migration outside IFC-194 scope:

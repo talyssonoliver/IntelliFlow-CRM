@@ -1,0 +1,28 @@
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/packages/domain
+
+ ❯ |domain| src/legal/privacy/__tests__/dsar.test.ts (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |domain| src/legal/privacy/__tests__/dsar.test.ts [ src/legal/privacy/__tests__/dsar.test.ts ]
+Error: Cannot find module '../dsar' imported from C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/packages/domain/src/legal/privacy/__tests__/dsar.test.ts
+ ❯ src/legal/privacy/__tests__/dsar.test.ts:9:1
+      7|  */
+      8| import { describe, it, expect } from 'vitest';
+      9| import {
+       | ^
+     10|   DSAR_LIMITS,
+     11|   DSAR_REQUEST_TYPES,
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  no tests
+   Start at  01:04:26
+   Duration  339ms (transform 45ms, setup 0ms, import 0ms, tests 0ms, environment 0ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\packages\domain:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/legal/privacy

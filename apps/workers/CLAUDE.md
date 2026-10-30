@@ -46,11 +46,11 @@ are removed after start and replaced by one that stops all three, then exits. A
 worker that fails to start aborts the process (exit 1) unless
 `COMBINED_ALLOW_PARTIAL=true`. `COMBINED_WORKERS` selects a subset.
 `COMBINED_BACKGROUND_JOBS=on` also runs the api's timer jobs (approval sweep,
-email bounce scan) from `apps/api/src/background-jobs.ts`; pair it with
-`API_BACKGROUND_JOBS=off` on the api service so an idle api makes no outbound
-traffic and Railway can sleep it (running them in both is safe: advisory lock /
-mailbox lease). Image: `combined-worker/Dockerfile`, published as
-`intelliflow-crm-combined-worker`.
+email bounce scan, DSAR deadline alerts) from `apps/api/src/background-jobs.ts`;
+pair it with `API_BACKGROUND_JOBS=off` on the api service so an idle api makes
+no outbound traffic and Railway can sleep it (running them in both is safe:
+advisory locks / mailbox lease / SKIP LOCKED). Image:
+`combined-worker/Dockerfile`, published as `intelliflow-crm-combined-worker`.
 
 ## Pitfalls
 

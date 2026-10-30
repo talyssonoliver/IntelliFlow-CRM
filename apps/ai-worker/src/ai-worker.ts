@@ -433,7 +433,7 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
     try {
       const { ContactEmbedWorker } = await import('./workers/contact-embed-worker.js');
       const { getEmbeddingChain } = await import('./chains/embedding.chain.js');
-      const { updateContactEmbedding } = await import('@intelliflow/db');
+      const { formatEmbeddingForPgVector, validateEmbedding } = await import('@intelliflow/db');
       const redisConnection = {
         host: requiredProdEnv('REDIS_HOST', process.env.REDIS_HOST, 'localhost'),
         port: Number.parseInt(process.env.REDIS_PORT || '6379', 10),
@@ -448,8 +448,15 @@ export class AIWorker extends BaseWorker<AIJobData, AIJobResult> {
             return result?.vector ?? null;
           },
         },
-        async (_prisma, contactId, _tenantId, embedding) => {
-          await updateContactEmbedding(contactId, embedding);
+        // PG-203: written through the transaction the worker passes (it holds the contact row
+        // lock taken after the data-request re-check), scoped to the tenant.
+        async (db, contactId, tenantId, embedding) => {
+          if (!validateEmbedding(embedding)) {
+            throw new Error('Invalid embedding: unexpected dimensions');
+          }
+          await db.$executeRaw`
+            UPDATE contacts SET embedding = ${formatEmbeddingForPgVector(embedding)}::vector
+            WHERE id = ${contactId} AND "tenantId" = ${tenantId}`;
         }
       );
       await this.contactEmbedWorker.start();

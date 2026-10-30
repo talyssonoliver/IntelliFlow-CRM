@@ -19,6 +19,14 @@ import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
 import type { CircuitBreaker } from '../utils/circuit-breaker';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
+import {
+  dispatchCandidateIds,
+  restrictedEmails,
+  scorableLeads,
+  scoringBlockedBy,
+  writeIfStillEligible,
+  type ScoringBlock,
+} from '../lib/data-request-guard';
 import { getBullMQConnectionOptions } from '@intelliflow/platform/queues/connection';
 
 const logger = pino({
@@ -301,6 +309,69 @@ function getScoringBreaker(): CircuitBreaker {
 // ============================================================================
 
 /**
+ * The DB module, imported once and shared. Concurrent jobs each awaiting their own dynamic
+ * import could otherwise resolve it more than once (vitest did, handing one job the real
+ * client instead of the mock).
+ */
+let dbModule: Promise<typeof import('@intelliflow/db')> | undefined;
+function loadDb(): Promise<typeof import('@intelliflow/db')> {
+  dbModule ??= import('@intelliflow/db');
+  return dbModule;
+}
+
+/** The lead columns the dispatcher reads to queue a per-lead job. */
+interface DispatchLead {
+  id: string;
+  email: string;
+  firstName: string | null;
+  lastName: string | null;
+  company: string | null;
+  title: string | null;
+  phone: string | null;
+  source: string | null;
+}
+
+const DISPATCH_SELECT = {
+  id: true,
+  email: true,
+  firstName: true,
+  lastName: true,
+  company: true,
+  title: true,
+  phone: true,
+  source: true,
+} as const;
+/** Leads queued per tenant per run. */
+export const DISPATCH_BATCH = 100;
+
+/**
+ * Up to DISPATCH_BATCH scorable leads of one tenant. PG-203 (owner Q18): restricted and
+ * erased people are excluded IN the query, on the normalised address and before the limit
+ * (dispatchCandidateIds), so they never fill the batch and starve everyone else (codex).
+ */
+async function nextDispatchBatch(
+  prisma: any,
+  tenantId: string,
+  staleThreshold: Date
+): Promise<DispatchLead[]> {
+  const restricted = await restrictedEmails(prisma, tenantId);
+  const ids = await dispatchCandidateIds(prisma, {
+    tenantId,
+    restricted,
+    staleBefore: staleThreshold,
+    limit: DISPATCH_BATCH,
+  });
+  if (ids.length === 0) return [];
+  const rows: DispatchLead[] = await prisma.lead.findMany({
+    where: { tenantId, id: { in: ids } },
+    select: DISPATCH_SELECT,
+    orderBy: { id: 'asc' },
+  });
+  // Belt and braces: the same rule in code.
+  return scorableLeads(prisma, tenantId, rows, restricted);
+}
+
+/**
  * Handle the scheduled cron sentinel — enumerate unscored/stale leads and enqueue per-lead jobs.
  */
 async function handleScheduledDispatch(
@@ -315,7 +386,7 @@ async function handleScheduledDispatch(
   let enqueued = 0;
 
   try {
-    const { prisma } = await import('@intelliflow/db');
+    const { prisma } = await loadDb();
     const { Queue } = await import('bullmq');
 
     const staleThreshold = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -324,6 +395,8 @@ async function handleScheduledDispatch(
     const tenantsWithUnscoredLeads = await (prisma as any).lead.groupBy({
       by: ['tenantId'],
       where: {
+        // PG-203: an erased lead (erased-<id>@erased.invalid) is never scored again.
+        NOT: { email: { endsWith: '@erased.invalid' } },
         OR: [
           { aiInsights: { none: {} } },
           { aiInsights: { some: { updatedAt: { lt: staleThreshold } } } },
@@ -357,29 +430,8 @@ async function handleScheduledDispatch(
     // Step 2: for each tenant, run a scoped query and enqueue per-lead jobs
     for (const tenantRow of tenantsWithUnscoredLeads) {
       const tenantId: string = tenantRow.tenantId;
-      const tenantLeads = await (prisma as any).lead.findMany({
-        where: {
-          tenantId,
-          OR: [
-            { aiInsights: { none: {} } },
-            { aiInsights: { some: { updatedAt: { lt: staleThreshold } } } },
-          ],
-        },
-        select: {
-          id: true,
-          email: true,
-          firstName: true,
-          lastName: true,
-          company: true,
-          title: true,
-          phone: true,
-          source: true,
-        },
-        take: 100,
-      });
-
       let tenantEnqueued = 0;
-      for (const l of tenantLeads) {
+      for (const l of await nextDispatchBatch(prisma as any, tenantId, staleThreshold)) {
         await queue.add(
           'score-lead',
           {
@@ -441,10 +493,11 @@ async function handleScheduledDispatch(
 async function persistScoringResult(
   leadId: string,
   tenantId: string,
+  email: string,
   result: ScoringResult,
   tier: LeadTier,
   recommendations: string[]
-): Promise<void> {
+): Promise<ScoringBlock | 'UNVERIFIED' | null> {
   // Defensive guard: never upsert against a placeholder / unresolved leadId.
   // The scheduled cron sentinel uses NIL_UUID, and no real Lead row exists for
   // it — an upsert here violates lead_ai_insights_leadId_fkey. Skip and log
@@ -454,38 +507,49 @@ async function persistScoringResult(
       { leadId, tenantId },
       'Skipping LeadAIInsight persist — leadId is unresolved/placeholder (no Lead row)'
     );
-    return;
+    return null;
   }
 
   try {
-    const { prisma: rawPrisma } = await import('@intelliflow/db');
+    const { prisma: rawPrisma } = await loadDb();
     const prisma = rawPrisma as unknown as import('@intelliflow/db').PrismaClient;
     const churnRisk = churnRiskFromTier(tier);
 
-    await prisma.leadAIInsight.upsert({
-      where: { leadId_tenantId: { leadId, tenantId } },
-      create: {
-        leadId,
-        tenantId,
-        engagementScore: Math.min(100, result.score),
-        conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-        estimatedValue: 0,
-        churnRisk,
-        nextBestAction: recommendations[0] || 'Review lead',
-        sentiment: sentimentFromScore(result.score),
-        sentimentTrend: 'stable',
-        recommendations,
-        lastEngagementDays: 0,
-        icpMatch: icpMatchFromScore(result.score),
-      },
-      update: {
-        engagementScore: Math.min(100, result.score),
-        conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
-        churnRisk,
-        nextBestAction: recommendations[0] || 'Review lead',
-        recommendations,
-      },
-    });
+    // PG-203: the person may have been erased or restricted while the AI call ran. The write
+    // happens only under the lead row lock, after re-checking (codex: no insight resurrection).
+    const outcome = await writeIfStillEligible(prisma as never, { leadId, tenantId, email }, (tx) =>
+      (tx as unknown as typeof prisma).leadAIInsight.upsert({
+        where: { leadId_tenantId: { leadId, tenantId } },
+        create: {
+          leadId,
+          tenantId,
+          engagementScore: Math.min(100, result.score),
+          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+          estimatedValue: 0,
+          churnRisk,
+          nextBestAction: recommendations[0] || 'Review lead',
+          sentiment: sentimentFromScore(result.score),
+          sentimentTrend: 'stable',
+          recommendations,
+          lastEngagementDays: 0,
+          icpMatch: icpMatchFromScore(result.score),
+        },
+        update: {
+          engagementScore: Math.min(100, result.score),
+          conversionProbability: Math.min(100, Math.round(result.score * 0.8)),
+          churnRisk,
+          nextBestAction: recommendations[0] || 'Review lead',
+          recommendations,
+        },
+      })
+    );
+    if (!outcome.written) {
+      logger.info(
+        { leadId, tenantId, reason: outcome.reason },
+        'Scoring result discarded — data request'
+      );
+      return outcome.reason;
+    }
 
     logger.info({ leadId, score: result.score, tier }, 'Persisted scoring result to LeadAIInsight');
 
@@ -505,7 +569,11 @@ async function persistScoringResult(
       { leadId, errorClass: classifyError(error) },
       'Failed to persist scoring result'
     );
+    // The locked re-check did not complete, so the person's eligibility is unknown: the score
+    // is not returned either (fails closed, codex).
+    return 'UNVERIFIED';
   }
+  return null;
 }
 
 /**
@@ -545,6 +613,22 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
         return { skipped: true, reason: 'feature-flag-disabled' } as unknown as ScoringJobResult;
       }
 
+      // PG-203 (owner Q18, sign-off 8): re-read the lead before any AI call. A job may have
+      // been queued before the person was restricted or erased, or before an email change.
+      const { prisma: guardPrisma } = await loadDb();
+      const blocked = await scoringBlockedBy(guardPrisma as never, {
+        leadId,
+        tenantId: validatedData.tenantId,
+        email: lead.email,
+      });
+      if (blocked) {
+        logger.info(
+          { jobId: job.id, leadId, tenantId: validatedData.tenantId, reason: blocked },
+          'AI scoring job skipped — data request'
+        );
+        return { skipped: true, reason: blocked } as unknown as ScoringJobResult;
+      }
+
       const chainInput: LeadInput = {
         email: lead.email,
         firstName: lead.firstName,
@@ -576,7 +660,19 @@ export async function processScoringJob(job: Job<ScoringJobData>): Promise<Scori
       const recommendations = generateRecommendations(tier, result.score);
 
       const tenantId = validatedData.tenantId;
-      await persistScoringResult(leadId, tenantId, result, tier, recommendations);
+      const discarded = await persistScoringResult(
+        leadId,
+        tenantId,
+        lead.email,
+        result,
+        tier,
+        recommendations
+      );
+      // Erased or restricted while the model ran: the score is not returned either, since
+      // BullMQ keeps completed job results in Redis (codex).
+      if (discarded) {
+        return { skipped: true, reason: discarded } as unknown as ScoringJobResult;
+      }
 
       const processingTimeMs = Date.now() - startTime;
       const jobResult: ScoringJobResult = {

@@ -89,6 +89,8 @@ vi.mock('@intelliflow/db', () => ({
   prisma: { $connect: vi.fn(), $disconnect: vi.fn() },
   PrismaClient: vi.fn(),
   updateContactEmbedding: vi.fn().mockResolvedValue(undefined),
+  validateEmbedding: (embedding: number[]) => embedding.length === 3,
+  formatEmbeddingForPgVector: (embedding: number[]) => `[${embedding.join(',')}]`,
   runWithQueryBudget: vi.fn().mockImplementation(async (_opts: unknown, fn: () => unknown) => fn()),
   resolveBackgroundBudget: vi.fn().mockReturnValue(50),
   getQueryBudgetStore: vi.fn().mockReturnValue(undefined),
@@ -255,11 +257,30 @@ describe('AIWorker.bootContactEmbedWorker — changed-line coverage (D2 PR #264)
       _prisma: unknown,
       _redisConnection: unknown,
       embeddingChainLike: { generateEmbedding: (text: string) => Promise<number[] | null> },
-      _updateFn: unknown
+      updateFn: unknown
     ) {
       (h as any)._cb = embeddingChainLike.generateEmbedding;
+      (h as any)._update = updateFn;
       return { start: h.mockContactEmbedWorkerStart };
     });
+  });
+
+  it('writes the embedding through the client it is given, scoped to the tenant (PG-203)', async () => {
+    const worker = new AIWorker();
+    (worker as any).prisma = { $connect: vi.fn(), $disconnect: vi.fn() };
+    await (worker as any).bootContactEmbedWorker();
+    const update = (h as any)._update as (
+      db: unknown,
+      contactId: string,
+      tenantId: string,
+      embedding: number[]
+    ) => Promise<void>;
+    const tx = { $executeRaw: vi.fn().mockResolvedValue(1) };
+    await update(tx, 'c-1', 't-1', [0.1, 0.2, 0.3]);
+    const [sql, ...values] = tx.$executeRaw.mock.calls[0]!;
+    expect((sql as string[]).join('?')).toContain('"tenantId"');
+    expect(values).toEqual(['[0.1,0.2,0.3]', 'c-1', 't-1']);
+    await expect(update(tx, 'c-1', 't-1', [0.1])).rejects.toThrow('Invalid embedding');
   });
 
   it('imports getEmbeddingChain and starts ContactEmbedWorker (line 316 reached)', async () => {

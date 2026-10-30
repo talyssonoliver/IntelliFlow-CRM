@@ -1,0 +1,27 @@
+# 2026-10-20T23:26:04Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# node C:/Users/talys/ops/test-slots/with-slot.mjs --label PG-203 -- pnpm --filter @intelliflow/domain build
+[test-slot] slot2 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/domain build
+
+> @intelliflow/domain@0.1.0 build C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\domain
+> tsup
+
+[34mCLI[39m Building entry: src/index.ts
+[34mCLI[39m Using tsconfig: tsconfig.json
+[34mCLI[39m tsup v8.5.1
+[34mCLI[39m Using tsup config: C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\domain\tsup.config.ts
+[34mCLI[39m Target: es2022
+[34mCLI[39m Cleaning output folder
+[34mCJS[39m Build start
+[34mESM[39m Build start
+[32mCJS[39m [1mdist\index.js     [22m[32m516.00 KB[39m
+[32mCJS[39m [1mdist\index.js.map [22m[32m1005.91 KB[39m
+[32mCJS[39m ⚡️ Build success in 124ms
+[32mESM[39m [1mdist\index.mjs     [22m[32m480.35 KB[39m
+[32mESM[39m [1mdist\index.mjs.map [22m[32m996.83 KB[39m
+[32mESM[39m ⚡️ Build success in 124ms
+[34mDTS[39m Build start
+[32mDTS[39m ⚡️ Build success in 2257ms
+[32mDTS[39m [1mdist\index.d.ts  [22m[32m387.66 KB[39m
+[32mDTS[39m [1mdist\index.d.mts [22m[32m387.66 KB[39m
+# exit=0

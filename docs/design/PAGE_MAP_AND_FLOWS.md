@@ -35,10 +35,10 @@ structure, and user flows in the IntelliFlow CRM web application.
 
 | Category                                        | Count |
 | ----------------------------------------------- | ----- |
-| Total Pages                                     | 216   |
-| Public Pages                                    | 33    |
+| Total Pages                                     | 220   |
+| Public Pages                                    | 36    |
 | Developer Pages                                 | 14    |
-| Protected Pages                                 | 169   |
+| Protected Pages                                 | 170   |
 | Next.js API handlers (excluded from page total) | 19    |
 | Layouts                                         | 36    |
 
@@ -367,7 +367,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 
 ---
 
-### 18. Settings (23 pages)
+### 18. Settings (24 pages)
 
 | Route                          | Page                  | Description                                                                                                                                                           |
 | ------------------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -393,6 +393,7 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/settings/reports`            | Reports Settings      | Analytics report defaults and export configuration                                                                                                                    |
 | `/settings/tasks`              | Tasks Settings        | Module-level task defaults (sidebar settingsHref)                                                                                                                     |
 | `/settings/tickets`            | Tickets Settings      | Module-level ticket defaults (sidebar settingsHref)                                                                                                                   |
+| `/settings/privacy-requests`   | Privacy Requests      | ADMIN-only handling of data subject requests: complete or erase, extend, refuse, revoke export, staff export, log an in-person request, lift restrictions (PG-203)    |
 
 ---
 
@@ -450,17 +451,24 @@ developer sidebar. These pages are accessible through the Settings sidebar
 | `/settings/help-center/articles/new` (PG-181)       | Help Article Editor — New  | Tiptap editor for drafting new articles (downstream, same sprint)                                                                                                 |
 | `/settings/help-center/articles/[id]/edit` (PG-181) | Help Article Editor — Edit | Tiptap editor for existing articles (downstream, same sprint)                                                                                                     |
 
-### 23. Public Booking (1 page — No Authentication, Not Indexed)
+### 23. Public Booking and DSAR (4 pages — No Authentication, Not Indexed)
 
 Located in `(public)` route group but rendered chrome-free (no public header or
 footer, no sidebar). `noindex`, disallowed in `robots.ts`, absent from the
-sitemap, and not linked from any in-app navigation. It is an external entry
-point: reached from the booking link built by `BookingLinkCard.tsx`
-(`<origin>/book/<handle>/<slug>`) and shared with the firm's clients.
+sitemap, and not linked from any in-app navigation. These are external entry
+points. `/book/[handle]/[slug]` is reached from the booking link built by
+`BookingLinkCard.tsx` (`<origin>/book/<handle>/<slug>`) and shared with the
+firm's clients. `/dsar/[handle]` is reached from the "Your personal data" link
+in the booking page footer and from the booking confirmation email;
+`/dsar/[handle]/verify` and `/dsar/[handle]/export` are reached only from the
+emailed link (token in the URL fragment). The DSAR flow is FLOW-040 (DSAR).
 
-| Route                   | Page           | Description                                                                                                                  |
-| ----------------------- | -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `/book/[handle]/[slug]` | Public Booking | Unauthenticated slot picker and booking form for one event type, served by the `publicBooking` tRPC router (PG-203, ADR-083) |
+| Route                   | Page             | Description                                                                                                                                                     |
+| ----------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/book/[handle]/[slug]` | Public Booking   | Unauthenticated slot picker and booking form for one event type, served by the `publicBooking` tRPC router (PG-203, ADR-083)                                    |
+| `/dsar/[handle]`        | DSAR Request     | Public data subject request form (GDPR rights request) for one firm, found by its booking handle, served by `privacy.getFirm` and `privacy.submit` (PG-203)     |
+| `/dsar/[handle]/verify` | DSAR Verify      | Confirms a data subject request from the emailed link; the token is read once from the URL fragment (`#r=<id>.<token>`) and stripped, `privacy.verify` (PG-203) |
+| `/dsar/[handle]/export` | DSAR Data Export | Download of the person's data export (JSON) from the emailed link, token in the URL fragment, `privacy.downloadExport` (PG-203)                                 |
 
 ---
 

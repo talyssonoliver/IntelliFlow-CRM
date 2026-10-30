@@ -218,8 +218,11 @@ VALUES ('contacts', 'uuid-here', 'CASE-2025-001', 'Litigation discovery', 'legal
 
 **Exception**: Cannot erase data under legal hold or required by law.
 
-**Process**: Immediate anonymization upon verified DSAR (see
-`apps/api/src/workflow/dsar-workflow.ts`).
+**Process**: Anonymisation in one transaction once an admin approves a verified
+erasure request (see
+`packages/adapters/src/repositories/PrismaSubjectDataRepository.ts` and
+[the DSAR process](./dsar-process.md)). Communications are a counted manual
+checklist (IFC-316).
 
 ### Right to Restriction (GDPR Article 18)
 
@@ -387,7 +390,7 @@ years.
 ## Related Documentation
 
 - [GDPR RLS Policies](../../infra/supabase/rls-policies-gdpr.sql)
-- [DSAR Workflow](../api/src/workflow/dsar-workflow.ts)
+- [DSAR Process](./dsar-process.md)
 - [Data Classification Guidelines](./data-classification.md)
 - [Legal Hold Procedure](./legal-hold-procedure.md)
 - [Privacy Policy](../legal/privacy-policy.md)

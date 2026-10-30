@@ -28,6 +28,20 @@ import type { Job } from 'bullmq';
 // and returns its conservative fallback: { qualificationLevel: 'UNQUALIFIED', ... }.
 // processQualification maps 'UNQUALIFIED' → 'NOT_QUALIFIED', preserving the
 // contract tests that assert prediction.value === 'NOT_QUALIFIED'.
+// PG-203 #1002: every person eligible here; the blocked paths have their own tests.
+// The prediction is persisted under the person's locks; a failed write now withholds the
+// result (fails closed), so these job-behaviour suites need the tables in memory (PG-203).
+vi.mock('@intelliflow/db', () => ({
+  prisma: {
+    leadAIInsight: { upsert: vi.fn().mockResolvedValue({}) },
+    contactAIInsight: { upsert: vi.fn().mockResolvedValue({}) },
+    notification: { create: vi.fn().mockResolvedValue({}) },
+  },
+}));
+vi.mock('../lib/data-request-guard', async (importOriginal) =>
+  (await import('../test/mocks/data-request-guard.mock')).passThroughGuard(await importOriginal())
+);
+
 vi.mock('../lib/llm-factory.js', () => ({
   createLLM: vi.fn(() => ({
     invoke: vi.fn().mockResolvedValue({ content: '{}' }),

@@ -1,0 +1,31 @@
+[test-slot] slot3 taken for PG-203@feat/pg-203-dsar: pnpm run lint
+
+> intelliflow-crm@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar
+> turbo run lint
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/combined-worker, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running lint in 26 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/domain:build: cache hit, suppressing logs 4b5f03c19c267885
+@intelliflow/partner-sdk:build: cache hit, suppressing logs d9f68c17b2073e6b
+@intelliflow/observability:build: cache hit, suppressing logs 4fde320cec6b208c
+@intelliflow/webhooks:build: cache hit, suppressing logs 9bf49d2874d871e0
+@intelliflow/db:build: cache hit, suppressing logs e87fe1753d89128c
+@intelliflow/validators:build: cache hit, suppressing logs 6ed258f2ada6b045
+@intelliflow/application:build: cache hit, suppressing logs a361518026e37be1
+@intelliflow/platform:build: cache hit, suppressing logs 0ff3b8383066aca1
+@intelliflow/worker-shared:build: cache hit, suppressing logs 40519d34fb1d53c3
+@intelliflow/adapters:build: cache hit, suppressing logs b4711bb3e0a1931a
+@intelliflow/ai-worker:build: cache hit, suppressing logs c6b725c5877563b0
+@intelliflow/events-worker:build: cache hit, suppressing logs ff7db8961c05094e
+@intelliflow/ingestion-worker:build: cache hit, suppressing logs 8eaa030868ac4409
+@intelliflow/api:build: cache hit, suppressing logs f2c2385d9cb69688
+@intelliflow/api-client:build: cache hit, suppressing logs cd18b461bb96b1fc
+
+ Tasks:    39 successful, 39 total
+Cached:    20 cached, 39 total
+  Time:    48.431s 
+

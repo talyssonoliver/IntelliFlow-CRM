@@ -1,7 +1,7 @@
 # IntelliFlow CRM - Information Architecture
 
 > **Location**: `docs/design/information-architecture.md` **Last Updated**:
-> 2026-05-02 **Total Pages**: 216 | **Total Flows**: 48 | **API Routers**: 76
+> 2026-05-02 **Total Pages**: 220 | **Total Flows**: 48 | **API Routers**: 76
 > (381 procedures) | **Ghost Links**: 0
 
 > **Canonical counts**: "Total Pages" reflects the filesystem total emitted by
@@ -202,9 +202,11 @@ Each module section contains a Markdown table with 8 columns:
 ### 3.1 Public / Marketing (26 routes)
 
 All public routes use `PublicHeader` + `PublicFooter`. No sidebar, no user menu.
-Located in `(public)` route group. Exception: `/book/[handle]/[slug]` (PG-203)
-is chrome-free and `noindex`; its nav layer is `EXT` (external entry: reached
-from the booking link shared with clients, never from in-app navigation).
+Located in `(public)` route group. Exceptions: `/book/[handle]/[slug]` and the
+three `/dsar/[handle]` pages (PG-203) are chrome-free and `noindex`; their nav
+layer is `EXT` (external entry: reached from the booking link shared with
+clients, the booking page footer link "Your personal data", or an emailed
+verification or export link, never from in-app navigation).
 
 | Route                      | File Path                                   | Task ID | Flow ID  | API Router        | Nav Layers | Status      | Ghost? |
 | -------------------------- | ------------------------------------------- | ------- | -------- | ----------------- | ---------- | ----------- | ------ |
@@ -234,6 +236,9 @@ from the booking link shared with clients, never from in-app navigation).
 | `/security`                | `(public)/security/page.tsx`                | —       | —        | N/A               | IP         | Implemented | --     |
 | `/status`                  | `(public)/status/page.tsx`                  | —       | —        | N/A               | IP         | Implemented | --     |
 | `/book/[handle]/[slug]`    | `(public)/book/[handle]/[slug]/page.tsx`    | PG-203  | FLOW-019 | `publicBooking.*` | EXT        | Implemented | --     |
+| `/dsar/[handle]`           | `(public)/dsar/[handle]/page.tsx`           | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
+| `/dsar/[handle]/verify`    | `(public)/dsar/[handle]/verify/page.tsx`    | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
+| `/dsar/[handle]/export`    | `(public)/dsar/[handle]/export/page.tsx`    | PG-203  | FLOW-040 | `privacy.*`       | EXT        | Implemented | --     |
 
 ### 3.2 Developer Portal (14 routes)
 
@@ -393,19 +398,20 @@ FLOW-020.
 | `/billing/receipts`        | `billing/receipts/page.tsx`        | —       | FLOW-010 | `billing.*` | SB         | Hardcoded | --     |
 | `/billing/subscriptions`   | `billing/subscriptions/page.tsx`   | —       | FLOW-010 | `billing.*` | SB         | Hardcoded | --     |
 
-### 3.17 Settings (9 routes)
+### 3.17 Settings (10 routes)
 
-| Route                     | File Path                         | Task ID | Flow ID  | API Router         | Nav Layers | Status      | Ghost? |
-| ------------------------- | --------------------------------- | ------- | -------- | ------------------ | ---------- | ----------- | ------ |
-| `/settings`               | `settings/page.tsx`               | —       | —        | N/A                | UM         | Implemented | --     |
-| `/settings/account`       | `settings/account/page.tsx`       | —       | FLOW-035 | `auth.*`           | SB         | Implemented | --     |
-| `/settings/ai`            | `settings/ai/page.tsx`            | —       | FLOW-045 | `chainVersion.*`   | SB         | Implemented | --     |
-| `/settings/integrations`  | `settings/integrations/page.tsx`  | —       | FLOW-036 | `integrations.*`   | SB         | Partial     | --     |
-| `/settings/notifications` | `settings/notifications/page.tsx` | —       | FLOW-021 | N/A                | SB         | Hardcoded   | --     |
-| `/settings/pipeline`      | `settings/pipeline/page.tsx`      | —       | FLOW-007 | `pipelineConfig.*` | SB         | Implemented | --     |
-| `/settings/routing`       | `settings/routing/page.tsx`       | —       | —        | `routing.*`        | SB         | Hardcoded   | --     |
-| `/settings/security/mfa`  | `settings/security/mfa/page.tsx`  | —       | FLOW-001 | `auth.*`           | SB         | Implemented | --     |
-| `/settings/team`          | `settings/team/page.tsx`          | —       | FLOW-002 | `auth.*`           | SB         | Implemented | --     |
+| Route                        | File Path                            | Task ID | Flow ID  | API Router         | Nav Layers | Status      | Ghost? |
+| ---------------------------- | ------------------------------------ | ------- | -------- | ------------------ | ---------- | ----------- | ------ |
+| `/settings`                  | `settings/page.tsx`                  | —       | —        | N/A                | UM         | Implemented | --     |
+| `/settings/account`          | `settings/account/page.tsx`          | —       | FLOW-035 | `auth.*`           | SB         | Implemented | --     |
+| `/settings/ai`               | `settings/ai/page.tsx`               | —       | FLOW-045 | `chainVersion.*`   | SB         | Implemented | --     |
+| `/settings/integrations`     | `settings/integrations/page.tsx`     | —       | FLOW-036 | `integrations.*`   | SB         | Partial     | --     |
+| `/settings/notifications`    | `settings/notifications/page.tsx`    | —       | FLOW-021 | N/A                | SB         | Hardcoded   | --     |
+| `/settings/pipeline`         | `settings/pipeline/page.tsx`         | —       | FLOW-007 | `pipelineConfig.*` | SB         | Implemented | --     |
+| `/settings/privacy-requests` | `settings/privacy-requests/page.tsx` | PG-203  | FLOW-040 | `privacy.admin.*`  | SB         | Implemented | --     |
+| `/settings/routing`          | `settings/routing/page.tsx`          | —       | —        | `routing.*`        | SB         | Hardcoded   | --     |
+| `/settings/security/mfa`     | `settings/security/mfa/page.tsx`     | —       | FLOW-001 | `auth.*`           | SB         | Implemented | --     |
+| `/settings/team`             | `settings/team/page.tsx`             | —       | FLOW-002 | `auth.*`           | SB         | Implemented | --     |
 
 ### 3.18 Governance (6 routes)
 
@@ -535,10 +541,10 @@ Four distinct layout patterns used across modules.
 
 | Category        | Count |
 | --------------- | ----- |
-| **Total Pages** | 216   |
-| Public Pages    | 33    |
+| **Total Pages** | 220   |
+| Public Pages    | 36    |
 | Developer Pages | 14    |
-| Protected Pages | 169   |
+| Protected Pages | 170   |
 
 ### Flow Coverage
 
