@@ -16,6 +16,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { isPurposeCeilingReached } from '../lib/purpose-ceiling';
 import { EmbeddingChain, getEmbeddingChain } from './embedding.chain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -50,8 +51,8 @@ export type RAGSource = (typeof RAG_SOURCES)[number];
  */
 export const ragContextInputSchema = z.object({
   query: z.string().min(1).max(4000),
-  tenantId: z.uuid(),
-  userId: z.uuid(),
+  tenantId: recordIdSchema,
+  userId: recordIdSchema,
   userRoles: z.array(z.string()).optional().default([]),
   sources: z.array(z.enum(RAG_SOURCES)).optional().default(['documents', 'notes']),
   maxResults: z.number().min(1).max(20).optional().default(5),
