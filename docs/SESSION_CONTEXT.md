@@ -1,17 +1,17 @@
 # Session Context Snapshot
-_Generated: 2026-10-30T11:16:36.781Z • Branch: feat/pg-208-task-automation_
+_Generated: 2026-10-30T20:52:09.890Z • Branch: feat/pg-208-task-automation_
 
 > Auto-generated from `apps/project-tracker/docs/metrics/`. **Do not edit by hand** — regenerate with `npx tsx apps/project-tracker/scripts/generate-context.ts`.
 
 ## Where We Left Off
 
-Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 4s ago; 626 total tasks across the project.
+Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(s) in progress, 0 open blocker(s) across the registry. Registry last updated 2s ago; 626 total tasks across the project.
 
 ## Project Health
 
 - **Progress:** 441/626 tasks completed (70.45%) — 167 backlog, 0 blocked, 18 in progress.
 - **Focus band:** Sprints 15, 18, 19, 20 carry the earliest remaining backlog.
-- **Evidence issues:** 22 attested but CSV not updated; 9 sprint path mismatches.
+- **Evidence issues:** 22 attested but CSV not updated; 8 sprint path mismatches.
 - _Source: `docs/CURRENT_STATE_REPORT.md` (0s ago) — full sprint-by-sprint breakdown._
 
 ## Active Tasks (IN_PROGRESS)
@@ -35,19 +35,19 @@ Active sprint: **Sprint 0** (sprint-0) — 100% complete (32/32 tasks). 18 task(
 
 ## Git Activity
 
-- **Branch:** `feat/pg-208-task-automation` (380 dirty file(s))
-- **Dirty preview:** `.env.example`, `.specify/sprints/sprint-18/attestations/PG-203/attestation.json`, `.specify/sprints/sprint-18/attestations/PG-203/context_ack.json`, `.specify/sprints/sprint-18/attestations/PG-203/task-tracking.json`, `.specify/sprints/sprint-18/context/PG-203/PG-203-hydrated-context.json` …
+- **Branch:** `feat/pg-208-task-automation` (127 dirty file(s))
+- **Dirty preview:** `.github/workflows/grafana-ai-alert-rules.yml`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation-latest.json`, `.specify/sprints/sprint-18/attestations/IFC-117/attestation.json`, `.specify/sprints/sprint-18/attestations/IFC-117/task-tracking.json`, `.specify/sprints/sprint-18/context/IFC-117/IFC-117-agent-selection.json` …
 - **Last 10 commits:**
-  - `c2e62a2f8` chore(tasks): resolve the schedule timezone debt entry now fixed in the pg-208 pr (pg-208) — Talysson Oliveira, 10 hours ago
-  - `42127081a` fix(tasks): make a schedule slot claim lose when the schedule was edited after the due read (pg-208) — Talysson Oliveira, 10 hours ago
-  - `28e3c906e` fix(tasks): write automation settings under a tenant lock so a re-enable is always stamped (pg-208) — Talysson Oliveira, 10 hours ago
-  - `0bde34ef4` chore(tasks): merge main into pg-208 after the cuid record id fix (pg-208) — Talysson Oliveira, 11 hours ago
-  - `7ba4ce7e7` fix(ai-worker): accept cuid record ids in job and queue schemas (#1095) — Talysson Oliveira, 11 hours ago
-  - `d2b76df75` fix(tasks): keep a scheduled run on the timezone it was admitted under (pg-208) — Talysson Oliveira, 12 hours ago
-  - `5d3af99b9` chore(tasks): merge main into pg-208 after ifc-074 and log the paused webhook runs debt (pg-208) — Talysson Oliveira, 12 hours ago
-  - `672f986e5` fix(tasks): retry a task create unlinked only when its record link is refused (pg-208) — Talysson Oliveira, 15 hours ago
-  - `e90716237` feat(observability): ship ifc-074 api logs to loki, per-datasource evidence and mttd live proxy (#1073) — Talysson Oliveira, 16 hours ago
-  - `e6f678441` fix(tasks): stop cross-tenant webhook throttling and align task access in automation (pg-208) — Talysson Oliveira, 17 hours ago
+  - `3b5e16703` chore(tasks): refresh the pg-208 attestation for the db push integration fix (pg-208) — Talysson Oliveira, 6 hours ago
+  - `1d765b915` test(tasks): apply the automation migration on a db push test database (pg-208) — Talysson Oliveira, 6 hours ago
+  - `cf79859ac` chore(tasks): refresh the pg-208 attestation after the pg-203 main merge (pg-208) — Talysson Oliveira, 9 hours ago
+  - `403bd097b` chore(tasks): merge main into pg-208 after the pg-203 data subject requests (pg-208) — Talysson Oliveira, 10 hours ago
+  - `e032ee9f4` feat(pg-203): data subject requests with export, erasure and processing restriction (#1056) — Talysson Oliveira, 10 hours ago
+  - `c2e62a2f8` chore(tasks): resolve the schedule timezone debt entry now fixed in the pg-208 pr (pg-208) — Talysson Oliveira, 20 hours ago
+  - `42127081a` fix(tasks): make a schedule slot claim lose when the schedule was edited after the due read (pg-208) — Talysson Oliveira, 20 hours ago
+  - `28e3c906e` fix(tasks): write automation settings under a tenant lock so a re-enable is always stamped (pg-208) — Talysson Oliveira, 20 hours ago
+  - `0bde34ef4` chore(tasks): merge main into pg-208 after the cuid record id fix (pg-208) — Talysson Oliveira, 20 hours ago
+  - `7ba4ce7e7` fix(ai-worker): accept cuid record ids in job and queue schemas (#1095) — Talysson Oliveira, 21 hours ago
 
 ## Key File References
 

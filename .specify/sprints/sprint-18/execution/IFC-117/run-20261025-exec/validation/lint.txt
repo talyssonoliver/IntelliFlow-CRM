@@ -1,0 +1,30 @@
+[test-slot] slot2 taken for IFC-117-lint@feat/IFC-117-ai-model-monitoring: pnpm run lint
+ WARN  Unsupported engine: wanted: {"node":"24.x"} (current: {"node":"v22.14.0","pnpm":"10.33.0"})
+
+> intelliflow-crm@0.1.0 lint C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-117
+> turbo run lint
+
+• turbo 2.9.16
+
+   • Packages in scope: @intelliflow/adapters, @intelliflow/ai, @intelliflow/ai-worker, @intelliflow/api, @intelliflow/api-client, @intelliflow/application, @intelliflow/db, @intelliflow/domain, @intelliflow/events-worker, @intelliflow/ingestion-worker, @intelliflow/observability, @intelliflow/partner-sdk, @intelliflow/plan-linter, @intelliflow/platform, @intelliflow/project-tracker, @intelliflow/sdk, @intelliflow/search, @intelliflow/test-fixtures, @intelliflow/typescript-config, @intelliflow/ui, @intelliflow/validators, @intelliflow/web, @intelliflow/webhooks, @intelliflow/worker-shared, @intelliflow/workers
+   • Running lint in 25 packages
+   • Remote caching disabled, using shared worktree cache
+
+@intelliflow/webhooks:build: cache hit, suppressing logs d54351ba4bc7bd3d
+@intelliflow/domain:build: cache hit, suppressing logs ab744584fff45264
+@intelliflow/partner-sdk:build: cache hit, suppressing logs 0439269717746b4f
+@intelliflow/observability:build: cache hit, suppressing logs e3d8dd119e885e65
+@intelliflow/db:build: cache hit, suppressing logs 3ada658bd6f6572e
+@intelliflow/validators:build: cache hit, suppressing logs 3389fb6cdb24c176
+@intelliflow/application:build: cache hit, suppressing logs 17814515c780986e
+@intelliflow/platform:build: cache hit, suppressing logs d7e554b013055928
+@intelliflow/adapters:build: cache hit, suppressing logs cc8f1137334dffb0
+@intelliflow/worker-shared:build: cache hit, suppressing logs fc6f9487319c9360
+@intelliflow/ai-worker:build: cache hit, suppressing logs c181e40b265b2b9a
+@intelliflow/api:build: cache hit, suppressing logs d66ade6f9c0bcc8e
+@intelliflow/api-client:build: cache hit, suppressing logs 002f5e81774ebb53
+
+ Tasks:    36 successful, 36 total
+Cached:    30 cached, 36 total
+  Time:    44.702s 
+

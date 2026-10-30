@@ -1,0 +1,54 @@
+{
+  "task_id": "IFC-117",
+  "run_id": "run-20261029-review",
+  "reviewed_at": "2026-10-29",
+  "reviewed_head": "87bbac6cc plus the uncommitted working tree that became f4d9290d3",
+  "mode": "read-only (no test, build or lint run by the reviewer; memory commit above 80%)",
+  "stoa": "Intelligence",
+  "agent": "stoa-intelligence subagent (Agent tool)",
+  "verdict": "WARN",
+  "gates": [
+    "withMonitoring success/error/fail-open path",
+    "metric label closed sets",
+    "cost attribution by served model",
+    "drift statistics (excess PSI, tie-aware KS, effect-size gate)",
+    "drift persistence state machine",
+    "time-of-day reference window",
+    "reservoir sampling and series/timestamp bounds",
+    "hallucination check wiring",
+    "scheduler overlap and error containment",
+    "PII and error text in logs and labels"
+  ],
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "where": "apps/ai-worker/src/monitoring/chain-monitor.ts (spend, chain-failure and hallucination-check logs)",
+      "issue": "raw error.message in log lines (the spend log was new in this PR)",
+      "resolution": "fixed: errorClass via classifyError (f4d9290d3, 5b4bc7f4e)"
+    },
+    {
+      "severity": "LOW",
+      "where": "apps/ai-worker/src/chains/scoring.chain.ts",
+      "issue": "leadEmail in logs and error text in factors[].reasoning (pre-existing on main)",
+      "resolution": "fixed: leadId and errorClass (5b4bc7f4e)"
+    },
+    {
+      "severity": "LOW",
+      "where": "apps/ai-worker/src/monitoring/drift-detector.ts recordSample",
+      "issue": "non-finite value accepted",
+      "resolution": "fixed: dropped and warned once (f4d9290d3)"
+    },
+    {
+      "severity": "LOW",
+      "where": "chain-monitor.ts fail-open",
+      "issue": "monitoring side effects share the try with fn()",
+      "resolution": "not changed: the OTel facade is guarded; recorded here"
+    },
+    {
+      "severity": "LOW",
+      "where": "drift-detector.ts Math.min/max spread; otel-ai-metrics.ts gauge key; chain-monitor.ts confidenceScore default",
+      "issue": "latent edge cases",
+      "resolution": "follow-up #1094"
+    }
+  ]
+}

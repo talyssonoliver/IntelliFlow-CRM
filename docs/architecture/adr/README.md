@@ -273,6 +273,7 @@ Previously missing from the index — added 2026-06-05:
 | [ADR-085](./ADR-085-user-mailbox-sending-and-bounce-reading.md)              | User mail leaves from the user's own mailbox (SMTP / Gmail / Microsoft); bounces read back from it      | Accepted    | 2026-10-21 | PG-207                      |
 | [ADR-086](./ADR-086-observability-log-pipeline-and-evidence.md)              | Observability log pipeline (pino → OTLP → Loki) and production-only evidence via a read-only collector  | ✅ Accepted | 2026-10-22 | IFC-074                     |
 | [ADR-087](./ADR-087-production-slos-anomaly-detection-and-self-healing.md)   | Production SLOs, anomaly detection (Grafana Asserts) and self-healing (Railway restart policy)          | ✅ Accepted | 2026-10-23 | ENV-008-AI                  |
+| [ADR-088](./ADR-088-ai-model-monitoring-otel-export.md)                      | AI model metrics leave ai-worker by OTLP on the NodeSDK meter; scheduled, corrected drift detection     | ✅ Accepted | 2026-10-25 | IFC-117                     |
 
 > **Note on ADR-055:** the number is **claimed** (search-package type-stubs,
 > IFC-155) even though the file is absent from this directory — it is **not**
@@ -298,10 +299,10 @@ Previously missing from the index — added 2026-06-05:
 
 ## Next Steps
 
-Future ADRs use IDs **088+** (ADR-086 is claimed by IFC-074 on its branch and
-ADR-087 is ENV-008-AI, 2026-10-23 — check the actual files in this directory
-before trusting this number, since this index has previously drifted behind
-them).
+Future ADRs use IDs **089+**. ADR-088 was taken by IFC-117 on 2026-10-25, and
+ADR-084, ADR-086 and ADR-087 are claimed by other lanes (PG-208, IFC-074 and
+ENV-008-AI). Check the actual files in this directory before trusting this
+number, since this index has previously drifted behind them.
 
 ## Resources
 

@@ -65,6 +65,7 @@ describe('MonitoringFlushService', () => {
     vi.mocked(driftDetector.getHistory).mockReturnValue([
       {
         detected: true,
+        inEvent: true,
         severity: 'high',
         metric: 'accuracy',
         driftScore: 0.85,
@@ -107,6 +108,149 @@ describe('MonitoringFlushService', () => {
           }),
         ]),
         skipDuplicates: true,
+      })
+    );
+  });
+
+  it('flushNow() persists the event severity with the event flag, and the tick severity in the payload', async () => {
+    const now = new Date();
+    const window = {
+      startTime: now,
+      endTime: now,
+      sampleCount: 60,
+      mean: 0.5,
+      variance: 0.01,
+      min: 0,
+      max: 1,
+      distribution: [],
+    };
+    const tick = {
+      model: 'scoring-free',
+      metric: 'score_distribution',
+      status: 'evaluated',
+      onset: false,
+      driftScore: 0.7,
+      pValue: 0.001,
+      timestamp: now,
+      baselineWindow: window,
+      currentWindow: window,
+      recommendations: [],
+    };
+    vi.mocked(driftDetector.getHistory).mockReturnValue([
+      // A detected tick before onset: no event yet.
+      { ...tick, detected: true, detectedTick: true, inEvent: false, severity: 'high' } as any,
+      // A clear tick while a critical event is still open.
+      {
+        ...tick,
+        detected: false,
+        detectedTick: false,
+        inEvent: true,
+        severity: 'none',
+        eventSeverity: 'critical',
+      } as any,
+    ]);
+
+    await service.flushNow();
+
+    const rows = vi.mocked(mockPrisma.aIMonitoringEvent.createMany).mock.calls[0][0].data as Array<{
+      flagged: boolean;
+      severity: string;
+      payload: { tickSeverity: string };
+    }>;
+    expect(rows.map((r) => [r.flagged, r.severity, r.payload.tickSeverity])).toEqual([
+      [false, 'none', 'high'],
+      [true, 'critical', 'none'],
+    ]);
+  });
+
+  it('flushNow() writes the drift result model, not the metric name, into model (IFC-117)', async () => {
+    const now = new Date();
+    const window = {
+      startTime: now,
+      endTime: now,
+      sampleCount: 60,
+      mean: 0.5,
+      variance: 0.01,
+      min: 0,
+      max: 1,
+      distribution: [],
+    };
+    vi.mocked(driftDetector.getHistory).mockReturnValue([
+      {
+        model: 'scoring-free',
+        metric: 'score_distribution',
+        status: 'evaluated',
+        detected: true,
+        detectedTick: true,
+        onset: true,
+        inEvent: true,
+        severity: 'high',
+        driftScore: 0.7,
+        pValue: 0.001,
+        timestamp: now,
+        baselineWindow: window,
+        currentWindow: window,
+        recommendations: [],
+      } as any,
+    ]);
+
+    await service.flushNow();
+
+    expect(mockPrisma.aIMonitoringEvent.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.arrayContaining([
+          expect.objectContaining({
+            eventType: 'drift',
+            model: 'scoring-free',
+            metric: 'score_distribution',
+          }),
+        ]),
+      })
+    );
+  });
+
+  it('flushNow() flags only ticks inside a confirmed drift event, keeping the raw tick in the payload', async () => {
+    const now = new Date();
+    const window = {
+      startTime: now,
+      endTime: now,
+      sampleCount: 60,
+      mean: 0.5,
+      variance: 0.01,
+      min: 0,
+      max: 1,
+      distribution: [],
+    };
+    vi.mocked(driftDetector.getHistory).mockReturnValue([
+      {
+        model: 'scoring-free',
+        metric: 'score_distribution',
+        status: 'evaluated',
+        detected: true,
+        detectedTick: true,
+        onset: false,
+        inEvent: false,
+        severity: 'high',
+        driftScore: 0.7,
+        pValue: 0.001,
+        timestamp: now,
+        baselineWindow: window,
+        currentWindow: window,
+        recommendations: [],
+      } as any,
+    ]);
+
+    await service.flushNow();
+
+    expect(mockPrisma.aIMonitoringEvent.createMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: [
+          expect.objectContaining({
+            eventType: 'drift',
+            flagged: false,
+            payload: expect.objectContaining({ detectedTick: true, inEvent: false }),
+          }),
+        ],
       })
     );
   });

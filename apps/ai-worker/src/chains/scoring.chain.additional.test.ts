@@ -63,9 +63,13 @@ vi.mock('@langchain/core/prompts', () => ({
 }));
 
 vi.mock('../utils/cost-tracker', () => ({ costTracker: { recordUsage: vi.fn() } }));
-vi.mock('pino', () => ({
-  default: () => ({ info: vi.fn(), error: vi.fn(), warn: vi.fn(), debug: vi.fn() }),
+const pinoLogger = vi.hoisted(() => ({
+  info: vi.fn(),
+  error: vi.fn(),
+  warn: vi.fn(),
+  debug: vi.fn(),
 }));
+vi.mock('pino', () => ({ default: () => pinoLogger }));
 
 let mockAiConfig: any;
 vi.mock('../config/ai.config', () => ({
@@ -139,17 +143,52 @@ describe('LeadScoringChain - additional', () => {
     }
   });
   it('returns error on LLM throw', async () => {
-    mockStructuredInvoke.mockRejectedValue(new Error('rate limit'));
+    mockStructuredInvoke.mockRejectedValue(Object.assign(new Error('rate limit'), { status: 429 }));
     const r = await new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'WEB' });
     expect(r.score).toBe(0);
     expect(r.confidence).toBe(0);
     expect(r.modelVersion).toBe('error:v1');
-    expect(r.factors[0].reasoning).toContain('rate limit');
+    expect(r.factors[0].reasoning).toBe('Scoring failed (rate_limited)');
   });
   it('handles non-Error thrown', async () => {
     mockStructuredInvoke.mockRejectedValue('oops');
     const r = await new LeadScoringChain().scoreLead({ email: 'f@e.com', source: 'W' });
-    expect(r.factors[0].reasoning).toContain('Unknown error');
+    expect(r.factors[0].reasoning).toBe('Scoring failed (other)');
+  });
+  describe('PII and error text (IFC-117 NF-002)', () => {
+    const canary = ['lead', 'canary'].join('-');
+    const email = `${canary}@example.invalid`;
+    const leadId = '00000000-0000-4000-8000-000000000117';
+    const logged = () =>
+      JSON.stringify([
+        ...pinoLogger.info.mock.calls,
+        ...pinoLogger.warn.mock.calls,
+        ...pinoLogger.error.mock.calls,
+      ]);
+    beforeEach(() => {
+      pinoLogger.info.mockClear();
+      pinoLogger.warn.mockClear();
+      pinoLogger.error.mockClear();
+    });
+
+    it('logs the lead id, never the email, on a scored lead', async () => {
+      await new LeadScoringChain().scoreLead({ email, source: 'WEB' }, { leadId });
+      expect(logged()).not.toContain(canary);
+      expect(logged()).toContain(leadId);
+    });
+
+    it('keeps the email and error text out of the failure log and the returned reasoning', async () => {
+      mockStructuredInvoke.mockRejectedValue(new Error(`provider echoed ${email}`));
+      const r = await new LeadScoringChain().scoreLead({ email, source: 'WEB' }, { leadId });
+      expect(logged()).not.toContain(canary);
+      expect(JSON.stringify(r)).not.toContain(canary);
+      expect(pinoLogger.error.mock.calls.find(([, m]) => m === 'Lead scoring failed')?.[0]).toEqual(
+        {
+          leadId,
+          errorClass: 'other',
+        }
+      );
+    });
   });
   it('sets litellm model version', async () => {
     const r = await new LeadScoringChain().scoreLead({ email: 't@a.com', source: 'W' });

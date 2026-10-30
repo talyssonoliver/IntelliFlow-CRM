@@ -12,7 +12,6 @@ import {
   HallucinationChecker,
   defaultHallucinationConfig,
   hallucinationChecker,
-  getHallucinationMetrics,
   type HallucinationCheckerConfig,
   type HallucinationType,
 } from '../hallucination-checker';
@@ -754,39 +753,6 @@ describe('HallucinationChecker', () => {
 
       // With high threshold, might not be marked as hallucinated
       expect(result).toBeDefined();
-    });
-  });
-
-  // ============================================
-  // Prometheus Metrics Tests
-  // ============================================
-
-  describe('getHallucinationMetrics', () => {
-    it('should return valid Prometheus format', () => {
-      const metrics = getHallucinationMetrics();
-
-      expect(metrics).toContain('# HELP');
-      expect(metrics).toContain('# TYPE');
-      expect(metrics).toContain('intelliflow_ai_hallucination_total');
-      expect(metrics).toContain('intelliflow_ai_hallucination_detected');
-      expect(metrics).toContain('intelliflow_ai_hallucination_rate');
-      expect(metrics).toContain('intelliflow_ai_hallucination_kpi_compliant');
-    });
-
-    it('should include by_type metrics', () => {
-      const metrics = getHallucinationMetrics();
-
-      expect(metrics).toContain('intelliflow_ai_hallucination_by_type');
-      expect(metrics).toContain('type="factual_error"');
-      expect(metrics).toContain('type="fabricated_entity"');
-    });
-
-    it('should format numbers correctly', () => {
-      const metrics = getHallucinationMetrics();
-
-      // Should not contain NaN or undefined
-      expect(metrics).not.toContain('NaN');
-      expect(metrics).not.toContain('undefined');
     });
   });
 

@@ -1,5 +1,5 @@
 # Current State Report
-_Generated: 2026-10-30T11:16:36.610Z_
+_Generated: 2026-10-30T20:52:09.764Z_
 
 > Built dynamically from `.specify/sprints/**/attestations/*/attestation.json` for task evidence, the canonical `Sprint_plan.csv` for task ownership and fallback DoD, and existing sprint summary files for sprint titles when available.
 
@@ -16,7 +16,7 @@ _Generated: 2026-10-30T11:16:36.610Z_
 
 - `.specify` sprint summary coverage is complete for the numbered sprint set.
 - Attested but not completed in CSV: ENV-008-AI (In Progress), EP-001-AI (In Progress), IFC-027 (In Progress), IFC-056 (Backlog), IFC-074 (In Progress), IFC-097 (In Progress), PG-014 (In Progress), SALES-001 (Backlog), IFC-116 (In Progress), IFC-117 (In Progress), IFC-142 (In Progress), IFC-151 (In Progress), IFC-234 (Backlog), IFC-304 (In Progress), PG-199 (In Progress), PG-206 (Backlog), PG-207 (In Progress), PG-209 (Backlog), INFRA-TF-004 (In Progress), ENG-OPS-002 (In Progress), ENG-OPS-002.R03 (Backlog), ENG-OPS-002.R16 (Backlog).
-- Sprint mismatches (attestation in different sprint than CSV Target Sprint): EP-001-AI (CSV sprint 18, attested in sprint 0), IFC-056 (CSV sprint 18, attested in sprint 9), IFC-097 (CSV sprint 18, attested in sprint 9), PG-014 (CSV sprint 18, attested in sprint 12), SALES-001 (CSV sprint 18, attested in sprint 1), IFC-116 (CSV sprint 18, attested in sprint 9), IFC-117 (CSV sprint 18, attested in sprint 6), IFC-142 (CSV sprint 18, attested in sprint 8), IFC-151 (CSV sprint 18, attested in sprint 6).
+- Sprint mismatches (attestation in different sprint than CSV Target Sprint): EP-001-AI (CSV sprint 18, attested in sprint 0), IFC-056 (CSV sprint 18, attested in sprint 9), IFC-097 (CSV sprint 18, attested in sprint 9), PG-014 (CSV sprint 18, attested in sprint 12), SALES-001 (CSV sprint 18, attested in sprint 1), IFC-116 (CSV sprint 18, attested in sprint 9), IFC-142 (CSV sprint 18, attested in sprint 8), IFC-151 (CSV sprint 18, attested in sprint 6).
 
 ## Continuous Work
 

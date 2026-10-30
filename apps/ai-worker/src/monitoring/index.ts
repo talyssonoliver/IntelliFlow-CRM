@@ -7,27 +7,14 @@
  */
 
 // Import for internal use
-import {
-  driftDetector as _driftDetector,
-  getDriftMetrics as _getDriftMetrics,
-} from './drift-detector';
-import {
-  hallucinationChecker as _hallucinationChecker,
-  getHallucinationMetrics as _getHallucinationMetrics,
-} from './hallucination-checker';
-import { roiTracker as _roiTracker, getROIMetrics as _getROIMetrics } from './roi-tracker';
-import {
-  latencyMonitor as _latencyMonitor,
-  getLatencyMetrics as _getLatencyMetrics,
-} from './latency-monitor';
+import { driftDetector as _driftDetector } from './drift-detector';
+import { hallucinationChecker as _hallucinationChecker } from './hallucination-checker';
+import { roiTracker as _roiTracker } from './roi-tracker';
+import { latencyMonitor as _latencyMonitor } from './latency-monitor';
 
 // Drift Detection
-export {
-  DriftDetector,
-  driftDetector,
-  defaultDriftConfig,
-  getDriftMetrics,
-} from './drift-detector';
+export { DriftDetector, driftDetector, defaultDriftConfig } from './drift-detector';
+export { DriftDetectionScheduler, SCHEDULED_DRIFT_METRICS } from './drift-scheduler';
 export type {
   DriftWindow,
   DriftResult,
@@ -41,7 +28,6 @@ export {
   HallucinationChecker,
   hallucinationChecker,
   defaultHallucinationConfig,
-  getHallucinationMetrics,
 } from './hallucination-checker';
 export type {
   HallucinationType,
@@ -51,7 +37,7 @@ export type {
 } from './hallucination-checker';
 
 // ROI Tracking
-export { ROITracker, roiTracker, defaultROIConfig, getROIMetrics } from './roi-tracker';
+export { ROITracker, roiTracker, defaultROIConfig } from './roi-tracker';
 export type {
   ValueType,
   AICost,
@@ -66,7 +52,6 @@ export {
   LatencyMonitor,
   latencyMonitor,
   defaultLatencyConfig,
-  getLatencyMetrics,
   withLatencyTracking,
 } from './latency-monitor';
 export type {
@@ -89,6 +74,16 @@ export {
 } from './chain-monitor';
 export type { ChainMonitorConfig, MonitoredResult } from './chain-monitor';
 
+// IFC-117: AI metrics go out through OTel (OTLP), not a Prometheus text endpoint.
+export {
+  registerAiMetrics,
+  recordDriftTick,
+  recordRetrainingTrigger,
+  AI_METRIC_DEFINITIONS,
+  AI_ALERT_THRESHOLDS,
+} from './otel-ai-metrics';
+export type { ChainId, DriftTickResult, HallucinationOutcome } from './otel-ai-types';
+
 export { MonitoringFlushService } from './monitoring-flush.service';
 
 // IFC-214: Redis-backed live snapshot publisher (paired with API-side store).
@@ -101,23 +96,6 @@ export type {
   SnapshotKind as MonitoringSnapshotKind,
   RedisMonitoringPublisherOptions,
 } from './redis-monitoring-publisher';
-
-/**
- * Get all Prometheus metrics from monitoring modules
- */
-export function getAllMetrics(): string {
-  let allMetrics = '';
-
-  allMetrics += _getDriftMetrics();
-  allMetrics += '\n';
-  allMetrics += _getHallucinationMetrics();
-  allMetrics += '\n';
-  allMetrics += _getROIMetrics();
-  allMetrics += '\n';
-  allMetrics += _getLatencyMetrics();
-
-  return allMetrics;
-}
 
 /**
  * Get combined monitoring status

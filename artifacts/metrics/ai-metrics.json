@@ -3,37 +3,43 @@
   "metadata": {
     "task_id": "IFC-117",
     "title": "AI Model Monitoring Metrics",
-    "description": "Performance metrics for AI model monitoring including drift, hallucination, latency, and ROI",
+    "description": "Performance metrics for AI model monitoring including drift, hallucination, latency, and ROI. Since IFC-117 sprint 18 (ADR-088) the values are measured in Grafana Cloud from the OTel instruments ai-worker exports; this file holds targets and configuration only, and every measured field stays null until the production evidence N1-N7 is recorded.",
     "created_at": "2025-12-29T00:00:00Z",
-    "updated_at": "2025-12-29T00:00:00Z",
-    "version": "1.0.0"
+    "updated_at": "2026-10-25T00:00:00Z",
+    "version": "2.0.0"
   },
   "kpis": {
     "drift_detection": {
       "name": "Drift Detection Window",
       "target": "< 1 day",
       "target_hours": 24,
-      "current_hours": 6,
+      "current_hours": null,
       "unit": "hours",
-      "status": "on_target",
-      "description": "Time window for detecting model drift",
-      "measurement_method": "Kolmogorov-Smirnov test + Population Stability Index",
+      "status": "NEEDS_HUMAN",
+      "description": "Time from an output-distribution shift (lead score or confidence) to its detection",
+      "measurement_method": "Every 30 min, the last 6h of samples are compared with the same 6h slice on days -1..-7: two-sample Kolmogorov-Smirnov (tie-aware, p < 0.01) AND (excess PSI >= 0.1 OR KS D >= 0.1) on 10 fixed bins over [0,1]; a detection needs 3 consecutive detected ticks and is counted at onset and again on each severity escalation of the open event. Minimum 50 reference and 25 current samples, else insufficient_data.",
       "configuration": {
         "window_size_hours": 6,
         "sliding_interval_minutes": 30,
-        "p_value_threshold": 0.05,
-        "min_samples_required": 50
-      }
+        "p_value_threshold": 0.01,
+        "min_samples_required": 50,
+        "min_current_samples": 25,
+        "reference_days": 7,
+        "persistence_ticks": 3,
+        "retention_days": 8,
+        "bin_count": 10
+      },
+      "evidence_ref": ".specify/sprints/sprint-18/specifications/IFC-117-spec.md#acceptance-criteria (N1-N7)"
     },
     "hallucination_rate": {
       "name": "Hallucination Rate",
       "target": "< 5%",
       "target_percentage": 5,
-      "current_percentage": 0,
+      "current_percentage": null,
       "unit": "percentage",
-      "status": "on_target",
-      "description": "Percentage of AI outputs containing hallucinations",
-      "measurement_method": "Multi-strategy detection: entity validation, fact checking, logic consistency, claim support, context drift, numerical accuracy",
+      "status": "NEEDS_HUMAN",
+      "description": "Share of lead-scoring outputs the heuristic hallucination checker flags (detected by heuristic checker: a floor, not ground truth)",
+      "measurement_method": "intelliflow_ai_hallucination_detected_total / intelliflow_ai_hallucination_checks_total over the window; reported only with at least 20 checks (alert) or 200 checks (KPI evidence N2).",
       "detection_types": [
         "factual_error",
         "fabricated_entity",
@@ -43,17 +49,18 @@
         "numerical_error",
         "attribution_error",
         "context_drift"
-      ]
+      ],
+      "evidence_ref": ".specify/sprints/sprint-18/specifications/IFC-117-spec.md#acceptance-criteria (N1-N7)"
     },
     "roi_tracking": {
-      "name": "ROI Tracking",
+      "name": "ROI Tracking (estimated)",
       "target": "> 200%",
       "target_percentage": 200,
       "current_percentage": null,
       "unit": "percentage",
-      "status": "tracking",
-      "description": "Return on investment for AI operations",
-      "measurement_method": "Cost vs value tracking per operation type",
+      "status": "NEEDS_HUMAN",
+      "description": "Estimated value of AI operations against their LLM cost",
+      "measurement_method": "intelliflow_ai_value_estimated_usd_total / intelliflow_ai_cost_usd_total. Value is a fixed estimate per scored lead, not booked revenue; n/a when cost is 0.",
       "value_types": [
         "lead_scored",
         "lead_qualified",
@@ -64,7 +71,8 @@
         "task_automated",
         "prediction_made",
         "recommendation_made"
-      ]
+      ],
+      "evidence_ref": ".specify/sprints/sprint-18/specifications/IFC-117-spec.md#acceptance-criteria (N1-N7)"
     },
     "latency_slo": {
       "name": "AI Latency SLO",
@@ -77,16 +85,10 @@
       "current_p95_ms": null,
       "current_p99_ms": null,
       "unit": "milliseconds",
-      "status": "tracking",
+      "status": "NEEDS_HUMAN",
       "description": "Service Level Objective for AI operation latency",
-      "measurement_method": "Histogram percentile calculation with phase breakdown",
-      "phases_tracked": [
-        "queue_wait",
-        "preprocessing",
-        "model_inference",
-        "postprocessing",
-        "total"
-      ]
+      "measurement_method": "histogram_quantile over intelliflow_ai_inference_latency_milliseconds_bucket (whole monitored chain call, buckets 50ms..30s).",
+      "evidence_ref": ".specify/sprints/sprint-18/specifications/IFC-117-spec.md#acceptance-criteria (N1-N7)"
     }
   },
   "monitoring_components": {
@@ -98,14 +100,12 @@
         "Population Stability Index (PSI) calculation",
         "Configurable severity thresholds",
         "Automatic baseline computation",
-        "Per-model and per-metric tracking",
-        "Prometheus metrics export"
+        "Per-model and per-metric tracking"
       ],
       "exports": [
         "DriftDetector",
         "driftDetector",
-        "defaultDriftConfig",
-        "getDriftMetrics"
+        "defaultDriftConfig"
       ]
     },
     "hallucination_checker": {
@@ -118,14 +118,12 @@
         "Logical consistency analysis",
         "Context drift detection",
         "Numerical accuracy verification",
-        "KPI compliance tracking",
-        "Prometheus metrics export"
+        "KPI compliance tracking"
       ],
       "exports": [
         "HallucinationChecker",
         "hallucinationChecker",
-        "defaultHallucinationConfig",
-        "getHallucinationMetrics"
+        "defaultHallucinationConfig"
       ]
     },
     "roi_tracker": {
@@ -137,14 +135,12 @@
         "Token-based cost calculation",
         "ROI trend analysis",
         "Cost and value breakdown reports",
-        "Operation-level ROI calculation",
-        "Prometheus metrics export"
+        "Operation-level ROI calculation"
       ],
       "exports": [
         "ROITracker",
         "roiTracker",
-        "defaultROIConfig",
-        "getROIMetrics"
+        "defaultROIConfig"
       ]
     },
     "latency_monitor": {
@@ -157,242 +153,190 @@
         "Alert generation for violations",
         "Trend analysis over time",
         "Per-model and per-operation breakdown",
-        "Async operation wrapper",
-        "Prometheus metrics export"
+        "Async operation wrapper"
       ],
       "exports": [
         "LatencyMonitor",
         "latencyMonitor",
         "defaultLatencyConfig",
-        "getLatencyMetrics",
         "withLatencyTracking"
+      ]
+    },
+    "otel_ai_metrics": {
+      "file": "apps/ai-worker/src/monitoring/otel-ai-metrics.ts",
+      "class": "OTel AI metrics facade",
+      "features": [
+        "Records inference, cost, estimated value, hallucination and drift through the global OTel meter",
+        "Label allowlist (model normalised to known pricing keys, else other)"
+      ]
+    },
+    "drift_scheduler": {
+      "file": "apps/ai-worker/src/monitoring/drift-scheduler.ts",
+      "class": "DriftDetectionScheduler",
+      "features": [
+        "Runs drift detection every 30 minutes in ai-worker and records each tick"
       ]
     }
   },
   "infrastructure": {
     "grafana_dashboard": {
-      "file": "infra/monitoring/ai-grafana-dashboard.json",
-      "panels": 19,
-      "refresh_rate": "30s",
-      "features": [
-        "Drift detection status",
-        "Hallucination rate tracking",
-        "ROI visualization",
-        "Latency percentiles",
-        "SLO compliance",
-        "Cost and value breakdown",
-        "Model-specific metrics",
-        "Trend analysis charts"
-      ]
+      "file": "infra/monitoring/grafana/cloud/dashboard-ai-models.json",
+      "uid": "ifc117-ai-models",
+      "applied": false,
+      "note": "Committed, not applied: the dashboard job reads only dashboard-production.json (spec N3)."
     },
-    "prometheus_rules": {
-      "file": "infra/monitoring/ai-prometheus-rules.yaml",
-      "rule_groups": [
-        {
-          "name": "intelliflow.ai.drift",
-          "rules": 3,
-          "alerts": [
-            "AIModelDriftDetected",
-            "AIModelDriftHighSeverity",
-            "AIModelDriftScoreCritical"
-          ]
-        },
-        {
-          "name": "intelliflow.ai.hallucination",
-          "rules": 4,
-          "alerts": [
-            "AIHallucinationRateHigh",
-            "AIHallucinationKPIViolation",
-            "AIHallucinationRateCritical",
-            "AIHallucinationByTypeSpike"
-          ]
-        },
-        {
-          "name": "intelliflow.ai.latency",
-          "rules": 6,
-          "alerts": [
-            "AILatencyP95Exceeded",
-            "AILatencyP99Exceeded",
-            "AISLOViolation",
-            "AILatencyByModelHigh",
-            "AISuccessRateLow",
-            "AISuccessRateCritical"
-          ]
-        },
-        {
-          "name": "intelliflow.ai.roi",
-          "rules": 4,
-          "alerts": [
-            "AIROINegative",
-            "AIROIBelowTarget",
-            "AICostSpike",
-            "AICostBudgetWarning"
-          ]
-        },
-        {
-          "name": "intelliflow.ai.operations",
-          "rules": 2,
-          "alerts": [
-            "AIOperationsLow",
-            "AIValueNotRecorded"
-          ]
-        },
-        {
-          "name": "intelliflow.ai.model-health",
-          "rules": 2,
-          "alerts": [
-            "AIModelHealthDegraded",
-            "AIModelHealthCritical"
-          ]
-        }
-      ],
-      "total_alerts": 21
+    "grafana_alert_rules": {
+      "file": "infra/monitoring/grafana/cloud/ai-alert-rules.json",
+      "workflow": ".github/workflows/grafana-ai-alert-rules.yml",
+      "folder": "intelliflow-ai",
+      "rules": 6,
+      "note": "Applied by CI on merge; routing and series verified by the owner (spec N4, N5)."
     }
   },
   "prometheus_metrics": [
     {
-      "name": "intelliflow_ai_drift_detected",
-      "type": "gauge",
-      "description": "Whether drift is detected (1=yes, 0=no)"
+      "name": "intelliflow_ai_inference_latency_milliseconds",
+      "type": "histogram",
+      "labels": [
+        "model",
+        "chain",
+        "outcome"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_inference_count_total",
+      "type": "counter",
+      "labels": [
+        "model",
+        "chain",
+        "outcome",
+        "error_class"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_confidence",
+      "type": "histogram",
+      "labels": [
+        "model",
+        "chain"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_cost_usd_total",
+      "type": "counter",
+      "labels": [
+        "model",
+        "chain"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_value_estimated_usd_total",
+      "type": "counter",
+      "labels": [
+        "chain",
+        "value_type"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_hallucination_checks_total",
+      "type": "counter",
+      "labels": [
+        "model",
+        "chain"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_hallucination_detected_total",
+      "type": "counter",
+      "labels": [
+        "model",
+        "chain"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_hallucination_types_total",
+      "type": "counter",
+      "labels": [
+        "model",
+        "chain",
+        "hallucination_type"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_hallucination_skipped_total",
+      "type": "counter",
+      "labels": [
+        "chain",
+        "reason"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
     },
     {
       "name": "intelliflow_ai_drift_score",
       "type": "gauge",
       "labels": [
+        "model",
+        "metric"
+      ],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
+    },
+    {
+      "name": "intelliflow_ai_drift_detections_total",
+      "type": "counter",
+      "labels": [
+        "model",
         "metric",
         "severity"
       ],
-      "description": "Drift score by model and metric"
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
     },
     {
-      "name": "intelliflow_ai_hallucination_rate",
-      "type": "gauge",
-      "description": "Current hallucination rate (0-1)"
-    },
-    {
-      "name": "intelliflow_ai_hallucination_kpi_compliant",
-      "type": "gauge",
-      "description": "Whether rate is below 5% target"
-    },
-    {
-      "name": "intelliflow_ai_hallucination_by_type",
+      "name": "intelliflow_ai_drift_checks_total",
       "type": "counter",
       "labels": [
-        "type"
+        "status"
       ],
-      "description": "Hallucinations by type"
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
     },
     {
-      "name": "intelliflow_ai_roi_current",
+      "name": "intelliflow_ai_drift_last_check",
       "type": "gauge",
-      "description": "Current ROI percentage"
+      "labels": [],
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
     },
     {
-      "name": "intelliflow_ai_total_cost",
-      "type": "gauge",
-      "description": "Total AI costs in USD"
-    },
-    {
-      "name": "intelliflow_ai_total_value",
-      "type": "gauge",
-      "description": "Total AI value generated in USD"
-    },
-    {
-      "name": "intelliflow_ai_cost_by_model",
-      "type": "gauge",
+      "name": "intelliflow_ai_retraining_triggers_total",
+      "type": "counter",
       "labels": [
-        "model"
+        "urgency"
       ],
-      "description": "AI cost by model in USD"
-    },
-    {
-      "name": "intelliflow_ai_latency_seconds",
-      "type": "histogram",
-      "description": "AI operation latency in seconds"
-    },
-    {
-      "name": "intelliflow_ai_latency_p95_ms",
-      "type": "gauge",
-      "description": "P95 latency in milliseconds"
-    },
-    {
-      "name": "intelliflow_ai_latency_p99_ms",
-      "type": "gauge",
-      "description": "P99 latency in milliseconds"
-    },
-    {
-      "name": "intelliflow_ai_slo_compliant",
-      "type": "gauge",
-      "labels": [
-        "slo"
-      ],
-      "description": "SLO compliance status (1=compliant, 0=not)"
-    },
-    {
-      "name": "intelliflow_ai_success_rate",
-      "type": "gauge",
-      "description": "AI operation success rate (0-1)"
+      "description": "Prometheus name assumed from the OTel instrument until verified (spec N5)"
     }
   ],
   "usage_examples": {
     "drift_detection": [
-      "driftDetector.recordSample({ value: 0.85, timestamp: new Date(), model: 'gpt-4', metric: 'score_distribution' });",
-      "const result = driftDetector.detectDrift('gpt-4', 'score_distribution');",
-      "const metrics = getDriftMetrics();"
+      "driftDetector.recordSample({ value: 0.85, timestamp: new Date(), model: 'scoring-free', metric: 'score_distribution' });",
+      "const result = driftDetector.detectDrift('scoring-free', 'score_distribution');"
     ],
-    "hallucination_checking": [
-      "const result = await hallucinationChecker.checkOutput({ id: 'op-1', model: 'gpt-4', inputContext: 'context', output: 'response', groundTruth: ['facts'] });",
-      "const stats = hallucinationChecker.getStats();",
-      "const metrics = getHallucinationMetrics();"
-    ],
-    "roi_tracking": [
-      "roiTracker.recordTokenUsage({ id: 'op-1', model: 'gpt-4', operationType: 'scoring', inputTokens: 100, outputTokens: 50 });",
-      "roiTracker.recordValueByType({ id: 'val-1', valueType: 'lead_scored', relatedCostIds: ['op-1'] });",
-      "const roi = roiTracker.calculateROI();"
-    ],
-    "latency_monitoring": [
-      "latencyMonitor.startOperation('op-1');",
-      "latencyMonitor.markPhase('op-1', 'model_inference');",
-      "latencyMonitor.completeOperation('op-1', { model: 'gpt-4', operationType: 'scoring', success: true });",
-      "const result = await withLatencyTracking('op-1', 'gpt-4', 'scoring', async () => await aiCall());"
+    "otel_recording": [
+      "recordInference({ model, chain: 'lead_scoring', outcome: 'success', latencyMs });"
     ]
   },
   "lastRefresh": "2026-02-23T20:33:58.488Z",
   "drift": {
-    "lastCheck": "2026-02-23T20:33:58.488Z"
+    "lastCheck": null
   },
   "history": {
-    "drift": [
-      {
-        "date": "2026-02-23",
-        "score": 0,
-        "detected": false
-      },
-      {
-        "date": "2026-02-23",
-        "score": 0,
-        "detected": false
-      }
-    ],
-    "hallucination": [
-      {
-        "date": "2026-02-23",
-        "rate": 0
-      },
-      {
-        "date": "2026-02-23",
-        "rate": 0
-      }
-    ],
-    "costs": [
-      {
-        "date": "2026-02-23",
-        "amount": 0
-      },
-      {
-        "date": "2026-02-23",
-        "amount": 0
-      }
-    ]
+    "drift": [],
+    "hallucination": [],
+    "costs": []
   }
 }

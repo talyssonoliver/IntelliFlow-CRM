@@ -3,9 +3,10 @@ import { BaseCallbackHandler } from '@langchain/core/callbacks/base';
 import type { LLMResult } from '@langchain/core/outputs';
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
-import { aiConfig, type AIProvider } from '../config/ai.config';
+import { MODEL_PRICING, aiConfig, servedPricingKey, type AIProvider } from '../config/ai.config';
 import { chainMonitor, withMonitoring } from '../monitoring/chain-monitor';
 import type { MonitoredResult, MonitoringContext, TokenUsage } from '../monitoring/chain-monitor';
+import { classifyError, recordInference } from '../monitoring/otel-ai-metrics';
 import { leadScoreSchema } from '@intelliflow/validators';
 import { requiresHumanReview } from '@intelliflow/domain';
 import { sanitizeStringField } from '../utils/input-sanitizer';
@@ -45,14 +46,57 @@ export type ScoringResult = z.infer<typeof leadScoreSchema>;
  * compute a real tokenCost (IFC-215). Usage metadata lives in the callback
  * because withStructuredOutput().invoke() returns only the parsed output.
  */
+/** A served name that is itself a MODEL_PRICING key, with or without a `vendor/` prefix. */
+function directPricingKey(served: string | undefined): string | undefined {
+  const name = served?.trim().toLowerCase();
+  if (!name) return undefined;
+  return [name, name.split('/').slice(1).join('/')].find(
+    (candidate) => candidate !== '' && Object.hasOwn(MODEL_PRICING, candidate)
+  );
+}
+
 export class TokenUsageCallbackHandler extends BaseCallbackHandler {
   name = 'TokenUsageCallbackHandler';
   private captured: TokenUsage | null = null;
   private readonly modelName: string;
+  private readonly provider: AIProvider | undefined;
+  private invokedModel: string | undefined;
 
-  constructor(modelName: string) {
+  /**
+   * @param modelName The pricing alias (`scoring-<tier>`) used when the served model is unknown.
+   * @param provider  The provider serving the call; Ollama runs locally and costs nothing.
+   */
+  constructor(modelName: string, provider?: AIProvider) {
     super();
     this.modelName = modelName;
+    this.provider = provider;
+  }
+
+  handleChatModelStart(
+    _llm: unknown,
+    _messages: unknown,
+    _runId: string,
+    _parentRunId?: string,
+    extraParams?: Record<string, unknown>
+  ): void {
+    const params = extraParams?.['invocation_params'] as { model?: unknown } | undefined;
+    if (typeof params?.model === 'string') this.invokedModel = params.model;
+  }
+
+  /**
+   * Price what actually served the call, like usage-metering.ts: a free model costs 0 and a known
+   * served deployment uses its own pricing key. The label stays bounded: a MODEL_PRICING key or
+   * the alias, never the raw served name.
+   */
+  private pricingFor(served: string | undefined): Pick<TokenUsage, 'model' | 'free'> {
+    // Provider model ids are case-insensitive: `:FREE` is still the free variant.
+    const isFreeModel = [served, this.invokedModel].some((name) =>
+      name?.trim().toLowerCase().endsWith(':free')
+    );
+    if (this.provider === 'ollama' || isFreeModel) return { model: this.modelName, free: true };
+    const key = directPricingKey(served) ?? servedPricingKey(served);
+    if (key && Object.hasOwn(MODEL_PRICING, key)) return { model: key, free: false };
+    return { model: this.modelName, free: false };
   }
 
   handleLLMEnd(output: LLMResult): void {
@@ -63,10 +107,14 @@ export class TokenUsageCallbackHandler extends BaseCallbackHandler {
       (output.llmOutput?.tokenUsage as TokenCounts | undefined) ??
       (output.llmOutput?.estimatedTokenUsage as TokenCounts | undefined);
     if (usage) {
+      const generation = output.generations?.[0]?.[0] as
+        | { message?: { response_metadata?: { model_name?: unknown } } }
+        | undefined;
+      const served = generation?.message?.response_metadata?.model_name;
       this.captured = {
         inputTokens: usage.promptTokens ?? 0,
         outputTokens: usage.completionTokens ?? 0,
-        model: this.modelName,
+        ...this.pricingFor(typeof served === 'string' ? served : undefined),
       };
     }
   }
@@ -89,6 +137,8 @@ export class LeadScoringChain {
   private readonly tenantId?: string;
   /** Optional provider override (job-level fallback, #324). */
   private readonly provider?: AIProvider;
+  /** false on the job-level fallback chain so a provider switch is not read as drift (IFC-117). */
+  private readonly recordDrift: boolean;
 
   /** Default prompt template used when no versioned config is available */
   private static readonly DEFAULT_PROMPT = `You are an expert lead scoring AI for a CRM system. Analyze the provided lead information and assign a score from 0-100 based on the lead's quality and conversion potential.
@@ -119,9 +169,10 @@ Lead Information:
 
 Respond with a structured JSON object containing the score, confidence, factors, and modelVersion fields.`;
 
-  constructor(options?: { tenantId?: string; provider?: AIProvider }) {
+  constructor(options?: { tenantId?: string; provider?: AIProvider; recordDrift?: boolean }) {
     this.tenantId = options?.tenantId;
     this.provider = options?.provider;
+    this.recordDrift = options?.recordDrift ?? true;
 
     // Initialize LLM via factory — provider/tier routing handled centrally
     this.model = createLLM('scoring', 'free', {
@@ -168,11 +219,15 @@ Respond with a structured JSON object containing the score, confidence, factors,
   /**
    * Score a lead and return structured results
    */
-  async scoreLead(lead: LeadInput): Promise<ScoringResult> {
+  async scoreLead(lead: LeadInput, options: { leadId?: string } = {}): Promise<ScoringResult> {
+    // Logs identify the lead by id, never by email or other contact data (IFC-117 NF-002).
+    const { leadId } = options;
     const startTime = Date.now();
+    // withMonitoring counts its own failures; errors before it are counted in the catch below.
+    let monitoredCallStarted = false;
 
     try {
-      logger.info({ leadEmail: lead.email }, 'Starting lead scoring');
+      logger.info({ leadId }, 'Starting lead scoring');
 
       // Lazy tenant-tier resolution: if tenantId is set, re-resolve model at invoke time.
       // Capture the effective tier so monitoring uses the correct pricing key (IFC-215 AC-004).
@@ -209,10 +264,17 @@ Respond with a structured JSON object containing the score, confidence, factors,
       // Use the logical pricing key (tier-aware) so calculateCost() matches the pricing table
       // (IFC-215 AC-004). The full versioned string is stored in modelVersion for audit tracing.
       const costModelKey = `scoring-${effectiveTierLabel}`;
-      const modelVersion = `${aiConfig.provider}:${costModelKey}:v1`;
-      const usageHandler = new TokenUsageCallbackHandler(costModelKey);
+      // The provider that actually served this call (a fallback chain overrides the global one).
+      const modelVersion = `${this.provider ?? aiConfig.provider}:${costModelKey}:v1`;
+      const usageHandler = new TokenUsageCallbackHandler(
+        costModelKey,
+        this.provider ?? aiConfig.provider
+      );
       const monitoringContext: MonitoringContext = {
         modelName: costModelKey,
+        chain: 'lead_scoring',
+        valueType: 'lead_scored',
+        recordDrift: this.recordDrift,
         getUsage: () => usageHandler.getUsage(),
         inputContext: leadInfo, // sanitized lead text — no raw PII beyond what is already logged
         extractText: (r: unknown): string | null => {
@@ -241,6 +303,7 @@ Respond with a structured JSON object containing the score, confidence, factors,
           return null;
         },
       };
+      monitoredCallStarted = true;
       const monitored: MonitoredResult<ScoringResult> = await withMonitoring(
         async () => {
           // Call the LLM with structured output; usageHandler captures token usage via callback
@@ -267,7 +330,7 @@ Respond with a structured JSON object containing the score, confidence, factors,
 
       logger.info(
         {
-          leadEmail: lead.email,
+          leadId,
           score: scoringResult.score,
           confidence: scoringResult.confidence,
           requiresHumanReview: needsReview,
@@ -283,13 +346,16 @@ Respond with a structured JSON object containing the score, confidence, factors,
 
       return { ...scoringResult, requiresReview: needsReview };
     } catch (error) {
-      logger.error(
-        {
-          leadEmail: lead.email,
-          error: error instanceof Error ? error.message : String(error),
-        },
-        'Lead scoring failed'
-      );
+      if (!monitoredCallStarted) {
+        // Tenant tier, LLM creation or prompt preparation failed before the monitored call.
+        recordInference({
+          model: undefined,
+          chain: 'lead_scoring',
+          outcome: 'error',
+          latencyMs: Date.now() - startTime,
+        });
+      }
+      logger.error({ leadId, errorClass: classifyError(error) }, 'Lead scoring failed');
 
       // Return a default low-confidence score on error
       return {
@@ -299,7 +365,8 @@ Respond with a structured JSON object containing the score, confidence, factors,
           {
             name: 'error',
             impact: 0,
-            reasoning: `Scoring failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            // The class only: the result is persisted and shown, and an error can echo lead text.
+            reasoning: `Scoring failed (${classifyError(error)})`,
           },
         ],
         modelVersion: 'error:v1',
