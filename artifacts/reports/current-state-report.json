@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T15:36:43.476Z",
+  "generatedAt": "2026-10-28T22:19:44.145Z",
   "sources": {
     "metricsDir": "apps/project-tracker/docs/metrics",
     "specifySprintsDir": ".specify/sprints",
@@ -328,6 +328,7 @@
       ".specify/sprints/sprint-18/attestations/AUTOMATION-003/attestation.json",
       ".specify/sprints/sprint-18/attestations/DOC-015/attestation.json",
       ".specify/sprints/sprint-18/attestations/DOC-016/attestation.json",
+      ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-032/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-070/attestation.json",
       ".specify/sprints/sprint-18/attestations/IFC-078/attestation.json",
@@ -546,11 +547,11 @@
     "totalTasks": 622,
     "totalNumberedSprintTasks": 616,
     "continuousTaskCount": 6,
-    "completedTasks": 439,
-    "backlogTasks": 164,
+    "completedTasks": 441,
+    "backlogTasks": 163,
     "blockedTasks": 0,
-    "completionPercentage": 70.58,
-    "inProgressTasks": 19,
+    "completionPercentage": 70.9,
+    "inProgressTasks": 18,
     "otherTasks": 0
   },
   "inconsistencies": {
@@ -562,7 +563,7 @@
         "taskId": "ENV-008-AI",
         "status": "In Progress",
         "sprint": 18,
-        "attestationPath": ".specify/sprints/sprint-0/attestations/ENV-008-AI/attestation.json"
+        "attestationPath": ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json"
       },
       {
         "taskId": "EP-001-AI",
@@ -685,31 +686,22 @@
         "attestationPath": ".specify/sprints/sprint-18/attestations/INFRA-TF-004/attestation.json"
       },
       {
-        "taskId": "ENG-OPS-002",
-        "status": "In Progress",
-        "sprint": 19,
-        "attestationPath": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json"
-      },
-      {
         "taskId": "ENG-OPS-002.R03",
         "status": "Backlog",
         "sprint": 19,
         "attestationPath": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json"
-      },
-      {
-        "taskId": "ENG-OPS-002.R16",
-        "status": "Backlog",
-        "sprint": 19,
-        "attestationPath": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R16/attestation.json"
       }
     ],
-    "duplicateCanonicalAttestations": [],
-    "sprintMismatches": [
+    "duplicateCanonicalAttestations": [
       {
         "taskId": "ENV-008-AI",
-        "csvSprint": 18,
-        "attestationSprint": 0
-      },
+        "kept": ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json",
+        "skipped": [
+          ".specify/sprints/sprint-0/attestations/ENV-008-AI/attestation.json"
+        ]
+      }
+    ],
+    "sprintMismatches": [
       {
         "taskId": "EP-001-AI",
         "csvSprint": 18,
@@ -1144,6 +1136,38 @@
         }
       },
       {
+        "taskId": "ENG-OPS-002.R03",
+        "sprint": 19,
+        "status": "Backlog",
+        "section": "Engineering Operations",
+        "title": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json",
+        "description": "Remediation R03 [Critical/STALE-001+002]: stale-doc cleanup — fix CLAUDE.md sprint/task-count anchor and regenerate/deprecate sprint-18 _summary.json",
+        "summary": "Scope delivered: STALE-001 (CLAUDE.md root anchor no longer misleads on sprint/task-count; now points to the regenerated docs/SESSION_CONTEXT.md).... CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md",
+        "definitionOfDone": "CLAUDE.md no longer claims Sprint 6/316 tasks; sprint-18 _summary.json reflects reality or is removed with consumers repointed; verified by: pnpm validate:docs-integrity",
+        "definitionOfDoneSnapshot": "CLAUDE.md sprint/task-count anchor corrected + points to SESSION_CONTEXT.md",
+        "dependencies": [
+          "ENG-OPS-002"
+        ],
+        "attestation": {
+          "exists": true,
+          "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002.R03/attestation.json",
+          "verdict": "PARTIAL",
+          "timestamp": "2026-07-22T13:05:00Z",
+          "sprintFolder": 19
+        },
+        "validationSummary": {
+          "total": 1,
+          "passed": 0,
+          "failed": 0,
+          "failingNames": []
+        },
+        "kpiSummary": {
+          "total": 0,
+          "met": 0,
+          "missed": 0
+        }
+      },
+      {
         "taskId": "ENG-OPS-002.R13",
         "sprint": 19,
         "status": "Backlog",
@@ -1220,38 +1244,6 @@
         "definitionOfDoneSnapshot": "All 5 review sections completed with evidence; sign-off block filled; conformance statement updated if needed; review archived at docs/compliance-and-governance/compliance/quarterly-a11y-reviews/sprint-20-review.md",
         "dependencies": [
           "DOC-012"
-        ],
-        "attestation": {
-          "exists": false,
-          "path": null,
-          "verdict": null,
-          "timestamp": null,
-          "sprintFolder": null
-        },
-        "validationSummary": {
-          "total": 0,
-          "passed": 0,
-          "failed": 0,
-          "failingNames": []
-        },
-        "kpiSummary": {
-          "total": 0,
-          "met": 0,
-          "missed": 0
-        }
-      },
-      {
-        "taskId": "IFC-087",
-        "sprint": 20,
-        "status": "Backlog",
-        "section": "Performance",
-        "title": "Edge Functions Optimization",
-        "description": "Edge Functions Optimization",
-        "summary": "Critical paths on edge, <50ms response globally",
-        "definitionOfDone": "Critical paths on edge, <50ms response globally; artifacts: edge-performance-map.json, cost-analysis-edge.xlsx, global-latency.csv",
-        "definitionOfDoneSnapshot": "Critical paths on edge, <50ms response globally",
-        "dependencies": [
-          "IFC-014"
         ],
         "attestation": {
           "exists": false,
@@ -17536,18 +17528,18 @@
           "section": "Foundation Setup",
           "title": "Automated Observability with Predictive Monitoring",
           "description": "Automated Observability with Predictive Monitoring",
-          "summary": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
+          "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Everything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's. Open items, each with the check that closes it:... OpenTelemetry AI-configured (ruling A:...",
           "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
-          "definitionOfDoneSnapshot": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
+          "definitionOfDoneSnapshot": "OpenTelemetry AI-configured (ruling A: api and ai-worker export OTLP to Grafana Cloud; llm.* attributes documented); Anomaly detection active (ruling A: Grafana Asserts rules on span metrics);...",
           "dependencies": [
             "ENV-005-AI"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-0/attestations/ENV-008-AI/attestation.json",
-            "verdict": "PARTIAL",
-            "timestamp": "2025-12-25T18:15:00.000Z",
-            "sprintFolder": 0
+            "path": ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-10-27T10:06:06Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
             "total": 4,
@@ -17556,9 +17548,9 @@
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 1,
+            "total": 5,
             "met": 1,
-            "missed": 0
+            "missed": 4
           }
         },
         {
@@ -17829,18 +17821,18 @@
           "section": "Foundation Setup",
           "title": "Automated Observability with Predictive Monitoring",
           "description": "Automated Observability with Predictive Monitoring",
-          "summary": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
+          "summary": "Verdict NEEDS_HUMAN, not COMPLETE. Everything that can be built and proven before merge is done and tested. What remains needs a merge, and merges are the owner's. Open items, each with the check that closes it:... OpenTelemetry AI-configured (ruling A:...",
           "definitionOfDone": "OpenTelemetry AI-configured, predictive alerts set, anomaly detection active, self-healing enabled; targets: >=100%",
-          "definitionOfDoneSnapshot": "OpenTelemetry AI-configured; Predictive alerts set; Self-healing enabled",
+          "definitionOfDoneSnapshot": "OpenTelemetry AI-configured (ruling A: api and ai-worker export OTLP to Grafana Cloud; llm.* attributes documented); Anomaly detection active (ruling A: Grafana Asserts rules on span metrics);...",
           "dependencies": [
             "ENV-005-AI"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-0/attestations/ENV-008-AI/attestation.json",
-            "verdict": "PARTIAL",
-            "timestamp": "2025-12-25T18:15:00.000Z",
-            "sprintFolder": 0
+            "path": ".specify/sprints/sprint-18/attestations/ENV-008-AI/attestation.json",
+            "verdict": "NEEDS_HUMAN",
+            "timestamp": "2026-10-27T10:06:06Z",
+            "sprintFolder": 18
           },
           "validationSummary": {
             "total": 4,
@@ -17849,9 +17841,9 @@
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 1,
+            "total": 5,
             "met": 1,
-            "missed": 0
+            "missed": 4
           }
         },
         {
@@ -20325,11 +20317,11 @@
       "name": "Sprint 19",
       "summarySource": "specify",
       "totalTasks": 19,
-      "completedTasks": 12,
-      "backlogTasks": 4,
+      "completedTasks": 14,
+      "backlogTasks": 3,
       "blockedTasks": 0,
-      "inProgressTasks": 3,
-      "attestedCompletedTasks": 12,
+      "inProgressTasks": 2,
+      "attestedCompletedTasks": 14,
       "missingCompletedAttestations": [],
       "context": "Primary focus areas: Engineering Operations (8), Core CRM (4), AI/Intelligence (1).",
       "notableCompleted": [
@@ -20351,7 +20343,7 @@
             "exists": true,
             "path": ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-10-23T15:23:37.923Z",
+            "timestamp": "2026-10-24T00:02:16.057Z",
             "sprintFolder": 19
           },
           "validationSummary": {
@@ -20465,34 +20457,37 @@
           }
         },
         {
-          "taskId": "ENG-OPS-003",
+          "taskId": "ENG-OPS-002",
           "sprint": 19,
           "status": "Completed",
           "section": "Engineering Operations",
-          "title": "Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634)",
-          "description": "Harness hardening Gaps #1-#4 + OSV PRs A/B: retroactive umbrella for the 8 untracked CI/security/E2E-harness PRs merged 2026-07-24 (#623, #625, #627, #628, #629, #630, #631, #634)",
-          "summary": "RETROSPECTIVE GOVERNANCE BACKFILL for the 2026-07-24 merge window, whose PRs skipped the documented orchestrator pipeline (docs/operations/sprint-18-orchestrator-prompt.md). Root cause: the orchestrator never read that document. Findings:......",
-          "definitionOfDone": "Every harness/security PR merged 2026-07-24 without a registered task ID is recorded in a PR -> merge-SHA -> gap ledger with its verification basis; the ledger is linked from the sprint-19 attestation; no code change is implied (all 8 PRs are already merged green on main); verified by: manual review",
-          "definitionOfDoneSnapshot": "Every harness/security PR merged 2026-07-24 without a registered task ID is recorded in a PR -> merge-SHA -> gap ledger with its verification basis; The ledger is linked from the sprint-19 attestation;...",
+          "title": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
+          "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
+          "summary": "AUDIT ONLY — no correction code. Reconciliation self-corrected a 12-task phantom false-positive (PG-196..208 pages verified present under apps/web/src/app) => 0 true phantom completions. Real problem is evidence:... Verifiable baseline of S1-18 delivered state;...",
+          "definitionOfDone": "Verifiable S1-18 baseline: 408 tasks reconciled, 19 tools executed (failures recorded), 101 findings classified, real Sonar baseline, remediation plan, debt ledger reconciled; verified by: pnpm test",
+          "definitionOfDoneSnapshot": "Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed",
           "dependencies": [
-            "ENG-OPS-002"
+            "ENG-OPS-001",
+            "GOV-001",
+            "IFC-131",
+            "EXP-REPORTS-002"
           ],
           "attestation": {
             "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-003/attestation.json",
+            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-07-25T00:00:00Z",
+            "timestamp": "2026-07-22T11:35:00Z",
             "sprintFolder": 19
           },
           "validationSummary": {
-            "total": 5,
-            "passed": 5,
+            "total": 4,
+            "passed": 0,
             "failed": 0,
             "failingNames": []
           },
           "kpiSummary": {
-            "total": 0,
-            "met": 0,
+            "total": 5,
+            "met": 5,
             "missed": 0
           }
         }
@@ -20528,41 +20523,6 @@
           "kpiSummary": {
             "total": 0,
             "met": 0,
-            "missed": 0
-          }
-        },
-        {
-          "taskId": "ENG-OPS-002",
-          "sprint": 19,
-          "status": "In Progress",
-          "section": "Engineering Operations",
-          "title": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
-          "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
-          "summary": "AUDIT ONLY — no correction code. Reconciliation self-corrected a 12-task phantom false-positive (PG-196..208 pages verified present under apps/web/src/app) => 0 true phantom completions. Real problem is evidence:... Verifiable baseline of S1-18 delivered state;...",
-          "definitionOfDone": "Verifiable S1-18 baseline: 408 tasks reconciled, 19 tools executed (failures recorded), 101 findings classified, real Sonar baseline, remediation plan, debt ledger reconciled; verified by: pnpm test",
-          "definitionOfDoneSnapshot": "Verifiable baseline of S1-18 delivered state; All required artifacts produced and reproducible; Failures registered, not suppressed",
-          "dependencies": [
-            "ENG-OPS-001",
-            "GOV-001",
-            "IFC-131",
-            "EXP-REPORTS-002"
-          ],
-          "attestation": {
-            "exists": true,
-            "path": ".specify/sprints/sprint-19/attestations/ENG-OPS-002/attestation.json",
-            "verdict": "COMPLETE",
-            "timestamp": "2026-07-22T11:35:00Z",
-            "sprintFolder": 19
-          },
-          "validationSummary": {
-            "total": 4,
-            "passed": 0,
-            "failed": 0,
-            "failingNames": []
-          },
-          "kpiSummary": {
-            "total": 5,
-            "met": 5,
             "missed": 0
           }
         },
@@ -20659,14 +20619,47 @@
             "met": 0,
             "missed": 0
           }
+        },
+        {
+          "taskId": "ENG-OPS-002.R13",
+          "sprint": 19,
+          "status": "Backlog",
+          "section": "Engineering Operations",
+          "title": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+          "description": "Remediation R13 [High/QUAL-012]: add eslint no-disabled-tests gate (allow-list w/ linked issue) and reconcile the 21 skipped property tests",
+          "summary": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+          "definitionOfDone": "Skips blocked by lint unless issue-linked; existing 21 reconciled; verified by: pnpm lint",
+          "definitionOfDoneSnapshot": "Skips blocked by lint unless issue-linked; existing 21 reconciled",
+          "dependencies": [
+            "ENG-OPS-002.R02",
+            "ENG-OPS-002.R10"
+          ],
+          "attestation": {
+            "exists": false,
+            "path": null,
+            "verdict": null,
+            "timestamp": null,
+            "sprintFolder": null
+          },
+          "validationSummary": {
+            "total": 0,
+            "passed": 0,
+            "failed": 0,
+            "failingNames": []
+          },
+          "kpiSummary": {
+            "total": 0,
+            "met": 0,
+            "missed": 0
+          }
         }
       ],
       "sectionSummary": [
         {
           "section": "Engineering Operations",
           "total": 8,
-          "completed": 4,
-          "open": 4
+          "completed": 6,
+          "open": 2
         },
         {
           "section": "Core CRM",
@@ -20736,7 +20729,7 @@
             "exists": true,
             "path": ".specify/sprints/sprint-19/attestations/IFC-033/attestation.json",
             "verdict": "COMPLETE",
-            "timestamp": "2026-10-23T15:23:37.923Z",
+            "timestamp": "2026-10-24T00:02:16.057Z",
             "sprintFolder": 19
           },
           "validationSummary": {
@@ -21013,7 +21006,7 @@
         {
           "taskId": "ENG-OPS-002",
           "sprint": 19,
-          "status": "In Progress",
+          "status": "Completed",
           "section": "Engineering Operations",
           "title": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
           "description": "Auditoria integral do estado técnico e arquitetural dos Sprints 1-18 (reconciliação + tooling + DDD/hexagonal/security/perf/quality/docs findings + Sonar baseline + remediation plan)",
@@ -21209,7 +21202,7 @@
         {
           "taskId": "ENG-OPS-002.R16",
           "sprint": 19,
-          "status": "Backlog",
+          "status": "Completed",
           "section": "Engineering Operations",
           "title": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
           "description": "Remediation R16 [High/GOV-A-001+002]: backfill 18 missing Sprint-18 attestations + record the 177-task provenance gap in debt ledger",
