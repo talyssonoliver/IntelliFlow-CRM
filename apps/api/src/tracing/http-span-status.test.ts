@@ -24,6 +24,7 @@ import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { NodeSDK, tracing } from '@opentelemetry/sdk-node';
 import { getStandardNodeInstrumentations } from '@intelliflow/observability/node-instrumentations';
 import { closeSentry, initializeSentry } from './sentry';
+import { setNodeSdkStarted } from './otel-state';
 
 const exporter = new tracing.InMemorySpanExporter();
 const processor = new tracing.SimpleSpanProcessor(exporter);
@@ -57,6 +58,8 @@ beforeAll(async () => {
     instrumentations: [getStandardNodeInstrumentations()],
   });
   sdk.start();
+  // What startTracing() records in production, so Sentry leaves HTTP spans to us.
+  setNodeSdkStarted(true);
 
   vi.stubEnv('NODE_ENV', 'production');
   vi.stubEnv('SENTRY_ENABLED', 'true');

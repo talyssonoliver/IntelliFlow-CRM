@@ -28,6 +28,7 @@
 import { NodeSDK } from '@opentelemetry/sdk-node';
 import { getStandardNodeInstrumentations } from '@intelliflow/observability/node-instrumentations';
 import { installQueryBudgetOtelEmitter } from './query-budget-otel';
+import { setNodeSdkStarted } from './otel-state';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   ATTR_DEPLOYMENT_ENVIRONMENT_NAME,
@@ -165,6 +166,7 @@ export function startTracing(): void {
 
   if (sdkInstance) {
     sdkInstance.start();
+    setNodeSdkStarted(true);
   }
 
   // ADR-053: forward query-budget over-budget events to OTel metrics so N+1 /

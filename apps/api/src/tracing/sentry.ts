@@ -22,6 +22,8 @@
  * @see https://docs.sentry.io/platforms/node/
  */
 
+import { isNodeSdkStarted } from './otel-state';
+
 type SentryNodeModule = typeof import('@sentry/node');
 type SentrySeverityLevel = 'fatal' | 'error' | 'warning' | 'log' | 'info' | 'debug';
 type SentryUser = { id: string; email?: string; username?: string } | null;
@@ -171,12 +173,18 @@ export async function initializeSentry(): Promise<void> {
       tracesSampleRate: config.tracesSampleRate, // Sample 10% of transactions
 
       // Integrations (using modern API).
-      // #1098: our NodeSDK (src/instrument.ts) already traces every request with a
-      // semconv HTTP server span. With spans on, Sentry registered a second
-      // HttpInstrumentation whose server span went to our exporter and marked 4xx as
-      // an error, so scanner 404s burned the availability SLO. `spans: false` keeps
-      // Sentry's request isolation and breadcrumbs without that second span.
-      integrations: [Sentry.httpIntegration({ spans: false }), Sentry.nativeNodeFetchIntegration()],
+      // #1098: when our NodeSDK (src/instrument.ts) is running it already traces
+      // every request with a semconv HTTP server span. With spans on, Sentry
+      // registered a second HttpInstrumentation whose server span went to our
+      // exporter and marked 4xx as an error, so scanner 404s burned the
+      // availability SLO. `spans: false` keeps Sentry's request isolation and
+      // breadcrumbs without that second span. When the NodeSDK is off
+      // (OTEL_ENABLED=false, or production without an OTLP endpoint), Sentry is
+      // the only HTTP tracer and keeps its spans.
+      integrations: [
+        Sentry.httpIntegration({ spans: !isNodeSdkStarted() }),
+        Sentry.nativeNodeFetchIntegration(),
+      ],
 
       // Debug mode (verbose logging)
       debug: config.debug,

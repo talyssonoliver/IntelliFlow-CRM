@@ -147,4 +147,33 @@ describe('OpenTelemetry SDK (otel.ts)', () => {
     expect(pinoConfig).toBeDefined();
     expect(pinoConfig?.disableLogSending).toBe(false);
   });
+
+  // #1098: sentry.ts turns its own HTTP spans off only while our NodeSDK runs.
+  it('marks the NodeSDK as started once startTracing starts it', async () => {
+    process.env.OTEL_ENABLED = 'true';
+    process.env.NODE_ENV = 'development';
+    vi.spyOn(process, 'on').mockReturnValue(process);
+
+    const { startTracing } = await import('./otel.js');
+    const { isNodeSdkStarted } = await import('./otel-state.js');
+    expect(isNodeSdkStarted()).toBe(false);
+
+    startTracing();
+
+    expect(nodeSdkStart).toHaveBeenCalledTimes(1);
+    expect(isNodeSdkStarted()).toBe(true);
+  });
+
+  it('leaves the NodeSDK marked as not started when tracing is disabled', async () => {
+    process.env.OTEL_ENABLED = 'false';
+    vi.spyOn(process, 'on').mockReturnValue(process);
+
+    const { startTracing } = await import('./otel.js');
+    const { isNodeSdkStarted } = await import('./otel-state.js');
+
+    startTracing();
+
+    expect(nodeSdkStart).not.toHaveBeenCalled();
+    expect(isNodeSdkStarted()).toBe(false);
+  });
 });
