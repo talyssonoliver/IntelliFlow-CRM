@@ -476,6 +476,12 @@ export type TaskAutomationActionShape =
       message?: string | null;
     };
 
+/** Code-unit order, not localeCompare: the rule key must not depend on the locale. */
+function compareCodeUnits(a: string, b: string): number {
+  if (a < b) return -1;
+  return a > b ? 1 : 0;
+}
+
 function normaliseAction(action: TaskAutomationActionShape): unknown {
   switch (action.type) {
     case 'CREATE_TASK':
@@ -494,7 +500,7 @@ function normaliseAction(action: TaskAutomationActionShape): unknown {
         action.type,
         action.recipients.assignee,
         action.recipients.owner,
-        [...action.recipients.userIds].sort(),
+        [...action.recipients.userIds].sort(compareCodeUnits),
         (action.message ?? '').trim(),
       ];
   }

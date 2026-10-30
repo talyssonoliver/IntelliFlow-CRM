@@ -188,6 +188,17 @@ describe('canonicalRuleKey', () => {
     ).toBe(canonicalRuleKey(trigger, [create, notifyB]));
   });
 
+  it('orders recipients by code unit, independent of locale', () => {
+    const notify = (userIds: string[]): TaskAutomationActionShape => ({
+      type: 'NOTIFY',
+      recipients: { assignee: false, owner: false, userIds },
+      message: null,
+    });
+    const key = canonicalRuleKey(trigger, [notify(['b', 'a2', 'B', 'a10', 'A'])]);
+    expect(key).toContain('["A","B","a10","a2","b"]');
+    expect(canonicalRuleKey(trigger, [notify(['a10', 'A', 'b', 'a2', 'B'])])).toBe(key);
+  });
+
   it('keys a schedule by the fields that decide when it runs', () => {
     const weekly = (extra: Partial<Extract<TaskAutomationTriggerShape, { type: 'SCHEDULE' }>>) =>
       canonicalRuleKey(
