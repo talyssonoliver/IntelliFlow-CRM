@@ -12,6 +12,7 @@ import { z } from 'zod';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { LeadScoringChain } from '../chains/scoring.chain';
+import { classifyError } from '../monitoring/otel-ai-metrics';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
 import { logAIAgentAction } from '../utils/audit-log';
 import { getLLMBreaker, resolveFallbackProvider } from '../lib/llm-factory';
@@ -251,7 +252,8 @@ async function generateScoringWithFallback(
           {
             jobId: job.id,
             fallbackProvider,
-            primaryError: error instanceof Error ? error.message : String(error),
+            // Error classes only: a provider error can echo prompt or lead text (NF-002).
+            primaryErrorClass: classifyError(error),
           },
           'Primary LLM scoring failed — recovered via fallback provider'
         );
@@ -261,7 +263,7 @@ async function generateScoringWithFallback(
           {
             jobId: job.id,
             fallbackProvider,
-            error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+            errorClass: classifyError(fallbackError),
           },
           'Fallback provider also failed — using heuristic'
         );
@@ -269,7 +271,7 @@ async function generateScoringWithFallback(
     }
 
     logger.warn(
-      { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
+      { jobId: job.id, errorClass: classifyError(error) },
       'LLM scoring failed or timed out — using heuristic fallback'
     );
     const heuristicScore = computeHeuristicScore(job.data.lead);
@@ -414,7 +416,8 @@ async function handleScheduledDispatch(
     );
   } catch (error) {
     logger.error(
-      { jobId: job.id, error: error instanceof Error ? error.message : String(error) },
+      // The class only: a Prisma or queue error can quote row values (NF-002).
+      { jobId: job.id, errorClass: classifyError(error) },
       'Scheduled scoring dispatcher failed'
     );
   }
@@ -498,7 +501,8 @@ async function persistScoringResult(
     });
   } catch (error) {
     logger.error(
-      { leadId, error: error instanceof Error ? error.message : String(error) },
+      // The class only: a Prisma error can quote row values (NF-002).
+      { leadId, errorClass: classifyError(error) },
       'Failed to persist scoring result'
     );
   }
