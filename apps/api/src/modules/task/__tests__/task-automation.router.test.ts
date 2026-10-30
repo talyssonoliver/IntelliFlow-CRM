@@ -800,6 +800,31 @@ describe('taskAutomationRouter (PG-208)', () => {
       ).toBeInstanceOf(Date);
     });
 
+    // A disable committed between the read and the write must not leave a re-enable unstamped.
+    it.each([
+      ['settings.update', () => admin.settings.update({ automationEnabled: true })],
+      ['resetToDefaults', () => admin.resetToDefaults()],
+    ])(
+      '%s reads the stored switch under the settings lock, in the write transaction',
+      async (_name, call) => {
+        m.taskAutomationSetting.upsert.mockResolvedValue({
+          automationEnabled: true,
+          notifyRuleOwnerOnFailure: false,
+          maxRunsPerRulePerHour: 60,
+        });
+        m.taskAutomationSetting.findUnique.mockResolvedValueOnce({ automationEnabled: false });
+        await call();
+        expect(m.$transaction).toHaveBeenCalledTimes(1);
+        const lock = m.$executeRaw.mock.invocationCallOrder[0];
+        const read = m.taskAutomationSetting.findUnique.mock.invocationCallOrder[0];
+        const write = m.taskAutomationSetting.upsert.mock.invocationCallOrder[0];
+        const begin = m.$transaction.mock.invocationCallOrder[0];
+        expect(begin).toBeLessThan(lock);
+        expect(lock).toBeLessThan(read);
+        expect(read).toBeLessThan(write);
+      }
+    );
+
     it('resetToDefaults resets settings only (rules, runs, tags kept)', async () => {
       m.taskAutomationSetting.upsert.mockResolvedValue({
         automationEnabled: true,

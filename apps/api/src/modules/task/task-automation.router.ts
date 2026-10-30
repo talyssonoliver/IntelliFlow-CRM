@@ -526,16 +526,37 @@ function ruleData(
  * The moment automation goes from off to on (else null). Events that occurred
  * before it happened while automation was off and are never run later.
  */
-async function reenabledAt(
-  ctx: TaskAutomationCtx,
-  nextEnabled: boolean | undefined
-): Promise<Date | null> {
-  if (nextEnabled !== true) return null;
-  const current = await ctx.prismaWithTenant.taskAutomationSetting.findUnique({
-    where: { tenantId: ctx.tenant.tenantId },
-    select: { automationEnabled: true },
+type SettingsWrite = Partial<TaskAutomationSettingsView>;
+
+/**
+ * Write a tenant's settings under a per-tenant lock, reading the stored switch in
+ * the same transaction. A disable committed between a separate read and the write
+ * would otherwise let a re-enable land without its `automationEnabledAt` stamp, and
+ * events from the off period would run (ADR-084: off means off).
+ */
+export async function writeAutomationSettings(
+  prisma: Pick<TaskAutomationCtx['prismaWithTenant'], '$transaction'>,
+  tenantId: string,
+  data: SettingsWrite
+): Promise<TaskAutomationSettingsView> {
+  return prisma.$transaction(async (tx) => {
+    const lockKey = 'task_automation_settings:' + tenantId;
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtextextended(${lockKey}, 0))`;
+    const current =
+      data.automationEnabled === true
+        ? await tx.taskAutomationSetting.findUnique({
+            where: { tenantId },
+            select: { automationEnabled: true },
+          })
+        : null;
+    const enabledAt = current?.automationEnabled === false ? new Date() : null;
+    return tx.taskAutomationSetting.upsert({
+      where: { tenantId },
+      create: { tenantId, ...data },
+      update: { ...data, ...(enabledAt && { automationEnabledAt: enabledAt }) },
+      select: SETTINGS_SELECT,
+    });
   });
-  return current?.automationEnabled === false ? new Date() : null;
 }
 
 const settingsRouter = createTRPCRouter({
@@ -557,13 +578,7 @@ const settingsRouter = createTRPCRouter({
           maxRunsPerRulePerHour: input.maxRunsPerRulePerHour,
         }),
       };
-      const enabledAt = await reenabledAt(ctx, input.automationEnabled);
-      const row = await ctx.prismaWithTenant.taskAutomationSetting.upsert({
-        where: { tenantId },
-        create: { tenantId, ...data },
-        update: { ...data, ...(enabledAt && { automationEnabledAt: enabledAt }) },
-        select: SETTINGS_SELECT,
-      });
+      const row = await writeAutomationSettings(ctx.prismaWithTenant, tenantId, data);
       logTaskAutomationAudit(ctx, 'UPDATE', tenantId, 'settings.update', {
         fields: Object.keys(data),
       });
@@ -1031,18 +1046,9 @@ export const taskAutomationRouter = createTRPCRouter({
       assertTaskAutomationAdmin(ctx);
       const tenantId = ctx.tenant.tenantId;
       // Settings only: rules, runs and tags are preserved (the dialog says so).
-      const enabledAt = await reenabledAt(ctx, TASK_AUTOMATION_SETTINGS_DEFAULTS.automationEnabled);
-      const row = await ctx.prismaWithTenant.$transaction(async (tx) =>
-        tx.taskAutomationSetting.upsert({
-          where: { tenantId },
-          create: { tenantId, ...TASK_AUTOMATION_SETTINGS_DEFAULTS },
-          update: {
-            ...TASK_AUTOMATION_SETTINGS_DEFAULTS,
-            ...(enabledAt && { automationEnabledAt: enabledAt }),
-          },
-          select: SETTINGS_SELECT,
-        })
-      );
+      const row = await writeAutomationSettings(ctx.prismaWithTenant, tenantId, {
+        ...TASK_AUTOMATION_SETTINGS_DEFAULTS,
+      });
       logTaskAutomationAudit(ctx, 'UPDATE', tenantId, 'settings.resetToDefaults');
       return row;
     }

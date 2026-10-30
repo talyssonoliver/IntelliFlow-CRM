@@ -19,7 +19,10 @@ import { PrismaClient } from '../../packages/db/generated/prisma/client';
 import { fieldEncryptionExtension, isEncrypted } from '../../packages/db/src/field-encryption';
 import { TASK_AUTOMATION_TAG_COLOR_TOKENS } from '../../packages/validators/src/task-automation';
 import { createTaskAutomationStore } from '../../apps/api/src/modules/task/automation/task-automation-store';
-import { triggerColumns } from '../../apps/api/src/modules/task/task-automation.router';
+import {
+  triggerColumns,
+  writeAutomationSettings,
+} from '../../apps/api/src/modules/task/task-automation.router';
 import {
   WebhookFailureLimiter,
   handleTaskAutomationWebhook,
@@ -704,6 +707,28 @@ describeDb('PG-208 task automation (real DB)', () => {
       expect(results.filter((r) => 'created' in r && r.created)).toHaveLength(2);
       expect(results.filter((r) => 'capped' in r)).toHaveLength(4);
       await expect(prisma.taskAutomationRun.count({ where: { ruleId: rule.id } })).resolves.toBe(2);
+    });
+
+    // ADR-084 "off means off": an enable racing a disable must never commit unstamped.
+    it('keeps the stored switch and its re-enable stamp consistent under concurrent writes', async () => {
+      for (let i = 0; i < 20; i++) {
+        await prisma.taskAutomationSetting.upsert({
+          where: { tenantId: TENANT_B },
+          create: { tenantId: TENANT_B, automationEnabled: true },
+          update: { automationEnabled: true, automationEnabledAt: null },
+        });
+        await Promise.all([
+          writeAutomationSettings(prisma as never, TENANT_B, { automationEnabled: true }),
+          writeAutomationSettings(prisma as never, TENANT_B, { automationEnabled: false }),
+        ]);
+        const row = await prisma.taskAutomationSetting.findUniqueOrThrow({
+          where: { tenantId: TENANT_B },
+        });
+        // Enabled at the end means the enable committed after the disable, so it must
+        // have seen the switch off and stamped the boundary.
+        if (row.automationEnabled) expect(row.automationEnabledAt).toBeInstanceOf(Date);
+        else expect(row.automationEnabledAt).toBeNull();
+      }
     });
 
     it('hands N concurrent round-robin increments N distinct cursor values', async () => {

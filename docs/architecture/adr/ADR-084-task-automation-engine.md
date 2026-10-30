@@ -144,7 +144,9 @@ rounds, owner rulings 8 and 9) that supersede parts of the text above:
   never changes an accepted run (owner ruling 9).
 - **Automation off means off:** `task_automation_settings.automationEnabledAt`
   records when automation was turned back on; events and schedule slots from the
-  off period never run.
+  off period never run. Settings writes take a per-tenant lock and read the
+  stored switch inside the same transaction, so a concurrent disable cannot
+  leave a re-enable unstamped.
 - **Postconditions:** lead events (published inside `LeadService`'s transaction)
   keep their state postconditions and are retried within the 30 s grace before
   being dropped; deal events are published after `OpportunityService` saves, so
