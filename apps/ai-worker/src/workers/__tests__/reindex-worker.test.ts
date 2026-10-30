@@ -132,9 +132,9 @@ describe('ReindexWorker', () => {
       expect(result.forceRegenerate).toBe(false);
     });
 
-    it('should validate tenantId is UUID', () => {
+    it('should validate tenantId is a safe record id', () => {
       const invalidData = {
-        tenantId: 'not-a-uuid',
+        tenantId: 'not a/valid id',
       };
 
       const result = ReindexJobDataSchema.safeParse(invalidData);

@@ -925,6 +925,9 @@ importers:
       '@intelliflow/db':
         specifier: workspace:*
         version: link:../../../packages/db
+      '@intelliflow/validators':
+        specifier: workspace:*
+        version: link:../../../packages/validators
       '@intelliflow/worker-shared':
         specifier: workspace:*
         version: link:../shared

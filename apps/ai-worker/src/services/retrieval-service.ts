@@ -26,6 +26,7 @@ import {
 } from '@intelliflow/db';
 import { z } from 'zod';
 import { isErasedEmail, normalizeSubjectEmail } from '@intelliflow/domain';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { EmbeddingChain } from '../chains/embedding.chain';
 import { erasedSubjectEmails, restrictedEmails, type GuardPrisma } from '../lib/data-request-guard';
 import { DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG } from '../config/relevance-config';
@@ -229,7 +230,7 @@ export const SearchConfigSchema = z.object({
     })
     .optional(),
   // IFC-155: Case-scoped search
-  caseId: z.uuid().optional(),
+  caseId: recordIdSchema.optional(),
   searchType: z.enum(['fulltext', 'semantic', 'hybrid']).optional().default('hybrid'),
   limit: z.number().min(1).max(100).optional().default(20),
   offset: z.number().min(0).optional().default(0),

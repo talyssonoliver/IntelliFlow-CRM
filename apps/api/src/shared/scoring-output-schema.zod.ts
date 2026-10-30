@@ -7,6 +7,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators';
 
 // Re-export from validators package
 export { leadScoreSchema, type LeadScoreInput } from '@intelliflow/validators';
@@ -17,7 +18,7 @@ export { leadScoreSchema, type LeadScoreInput } from '@intelliflow/validators';
  */
 export const scoringResponseSchema = z.object({
   /** Lead ID that was scored */
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   /** The scoring result */
   scoring: z.object({
     score: z.number().int().min(0).max(100),
@@ -45,7 +46,7 @@ export type ScoringResponse = z.infer<typeof scoringResponseSchema>;
  * Batch scoring request schema
  */
 export const batchScoringRequestSchema = z.object({
-  leadIds: z.array(z.uuid()).min(1).max(100),
+  leadIds: z.array(recordIdSchema).min(1).max(100),
   options: z
     .object({
       skipCached: z.boolean().default(false),
@@ -80,10 +81,10 @@ export type BatchScoringResponse = z.infer<typeof batchScoringResponseSchema>;
  * Human override schema for correcting AI scores
  */
 export const scoreOverrideSchema = z.object({
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   overrideScore: z.number().int().min(0).max(100),
   reason: z.string().min(10).max(500),
-  overriddenBy: z.uuid(),
+  overriddenBy: recordIdSchema,
 });
 
 export type ScoreOverride = z.infer<typeof scoreOverrideSchema>;

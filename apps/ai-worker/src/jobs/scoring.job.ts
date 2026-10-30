@@ -9,6 +9,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { LeadScoringChain } from '../chains/scoring.chain';
 import type { LeadInput, ScoringResult } from '../chains/scoring.chain';
@@ -45,7 +46,7 @@ export type LeadTier = 'HOT' | 'WARM' | 'COLD' | 'UNQUALIFIED';
 
 /** Schema for scoring job data */
 export const ScoringJobDataSchema = z.object({
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   tenantId: z.string().min(1),
   lead: z.object({
     email: z.email(),
@@ -67,7 +68,7 @@ export type ScoringJobData = z.infer<typeof ScoringJobDataSchema>;
 
 /** Schema for scoring job result */
 export const ScoringJobResultSchema = z.object({
-  leadId: z.uuid(),
+  leadId: recordIdSchema,
   score: z.number().min(0).max(100),
   confidence: z.number().min(0).max(1),
   tier: z.enum(['HOT', 'WARM', 'COLD', 'UNQUALIFIED']),

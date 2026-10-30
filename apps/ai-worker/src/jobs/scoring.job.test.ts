@@ -215,10 +215,10 @@ describe('ScoringJob', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid UUID', () => {
+    it('should reject an unsafe leadId', () => {
       const invalidData = {
         ...validJobData,
-        leadId: 'not-a-uuid',
+        leadId: 'not a/valid id',
       };
 
       const result = ScoringJobDataSchema.safeParse(invalidData);

@@ -71,8 +71,8 @@ describe('MemoryRetentionJobDataSchema', () => {
     expect(r.success).toBe(true);
     if (r.success) expect(r.data.dryRun).toBe(false);
   });
-  it('rejects a non-uuid tenantId', () => {
-    const r = MemoryRetentionJobDataSchema.safeParse({ tenantId: 'not-a-uuid' });
+  it('rejects an unsafe tenantId', () => {
+    const r = MemoryRetentionJobDataSchema.safeParse({ tenantId: 'not a/valid id' });
     expect(r.success).toBe(false);
   });
 });

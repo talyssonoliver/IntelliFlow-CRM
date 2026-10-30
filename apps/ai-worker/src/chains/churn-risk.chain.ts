@@ -16,6 +16,7 @@
 
 import { PromptTemplate } from '@langchain/core/prompts';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { aiConfig } from '../config/ai.config';
 import { sanitizeStringField } from '../utils/input-sanitizer';
 import { createLLM, createLLMForTenant } from '../lib/llm-factory';
@@ -77,7 +78,7 @@ export const RISK_LEVEL_CONFIG: Record<ChurnRiskLevel, { threshold: number; slaH
  */
 export const churnRiskInputSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
-  entityId: z.uuid(),
+  entityId: recordIdSchema,
 
   // Engagement metrics
   daysSinceLastLogin: z.number().optional(),
