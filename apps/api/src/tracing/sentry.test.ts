@@ -99,6 +99,8 @@ describe('Sentry integration (sentry.ts)', () => {
     await initializeSentry();
 
     expect(sentryInit).toHaveBeenCalledTimes(1);
+    // #1098: our NodeSDK owns the HTTP server span; Sentry must not add a second one.
+    expect(httpIntegration).toHaveBeenCalledWith({ spans: false });
 
     const options = sentryInit.mock.calls[0]?.[0] as SentryInitOptions;
     expect(options.dsn).toBe(process.env.SENTRY_DSN);

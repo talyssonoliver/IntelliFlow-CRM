@@ -170,8 +170,13 @@ export async function initializeSentry(): Promise<void> {
       // Performance Monitoring
       tracesSampleRate: config.tracesSampleRate, // Sample 10% of transactions
 
-      // Integrations (using modern API)
-      integrations: [Sentry.httpIntegration(), Sentry.nativeNodeFetchIntegration()],
+      // Integrations (using modern API).
+      // #1098: our NodeSDK (src/instrument.ts) already traces every request with a
+      // semconv HTTP server span. With spans on, Sentry registered a second
+      // HttpInstrumentation whose server span went to our exporter and marked 4xx as
+      // an error, so scanner 404s burned the availability SLO. `spans: false` keeps
+      // Sentry's request isolation and breadcrumbs without that second span.
+      integrations: [Sentry.httpIntegration({ spans: false }), Sentry.nativeNodeFetchIntegration()],
 
       // Debug mode (verbose logging)
       debug: config.debug,
