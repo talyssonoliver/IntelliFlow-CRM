@@ -4,13 +4,13 @@
   "task_id": "IFC-117",
   "run_id": "run-20261029-review",
   "attestor": "Claude Code",
-  "attestation_timestamp": "2026-10-30T00:39:01Z",
+  "attestation_timestamp": "2026-10-30T10:36:28Z",
   "verdict": "NEEDS_HUMAN",
   "evidence_summary": {
-    "artifacts_verified": 115,
+    "artifacts_verified": 117,
     "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 21,
+    "gates_passed": 22,
     "gates_failed": 2,
     "kpis_met": 2,
     "kpis_missed": 3,
@@ -209,6 +209,13 @@
       "exit_code": 0,
       "detail": "FAIL on section 6 (CSV artifacts) resolved in 65ecc91eb; preflights phrases, nav-wiring, lighthouse, provenance exit 0",
       "timestamp": "2026-10-30T00:39:01Z"
+    },
+    {
+      "gate_id": "scoring-job-error-class-delta",
+      "passed": true,
+      "exit_code": 0,
+      "detail": "apps/ai-worker src/jobs at 7b6fb1136: 282 passed (21 files), incl. 4 canary tests in scoring.job.error-log.test.ts",
+      "timestamp": "2026-10-30T10:36:13.000Z"
     }
   ],
   "kpi_results": [
@@ -309,7 +316,7 @@
   },
   "artifact_hashes": {
     ".github/workflows/grafana-ai-alert-rules.yml": "0416340e6c5322f325c6ffe8cb10347c8aa68fca84686714f18400d5b75f7976",
-    ".specify/sprints/sprint-18/attestations/IFC-117/task-tracking.json": "31f56df3c7636542917193c468ecc1e0e43bbf0dce16de347a372d6d0c2dbb8d",
+    ".specify/sprints/sprint-18/attestations/IFC-117/task-tracking.json": "42d3b543f24c40a86471eb9e1a06668c6865e726f40ca286b967f56309498bba",
     ".specify/sprints/sprint-18/context/IFC-117/IFC-117-agent-selection.json": "150bad3ab4efc1b56fca2497c9a359f02975ded504f6d80ef4f36b54f1396cc7",
     ".specify/sprints/sprint-18/context/IFC-117/IFC-117-plan-session.json": "5f926f52b99816fdc7ccf1091607f5222018405453339f09dc8e8528de700397",
     ".specify/sprints/sprint-18/context/IFC-117/hydrated-context.json": "eeb4178c0dba86abedfb8bf516ea955418ddce988ca05d123bacbaf8524e4003",
@@ -346,6 +353,7 @@
     ".specify/sprints/sprint-18/execution/IFC-117/run-20261029-review/matop/stoa-verdicts/Quality.json": "48f5cd66232ed8a51aabbc98e3cafbae751a6efb3b8dc18831d5b26ed96dc549",
     ".specify/sprints/sprint-18/execution/IFC-117/run-20261029-review/matop/stoa-verdicts/Security.json": "c9de6dc14ffb2442546092873f72d571050159e9361b3d9005e274151b48123c",
     ".specify/sprints/sprint-18/execution/IFC-117/run-20261029-review/validation/ai-worker-full.txt": "0c745ec31b7c38e4940621bc1226bf2fae9e908e23c275e6339f8853479ec9aa",
+    ".specify/sprints/sprint-18/execution/IFC-117/run-20261029-review/validation/ai-worker-jobs-7b6fb1136.txt": "144f5ffdaa6e7808a21adebcf3a2c83a0e726d975c6d169151910f5e36585837",
     ".specify/sprints/sprint-18/execution/IFC-117/run-20261029-review/validation/ai-worker-lint.txt": "055111198d51000bc8145129dd890ada45c8eb51570b4cc412b8cb23e199f2b3",
     ".specify/sprints/sprint-18/execution/IFC-117/run-20261029-review/validation/ai-worker-typecheck.txt": "99bb1a8bce0d56e17aefe9d7efa305ca6016804f84819cfb2127e9cbf9567836",
     ".specify/sprints/sprint-18/execution/IFC-117/run-20261029-review/validation/tools-grafana.txt": "1f0192ed3448d6db0de8211da66a7386e9f65b704a6b367b02e971c475a403b8",
@@ -365,9 +373,10 @@
     "apps/ai-worker/src/config/__tests__/calculate-cost-free.test.ts": "2c4defd080326c4b38268cefc4998b6819acc892a06b53a47e76844e11d24441",
     "apps/ai-worker/src/config/ai.config.ts": "caab4ffd4d999f6f40b19dcc58cdd2fa50bc309cd570e0346dc8fd3d4bba785f",
     "apps/ai-worker/src/jobs/__tests__/feedback-analytics.job.test.ts": "ecc9cd2cb04078c47543503e3a4da08b6972a2da57ae0fed333274d422ea7241",
+    "apps/ai-worker/src/jobs/__tests__/scoring.job.error-log.test.ts": "fcbabd909b0aea2bb2898fe60937ee845d3ca4696aaf04a8bfad85404cec462a",
     "apps/ai-worker/src/jobs/feedback-analytics.job.ts": "53774f04ac1147dfd69503b33c12705709260a6d197d7a58aeccc6a0c2f4c8b5",
     "apps/ai-worker/src/jobs/scoring.job.test.ts": "dd9d9c80d065390df202ae82779fb8c16dfc63428691cbc606e76013989c4142",
-    "apps/ai-worker/src/jobs/scoring.job.ts": "0bd36775f5f085bcf5f6718fcc4dab53b06b45b0adde318d280fb91865e44c23",
+    "apps/ai-worker/src/jobs/scoring.job.ts": "7d00d09220b5f1aefa17e10c231463c0b4eff453a69e9bf62e96888336cbbabd",
     "apps/ai-worker/src/monitoring/__tests__/chain-monitor.otel.test.ts": "df583ff67eae96e7180950346f613f95dfa6c0af36df02ff902bcb9f2df338e7",
     "apps/ai-worker/src/monitoring/__tests__/chain-monitor.spend-log.test.ts": "875ecc4391fdeee9b6fce3de0c289072fe8ae11896dc19663a323ee8ad7d2d4c",
     "apps/ai-worker/src/monitoring/__tests__/chain-monitor.test.ts": "71f3a83cf912a9ee3a78e7d6ae6ef3e583aff09feac71208e834ad62d065e189",
@@ -430,7 +439,7 @@
     "git_commit": "87bbac6cc",
     "branch": "feat/IFC-117-ai-model-monitoring"
   },
-  "notes": "Verdict NEEDS_HUMAN. The code path is delivered and validated; the production KPIs are the owner's after ai-worker is promoted.\nOpen production evidence (who / query / pass):\nN1 Output-distribution shift detected within 1 day — owner — increase(intelliflow_ai_drift_detections_total[1d]) and intelliflow_ai_drift_checks_total{status=\"evaluated\"} after a natural shift or a seeded replay — pass: onset < 24h after the shift; with no shift, checks every 30 min for 7 days and evaluated after warm-up, else recorded as not exercised\nN2 Hallucination rate < 5% (detected by the heuristic checker; a floor) — owner — sum(increase(intelliflow_ai_hallucination_detected_total[7d])) / sum(increase(intelliflow_ai_hallucination_checks_total[7d])) — pass: < 0.05 with >= 200 checks, else insufficient data\nN3 Dashboard applied — ENV-008-AI follow-up, then owner — ENV-008-AI dashboard job reading dashboard-ai-models.json — pass: dashboard uid ifc117-ai-models live with panels showing data\nN4 AI rules applied and routed — owner — dispatch grafana-ai-alert-rules.yml (dry_run=false); Grafana Preview routing for {source:ifc-117, grafana_folder:intelliflow-ai} — pass: six ifc117-* rules visible; route resolves to the owner contact point\nN5 Metric names and service label verified — owner — dispatch grafana-ai-alert-rules.yml with dry_run=true after a scoring call — pass: non-zero series count for each selector and every expr query succeeds\nN6 ROI (estimated) tracked — owner — increase(intelliflow_ai_cost_usd_total[7d]) and increase(intelliflow_ai_value_estimated_usd_total[7d]) — pass: both non-zero over 7 days\nN7 Latency series — owner — histogram_quantile(0.95, sum by (le)(rate(intelliflow_ai_inference_latency_milliseconds_bucket[1h]))) — pass: a series exists\nPromotion follow-up: owner Talysson; date: the first production promotion of ai-worker after this PR merges (not scheduled yet). N3 also waits for the ENV-008-AI multi-file dashboard job.\nNo unit test is cited as proof of a KPI. The sprint-6 attestations are left untouched as history.\nGate 4b is recorded as failed and disclosed (see gate_results); the pre-ship gate runs on the single push after this attestation.\nDeleted: apps/ai-worker/src/chains/__tests__/scoring-with-monitoring.integration.test.ts, apps/ai-worker/src/metrics/__tests__/prometheus-exporter.test.ts, apps/ai-worker/src/metrics/prometheus-exporter.ts.\nCoverage before/after (touched area): lines 97.51 -> 98.20, branches 85.00 -> 88.49.\nCSV stays In Progress at 90%: validate-sprint-data does not accept the canonical Needs Human status yet (follow-up issue).\nRefresh 2026-10-29 (PR #1078 review round):\ngit_commit is the last pushed head, 87bbac6cc (pre-ship PASS + attestation ref). Commits since, not yet pushed: f4d9290d3 (drift sample bounds, case-insensitive :free in the scoring chain and calculateCost, spend log by error class), 65ecc91eb (CSV Artifacts To Track +15, spec ADR-088 Accepted), 5b4bc7f4e (lead id instead of email and error class instead of message in scoring and chain-monitor logs and in factors[].reasoning), df34ac20c (merge of origin/main e90716237, #1073), 55b19ff0a (first refresh), 19b87a762 (merge of origin/main 7ba4ce7e7, #1095 cuid record ids, no conflicts; recordIdSchema kept, leadId logging kept) and the commit carrying this refresh. Tests, Typecheck and Lint above ran this round at 19b87a762; Build is from the 87bbac6cc pre-ship and is re-run by pre-ship on the next push. STOA verdicts and compliance-check: execution/IFC-117/run-20261029-review/matop/. Follow-ups: #1094 (latent LOWs); advisory #1065 is pre-existing on main.",
+  "notes": "Verdict NEEDS_HUMAN. The code path is delivered and validated; the production KPIs are the owner's after ai-worker is promoted.\nOpen production evidence (who / query / pass):\nN1 Output-distribution shift detected within 1 day — owner — increase(intelliflow_ai_drift_detections_total[1d]) and intelliflow_ai_drift_checks_total{status=\"evaluated\"} after a natural shift or a seeded replay — pass: onset < 24h after the shift; with no shift, checks every 30 min for 7 days and evaluated after warm-up, else recorded as not exercised\nN2 Hallucination rate < 5% (detected by the heuristic checker; a floor) — owner — sum(increase(intelliflow_ai_hallucination_detected_total[7d])) / sum(increase(intelliflow_ai_hallucination_checks_total[7d])) — pass: < 0.05 with >= 200 checks, else insufficient data\nN3 Dashboard applied — ENV-008-AI follow-up, then owner — ENV-008-AI dashboard job reading dashboard-ai-models.json — pass: dashboard uid ifc117-ai-models live with panels showing data\nN4 AI rules applied and routed — owner — dispatch grafana-ai-alert-rules.yml (dry_run=false); Grafana Preview routing for {source:ifc-117, grafana_folder:intelliflow-ai} — pass: six ifc117-* rules visible; route resolves to the owner contact point\nN5 Metric names and service label verified — owner — dispatch grafana-ai-alert-rules.yml with dry_run=true after a scoring call — pass: non-zero series count for each selector and every expr query succeeds\nN6 ROI (estimated) tracked — owner — increase(intelliflow_ai_cost_usd_total[7d]) and increase(intelliflow_ai_value_estimated_usd_total[7d]) — pass: both non-zero over 7 days\nN7 Latency series — owner — histogram_quantile(0.95, sum by (le)(rate(intelliflow_ai_inference_latency_milliseconds_bucket[1h]))) — pass: a series exists\nPromotion follow-up: owner Talysson; date: the first production promotion of ai-worker after this PR merges (not scheduled yet). N3 also waits for the ENV-008-AI multi-file dashboard job.\nNo unit test is cited as proof of a KPI. The sprint-6 attestations are left untouched as history.\nGate 4b is recorded as failed and disclosed (see gate_results); the pre-ship gate runs on the single push after this attestation.\nDeleted: apps/ai-worker/src/chains/__tests__/scoring-with-monitoring.integration.test.ts, apps/ai-worker/src/metrics/__tests__/prometheus-exporter.test.ts, apps/ai-worker/src/metrics/prometheus-exporter.ts.\nCoverage before/after (touched area): lines 97.51 -> 98.20, branches 85.00 -> 88.49.\nCSV stays In Progress at 90%: validate-sprint-data does not accept the canonical Needs Human status yet (follow-up issue).\nRefresh 2026-10-29 (PR #1078 review round):\ngit_commit is the last pushed head, 87bbac6cc (pre-ship PASS + attestation ref). Commits since, not yet pushed: f4d9290d3 (drift sample bounds, case-insensitive :free in the scoring chain and calculateCost, spend log by error class), 65ecc91eb (CSV Artifacts To Track +15, spec ADR-088 Accepted), 5b4bc7f4e (lead id instead of email and error class instead of message in scoring and chain-monitor logs and in factors[].reasoning), df34ac20c (merge of origin/main e90716237, #1073), 55b19ff0a (first refresh), 19b87a762 (merge of origin/main 7ba4ce7e7, #1095 cuid record ids, no conflicts; recordIdSchema kept, leadId logging kept) and the commit carrying this refresh. Tests, Typecheck and Lint above ran this round at 19b87a762; Build is from the 87bbac6cc pre-ship and is re-run by pre-ship on the next push. STOA verdicts and compliance-check: execution/IFC-117/run-20261029-review/matop/. Follow-ups: #1094 (latent LOWs); advisory #1065 is pre-existing on main.\nDelta 2026-10-30: 7b6fb1136 replaces the raw error messages in five scoring job logs (primary recovered, fallback failed, heuristic, scheduled dispatcher, persist) with the classifyError class; src/jobs re-run at 7b6fb1136 (282 passed). The full-suite, typecheck and lint rows above are from 19b87a762; pre-ship re-runs them on the next push.",
   "spec_session_consensus": "APPROVED 5/5 (IFC-117-spec-consensus.json, threshold 0.66; ai-specialist, devops-lead, security-lead, domain-expert, test-engineer)",
   "plan_reviewer_verdict": "APPROVED_WITH_CHANGES",
   "plan_reviewer_agent": "plan-reviewer subagent (iterations 1-2 REVISE, iteration 3 APPROVED_WITH_CHANGES; IFC-117-plan.md Plan-Reviewer Sign-off)",
