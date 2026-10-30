@@ -25,9 +25,7 @@ import { useAuth } from '@/lib/auth';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
 import { revalidateTicketsCache } from '@/lib/tickets/revalidate-tickets-cache';
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const CUID_RE = /^c[a-z0-9]{8,}$/;
+import { isRecordId } from '@/lib/shared/record-id';
 
 const LEFT_META_SKELETON_KEYS = [
   'meta-0',
@@ -39,10 +37,6 @@ const LEFT_META_SKELETON_KEYS = [
 ] as const;
 const TAB_SKELETON_KEYS = ['tab-0', 'tab-1', 'tab-2', 'tab-3', 'tab-4'] as const;
 
-function isValidEntityId(id: string): boolean {
-  return UUID_RE.test(id) || CUID_RE.test(id);
-}
-
 export default function TicketDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -51,7 +45,7 @@ export default function TicketDetailPage() {
 
   const utils = api.useUtils();
 
-  const validId = isValidEntityId(ticketId);
+  const validId = isRecordId(ticketId);
 
   // tRPC queries — only fire when the URL param looks like a real ID
   const { data: ticket, isLoading } = api.ticket.getById.useQuery(
@@ -141,7 +135,7 @@ export default function TicketDetailPage() {
   const handleAssign = async (userId: string) => {
     const assigneeId = userId?.trim();
 
-    if (!assigneeId || !UUID_RE.test(assigneeId)) {
+    if (!assigneeId || !isRecordId(assigneeId)) {
       toast({
         title: 'Invalid Assignee',
         description: 'Cannot assign ticket because user ID is invalid.',

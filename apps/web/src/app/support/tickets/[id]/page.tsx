@@ -20,9 +20,8 @@ import type { TicketDetailData, ResolutionInput } from '@/components/tickets';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { normalizeAvatarSource } from '@/lib/shared/avatar-utils';
+import { isRecordId } from '@/lib/shared/record-id';
 import { mapTicketToDetailData } from '@/lib/tickets/ticket-detail-mapper';
-
-const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 export default function SupportTicketDetailPage() {
   const params = useParams();
@@ -85,7 +84,7 @@ export default function SupportTicketDetailPage() {
 
   const handleAssign = async (userId: string) => {
     const assigneeId = userId?.trim();
-    if (!assigneeId || !UUID_RE.test(assigneeId)) {
+    if (!assigneeId || !isRecordId(assigneeId)) {
       toast({
         title: 'Invalid Assignee',
         description: 'Cannot assign ticket because user ID is invalid.',

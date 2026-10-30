@@ -8,7 +8,8 @@ import { ContactList, type ContactListProps } from '@/components/contacts';
 import { api } from '@/lib/api';
 import { useRequireAuth } from '@/lib/auth/AuthContext';
 import { CONTACT_STATUSES } from '@intelliflow/domain';
-import { useContactFilterOptions, isValidUUID } from '@/hooks/use-dynamic-filters';
+import { useContactFilterOptions } from '@/hooks/use-dynamic-filters';
+import { isRecordId } from '@/lib/shared/record-id';
 import {
   SORT_OPTIONS,
   buildContactListQuery,
@@ -145,7 +146,7 @@ export default function ContactsPageClient({
   const { statusOptions, departmentOptions, accountOptions } = useContactFilterOptions({
     search: debouncedSearch || undefined,
     status: statusFilter ? [statusFilter as (typeof CONTACT_STATUSES)[number]] : undefined,
-    accountId: companyFilter && isValidUUID(companyFilter) ? companyFilter : undefined,
+    accountId: companyFilter && isRecordId(companyFilter) ? companyFilter : undefined,
     department: departmentFilter || undefined,
   });
 
