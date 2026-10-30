@@ -45,8 +45,8 @@
     },
     {
       "status": "In Progress",
-      "at": "2026-10-29T23:52:26Z",
-      "note": "PR #1078 review round (codex + adversarial). STOA Intelligence, Quality, Foundation and Security ran read-only as subagents, plus compliance-check; verdicts under execution/IFC-117/run-20261029-review/matop/. Fixes in f4d9290d3, 65ecc91eb and 5b4bc7f4e; main merged in df34ac20c. Verdict stays NEEDS_HUMAN."
+      "at": "2026-10-30T00:39:01Z",
+      "note": "PR #1078 review round (codex + adversarial). STOA Intelligence, Quality, Foundation and Security ran read-only as subagents, plus compliance-check; verdicts under execution/IFC-117/run-20261029-review/matop/. Fixes in f4d9290d3, 65ecc91eb and 5b4bc7f4e; main merged in df34ac20c and 19b87a762 (#1095). Verdict stays NEEDS_HUMAN."
     }
   ],
   "blockers": [
@@ -67,5 +67,5 @@
     }
   ],
   "percent_complete": 90,
-  "updated_at": "2026-10-29T23:52:26Z"
+  "updated_at": "2026-10-30T00:39:01Z"
 }
