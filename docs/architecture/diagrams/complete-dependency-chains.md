@@ -1390,7 +1390,8 @@ Dependency Chain:
                                     │    IFC-117       │
                                     │  AI Model        │
                                     │  Monitoring      │
-                                    │      ✅          │
+                                    │  ⏳ Needs Human  │
+                                    │  (prod unverif.) │
                                     └────────┬─────────┘
                                              │
               ┌──────────────────────────────┼──────────────────────────────┐
@@ -1419,7 +1420,7 @@ Dependency Chain:
                                  └──────────────────┘
 
 Dependency Chain:
-  IFC-117 (Monitoring) ✅ ──► IFC-214 (Redis Bridge) ✅ ──► IFC-215 (Payload Fidelity) ✅
+  IFC-117 (Monitoring) ⏳ Needs Human / production unverified ──► IFC-214 (Redis Bridge) ✅ ──► IFC-215 (Payload Fidelity) ✅
                             ──┬──► AUTOMATION-002 (Drift) ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 (UI) ⬜
                               ├──► TRACK-004 (Metrics) ⬜ ────────────────────────────────────────────────┘
                               └──► ai-metrics.ts (Val) ⬜ ────────────────────────────────────────────────┘
@@ -2154,7 +2155,7 @@ Analytics:     ANALYTICS-001 ✅ ──► IFC-200 ✅ ──► IFC-190 ✅ ─
 ```
 Ticket:           IFC-188 ✅ ──► validators ✅ ──► adapter ✅ ──► IFC-189 ✅ ──► PG-137 ✅
 NBA:              IFC-095 ✅ ──► IFC-039 ⬜ ──► nba.ts ⬜ ──► intelligence.router ──► PG-145 ⬜
-AI Monitoring:    IFC-117 ✅ ──► IFC-214 ✅ ──► IFC-215 ✅ ──► AUTOMATION-002 ⬜ ──► TRACK-004 ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 ⬜
+AI Monitoring:    IFC-117 ⏳ (Needs Human / production unverified) ──► IFC-214 ✅ ──► IFC-215 ✅ ──► AUTOMATION-002 ⬜ ──► TRACK-004 ⬜ ──► ai-monitoring.router ⬜ ──► PG-146 ⬜
 Domain Events:    IFC-150 ⬜ ──► IFC-151 ⬜ ──► OutboxRepository ⬜ ──► events-worker ⬜
 Workflow Engine:  IFC-028 ✅ ──► IFC-141 ⬜ ──► workflow.router ⬜ ──► IFC-031 ✅ / PG-147 ⬜
 Security/Secrets: EXC-SEC-001 ✅ ──► IFC-113 ⬜ ──► IFC-121 ⬜ ──► IFC-143 ⬜ ──► PG-120 ⬜

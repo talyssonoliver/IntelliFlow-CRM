@@ -1,0 +1,37 @@
+{
+  "task_id": "IFC-117",
+  "selected_on": "2026-10-25",
+  "selected_after": "context hydration at 2026-10-25T15:25:06Z (hydrated-context.json mtime); before the Phase 0.75 exploration agents were launched",
+  "mode": "subagent",
+  "agents": [
+    {
+      "role": "AI-Specialist",
+      "file": ".claude/agents/ai-specialist.md",
+      "reason": "Drift, hallucination, latency and ROI monitors live in apps/ai-worker/src/monitoring and wrap the LangChain scoring and auto-response chains"
+    },
+    {
+      "role": "DevOps-Lead",
+      "file": ".claude/agents/devops-lead.md",
+      "reason": "OTLP export from the ai-worker NodeSDK to Grafana Cloud, and the CI path (grafana-alert-rules.yml) that applies alert rules; dashboards have no CI path yet"
+    },
+    {
+      "role": "Security-Lead",
+      "file": ".claude/agents/security-lead.md",
+      "reason": "Metric labels must carry no PII or tenant identifiers; the dead prometheus-exporter has a Bearer-auth /metrics surface; Grafana service-account token handling"
+    },
+    {
+      "role": "Domain-Expert",
+      "file": ".claude/agents/domain-expert.md",
+      "reason": "Always included: what drift, hallucination rate and ROI mean for lead scoring, and the DoD targets (drift within 1 day, hallucination <5%, ROI tracked)"
+    },
+    {
+      "role": "Test-Engineer",
+      "file": ".claude/agents/test-engineer.md",
+      "reason": "Always included: the coordinator requires a test that drives a real chain call and asserts the OTel instrument recorded, not a recorder-only unit test"
+    }
+  ],
+  "excluded": [
+    { "role": "Frontend-Lead", "reason": "No UI change: in-app monitoring pages (PG-146/152/153) already read the DB/Redis tier" },
+    { "role": "Data-Engineer", "reason": "No Prisma schema change expected (ADR-043 persistence stays as is)" }
+  ]
+}

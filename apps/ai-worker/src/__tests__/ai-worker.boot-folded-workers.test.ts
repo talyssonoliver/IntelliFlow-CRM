@@ -160,6 +160,28 @@ vi.mock('../monitoring/monitoring-flush.service', () => ({
   MonitoringFlushService: vi.fn().mockImplementation(() => ({ start: vi.fn(), stop: vi.fn() })),
 }));
 
+// IFC-117: the drift scheduler and the OTel facade are started first in onStart().
+const drift = vi.hoisted(() => {
+  const calls: string[] = [];
+  return {
+    calls,
+    start: vi.fn(() => calls.push('scheduler.start')),
+    stop: vi.fn(() => calls.push('scheduler.stop')),
+    registerAiMetrics: vi.fn(() => calls.push('registerAiMetrics')),
+  };
+});
+
+vi.mock('../monitoring/drift-scheduler', () => ({
+  DriftDetectionScheduler: vi.fn().mockImplementation(function () {
+    return { start: drift.start, stop: drift.stop };
+  }),
+}));
+
+vi.mock('../monitoring/otel-ai-metrics', () => ({
+  registerAiMetrics: drift.registerAiMetrics,
+  recordDriftTick: vi.fn(),
+}));
+
 vi.mock('../utils/audit-log', () => ({
   setAuditLogAdapter: vi.fn(),
 }));
@@ -227,6 +249,7 @@ vi.mock('express', () => {
 // SUT import — after all vi.mock() calls
 // ---------------------------------------------------------------------------
 import { AIWorker } from '../ai-worker';
+import { DriftDetectionScheduler } from '../monitoring/drift-scheduler';
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -380,5 +403,41 @@ describe('AIWorker — folded-worker boot methods (#230)', () => {
 
     const infoCalls = (worker as any).logger.info.mock.calls.map((c: unknown[]) => c[0]);
     expect(infoCalls).not.toContain('NotificationEmailWorker stopped');
+  });
+});
+
+describe('AIWorker — IFC-117 drift scheduler lifecycle', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    drift.calls.length = 0;
+    // resetMocks is on in this project: re-apply implementations per test.
+    drift.start.mockImplementation(() => drift.calls.push('scheduler.start'));
+    drift.stop.mockImplementation(() => drift.calls.push('scheduler.stop'));
+    drift.registerAiMetrics.mockImplementation(() => drift.calls.push('registerAiMetrics'));
+    vi.mocked(DriftDetectionScheduler).mockImplementation(function () {
+      return { start: drift.start, stop: drift.stop } as never;
+    });
+  });
+
+  it('registers the AI metrics and starts the drift scheduler even when a later onStart step throws', async () => {
+    const worker = new AIWorker();
+    (worker as any).registerScheduledJobs = vi.fn().mockRejectedValue(new Error('redis down'));
+
+    await expect((worker as any).onStart()).rejects.toThrow('redis down');
+
+    expect(drift.calls).toEqual(['registerAiMetrics', 'scheduler.start']);
+  });
+
+  it('stops the drift scheduler before the monitoring flush service on shutdown', async () => {
+    const worker = new AIWorker();
+    const flushStop = vi.fn(async () => {
+      drift.calls.push('flush.stop');
+    });
+    (worker as any).driftScheduler = { stop: drift.stop };
+    (worker as any).monitoringFlushService = { stop: flushStop };
+
+    await (worker as any).onStop();
+
+    expect(drift.calls).toEqual(['scheduler.stop', 'flush.stop']);
   });
 });

@@ -1,0 +1,47 @@
+{
+  "task_id": "IFC-117",
+  "run_id": "run-20261029-review",
+  "reviewed_at": "2026-10-29",
+  "reviewed_head": "87bbac6cc plus the uncommitted working tree that became f4d9290d3",
+  "mode": "read-only (no test, build or lint run by the reviewer; memory commit above 80%)",
+  "stoa": "Foundation",
+  "agent": "stoa-foundation subagent (Agent tool)",
+  "verdict": "WARN",
+  "gates": [
+    "typecheck",
+    "build",
+    "lint",
+    "format-check",
+    "architecture",
+    "validate-sprint-data",
+    "actionlint",
+    "split CSV reassembly",
+    "workflow review"
+  ],
+  "findings": [
+    {
+      "severity": "MEDIUM",
+      "where": "branch state",
+      "issue": "origin/main e90716237 (#1073) changed grafana-provisioning.mjs, imported by the new script",
+      "resolution": "merged (df34ac20c); Grafana tools tests 171/171 after the merge (validation/tools-grafana.txt)"
+    },
+    {
+      "severity": "MEDIUM",
+      "where": "working tree",
+      "issue": "edits not covered by pre-ship",
+      "resolution": "committed; pre-ship pending GO"
+    },
+    {
+      "severity": "LOW",
+      "where": "artifacts/preship/last-run.json",
+      "issue": "actionlint SKIPPED_PRECONDITION",
+      "resolution": "recorded; CI runs actionlint"
+    },
+    {
+      "severity": "LOW",
+      "where": "audit / osv-scan advisories",
+      "issue": "systeminformation via @opentelemetry",
+      "resolution": "pre-existing on main, tracked in #1065"
+    }
+  ]
+}
