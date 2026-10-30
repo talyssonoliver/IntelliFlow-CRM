@@ -1,0 +1,86 @@
+
+======================================================================
+  ARTIFACT RECONCILIATION — Task: IFC-117
+======================================================================
+
+  CSV Artifacts:  8
+  Plan Artifacts: 29
+  Plan File:      C:\Users\talys\projects\intelliFlow-CRM-worktrees\ifc-117\.specify\sprints\sprint-18\planning\IFC-117-plan.md
+
+  | Source | Path | On Disk | In Plan | In CSV |
+  |--------|------|---------|---------|--------|
+  | Both   | artifacts/metrics/ai-metrics.json | YES     | YES     | YES    |
+  | CSV    | docs/planning/drift-dashboard.md | YES     | NO      | YES    |
+  | CSV    | infra/monitoring/alerts-config.yaml | YES     | NO      | YES    |
+  | Both   | infra/monitoring/grafana/cloud/dashboard-ai-models.json | YES     | YES     | YES    |
+  | Both   | infra/monitoring/grafana/cloud/ai-alert-rules.json | YES     | YES     | YES    |
+  | CSV    | apps/ai-worker/src/monitoring/otel-ai-metrics.ts | YES     | NO      | YES    |
+  | CSV    | .specify/sprints/sprint-6/attestations/IFC-117/attestation.json | YES     | NO      | YES    |
+  | CSV    | .specify/sprints/sprint-18/attestations/IFC-117/attestation.json | YES     | NO      | YES    |
+  | Plan   | apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.test.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.global.test.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/__tests__/chain-monitor.otel.test.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/__tests__/drift-detector.shift.test.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/__tests__/drift-scheduler.test.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts | YES     | YES     | NO     |
+  | Plan   | tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts | YES     | YES     | NO     |
+  | Plan   | tools/scripts/__tests__/ai-monitoring-assets.test.ts | YES     | YES     | NO     |
+  | Plan   | tools/scripts/__tests__/fixtures/ifc-117-legacy/ai-grafana-dashboard.json | YES     | YES     | NO     |
+  | Plan   | tools/scripts/__tests__/fixtures/ifc-117-legacy/ai-prometheus-rules.yaml | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/otel-ai-types.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/drift-stats.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/drift-scheduler.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/jobs/__tests__/feedback-analytics.job.test.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/package.json | YES     | YES     | NO     |
+  | Plan   | pnpm-lock.yaml | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/drift-detector.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/chain-monitor.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/chains/scoring.chain.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/ai-worker.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/jobs/feedback-analytics.job.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/index.ts | YES     | YES     | NO     |
+  | Plan   | apps/ai-worker/src/monitoring/drift-detector.test.ts | YES     | YES     | NO     |
+  | Plan   | docs/architecture/diagrams/ai-intelligence-dependency-chain.md | YES     | YES     | NO     |
+  | Plan   | apps/project-tracker/docs/metrics/_global/Sprint_plan.csv | YES     | YES     | NO     |
+  | Plan   | docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md | YES     | YES     | NO     |
+
+  CSV-only (in CSV but not in plan):
+    - docs/planning/drift-dashboard.md
+    - infra/monitoring/alerts-config.yaml
+    - apps/ai-worker/src/monitoring/otel-ai-metrics.ts
+    - .specify/sprints/sprint-6/attestations/IFC-117/attestation.json
+    - .specify/sprints/sprint-18/attestations/IFC-117/attestation.json
+
+  Plan-only (in plan but not in CSV):
+    - apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.test.ts
+    - apps/ai-worker/src/monitoring/__tests__/otel-ai-metrics.global.test.ts
+    - apps/ai-worker/src/monitoring/__tests__/chain-monitor.otel.test.ts
+    - apps/ai-worker/src/monitoring/__tests__/drift-detector.shift.test.ts
+    - apps/ai-worker/src/monitoring/__tests__/drift-scheduler.test.ts
+    - apps/ai-worker/src/chains/__tests__/scoring.chain.otel.integration.test.ts
+    - tools/scripts/__tests__/apply-grafana-ai-alert-rules.test.ts
+    - tools/scripts/__tests__/ai-monitoring-assets.test.ts
+    - tools/scripts/__tests__/fixtures/ifc-117-legacy/ai-grafana-dashboard.json
+    - tools/scripts/__tests__/fixtures/ifc-117-legacy/ai-prometheus-rules.yaml
+    - apps/ai-worker/src/monitoring/otel-ai-types.ts
+    - apps/ai-worker/src/monitoring/drift-stats.ts
+    - apps/ai-worker/src/monitoring/drift-scheduler.ts
+    - apps/ai-worker/src/jobs/__tests__/feedback-analytics.job.test.ts
+    - apps/ai-worker/package.json
+    - pnpm-lock.yaml
+    - apps/ai-worker/src/monitoring/drift-detector.ts
+    - apps/ai-worker/src/monitoring/chain-monitor.ts
+    - apps/ai-worker/src/chains/scoring.chain.ts
+    - apps/ai-worker/src/ai-worker.ts
+    - apps/ai-worker/src/jobs/feedback-analytics.job.ts
+    - apps/ai-worker/src/monitoring/index.ts
+    - apps/ai-worker/src/monitoring/drift-detector.test.ts
+    - docs/architecture/diagrams/ai-intelligence-dependency-chain.md
+    - apps/project-tracker/docs/metrics/_global/Sprint_plan.csv
+    - docs/architecture/adr/ADR-088-ai-model-monitoring-otel-export.md
+
+  Fully aligned: 3 artifact(s)
+
+  STATUS: MISMATCH — artifacts are not fully reconciled
+======================================================================
+
