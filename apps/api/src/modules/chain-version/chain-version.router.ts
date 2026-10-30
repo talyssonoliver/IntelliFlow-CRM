@@ -11,6 +11,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, protectedProcedure, tenantProcedure, adminProcedure } from '../../trpc';
 import {
@@ -65,7 +66,7 @@ export const chainVersionRouter = createTRPCRouter({
   update: tenantProcedure
     .input(
       z.object({
-        versionId: z.uuid(),
+        versionId: recordIdSchema,
         data: updateChainVersionSchema,
       })
     )
@@ -91,7 +92,7 @@ export const chainVersionRouter = createTRPCRouter({
    * SECURITY: Uses adminProcedure
    */
   deprecate: adminProcedure
-    .input(z.object({ versionId: z.uuid() }))
+    .input(z.object({ versionId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
@@ -104,7 +105,7 @@ export const chainVersionRouter = createTRPCRouter({
    * SECURITY: Uses adminProcedure
    */
   archive: adminProcedure
-    .input(z.object({ versionId: z.uuid() }))
+    .input(z.object({ versionId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
       const typedCtx = getTenantContext(ctx);
@@ -136,7 +137,7 @@ export const chainVersionRouter = createTRPCRouter({
    * SECURITY: Uses tenantProcedure
    */
   getById: tenantProcedure
-    .input(z.object({ versionId: z.uuid() }))
+    .input(z.object({ versionId: recordIdSchema }))
     .query(async ({ ctx, input }) => {
       const chainVersionService = getChainVersionService(ctx);
       return chainVersionService.getVersion(input.versionId);
@@ -252,7 +253,7 @@ export const chainVersionRouter = createTRPCRouter({
   getAuditLog: adminProcedure
     .input(
       z.object({
-        versionId: z.uuid(),
+        versionId: recordIdSchema,
         limit: z.number().int().min(1).max(100).default(50),
       })
     )
@@ -285,8 +286,8 @@ export const chainVersionRouter = createTRPCRouter({
   compare: tenantProcedure
     .input(
       z.object({
-        versionIdA: z.uuid(),
-        versionIdB: z.uuid(),
+        versionIdA: recordIdSchema,
+        versionIdB: recordIdSchema,
       })
     )
     .query(async ({ ctx, input }) => {

@@ -48,7 +48,7 @@ export const SCHEDULED_INSIGHT_JOB_NAME = 'scheduled-insight-refresh';
 /** Schema for insight job data */
 export const InsightJobDataSchema = z.object({
   tenantId: recordIdSchema,
-  userId: z.string(),
+  userId: recordIdSchema,
   correlationId: z.string().optional(),
   dealsAtRisk: z
     .array(

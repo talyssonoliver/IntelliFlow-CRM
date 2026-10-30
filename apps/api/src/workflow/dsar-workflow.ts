@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { randomBytes } from 'node:crypto';
 
 /**
@@ -28,7 +29,7 @@ export const dsarRequestSchema = z.object({
     'restriction',
     'objection',
   ]),
-  subjectId: z.uuid(),
+  subjectId: recordIdSchema,
   subjectEmail: z.email(),
   requestDetails: z.string().optional(),
   preferredFormat: z.enum(['json', 'csv', 'pdf']).default('json'),

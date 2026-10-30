@@ -10,6 +10,7 @@
  */
 
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 
 // ============================================
 // Search Configuration
@@ -43,7 +44,7 @@ export const SearchConfigSchema = z.object({
     .optional(),
 
   // Document-specific filters (IFC-155)
-  caseId: z.uuid().optional(),
+  caseId: recordIdSchema.optional(),
   classification: z.array(z.string()).optional(),
   documentTypes: z.array(z.string()).optional(),
   semanticThreshold: z.number().min(0).max(1).default(0.7),

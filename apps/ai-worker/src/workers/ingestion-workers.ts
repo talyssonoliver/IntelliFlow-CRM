@@ -45,8 +45,8 @@ export const IngestionJobDataSchema = z.object({
   documentId: recordIdSchema,
   sourceUrl: z.string().url(),
   format: z.string(),
-  tenantId: z.string(),
-  userId: z.string().optional(),
+  tenantId: recordIdSchema,
+  userId: recordIdSchema.optional(),
   language: z.string().default('en'),
   options: z
     .object({

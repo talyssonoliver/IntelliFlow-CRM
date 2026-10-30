@@ -15,6 +15,7 @@
 
 import { context as otelContext, propagation } from '@opentelemetry/api';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@intelliflow/db';
 import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
@@ -162,7 +163,7 @@ const entityTypeSchema = z.enum(['lead', 'contact', 'opportunity', 'account']);
  */
 const getInsightsInputSchema = z.object({
   entityType: entityTypeSchema,
-  entityId: z.uuid(),
+  entityId: recordIdSchema,
 });
 
 /**
@@ -170,7 +171,7 @@ const getInsightsInputSchema = z.object({
  */
 const triggerPredictionInputSchema = z.object({
   entityType: entityTypeSchema,
-  entityId: z.uuid(),
+  entityId: recordIdSchema,
   predictionType: z.enum(['CHURN_RISK', 'NEXT_BEST_ACTION', 'QUALIFICATION']),
   priority: z.enum(['LOW', 'NORMAL', 'HIGH']).default('NORMAL'),
 });
@@ -727,7 +728,7 @@ export const intelligenceRouter = createTRPCRouter({
    * Returns the stored AI insights from LeadAIInsight model
    */
   getLeadInsights: tenantProcedure
-    .input(z.object({ leadId: z.uuid() }))
+    .input(z.object({ leadId: recordIdSchema }))
     .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
@@ -777,7 +778,7 @@ export const intelligenceRouter = createTRPCRouter({
    * Returns the stored AI insights from ContactAIInsight model
    */
   getContactInsights: tenantProcedure
-    .input(z.object({ contactId: z.uuid() }))
+    .input(z.object({ contactId: recordIdSchema }))
     .output(aiInsightsResponseSchema.nullable())
     .query(async ({ ctx, input }) => {
       const typedCtx = getTenantContext(ctx);
@@ -1034,7 +1035,7 @@ export const intelligenceRouter = createTRPCRouter({
   updateLeadInsights: tenantProcedure
     .input(
       z.object({
-        leadId: z.uuid(),
+        leadId: recordIdSchema,
         churnRisk: churnRiskLevelSchema.optional(),
         conversionProbability: z.number().min(0).max(100).optional(),
         estimatedValue: z.number().optional(),
@@ -1122,7 +1123,7 @@ export const intelligenceRouter = createTRPCRouter({
   updateContactInsights: tenantProcedure
     .input(
       z.object({
-        contactId: z.uuid(),
+        contactId: recordIdSchema,
         churnRisk: churnRiskLevelSchema.optional(),
         conversionProbability: z.number().min(0).max(100).optional(),
         lifetimeValue: z.number().optional(),

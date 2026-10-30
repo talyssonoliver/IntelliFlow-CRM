@@ -36,6 +36,7 @@
 import { Job, Worker, Queue } from 'bullmq';
 import pino from 'pino';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { renderNotificationEmail } from './notification-email-template.js';
 import type { Result, DomainError } from '@intelliflow/domain';
 import type { NotificationResult } from '@intelliflow/application';
@@ -58,7 +59,7 @@ export const EMAIL_NOTIFICATIONS_QUEUE = 'intelliflow-notifications-email';
 export const NotificationEmailJobDataSchema = z.object({
   type: z.string(),
   recipientUserId: z.string().optional(),
-  tenantId: z.string(),
+  tenantId: recordIdSchema,
   subject: z.string(),
   body: z.string(),
   entityType: z.string().optional(),

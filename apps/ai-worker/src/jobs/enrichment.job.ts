@@ -15,6 +15,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 import { prisma } from '@intelliflow/db';
 import { enrichContact, type EnrichContactResult } from '../contact-enrichment.chain.js';
@@ -32,7 +33,7 @@ const logger = pino({
 export const EnrichmentJobDataSchema = z.object({
   entityType: z.enum(['contact', 'account']),
   entityId: z.string().min(1),
-  tenantId: z.string().min(1),
+  tenantId: recordIdSchema,
   _otelCarrier: z.record(z.string(), z.string()).optional(),
 });
 export type EnrichmentJobData = z.infer<typeof EnrichmentJobDataSchema>;
@@ -47,6 +48,58 @@ function isIndustryEmpty(industry: string | null | undefined): boolean {
   return industry === null || industry === undefined || industry.trim() === '';
 }
 
+async function processContactEnrichment(
+  entityId: string,
+  tenantId: string
+): Promise<EnrichmentJobResult> {
+  const setting = await prisma.contactAutomationSetting.findUnique({ where: { tenantId } });
+  if (!setting?.aiEnrichment) {
+    logger.info({ entityId, tenantId }, 'enrichment skipped — toggle disabled');
+    return { skipped: true };
+  }
+  const contact = await prisma.contact.findUnique({
+    where: { tenantId_id: { tenantId, id: entityId } },
+  });
+  if (!contact) return { skipped: true };
+  const enrichment = await enrichContact({
+    contactId: entityId,
+    tenantId,
+    seed: {
+      email: contact.email,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      ...(contact.company ? { company: contact.company } : {}),
+    },
+  });
+  return { enrichment };
+}
+
+/** Infers the account industry from the tenant's active vocabulary; undefined when it is empty. */
+async function inferIndustryFromVocabulary(
+  entityId: string,
+  tenantId: string,
+  account: { name: string; website: string | null; description: string | null }
+): Promise<EnrichmentJobResult['industry'] | undefined> {
+  const vocab = await prisma.accountIndustryOption.findMany({
+    where: { tenantId, isActive: true },
+    select: { key: true, label: true },
+  });
+  if (vocab.length === 0) {
+    logger.info({ entityId, tenantId }, 'industry inference skipped — empty vocabulary');
+    return undefined;
+  }
+  return inferAccountIndustry({
+    accountId: entityId,
+    tenantId,
+    seed: {
+      name: account.name,
+      ...(account.website ? { website: account.website } : {}),
+      ...(account.description ? { description: account.description } : {}),
+    },
+    vocabulary: vocab,
+  });
+}
+
 export async function processEnrichmentJob(
   job: Job<EnrichmentJobData>
 ): Promise<EnrichmentJobResult> {
@@ -54,28 +107,7 @@ export async function processEnrichmentJob(
   const { entityType, entityId, tenantId } = data;
 
   try {
-    if (entityType === 'contact') {
-      const setting = await prisma.contactAutomationSetting.findUnique({ where: { tenantId } });
-      if (!setting?.aiEnrichment) {
-        logger.info({ entityId, tenantId }, 'enrichment skipped — toggle disabled');
-        return { skipped: true };
-      }
-      const contact = await prisma.contact.findUnique({
-        where: { tenantId_id: { tenantId, id: entityId } },
-      });
-      if (!contact) return { skipped: true };
-      const enrichment = await enrichContact({
-        contactId: entityId,
-        tenantId,
-        seed: {
-          email: contact.email,
-          firstName: contact.firstName,
-          lastName: contact.lastName,
-          ...(contact.company ? { company: contact.company } : {}),
-        },
-      });
-      return { enrichment };
-    }
+    if (entityType === 'contact') return await processContactEnrichment(entityId, tenantId);
 
     // Account branch — single setting load drives both toggles.
     const setting = await prisma.accountAutomationSetting.findUnique({ where: { tenantId } });
@@ -106,24 +138,8 @@ export async function processEnrichmentJob(
     }
 
     if (wantsIndustry && isIndustryEmpty(account.industry)) {
-      const vocab = await prisma.accountIndustryOption.findMany({
-        where: { tenantId, isActive: true },
-        select: { key: true, label: true },
-      });
-      if (vocab.length === 0) {
-        logger.info({ entityId, tenantId }, 'industry inference skipped — empty vocabulary');
-      } else {
-        result.industry = await inferAccountIndustry({
-          accountId: entityId,
-          tenantId,
-          seed: {
-            name: account.name,
-            ...(account.website ? { website: account.website } : {}),
-            ...(account.description ? { description: account.description } : {}),
-          },
-          vocabulary: vocab,
-        });
-      }
+      const industry = await inferIndustryFromVocabulary(entityId, tenantId, account);
+      if (industry !== undefined) result.industry = industry;
     }
 
     return result;

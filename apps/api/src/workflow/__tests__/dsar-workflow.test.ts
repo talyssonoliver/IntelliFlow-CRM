@@ -165,10 +165,10 @@ describe('DSARWorkflow', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid UUID for subjectId', () => {
+    it('should reject an unsafe subjectId', () => {
       const result = dsarRequestSchema.safeParse({
         requestType: 'access',
-        subjectId: 'not-a-uuid',
+        subjectId: 'not a/valid id',
         subjectEmail: 'user@example.com',
       });
 

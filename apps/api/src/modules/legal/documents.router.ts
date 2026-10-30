@@ -13,6 +13,7 @@ import {
 } from '@intelliflow/validators';
 import { PrismaCaseDocumentRepository } from '@intelliflow/adapters';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { TRPCError } from '@trpc/server';
 import { createTRPCRouter, moduleTenantProcedure } from '../../trpc';
 import { container } from '../../container';
@@ -57,8 +58,8 @@ const createDocumentInputSchema = z
     documentTypeLabel: z.string().trim().min(1).max(100).optional(),
     classification: z.enum(['PUBLIC', 'INTERNAL', 'CONFIDENTIAL', 'PRIVILEGED']),
     tags: z.array(z.string().max(50)).max(20).default([]),
-    relatedCaseId: z.uuid().optional(),
-    relatedContactId: z.uuid().optional(),
+    relatedCaseId: recordIdSchema.optional(),
+    relatedContactId: recordIdSchema.optional(),
     contentHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
     mimeType: z.string().min(1),
     sizeBytes: z.number().int().positive(),
@@ -74,26 +75,26 @@ const createDocumentInputSchema = z
   });
 
 const grantAccessInputSchema = z.object({
-  documentId: z.uuid(),
-  principalId: z.uuid(),
+  documentId: recordIdSchema,
+  principalId: recordIdSchema,
   principalType: z.enum(['USER', 'ROLE', 'TENANT']),
   accessLevel: z.enum(['NONE', 'VIEW', 'COMMENT', 'EDIT', 'ADMIN']),
   expiresAt: z.coerce.date().optional(),
 });
 
 const createVersionInputSchema = z.object({
-  documentId: z.uuid(),
+  documentId: recordIdSchema,
   versionType: z.enum(['major', 'minor', 'patch']),
   storageKey: z.string().min(1),
   contentHash: z.string().check(z.regex(/^[a-f0-9]{64}$/)),
 });
 
 const signDocumentInputSchema = z.object({
-  documentId: z.uuid(),
+  documentId: recordIdSchema,
 });
 
 const placeLegalHoldInputSchema = z.object({
-  documentId: z.uuid(),
+  documentId: recordIdSchema,
   retentionUntil: z.coerce.date(),
 });
 
@@ -260,7 +261,7 @@ export const documentsRouter = createTRPCRouter({
   /**
    * Get document by ID
    */
-  getById: tenantProcedure.input(z.object({ id: z.uuid() })).query(async ({ ctx, input }) => {
+  getById: tenantProcedure.input(z.object({ id: recordIdSchema })).query(async ({ ctx, input }) => {
     const userId = ctx.user?.userId;
     if (!userId) {
       throw new TRPCError({ code: 'UNAUTHORIZED', message: 'User not authenticated' });
@@ -293,7 +294,7 @@ export const documentsRouter = createTRPCRouter({
     .input(
       z
         .object({
-          caseId: z.uuid().optional(),
+          caseId: recordIdSchema.optional(),
           status: z
             .enum(['DRAFT', 'UNDER_REVIEW', 'APPROVED', 'SIGNED', 'ARCHIVED', 'SUPERSEDED'])
             .optional(),
@@ -383,7 +384,7 @@ export const documentsRouter = createTRPCRouter({
    * Revoke access from a user or role
    */
   revokeAccess: tenantProcedure
-    .input(z.object({ documentId: z.uuid(), principalId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema, principalId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -417,7 +418,7 @@ export const documentsRouter = createTRPCRouter({
    * Submit document for review
    */
   submitForReview: tenantProcedure
-    .input(z.object({ documentId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -450,7 +451,7 @@ export const documentsRouter = createTRPCRouter({
    * Approve document
    */
   approve: tenantProcedure
-    .input(z.object({ documentId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -542,7 +543,7 @@ export const documentsRouter = createTRPCRouter({
    * Archive document
    */
   archive: tenantProcedure
-    .input(z.object({ documentId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -605,7 +606,7 @@ export const documentsRouter = createTRPCRouter({
    * Release legal hold
    */
   releaseLegalHold: tenantProcedure
-    .input(z.object({ documentId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       const userRole = ctx.user?.role;
@@ -635,7 +636,7 @@ export const documentsRouter = createTRPCRouter({
    * Soft delete document
    */
   delete: tenantProcedure
-    .input(z.object({ documentId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema }))
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -667,7 +668,7 @@ export const documentsRouter = createTRPCRouter({
    * Get a signed URL for document preview/download (AC-004)
    */
   getSignedUrl: tenantProcedure
-    .input(z.object({ documentId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema }))
     .query(async ({ ctx, input }) => {
       const userId = ctx.user?.userId;
       if (!userId) {
@@ -700,7 +701,7 @@ export const documentsRouter = createTRPCRouter({
    * Get audit trail for document
    */
   getAuditTrail: tenantProcedure
-    .input(z.object({ documentId: z.uuid() }))
+    .input(z.object({ documentId: recordIdSchema }))
     .query(async ({ ctx, input }): Promise<DocumentAuditEntryDto[]> => {
       const userId = ctx.user?.userId;
       if (!userId) {

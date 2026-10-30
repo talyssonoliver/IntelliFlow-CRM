@@ -71,7 +71,8 @@ export const PredictionJobDataSchema = z.object({
     .string({
       error: () => 'tenantId is required for prediction jobs - tenant isolation enforced',
     })
-    .min(1, 'tenantId is required for prediction jobs - tenant isolation enforced'),
+    .min(1, 'tenantId is required for prediction jobs - tenant isolation enforced')
+    .pipe(recordIdSchema),
   context: z.record(z.string(), z.unknown()).optional(),
   correlationId: z.string().optional(),
   priority: z.number().min(1).max(10).default(5),
