@@ -369,9 +369,15 @@ const STEPS = [
     required: true,
   },
   {
+    // #1100: locally the turbo typecheck runs with --concurrency (default 3,
+    // PRESHIP_TYPECHECK_CONCURRENCY overrides it); all packages at once was the
+    // gate's memory peak. Under CI it keeps turbo's default parallelism. See
+    // scripts/lib/preship-typecheck.mjs.
     id: 'typecheck',
-    description: 'turbo run typecheck + sonar-guard',
-    cmd: ['pnpm', 'run', 'typecheck'],
+    description: IS_CI
+      ? 'turbo run typecheck + sonar-guard'
+      : 'turbo run typecheck (bounded concurrency) + sonar-guard',
+    cmd: ['node', 'scripts/run-typecheck.mjs'],
     required: true,
   },
   {
@@ -545,8 +551,12 @@ const STEPS = [
         process.env.PRISMA_FIELD_ENCRYPTION_KEY || 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=',
       AI_AUDIT_SIGNING_KEY:
         process.env.AI_AUDIT_SIGNING_KEY || 'ci-build-stub-key-not-used-at-runtime',
-      DATABASE_URL: process.env.DATABASE_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
-      DIRECT_URL: process.env.DIRECT_URL || `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      DATABASE_URL:
+        process.env.DATABASE_URL ||
+        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
+      DIRECT_URL:
+        process.env.DIRECT_URL ||
+        `postgresql://${STUB_DB_USER}:${STUB_DB_USER}@localhost:5432/stub`,
       SUPABASE_URL: process.env.SUPABASE_URL || 'https://stub.supabase.co',
       SUPABASE_ANON_KEY:
         process.env.SUPABASE_ANON_KEY ||
