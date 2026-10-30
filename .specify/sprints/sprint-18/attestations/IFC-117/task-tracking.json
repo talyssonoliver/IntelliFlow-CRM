@@ -52,6 +52,11 @@
       "status": "In Progress",
       "at": "2026-10-30T10:36:28Z",
       "note": "PR #1078 delta review: codex confirmed fixes 1-4; the scoring job now logs error classes on all five failure paths (7b6fb1136). Verdict stays NEEDS_HUMAN."
+    },
+    {
+      "status": "In Progress",
+      "at": "2026-10-30T11:18:41Z",
+      "note": "Merged origin/main e032ee9f4 (#1056, PG-203 DSAR) in 8f69b2c74, no conflicts. The scoring-job canary test now mocks the PG-203 data-request guard. Full ai-worker suite re-run. Verdict stays NEEDS_HUMAN."
     }
   ],
   "blockers": [
@@ -72,5 +77,5 @@
     }
   ],
   "percent_complete": 90,
-  "updated_at": "2026-10-30T10:36:28Z"
+  "updated_at": "2026-10-30T11:18:41Z"
 }

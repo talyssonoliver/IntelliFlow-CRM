@@ -45,6 +45,19 @@ const prismaMock = vi.hoisted(() => ({
 }));
 vi.mock('@intelliflow/db', () => ({ prisma: prismaMock }));
 
+// PG-203: every lead is eligible and the locked write runs straight against the prisma mock.
+// The guard itself is tested in lib/__tests__/data-request-guard.test.ts.
+vi.mock('../../lib/data-request-guard', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  scoringBlockedBy: vi.fn(async () => null),
+  writeIfStillEligible: vi.fn(
+    async (_prisma: unknown, _job: unknown, write: (tx: unknown) => Promise<unknown>) => ({
+      written: true,
+      value: await write(prismaMock),
+    })
+  ),
+}));
+
 // A configured fallback provider, so the #324 job-level fallback path runs deterministically.
 vi.mock('../../lib/llm-factory', async (importActual) => {
   const actual = (await importActual()) as Record<string, unknown>;
