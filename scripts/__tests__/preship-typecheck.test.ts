@@ -4,11 +4,13 @@
  * concurrency, because all packages at once was the memory peak that got the
  * gate killed; under CI it keeps turbo's default parallelism.
  */
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import path from 'node:path';
 
 import {
   DEFAULT_LOCAL_TYPECHECK_CONCURRENCY,
   CONCURRENCY_ENV,
+  runTypecheck,
   typecheckConcurrency,
   typecheckPlan,
 } from '../lib/preship-typecheck.mjs';
@@ -62,5 +64,99 @@ describe('typecheckPlan', () => {
     expect(plan[0].args).toEqual(['run', 'typecheck']);
     expect(plan[0].args.some((a: string) => a.startsWith('--concurrency'))).toBe(false);
     expect(plan[1].args).toEqual(['run', 'lint:sonar:guard']);
+  });
+});
+
+describe('runTypecheck', () => {
+  const root = path.join('repo', 'root');
+  const turbo = path.join(root, 'node_modules', 'turbo', 'bin', 'turbo');
+
+  function setup(results: Array<{ status?: number | null; error?: Error }> = []) {
+    const spawn = vi.fn((_file: string, _args: string[], _opts: object) => {
+      const r = results.shift() ?? { status: 0 };
+      return { status: r.status === undefined ? 0 : r.status, error: r.error };
+    });
+    const log = vi.fn();
+    const logError = vi.fn();
+    return { spawn, log, logError };
+  }
+
+  it('runs turbo through node, then the sonar guard through pnpm, and returns 0', () => {
+    const { spawn, log, logError } = setup();
+
+    const code = runTypecheck({
+      isCI: false,
+      env: {},
+      root,
+      spawn,
+      log,
+      logError,
+      execPath: 'node-bin',
+      platform: 'linux',
+    });
+
+    expect(code).toBe(0);
+    expect(spawn).toHaveBeenCalledTimes(2);
+    expect(spawn.mock.calls[0]).toEqual([
+      'node-bin',
+      [turbo, 'run', 'typecheck', '--concurrency=3'],
+      { cwd: root, stdio: 'inherit' },
+    ]);
+    expect(spawn.mock.calls[1]).toEqual([
+      'pnpm',
+      ['run', 'lint:sonar:guard'],
+      { cwd: root, stdio: 'inherit', shell: false },
+    ]);
+    expect(logError).not.toHaveBeenCalled();
+  });
+
+  it('uses a shell for pnpm on win32', () => {
+    const { spawn, log, logError } = setup();
+
+    runTypecheck({ isCI: true, env: {}, root, spawn, log, logError, platform: 'win32' });
+
+    expect(spawn.mock.calls[0][1]).toEqual([turbo, 'run', 'typecheck']);
+    expect(spawn.mock.calls[1][2]).toMatchObject({ shell: true });
+  });
+
+  it('stops at a failing turbo typecheck and returns its exit code', () => {
+    const { spawn, log, logError } = setup([{ status: 2 }]);
+
+    const code = runTypecheck({ isCI: false, env: {}, root, spawn, log, logError });
+
+    expect(code).toBe(2);
+    expect(spawn).toHaveBeenCalledTimes(1);
+  });
+
+  it('returns 1 when a command ends without an exit code', () => {
+    const { spawn, log, logError } = setup([{ status: 0 }, { status: null }]);
+
+    expect(runTypecheck({ isCI: false, env: {}, root, spawn, log, logError })).toBe(1);
+  });
+
+  it('returns 1 when a command cannot start', () => {
+    const { spawn, log, logError } = setup([{ status: null, error: new Error('ENOENT') }]);
+
+    const code = runTypecheck({ isCI: false, env: {}, root, spawn, log, logError });
+
+    expect(code).toBe(1);
+    expect(logError).toHaveBeenCalledWith(expect.stringContaining('could not start turbo: ENOENT'));
+  });
+
+  it('returns 1 without running anything for a malformed override', () => {
+    const { spawn, log, logError } = setup();
+
+    const code = runTypecheck({
+      isCI: false,
+      env: { [CONCURRENCY_ENV]: 'abc' },
+      root,
+      spawn,
+      log,
+      logError,
+    });
+
+    expect(code).toBe(1);
+    expect(spawn).not.toHaveBeenCalled();
+    expect(logError).toHaveBeenCalledWith(expect.stringContaining(CONCURRENCY_ENV));
   });
 });

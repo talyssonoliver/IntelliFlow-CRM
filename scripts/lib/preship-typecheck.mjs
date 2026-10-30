@@ -13,8 +13,11 @@
  * does. Turbo has no environment variable for concurrency, and
  * `pnpm run typecheck -- --concurrency=N` would hand the flag to the last command
  * of the script's `&&` chain (the sonar guard), so the step runs the two commands
- * itself (scripts/run-typecheck.mjs).
+ * itself (runTypecheck, called by scripts/run-typecheck.mjs).
  */
+
+import path from 'node:path';
+import { spawnSync } from 'node:child_process';
 
 export const CONCURRENCY_ENV = 'PRESHIP_TYPECHECK_CONCURRENCY';
 export const DEFAULT_LOCAL_TYPECHECK_CONCURRENCY = 3;
@@ -50,4 +53,43 @@ export function typecheckPlan({ isCI, env }) {
     { name: 'turbo typecheck', bin: 'turbo', args: turboArgs },
     { name: 'sonar guard', bin: 'pnpm', args: ['run', 'lint:sonar:guard'] },
   ];
+}
+
+/**
+ * Run the typecheck step's commands in order, stopping at the first failure.
+ * Turbo is spawned through node directly (no shell). pnpm needs a shell on win32
+ * to resolve pnpm.cmd; its arguments are fixed strings.
+ * @returns {number} the step's exit code
+ */
+export function runTypecheck({
+  isCI,
+  env,
+  root,
+  spawn = spawnSync,
+  log = console.log,
+  logError = console.error,
+  execPath = process.execPath,
+  platform = process.platform,
+}) {
+  let plan;
+  try {
+    plan = typecheckPlan({ isCI, env });
+  } catch (err) {
+    logError(`typecheck: ${err.message}`);
+    return 1;
+  }
+  const turbo = path.join(root, 'node_modules', 'turbo', 'bin', 'turbo');
+  for (const step of plan) {
+    log(`typecheck: ${step.name} — ${step.bin} ${step.args.join(' ')}`);
+    const r =
+      step.bin === 'turbo'
+        ? spawn(execPath, [turbo, ...step.args], { cwd: root, stdio: 'inherit' })
+        : spawn('pnpm', step.args, { cwd: root, stdio: 'inherit', shell: platform === 'win32' });
+    if (r.error) {
+      logError(`typecheck: could not start ${step.bin}: ${r.error.message}`);
+      return 1;
+    }
+    if (r.status !== 0) return r.status ?? 1;
+  }
+  return 0;
 }
