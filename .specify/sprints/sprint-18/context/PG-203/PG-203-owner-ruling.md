@@ -131,3 +131,39 @@ Answer: **CRM core auto, comms checklist.** Auto-erase the lead/contact profile,
 Finding: a new booker's lead was created inside the booking request, so a booking for an email NOT in the CRM took measurably longer; timing bookings could reveal who is already a client.
 
 Answer: **Create lead after reply.** The visitor gets the confirmation first; the lead is created and linked a moment after (same lock, same rules). If that step fails, the booking still stands and the host email says to add the lead by hand.
+
+## Q21 — restriction and erasure for AI insights and predictions (2026-10-23, AskUserQuestion, issue #1002)
+
+Finding (codex round 24 on the DSAR PR): the insight and prediction workers did not check a restriction or an erasure before the model call. A queued job could send an erased person's context to the model, and restricted people still got insights and predictions.
+
+Answer: **Stop both, in PR 2.** A processing restriction and an erasure both stop AI insights and predictions (an Art 18 extension of Q18). Each worker checks the person before the model call and writes only under the row and address locks after a re-check, as embedding does.
+
+## Q22 — restriction and erasure for every AI path (2026-10-23, AskUserQuestion, plan-reviewer finding on Addendum B)
+
+Finding (plan-reviewer, Addendum B must-fix 2): beyond scoring, embeddings, drafts (Q18) and insights and predictions (Q21), other AI paths still send a lead's or contact's data to a model with no restriction or erasure check: contact enrichment, tag suggestions, contact reply drafts, conversation summaries, and the next-best-action, qualification, follow-up and email-writer agents.
+
+Answer: **All AI paths, in PR 2.** A processing restriction and an erasure stop every AI path that sends a person's data to a model. Each checks the person before the model call and writes its result only under the person's row and address locks after a re-check.
+
+## Q23 — deals and tasks in the export and erasure (2026-10-25, AskUserQuestion, D12 compliance and security-lead reviews)
+
+Finding: deals and tasks linked to the person's lead or contact were not in the export, not erased and not on the erasure checklist, though their names and descriptions often carry the person's name. Q19 did not list them.
+
+Answer: **Export + checklist.** The export includes deals (name, value, stage, dates) and tasks (title, status, dates); their descriptions are withheld and counted, as notes are. Erasure counts both on the manual checklist, like emails and tickets (consistent with Q19).
+
+## Q24 — public form flooding (same modal, security-lead M1)
+
+Finding: with rotating addresses and IPs, one firm can receive unlimited verified requests; each emails the admins, unverified rows (up to 2,000 characters of details) are never purged, and the admin list is unbounded.
+
+Answer: **Fix in PR 2.** A per-firm daily cap on public submissions (same generic reply); the deadline job deletes unverified requests 7 days after their link expired; the admin list leaves expired unverified requests out.
+
+## Q25 — waiting period for staff-logged erasure (same modal, security-lead L4)
+
+Finding: with two or more admins a staff-logged erasure could run at once, while the warning email tells the person they can object.
+
+Answer: **Always wait 24h.** Every staff-logged erasure waits 24 hours after the warning email; a second admin no longer skips the wait.
+
+## Q26 — AI and staff free text in the export (same modal, security-lead L1)
+
+Finding: AI insight text and recommendations, staff-written tags and booking answers went to the person without the firm's review, and can name third parties (Art 15(4)).
+
+Answer: **Withhold for review.** AI free text and tags (and the other staff free text) are withheld and counted like notes, and the firm releases them when it completes the request. Structured scores (numbers, stages) still export.

@@ -1,0 +1,155 @@
+{
+  "task_id": "PG-203",
+  "phase": "before",
+  "captured_at": "2026-10-20T23:20:29.000Z",
+  "source": "artifacts/coverage/coverage-summary.json (committed baseline @ 28d93df47, HEAD d4db133c9, branch feat/pg-203-event-types); no fresh full coverage run (shared machine, slot limits) - PG-202/PG-204 precedent",
+  "total": {
+    "lines": {
+      "total": 96052,
+      "covered": 9899,
+      "skipped": 0,
+      "pct": 10.3
+    },
+    "statements": {
+      "total": 104374,
+      "covered": 10522,
+      "skipped": 0,
+      "pct": 10.08
+    },
+    "functions": {
+      "total": 22572,
+      "covered": 2652,
+      "skipped": 0,
+      "pct": 11.74
+    },
+    "branches": {
+      "total": 66726,
+      "covered": 6156,
+      "skipped": 0,
+      "pct": 9.22
+    },
+    "branchesTrue": {
+      "total": 0,
+      "covered": 0,
+      "skipped": 0,
+      "pct": 100
+    }
+  },
+  "packages": {
+    "apps/web": {
+      "files": 921,
+      "lines": {
+        "total": 27182,
+        "covered": 6092,
+        "pct": 22.41
+      },
+      "statements": {
+        "total": 29899,
+        "covered": 6513,
+        "pct": 21.78
+      },
+      "functions": {
+        "total": 8839,
+        "covered": 1972,
+        "pct": 22.31
+      },
+      "branches": {
+        "total": 21880,
+        "covered": 4380,
+        "pct": 20.02
+      }
+    },
+    "apps/api": {
+      "files": 182,
+      "lines": {
+        "total": 15381,
+        "covered": 2642,
+        "pct": 17.18
+      },
+      "statements": {
+        "total": 16518,
+        "covered": 2784,
+        "pct": 16.85
+      },
+      "functions": {
+        "total": 3221,
+        "covered": 459,
+        "pct": 14.25
+      },
+      "branches": {
+        "total": 11060,
+        "covered": 1331,
+        "pct": 12.03
+      }
+    },
+    "packages/domain": {
+      "files": 117,
+      "lines": {
+        "total": 5031,
+        "covered": 311,
+        "pct": 6.18
+      },
+      "statements": {
+        "total": 5214,
+        "covered": 332,
+        "pct": 6.37
+      },
+      "functions": {
+        "total": 1589,
+        "covered": 93,
+        "pct": 5.85
+      },
+      "branches": {
+        "total": 2130,
+        "covered": 146,
+        "pct": 6.85
+      }
+    },
+    "packages/validators": {
+      "files": 55,
+      "lines": {
+        "total": 1142,
+        "covered": 586,
+        "pct": 51.31
+      },
+      "statements": {
+        "total": 1179,
+        "covered": 600,
+        "pct": 50.89
+      },
+      "functions": {
+        "total": 132,
+        "covered": 72,
+        "pct": 54.55
+      },
+      "branches": {
+        "total": 272,
+        "covered": 133,
+        "pct": 48.9
+      }
+    },
+    "packages/application": {
+      "files": 44,
+      "lines": {
+        "total": 3648,
+        "covered": 0,
+        "pct": 0.0
+      },
+      "statements": {
+        "total": 3825,
+        "covered": 0,
+        "pct": 0.0
+      },
+      "functions": {
+        "total": 576,
+        "covered": 0,
+        "pct": 0.0
+      },
+      "branches": {
+        "total": 2271,
+        "covered": 0,
+        "pct": 0.0
+      }
+    }
+  }
+}

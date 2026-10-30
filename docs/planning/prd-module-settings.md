@@ -1190,6 +1190,40 @@ as gh #972.
 **Prisma migrations** `20261021120000` to `20261021120500` (six, all Class A)
 must be applied to production before this ships.
 
+## PG-203 Addendum: DSAR delivery (2026-10-24)
+
+PG-203 also delivers data subject requests (DSAR), because AC-022 needs the
+booking fields covered and exploration found no working DSAR path. Design: spec
+Addendum A, plan Addenda A and B, ADR-007 (PG-203 addendum) and ADR-083 (Data
+subject requests). Owner rulings Q16 to Q22.
+
+- **Public page.** `/dsar/<bookingHandle>` takes a request (access,
+  rectification, erasure, restriction, portability or objection). The booking
+  page footer and the booking confirmation email link to it. The person confirms
+  from an emailed link. The deadline is one calendar month from confirmation.
+- **Automatic after confirmation.** Access and portability email an expiring
+  export link. They complete at once only when nothing is withheld. Otherwise a
+  firm admin completes them after reviewing what was withheld.
+- **Admin decision.** Erasure, rectification, restriction and objection wait for
+  a firm ADMIN on `/settings/privacy-requests`. Staff can also log a request for
+  a person, with a recorded identity check. A job emails admins before the
+  deadline.
+- **Restriction.** A restriction or objection, and an erasure, stop every AI
+  path that sends the person's data to a model (Q18, Q21, Q22). The lead and
+  contact detail pages show a banner.
+- **Pages.** Four new pages: three public (`request`, `verify`, `export`) and
+  `/settings/privacy-requests`.
+- **Out of scope.** Outreach suppression, automated erasure of communications
+  and files, a CSV export with direct transfer, and Article 19 recipient
+  notification are follow-up tasks IFC-315 to IFC-318 (Sprint 19). Open issues:
+  #1007, #1009, #1010, #1014, #1015 and #1019.
+
+**Prisma migration** `20261022120000_dsar_requests` (L13). It adds two tables,
+two enums and database triggers, and alters no existing column, so it is Class
+A. It is applied to production through the gated `prisma migrate deploy`
+workflow **before** the API is promoted. It follows the six event-type
+migrations above.
+
 ## PG-207 Addendum: Email Settings and User Mailboxes (2026-10-21)
 
 Owner rulings Q1-Q11 (2026-10-20/21,

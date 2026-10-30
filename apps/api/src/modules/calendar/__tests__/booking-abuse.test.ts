@@ -16,6 +16,7 @@ import {
   assertEventTypeBookingCap,
   getBookingSalt,
   hashBookingValue,
+  ipHashOf,
   normalizeEmailForCap,
   pruneBookingAttempts,
   recordBookingAttempt,
@@ -203,6 +204,13 @@ describe('bookingClientIp (security review F3; codex fp 07766f8e)', () => {
     expect(bookingClientIp(req({ 'x-forwarded-for': '203.0.113.9, 198.51.100.7' }))).toBe(
       '198.51.100.7'
     );
+  });
+
+  it('ipHashOf hashes the same client address the caps use, never the raw IP', () => {
+    const hashed = ipHashOf(req({ 'x-real-ip': '203.0.113.50' }), 'salt');
+    expect(hashed).toBe(hashBookingValue('203.0.113.50', 'salt'));
+    expect(hashed).toMatch(/^[0-9a-f]{64}$/);
+    expect(ipHashOf(undefined, 'salt')).toBe(hashBookingValue('unknown', 'salt'));
   });
 
   it('puts callers with neither header in the shared unknown bucket', () => {

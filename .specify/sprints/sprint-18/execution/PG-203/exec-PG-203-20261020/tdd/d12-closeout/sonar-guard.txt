@@ -1,0 +1,6 @@
+
+> intelliflow-crm@0.1.0 lint:sonar:guard C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar
+> tsx tools/scripts/lint-sonar-guard.ts
+
+sonar-guard: checking 161 changed TS/TSX files.
+sonar-guard: running web accessibility guard on 31 file(s).

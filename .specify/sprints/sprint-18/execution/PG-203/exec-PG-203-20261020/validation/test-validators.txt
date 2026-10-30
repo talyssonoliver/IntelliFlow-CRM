@@ -1,0 +1,14 @@
+[test-slot] slot2 taken for PG-203@feat/pg-203-event-types: pnpm --filter @intelliflow/validators test
+
+> @intelliflow/validators@0.1.0 test C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203\packages\validators
+> vitest run
+
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/validators
+
+
+ Test Files  60 passed (60)
+      Tests  2818 passed (2818)
+   Start at  20:51:35
+   Duration  6.79s (transform 2.54s, setup 0ms, import 10.51s, tests 1.35s, environment 6ms)
+

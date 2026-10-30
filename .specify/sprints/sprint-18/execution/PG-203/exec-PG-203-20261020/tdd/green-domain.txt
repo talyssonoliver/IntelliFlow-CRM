@@ -1,0 +1,13 @@
+# 2026-10-20T23:25:59Z
+# 91c6477ac5cbe5f21cf81c522b36ec57bad849eb
+# pnpm --filter @intelliflow/domain exec vitest run src/legal/appointments/__tests__/listOpenSlots.test.ts src/legal/appointments/__tests__/event-types.test.ts
+
+ RUN  v4.1.11 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203/packages/domain
+
+
+ Test Files  2 passed (2)
+      Tests  30 passed (30)
+   Start at  00:26:00
+   Duration  627ms (transform 348ms, setup 0ms, import 438ms, tests 160ms, environment 0ms)
+
+# exit=0

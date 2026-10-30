@@ -1,0 +1,381 @@
+[test-slot] slot1 taken for PG-203@feat/pg-203-dsar: pnpm --filter @intelliflow/web exec vitest run src/app/settings/privacy-requests/__tests__/PrivacyRequestsContent.test.tsx
+
+ RUN  v4.1.12 C:/Users/talys/projects/intelliFlow-CRM-worktrees/pg-203-dsar/apps/web
+
+ ❯ |web| src/app/settings/privacy-requests/__tests__/PrivacyRequestsContent.test.tsx (26 tests | 1 failed) 1769ms
+     × shows the shared empty state for no open requests and no restrictions 33ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |web| src/app/settings/privacy-requests/__tests__/PrivacyRequestsContent.test.tsx > PrivacyRequestsContent > shows the shared empty state for no open requests and no restrictions
+TestingLibraryElementError: Unable to find an accessible element with the role "region" and name "No open requests"
+
+Here are the accessible roles:
+
+  navigation:
+
+  Name "Breadcrumb":
+  [36m<nav[39m
+    [33maria-label[39m=[32m"Breadcrumb"[39m
+    [33mclass[39m=[32m"flex items-center gap-2 text-sm text-muted-foreground mb-1"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  link:
+
+  Name "Settings":
+  [36m<a[39m
+    [33mclass[39m=[32m"hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"[39m
+    [33mhref[39m=[32m"/settings"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  heading:
+
+  Name "Privacy requests":
+  [36m<h1[39m
+    [33mclass[39m=[32m"text-2xl md:text-3xl font-bold text-foreground tracking-tight"[39m
+  [36m/>[39m
+
+  Name "Open requests":
+  [36m<h2[39m
+    [33mclass[39m=[32m"text-base font-semibold text-foreground"[39m
+    [33mid[39m=[32m"open-requests-title"[39m
+    [33mtabindex[39m=[32m"-1"[39m
+  [36m/>[39m
+
+  Name "Processing restrictions":
+  [36m<h2[39m
+    [33mclass[39m=[32m"text-base font-semibold text-foreground"[39m
+  [36m/>[39m
+
+  Name "Closed requests":
+  [36m<h2[39m
+    [33mclass[39m=[32m"text-base font-semibold text-foreground"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  paragraph:
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-muted-foreground mt-1"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-2 text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"mt-2 text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"font-medium text-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-sm text-foreground"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<p[39m
+    [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  button:
+
+  Name "Log a request":
+  [36m<button[39m
+    [33mclass[39m=[32m"group flex items-center justify-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-sm rounded-lg transition-all active:scale-95 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-50 dark:hover:bg-slate-700"[39m
+    [33mtype[39m=[32m"button"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  list:
+
+  Name "":
+  [36m<ul[39m
+    [33mclass[39m=[32m"divide-y divide-border"[39m
+  [36m/>[39m
+
+  Name "":
+  [36m<ul[39m
+    [33mclass[39m=[32m"divide-y divide-border"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+  listitem:
+
+  Name "":
+  [36m<li[39m
+    [33mclass[39m=[32m"flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between"[39m
+  [36m/>[39m
+
+  --------------------------------------------------
+
+Ignored nodes: comments, script, style
+[36m<body[39m
+  [33mstyle[39m=[32m""[39m
+[36m>[39m
+  [36m<div>[39m
+    [36m<div[39m
+      [33mclass[39m=[32m"space-y-6 p-6"[39m
+    [36m>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"flex flex-col sm:flex-row sm:items-center justify-between gap-4"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"min-w-0 flex-1"[39m
+        [36m>[39m
+          [36m<nav[39m
+            [33maria-label[39m=[32m"Breadcrumb"[39m
+            [33mclass[39m=[32m"flex items-center gap-2 text-sm text-muted-foreground mb-1"[39m
+          [36m>[39m
+            [36m<a[39m
+              [33mclass[39m=[32m"hover:text-foreground transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"[39m
+              [33mhref[39m=[32m"/settings"[39m
+            [36m>[39m
+              [0mSettings[0m
+            [36m</a>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"material-symbols-outlined text-xs"[39m
+            [36m>[39m
+              [0mchevron_right[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33maria-current[39m=[32m"page"[39m
+              [33mclass[39m=[32m"text-foreground font-medium"[39m
+            [36m>[39m
+              [0mPrivacy requests[0m
+            [36m</span>[39m
+          [36m</nav>[39m
+          [36m<h1[39m
+            [33mclass[39m=[32m"text-2xl md:text-3xl font-bold text-foreground tracking-tight"[39m
+          [36m>[39m
+            [0mPrivacy requests[0m
+          [36m</h1>[39m
+          [36m<p[39m
+            [33mclass[39m=[32m"text-muted-foreground mt-1"[39m
+          [36m>[39m
+            [0mRequests from people about their personal data. Answer each within one month of confirmation.[0m
+          [36m</p>[39m
+        [36m</div>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-center gap-2 sm:gap-3 flex-wrap sm:flex-nowrap flex-shrink-0"[39m
+        [36m>[39m
+          [36m<button[39m
+            [33mclass[39m=[32m"group flex items-center justify-center gap-2 px-3 sm:px-5 py-2 sm:py-2.5 text-sm rounded-lg transition-all active:scale-95 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-medium hover:bg-slate-50 dark:hover:bg-slate-700"[39m
+            [33mtype[39m=[32m"button"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"material-symbols-outlined text-[20px] group-hover:rotate-90 transition-transform"[39m
+            [36m>[39m
+              [0madd[0m
+            [36m</span>[39m
+            [36m<span[39m
+              [33mclass[39m=[32m""[39m
+            [36m>[39m
+              [0mLog a request[0m
+            [36m</span>[39m
+          [36m</button>[39m
+        [36m</div>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm p-6"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-start gap-3 mb-5"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"w-9 h-9 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"material-symbols-outlined text-[20px] text-blue-600 dark:text-blue-400"[39m
+            [36m>[39m
+              [0massignment_ind[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"text-base font-semibold text-foreground"[39m
+              [33mid[39m=[32m"open-requests-title"[39m
+              [33mtabindex[39m=[32m"-1"[39m
+            [36m>[39m
+              [0mOpen requests[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+            [36m>[39m
+              [0mOverdue first, then the nearest deadline.[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-2 text-sm text-muted-foreground"[39m
+        [36m>[39m
+          [0mNo open requests.[0m
+        [36m</p>[39m
+        [36m<ul[39m
+          [33mclass[39m=[32m"divide-y divide-border"[39m
+        [36m/>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm p-6"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-start gap-3 mb-5"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"w-9 h-9 rounded-lg bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"material-symbols-outlined text-[20px] text-amber-700 dark:text-amber-400"[39m
+            [36m>[39m
+              [0mblock[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"text-base font-semibold text-foreground"[39m
+            [36m>[39m
+              [0mProcessing restrictions[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+            [36m>[39m
+              [0mWhile a restriction is in force, the person is not scored, embedded or drafted for by AI. Lifting one emails the person first.[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<p[39m
+          [33mclass[39m=[32m"mt-2 text-sm text-muted-foreground"[39m
+        [36m>[39m
+          [0mNo restrictions in force.[0m
+        [36m</p>[39m
+      [36m</div>[39m
+      [36m<div[39m
+        [33mclass[39m=[32m"rounded-lg border bg-card text-card-foreground shadow-sm p-6"[39m
+      [36m>[39m
+        [36m<div[39m
+          [33mclass[39m=[32m"flex items-start gap-3 mb-5"[39m
+        [36m>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"w-9 h-9 rounded-lg bg-muted flex items-center justify-center shrink-0"[39m
+          [36m>[39m
+            [36m<span[39m
+              [33maria-hidden[39m=[32m"true"[39m
+              [33mclass[39m=[32m"material-symbols-outlined text-[20px] text-muted-foreground"[39m
+            [36m>[39m
+              [0mtask_alt[0m
+            [36m</span>[39m
+          [36m</div>[39m
+          [36m<div[39m
+            [33mclass[39m=[32m"min-w-0 flex-1"[39m
+          [36m>[39m
+            [36m<h2[39m
+              [33mclass[39m=[32m"text-base font-semibold text-foreground"[39m
+            [36m>[39m
+              [0mClosed requests[0m
+            [36m</h2>[39m
+            [36m<p[39m
+              [33mclass[39m=[32m"text-sm text-muted-foreground"[39m
+            [36m>[39m
+              [0mCompleted and refused requests, kept as the record of each answer.[0m
+            [36m</p>[39m
+          [36m</div>[39m
+        [36m</div>[39m
+        [36m<ul[39m
+          [33mclass[39m=[32m"divide-y divide-border"[39m
+        [36m>[39m
+          [36m<li[39m
+            [33mclass[39m=[32m"flex flex-col gap-3 py-4 sm:flex-row sm:items-start sm:justify-between"[39m
+          [36m>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"space-y-1"[39m
+            [36m>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"font-medium text-foreground"[39m
+              [36m>[39m
+                [0mErasure (delete data)[0m
+              [36m</p>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-sm text-foreground"[39m
+              [36m>[39m
+                [0mada@example.invalid[0m
+              [36m</p>[39m
+              [36m<p[39m
+                [33mclass[39m=[32m"text-xs text-muted-foreground"[39m
+              [36m>[39m
+                [0mReceived 1 Oct 2026 · Online form[0m
+              [36m</p>[39m
+              [36m<div[39m
+                [33mclass[39m=[32m"flex flex-wrap gap-2"[39m
+              [36m>[39m
+                [36m<div[39m
+                  [33mclass[39m=[32m"inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80"[39m
+                [36m>[39m
+                  [0mCompleted[0m
+                [36m</div>[39m
+              [36m</div>[39m
+            [36m</div>[39m
+            [36m<div[39m
+              [33mclass[39m=[32m"flex flex-wrap gap-2 sm:justify-end"[39m
+            [36m/>[39m
+          [36m</li>[39m
+        [36m</ul>[39m
+      [36m</div>[39m
+    [36m</div>[39m
+  [36m</div>[39m
+[36m</body>[39m
+ ❯ Object.getElementError ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/config.js:37:19
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:76:38
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:52:17
+ ❯ ../../node_modules/.pnpm/@testing-library+dom@10.4.2/node_modules/@testing-library/dom/dist/query-helpers.js:95:19
+ ❯ src/app/settings/privacy-requests/__tests__/PrivacyRequestsContent.test.tsx:371:29
+    369|     h.list.data = [request({ status: 'COMPLETED' })];
+    370|     const { container } = render(<PrivacyRequestsContent />);
+    371|     const requests = screen.getByRole('region', { name: 'No open reque…
+       |                             ^
+    372|     expect(within(requests).getByRole('heading', { level: 3, name: 'No…
+    373|     const restrictions = screen.getByRole('region', { name: 'No restri…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  1 failed | 25 passed (26)
+   Start at  09:02:58
+   Duration  4.85s (transform 980ms, setup 293ms, import 1.70s, tests 1.77s, environment 887ms)
+
+undefined
+C:\Users\talys\projects\intelliFlow-CRM-worktrees\pg-203-dsar\apps\web:
+ ERR_PNPM_RECURSIVE_EXEC_FIRST_FAIL  Command failed with exit code 1: vitest run src/app/settings/privacy-requests/__tests__/PrivacyRequestsContent.test.tsx

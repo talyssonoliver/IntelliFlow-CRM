@@ -7,7 +7,8 @@
 # Related:
 # - docs/compliance-and-governance/compliance/retention-policy.md
 # - infra/supabase/migrations/20260104000000_conversation_rls.sql
-# - apps/api/src/workflow/dsar-workflow.ts
+# - docs/compliance-and-governance/data-governance/dsar-process.md (PG-203; the old
+#   apps/api/src/workflow/dsar-workflow.ts was removed)
 # =============================================================================
 
 version: '1.0'
@@ -206,6 +207,9 @@ cleanup_schedule:
 # =============================================================================
 # DSAR (DATA SUBJECT ACCESS REQUEST) INTEGRATION
 # =============================================================================
+# Target settings, not current behaviour: the PG-203 export and erasure do not
+# read conversation, message or tool-call records yet, because those carry no
+# person key (#1015).
 dsar:
   # Include in access requests (Article 15)
   include_in_access_request: true

@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-21T17:06:03.293Z",
+  "generated_at": "2026-10-23T15:37:20.795Z",
   "tool_version": "1.2.0",
   "routes": [
     {
@@ -7481,6 +7481,195 @@
       "notes": ""
     },
     {
+      "route": "/dsar/[handle]",
+      "file_path": "apps/web/src/app/(public)/dsar/[handle]/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": true
+      },
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/dsar/[handle]/export",
+      "file_path": "apps/web/src/app/(public)/dsar/[handle]/export/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": true
+      },
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
+      "route": "/dsar/[handle]/verify",
+      "file_path": "apps/web/src/app/(public)/dsar/[handle]/verify/page.tsx",
+      "access_tier": "public",
+      "metadata": {
+        "title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": true
+      },
+      "seo_score": 80,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/email",
       "file_path": "apps/web/src/app/email/page.tsx",
       "access_tier": "auth-gated",
@@ -7818,7 +8007,7 @@
           "source": "root-layout"
         },
         "og_url": {
-          "value": "https://intelliflow-crm.com",
+          "value": "https://intelli-flow-crm-web.vercel.app",
           "source": "root-layout"
         },
         "og_site_name": {
@@ -11874,6 +12063,69 @@
       "notes": ""
     },
     {
+      "route": "/settings/privacy-requests",
+      "file_path": "apps/web/src/app/settings/privacy-requests/page.tsx",
+      "access_tier": "auth-gated",
+      "metadata": {
+        "title": {
+          "value": "Settings",
+          "source": "layout"
+        },
+        "description": {
+          "value": "Aurora scores your leads, keeps your pipeline current and drafts the next follow-up. Every AI action waits for a person to say yes.",
+          "source": "root-layout",
+          "length": 131
+        },
+        "og_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "og_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "og_url": {
+          "value": "https://intelli-flow-crm-web.vercel.app",
+          "source": "root-layout"
+        },
+        "og_site_name": {
+          "value": "Aurora",
+          "source": "root-layout"
+        },
+        "og_image": {
+          "value": null,
+          "source": null
+        },
+        "twitter_card": {
+          "value": "summary_large_image",
+          "source": "root-layout"
+        },
+        "twitter_title": {
+          "value": "Aurora, the AI CRM that asks before it acts",
+          "source": "root-layout"
+        },
+        "twitter_description": {
+          "value": "Lead scoring, pipeline and follow-ups drafted by AI agents, with every action waiting for your yes.",
+          "source": "root-layout"
+        },
+        "robots_noindex": false
+      },
+      "seo_score": null,
+      "in_sitemap": false,
+      "sitemap_last_modified_method": null,
+      "http_status": null,
+      "response_time_ms": null,
+      "http_measurement_method": "pending-runtime",
+      "stale_content": {
+        "classification": "none",
+        "patterns_found": [],
+        "data_sources": []
+      },
+      "ghost_links": [],
+      "broken_inpage_links": [],
+      "notes": ""
+    },
+    {
       "route": "/settings/reports",
       "file_path": "apps/web/src/app/settings/reports/page.tsx",
       "access_tier": "auth-gated",
@@ -13718,13 +13970,13 @@
     }
   ],
   "summary": {
-    "total_routes": 216,
-    "public_routes": 33,
-    "auth_gated_routes": 169,
+    "total_routes": 220,
+    "public_routes": 36,
+    "auth_gated_routes": 170,
     "developer_routes": 14,
-    "routes_with_seo_score": 33,
-    "routes_pending_runtime_measurement": 215,
-    "average_seo_score_public": 85,
+    "routes_with_seo_score": 36,
+    "routes_pending_runtime_measurement": 220,
+    "average_seo_score_public": 84,
     "legal_pages_missing": [],
     "ghost_link_count": 0
   },

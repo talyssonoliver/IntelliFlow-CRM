@@ -34,13 +34,24 @@ import { hallucinationChecker } from '../monitoring/hallucination-checker';
 // Fix #20: conversation record audit logging
 import { logConversationRecord } from '../utils/conversation-record-logger';
 // Fix #15: human review threshold check
-import { requiresHumanReview } from '@intelliflow/domain';
+import { normalizeSubjectEmail, requiresHumanReview } from '@intelliflow/domain';
 // H4: AI_AGENT audit entries
 import { logAIAgentAction } from '../utils/audit-log';
 // H9/H10: circuit breaker + fallbacks
 import { getLLMBreaker } from '../lib/llm-factory';
 import { runWithLogContext, getCurrentLogContext } from '@intelliflow/observability';
 import { isAiFeatureEnabled } from '../lib/feature-flags';
+// PG-203 #1002: erased and restricted people get no prediction
+import {
+  dealContactIds,
+  eligibleSubjectEmail,
+  queuedAddressBlocked,
+  SUBJECT_NOT_PROCESSABLE,
+  writeIfQueuedAddressStillClear,
+  writeSubjectIfStillEligible,
+  type SubjectKind,
+  type SubjectPrisma,
+} from '../lib/data-request-guard';
 
 const logger = pino({
   name: 'prediction-job',
@@ -133,6 +144,31 @@ export async function processPredictionJob(
         return { skipped: true, reason: 'feature-flag-disabled' } as unknown as PredictionJobResult;
       }
 
+      // PG-203 #1002 (owner ruling): an erased or restricted person is never sent to the model.
+      const subject = await predictionSubject(entityType, entityId, tenantId);
+      const subjectEmail = await processableSubjectEmail(subject, tenantId);
+      // The queued context goes to the model as it is: it must name the person just checked,
+      // not an address they have since moved from (codex).
+      const queuedEmail = queuedContextEmail(context);
+      const staleContext =
+        subjectEmail !== null &&
+        subject !== null &&
+        queuedEmail !== null &&
+        normalizeSubjectEmail(queuedEmail) !== normalizeSubjectEmail(subjectEmail);
+      // About no one now (a deal whose contact was removed), but the queued context still names
+      // someone: that address must not be restricted or erased either (codex).
+      const unlinkedPerson =
+        subject === null &&
+        queuedEmail !== null &&
+        (await queuedContextBlocked(tenantId, queuedEmail));
+      if (subjectEmail === null || staleContext || unlinkedPerson) {
+        logger.info(
+          { jobId: job.id, tenantId, entityType, entityId, predictionType },
+          'AI prediction job skipped — erased or restricted data subject'
+        );
+        return { skipped: true, reason: SUBJECT_NOT_PROCESSABLE } as unknown as PredictionJobResult;
+      }
+
       logger.info(
         {
           jobId: job.id,
@@ -185,18 +221,43 @@ export async function processPredictionJob(
       await job.updateProgress(90);
 
       // Persist prediction results to entity insight tables
-      await persistPredictionResult(
+      const persisted = await persistPredictionResult(
         entityType,
         entityId,
         tenantId,
         predictionType,
         prediction,
-        recommendations
+        recommendations,
+        subject,
+        subjectEmail,
+        queuedEmail
       );
+
+      // Erased or restricted while the model ran: nothing about the person survives, not even
+      // in the job result BullMQ keeps in Redis after completion (codex).
+      if (persisted === 'blocked') {
+        return { skipped: true, reason: SUBJECT_NOT_PROCESSABLE } as unknown as PredictionJobResult;
+      }
+      // The locked re-check did not complete: the person's eligibility is unknown, so nothing
+      // about them is returned or alerted on (fails closed, codex).
+      if (persisted === 'failed') {
+        return {
+          skipped: true,
+          reason: 'eligibility-unverified',
+        } as unknown as PredictionJobResult;
+      }
 
       // Notify on high churn risk (non-blocking)
       if (predictionType === 'CHURN_RISK') {
-        await notifyHighChurnRisk(tenantId, entityType, entityId, prediction, context);
+        await notifyHighChurnRisk(
+          tenantId,
+          entityType,
+          entityId,
+          prediction,
+          subject,
+          subjectEmail,
+          context
+        );
       }
 
       // Transform to job result
@@ -326,10 +387,88 @@ async function persistContactPrediction(
   logger.info({ entityId, predictionType }, 'Persisted prediction to ContactAIInsight');
 }
 
+/** The person a prediction is about; null when it is about no one, MISSING when the deal is gone. */
+type PredictionSubject = { kind: SubjectKind; id: string } | null | 'MISSING';
+
+/**
+ * A lead or contact is the person. A deal follows its contact (Q22, as insights do; codex): its
+ * prediction context carries the contact's name, email and messages. A deal with no contact and
+ * an account are about no one; a deal that no longer exists fails closed.
+ */
+async function predictionSubject(
+  entityType: string,
+  entityId: string,
+  tenantId: string
+): Promise<PredictionSubject> {
+  if (entityType === 'lead' || entityType === 'contact') return { kind: entityType, id: entityId };
+  if (entityType !== 'opportunity') return null;
+  const { prisma } = await import('@intelliflow/db');
+  const contacts = await dealContactIds(prisma as never, tenantId, [entityId]);
+  if (!contacts.has(entityId)) return 'MISSING';
+  const contactId = contacts.get(entityId);
+  return contactId ? { kind: 'contact', id: contactId } : null;
+}
+
+/** The person a queued context names, if any. */
+function queuedContextEmail(context: Record<string, unknown> | undefined): string | null {
+  return typeof context?.['email'] === 'string' ? context['email'] : null;
+}
+
+/** A queued context's address: restricted, erased, or the subject of a completed erasure. */
+async function queuedContextBlocked(tenantId: string, email: string): Promise<boolean> {
+  const { prisma } = await import('@intelliflow/db');
+  return queuedAddressBlocked(prisma as never, tenantId, email);
+}
+
+/**
+ * The person's stored address when they may be processed, null when they are missing, erased
+ * or restricted (#1002). A prediction about no one always passes, as an empty address.
+ */
+async function processableSubjectEmail(
+  subject: PredictionSubject,
+  tenantId: string
+): Promise<string | null> {
+  if (subject === 'MISSING') return null;
+  if (subject === null) return '';
+  const { prisma } = await import('@intelliflow/db');
+  return eligibleSubjectEmail(prisma as unknown as SubjectPrisma, { ...subject, tenantId });
+}
+
+/**
+ * Whether a deal's result may be kept: its contact is re-checked under the contact's locks, or,
+ * for a deal with no contact, the person its queued context named is re-checked under their
+ * address lock (codex HIGH). A deal about no one at all is always allowed.
+ */
+async function dealResultStillAllowed(
+  tenantId: string,
+  subject: PredictionSubject,
+  subjectEmail: string,
+  queuedEmail: string | null
+): Promise<boolean> {
+  const { prisma } = await import('@intelliflow/db');
+  if (subject && subject !== 'MISSING') {
+    const outcome = await writeSubjectIfStillEligible(
+      prisma as never,
+      { ...subject, tenantId, email: subjectEmail },
+      async () => undefined
+    );
+    return outcome.written;
+  }
+  if (queuedEmail === null) return true;
+  const outcome = await writeIfQueuedAddressStillClear(
+    prisma as never,
+    { tenantId, email: queuedEmail },
+    async () => undefined
+  );
+  return outcome.written;
+}
+
 /**
  * Persist prediction results to entity-level insight tables.
  * Uses the same LeadAIInsight / ContactAIInsight tables as the insight job,
- * closing the loop so entity 360 pages show prediction data.
+ * closing the loop so entity 360 pages show prediction data. The write happens under the
+ * person's row and address locks after a re-check, so an erasure or restriction that landed
+ * while the model ran wins ('blocked', #1002).
  */
 async function persistPredictionResult(
   entityType: string,
@@ -337,35 +476,38 @@ async function persistPredictionResult(
   tenantId: string,
   predictionType: string,
   prediction: PredictionJobResult['prediction'],
-  recommendations: string[]
-): Promise<void> {
+  recommendations: string[],
+  subject: PredictionSubject,
+  subjectEmail: string,
+  queuedEmail: string | null
+): Promise<'written' | 'blocked' | 'skipped' | 'failed'> {
+  const kind = entityType === 'lead' || entityType === 'contact' ? entityType : null;
+  if (!kind) {
+    // A deal's result is kept in the job result: it is dropped too if its person was erased or
+    // restricted while the model ran.
+    if (!(await dealResultStillAllowed(tenantId, subject, subjectEmail, queuedEmail))) {
+      return 'blocked';
+    }
+    logger.info(
+      { entityType, entityId, predictionType },
+      'Prediction persistence skipped — no AI insight table for this entity type'
+    );
+    return 'skipped'; // no DB write — skip audit entry
+  }
   try {
     const { prisma } = await import('@intelliflow/db');
-
-    if (entityType === 'lead') {
-      await persistLeadPrediction(
-        prisma,
-        entityId,
-        tenantId,
-        predictionType,
-        prediction,
-        recommendations
-      );
-    } else if (entityType === 'contact') {
-      await persistContactPrediction(
-        prisma,
-        entityId,
-        tenantId,
-        predictionType,
-        prediction,
-        recommendations
-      );
-    } else {
+    const persist = kind === 'lead' ? persistLeadPrediction : persistContactPrediction;
+    const outcome = await writeSubjectIfStillEligible(
+      prisma as never,
+      { kind, id: entityId, tenantId, email: subjectEmail },
+      (tx) => persist(tx, entityId, tenantId, predictionType, prediction, recommendations)
+    );
+    if (!outcome.written) {
       logger.info(
-        { entityType, entityId, predictionType },
-        'Prediction persistence skipped — no AI insight table for this entity type'
+        { entityType, entityId, predictionType, reason: outcome.reason },
+        'Prediction not persisted — data subject erased or restricted during the model call'
       );
-      return; // no DB write — skip audit entry
+      return 'blocked';
     }
 
     // H4: emit AI_AGENT audit entry after successful DB write — non-fatal
@@ -379,6 +521,7 @@ async function persistPredictionResult(
     }).catch((err: unknown) => {
       logger.warn({ entityId, entityType, err }, 'audit-log: logAIAgentAction failed (non-fatal)');
     });
+    return 'written';
   } catch (error) {
     logger.error(
       {
@@ -388,6 +531,7 @@ async function persistPredictionResult(
       },
       'Failed to persist prediction result to DB'
     );
+    return 'failed';
   }
 }
 
@@ -401,6 +545,8 @@ async function notifyHighChurnRisk(
   entityType: string,
   entityId: string,
   prediction: PredictionJobResult['prediction'],
+  subject: PredictionSubject,
+  subjectEmail: string,
   context?: Record<string, unknown>
 ): Promise<void> {
   if (prediction.confidence < 0.7) return;
@@ -418,27 +564,51 @@ async function notifyHighChurnRisk(
 
   try {
     const { prisma } = await import('@intelliflow/db');
-    await prisma.notification.create({
-      data: {
-        tenantId,
-        recipientId,
-        channel: 'IN_APP',
-        subject: `High churn risk: ${entityType} ${entityId}`,
-        body: prediction.explanation || 'High churn risk detected — review and take action.',
-        priority: 'HIGH',
-        status: 'PENDING',
-        category: 'ALERTS',
-        sourceType: 'ai_recommendation',
-        sourceId: entityId,
-        metadata: {
-          notificationType: 'ai_recommendation',
-          predictionType: 'CHURN_RISK',
-          confidence: prediction.confidence,
-          riskLevel,
-          actionUrl: `/${entityType}s/${entityId}`,
+    const notify = (db: typeof prisma) =>
+      db.notification.create({
+        data: {
+          tenantId,
+          recipientId,
+          channel: 'IN_APP',
+          subject: `High churn risk: ${entityType} ${entityId}`,
+          body: prediction.explanation || 'High churn risk detected — review and take action.',
+          priority: 'HIGH',
+          status: 'PENDING',
+          category: 'ALERTS',
+          sourceType: 'ai_recommendation',
+          sourceId: entityId,
+          metadata: {
+            notificationType: 'ai_recommendation',
+            predictionType: 'CHURN_RISK',
+            confidence: prediction.confidence,
+            riskLevel,
+            actionUrl: `/${entityType}s/${entityId}`,
+          },
         },
-      },
-    });
+      });
+    if (subject === null || subject === 'MISSING') {
+      // A deal with no contact: the person its queued context names is re-checked under their
+      // address lock, as the result was (codex HIGH).
+      const queuedEmail = queuedContextEmail(context);
+      if (queuedEmail === null) {
+        await notify(prisma);
+        return;
+      }
+      await writeIfQueuedAddressStillClear(
+        prisma as never,
+        { tenantId, email: queuedEmail },
+        (tx) => notify(tx as unknown as typeof prisma)
+      );
+      return;
+    }
+    // The alert repeats the prediction about a person: it takes the person's locks and
+    // re-checks, so an erasure or restriction that committed after the prediction write
+    // leaves it unwritten (#1002, codex).
+    await writeSubjectIfStillEligible(
+      prisma as never,
+      { ...subject, tenantId, email: subjectEmail },
+      (tx) => notify(tx as unknown as typeof prisma)
+    );
   } catch {
     // Non-blocking — notification failure should not affect prediction pipeline
   }

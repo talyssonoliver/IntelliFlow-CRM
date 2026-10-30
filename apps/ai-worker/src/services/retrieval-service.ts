@@ -25,8 +25,10 @@ import {
   TicketStatus as PrismaTicketStatus,
 } from '@intelliflow/db';
 import { z } from 'zod';
+import { isErasedEmail, normalizeSubjectEmail } from '@intelliflow/domain';
 import { recordIdSchema } from '@intelliflow/validators/record-id';
 import { EmbeddingChain } from '../chains/embedding.chain';
+import { erasedSubjectEmails, restrictedEmails, type GuardPrisma } from '../lib/data-request-guard';
 import { DEFAULT_RELEVANCE_CONFIG as CANONICAL_RELEVANCE_CONFIG } from '../config/relevance-config';
 import type { ConversationRecordData, MessageRecordWithConversation } from '@intelliflow/domain';
 
@@ -100,6 +102,8 @@ interface OpportunityRecord {
   createdAt: Date;
   updatedAt: Date;
   account: { name: string };
+  /** The deal's person, if any (PG-203 Q22: the deal follows its contact). */
+  contact: { email: string } | null;
 }
 
 interface DocumentAclRecord {
@@ -179,6 +183,8 @@ interface TicketRecord {
   priority: string;
   slaStatus: string | null;
   contactName: string | null;
+  contactEmail: string;
+  contactId?: string | null;
   assigneeId: string | null;
   createdAt: Date;
   updatedAt: Date;
@@ -596,6 +602,62 @@ export class RetrievalService {
   }
 
   /**
+   * PG-203 Q22: search results feed AI prompts (RAG), so an erased or restricted person's
+   * record never comes back, whatever entity the prompt is about. Matched on the stored
+   * address, normalised as the restriction key is.
+   */
+  private async withoutDataRequestSubjects(
+    tenantId: string,
+    results: SearchResult[],
+    /** Result id → the address of the record it is linked to, checked as well (tickets). */
+    linkedEmails: Map<string, string> = new Map()
+  ): Promise<SearchResult[]> {
+    if (results.length === 0) return results;
+    const [restrictions, erasures] = await Promise.all([
+      restrictedEmails(this.prisma as unknown as GuardPrisma, tenantId),
+      erasedSubjectEmails(this.prisma as never, tenantId),
+    ]);
+    // Restrictions and completed erasures are keyed on the normalised address.
+    const restricted = new Set([...restrictions, ...erasures].map((e) => normalizeSubjectEmail(e)));
+    const blocked = (raw: string | undefined) => {
+      const email = normalizeSubjectEmail(raw ?? '');
+      return isErasedEmail(email) || restricted.has(email);
+    };
+    return results.filter(
+      (result) =>
+        !blocked(String(result.metadata?.['email'] ?? '')) && !blocked(linkedEmails.get(result.id))
+    );
+  }
+
+  /**
+   * Tickets keep the address they were raised with, and erasure leaves tickets for the admin's
+   * checklist: the linked contact's current address (erased, or moved under a restriction) is
+   * what says whether the person may be sent to a model. Used for the check only.
+   */
+  private async ticketContactEmails(
+    tenantId: string,
+    results: SearchResult[]
+  ): Promise<Map<string, string>> {
+    const contactIdByTicket = new Map<string, string>();
+    for (const result of results) {
+      const contactId = result.metadata?.['contactId'];
+      if (typeof contactId === 'string' && contactId) contactIdByTicket.set(result.id, contactId);
+    }
+    const linked = new Map<string, string>();
+    if (contactIdByTicket.size === 0) return linked;
+    const contacts: Array<{ id: string; email: string }> = await this.prisma.contact.findMany({
+      where: { tenantId, id: { in: [...new Set(contactIdByTicket.values())] } },
+      select: { id: true, email: true },
+    });
+    const emailById = new Map(contacts.map((c) => [c.id, c.email]));
+    for (const [ticketId, contactId] of contactIdByTicket) {
+      const email = emailById.get(contactId);
+      if (email !== undefined) linked.set(ticketId, email);
+    }
+    return linked;
+  }
+
+  /**
    * Search a specific data source
    */
   private async searchSource(
@@ -607,13 +669,22 @@ export class RetrievalService {
 
     switch (source) {
       case 'leads':
-        return this.searchLeads(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          await this.searchLeads(config, aclFilter)
+        );
       case 'contacts':
-        return this.searchContacts(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          await this.searchContacts(config, aclFilter)
+        );
       case 'accounts':
         return this.searchAccounts(config, aclFilter);
       case 'opportunities':
-        return this.searchOpportunities(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          await this.searchOpportunities(config, aclFilter)
+        );
       case 'documents':
         // IFC-155: Route to appropriate search method based on searchType
         return this.searchDocumentsDispatch(config, aclFilter, aclContext);
@@ -624,8 +695,14 @@ export class RetrievalService {
         return this.searchConversations(config, aclFilter);
       case 'messages':
         return this.searchMessages(config, aclFilter);
-      case 'tickets':
-        return this.searchTickets(config, aclFilter);
+      case 'tickets': {
+        const tickets = await this.searchTickets(config, aclFilter);
+        return this.withoutDataRequestSubjects(
+          aclContext.tenantId,
+          tickets,
+          await this.ticketContactEmails(aclContext.tenantId, tickets)
+        );
+      }
       default:
         return [];
     }
@@ -843,8 +920,16 @@ export class RetrievalService {
         cn."createdAt" as "createdAt",
         cn."updatedAt" as "updatedAt"
       FROM contact_notes cn
+      JOIN contacts c ON c.id = cn."contactId" AND c."tenantId" = cn."tenantId"
       WHERE cn."tenantId" = ${tenantId}
         AND cn.search_vector @@ plainto_tsquery('english', ${query})
+        -- PG-203 Q22: notes on an erased or restricted person never reach an AI prompt.
+        AND c.email NOT LIKE '%@erased.invalid'
+        AND NOT EXISTS (
+          SELECT 1 FROM processing_restrictions pr
+          WHERE pr."tenantId" = cn."tenantId" AND pr."liftedAt" IS NULL
+            AND pr."subjectEmail" = dsar_normalise_email(c.email)
+        )
       ORDER BY rank DESC
       LIMIT ${limit}
     `;
@@ -1183,6 +1268,7 @@ export class RetrievalService {
       },
       include: {
         account: true,
+        contact: { select: { email: true } },
       },
       take: 100,
       orderBy: { updatedAt: 'desc' },
@@ -1200,6 +1286,8 @@ export class RetrievalService {
         value: opp.value.toString(),
         probability: opp.probability,
         accountName: opp.account.name,
+        // A deal with no contact has no address, which no restriction matches.
+        email: opp.contact?.email ?? '',
       },
       acl: {
         viewableBy: [opp.ownerId],
@@ -1409,6 +1497,8 @@ export class RetrievalService {
         priority: ticket.priority,
         slaStatus: ticket.slaStatus,
         contactName: ticket.contactName,
+        email: ticket.contactEmail,
+        contactId: ticket.contactId ?? null,
       },
       acl: {
         viewableBy: ticket.assigneeId ? [ticket.assigneeId] : [],

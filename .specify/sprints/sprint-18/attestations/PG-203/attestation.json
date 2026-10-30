@@ -1,72 +1,348 @@
 {
-  "$schema": "../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
+  "$schema": "../../../../../apps/project-tracker/docs/metrics/schemas/attestation.schema.json",
   "schema_version": "1.0.0",
   "task_id": "PG-203",
-  "run_id": "eng-ops-002-r16-pg-203-2026-07-22",
-  "attestor": "Claude Code (claude-sonnet-5) — ENG-OPS-002.R16 attestation backfill (chore/eng-ops-002-r16-attestation-backfill)",
-  "attestation_timestamp": "2026-07-25T17:18:29Z",
-  "verdict": "INCOMPLETE",
+  "run_id": "20261029-d12-closeout",
+  "attestor": "Claude Code (AURORA PG-203 lane), D12 close-out",
+  "attestation_timestamp": "2026-10-29T14:28:36Z",
+  "verdict": "COMPLETE",
+  "context_acknowledgment": {
+    "acknowledged_at": "2026-10-20T23:21:27Z",
+    "files_read": [
+      {
+        "path": "apps/web/src/components/sidebar/configs/appointments.ts",
+        "sha256": "6051736091c046ff488153814d6c0e25df3aaba0d3c08d5b9ee28c4e54dec33e"
+      },
+      {
+        "path": "apps/web/src/app/calendar/calendar-settings/page.tsx",
+        "sha256": "adc97f2590b815f2da0475464478e47d92bc2902d89eae28f918b442c35722c6"
+      },
+      {
+        "path": "docs/planning/module-settings-playbook.md",
+        "sha256": "d6ded4b5d5ce3e951a6d6491d626cf636bd209faa96101edc39cdb0bfb8b5fa3"
+      },
+      {
+        "path": "docs/planning/prd-module-settings.md",
+        "sha256": "8ec749e72af59b909bad9ec68d2c9cad4448a8041ceeaab13b4dbc4493605d40"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/specifications/PG-203-spec.md",
+        "sha256": "f2c1c07284c6aac61654576342805b17e00e66027a6367a17350776ad03276a6"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/planning/PG-203-plan.md",
+        "sha256": "2103064bc7de5f3d3593be84d369e7abc2d2302233a2105a832fe8bb756745a4"
+      },
+      {
+        "path": ".specify/sprints/sprint-18/context/PG-203/PG-203-owner-ruling.md",
+        "sha256": "0ca3c9575a58f27fc355a03d6d101c842061da220c4580b0b271b155620e6e8b"
+      },
+      {
+        "path": "docs/architecture/adr/ADR-083-event-types-public-booking.md",
+        "sha256": "c6421fcaa358259e3dca606bd5c47000129cfc4c9ef44ce2bf3b26e3bda58cdf"
+      },
+      {
+        "path": "docs/architecture/adr/ADR-081-tenant-availability.md",
+        "sha256": "dc2f6ca332714d3b69a4aff20c26b80ccc52ab3604221ba76973b77111666ffc"
+      },
+      {
+        "path": "apps/web/src/components/sidebar/configs/calendar.ts",
+        "sha256": "28bcf48807bf8a838de162b0d640864c40553be9ebfa139096e3f7000b8fa4d6"
+      },
+      {
+        "path": "apps/web/src/app/calendar/event-types/page.tsx",
+        "sha256": "21749b50c5c277bc50dcec7e89108063c81126f8bdf6adaceba9c46cd02a8789"
+      },
+      {
+        "path": "apps/api/src/modules/public-feedback/public-feedback.router.ts",
+        "sha256": "d2eb073d2f1cbd88d4bebda9305bb2aa91ee8a6c7bcd027720689309d837eab7"
+      },
+      {
+        "path": "apps/api/src/security/public-rate-limiter.ts",
+        "sha256": "a0ec8d0ee9318de9b7535454b21b9b901268091486ac2ff491bf448ff316ce6a"
+      },
+      {
+        "path": "packages/application/src/services/LeadService.ts",
+        "sha256": "ae8ea79465910780b5d306c81599d82f65b006992a2d0e958675df3844846079"
+      },
+      {
+        "path": "packages/adapters/src/persistence/PrismaTransactionManager.ts",
+        "sha256": "e65193fd0b408d5f2c333530d25037fcd43f490088d6fbadd6d889f6b6984d8b"
+      },
+      {
+        "path": "apps/api/src/workflow/dsar-workflow.ts",
+        "sha256": "5d524f0157ecb66b0ce8dde7317ebee8ccb0147ce4f200f8d03019daa2a38348"
+      },
+      {
+        "path": "packages/db/prisma/schema.prisma",
+        "sha256": "f854ad7b01d32fa2dbacff28538b52422bbf95cd334496cd99ff42a9d4bb981a"
+      },
+      {
+        "path": "packages/db/prisma/migrations/20261017120100_contacts_type_idx/migration.sql",
+        "sha256": "62079575ee1afae7c8a1c835377b4e833ea0fc30308c2db0bf128c4275204333"
+      },
+      {
+        "path": "apps/web/src/components/appointments/AppointmentForm.tsx",
+        "sha256": "2be32792419d1e30392a670e2e0f384b51a47897e54e0ed8daca9e21646cb5df"
+      }
+    ],
+    "invariants_acknowledged": [
+      "Every event-type and public-booking query and write carries an explicit tenantId; RLS is not the tenant boundary (tenant-context.ts:131-135).",
+      "Public booking resolves the tenant only from Tenant.bookingHandle via one lookup query; tenantId/hostId/leadId are never accepted from the request body (strict schemas).",
+      "Unknown handle, unknown slug, inactive type, firm without saved availability and unavailable host all return an identical NOT_FOUND after the same single DB call.",
+      "A booking re-checks the slot inside one transaction under a per-tenant pg_advisory_xact_lock with transaction-local app.current_tenant_id; two concurrent books of one slot yield one success and one CONFLICT.",
+      "Booking leads are always AI-scored (owner Q8/Q9); there is no AI toggle; LeadCreated lands in the outbox in the same transaction via LeadService.createLeadInTransaction.",
+      "Existing leads and contacts are never linked or modified from anonymous input (owner Q11); only the host email flags a match.",
+      "All destructive event-type writes run in $transaction; no skipDuplicates; colorToken is CHECK-constrained to the 18-token TAG palette; duplicate booking slugs rejected by Zod superRefine and the DB unique.",
+      "All five migrations are additive Class A, applied only to the local test DB in this task; production apply is manual and must precede the API ship (L13).",
+      "Emails use fixed templates with every interpolated value HTML-escaped and CR/LF stripped from subjects; tests use the mock notification adapter and never send real mail."
+    ]
+  },
   "evidence_summary": {
-    "artifacts_verified": 1,
-    "validations_passed": 0,
+    "artifacts_verified": 30,
+    "validations_passed": 4,
     "validations_failed": 0,
-    "gates_passed": 0,
-    "gates_failed": 1,
-    "kpis_met": 0,
+    "gates_passed": 14,
+    "gates_failed": 0,
+    "kpis_met": 7,
     "kpis_missed": 0,
-    "placeholders_found": 1
+    "placeholders_found": 0
   },
   "artifact_hashes": {
-    "apps/web/src/app/calendar/event-types/page.tsx": "21749b50c5c277bc50dcec7e89108063c81126f8bdf6adaceba9c46cd02a8789"
+    "apps/web/src/app/calendar/event-types/page.tsx": "d1548e47dd724916886db5140463d210a322100ace08223286564dc71395699a",
+    "apps/web/src/app/calendar/event-types/EventTypesContent.tsx": "28469777882c3d7521ad4476c747f143162f8b9f9d288bb1d925851e9f4d7d6f",
+    "apps/api/src/modules/calendar/event-types.router.ts": "3053246021c941fa944065f6255daf55c36e57a596f9a59434e26ebe65b02c65",
+    "packages/validators/src/event-types.ts": "69d0dd78c23c8bbca2dc4d4e0c566fadd763c6e1e9f6d23bf1738661512df862",
+    ".specify/sprints/sprint-18/attestations/PG-203/context_ack.json": "c39e358407b1fe578b83e08c9efaf770de7ebcddde14256bc50c4d8afbef2ddf",
+    "apps/api/src/modules/calendar/public-booking.router.ts": "6d53eec530905c803df68e77b6c7e638a4d4dcd5e5764fc6f3028abcf82c4664",
+    "apps/web/src/app/(public)/book/[handle]/[slug]/page.tsx": "7e7ac141b538afcff8aaa5bbac495fd65bff87e96f859aae376faaec6384fd84",
+    "apps/web/src/app/(public)/book/[handle]/[slug]/BookingContent.tsx": "93091ed451777f4cc329ce1e21329c6966d5f9ee86b6624b0c2405ddb86d1a57",
+    "packages/db/prisma/migrations/20261021120100_event_types/migration.sql": "6b42a0b3b29d2d22ec72c647069a69891afdd40e3eeeb9691456e9495bbdbd96",
+    "docs/architecture/adr/ADR-083-event-types-public-booking.md": "64be6194241be4e7fd7c5e0ca57f7ba2c934f84f5b8ad7b305c142734516cf7e",
+    "apps/api/src/modules/privacy/privacy.router.ts": "af516f0ca7d92548a9900b7956076dd5a2640023c340f0149eb1c73086f793cf",
+    "apps/api/src/modules/privacy/privacy-public.router.ts": "1d1da265ddbec93e78c5a69067af1490d59cda3ee5a5e3be5f2e3781549ef5f0",
+    "apps/api/src/modules/privacy/privacy-admin.router.ts": "65909cdf6d9837350f4447c68f4839fbb84f3b0b74eebea51f7380a0bf260943",
+    "apps/web/src/app/(public)/dsar/[handle]/page.tsx": "da46a0e73281e72c3856d74774ff39fef2ea650b1f6e82759b332fc56afad368",
+    "apps/web/src/app/settings/privacy-requests/page.tsx": "bf3682594481ebf00f617bae5a014c3c11524657bd2c54a7023e5645d3a3f1e2",
+    "apps/web/src/app/settings/privacy-requests/PrivacyRequestsContent.tsx": "e2dc609a5afe59147c785d1eccee73ea0f086f72164c233c3a36eac755c6d643",
+    "packages/application/src/services/DataSubjectRequestService.ts": "b02e274b0b612a20503fdf48fe101dd2573144c1cf1845c64143d47cc36bfb87",
+    "packages/adapters/src/repositories/PrismaSubjectDataRepository.ts": "37181051cc70bb3b1aa3df2762456c3c11d176488bf649509869588eb70fc5ea",
+    "packages/db/prisma/migrations/20261022120000_dsar_requests/migration.sql": "cea9e1337cc9f66434f884fa29ccb65eb2c4bb76475872a89ce7693fb2fed745",
+    "apps/ai-worker/src/lib/data-request-guard.ts": "a0950ea3b60665d5f20d14dbca0c72bb3ddb6ec447f20ffcbcc427c323447f0a",
+    "artifacts/coverage/PG-203-before.json": "cc7b4cf2356a7f21cd11169798bcca9bcba6997cbb783431a344a9ed14ccd68a",
+    "artifacts/lighthouse/PG-203/local-run-note.md": "60c74ff02836afe85fb0821a83e666504c3877b46f052c3a7aca0ff42cb49aca",
+    ".specify/sprints/sprint-18/execution/PG-203/20261029-d12-closeout/PG-203-delivery.md": "5679622bfd7c04c61d22dbb75e0e638d2798754ddf3390aa35a44c7aaa4fb235",
+    ".specify/sprints/sprint-18/execution/PG-203/PG-203-dsar-sql-review.md": "147271c54c8b8f823bb771a7af1fc5ece48a1ea4857452db3aca5c25c096b4fd",
+    "artifacts/lighthouse/PG-203/calendar-event-types.report.json": "819cfddd909eda15b105eb7dd971148911ab84397b945a27ab66f55e4de60ebc",
+    "artifacts/lighthouse/PG-203/settings-privacy-requests.report.json": "ec53353cd68664a3a17120a25b43fd5738c63b883e67e8549e77854775bdd785",
+    "artifacts/lighthouse/PG-203/book.report.json": "768c0c486dd09b14671afdaaacd68b6d548e3a9fe5e3d39b62afa62040f13e40",
+    "artifacts/lighthouse/PG-203/dsar-request.report.json": "b6a9a0330fe0848c691ea0d0587ca85ae2690f98490ddf225f62d372c121ee9c",
+    "artifacts/lighthouse/PG-203/dsar-verify.report.json": "edc8fb4a78a2e22ff8f09a850ab33c20ef7c59d57d8bc25ffc0c6f2f0a682c28",
+    "artifacts/lighthouse/PG-203/dsar-export.report.json": "c1df75832187aa9689d60164be575d5979c9479bc6c02c073b343d9813d42c45"
   },
-  "validation_results": [],
+  "validation_results": [
+    {
+      "name": "TypeScript",
+      "command": "pnpm run typecheck (turbo 40 tasks + lint:sonar:guard), 2026-10-29 close-out tree; also pre-ship typecheck at 4db3266f1",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T10:51:07Z",
+      "stdout_hash": "86a1dc33b3e4d48bb68e10d9d2a5e0ebe4abe52f636e0ea9b968607a0022abf6"
+    },
+    {
+      "name": "Tests",
+      "command": "pre-ship unit-tests (full scope, 41195 passed) + integration-tests (622 passed, 20 skipped) at 4db3266f1; close-out: privacy module 120/120, book + privacy-requests 56/56",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T01:10:28.390Z",
+      "stdout_hash": "fd5141d09c11148c971a64c504801d5e751496cf1b1a40e0fb181bd94e6a0d31"
+    },
+    {
+      "name": "Lint",
+      "command": "pnpm run lint (turbo, 39 tasks), 2026-10-29 close-out tree; pre-ship lint + lint-promises at 4db3266f1",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T10:49:30Z",
+      "stdout_hash": "ed497e1b22973337fedc5f28719135906267eb83dd28cb92930c86d9bf7f15e7"
+    },
+    {
+      "name": "Build",
+      "command": "pre-ship build (pnpm run build, 21 tasks) at 4db3266f1; pnpm --filter @intelliflow/web build of the close-out tree (Lighthouse run 9, 2026-10-29T10:41Z)",
+      "passed": true,
+      "exit_code": 0,
+      "timestamp": "2026-10-29T01:10:28.390Z",
+      "stdout_hash": "dbd538c3098a6884bd1afb563355d1a38c31858b9ba0954e45409a5ff235f5b4"
+    }
+  ],
   "gate_results": [
     {
-      "gate_id": "module-settings-dod-artifacts-present",
-      "passed": false,
-      "log_path": "Sprint_plan.csv row for PG-203 requires page.tsx (exists), EventTypesContent.tsx (MISSING), apps/api/src/modules/calendar/event-types.router.ts (MISSING), packages/validators/src/event-types.ts (MISSING), context_ack.json (MISSING). Broad grep for a dedicated calendar event-types router/validator across apps/api and packages/validators returned zero hits (the only 'event-types'-adjacent hits are the unrelated misc/timeline.router.ts generic timeline-event-type field)."
+      "gate_id": "gate-0-context-ack (context_ack.json, 19 files, 9 invariants; PR 1 scope, committed 2026-10-29 byte-for-byte)",
+      "passed": true
+    },
+    {
+      "gate_id": "gate-1-plan-checkboxes",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/planning/PG-203-plan.md"
+    },
+    {
+      "gate_id": "gate-2-artifact-hashes (every planned file exists; dsar-workflow.ts + test superseded, deleted in 3fcafee91; no shims)",
+      "passed": true
+    },
+    {
+      "gate_id": "gate-2b-import-reachability (all 33 new source files have a production importer)",
+      "passed": true
+    },
+    {
+      "gate_id": "gate-2c-runtime-wiring (old DSAR router/workflow removed; privacy router wired; container/context)",
+      "passed": true
+    },
+    {
+      "gate_id": "gate-2d-shared-component-reuse (retrospective audit in hydrated context; EmptyState fixed)",
+      "passed": true
+    },
+    {
+      "gate_id": "gate-3-build-validation (4/4)",
+      "passed": true
+    },
+    {
+      "gate_id": "gate-3b-diff-coverage (81.2% of changed lines, floor 80%)",
+      "passed": true,
+      "log_path": "artifacts/preship/logs/diff-coverage.log"
+    },
+    {
+      "gate_id": "gate-3c-dead-code (knip: no new file unused)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-203/exec-PG-203-20261020/tdd/d12-closeout/knip-files.txt"
+    },
+    {
+      "gate_id": "gate-4-stoa (Domain WARN, Foundation WARN, Intelligence PASS, Quality WARN, Security PASS)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-203/20261029-d12-closeout/matop/stoa-verdicts"
+    },
+    {
+      "gate_id": "gate-12-nav-wiring (manual: sidebar settings.ts + settings-search for /settings/privacy-requests; calendar.ts + CalendarSettingsPanel for /calendar/event-types; booking page + booking email link /dsar/<handle>; preflight scanner blind to route groups)",
+      "passed": true
+    },
+    {
+      "gate_id": "gate-14-lighthouse-evidence (six reports 2026-10-29, final screenshots rendered)",
+      "passed": true,
+      "log_path": "artifacts/lighthouse/PG-203/local-run-note.md"
+    },
+    {
+      "gate_id": "sql-review-dsar-migration (APPROVED WITH NOTES)",
+      "passed": true,
+      "log_path": ".specify/sprints/sprint-18/execution/PG-203/PG-203-dsar-sql-review.md"
+    },
+    {
+      "gate_id": "accessibility-doc-gate (WCAG statement + VPAT 1.14.0)",
+      "passed": true
     }
+  ],
+  "kpi_results": [
+    {
+      "kpi": "Lighthouse /calendar/event-types (signed in, median of 3)",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 95, accessibility 93 (artifacts/lighthouse/PG-203/calendar-event-types.report.json, 2026-10-29 run 9; final screenshot shows the rendered page)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse /settings/privacy-requests (signed in, median of 3)",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 92, accessibility 96 (artifacts/lighthouse/PG-203/settings-privacy-requests.report.json, 2026-10-29 run 9; final screenshot shows the rendered page)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse /book/<handle>/<slug> (median of 3)",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 93, accessibility 96 (artifacts/lighthouse/PG-203/book.report.json, 2026-10-29 run 9; final screenshot shows the rendered page)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse /dsar/<handle>",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 93, accessibility 96 (artifacts/lighthouse/PG-203/dsar-request.report.json, 2026-10-29 run 9; final screenshot shows the rendered page)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse /dsar/<handle>/verify",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 93, accessibility 100 (artifacts/lighthouse/PG-203/dsar-verify.report.json, 2026-10-29 run 9; final screenshot shows the rendered page)",
+      "met": true
+    },
+    {
+      "kpi": "Lighthouse /dsar/<handle>/export",
+      "target": ">= 90 performance and accessibility",
+      "actual": "performance 93, accessibility 96 (artifacts/lighthouse/PG-203/dsar-export.report.json, 2026-10-29 run 9; final screenshot shows the rendered page)",
+      "met": true
+    },
+    {
+      "kpi": "Changed-line coverage (Sonar new_coverage mirror)",
+      "target": ">= 80%",
+      "actual": "81.2% (2512/3094 lines + branch conditions) at 4db3266f1",
+      "met": true
+    }
+  ],
+  "dependencies_verified": [
+    "PG-178",
+    "PG-189"
   ],
   "definition_of_done_items": [
     {
-      "criterion": "Route /calendar/event-types renders",
+      "criterion": "Event types at /calendar/event-types: duration, color, description, booking slug, required fields, location type",
       "met": true,
-      "evidence": "page.tsx exists and is a valid client component"
+      "evidence": "EventTypesContent.tsx, event-types.router.ts, validators event-types.ts; AC-001..AC-010 in the delivery report"
     },
     {
-      "criterion": "Meeting type definitions: duration, color, default description, booking link slug, required form fields, location type implemented",
-      "met": false,
-      "evidence": "page.tsx (16 lines) is a static placeholder ('Event types configuration coming soon.'). No form, no data fetch, no event-type model."
+      "criterion": "Playbook: PageHeader + bento, canonical EmptyState passive, CTAs, TagsTab via forwardRef (EventTypeList openCreate), $transaction on destructive writes, no skipDuplicates, superRefine on duplicate slugs, colorToken CHECK",
+      "met": true,
+      "evidence": "AC-001, AC-002, AC-004, AC-006, AC-008; migration 20261021120100_event_types CHECKs"
     },
     {
-      "criterion": "PageHeader+bento grid; canonical EmptyState; TagsTab; $transaction; Zod superRefine for duplicate booking slugs; colorToken CHECK; AI defaults FALSE; Boolean toggles wired",
-      "met": false,
-      "evidence": "None of these patterns present in the stub file."
+      "criterion": "AI defaults FALSE; every Boolean toggle wired",
+      "met": true,
+      "evidence": "Only isActive exists and is wired; owner Q9: no AI toggle (booking leads always scored); AC-009"
     },
     {
-      "criterion": "cross-tenant negative test; Lighthouse >=90; verified by pnpm test",
-      "met": false,
-      "evidence": "No test file exists for this feature anywhere in the repo."
+      "criterion": "Cross-tenant negative test",
+      "met": true,
+      "evidence": "AC-023 (router + real-DB RLS); D-AC-07"
+    },
+    {
+      "criterion": "Lighthouse >= 90",
+      "met": true,
+      "evidence": "kpi_results; run 9 2026-10-29"
+    },
+    {
+      "criterion": "Verified by pnpm test",
+      "met": true,
+      "evidence": "pre-ship full-scope unit + integration at 4db3266f1; close-out suites"
     }
   ],
-  "dependencies_verified": [],
+  "nav_wiring_confirmed": true,
+  "spec_session_consensus": "PR 1: 6/6 APPROVED (Round 4.2, 2026-10-20). Addendum A (DSAR): 3/3 APPROVED (R4, 2026-10-22).",
+  "plan_reviewer_verdict": "APPROVED",
+  "plan_reviewer_agent": "plan-reviewer subagent (main plan REVISE then APPROVE 2026-10-20; Addendum A and B sign-offs in the plan)",
+  "plan_reviewer_marker": "plan-reviewer: subagent",
+  "spec_path": ".specify/sprints/sprint-18/specifications/PG-203-spec.md",
+  "plan_path": ".specify/sprints/sprint-18/planning/PG-203-plan.md",
   "environment": {
     "os": "win32",
-    "node_version": "v22.14.0",
-    "git_commit": "a14dfb43b8bf8fda50e0191b4996293b990d35a5",
-    "branch": "chore/eng-ops-002-r16-attestation-backfill"
+    "node_version": "v24.21.0",
+    "git_commit": "5c716511ad0f9e2d70c5e38887541d1a0035348d",
+    "branch": "feat/pg-203-dsar"
   },
-  "notes": "RETROACTIVE ATTESTATION BACKFILL (ENG-OPS-002.R16, remediating GOV-A-001). CSV-marked 'Completed'; independent re-verification does not substantiate that claim, so this attestation records verdict=INCOMPLETE per the honesty protocol rather than fabricating a pass. What exists: a 16-line 'coming soon' placeholder page.tsx, added 2026-03-15 in commit e18a18a92e061d48ffc57916b85cec7f5837c985 ('feat(web): add email, calendar, and notification settings pages') — confirmed via `git log --diff-filter=A` at the exact current path (single unambiguous add event, no PR wraps this commit). Missing per the CSV's own ARTIFACT/DoD list: EventTypesContent.tsx, event-types.router.ts, event-types validators, context_ack.json — none exist anywhere under any name. No later commit implements this feature. FLAGGED FOR HUMAN DECISION: revert CSV status or schedule real implementation; see the R16 PR body for the full 12-task pattern. SCOPE CORRECTION 2026-07-25: the batch was originally 13 and included PG-206 (Storage Policies). PG-206 has since been genuinely implemented and attested COMPLETE by PR #626 (commit 2ec7d0e49, \"feat(documents): wire storage-policies retention UI to backend\"), so it is excluded here rather than carried forward on a now-stale INCOMPLETE verdict. The 12 tasks this pattern still applies to are PG-196, PG-197, PG-198, PG-199, PG-201, PG-202, PG-203, PG-204, PG-205, PG-207, PG-208, PG-209. Issue #615 still names 13 and should be narrowed to these 12. RE-VERIFIED 2026-07-25 at origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5: the placeholder page.tsx SHA-256 recorded in artifact_hashes still matches the file in the tree byte-for-byte, and the Content component, tRPC router, Zod validator and context_ack.json are all still absent — so this verdict is current, not a stale claim inherited from the 2026-07-22 pass.",
+  "notes": "D12 close-out of PG-203 (PR 1 #1003 merged, PR 2 #1056). Verdict COMPLETE rests on the owner's risk acceptance of 2026-10-29 (manual_verification): Talysson accepted #1010, #1015 and #1063 as known gaps to fix before the first real customer; the three issues stay open with that deadline and carry the acceptance as a comment. The Security STOA first returned FAIL only for that missing acceptance and, re-run with it on record, returned PASS; Domain, Foundation and Quality are WARN (pre-ship not yet at the close-out head; the migration edit, since verified by migrate-deploy-run9.txt and an unchanged drift report), Intelligence PASS. LOW items: dsar_normalise_email accepted as documented; RLS of the two new tables is proven by the dsar.test.ts real-session check (passed 2026-10-29T01:01Z, rls-session-check.txt); the DROP TRIGGER finding was a misread of comments. Partly met acceptance criteria D-AC-04, D-AC-06 and D-AC-08 are recorded as deviations in the delivery report and findings. Provenance: context_ack.json and the coverage before-capture were written 2026-10-20 in the PR 1 worktree and committed byte-for-byte on 2026-10-29 (gitignored / untracked until then); all 19 ack hashes match d4db133c9. The ack covers PR 1 scope only. Plan step V-0b: the before-capture copied the committed coverage-summary baseline, not a fresh run; the coverage evidence is the pre-ship diff-coverage gate (81.2%). Hydrated context: the hydrator takes scope from the CSV row only (no DSAR text); the shared component and route conflict audits were added retrospectively 2026-10-29. Discussion log: Addendum A rounds R1-R4 rebuilt from the session transcripts. The DSAR migration SQL review was missed at D3 and run 2026-10-29 (APPROVED WITH NOTES); its should-fix on locking was applied and the edited migration applied on a fresh DB (migrate-deploy-run9.txt). Lighthouse: the 2026-10-25 scores measured loading screens (driver v2 froze the in-process API) and are superseded by run 9; /book was first measured with content in this round, scored 81 (CLS 0.25), and was fixed (CLS 0.003, 93). Compliance check: WCAG statement and VPAT updated (/book had never been listed). nav_wiring_confirmed by hand: settings sidebar + settings search, calendar sidebar + panel, booking page footer and booking email. NEEDS_HUMAN after merge: apply 20261022120000_dsar_requests via the gated prisma migrate deploy before the API image with PR 2 is promoted (the six PR 1 migrations are already applied in production, checked read-only by Aurora on 2026-10-29; dsar_requests does not exist there yet); confirm has_function_privilege on the API connection; send one real DSAR email and check no token appears in server logs; production smoke. Open follow-ups: #1007 #1009 #1010 #1014 #1015 #1019 #1020 #1021 #1027 #1063, IFC-315..IFC-318, PG-211..PG-213. Final pre-ship on the close-out head runs at push.",
   "manual_verification": {
-    "performed_by": "Claude Code (claude-opus-5) — ENG-OPS-002.R16 re-verification pass",
-    "performed_at": "2026-07-25T17:18:29Z",
-    "review_notes": "Independent re-verification against origin/main a14dfb43b8bf8fda50e0191b4996293b990d35a5 before merge. The recorded artifact SHA-256 still matches the on-disk page.tsx, and existence checks for the Content component, tRPC router, Zod validator and context_ack.json all still return nothing. Verdict INCOMPLETE confirmed current as of 2026-07-25.",
+    "performed_by": "Talysson Oliveira (owner), asked through the Aurora coordinator's question",
+    "performed_at": "2026-10-29T00:00:00Z",
+    "review_notes": "Owner risk acceptance for the Security STOA's open items. Question and option, verbatim: \"You accept #1010, #1015 and #1063 as known gaps to fix before the first real customer. Your words go into PG-203's attestation and each issue; PG-203 closes COMPLETE. The three issues stay open with that deadline.\" Answer: \"Accept as follow-ups\". Approver: Talysson, via Aurora's question, 2026-10-29. Deadline: before the first real customer. Recorded on the issues: #1010 issuecomment-6499270540, #1015 issuecomment-6499271213, #1063 issuecomment-6499271702. LOW items, per Aurora relaying the same ruling: (a) dsar_normalise_email stays executable and without a pinned search_path, accepted as documented (SECURITY INVOKER lower(trim(...)), reads no table); (b) dsar_requests and processing_restrictions are not added to rls-tenant-isolation.test.ts, because that suite skipped on this host while tests/integration/dsar.test.ts ran the same real-session check as the authenticated role and passed on 2026-10-29 (evidence d12-closeout/rls-session-check.txt); (c) the \"DROP TRIGGER statements remain\" finding was a misread: the remaining matches are header comments.",
     "items_checked": [
-      "artifact_hashes[page.tsx] recomputed and compared — match",
-      "*Content.tsx sibling component — absent",
-      "apps/api/src/modules/**/<feature>.router.ts — absent",
-      "packages/validators/src/<feature>.ts — absent",
-      ".specify/sprints/sprint-18/attestations/PG-203/context_ack.json — absent"
+      "#1010 AI-created tasks keep insight text about an erased person: accepted, open, fix before the first real customer",
+      "#1015 conversations and messages are not tagged with their person for RAG, export and erasure: accepted, open, fix before the first real customer",
+      "#1063 erasure cannot find unlinked AI insights that name a person: accepted, open, fix before the first real customer",
+      "LOW dsar_normalise_email not revoked and no search_path: accepted as documented",
+      "LOW RLS coverage of the two new tables: covered by dsar.test.ts real-session check (passed 2026-10-29T01:01Z); not duplicated in rls-tenant-isolation.test.ts",
+      "LOW DROP TRIGGER remnants: misread, comments only"
     ]
   }
 }

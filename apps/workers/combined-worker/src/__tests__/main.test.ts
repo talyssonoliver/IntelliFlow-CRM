@@ -41,7 +41,7 @@ describe('combined-worker main', () => {
   });
 
   it('loads the api background jobs lazily, only when the loader runs', async () => {
-    const start = vi.fn(() => ({ approvalSweep: true, bounceScan: true }));
+    const start = vi.fn(() => ({ approvalSweep: true, bounceScan: true, dsarSla: true }));
     const stop = vi.fn();
     vi.doMock('@intelliflow/api/dist/background-jobs.js', () => ({
       startBackgroundJobs: start,

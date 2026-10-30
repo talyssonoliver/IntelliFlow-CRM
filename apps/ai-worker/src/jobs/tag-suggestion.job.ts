@@ -19,6 +19,11 @@ import {
   suggestAccountTags,
   type AccountProfileSnapshot,
 } from '../account-tag-suggestion.chain.js';
+import {
+  eligibleSubjectEmail,
+  SUBJECT_NOT_PROCESSABLE,
+  type SubjectPrisma,
+} from '../lib/data-request-guard';
 
 const logger = pino({
   name: 'tag-suggestion-job',
@@ -34,6 +39,25 @@ export const TagSuggestionJobDataSchema = z.object({
 });
 export type TagSuggestionJobData = z.infer<typeof TagSuggestionJobDataSchema>;
 
+/** The contact's profile as stored now, in the shape the router queues (null: gone). */
+async function currentContactProfile(
+  contactId: string,
+  tenantId: string
+): Promise<ContactProfileSnapshot | null> {
+  const contact = await prisma.contact.findFirst({
+    where: { id: contactId, tenantId },
+    select: { firstName: true, lastName: true, title: true, company: true, contactNotes: true },
+  });
+  if (!contact) return null;
+  return {
+    firstName: contact.firstName,
+    lastName: contact.lastName,
+    title: contact.title ?? undefined,
+    company: contact.company ?? undefined,
+    bio: contact.contactNotes ?? undefined,
+  };
+}
+
 export async function processTagSuggestionJob(job: Job<TagSuggestionJobData>): Promise<{
   suggestions: Array<{ label: string; confidence: number; reason: string }>;
   modelVersion: string;
@@ -47,11 +71,27 @@ export async function processTagSuggestionJob(job: Job<TagSuggestionJobData>): P
       if (!setting?.aiTagSuggestions) {
         return { suggestions: [], modelVersion: 'disabled' };
       }
-      return await suggestContactTags({
+      // PG-203 Q22: an erased or restricted person is never sent to the model. Nothing is
+      // stored here, so the caller just gets no suggestions.
+      const subject = { kind: 'contact' as const, id: entityId, tenantId };
+      const guard = prisma as unknown as SubjectPrisma;
+      const email = await eligibleSubjectEmail(guard, subject);
+      if (email === null) return { suggestions: [], modelVersion: SUBJECT_NOT_PROCESSABLE };
+      // The profile is read now, never taken from the queued snapshot: an erasure that ran
+      // while the job waited must not have its old names and notes sent (codex).
+      const current = await currentContactProfile(entityId, tenantId);
+      if (!current) return { suggestions: [], modelVersion: SUBJECT_NOT_PROCESSABLE };
+      const result = await suggestContactTags({
         contactId: entityId,
         tenantId,
-        profileSnapshot: profileSnapshot as ContactProfileSnapshot,
+        profileSnapshot: current,
       });
+      // The suggestions go back to the caller and stay in the job result: none survive an
+      // erasure, restriction or address change that landed while the model ran (codex).
+      if ((await eligibleSubjectEmail(guard, subject)) !== email) {
+        return { suggestions: [], modelVersion: SUBJECT_NOT_PROCESSABLE };
+      }
+      return result;
     }
 
     const setting = await prisma.accountAutomationSetting.findUnique({ where: { tenantId } });
