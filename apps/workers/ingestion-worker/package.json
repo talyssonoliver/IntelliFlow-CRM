@@ -18,6 +18,7 @@
   "dependencies": {
     "@intelliflow/ai-worker": "workspace:*",
     "@intelliflow/db": "workspace:*",
+    "@intelliflow/validators": "workspace:*",
     "@intelliflow/worker-shared": "workspace:*",
     "bullmq": "^5.79.1",
     "mammoth": "^1.12.0",

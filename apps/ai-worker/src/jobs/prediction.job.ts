@@ -14,6 +14,7 @@
 
 import type { Job } from 'bullmq';
 import { z } from 'zod';
+import { recordIdSchema } from '@intelliflow/validators/record-id';
 import pino from 'pino';
 
 // AI Chain imports (IFC-095)
@@ -61,7 +62,7 @@ export type PredictionType = (typeof PredictionTypes)[number];
 /** Schema for prediction job data */
 export const PredictionJobDataSchema = z.object({
   entityType: z.enum(['lead', 'contact', 'opportunity', 'account']),
-  entityId: z.uuid(),
+  entityId: recordIdSchema,
   predictionType: z.enum(PredictionTypes),
   // H5/M8 — tenantId is a top-level required field (was previously buried in
   // untyped context). Enqueue sites MUST pass it; Zod rejects missing/empty
@@ -83,7 +84,7 @@ export type PredictionJobData = z.infer<typeof PredictionJobDataSchema>;
 /** Schema for prediction job result */
 export const PredictionJobResultSchema = z.object({
   entityType: z.string(),
-  entityId: z.uuid(),
+  entityId: recordIdSchema,
   predictionType: z.string(),
   prediction: z.object({
     value: z.union([z.string(), z.number(), z.boolean()]),

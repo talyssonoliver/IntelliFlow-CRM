@@ -357,11 +357,11 @@ describe('ChurnRiskChain', () => {
       expect(result).toBeDefined();
     });
 
-    it('should handle invalid UUID gracefully with fallback', async () => {
+    it('should handle an unsafe entityId gracefully with fallback', async () => {
       // The chain should return a fallback result instead of throwing
       const invalidInput = {
         entityType: 'lead',
-        entityId: 'not-a-valid-uuid',
+        entityId: 'not a/valid id',
       };
 
       const result = await chain.predictChurnRisk(invalidInput as ChurnRiskInput);

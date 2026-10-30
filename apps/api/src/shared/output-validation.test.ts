@@ -307,9 +307,9 @@ describe('AI Output Validation', () => {
     });
 
     describe('invalid outputs', () => {
-      it('should reject invalid UUID for leadId', () => {
+      it('should reject an unsafe leadId', () => {
         const invalidResponse = createValidScoringResponse({
-          leadId: 'not-a-uuid',
+          leadId: 'not a/valid id',
         });
         const result = scoringResponseSchema.safeParse(invalidResponse);
         expect(result.success).toBe(false);
@@ -678,12 +678,12 @@ describe('Score Override Validation', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject invalid UUID for overriddenBy', () => {
+  it('should reject an unsafe overriddenBy', () => {
     const override = {
       leadId: TEST_UUIDS.lead1,
       overrideScore: 90,
       reason: 'Valid reason with enough characters',
-      overriddenBy: 'not-a-uuid',
+      overriddenBy: 'not a/valid id',
     };
 
     const result = scoreOverrideSchema.safeParse(override);
